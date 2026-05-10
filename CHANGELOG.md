@@ -1,3 +1,17 @@
+## [1.103.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.102.0...v1.103.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **admin:** UI cross-version compare + replay diff (Lot 4.F) ([#731](https://github.com/Ryxeuf/fantasy-football-game/issues/731)) ([9e16dbb](https://github.com/Ryxeuf/fantasy-football-game/commit/9e16dbb1e860df0e565c6990fbd6765d99be0cba)), closes [#722](https://github.com/Ryxeuf/fantasy-football-game/issues/722) [#725](https://github.com/Ryxeuf/fantasy-football-game/issues/725)
+* **broadcaster:** pnpm sim:loadtest:broadcaster — scaling probe (Lot 4.C.1) ([#733](https://github.com/Ryxeuf/fantasy-football-game/issues/733)) ([9306376](https://github.com/Ryxeuf/fantasy-football-game/commit/93063761a9eac648cdab181392741efb38d91dce))
+* **pro-league:** niggling TV malus + cron sweepRecomputeTvs (Lot 4.D.3) ([#728](https://github.com/Ryxeuf/fantasy-football-game/issues/728)) ([4570c37](https://github.com/Ryxeuf/fantasy-football-game/commit/4570c376ee927c233da1ea25fcb613f00a085ff5))
+* **pro-league:** pools S/A/P/M par position + pricing primary/secondary (Lot 4.D.2) ([#730](https://github.com/Ryxeuf/fantasy-football-game/issues/730)) ([51e41ff](https://github.com/Ryxeuf/fantasy-football-game/commit/51e41ff4cba674e70b134bb73cf512237391cd12))
+* **pro-league:** roster coach UI — level / SPP / TV / bonuses (Lot E) ([19e2dbc](https://github.com/Ryxeuf/fantasy-football-game/commit/19e2dbc77a72cd8a35d31470ca176eabd43f305b))
+* **pro-league:** stat increases on doubles + TV propagation (Lot 4.D.1) ([#729](https://github.com/Ryxeuf/fantasy-football-game/issues/729)) ([b99c85b](https://github.com/Ryxeuf/fantasy-football-game/commit/b99c85b6d4a046ab004c49b4f64d0edf1f213616))
+* **sim-engine:** hybrid driver attribue scorerId pondere par position (Lot 4.D.4) ([#727](https://github.com/Ryxeuf/fantasy-football-game/issues/727)) ([7ad26ae](https://github.com/Ryxeuf/fantasy-football-game/commit/7ad26aee926042facee981d40ab177a19939e3c2))
+* **sim-engine:** replay diff tool event-by-event + pnpm sim:diff-replays (Lot 4.B.2) ([#725](https://github.com/Ryxeuf/fantasy-football-game/issues/725)) ([f262945](https://github.com/Ryxeuf/fantasy-football-game/commit/f262945c7f0cc448daad33ce8980e4d45e91a29a))
+
 ## [1.102.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.101.0...v1.102.0) (2026-05-10)
 
 
