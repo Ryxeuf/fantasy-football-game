@@ -839,6 +839,48 @@ if (!inTestLevelUpEnv && levelUpTickMs > 0) {
 
 
 // =============================================================================
+// Pro League TV recompute cron (Lot 4.D.3).
+// =============================================================================
+// Sweep les rosters `active` et reconcilie `tvCached` apres :
+//   - les level-ups (skills appris -> +20k chacun)
+//   - les casualties (niggling +1 -> -10k chacun)
+// Le level-up applier recompute deja inline lors d'un level-up, mais
+// les niggling sont incrementes par le casualty cron sans toucher
+// la TV. Ce cron rattrape le drift en regime stable.
+//
+// Idempotent : `recomputePlayerTv` no-op si tvCached deja correct.
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_TV_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestTvEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const tvTickMsEnv = Number(process.env.PRO_LEAGUE_TV_TICK_MS);
+const tvTickMs = Number.isFinite(tvTickMsEnv)
+  ? tvTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestTvEnv && tvTickMs > 0) {
+  void import("./services/pro-roster-tv").then(({ sweepRecomputeTvs }) => {
+    const tick = async () => {
+      try {
+        const out = await sweepRecomputeTvs();
+        if (out.processed > 0 || out.failed > 0) {
+          serverLog.info(
+            `[pro-tv] sweep: processed=${out.processed} failed=${out.failed} (inspected=${out.inspected})`,
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[pro-tv] sweep failed: ${msg}`);
+      }
+    };
+    setInterval(() => {
+      void tick();
+    }, tvTickMs).unref();
+  });
+}
+
+
+// =============================================================================
 // Pro League rookie replenish cron (sprint 1.E.6).
 // =============================================================================
 // Sweep les equipes Pro dont le roster `active` est sous la cible

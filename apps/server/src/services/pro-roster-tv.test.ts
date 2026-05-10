@@ -23,6 +23,7 @@ import {
   computePlayerTv,
   computeStatBonusCost,
   DEFAULT_POSITION_COST,
+  NIGGLING_MALUS,
   recomputePlayerTv,
   RecomputeTvError,
   SKILL_COST,
@@ -104,15 +105,39 @@ describe("computePlayerTv — Lot 3.C.5", () => {
     expect(computeStatBonusCost({ ma: -3 })).toBe(0);
   });
 
-  it("Lot 4.D.1 — computePlayerTv inclut les stat bonuses", () => {
-    // Lineman 50k + 1 skill 20k + 1 MA 30k = 100k.
+  it("Lot 4.D.1 — computePlayerTv inclut les stat bonuses (apres niggling param)", () => {
+    // Lineman 50k + 1 skill 20k + 1 MA 30k = 100k. Niggling=0.
     expect(
-      computePlayerTv("Lineman", 1, { ma: 1 }),
+      computePlayerTv("Lineman", 1, 0, { ma: 1 }),
     ).toBe(100_000);
   });
 
   it("Lot 4.D.1 — stat bonuses default {} pour rétrocompat", () => {
     expect(computePlayerTv("Lineman", 2)).toBe(50_000 + 2 * SKILL_COST);
+  });
+
+  it("Lot 4.D.3 — niggling=1 retire NIGGLING_MALUS du total", () => {
+    expect(computePlayerTv("Lineman", 0, 1)).toBe(50_000 - NIGGLING_MALUS);
+    expect(NIGGLING_MALUS).toBe(10_000);
+  });
+
+  it("Lot 4.D.3 — niggling=3 retire 3 * NIGGLING_MALUS", () => {
+    expect(computePlayerTv("Big Guy", 1, 3)).toBe(
+      140_000 + SKILL_COST - 3 * NIGGLING_MALUS,
+    );
+  });
+
+  it("Lot 4.D.3 — niggling default 0 (rétrocompat)", () => {
+    expect(computePlayerTv("Lineman", 2)).toBe(50_000 + 2 * SKILL_COST);
+  });
+
+  it("Lot 4.D.3 — niggling negatif traite comme 0", () => {
+    expect(computePlayerTv("Lineman", 0, -3)).toBe(50_000);
+  });
+
+  it("Lot 4.D.3 — TV clampe a 0 si niggling depasse base + skills", () => {
+    // 5 niggling sur Lineman 50k + 0 skill = -50k -> clampe a 0.
+    expect(computePlayerTv("Lineman", 0, 6)).toBe(0);
   });
 });
 
@@ -177,6 +202,19 @@ describe("recomputePlayerTv — Lot 3.C.5", () => {
     });
     const out = await recomputePlayerTv("r4");
     expect(out.newTv).toBe(140_000);
+  });
+
+  it("Lot 4.D.3 — applique le malus niggling depuis le DB", async () => {
+    mocked.proTeamRoster.findUnique.mockResolvedValue({
+      id: "r_inj",
+      position: "Lineman",
+      skills: ["block", "tackle"],
+      niggling: 2,
+      tvCached: 0,
+    });
+    const out = await recomputePlayerTv("r_inj");
+    // 50k Lineman + 2 skills * 20k - 2 niggling * 10k = 70k
+    expect(out.newTv).toBe(70_000);
   });
 });
 
