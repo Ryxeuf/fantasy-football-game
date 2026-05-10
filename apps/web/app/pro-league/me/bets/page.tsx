@@ -136,6 +136,12 @@ export default function MyBetsPage(): JSX.Element {
         <div className="flex items-center gap-2">
           <WalletBadge />
           <Link
+            href="/pro-league/me/wallet"
+            className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
+          >
+            Wallet →
+          </Link>
+          <Link
             href="/pro-league"
             className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
           >
