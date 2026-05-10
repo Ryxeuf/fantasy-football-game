@@ -43,7 +43,15 @@ interface StandingsRow {
   readonly casualtiesFor: number;
   readonly casualtiesAgainst: number;
   readonly casualtiesDiff: number;
+  readonly teamValue: number;
   readonly form: readonly FormChar[];
+}
+
+type StandingsSortKey = "rank" | "tv";
+
+function formatTv(gp: number): string {
+  if (gp === 0) return "—";
+  return `${(gp / 1000).toFixed(0)}k`;
 }
 
 interface StandingsSnapshot {
@@ -101,6 +109,7 @@ export default function ProLeagueStandingsPage(): JSX.Element {
   const [data, setData] = useState<StandingsSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<StandingsSortKey>("rank");
 
   useEffect(() => {
     let cancelled = false;
@@ -201,13 +210,30 @@ export default function ProLeagueStandingsPage(): JSX.Element {
                 <th className="w-12 px-2 py-2 text-center">
                   {t.proLeague.standings.thDiff}
                 </th>
+                <th
+                  data-testid="standings-tv-header"
+                  className={`w-14 cursor-pointer px-2 py-2 text-center hover:bg-slate-800 ${
+                    sortKey === "tv" ? "text-amber-300" : ""
+                  }`}
+                  title="Lot I — Team Value totale (somme tvCached actifs). Click pour trier."
+                  onClick={() =>
+                    setSortKey((k) => (k === "tv" ? "rank" : "tv"))
+                  }
+                >
+                  TV {sortKey === "tv" ? "↓" : ""}
+                </th>
                 <th className="w-24 px-2 py-2 text-center">
                   {t.proLeague.standings.thForm}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {data.rows.map((r) => (
+              {(sortKey === "tv"
+                ? [...data.rows].sort(
+                    (a, b) => b.teamValue - a.teamValue,
+                  )
+                : data.rows
+              ).map((r) => (
                 <tr
                   key={r.team.slug}
                   className="border-t border-slate-800 hover:bg-slate-900"
@@ -264,6 +290,14 @@ export default function ProLeagueStandingsPage(): JSX.Element {
                     className={`px-2 py-2 text-center font-mono ${diffColorClass(r.casualtiesDiff)}`}
                   >
                     {formatDiff(r.casualtiesDiff)}
+                  </td>
+                  <td
+                    data-testid={`standings-tv-${r.team.slug}`}
+                    className={`px-2 py-2 text-center font-mono ${
+                      sortKey === "tv" ? "text-amber-300" : "text-slate-300"
+                    }`}
+                  >
+                    {formatTv(r.teamValue)}
                   </td>
                   <td className="px-2 py-2">
                     <div className="flex justify-center">

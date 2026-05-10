@@ -5,6 +5,7 @@ vi.mock("../prisma", () => ({
     proLeague: { findUnique: vi.fn() },
     proLeagueSeason: { findFirst: vi.fn() },
     proLeagueStandings: { findMany: vi.fn() },
+    proTeamRoster: { groupBy: vi.fn() },
   },
 }));
 
@@ -18,12 +19,16 @@ interface MockedPrisma {
   proLeague: { findUnique: ReturnType<typeof vi.fn> };
   proLeagueSeason: { findFirst: ReturnType<typeof vi.fn> };
   proLeagueStandings: { findMany: ReturnType<typeof vi.fn> };
+  proTeamRoster: { groupBy: ReturnType<typeof vi.fn> };
 }
 
 const mocked = prisma as unknown as MockedPrisma;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Lot I — par défaut, aucune équipe n'a de TV agrégée. Les tests
+  // qui veulent une TV peuvent override.
+  mocked.proTeamRoster.groupBy.mockResolvedValue([]);
 });
 
 describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
@@ -62,6 +67,7 @@ describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
         casualtiesAgainst: 1,
         form: '["W","W","L","W","W"]',
         team: {
+          id: "team_buf",
           slug: "buf-snow-ogres",
           name: "Snow Ogres",
           city: "Buffalo",
@@ -82,6 +88,7 @@ describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
         casualtiesAgainst: 5,
         form: '["L","D","L","L","L"]',
         team: {
+          id: "team_gb",
           slug: "gb-cheese-halflings",
           name: "Cheese Halflings",
           city: "Green Bay",
@@ -124,6 +131,7 @@ describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
         casualtiesAgainst: 0,
         form: ["W"], // postgres JSON-natif (pas string)
         team: {
+          id: "team_pit",
           slug: "pit-smashers",
           name: "Smashers",
           city: "Pittsburgh",
@@ -157,6 +165,7 @@ describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
         casualtiesAgainst: 0,
         form: "garbage-not-json",
         team: {
+          id: "team_x",
           slug: "x",
           name: "X",
           city: "X",
@@ -168,5 +177,109 @@ describe("getProLeagueCurrentStandings — sprint 1.C.5", () => {
     ]);
     const out = await getProLeagueCurrentStandings();
     expect(out.rows[0].form).toEqual([]);
+  });
+
+  it("Lot I — agrège la TV team via groupBy(tvCached) status='active'", async () => {
+    mocked.proLeague.findUnique.mockResolvedValue({ slug: "old-world-league" });
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({
+      id: "s1",
+      year: 2026,
+      status: "in_progress",
+    });
+    mocked.proLeagueStandings.findMany.mockResolvedValue([
+      {
+        played: 5,
+        wins: 4,
+        draws: 0,
+        losses: 1,
+        points: 12,
+        tdFor: 14,
+        tdAgainst: 6,
+        casualtiesFor: 3,
+        casualtiesAgainst: 1,
+        form: '["W","W","L","W","W"]',
+        team: {
+          id: "team_buf",
+          slug: "buf-snow-ogres",
+          name: "Snow Ogres",
+          city: "Buffalo",
+          race: "Ogre",
+          primaryColor: "#00338D",
+          secondaryColor: "#C60C30",
+        },
+      },
+      {
+        played: 5,
+        wins: 0,
+        draws: 1,
+        losses: 4,
+        points: 1,
+        tdFor: 4,
+        tdAgainst: 12,
+        casualtiesFor: 0,
+        casualtiesAgainst: 5,
+        form: '["L","D","L","L","L"]',
+        team: {
+          id: "team_gb",
+          slug: "gb-cheese-halflings",
+          name: "Cheese Halflings",
+          city: "Green Bay",
+          race: "Halfling",
+          primaryColor: "#203731",
+          secondaryColor: "#FFB612",
+        },
+      },
+    ]);
+    mocked.proTeamRoster.groupBy.mockResolvedValueOnce([
+      { teamId: "team_buf", _sum: { tvCached: 1_150_000 } },
+      { teamId: "team_gb", _sum: { tvCached: 950_000 } },
+    ]);
+
+    const out = await getProLeagueCurrentStandings();
+    expect(out.rows[0].teamValue).toBe(1_150_000);
+    expect(out.rows[1].teamValue).toBe(950_000);
+    // Vérifie qu'on filtre bien sur status='active'
+    expect(mocked.proTeamRoster.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ["teamId"],
+        where: expect.objectContaining({ status: "active" }),
+        _sum: { tvCached: true },
+      }),
+    );
+  });
+
+  it("Lot I — teamValue=0 si aucun joueur actif (aggregate empty)", async () => {
+    mocked.proLeague.findUnique.mockResolvedValue({ slug: "old-world-league" });
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({
+      id: "s1",
+      year: 2026,
+      status: "in_progress",
+    });
+    mocked.proLeagueStandings.findMany.mockResolvedValue([
+      {
+        played: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        points: 0,
+        tdFor: 0,
+        tdAgainst: 0,
+        casualtiesFor: 0,
+        casualtiesAgainst: 0,
+        form: "[]",
+        team: {
+          id: "team_orphan",
+          slug: "orphan",
+          name: "Orphan",
+          city: "Nowhere",
+          race: "Skaven",
+          primaryColor: null,
+          secondaryColor: null,
+        },
+      },
+    ]);
+    mocked.proTeamRoster.groupBy.mockResolvedValueOnce([]);
+    const out = await getProLeagueCurrentStandings();
+    expect(out.rows[0].teamValue).toBe(0);
   });
 });
