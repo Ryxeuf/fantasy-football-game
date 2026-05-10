@@ -21,11 +21,13 @@ import { prisma } from "../prisma";
 import {
   BASE_POSITION_COST,
   computePlayerTv,
+  computeSkillsCost,
   computeStatBonusCost,
   DEFAULT_POSITION_COST,
   NIGGLING_MALUS,
   recomputePlayerTv,
   RecomputeTvError,
+  SECONDARY_SKILL_COST,
   SKILL_COST,
   STAT_INCREASE_COSTS,
   sweepRecomputeTvs,
@@ -139,6 +141,35 @@ describe("computePlayerTv — Lot 3.C.5", () => {
     // 5 niggling sur Lineman 50k + 0 skill = -50k -> clampe a 0.
     expect(computePlayerTv("Lineman", 0, 6)).toBe(0);
   });
+
+  it("Lot 4.D.2 — SECONDARY_SKILL_COST = 30k", () => {
+    expect(SECONDARY_SKILL_COST).toBe(30_000);
+  });
+
+  it("Lot 4.D.2 — slugs primary appliquent 20k, secondary 30k", () => {
+    // Lineman : block (G) primary, dodge (A) secondary.
+    expect(computePlayerTv("Lineman", ["block"])).toBe(50_000 + 20_000);
+    expect(computePlayerTv("Lineman", ["dodge"])).toBe(50_000 + 30_000);
+    expect(computePlayerTv("Lineman", ["block", "dodge"])).toBe(
+      50_000 + 20_000 + 30_000,
+    );
+  });
+
+  it("Lot 4.D.2 — slug unavailable compte 0 (defense)", () => {
+    // Lineman + claws (M unavailable) -> claws ne compte pas.
+    expect(computePlayerTv("Lineman", ["block", "claws"])).toBe(
+      50_000 + 20_000,
+    );
+  });
+
+  it("Lot 4.D.2 — Big Guy : block (G) est secondary", () => {
+    // Big Guy : G secondary (1 skill 30k).
+    expect(computePlayerTv("Big Guy", ["block"])).toBe(140_000 + 30_000);
+  });
+
+  it("Lot 4.D.2 — computeSkillsCost retourne 0 sur liste vide", () => {
+    expect(computeSkillsCost("Lineman", [])).toBe(0);
+  });
 });
 
 describe("recomputePlayerTv — Lot 3.C.5", () => {
@@ -150,10 +181,11 @@ describe("recomputePlayerTv — Lot 3.C.5", () => {
     });
   });
 
-  it("recompute Lineman avec 2 skills -> tvCached=90k", async () => {
+  it("recompute Lineman avec 2 skills primary -> tvCached=90k", async () => {
     mocked.proTeamRoster.findUnique.mockResolvedValue({
       id: "r1",
       position: "Lineman",
+      // block + tackle sont tous deux primary G pour Lineman -> 20k chacun.
       skills: ["block", "tackle"],
       tvCached: 50000,
     });
@@ -167,6 +199,18 @@ describe("recomputePlayerTv — Lot 3.C.5", () => {
         data: { tvCached: 90_000 },
       }),
     );
+  });
+
+  it("Lot 4.D.2 — recompute Lineman avec mix primary+secondary applique le bon pricing", async () => {
+    mocked.proTeamRoster.findUnique.mockResolvedValue({
+      id: "r_mix",
+      position: "Lineman",
+      // block (G primary 20k) + dodge (A secondary 30k) = 50k de skills.
+      skills: ["block", "dodge"],
+      tvCached: 0,
+    });
+    const out = await recomputePlayerTv("r_mix");
+    expect(out.newTv).toBe(50_000 + 20_000 + 30_000);
   });
 
   it("idempotent : skip si tvCached deja a jour", async () => {

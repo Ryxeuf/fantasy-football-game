@@ -27,9 +27,15 @@ import {
   levelForSpp,
   LevelUpError,
   pickAdvancement,
+  pickAdvancementFor,
+  SECONDARY_PICK_PROBABILITY,
   SPP_LEVEL_THRESHOLDS,
   sweepLevelUps,
 } from "./pro-roster-level-up";
+import {
+  getEligiblePoolFor,
+  skillSourceForPlayer,
+} from "./pro-position-skill-access";
 
 interface MockedPrisma {
   proTeamRoster: {
@@ -162,7 +168,13 @@ describe("applyLevelUps — Lot 3.C.4", () => {
     expect(out.advancements).toHaveLength(1);
     const adv = out.advancements[0];
     if (adv.kind === "skill") {
-      expect(GENERAL_SKILL_POOL).toContain(adv.skill);
+      // Lot 4.D.2 — le skill peut etre primary (G) OU secondary (A/S/P)
+      // pour un Lineman.
+      const eligible = [
+        ...getEligiblePoolFor("Lineman", "primary"),
+        ...getEligiblePoolFor("Lineman", "secondary"),
+      ];
+      expect(eligible).toContain(adv.skill);
     } else {
       expect(["ma", "ag", "pa", "av", "st"]).toContain(adv.stat);
     }
@@ -172,6 +184,8 @@ describe("applyLevelUps — Lot 3.C.4", () => {
         data: expect.objectContaining({
           level: 2,
           skills: expect.any(Array),
+          // Lot 3.C.5 + 4.D.2 — Lineman 50k + 1 skill (20k primary
+          // OU 30k secondary selon le tirage).
           tvCached: expect.any(Number),
         }),
       }),
@@ -213,10 +227,17 @@ describe("applyLevelUps — Lot 3.C.4", () => {
   });
 
   it("plafonne les advancements si le pool s'epuise (no_skill_available)", async () => {
-    // Roster a tous les skills general + 1/6 doubles probability ->
-    // certaines rosterIds tomberont sur skill (pool epuise = skip),
-    // d'autres sur stat (advancement OK). On cherche la premiere
-    // rosterId qui produit le skip 'no_skill_available' sur 30 ids.
+    // Lot 4.D.2 + 4.D.1 — le pool acccessible a un Lineman = primary G +
+    // secondary A/S/P. Pour epuiser, il faut connaitre tous ces skills.
+    // M (Mutation) est `unavailable` pour Lineman donc pas utile a remplir.
+    // Avec 1/6 doubles probability (4.D.1), certaines rosterIds tomberont
+    // sur skill (pool epuise = skip), d'autres sur stat (advancement OK).
+    // On cherche la premiere rosterId qui produit le skip
+    // 'no_skill_available' sur 30 ids.
+    const eligible = [
+      ...getEligiblePoolFor("Lineman", "primary"),
+      ...getEligiblePoolFor("Lineman", "secondary"),
+    ];
     let foundSkip = false;
     for (let i = 0; i < 30 && !foundSkip; i += 1) {
       vi.clearAllMocks();
@@ -225,7 +246,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
         id: `r_full_${i}`,
         spp: 6,
         level: 1,
-        skills: [...GENERAL_SKILL_POOL],
+        skills: eligible,
         status: "active",
         position: "Lineman",
         maBonus: 0,
@@ -328,10 +349,10 @@ describe("applyLevelUps stat increases (Lot 4.D.1) — wire integration", () => 
     );
   });
 
-  it("sur 50 rosters fictifs, observe au moins 5 stat advancements (proba >= 1/10)", async () => {
+  it("sur 50 rosters fictifs, observe au moins 3 stat advancements (proba >= 1/10)", async () => {
     // Sample 50 rosterIds different pour echantillonner la proba 1/6
     // des doubles. On attend au moins ~6-9 stat increases mais on
-    // baisse a 5 pour etre robuste a la variance.
+    // baisse a 3 pour etre robuste a la variance.
     let statCount = 0;
     let skillCount = 0;
     for (let i = 0; i < 50; i += 1) {
@@ -357,6 +378,75 @@ describe("applyLevelUps stat increases (Lot 4.D.1) — wire integration", () => 
     }
     expect(statCount).toBeGreaterThanOrEqual(3);
     expect(skillCount).toBeGreaterThan(statCount); // skills doivent dominer
+  });
+});
+
+describe("pickAdvancementFor — Lot 4.D.2", () => {
+  it("Lineman + skills vides -> pick valide (primary OU secondary)", () => {
+    const out = pickAdvancementFor("Lineman", [], 42);
+    expect(out).not.toBeNull();
+    if (out) {
+      expect(["primary", "secondary"]).toContain(out.source);
+      expect(skillSourceForPlayer("Lineman", out.slug)).toBe(out.source);
+    }
+  });
+
+  it("filtre les skills deja connus", () => {
+    // Pas de seed magique : on test sur 200 seeds qu'aucun ne pioche
+    // un skill deja connu.
+    const known = ["block", "tackle"];
+    for (let s = 0; s < 200; s += 1) {
+      const out = pickAdvancementFor("Lineman", known, s);
+      if (out) {
+        expect(known).not.toContain(out.slug);
+      }
+    }
+  });
+
+  it("retourne null quand tous les pools accessibles sont epuises", () => {
+    const all = [
+      ...getEligiblePoolFor("Lineman", "primary"),
+      ...getEligiblePoolFor("Lineman", "secondary"),
+    ];
+    expect(pickAdvancementFor("Lineman", all, 42)).toBeNull();
+  });
+
+  it("biais vers primary : sur 200 picks, ~75% sont primary", () => {
+    let primaryCount = 0;
+    let secondaryCount = 0;
+    for (let s = 0; s < 200; s += 1) {
+      const out = pickAdvancementFor("Lineman", [], s);
+      if (out?.source === "primary") primaryCount += 1;
+      else if (out?.source === "secondary") secondaryCount += 1;
+    }
+    // Target = 75/25 avec tolerance large pour 200 echantillons.
+    const ratio = primaryCount / (primaryCount + secondaryCount);
+    expect(ratio).toBeGreaterThan(0.6);
+    expect(ratio).toBeLessThan(0.9);
+    expect(SECONDARY_PICK_PROBABILITY).toBe(0.25);
+  });
+
+  it("Big Guy ne pioche pas de skills A (unavailable)", () => {
+    for (let s = 0; s < 100; s += 1) {
+      const out = pickAdvancementFor("Big Guy", [], s);
+      if (out) {
+        // Big Guy : primary S, secondary G, A/P/M unavailable.
+        expect(skillSourceForPlayer("Big Guy", out.slug)).not.toBe(
+          "unavailable",
+        );
+      }
+    }
+  });
+
+  it("primary epuise -> fallback sur secondary", () => {
+    // Lineman primary = G ; on connait tout G. Le picker doit pioche
+    // dans secondary (A/S/P).
+    const knownPrimary = getEligiblePoolFor("Lineman", "primary");
+    const out = pickAdvancementFor("Lineman", knownPrimary, 42);
+    expect(out).not.toBeNull();
+    if (out) {
+      expect(out.source).toBe("secondary");
+    }
   });
 });
 
