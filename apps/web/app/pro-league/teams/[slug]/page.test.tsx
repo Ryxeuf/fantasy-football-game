@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("../../../lib/api-client", () => ({
   apiRequest: vi.fn(),
@@ -246,5 +246,181 @@ describe("ProLeagueTeamPage — sprint 1.C.2", () => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });
     expect(screen.getByRole("alert").textContent).toContain("not-found");
+  });
+
+  describe("Lot H — filters / sort / ready badge", () => {
+    function makeRosterTeam() {
+      return makeTeam({
+        roster: [
+          {
+            id: "p1",
+            name: "Charlie",
+            position: "Lineman",
+            ma: 5,
+            st: 3,
+            ag: 3,
+            pa: 4,
+            av: 9,
+            skills: [],
+            status: "active",
+            form: 50,
+            niggling: 0,
+            progression: { level: 1, spp: 2, nextLevelSpp: 6, tv: 50000 },
+            statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+            career: { tdCount: 0, casCount: 0, compCount: 0, mvpCount: 0 },
+          },
+          {
+            id: "p2",
+            name: "Alice",
+            position: "Blitzer",
+            ma: 7,
+            st: 3,
+            ag: 4,
+            pa: 4,
+            av: 10,
+            skills: ["block"],
+            status: "active",
+            form: 70,
+            niggling: 0,
+            // ready : 18 SPP > 16 (= nextLevelSpp pour level 2)
+            progression: { level: 2, spp: 18, nextLevelSpp: 16, tv: 110000 },
+            statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+            career: { tdCount: 3, casCount: 0, compCount: 0, mvpCount: 1 },
+          },
+          {
+            id: "p3",
+            name: "Bob",
+            position: "Catcher",
+            ma: 8,
+            st: 2,
+            ag: 4,
+            pa: null,
+            av: 8,
+            skills: ["dodge", "catch"],
+            status: "active",
+            form: 50,
+            niggling: 1, // niggling > 0 → blessé
+            progression: { level: 3, spp: 25, nextLevelSpp: 31, tv: 90000 },
+            statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+            career: { tdCount: 8, casCount: 0, compCount: 1, mvpCount: 0 },
+          },
+        ],
+      });
+    }
+
+    it("affiche le summary 'X joueurs · Y prêts à level-up · Z blessés'", async () => {
+      mockedApi.mockResolvedValue(makeRosterTeam());
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-toolbar")).toBeTruthy();
+      });
+      const summary = screen.getByTestId("roster-ready-summary");
+      expect(summary.textContent).toContain("1 prêt");
+      // 1 niggled = 1 blessé
+      expect(screen.getByText(/1 blessé/i)).toBeTruthy();
+    });
+
+    it("affiche le badge ⬆ ready sur le joueur ayant atteint le palier", async () => {
+      mockedApi.mockResolvedValue(makeRosterTeam());
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-table")).toBeTruthy();
+      });
+      const badges = screen.getAllByTestId("ready-badge");
+      expect(badges.length).toBe(1);
+      expect(badges[0].textContent).toContain("ready");
+    });
+
+    it("filtre 'Actifs' exclut les blessés / nigglés", async () => {
+      mockedApi.mockResolvedValue(makeRosterTeam());
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-filter")).toBeTruthy();
+      });
+      const select = screen.getByTestId("roster-filter") as HTMLSelectElement;
+      fireEvent.change(select, { target: { value: "active" } });
+      // Bob a niggling=1 → exclu
+      await waitFor(() => {
+        expect(screen.queryByText("Bob")).toBeNull();
+      });
+      expect(screen.getByText("Alice")).toBeTruthy();
+      expect(screen.getByText("Charlie")).toBeTruthy();
+    });
+
+    it("filtre 'Blessés' ne montre que les nigglés / non-actifs", async () => {
+      mockedApi.mockResolvedValue(makeRosterTeam());
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-filter")).toBeTruthy();
+      });
+      const select = screen.getByTestId("roster-filter") as HTMLSelectElement;
+      fireEvent.change(select, { target: { value: "injured" } });
+      await waitFor(() => {
+        expect(screen.queryByText("Alice")).toBeNull();
+      });
+      expect(screen.getByText("Bob")).toBeTruthy();
+    });
+
+    it("tri par level ascendant puis descendant", async () => {
+      mockedApi.mockResolvedValue(makeRosterTeam());
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-sort-key")).toBeTruthy();
+      });
+      const sortKey = screen.getByTestId(
+        "roster-sort-key",
+      ) as HTMLSelectElement;
+      fireEvent.change(sortKey, { target: { value: "level" } });
+      // Default asc → Charlie (level 1) avant Bob (level 3)
+      // Test ordre via compareDocumentPosition (DOCUMENT_POSITION_FOLLOWING=4)
+      const charlieIdx = screen.getByText("Charlie").compareDocumentPosition(
+        screen.getByText("Bob"),
+      );
+      expect(charlieIdx & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+      // Click "↑ asc" toggle → desc
+      const dirBtn = screen.getByTestId("roster-sort-direction");
+      fireEvent.click(dirBtn);
+      // Maintenant Bob (level 3) avant Charlie (level 1)
+      const bobToCharlie = screen.getByText("Bob").compareDocumentPosition(
+        screen.getByText("Charlie"),
+      );
+      expect(bobToCharlie & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("filtre vide → message 'Aucun joueur'", async () => {
+      mockedApi.mockResolvedValue(
+        makeTeam({
+          roster: [
+            {
+              id: "p1",
+              name: "Solo",
+              position: "Lineman",
+              ma: 5,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+              skills: [],
+              status: "active",
+              form: 50,
+              niggling: 0,
+              progression: { level: 1, spp: 0, nextLevelSpp: 6, tv: 50000 },
+              statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+              career: { tdCount: 0, casCount: 0, compCount: 0, mvpCount: 0 },
+            },
+          ],
+        }),
+      );
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-filter")).toBeTruthy();
+      });
+      const select = screen.getByTestId("roster-filter") as HTMLSelectElement;
+      fireEvent.change(select, { target: { value: "injured" } });
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-empty-filter")).toBeTruthy();
+      });
+    });
   });
 });
