@@ -215,9 +215,21 @@ function formatTv(gp: number): string {
 }
 
 /**
+ * Lot H — un joueur est "ready to level-up" quand spp >= nextLevelSpp.
+ * Le level-up applier asynchrone n'a pas encore tourné (il consume les
+ * SPP en background entre matchs), mais le coach peut savoir au coup
+ * d'œil quels joueurs ont franchi un palier.
+ */
+function isReadyToLevelUp(p: RosterProgression): boolean {
+  return p.nextLevelSpp !== null && p.spp >= p.nextLevelSpp;
+}
+
+/**
  * Lot E — barre de progression SPP. Affiche `cur / next` avec une barre
  * qui montre l'avancement entre le seuil précédent (= cur du level
  * actuel) et le prochain seuil. `null` next ⇒ legend (level 7).
+ *
+ * Lot H — badge ⬆ "ready" si `spp >= nextLevelSpp`.
  */
 function SppProgressBadge({
   spp,
@@ -231,6 +243,7 @@ function SppProgressBadge({
       </span>
     );
   }
+  const ready = spp >= nextLevelSpp;
   // Seuils précédents pour calculer le pct entre (prev, next).
   const THRESHOLDS = [0, 6, 16, 31, 51, 76, 176];
   const prev = THRESHOLDS[level - 1] ?? 0;
@@ -245,10 +258,19 @@ function SppProgressBadge({
         <span>
           {spp}/{nextLevelSpp}
         </span>
+        {ready && (
+          <span
+            data-testid="ready-badge"
+            className="rounded bg-emerald-700 px-1 text-[9px] font-bold text-emerald-50"
+            title="SPP atteint le seuil du prochain level — advancement en attente"
+          >
+            ⬆ ready
+          </span>
+        )}
       </div>
       <div className="h-1 w-full rounded bg-slate-800">
         <div
-          className="h-full rounded bg-emerald-500"
+          className={`h-full rounded ${ready ? "bg-amber-400" : "bg-emerald-500"}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -256,11 +278,76 @@ function SppProgressBadge({
   );
 }
 
+type StatusFilter = "all" | "active" | "injured";
+type SortKey = "name" | "position" | "level" | "spp" | "tv";
+
+const STATUS_FILTERS: readonly { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "active", label: "Actifs" },
+  { value: "injured", label: "Blessés / nigglés" },
+];
+
+const SORT_KEYS: readonly { value: SortKey; label: string }[] = [
+  { value: "name", label: "Nom" },
+  { value: "position", label: "Position" },
+  { value: "level", label: "Level" },
+  { value: "spp", label: "SPP" },
+  { value: "tv", label: "TV" },
+];
+
+function applyRosterFilter(
+  rows: readonly RosterEntry[],
+  filter: StatusFilter,
+): readonly RosterEntry[] {
+  if (filter === "all") return rows;
+  if (filter === "active") {
+    return rows.filter((r) => r.status === "active" && r.niggling === 0);
+  }
+  // injured = status injured/dead/retired OU niggling > 0 OU status reductions
+  return rows.filter(
+    (r) => r.status !== "active" || r.niggling > 0,
+  );
+}
+
+function applyRosterSort(
+  rows: readonly RosterEntry[],
+  key: SortKey,
+  desc: boolean,
+): RosterEntry[] {
+  const sorted = [...rows];
+  sorted.sort((a, b) => {
+    let cmp = 0;
+    switch (key) {
+      case "name":
+        cmp = a.name.localeCompare(b.name);
+        break;
+      case "position":
+        cmp = a.position.localeCompare(b.position);
+        break;
+      case "level":
+        cmp = a.progression.level - b.progression.level;
+        break;
+      case "spp":
+        cmp = a.progression.spp - b.progression.spp;
+        break;
+      case "tv":
+        cmp = a.progression.tv - b.progression.tv;
+        break;
+    }
+    return desc ? -cmp : cmp;
+  });
+  return sorted;
+}
+
 function RosterTable({
   rows,
 }: {
   rows: readonly RosterEntry[];
 }): JSX.Element {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("position");
+  const [sortDesc, setSortDesc] = useState<boolean>(false);
+
   if (rows.length === 0) {
     return (
       <p className="text-sm text-slate-500">
@@ -269,7 +356,87 @@ function RosterTable({
       </p>
     );
   }
+  const filtered = applyRosterFilter(rows, statusFilter);
+  const sorted = applyRosterSort(filtered, sortKey, sortDesc);
+  const readyCount = rows.filter((r) => isReadyToLevelUp(r.progression)).length;
+  const injuredCount = rows.filter(
+    (r) => r.status !== "active" || r.niggling > 0,
+  ).length;
   return (
+    <div className="space-y-2">
+      <div
+        data-testid="roster-toolbar"
+        className="flex flex-wrap items-center gap-3 text-xs"
+      >
+        <span className="text-slate-400">
+          <strong className="text-slate-200">{rows.length}</strong> joueurs
+        </span>
+        {readyCount > 0 && (
+          <span
+            data-testid="roster-ready-summary"
+            className="rounded bg-emerald-900/40 px-2 py-0.5 text-emerald-300"
+            title="Joueurs avec spp ≥ nextLevelSpp"
+          >
+            ⬆ {readyCount} prêt{readyCount > 1 ? "s" : ""} à level-up
+          </span>
+        )}
+        {injuredCount > 0 && (
+          <span className="rounded bg-amber-900/40 px-2 py-0.5 text-amber-300">
+            🤕 {injuredCount} blessé{injuredCount > 1 ? "s" : ""} / niggled
+          </span>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <label className="flex items-center gap-1">
+            <span className="text-slate-500">Filtre :</span>
+            <select
+              data-testid="roster-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5"
+            >
+              {STATUS_FILTERS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-1">
+            <span className="text-slate-500">Tri :</span>
+            <select
+              data-testid="roster-sort-key"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5"
+            >
+              {SORT_KEYS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            data-testid="roster-sort-direction"
+            onClick={() => setSortDesc((d) => !d)}
+            className="rounded border border-slate-700 bg-slate-900 px-2 py-0.5 hover:bg-slate-800"
+            title={sortDesc ? "Tri descendant" : "Tri ascendant"}
+          >
+            {sortDesc ? "↓ desc" : "↑ asc"}
+          </button>
+        </div>
+      </div>
+
+      {sorted.length === 0 && (
+        <p
+          data-testid="roster-empty-filter"
+          className="rounded border border-slate-800 bg-slate-900 p-4 text-sm text-slate-500"
+        >
+          Aucun joueur ne correspond au filtre.
+        </p>
+      )}
+
+      {sorted.length > 0 && (
     <div className="overflow-x-auto rounded border border-slate-800">
       <table data-testid="roster-table" className="w-full text-sm">
         <thead className="bg-slate-900 text-xs uppercase text-slate-400">
@@ -300,7 +467,7 @@ function RosterTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr
               key={r.id}
               className="border-t border-slate-800 hover:bg-slate-900"
@@ -368,6 +535,8 @@ function RosterTable({
           ))}
         </tbody>
       </table>
+    </div>
+      )}
     </div>
   );
 }
