@@ -1,3 +1,10 @@
+## [1.107.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.106.0...v1.107.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **pro-league:** wallet page avec ledger transactions (Lot N) ([e374b01](https://github.com/Ryxeuf/fantasy-football-game/commit/e374b01fc22e86f36f08f5ad354961d7d0482aac))
+
 ## [1.106.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.105.0...v1.106.0) (2026-05-10)
 
 
