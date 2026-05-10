@@ -18,6 +18,7 @@
     "db:seed": "tsx src/seed.ts",
     "db:seed:themed-league": "tsx src/seed-themed-league.ts",
     "list:users": "tsx src/list-users.ts",
+    "sim:loadtest:broadcaster": "tsx scripts/loadtest-broadcaster.ts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "postinstall": "test -f ../../prisma/schema.prisma && prisma generate --schema ../../prisma/schema.prisma || true"
