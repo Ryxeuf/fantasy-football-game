@@ -1,36 +1,43 @@
 /**
- * Service level-up / progression skill (Lot 3.C.4).
+ * Service level-up / progression skill (Lot 3.C.4 + 4.D.1).
  *
  * Apres que le SPP service (Lot 3.C.2) ait crediter les Star Player
  * Points sur les rosters, on calcule le `level` attendu via la table
  * BB officielle (6/16/31/51/76/176 SPP cumulatifs) et on ajoute le
- * nombre d'advancements manquants. Pour le MVP, chaque level-up =
- * 1 skill aleatoire deterministe depuis le pool "general" BB.
+ * nombre d'advancements manquants. Chaque level-up :
+ *
+ *   - Lot 3.C.4 (skill) : 5/6 chance -> tirage du pool General
+ *     (deterministe via hash(rosterId) + offset par level).
+ *   - Lot 4.D.1 (stat) : 1/6 chance -> "double" BB (+1 sur une stat
+ *     pondere : MA/PA majoritaires, AG/AV moyen, ST rare).
+ *
+ * Le 1/6 reproduit la proba BB officielle d'un double sur 2D6 (chaque
+ * paire xx a 1/36 -> 6 paires possibles -> 6/36 = 1/6).
  *
  * Architecture
  * ------------
  *  - `levelForSpp(spp)` : pure, table -> level.
- *  - `pickAdvancement(skills, seed)` : pure, choisit un skill non
- *    deja connu via mulberry32 + le pool general.
+ *  - `pickAdvancement(skills, seed)` : pure, choisit un skill General
+ *    non encore connu.
+ *  - `pickStatIncrease(seed)` : pure, choisit une stat parmi MA/AG/PA/AV/ST.
+ *  - `rollStatVsSkill(seed)` : pure, true si "double" (1/6).
  *  - `applyLevelUps(rosterId)` : I/O, applique tous les level-ups
- *    manquants en un seul UPDATE. Idempotent : si le level est deja
- *    a jour, no-op.
- *  - `sweepLevelUps()` cron : sweep tous les rosters actifs
- *    (limit 200) et applique. Erreur par roster isolee.
+ *    manquants en un seul UPDATE. Idempotent.
+ *  - `sweepLevelUps()` cron : sweep rosters actifs avec spp>0.
  *
- * Hors scope MVP
- * --------------
- *  - Stat increases (doubles roll). BB autorise +1 MA/AG/PA/AV sur un
- *    double — ignore ici, advancement = skill seulement.
- *  - Pool S/A/P/M (strength, agility, passing, mutation). Pour le MVP
- *    on tape uniquement le pool General. Lot futur : restreindre aux
- *    skills accessibles a la `position` du joueur.
- *  - Coach choice : en BB IRL, le coach choisit le skill ; ici tout
- *    est aleatoire deterministe (cohereent avec la simulation auto).
+ * Hors scope
+ * ----------
+ *  - Pool S/A/P/M par position (Lot 4.D.2 a venir). Pour le moment,
+ *    seul General est utilise pour les skills.
+ *  - Coach choice : en BB IRL, le coach choisit ; ici tout est
+ *    aleatoire deterministe (coherent avec auto-play).
+ *  - Stat caps : un Lineman peut theoriquement gagner +5 MA pour
+ *    aller de 6 a 11. BB officiel limite +2 par stat. Lot futur si
+ *    besoin (rare en MVP).
  */
 
 import { prisma } from "../prisma";
-import { computePlayerTv } from "./pro-roster-tv";
+import { computePlayerTv, type StatBonuses } from "./pro-roster-tv";
 
 /**
  * Seuils SPP cumulatifs pour atteindre les niveaux 2..7. Index `i`
@@ -129,10 +136,66 @@ export function pickAdvancement(
   return available[idx] ?? null;
 }
 
+/**
+ * Lot 4.D.1 — pool de stat increases ponderes pour le pick aleatoire.
+ *
+ * Distribution choisie pour eviter une avalanche de +ST (BB tres
+ * puissant) tout en gardant l'option presente. MA/PA dominent (catchers,
+ * throwers), AG/AV moyens, ST rare.
+ */
+export type StatIncreaseKind = "ma" | "ag" | "pa" | "av" | "st";
+
+const STAT_INCREASE_WEIGHTS: ReadonlyArray<readonly [StatIncreaseKind, number]> = [
+  ["ma", 5],
+  ["pa", 5],
+  ["ag", 4],
+  ["av", 4],
+  ["st", 2],
+];
+
+/**
+ * Choisit une stat increase ponderee par STAT_INCREASE_WEIGHTS.
+ * Deterministe via le seed.
+ */
+export function pickStatIncrease(seed: number): StatIncreaseKind {
+  const rng = mulberry32(seed);
+  let total = 0;
+  for (const [, w] of STAT_INCREASE_WEIGHTS) total += w;
+  const target = rng() * total;
+  let cumulative = 0;
+  for (const [stat, w] of STAT_INCREASE_WEIGHTS) {
+    cumulative += w;
+    if (target < cumulative) return stat;
+  }
+  // Edge case rounding : retombe sur la derniere.
+  return STAT_INCREASE_WEIGHTS[STAT_INCREASE_WEIGHTS.length - 1][0];
+}
+
+/**
+ * Lot 4.D.1 — `true` si l'advancement roll est un "double" (1/6
+ * proba). En BB rules, un double sur 2D6 ouvre l'option stat increase
+ * au lieu d'un skill primary/secondary.
+ */
+export function rollStatVsSkill(seed: number): boolean {
+  const rng = mulberry32(seed);
+  return rng() < 1 / 6;
+}
+
 export type LevelUpSkipReason =
   | "level_up_to_date"
   | "inactive_roster"
   | "no_skill_available";
+
+/**
+ * Lot 4.D.1 — un advancement applique au level-up est soit un skill
+ * du pool General (90.83%) soit un stat increase (16.67% via doubles
+ * roll, fallback skill si le pool est vide). Le retour est une union
+ * discriminee pour que le caller puisse logger / afficher precisement
+ * ce qui a ete distribue.
+ */
+export type Advancement =
+  | { readonly kind: "skill"; readonly skill: string }
+  | { readonly kind: "stat"; readonly stat: StatIncreaseKind };
 
 export interface ApplyLevelUpsResult {
   readonly rosterId: string;
@@ -140,7 +203,7 @@ export interface ApplyLevelUpsResult {
   readonly skipReason: LevelUpSkipReason | null;
   readonly oldLevel: number;
   readonly newLevel: number;
-  readonly advancements: readonly string[];
+  readonly advancements: readonly Advancement[];
 }
 
 /**
@@ -187,6 +250,13 @@ export async function applyLevelUps(
       status: true,
       // Lot 3.C.5 — position lue pour recompute tvCached inline.
       position: true,
+      // Lot 4.D.1 — stat bonuses lus pour appliquer leur cost dans
+      // le tvCached recompute. Prisma `increment` accumule ensuite.
+      maBonus: true,
+      agBonus: true,
+      paBonus: true,
+      avBonus: true,
+      stBonus: true,
     },
   });
   if (!roster) {
@@ -223,16 +293,47 @@ export async function applyLevelUps(
 
   const skills = parseSkillsJson(roster.skills);
   const baseSeed = hashStringToInt(rosterId);
-  const advancements: string[] = [];
+  const advancements: Advancement[] = [];
+  // Stats accumules pour l'UPDATE final (incremente sur chaque "double").
+  const accruedStats: { ma: number; ag: number; pa: number; av: number; st: number } = {
+    ma: 0,
+    ag: 0,
+    pa: 0,
+    av: 0,
+    st: 0,
+  };
+  // Skills accumulees (pour eviter dupes inter-level si plusieurs
+  // levels grimpes d'un coup).
+  const newSkillsAcc: string[] = [];
   let currentLevel = oldLevel;
   for (let l = oldLevel + 1; l <= targetLevel; l += 1) {
     // Variation par level pour eviter qu'un meme rosterId pioche
     // plusieurs fois le meme skill quand on grimpe de plusieurs
     // niveaux d'un coup.
-    const seed = (baseSeed ^ (l * 0x9e3779b9)) >>> 0;
-    const skill = pickAdvancement([...skills, ...advancements], seed);
-    if (!skill) break;
-    advancements.push(skill);
+    const seedSkill = (baseSeed ^ (l * 0x9e3779b9)) >>> 0;
+    // Lot 4.D.1 — seed independant pour le check skill/stat (eviter
+    // que le meme seed conditionne a la fois le pick skill ET la
+    // decision stat).
+    const seedRollKind = (baseSeed ^ (l * 0x85ebca6b)) >>> 0;
+    const seedStat = (baseSeed ^ (l * 0xc2b2ae35)) >>> 0;
+
+    if (rollStatVsSkill(seedRollKind)) {
+      const stat = pickStatIncrease(seedStat);
+      accruedStats[stat] += 1;
+      advancements.push({ kind: "stat", stat });
+      currentLevel = l;
+      continue;
+    }
+
+    const skill = pickAdvancement([...skills, ...newSkillsAcc], seedSkill);
+    if (!skill) {
+      // Pool epuise sur ce level. On stoppe la progression (les
+      // levels suivants seront tente au prochain tick une fois que
+      // le pool aura grandit — peu probable, mais defensif).
+      break;
+    }
+    newSkillsAcc.push(skill);
+    advancements.push({ kind: "skill", skill });
     currentLevel = l;
   }
 
@@ -247,11 +348,20 @@ export async function applyLevelUps(
     };
   }
 
-  const newSkills = [...skills, ...advancements];
-  // Lot 3.C.5 — recompute TV inline (1 UPDATE pour level + skills + tv).
+  const newSkills = [...skills, ...newSkillsAcc];
+  // Lot 3.C.5 + 4.D.1 — recompute TV inline avec stat bonuses
+  // accumules dans la session de level-up + ceux deja persistes.
+  const totalStatBonuses: StatBonuses = {
+    ma: ((roster.maBonus as number) ?? 0) + accruedStats.ma,
+    ag: ((roster.agBonus as number) ?? 0) + accruedStats.ag,
+    pa: ((roster.paBonus as number) ?? 0) + accruedStats.pa,
+    av: ((roster.avBonus as number) ?? 0) + accruedStats.av,
+    st: ((roster.stBonus as number) ?? 0) + accruedStats.st,
+  };
   const newTvCached = computePlayerTv(
     (roster.position as string) ?? "",
     newSkills.length,
+    totalStatBonuses,
   );
   await prisma.proTeamRoster.update({
     where: { id: rosterId },
@@ -259,6 +369,14 @@ export async function applyLevelUps(
       level: currentLevel,
       skills: newSkills,
       tvCached: newTvCached,
+      // Lot 4.D.1 — Prisma `increment` evite les race conditions
+      // (un casualty applier qui tournerait en parallele ne casse
+      // pas la valeur).
+      maBonus: { increment: accruedStats.ma },
+      agBonus: { increment: accruedStats.ag },
+      paBonus: { increment: accruedStats.pa },
+      avBonus: { increment: accruedStats.av },
+      stBonus: { increment: accruedStats.st },
     },
   });
 

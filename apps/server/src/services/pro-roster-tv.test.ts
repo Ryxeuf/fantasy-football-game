@@ -21,10 +21,12 @@ import { prisma } from "../prisma";
 import {
   BASE_POSITION_COST,
   computePlayerTv,
+  computeStatBonusCost,
   DEFAULT_POSITION_COST,
   recomputePlayerTv,
   RecomputeTvError,
   SKILL_COST,
+  STAT_INCREASE_COSTS,
   sweepRecomputeTvs,
 } from "./pro-roster-tv";
 
@@ -80,6 +82,37 @@ describe("computePlayerTv — Lot 3.C.5", () => {
 
   it("skillCount > 12 (max pool) -> bornee mais accepte (defense)", () => {
     expect(computePlayerTv("Lineman", 100)).toBe(50_000 + 100 * SKILL_COST);
+  });
+
+  it("Lot 4.D.1 — STAT_INCREASE_COSTS reflete BB officiel", () => {
+    expect(STAT_INCREASE_COSTS.ma).toBe(30_000);
+    expect(STAT_INCREASE_COSTS.ag).toBe(40_000);
+    expect(STAT_INCREASE_COSTS.pa).toBe(20_000);
+    expect(STAT_INCREASE_COSTS.av).toBe(30_000);
+    expect(STAT_INCREASE_COSTS.st).toBe(80_000);
+  });
+
+  it("Lot 4.D.1 — computeStatBonusCost somme les bonuses ponderes", () => {
+    expect(computeStatBonusCost({})).toBe(0);
+    expect(computeStatBonusCost({ ma: 1 })).toBe(30_000);
+    expect(computeStatBonusCost({ ma: 1, ag: 1, st: 1 })).toBe(
+      30_000 + 40_000 + 80_000,
+    );
+  });
+
+  it("Lot 4.D.1 — bonuses negatifs traites comme 0", () => {
+    expect(computeStatBonusCost({ ma: -3 })).toBe(0);
+  });
+
+  it("Lot 4.D.1 — computePlayerTv inclut les stat bonuses", () => {
+    // Lineman 50k + 1 skill 20k + 1 MA 30k = 100k.
+    expect(
+      computePlayerTv("Lineman", 1, { ma: 1 }),
+    ).toBe(100_000);
+  });
+
+  it("Lot 4.D.1 — stat bonuses default {} pour rétrocompat", () => {
+    expect(computePlayerTv("Lineman", 2)).toBe(50_000 + 2 * SKILL_COST);
   });
 });
 

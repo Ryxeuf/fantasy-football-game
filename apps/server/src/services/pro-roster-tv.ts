@@ -68,6 +68,42 @@ export const DEFAULT_POSITION_COST = 50_000;
  */
 export const SKILL_COST = 20_000;
 
+/**
+ * Lot 4.D.1 — costs BB officiels par +1 stat increase.
+ * Source : Blood Bowl Season 2/3 advancements table.
+ */
+export const STAT_INCREASE_COSTS = {
+  ma: 30_000,
+  ag: 40_000,
+  pa: 20_000,
+  av: 30_000,
+  st: 80_000,
+} as const;
+
+/** Bonus stats accumules via doubles roll au level-up. */
+export interface StatBonuses {
+  readonly ma?: number;
+  readonly ag?: number;
+  readonly pa?: number;
+  readonly av?: number;
+  readonly st?: number;
+}
+
+function safeBonus(n: number | undefined): number {
+  return Number.isFinite(n) && (n as number) > 0 ? (n as number) : 0;
+}
+
+/** Cost total des stat bonuses appliques sur un roster. */
+export function computeStatBonusCost(bonuses: StatBonuses): number {
+  return (
+    safeBonus(bonuses.ma) * STAT_INCREASE_COSTS.ma +
+    safeBonus(bonuses.ag) * STAT_INCREASE_COSTS.ag +
+    safeBonus(bonuses.pa) * STAT_INCREASE_COSTS.pa +
+    safeBonus(bonuses.av) * STAT_INCREASE_COSTS.av +
+    safeBonus(bonuses.st) * STAT_INCREASE_COSTS.st
+  );
+}
+
 export type RecomputeTvErrorCode = "ROSTER_NOT_FOUND";
 
 export class RecomputeTvError extends Error {
@@ -81,18 +117,23 @@ export class RecomputeTvError extends Error {
 }
 
 /**
- * Pure : calcule la TV individuelle a partir de la position et du
- * nombre de skills. `skillCount` negatif est traite comme 0
+ * Pure : calcule la TV individuelle a partir de la position, du nombre
+ * de skills, et des stat bonuses (Lot 4.D.1).
+ *
+ * Formule : `base + skills * SKILL_COST + sum(statBonuses * STAT_COSTS)`.
+ *
+ * Tous les arguments numeriques negatifs sont traites comme 0
  * (defense-in-depth).
  */
 export function computePlayerTv(
   position: string,
   skillCount: number,
+  statBonuses: StatBonuses = {},
 ): number {
   const base = BASE_POSITION_COST[position] ?? DEFAULT_POSITION_COST;
   const safeCount =
     Number.isFinite(skillCount) && skillCount > 0 ? skillCount : 0;
-  return base + safeCount * SKILL_COST;
+  return base + safeCount * SKILL_COST + computeStatBonusCost(statBonuses);
 }
 
 /**
@@ -135,7 +176,18 @@ export async function recomputePlayerTv(
 ): Promise<RecomputePlayerTvResult> {
   const roster = await prisma.proTeamRoster.findUnique({
     where: { id: rosterId },
-    select: { id: true, position: true, skills: true, tvCached: true },
+    select: {
+      id: true,
+      position: true,
+      skills: true,
+      tvCached: true,
+      // Lot 4.D.1 — stat bonuses lus pour appliquer leur cost dans tvCached.
+      maBonus: true,
+      agBonus: true,
+      paBonus: true,
+      avBonus: true,
+      stBonus: true,
+    },
   });
   if (!roster) {
     throw new RecomputeTvError(
@@ -145,7 +197,13 @@ export async function recomputePlayerTv(
   }
 
   const skills = parseSkillsJson(roster.skills);
-  const newTv = computePlayerTv(roster.position as string, skills.length);
+  const newTv = computePlayerTv(roster.position as string, skills.length, {
+    ma: (roster.maBonus as number) ?? 0,
+    ag: (roster.agBonus as number) ?? 0,
+    pa: (roster.paBonus as number) ?? 0,
+    av: (roster.avBonus as number) ?? 0,
+    st: (roster.stBonus as number) ?? 0,
+  });
   const oldTv = (roster.tvCached as number) ?? 0;
 
   if (newTv === oldTv) {
