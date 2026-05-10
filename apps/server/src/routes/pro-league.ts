@@ -98,6 +98,10 @@ import {
   ProPlayerNotFoundError,
   getProPlayerDetail,
 } from "../services/pro-player-detail";
+import {
+  PlayerHistoryNotFoundError,
+  getPlayerMatchHistory,
+} from "../services/pro-player-match-history";
 import { serverLog } from "../utils/server-log";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -337,6 +341,41 @@ export async function handleGetPlayerDetail(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/players/${id}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Handler `GET /api/pro-league/players/:id/history` — Lot L.
+ *
+ * Renvoie les `?limit` (default 5, max 20) derniers matchs de l'équipe
+ * du joueur avec le delta SPP (TD/CAS/COMP/MVP/total) gagné par le
+ * joueur sur chaque match. Pour matchs sans replay, delta=0.
+ */
+export async function handleGetPlayerHistory(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  const limitRaw = req.query.limit;
+  const limit =
+    typeof limitRaw === "string" && /^\d+$/.test(limitRaw)
+      ? Number.parseInt(limitRaw, 10)
+      : undefined;
+  try {
+    const data = await getPlayerMatchHistory(id, limit);
+    res.json({ matches: data });
+  } catch (err: unknown) {
+    if (err instanceof PlayerHistoryNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/players/${id}/history] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -841,6 +880,7 @@ router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/players/:id", handleGetPlayerDetail);
+router.get("/players/:id/history", handleGetPlayerHistory);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);

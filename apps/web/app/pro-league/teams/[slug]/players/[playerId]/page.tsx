@@ -170,11 +170,42 @@ interface PlayerPageProps {
   readonly params: { slug: string; playerId: string };
 }
 
+interface PlayerMatchSpp {
+  tdCount: number;
+  casCount: number;
+  compCount: number;
+  mvpCount: number;
+  totalSpp: number;
+}
+
+interface PlayerMatchHistoryEntry {
+  matchId: string;
+  roundNumber: number;
+  scheduledAt: string;
+  status: string;
+  isHome: boolean;
+  opponent: {
+    slug: string;
+    name: string;
+    city: string;
+    primaryColor: string | null;
+  };
+  scoreHome: number | null;
+  scoreAway: number | null;
+  outcome: string | null;
+  spp: PlayerMatchSpp;
+}
+
+interface PlayerHistoryResponse {
+  matches: PlayerMatchHistoryEntry[];
+}
+
 export default function ProLeaguePlayerPage({
   params,
 }: PlayerPageProps): JSX.Element {
   const { slug, playerId } = params;
   const [data, setData] = useState<PlayerDetail | null>(null);
+  const [history, setHistory] = useState<PlayerMatchHistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -182,9 +213,16 @@ export default function ProLeaguePlayerPage({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    apiRequest<PlayerDetail>(`/api/pro-league/players/${playerId}`)
-      .then((d) => {
-        if (!cancelled) setData(d);
+    Promise.all([
+      apiRequest<PlayerDetail>(`/api/pro-league/players/${playerId}`),
+      apiRequest<PlayerHistoryResponse>(
+        `/api/pro-league/players/${playerId}/history`,
+      ).catch(() => ({ matches: [] }) as PlayerHistoryResponse),
+    ])
+      .then(([d, h]) => {
+        if (cancelled) return;
+        setData(d);
+        setHistory(h.matches);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError((e as Error).message);
@@ -398,10 +436,106 @@ export default function ProLeaguePlayerPage({
         </div>
       </section>
 
+      <section className="mb-6">
+        <h2 className="mb-2 text-sm font-medium uppercase text-slate-400">
+          Derniers matchs (5)
+        </h2>
+        {history.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            Aucun match joué pour ce joueur — ou les replays ne sont plus
+            disponibles.
+          </p>
+        ) : (
+          <ul data-testid="player-history" className="space-y-1.5">
+            {history.map((m) => (
+              <PlayerHistoryRow key={m.matchId} match={m} />
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="text-xs text-slate-500">
         Forme actuelle :{" "}
         <span className="font-mono text-slate-300">{data.form}/100</span>
       </section>
     </div>
+  );
+}
+
+function PlayerHistoryRow({
+  match,
+}: {
+  match: PlayerMatchHistoryEntry;
+}): JSX.Element {
+  const at = new Date(match.scheduledAt);
+  const formattedDate = at.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const finished = match.status === "completed";
+  const myScore = match.isHome ? match.scoreHome : match.scoreAway;
+  const oppScore = match.isHome ? match.scoreAway : match.scoreHome;
+  const won =
+    finished &&
+    ((match.isHome && match.outcome === "home") ||
+      (!match.isHome && match.outcome === "away"));
+  const drew = finished && match.outcome === "draw";
+  const resultClass = finished
+    ? won
+      ? "text-emerald-300"
+      : drew
+        ? "text-slate-300"
+        : "text-rose-300"
+    : "text-slate-500";
+
+  const sppParts: string[] = [];
+  if (match.spp.tdCount > 0) sppParts.push(`${match.spp.tdCount} TD`);
+  if (match.spp.casCount > 0) sppParts.push(`${match.spp.casCount} CAS`);
+  if (match.spp.compCount > 0) sppParts.push(`${match.spp.compCount} COMP`);
+  if (match.spp.mvpCount > 0) sppParts.push(`${match.spp.mvpCount} MVP`);
+  const sppDetail = sppParts.length > 0 ? ` (${sppParts.join(", ")})` : "";
+  const sppSummary =
+    match.spp.totalSpp > 0
+      ? `+${match.spp.totalSpp} SPP${sppDetail}`
+      : finished
+        ? "+0 SPP"
+        : "—";
+
+  return (
+    <li
+      data-testid="player-history-row"
+      className="flex items-center justify-between rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm"
+    >
+      <div className="flex items-center gap-3">
+        <span className="w-12 text-xs uppercase text-slate-500">
+          R{match.roundNumber} · {match.isHome ? "H" : "A"}
+        </span>
+        <span
+          aria-hidden
+          className="inline-block h-3 w-3 rounded-full ring-1 ring-slate-700"
+          style={{ background: match.opponent.primaryColor ?? "#475569" }}
+        />
+        <span className="font-medium text-slate-100">
+          {match.opponent.name}
+        </span>
+        <span className="text-xs text-slate-500">{formattedDate}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        {finished && myScore !== null && oppScore !== null && (
+          <span className={`font-mono text-sm ${resultClass}`}>
+            {myScore}–{oppScore}
+          </span>
+        )}
+        <span
+          data-testid="player-history-spp"
+          className={`font-mono text-xs ${
+            match.spp.totalSpp > 0 ? "text-emerald-300" : "text-slate-500"
+          }`}
+        >
+          {sppSummary}
+        </span>
+      </div>
+    </li>
   );
 }
