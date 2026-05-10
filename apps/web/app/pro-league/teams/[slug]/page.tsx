@@ -341,8 +341,10 @@ function applyRosterSort(
 
 function RosterTable({
   rows,
+  teamSlug,
 }: {
   rows: readonly RosterEntry[];
+  teamSlug: string;
 }): JSX.Element {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortKey, setSortKey] = useState<SortKey>("position");
@@ -473,7 +475,13 @@ function RosterTable({
               className="border-t border-slate-800 hover:bg-slate-900"
             >
               <td className="px-2 py-2 font-medium text-slate-100">
-                {r.name}
+                <Link
+                  data-testid={`player-link-${r.id}`}
+                  href={`/pro-league/teams/${teamSlug}/players/${r.id}`}
+                  className="hover:text-emerald-300 hover:underline"
+                >
+                  {r.name}
+                </Link>
               </td>
               <td className="px-2 py-2 text-slate-300">{r.position}</td>
               <td
@@ -784,7 +792,7 @@ export default function ProLeagueTeamPage({
               <h2 className="mb-2 text-lg font-semibold text-slate-100">
                 Roster
               </h2>
-              <RosterTable rows={data.roster} />
+              <RosterTable rows={data.roster} teamSlug={params.slug} />
             </section>
 
             <section className="mb-6">
