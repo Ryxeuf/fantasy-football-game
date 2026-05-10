@@ -37,6 +37,12 @@ export interface ProLeagueStandingsRow {
   readonly casualtiesFor: number;
   readonly casualtiesAgainst: number;
   readonly casualtiesDiff: number;
+  /**
+   * Lot I — Team Value courante en gold pieces. Somme des `tvCached`
+   * des joueurs actifs (status='active') du roster. Permet aux coachs
+   * de comparer la richesse roster au classement points.
+   */
+  readonly teamValue: number;
   /** Tableau des 5 derniers résultats (W/D/L), ordre du plus ancien
    *  au plus récent. Vide si aucun match joué. */
   readonly form: readonly ("W" | "D" | "L")[];
@@ -137,6 +143,7 @@ export async function getProLeagueCurrentStandings(
       form: true,
       team: {
         select: {
+          id: true,
           slug: true,
           name: true,
           city: true,
@@ -147,6 +154,29 @@ export async function getProLeagueCurrentStandings(
       },
     },
   });
+
+  // Lot I — TV par équipe : somme(tvCached) des joueurs status='active'.
+  // groupBy sert à éviter N+1 requêtes (1 par équipe). Bornée à 16
+  // équipes par ligue donc le tableau reste petit.
+  const teamIds = rowsRaw
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((s: any) => s.team.id as string)
+    .filter((id: string): id is string => typeof id === "string");
+  const tvAggregates = await prisma.proTeamRoster.groupBy({
+    by: ["teamId"],
+    where: {
+      teamId: { in: teamIds },
+      status: "active",
+    },
+    _sum: { tvCached: true },
+  });
+  const tvByTeamId = new Map<string, number>();
+  for (const a of tvAggregates as Array<{
+    teamId: string;
+    _sum: { tvCached: number | null };
+  }>) {
+    tvByTeamId.set(a.teamId, a._sum.tvCached ?? 0);
+  }
 
   return {
     leagueSlug: league.slug as string,
@@ -180,6 +210,7 @@ export async function getProLeagueCurrentStandings(
         casualtiesFor: casFor,
         casualtiesAgainst: casAgainst,
         casualtiesDiff: casFor - casAgainst,
+        teamValue: tvByTeamId.get(s.team.id as string) ?? 0,
         form: parseForm(s.form),
       };
     }),
