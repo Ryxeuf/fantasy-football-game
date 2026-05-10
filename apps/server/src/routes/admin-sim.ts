@@ -15,6 +15,11 @@ import { runEngineComparison } from "../services/engine-comparison";
 import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
 import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
 import {
+  AdminToolsError,
+  runReplayDiff,
+  runVersionComparison,
+} from "../services/pro-league-admin-tools";
+import {
   createTestMatch,
   listTestMatches,
 } from "../services/pro-league-sandbox";
@@ -274,6 +279,77 @@ export async function handleRunComparison(
   }
 }
 
+/**
+ * Schema pour `POST /admin/sim/compare-versions` — Lot 4.F.
+ *
+ * Recoit 2 baselines JSON (Bench snapshot files) + thresholds optionnels.
+ * Le service service valide les schemas Zod et delegue a `compareBaselines`.
+ */
+export const compareVersionsSchema = z.object({
+  baseRaw: z.unknown(),
+  headRaw: z.unknown(),
+  warnThreshold: z.number().positive().lt(1).optional(),
+  criticalThreshold: z.number().positive().lt(1).optional(),
+});
+
+export type CompareVersionsBody = z.infer<typeof compareVersionsSchema>;
+
+/** Handler `POST /admin/sim/compare-versions` — Lot 4.F. */
+export async function handleCompareVersions(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const body = req.body as CompareVersionsBody;
+  try {
+    const result = runVersionComparison(body);
+    res.status(200).json(result);
+  } catch (err: unknown) {
+    if (err instanceof AdminToolsError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    res.status(500).json({ error: msg });
+  }
+}
+
+/**
+ * Schema pour `POST /admin/sim/diff-replays` — Lot 4.F.
+ *
+ * Recoit 2 matchIds (cuids) ; le service charge les Replay.payload
+ * de la DB, les decompresse et runne `diffReplayEvents`.
+ */
+export const diffReplaysSchema = z.object({
+  matchIdA: z.string().min(1),
+  matchIdB: z.string().min(1),
+  maxDivergences: z.number().int().min(1).max(1000).optional(),
+});
+
+export type DiffReplaysBody = z.infer<typeof diffReplaysSchema>;
+
+/** Handler `POST /admin/sim/diff-replays` — Lot 4.F. */
+export async function handleDiffReplays(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const body = req.body as DiffReplaysBody;
+  try {
+    const result = await runReplayDiff(body);
+    res.status(200).json(result);
+  } catch (err: unknown) {
+    if (err instanceof AdminToolsError) {
+      const status =
+        err.code === "MATCH_NOT_FOUND" || err.code === "REPLAY_NOT_FOUND"
+          ? 404
+          : 400;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    res.status(500).json({ error: msg });
+  }
+}
+
 const router = Router();
 
 router.use(authUser, adminOnly);
@@ -292,6 +368,16 @@ router.post(
   "/comparison",
   validate(comparisonSchema),
   handleRunComparison,
+);
+router.post(
+  "/compare-versions",
+  validate(compareVersionsSchema),
+  handleCompareVersions,
+);
+router.post(
+  "/diff-replays",
+  validate(diffReplaysSchema),
+  handleDiffReplays,
 );
 
 export default router;
