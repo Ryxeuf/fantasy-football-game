@@ -104,6 +104,16 @@ export function computeStatBonusCost(bonuses: StatBonuses): number {
   );
 }
 
+/**
+ * Lot 4.D.3 — malus par niggling injury (BB rules : -10k TV par
+ * niggling pour le matchmaking). Le joueur reste actif mais "fragile"
+ * et compte moins dans le TV total. Le casualty applier (Lot 3.C.1)
+ * incremente `ProTeamRoster.niggling` lors d'une injury "niggling"
+ * post-match ; `recomputePlayerTv` doit lire ce compteur pour
+ * reconciler la TV.
+ */
+export const NIGGLING_MALUS = 10_000;
+
 export type RecomputeTvErrorCode = "ROSTER_NOT_FOUND";
 
 export class RecomputeTvError extends Error {
@@ -118,22 +128,35 @@ export class RecomputeTvError extends Error {
 
 /**
  * Pure : calcule la TV individuelle a partir de la position, du nombre
- * de skills, et des stat bonuses (Lot 4.D.1).
+ * de skills, du nombre de niggling injuries, et des stat bonuses.
  *
- * Formule : `base + skills * SKILL_COST + sum(statBonuses * STAT_COSTS)`.
+ * Formule : `base + skills * SKILL_COST + sum(statBonuses * STAT_COSTS)
+ *           - niggling * NIGGLING_MALUS`.
  *
  * Tous les arguments numeriques negatifs sont traites comme 0
- * (defense-in-depth).
+ * (defense-in-depth). Le total est clampe a 0 (un joueur ne peut
+ * jamais avoir une TV negative).
+ *
+ * Lot 4.D.1 — stat bonuses ajoutes.
+ * Lot 4.D.3 — niggling malus ajoute.
  */
 export function computePlayerTv(
   position: string,
   skillCount: number,
+  niggling: number = 0,
   statBonuses: StatBonuses = {},
 ): number {
   const base = BASE_POSITION_COST[position] ?? DEFAULT_POSITION_COST;
-  const safeCount =
+  const safeSkills =
     Number.isFinite(skillCount) && skillCount > 0 ? skillCount : 0;
-  return base + safeCount * SKILL_COST + computeStatBonusCost(statBonuses);
+  const safeNiggling =
+    Number.isFinite(niggling) && niggling > 0 ? niggling : 0;
+  const tv =
+    base +
+    safeSkills * SKILL_COST +
+    computeStatBonusCost(statBonuses) -
+    safeNiggling * NIGGLING_MALUS;
+  return tv > 0 ? tv : 0;
 }
 
 /**
@@ -187,6 +210,8 @@ export async function recomputePlayerTv(
       paBonus: true,
       avBonus: true,
       stBonus: true,
+      // Lot 4.D.3 — niggling lu pour appliquer le malus -10k/niggling.
+      niggling: true,
     },
   });
   if (!roster) {
@@ -197,13 +222,18 @@ export async function recomputePlayerTv(
   }
 
   const skills = parseSkillsJson(roster.skills);
-  const newTv = computePlayerTv(roster.position as string, skills.length, {
-    ma: (roster.maBonus as number) ?? 0,
-    ag: (roster.agBonus as number) ?? 0,
-    pa: (roster.paBonus as number) ?? 0,
-    av: (roster.avBonus as number) ?? 0,
-    st: (roster.stBonus as number) ?? 0,
-  });
+  const newTv = computePlayerTv(
+    roster.position as string,
+    skills.length,
+    (roster.niggling as number) ?? 0,
+    {
+      ma: (roster.maBonus as number) ?? 0,
+      ag: (roster.agBonus as number) ?? 0,
+      pa: (roster.paBonus as number) ?? 0,
+      av: (roster.avBonus as number) ?? 0,
+      st: (roster.stBonus as number) ?? 0,
+    },
+  );
   const oldTv = (roster.tvCached as number) ?? 0;
 
   if (newTv === oldTv) {

@@ -257,6 +257,9 @@ export async function applyLevelUps(
       paBonus: true,
       avBonus: true,
       stBonus: true,
+      // Lot 4.D.3 — niggling lu pour appliquer le malus -10k/niggling
+      // dans le tvCached recompute.
+      niggling: true,
     },
   });
   if (!roster) {
@@ -349,8 +352,10 @@ export async function applyLevelUps(
   }
 
   const newSkills = [...skills, ...newSkillsAcc];
-  // Lot 3.C.5 + 4.D.1 — recompute TV inline avec stat bonuses
-  // accumules dans la session de level-up + ceux deja persistes.
+  // Lot 3.C.5 + 4.D.1 + 4.D.3 — recompute TV inline avec stat bonuses
+  // accumules dans la session de level-up + ceux deja persistes +
+  // malus niggling courant (le casualty applier peut avoir incremente
+  // niggling avant le tick level-up).
   const totalStatBonuses: StatBonuses = {
     ma: ((roster.maBonus as number) ?? 0) + accruedStats.ma,
     ag: ((roster.agBonus as number) ?? 0) + accruedStats.ag,
@@ -361,6 +366,7 @@ export async function applyLevelUps(
   const newTvCached = computePlayerTv(
     (roster.position as string) ?? "",
     newSkills.length,
+    (roster.niggling as number) ?? 0,
     totalStatBonuses,
   );
   await prisma.proTeamRoster.update({
