@@ -43,6 +43,8 @@ interface Progression {
   level: number;
   spp: number;
   nextLevelSpp: number | null;
+  /** Lot K — applier en retard, advancement en attente. */
+  readyToLevelUp?: boolean;
   tv: number;
 }
 
@@ -132,6 +134,7 @@ function SppProgressBar({
   spp,
   nextLevelSpp,
   level,
+  readyToLevelUp,
 }: Progression): JSX.Element {
   if (nextLevelSpp === null) {
     return (
@@ -154,6 +157,15 @@ function SppProgressBar({
         <span className="font-mono">
           {spp} / {nextLevelSpp} SPP ({Math.round(pct)}%)
         </span>
+        {readyToLevelUp === true && (
+          <span
+            data-testid="player-ready-badge"
+            className="rounded bg-emerald-700 px-1.5 py-0.5 text-[10px] font-bold text-emerald-50"
+            title="Advancement en attente — l'applier sweepLevelUps tourne toutes les 30 min"
+          >
+            ⬆ ready
+          </span>
+        )}
       </div>
       <div className="h-2 w-full rounded bg-slate-800">
         <div

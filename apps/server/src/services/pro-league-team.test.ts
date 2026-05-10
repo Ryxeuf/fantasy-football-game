@@ -285,6 +285,42 @@ describe("getProTeamDetail roster — Lot E (progression / TV / career)", () => 
     const out = await getProTeamDetail("buf-snow-ogres");
     // 50 SPP ⇒ level 4 (passé 16, 31, 51 ? non, 50 < 51 → level 4 = passé 6, 16, 31)
     expect(out.roster[0]!.progression.level).toBe(4);
+    // Lot K — DB level=1, computed level=4 → applier en retard ⇒ ready=true
+    expect(out.roster[0]!.progression.readyToLevelUp).toBe(true);
+  });
+
+  it("Lot K — readyToLevelUp=false quand le level DB est synchro avec spp", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p1",
+        name: "Synchro",
+        position: "Lineman",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: [],
+        status: "active",
+        form: 50,
+        niggling: 0,
+        spp: 25,
+        level: 3, // levelForSpp(25) = 3 → applier sync, pas de ready
+        tvCached: 60000,
+        tdCount: 0,
+        casCount: 0,
+        compCount: 0,
+        mvpCount: 0,
+        maBonus: 0,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.roster[0]!.progression.readyToLevelUp).toBe(false);
   });
 
   it("expose statBonuses (Lot 4.D.1) et career counters (Lot 3.C.x)", async () => {

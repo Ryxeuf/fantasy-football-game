@@ -282,8 +282,14 @@ describe("ProLeagueTeamPage — sprint 1.C.2", () => {
             status: "active",
             form: 70,
             niggling: 0,
-            // ready : 18 SPP > 16 (= nextLevelSpp pour level 2)
-            progression: { level: 2, spp: 18, nextLevelSpp: 16, tv: 110000 },
+            // Lot K — ready : applier en retard (DB level 1, computed 2)
+            progression: {
+              level: 2,
+              spp: 18,
+              nextLevelSpp: 31,
+              readyToLevelUp: true,
+              tv: 110000,
+            },
             statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
             career: { tdCount: 3, casCount: 0, compCount: 0, mvpCount: 1 },
           },
