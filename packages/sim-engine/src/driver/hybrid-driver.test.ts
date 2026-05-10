@@ -498,3 +498,109 @@ describe('runHybridDriver — yards as narrated MOVE events (#4)', () => {
   });
 });
 
+describe('runHybridDriver — TD scorerId attribution (Lot 4.D.4)', () => {
+  function rosterFor(prefix: string) {
+    return [
+      {
+        id: `${prefix}-cat`,
+        name: `${prefix} Catcher`,
+        number: 1,
+        position: 'Catcher',
+        ma: 8,
+        st: 2,
+        ag: 4,
+        pa: 3,
+        av: 8,
+      },
+      {
+        id: `${prefix}-blz`,
+        name: `${prefix} Blitzer`,
+        number: 2,
+        position: 'Blitzer',
+        ma: 7,
+        st: 4,
+        ag: 3,
+        pa: 4,
+        av: 9,
+      },
+      {
+        id: `${prefix}-lin`,
+        name: `${prefix} Lineman`,
+        number: 3,
+        position: 'Lineman',
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+      },
+    ];
+  }
+
+  it('attribue scorerId aux TD events quand un roster est fourni', () => {
+    const out = runHybridDriver(
+      baseInput({
+        seed: 42,
+        home: {
+          id: 'home',
+          name: 'Home',
+          side: 'home',
+          roster: rosterFor('h'),
+        },
+        away: {
+          id: 'away',
+          name: 'Away',
+          side: 'away',
+          roster: rosterFor('a'),
+        },
+      }),
+    );
+    const tds = out.events.filter((e) => e.type === 'TD');
+    if (tds.length > 0) {
+      // Tous les TD doivent avoir scorerId, et l'id doit appartenir
+      // au roster de la team scoring.
+      for (const td of tds) {
+        const meta = (td.meta ?? {}) as Record<string, unknown>;
+        expect(typeof meta.scorerId).toBe('string');
+        const team = meta.team as 'home' | 'away';
+        const expected = (team === 'home' ? 'h' : 'a') + '-';
+        expect((meta.scorerId as string).startsWith(expected)).toBe(true);
+      }
+    }
+  });
+
+  it('omet scorerId quand aucun roster fourni (mode legacy archetype)', () => {
+    const out = runHybridDriver(baseInput({ seed: 42 }));
+    const tds = out.events.filter((e) => e.type === 'TD');
+    for (const td of tds) {
+      const meta = (td.meta ?? {}) as Record<string, unknown>;
+      expect(meta.scorerId).toBeUndefined();
+    }
+  });
+
+  it('deterministe : meme seed + roster -> meme scorerId par TD', () => {
+    const seed = 7;
+    const home = {
+      id: 'h',
+      name: 'H',
+      side: 'home' as const,
+      roster: rosterFor('h'),
+    };
+    const away = {
+      id: 'a',
+      name: 'A',
+      side: 'away' as const,
+      roster: rosterFor('a'),
+    };
+    const a = runHybridDriver(baseInput({ seed, home, away }));
+    const b = runHybridDriver(baseInput({ seed, home, away }));
+    const scorersA = a.events
+      .filter((e) => e.type === 'TD')
+      .map((e) => (e.meta as { scorerId?: string })?.scorerId);
+    const scorersB = b.events
+      .filter((e) => e.type === 'TD')
+      .map((e) => (e.meta as { scorerId?: string })?.scorerId);
+    expect(scorersB).toEqual(scorersA);
+  });
+});
+
