@@ -24,6 +24,7 @@ import {
   listTestMatches,
 } from "../services/pro-league-sandbox";
 import { computeSimHealthSnapshot } from "../services/pro-league-sim-health";
+import { runBroadcasterLoadTest } from "../services/pro-league-broadcaster-loadtest";
 import { appMetrics } from "../utils/metrics";
 
 /**
@@ -378,6 +379,43 @@ export async function handleDiffReplays(
   }
 }
 
+/**
+ * Schema pour `POST /admin/sim/loadtest` — Lot J (wrappe le CLI 4.C.1).
+ *
+ * Les caps sont volontairement plus stricts que le CLI : la route
+ * tourne dans le process server prod, donc un load test mal
+ * dimensionné saturerait l'event loop. Le CLI offline accepte des
+ * scaling tests plus agressifs.
+ *   - matches ≤ 50 (vs 1000 CLI)
+ *   - subscribers ≤ 1000 (vs 5000 CLI)
+ *   - events ≤ 200 (vs 1000 CLI)
+ *   - durée capée par eventSpacingMs × events × matches (sanity)
+ */
+export const loadtestSchema = z.object({
+  matches: z.number().int().min(1).max(50),
+  subscribers: z.number().int().min(1).max(1000),
+  events: z.number().int().min(1).max(200),
+  eventSpacingMs: z.number().int().min(1).max(1000).optional(),
+  tickIntervalMs: z.number().int().min(1).max(1000).optional(),
+});
+
+export type LoadtestBody = z.infer<typeof loadtestSchema>;
+
+/** Handler `POST /admin/sim/loadtest` — Lot J. */
+export async function handleRunLoadtest(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const body = req.body as LoadtestBody;
+  try {
+    const result = await runBroadcasterLoadTest(body);
+    res.status(200).json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    res.status(500).json({ error: msg });
+  }
+}
+
 const router = Router();
 
 router.use(authUser, adminOnly);
@@ -407,6 +445,11 @@ router.post(
   "/diff-replays",
   validate(diffReplaysSchema),
   handleDiffReplays,
+);
+router.post(
+  "/loadtest",
+  validate(loadtestSchema),
+  handleRunLoadtest,
 );
 
 export default router;

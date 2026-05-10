@@ -343,6 +343,9 @@ export default function AdminSimHealthPage() {
         >
           → Broadcaster live stats
         </Link>
+        <Link href={"/admin/sim/loadtest" as never} className="underline">
+          → Broadcaster load test
+        </Link>
         <Link href={"/admin/sim/replays" as never} className="underline">
           → Replays
         </Link>

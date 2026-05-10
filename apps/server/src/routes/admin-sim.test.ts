@@ -35,6 +35,9 @@ vi.mock("../services/pro-league-admin-tools", async () => {
 vi.mock("../services/pro-league-sim-health", () => ({
   computeSimHealthSnapshot: vi.fn(),
 }));
+vi.mock("../services/pro-league-broadcaster-loadtest", () => ({
+  runBroadcasterLoadTest: vi.fn(),
+}));
 
 import {
   comparisonSchema,
@@ -48,6 +51,8 @@ import {
   handleGetHealthSnapshot,
   handleListTeams,
   handleListTestMatches,
+  handleRunLoadtest,
+  loadtestSchema,
   handleRunComparison,
   handleRunSim,
   runSimSchema,
@@ -67,6 +72,7 @@ import {
   runReplayDiff,
   runVersionComparison,
 } from "../services/pro-league-admin-tools";
+import { runBroadcasterLoadTest } from "../services/pro-league-broadcaster-loadtest";
 import { appMetrics } from "../utils/metrics";
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
@@ -874,6 +880,131 @@ describe("handleDiffReplays — Lot 4.F", () => {
     const res = buildRes();
     await handleDiffReplays(
       { body: { matchIdA: "a", matchIdB: "b" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe("loadtestSchema — Lot J input validation", () => {
+  it("accepte un payload minimal", () => {
+    const out = loadtestSchema.parse({
+      matches: 2,
+      subscribers: 50,
+      events: 10,
+    });
+    expect(out.matches).toBe(2);
+    expect(out.subscribers).toBe(50);
+    expect(out.events).toBe(10);
+  });
+
+  it("rejette matches > 50 (cap server-side plus strict que CLI)", () => {
+    expect(() =>
+      loadtestSchema.parse({ matches: 51, subscribers: 50, events: 10 }),
+    ).toThrow();
+  });
+
+  it("rejette subscribers > 1000", () => {
+    expect(() =>
+      loadtestSchema.parse({ matches: 1, subscribers: 1001, events: 10 }),
+    ).toThrow();
+  });
+
+  it("rejette events > 200", () => {
+    expect(() =>
+      loadtestSchema.parse({ matches: 1, subscribers: 50, events: 201 }),
+    ).toThrow();
+  });
+
+  it("rejette les valeurs zero (min 1)", () => {
+    expect(() =>
+      loadtestSchema.parse({ matches: 0, subscribers: 50, events: 10 }),
+    ).toThrow();
+    expect(() =>
+      loadtestSchema.parse({ matches: 1, subscribers: 0, events: 10 }),
+    ).toThrow();
+  });
+
+  it("accepte eventSpacingMs et tickIntervalMs optionnels", () => {
+    const out = loadtestSchema.parse({
+      matches: 1,
+      subscribers: 50,
+      events: 10,
+      eventSpacingMs: 50,
+      tickIntervalMs: 25,
+    });
+    expect(out.eventSpacingMs).toBe(50);
+    expect(out.tickIntervalMs).toBe(25);
+  });
+});
+
+describe("handleRunLoadtest — Lot J", () => {
+  it("retourne 200 + LoadTestResult quand le service réussit", async () => {
+    (runBroadcasterLoadTest as ReturnType<typeof vi.fn>).mockResolvedValue({
+      config: { matches: 2, subscribers: 50, events: 10 },
+      totalEventsDispatched: 20,
+      totalListenerInvocations: 1000,
+      dispatchLagMs: { p50: 5, p95: 20, p99: 50, max: 60, mean: 8 },
+      cpuMs: { user: 12, system: 2 },
+      memoryMb: { rss: 90, heapUsed: 8 },
+      durationMs: 1100,
+    });
+    const res = buildRes();
+    await handleRunLoadtest(
+      {
+        body: { matches: 2, subscribers: 50, events: 10 },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(200);
+    expect(
+      (res.body as { totalListenerInvocations: number })
+        .totalListenerInvocations,
+    ).toBe(1000);
+    expect(runBroadcasterLoadTest).toHaveBeenCalledWith({
+      matches: 2,
+      subscribers: 50,
+      events: 10,
+    });
+  });
+
+  it("propage eventSpacingMs et tickIntervalMs au service", async () => {
+    (runBroadcasterLoadTest as ReturnType<typeof vi.fn>).mockResolvedValue({
+      config: {},
+      totalEventsDispatched: 0,
+      totalListenerInvocations: 0,
+      dispatchLagMs: { p50: 0, p95: 0, p99: 0, max: 0, mean: 0 },
+      cpuMs: { user: 0, system: 0 },
+      memoryMb: { rss: 0, heapUsed: 0 },
+      durationMs: 0,
+    });
+    const res = buildRes();
+    await handleRunLoadtest(
+      {
+        body: {
+          matches: 1,
+          subscribers: 10,
+          events: 5,
+          eventSpacingMs: 25,
+          tickIntervalMs: 25,
+        },
+      } as unknown as Request,
+      res,
+    );
+    expect(runBroadcasterLoadTest).toHaveBeenCalledWith(
+      expect.objectContaining({ eventSpacingMs: 25, tickIntervalMs: 25 }),
+    );
+  });
+
+  it("retourne 500 sur erreur inattendue", async () => {
+    (runBroadcasterLoadTest as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("event loop saturated"),
+    );
+    const res = buildRes();
+    await handleRunLoadtest(
+      {
+        body: { matches: 1, subscribers: 10, events: 5 },
+      } as unknown as Request,
       res,
     );
     expect(res.statusCode).toBe(500);
