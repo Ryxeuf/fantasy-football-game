@@ -91,6 +91,15 @@ interface DetailRecord {
   readonly form: readonly FormChar[];
 }
 
+interface TopEarner {
+  readonly id: string;
+  readonly name: string;
+  readonly position: string;
+  readonly level: number;
+  readonly tv: number;
+  readonly status: string;
+}
+
 interface TeamDetail {
   readonly slug: string;
   readonly city: string;
@@ -105,6 +114,9 @@ interface TeamDetail {
   readonly seasonYear: number | null;
   readonly record: DetailRecord | null;
   readonly roster: readonly RosterEntry[];
+  /** Lot M — top 5 actifs par TV. */
+  readonly topEarners?: readonly TopEarner[];
+  readonly totalRosterTv?: number;
   readonly upcomingMatches: readonly DetailMatch[];
   readonly recentMatches: readonly DetailMatch[];
 }
@@ -195,6 +207,45 @@ function MatchRow({ match }: { match: DetailMatch }): JSX.Element {
         <span className="text-xs text-slate-500">{formattedDate}</span>
       </div>
     </Link>
+  );
+}
+
+/**
+ * Lot M — carte "Top earner" (top 5 par TV). Cliquable vers la fiche
+ * joueur. Affiche rank + nom + position + level + TV.
+ */
+function TopEarnerCard({
+  rank,
+  player,
+  teamSlug,
+}: {
+  rank: number;
+  player: TopEarner;
+  teamSlug: string;
+}): JSX.Element {
+  return (
+    <li
+      data-testid={`top-earner-${rank}`}
+      className="rounded border border-slate-800 bg-slate-900 hover:bg-slate-800"
+    >
+      <Link
+        href={`/pro-league/teams/${teamSlug}/players/${player.id}`}
+        className="flex items-center gap-3 px-3 py-2 text-sm"
+      >
+        <span className="w-6 font-mono text-xs text-slate-500">
+          #{rank}
+        </span>
+        <div className="flex-1">
+          <div className="font-medium text-slate-100">{player.name}</div>
+          <div className="text-xs text-slate-500">
+            {player.position} · Lv {player.level}
+          </div>
+        </div>
+        <span className="font-mono text-base text-amber-300">
+          {formatTv(player.tv)}
+        </span>
+      </Link>
+    </li>
   );
 }
 
@@ -787,6 +838,36 @@ export default function ProLeagueTeamPage({
                 </div>
               </section>
             ) : null}
+
+            {data.topEarners && data.topEarners.length > 0 && (
+              <section className="mb-6">
+                <h2 className="mb-2 text-lg font-semibold text-slate-100">
+                  Top earners{" "}
+                  {typeof data.totalRosterTv === "number" && (
+                    <span className="ml-2 text-sm font-normal text-slate-500">
+                      (roster total :{" "}
+                      <span className="font-mono text-slate-300">
+                        {formatTv(data.totalRosterTv)}
+                      </span>
+                      )
+                    </span>
+                  )}
+                </h2>
+                <ol
+                  data-testid="top-earners"
+                  className="grid gap-2 sm:grid-cols-2"
+                >
+                  {data.topEarners.map((p, idx) => (
+                    <TopEarnerCard
+                      key={p.id}
+                      rank={idx + 1}
+                      player={p}
+                      teamSlug={params.slug}
+                    />
+                  ))}
+                </ol>
+              </section>
+            )}
 
             <section className="mb-6">
               <h2 className="mb-2 text-lg font-semibold text-slate-100">

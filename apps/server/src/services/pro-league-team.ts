@@ -99,6 +99,20 @@ export interface ProTeamDetailRecord {
   readonly form: readonly ("W" | "D" | "L")[];
 }
 
+/**
+ * Lot M — entrée résumée pour le widget "Top earners" sur la page
+ * équipe. Sous-set de `ProTeamRosterEntry` cible le rendu compact
+ * (image carte + chiffre TV + level).
+ */
+export interface ProTeamTopEarner {
+  readonly id: string;
+  readonly name: string;
+  readonly position: string;
+  readonly level: number;
+  readonly tv: number;
+  readonly status: string;
+}
+
 export interface ProTeamDetail {
   readonly slug: string;
   readonly city: string;
@@ -113,6 +127,13 @@ export interface ProTeamDetail {
   readonly seasonYear: number | null;
   readonly record: ProTeamDetailRecord | null;
   readonly roster: readonly ProTeamRosterEntry[];
+  /**
+   * Lot M — Top 5 joueurs actifs par TV (desc), pour mettre en avant
+   * les "stars" du roster sur la page équipe sans scroller la table
+   * complète.
+   */
+  readonly topEarners: readonly ProTeamTopEarner[];
+  readonly totalRosterTv: number;
   readonly upcomingMatches: readonly ProTeamDetailMatch[];
   readonly recentMatches: readonly ProTeamDetailMatch[];
 }
@@ -352,6 +373,24 @@ export async function getProTeamDetail(
 
   const meta = (team.meta as { motto?: string } | null | undefined) ?? null;
 
+  // Lot M — top 5 joueurs actifs par TV desc, sans appel DB additionnel.
+  const activeRoster = roster.filter((p) => p.status === "active");
+  const topEarners: ProTeamTopEarner[] = [...activeRoster]
+    .sort((a, b) => b.progression.tv - a.progression.tv)
+    .slice(0, 5)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      position: p.position,
+      level: p.progression.level,
+      tv: p.progression.tv,
+      status: p.status,
+    }));
+  const totalRosterTv = activeRoster.reduce(
+    (acc, p) => acc + p.progression.tv,
+    0,
+  );
+
   return {
     slug: team.slug as string,
     city: team.city as string,
@@ -366,6 +405,8 @@ export async function getProTeamDetail(
     seasonYear: season ? (season.year as number) : null,
     record,
     roster,
+    topEarners,
+    totalRosterTv,
     upcomingMatches,
     recentMatches,
   };
