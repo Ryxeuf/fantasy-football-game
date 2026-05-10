@@ -48,6 +48,7 @@ import { getFumbblRaceStats } from "@bb/sim-engine";
 import { prisma } from "../prisma";
 import { appMetrics } from "../utils/metrics";
 import { serverLog } from "../utils/server-log";
+import { detectRaceBoundAlerts } from "./pro-league-race-bounds";
 
 /** Intervalle par défaut entre deux passages du watcher (1h). */
 const DEFAULT_INTERVAL_MS = 60 * 60 * 1000;
@@ -374,11 +375,23 @@ export async function runDriftTick(
   try {
     const samples = await computeEngineDrift(options);
     pushDriftToMetrics(samples);
-    const alerts = detectDriftAlerts(samples);
-    const counts = countAlertsBySeverity(alerts);
-    appMetrics.setEngineDriftAlertsCount("warn", counts.warn);
-    appMetrics.setEngineDriftAlertsCount("critical", counts.critical);
-    for (const alert of alerts) {
+    const driftAlerts = detectDriftAlerts(samples);
+    // Lot 4.A.3 — alertes critical additionelles quand l'observed
+    // sort des bornes BB-realistes (Halfling > 45% winrate, Wood
+    // Elf < 45% winrate, etc.). Les bound alerts sont TOUJOURS
+    // critical (seuils choisis large pour ne signaler que les
+    // anomalies vraiment suspectes).
+    const boundAlerts = detectRaceBoundAlerts(samples);
+    const driftCounts = countAlertsBySeverity(driftAlerts);
+    appMetrics.setEngineDriftAlertsCount(
+      "warn",
+      driftCounts.warn,
+    );
+    appMetrics.setEngineDriftAlertsCount(
+      "critical",
+      driftCounts.critical + boundAlerts.length,
+    );
+    for (const alert of driftAlerts) {
       // Log structure pino-friendly : Loki indexera les labels
       // (severity, metric, race, seasonId, drift) pour les queries
       // type "alertes critical sur saison s_2026 par race".
@@ -391,6 +404,23 @@ export async function runDriftTick(
         drift: alert.drift,
         observed: alert.observed,
         reference: alert.reference,
+        samples: alert.samples,
+      });
+    }
+    for (const alert of boundAlerts) {
+      // Lot 4.A.3 — log type distinct (`race_bound_alert`) pour
+      // permettre des queries Loki separees : un drift de +12% sur
+      // une race "moyenne" est moins inquietant qu'un Halfling
+      // observed=0.55 winrate (BB-rules-violation).
+      serverLog.warn("race_bound_alert", {
+        event: "race_bound_alert",
+        severity: alert.severity,
+        metric: alert.metric,
+        race: alert.race,
+        seasonId: alert.seasonId,
+        direction: alert.direction,
+        observed: alert.observed,
+        bound: alert.bound,
         samples: alert.samples,
       });
     }
