@@ -1,3 +1,13 @@
+## [1.110.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.109.0...v1.110.0) (2026-05-11)
+
+
+### ✨ Features
+
+* **admin:** admin password reset override (Lot P.C.2) ([#759](https://github.com/Ryxeuf/fantasy-football-game/issues/759)) ([52d46f4](https://github.com/Ryxeuf/fantasy-football-game/commit/52d46f4848e417533bf75173d1f013c3246770d7))
+* **admin:** moderation matchs humains + ban users (Lot P.B.4) ([#758](https://github.com/Ryxeuf/fantasy-football-game/issues/758)) ([f53470c](https://github.com/Ryxeuf/fantasy-football-game/commit/f53470cc748410072a1752155f62fa7c91fe1d5c))
+* **admin:** soft-delete users + restore (Lot P.A.2) ([f491024](https://github.com/Ryxeuf/fantasy-football-game/commit/f49102461dcb9d22bb8db2226913a33bf0a803ad))
+* **admin:** wallet UI + endpoints (Lot P.B.1) ([#760](https://github.com/Ryxeuf/fantasy-football-game/issues/760)) ([1bb7ccb](https://github.com/Ryxeuf/fantasy-football-game/commit/1bb7ccbebe60b3c365ab9d06d9980a963e0f8be0))
+
 ## [1.109.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.108.0...v1.109.0) (2026-05-11)
 
 
