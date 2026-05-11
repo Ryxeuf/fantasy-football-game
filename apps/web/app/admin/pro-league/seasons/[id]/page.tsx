@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "../../../../auth-client";
+import SeasonMatches from "./_components/SeasonMatches";
 
 interface SeasonDetail {
   season: {
@@ -195,6 +196,8 @@ export default function AdminProSeasonDetailPage() {
           </table>
         )}
       </div>
+
+      <SeasonMatches seasonId={season.id} totalRounds={rounds.length} />
 
       <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
         <h2 className="text-lg font-semibold mb-3">
