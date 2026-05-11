@@ -1,8 +1,43 @@
-FROM node:18-alpine
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# Dockerfile.web — Multi-stage build du frontend Next.js.
+#
+# Stages :
+#   1. deps    : install pnpm + deps du workspace (cache layer principal).
+#   2. builder : prisma generate + next build (sortie .next).
+#   3. runner  : image finale minimale, lance `next start`.
+#
+# Build offload : cette image est buildee dans GitHub Actions, pushee vers
+# GHCR, puis pullee sur la VM prod. `docker-compose.prod.yml` utilise
+# `image:` au lieu de `build:` pour eviter le build sur le serveur prod.
+# =============================================================================
 
-# NEXT_PUBLIC_* vars must be present at build time — Next.js inlines them
-# into the client bundle during `next build`. Override via build args from
-# docker-compose; defaults match the current production host.
+############################
+# Stage 1 - deps
+############################
+FROM node:20-alpine AS deps
+RUN npm install -g pnpm@9.7.0
+WORKDIR /app
+
+# Copy package manifests first (cache invalidation only on dep changes).
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/game-engine/package.json ./packages/game-engine/
+COPY prisma ./prisma/
+
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+############################
+# Stage 2 - builder
+############################
+FROM node:20-alpine AS builder
+RUN npm install -g pnpm@9.7.0
+WORKDIR /app
+
+# NEXT_PUBLIC_* must be present at build time — Next inlines them in the
+# client bundle. Overridden via --build-arg from CI / docker-compose.
 ARG NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
 ARG NEXT_PUBLIC_UMAMI_ENABLED=true
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
@@ -11,37 +46,49 @@ ENV NEXT_PUBLIC_UMAMI_ENABLED=$NEXT_PUBLIC_UMAMI_ENABLED
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install pnpm — version pinnee a celle declaree dans package.json (packageManager).
-# Sans pin, npm installe la derniere version (10.x) qui change le comportement de
-# hoisting et casse `next` dans apps/web/node_modules avec le lockfile v9.
-RUN npm install -g pnpm@9.7.0
-
-WORKDIR /app
-
-# Install deps first for Docker-layer cache.
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/ui/package.json ./packages/ui/
-COPY packages/game-engine/package.json ./packages/game-engine/
-RUN pnpm install --frozen-lockfile
-
-# Copy source and build an optimized production bundle so that ISR, static
-# pre-rendering, minification, and bundle splitting actually kick in.
+# Reuse the installed deps + copy the full source.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/ui/node_modules ./packages/ui/node_modules
+COPY --from=deps /app/packages/game-engine/node_modules ./packages/game-engine/node_modules
 COPY . .
+
 RUN pnpm -w prisma generate
-# Borne le heap V8 a 2 Go pour que les workers de build Next.js declenchent
-# un GC agressif plutot que d'etre tues par le OOM-killer systeme quand les
-# autres services de l'hote occupent deja ~10 Go de RAM resident. Sans ce
-# plafond, le build echoue sporadiquement avec exit code 137 / oom_kill.
+
+# Borne le heap V8 a 2 Go pour eviter les OOM-kills sur les workers Next
+# (cf. commentaire historique sur la VM prod a ~10 Go occupes).
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN pnpm --filter @bb/web run build
 
+############################
+# Stage 3 - runner
+############################
+FROM node:20-alpine AS runner
+RUN npm install -g pnpm@9.7.0
+WORKDIR /app
+
 ENV NODE_ENV=production
 ENV PORT=3100
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Manifests + lockfile (necessaires pour que pnpm retrouve les workspaces).
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/apps/web/package.json ./apps/web/
+COPY --from=builder /app/packages/ui/package.json ./packages/ui/
+COPY --from=builder /app/packages/game-engine/package.json ./packages/game-engine/
+
+# Build artifacts + node_modules (deps de prod uniquement).
+# On garde tous les node_modules pour simplifier — Next.js a besoin de
+# react/react-dom et la chaine de transpilePackages. Image finale tourne
+# ~600 MB au lieu de ~1.5 GB de l'ancien single-stage.
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/web ./apps/web
+COPY --from=builder /app/packages/ui ./packages/ui
+COPY --from=builder /app/packages/game-engine ./packages/game-engine
+
 EXPOSE 3100
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=6 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3100/ || exit 1
 
-# `next start` reads PORT from env, so the compose setting propagates.
 CMD ["pnpm", "--filter", "@bb/web", "exec", "next", "start", "-p", "3100"]

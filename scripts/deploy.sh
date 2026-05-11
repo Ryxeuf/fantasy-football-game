@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy.sh - Deploiement complet de Nuffle Arena avec page de maintenance
+# deploy.sh - Deploiement Nuffle Arena (Phase A : pull-only, sans maintenance).
 #
 # Usage:
-#   ./scripts/deploy.sh              Deploy complet (pull + build + restart)
-#   ./scripts/deploy.sh --no-cache   Deploy sans cache Docker
-#   ./scripts/deploy.sh --skip-pull  Deploy sans git pull (build local)
+#   ./scripts/deploy.sh --image-tag <sha>   Deploy de l'image taggee <sha>
+#   ./scripts/deploy.sh                      Deploy de l'image :latest
+#   ./scripts/deploy.sh --maintenance        Active la maintenance pendant le swap
+#                                            (a reserver aux migrations breaking)
+#   ./scripts/deploy.sh --skip-migrate       Skip la migration Prisma (rare)
+#   ./scripts/deploy.sh --dry-run            Affiche les actions sans les executer
 #
-# Ce script :
-#   1. Active la page de maintenance
-#   2. Pull les derniers changements (git)
-#   3. Rebuild les images Docker
-#   4. Redemarre les services
-#   5. Attend que les health checks passent
-#   6. Desactive la page de maintenance
-#   7. En cas d'echec : rollback automatique
+# Flux nominal (Phase A) :
+#   1. Resolve IMAGE_TAG (CLI > .env.deploy > "latest").
+#   2. Sauvegarde PREVIOUS_IMAGE_TAG depuis .env.deploy pour rollback.
+#   3. docker compose pull (images deja buildees par la CI sur GHCR).
+#   4. scripts/db-migrate.sh (schema + seed, idempotent).
+#   5. docker compose up -d --no-deps web server (swap des containers).
+#   6. Wait healthy via /health endpoints (timeout 120s).
+#   7. Si fail : restore PREVIOUS_IMAGE_TAG et up -d (rollback en ~30s).
+#
+# Downtime attendu : 10-30s (cold-start Next.js apres le swap).
+# Pour passer a ~0s : voir Phase B (Blue/Green Traefik).
 # =============================================================================
 set -euo pipefail
 
@@ -22,304 +28,236 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 COMPOSE_PROD="$PROJECT_DIR/docker-compose.prod.yml"
 MAINTENANCE_SCRIPT="$SCRIPT_DIR/maintenance.sh"
+DB_MIGRATE_SCRIPT="$SCRIPT_DIR/db-migrate.sh"
+
 DEPLOY_LOG="$PROJECT_DIR/deploy.log"
-# Fichier d'etat qui memorise le dernier commit reellement deploye en prod.
-# Permet de lister correctement les commits mis en prod meme si HEAD local
-# a ete avance par un git pull manuel ou par une autre automatisation
-# entre deux deploys.
 LAST_DEPLOYED_FILE="$PROJECT_DIR/.last-deployed-commit"
+# .env.deploy : memoire du tag image actuellement en service. Permet le
+# rollback meme si la CI a pushe plusieurs tags :latest entre temps.
+ENV_DEPLOY_FILE="$PROJECT_DIR/.env.deploy"
+
 HEALTH_TIMEOUT=120
 
-# Charge les variables depuis .env.local si present (gitignore).
-# Permet d'y stocker par exemple DISCORD_WEBHOOK_URL=...
+# Charge les variables locales (ex: DISCORD_WEBHOOK_URL).
 if [ -f "$PROJECT_DIR/.env.local" ]; then
   set -a
   # shellcheck disable=SC1091
   . "$PROJECT_DIR/.env.local"
   set +a
 fi
-
-# Webhook Discord pour notifier les bascules en/hors maintenance.
-# A definir via la variable d'environnement DISCORD_WEBHOOK_URL
-# (soit dans l'environnement, soit dans .env.local a la racine du projet).
-# Si vide, les notifications Discord sont simplement ignorees.
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 
-# Options
-NO_CACHE=""
-SKIP_PULL=false
-
-for arg in "$@"; do
-  case "$arg" in
-    --no-cache)  NO_CACHE="--no-cache" ;;
-    --skip-pull) SKIP_PULL=true ;;
+# --- Args ---
+IMAGE_TAG_ARG=""
+USE_MAINTENANCE=false
+SKIP_MIGRATE=false
+DRY_RUN=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --image-tag)   IMAGE_TAG_ARG="$2"; shift 2 ;;
+    --maintenance) USE_MAINTENANCE=true; shift ;;
+    --skip-migrate)SKIP_MIGRATE=true; shift ;;
+    --dry-run)     DRY_RUN=true; shift ;;
+    *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
 
-# Couleurs
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
-
+# --- Logging ---
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 log_info()    { echo -e "${CYAN}[INFO]${NC}    $1"; }
 log_ok()      { echo -e "${GREEN}[OK]${NC}      $1"; }
 log_warn()    { echo -e "${YELLOW}[WARN]${NC}    $1"; }
 log_error()   { echo -e "${RED}[ERROR]${NC}   $1"; }
 log_section() { echo -e "\n${BOLD}${CYAN}=== $1 ===${NC}"; }
+timestamp()   { date '+%Y-%m-%d %H:%M:%S'; }
+log_deploy()  { echo "[$(timestamp)] $1" >> "$DEPLOY_LOG"; }
 
-timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
-
-# Enregistre dans le log de deploy
-log_deploy() {
-  echo "[$(timestamp)] $1" >> "$DEPLOY_LOG"
+# `run` execute la commande ou la prefixe par "[dry-run]" selon le flag.
+run() {
+  if [ "$DRY_RUN" = true ]; then
+    echo "[dry-run] $*"
+    return 0
+  fi
+  "$@"
 }
 
-# Envoie une notification Discord (non bloquant).
-# Usage: discord_notify "message"
 discord_notify() {
   local message="$1"
-
-  if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
-    return 0
-  fi
-
-  if ! command -v curl >/dev/null 2>&1; then
-    log_warn "curl introuvable : notification Discord ignoree."
-    return 0
-  fi
-
-  # Echappe les caracteres JSON sensibles (\ " et retours a la ligne)
+  if [ -z "${DISCORD_WEBHOOK_URL:-}" ] || [ "$DRY_RUN" = true ]; then return 0; fi
+  command -v curl >/dev/null 2>&1 || return 0
   local escaped="${message//\\/\\\\}"
   escaped="${escaped//\"/\\\"}"
   escaped="${escaped//$'\n'/\\n}"
-
-  local payload="{\"content\":\"${escaped}\"}"
-
-  if ! curl -sS -m 5 -X POST \
-      -H "Content-Type: application/json" \
-      -d "$payload" \
-      "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1; then
-    log_warn "Echec de l'envoi de la notification Discord."
-  fi
+  curl -sS -m 5 -X POST -H "Content-Type: application/json" \
+       -d "{\"content\":\"${escaped}\"}" "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1 || true
 }
+
+# --- Resolution du tag image ---
+PREVIOUS_IMAGE_TAG=""
+if [ -f "$ENV_DEPLOY_FILE" ]; then
+  # shellcheck disable=SC1090
+  PREVIOUS_IMAGE_TAG=$(grep -E '^IMAGE_TAG=' "$ENV_DEPLOY_FILE" | head -1 | cut -d= -f2- || true)
+fi
+PREVIOUS_IMAGE_TAG="${PREVIOUS_IMAGE_TAG:-latest}"
+
+if [ -n "$IMAGE_TAG_ARG" ]; then
+  NEW_IMAGE_TAG="$IMAGE_TAG_ARG"
+else
+  NEW_IMAGE_TAG="latest"
+fi
+export IMAGE_TAG="$NEW_IMAGE_TAG"
 
 # --- Pre-checks ---
 cd "$PROJECT_DIR"
-
-PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
-# Lit le dernier commit reellement deploye en prod (fallback : HEAD courant).
-# Indispensable pour calculer la liste des commits mis en prod lorsque HEAD
-# a deja ete avance avant l'execution du script (pull manuel, etc.).
-LAST_DEPLOYED_COMMIT=""
-if [ -f "$LAST_DEPLOYED_FILE" ]; then
-  LAST_DEPLOYED_COMMIT=$(tr -d ' \t\r\n' < "$LAST_DEPLOYED_FILE" || true)
-fi
-if [ -z "$LAST_DEPLOYED_COMMIT" ] || ! git cat-file -e "${LAST_DEPLOYED_COMMIT}^{commit}" 2>/dev/null; then
-  LAST_DEPLOYED_COMMIT="$PREVIOUS_COMMIT"
-fi
-
-# Commit de rollback fiable : dernier commit reellement deploye en prod.
-# PREVIOUS_COMMIT peut pointer vers un HEAD local jamais passe en prod.
-ROLLBACK_COMMIT="$LAST_DEPLOYED_COMMIT"
-if [ -z "$ROLLBACK_COMMIT" ] || [ "$ROLLBACK_COMMIT" = "unknown" ]; then
-  ROLLBACK_COMMIT="$PREVIOUS_COMMIT"
-fi
-
-echo -e "\n${BOLD}🏈 Deploiement Nuffle Arena${NC}"
-echo -e "   Branche: ${CYAN}$BRANCH${NC}"
-echo -e "   Commit actuel: ${CYAN}${PREVIOUS_COMMIT:0:7}${NC}"
-echo -e "   Dernier deploy: ${CYAN}${LAST_DEPLOYED_COMMIT:0:7}${NC}"
-echo -e "   Cible rollback: ${CYAN}${ROLLBACK_COMMIT:0:7}${NC}"
-echo -e "   Options: cache=${NO_CACHE:-oui} pull=${SKIP_PULL/true/non}"
+echo -e "\n${BOLD}🏈 Deploiement Nuffle Arena (Phase A)${NC}"
+echo -e "   Branche       : ${CYAN}$BRANCH${NC}"
+echo -e "   Commit        : ${CYAN}${COMMIT:0:7}${NC}"
+echo -e "   Image tag new : ${CYAN}$NEW_IMAGE_TAG${NC}"
+echo -e "   Image tag prev: ${CYAN}$PREVIOUS_IMAGE_TAG${NC}"
+echo -e "   Maintenance   : ${CYAN}$USE_MAINTENANCE${NC}  Dry-run: ${CYAN}$DRY_RUN${NC}"
 echo ""
 
-log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - last deployed ${LAST_DEPLOYED_COMMIT:0:7} - rollback target ${ROLLBACK_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
+log_deploy "deploy start - branch $BRANCH - commit ${COMMIT:0:7} - new=$NEW_IMAGE_TAG prev=$PREVIOUS_IMAGE_TAG maintenance=$USE_MAINTENANCE"
 
-# --- Calcul des commits a deployer (pour les notifications Discord) ---
-# Fetch non destructif pour connaitre la cible du deploiement avant de
-# basculer en maintenance. On compare ensuite LAST_DEPLOYED_COMMIT (ce qui
-# tourne reellement en prod) a la cible a deployer (origin/$BRANCH si pull,
-# sinon HEAD). Limite a 20 commits pour respecter la limite Discord
-# (2000 caracteres).
-COMMITS_BULLETS=""
-TARGET_REF=""
-if [ "$SKIP_PULL" = false ] && [ "$BRANCH" != "unknown" ]; then
-  if git fetch origin "$BRANCH" --quiet 2>/dev/null; then
-    TARGET_REF="origin/$BRANCH"
-  fi
-elif [ "$SKIP_PULL" = true ]; then
-  TARGET_REF="HEAD"
-fi
-
-if [ -n "$TARGET_REF" ] && [ "$LAST_DEPLOYED_COMMIT" != "unknown" ]; then
-  COMMITS_BULLETS=$(git log --format="- %s" "$LAST_DEPLOYED_COMMIT..$TARGET_REF" 2>/dev/null | head -n 20 || true)
-  TOTAL_COMMITS=$(git rev-list --count "$LAST_DEPLOYED_COMMIT..$TARGET_REF" 2>/dev/null || echo 0)
-  if [ "$TOTAL_COMMITS" -gt 20 ] 2>/dev/null; then
-    COMMITS_BULLETS="${COMMITS_BULLETS}"$'\n'"- ... et $((TOTAL_COMMITS - 20)) autres commits"
-  fi
-fi
-
-# --- Fonction de rollback ---
+# --- Rollback ---
+ROLLBACK_DONE=false
 rollback() {
-  log_section "ROLLBACK"
-  log_error "Le deploiement a echoue. Rollback en cours..."
-  log_deploy "deploy FAILED - rollback to ${ROLLBACK_COMMIT:0:7}"
+  [ "$ROLLBACK_DONE" = true ] && return 0
+  ROLLBACK_DONE=true
 
-  # Desactiver la maintenance en cas d'erreur pendant le rollback
+  log_section "ROLLBACK"
+  log_error "Deploiement echoue. Restauration de l'image $PREVIOUS_IMAGE_TAG..."
+  log_deploy "deploy FAILED - rollback to image=$PREVIOUS_IMAGE_TAG"
   trap '' ERR
 
-  if [ "$ROLLBACK_COMMIT" != "unknown" ]; then
-    log_info "Retour au commit $ROLLBACK_COMMIT..."
-    git reset --hard "$ROLLBACK_COMMIT"
+  export IMAGE_TAG="$PREVIOUS_IMAGE_TAG"
+  run docker compose -f "$COMPOSE_PROD" up -d --no-deps web server || true
+
+  if [ "$USE_MAINTENANCE" = true ]; then
+    run "$MAINTENANCE_SCRIPT" off 2>/dev/null || true
   fi
 
-  log_info "Rebuild des services (rollback)..."
-  docker compose -f "$COMPOSE_PROD" build $NO_CACHE 2>&1 | tail -5
-  docker compose -f "$COMPOSE_PROD" up -d
-
-  log_info "Attente du demarrage des services..."
-  sleep 15
-
-  # Desactiver la maintenance apres rollback
-  "$MAINTENANCE_SCRIPT" off 2>/dev/null || true
-
-  discord_notify ":warning: **Nuffle Arena** - Deploiement echoue, rollback effectue vers \`${ROLLBACK_COMMIT:0:7}\` sur \`$BRANCH\`. Site de nouveau accessible."
-
-  log_error "Rollback termine. Verifiez les logs : docker compose -f docker-compose.prod.yml logs"
-  log_deploy "rollback completed to ${ROLLBACK_COMMIT:0:7}"
+  discord_notify ":warning: **Nuffle Arena** - Deploy echoue, rollback vers image \`${PREVIOUS_IMAGE_TAG}\`."
+  log_error "Rollback termine. Verifier: docker compose -f docker-compose.prod.yml logs"
+  log_deploy "rollback completed to image=$PREVIOUS_IMAGE_TAG"
   exit 1
 }
-
 trap rollback ERR
 
 # =============================================================================
-# ETAPE 1 : Activer la maintenance
+# 1. Maintenance ON (optionnel, par defaut OFF)
 # =============================================================================
-log_section "1/5 - Activation de la maintenance"
-"$MAINTENANCE_SCRIPT" on
-
-MAINT_MSG=":tools: **Nuffle Arena** - Passage en maintenance pour un deploiement (branche \`$BRANCH\`, commit \`${PREVIOUS_COMMIT:0:7}\`)."
-if [ -n "$COMMITS_BULLETS" ]; then
-  MAINT_MSG="${MAINT_MSG}"$'\n'"**Commits a deployer :**"$'\n'"${COMMITS_BULLETS}"
-fi
-discord_notify "$MAINT_MSG"
-
-# Petit delai pour que Traefik detecte le nouveau container
-sleep 2
-
-# =============================================================================
-# ETAPE 2 : Pull des changements
-# =============================================================================
-log_section "2/5 - Mise a jour du code"
-
-if [ "$SKIP_PULL" = true ]; then
-  log_warn "Pull ignore (--skip-pull)"
+if [ "$USE_MAINTENANCE" = true ]; then
+  log_section "1/5 - Maintenance ON (mode breaking)"
+  run "$MAINTENANCE_SCRIPT" on
+  discord_notify ":tools: **Nuffle Arena** - Passage en maintenance (deploy breaking, branche \`$BRANCH\`)."
+  sleep 2  # laisse Traefik detecter le router maintenance
 else
-  log_info "Fetch et reset sur origin/$BRANCH..."
-  git fetch origin "$BRANCH"
-  git reset --hard "origin/$BRANCH"
-  NEW_COMMIT=$(git rev-parse HEAD)
-  log_ok "Code mis a jour: ${PREVIOUS_COMMIT:0:7} -> ${NEW_COMMIT:0:7}"
+  log_section "1/5 - Maintenance OFF (deploy sans coupure annoncee)"
+  log_info "Pas de page de maintenance. Le swap engendrera ~10-30s de downtime cold-start."
 fi
 
 # =============================================================================
-# ETAPE 3 : Build des images
+# 2. Pull des nouvelles images depuis GHCR
 # =============================================================================
-log_section "3/5 - Build des images Docker"
-log_info "Build en cours... (peut prendre quelques minutes)"
-
-docker compose -f "$COMPOSE_PROD" build $NO_CACHE 2>&1 | while IFS= read -r line; do
-  # Affiche seulement les lignes importantes
-  if echo "$line" | grep -qE '(Step|Successfully|ERROR|CACHED)'; then
-    echo "  $line"
-  fi
-done
-
-log_ok "Build termine."
+log_section "2/5 - Pull images Docker"
+log_info "docker compose pull (IMAGE_TAG=$NEW_IMAGE_TAG)..."
+run docker compose -f "$COMPOSE_PROD" pull web server
+log_ok "Images $NEW_IMAGE_TAG presentes localement."
 
 # =============================================================================
-# ETAPE 4 : Redemarrage des services
+# 3. Migration DB (one-shot container, hors swap)
 # =============================================================================
-log_section "4/5 - Redemarrage des services"
-log_info "Arret et redemarrage des containers..."
-
-docker compose -f "$COMPOSE_PROD" up -d
+if [ "$SKIP_MIGRATE" = true ]; then
+  log_section "3/5 - Migration DB (SKIPPED par flag)"
+else
+  log_section "3/5 - Migration DB (db push + seed)"
+  # IMAGE_TAG est exporte au-dessus, db-migrate.sh lit la nouvelle image.
+  run "$DB_MIGRATE_SCRIPT"
+fi
 
 # =============================================================================
-# ETAPE 5 : Health checks
+# 4. Swap des containers applicatifs
 # =============================================================================
-log_section "5/5 - Verification des services"
-log_info "Attente que les services soient healthy (max ${HEALTH_TIMEOUT}s)..."
+log_section "4/5 - Swap containers (web + server)"
+log_info "docker compose up -d --no-deps --pull never web server..."
+# --no-deps : ne touche pas a la DB.
+# --pull never : on a deja pulle a l'etape 2, evite un second round-trip.
+run docker compose -f "$COMPOSE_PROD" up -d --no-deps --pull never web server
 
-ELAPSED=0
-while [ $ELAPSED -lt $HEALTH_TIMEOUT ]; do
-  WEB_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_web 2>/dev/null || echo "starting")
-  SERVER_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_server 2>/dev/null || echo "starting")
-  DB_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_db 2>/dev/null || echo "starting")
+# =============================================================================
+# 5. Health checks
+# =============================================================================
+log_section "5/5 - Verification health checks"
+log_info "Attente que web + server soient healthy (max ${HEALTH_TIMEOUT}s)..."
 
-  echo -ne "\r  DB: $DB_HEALTH | Server: $SERVER_HEALTH | Web: $WEB_HEALTH (${ELAPSED}s/${HEALTH_TIMEOUT}s)  "
+if [ "$DRY_RUN" = true ]; then
+  log_warn "Dry-run actif, health checks ignores."
+  ELAPSED=0
+else
+  ELAPSED=0
+  while [ $ELAPSED -lt $HEALTH_TIMEOUT ]; do
+    WEB_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_web 2>/dev/null || echo "starting")
+    SERVER_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_server 2>/dev/null || echo "starting")
+    DB_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_db 2>/dev/null || echo "n/a")
+    echo -ne "\r  DB: $DB_HEALTH | Server: $SERVER_HEALTH | Web: $WEB_HEALTH (${ELAPSED}s/${HEALTH_TIMEOUT}s)  "
 
-  if [ "$WEB_HEALTH" = "healthy" ] && [ "$SERVER_HEALTH" = "healthy" ]; then
-    echo ""
-    log_ok "Tous les services sont healthy !"
-    break
-  fi
-
-  # Echec immediat si un container a crashe
-  for container in nufflearena_web nufflearena_server; do
-    RUNNING=$(docker inspect --format='{{.State.Running}}' "$container" 2>/dev/null || echo "false")
-    if [ "$RUNNING" = "false" ]; then
-      echo ""
-      log_error "Le container $container a crashe !"
-      docker compose -f "$COMPOSE_PROD" logs --tail=30 "$container"
-      exit 1  # Declenche le trap -> rollback
+    if [ "$WEB_HEALTH" = "healthy" ] && [ "$SERVER_HEALTH" = "healthy" ]; then
+      echo ""; log_ok "Tous les services sont healthy."
+      break
     fi
+
+    for c in nufflearena_web nufflearena_server; do
+      RUNNING=$(docker inspect --format='{{.State.Running}}' "$c" 2>/dev/null || echo "false")
+      if [ "$RUNNING" = "false" ]; then
+        echo ""
+        log_error "Le container $c a crashe."
+        docker compose -f "$COMPOSE_PROD" logs --tail=30 "$c"
+        exit 1  # declenche rollback via trap
+      fi
+    done
+
+    sleep 5
+    ELAPSED=$((ELAPSED + 5))
   done
 
-  sleep 5
-  ELAPSED=$((ELAPSED + 5))
-done
-
-# Timeout atteint ?
-if [ $ELAPSED -ge $HEALTH_TIMEOUT ]; then
-  echo ""
-  log_error "Les services ne sont pas healthy apres ${HEALTH_TIMEOUT}s."
-  docker compose -f "$COMPOSE_PROD" logs --tail=20
-  exit 1  # Declenche le trap -> rollback
+  if [ $ELAPSED -ge $HEALTH_TIMEOUT ]; then
+    echo ""
+    log_error "Services non healthy apres ${HEALTH_TIMEOUT}s."
+    docker compose -f "$COMPOSE_PROD" logs --tail=30
+    exit 1  # declenche rollback via trap
+  fi
 fi
 
 # =============================================================================
-# SUCCES : Desactiver la maintenance
+# Finalisation : maintenance OFF + memoire deploy
 # =============================================================================
-trap '' ERR  # Desactive le trap rollback
+trap '' ERR
 
-log_section "Finalisation"
-"$MAINTENANCE_SCRIPT" off
-
-FINAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-DURATION=$ELAPSED
-
-# Memorise le commit effectivement deploye pour le prochain deploy (permet
-# de lister correctement les commits mis en prod meme apres un pull manuel).
-if [ "$FINAL_COMMIT" != "unknown" ]; then
-  echo "$FINAL_COMMIT" > "$LAST_DEPLOYED_FILE"
+if [ "$USE_MAINTENANCE" = true ]; then
+  log_section "Finalisation"
+  run "$MAINTENANCE_SCRIPT" off
 fi
 
-SUCCESS_MSG=":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
-if [ -n "$COMMITS_BULLETS" ]; then
-  SUCCESS_MSG="${SUCCESS_MSG}"$'\n'"**Commits deployes :**"$'\n'"${COMMITS_BULLETS}"
+# Memoire : .env.deploy (tag image actif) + .last-deployed-commit (code).
+if [ "$DRY_RUN" = false ]; then
+  printf 'IMAGE_TAG=%s\n' "$NEW_IMAGE_TAG" > "$ENV_DEPLOY_FILE"
+  if [ "$COMMIT" != "unknown" ]; then
+    echo "$COMMIT" > "$LAST_DEPLOYED_FILE"
+  fi
 fi
-discord_notify "$SUCCESS_MSG"
+
+discord_notify ":white_check_mark: **Nuffle Arena** - Deploy reussi (branche \`$BRANCH\`, commit \`${COMMIT:0:7}\`, image \`$NEW_IMAGE_TAG\`, health ${ELAPSED}s)."
 
 echo ""
-echo -e "${BOLD}${GREEN}✅ Deploiement reussi !${NC}"
-echo -e "   Commit: ${CYAN}${FINAL_COMMIT:0:7}${NC}"
-echo -e "   Duree health check: ${CYAN}${DURATION}s${NC}"
+echo -e "${BOLD}${GREEN}Deploiement reussi !${NC}"
+echo -e "   Commit      : ${CYAN}${COMMIT:0:7}${NC}"
+echo -e "   Image       : ${CYAN}$NEW_IMAGE_TAG${NC}"
+echo -e "   Duree health: ${CYAN}${ELAPSED}s${NC}"
 echo ""
 
-log_deploy "deploy all - commit ${FINAL_COMMIT:0:7} - SUCCESS"
+log_deploy "deploy SUCCESS - commit ${COMMIT:0:7} - image $NEW_IMAGE_TAG - health ${ELAPSED}s"
