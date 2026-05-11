@@ -21,6 +21,7 @@ import { ApiClientError, apiRequest } from "../../../lib/api-client";
 import { useWallet } from "../../../lib/use-wallet";
 
 import { WalletBadge } from "../../_components/WalletBadge";
+import DailyBonusCard from "./_components/DailyBonusCard";
 
 type ProTxType = "BET" | "WIN" | "REWARD" | "DAILY" | "BADGE";
 
@@ -95,6 +96,8 @@ export default function ProLeagueWalletPage(): JSX.Element {
   const [data, setData] = useState<WalletSnapshotResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Lot O.C.1 — increment apres claim daily bonus → relance le fetch wallet. */
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +123,7 @@ export default function ProLeagueWalletPage(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [wallet.balance]);
+  }, [wallet.balance, refreshTick]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
@@ -162,6 +165,8 @@ export default function ProLeagueWalletPage(): JSX.Element {
         </p>
       ) : !data ? null : (
         <>
+          <DailyBonusCard onClaimed={() => setRefreshTick((n) => n + 1)} />
+
           <section
             data-testid="wallet-balance"
             className="mb-6 rounded border border-amber-700 bg-amber-950/30 px-4 py-4"
