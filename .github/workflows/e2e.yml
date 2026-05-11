@@ -25,6 +25,8 @@ env:
   # Force tous les feature flags à ON pour la CI (E2E API + UI).
   # Cf. apps/server/src/services/featureFlags.ts
   FEATURE_FLAGS_FORCE_ENABLED: "true"
+  # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # -------------------------------------------------------------------------

@@ -19,6 +19,8 @@ env:
   REGISTRY: ghcr.io
   IMAGE_WEB: ${{ github.repository }}/web
   IMAGE_SERVER: ${{ github.repository }}/server
+  # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # =========================================================================

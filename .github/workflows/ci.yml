@@ -12,6 +12,12 @@ env:
   # Force tous les feature flags à ON pour la CI (build, lint, tests).
   # Cf. apps/server/src/services/featureFlags.ts
   FEATURE_FLAGS_FORCE_ENABLED: "true"
+  # Workaround GitHub Actions deprecation Node 20 (juin 2026 → forced
+  # default Node 24, sept 2026 → Node 20 retire du runner). Opt-in
+  # immediat des actions JS (checkout/setup-node/etc.) sur Node 24
+  # pour valider et eviter le warning "may not work as expected".
+  # Voir https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
   ci:
     runs-on: ubuntu-latest

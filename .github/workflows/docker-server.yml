@@ -11,6 +11,8 @@ permissions:
   packages: write
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}/server
+  # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
   docker:
     runs-on: ubuntu-latest

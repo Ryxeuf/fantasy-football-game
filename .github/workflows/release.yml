@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
   pull-requests: write
+env:
+  # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
   version-or-release:
     runs-on: ubuntu-latest
