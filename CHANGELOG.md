@@ -1,3 +1,26 @@
+## [1.108.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.107.0...v1.108.0) (2026-05-11)
+
+
+### ✨ Features
+
+* **auth:** kill-switch validation admin sur /auth/register (Lot O.B.1) ([#746](https://github.com/Ryxeuf/fantasy-football-game/issues/746)) ([464a1aa](https://github.com/Ryxeuf/fantasy-football-game/commit/464a1aac101e2e0b78433c114dc5e69cc99da8ef))
+* **pro-league:** badge unlock toast + provider global (Lot O.C.3) ([#749](https://github.com/Ryxeuf/fantasy-football-game/issues/749)) ([3d508dc](https://github.com/Ryxeuf/fantasy-football-game/commit/3d508dc60613a63a22364068e5b5203e5aaedc22))
+* **pro-league:** daily bonus claim UI sur /me/wallet (Lot O.C.1) ([ed4201e](https://github.com/Ryxeuf/fantasy-football-game/commit/ed4201ed434f86262b3c9f6e5e885ae385f37512))
+* **pro-league:** OG image dynamique + share buttons matchs (Lot O.D) ([#750](https://github.com/Ryxeuf/fantasy-football-game/issues/750)) ([805bd54](https://github.com/Ryxeuf/fantasy-football-game/commit/805bd54feeec13bb08df563f140ecf4dd98a2e3c))
+* **web:** match report banner sur /me/teams/[id] (Lot O.C.2) ([ae3a2e7](https://github.com/Ryxeuf/fantasy-football-game/commit/ae3a2e731cdbcc82abd2615c3449452c75f4f5eb))
+* **web:** onboarding modal post-signup sur /me/teams (Lot O.B.3) ([#747](https://github.com/Ryxeuf/fantasy-football-game/issues/747)) ([1934873](https://github.com/Ryxeuf/fantasy-football-game/commit/1934873e601d871be7036e1ef6d7a7a9a3005e2c))
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** regeneration / apothecary order BB Season 2/3 (Lot O.A.1) ([#745](https://github.com/Ryxeuf/fantasy-football-game/issues/745)) ([05b4aaf](https://github.com/Ryxeuf/fantasy-football-game/commit/05b4aafb845fc793f00cfa73f354804becdaf5ba))
+
+
+### 📝 Documentation
+
+* **roadmap:** sprints O/P/Q/R post-audit 7 agents (2026-05-10) ([#744](https://github.com/Ryxeuf/fantasy-football-game/issues/744)) ([2dd13f5](https://github.com/Ryxeuf/fantasy-football-game/commit/2dd13f58c17d641965d1e0178e09df4769c0aeca))
+* session UI polish Pro League 2026-05-10 (12 lots livrés) ([#743](https://github.com/Ryxeuf/fantasy-football-game/issues/743)) ([b45047c](https://github.com/Ryxeuf/fantasy-football-game/commit/b45047c1094ed4b5ddccf6c45358eb2ba2280e49)), closes [#728](https://github.com/Ryxeuf/fantasy-football-game/issues/728) [-#742](https://github.com/Ryxeuf/-/issues/742)
+
 ## [1.107.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.106.0...v1.107.0) (2026-05-10)
 
 
