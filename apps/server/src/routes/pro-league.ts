@@ -41,6 +41,7 @@ import {
   getBetLeaderboard,
 } from "../services/pro-bet-leaderboard";
 import {
+  BADGE_CATALOGUE,
   evaluateBadgesForUser,
   getCatalogueWithStatus,
   listUserBadges,
@@ -640,6 +641,26 @@ export async function handleListMyBets(
 }
 
 /**
+ * Sprint O (Lot O.C.3) — Catalogue public des badges (code + name +
+ * description + emoji). Pas d'auth requis : sert au toast d'unlock
+ * pour afficher le nom + emoji du badge debloque, sans dependre de
+ * l'auth state du user.
+ */
+export function handleGetBadgeCatalogue(
+  _req: Request,
+  res: Response,
+): void {
+  res.json({
+    badges: BADGE_CATALOGUE.map((b) => ({
+      code: b.code,
+      name: b.name,
+      description: b.description,
+      emoji: b.emoji,
+    })),
+  });
+}
+
+/**
  * Sprint 1.D.9 — Liste les badges + statut (earned/not) du user.
  */
 export async function handleListMyBadges(
@@ -904,6 +925,7 @@ router.post("/bets", authUser, handlePlaceBet);
 router.get("/me/bets", authUser, handleListMyBets);
 
 // Sprint 1.D.9 — badges/titres.
+router.get("/badges", handleGetBadgeCatalogue);
 router.get("/me/badges", authUser, handleListMyBadges);
 router.post("/me/badges/evaluate", authUser, handleEvaluateMyBadges);
 

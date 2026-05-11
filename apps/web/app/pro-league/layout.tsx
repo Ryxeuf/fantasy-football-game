@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import ProLeagueStructuredData from "./_components/ProLeagueStructuredData";
+import { BadgeToastProvider } from "./_components/BadgeToastProvider";
 
 export const metadata: Metadata = {
   title: "Pro League — Old World League | Nuffle Arena",
@@ -30,9 +31,9 @@ export default function ProLeagueLayout({
   children: React.ReactNode;
 }): JSX.Element {
   return (
-    <>
+    <BadgeToastProvider>
       <ProLeagueStructuredData />
       {children}
-    </>
+    </BadgeToastProvider>
   );
 }
