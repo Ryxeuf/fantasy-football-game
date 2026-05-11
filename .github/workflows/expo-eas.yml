@@ -5,6 +5,9 @@ on:
   #   tags: [ "mobile-v*" ]
   # Désactiver temporairement en utilisant un événement qui ne se produira jamais
   workflow_dispatch:
+env:
+  # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
   eas:
     runs-on: ubuntu-latest
