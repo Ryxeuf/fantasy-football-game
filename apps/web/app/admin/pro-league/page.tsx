@@ -130,9 +130,9 @@ export default function AdminProLeagueHubPage() {
 
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
         <strong>Roadmap admin Pro League</strong> : a venir dans les
-        prochains sprints : gestion fine des rosters (re-generer joueurs,
-        editer skills), re-simulation d&apos;un match avec nouveau seed,
-        gestion des bet markets.
+        prochains sprints : edition individuelle skills/stats joueurs,
+        re-simulation d&apos;un match avec nouveau seed, gestion des bet
+        markets.
       </div>
     </div>
   );

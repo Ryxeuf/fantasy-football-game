@@ -166,6 +166,19 @@ export const adminForceForfeitSchema = z.object({
   }),
 });
 
+/** Replenish d'un roster Pro League : remplit jusqu'a `targetSize`
+ *  (defaut 12) avec des rookies. Action non destructive — n'efface
+ *  rien. */
+export const adminRosterReplenishSchema = z.object({
+  targetSize: z.number().int().min(1).max(30).optional(),
+});
+
+/** Regenerate complet d'un roster (DESTRUCTIF). Wipe puis re-seed
+ *  `count` rookies. */
+export const adminRosterRegenerateSchema = z.object({
+  count: z.number().int().min(1).max(30).default(12),
+});
+
 /** Branding admin d'une ProTeam : couleurs, motto, headline, nflFlavor.
  *  Tous les champs sont optionnels — l'endpoint applique seulement ceux
  *  fournis, ne touche pas aux autres. `null` explicite = effacer le champ. */

@@ -246,12 +246,21 @@ export default function AdminProLeagueTeamEditPage() {
         <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite">
           🎨 {team.city} {team.name}
         </h1>
-        <Link
-          href={"/admin/pro-league/teams" as any}
-          className="text-sm text-blue-700 hover:underline"
-        >
-          ← Liste teams
-        </Link>
+        <div className="flex gap-3 text-sm">
+          <Link
+            href={`/admin/pro-league/teams/${team.id}/roster` as any}
+            className="text-blue-700 hover:underline"
+            data-testid="link-roster"
+          >
+            👥 Roster
+          </Link>
+          <Link
+            href={"/admin/pro-league/teams" as any}
+            className="text-blue-700 hover:underline"
+          >
+            ← Liste teams
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

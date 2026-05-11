@@ -17,6 +17,7 @@ import adminWalletRoutes from "./routes/admin-wallet";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
 import adminProTeamRoutes from "./routes/admin-pro-team";
+import adminProRosterRoutes from "./routes/admin-pro-roster";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -236,6 +237,8 @@ app.use("/admin/utilities", adminUtilitiesRoutes);
 app.use("/admin/pro-league", adminProSeasonRoutes);
 // Branding teams Pro League (couleurs / motto / headline).
 app.use("/admin/pro-league", adminProTeamRoutes);
+// Gestion rosters Pro League (regen, replenish, retire joueur).
+app.use("/admin/pro-league", adminProRosterRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);
