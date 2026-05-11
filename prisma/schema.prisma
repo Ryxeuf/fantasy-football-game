@@ -55,6 +55,11 @@ model User {
   bannedUntil                 DateTime?
   /// Lot P.B.4 — raison du bannissement (visible admin uniquement).
   banReason                   String?
+  /// Lot P.C.2 — admin password reset override. Si true, le user doit
+  /// changer son mot de passe a la prochaine connexion. Mis a true par
+  /// `POST /admin/users/:id/password-reset` ; remis a false des qu'un
+  /// password change reussit (handler /auth/change-password).
+  mustChangePassword          Boolean                 @default(false)
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   createdAt                   DateTime                @default(now())

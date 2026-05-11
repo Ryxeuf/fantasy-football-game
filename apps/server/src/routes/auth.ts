@@ -231,6 +231,10 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       role: primaryRole,
       roles,
       createdAt: user.createdAt,
+      // Lot P.C.2 — admin password reset override. Si true, le frontend
+      // doit rediriger vers /change-password apres login.
+      mustChangePassword:
+        (user as { mustChangePassword?: boolean }).mustChangePassword ?? false,
     };
     const { token, refreshToken } = await issueTokenPair({
       userId: user.id,
@@ -320,6 +324,9 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         valid: true,
         eloRating: true,
         privateProfile: true,
+        // Lot P.C.2 — flag pour declencher la redirection vers
+        // /change-password si un admin a force un reset.
+        mustChangePassword: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -453,12 +460,15 @@ router.put("/me/password", authUser, validate(changePasswordSchema), async (req:
     // Hasher le nouveau mot de passe
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     
-    // Mettre à jour le mot de passe
+    // Mettre à jour le mot de passe + Lot P.C.2 : reset le flag
+    // `mustChangePassword` car le user vient de prouver qu'il maitrise
+    // a nouveau son compte. Re-validation OK pour les comptes qui
+    // ont ete reset par un admin.
     await prisma.user.update({
       where: { id: req.user!.id },
-      data: { passwordHash: newPasswordHash },
+      data: { passwordHash: newPasswordHash, mustChangePassword: false },
     });
-    
+
     res.json({ message: "Mot de passe modifié avec succès" });
   } catch (e: any) {
     serverLog.error(e);

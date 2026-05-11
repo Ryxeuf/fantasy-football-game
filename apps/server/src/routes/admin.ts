@@ -1,9 +1,12 @@
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
 import { normalizeRoles } from "../utils/roles";
 import { validate, validateQuery } from "../middleware/validate";
+import { generateTempPassword } from "../services/temp-password";
+import { getRefreshTokenStore } from "./auth";
 import {
   adminUsersQuerySchema,
   adminMatchesQuerySchema,
@@ -472,6 +475,82 @@ router.post("/users/:id/unban", async (req, res) => {
     }
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors du debannissement" });
+  }
+});
+
+/**
+ * Lot P.C.2 — Admin password reset override.
+ *
+ * Genere un mot de passe temporaire cryptographiquement sur (16 chars,
+ * politique de complexite garantie), update le passwordHash bcrypt,
+ * marque `mustChangePassword=true`, revoque toutes les sessions actives
+ * du user (refresh tokens) et retourne le password en clair UNE FOIS
+ * dans la reponse pour transmission out-of-band (chat support, e-mail
+ * manuel).
+ *
+ * Refuse de reset son propre password via cette voie : un admin doit
+ * passer par /auth/change-password.
+ *
+ * Audit log strict : trace l'identite admin via safeAudit. Le password
+ * temporaire n'est jamais persiste en clair.
+ */
+router.post("/users/:id/password-reset", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if ((req as AuthenticatedRequest).user?.id === id) {
+      return res.status(400).json({
+        error: "Utilisez /auth/change-password pour votre propre compte",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, coachName: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    const tempPassword = generateTempPassword(16);
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    await prisma.user.update({
+      where: { id },
+      data: { passwordHash, mustChangePassword: true },
+    });
+
+    // Revoque toutes les sessions actives — force re-login avec le temp
+    // password. Le change-password handler resettera mustChangePassword.
+    try {
+      await getRefreshTokenStore().revokeAllForUser(id);
+    } catch (revokeErr) {
+      // Pas bloquant : si la revocation echoue, le password est deja
+      // change, donc les tokens existants seront refuses au prochain
+      // refresh par le check de validite du compte.
+      serverLog.error("[admin.password-reset] revoke tokens failed:", revokeErr);
+    }
+
+    await safeAudit(req, {
+      action: "user.password.reset",
+      entity: "User",
+      entityId: id,
+      // Ne JAMAIS logger le password en clair. On trace uniquement
+      // l'execution de l'action.
+      newValue: { mustChangePassword: true, sessionsRevoked: true },
+    });
+
+    res.json({
+      user: { id: user.id, email: user.email, coachName: user.coachName },
+      tempPassword,
+    });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors du reset du mot de passe" });
   }
 });
 
