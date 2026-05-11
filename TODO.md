@@ -22,17 +22,45 @@ prete a accueillir les phases R+).
 
 ## Priorite immediate
 
+- [**SPRINT O — Bug fixes engine + deblocage acquisition**](./docs/roadmap/sprints/SPRINT-O-bug-fixes-acquisition.md)
+  — **EN COURS** (demarre 2026-05-10, 2 semaines) — 4 bugs regles BB
+  visibles par veterans FUMBBL (Perfect Defence, Illegal Procedure,
+  regen/apothecary order, Diving Tackle) + 5 skills hardcodes a
+  cabler dans registry (Sure Feet, Sprint, Horns, Stunty, Sneaky Git)
+  + kill registration approval gate + onboarding modal + daily bonus
+  claim UI + match report banner + badge unlock toast + OG image
+  dynamique + share buttons.
+
+- [**SPRINT P — Ops readiness + scaling 10k MAU**](./docs/roadmap/sprints/SPRINT-P-ops-readiness.md)
+  — **PLANIFIE** (post-Sprint O, 3 semaines) — mode maintenance, admin
+  wallet UI, season factory Pro League, password reset self-service,
+  soft-delete users + GDPR export, sinks Crowns (cosmetiques HoF +
+  tournois entry), dashboard analytics admin (DAU/MAU/funnel/inflation
+  Crowns), moderation matchs humains.
+
+- [**SPRINT Q — Differenciation fan / engagement narratif**](./docs/roadmap/sprints/SPRINT-Q-fan-differentiation.md)
+  — **PLANIFIE** (post-Sprint P, 6-8 semaines) — career page joueur
+  durable + rivalries, player-of-the-week vote, clips highlights auto
+  MP4 vertical (TikTok/Shorts), prediction mini-leagues privees,
+  Survivor Pick'em, Gazette commentaires + fan predictions.
+
+- [**SPRINT R — International + monetisation + mobile release**](./docs/roadmap/sprints/SPRINT-R-international-monetization-mobile.md)
+  — **PLANIFIE** (post-Sprint Q, 3-6 mois) — i18n EN/DE/PL/ES
+  complete, Patreon Founders Club + Season Pass cosmetique, mobile
+  parite + App Store + Play Store, Discord officiel + bot Gazette,
+  programme ambassadeur 5 casters, NAF integration, PvP async tours-
+  par-jour (FUMBBL-killer feature). Win condition : 10k MAU + top 3
+  BB online FR/EN/DE a 12 mois.
+
 - [**SPRINT Ligues v2 — Gestion complete des ligues Blood Bowl**](./docs/roadmap/sprints/SPRINT-leagues-v2.md)
   — **TERMINE** (Lots A/B/C livres en PRs #535-#545). Restes optionnels
   reportes en backlog ci-dessous.
 
 - [**SPRINT Pro League — Championnat virtuel + Paris MVP**](./docs/roadmap/sprints/SPRINT-pro-league.md)
-  — **EN COURS** — Phase 0 sim foundation + Phase 1 MVP livres. La
-  session 2026-05-10 a comble les derniers gaps UX. Reste : tuning
-  bench panel humain (Phase 0 gate) et go-live calendrier saison NFL
-  2026-27 (cible kickoff 5 sept 2026). Backlog idees differees
-  consigne dans
-  [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md).
+  — **TERMINE Phase 0 + Phase 1 + session polish 2026-05-10 (PRs #728-#742)**.
+  Reste : tuning bench panel humain (Phase 0 gate) et go-live calendrier
+  saison NFL 2026-27 (cible kickoff 5 sept 2026). Backlog idees differees
+  consigne dans [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md).
 
 ## Suivi qualite actif
 
