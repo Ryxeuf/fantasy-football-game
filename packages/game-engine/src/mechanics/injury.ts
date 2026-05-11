@@ -90,19 +90,24 @@ function handleKnockedOut(state: GameState, player: Player, rng: RNG): GameState
   );
   newState.gameLog = [...newState.gameLog, koLog];
 
-  // Regeneration check (AVANT l'apothecaire)
-  if (hasRegeneration(newState, player.id)) {
-    const regenResult = tryRegeneration(newState, player.id, rng, 'ko');
-    if (regenResult) return regenResult;
-  }
-
-  // Verifier si l'apothecaire est disponible
+  // Lot O.A.1 — BB Season 2/3 : apothecaire propose en premier, regen
+  // en fallback. Si le coach refuse l'apothecaire, la regen est tentee
+  // dans `applyApothecaryChoice` (flag `fallbackToRegeneration`).
+  const hasRegen = hasRegeneration(newState, player.id);
   if (isApothecaryAvailable(newState, player.id)) {
     newState.pendingApothecary = {
       playerId: player.id,
       team: player.team,
       injuryType: 'ko',
+      fallbackToRegeneration: hasRegen,
     };
+    return newState;
+  }
+
+  // Pas d'apothecaire dispo → tentative de regeneration directe.
+  if (hasRegen) {
+    const regenResult = tryRegeneration(newState, player.id, rng, 'ko');
+    if (regenResult) return regenResult;
   }
 
   return newState;
@@ -234,13 +239,10 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
   // Enregistrer le résultat de la blessure dans l'état du jeu
   newState.casualtyResults = { ...newState.casualtyResults, [player.id]: outcome };
 
-  // Regeneration check (AVANT l'apothecaire)
-  if (hasRegeneration(newState, player.id)) {
-    const regenResult = tryRegeneration(newState, player.id, rng, 'casualty');
-    if (regenResult) return regenResult;
-  }
-
-  // Verifier si l'apothecaire est disponible
+  // Lot O.A.1 — BB Season 2/3 : apothecaire propose en premier, regen
+  // en fallback. Si refus apothecaire ET joueur a Regeneration, regen
+  // est tentee dans `applyApothecaryChoice`.
+  const hasRegen = hasRegeneration(newState, player.id);
   if (isApothecaryAvailable(newState, player.id)) {
     const pendingApothecary: PendingApothecary = {
       playerId: player.id,
@@ -249,12 +251,20 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
       originalCasualtyOutcome: outcome,
       originalCasualtyRoll: casualtyRoll,
       causedById,
+      fallbackToRegeneration: hasRegen,
     };
     // Store lasting injury if applicable
     if (newState.lastingInjuryDetails[player.id]) {
       pendingApothecary.originalLastingInjury = { ...newState.lastingInjuryDetails[player.id] };
     }
     newState.pendingApothecary = pendingApothecary;
+    return newState;
+  }
+
+  // Pas d'apothecaire dispo → tentative de regeneration directe.
+  if (hasRegen) {
+    const regenResult = tryRegeneration(newState, player.id, rng, 'casualty');
+    if (regenResult) return regenResult;
   }
 
   return newState;

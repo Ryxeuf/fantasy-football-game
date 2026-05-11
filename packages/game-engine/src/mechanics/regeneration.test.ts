@@ -103,24 +103,24 @@ describe('Regle: Regeneration', () => {
       expect(result.dugouts.teamA.zones.knockedOut.players).toContain('A1');
     });
 
-    it('devrait permettre l\'apothecaire apres echec de regeneration (KO)', () => {
+    it('Lot O.A.1 — apothecaire propose en PREMIER avec flag fallbackToRegeneration (KO)', () => {
+      // BB Season 2/3 : apothecaire est toujours offert en premier si
+      // disponible. La regen sert de fallback si le coach decline.
       const state = createTestState({
         apothecaryAvailable: { teamA: true, teamB: false },
       });
-      let callCount = 0;
-      const rng = () => {
-        callCount++;
-        if (callCount <= 2) return 0.5; // 4+4=8 (KO)
-        return 0.01; // regen fail (roll=1)
-      };
+      const rng = () => 0.5; // 4+4=8 (KO)
       const result = performInjuryRoll(state, state.players[0], rng);
 
-      // Regen failed → apothecary should be offered
+      // Apothecary offered, regen non-encore tentee.
       expect(result.pendingApothecary).toBeDefined();
       expect(result.pendingApothecary!.injuryType).toBe('ko');
+      expect(result.pendingApothecary!.fallbackToRegeneration).toBe(true);
+      // Player still in KO zone, awaiting coach decision.
+      expect(result.dugouts.teamA.zones.knockedOut.players).toContain('A1');
     });
 
-    it('ne devrait PAS proposer l\'apothecaire si regeneration reussit (KO)', () => {
+    it('Lot O.A.1 — refus apothecaire → regen tentee en fallback (succes, KO)', () => {
       const state = createTestState({
         apothecaryAvailable: { teamA: true, teamB: false },
       });
@@ -128,13 +128,34 @@ describe('Regle: Regeneration', () => {
       const rng = () => {
         callCount++;
         if (callCount <= 2) return 0.5; // 4+4=8 (KO)
-        return 0.99; // regen success (roll=6)
+        return 0.99; // regen success on decline (roll=6)
       };
-      const result = performInjuryRoll(state, state.players[0], rng);
+      const intermediate = performInjuryRoll(state, state.players[0], rng);
+      // Coach decline apothecary → regen kicks in via applyApothecaryChoice
+      const result = applyApothecaryChoice(intermediate, false, rng);
 
-      // Regen succeeded → no apothecary needed
-      expect(result.pendingApothecary).toBeUndefined();
+      // Regen succeeded: player goes to reserves
+      expect(result.dugouts.teamA.zones.knockedOut.players).not.toContain('A1');
       expect(result.dugouts.teamA.zones.reserves.players).toContain('A1');
+      expect(result.pendingApothecary).toBeUndefined();
+    });
+
+    it('Lot O.A.1 — refus apothecaire → regen tentee en fallback (echec, KO)', () => {
+      const state = createTestState({
+        apothecaryAvailable: { teamA: true, teamB: false },
+      });
+      let callCount = 0;
+      const rng = () => {
+        callCount++;
+        if (callCount <= 2) return 0.5; // 4+4=8 (KO)
+        return 0.01; // regen fail on decline (roll=1)
+      };
+      const intermediate = performInjuryRoll(state, state.players[0], rng);
+      const result = applyApothecaryChoice(intermediate, false, rng);
+
+      // Regen failed: player stays in KO
+      expect(result.dugouts.teamA.zones.knockedOut.players).toContain('A1');
+      expect(result.pendingApothecary).toBeUndefined();
     });
   });
 
@@ -177,22 +198,25 @@ describe('Regle: Regeneration', () => {
       expect(result.casualtyResults['A1']).toBe('badly_hurt');
     });
 
-    it('devrait permettre l\'apothecaire apres echec de regeneration (Casualty)', () => {
+    it('Lot O.A.1 — apothecaire propose en PREMIER avec fallbackToRegeneration (Casualty)', () => {
+      // BB Season 2/3 : apothecaire offert en premier pour casualty
+      // aussi. Permet au coach de re-roller le D16 (typique pour dead).
       const state = createTestState({
         apothecaryAvailable: { teamA: true, teamB: false },
       });
       let callCount = 0;
       const rng = () => {
         callCount++;
-        if (callCount <= 2) return 0.99; // casualty
+        if (callCount <= 2) return 0.99; // 6+6=12 (casualty)
         if (callCount === 3) return 0.99; // D16 → dead (roll=16)
-        return 0.01; // regen fail
+        return 0.5;
       };
       const result = performInjuryRoll(state, state.players[0], rng);
 
-      // Regen failed → apothecary offered
       expect(result.pendingApothecary).toBeDefined();
       expect(result.pendingApothecary!.injuryType).toBe('casualty');
+      expect(result.pendingApothecary!.fallbackToRegeneration).toBe(true);
+      expect(result.pendingApothecary!.originalCasualtyOutcome).toBe('dead');
     });
 
     it('devrait effacer les lasting injury details si regeneration reussit', () => {

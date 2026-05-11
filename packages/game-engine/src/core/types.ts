@@ -102,6 +102,13 @@ export interface PendingApothecary {
   originalCasualtyRoll?: number;
   originalLastingInjury?: LastingInjuryDetail;
   causedById?: string;
+  /**
+   * Lot O.A.1 — Si vrai, le joueur a la skill Regeneration. Quand le
+   * coach refuse l'apothecaire (`applyApothecaryChoice(_, false, _)`),
+   * la regeneration est tentee en fallback. BB Season 2/3 : apothecaire
+   * propose en premier, regeneration en dernier recours.
+   */
+  fallbackToRegeneration?: boolean;
 }
 
 export interface GameState {
