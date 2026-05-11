@@ -14,6 +14,7 @@ import {
   updateUserRoleSchema,
   updateUserPatreonSchema,
   updateUserValidSchema,
+  updateUserLeaderboardStatusSchema,
   updateMatchStatusSchema,
   adminMatchForfeitSchema,
   adminMatchCancelSchema,
@@ -149,6 +150,10 @@ router.get("/users/:id", async (req, res) => {
         banReason: true,
         deletedAt: true,
         deletionReason: true,
+        leaderboardStatus: true,
+        leaderboardStatusReason: true,
+        leaderboardStatusUpdatedAt: true,
+        leaderboardStatusUpdatedBy: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
@@ -347,6 +352,89 @@ router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, re
     res.status(500).json({ error: "Erreur lors de la modification du statut de validation" });
   }
 });
+
+/**
+ * Modifie le statut de visibilite ELO d'un utilisateur.
+ *
+ * `visible` (defaut) = le joueur apparait dans le leaderboard et sa
+ * section ELO est visible sur son profil public.
+ * `hidden_admin` = retire du leaderboard ELO + ELO et historique ELO
+ * masques sur `/coach/{slug}` ; un badge "Non classe" s'affiche en
+ * remplacement. Le profil reste visible (succes, equipes, etc.).
+ *
+ * Reason optionnelle, stockee en clair pour audit interne. L'audit log
+ * trace systematiquement le changement (oldValue / newValue).
+ */
+router.patch(
+  "/users/:id/leaderboard-status",
+  validate(updateUserLeaderboardStatusSchema),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, reason } = req.body as {
+        status: "visible" | "hidden_admin";
+        reason?: string;
+      };
+      const adminId = (req as AuthenticatedRequest).user?.id ?? null;
+
+      const previous = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          leaderboardStatus: true,
+          leaderboardStatusReason: true,
+          leaderboardStatusUpdatedAt: true,
+          leaderboardStatusUpdatedBy: true,
+        },
+      });
+
+      if (!previous) {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          leaderboardStatus: status,
+          // Pour "visible" on efface la raison (elle n'a de sens que pour un masquage).
+          leaderboardStatusReason: status === "visible" ? null : (reason ?? null),
+          leaderboardStatusUpdatedAt: new Date(),
+          leaderboardStatusUpdatedBy: adminId,
+        },
+        select: {
+          id: true,
+          email: true,
+          coachName: true,
+          leaderboardStatus: true,
+          leaderboardStatusReason: true,
+          leaderboardStatusUpdatedAt: true,
+          leaderboardStatusUpdatedBy: true,
+        },
+      });
+
+      await safeAudit(req, {
+        action: "user.leaderboardStatus.update",
+        entity: "User",
+        entityId: id,
+        oldValue: previous,
+        newValue: {
+          leaderboardStatus: user.leaderboardStatus,
+          leaderboardStatusReason: user.leaderboardStatusReason,
+        },
+      });
+
+      res.json({ user });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err.code === "P2025") {
+        return res.status(404).json({ error: "Utilisateur non trouvé" });
+      }
+      serverLog.error(e);
+      res
+        .status(500)
+        .json({ error: "Erreur lors de la modification du statut de classement" });
+    }
+  },
+);
 
 /**
  * Lot P.B.4 — Bannir un utilisateur (temporaire ou permanent).

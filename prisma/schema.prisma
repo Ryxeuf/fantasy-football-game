@@ -71,6 +71,20 @@ model User {
   deletionReason              String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
+  /// Statut de visibilite dans le classement ELO public + sections ELO
+  /// du profil coach. Valeurs : "visible" (defaut) | "hidden_admin".
+  /// `hidden_admin` masque le user du leaderboard et masque la section
+  /// ELO / historique ELO sur `/coach/{slug}` ; un badge "Non classe"
+  /// s'affiche en remplacement. Modifiable uniquement par un admin
+  /// via PATCH /admin/users/:id/leaderboard-status.
+  leaderboardStatus           String                  @default("visible")
+  /// Note admin libre (max 500 chars) sur le motif de masquage. Visible
+  /// admin uniquement, sert d'audit interne.
+  leaderboardStatusReason     String?
+  /// Date de la derniere modification du `leaderboardStatus`.
+  leaderboardStatusUpdatedAt  DateTime?
+  /// userId de l'admin auteur du dernier changement de statut.
+  leaderboardStatusUpdatedBy  String?
   createdAt                   DateTime                @default(now())
   updatedAt                   DateTime                @updatedAt
   matches                     Match[]
@@ -96,6 +110,8 @@ model User {
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
+
+  @@index([leaderboardStatus])
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2

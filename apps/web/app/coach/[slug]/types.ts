@@ -10,11 +10,23 @@ export interface CoachPublicProfile {
   id: string;
   slug: string;
   coachName: string;
-  eloRating: number;
+  /**
+   * ELO du coach. `null` quand le coach est masque du classement par un admin
+   * (`leaderboardStatusVisible === false`) — un badge "Non classe" est rendu
+   * a la place et la courbe ELO 90j est masquee.
+   */
+  eloRating: number | null;
   isSupporter: boolean;
   supporterTier: string | null;
   /** ISO 8601 timestamp of the User.createdAt. */
   memberSince: string;
+  /**
+   * `true` (defaut) si le coach apparait dans le classement ELO public et que
+   * son ELO est visible sur son profil. `false` si un admin a masque le coach
+   * via `PATCH /admin/users/:id/leaderboard-status`. Optionnel pour
+   * retro-compat avec les reponses API ne renvoyant pas encore le champ.
+   */
+  leaderboardStatusVisible?: boolean;
   /** S26.3f — vitrine des derniers succes deverrouilles. */
   achievements: CoachShowcaseAchievement[];
   /** S26.3h — equipes recentes du coach. */

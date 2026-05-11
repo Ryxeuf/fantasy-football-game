@@ -74,6 +74,13 @@ export default async function CoachProfilePage({
     notFound();
   }
 
+  // Si un admin a masque le coach du classement, l'API renvoie deja
+  // `eloRating: null` et `leaderboardStatusVisible: false`, et
+  // `/elo-history` renvoie []. On evite simplement de monter le composant
+  // courbe pour ne pas afficher un graphique vide sans contexte.
+  const leaderboardVisible =
+    profile.leaderboardStatusVisible !== false && profile.eloRating !== null;
+
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       <CoachProfileHeader profile={profile} />
@@ -82,7 +89,7 @@ export default async function CoachProfilePage({
       <CoachLeagueChampionshipsBanner
         leagueChampionships={profile.leagueChampionships}
       />
-      <CoachEloChart snapshots={eloSnapshots} />
+      {leaderboardVisible && <CoachEloChart snapshots={eloSnapshots} />}
       <CoachAchievementsShowcase achievements={profile.achievements} />
       <CoachRecentTeams teams={profile.recentTeams} />
       <CoachExportPdfButton profile={profile} eloSnapshots={eloSnapshots} />

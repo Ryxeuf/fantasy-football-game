@@ -69,8 +69,10 @@ export function buildCoachCardSections(
   const supporterTag = profile.isSupporter
     ? ` - Supporter${profile.supporterTier ? ` ${profile.supporterTier}` : ""}`
     : "";
+  // ELO masque (coach `hidden_admin`) ⇒ on remplace par "Non classe" dans le PDF.
+  const eloLabel = profile.eloRating === null ? "Non classe" : `ELO ${profile.eloRating}`;
   const subtitle =
-    `ELO ${profile.eloRating} - @${profile.slug} - Membre depuis ` +
+    `${eloLabel} - @${profile.slug} - Membre depuis ` +
     `${yearOf(profile.memberSince)}${supporterTag}`;
 
   const achievementRows = profile.achievements.map((a) => [

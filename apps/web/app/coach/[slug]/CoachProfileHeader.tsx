@@ -16,6 +16,10 @@ export default function CoachProfileHeader({
   const supporterLabel = profile.supporterTier
     ? `Supporter ${profile.supporterTier}`
     : "Supporter";
+  // Si l'API ne renvoie pas encore le champ, on assume "visible" (retro-compat).
+  // eloRating peut etre null quand un admin a masque le coach.
+  const leaderboardVisible =
+    profile.leaderboardStatusVisible !== false && profile.eloRating !== null;
   return (
     <header className="bg-gradient-to-br from-nuffle-anthracite to-gray-800 text-white rounded-xl p-6 shadow-lg">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -31,17 +35,27 @@ export default function CoachProfileHeader({
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="bg-nuffle-gold/15 border border-nuffle-gold rounded-lg px-3 py-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-nuffle-gold">
-              ELO
-            </p>
-            <p
-              data-testid="coach-elo"
-              className="text-xl font-bold leading-none"
+          {leaderboardVisible ? (
+            <div className="bg-nuffle-gold/15 border border-nuffle-gold rounded-lg px-3 py-1.5">
+              <p className="text-[10px] uppercase tracking-wide text-nuffle-gold">
+                ELO
+              </p>
+              <p
+                data-testid="coach-elo"
+                className="text-xl font-bold leading-none"
+              >
+                {profile.eloRating}
+              </p>
+            </div>
+          ) : (
+            <span
+              data-testid="coach-unranked-badge"
+              title="Ce coach n'apparait pas dans le classement public"
+              className="inline-flex items-center gap-1 rounded-full bg-gray-700 text-gray-100 px-3 py-1.5 text-xs font-bold uppercase tracking-wide border border-gray-500"
             >
-              {profile.eloRating}
-            </p>
-          </div>
+              Non classe
+            </span>
+          )}
           {profile.isSupporter && (
             <span
               data-testid="coach-supporter-badge"

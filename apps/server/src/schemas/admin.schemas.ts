@@ -55,6 +55,18 @@ export const updateUserValidSchema = z.object({
   valid: z.boolean({ message: "Valeur valid invalide" }),
 });
 
+/**
+ * Statut de visibilite du joueur dans le classement ELO public et sur la
+ * section ELO de son profil coach. Reason optionnelle (cap 500 chars,
+ * audit interne, jamais expose publiquement).
+ */
+export const updateUserLeaderboardStatusSchema = z.object({
+  status: z.enum(["visible", "hidden_admin"], {
+    message: "Statut invalide (visible | hidden_admin)",
+  }),
+  reason: z.string().max(500, "raison trop longue (500 chars max)").optional(),
+});
+
 export const updateMatchStatusSchema = z.object({
   status: z.enum(
     ["pending", "prematch", "prematch-setup", "active", "ended", "cancelled"],
