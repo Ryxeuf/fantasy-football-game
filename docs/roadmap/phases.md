@@ -1,9 +1,10 @@
 # Roadmap v2 — Sprints 24-27
 
-> Derniere mise a jour : 2026-05-05
+> Derniere mise a jour : 2026-05-10
 > Contexte : v1.74.0 livree (beta publique). Roadmap v1 archivee dans
 > [`archive/v1.73/`](./archive/v1.73/README.md). Cette nouvelle roadmap
-> couvre les 4 sprints suivants, derives d'un audit a 10 agents.
+> couvre les 4 sprints initiaux S24-27 + sprints post-audit O-R derives
+> du gap analysis 2026-05-10.
 
 ## Index des sprints
 
@@ -13,13 +14,23 @@
 | **S25** | Observabilite, perf & qualite (logs, metrics, tests, bundle) | [sprints/S25-observabilite-qualite.md](./sprints/S25-observabilite-qualite.md) | TERMINE |
 | **S26** | Refactor + Retention & engagement (page.tsx prerequis, achievements, profil, ligues) | [sprints/S26-retention-engagement.md](./sprints/S26-retention-engagement.md) | TERMINE |
 | **S27** | Evolutions & confort (esport, mobile parite, S4 skeleton, audit log, B0.1 residuels) | [sprints/S27-evolutions-confort.md](./sprints/S27-evolutions-confort.md) | TERMINE |
-| **Ligues v2** | **PRIORITE** Gestion complete des ligues BB (creation UI, inscription, calendrier auto, forfait, Jeu en Ligue post-match, awards) | [sprints/SPRINT-leagues-v2.md](./sprints/SPRINT-leagues-v2.md) | A faire (P0) |
-| **Pro League** | Championnat virtuel 16 equipes IA vs IA (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris en Crowns, mode spectateur/fan, Nuffle Gazette LLM. Phase 0 sim foundation bloquante (8 sem) + Phase 1 MVP (4 sem) | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | A faire (P1, post-Ligues v2) |
+| **Ligues v2** | Gestion complete des ligues BB (creation UI, inscription, calendrier auto, forfait, Jeu en Ligue post-match, awards) | [sprints/SPRINT-leagues-v2.md](./sprints/SPRINT-leagues-v2.md) | TERMINE |
+| **Pro League** | Championnat virtuel 16 equipes IA vs IA, matchs auto mardi 21h, paris Crowns, Gazette LLM, Hall of Fame | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | TERMINE Phase 0 + 1 (session polish 2026-05-10 livre 12 lots #728-#742) |
+| **Sprint O** | **Bug fixes engine + deblocage acquisition** (regles BB Perfect Defence/Illegal Procedure/regen order, skills registry, registration auto-approve, onboarding, OG image, share) | [sprints/SPRINT-O-bug-fixes-acquisition.md](./sprints/SPRINT-O-bug-fixes-acquisition.md) | **EN COURS** (2 sem) |
+| **Sprint P** | **Ops readiness + scaling 10k MAU** (mode maintenance, season factory, admin wallet, password reset, soft-delete + GDPR, sinks Crowns, dashboard analytics) | [sprints/SPRINT-P-ops-readiness.md](./sprints/SPRINT-P-ops-readiness.md) | PLANIFIE (3 sem) |
+| **Sprint Q** | **Differenciation fan / engagement narratif Pro League** (career pages, MVP vote, clips highlights MP4, mini-leagues privees, Survivor Pick'em, commentaires Gazette) | [sprints/SPRINT-Q-fan-differentiation.md](./sprints/SPRINT-Q-fan-differentiation.md) | PLANIFIE (6-8 sem) |
+| **Sprint R** | **International + monetisation + mobile release** (i18n EN/DE/PL/ES, Patreon + Season Pass, App Store + Play Store, Discord, ambassadeurs, NAF, PvP async tours-par-jour) | [sprints/SPRINT-R-international-monetization-mobile.md](./sprints/SPRINT-R-international-monetization-mobile.md) | PLANIFIE (3-6 mois) |
+
+> **Win condition 12 mois (Sprint R termine) :** 10 000 MAU + top 3
+> reconnaissance BB online FR/EN/DE. Voir
+> [session log 2026-05-10](./sessions/2026-05-10-pro-league-ui-polish.md)
+> pour le contexte et l'audit complet 7 agents qui derive O-R.
 
 ## Suivi qualite actif
 
-- [Hardcodes skill registry residuels (B0.1)](./follow-up-b01.md) — solde
-  prevu en S27.7. Stunty AV, Sure Feet/Sprint GFI, Horns, Sneaky Git.
+- [Hardcodes skill registry residuels (B0.1)](./follow-up-b01.md) —
+  Stunty AV, Sure Feet/Sprint GFI, Horns, Sneaky Git, Pile Driver.
+  Adresses en **Sprint O lot O.A.2-4**.
 
 ## Items ecartes / backlog
 
