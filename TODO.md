@@ -19,17 +19,22 @@ prete a accueillir les phases R+).
   (drill-down joueur, top earners, wallet ledger, broadcaster load
   test admin, fix badge "ready to level-up" phantom). Detail :
   [`docs/roadmap/sessions/2026-05-10-pro-league-ui-polish.md`](./docs/roadmap/sessions/2026-05-10-pro-league-ui-polish.md).
+- **2026-05-11** — Sprint O termine a 87% (7 lots livres, PRs #744-#751).
+  Fix regen/apothecary BB order, kill-switch validation admin,
+  onboarding modal, daily bonus UI, badge unlock toast, OG image
+  dynamique + share buttons matchs, match report banner. Lot
+  O.A.2-4 (skill registry wiring) differe a session focused engine.
+  Detail :
+  [`docs/roadmap/sessions/2026-05-11-sprint-O.md`](./docs/roadmap/sessions/2026-05-11-sprint-O.md).
 
 ## Priorite immediate
 
 - [**SPRINT O — Bug fixes engine + deblocage acquisition**](./docs/roadmap/sprints/SPRINT-O-bug-fixes-acquisition.md)
-  — **EN COURS** (demarre 2026-05-10, 2 semaines) — 4 bugs regles BB
-  visibles par veterans FUMBBL (Perfect Defence, Illegal Procedure,
-  regen/apothecary order, Diving Tackle) + 5 skills hardcodes a
-  cabler dans registry (Sure Feet, Sprint, Horns, Stunty, Sneaky Git)
-  + kill registration approval gate + onboarding modal + daily bonus
-  claim UI + match report banner + badge unlock toast + OG image
-  dynamique + share buttons.
+  — **TERMINE a 87%** (7/9 lots livres, PRs #744-#751 mergees, 2026-05-11).
+  Lot O.A.2-4 (skill registry wiring : Sure Feet, Sprint, Horns,
+  Stunty, Sneaky Git, Pile Driver) **differe** a session focused
+  engine — ~3 jours dans `packages/game-engine/src/mechanics/` +
+  bench drift FUMBBL verification.
 
 - [**SPRINT P — Ops readiness + scaling 10k MAU**](./docs/roadmap/sprints/SPRINT-P-ops-readiness.md)
   — **PLANIFIE** (post-Sprint O, 3 semaines) — mode maintenance, admin
