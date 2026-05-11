@@ -141,6 +141,76 @@ interface RosterProgression {
 }
 ```
 
+### Kill-switch flag ≠ feature flag (O.B.1)
+Quand un flag implemente une logique de **blocage** (validation,
+maintenance, rate-limit strict) plutot que d'activation feature, l'env
+`FEATURE_FLAGS_FORCE_ENABLED` (utilise en CI) ne doit **pas** le
+force-ON. Sinon les E2E qui assument le comportement par defaut
+cassent. Le bypass admin doit aussi etre desactive.
+
+```ts
+const KILL_SWITCH_FLAGS = new Set<string>([
+  REGISTRATION_REQUIRES_VALIDATION_FLAG,
+]);
+
+export async function isEnabled(key, userId?, context?) {
+  const isKillSwitch = KILL_SWITCH_FLAGS.has(key);
+  if (!isKillSwitch && isForceEnabled()) return true;
+  if (!isKillSwitch && isAdmin(context)) return true;
+  // ... DB lookup normale
+}
+```
+
+### Provider global avec hook no-op fallback (O.C.3)
+Pour un systeme de notifications transversal (toast badge unlock),
+monter un `Provider` dans un layout client + exposer un hook qui est
+**no-op gracieux** hors provider. Permet de tester les composants
+individuellement sans wrapper.
+
+```ts
+export function useBadgeNotify(): BadgeToastContextValue {
+  const ctx = useContext(BadgeToastContext);
+  if (!ctx) {
+    return { notifyAndEvaluate: async () => {} }; // no-op
+  }
+  return ctx;
+}
+```
+
+### LocalStorage dismiss par couple (entityId, recordId) (O.C.2)
+Pour qu'un banner "Dernier X" ne re-affiche pas le meme record apres
+dismiss, utiliser une cle composite plutot qu'une cle globale.
+
+```ts
+function dismissKey(teamId: string, matchId: string): string {
+  return `match_report_dismissed:${teamId}:${matchId}`;
+}
+```
+
+### Convention Next.js `opengraph-image.tsx` (O.D)
+Pour generer une OG image dynamique d'une page App Router, creer
+`opengraph-image.tsx` au meme niveau que `page.tsx`. Next.js le
+detecte automatiquement et l'expose a `/{route}/opengraph-image`.
+Ajouter `generateMetadata` dans un `layout.tsx` voisin si la page est
+client-side ("use client").
+
+```
+app/pro-league/matches/[id]/
+  ├── page.tsx (use client)
+  ├── layout.tsx (server, generateMetadata + openGraph + twitter)
+  └── opengraph-image.tsx (server, ImageResponse 1200×630)
+```
+
+### BB Season 2/3 : apothecary AVANT regeneration (O.A.1)
+Bug regressif piegeur : l'ordre regen → apothecary est **inverse** de
+la regle BB officielle. Pattern fix :
+
+1. Sur KO/Casualty, set `pendingApothecary` avec
+   `fallbackToRegeneration: hasRegen`.
+2. Coach decline apothecary → trigger regen en cascade dans
+   `applyApothecaryChoice`.
+3. Pas d'apothecary disponible → regen directe en fallback path.
+
 ## Pieges connus
 
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)
@@ -166,6 +236,37 @@ function parseSkills(raw: unknown): string[] {
   }
   return [];
 }
+```
+
+### CI E2E API force-enable les flags
+Le workflow `.github/workflows/e2e.yml` exporte
+`FEATURE_FLAGS_FORCE_ENABLED: true`. Toujours penser a cette contrainte
+quand on introduit un nouveau flag — soit le flag est coherent avec
+un comportement on/on, soit c'est un kill-switch (cf. pattern dedie
+ci-dessus) et doit etre liste dans `KILL_SWITCH_FLAGS`.
+
+### supertest n'est pas dans les deps
+Pour tester un Express handler en isolation, utiliser
+`http.createServer(express())` + `http.request` natif au lieu de
+`supertest`. Pattern dans `apps/server/src/routes/auth-register.test.ts`.
+
+### jsdom n'expose pas `document.execCommand`
+Pour tester le fallback clipboard, injecter manuellement la methode :
+
+```ts
+Object.defineProperty(document, "execCommand", {
+  configurable: true,
+  writable: true,
+  value: vi.fn().mockReturnValue(true),
+});
+```
+
+### URLSearchParams encode spaces as `+`
+Quand on teste un URL genere par `URLSearchParams`, decoder le `+` en
+espace avant le `decodeURIComponent` :
+
+```ts
+const decoded = decodeURIComponent(link.href.replace(/\+/g, " "));
 ```
 
 ## Workflow git
@@ -224,3 +325,8 @@ vi.mock("./pro-roster-spp", () => ({
 
 - **2026-05-10** : Pro League UI polish, 12 lots/PRs (#728-#742). Voir
   [`docs/roadmap/sessions/2026-05-10-pro-league-ui-polish.md`](./docs/roadmap/sessions/2026-05-10-pro-league-ui-polish.md).
+- **2026-05-11** : Sprint O — Bug fixes engine + deblocage acquisition,
+  7 lots/PRs (#745-#751) + docs sprints O/P/Q/R (#744). Audit 7 agents
+  → fixes regen/apothecary BB order, onboarding modal, daily bonus,
+  badge toast, OG image, share buttons, match report banner. Voir
+  [`docs/roadmap/sessions/2026-05-11-sprint-O.md`](./docs/roadmap/sessions/2026-05-11-sprint-O.md).
