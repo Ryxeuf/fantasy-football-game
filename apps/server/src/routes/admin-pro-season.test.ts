@@ -621,6 +621,80 @@ describe("GET /admin/pro-league/matches/:id", () => {
   });
 });
 
+describe("POST /admin/pro-league/seasons/:seasonId/rounds/:roundNumber/simulate-all", () => {
+  it("simule en serie les matchs non-finaux, retourne agreges", async () => {
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValueOnce([
+      { id: "m1" },
+      { id: "m2" },
+      { id: "m3" },
+    ]);
+    simulate
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false); // m3 deja final
+
+    const res = await request("POST", "/seasons/s1/rounds/1/simulate-all");
+
+    expect(res.status).toBe(200);
+    expect(res.body.simulated).toBe(2);
+    expect(res.body.skipped).toBe(1);
+    expect(res.body.failed).toBe(0);
+    expect(res.body.failures).toEqual([]);
+    expect(simulate).toHaveBeenCalledTimes(3);
+    expect(mockedAudit).toHaveBeenCalledWith(
+      prisma,
+      expect.anything(),
+      expect.objectContaining({
+        action: "pro-season.simulate-round",
+        newValue: expect.objectContaining({
+          roundNumber: 1,
+          total: 3,
+          simulated: 2,
+          skipped: 1,
+          failed: 0,
+        }),
+      }),
+    );
+  });
+
+  it("ne crash pas si un match throw : reste continue + ajout failures", async () => {
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValueOnce([
+      { id: "m1" },
+      { id: "m2" },
+    ]);
+    simulate
+      .mockRejectedValueOnce(new Error("Engine version mismatch"))
+      .mockResolvedValueOnce(true);
+
+    const res = await request("POST", "/seasons/s1/rounds/2/simulate-all");
+
+    expect(res.status).toBe(200);
+    expect(res.body.simulated).toBe(1);
+    expect(res.body.failed).toBe(1);
+    expect(res.body.failures).toHaveLength(1);
+    expect(res.body.failures[0]).toMatchObject({
+      matchId: "m1",
+      error: expect.stringMatching(/mismatch/),
+    });
+  });
+
+  it("0 matchs : retourne early sans audit", async () => {
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValueOnce([]);
+    const res = await request("POST", "/seasons/s1/rounds/1/simulate-all");
+    expect(res.status).toBe(200);
+    expect(res.body.simulated).toBe(0);
+    expect(simulate).not.toHaveBeenCalled();
+    expect(mockedAudit).not.toHaveBeenCalled();
+  });
+
+  it("400 si roundNumber hors bornes", async () => {
+    const res = await request("POST", "/seasons/s1/rounds/0/simulate-all");
+    expect(res.status).toBe(400);
+    const res2 = await request("POST", "/seasons/s1/rounds/abc/simulate-all");
+    expect(res2.status).toBe(400);
+  });
+});
+
 describe("POST /admin/pro-league/matches/:id/simulate", () => {
   it("simule un match scheduled + audit log", async () => {
     simulate.mockResolvedValueOnce(true);

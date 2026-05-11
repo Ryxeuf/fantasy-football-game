@@ -558,4 +558,107 @@ router.post("/matches/:id/simulate", async (req, res) => {
   }
 });
 
+/**
+ * POST /admin/pro-league/seasons/:seasonId/rounds/:roundNumber/simulate-all
+ *
+ * Simule en serie tous les matchs non-finaux d'un round. Utile pour
+ * avancer rapidement une saison de demo (1 click = 8 matchs simules en
+ * ~400ms hybrid driver). Retourne un agregat { simulated, skipped, failed }.
+ *
+ * Strategie : sequentiel pour respecter la backpressure du sim-runner
+ * (chaque simulateProMatch fait des $transactions Prisma — paralleliser
+ * 8 d'un coup peut saturer le pool de connexions). Acceptable pour < 16
+ * matchs (1 round = 8 matchs max).
+ */
+router.post(
+  "/seasons/:seasonId/rounds/:roundNumber/simulate-all",
+  async (req, res) => {
+    try {
+      const { seasonId, roundNumber: roundNumberRaw } = req.params;
+      const roundNumber = parseInt(roundNumberRaw, 10);
+      if (!Number.isInteger(roundNumber) || roundNumber < 1 || roundNumber > 50) {
+        return res.status(400).json({ error: "roundNumber doit etre 1..50" });
+      }
+
+      // Charge les matchs du round non-finaux. Limite a 50 pour cap les
+      // bulk insanes (un round-robin standard = 8 matchs).
+      const matches = (await prisma.proLeagueMatch.findMany({
+        where: {
+          seasonId,
+          round: { roundNumber },
+          status: { notIn: ["completed", "failed"] },
+        },
+        select: { id: true },
+        take: 50,
+      })) as Array<{ id: string }>;
+
+      if (matches.length === 0) {
+        return res.json({
+          seasonId,
+          roundNumber,
+          simulated: 0,
+          skipped: 0,
+          failed: 0,
+          failures: [],
+        });
+      }
+
+      let simulated = 0;
+      let skipped = 0;
+      let failed = 0;
+      const failures: Array<{ matchId: string; error: string }> = [];
+
+      for (const m of matches) {
+        try {
+          const ok = await simulateProMatch(m.id);
+          if (ok) simulated++;
+          else skipped++;
+        } catch (e) {
+          failed++;
+          failures.push({
+            matchId: m.id,
+            error: e instanceof Error ? e.message : String(e),
+          });
+          serverLog.error(
+            `[admin.simulate-all] match=${m.id} round=${roundNumber} failed:`,
+            e,
+          );
+        }
+      }
+
+      await safeRecordAdminActionFromRequest(
+        prisma,
+        req as AuthenticatedRequest,
+        {
+          action: "pro-season.simulate-round",
+          entity: "ProLeagueSeason",
+          entityId: seasonId,
+          newValue: {
+            roundNumber,
+            total: matches.length,
+            simulated,
+            skipped,
+            failed,
+          },
+        },
+      );
+
+      res.json({
+        seasonId,
+        roundNumber,
+        total: matches.length,
+        simulated,
+        skipped,
+        failed,
+        failures,
+      });
+    } catch (e) {
+      serverLog.error(e);
+      res.status(500).json({
+        error: e instanceof Error ? e.message : "Erreur inconnue",
+      });
+    }
+  },
+);
+
 export default router;

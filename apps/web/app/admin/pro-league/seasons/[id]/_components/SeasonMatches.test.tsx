@@ -153,6 +153,60 @@ describe("SeasonMatches", () => {
     });
   });
 
+  it("bouton bulk simulate apparait apres choix d'un round + envoie POST", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ matches: sampleMatches }),
+      } as unknown as Response)
+      // Reload apres filter change.
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ matches: sampleMatches }),
+      } as unknown as Response)
+      // POST bulk.
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          simulated: 8,
+          skipped: 0,
+          failed: 0,
+          failures: [],
+        }),
+      } as unknown as Response)
+      // Reload apres bulk.
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ matches: sampleMatches }),
+      } as unknown as Response);
+    global.fetch = fetchMock as unknown as typeof fetch;
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+
+    render(<SeasonMatches seasonId="s1" totalRounds={15} />);
+    await waitFor(() => screen.getByTestId("round-filter"));
+
+    // Avant de choisir un round : bouton bulk absent.
+    expect(
+      screen.queryByTestId("btn-bulk-simulate-round"),
+    ).toBeNull();
+
+    fireEvent.change(screen.getByTestId("round-filter"), {
+      target: { value: "1" },
+    });
+    await waitFor(() => screen.getByTestId("btn-bulk-simulate-round"));
+
+    fireEvent.click(screen.getByTestId("btn-bulk-simulate-round"));
+
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls.map((c) => c[0] as string);
+      const bulkCall = calls.find((c) =>
+        c.includes("/rounds/1/simulate-all"),
+      );
+      expect(bulkCall).toBeDefined();
+    });
+  });
+
   it("lien Replay rendu si replayId existe", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
