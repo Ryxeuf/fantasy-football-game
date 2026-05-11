@@ -33,7 +33,14 @@
 import { prisma } from "../prisma";
 
 /** Types valides pour `ProTransaction.type`. */
-export type ProTxType = "BET" | "WIN" | "REWARD" | "DAILY" | "BADGE";
+/**
+ * Sprint P (Lot P.B.2) — `SINK` ajoute pour les Crowns sinks
+ * volontaires (HoF dedication, tournament entry, cosmetics).
+ * Differencie d'un `BET` qui est lui aussi un debit mais avec
+ * promesse de gain. Un `SINK` est un "depense pour fun/prestige" sans
+ * payout possible.
+ */
+export type ProTxType = "BET" | "WIN" | "REWARD" | "DAILY" | "BADGE" | "SINK";
 
 const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
   "BET",
@@ -41,6 +48,7 @@ const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
   "REWARD",
   "DAILY",
   "BADGE",
+  "SINK",
 ]);
 
 export interface ProWalletSnapshot {

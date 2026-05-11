@@ -74,6 +74,7 @@ model User {
   proWallet                   ProWallet?
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
+  proHofDedications           ProHallOfFameDedication[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1147,7 +1148,7 @@ model ProGazetteArticle {
 }
 
 model ProHallOfFame {
-  id          String   @id @default(cuid())
+  id          String                     @id @default(cuid())
   rosterId    String
   teamSlug    String
   teamName    String
@@ -1163,12 +1164,35 @@ model ProHallOfFame {
   careerStats String
   reason      String
   citation    String?
-  inductedAt  DateTime @default(now())
+  inductedAt  DateTime                   @default(now())
+  /// Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
+  dedications ProHallOfFameDedication[]
 
   @@unique([rosterId, reason])
   @@index([teamSlug])
   @@index([reason])
   @@index([inductedAt])
+}
+
+/// Sprint P (Lot P.B.2) — Dedications sur les entrees Hall of Fame.
+/// Sink Crowns : un user paie 500 Crowns pour epingler un message
+/// custom (max 280 chars) sur une entree HoF. 1 dedicace par user
+/// par entree (unique[hallOfFameId, userId]). Sert de Crowns sink
+/// pour prevenir l'hyperinflation introduite par les daily bonus +
+/// gains de paris.
+model ProHallOfFameDedication {
+  id           String        @id @default(cuid())
+  hallOfFameId String
+  hallOfFame   ProHallOfFame @relation(fields: [hallOfFameId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message      String        // max 280 chars (validated cote service)
+  costCrowns   Int           // montant debite (500 par defaut)
+  createdAt    DateTime      @default(now())
+
+  @@unique([hallOfFameId, userId])
+  @@index([userId])
+  @@index([hallOfFameId, createdAt])
 }
 
 // S27.6 — Audit log admin. Schema SQLite : `oldValue`/`newValue`

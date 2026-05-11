@@ -74,6 +74,7 @@ model User {
   proWallet                   ProWallet?
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
+  proHofDedications           ProHallOfFameDedication[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1644,11 +1645,36 @@ model ProHallOfFame {
   /// Description humaine optionnelle (pour rendu UI).
   citation    String?
   inductedAt  DateTime @default(now())
+  /// Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
+  dedications ProHallOfFameDedication[]
 
   @@unique([rosterId, reason])
   @@index([teamSlug])
   @@index([reason])
   @@index([inductedAt])
+}
+
+/// Sprint P (Lot P.B.2) — Dedications sur les entrees Hall of Fame.
+/// Sink Crowns : un user paie 500 Crowns pour epingler un message
+/// custom (max 280 chars) sur une entree HoF. 1 dedicace par user
+/// par entree (unique[hallOfFameId, userId]). Sert de Crowns sink
+/// pour prevenir l'hyperinflation introduite par les daily bonus +
+/// gains de paris.
+model ProHallOfFameDedication {
+  id           String        @id @default(cuid())
+  hallOfFameId String
+  hallOfFame   ProHallOfFame @relation(fields: [hallOfFameId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Texte custom max 280 chars (validation Zod cote service).
+  message      String        @db.VarChar(280)
+  /// Crowns debites au moment de la dedicace (500 par defaut).
+  costCrowns   Int
+  createdAt    DateTime      @default(now())
+
+  @@unique([hallOfFameId, userId])
+  @@index([userId])
+  @@index([hallOfFameId, createdAt])
 }
 
 /// S27.6 — Trace immuable des actions admin (compliance + tracabilite).
