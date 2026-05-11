@@ -48,6 +48,13 @@ model User {
   /// `true` = profil retire de la lookup publique et du sitemap.
   privateProfile              Boolean                 @default(false)
   valid                       Boolean                 @default(false)
+  /// Lot P.B.4 — moderation. Date de debut du dernier bannissement. null = jamais banni.
+  bannedAt                    DateTime?
+  /// Lot P.B.4 — fin du bannissement. Si > now() le user ne peut pas se logger.
+  /// null = pas banni. Pour un ban permanent on stocke une date tres lointaine (year 9999).
+  bannedUntil                 DateTime?
+  /// Lot P.B.4 — raison du bannissement (visible admin uniquement).
+  banReason                   String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   createdAt                   DateTime                @default(now())
@@ -196,6 +203,17 @@ model Match {
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
+
+  /// Lot P.B.4 — moderation. Date a laquelle un admin a force un forfait. null = pas de forfait.
+  forfeitedAt       DateTime?
+  /// Lot P.B.4 — cote du vainqueur ('A' ou 'B') quand un forfait admin est applique. null si pas forfeite.
+  forfeitWinnerSide String?
+  /// Lot P.B.4 — raison du forfait (visible admin + dans l'audit log). null si pas forfeite.
+  forfeitReason     String?
+  /// Lot P.B.4 — date a laquelle un admin a annule le match. null = pas annule.
+  cancelledAt       DateTime?
+  /// Lot P.B.4 — raison de l'annulation. null si pas annule.
+  cancelReason      String?
 
   // Practice vs AI — online match with an AI opponent.
   aiOpponent   Boolean @default(false)

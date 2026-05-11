@@ -1,16 +1,22 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../../auth-client";
+import BanUserModal from "./_components/BanUserModal";
 
 type User = {
   id: string;
   email: string;
   name?: string | null;
+  coachName?: string | null;
   role?: string;
   roles?: string[];
   patreon?: boolean;
   valid?: boolean;
   lastLoginAt?: string | null;
+  // Lot P.B.4 — moderation
+  bannedAt?: string | null;
+  bannedUntil?: string | null;
+  banReason?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -82,6 +88,9 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [teamDetails, setTeamDetails] = useState<any | null>(null);
+  // Lot P.B.4 — ban modal state
+  const [banModalUser, setBanModalUser] = useState<User | null>(null);
+  const [banLoading, setBanLoading] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -216,6 +225,59 @@ export default function AdminUsersPage() {
       await loadUsers();
     } catch (e: any) {
       alert(e.message || "Erreur lors de la suppression");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Lot P.B.4 — bannissement
+  const openBanModal = (user: User) => {
+    setBanModalUser(user);
+  };
+
+  const closeBanModal = () => {
+    setBanModalUser(null);
+    setBanLoading(false);
+  };
+
+  const handleBanConfirm = async (payload: {
+    reason: string;
+    durationDays: number;
+  }) => {
+    if (!banModalUser) return;
+    setBanLoading(true);
+    try {
+      await fetchJSON(`/admin/users/${banModalUser.id}/ban`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      closeBanModal();
+      await loadUsers();
+      if (selectedUser === banModalUser.id) {
+        await loadUserDetails(banModalUser.id);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors du bannissement");
+      setBanLoading(false);
+    }
+  };
+
+  const handleUnban = async (userId: string) => {
+    if (!confirm("Lever le bannissement de cet utilisateur ?")) {
+      return;
+    }
+    setActionLoading(userId);
+    try {
+      await fetchJSON(`/admin/users/${userId}/unban`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      await loadUsers();
+      if (selectedUser === userId) {
+        await loadUserDetails(userId);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors du debannissement");
     } finally {
       setActionLoading(null);
     }
@@ -653,6 +715,68 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
+              {/* Lot P.B.4 — section bannissement */}
+              {(() => {
+                const bannedUntil = userDetails.bannedUntil
+                  ? new Date(userDetails.bannedUntil)
+                  : null;
+                const isCurrentlyBanned =
+                  bannedUntil !== null && bannedUntil.getTime() > Date.now();
+                const isPermanent =
+                  bannedUntil !== null && bannedUntil.getFullYear() > 9000;
+                return (
+                  <div
+                    data-testid="user-ban-section"
+                    className={`p-4 rounded-lg border ${
+                      isCurrentlyBanned
+                        ? "bg-red-50 border-red-200"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <h3 className="font-semibold mb-2">Bannissement</h3>
+                    {isCurrentlyBanned ? (
+                      <div className="space-y-2 text-sm">
+                        <div className="font-medium text-red-700">
+                          {isPermanent
+                            ? "Bannissement permanent"
+                            : `Banni jusqu'au ${bannedUntil!.toLocaleString("fr-FR")}`}
+                        </div>
+                        {userDetails.banReason && (
+                          <div>
+                            <span className="text-gray-600">Raison :</span>{" "}
+                            <span data-testid="user-ban-reason">
+                              {userDetails.banReason}
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleUnban(userDetails.id)}
+                          disabled={actionLoading === userDetails.id}
+                          data-testid="btn-unban"
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
+                        >
+                          Lever le bannissement
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 text-sm">
+                        <div className="text-gray-600">
+                          Compte actif. Bannir empeche le login (message neutre).
+                        </div>
+                        <button
+                          onClick={() => openBanModal(userDetails)}
+                          disabled={actionLoading === userDetails.id}
+                          data-testid="btn-ban"
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50"
+                        >
+                          Bannir cet utilisateur
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
@@ -934,6 +1058,20 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+
+      {/* Lot P.B.4 — modal de bannissement */}
+      <BanUserModal
+        open={banModalUser !== null}
+        userId={banModalUser?.id ?? null}
+        userLabel={
+          banModalUser
+            ? banModalUser.coachName || banModalUser.email
+            : ""
+        }
+        loading={banLoading}
+        onClose={closeBanModal}
+        onConfirm={handleBanConfirm}
+      />
     </div>
   );
 }

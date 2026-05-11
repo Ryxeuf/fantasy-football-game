@@ -15,8 +15,8 @@ enum Ruleset {
 }
 
 model User {
-  id                          String               @id @default(cuid())
-  email                       String               @unique
+  id                          String                    @id @default(cuid())
+  email                       String                    @unique
   passwordHash                String
   name                        String? // Conservé pour rétrocompatibilité
   coachName                   String // Nom de coach (obligatoire)
@@ -24,47 +24,52 @@ model User {
   lastName                    String? // Nom (optionnel)
   dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                        String               @default("user")
+  role                        String                    @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles                       String               @default("[]")
+  roles                       String                    @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon                     Boolean              @default(false)
+  patreon                     Boolean                   @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode                String?              @unique
+  kofiLinkCode                String?                   @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi).
-  discordUserId               String?              @unique
+  discordUserId               String?                   @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
   supporterTier               String?
   /// Fin de la période de supporter payée.
   supporterActiveUntil        DateTime?
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
-  totalDonatedCentsByCurrency String               @default("{}")
+  totalDonatedCentsByCurrency String                    @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
-  privateProfile              Boolean              @default(false)
+  privateProfile              Boolean                   @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid                       Boolean              @default(true)
+  valid                       Boolean                   @default(true)
+  /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
+  /// services admin/ban puissent etre testes en SQLite sans diverger.
+  bannedAt                    DateTime?
+  bannedUntil                 DateTime?
+  banReason                   String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
-  createdAt                   DateTime             @default(now())
-  updatedAt                   DateTime             @updatedAt
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
   matches                     Match[]
-  createdMatches              Match[]              @relation("MatchCreator")
+  createdMatches              Match[]                   @relation("MatchCreator")
   teams                       Team[]
   teamSelections              TeamSelection[]
-  createdCups                 Cup[]                @relation("CupCreator")
-  createdLeagues              League[]             @relation("LeagueCreator")
-  createdLocalMatches         LocalMatch[]         @relation("LocalMatchCreator")
-  eloRating                   Int                  @default(1000)
+  createdCups                 Cup[]                     @relation("CupCreator")
+  createdLeagues              League[]                  @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]              @relation("LocalMatchCreator")
+  eloRating                   Int                       @default(1000)
   matchQueue                  MatchQueue?
   featureFlagOverrides        FeatureFlagUser[]
-  friendshipsSent             Friendship[]         @relation("FriendshipRequester")
-  friendshipsReceived         Friendship[]         @relation("FriendshipReceiver")
+  friendshipsSent             Friendship[]              @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]              @relation("FriendshipReceiver")
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
@@ -74,6 +79,7 @@ model User {
   proWallet                   ProWallet?
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
+  proHofDedications           ProHallOfFameDedication[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -208,6 +214,13 @@ model Match {
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
+
+  /// Lot P.B.4 — moderation matchs humains. Miroir des colonnes Postgres.
+  forfeitedAt       DateTime?
+  forfeitWinnerSide String?
+  forfeitReason     String?
+  cancelledAt       DateTime?
+  cancelReason      String?
 
   // Practice vs AI — online match with an AI opponent.
   // Mirrors the same fields on the PostgreSQL schema so e2e-api tests that
@@ -1147,7 +1160,7 @@ model ProGazetteArticle {
 }
 
 model ProHallOfFame {
-  id          String   @id @default(cuid())
+  id          String                    @id @default(cuid())
   rosterId    String
   teamSlug    String
   teamName    String
@@ -1163,12 +1176,35 @@ model ProHallOfFame {
   careerStats String
   reason      String
   citation    String?
-  inductedAt  DateTime @default(now())
+  inductedAt  DateTime                  @default(now())
+  /// Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
+  dedications ProHallOfFameDedication[]
 
   @@unique([rosterId, reason])
   @@index([teamSlug])
   @@index([reason])
   @@index([inductedAt])
+}
+
+/// Sprint P (Lot P.B.2) — Dedications sur les entrees Hall of Fame.
+/// Sink Crowns : un user paie 500 Crowns pour epingler un message
+/// custom (max 280 chars) sur une entree HoF. 1 dedicace par user
+/// par entree (unique[hallOfFameId, userId]). Sert de Crowns sink
+/// pour prevenir l'hyperinflation introduite par les daily bonus +
+/// gains de paris.
+model ProHallOfFameDedication {
+  id           String        @id @default(cuid())
+  hallOfFameId String
+  hallOfFame   ProHallOfFame @relation(fields: [hallOfFameId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message      String // max 280 chars (validated cote service)
+  costCrowns   Int // montant debite (500 par defaut)
+  createdAt    DateTime      @default(now())
+
+  @@unique([hallOfFameId, userId])
+  @@index([userId])
+  @@index([hallOfFameId, createdAt])
 }
 
 // S27.6 — Audit log admin. Schema SQLite : `oldValue`/`newValue`

@@ -49,6 +49,11 @@ model User {
   privateProfile              Boolean              @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                       Boolean              @default(true)
+  /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
+  /// services admin/ban puissent etre testes en SQLite sans diverger.
+  bannedAt                    DateTime?
+  bannedUntil                 DateTime?
+  banReason                   String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   createdAt                   DateTime             @default(now())
@@ -209,6 +214,13 @@ model Match {
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
+
+  /// Lot P.B.4 — moderation matchs humains. Miroir des colonnes Postgres.
+  forfeitedAt       DateTime?
+  forfeitWinnerSide String?
+  forfeitReason     String?
+  cancelledAt       DateTime?
+  cancelReason      String?
 
   // Practice vs AI — online match with an AI opponent.
   // Mirrors the same fields on the PostgreSQL schema so e2e-api tests that

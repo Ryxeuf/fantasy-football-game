@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import ModerationModal, {
+  type ModerationMode,
+} from "./_components/ModerationModal";
 
 type TeamSelection = {
   user: { id: string; coachName: string; email: string };
@@ -19,6 +22,12 @@ type Match = {
   creator: { id: string; email: string; coachName: string } | null;
   teamSelections: TeamSelection[];
   _count: { turns: number; players: number };
+  // Lot P.B.4 — moderation
+  forfeitedAt?: string | null;
+  forfeitWinnerSide?: "A" | "B" | null;
+  forfeitReason?: string | null;
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
 };
 
 type StatusCounts = {
@@ -46,6 +55,23 @@ async function patchJSON(path: string, data: any) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
     method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
+  return res.json();
+}
+
+async function postJSON(path: string, data: any) {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
       "Content-Type": "application/json",
@@ -100,6 +126,10 @@ export default function AdminMatchesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [moderationMatch, setModerationMatch] = useState<Match | null>(null);
+  const [moderationMode, setModerationMode] =
+    useState<ModerationMode>("forfeit");
+  const [moderationLoading, setModerationLoading] = useState(false);
 
   useEffect(() => {
     loadMatches();
@@ -157,6 +187,42 @@ export default function AdminMatchesPage() {
       setError(e.message || "Erreur lors du changement de statut");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const openModeration = (match: Match, mode: ModerationMode) => {
+    setModerationMatch(match);
+    setModerationMode(mode);
+  };
+
+  const closeModeration = () => {
+    setModerationMatch(null);
+    setModerationLoading(false);
+  };
+
+  const handleModerationConfirm = async (payload: {
+    reason: string;
+    winnerSide?: "A" | "B";
+  }) => {
+    if (!moderationMatch) return;
+    setModerationLoading(true);
+    setError(null);
+    try {
+      if (moderationMode === "forfeit") {
+        await postJSON(`/admin/matches/${moderationMatch.id}/forfeit`, {
+          winnerSide: payload.winnerSide,
+          reason: payload.reason,
+        });
+      } else {
+        await postJSON(`/admin/matches/${moderationMatch.id}/cancel`, {
+          reason: payload.reason,
+        });
+      }
+      closeModeration();
+      loadMatches();
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la moderation");
+      setModerationLoading(false);
     }
   };
 
@@ -502,6 +568,24 @@ export default function AdminMatchesPage() {
                         >
                           {STATUS_LABELS[match.status] || match.status}
                         </span>
+                        {match.forfeitedAt && (
+                          <div
+                            data-testid={`match-forfeit-${match.id}`}
+                            className="mt-1 text-[10px] font-medium text-orange-700"
+                            title={match.forfeitReason ?? ""}
+                          >
+                            ⚑ Forfait (gagnant : {match.forfeitWinnerSide})
+                          </div>
+                        )}
+                        {match.cancelledAt && (
+                          <div
+                            data-testid={`match-cancelled-${match.id}`}
+                            className="mt-1 text-[10px] font-medium text-red-700"
+                            title={match.cancelReason ?? ""}
+                          >
+                            ✕ Annule
+                          </div>
+                        )}
                       </td>
 
                       {/* Turns */}
@@ -542,6 +626,28 @@ export default function AdminMatchesPage() {
                                 </option>
                               ))}
                           </select>
+                          {/* Lot P.B.4 — moderation. Indispo si le match est deja
+                              forfeite ou annule (idempotence). */}
+                          {!match.forfeitedAt && !match.cancelledAt && (
+                            <>
+                              <button
+                                onClick={() => openModeration(match, "forfeit")}
+                                disabled={isLoading}
+                                data-testid={`btn-forfeit-${match.id}`}
+                                className="text-xs text-orange-600 hover:text-orange-800 text-left"
+                              >
+                                Forcer un forfait
+                              </button>
+                              <button
+                                onClick={() => openModeration(match, "cancel")}
+                                disabled={isLoading}
+                                data-testid={`btn-cancel-${match.id}`}
+                                className="text-xs text-red-600 hover:text-red-800 text-left"
+                              >
+                                Annuler le match
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => handleDelete(match.id)}
                             disabled={isLoading}
@@ -559,6 +665,26 @@ export default function AdminMatchesPage() {
           </table>
         </div>
       </div>
+
+      {/* Lot P.B.4 — modal de moderation (forfait ou annulation) */}
+      <ModerationModal
+        open={moderationMatch !== null}
+        mode={moderationMode}
+        matchId={moderationMatch?.id ?? null}
+        teamALabel={
+          moderationMatch
+            ? getTeamInfo(moderationMatch, 0)?.teamName ?? "Equipe A"
+            : "Equipe A"
+        }
+        teamBLabel={
+          moderationMatch
+            ? getTeamInfo(moderationMatch, 1)?.teamName ?? "Equipe B"
+            : "Equipe B"
+        }
+        loading={moderationLoading}
+        onClose={closeModeration}
+        onConfirm={handleModerationConfirm}
+      />
     </div>
   );
 }

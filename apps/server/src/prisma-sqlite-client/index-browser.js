@@ -136,6 +136,9 @@ exports.Prisma.UserScalarFieldEnum = {
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
   privateProfile: 'privateProfile',
   valid: 'valid',
+  bannedAt: 'bannedAt',
+  bannedUntil: 'bannedUntil',
+  banReason: 'banReason',
   lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -228,6 +231,11 @@ exports.Prisma.MatchScalarFieldEnum = {
   creatorId: 'creatorId',
   currentTurnUserId: 'currentTurnUserId',
   lastMoveAt: 'lastMoveAt',
+  forfeitedAt: 'forfeitedAt',
+  forfeitWinnerSide: 'forfeitWinnerSide',
+  forfeitReason: 'forfeitReason',
+  cancelledAt: 'cancelledAt',
+  cancelReason: 'cancelReason',
   aiOpponent: 'aiOpponent',
   aiDifficulty: 'aiDifficulty',
   aiTeamSide: 'aiTeamSide',
@@ -834,6 +842,15 @@ exports.Prisma.ProHallOfFameScalarFieldEnum = {
   inductedAt: 'inductedAt'
 };
 
+exports.Prisma.ProHallOfFameDedicationScalarFieldEnum = {
+  id: 'id',
+  hallOfFameId: 'hallOfFameId',
+  userId: 'userId',
+  message: 'message',
+  costCrowns: 'costCrowns',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -952,6 +969,7 @@ exports.Prisma.ModelName = {
   ProUserBadge: 'ProUserBadge',
   ProGazetteArticle: 'ProGazetteArticle',
   ProHallOfFame: 'ProHallOfFame',
+  ProHallOfFameDedication: 'ProHallOfFameDedication',
   AuditLog: 'AuditLog',
   EngineComparison: 'EngineComparison'
 };

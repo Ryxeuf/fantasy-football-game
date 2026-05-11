@@ -269,6 +269,16 @@ export type ProGazetteArticle = $Result.DefaultSelection<Prisma.$ProGazetteArtic
  */
 export type ProHallOfFame = $Result.DefaultSelection<Prisma.$ProHallOfFamePayload>
 /**
+ * Model ProHallOfFameDedication
+ * Sprint P (Lot P.B.2) — Dedications sur les entrees Hall of Fame.
+ * Sink Crowns : un user paie 500 Crowns pour epingler un message
+ * custom (max 280 chars) sur une entree HoF. 1 dedicace par user
+ * par entree (unique[hallOfFameId, userId]). Sert de Crowns sink
+ * pour prevenir l'hyperinflation introduite par les daily bonus +
+ * gains de paris.
+ */
+export type ProHallOfFameDedication = $Result.DefaultSelection<Prisma.$ProHallOfFameDedicationPayload>
+/**
  * Model AuditLog
  * 
  */
@@ -925,6 +935,16 @@ export class PrismaClient<
   get proHallOfFame(): Prisma.ProHallOfFameDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.proHallOfFameDedication`: Exposes CRUD operations for the **ProHallOfFameDedication** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProHallOfFameDedications
+    * const proHallOfFameDedications = await prisma.proHallOfFameDedication.findMany()
+    * ```
+    */
+  get proHallOfFameDedication(): Prisma.ProHallOfFameDedicationDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.auditLog`: Exposes CRUD operations for the **AuditLog** model.
     * Example usage:
     * ```ts
@@ -1434,6 +1454,7 @@ export namespace Prisma {
     ProUserBadge: 'ProUserBadge',
     ProGazetteArticle: 'ProGazetteArticle',
     ProHallOfFame: 'ProHallOfFame',
+    ProHallOfFameDedication: 'ProHallOfFameDedication',
     AuditLog: 'AuditLog',
     EngineComparison: 'EngineComparison'
   };
@@ -1454,7 +1475,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "auditLog" | "engineComparison"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "auditLog" | "engineComparison"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5232,6 +5253,80 @@ export namespace Prisma {
           }
         }
       }
+      ProHallOfFameDedication: {
+        payload: Prisma.$ProHallOfFameDedicationPayload<ExtArgs>
+        fields: Prisma.ProHallOfFameDedicationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProHallOfFameDedicationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProHallOfFameDedicationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          findFirst: {
+            args: Prisma.ProHallOfFameDedicationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProHallOfFameDedicationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          findMany: {
+            args: Prisma.ProHallOfFameDedicationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>[]
+          }
+          create: {
+            args: Prisma.ProHallOfFameDedicationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          createMany: {
+            args: Prisma.ProHallOfFameDedicationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProHallOfFameDedicationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>[]
+          }
+          delete: {
+            args: Prisma.ProHallOfFameDedicationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          update: {
+            args: Prisma.ProHallOfFameDedicationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProHallOfFameDedicationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProHallOfFameDedicationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProHallOfFameDedicationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProHallOfFameDedicationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProHallOfFameDedicationPayload>
+          }
+          aggregate: {
+            args: Prisma.ProHallOfFameDedicationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProHallOfFameDedication>
+          }
+          groupBy: {
+            args: Prisma.ProHallOfFameDedicationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProHallOfFameDedicationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProHallOfFameDedicationCountArgs<ExtArgs>
+            result: $Utils.Optional<ProHallOfFameDedicationCountAggregateOutputType> | number
+          }
+        }
+      }
       AuditLog: {
         payload: Prisma.$AuditLogPayload<ExtArgs>
         fields: Prisma.AuditLogFieldRefs
@@ -5527,6 +5622,7 @@ export namespace Prisma {
     proUserBadge?: ProUserBadgeOmit
     proGazetteArticle?: ProGazetteArticleOmit
     proHallOfFame?: ProHallOfFameOmit
+    proHallOfFameDedication?: ProHallOfFameDedicationOmit
     auditLog?: AuditLogOmit
     engineComparison?: EngineComparisonOmit
   }
@@ -5627,6 +5723,7 @@ export namespace Prisma {
     proSpectatorFollows: number
     proBets: number
     proUserBadges: number
+    proHofDedications: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5648,6 +5745,7 @@ export namespace Prisma {
     proSpectatorFollows?: boolean | UserCountOutputTypeCountProSpectatorFollowsArgs
     proBets?: boolean | UserCountOutputTypeCountProBetsArgs
     proUserBadges?: boolean | UserCountOutputTypeCountProUserBadgesArgs
+    proHofDedications?: boolean | UserCountOutputTypeCountProHofDedicationsArgs
   }
 
   // Custom InputTypes
@@ -5785,6 +5883,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountProUserBadgesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProUserBadgeWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProHofDedicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProHallOfFameDedicationWhereInput
   }
 
 
@@ -6567,6 +6672,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type ProHallOfFameCountOutputType
+   */
+
+  export type ProHallOfFameCountOutputType = {
+    dedications: number
+  }
+
+  export type ProHallOfFameCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    dedications?: boolean | ProHallOfFameCountOutputTypeCountDedicationsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ProHallOfFameCountOutputType without action
+   */
+  export type ProHallOfFameCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameCountOutputType
+     */
+    select?: ProHallOfFameCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ProHallOfFameCountOutputType without action
+   */
+  export type ProHallOfFameCountOutputTypeCountDedicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProHallOfFameDedicationWhereInput
+  }
+
+
+  /**
    * Models
    */
 
@@ -6609,6 +6745,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     valid: boolean | null
+    bannedAt: Date | null
+    bannedUntil: Date | null
+    banReason: string | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6634,6 +6773,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     valid: boolean | null
+    bannedAt: Date | null
+    bannedUntil: Date | null
+    banReason: string | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6659,6 +6801,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: number
     privateProfile: number
     valid: number
+    bannedAt: number
+    bannedUntil: number
+    banReason: number
     lastLoginAt: number
     createdAt: number
     updatedAt: number
@@ -6694,6 +6839,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    bannedAt?: true
+    bannedUntil?: true
+    banReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6719,6 +6867,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    bannedAt?: true
+    bannedUntil?: true
+    banReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6744,6 +6895,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    bannedAt?: true
+    bannedUntil?: true
+    banReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6856,6 +7010,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string
     privateProfile: boolean
     valid: boolean
+    bannedAt: Date | null
+    bannedUntil: Date | null
+    banReason: string | null
     lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -6900,6 +7057,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: boolean
+    bannedUntil?: boolean
+    banReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6924,6 +7084,7 @@ export namespace Prisma {
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
+    proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -6946,6 +7107,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: boolean
+    bannedUntil?: boolean
+    banReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6971,6 +7135,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: boolean
+    bannedUntil?: boolean
+    banReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6996,13 +7163,16 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: boolean
+    bannedUntil?: boolean
+    banReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "lastLoginAt" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "lastLoginAt" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -7024,6 +7194,7 @@ export namespace Prisma {
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
+    proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -7052,6 +7223,7 @@ export namespace Prisma {
       proWallet: Prisma.$ProWalletPayload<ExtArgs> | null
       proBets: Prisma.$ProBetPayload<ExtArgs>[]
       proUserBadges: Prisma.$ProUserBadgePayload<ExtArgs>[]
+      proHofDedications: Prisma.$ProHallOfFameDedicationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7108,6 +7280,13 @@ export namespace Prisma {
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
       valid: boolean
+      /**
+       * Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
+       * services admin/ban puissent etre testes en SQLite sans diverger.
+       */
+      bannedAt: Date | null
+      bannedUntil: Date | null
+      banReason: string | null
       /**
        * Date de la dernière connexion réussie de l'utilisateur.
        */
@@ -7529,6 +7708,7 @@ export namespace Prisma {
     proWallet<T extends User$proWalletArgs<ExtArgs> = {}>(args?: Subset<T, User$proWalletArgs<ExtArgs>>): Prisma__ProWalletClient<$Result.GetResult<Prisma.$ProWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     proBets<T extends User$proBetsArgs<ExtArgs> = {}>(args?: Subset<T, User$proBetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProBetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proUserBadges<T extends User$proUserBadgesArgs<ExtArgs> = {}>(args?: Subset<T, User$proUserBadgesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProUserBadgePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proHofDedications<T extends User$proHofDedicationsArgs<ExtArgs> = {}>(args?: Subset<T, User$proHofDedicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7576,6 +7756,9 @@ export namespace Prisma {
     readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
     readonly privateProfile: FieldRef<"User", 'Boolean'>
     readonly valid: FieldRef<"User", 'Boolean'>
+    readonly bannedAt: FieldRef<"User", 'DateTime'>
+    readonly bannedUntil: FieldRef<"User", 'DateTime'>
+    readonly banReason: FieldRef<"User", 'String'>
     readonly lastLoginAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -8433,6 +8616,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProUserBadgeScalarFieldEnum | ProUserBadgeScalarFieldEnum[]
+  }
+
+  /**
+   * User.proHofDedications
+   */
+  export type User$proHofDedicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    where?: ProHallOfFameDedicationWhereInput
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProHallOfFameDedicationScalarFieldEnum | ProHallOfFameDedicationScalarFieldEnum[]
   }
 
   /**
@@ -17230,6 +17437,11 @@ export namespace Prisma {
     creatorId: string | null
     currentTurnUserId: string | null
     lastMoveAt: Date | null
+    forfeitedAt: Date | null
+    forfeitWinnerSide: string | null
+    forfeitReason: string | null
+    cancelledAt: Date | null
+    cancelReason: string | null
     aiOpponent: boolean | null
     aiDifficulty: string | null
     aiTeamSide: string | null
@@ -17248,6 +17460,11 @@ export namespace Prisma {
     creatorId: string | null
     currentTurnUserId: string | null
     lastMoveAt: Date | null
+    forfeitedAt: Date | null
+    forfeitWinnerSide: string | null
+    forfeitReason: string | null
+    cancelledAt: Date | null
+    cancelReason: string | null
     aiOpponent: boolean | null
     aiDifficulty: string | null
     aiTeamSide: string | null
@@ -17266,6 +17483,11 @@ export namespace Prisma {
     creatorId: number
     currentTurnUserId: number
     lastMoveAt: number
+    forfeitedAt: number
+    forfeitWinnerSide: number
+    forfeitReason: number
+    cancelledAt: number
+    cancelReason: number
     aiOpponent: number
     aiDifficulty: number
     aiTeamSide: number
@@ -17286,6 +17508,11 @@ export namespace Prisma {
     creatorId?: true
     currentTurnUserId?: true
     lastMoveAt?: true
+    forfeitedAt?: true
+    forfeitWinnerSide?: true
+    forfeitReason?: true
+    cancelledAt?: true
+    cancelReason?: true
     aiOpponent?: true
     aiDifficulty?: true
     aiTeamSide?: true
@@ -17304,6 +17531,11 @@ export namespace Prisma {
     creatorId?: true
     currentTurnUserId?: true
     lastMoveAt?: true
+    forfeitedAt?: true
+    forfeitWinnerSide?: true
+    forfeitReason?: true
+    cancelledAt?: true
+    cancelReason?: true
     aiOpponent?: true
     aiDifficulty?: true
     aiTeamSide?: true
@@ -17322,6 +17554,11 @@ export namespace Prisma {
     creatorId?: true
     currentTurnUserId?: true
     lastMoveAt?: true
+    forfeitedAt?: true
+    forfeitWinnerSide?: true
+    forfeitReason?: true
+    cancelledAt?: true
+    cancelReason?: true
     aiOpponent?: true
     aiDifficulty?: true
     aiTeamSide?: true
@@ -17413,6 +17650,11 @@ export namespace Prisma {
     creatorId: string | null
     currentTurnUserId: string | null
     lastMoveAt: Date | null
+    forfeitedAt: Date | null
+    forfeitWinnerSide: string | null
+    forfeitReason: string | null
+    cancelledAt: Date | null
+    cancelReason: string | null
     aiOpponent: boolean
     aiDifficulty: string | null
     aiTeamSide: string | null
@@ -17448,6 +17690,11 @@ export namespace Prisma {
     creatorId?: boolean
     currentTurnUserId?: boolean
     lastMoveAt?: boolean
+    forfeitedAt?: boolean
+    forfeitWinnerSide?: boolean
+    forfeitReason?: boolean
+    cancelledAt?: boolean
+    cancelReason?: boolean
     aiOpponent?: boolean
     aiDifficulty?: boolean
     aiTeamSide?: boolean
@@ -17475,6 +17722,11 @@ export namespace Prisma {
     creatorId?: boolean
     currentTurnUserId?: boolean
     lastMoveAt?: boolean
+    forfeitedAt?: boolean
+    forfeitWinnerSide?: boolean
+    forfeitReason?: boolean
+    cancelledAt?: boolean
+    cancelReason?: boolean
     aiOpponent?: boolean
     aiDifficulty?: boolean
     aiTeamSide?: boolean
@@ -17497,6 +17749,11 @@ export namespace Prisma {
     creatorId?: boolean
     currentTurnUserId?: boolean
     lastMoveAt?: boolean
+    forfeitedAt?: boolean
+    forfeitWinnerSide?: boolean
+    forfeitReason?: boolean
+    cancelledAt?: boolean
+    cancelReason?: boolean
     aiOpponent?: boolean
     aiDifficulty?: boolean
     aiTeamSide?: boolean
@@ -17519,6 +17776,11 @@ export namespace Prisma {
     creatorId?: boolean
     currentTurnUserId?: boolean
     lastMoveAt?: boolean
+    forfeitedAt?: boolean
+    forfeitWinnerSide?: boolean
+    forfeitReason?: boolean
+    cancelledAt?: boolean
+    cancelReason?: boolean
     aiOpponent?: boolean
     aiDifficulty?: boolean
     aiTeamSide?: boolean
@@ -17529,7 +17791,7 @@ export namespace Prisma {
     leagueScoredAt?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId" | "currentTurnUserId" | "lastMoveAt" | "aiOpponent" | "aiDifficulty" | "aiTeamSide" | "aiUserId" | "leagueSeasonId" | "leagueRoundId" | "leaguePairingId" | "leagueScoredAt", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId" | "currentTurnUserId" | "lastMoveAt" | "forfeitedAt" | "forfeitWinnerSide" | "forfeitReason" | "cancelledAt" | "cancelReason" | "aiOpponent" | "aiDifficulty" | "aiTeamSide" | "aiUserId" | "leagueSeasonId" | "leagueRoundId" | "leaguePairingId" | "leagueScoredAt", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | Match$creatorArgs<ExtArgs>
     players?: boolean | Match$playersArgs<ExtArgs>
@@ -17574,6 +17836,14 @@ export namespace Prisma {
       creatorId: string | null
       currentTurnUserId: string | null
       lastMoveAt: Date | null
+      /**
+       * Lot P.B.4 — moderation matchs humains. Miroir des colonnes Postgres.
+       */
+      forfeitedAt: Date | null
+      forfeitWinnerSide: string | null
+      forfeitReason: string | null
+      cancelledAt: Date | null
+      cancelReason: string | null
       aiOpponent: boolean
       aiDifficulty: string | null
       aiTeamSide: string | null
@@ -18020,6 +18290,11 @@ export namespace Prisma {
     readonly creatorId: FieldRef<"Match", 'String'>
     readonly currentTurnUserId: FieldRef<"Match", 'String'>
     readonly lastMoveAt: FieldRef<"Match", 'DateTime'>
+    readonly forfeitedAt: FieldRef<"Match", 'DateTime'>
+    readonly forfeitWinnerSide: FieldRef<"Match", 'String'>
+    readonly forfeitReason: FieldRef<"Match", 'String'>
+    readonly cancelledAt: FieldRef<"Match", 'DateTime'>
+    readonly cancelReason: FieldRef<"Match", 'String'>
     readonly aiOpponent: FieldRef<"Match", 'Boolean'>
     readonly aiDifficulty: FieldRef<"Match", 'String'>
     readonly aiTeamSide: FieldRef<"Match", 'String'>
@@ -66705,6 +66980,8 @@ export namespace Prisma {
     reason?: boolean
     citation?: boolean
     inductedAt?: boolean
+    dedications?: boolean | ProHallOfFame$dedicationsArgs<ExtArgs>
+    _count?: boolean | ProHallOfFameCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["proHallOfFame"]>
 
   export type ProHallOfFameSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -66768,10 +67045,21 @@ export namespace Prisma {
   }
 
   export type ProHallOfFameOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "teamSlug" | "teamName" | "playerName" | "race" | "position" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "careerStats" | "reason" | "citation" | "inductedAt", ExtArgs["result"]["proHallOfFame"]>
+  export type ProHallOfFameInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    dedications?: boolean | ProHallOfFame$dedicationsArgs<ExtArgs>
+    _count?: boolean | ProHallOfFameCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ProHallOfFameIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ProHallOfFameIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ProHallOfFamePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ProHallOfFame"
-    objects: {}
+    objects: {
+      /**
+       * Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
+       */
+      dedications: Prisma.$ProHallOfFameDedicationPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       rosterId: string
@@ -67184,6 +67472,7 @@ export namespace Prisma {
    */
   export interface Prisma__ProHallOfFameClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    dedications<T extends ProHallOfFame$dedicationsArgs<ExtArgs> = {}>(args?: Subset<T, ProHallOfFame$dedicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -67247,6 +67536,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * Filter, which ProHallOfFame to fetch.
      */
     where: ProHallOfFameWhereUniqueInput
@@ -67265,6 +67558,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * Filter, which ProHallOfFame to fetch.
      */
     where: ProHallOfFameWhereUniqueInput
@@ -67282,6 +67579,10 @@ export namespace Prisma {
      * Omit specific fields from the ProHallOfFame
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
     /**
      * Filter, which ProHallOfFame to fetch.
      */
@@ -67331,6 +67632,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * Filter, which ProHallOfFame to fetch.
      */
     where?: ProHallOfFameWhereInput
@@ -67379,6 +67684,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * Filter, which ProHallOfFames to fetch.
      */
     where?: ProHallOfFameWhereInput
@@ -67421,6 +67730,10 @@ export namespace Prisma {
      * Omit specific fields from the ProHallOfFame
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
     /**
      * The data needed to create a ProHallOfFame.
      */
@@ -67467,6 +67780,10 @@ export namespace Prisma {
      * Omit specific fields from the ProHallOfFame
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
     /**
      * The data needed to update a ProHallOfFame.
      */
@@ -67534,6 +67851,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * The filter to search for the ProHallOfFame to update in case it exists.
      */
     where: ProHallOfFameWhereUniqueInput
@@ -67560,6 +67881,10 @@ export namespace Prisma {
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+    /**
      * Filter which ProHallOfFame to delete.
      */
     where: ProHallOfFameWhereUniqueInput
@@ -67580,6 +67905,30 @@ export namespace Prisma {
   }
 
   /**
+   * ProHallOfFame.dedications
+   */
+  export type ProHallOfFame$dedicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    where?: ProHallOfFameDedicationWhereInput
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProHallOfFameDedicationScalarFieldEnum | ProHallOfFameDedicationScalarFieldEnum[]
+  }
+
+  /**
    * ProHallOfFame without action
    */
   export type ProHallOfFameDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -67591,6 +67940,1121 @@ export namespace Prisma {
      * Omit specific fields from the ProHallOfFame
      */
     omit?: ProHallOfFameOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProHallOfFameDedication
+   */
+
+  export type AggregateProHallOfFameDedication = {
+    _count: ProHallOfFameDedicationCountAggregateOutputType | null
+    _avg: ProHallOfFameDedicationAvgAggregateOutputType | null
+    _sum: ProHallOfFameDedicationSumAggregateOutputType | null
+    _min: ProHallOfFameDedicationMinAggregateOutputType | null
+    _max: ProHallOfFameDedicationMaxAggregateOutputType | null
+  }
+
+  export type ProHallOfFameDedicationAvgAggregateOutputType = {
+    costCrowns: number | null
+  }
+
+  export type ProHallOfFameDedicationSumAggregateOutputType = {
+    costCrowns: number | null
+  }
+
+  export type ProHallOfFameDedicationMinAggregateOutputType = {
+    id: string | null
+    hallOfFameId: string | null
+    userId: string | null
+    message: string | null
+    costCrowns: number | null
+    createdAt: Date | null
+  }
+
+  export type ProHallOfFameDedicationMaxAggregateOutputType = {
+    id: string | null
+    hallOfFameId: string | null
+    userId: string | null
+    message: string | null
+    costCrowns: number | null
+    createdAt: Date | null
+  }
+
+  export type ProHallOfFameDedicationCountAggregateOutputType = {
+    id: number
+    hallOfFameId: number
+    userId: number
+    message: number
+    costCrowns: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ProHallOfFameDedicationAvgAggregateInputType = {
+    costCrowns?: true
+  }
+
+  export type ProHallOfFameDedicationSumAggregateInputType = {
+    costCrowns?: true
+  }
+
+  export type ProHallOfFameDedicationMinAggregateInputType = {
+    id?: true
+    hallOfFameId?: true
+    userId?: true
+    message?: true
+    costCrowns?: true
+    createdAt?: true
+  }
+
+  export type ProHallOfFameDedicationMaxAggregateInputType = {
+    id?: true
+    hallOfFameId?: true
+    userId?: true
+    message?: true
+    costCrowns?: true
+    createdAt?: true
+  }
+
+  export type ProHallOfFameDedicationCountAggregateInputType = {
+    id?: true
+    hallOfFameId?: true
+    userId?: true
+    message?: true
+    costCrowns?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ProHallOfFameDedicationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProHallOfFameDedication to aggregate.
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProHallOfFameDedications to fetch.
+     */
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProHallOfFameDedications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProHallOfFameDedications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProHallOfFameDedications
+    **/
+    _count?: true | ProHallOfFameDedicationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ProHallOfFameDedicationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ProHallOfFameDedicationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProHallOfFameDedicationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProHallOfFameDedicationMaxAggregateInputType
+  }
+
+  export type GetProHallOfFameDedicationAggregateType<T extends ProHallOfFameDedicationAggregateArgs> = {
+        [P in keyof T & keyof AggregateProHallOfFameDedication]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProHallOfFameDedication[P]>
+      : GetScalarType<T[P], AggregateProHallOfFameDedication[P]>
+  }
+
+
+
+
+  export type ProHallOfFameDedicationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProHallOfFameDedicationWhereInput
+    orderBy?: ProHallOfFameDedicationOrderByWithAggregationInput | ProHallOfFameDedicationOrderByWithAggregationInput[]
+    by: ProHallOfFameDedicationScalarFieldEnum[] | ProHallOfFameDedicationScalarFieldEnum
+    having?: ProHallOfFameDedicationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProHallOfFameDedicationCountAggregateInputType | true
+    _avg?: ProHallOfFameDedicationAvgAggregateInputType
+    _sum?: ProHallOfFameDedicationSumAggregateInputType
+    _min?: ProHallOfFameDedicationMinAggregateInputType
+    _max?: ProHallOfFameDedicationMaxAggregateInputType
+  }
+
+  export type ProHallOfFameDedicationGroupByOutputType = {
+    id: string
+    hallOfFameId: string
+    userId: string
+    message: string
+    costCrowns: number
+    createdAt: Date
+    _count: ProHallOfFameDedicationCountAggregateOutputType | null
+    _avg: ProHallOfFameDedicationAvgAggregateOutputType | null
+    _sum: ProHallOfFameDedicationSumAggregateOutputType | null
+    _min: ProHallOfFameDedicationMinAggregateOutputType | null
+    _max: ProHallOfFameDedicationMaxAggregateOutputType | null
+  }
+
+  type GetProHallOfFameDedicationGroupByPayload<T extends ProHallOfFameDedicationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProHallOfFameDedicationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProHallOfFameDedicationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProHallOfFameDedicationGroupByOutputType[P]>
+            : GetScalarType<T[P], ProHallOfFameDedicationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProHallOfFameDedicationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hallOfFameId?: boolean
+    userId?: boolean
+    message?: boolean
+    costCrowns?: boolean
+    createdAt?: boolean
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proHallOfFameDedication"]>
+
+  export type ProHallOfFameDedicationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hallOfFameId?: boolean
+    userId?: boolean
+    message?: boolean
+    costCrowns?: boolean
+    createdAt?: boolean
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proHallOfFameDedication"]>
+
+  export type ProHallOfFameDedicationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    hallOfFameId?: boolean
+    userId?: boolean
+    message?: boolean
+    costCrowns?: boolean
+    createdAt?: boolean
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proHallOfFameDedication"]>
+
+  export type ProHallOfFameDedicationSelectScalar = {
+    id?: boolean
+    hallOfFameId?: boolean
+    userId?: boolean
+    message?: boolean
+    costCrowns?: boolean
+    createdAt?: boolean
+  }
+
+  export type ProHallOfFameDedicationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "hallOfFameId" | "userId" | "message" | "costCrowns" | "createdAt", ExtArgs["result"]["proHallOfFameDedication"]>
+  export type ProHallOfFameDedicationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProHallOfFameDedicationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProHallOfFameDedicationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    hallOfFame?: boolean | ProHallOfFameDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ProHallOfFameDedicationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProHallOfFameDedication"
+    objects: {
+      hallOfFame: Prisma.$ProHallOfFamePayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      hallOfFameId: string
+      userId: string
+      message: string
+      costCrowns: number
+      createdAt: Date
+    }, ExtArgs["result"]["proHallOfFameDedication"]>
+    composites: {}
+  }
+
+  type ProHallOfFameDedicationGetPayload<S extends boolean | null | undefined | ProHallOfFameDedicationDefaultArgs> = $Result.GetResult<Prisma.$ProHallOfFameDedicationPayload, S>
+
+  type ProHallOfFameDedicationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProHallOfFameDedicationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProHallOfFameDedicationCountAggregateInputType | true
+    }
+
+  export interface ProHallOfFameDedicationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProHallOfFameDedication'], meta: { name: 'ProHallOfFameDedication' } }
+    /**
+     * Find zero or one ProHallOfFameDedication that matches the filter.
+     * @param {ProHallOfFameDedicationFindUniqueArgs} args - Arguments to find a ProHallOfFameDedication
+     * @example
+     * // Get one ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProHallOfFameDedicationFindUniqueArgs>(args: SelectSubset<T, ProHallOfFameDedicationFindUniqueArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProHallOfFameDedication that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProHallOfFameDedicationFindUniqueOrThrowArgs} args - Arguments to find a ProHallOfFameDedication
+     * @example
+     * // Get one ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProHallOfFameDedicationFindUniqueOrThrowArgs>(args: SelectSubset<T, ProHallOfFameDedicationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProHallOfFameDedication that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationFindFirstArgs} args - Arguments to find a ProHallOfFameDedication
+     * @example
+     * // Get one ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProHallOfFameDedicationFindFirstArgs>(args?: SelectSubset<T, ProHallOfFameDedicationFindFirstArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProHallOfFameDedication that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationFindFirstOrThrowArgs} args - Arguments to find a ProHallOfFameDedication
+     * @example
+     * // Get one ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProHallOfFameDedicationFindFirstOrThrowArgs>(args?: SelectSubset<T, ProHallOfFameDedicationFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProHallOfFameDedications that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProHallOfFameDedications
+     * const proHallOfFameDedications = await prisma.proHallOfFameDedication.findMany()
+     * 
+     * // Get first 10 ProHallOfFameDedications
+     * const proHallOfFameDedications = await prisma.proHallOfFameDedication.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const proHallOfFameDedicationWithIdOnly = await prisma.proHallOfFameDedication.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProHallOfFameDedicationFindManyArgs>(args?: SelectSubset<T, ProHallOfFameDedicationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProHallOfFameDedication.
+     * @param {ProHallOfFameDedicationCreateArgs} args - Arguments to create a ProHallOfFameDedication.
+     * @example
+     * // Create one ProHallOfFameDedication
+     * const ProHallOfFameDedication = await prisma.proHallOfFameDedication.create({
+     *   data: {
+     *     // ... data to create a ProHallOfFameDedication
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProHallOfFameDedicationCreateArgs>(args: SelectSubset<T, ProHallOfFameDedicationCreateArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProHallOfFameDedications.
+     * @param {ProHallOfFameDedicationCreateManyArgs} args - Arguments to create many ProHallOfFameDedications.
+     * @example
+     * // Create many ProHallOfFameDedications
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProHallOfFameDedicationCreateManyArgs>(args?: SelectSubset<T, ProHallOfFameDedicationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProHallOfFameDedications and returns the data saved in the database.
+     * @param {ProHallOfFameDedicationCreateManyAndReturnArgs} args - Arguments to create many ProHallOfFameDedications.
+     * @example
+     * // Create many ProHallOfFameDedications
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProHallOfFameDedications and only return the `id`
+     * const proHallOfFameDedicationWithIdOnly = await prisma.proHallOfFameDedication.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProHallOfFameDedicationCreateManyAndReturnArgs>(args?: SelectSubset<T, ProHallOfFameDedicationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProHallOfFameDedication.
+     * @param {ProHallOfFameDedicationDeleteArgs} args - Arguments to delete one ProHallOfFameDedication.
+     * @example
+     * // Delete one ProHallOfFameDedication
+     * const ProHallOfFameDedication = await prisma.proHallOfFameDedication.delete({
+     *   where: {
+     *     // ... filter to delete one ProHallOfFameDedication
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProHallOfFameDedicationDeleteArgs>(args: SelectSubset<T, ProHallOfFameDedicationDeleteArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProHallOfFameDedication.
+     * @param {ProHallOfFameDedicationUpdateArgs} args - Arguments to update one ProHallOfFameDedication.
+     * @example
+     * // Update one ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProHallOfFameDedicationUpdateArgs>(args: SelectSubset<T, ProHallOfFameDedicationUpdateArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProHallOfFameDedications.
+     * @param {ProHallOfFameDedicationDeleteManyArgs} args - Arguments to filter ProHallOfFameDedications to delete.
+     * @example
+     * // Delete a few ProHallOfFameDedications
+     * const { count } = await prisma.proHallOfFameDedication.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProHallOfFameDedicationDeleteManyArgs>(args?: SelectSubset<T, ProHallOfFameDedicationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProHallOfFameDedications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProHallOfFameDedications
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProHallOfFameDedicationUpdateManyArgs>(args: SelectSubset<T, ProHallOfFameDedicationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProHallOfFameDedications and returns the data updated in the database.
+     * @param {ProHallOfFameDedicationUpdateManyAndReturnArgs} args - Arguments to update many ProHallOfFameDedications.
+     * @example
+     * // Update many ProHallOfFameDedications
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProHallOfFameDedications and only return the `id`
+     * const proHallOfFameDedicationWithIdOnly = await prisma.proHallOfFameDedication.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProHallOfFameDedicationUpdateManyAndReturnArgs>(args: SelectSubset<T, ProHallOfFameDedicationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProHallOfFameDedication.
+     * @param {ProHallOfFameDedicationUpsertArgs} args - Arguments to update or create a ProHallOfFameDedication.
+     * @example
+     * // Update or create a ProHallOfFameDedication
+     * const proHallOfFameDedication = await prisma.proHallOfFameDedication.upsert({
+     *   create: {
+     *     // ... data to create a ProHallOfFameDedication
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProHallOfFameDedication we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProHallOfFameDedicationUpsertArgs>(args: SelectSubset<T, ProHallOfFameDedicationUpsertArgs<ExtArgs>>): Prisma__ProHallOfFameDedicationClient<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProHallOfFameDedications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationCountArgs} args - Arguments to filter ProHallOfFameDedications to count.
+     * @example
+     * // Count the number of ProHallOfFameDedications
+     * const count = await prisma.proHallOfFameDedication.count({
+     *   where: {
+     *     // ... the filter for the ProHallOfFameDedications we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProHallOfFameDedicationCountArgs>(
+      args?: Subset<T, ProHallOfFameDedicationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProHallOfFameDedicationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProHallOfFameDedication.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProHallOfFameDedicationAggregateArgs>(args: Subset<T, ProHallOfFameDedicationAggregateArgs>): Prisma.PrismaPromise<GetProHallOfFameDedicationAggregateType<T>>
+
+    /**
+     * Group by ProHallOfFameDedication.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProHallOfFameDedicationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProHallOfFameDedicationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProHallOfFameDedicationGroupByArgs['orderBy'] }
+        : { orderBy?: ProHallOfFameDedicationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProHallOfFameDedicationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProHallOfFameDedicationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProHallOfFameDedication model
+   */
+  readonly fields: ProHallOfFameDedicationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProHallOfFameDedication.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProHallOfFameDedicationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    hallOfFame<T extends ProHallOfFameDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProHallOfFameDefaultArgs<ExtArgs>>): Prisma__ProHallOfFameClient<$Result.GetResult<Prisma.$ProHallOfFamePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProHallOfFameDedication model
+   */
+  interface ProHallOfFameDedicationFieldRefs {
+    readonly id: FieldRef<"ProHallOfFameDedication", 'String'>
+    readonly hallOfFameId: FieldRef<"ProHallOfFameDedication", 'String'>
+    readonly userId: FieldRef<"ProHallOfFameDedication", 'String'>
+    readonly message: FieldRef<"ProHallOfFameDedication", 'String'>
+    readonly costCrowns: FieldRef<"ProHallOfFameDedication", 'Int'>
+    readonly createdAt: FieldRef<"ProHallOfFameDedication", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProHallOfFameDedication findUnique
+   */
+  export type ProHallOfFameDedicationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter, which ProHallOfFameDedication to fetch.
+     */
+    where: ProHallOfFameDedicationWhereUniqueInput
+  }
+
+  /**
+   * ProHallOfFameDedication findUniqueOrThrow
+   */
+  export type ProHallOfFameDedicationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter, which ProHallOfFameDedication to fetch.
+     */
+    where: ProHallOfFameDedicationWhereUniqueInput
+  }
+
+  /**
+   * ProHallOfFameDedication findFirst
+   */
+  export type ProHallOfFameDedicationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter, which ProHallOfFameDedication to fetch.
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProHallOfFameDedications to fetch.
+     */
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProHallOfFameDedications.
+     */
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProHallOfFameDedications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProHallOfFameDedications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProHallOfFameDedications.
+     */
+    distinct?: ProHallOfFameDedicationScalarFieldEnum | ProHallOfFameDedicationScalarFieldEnum[]
+  }
+
+  /**
+   * ProHallOfFameDedication findFirstOrThrow
+   */
+  export type ProHallOfFameDedicationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter, which ProHallOfFameDedication to fetch.
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProHallOfFameDedications to fetch.
+     */
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProHallOfFameDedications.
+     */
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProHallOfFameDedications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProHallOfFameDedications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProHallOfFameDedications.
+     */
+    distinct?: ProHallOfFameDedicationScalarFieldEnum | ProHallOfFameDedicationScalarFieldEnum[]
+  }
+
+  /**
+   * ProHallOfFameDedication findMany
+   */
+  export type ProHallOfFameDedicationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter, which ProHallOfFameDedications to fetch.
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProHallOfFameDedications to fetch.
+     */
+    orderBy?: ProHallOfFameDedicationOrderByWithRelationInput | ProHallOfFameDedicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProHallOfFameDedications.
+     */
+    cursor?: ProHallOfFameDedicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProHallOfFameDedications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProHallOfFameDedications.
+     */
+    skip?: number
+    distinct?: ProHallOfFameDedicationScalarFieldEnum | ProHallOfFameDedicationScalarFieldEnum[]
+  }
+
+  /**
+   * ProHallOfFameDedication create
+   */
+  export type ProHallOfFameDedicationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProHallOfFameDedication.
+     */
+    data: XOR<ProHallOfFameDedicationCreateInput, ProHallOfFameDedicationUncheckedCreateInput>
+  }
+
+  /**
+   * ProHallOfFameDedication createMany
+   */
+  export type ProHallOfFameDedicationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProHallOfFameDedications.
+     */
+    data: ProHallOfFameDedicationCreateManyInput | ProHallOfFameDedicationCreateManyInput[]
+  }
+
+  /**
+   * ProHallOfFameDedication createManyAndReturn
+   */
+  export type ProHallOfFameDedicationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProHallOfFameDedications.
+     */
+    data: ProHallOfFameDedicationCreateManyInput | ProHallOfFameDedicationCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProHallOfFameDedication update
+   */
+  export type ProHallOfFameDedicationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProHallOfFameDedication.
+     */
+    data: XOR<ProHallOfFameDedicationUpdateInput, ProHallOfFameDedicationUncheckedUpdateInput>
+    /**
+     * Choose, which ProHallOfFameDedication to update.
+     */
+    where: ProHallOfFameDedicationWhereUniqueInput
+  }
+
+  /**
+   * ProHallOfFameDedication updateMany
+   */
+  export type ProHallOfFameDedicationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProHallOfFameDedications.
+     */
+    data: XOR<ProHallOfFameDedicationUpdateManyMutationInput, ProHallOfFameDedicationUncheckedUpdateManyInput>
+    /**
+     * Filter which ProHallOfFameDedications to update
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * Limit how many ProHallOfFameDedications to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProHallOfFameDedication updateManyAndReturn
+   */
+  export type ProHallOfFameDedicationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * The data used to update ProHallOfFameDedications.
+     */
+    data: XOR<ProHallOfFameDedicationUpdateManyMutationInput, ProHallOfFameDedicationUncheckedUpdateManyInput>
+    /**
+     * Filter which ProHallOfFameDedications to update
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * Limit how many ProHallOfFameDedications to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProHallOfFameDedication upsert
+   */
+  export type ProHallOfFameDedicationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProHallOfFameDedication to update in case it exists.
+     */
+    where: ProHallOfFameDedicationWhereUniqueInput
+    /**
+     * In case the ProHallOfFameDedication found by the `where` argument doesn't exist, create a new ProHallOfFameDedication with this data.
+     */
+    create: XOR<ProHallOfFameDedicationCreateInput, ProHallOfFameDedicationUncheckedCreateInput>
+    /**
+     * In case the ProHallOfFameDedication was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProHallOfFameDedicationUpdateInput, ProHallOfFameDedicationUncheckedUpdateInput>
+  }
+
+  /**
+   * ProHallOfFameDedication delete
+   */
+  export type ProHallOfFameDedicationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
+    /**
+     * Filter which ProHallOfFameDedication to delete.
+     */
+    where: ProHallOfFameDedicationWhereUniqueInput
+  }
+
+  /**
+   * ProHallOfFameDedication deleteMany
+   */
+  export type ProHallOfFameDedicationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProHallOfFameDedications to delete
+     */
+    where?: ProHallOfFameDedicationWhereInput
+    /**
+     * Limit how many ProHallOfFameDedications to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProHallOfFameDedication without action
+   */
+  export type ProHallOfFameDedicationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProHallOfFameDedication
+     */
+    select?: ProHallOfFameDedicationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProHallOfFameDedication
+     */
+    omit?: ProHallOfFameDedicationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProHallOfFameDedicationInclude<ExtArgs> | null
   }
 
 
@@ -69888,6 +71352,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
     privateProfile: 'privateProfile',
     valid: 'valid',
+    bannedAt: 'bannedAt',
+    bannedUntil: 'bannedUntil',
+    banReason: 'banReason',
     lastLoginAt: 'lastLoginAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -70007,6 +71474,11 @@ export namespace Prisma {
     creatorId: 'creatorId',
     currentTurnUserId: 'currentTurnUserId',
     lastMoveAt: 'lastMoveAt',
+    forfeitedAt: 'forfeitedAt',
+    forfeitWinnerSide: 'forfeitWinnerSide',
+    forfeitReason: 'forfeitReason',
+    cancelledAt: 'cancelledAt',
+    cancelReason: 'cancelReason',
     aiOpponent: 'aiOpponent',
     aiDifficulty: 'aiDifficulty',
     aiTeamSide: 'aiTeamSide',
@@ -70739,6 +72211,18 @@ export namespace Prisma {
   export type ProHallOfFameScalarFieldEnum = (typeof ProHallOfFameScalarFieldEnum)[keyof typeof ProHallOfFameScalarFieldEnum]
 
 
+  export const ProHallOfFameDedicationScalarFieldEnum: {
+    id: 'id',
+    hallOfFameId: 'hallOfFameId',
+    userId: 'userId',
+    message: 'message',
+    costCrowns: 'costCrowns',
+    createdAt: 'createdAt'
+  };
+
+  export type ProHallOfFameDedicationScalarFieldEnum = (typeof ProHallOfFameDedicationScalarFieldEnum)[keyof typeof ProHallOfFameDedicationScalarFieldEnum]
+
+
   export const AuditLogScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -70925,6 +72409,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    banReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -70949,6 +72436,7 @@ export namespace Prisma {
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
+    proHofDedications?: ProHallOfFameDedicationListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -70970,6 +72458,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    bannedAt?: SortOrderInput | SortOrder
+    bannedUntil?: SortOrderInput | SortOrder
+    banReason?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -70994,6 +72485,7 @@ export namespace Prisma {
     proWallet?: ProWalletOrderByWithRelationInput
     proBets?: ProBetOrderByRelationAggregateInput
     proUserBadges?: ProUserBadgeOrderByRelationAggregateInput
+    proHofDedications?: ProHallOfFameDedicationOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -71018,6 +72510,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    banReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -71042,6 +72537,7 @@ export namespace Prisma {
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
+    proHofDedications?: ProHallOfFameDedicationListRelationFilter
   }, "id" | "email" | "kofiLinkCode" | "discordUserId">
 
   export type UserOrderByWithAggregationInput = {
@@ -71063,6 +72559,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    bannedAt?: SortOrderInput | SortOrder
+    bannedUntil?: SortOrderInput | SortOrder
+    banReason?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -71096,6 +72595,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
     privateProfile?: BoolWithAggregatesFilter<"User"> | boolean
     valid?: BoolWithAggregatesFilter<"User"> | boolean
+    bannedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    bannedUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    banReason?: StringNullableWithAggregatesFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -71637,6 +73139,11 @@ export namespace Prisma {
     creatorId?: StringNullableFilter<"Match"> | string | null
     currentTurnUserId?: StringNullableFilter<"Match"> | string | null
     lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitWinnerSide?: StringNullableFilter<"Match"> | string | null
+    forfeitReason?: StringNullableFilter<"Match"> | string | null
+    cancelledAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    cancelReason?: StringNullableFilter<"Match"> | string | null
     aiOpponent?: BoolFilter<"Match"> | boolean
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
@@ -71663,6 +73170,11 @@ export namespace Prisma {
     creatorId?: SortOrderInput | SortOrder
     currentTurnUserId?: SortOrderInput | SortOrder
     lastMoveAt?: SortOrderInput | SortOrder
+    forfeitedAt?: SortOrderInput | SortOrder
+    forfeitWinnerSide?: SortOrderInput | SortOrder
+    forfeitReason?: SortOrderInput | SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    cancelReason?: SortOrderInput | SortOrder
     aiOpponent?: SortOrder
     aiDifficulty?: SortOrderInput | SortOrder
     aiTeamSide?: SortOrderInput | SortOrder
@@ -71693,6 +73205,11 @@ export namespace Prisma {
     creatorId?: StringNullableFilter<"Match"> | string | null
     currentTurnUserId?: StringNullableFilter<"Match"> | string | null
     lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitWinnerSide?: StringNullableFilter<"Match"> | string | null
+    forfeitReason?: StringNullableFilter<"Match"> | string | null
+    cancelledAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    cancelReason?: StringNullableFilter<"Match"> | string | null
     aiOpponent?: BoolFilter<"Match"> | boolean
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
@@ -71718,6 +73235,11 @@ export namespace Prisma {
     creatorId?: SortOrderInput | SortOrder
     currentTurnUserId?: SortOrderInput | SortOrder
     lastMoveAt?: SortOrderInput | SortOrder
+    forfeitedAt?: SortOrderInput | SortOrder
+    forfeitWinnerSide?: SortOrderInput | SortOrder
+    forfeitReason?: SortOrderInput | SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    cancelReason?: SortOrderInput | SortOrder
     aiOpponent?: SortOrder
     aiDifficulty?: SortOrderInput | SortOrder
     aiTeamSide?: SortOrderInput | SortOrder
@@ -71742,6 +73264,11 @@ export namespace Prisma {
     creatorId?: StringNullableWithAggregatesFilter<"Match"> | string | null
     currentTurnUserId?: StringNullableWithAggregatesFilter<"Match"> | string | null
     lastMoveAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    forfeitedAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    forfeitWinnerSide?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    forfeitReason?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    cancelledAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    cancelReason?: StringNullableWithAggregatesFilter<"Match"> | string | null
     aiOpponent?: BoolWithAggregatesFilter<"Match"> | boolean
     aiDifficulty?: StringNullableWithAggregatesFilter<"Match"> | string | null
     aiTeamSide?: StringNullableWithAggregatesFilter<"Match"> | string | null
@@ -75468,6 +76995,7 @@ export namespace Prisma {
     reason?: StringFilter<"ProHallOfFame"> | string
     citation?: StringNullableFilter<"ProHallOfFame"> | string | null
     inductedAt?: DateTimeFilter<"ProHallOfFame"> | Date | string
+    dedications?: ProHallOfFameDedicationListRelationFilter
   }
 
   export type ProHallOfFameOrderByWithRelationInput = {
@@ -75488,6 +77016,7 @@ export namespace Prisma {
     reason?: SortOrder
     citation?: SortOrderInput | SortOrder
     inductedAt?: SortOrder
+    dedications?: ProHallOfFameDedicationOrderByRelationAggregateInput
   }
 
   export type ProHallOfFameWhereUniqueInput = Prisma.AtLeast<{
@@ -75512,6 +77041,7 @@ export namespace Prisma {
     reason?: StringFilter<"ProHallOfFame"> | string
     citation?: StringNullableFilter<"ProHallOfFame"> | string | null
     inductedAt?: DateTimeFilter<"ProHallOfFame"> | Date | string
+    dedications?: ProHallOfFameDedicationListRelationFilter
   }, "id" | "rosterId_reason">
 
   export type ProHallOfFameOrderByWithAggregationInput = {
@@ -75560,6 +77090,72 @@ export namespace Prisma {
     reason?: StringWithAggregatesFilter<"ProHallOfFame"> | string
     citation?: StringNullableWithAggregatesFilter<"ProHallOfFame"> | string | null
     inductedAt?: DateTimeWithAggregatesFilter<"ProHallOfFame"> | Date | string
+  }
+
+  export type ProHallOfFameDedicationWhereInput = {
+    AND?: ProHallOfFameDedicationWhereInput | ProHallOfFameDedicationWhereInput[]
+    OR?: ProHallOfFameDedicationWhereInput[]
+    NOT?: ProHallOfFameDedicationWhereInput | ProHallOfFameDedicationWhereInput[]
+    id?: StringFilter<"ProHallOfFameDedication"> | string
+    hallOfFameId?: StringFilter<"ProHallOfFameDedication"> | string
+    userId?: StringFilter<"ProHallOfFameDedication"> | string
+    message?: StringFilter<"ProHallOfFameDedication"> | string
+    costCrowns?: IntFilter<"ProHallOfFameDedication"> | number
+    createdAt?: DateTimeFilter<"ProHallOfFameDedication"> | Date | string
+    hallOfFame?: XOR<ProHallOfFameScalarRelationFilter, ProHallOfFameWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ProHallOfFameDedicationOrderByWithRelationInput = {
+    id?: SortOrder
+    hallOfFameId?: SortOrder
+    userId?: SortOrder
+    message?: SortOrder
+    costCrowns?: SortOrder
+    createdAt?: SortOrder
+    hallOfFame?: ProHallOfFameOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ProHallOfFameDedicationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    hallOfFameId_userId?: ProHallOfFameDedicationHallOfFameIdUserIdCompoundUniqueInput
+    AND?: ProHallOfFameDedicationWhereInput | ProHallOfFameDedicationWhereInput[]
+    OR?: ProHallOfFameDedicationWhereInput[]
+    NOT?: ProHallOfFameDedicationWhereInput | ProHallOfFameDedicationWhereInput[]
+    hallOfFameId?: StringFilter<"ProHallOfFameDedication"> | string
+    userId?: StringFilter<"ProHallOfFameDedication"> | string
+    message?: StringFilter<"ProHallOfFameDedication"> | string
+    costCrowns?: IntFilter<"ProHallOfFameDedication"> | number
+    createdAt?: DateTimeFilter<"ProHallOfFameDedication"> | Date | string
+    hallOfFame?: XOR<ProHallOfFameScalarRelationFilter, ProHallOfFameWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "hallOfFameId_userId">
+
+  export type ProHallOfFameDedicationOrderByWithAggregationInput = {
+    id?: SortOrder
+    hallOfFameId?: SortOrder
+    userId?: SortOrder
+    message?: SortOrder
+    costCrowns?: SortOrder
+    createdAt?: SortOrder
+    _count?: ProHallOfFameDedicationCountOrderByAggregateInput
+    _avg?: ProHallOfFameDedicationAvgOrderByAggregateInput
+    _max?: ProHallOfFameDedicationMaxOrderByAggregateInput
+    _min?: ProHallOfFameDedicationMinOrderByAggregateInput
+    _sum?: ProHallOfFameDedicationSumOrderByAggregateInput
+  }
+
+  export type ProHallOfFameDedicationScalarWhereWithAggregatesInput = {
+    AND?: ProHallOfFameDedicationScalarWhereWithAggregatesInput | ProHallOfFameDedicationScalarWhereWithAggregatesInput[]
+    OR?: ProHallOfFameDedicationScalarWhereWithAggregatesInput[]
+    NOT?: ProHallOfFameDedicationScalarWhereWithAggregatesInput | ProHallOfFameDedicationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProHallOfFameDedication"> | string
+    hallOfFameId?: StringWithAggregatesFilter<"ProHallOfFameDedication"> | string
+    userId?: StringWithAggregatesFilter<"ProHallOfFameDedication"> | string
+    message?: StringWithAggregatesFilter<"ProHallOfFameDedication"> | string
+    costCrowns?: IntWithAggregatesFilter<"ProHallOfFameDedication"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ProHallOfFameDedication"> | Date | string
   }
 
   export type AuditLogWhereInput = {
@@ -75767,6 +77363,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75791,6 +77390,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -75812,6 +77412,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75836,6 +77439,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -75857,6 +77461,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75881,6 +77488,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -75902,6 +77510,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75926,6 +77537,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -75947,6 +77559,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75972,6 +77587,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75997,6 +77615,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -76551,6 +78172,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -76574,6 +78200,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -76595,6 +78226,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76618,6 +78254,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76640,6 +78281,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -76657,6 +78303,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76672,6 +78323,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80839,6 +82495,7 @@ export namespace Prisma {
     reason: string
     citation?: string | null
     inductedAt?: Date | string
+    dedications?: ProHallOfFameDedicationCreateNestedManyWithoutHallOfFameInput
   }
 
   export type ProHallOfFameUncheckedCreateInput = {
@@ -80859,6 +82516,7 @@ export namespace Prisma {
     reason: string
     citation?: string | null
     inductedAt?: Date | string
+    dedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutHallOfFameInput
   }
 
   export type ProHallOfFameUpdateInput = {
@@ -80879,6 +82537,7 @@ export namespace Prisma {
     reason?: StringFieldUpdateOperationsInput | string
     citation?: NullableStringFieldUpdateOperationsInput | string | null
     inductedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedications?: ProHallOfFameDedicationUpdateManyWithoutHallOfFameNestedInput
   }
 
   export type ProHallOfFameUncheckedUpdateInput = {
@@ -80899,6 +82558,7 @@ export namespace Prisma {
     reason?: StringFieldUpdateOperationsInput | string
     citation?: NullableStringFieldUpdateOperationsInput | string | null
     inductedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutHallOfFameNestedInput
   }
 
   export type ProHallOfFameCreateManyInput = {
@@ -80959,6 +82619,67 @@ export namespace Prisma {
     reason?: StringFieldUpdateOperationsInput | string
     citation?: NullableStringFieldUpdateOperationsInput | string | null
     inductedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationCreateInput = {
+    id?: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+    hallOfFame: ProHallOfFameCreateNestedOneWithoutDedicationsInput
+    user: UserCreateNestedOneWithoutProHofDedicationsInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedCreateInput = {
+    id?: string
+    hallOfFameId: string
+    userId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
+  export type ProHallOfFameDedicationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hallOfFame?: ProHallOfFameUpdateOneRequiredWithoutDedicationsNestedInput
+    user?: UserUpdateOneRequiredWithoutProHofDedicationsNestedInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hallOfFameId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationCreateManyInput = {
+    id?: string
+    hallOfFameId: string
+    userId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
+  export type ProHallOfFameDedicationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hallOfFameId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AuditLogCreateInput = {
@@ -81357,6 +83078,12 @@ export namespace Prisma {
     none?: ProUserBadgeWhereInput
   }
 
+  export type ProHallOfFameDedicationListRelationFilter = {
+    every?: ProHallOfFameDedicationWhereInput
+    some?: ProHallOfFameDedicationWhereInput
+    none?: ProHallOfFameDedicationWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -81426,6 +83153,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ProHallOfFameDedicationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
@@ -81445,6 +83176,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    bannedAt?: SortOrder
+    bannedUntil?: SortOrder
+    banReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -81474,6 +83208,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    bannedAt?: SortOrder
+    bannedUntil?: SortOrder
+    banReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -81499,6 +83236,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    bannedAt?: SortOrder
+    bannedUntil?: SortOrder
+    banReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -81930,6 +83670,11 @@ export namespace Prisma {
     creatorId?: SortOrder
     currentTurnUserId?: SortOrder
     lastMoveAt?: SortOrder
+    forfeitedAt?: SortOrder
+    forfeitWinnerSide?: SortOrder
+    forfeitReason?: SortOrder
+    cancelledAt?: SortOrder
+    cancelReason?: SortOrder
     aiOpponent?: SortOrder
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
@@ -81948,6 +83693,11 @@ export namespace Prisma {
     creatorId?: SortOrder
     currentTurnUserId?: SortOrder
     lastMoveAt?: SortOrder
+    forfeitedAt?: SortOrder
+    forfeitWinnerSide?: SortOrder
+    forfeitReason?: SortOrder
+    cancelledAt?: SortOrder
+    cancelReason?: SortOrder
     aiOpponent?: SortOrder
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
@@ -81966,6 +83716,11 @@ export namespace Prisma {
     creatorId?: SortOrder
     currentTurnUserId?: SortOrder
     lastMoveAt?: SortOrder
+    forfeitedAt?: SortOrder
+    forfeitWinnerSide?: SortOrder
+    forfeitReason?: SortOrder
+    cancelledAt?: SortOrder
+    cancelReason?: SortOrder
     aiOpponent?: SortOrder
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
@@ -84782,6 +86537,51 @@ export namespace Prisma {
     av?: SortOrder
   }
 
+  export type ProHallOfFameScalarRelationFilter = {
+    is?: ProHallOfFameWhereInput
+    isNot?: ProHallOfFameWhereInput
+  }
+
+  export type ProHallOfFameDedicationHallOfFameIdUserIdCompoundUniqueInput = {
+    hallOfFameId: string
+    userId: string
+  }
+
+  export type ProHallOfFameDedicationCountOrderByAggregateInput = {
+    id?: SortOrder
+    hallOfFameId?: SortOrder
+    userId?: SortOrder
+    message?: SortOrder
+    costCrowns?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProHallOfFameDedicationAvgOrderByAggregateInput = {
+    costCrowns?: SortOrder
+  }
+
+  export type ProHallOfFameDedicationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    hallOfFameId?: SortOrder
+    userId?: SortOrder
+    message?: SortOrder
+    costCrowns?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProHallOfFameDedicationMinOrderByAggregateInput = {
+    id?: SortOrder
+    hallOfFameId?: SortOrder
+    userId?: SortOrder
+    message?: SortOrder
+    costCrowns?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProHallOfFameDedicationSumOrderByAggregateInput = {
+    costCrowns?: SortOrder
+  }
+
   export type AuditLogCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -85041,6 +86841,13 @@ export namespace Prisma {
     connect?: ProUserBadgeWhereUniqueInput | ProUserBadgeWhereUniqueInput[]
   }
 
+  export type ProHallOfFameDedicationCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput> | ProHallOfFameDedicationCreateWithoutUserInput[] | ProHallOfFameDedicationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutUserInput | ProHallOfFameDedicationCreateOrConnectWithoutUserInput[]
+    createMany?: ProHallOfFameDedicationCreateManyUserInputEnvelope
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+  }
+
   export type MatchUncheckedCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -85176,6 +86983,13 @@ export namespace Prisma {
     connectOrCreate?: ProUserBadgeCreateOrConnectWithoutUserInput | ProUserBadgeCreateOrConnectWithoutUserInput[]
     createMany?: ProUserBadgeCreateManyUserInputEnvelope
     connect?: ProUserBadgeWhereUniqueInput | ProUserBadgeWhereUniqueInput[]
+  }
+
+  export type ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput> | ProHallOfFameDedicationCreateWithoutUserInput[] | ProHallOfFameDedicationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutUserInput | ProHallOfFameDedicationCreateOrConnectWithoutUserInput[]
+    createMany?: ProHallOfFameDedicationCreateManyUserInputEnvelope
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -85477,6 +87291,20 @@ export namespace Prisma {
     deleteMany?: ProUserBadgeScalarWhereInput | ProUserBadgeScalarWhereInput[]
   }
 
+  export type ProHallOfFameDedicationUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput> | ProHallOfFameDedicationCreateWithoutUserInput[] | ProHallOfFameDedicationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutUserInput | ProHallOfFameDedicationCreateOrConnectWithoutUserInput[]
+    upsert?: ProHallOfFameDedicationUpsertWithWhereUniqueWithoutUserInput | ProHallOfFameDedicationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProHallOfFameDedicationCreateManyUserInputEnvelope
+    set?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    disconnect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    delete?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    update?: ProHallOfFameDedicationUpdateWithWhereUniqueWithoutUserInput | ProHallOfFameDedicationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProHallOfFameDedicationUpdateManyWithWhereWithoutUserInput | ProHallOfFameDedicationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
+  }
+
   export type MatchUncheckedUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -85746,6 +87574,20 @@ export namespace Prisma {
     update?: ProUserBadgeUpdateWithWhereUniqueWithoutUserInput | ProUserBadgeUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: ProUserBadgeUpdateManyWithWhereWithoutUserInput | ProUserBadgeUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: ProUserBadgeScalarWhereInput | ProUserBadgeScalarWhereInput[]
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput> | ProHallOfFameDedicationCreateWithoutUserInput[] | ProHallOfFameDedicationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutUserInput | ProHallOfFameDedicationCreateOrConnectWithoutUserInput[]
+    upsert?: ProHallOfFameDedicationUpsertWithWhereUniqueWithoutUserInput | ProHallOfFameDedicationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProHallOfFameDedicationCreateManyUserInputEnvelope
+    set?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    disconnect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    delete?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    update?: ProHallOfFameDedicationUpdateWithWhereUniqueWithoutUserInput | ProHallOfFameDedicationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProHallOfFameDedicationUpdateManyWithWhereWithoutUserInput | ProHallOfFameDedicationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutEloSnapshotsInput = {
@@ -88468,6 +90310,76 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProUserBadgesInput, UserUpdateWithoutProUserBadgesInput>, UserUncheckedUpdateWithoutProUserBadgesInput>
   }
 
+  export type ProHallOfFameDedicationCreateNestedManyWithoutHallOfFameInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput> | ProHallOfFameDedicationCreateWithoutHallOfFameInput[] | ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput | ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput[]
+    createMany?: ProHallOfFameDedicationCreateManyHallOfFameInputEnvelope
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+  }
+
+  export type ProHallOfFameDedicationUncheckedCreateNestedManyWithoutHallOfFameInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput> | ProHallOfFameDedicationCreateWithoutHallOfFameInput[] | ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput | ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput[]
+    createMany?: ProHallOfFameDedicationCreateManyHallOfFameInputEnvelope
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+  }
+
+  export type ProHallOfFameDedicationUpdateManyWithoutHallOfFameNestedInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput> | ProHallOfFameDedicationCreateWithoutHallOfFameInput[] | ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput | ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput[]
+    upsert?: ProHallOfFameDedicationUpsertWithWhereUniqueWithoutHallOfFameInput | ProHallOfFameDedicationUpsertWithWhereUniqueWithoutHallOfFameInput[]
+    createMany?: ProHallOfFameDedicationCreateManyHallOfFameInputEnvelope
+    set?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    disconnect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    delete?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    update?: ProHallOfFameDedicationUpdateWithWhereUniqueWithoutHallOfFameInput | ProHallOfFameDedicationUpdateWithWhereUniqueWithoutHallOfFameInput[]
+    updateMany?: ProHallOfFameDedicationUpdateManyWithWhereWithoutHallOfFameInput | ProHallOfFameDedicationUpdateManyWithWhereWithoutHallOfFameInput[]
+    deleteMany?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateManyWithoutHallOfFameNestedInput = {
+    create?: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput> | ProHallOfFameDedicationCreateWithoutHallOfFameInput[] | ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput[]
+    connectOrCreate?: ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput | ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput[]
+    upsert?: ProHallOfFameDedicationUpsertWithWhereUniqueWithoutHallOfFameInput | ProHallOfFameDedicationUpsertWithWhereUniqueWithoutHallOfFameInput[]
+    createMany?: ProHallOfFameDedicationCreateManyHallOfFameInputEnvelope
+    set?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    disconnect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    delete?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    connect?: ProHallOfFameDedicationWhereUniqueInput | ProHallOfFameDedicationWhereUniqueInput[]
+    update?: ProHallOfFameDedicationUpdateWithWhereUniqueWithoutHallOfFameInput | ProHallOfFameDedicationUpdateWithWhereUniqueWithoutHallOfFameInput[]
+    updateMany?: ProHallOfFameDedicationUpdateManyWithWhereWithoutHallOfFameInput | ProHallOfFameDedicationUpdateManyWithWhereWithoutHallOfFameInput[]
+    deleteMany?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
+  }
+
+  export type ProHallOfFameCreateNestedOneWithoutDedicationsInput = {
+    create?: XOR<ProHallOfFameCreateWithoutDedicationsInput, ProHallOfFameUncheckedCreateWithoutDedicationsInput>
+    connectOrCreate?: ProHallOfFameCreateOrConnectWithoutDedicationsInput
+    connect?: ProHallOfFameWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutProHofDedicationsInput = {
+    create?: XOR<UserCreateWithoutProHofDedicationsInput, UserUncheckedCreateWithoutProHofDedicationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProHofDedicationsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ProHallOfFameUpdateOneRequiredWithoutDedicationsNestedInput = {
+    create?: XOR<ProHallOfFameCreateWithoutDedicationsInput, ProHallOfFameUncheckedCreateWithoutDedicationsInput>
+    connectOrCreate?: ProHallOfFameCreateOrConnectWithoutDedicationsInput
+    upsert?: ProHallOfFameUpsertWithoutDedicationsInput
+    connect?: ProHallOfFameWhereUniqueInput
+    update?: XOR<XOR<ProHallOfFameUpdateToOneWithWhereWithoutDedicationsInput, ProHallOfFameUpdateWithoutDedicationsInput>, ProHallOfFameUncheckedUpdateWithoutDedicationsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutProHofDedicationsNestedInput = {
+    create?: XOR<UserCreateWithoutProHofDedicationsInput, UserUncheckedCreateWithoutProHofDedicationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProHofDedicationsInput
+    upsert?: UserUpsertWithoutProHofDedicationsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProHofDedicationsInput, UserUpdateWithoutProHofDedicationsInput>, UserUncheckedUpdateWithoutProHofDedicationsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -88789,6 +90701,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -88811,6 +90728,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -88836,6 +90758,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -88857,6 +90784,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -89454,6 +91386,31 @@ export namespace Prisma {
     data: ProUserBadgeCreateManyUserInput | ProUserBadgeCreateManyUserInput[]
   }
 
+  export type ProHallOfFameDedicationCreateWithoutUserInput = {
+    id?: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+    hallOfFame: ProHallOfFameCreateNestedOneWithoutDedicationsInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedCreateWithoutUserInput = {
+    id?: string
+    hallOfFameId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
+  export type ProHallOfFameDedicationCreateOrConnectWithoutUserInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    create: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput>
+  }
+
+  export type ProHallOfFameDedicationCreateManyUserInputEnvelope = {
+    data: ProHallOfFameDedicationCreateManyUserInput | ProHallOfFameDedicationCreateManyUserInput[]
+  }
+
   export type MatchUpsertWithWhereUniqueWithoutPlayersInput = {
     where: MatchWhereUniqueInput
     update: XOR<MatchUpdateWithoutPlayersInput, MatchUncheckedUpdateWithoutPlayersInput>
@@ -89481,6 +91438,11 @@ export namespace Prisma {
     creatorId?: StringNullableFilter<"Match"> | string | null
     currentTurnUserId?: StringNullableFilter<"Match"> | string | null
     lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    forfeitWinnerSide?: StringNullableFilter<"Match"> | string | null
+    forfeitReason?: StringNullableFilter<"Match"> | string | null
+    cancelledAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    cancelReason?: StringNullableFilter<"Match"> | string | null
     aiOpponent?: BoolFilter<"Match"> | boolean
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
@@ -90051,6 +92013,34 @@ export namespace Prisma {
     meta?: StringNullableFilter<"ProUserBadge"> | string | null
   }
 
+  export type ProHallOfFameDedicationUpsertWithWhereUniqueWithoutUserInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    update: XOR<ProHallOfFameDedicationUpdateWithoutUserInput, ProHallOfFameDedicationUncheckedUpdateWithoutUserInput>
+    create: XOR<ProHallOfFameDedicationCreateWithoutUserInput, ProHallOfFameDedicationUncheckedCreateWithoutUserInput>
+  }
+
+  export type ProHallOfFameDedicationUpdateWithWhereUniqueWithoutUserInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    data: XOR<ProHallOfFameDedicationUpdateWithoutUserInput, ProHallOfFameDedicationUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ProHallOfFameDedicationUpdateManyWithWhereWithoutUserInput = {
+    where: ProHallOfFameDedicationScalarWhereInput
+    data: XOR<ProHallOfFameDedicationUpdateManyMutationInput, ProHallOfFameDedicationUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ProHallOfFameDedicationScalarWhereInput = {
+    AND?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
+    OR?: ProHallOfFameDedicationScalarWhereInput[]
+    NOT?: ProHallOfFameDedicationScalarWhereInput | ProHallOfFameDedicationScalarWhereInput[]
+    id?: StringFilter<"ProHallOfFameDedication"> | string
+    hallOfFameId?: StringFilter<"ProHallOfFameDedication"> | string
+    userId?: StringFilter<"ProHallOfFameDedication"> | string
+    message?: StringFilter<"ProHallOfFameDedication"> | string
+    costCrowns?: IntFilter<"ProHallOfFameDedication"> | number
+    createdAt?: DateTimeFilter<"ProHallOfFameDedication"> | Date | string
+  }
+
   export type UserCreateWithoutEloSnapshotsInput = {
     id?: string
     email: string
@@ -90070,6 +92060,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90093,6 +92086,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEloSnapshotsInput = {
@@ -90114,6 +92108,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90137,6 +92134,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEloSnapshotsInput = {
@@ -90174,6 +92172,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90197,6 +92198,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEloSnapshotsInput = {
@@ -90218,6 +92220,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90241,6 +92246,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutRefreshTokensInput = {
@@ -90262,6 +92268,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90285,6 +92294,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRefreshTokensInput = {
@@ -90306,6 +92316,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90329,6 +92342,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -90366,6 +92380,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90389,6 +92406,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRefreshTokensInput = {
@@ -90410,6 +92428,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90433,6 +92454,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutKofiTransactionsInput = {
@@ -90454,6 +92476,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90477,6 +92502,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutKofiTransactionsInput = {
@@ -90498,6 +92524,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90521,6 +92550,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutKofiTransactionsInput = {
@@ -90558,6 +92588,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90581,6 +92614,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutKofiTransactionsInput = {
@@ -90602,6 +92636,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90625,6 +92662,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutTutorialCompletionsInput = {
@@ -90646,6 +92684,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90669,6 +92710,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTutorialCompletionsInput = {
@@ -90690,6 +92732,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90713,6 +92758,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTutorialCompletionsInput = {
@@ -90750,6 +92796,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90773,6 +92822,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTutorialCompletionsInput = {
@@ -90794,6 +92844,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90817,6 +92870,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAchievementsInput = {
@@ -90838,6 +92892,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90861,6 +92918,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAchievementsInput = {
@@ -90882,6 +92940,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -90905,6 +92966,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAchievementsInput = {
@@ -90942,6 +93004,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90965,6 +93030,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAchievementsInput = {
@@ -90986,6 +93052,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91009,6 +93078,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutFriendshipsSentInput = {
@@ -91030,6 +93100,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91053,6 +93126,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsSentInput = {
@@ -91074,6 +93148,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91097,6 +93174,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsSentInput = {
@@ -91123,6 +93201,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91146,6 +93227,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsReceivedInput = {
@@ -91167,6 +93249,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91190,6 +93275,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsReceivedInput = {
@@ -91227,6 +93313,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91250,6 +93339,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsSentInput = {
@@ -91271,6 +93361,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91294,6 +93387,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutFriendshipsReceivedInput = {
@@ -91326,6 +93420,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91349,6 +93446,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsReceivedInput = {
@@ -91370,6 +93468,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91393,6 +93494,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type FeatureFlagUserCreateWithoutFlagInput = {
@@ -91474,6 +93576,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91497,6 +93602,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFeatureFlagOverridesInput = {
@@ -91518,6 +93624,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91541,6 +93650,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFeatureFlagOverridesInput = {
@@ -91607,6 +93717,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91630,6 +93743,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFeatureFlagOverridesInput = {
@@ -91651,6 +93765,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91674,6 +93791,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutCreatedMatchesInput = {
@@ -91695,6 +93813,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91718,6 +93839,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedMatchesInput = {
@@ -91739,6 +93861,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91762,6 +93887,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedMatchesInput = {
@@ -91788,6 +93914,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91811,6 +93940,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchesInput = {
@@ -91832,6 +93962,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -91855,6 +93988,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchesInput = {
@@ -92082,6 +94216,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92105,6 +94242,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedMatchesInput = {
@@ -92126,6 +94264,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92149,6 +94290,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutMatchesInput = {
@@ -92189,6 +94331,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    banReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -92411,6 +94556,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -92433,6 +94583,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -92469,6 +94624,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92491,6 +94651,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92511,6 +94676,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -92533,6 +94703,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -92570,6 +94745,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92593,6 +94771,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamSelectionsInput = {
@@ -92614,6 +94793,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92637,6 +94819,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamSelectionsInput = {
@@ -92717,6 +94900,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92739,6 +94927,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92782,6 +94975,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92805,6 +95001,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -92826,6 +95023,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92849,6 +95049,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutSelectionsInput = {
@@ -92931,6 +95132,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92954,6 +95158,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamsInput = {
@@ -92975,6 +95180,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92998,6 +95206,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamsInput = {
@@ -93363,6 +95572,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93386,6 +95598,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamsInput = {
@@ -93407,6 +95620,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93430,6 +95646,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -94314,6 +96531,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94337,6 +96557,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedCupsInput = {
@@ -94358,6 +96579,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94381,6 +96605,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedCupsInput = {
@@ -94496,6 +96721,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -94519,6 +96747,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedCupsInput = {
@@ -94540,6 +96769,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -94563,6 +96795,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type CupParticipantUpsertWithWhereUniqueWithoutCupInput = {
@@ -94832,6 +97065,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94855,6 +97091,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchQueueInput = {
@@ -94876,6 +97113,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94899,6 +97139,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchQueueInput = {
@@ -94991,6 +97232,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95014,6 +97258,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchQueueInput = {
@@ -95035,6 +97280,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95058,6 +97306,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutMatchQueueInput = {
@@ -95140,6 +97389,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95163,6 +97415,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLocalMatchesInput = {
@@ -95184,6 +97437,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95207,6 +97463,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLocalMatchesInput = {
@@ -95450,6 +97707,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95473,6 +97733,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLocalMatchesInput = {
@@ -95494,6 +97755,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95517,6 +97781,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutLocalMatchesAsTeamAInput = {
@@ -95865,6 +98130,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95888,6 +98156,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLeaguesInput = {
@@ -95909,6 +98178,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95932,6 +98204,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLeaguesInput = {
@@ -96014,6 +98287,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96037,6 +98313,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLeaguesInput = {
@@ -96058,6 +98335,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96081,6 +98361,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type LeagueSeasonUpsertWithWhereUniqueWithoutLeagueInput = {
@@ -96255,6 +98536,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -96277,6 +98563,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -96826,6 +99117,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -96848,6 +99144,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -97114,6 +99415,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -97136,6 +99442,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -97315,6 +99626,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -97337,6 +99653,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -97357,6 +99678,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -97379,6 +99705,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -97415,6 +99746,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -97437,6 +99773,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -99294,6 +101635,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -99317,6 +101661,7 @@ export namespace Prisma {
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProSpectatorFollowsInput = {
@@ -99338,6 +101683,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -99361,6 +101709,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProSpectatorFollowsInput = {
@@ -99443,6 +101792,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99466,6 +101818,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProSpectatorFollowsInput = {
@@ -99487,6 +101840,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99510,6 +101866,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ProTeamUpsertWithoutFollowersInput = {
@@ -99582,6 +101939,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -99605,6 +101965,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProWalletInput = {
@@ -99626,6 +101987,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -99649,6 +102013,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProWalletInput = {
@@ -99711,6 +102076,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99734,6 +102102,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProWalletInput = {
@@ -99755,6 +102124,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99778,6 +102150,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ProTransactionUpsertWithWhereUniqueWithoutWalletInput = {
@@ -100102,6 +102475,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -100125,6 +102501,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProBetsInput = {
@@ -100146,6 +102523,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -100169,6 +102549,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProBetsInput = {
@@ -100235,6 +102616,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100258,6 +102642,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProBetsInput = {
@@ -100279,6 +102664,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100302,6 +102690,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ProBetMarketUpsertWithoutBetsInput = {
@@ -100422,6 +102811,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -100445,6 +102837,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProUserBadgesInput = {
@@ -100466,6 +102859,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -100489,6 +102885,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProUserBadgesInput = {
@@ -100526,6 +102923,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100549,6 +102949,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProUserBadgesInput = {
@@ -100570,6 +102971,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100593,6 +102997,352 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type ProHallOfFameDedicationCreateWithoutHallOfFameInput = {
+    id?: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutProHofDedicationsInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput = {
+    id?: string
+    userId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
+  export type ProHallOfFameDedicationCreateOrConnectWithoutHallOfFameInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    create: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput>
+  }
+
+  export type ProHallOfFameDedicationCreateManyHallOfFameInputEnvelope = {
+    data: ProHallOfFameDedicationCreateManyHallOfFameInput | ProHallOfFameDedicationCreateManyHallOfFameInput[]
+  }
+
+  export type ProHallOfFameDedicationUpsertWithWhereUniqueWithoutHallOfFameInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    update: XOR<ProHallOfFameDedicationUpdateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedUpdateWithoutHallOfFameInput>
+    create: XOR<ProHallOfFameDedicationCreateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedCreateWithoutHallOfFameInput>
+  }
+
+  export type ProHallOfFameDedicationUpdateWithWhereUniqueWithoutHallOfFameInput = {
+    where: ProHallOfFameDedicationWhereUniqueInput
+    data: XOR<ProHallOfFameDedicationUpdateWithoutHallOfFameInput, ProHallOfFameDedicationUncheckedUpdateWithoutHallOfFameInput>
+  }
+
+  export type ProHallOfFameDedicationUpdateManyWithWhereWithoutHallOfFameInput = {
+    where: ProHallOfFameDedicationScalarWhereInput
+    data: XOR<ProHallOfFameDedicationUpdateManyMutationInput, ProHallOfFameDedicationUncheckedUpdateManyWithoutHallOfFameInput>
+  }
+
+  export type ProHallOfFameCreateWithoutDedicationsInput = {
+    id?: string
+    rosterId: string
+    teamSlug: string
+    teamName: string
+    playerName: string
+    race: string
+    position: string
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    skills: string
+    careerStats: string
+    reason: string
+    citation?: string | null
+    inductedAt?: Date | string
+  }
+
+  export type ProHallOfFameUncheckedCreateWithoutDedicationsInput = {
+    id?: string
+    rosterId: string
+    teamSlug: string
+    teamName: string
+    playerName: string
+    race: string
+    position: string
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    skills: string
+    careerStats: string
+    reason: string
+    citation?: string | null
+    inductedAt?: Date | string
+  }
+
+  export type ProHallOfFameCreateOrConnectWithoutDedicationsInput = {
+    where: ProHallOfFameWhereUniqueInput
+    create: XOR<ProHallOfFameCreateWithoutDedicationsInput, ProHallOfFameUncheckedCreateWithoutDedicationsInput>
+  }
+
+  export type UserCreateWithoutProHofDedicationsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutProHofDedicationsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutProHofDedicationsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProHofDedicationsInput, UserUncheckedCreateWithoutProHofDedicationsInput>
+  }
+
+  export type ProHallOfFameUpsertWithoutDedicationsInput = {
+    update: XOR<ProHallOfFameUpdateWithoutDedicationsInput, ProHallOfFameUncheckedUpdateWithoutDedicationsInput>
+    create: XOR<ProHallOfFameCreateWithoutDedicationsInput, ProHallOfFameUncheckedCreateWithoutDedicationsInput>
+    where?: ProHallOfFameWhereInput
+  }
+
+  export type ProHallOfFameUpdateToOneWithWhereWithoutDedicationsInput = {
+    where?: ProHallOfFameWhereInput
+    data: XOR<ProHallOfFameUpdateWithoutDedicationsInput, ProHallOfFameUncheckedUpdateWithoutDedicationsInput>
+  }
+
+  export type ProHallOfFameUpdateWithoutDedicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: StringFieldUpdateOperationsInput | string
+    teamSlug?: StringFieldUpdateOperationsInput | string
+    teamName?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    race?: StringFieldUpdateOperationsInput | string
+    position?: StringFieldUpdateOperationsInput | string
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    skills?: StringFieldUpdateOperationsInput | string
+    careerStats?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    citation?: NullableStringFieldUpdateOperationsInput | string | null
+    inductedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameUncheckedUpdateWithoutDedicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: StringFieldUpdateOperationsInput | string
+    teamSlug?: StringFieldUpdateOperationsInput | string
+    teamName?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    race?: StringFieldUpdateOperationsInput | string
+    position?: StringFieldUpdateOperationsInput | string
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    skills?: StringFieldUpdateOperationsInput | string
+    careerStats?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    citation?: NullableStringFieldUpdateOperationsInput | string | null
+    inductedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUpsertWithoutProHofDedicationsInput = {
+    update: XOR<UserUpdateWithoutProHofDedicationsInput, UserUncheckedUpdateWithoutProHofDedicationsInput>
+    create: XOR<UserCreateWithoutProHofDedicationsInput, UserUncheckedCreateWithoutProHofDedicationsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProHofDedicationsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProHofDedicationsInput, UserUncheckedUpdateWithoutProHofDedicationsInput>
+  }
+
+  export type UserUpdateWithoutProHofDedicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProHofDedicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type MatchCreateManyCreatorInput = {
@@ -100602,6 +103352,11 @@ export namespace Prisma {
     seed: string
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -100794,6 +103549,14 @@ export namespace Prisma {
     meta?: string | null
   }
 
+  export type ProHallOfFameDedicationCreateManyUserInput = {
+    id?: string
+    hallOfFameId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
   export type MatchUpdateWithoutPlayersInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100801,6 +103564,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100823,6 +103591,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100844,6 +103617,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100861,6 +103639,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100882,6 +103665,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100903,6 +103691,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101483,6 +104276,30 @@ export namespace Prisma {
     meta?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type ProHallOfFameDedicationUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hallOfFame?: ProHallOfFameUpdateOneRequiredWithoutDedicationsNestedInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hallOfFameId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hallOfFameId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type FeatureFlagUserCreateManyFlagInput = {
     id?: string
     userId: string
@@ -101541,6 +104358,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -101564,6 +104384,7 @@ export namespace Prisma {
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchesInput = {
@@ -101585,6 +104406,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -101608,6 +104432,7 @@ export namespace Prisma {
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesInput = {
@@ -101629,6 +104454,9 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102595,6 +105423,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -102712,6 +105545,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -102734,6 +105572,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -102755,6 +105598,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -102864,6 +105712,11 @@ export namespace Prisma {
     creatorId?: string | null
     currentTurnUserId?: string | null
     lastMoveAt?: Date | string | null
+    forfeitedAt?: Date | string | null
+    forfeitWinnerSide?: string | null
+    forfeitReason?: string | null
+    cancelledAt?: Date | string | null
+    cancelReason?: string | null
     aiOpponent?: boolean
     aiDifficulty?: string | null
     aiTeamSide?: string | null
@@ -102891,6 +105744,11 @@ export namespace Prisma {
     seed?: StringFieldUpdateOperationsInput | string
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -102913,6 +105771,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -102934,6 +105797,11 @@ export namespace Prisma {
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
     currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    forfeitWinnerSide?: NullableStringFieldUpdateOperationsInput | string | null
+    forfeitReason?: NullableStringFieldUpdateOperationsInput | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelReason?: NullableStringFieldUpdateOperationsInput | string | null
     aiOpponent?: BoolFieldUpdateOperationsInput | boolean
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
@@ -104006,6 +106874,38 @@ export namespace Prisma {
     clientToken?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationCreateManyHallOfFameInput = {
+    id?: string
+    userId: string
+    message: string
+    costCrowns: number
+    createdAt?: Date | string
+  }
+
+  export type ProHallOfFameDedicationUpdateWithoutHallOfFameInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutProHofDedicationsNestedInput
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateWithoutHallOfFameInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProHallOfFameDedicationUncheckedUpdateManyWithoutHallOfFameInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    costCrowns?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
