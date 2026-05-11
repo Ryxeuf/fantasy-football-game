@@ -44,7 +44,7 @@ export interface CreateLeagueInput {
   creatorId: string;
   name: string;
   description?: string | null;
-  ruleset?: "season_2" | "season_3" | "season_4";
+  ruleset?: "season_2" | "season_3";
   isPublic?: boolean;
   maxParticipants?: number;
   allowedRosters?: string[] | null;

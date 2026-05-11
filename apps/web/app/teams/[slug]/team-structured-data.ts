@@ -42,7 +42,7 @@ export interface TeamSchemaRoster {
 export interface BuildTeamSchemaInput {
   slug: string;
   roster: TeamSchemaRoster;
-  ruleset: "season_2" | "season_3" | "season_4";
+  ruleset: "season_2" | "season_3";
   baseUrl: string;
   lang?: Lang;
   /** Override pour tests deterministes ; sinon ISO date du jour. */
