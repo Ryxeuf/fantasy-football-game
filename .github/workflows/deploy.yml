@@ -12,7 +12,8 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write  # required to push images to ghcr.io
+  packages: write   # required to push images to ghcr.io
+  deployments: write  # required to POST /repos/.../deployments via github-script
 
 env:
   REGISTRY: ghcr.io
@@ -125,17 +126,30 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          # GHCR pull credentials passes via SSH envs. Le GITHUB_TOKEN du
+          # workflow herite des permissions packages:write donc read:packages
+          # implicite, valable ~1h (lifetime du job). Plus propre qu'un PAT
+          # permanent stocke sur la VM.
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
-          script_stop: true
-          envs: IMAGE_TAG
+          # `set -e` dans le script suffit ; `script_stop` n'est plus une
+          # option valide de appleboy/ssh-action@v1 (warning au runtime).
+          envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN
           script: |
             set -e
             export IMAGE_TAG="${{ needs.build-and-push.outputs.image_tag }}"
             cd ${{ secrets.DEPLOY_PATH || '~/fantasy-football-game' }}
+
+            # Auth GHCR pour le `docker compose pull` qui suit. Login non
+            # persistent (~/.docker/config.json est ecrase a chaque deploy
+            # mais le token expire avec le job — pas de credential traine).
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             # Pull last code (for compose files + scripts + prisma schema).
             git fetch origin main
