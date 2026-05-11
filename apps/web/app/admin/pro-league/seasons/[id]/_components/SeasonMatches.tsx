@@ -68,6 +68,7 @@ export default function SeasonMatches({
   const [roundFilter, setRoundFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [simulating, setSimulating] = useState<string | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,6 +93,35 @@ export default function SeasonMatches({
     load();
   }, [load]);
 
+  const handleBulkSimulateRound = async () => {
+    if (!roundFilter) return;
+    if (
+      !confirm(
+        `Simuler tous les matchs non-finaux du round ${roundFilter} ? Operation sequentielle (~50ms/match).`,
+      )
+    ) {
+      return;
+    }
+    setBulkRunning(true);
+    try {
+      const data = await fetchJSON(
+        `/admin/pro-league/seasons/${seasonId}/rounds/${roundFilter}/simulate-all`,
+        { method: "POST", body: "{}" },
+      );
+      const msg = `Round ${roundFilter} : ${data.simulated} simules, ${data.skipped} skipped, ${data.failed} echoues.`;
+      if (data.failed > 0) {
+        alert(`${msg}\n\nPremieres erreurs :\n${(data.failures ?? []).slice(0, 3).map((f: { matchId: string; error: string }) => `- ${f.matchId} : ${f.error}`).join("\n")}`);
+      } else {
+        alert(msg);
+      }
+      await load();
+    } catch (e: any) {
+      alert(e.message || "Erreur lors du bulk simulate");
+    } finally {
+      setBulkRunning(false);
+    }
+  };
+
   const handleSimulate = async (matchId: string) => {
     if (!confirm("Simuler ce match maintenant ?")) return;
     setSimulating(matchId);
@@ -115,7 +145,19 @@ export default function SeasonMatches({
     <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
         <h2 className="text-lg font-semibold">Matchs</h2>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
+          {roundFilter && (
+            <button
+              onClick={handleBulkSimulateRound}
+              disabled={bulkRunning}
+              data-testid="btn-bulk-simulate-round"
+              className="px-3 py-1 text-xs text-white bg-purple-700 hover:bg-purple-800 rounded font-medium disabled:opacity-50"
+            >
+              {bulkRunning
+                ? `Simulation round ${roundFilter}…`
+                : `Simuler le round ${roundFilter}`}
+            </button>
+          )}
           <select
             data-testid="round-filter"
             value={roundFilter}
