@@ -1,6 +1,10 @@
 # Docker Compose - Production
-# Utilisé par le workflow de déploiement automatique
+# Utilise par le workflow de deploiement automatique.
 # Usage: docker compose -f docker-compose.prod.yml up -d
+#
+# Images : les services web/server tirent des images deja buildees sur GHCR
+# (voir .github/workflows/deploy.yml). Le tag est pilote par la variable
+# d'env IMAGE_TAG (defaut : latest). scripts/deploy.sh la positionne.
 
 services:
   db:
@@ -24,13 +28,8 @@ services:
       retries: 5
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      args:
-        NEXT_PUBLIC_API_BASE: https://api.nufflearena.fr
-        NEXT_PUBLIC_UMAMI_ENABLED: "true"
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: "0x4AAAAAADKpF_rnzPQGe8g9"
+    image: ghcr.io/ryxeuf/fantasy-football-game/web:${IMAGE_TAG:-latest}
+    pull_policy: always
     restart: unless-stopped
     container_name: nufflearena_web
     environment:
@@ -59,15 +58,14 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
 
   server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
+    image: ghcr.io/ryxeuf/fantasy-football-game/server:${IMAGE_TAG:-latest}
+    pull_policy: always
     restart: unless-stopped
     container_name: nufflearena_server
     environment:
@@ -103,18 +101,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "
-        npx prisma generate --schema /app/prisma/schema.prisma &&
-        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate --accept-data-loss &&
-        pnpm --filter @bb/server run dev:nowatch
-      "
+    # NOTE : `prisma db push` n'est plus dans le CMD. Il est execute en
+    # one-shot par scripts/db-migrate.sh avant le swap, pour :
+    #  1) accelerer le cold-start du container (moins de risque de timeout
+    #     healthcheck et fenetre de bascule plus courte).
+    #  2) garder le contrele de l'ordre migration / swap cote deploy.sh.
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8201/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8201/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
 
 volumes:
   db_data:

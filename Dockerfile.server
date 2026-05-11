@@ -1,35 +1,61 @@
-FROM node:18-alpine
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# Dockerfile.server — Multi-stage build du backend Express/Prisma.
+#
+# Stages :
+#   1. deps    : install pnpm + deps du workspace + prisma generate.
+#   2. runtime : image finale qui execute le serveur via tsx.
+#
+# Note : on garde tsx (pas de tsc build) pour minimiser le changement
+# fonctionnel dans cette PR. Une PR future pourra compiler en JS pur
+# pour reduire encore l'empreinte et le cold-start.
+# =============================================================================
 
-# Install pnpm — version pinnee a celle declaree dans package.json (packageManager).
-# Sans pin, npm installe la derniere version (10.x) qui change le comportement de
-# hoisting et casse `next` dans apps/web/node_modules avec le lockfile v9.
+############################
+# Stage 1 - deps
+############################
+FROM node:20-alpine AS deps
 RUN npm install -g pnpm@9.7.0
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/server/package.json ./apps/server/
 COPY packages/game-engine/package.json ./packages/game-engine/
 COPY packages/sim-engine/package.json ./packages/sim-engine/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY prisma ./prisma/
 
-# Install dependencies
-RUN pnpm install
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy source + generate Prisma client (needs schema.prisma).
 COPY . .
-
-# Generate Prisma client now that schema is present
 RUN pnpm -w prisma generate
 
-# Expose ports
-EXPOSE 8000 8001
+############################
+# Stage 2 - runtime
+############################
+FROM node:20-alpine AS runtime
+RUN npm install -g pnpm@9.7.0
+WORKDIR /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8201/api/rosters || exit 1
+ENV NODE_ENV=production
+ENV API_PORT=8201
 
-# Default command
-CMD ["pnpm", "run", "dev"]
+# Copy the full installed workspace from deps stage. We keep tsx (a dev
+# dep) intentionally so we can still run src/index.ts in prod without a
+# separate compile step.
+COPY --from=deps /app /app
+
+EXPOSE 8201
+
+# /health/ready ping the DB — better readiness probe than the previous
+# /api/rosters check (which forced DB hit + payload).
+HEALTHCHECK --interval=10s --timeout=3s --start-period=45s --retries=6 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8201/health/ready || exit 1
+
+# Start the server. Prisma migrations and seed are NO LONGER part of this
+# command — they are executed explicitly by scripts/db-migrate.sh before
+# the swap, so the container starts fast and the deploy script controls
+# the migration timing.
+CMD ["pnpm", "--filter", "@bb/server", "run", "dev:nowatch"]
