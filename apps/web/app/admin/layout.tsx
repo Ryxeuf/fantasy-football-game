@@ -84,6 +84,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {navItem("/admin/feedback", "Feedback", "💬")}
               {navItem("/admin/audit-log", "Journal d'audit", "📜")}
               {navItem("/admin/routes", "Routes", "📋")}
+              {navItem("/admin/utilities", "Utilitaires", "🛠️")}
             </div>
 
             <div className="pt-4 border-t border-gray-200">
