@@ -327,6 +327,9 @@ export async function handleListMyMatches(
         turn,
         myTeam: mySelection
           ? {
+              // Lot O.C.2 — expose `teamId` pour filtrer "mes matchs sur
+              // cette equipe" depuis /me/teams/[id].
+              teamId: mySelection.teamRef?.id ?? null,
               coachName: mySelection.user.coachName,
               teamName: mySelection.teamRef?.name || mySelection.team,
               rosterName: mySelection.teamRef?.roster,
