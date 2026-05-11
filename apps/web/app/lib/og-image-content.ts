@@ -15,7 +15,7 @@
  *      supporte pas grid)
  */
 
-export type OgAccent = "team" | "star" | "skill";
+export type OgAccent = "team" | "star" | "skill" | "match" | "gazette";
 
 export interface OgContent {
   /** Titre principal affiche en grand. */
@@ -45,6 +45,38 @@ export interface StarPlayerOgInput {
   pa: number | null;
   av: number;
   isMegaStar?: boolean;
+}
+
+/**
+ * Sprint O (Lot O.D) — entrees pour generer les OG images des pages
+ * Pro League : matchs et editions Gazette.
+ */
+export interface ProLeagueMatchOgInput {
+  /** Nom court de la home team (ex: "Snow Ogres"). */
+  homeName: string;
+  /** Nom court de l'away team. */
+  awayName: string;
+  /** Race / city pour ligne secondaire (ex: "Buffalo · Ogre"). */
+  homeMeta?: string;
+  awayMeta?: string;
+  /** Score si match completed/in-progress. Null si scheduled. */
+  scoreHome: number | null;
+  scoreAway: number | null;
+  /** Numero de la journee (ex: 5). */
+  roundNumber: number;
+  /** "scheduled" | "in_progress" | "completed" | "failed". */
+  status: string;
+}
+
+export interface ProLeagueGazetteOgInput {
+  /** Date editions au format ISO (YYYY-MM-DD). */
+  date: string;
+  /** Titre du premier article. */
+  headline: string;
+  /** Persona generation (ex: "Cynic", "Orc Enthusiast", "Statistician"). */
+  persona?: string;
+  /** Nombre d'articles dans l'edition. */
+  articleCount: number;
 }
 
 export interface SkillsOgInput {
@@ -121,4 +153,70 @@ export function buildSkillsOgContent(input: SkillsOgInput): OgContent {
     ],
     accent: "skill",
   };
+}
+
+/**
+ * Sprint O (Lot O.D) — OG image pour un match Pro League. Affiche
+ * "Home vs Away" en gros, score si disponible, journee + status.
+ */
+export function buildProLeagueMatchOgContent(
+  input: ProLeagueMatchOgInput,
+): OgContent {
+  const hasScore =
+    input.scoreHome !== null && input.scoreAway !== null;
+  const scorePart = hasScore
+    ? `${input.scoreHome}${NBSP}–${NBSP}${input.scoreAway}`
+    : "vs";
+  const title = `${input.homeName} ${scorePart} ${input.awayName}`;
+
+  const statusLabel = (() => {
+    switch (input.status) {
+      case "completed":
+        return "Terminé";
+      case "in_progress":
+        return "EN DIRECT";
+      case "scheduled":
+        return "À venir";
+      case "ready":
+        return "Prêt";
+      default:
+        return input.status;
+    }
+  })();
+
+  const badges: string[] = [`R${input.roundNumber}`, statusLabel];
+  if (input.homeMeta) badges.push(input.homeMeta);
+  if (input.awayMeta) badges.push(input.awayMeta);
+
+  return {
+    title,
+    subtitle: "Pro League · Old World League — Nuffle Arena",
+    badges,
+    accent: "match",
+  };
+}
+
+/**
+ * Sprint O (Lot O.D) — OG image pour une edition de la Gazette.
+ */
+export function buildProLeagueGazetteOgContent(
+  input: ProLeagueGazetteOgInput,
+): OgContent {
+  const niceDate = formatGazetteDate(input.date);
+  const badges: string[] = [niceDate, `${input.articleCount} articles`];
+  if (input.persona) badges.push(input.persona);
+  return {
+    title: input.headline,
+    subtitle: `Nuffle Gazette · ${niceDate}`,
+    badges,
+    accent: "gazette",
+  };
+}
+
+function formatGazetteDate(iso: string): string {
+  // Tolerant ISO YYYY-MM-DD.
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const [, y, mo, d] = m;
+  return `${d}/${mo}/${y}`;
 }

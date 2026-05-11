@@ -41,6 +41,24 @@ const THEMES: Record<OgAccent, AccentTheme> = {
     badgeBg: "rgba(147, 197, 253, 0.18)",
     badgeText: "#dbeafe",
   },
+  // Lot O.D — Pro League match : dark slate avec accent emerald (live)
+  match: {
+    background:
+      "linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%)",
+    accent: "#34d399",
+    text: "#ecfdf5",
+    badgeBg: "rgba(52, 211, 153, 0.18)",
+    badgeText: "#a7f3d0",
+  },
+  // Lot O.D — Gazette : parchemin journal, sepia/amber chaud
+  gazette: {
+    background:
+      "linear-gradient(135deg, #1c1410 0%, #3a2616 50%, #92400e 100%)",
+    accent: "#fbbf24",
+    text: "#fef3c7",
+    badgeBg: "rgba(251, 191, 36, 0.20)",
+    badgeText: "#fde68a",
+  },
 };
 
 interface OgImageTemplateProps {
