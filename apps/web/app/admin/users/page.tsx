@@ -18,6 +18,9 @@ type User = {
   bannedAt?: string | null;
   bannedUntil?: string | null;
   banReason?: string | null;
+  // Lot P.A.2 — soft-delete
+  deletedAt?: string | null;
+  deletionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -220,21 +223,45 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = async (userId: string, userEmail: string) => {
-    if (
-      !confirm(
-        `⚠️ ATTENTION: Voulez-vous vraiment supprimer l'utilisateur "${userEmail}" ?\n\nCette action est irréversible.`,
-      )
-    ) {
-      return;
-    }
+    // Lot P.A.2 — soft-delete : reversible via /restore. Pas plus
+    // d'avertissement "irreversible".
+    const reason = prompt(
+      `Supprimer (soft-delete) le compte "${userEmail}" ?\n\nRaison (optionnelle, audit log) :`,
+    );
+    if (reason === null) return; // l'utilisateur a annule
+
     setActionLoading(userId);
     try {
       await fetchJSON(`/admin/users/${userId}`, {
         method: "DELETE",
+        body: JSON.stringify({ reason: reason || undefined }),
       });
       await loadUsers();
+      if (selectedUser === userId && userDetails) {
+        await loadUserDetails(userId);
+      }
     } catch (e: any) {
       alert(e.message || "Erreur lors de la suppression");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Lot P.A.2 — restauration d'un compte soft-deleted.
+  const handleRestore = async (userId: string) => {
+    if (!confirm("Restaurer ce compte supprime ?")) return;
+    setActionLoading(userId);
+    try {
+      await fetchJSON(`/admin/users/${userId}/restore`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      await loadUsers();
+      if (selectedUser === userId) {
+        await loadUserDetails(userId);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la restauration");
     } finally {
       setActionLoading(null);
     }
@@ -481,6 +508,14 @@ export default function AdminUsersPage() {
                 >
                   <td className="px-6 py-4 font-mono text-xs text-gray-600">
                     {u.email}
+                    {u.deletedAt && (
+                      <span
+                        data-testid={`badge-deleted-${u.id}`}
+                        className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800"
+                      >
+                        supprime
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {u.name || "—"}
@@ -752,6 +787,40 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Lot P.A.2 — section soft-delete */}
+              {userDetails.deletedAt && (
+                <div
+                  data-testid="user-deletion-section"
+                  className="p-4 rounded-lg border bg-red-50 border-red-200"
+                >
+                  <h3 className="font-semibold mb-2 text-red-800">
+                    ⚠ Compte supprime
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">Supprime le :</span>{" "}
+                      {new Date(userDetails.deletedAt).toLocaleString("fr-FR")}
+                    </div>
+                    {userDetails.deletionReason && (
+                      <div>
+                        <span className="text-gray-600">Raison :</span>{" "}
+                        <span data-testid="user-deletion-reason">
+                          {userDetails.deletionReason}
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => handleRestore(userDetails.id)}
+                      disabled={actionLoading === userDetails.id}
+                      data-testid="btn-restore"
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
+                    >
+                      Restaurer le compte
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Lot P.B.4 — section bannissement */}
               {(() => {

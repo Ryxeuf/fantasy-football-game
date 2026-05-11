@@ -118,7 +118,7 @@ describe("getCoachPublicProfile", () => {
     const arg = mockPrisma.user.findMany.mock.calls[0][0] as {
       where: { valid: boolean; privateProfile: boolean };
     };
-    expect(arg.where).toEqual({ valid: true, privateProfile: false });
+    expect(arg.where).toEqual({ valid: true, privateProfile: false, deletedAt: null });
   });
 
   it("disambiguates collisions by returning the oldest matching account", async () => {
@@ -267,7 +267,7 @@ describe("listPublicCoachSlugs (S26.3g)", () => {
       where: { valid: boolean; privateProfile: boolean };
       take: number;
     };
-    expect(arg.where).toEqual({ valid: true, privateProfile: false });
+    expect(arg.where).toEqual({ valid: true, privateProfile: false, deletedAt: null });
     expect(arg.take).toBe(1000);
   });
 

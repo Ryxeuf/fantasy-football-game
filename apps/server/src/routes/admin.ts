@@ -147,6 +147,8 @@ router.get("/users/:id", async (req, res) => {
         bannedAt: true,
         bannedUntil: true,
         banReason: true,
+        deletedAt: true,
+        deletionReason: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
@@ -555,9 +557,26 @@ router.post("/users/:id/password-reset", async (req, res) => {
 });
 
 // Route pour supprimer un utilisateur
+/**
+ * Lot P.A.2 — Soft-delete d'un utilisateur.
+ *
+ * Au lieu d'un hard delete (qui casse les FK audit log, replays, ELO
+ * snapshots), on flag `User.deletedAt = now()` + `deletionReason`. Le
+ * compte ne peut plus se logger (cf. /auth/login), n'apparait plus dans
+ * les recherches publiques (coach search, friend search), mais les
+ * references historiques restent intactes.
+ *
+ * Pour annuler une suppression, /admin/users/:id/restore. Pour purger
+ * definitivement (anonymisation), lot RGPD dedie a venir.
+ *
+ * La raison est optionnelle (suffit a tracer ce qu'a fait l'admin via
+ * l'audit log). On accepte aussi le body vide pour back-compat avec les
+ * clients qui n'envoient rien.
+ */
 router.delete("/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const reason = typeof req.body?.reason === "string" ? req.body.reason.slice(0, 500) : null;
 
     // Empêcher de supprimer son propre compte
     if ((req as any).user?.id === id) {
@@ -574,11 +593,27 @@ router.delete("/users/:id", async (req, res) => {
         roles: true,
         patreon: true,
         valid: true,
+        deletedAt: true,
+        deletionReason: true,
       },
     });
 
-    await prisma.user.delete({
+    if (!previous) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    if (previous.deletedAt) {
+      return res
+        .status(409)
+        .json({ error: "Compte deja supprime" });
+    }
+
+    const now = new Date();
+    await prisma.user.update({
       where: { id },
+      data: {
+        deletedAt: now,
+        deletionReason: reason,
+      },
     });
 
     await safeAudit(req, {
@@ -586,6 +621,55 @@ router.delete("/users/:id", async (req, res) => {
       entity: "User",
       entityId: id,
       oldValue: previous,
+      newValue: { deletedAt: now, deletionReason: reason },
+    });
+
+    res.json({ ok: true, deletedAt: now.toISOString() });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors de la suppression de l'utilisateur" });
+  }
+});
+
+/**
+ * Lot P.A.2 — Restaure un compte soft-deleted.
+ *
+ * Idempotent strict : 409 si le compte n'a jamais ete supprime (pour
+ * eviter qu'un click accidentel modifie un compte actif). 404 si user
+ * inexistant.
+ */
+router.post("/users/:id/restore", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { deletedAt: true, deletionReason: true },
+    });
+
+    if (!previous) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    if (!previous.deletedAt) {
+      return res
+        .status(409)
+        .json({ error: "Compte deja actif, rien a restaurer" });
+    }
+
+    await prisma.user.update({
+      where: { id },
+      data: { deletedAt: null, deletionReason: null },
+    });
+
+    await safeAudit(req, {
+      action: "user.restore",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: { deletedAt: null, deletionReason: null },
     });
 
     res.json({ ok: true });
@@ -594,7 +678,7 @@ router.delete("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
     serverLog.error(e);
-    res.status(500).json({ error: "Erreur lors de la suppression de l'utilisateur" });
+    res.status(500).json({ error: "Erreur lors de la restauration" });
   }
 });
 

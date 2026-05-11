@@ -140,6 +140,8 @@ exports.Prisma.UserScalarFieldEnum = {
   bannedUntil: 'bannedUntil',
   banReason: 'banReason',
   mustChangePassword: 'mustChangePassword',
+  deletedAt: 'deletedAt',
+  deletionReason: 'deletionReason',
   lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',

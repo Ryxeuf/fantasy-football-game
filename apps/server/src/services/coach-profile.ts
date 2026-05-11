@@ -88,7 +88,8 @@ export async function getCoachPublicProfile(
       findMany: (args: unknown) => Promise<CandidateUser[]>;
     };
   }).user.findMany({
-    where: { valid: true, privateProfile: false },
+    // Lot P.A.2 — exclut les comptes soft-deleted (helper whereActiveUser).
+    where: { valid: true, privateProfile: false, deletedAt: null },
     select: {
       id: true,
       coachName: true,
@@ -189,7 +190,8 @@ export async function listPublicCoachSlugs(
       findMany: (args: unknown) => Promise<Array<{ coachName: string }>>;
     };
   }).user.findMany({
-    where: { valid: true, privateProfile: false },
+    // Lot P.A.2 — exclut les comptes soft-deleted du sitemap public.
+    where: { valid: true, privateProfile: false, deletedAt: null },
     select: { coachName: true },
     orderBy: { createdAt: "asc" },
     take: limit,

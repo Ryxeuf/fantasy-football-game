@@ -6749,6 +6749,8 @@ export namespace Prisma {
     bannedUntil: Date | null
     banReason: string | null
     mustChangePassword: boolean | null
+    deletedAt: Date | null
+    deletionReason: string | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6778,6 +6780,8 @@ export namespace Prisma {
     bannedUntil: Date | null
     banReason: string | null
     mustChangePassword: boolean | null
+    deletedAt: Date | null
+    deletionReason: string | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6807,6 +6811,8 @@ export namespace Prisma {
     bannedUntil: number
     banReason: number
     mustChangePassword: number
+    deletedAt: number
+    deletionReason: number
     lastLoginAt: number
     createdAt: number
     updatedAt: number
@@ -6846,6 +6852,8 @@ export namespace Prisma {
     bannedUntil?: true
     banReason?: true
     mustChangePassword?: true
+    deletedAt?: true
+    deletionReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6875,6 +6883,8 @@ export namespace Prisma {
     bannedUntil?: true
     banReason?: true
     mustChangePassword?: true
+    deletedAt?: true
+    deletionReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -6904,6 +6914,8 @@ export namespace Prisma {
     bannedUntil?: true
     banReason?: true
     mustChangePassword?: true
+    deletedAt?: true
+    deletionReason?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -7020,6 +7032,8 @@ export namespace Prisma {
     bannedUntil: Date | null
     banReason: string | null
     mustChangePassword: boolean
+    deletedAt: Date | null
+    deletionReason: string | null
     lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -7068,6 +7082,8 @@ export namespace Prisma {
     bannedUntil?: boolean
     banReason?: boolean
     mustChangePassword?: boolean
+    deletedAt?: boolean
+    deletionReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -7119,6 +7135,8 @@ export namespace Prisma {
     bannedUntil?: boolean
     banReason?: boolean
     mustChangePassword?: boolean
+    deletedAt?: boolean
+    deletionReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -7148,6 +7166,8 @@ export namespace Prisma {
     bannedUntil?: boolean
     banReason?: boolean
     mustChangePassword?: boolean
+    deletedAt?: boolean
+    deletionReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -7177,13 +7197,15 @@ export namespace Prisma {
     bannedUntil?: boolean
     banReason?: boolean
     mustChangePassword?: boolean
+    deletedAt?: boolean
+    deletionReason?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "lastLoginAt" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "deletedAt" | "deletionReason" | "lastLoginAt" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -7302,6 +7324,11 @@ export namespace Prisma {
        * Lot P.C.2 — admin password reset override. Mirror du flag Postgres.
        */
       mustChangePassword: boolean
+      /**
+       * Lot P.A.2 — soft-delete RGPD-compatible. Mirror PG.
+       */
+      deletedAt: Date | null
+      deletionReason: string | null
       /**
        * Date de la dernière connexion réussie de l'utilisateur.
        */
@@ -7775,6 +7802,8 @@ export namespace Prisma {
     readonly bannedUntil: FieldRef<"User", 'DateTime'>
     readonly banReason: FieldRef<"User", 'String'>
     readonly mustChangePassword: FieldRef<"User", 'Boolean'>
+    readonly deletedAt: FieldRef<"User", 'DateTime'>
+    readonly deletionReason: FieldRef<"User", 'String'>
     readonly lastLoginAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -71372,6 +71401,8 @@ export namespace Prisma {
     bannedUntil: 'bannedUntil',
     banReason: 'banReason',
     mustChangePassword: 'mustChangePassword',
+    deletedAt: 'deletedAt',
+    deletionReason: 'deletionReason',
     lastLoginAt: 'lastLoginAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -72430,6 +72461,8 @@ export namespace Prisma {
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     banReason?: StringNullableFilter<"User"> | string | null
     mustChangePassword?: BoolFilter<"User"> | boolean
+    deletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    deletionReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -72480,6 +72513,8 @@ export namespace Prisma {
     bannedUntil?: SortOrderInput | SortOrder
     banReason?: SortOrderInput | SortOrder
     mustChangePassword?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    deletionReason?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -72533,6 +72568,8 @@ export namespace Prisma {
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     banReason?: StringNullableFilter<"User"> | string | null
     mustChangePassword?: BoolFilter<"User"> | boolean
+    deletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    deletionReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -72583,6 +72620,8 @@ export namespace Prisma {
     bannedUntil?: SortOrderInput | SortOrder
     banReason?: SortOrderInput | SortOrder
     mustChangePassword?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    deletionReason?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -72620,6 +72659,8 @@ export namespace Prisma {
     bannedUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     banReason?: StringNullableWithAggregatesFilter<"User"> | string | null
     mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    deletionReason?: StringNullableWithAggregatesFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -77389,6 +77430,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -77439,6 +77482,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -77489,6 +77534,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77539,6 +77586,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77589,6 +77638,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -77618,6 +77669,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77647,6 +77700,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -83209,6 +83264,8 @@ export namespace Prisma {
     bannedUntil?: SortOrder
     banReason?: SortOrder
     mustChangePassword?: SortOrder
+    deletedAt?: SortOrder
+    deletionReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -83242,6 +83299,8 @@ export namespace Prisma {
     bannedUntil?: SortOrder
     banReason?: SortOrder
     mustChangePassword?: SortOrder
+    deletedAt?: SortOrder
+    deletionReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -83271,6 +83330,8 @@ export namespace Prisma {
     bannedUntil?: SortOrder
     banReason?: SortOrder
     mustChangePassword?: SortOrder
+    deletedAt?: SortOrder
+    deletionReason?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -92096,6 +92157,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92145,6 +92208,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92210,6 +92275,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92259,6 +92326,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92308,6 +92377,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92357,6 +92428,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92422,6 +92495,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92471,6 +92546,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92520,6 +92597,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92569,6 +92648,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92634,6 +92715,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92683,6 +92766,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92732,6 +92817,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92781,6 +92868,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92846,6 +92935,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92895,6 +92986,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92944,6 +93037,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -92993,6 +93088,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93058,6 +93155,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93107,6 +93206,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93156,6 +93257,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93205,6 +93308,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93259,6 +93364,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93308,6 +93415,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93373,6 +93482,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93422,6 +93533,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93482,6 +93595,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93531,6 +93646,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93640,6 +93757,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93689,6 +93808,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93783,6 +93904,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93832,6 +93955,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93881,6 +94006,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93930,6 +94057,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -93984,6 +94113,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94033,6 +94164,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94288,6 +94421,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -94337,6 +94472,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -94405,6 +94542,8 @@ export namespace Prisma {
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     banReason?: StringNullableFilter<"User"> | string | null
     mustChangePassword?: BoolFilter<"User"> | boolean
+    deletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    deletionReason?: StringNullableFilter<"User"> | string | null
     lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -94820,6 +94959,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -94869,6 +95010,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95052,6 +95195,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95101,6 +95246,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95211,6 +95358,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95260,6 +95409,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -95653,6 +95804,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -95702,6 +95855,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96614,6 +96769,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -96663,6 +96820,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -96806,6 +96965,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96855,6 +97016,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -97152,6 +97315,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -97201,6 +97366,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -97321,6 +97488,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -97370,6 +97539,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -97480,6 +97651,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -97529,6 +97702,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -97800,6 +97975,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -97849,6 +98026,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -98225,6 +98404,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -98274,6 +98455,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -98384,6 +98567,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -98433,6 +98618,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -101734,6 +101921,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -101783,6 +101972,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -101893,6 +102084,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -101942,6 +102135,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102042,6 +102237,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -102091,6 +102288,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -102181,6 +102380,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102230,6 +102431,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102582,6 +102785,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -102631,6 +102836,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -102725,6 +102932,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102774,6 +102983,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -102922,6 +103133,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -102971,6 +103184,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -103036,6 +103251,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -103085,6 +103302,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -103220,6 +103439,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -103269,6 +103490,8 @@ export namespace Prisma {
     bannedUntil?: Date | string | null
     banReason?: string | null
     mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -103385,6 +103608,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -103434,6 +103659,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -104477,6 +104704,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -104526,6 +104755,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -104575,6 +104806,8 @@ export namespace Prisma {
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     banReason?: NullableStringFieldUpdateOperationsInput | string | null
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

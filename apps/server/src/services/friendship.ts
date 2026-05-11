@@ -43,8 +43,11 @@ export async function sendFriendRequest(
     throw new Error("Impossible de s'ajouter soi-meme");
   }
 
-  const receiver = await prisma.user.findUnique({
-    where: { id: receiverId },
+  // Lot P.A.2 — un compte soft-deleted ne doit pas pouvoir recevoir de
+  // nouvelles demandes d'amitie. findFirst au lieu de findUnique pour
+  // pouvoir filtrer sur deletedAt.
+  const receiver = await prisma.user.findFirst({
+    where: { id: receiverId, deletedAt: null },
     select: { id: true },
   });
   if (!receiver) {
