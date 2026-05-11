@@ -24,6 +24,10 @@ import {
 } from "../services/auth-tokens";
 import { type RefreshTokenStore } from "../services/refresh-token-store";
 import { PrismaRefreshTokenStore } from "../services/prisma-refresh-token-store";
+import {
+  REGISTRATION_REQUIRES_VALIDATION_FLAG,
+  isEnabled as isFeatureEnabled,
+} from "../services/featureFlags";
 
 const router = Router();
 
@@ -84,6 +88,14 @@ router.post("/register", validate(registerSchema), async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Lot O.B.1 — kill-switch optionnel : si le flag
+    // REGISTRATION_REQUIRES_VALIDATION_FLAG est ON, on cree le user en
+    // mode "pending" (valid=false, pas de token). Par defaut OFF →
+    // auto-approve (UX d'acquisition normale).
+    const requiresValidation = await isFeatureEnabled(
+      REGISTRATION_REQUIRES_VALIDATION_FLAG,
+    );
+
     const created = await prisma.user.create({
       data: {
         email,
@@ -94,7 +106,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
         lastName: lastName && lastName !== "" ? lastName : null,
         dateOfBirth:
           dateOfBirth && dateOfBirth !== "" ? new Date(dateOfBirth) : null,
-        valid: true,
+        valid: !requiresValidation,
       },
     });
 
@@ -122,6 +134,17 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       valid: created.valid,
       createdAt: created.createdAt,
     };
+
+    // Lot O.B.1 — si le flag REGISTRATION_REQUIRES_VALIDATION est actif,
+    // on cree le compte mais on ne livre pas de token : le user voit la
+    // page "pending validation" sur le frontend (deja existante).
+    if (requiresValidation) {
+      return res.status(201).json({
+        user: publicUser,
+        message:
+          "Ton compte est en attente de validation par un administrateur. Tu recevras un mail des qu'il sera actif.",
+      });
+    }
 
     const { token, refreshToken } = await issueTokenPair({
       userId: created.id,

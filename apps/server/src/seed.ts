@@ -22,6 +22,7 @@ import {
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
   LEAGUES_V2_UI_FLAG,
+  REGISTRATION_REQUIRES_VALIDATION_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1061,6 +1062,25 @@ async function main() {
       `   ✅ Override '${LEAGUES_V2_UI_FLAG}' ajouté pour user@example.com`,
     );
   }
+
+  // Sprint O (Lot O.B.1) — kill-switch optionnel pour la validation admin
+  // sur les nouveaux signups. OFF par defaut (auto-approve).
+  const registrationValidationFlag = await prisma.featureFlag.upsert({
+    where: { key: REGISTRATION_REQUIRES_VALIDATION_FLAG },
+    update: {
+      description:
+        "Lot O.B.1 — Si active, les nouveaux comptes /auth/register sont crees avec valid=false et n'obtiennent pas de token tant qu'un admin n'a pas valide. Off par defaut (auto-approve).",
+    },
+    create: {
+      key: REGISTRATION_REQUIRES_VALIDATION_FLAG,
+      description:
+        "Lot O.B.1 — Si active, les nouveaux comptes /auth/register sont crees avec valid=false et n'obtiennent pas de token tant qu'un admin n'a pas valide. Off par defaut (auto-approve).",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${REGISTRATION_REQUIRES_VALIDATION_FLAG}' ${registrationValidationFlag.enabled ? "ACTIF (validation requise)" : "inactif (auto-approve par defaut)"}`,
+  );
 
   // =============================================================================
   // 7. SEED D'UNE COUPE ET D'UN MATCH LOCAL (fixtures de test)

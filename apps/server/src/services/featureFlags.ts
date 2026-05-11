@@ -35,6 +35,22 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
  */
 export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 
+/**
+ * Sprint O (Lot O.B.1) — kill-switch optionnel pour exiger une validation
+ * admin sur les nouveaux comptes. Par defaut OFF (auto-approve), pour ne
+ * pas bloquer l'acquisition. Si activate :
+ *
+ *   - POST /auth/register cree le user avec `valid: false`.
+ *   - Pas de token issued, l'API renvoie `{ user, message }` sans token.
+ *   - L'UI montre la page "pending validation" (deja existante).
+ *
+ * Utilite : si un raid de signup spammy apparait en prod, on active ce
+ * flag pour forcer la moderation manuelle le temps de corriger
+ * (CAPTCHA, IP block, etc.).
+ */
+export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
+  "registration_requires_validation" as const;
+
 export interface FeatureFlagDTO {
   id: string;
   key: string;
