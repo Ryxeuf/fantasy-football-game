@@ -39,8 +39,25 @@ import { prisma } from "../prisma";
  * Differencie d'un `BET` qui est lui aussi un debit mais avec
  * promesse de gain. Un `SINK` est un "depense pour fun/prestige" sans
  * payout possible.
+ *
+ * Sprint P (Lot P.B.1) :
+ *  - `ADMIN_ADJUST` : ajustement manuel par un admin (positif credit /
+ *     negatif debit). La `ref` stocke la raison (audit log doublon
+ *     par securite, et exposable dans l'historique user).
+ *  - `ADMIN_REFUND` : remboursement d'un pari par un admin. `ref`
+ *     stocke le `betId` rembourse. Amount = stake initial du bet
+ *     (credit). Le bet bascule a `status='void'` cote ProBet dans la
+ *     meme transaction admin.
  */
-export type ProTxType = "BET" | "WIN" | "REWARD" | "DAILY" | "BADGE" | "SINK";
+export type ProTxType =
+  | "BET"
+  | "WIN"
+  | "REWARD"
+  | "DAILY"
+  | "BADGE"
+  | "SINK"
+  | "ADMIN_ADJUST"
+  | "ADMIN_REFUND";
 
 const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
   "BET",
@@ -49,6 +66,8 @@ const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
   "DAILY",
   "BADGE",
   "SINK",
+  "ADMIN_ADJUST",
+  "ADMIN_REFUND",
 ]);
 
 export interface ProWalletSnapshot {

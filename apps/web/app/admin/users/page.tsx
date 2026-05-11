@@ -844,6 +844,22 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
+              {/* Lot P.B.1 — lien vers la page wallet admin */}
+              <div className="p-4 rounded-lg border bg-pink-50 border-pink-200">
+                <h3 className="font-semibold mb-2">Wallet (Crowns)</h3>
+                <p className="text-sm text-gray-700 mb-2">
+                  Ajustement de solde, refund de paris, historique des
+                  transactions. Audit log financier strict.
+                </p>
+                <a
+                  href={`/admin/wallets/${userDetails.id}`}
+                  data-testid="link-admin-wallet"
+                  className="inline-block px-3 py-1.5 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg"
+                >
+                  Ouvrir le wallet
+                </a>
+              </div>
+
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
