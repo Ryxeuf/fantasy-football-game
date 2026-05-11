@@ -10,8 +10,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    proLeagueSeason: { findMany: vi.fn() },
+    proLeagueSeason: { findMany: vi.fn(), findUnique: vi.fn() },
     proLeagueMatch: { groupBy: vi.fn() },
+    proLeagueRound: { findMany: vi.fn() },
+    proLeagueStandings: { findMany: vi.fn() },
   },
 }));
 
@@ -42,6 +44,7 @@ vi.mock("../services/pro-season-factory", () => {
   }
   return {
     cloneSeason: vi.fn(),
+    createSeason: vi.fn(),
     resetStandings: vi.fn(),
     cancelSeason: vi.fn(),
     forceForfeit: vi.fn(),
@@ -50,6 +53,7 @@ vi.mock("../services/pro-season-factory", () => {
 });
 
 vi.mock("../services/pro-league-scheduler", () => ({
+  buildProLeagueSchedule: vi.fn(),
   regenerateProLeagueSchedule: vi.fn(),
 }));
 
@@ -60,23 +64,34 @@ import { prisma } from "../prisma";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import {
   cloneSeason as cloneSeasonMock,
+  createSeason as createSeasonMock,
   resetStandings as resetStandingsMock,
   cancelSeason as cancelSeasonMock,
   forceForfeit as forceForfeitMock,
   SeasonFactoryError,
 } from "../services/pro-season-factory";
-import { regenerateProLeagueSchedule as regenerateMock } from "../services/pro-league-scheduler";
+import {
+  buildProLeagueSchedule as buildMock,
+  regenerateProLeagueSchedule as regenerateMock,
+} from "../services/pro-league-scheduler";
 
 const mockedAudit = vi.mocked(safeRecordAdminActionFromRequest);
 const cloneSeason = vi.mocked(cloneSeasonMock);
+const createSeasonFn = vi.mocked(createSeasonMock);
 const resetStandings = vi.mocked(resetStandingsMock);
 const cancelSeason = vi.mocked(cancelSeasonMock);
 const forceForfeit = vi.mocked(forceForfeitMock);
 const regenerate = vi.mocked(regenerateMock);
+const buildSchedule = vi.mocked(buildMock);
 
 interface MockedPrisma {
-  proLeagueSeason: { findMany: ReturnType<typeof vi.fn> };
+  proLeagueSeason: {
+    findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
   proLeagueMatch: { groupBy: ReturnType<typeof vi.fn> };
+  proLeagueRound: { findMany: ReturnType<typeof vi.fn> };
+  proLeagueStandings: { findMany: ReturnType<typeof vi.fn> };
 }
 
 const mockedPrisma = prisma as unknown as MockedPrisma;
@@ -182,6 +197,142 @@ describe("GET /admin/pro-league/seasons", () => {
     expect(res.status).toBe(200);
     expect(res.body.seasons).toEqual([]);
     expect(mockedPrisma.proLeagueMatch.groupBy).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /admin/pro-league/seasons/:id", () => {
+  it("retourne season + rounds + standings ordonnees", async () => {
+    mockedPrisma.proLeagueSeason.findUnique.mockResolvedValueOnce({
+      id: "s1",
+      leagueId: "l1",
+      year: 2026,
+      status: "in_progress",
+      driverKind: "hybrid",
+      engineVer: "0.16.0",
+      startsAt: null,
+      endsAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mockedPrisma.proLeagueRound.findMany.mockResolvedValueOnce([
+      {
+        id: "r1",
+        roundNumber: 1,
+        status: "pending",
+        scheduledAt: new Date(),
+        _count: { matches: 8 },
+      },
+    ]);
+    mockedPrisma.proLeagueStandings.findMany.mockResolvedValueOnce([
+      {
+        teamId: "t1",
+        played: 1,
+        wins: 1,
+        draws: 0,
+        losses: 0,
+        points: 3,
+        tdFor: 2,
+        tdAgainst: 0,
+        team: { name: "A", slug: "a", race: "Orc" },
+      },
+    ]);
+
+    const res = await request("GET", "/seasons/s1");
+    expect(res.status).toBe(200);
+    expect(res.body.season.id).toBe("s1");
+    expect(res.body.rounds).toHaveLength(1);
+    expect(res.body.standings).toHaveLength(1);
+  });
+
+  it("404 si saison inexistante", async () => {
+    mockedPrisma.proLeagueSeason.findUnique.mockResolvedValueOnce(null);
+    const res = await request("GET", "/seasons/ghost");
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /admin/pro-league/seasons", () => {
+  it("cree saison (sans autoSchedule) + audit", async () => {
+    createSeasonFn.mockResolvedValueOnce({
+      seasonId: "new-s",
+      leagueId: "l1",
+      year: 2027,
+      engineVer: "0.16.0",
+      driverKind: "hybrid",
+    });
+
+    const res = await request("POST", "/seasons", { year: 2027 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.seasonId).toBe("new-s");
+    expect(res.body.scheduled).toBeNull();
+    expect(buildSchedule).not.toHaveBeenCalled();
+    expect(mockedAudit).toHaveBeenCalledWith(
+      prisma,
+      expect.anything(),
+      expect.objectContaining({
+        action: "pro-season.create",
+        newValue: expect.objectContaining({ year: 2027, autoSchedule: false }),
+      }),
+    );
+  });
+
+  it("autoSchedule=true enchaine buildProLeagueSchedule", async () => {
+    createSeasonFn.mockResolvedValueOnce({
+      seasonId: "new-s",
+      leagueId: "l1",
+      year: 2027,
+      engineVer: "0.16.0",
+      driverKind: "hybrid",
+    });
+    buildSchedule.mockResolvedValueOnce({
+      seasonId: "new-s",
+      roundsCreated: 15,
+      matchesCreated: 120,
+      idempotentSkip: false,
+    });
+
+    const res = await request("POST", "/seasons", {
+      year: 2027,
+      autoSchedule: true,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.scheduled).toEqual({
+      roundsCreated: 15,
+      matchesCreated: 120,
+    });
+    expect(buildSchedule).toHaveBeenCalledWith({ seasonId: "new-s" });
+  });
+
+  it("404 si LEAGUE_NOT_FOUND", async () => {
+    createSeasonFn.mockRejectedValueOnce(
+      new SeasonFactoryError("LEAGUE_NOT_FOUND", "no league"),
+    );
+    const res = await request("POST", "/seasons", { year: 2027 });
+    expect(res.status).toBe(404);
+  });
+
+  it("409 si DUPLICATE_YEAR", async () => {
+    createSeasonFn.mockRejectedValueOnce(
+      new SeasonFactoryError("DUPLICATE_YEAR", "already"),
+    );
+    const res = await request("POST", "/seasons", { year: 2026 });
+    expect(res.status).toBe(409);
+  });
+
+  it("422 si NO_TEAMS", async () => {
+    createSeasonFn.mockRejectedValueOnce(
+      new SeasonFactoryError("NO_TEAMS", "seed"),
+    );
+    const res = await request("POST", "/seasons", { year: 2027 });
+    expect(res.status).toBe(422);
+  });
+
+  it("400 si year invalide (Zod)", async () => {
+    const res = await request("POST", "/seasons", { year: 1999 });
+    expect(res.status).toBe(400);
+    expect(createSeasonFn).not.toHaveBeenCalled();
   });
 });
 

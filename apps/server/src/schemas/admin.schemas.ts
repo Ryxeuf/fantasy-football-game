@@ -126,6 +126,17 @@ export const adminBetRefundSchema = z.object({
 
 // ── Lot P.B.3 — Pro League season factory ──
 
+/** Creation d'une saison Pro League from scratch.
+ *  Initialise les standings a zero. Le schedule est genere si
+ *  `autoSchedule: true` (par defaut false — l'admin appellera
+ *  regenerate-schedule plus tard si besoin de personnaliser la date). */
+export const adminCreateSeasonSchema = z.object({
+  year: z.number().int().min(2020).max(2100),
+  driverKind: z.enum(["hybrid", "full"]).optional(),
+  engineVer: z.string().min(1).max(50).optional(),
+  autoSchedule: z.boolean().optional().default(false),
+});
+
 /** Clone d'une saison Pro League. La saison source doit exister. Le
  *  `year` cible doit etre unique dans la ligue (sinon DUPLICATE_YEAR
  *  cote service). `driverKind` optionnel = inherit la valeur source. */

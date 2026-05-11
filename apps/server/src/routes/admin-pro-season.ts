@@ -20,6 +20,7 @@ import { adminOnly } from "../middleware/adminOnly";
 import { validate } from "../middleware/validate";
 import {
   adminCloneSeasonSchema,
+  adminCreateSeasonSchema,
   adminForceForfeitSchema,
 } from "../schemas/admin.schemas";
 import { serverLog } from "../utils/server-log";
@@ -27,12 +28,16 @@ import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 import {
   cloneSeason,
+  createSeason,
   resetStandings,
   cancelSeason,
   forceForfeit,
   SeasonFactoryError,
 } from "../services/pro-season-factory";
-import { regenerateProLeagueSchedule } from "../services/pro-league-scheduler";
+import {
+  buildProLeagueSchedule,
+  regenerateProLeagueSchedule,
+} from "../services/pro-league-scheduler";
 
 const router = Router();
 
@@ -43,6 +48,7 @@ function errorStatus(code: SeasonFactoryError["code"]): number {
   switch (code) {
     case "SEASON_NOT_FOUND":
     case "MATCH_NOT_FOUND":
+    case "LEAGUE_NOT_FOUND":
       return 404;
     case "MATCH_ALREADY_COMPLETED":
     case "DUPLICATE_YEAR":
@@ -50,6 +56,8 @@ function errorStatus(code: SeasonFactoryError["code"]): number {
       return 409;
     case "INVALID_INPUT":
       return 400;
+    case "NO_TEAMS":
+      return 422;
     default:
       return 500;
   }
@@ -126,6 +134,130 @@ router.get("/seasons", async (_req, res) => {
     res.status(500).json({ error: "Erreur lors de la lecture des saisons" });
   }
 });
+
+/**
+ * GET /admin/pro-league/seasons/:id — detail saison.
+ *
+ * Retourne : season meta + rounds (1..N avec status, scheduledAt et
+ * counters matches) + standings ordonnees par points desc.
+ */
+router.get("/seasons/:id", async (req, res) => {
+  try {
+    const season = await prisma.proLeagueSeason.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        leagueId: true,
+        year: true,
+        status: true,
+        driverKind: true,
+        engineVer: true,
+        startsAt: true,
+        endsAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!season) {
+      return res.status(404).json({ error: "Saison introuvable" });
+    }
+
+    const [rounds, standings] = await Promise.all([
+      prisma.proLeagueRound.findMany({
+        where: { seasonId: req.params.id },
+        select: {
+          id: true,
+          roundNumber: true,
+          status: true,
+          scheduledAt: true,
+          startedAt: true,
+          completedAt: true,
+          _count: { select: { matches: true } },
+        },
+        orderBy: { roundNumber: "asc" },
+      }),
+      prisma.proLeagueStandings.findMany({
+        where: { seasonId: req.params.id },
+        select: {
+          teamId: true,
+          played: true,
+          wins: true,
+          draws: true,
+          losses: true,
+          points: true,
+          tdFor: true,
+          tdAgainst: true,
+          team: { select: { name: true, slug: true, race: true } },
+        },
+        orderBy: [{ points: "desc" }, { tdFor: "desc" }],
+      }),
+    ]);
+
+    res.json({ season, rounds, standings });
+  } catch (e) {
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors du chargement de la saison" });
+  }
+});
+
+/**
+ * POST /admin/pro-league/seasons — cree une saison from scratch.
+ *
+ * `autoSchedule: true` enchaine `buildProLeagueSchedule` apres la
+ * creation, ce qui genere les 15 rounds + 120 matches du round-robin
+ * (en utilisant le defaut "prochain mardi 21h00 UTC" comme date du
+ * round 1).
+ */
+router.post(
+  "/seasons",
+  validate(adminCreateSeasonSchema),
+  async (req, res) => {
+    try {
+      const { autoSchedule = false, ...createInput } = req.body as {
+        year: number;
+        driverKind?: "hybrid" | "full";
+        engineVer?: string;
+        autoSchedule?: boolean;
+      };
+      const created = await createSeason(createInput);
+
+      let scheduled: { roundsCreated: number; matchesCreated: number } | null =
+        null;
+      if (autoSchedule) {
+        const build = await buildProLeagueSchedule({ seasonId: created.seasonId });
+        scheduled = {
+          roundsCreated: build.roundsCreated,
+          matchesCreated: build.matchesCreated,
+        };
+      }
+
+      await safeRecordAdminActionFromRequest(
+        prisma,
+        req as AuthenticatedRequest,
+        {
+          action: "pro-season.create",
+          entity: "ProLeagueSeason",
+          entityId: created.seasonId,
+          newValue: {
+            year: created.year,
+            driverKind: created.driverKind,
+            engineVer: created.engineVer,
+            autoSchedule,
+            scheduled,
+          },
+        },
+      );
+
+      res.json({ ...created, scheduled });
+    } catch (e) {
+      if (e instanceof SeasonFactoryError) {
+        return res.status(errorStatus(e.code)).json({ error: e.message });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur lors de la creation de la saison" });
+    }
+  },
+);
 
 /**
  * POST /admin/pro-league/seasons/clone — clone une saison existante.

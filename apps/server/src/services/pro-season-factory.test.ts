@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
+    proLeague: { findUnique: vi.fn() },
     proLeagueSeason: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     proLeagueStandings: { updateMany: vi.fn(), createMany: vi.fn() },
     proLeagueMatch: { findUnique: vi.fn(), update: vi.fn() },
@@ -22,16 +23,26 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("@bb/sim-engine", () => ({
+  ENGINE_VER: "1.0.0-test",
+}));
+
+vi.mock("../seeders/pro-league", () => ({
+  OLD_WORLD_LEAGUE_SLUG: "old-world-league",
+}));
+
 import { prisma } from "../prisma";
 import {
   resetStandings,
   cancelSeason,
   forceForfeit,
   cloneSeason,
+  createSeason,
   SeasonFactoryError,
 } from "./pro-season-factory";
 
 interface MockedPrisma {
+  proLeague: { findUnique: ReturnType<typeof vi.fn> };
   proLeagueSeason: {
     findUnique: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
@@ -295,5 +306,96 @@ describe("cloneSeason", () => {
     expect(e).toBeInstanceOf(Error);
     expect(e.code).toBe("INVALID_INPUT");
     expect(e.name).toBe("SeasonFactoryError");
+  });
+});
+
+describe("createSeason", () => {
+  it("cree saison + init standings pour toutes les teams", async () => {
+    mocked.proLeague.findUnique.mockResolvedValueOnce({ id: "l1" });
+    mocked.proLeagueSeason.findUnique.mockResolvedValueOnce(null);
+    mocked.proTeam.findMany.mockResolvedValueOnce([
+      { id: "t1" },
+      { id: "t2" },
+      { id: "t3" },
+    ]);
+    const seasonCreate = vi.fn().mockResolvedValueOnce({ id: "new-s" });
+    const standingsCreateMany = vi.fn().mockResolvedValueOnce({ count: 3 });
+    mocked.$transaction.mockImplementationOnce(async (fn: any) =>
+      fn({
+        proLeagueSeason: { create: seasonCreate },
+        proLeagueStandings: { createMany: standingsCreateMany },
+      }),
+    );
+
+    const result = await createSeason({ year: 2027 });
+
+    expect(result.year).toBe(2027);
+    expect(result.engineVer).toBe("1.0.0-test");
+    expect(result.driverKind).toBe("hybrid");
+    expect(result.seasonId).toBe("new-s");
+    expect(seasonCreate.mock.calls[0][0].data).toMatchObject({
+      leagueId: "l1",
+      year: 2027,
+      status: "scheduled",
+      engineVer: "1.0.0-test",
+      driverKind: "hybrid",
+    });
+    expect(standingsCreateMany.mock.calls[0][0].data).toHaveLength(3);
+  });
+
+  it("override driverKind + engineVer si fournis", async () => {
+    mocked.proLeague.findUnique.mockResolvedValueOnce({ id: "l1" });
+    mocked.proLeagueSeason.findUnique.mockResolvedValueOnce(null);
+    mocked.proTeam.findMany.mockResolvedValueOnce([{ id: "t1" }]);
+    const seasonCreate = vi.fn().mockResolvedValueOnce({ id: "new-s" });
+    mocked.$transaction.mockImplementationOnce(async (fn: any) =>
+      fn({
+        proLeagueSeason: { create: seasonCreate },
+        proLeagueStandings: { createMany: vi.fn() },
+      }),
+    );
+
+    await createSeason({
+      year: 2027,
+      driverKind: "full",
+      engineVer: "0.99.0",
+    });
+
+    expect(seasonCreate.mock.calls[0][0].data.driverKind).toBe("full");
+    expect(seasonCreate.mock.calls[0][0].data.engineVer).toBe("0.99.0");
+  });
+
+  it("INVALID_INPUT si year < 2020 ou > 2100", async () => {
+    await expect(createSeason({ year: 1999 })).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+    await expect(createSeason({ year: 3000 })).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+  });
+
+  it("LEAGUE_NOT_FOUND si la ligue singleton n'est pas seedee", async () => {
+    mocked.proLeague.findUnique.mockResolvedValueOnce(null);
+    await expect(createSeason({ year: 2027 })).rejects.toMatchObject({
+      code: "LEAGUE_NOT_FOUND",
+    });
+  });
+
+  it("DUPLICATE_YEAR si une saison existe deja", async () => {
+    mocked.proLeague.findUnique.mockResolvedValueOnce({ id: "l1" });
+    mocked.proLeagueSeason.findUnique.mockResolvedValueOnce({ id: "dup" });
+    await expect(createSeason({ year: 2026 })).rejects.toMatchObject({
+      code: "DUPLICATE_YEAR",
+    });
+    expect(mocked.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("NO_TEAMS si aucune team en DB", async () => {
+    mocked.proLeague.findUnique.mockResolvedValueOnce({ id: "l1" });
+    mocked.proLeagueSeason.findUnique.mockResolvedValueOnce(null);
+    mocked.proTeam.findMany.mockResolvedValueOnce([]);
+    await expect(createSeason({ year: 2027 })).rejects.toMatchObject({
+      code: "NO_TEAMS",
+    });
   });
 });
