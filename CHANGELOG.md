@@ -1,3 +1,18 @@
+## [1.109.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.108.0...v1.109.0) (2026-05-11)
+
+
+### ✨ Features
+
+* **admin:** dashboard analytics business (Lot P.C.3) ([#755](https://github.com/Ryxeuf/fantasy-football-game/issues/755)) ([65a24cf](https://github.com/Ryxeuf/fantasy-football-game/commit/65a24cf9477c4f52777b6c73e418044dbdb07de9))
+* **ops:** mode maintenance global toggleable (Lot P.A.1) ([#753](https://github.com/Ryxeuf/fantasy-football-game/issues/753)) ([c785cfa](https://github.com/Ryxeuf/fantasy-football-game/commit/c785cfaddcc8189eef19490bb7bcd07dec7c4867))
+* **privacy:** GDPR data export self-service (Lot P.A.3) ([fb13117](https://github.com/Ryxeuf/fantasy-football-game/commit/fb131174cc0a41978cd7eae345175551513373f2))
+* **pro-league:** Hall of Fame dedications — Crowns sink (Lot P.B.2) ([#754](https://github.com/Ryxeuf/fantasy-football-game/issues/754)) ([4830c10](https://github.com/Ryxeuf/fantasy-football-game/commit/4830c105de5aed479fe99df4970dd4c4946d3011))
+
+
+### 📝 Documentation
+
+* session log Sprint O 2026-05-11 + patterns CLAUDE.md ([#752](https://github.com/Ryxeuf/fantasy-football-game/issues/752)) ([7a696b3](https://github.com/Ryxeuf/fantasy-football-game/commit/7a696b30307c8feeab3dbcf3863b0291ba96e662)), closes [#744](https://github.com/Ryxeuf/fantasy-football-game/issues/744) [-#751](https://github.com/Ryxeuf/-/issues/751)
+
 ## [1.108.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.107.0...v1.108.0) (2026-05-11)
 
 
