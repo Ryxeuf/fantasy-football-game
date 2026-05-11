@@ -13,6 +13,7 @@ import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
 import adminSimReplaysRoutes from "./routes/admin-sim-replays";
+import adminWalletRoutes from "./routes/admin-wallet";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -222,6 +223,9 @@ app.use("/admin/sim", adminSimRoutes);
 // distinct (`/admin/sim-replays`) pour éviter la double exécution du
 // middleware d'auth qui se produirait si on imbriquait sous `/admin/sim`.
 app.use("/admin/sim-replays", adminSimReplaysRoutes);
+// Lot P.B.1 — admin wallet (audit financier strict). Mountee sur /admin
+// pour avoir /admin/wallets/* et /admin/bets/*.
+app.use("/admin", adminWalletRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);

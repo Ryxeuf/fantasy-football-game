@@ -92,3 +92,34 @@ export const adminUserBanSchema = z.object({
   /** Duree en jours. Omis ou 0 = ban permanent (annee 9999). Max 3650 (~10 ans). */
   durationDays: z.number().int().min(0).max(3650).optional(),
 });
+
+// ── Lot P.B.1 — admin wallet (audit financier strict) ──
+
+/** Ajustement manuel du solde d'un wallet par un admin.
+ *  - `delta` entier signe (positif = credit, negatif = debit, non nul).
+ *  - `reason` obligatoire (audit financier). Cap a 500 chars.
+ *  Bornes : +/-10_000_000 Crowns par ajustement pour prevenir une
+ *  catastrophe en cas de typo (10M = TV bulk d'une grosse equipe). */
+export const adminWalletAdjustSchema = z.object({
+  delta: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, "delta ne peut pas etre 0")
+    .refine((n) => Math.abs(n) <= 10_000_000, "delta hors bornes (max +/-10M Crowns)"),
+  reason: z
+    .string()
+    .min(3, "raison trop courte (3 chars min)")
+    .max(500, "raison trop longue (500 chars max)"),
+});
+
+/** Refund admin d'un pari : credite le wallet du stake + void le bet.
+ *  Raison obligatoire (audit financier). Idempotence : refuse si le bet
+ *  est deja `void`. Pour les bets `won`, le payout deja credite n'est
+ *  pas re-debit (on assume que le settlement est legitime ; seul le
+ *  stake initial est rembourse en mode best-effort). */
+export const adminBetRefundSchema = z.object({
+  reason: z
+    .string()
+    .min(3, "raison trop courte (3 chars min)")
+    .max(500, "raison trop longue (500 chars max)"),
+});
