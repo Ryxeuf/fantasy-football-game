@@ -165,3 +165,31 @@ export const adminForceForfeitSchema = z.object({
     message: "winnerSide doit etre 'home' ou 'away'",
   }),
 });
+
+/** Branding admin d'une ProTeam : couleurs, motto, headline, nflFlavor.
+ *  Tous les champs sont optionnels — l'endpoint applique seulement ceux
+ *  fournis, ne touche pas aux autres. `null` explicite = effacer le champ. */
+const hexColorRegex = /^#[0-9a-fA-F]{6}$/;
+
+export const adminProTeamBrandingSchema = z
+  .object({
+    city: z.string().min(1).max(80).optional(),
+    name: z.string().min(1).max(120).optional(),
+    nflFlavor: z.string().max(120).nullable().optional(),
+    primaryColor: z
+      .string()
+      .regex(hexColorRegex, "Format attendu : #RRGGBB")
+      .nullable()
+      .optional(),
+    secondaryColor: z
+      .string()
+      .regex(hexColorRegex, "Format attendu : #RRGGBB")
+      .nullable()
+      .optional(),
+    motto: z.string().max(200).nullable().optional(),
+    headline: z.string().max(200).nullable().optional(),
+  })
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    { message: "Au moins un champ doit etre fourni" },
+  );
