@@ -54,6 +54,12 @@ import {
 } from "../services/pro-gazette";
 import { listHallOfFame } from "../services/pro-hall-of-fame";
 import {
+  DEDICATE_COST_CROWNS,
+  DedicateError,
+  dedicateHallOfFame,
+  listDedications,
+} from "../services/pro-hall-of-fame-dedicate";
+import {
   InsufficientFundsError,
   getBalance,
   getRecentTransactions,
@@ -763,6 +769,87 @@ export async function handleListHallOfFame(
 }
 
 /**
+ * Sprint P (Lot P.B.2) — Liste publique des dedications d'une entree
+ * Hall of Fame. Pas d'auth requise. Pagination via `?limit=N`.
+ */
+export async function handleListHallOfFameDedications(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  const limit =
+    typeof req.query.limit === "string"
+      ? Number.parseInt(req.query.limit, 10)
+      : 50;
+  try {
+    const dedications = await listDedications(id, limit);
+    res.json({ dedications, costCrowns: DEDICATE_COST_CROWNS });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/hall-of-fame/${id}/dedications] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint P (Lot P.B.2) — Dedicace une entree HoF en payant 500 Crowns.
+ * Auth requise. Body `{ message: string }` (max 280 chars).
+ *
+ * Codes erreur :
+ *  - 400 INVALID_MESSAGE / MESSAGE_TOO_LONG
+ *  - 402 WALLET_INSUFFICIENT_FUNDS (mapping cote handler)
+ *  - 404 HOF_NOT_FOUND
+ */
+export async function handleDedicateHallOfFame(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  const message = (req.body as { message?: unknown })?.message;
+  if (typeof message !== "string") {
+    res.status(400).json({ error: "INVALID_MESSAGE", code: "INVALID_MESSAGE" });
+    return;
+  }
+  try {
+    const out = await dedicateHallOfFame(userId, id, message);
+    res.status(out.granted ? 201 : 200).json(out);
+  } catch (err: unknown) {
+    if (err instanceof DedicateError) {
+      const status = err.code === "HOF_NOT_FOUND" ? 404 : 400;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    if (err instanceof InsufficientFundsError) {
+      res.status(402).json({
+        error: err.message,
+        code: "WALLET_INSUFFICIENT_FUNDS",
+      });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/hall-of-fame/${id}/dedicate] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
  * Sprint 1.E.2 — Liste les dates publiées (archive). `?limit=N`.
  */
 export async function handleListEditionDates(
@@ -911,6 +998,15 @@ router.get("/gazette/latest", handleGetLatestEdition);
 router.get("/gazette/dates", handleListEditionDates);
 router.get("/gazette/:date", handleGetEditionByDate);
 router.get("/hall-of-fame", handleListHallOfFame);
+router.get(
+  "/hall-of-fame/:id/dedications",
+  handleListHallOfFameDedications,
+);
+router.post(
+  "/hall-of-fame/:id/dedicate",
+  authUser,
+  handleDedicateHallOfFame,
+);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
