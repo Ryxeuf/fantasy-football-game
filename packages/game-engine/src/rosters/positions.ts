@@ -33,8 +33,8 @@ export interface TeamRoster {
   secondaryColor?: number;
 }
 
-export type Ruleset = "season_2" | "season_3" | "season_4";
-export const RULESETS: Ruleset[] = ["season_2", "season_3", "season_4"];
+export type Ruleset = "season_2" | "season_3";
+export const RULESETS: Ruleset[] = ["season_2", "season_3"];
 export const DEFAULT_RULESET: Ruleset = "season_3";
 
 type TeamRosterMap = Record<string, TeamRoster>;
@@ -2432,7 +2432,6 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
 };
 
 import { SEASON_THREE_ROSTERS } from './season3-rosters';
-import { SEASON_FOUR_ROSTERS } from './season4-rosters';
 
 const cloneRoster = (roster: TeamRoster): TeamRoster => ({
   ...roster,
@@ -2447,9 +2446,6 @@ const cloneRosterMap = (source: TeamRosterMap): TeamRosterMap =>
 export const TEAM_ROSTERS_BY_RULESET: Record<Ruleset, TeamRosterMap> = {
   season_2: SEASON_TWO_ROSTERS,
   season_3: SEASON_THREE_ROSTERS,
-  // S27.5 — skeleton vide ; voir `season4-rosters.ts` pour le pattern
-  // d'ajout des rosters officiels GW 2025-2026.
-  season_4: SEASON_FOUR_ROSTERS,
 };
 
 export const TEAM_ROSTERS = TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
