@@ -63,8 +63,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("rejette si aucune saison active", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue(null);
     await expect(
@@ -74,8 +74,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("crée le match avec isTest=true et appelle simulateProMatch", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue({
       id: "season-2026",
@@ -94,8 +94,10 @@ describe("createTestMatch — Lot 2.C.2", () => {
         data: expect.objectContaining({
           seasonId: "season-2026",
           roundId: "round-sandbox",
-          homeTeamId: "t1",
-          awayTeamId: "t2",
+          // L'input passe le slug ("t1"), mais le create stocke l'id
+          // Prisma (cuid) resolu via la lookup proTeam.findMany.
+          homeTeamId: "team-cuid-1",
+          awayTeamId: "team-cuid-2",
           isTest: true,
           status: "scheduled",
         }),
@@ -111,8 +113,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("Lot 3.B.1 — driverKindOverride par défaut null (= inherit saison)", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue({
       id: "season-2026",
@@ -132,8 +134,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("Lot 3.B.1 — propage driverKind='full' dans driverKindOverride", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue({
       id: "season-2026",
@@ -157,8 +159,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("Lot 3.B.1 — driverKind invalide (defense-in-depth) → null", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue({
       id: "season-2026",
@@ -183,8 +185,8 @@ describe("createTestMatch — Lot 2.C.2", () => {
 
   it("upsert le round sandbox (roundNumber=0) si absent", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
-      { id: "t1", slug: "a" },
-      { id: "t2", slug: "b" },
+      { id: "team-cuid-1", slug: "t1" },
+      { id: "team-cuid-2", slug: "t2" },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValue({
       id: "season-2026",

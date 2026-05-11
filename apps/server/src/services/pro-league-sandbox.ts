@@ -141,18 +141,22 @@ export async function createTestMatch(
     throw new Error("homeTeamId et awayTeamId doivent être distincts");
   }
 
-  // Vérifie l'existence des deux teams en une seule query.
+  // L'UI admin envoie les slugs (PRO_LEAGUE_TEAMS[i].id = slug, ex.
+  // "kc-soaring-hawks"). On resout le slug → id Prisma (cuid) pour
+  // l'insertion dans ProLeagueMatch (FK vers ProTeam.id).
   const teams = (await prisma.proTeam.findMany({
-    where: { id: { in: [input.homeTeamId, input.awayTeamId] } },
+    where: { slug: { in: [input.homeTeamId, input.awayTeamId] } },
     select: { id: true, slug: true },
   })) as Array<{ id: string; slug: string }>;
   if (teams.length !== 2) {
-    const found = new Set(teams.map((t) => t.id));
+    const found = new Set(teams.map((t) => t.slug));
     const missing = [input.homeTeamId, input.awayTeamId].filter(
-      (id) => !found.has(id),
+      (slug) => !found.has(slug),
     );
     throw new Error(`Teams introuvables : ${missing.join(", ")}`);
   }
+  const homeTeam = teams.find((t) => t.slug === input.homeTeamId)!;
+  const awayTeam = teams.find((t) => t.slug === input.awayTeamId)!;
 
   const season = await findLatestActiveSeason();
   const roundId = await ensureSandboxRound(season.id);
@@ -169,8 +173,9 @@ export async function createTestMatch(
     data: {
       seasonId: season.id,
       roundId,
-      homeTeamId: input.homeTeamId,
-      awayTeamId: input.awayTeamId,
+      // FK vers ProTeam.id (cuid), pas le slug.
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
       status: "scheduled",
       scheduledAt: new Date(),
       isTest: true,

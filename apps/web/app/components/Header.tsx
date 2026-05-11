@@ -143,7 +143,10 @@ export default function Header() {
             </button>
             {openDropdown === "competitions" && (
               <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
-                {dropdownItem("/leagues", "🏅", t.nav.leagues)}
+                {/* Le hub /leagues est gate par OnlinePlayGate cote layout.
+                    Sans le flag, le lien menerait a un message "indisponible"
+                    decevant — on le cache pour eviter l'effet tunnel. */}
+                {onlinePlayEnabled && dropdownItem("/leagues", "🏅", t.nav.leagues)}
                 {dropdownItem("/cups", "🏆", t.nav.cups)}
                 {onlinePlayEnabled && dropdownItem("/leaderboard", "📊", t.nav.leaderboard)}
               </div>
@@ -261,13 +264,17 @@ export default function Header() {
               <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 🏆 {t.nav.competitions}
               </p>
-              <a
-                href="/leagues"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
-              >
-                🏅 {t.nav.leagues}
-              </a>
+              {/* Cf. desktop ci-dessus : on cache /leagues quand le flag
+                  online_play est OFF pour eviter le message "indisponible". */}
+              {onlinePlayEnabled && (
+                <a
+                  href="/leagues"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  🏅 {t.nav.leagues}
+                </a>
+              )}
               <a
                 href="/cups"
                 onClick={() => setMobileMenuOpen(false)}
