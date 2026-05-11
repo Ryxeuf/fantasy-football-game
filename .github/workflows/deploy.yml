@@ -38,7 +38,20 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Tests
-        run: pnpm test
+        # Les workspaces e2e/integration (`@bb/tests*`) ont besoin d'infra
+        # specifique (DB Postgres, browsers Playwright, server Next/Express
+        # demarres) absente sur ce runner — leurs jobs dedies tournent dans
+        # `e2e.yml`. On lance uniquement les unit tests des 6 workspaces
+        # metier ; le filtrage explicite evite les echecs silencieux d'un
+        # `|| true` qui masquerait de vrais bugs.
+        run: |
+          pnpm --filter @bb/server \
+               --filter @bb/web \
+               --filter @bb/ui \
+               --filter @bb/game-engine \
+               --filter @bb/sim-engine \
+               --filter @bb/shared-types \
+               run test
 
   # =========================================================================
   # 2. Build & push images Docker vers GHCR.
