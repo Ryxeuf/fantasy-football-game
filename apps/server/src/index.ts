@@ -10,6 +10,7 @@ import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
 import adminLeaguesRoutes from "./routes/admin-leagues";
+import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
 import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import userRoutes from "./routes/user";
@@ -213,6 +214,7 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // L2.C.6 — admin leagues : reservation aux admins, route distincte
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
+app.use("/admin", adminAnalyticsRoutes);
 app.use("/admin/sim", adminSimRoutes);
 // Sprint Pro League 0.E.2 / 0.E.3 — exposition lecture seule des replays
 // panel pour la validation C6-C9 du gate Phase 0 → Phase 1 (cf.
