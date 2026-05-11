@@ -1,3 +1,24 @@
+## [1.111.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.110.1...v1.111.0) (2026-05-11)
+
+
+### ✨ Features
+
+* **admin:** bootstrap Pro League — create season + hub + season detail ([#765](https://github.com/Ryxeuf/fantasy-football-game/issues/765)) ([15eb024](https://github.com/Ryxeuf/fantasy-football-game/commit/15eb0246d95ce58551a7880c480490e664042d94))
+* **admin:** bulk simulate tous les matchs d'un round ([b1c30a1](https://github.com/Ryxeuf/fantasy-football-game/commit/b1c30a13dab202027c9edd60773bff78c4fb3447))
+* **admin:** gestion des matchs Pro League (simulate + list + detail) ([#767](https://github.com/Ryxeuf/fantasy-football-game/issues/767)) ([4af5b91](https://github.com/Ryxeuf/fantasy-football-game/commit/4af5b917f916a2a5cdba5d28b6f3d337fb03e643))
+* **admin:** masquage admin du classement ELO + badge "Non classe" ([#766](https://github.com/Ryxeuf/fantasy-football-game/issues/766)) ([d1f316e](https://github.com/Ryxeuf/fantasy-football-game/commit/d1f316ef1e4c2f8b4644d12262495f32bb0f95a4))
+* **admin:** season factory Pro League (Lot P.B.3) ([#764](https://github.com/Ryxeuf/fantasy-football-game/issues/764)) ([7233b05](https://github.com/Ryxeuf/fantasy-football-game/commit/7233b0598b82dc82fc97ce072a2811c27d0e16e2))
+
+
+### 🐛 Bug Fixes
+
+* **engine:** retire season_4 + page admin utilities (debloque seed prod) ([#763](https://github.com/Ryxeuf/fantasy-football-game/issues/763)) ([e072103](https://github.com/Ryxeuf/fantasy-football-game/commit/e072103086412da58b704243bf73368f44a002fa))
+
+
+### ♻️ Code Refactoring
+
+* Phase A deployment (pull-only, CI builds images) ([#768](https://github.com/Ryxeuf/fantasy-football-game/issues/768)) ([61dcb16](https://github.com/Ryxeuf/fantasy-football-game/commit/61dcb1669e2664481c0d8023a8f603e06f9ee577))
+
 ## [1.110.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.110.0...v1.110.1) (2026-05-11)
 
 
