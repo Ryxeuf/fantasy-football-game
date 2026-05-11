@@ -38,6 +38,7 @@ import {
   buildProLeagueSchedule,
   regenerateProLeagueSchedule,
 } from "../services/pro-league-scheduler";
+import { simulateProMatch } from "../services/pro-league-sim-runner";
 
 const router = Router();
 
@@ -409,5 +410,152 @@ router.post(
     }
   },
 );
+
+/**
+ * GET /admin/pro-league/seasons/:id/matches — liste des matchs d'une saison.
+ *
+ * Filtres optionnels : `?roundNumber=N` (1..15), `?status=scheduled|ready|
+ * in_progress|completed|failed`. Ordre par roundNumber asc puis
+ * scheduledAt asc pour faciliter le triage round-par-round.
+ */
+router.get("/seasons/:id/matches", async (req, res) => {
+  try {
+    const where: {
+      seasonId: string;
+      status?: string;
+      round?: { roundNumber: number };
+    } = { seasonId: req.params.id };
+
+    const roundNumberRaw = req.query.roundNumber as string | undefined;
+    if (roundNumberRaw !== undefined && roundNumberRaw !== "") {
+      const n = parseInt(roundNumberRaw, 10);
+      if (!Number.isInteger(n) || n < 1 || n > 50) {
+        return res.status(400).json({ error: "roundNumber doit etre 1..50" });
+      }
+      where.round = { roundNumber: n };
+    }
+    const statusFilter = req.query.status as string | undefined;
+    if (statusFilter) {
+      where.status = statusFilter;
+    }
+
+    const matches = (await prisma.proLeagueMatch.findMany({
+      where,
+      select: {
+        id: true,
+        status: true,
+        scheduledAt: true,
+        simulatedAt: true,
+        completedAt: true,
+        scoreHome: true,
+        scoreAway: true,
+        outcome: true,
+        isTest: true,
+        replayId: true,
+        homeTeam: { select: { name: true, slug: true } },
+        awayTeam: { select: { name: true, slug: true } },
+        round: { select: { roundNumber: true } },
+      },
+      orderBy: [
+        { round: { roundNumber: "asc" } },
+        { scheduledAt: "asc" },
+      ],
+      take: 500,
+    })) as Array<unknown>;
+
+    res.json({ matches });
+  } catch (e) {
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors de la lecture des matchs" });
+  }
+});
+
+/**
+ * GET /admin/pro-league/matches/:id — detail d'un match Pro League.
+ *
+ * Renvoie : meta complete (status, score, outcome, counters, engineVer),
+ * teams, round, replayId. Utilise par la page detail match + decisions
+ * admin (simulate, force-forfeit).
+ */
+router.get("/matches/:id", async (req, res) => {
+  try {
+    const match = await prisma.proLeagueMatch.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        seasonId: true,
+        roundId: true,
+        status: true,
+        scheduledAt: true,
+        simulatedAt: true,
+        completedAt: true,
+        scoreHome: true,
+        scoreAway: true,
+        outcome: true,
+        touchdownCount: true,
+        casualtyCount: true,
+        turnoverCount: true,
+        nuffleCount: true,
+        isTest: true,
+        engineVer: true,
+        driverKindOverride: true,
+        replayId: true,
+        homeTeam: { select: { id: true, name: true, slug: true, race: true } },
+        awayTeam: { select: { id: true, name: true, slug: true, race: true } },
+        round: { select: { id: true, roundNumber: true } },
+        season: { select: { id: true, year: true, engineVer: true, driverKind: true } },
+      },
+    });
+    if (!match) {
+      return res.status(404).json({ error: "Match introuvable" });
+    }
+    res.json({ match });
+  } catch (e) {
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors du chargement du match" });
+  }
+});
+
+/**
+ * POST /admin/pro-league/matches/:id/simulate — declenche la simulation
+ * d'un match Pro League individuel.
+ *
+ * Utilise le sim-runner standard (`simulateProMatch`). Idempotent :
+ * retourne `{ simulated: false }` si le match est deja dans un status
+ * final (`completed` / `failed`).
+ *
+ * Le sim peut lever `EngineVersionMismatchError` si le match avait deja
+ * un engineVer pinne different de la version courante. On retourne 422
+ * dans ce cas (le re-sim n'est pas autorise — il faut bouger le match
+ * ou la saison vers la nouvelle version d'abord).
+ */
+router.post("/matches/:id/simulate", async (req, res) => {
+  try {
+    const simulated = await simulateProMatch(req.params.id);
+
+    await safeRecordAdminActionFromRequest(
+      prisma,
+      req as AuthenticatedRequest,
+      {
+        action: "pro-season.simulate-match",
+        entity: "ProLeagueMatch",
+        entityId: req.params.id,
+        newValue: { simulated },
+      },
+    );
+
+    res.json({ matchId: req.params.id, simulated });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Erreur inconnue";
+    if (msg.includes("introuvable") || msg.includes("not found")) {
+      return res.status(404).json({ error: msg });
+    }
+    if (msg.includes("EngineVersionMismatch") || msg.includes("engineVer")) {
+      return res.status(422).json({ error: msg });
+    }
+    serverLog.error(e);
+    res.status(500).json({ error: msg });
+  }
+});
 
 export default router;

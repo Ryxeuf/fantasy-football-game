@@ -11,10 +11,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     proLeagueSeason: { findMany: vi.fn(), findUnique: vi.fn() },
-    proLeagueMatch: { groupBy: vi.fn() },
+    proLeagueMatch: {
+      groupBy: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
     proLeagueRound: { findMany: vi.fn() },
     proLeagueStandings: { findMany: vi.fn() },
   },
+}));
+
+vi.mock("../services/pro-league-sim-runner", () => ({
+  simulateProMatch: vi.fn(),
 }));
 
 vi.mock("../middleware/authUser", () => ({
@@ -74,6 +82,7 @@ import {
   buildProLeagueSchedule as buildMock,
   regenerateProLeagueSchedule as regenerateMock,
 } from "../services/pro-league-scheduler";
+import { simulateProMatch as simulateMock } from "../services/pro-league-sim-runner";
 
 const mockedAudit = vi.mocked(safeRecordAdminActionFromRequest);
 const cloneSeason = vi.mocked(cloneSeasonMock);
@@ -83,13 +92,18 @@ const cancelSeason = vi.mocked(cancelSeasonMock);
 const forceForfeit = vi.mocked(forceForfeitMock);
 const regenerate = vi.mocked(regenerateMock);
 const buildSchedule = vi.mocked(buildMock);
+const simulate = vi.mocked(simulateMock);
 
 interface MockedPrisma {
   proLeagueSeason: {
     findMany: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
   };
-  proLeagueMatch: { groupBy: ReturnType<typeof vi.fn> };
+  proLeagueMatch: {
+    groupBy: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
   proLeagueRound: { findMany: ReturnType<typeof vi.fn> };
   proLeagueStandings: { findMany: ReturnType<typeof vi.fn> };
 }
@@ -522,5 +536,128 @@ describe("POST /admin/pro-league/matches/:id/force-forfeit", () => {
       winnerSide: "home",
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /admin/pro-league/seasons/:id/matches", () => {
+  it("liste les matches de la saison", async () => {
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValueOnce([
+      {
+        id: "m1",
+        status: "scheduled",
+        scheduledAt: new Date(),
+        simulatedAt: null,
+        completedAt: null,
+        scoreHome: null,
+        scoreAway: null,
+        outcome: null,
+        isTest: false,
+        replayId: null,
+        homeTeam: { name: "A", slug: "a" },
+        awayTeam: { name: "B", slug: "b" },
+        round: { roundNumber: 1 },
+      },
+    ]);
+
+    const res = await request("GET", "/seasons/s1/matches");
+    expect(res.status).toBe(200);
+    expect(res.body.matches).toHaveLength(1);
+    const call = mockedPrisma.proLeagueMatch.findMany.mock.calls[0]![0];
+    expect(call.where).toEqual({ seasonId: "s1" });
+  });
+
+  it("applique filtres roundNumber + status", async () => {
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValueOnce([]);
+    const res = await request(
+      "GET",
+      "/seasons/s1/matches?roundNumber=3&status=completed",
+    );
+    expect(res.status).toBe(200);
+    const call = mockedPrisma.proLeagueMatch.findMany.mock.calls[0]![0];
+    expect(call.where).toMatchObject({
+      seasonId: "s1",
+      status: "completed",
+      round: { roundNumber: 3 },
+    });
+  });
+
+  it("400 si roundNumber hors bornes", async () => {
+    const res = await request("GET", "/seasons/s1/matches?roundNumber=100");
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /admin/pro-league/matches/:id", () => {
+  it("retourne le detail du match", async () => {
+    mockedPrisma.proLeagueMatch.findUnique.mockResolvedValueOnce({
+      id: "m1",
+      seasonId: "s1",
+      roundId: "r1",
+      status: "completed",
+      scoreHome: 2,
+      scoreAway: 1,
+      outcome: "home",
+      replayId: "replay-1",
+      homeTeam: { id: "t1", name: "A", slug: "a", race: "Orc" },
+      awayTeam: { id: "t2", name: "B", slug: "b", race: "Wood Elf" },
+      round: { id: "r1", roundNumber: 5 },
+      season: {
+        id: "s1",
+        year: 2026,
+        engineVer: "0.16.0",
+        driverKind: "hybrid",
+      },
+    });
+    const res = await request("GET", "/matches/m1");
+    expect(res.status).toBe(200);
+    expect(res.body.match.id).toBe("m1");
+    expect(res.body.match.outcome).toBe("home");
+  });
+
+  it("404 si match inexistant", async () => {
+    mockedPrisma.proLeagueMatch.findUnique.mockResolvedValueOnce(null);
+    const res = await request("GET", "/matches/ghost");
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /admin/pro-league/matches/:id/simulate", () => {
+  it("simule un match scheduled + audit log", async () => {
+    simulate.mockResolvedValueOnce(true);
+    const res = await request("POST", "/matches/m1/simulate");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ matchId: "m1", simulated: true });
+    expect(simulate).toHaveBeenCalledWith("m1");
+    expect(mockedAudit).toHaveBeenCalledWith(
+      prisma,
+      expect.anything(),
+      expect.objectContaining({
+        action: "pro-season.simulate-match",
+        entity: "ProLeagueMatch",
+        entityId: "m1",
+        newValue: { simulated: true },
+      }),
+    );
+  });
+
+  it("simulated=false (idempotent) si deja completed", async () => {
+    simulate.mockResolvedValueOnce(false);
+    const res = await request("POST", "/matches/m1/simulate");
+    expect(res.status).toBe(200);
+    expect(res.body.simulated).toBe(false);
+  });
+
+  it("404 si match introuvable (message)", async () => {
+    simulate.mockRejectedValueOnce(new Error("ProLeagueMatch 'ghost' introuvable"));
+    const res = await request("POST", "/matches/ghost/simulate");
+    expect(res.status).toBe(404);
+  });
+
+  it("422 si EngineVersionMismatch", async () => {
+    simulate.mockRejectedValueOnce(
+      new Error("EngineVersionMismatchError: engineVer pinned"),
+    );
+    const res = await request("POST", "/matches/m1/simulate");
+    expect(res.status).toBe(422);
   });
 });
