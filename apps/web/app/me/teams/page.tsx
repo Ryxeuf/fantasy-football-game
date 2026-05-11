@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import OnboardingModal from "./_components/OnboardingModal";
 
 type Team = {
   id: string;
@@ -46,6 +47,8 @@ export default function MyTeamsPage() {
   const [rosterNames, setRosterNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Lot O.B.3 — `createdAt` du user pour decider d'afficher le modal welcome. */
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -76,6 +79,10 @@ export default function MyTeamsPage() {
           return;
         }
 
+        // Lot O.B.3 — `createdAt` est expose par /auth/me (cf. auth.ts).
+        if (typeof me.user.createdAt === "string") {
+          setUserCreatedAt(me.user.createdAt);
+        }
         setTeams(mine?.teams ?? []);
 
         if (rostersResponse && rostersResponse.ok) {
@@ -98,6 +105,12 @@ export default function MyTeamsPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {!loading && (
+        <OnboardingModal
+          userCreatedAt={userCreatedAt}
+          teamsCount={teams.length}
+        />
+      )}
       <h1 className="text-xl sm:text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {loading && <TeamsSkeleton />}
