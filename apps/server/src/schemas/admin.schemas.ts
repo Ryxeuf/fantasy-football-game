@@ -123,3 +123,22 @@ export const adminBetRefundSchema = z.object({
     .min(3, "raison trop courte (3 chars min)")
     .max(500, "raison trop longue (500 chars max)"),
 });
+
+// ── Lot P.B.3 — Pro League season factory ──
+
+/** Clone d'une saison Pro League. La saison source doit exister. Le
+ *  `year` cible doit etre unique dans la ligue (sinon DUPLICATE_YEAR
+ *  cote service). `driverKind` optionnel = inherit la valeur source. */
+export const adminCloneSeasonSchema = z.object({
+  fromSeasonId: z.string().min(1, "fromSeasonId requis"),
+  year: z.number().int().min(2020).max(2100),
+  driverKind: z.enum(["hybrid", "full"]).optional(),
+});
+
+/** Force forfait d'un match Pro League. Le service refuse si match
+ *  est deja `completed`. `winnerSide` obligatoire. */
+export const adminForceForfeitSchema = z.object({
+  winnerSide: z.enum(["home", "away"], {
+    message: "winnerSide doit etre 'home' ou 'away'",
+  }),
+});
