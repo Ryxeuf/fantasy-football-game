@@ -41,6 +41,7 @@ import {
   adminFeatureFlagsRouter,
 } from "./routes/feature-flags";
 import { requireFeatureFlag } from "./middleware/requireFeatureFlag";
+import { maintenanceMode } from "./middleware/maintenance";
 import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
@@ -117,6 +118,11 @@ app.use(bodyParser.json());
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
 app.use(apiRateLimiter);
+
+// Sprint P (Lot P.A.1) — mode maintenance global. Kill-switch :
+// 503 + Retry-After pour toutes les routes sauf /health/*, /admin/*
+// et auth essentielles. Toggle via /admin/feature-flags.
+app.use(maintenanceMode());
 
 // Healthchecks S25.1 :
 //  - /health      : alias retro-compatible vers liveness ({ok:true,status:"live"})

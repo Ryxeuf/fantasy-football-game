@@ -36,6 +36,18 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
 export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 
 /**
+ * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
+ * "maintenance" : toutes les routes non-essentielles retournent 503
+ * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
+ * `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/logout`. Le
+ * frontend affiche une page maintenance avec timer.
+ *
+ * Kill-switch (cf. `KILL_SWITCH_FLAGS`) → pas force-ON par
+ * `FEATURE_FLAGS_FORCE_ENABLED` (CI).
+ */
+export const MAINTENANCE_MODE_FLAG = "maintenance_mode" as const;
+
+/**
  * Sprint O (Lot O.B.1) — kill-switch optionnel pour exiger une validation
  * admin sur les nouveaux comptes. Par defaut OFF (auto-approve), pour ne
  * pas bloquer l'acquisition. Si activate :
@@ -128,6 +140,7 @@ async function getAllFlagsCached(): Promise<FeatureFlagDTO[]> {
  */
 const KILL_SWITCH_FLAGS = new Set<string>([
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
+  MAINTENANCE_MODE_FLAG,
 ]);
 
 /**

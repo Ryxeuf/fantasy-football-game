@@ -23,6 +23,7 @@ import {
   AI_TRAINING_FLAG,
   LEAGUES_V2_UI_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
+  MAINTENANCE_MODE_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1080,6 +1081,26 @@ async function main() {
   });
   serverLog.log(
     `   ✅ Flag '${REGISTRATION_REQUIRES_VALIDATION_FLAG}' ${registrationValidationFlag.enabled ? "ACTIF (validation requise)" : "inactif (auto-approve par defaut)"}`,
+  );
+
+  // Sprint P (Lot P.A.1) — kill-switch global "maintenance mode". OFF
+  // par defaut (site up). Activer via /admin/feature-flags pour mettre
+  // tout le site en 503 sauf admin/health/auth essentielles.
+  const maintenanceFlag = await prisma.featureFlag.upsert({
+    where: { key: MAINTENANCE_MODE_FLAG },
+    update: {
+      description:
+        "Lot P.A.1 — Kill-switch global. Si active, toutes les routes non-essentielles retournent 503 + Retry-After. Routes preservees : /health/*, /admin/*, /auth/{login,refresh,me,logout}.",
+    },
+    create: {
+      key: MAINTENANCE_MODE_FLAG,
+      description:
+        "Lot P.A.1 — Kill-switch global. Si active, toutes les routes non-essentielles retournent 503 + Retry-After. Routes preservees : /health/*, /admin/*, /auth/{login,refresh,me,logout}.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${MAINTENANCE_MODE_FLAG}' ${maintenanceFlag.enabled ? "🚧 ACTIF — site en maintenance" : "inactif (site up)"}`,
   );
 
   // =============================================================================
