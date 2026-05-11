@@ -183,6 +183,18 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
+    // Lot P.B.4 — bannissement actif. Verifie AVANT bcrypt pour eviter de
+    // donner un signal "password ok" a un user banni qui retenterait sans
+    // arret. Le message reste neutre, sans exposer la raison interne.
+    const bannedUntil = (user as { bannedUntil?: Date | null }).bannedUntil ?? null;
+    if (bannedUntil && bannedUntil.getTime() > Date.now()) {
+      serverLog.log(`[LOGIN] Compte banni pour ${email} jusqu'a ${bannedUntil.toISOString()}`);
+      return res.status(403).json({
+        error: "Compte suspendu. Contactez un administrateur pour plus d'informations.",
+        bannedUntil: bannedUntil.toISOString(),
+      });
+    }
+
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
       serverLog.log(`[LOGIN] Mot de passe incorrect pour ${email}`);

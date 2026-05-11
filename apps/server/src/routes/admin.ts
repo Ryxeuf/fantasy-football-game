@@ -12,6 +12,9 @@ import {
   updateUserPatreonSchema,
   updateUserValidSchema,
   updateMatchStatusSchema,
+  adminMatchForfeitSchema,
+  adminMatchCancelSchema,
+  adminUserBanSchema,
 } from "../schemas/admin.schemas";
 import { serverLog } from "../utils/server-log";
 import {
@@ -138,6 +141,9 @@ router.get("/users/:id", async (req, res) => {
         roles: true,
         patreon: true,
         valid: true,
+        bannedAt: true,
+        bannedUntil: true,
+        banReason: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
@@ -337,6 +343,138 @@ router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, re
   }
 });
 
+/**
+ * Lot P.B.4 — Bannir un utilisateur (temporaire ou permanent).
+ *
+ * Un ban temporaire est exprime en `durationDays` (>= 1). Un ban permanent
+ * passe une duree absente ou nulle, et est materialise par une date tres
+ * lointaine (year 9999) pour unifier la verification au login (compare a now()).
+ *
+ * Refuse de se bannir soi-meme pour eviter le lock-out admin. Idempotent :
+ * appeler /ban sur un user deja banni etend (ne remet pas a zero) la duree
+ * tout en mettant a jour `banReason`.
+ */
+router.post("/users/:id/ban", validate(adminUserBanSchema), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, durationDays } = req.body as { reason: string; durationDays?: number };
+
+    if ((req as AuthenticatedRequest).user?.id === id) {
+      return res.status(400).json({ error: "Vous ne pouvez pas vous bannir vous-meme" });
+    }
+
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { bannedAt: true, bannedUntil: true, banReason: true, role: true, roles: true },
+    });
+
+    if (!previous) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    const now = new Date();
+    const PERMANENT_BAN_END = new Date("9999-12-31T23:59:59.999Z");
+    const newBannedUntil =
+      !durationDays || durationDays === 0
+        ? PERMANENT_BAN_END
+        : new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    // Si deja banni avec une fin > newBannedUntil, garde la plus longue.
+    const effectiveUntil =
+      previous.bannedUntil && previous.bannedUntil.getTime() > newBannedUntil.getTime()
+        ? previous.bannedUntil
+        : newBannedUntil;
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        bannedAt: previous.bannedAt ?? now,
+        bannedUntil: effectiveUntil,
+        banReason: reason,
+      },
+      select: {
+        id: true,
+        email: true,
+        coachName: true,
+        bannedAt: true,
+        bannedUntil: true,
+        banReason: true,
+      },
+    });
+
+    await safeAudit(req, {
+      action: "user.ban",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: {
+        bannedAt: user.bannedAt,
+        bannedUntil: user.bannedUntil,
+        banReason: user.banReason,
+        durationDays: durationDays ?? 0,
+      },
+    });
+
+    res.json({ user });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors du bannissement" });
+  }
+});
+
+/**
+ * Lot P.B.4 — Lever le bannissement d'un utilisateur.
+ *
+ * Idempotent : si le user n'est pas banni, no-op (200 ok). Audit log
+ * trace l'etat precedent pour pouvoir tracer un debannissement abusif.
+ */
+router.post("/users/:id/unban", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { bannedAt: true, bannedUntil: true, banReason: true },
+    });
+
+    if (!previous) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { bannedAt: null, bannedUntil: null, banReason: null },
+      select: {
+        id: true,
+        email: true,
+        coachName: true,
+        bannedAt: true,
+        bannedUntil: true,
+        banReason: true,
+      },
+    });
+
+    await safeAudit(req, {
+      action: "user.unban",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: { bannedAt: null, bannedUntil: null, banReason: null },
+    });
+
+    res.json({ user });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    serverLog.error(e);
+    res.status(500).json({ error: "Erreur lors du debannissement" });
+  }
+});
+
 // Route pour supprimer un utilisateur
 router.delete("/users/:id", async (req, res) => {
   try {
@@ -431,6 +569,11 @@ router.get("/matches", validateQuery(adminMatchesQuerySchema), async (req, res) 
         createdAt: true,
         lastMoveAt: true,
         currentTurnUserId: true,
+        forfeitedAt: true,
+        forfeitWinnerSide: true,
+        forfeitReason: true,
+        cancelledAt: true,
+        cancelReason: true,
         creator: {
           select: { id: true, email: true, coachName: true },
         },
@@ -565,6 +708,174 @@ router.patch("/matches/:id/status", validate(updateMatchStatusSchema), async (re
     res.status(500).json({ error: "Erreur lors de la modification du statut" });
   }
 });
+
+/**
+ * Lot P.B.4 — Forfait force par un admin (no-show, comportement toxique...).
+ *
+ * Passe le match a `status="ended"` et trace le forfait dans
+ * `forfeitedAt` / `forfeitWinnerSide` / `forfeitReason`. La raison est
+ * obligatoire pour la tracabilite audit log. Le winner cote ne fait pas
+ * de change directe sur le score (Turn payload) : c'est une decision
+ * administrative qui prime, exposee en UI admin via les nouveaux champs.
+ *
+ * Refuse si le match est deja `cancelled` ou deja `forfeitedAt != null`.
+ */
+router.post(
+  "/matches/:id/forfeit",
+  validate(adminMatchForfeitSchema),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { winnerSide, reason } = req.body as {
+        winnerSide: "A" | "B";
+        reason: string;
+      };
+
+      const previous = await prisma.match.findUnique({
+        where: { id },
+        select: {
+          status: true,
+          forfeitedAt: true,
+          forfeitWinnerSide: true,
+          forfeitReason: true,
+          cancelledAt: true,
+        },
+      });
+
+      if (!previous) {
+        return res.status(404).json({ error: "Partie non trouvée" });
+      }
+      if (previous.cancelledAt) {
+        return res
+          .status(409)
+          .json({ error: "Le match est deja annule, impossible de forfaiter" });
+      }
+      if (previous.forfeitedAt) {
+        return res
+          .status(409)
+          .json({ error: "Le match a deja ete forfeite" });
+      }
+
+      const now = new Date();
+      const match = await prisma.match.update({
+        where: { id },
+        data: {
+          status: "ended",
+          forfeitedAt: now,
+          forfeitWinnerSide: winnerSide,
+          forfeitReason: reason,
+        },
+        select: {
+          id: true,
+          status: true,
+          forfeitedAt: true,
+          forfeitWinnerSide: true,
+          forfeitReason: true,
+        },
+      });
+
+      await safeAudit(req, {
+        action: "match.forfeit",
+        entity: "Match",
+        entityId: id,
+        oldValue: previous,
+        newValue: {
+          status: match.status,
+          forfeitedAt: match.forfeitedAt,
+          forfeitWinnerSide: match.forfeitWinnerSide,
+          forfeitReason: match.forfeitReason,
+        },
+      });
+
+      res.json({ match });
+    } catch (e: any) {
+      if (e.code === "P2025") {
+        return res.status(404).json({ error: "Partie non trouvée" });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur lors du forfait" });
+    }
+  },
+);
+
+/**
+ * Lot P.B.4 — Annulation administrative d'un match (bug, exploit, etc.).
+ *
+ * Passe le match a `status="cancelled"` + trace metadata. La raison est
+ * obligatoire pour la tracabilite audit log. Distinct du forfait : un
+ * cancel implique qu'il n'y a pas de vainqueur. Refuse si deja forfeite
+ * ou deja cancelled (idempotence stricte).
+ */
+router.post(
+  "/matches/:id/cancel",
+  validate(adminMatchCancelSchema),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body as { reason: string };
+
+      const previous = await prisma.match.findUnique({
+        where: { id },
+        select: {
+          status: true,
+          forfeitedAt: true,
+          cancelledAt: true,
+          cancelReason: true,
+        },
+      });
+
+      if (!previous) {
+        return res.status(404).json({ error: "Partie non trouvée" });
+      }
+      if (previous.forfeitedAt) {
+        return res
+          .status(409)
+          .json({ error: "Le match est deja forfeite, impossible d'annuler" });
+      }
+      if (previous.cancelledAt) {
+        return res
+          .status(409)
+          .json({ error: "Le match a deja ete annule" });
+      }
+
+      const now = new Date();
+      const match = await prisma.match.update({
+        where: { id },
+        data: {
+          status: "cancelled",
+          cancelledAt: now,
+          cancelReason: reason,
+        },
+        select: {
+          id: true,
+          status: true,
+          cancelledAt: true,
+          cancelReason: true,
+        },
+      });
+
+      await safeAudit(req, {
+        action: "match.cancel",
+        entity: "Match",
+        entityId: id,
+        oldValue: previous,
+        newValue: {
+          status: match.status,
+          cancelledAt: match.cancelledAt,
+          cancelReason: match.cancelReason,
+        },
+      });
+
+      res.json({ match });
+    } catch (e: any) {
+      if (e.code === "P2025") {
+        return res.status(404).json({ error: "Partie non trouvée" });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur lors de l'annulation" });
+    }
+  },
+);
 
 // Supprimer un match et ses données associées
 router.delete("/matches/:id", async (req, res) => {
