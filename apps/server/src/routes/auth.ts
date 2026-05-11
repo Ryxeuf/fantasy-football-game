@@ -183,6 +183,16 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
+    // Lot P.A.2 — compte soft-deleted. Verifie AVANT bcrypt + AVANT le
+    // ban pour les memes raisons (pas de leak). Message neutre.
+    const deletedAt = (user as { deletedAt?: Date | null }).deletedAt ?? null;
+    if (deletedAt !== null) {
+      serverLog.log(`[LOGIN] Compte supprime pour ${email} (deletedAt=${deletedAt.toISOString()})`);
+      return res.status(403).json({
+        error: "Identifiants invalides",
+      });
+    }
+
     // Lot P.B.4 — bannissement actif. Verifie AVANT bcrypt pour eviter de
     // donner un signal "password ok" a un user banni qui retenterait sans
     // arret. Le message reste neutre, sans exposer la raison interne.

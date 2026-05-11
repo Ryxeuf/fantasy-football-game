@@ -60,6 +60,15 @@ model User {
   /// `POST /admin/users/:id/password-reset` ; remis a false des qu'un
   /// password change reussit (handler /auth/change-password).
   mustChangePassword          Boolean                 @default(false)
+  /// Lot P.A.2 — soft-delete RGPD-compatible. Quand non-null, le compte
+  /// est considere supprime : login refuse, profil public masque, mais
+  /// les references foreign-key (audit log, replays, classements) sont
+  /// preservees. Restaurable via /admin/users/:id/restore. Plus tard
+  /// (lot dedie RGPD), un job purgera definitivement les comptes
+  /// soft-deleted depuis > 30j.
+  deletedAt                   DateTime?
+  /// Lot P.A.2 — raison de la suppression (visible admin + audit log).
+  deletionReason              String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   createdAt                   DateTime                @default(now())

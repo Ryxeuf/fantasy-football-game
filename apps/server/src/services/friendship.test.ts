@@ -12,6 +12,7 @@ vi.mock("../prisma", () => ({
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -39,7 +40,7 @@ describe("Rule: Friendship service", () => {
 
   describe("sendFriendRequest", () => {
     it("creates a new pending request when no relationship exists", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: bob });
+      mockPrisma.user.findFirst.mockResolvedValue({ id: bob });
       mockPrisma.friendship.findFirst.mockResolvedValue(null);
       const created = {
         id: "f-1",
@@ -69,7 +70,7 @@ describe("Rule: Friendship service", () => {
     });
 
     it("rejects when receiver does not exist", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findFirst.mockResolvedValue(null);
       await expect(sendFriendRequest(alice, bob)).rejects.toThrow(
         /introuvable|not found/i,
       );
@@ -77,7 +78,7 @@ describe("Rule: Friendship service", () => {
     });
 
     it("rejects when a request already exists in either direction", async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: bob });
+      mockPrisma.user.findFirst.mockResolvedValue({ id: bob });
       mockPrisma.friendship.findFirst.mockResolvedValue({
         id: "existing",
         requesterId: bob,
