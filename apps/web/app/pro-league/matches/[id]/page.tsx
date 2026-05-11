@@ -9,6 +9,10 @@ import { useWallet } from "../../../lib/use-wallet";
 
 import { MarketsList } from "../../_components/MarketsList";
 import { WalletBadge } from "../../_components/WalletBadge";
+import ShareButtons from "../../_components/ShareButtons";
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
 /**
  * Page détail d'un match Pro League — sprint Pro League lot 1.C.3.
@@ -424,6 +428,17 @@ export default function ProLeagueMatchDetailPage({
       ) : (
         <>
           <ScoreboardBanner match={data} />
+          <div className="px-4 py-3">
+            <ShareButtons
+              url={`${SITE_URL.replace(/\/$/, "")}/pro-league/matches/${data.id}`}
+              text={
+                data.scoreHome !== null && data.scoreAway !== null
+                  ? `${data.homeTeam.name} ${data.scoreHome}-${data.scoreAway} ${data.awayTeam.name} — Pro League Nuffle Arena`
+                  : `${data.homeTeam.name} vs ${data.awayTeam.name} — Pro League Nuffle Arena`
+              }
+              hashtags={["bloodbowl", "nufflearena"]}
+            />
+          </div>
           <div className="px-4 py-6">
             {data.status === "scheduled" || data.status === "ready" ? (
               <>
