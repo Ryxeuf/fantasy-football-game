@@ -131,6 +131,31 @@ describe("featureFlags service", () => {
       expect(mockPrisma.featureFlag.findMany).not.toHaveBeenCalled();
     });
 
+    it("Lot O.B.1 — KILL_SWITCH flags ne sont PAS force-enabled par FEATURE_FLAGS_FORCE_ENABLED", async () => {
+      // Le kill-switch `registration_requires_validation` doit etre
+      // evalue normalement meme en CI, sinon les E2E (qui attendent un
+      // auto-approve avec token) cassent.
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f-reg", "registration_requires_validation", false),
+      ]);
+      expect(
+        await isEnabled("registration_requires_validation"),
+      ).toBe(false);
+      // Et lookup DB exectue (pas de short-circuit).
+      expect(mockPrisma.featureFlag.findMany).toHaveBeenCalled();
+    });
+
+    it("Lot O.B.1 — KILL_SWITCH flag retourne true si vraiment enabled en DB", async () => {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f-reg", "registration_requires_validation", true),
+      ]);
+      expect(
+        await isEnabled("registration_requires_validation"),
+      ).toBe(true);
+    });
+
     it('accepts "1" as a truthy value for FEATURE_FLAGS_FORCE_ENABLED', async () => {
       process.env.FEATURE_FLAGS_FORCE_ENABLED = "1";
       expect(await isEnabled("anything")).toBe(true);

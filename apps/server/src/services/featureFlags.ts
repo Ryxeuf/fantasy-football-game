@@ -35,6 +35,22 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
  */
 export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 
+/**
+ * Sprint O (Lot O.B.1) — kill-switch optionnel pour exiger une validation
+ * admin sur les nouveaux comptes. Par defaut OFF (auto-approve), pour ne
+ * pas bloquer l'acquisition. Si activate :
+ *
+ *   - POST /auth/register cree le user avec `valid: false`.
+ *   - Pas de token issued, l'API renvoie `{ user, message }` sans token.
+ *   - L'UI montre la page "pending validation" (deja existante).
+ *
+ * Utilite : si un raid de signup spammy apparait en prod, on active ce
+ * flag pour forcer la moderation manuelle le temps de corriger
+ * (CAPTCHA, IP block, etc.).
+ */
+export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
+  "registration_requires_validation" as const;
+
 export interface FeatureFlagDTO {
   id: string;
   key: string;
@@ -104,17 +120,31 @@ async function getAllFlagsCached(): Promise<FeatureFlagDTO[]> {
 }
 
 /**
+ * Lot O.B.1 — Flags qui sont des **kill-switches** (semantique opposee
+ * d'un feature gate normal : "ON" BLOQUE quelque chose plutot que de
+ * l'activer). Ces flags ne doivent JAMAIS etre force-ON par
+ * `FEATURE_FLAGS_FORCE_ENABLED` (CI), sinon les tests E2E qui assument
+ * le comportement par defaut (ex: signup auto-approve) cassent.
+ */
+const KILL_SWITCH_FLAGS = new Set<string>([
+  REGISTRATION_REQUIRES_VALIDATION_FLAG,
+]);
+
+/**
  * Returns true if `key` is enabled for the given user (or globally).
  * L'env `FEATURE_FLAGS_FORCE_ENABLED` et le rôle `admin` court-circuitent
- * toute vérification : ils rendent n'importe quel flag actif.
+ * toute vérification : ils rendent n'importe quel flag actif. Exception :
+ * les kill-switches (voir `KILL_SWITCH_FLAGS`) sont evalues normalement
+ * meme en force-enabled.
  */
 export async function isEnabled(
   key: string,
   userId?: string,
   context?: EvaluationContext,
 ): Promise<boolean> {
-  if (isForceEnabled()) return true;
-  if (isAdmin(context)) return true;
+  const isKillSwitch = KILL_SWITCH_FLAGS.has(key);
+  if (!isKillSwitch && isForceEnabled()) return true;
+  if (!isKillSwitch && isAdmin(context)) return true;
   const flags = await getAllFlagsCached();
   const flag = flags.find((f) => f.key === key);
   if (!flag) return false;
