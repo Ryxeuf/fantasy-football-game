@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { ApiClientError, apiRequest } from "../../lib/api-client";
 import { useWallet } from "../../lib/use-wallet";
+import { useBadgeNotify } from "./BadgeToastProvider";
 
 /**
  * Modale de pose de pari — sprint 1.D.7.
@@ -73,6 +74,7 @@ export function BetSlip({
 }: BetSlipProps): JSX.Element {
   const { t } = useLanguage();
   const wallet = useWallet();
+  const badgeNotify = useBadgeNotify();
   const dialogId = useId();
   const [stake, setStake] = useState(50);
   const [pending, setPending] = useState(false);
@@ -116,6 +118,10 @@ export function BetSlip({
       });
       // Actualise wallet en arrière-plan.
       void wallet.refresh();
+      // Lot O.C.3 — apres un pari place, lance l'evaluation badges :
+      // peut debloquer "first_kickoff" (1er pari) ou continuer streak
+      // pour "oracle_of_nuffle". Toast affiche par le provider.
+      void badgeNotify.notifyAndEvaluate();
     } catch (e: unknown) {
       const code =
         e instanceof ApiClientError && typeof e.message === "string"
