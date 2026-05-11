@@ -54,6 +54,8 @@ model User {
   bannedAt                    DateTime?
   bannedUntil                 DateTime?
   banReason                   String?
+  /// Lot P.C.2 — admin password reset override. Mirror du flag Postgres.
+  mustChangePassword          Boolean                   @default(false)
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   createdAt                   DateTime                  @default(now())

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../../auth-client";
 import BanUserModal from "./_components/BanUserModal";
+import PasswordResetModal from "./_components/PasswordResetModal";
 
 type User = {
   id: string;
@@ -91,6 +92,15 @@ export default function AdminUsersPage() {
   // Lot P.B.4 — ban modal state
   const [banModalUser, setBanModalUser] = useState<User | null>(null);
   const [banLoading, setBanLoading] = useState(false);
+  // Lot P.C.2 — admin password reset
+  const [passwordResetUser, setPasswordResetUser] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
+  const [passwordResetTempPwd, setPasswordResetTempPwd] = useState<string | null>(
+    null,
+  );
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -280,6 +290,34 @@ export default function AdminUsersPage() {
       alert(e.message || "Erreur lors du debannissement");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  // Lot P.C.2 — admin password reset
+  const openPasswordReset = (user: { id: string; email: string; name?: string | null }) => {
+    setPasswordResetUser({ id: user.id, label: user.name || user.email });
+    setPasswordResetTempPwd(null);
+  };
+
+  const closePasswordReset = () => {
+    setPasswordResetUser(null);
+    setPasswordResetTempPwd(null);
+    setPasswordResetLoading(false);
+  };
+
+  const handlePasswordResetConfirm = async () => {
+    if (!passwordResetUser) return;
+    setPasswordResetLoading(true);
+    try {
+      const data = await fetchJSON(
+        `/admin/users/${passwordResetUser.id}/password-reset`,
+        { method: "POST", body: JSON.stringify({}) },
+      );
+      setPasswordResetTempPwd(data.tempPassword);
+    } catch (e: any) {
+      alert(e.message || "Erreur lors du reset du mot de passe");
+    } finally {
+      setPasswordResetLoading(false);
     }
   };
 
@@ -777,6 +815,35 @@ export default function AdminUsersPage() {
                 );
               })()}
 
+              {/* Lot P.C.2 — Section securite : reset password override admin. */}
+              <div
+                data-testid="user-security-section"
+                className="p-4 rounded-lg border bg-orange-50 border-orange-200"
+              >
+                <h3 className="font-semibold mb-2">Securite</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="text-gray-700">
+                    Reset administratif : genere un mot de passe temporaire,
+                    revoque toutes les sessions, force un changement a la
+                    prochaine connexion.
+                  </div>
+                  <button
+                    onClick={() =>
+                      openPasswordReset({
+                        id: userDetails.id,
+                        email: userDetails.email,
+                        name: userDetails.name,
+                      })
+                    }
+                    disabled={actionLoading === userDetails.id}
+                    data-testid="btn-password-reset"
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg disabled:opacity-50"
+                  >
+                    Reset du mot de passe
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
@@ -1071,6 +1138,17 @@ export default function AdminUsersPage() {
         loading={banLoading}
         onClose={closeBanModal}
         onConfirm={handleBanConfirm}
+      />
+
+      {/* Lot P.C.2 — modal admin password reset */}
+      <PasswordResetModal
+        open={passwordResetUser !== null}
+        userId={passwordResetUser?.id ?? null}
+        userLabel={passwordResetUser?.label ?? ""}
+        tempPassword={passwordResetTempPwd}
+        loading={passwordResetLoading}
+        onClose={closePasswordReset}
+        onConfirm={handlePasswordResetConfirm}
       />
     </div>
   );
