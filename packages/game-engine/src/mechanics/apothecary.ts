@@ -12,6 +12,7 @@
 import { GameState, TeamId, RNG, CasualtyOutcome, PendingApothecary } from '../core/types';
 import { movePlayerToDugoutZone } from './dugout';
 import { rollLastingInjuryType } from './injury';
+import { tryRegeneration } from './regeneration';
 import { createLogEntry } from '../utils/logging';
 
 /** Severity ranking for casualty outcomes (lower = less severe) */
@@ -75,6 +76,20 @@ export function applyApothecaryChoice(
       pending.team
     );
     newState.gameLog = [...newState.gameLog, declineLog];
+
+    // Lot O.A.1 — BB Season 2/3 : si le joueur a Regeneration et qu'on
+    // refuse l'apothecaire, la regen est tentee en fallback. Si elle
+    // reussit, le joueur quitte la zone blesses/KO.
+    if (pending.fallbackToRegeneration) {
+      const regenResult = tryRegeneration(
+        newState,
+        pending.playerId,
+        rng,
+        pending.injuryType,
+      );
+      if (regenResult) return regenResult;
+    }
+
     return newState;
   }
 
