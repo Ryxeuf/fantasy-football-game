@@ -81,6 +81,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {navItem("/admin/sim/health", "Sim Health", "❤️")}
               {navItem("/admin/sim/broadcaster", "Broadcaster", "📡")}
               {navItem("/admin/sim/test-match", "Test Match", "🧪")}
+              {navItem("/admin/pro-league/seasons", "Saisons Pro League", "🏆")}
               {navItem("/admin/feedback", "Feedback", "💬")}
               {navItem("/admin/audit-log", "Journal d'audit", "📜")}
               {navItem("/admin/routes", "Routes", "📋")}
