@@ -16,6 +16,8 @@
  */
 
 import { prisma } from "../prisma";
+import { ENGINE_VER as CURRENT_ENGINE_VER } from "@bb/sim-engine";
+import { OLD_WORLD_LEAGUE_SLUG } from "../seeders/pro-league";
 
 export class SeasonFactoryError extends Error {
   constructor(
@@ -25,12 +27,125 @@ export class SeasonFactoryError extends Error {
       | "MATCH_NOT_FOUND"
       | "MATCH_ALREADY_COMPLETED"
       | "INVALID_INPUT"
-      | "DUPLICATE_YEAR",
+      | "DUPLICATE_YEAR"
+      | "LEAGUE_NOT_FOUND"
+      | "NO_TEAMS",
     message: string,
   ) {
     super(message);
     this.name = "SeasonFactoryError";
   }
+}
+
+// ---------------------------------------------------------------------------
+// createSeason — bootstrap d'une saison Pro League from scratch
+// ---------------------------------------------------------------------------
+
+export interface CreateSeasonInput {
+  /** Annee de la saison (2020..2100, unique par ligue). */
+  readonly year: number;
+  /** Driver de simulation : default "hybrid". */
+  readonly driverKind?: "hybrid" | "full";
+  /** engineVer pinne : default CURRENT_ENGINE_VER de @bb/sim-engine. */
+  readonly engineVer?: string;
+}
+
+export interface CreateSeasonResult {
+  readonly seasonId: string;
+  readonly leagueId: string;
+  readonly year: number;
+  readonly engineVer: string;
+  readonly driverKind: string;
+}
+
+/**
+ * Cree une nouvelle saison Pro League pour la ligue singleton
+ * `old-world-league`. Initialise les `ProLeagueStandings` a zero pour
+ * les 16 teams (ou ce qui est en DB).
+ *
+ * Le schedule n'est PAS genere ici — appeler ensuite
+ * `buildProLeagueSchedule({ seasonId })` pour creer les 15 rounds + 120
+ * matches du round-robin.
+ *
+ * Refuse si :
+ *  - la ligue singleton n'est pas seedee (LEAGUE_NOT_FOUND) ;
+ *  - une saison avec ce `year` existe deja (DUPLICATE_YEAR) ;
+ *  - aucune team n'est en DB (NO_TEAMS).
+ */
+export async function createSeason(
+  input: CreateSeasonInput,
+): Promise<CreateSeasonResult> {
+  if (!Number.isInteger(input.year) || input.year < 2020 || input.year > 2100) {
+    throw new SeasonFactoryError(
+      "INVALID_INPUT",
+      `year doit etre un entier 2020..2100 (recu: ${input.year})`,
+    );
+  }
+
+  const league = await prisma.proLeague.findUnique({
+    where: { slug: OLD_WORLD_LEAGUE_SLUG },
+    select: { id: true },
+  });
+  if (!league) {
+    throw new SeasonFactoryError(
+      "LEAGUE_NOT_FOUND",
+      `Ligue '${OLD_WORLD_LEAGUE_SLUG}' introuvable. Lance d'abord le seed (Utilitaires → Reseed Pro League).`,
+    );
+  }
+
+  const duplicate = await prisma.proLeagueSeason.findUnique({
+    where: { leagueId_year: { leagueId: league.id, year: input.year } },
+    select: { id: true },
+  });
+  if (duplicate) {
+    throw new SeasonFactoryError(
+      "DUPLICATE_YEAR",
+      `Une saison existe deja pour year=${input.year}`,
+    );
+  }
+
+  const teams = (await prisma.proTeam.findMany({
+    where: { leagueId: league.id },
+    select: { id: true },
+  })) as Array<{ id: string }>;
+  if (teams.length === 0) {
+    throw new SeasonFactoryError(
+      "NO_TEAMS",
+      "Aucune equipe en DB. Lance d'abord le seed (Utilitaires → Reseed Pro League).",
+    );
+  }
+
+  const driverKind = input.driverKind ?? "hybrid";
+  const engineVer = input.engineVer ?? CURRENT_ENGINE_VER;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const created = await prisma.$transaction(async (tx: any) => {
+    const newSeason = await tx.proLeagueSeason.create({
+      data: {
+        leagueId: league.id,
+        year: input.year,
+        status: "scheduled",
+        engineVer,
+        driverKind,
+      },
+      select: { id: true },
+    });
+    await tx.proLeagueStandings.createMany({
+      data: teams.map((team) => ({
+        seasonId: newSeason.id as string,
+        teamId: team.id,
+      })),
+    });
+    return newSeason;
+  });
+
+  return {
+    seasonId: created.id as string,
+    leagueId: league.id,
+    year: input.year,
+    engineVer,
+    driverKind,
+  };
 }
 
 // ---------------------------------------------------------------------------

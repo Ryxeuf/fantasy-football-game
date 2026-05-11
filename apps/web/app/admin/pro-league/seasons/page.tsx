@@ -15,8 +15,10 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
 import CloneSeasonModal from "./_components/CloneSeasonModal";
+import CreateSeasonModal from "./_components/CreateSeasonModal";
 
 interface Season {
   id: string;
@@ -65,6 +67,8 @@ export default function AdminProLeagueSeasonsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [cloneSource, setCloneSource] = useState<Season | null>(null);
   const [cloneLoading, setCloneLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +104,26 @@ export default function AdminProLeagueSeasonsPage() {
       alert(e.message || `Erreur lors de ${action}`);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleCreateConfirm = async (payload: {
+    year: number;
+    driverKind?: "hybrid" | "full";
+    autoSchedule: boolean;
+  }) => {
+    setCreateLoading(true);
+    try {
+      await fetchJSON("/admin/pro-league/seasons", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setCreateOpen(false);
+      await load();
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la creation");
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -140,14 +164,23 @@ export default function AdminProLeagueSeasonsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
-          🏆 Saisons Pro League
-        </h1>
-        <p className="text-sm text-gray-600">
-          Gestion administrative des saisons : clone, regeneration de
-          calendrier, reset des standings, annulation.
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+            🏆 Saisons Pro League
+          </h1>
+          <p className="text-sm text-gray-600">
+            Gestion administrative des saisons : creation, clone, regeneration
+            de calendrier, reset des standings, annulation.
+          </p>
+        </div>
+        <button
+          onClick={() => setCreateOpen(true)}
+          data-testid="btn-create-season"
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm"
+        >
+          + Creer une saison
+        </button>
       </div>
 
       {error && (
@@ -191,7 +224,14 @@ export default function AdminProLeagueSeasonsPage() {
                     data-testid={`season-row-${s.id}`}
                     className="border-t border-gray-100"
                   >
-                    <td className="p-3 font-semibold">{s.year}</td>
+                    <td className="p-3 font-semibold">
+                      <Link
+                        href={`/admin/pro-league/seasons/${s.id}` as any}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {s.year}
+                      </Link>
+                    </td>
                     <td className="p-3">
                       <span
                         className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -282,6 +322,13 @@ export default function AdminProLeagueSeasonsPage() {
           </tbody>
         </table>
       </div>
+
+      <CreateSeasonModal
+        open={createOpen}
+        loading={createLoading}
+        onClose={() => setCreateOpen(false)}
+        onConfirm={handleCreateConfirm}
+      />
 
       <CloneSeasonModal
         open={cloneSource !== null}
