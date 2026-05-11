@@ -1,3 +1,10 @@
+## [1.110.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.110.0...v1.110.1) (2026-05-11)
+
+
+### 🐛 Bug Fixes
+
+* **admin:** sandbox test-match resolve team slug → id Prisma + cache lien Ligues si online_play OFF ([b8efa83](https://github.com/Ryxeuf/fantasy-football-game/commit/b8efa8305339eca5c6038c22e424d202418fe9c4))
+
 ## [1.110.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.109.0...v1.110.0) (2026-05-11)
 
 
