@@ -16,6 +16,7 @@ import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import adminWalletRoutes from "./routes/admin-wallet";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
+import adminProTeamRoutes from "./routes/admin-pro-team";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -233,6 +234,8 @@ app.use("/admin/utilities", adminUtilitiesRoutes);
 // Lot P.B.3 — season factory Pro League (clone, reset standings, force
 // forfeit, cancel season). Audit log strict sur toutes les actions.
 app.use("/admin/pro-league", adminProSeasonRoutes);
+// Branding teams Pro League (couleurs / motto / headline).
+app.use("/admin/pro-league", adminProTeamRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);

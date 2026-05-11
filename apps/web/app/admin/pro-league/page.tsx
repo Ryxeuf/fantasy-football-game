@@ -29,6 +29,14 @@ const LINKS: ReadonlyArray<HubLink> = [
     status: "stable",
   },
   {
+    href: "/admin/pro-league/teams",
+    icon: "🎨",
+    title: "Branding teams",
+    description:
+      "Editer les couleurs (primaire/secondaire), motto, headline, ville/nom, flavor NFL d'une team.",
+    status: "stable",
+  },
+  {
     href: "/admin/sim",
     icon: "🎲",
     title: "Sim Pro League",
@@ -123,8 +131,8 @@ export default function AdminProLeagueHubPage() {
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
         <strong>Roadmap admin Pro League</strong> : a venir dans les
         prochains sprints : gestion fine des rosters (re-generer joueurs,
-        editer skills), edition branding teams, re-simulation d&apos;un
-        match avec nouveau seed, gestion des bet markets.
+        editer skills), re-simulation d&apos;un match avec nouveau seed,
+        gestion des bet markets.
       </div>
     </div>
   );
