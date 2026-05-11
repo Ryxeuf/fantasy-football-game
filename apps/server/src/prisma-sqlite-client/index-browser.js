@@ -143,6 +143,10 @@ exports.Prisma.UserScalarFieldEnum = {
   deletedAt: 'deletedAt',
   deletionReason: 'deletionReason',
   lastLoginAt: 'lastLoginAt',
+  leaderboardStatus: 'leaderboardStatus',
+  leaderboardStatusReason: 'leaderboardStatusReason',
+  leaderboardStatusUpdatedAt: 'leaderboardStatusUpdatedAt',
+  leaderboardStatusUpdatedBy: 'leaderboardStatusUpdatedBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   eloRating: 'eloRating'

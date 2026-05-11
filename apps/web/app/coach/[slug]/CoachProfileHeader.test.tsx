@@ -58,4 +58,26 @@ describe("CoachProfileHeader", () => {
     const badge = screen.getByTestId("coach-supporter-badge");
     expect(badge.textContent).toMatch(/supporter/i);
   });
+
+  it("renders an 'unranked' badge in place of the ELO when leaderboardStatusVisible is false", () => {
+    render(
+      <CoachProfileHeader
+        profile={{
+          ...baseProfile,
+          eloRating: null,
+          leaderboardStatusVisible: false,
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("coach-elo")).toBeNull();
+    const badge = screen.getByTestId("coach-unranked-badge");
+    expect(badge.textContent).toMatch(/non classe/i);
+  });
+
+  it("falls back to showing the ELO when leaderboardStatusVisible is undefined (retro-compat)", () => {
+    const { leaderboardStatusVisible: _omit, ...legacy } = baseProfile;
+    render(<CoachProfileHeader profile={legacy as CoachPublicProfile} />);
+    expect(screen.getByTestId("coach-elo").textContent).toMatch(/1234/);
+    expect(screen.queryByTestId("coach-unranked-badge")).toBeNull();
+  });
 });

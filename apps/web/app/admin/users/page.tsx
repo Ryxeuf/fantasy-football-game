@@ -4,6 +4,8 @@ import { API_BASE } from "../../auth-client";
 import BanUserModal from "./_components/BanUserModal";
 import PasswordResetModal from "./_components/PasswordResetModal";
 
+type LeaderboardStatus = "visible" | "hidden_admin";
+
 type User = {
   id: string;
   email: string;
@@ -21,6 +23,11 @@ type User = {
   // Lot P.A.2 — soft-delete
   deletedAt?: string | null;
   deletionReason?: string | null;
+  // Visibilite classement ELO (admin only)
+  leaderboardStatus?: LeaderboardStatus;
+  leaderboardStatusReason?: string | null;
+  leaderboardStatusUpdatedAt?: string | null;
+  leaderboardStatusUpdatedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -217,6 +224,31 @@ export default function AdminUsersPage() {
       }
     } catch (e: any) {
       alert(e.message || "Erreur lors de la modification du statut de validation");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleLeaderboardStatusChange = async (
+    userId: string,
+    status: LeaderboardStatus,
+    reason: string | null,
+  ) => {
+    setActionLoading(userId);
+    try {
+      await fetchJSON(`/admin/users/${userId}/leaderboard-status`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status,
+          ...(status === "hidden_admin" && reason ? { reason } : {}),
+        }),
+      });
+      await loadUsers();
+      if (selectedUser === userId && userDetails) {
+        await loadUserDetails(userId);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la modification du statut de classement");
     } finally {
       setActionLoading(null);
     }
@@ -883,6 +915,92 @@ export default function AdminUsersPage() {
                   </div>
                 );
               })()}
+
+              {/* Visibilite classement ELO — admin only. */}
+              <div
+                data-testid="user-leaderboard-section"
+                className="p-4 rounded-lg border bg-blue-50 border-blue-200"
+              >
+                <h3 className="font-semibold mb-2">Classement ELO</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="text-gray-700">
+                    {userDetails.leaderboardStatus === "hidden_admin" ? (
+                      <span
+                        data-testid="user-leaderboard-status-hidden"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-700 text-gray-100 text-xs font-bold uppercase"
+                      >
+                        Non classe
+                      </span>
+                    ) : (
+                      <span
+                        data-testid="user-leaderboard-status-visible"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-bold uppercase"
+                      >
+                        Visible
+                      </span>
+                    )}
+                    <span className="ml-2 text-gray-600">
+                      {userDetails.leaderboardStatus === "hidden_admin"
+                        ? "Retire du leaderboard public. ELO et historique masques sur le profil coach."
+                        : "Apparait dans le leaderboard public et sur son profil coach."}
+                    </span>
+                  </div>
+                  {userDetails.leaderboardStatus === "hidden_admin" &&
+                    userDetails.leaderboardStatusReason && (
+                      <div>
+                        <span className="text-gray-600">Raison :</span>{" "}
+                        <span data-testid="user-leaderboard-status-reason">
+                          {userDetails.leaderboardStatusReason}
+                        </span>
+                      </div>
+                    )}
+                  {userDetails.leaderboardStatusUpdatedAt && (
+                    <div className="text-xs text-gray-500">
+                      Modifie le{" "}
+                      {new Date(
+                        userDetails.leaderboardStatusUpdatedAt,
+                      ).toLocaleString("fr-FR")}
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    {userDetails.leaderboardStatus === "hidden_admin" ? (
+                      <button
+                        onClick={() =>
+                          handleLeaderboardStatusChange(
+                            userDetails.id,
+                            "visible",
+                            null,
+                          )
+                        }
+                        disabled={actionLoading === userDetails.id}
+                        data-testid="btn-leaderboard-show"
+                        className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
+                      >
+                        Reafficher dans le classement
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const reason = prompt(
+                            "Raison du masquage (optionnelle, audit interne) :",
+                          );
+                          if (reason === null) return;
+                          handleLeaderboardStatusChange(
+                            userDetails.id,
+                            "hidden_admin",
+                            reason || null,
+                          );
+                        }}
+                        disabled={actionLoading === userDetails.id}
+                        data-testid="btn-leaderboard-hide"
+                        className="px-3 py-1.5 text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 rounded-lg disabled:opacity-50"
+                      >
+                        Masquer du classement
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Lot P.C.2 — Section securite : reset password override admin. */}
               <div

@@ -61,6 +61,11 @@ model User {
   deletionReason              String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
+  /// Mirror PG — Visibilite dans le classement ELO ("visible" | "hidden_admin").
+  leaderboardStatus           String               @default("visible")
+  leaderboardStatusReason     String?
+  leaderboardStatusUpdatedAt  DateTime?
+  leaderboardStatusUpdatedBy  String?
   createdAt                   DateTime             @default(now())
   updatedAt                   DateTime             @updatedAt
   matches                     Match[]

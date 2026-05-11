@@ -316,12 +316,27 @@ if (process.env.TEST_SQLITE === "1") {
   // un compte déjà validé (bypass de la modération admin).
   app.post("/__test/seed-user", async (req, res) => {
     try {
-      const { email, password, name, role, valid } = req.body as {
+      const {
+        email,
+        password,
+        name,
+        role,
+        valid,
+        leaderboardStatus,
+        rankedMatches,
+      } = req.body as {
         email?: string;
         password?: string;
         name?: string;
         role?: string;
         valid?: boolean;
+        leaderboardStatus?: "visible" | "hidden_admin";
+        /**
+         * Nombre de `EloSnapshot` a creer pour ce user (default 0). Sert aux
+         * specs E2E qui veulent simuler un coach ayant joue des matches
+         * ranked (le leaderboard filtre sur `eloSnapshots: { some: {} }`).
+         */
+        rankedMatches?: number;
       };
       if (!email || !password) {
         return res
@@ -341,6 +356,9 @@ if (process.env.TEST_SQLITE === "1") {
       const update: Record<string, unknown> = { passwordHash };
       if (typeof valid === "boolean") update.valid = valid;
       if (typeof role === "string") update.role = role;
+      if (typeof leaderboardStatus === "string") {
+        update.leaderboardStatus = leaderboardStatus;
+      }
       const user = await prisma.user.upsert({
         where: { email },
         update,
@@ -352,8 +370,33 @@ if (process.env.TEST_SQLITE === "1") {
           role: effectiveRole,
           roles: JSON.stringify([effectiveRole]),
           ...(typeof valid === "boolean" ? { valid } : {}),
+          ...(typeof leaderboardStatus === "string"
+            ? { leaderboardStatus }
+            : {}),
         },
       });
+
+      const snapshots =
+        typeof rankedMatches === "number" && rankedMatches > 0
+          ? Math.min(Math.trunc(rankedMatches), 100)
+          : 0;
+      if (snapshots > 0) {
+        // Cree des snapshots avec des `recordedAt` ordonnes pour eviter les
+        // collisions de timestamp si deux snapshots sont crees dans la meme ms.
+        const baseTime = Date.now() - snapshots * 60_000;
+        await Promise.all(
+          Array.from({ length: snapshots }).map((_, i) =>
+            prisma.eloSnapshot.create({
+              data: {
+                userId: user.id,
+                rating: 1000,
+                delta: 0,
+                recordedAt: new Date(baseTime + i * 60_000),
+              },
+            }),
+          ),
+        );
+      }
 
       return res.json({ id: user.id, email: user.email, name: user.name });
     } catch (e: any) {

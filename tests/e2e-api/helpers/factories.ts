@@ -45,7 +45,18 @@ export async function seedAndLogin(
   email: string,
   password: string,
   name?: string,
-  options: { role?: string; valid?: boolean } = {},
+  options: {
+    role?: string;
+    valid?: boolean;
+    /**
+     * Marque le coach comme ayant joue `rankedMatches` matches ranked en
+     * creant autant de `EloSnapshot`. Necessaire pour les specs qui veulent
+     * voir le coach apparaitre dans le leaderboard public (le filtre serveur
+     * exige `eloSnapshots: { some: {} }`).
+     */
+    rankedMatches?: number;
+    leaderboardStatus?: "visible" | "hidden_admin";
+  } = {},
 ): Promise<{ token: string; userId: string }> {
   const seeded = await post<{ id: string; email: string }>(
     "/__test/seed-user",

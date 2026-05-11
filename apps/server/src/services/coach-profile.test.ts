@@ -13,6 +13,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     user: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
     },
     userAchievement: {
       findMany: vi.fn(),
@@ -38,6 +39,7 @@ import {
 const mockPrisma = prisma as unknown as {
   user: {
     findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
   };
   userAchievement: {
     findMany: ReturnType<typeof vi.fn>;
@@ -152,6 +154,36 @@ describe("getCoachPublicProfile", () => {
     expect(await getCoachPublicProfile("", FIXED_NOW)).toBeNull();
     expect(await getCoachPublicProfile("   ", FIXED_NOW)).toBeNull();
     expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it("flags leaderboardStatusVisible=true and exposes the ELO by default", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      buildUser({ leaderboardStatus: "visible" }),
+    ]);
+    const result = await getCoachPublicProfile("coach-alpha", FIXED_NOW);
+    expect(result!.leaderboardStatusVisible).toBe(true);
+    expect(result!.eloRating).toBe(1234);
+  });
+
+  it("masks the ELO (eloRating=null) and flags leaderboardStatusVisible=false for hidden_admin coaches", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      buildUser({ leaderboardStatus: "hidden_admin" }),
+    ]);
+    const result = await getCoachPublicProfile("coach-alpha", FIXED_NOW);
+    expect(result!.leaderboardStatusVisible).toBe(false);
+    expect(result!.eloRating).toBeNull();
+    // The profile itself remains visible — only the ELO section is masked.
+    expect(result!.coachName).toBe("Coach Alpha");
+    expect(result!.memberSince).toBe("2025-12-01T00:00:00.000Z");
+  });
+
+  it("defaults missing leaderboardStatus to visible (retro-compat with pre-migration rows)", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      buildUser({ leaderboardStatus: undefined }),
+    ]);
+    const result = await getCoachPublicProfile("coach-alpha", FIXED_NOW);
+    expect(result!.leaderboardStatusVisible).toBe(true);
+    expect(result!.eloRating).toBe(1234);
   });
 });
 
@@ -336,11 +368,32 @@ describe("getCoachRecentTeams (S26.3h)", () => {
 describe("getCoachEloHistory (S26.3m)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Defaut : coach visible. Les tests qui veulent assert le masquage
+    // overriderons sur le mock.
+    mockPrisma.user.findUnique.mockResolvedValue({ leaderboardStatus: "visible" });
   });
 
   it("returns an empty array (no DB call) for empty userId", async () => {
     expect(await getCoachEloHistory("", 90, FIXED_NOW)).toEqual([]);
     expect(mockPrisma.eloSnapshot.findMany).not.toHaveBeenCalled();
+  });
+
+  it("returns [] when the coach is hidden_admin (does not query EloSnapshot)", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      leaderboardStatus: "hidden_admin",
+    });
+    const result = await getCoachEloHistory("u-1", 90, FIXED_NOW);
+    expect(result).toEqual([]);
+    expect(mockPrisma.eloSnapshot.findMany).not.toHaveBeenCalled();
+  });
+
+  it("tolerates an unknown leaderboardStatus value (treats as visible)", async () => {
+    // Defensive : si la colonne contient autre chose que les valeurs connues
+    // (cas pathologique post-migration), on continue de servir l'historique.
+    mockPrisma.user.findUnique.mockResolvedValue({ leaderboardStatus: null });
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([]);
+    await getCoachEloHistory("u-1", 90, FIXED_NOW);
+    expect(mockPrisma.eloSnapshot.findMany).toHaveBeenCalled();
   });
 
   it("queries snapshots scoped to userId, sorted asc by recordedAt", async () => {

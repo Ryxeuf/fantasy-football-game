@@ -24,11 +24,22 @@ export interface CoachPublicProfile {
   id: string;
   slug: string;
   coachName: string;
-  eloRating: number;
+  /**
+   * ELO rating du coach. `null` lorsque `leaderboardStatusVisible` est `false`
+   * — le client doit afficher un badge "Non classe" en remplacement et masquer
+   * la courbe ELO 90j.
+   */
+  eloRating: number | null;
   isSupporter: boolean;
   supporterTier: string | null;
   /** ISO 8601 timestamp of the User.createdAt. */
   memberSince: string;
+  /**
+   * `true` si le coach apparait dans le leaderboard public et expose son ELO
+   * sur son profil. `false` quand un admin a masque le coach via
+   * `PATCH /admin/users/:id/leaderboard-status`.
+   */
+  leaderboardStatusVisible: boolean;
 }
 
 export interface CoachShowcaseAchievement {
@@ -74,6 +85,8 @@ interface CandidateUser {
   supporterActiveUntil: Date | null;
   supporterTier: string | null;
   createdAt: Date;
+  /** "visible" | "hidden_admin" — defaut "visible". */
+  leaderboardStatus?: string | null;
 }
 
 export async function getCoachPublicProfile(
@@ -98,6 +111,7 @@ export async function getCoachPublicProfile(
       supporterActiveUntil: true,
       supporterTier: true,
       createdAt: true,
+      leaderboardStatus: true,
     },
     orderBy: { createdAt: "asc" },
   })) as CandidateUser[];
@@ -107,11 +121,17 @@ export async function getCoachPublicProfile(
   );
   if (!match) return null;
 
+  // Si masque par un admin, le profil reste accessible (le coach existe,
+  // succes / equipes restent publics) mais l'ELO est elide pour declencher
+  // le rendu "Non classe" cote UI.
+  const isLeaderboardVisible =
+    (match.leaderboardStatus ?? "visible") === "visible";
+
   return {
     id: match.id,
     slug: coachSlugFrom(match.coachName),
     coachName: match.coachName,
-    eloRating: match.eloRating,
+    eloRating: isLeaderboardVisible ? match.eloRating : null,
     isSupporter: isSupporter(
       {
         patreon: match.patreon,
@@ -121,6 +141,7 @@ export async function getCoachPublicProfile(
     ),
     supporterTier: match.supporterTier,
     memberSince: match.createdAt.toISOString(),
+    leaderboardStatusVisible: isLeaderboardVisible,
   };
 }
 
@@ -278,6 +299,22 @@ export async function getCoachEloHistory(
   now: Date = new Date(),
 ): Promise<CoachEloSnapshot[]> {
   if (!userId) return [];
+
+  // Court-circuit : si le coach est masque du classement (decision admin),
+  // l'historique ELO ne doit pas non plus etre expose. La route publique
+  // ne doit pas pouvoir reconstituer la courbe via cet endpoint.
+  const user = (await (prisma as unknown as {
+    user: {
+      findUnique: (args: unknown) => Promise<{ leaderboardStatus: string | null } | null>;
+    };
+  }).user.findUnique({
+    where: { id: userId },
+    select: { leaderboardStatus: true },
+  })) as { leaderboardStatus: string | null } | null;
+  if (user && (user.leaderboardStatus ?? "visible") !== "visible") {
+    return [];
+  }
+
   const days = Math.min(
     MAX_ELO_HISTORY_DAYS,
     Math.max(MIN_ELO_HISTORY_DAYS, Math.trunc(daysBack)),

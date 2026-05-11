@@ -22,6 +22,9 @@ interface LeaderboardResponse {
  *  - le contrat de réponse (success / data / meta)
  *  - la pagination via ?limit et ?offset
  *  - le tri descendant par eloRating
+ *  - le filtrage : profils non validés, comptes IA, coachs masqués
+ *    par un admin (`leaderboardStatus = "hidden_admin"`), et coachs
+ *    sans match ranked (pas d'`EloSnapshot`) sont exclus.
  */
 describe("E2E API — /leaderboard", () => {
   beforeEach(async () => {
@@ -29,11 +32,13 @@ describe("E2E API — /leaderboard", () => {
   });
 
   it("retourne un envelope standard {success, data, meta}", async () => {
-    // Crée 3 coachs pour avoir un classement non vide.
+    // Crée 3 coachs avec au moins 1 match ranked chacun pour qu'ils
+    // apparaissent dans le classement (le serveur filtre sur
+    // `eloSnapshots: { some: {} }`).
     await Promise.all([
-      seedAndLogin("alice@e2e.test", "password-a", "Alice"),
-      seedAndLogin("bob@e2e.test", "password-b", "Bob"),
-      seedAndLogin("carol@e2e.test", "password-c", "Carol"),
+      seedAndLogin("alice@e2e.test", "password-a", "Alice", { rankedMatches: 1 }),
+      seedAndLogin("bob@e2e.test", "password-b", "Bob", { rankedMatches: 1 }),
+      seedAndLogin("carol@e2e.test", "password-c", "Carol", { rankedMatches: 1 }),
     ]);
 
     const res = await get<LeaderboardResponse>("/leaderboard", null);
@@ -49,9 +54,9 @@ describe("E2E API — /leaderboard", () => {
 
   it("respecte le paramètre ?limit", async () => {
     await Promise.all([
-      seedAndLogin("alice@e2e.test", "password-a", "Alice"),
-      seedAndLogin("bob@e2e.test", "password-b", "Bob"),
-      seedAndLogin("carol@e2e.test", "password-c", "Carol"),
+      seedAndLogin("alice@e2e.test", "password-a", "Alice", { rankedMatches: 1 }),
+      seedAndLogin("bob@e2e.test", "password-b", "Bob", { rankedMatches: 1 }),
+      seedAndLogin("carol@e2e.test", "password-c", "Carol", { rankedMatches: 1 }),
     ]);
 
     const res = await get<LeaderboardResponse>("/leaderboard?limit=2", null);
@@ -61,8 +66,8 @@ describe("E2E API — /leaderboard", () => {
 
   it("retourne les coachs triés par eloRating décroissant", async () => {
     await Promise.all([
-      seedAndLogin("alice@e2e.test", "password-a", "Alice"),
-      seedAndLogin("bob@e2e.test", "password-b", "Bob"),
+      seedAndLogin("alice@e2e.test", "password-a", "Alice", { rankedMatches: 1 }),
+      seedAndLogin("bob@e2e.test", "password-b", "Bob", { rankedMatches: 1 }),
     ]);
 
     const res = await get<LeaderboardResponse>("/leaderboard", null);
@@ -79,9 +84,9 @@ describe("E2E API — /leaderboard", () => {
 
   it("supporte ?offset pour la pagination", async () => {
     await Promise.all([
-      seedAndLogin("alice@e2e.test", "password-a", "Alice"),
-      seedAndLogin("bob@e2e.test", "password-b", "Bob"),
-      seedAndLogin("carol@e2e.test", "password-c", "Carol"),
+      seedAndLogin("alice@e2e.test", "password-a", "Alice", { rankedMatches: 1 }),
+      seedAndLogin("bob@e2e.test", "password-b", "Bob", { rankedMatches: 1 }),
+      seedAndLogin("carol@e2e.test", "password-c", "Carol", { rankedMatches: 1 }),
     ]);
 
     const res = await get<LeaderboardResponse>("/leaderboard?offset=1", null);
@@ -98,18 +103,21 @@ describe("E2E API — /leaderboard", () => {
         email: "valid@e2e.test",
         password: "password",
         name: "ValidCoach",
+        rankedMatches: 1,
       }),
       post("/__test/seed-user", null, {
         email: "pending@e2e.test",
         password: "password",
         name: "PendingCoach",
         valid: false,
+        rankedMatches: 1,
       }),
       post("/__test/seed-user", null, {
         email: "ai@e2e.test",
         password: "password",
         name: "AiCoach",
         role: "ai",
+        rankedMatches: 1,
       }),
     ]);
 
@@ -121,5 +129,51 @@ describe("E2E API — /leaderboard", () => {
     // `meta.total` reflète aussi les filtres pour garder la pagination
     // cohérente côté client.
     expect(res.meta.total).toBe(names.length);
+  });
+
+  it("exclut les coachs sans match ranked (pas d'EloSnapshot)", async () => {
+    await Promise.all([
+      // Coach actif (1 snapshot).
+      post("/__test/seed-user", null, {
+        email: "active@e2e.test",
+        password: "password",
+        name: "ActiveCoach",
+        rankedMatches: 1,
+      }),
+      // Coach inactif (0 snapshot) — ne doit pas apparaitre.
+      post("/__test/seed-user", null, {
+        email: "fresh@e2e.test",
+        password: "password",
+        name: "FreshCoach",
+      }),
+    ]);
+
+    const res = await get<LeaderboardResponse>("/leaderboard", null);
+    const names = res.data.map((e) => e.coachName);
+    expect(names).toContain("ActiveCoach");
+    expect(names).not.toContain("FreshCoach");
+  });
+
+  it("exclut les coachs masques par un admin (leaderboardStatus = hidden_admin)", async () => {
+    await Promise.all([
+      post("/__test/seed-user", null, {
+        email: "shown@e2e.test",
+        password: "password",
+        name: "ShownCoach",
+        rankedMatches: 1,
+      }),
+      post("/__test/seed-user", null, {
+        email: "hidden@e2e.test",
+        password: "password",
+        name: "HiddenCoach",
+        rankedMatches: 1,
+        leaderboardStatus: "hidden_admin",
+      }),
+    ]);
+
+    const res = await get<LeaderboardResponse>("/leaderboard", null);
+    const names = res.data.map((e) => e.coachName);
+    expect(names).toContain("ShownCoach");
+    expect(names).not.toContain("HiddenCoach");
   });
 });
