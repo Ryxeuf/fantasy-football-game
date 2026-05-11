@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
 import { updatePrivacySchema } from "../schemas/auth.schemas";
+import { exportUserData } from "../services/gdpr-export";
 import { serverLog } from "../utils/server-log";
 
 /**
@@ -40,6 +41,38 @@ export async function handleUpdatePrivacy(
   }
 }
 
+/**
+ * Sprint P (Lot P.A.3) — Export RGPD self-service.
+ *
+ * `GET /auth/me/gdpr-export` retourne le snapshot JSON complet des
+ * donnees de l'user (article 15 RGPD : droit d'acces). Auth required.
+ *
+ * Format : JSON pretty (Content-Type application/json,
+ * Content-Disposition attachment) avec nom `gdpr-<userId>-<date>.json`
+ * pour faciliter le telechargement.
+ */
+export async function handleGdprExport(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user!.id;
+  try {
+    const data = await exportUserData(userId);
+    const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="gdpr-${safeId}-${dateStamp}.json"`,
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).json(data);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Erreur serveur";
+    serverLog.error("[GET /auth/me/gdpr-export] error:", message);
+    res.status(500).json({ success: false, error: message });
+  }
+}
+
 const router = Router();
 router.put(
   "/me/privacy",
@@ -47,5 +80,6 @@ router.put(
   validate(updatePrivacySchema),
   handleUpdatePrivacy,
 );
+router.get("/me/gdpr-export", authUser, handleGdprExport);
 
 export default router;
