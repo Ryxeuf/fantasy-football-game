@@ -2,15 +2,20 @@
  * Sprint 1.G.3 — Hook auto-redirect entre `/live` et `/replay`.
  *
  * Logique :
- *  - Mode `live` est valide quand `match.status === 'in_progress'`.
+ *  - Mode `live` est valide quand :
+ *    - `match.status === 'in_progress'`, OU
+ *    - `match.status === 'ready'` ET `scheduledAt <= now` (le broadcaster
+ *      in-memory streame le replay pre-simule des le kickoff passe ; le
+ *      status DB ne fait pas la transition `ready → in_progress`).
  *  - Mode `replay` est valide quand `match.status === 'completed'`.
  *  - Si l'utilisateur arrive sur le mauvais mode, on `router.replace()`
  *    vers le bon URL pour ne pas polluer l'historique.
- *  - Sur un `scheduled` / `ready` / `failed` on redirige vers la page
- *    parent `/pro-league/matches/:id` (info pre-match / erreur).
+ *  - Sur un `scheduled` / `ready` (kickoff futur) / `failed` on redirige
+ *    vers la page parent `/pro-league/matches/:id` (info pre-match /
+ *    erreur).
  *
  * Le hook fait sa propre fetch leger sur `/pro-league/matches/:id` (la
- * route hub renvoie deja le status).
+ * route hub renvoie deja le status + scheduledAt).
  */
 
 "use client";
@@ -25,6 +30,7 @@ export type MatchMode = "live" | "replay";
 interface MinimalMatch {
   readonly id: string;
   readonly status: string;
+  readonly scheduledAt: string;
   readonly isTest?: boolean;
 }
 
@@ -40,10 +46,23 @@ export interface MatchModeRedirectResult {
   readonly isTest: boolean;
 }
 
-function targetPathFor(matchId: string, status: string): string | null {
-  if (status === "in_progress") return `/pro-league/matches/${matchId}/live`;
+function isLiveValid(status: string, scheduledAtMs: number, nowMs: number): boolean {
+  if (status === "in_progress") return true;
+  if (status === "ready" && scheduledAtMs <= nowMs) return true;
+  return false;
+}
+
+function targetPathFor(
+  matchId: string,
+  status: string,
+  scheduledAtMs: number,
+  nowMs: number,
+): string | null {
+  if (isLiveValid(status, scheduledAtMs, nowMs)) {
+    return `/pro-league/matches/${matchId}/live`;
+  }
   if (status === "completed") return `/pro-league/matches/${matchId}/replay`;
-  // scheduled / ready / failed -> page parent (info pre-match / erreur).
+  // scheduled / ready (kickoff futur) / failed -> page parent.
   return `/pro-league/matches/${matchId}`;
 }
 
@@ -66,10 +85,19 @@ export function useMatchModeRedirect(
         if (cancelled) return;
         setStatus(m.status);
         setIsTest(Boolean(m.isTest));
-        const expected =
-          expectedMode === "live" ? "in_progress" : "completed";
-        if (m.status !== expected) {
-          const target = targetPathFor(matchId, m.status);
+        const nowMs = Date.now();
+        const scheduledAtMs = new Date(m.scheduledAt).getTime();
+        const liveOk = isLiveValid(m.status, scheduledAtMs, nowMs);
+        const replayOk = m.status === "completed";
+        const matchedExpected =
+          expectedMode === "live" ? liveOk : replayOk;
+        if (!matchedExpected) {
+          const target = targetPathFor(
+            matchId,
+            m.status,
+            scheduledAtMs,
+            nowMs,
+          );
           if (target) {
             setRedirecting(true);
             router.replace(target);

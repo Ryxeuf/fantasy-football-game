@@ -154,23 +154,48 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
     await waitFor(() => {
       expect(screen.getByTestId("pre-match-card")).toBeTruthy();
     });
-    expect(screen.getByText(/Suivre en direct/i)).toBeTruthy();
+    // Status='scheduled' (pas ready) → button disabled "Direct au kickoff →".
+    expect(screen.getByTestId("follow-live-disabled")).toBeTruthy();
+    expect(screen.queryByTestId("follow-live-link")).toBeNull();
     expect(screen.getByTestId("scoreboard").textContent).toContain("vs");
   });
 
-  it("ready : affiche le card pré-simulation", async () => {
+  it("ready + kickoff futur : countdown + button disabled", async () => {
     mockedApi.mockResolvedValue(
       makeMatch({
         status: "ready",
         scoreHome: null,
         scoreAway: null,
         outcome: null,
+        scheduledAt: new Date(Date.now() + 90 * 60_000).toISOString(),
       }),
     );
     renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("pre-match-card")).toBeTruthy();
     });
+    expect(screen.getByTestId("follow-live-disabled")).toBeTruthy();
+    expect(screen.queryByTestId("follow-live-link")).toBeNull();
+    expect(screen.getByText(/Direct disponible au kickoff/i)).toBeTruthy();
+  });
+
+  it("ready + kickoff passe : button actif vers /live", async () => {
+    mockedApi.mockResolvedValue(
+      makeMatch({
+        status: "ready",
+        scoreHome: null,
+        scoreAway: null,
+        outcome: null,
+        scheduledAt: new Date(Date.now() - 60_000).toISOString(),
+      }),
+    );
+    renderPage({ params: { id: "m_1" } });
+    await waitFor(() => {
+      expect(screen.getByTestId("pre-match-card")).toBeTruthy();
+    });
+    const link = screen.getByTestId("follow-live-link") as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/pro-league/matches/m_1/live");
+    expect(screen.queryByTestId("follow-live-disabled")).toBeNull();
     expect(screen.getByText(/Pré-simulation faite/i)).toBeTruthy();
   });
 
