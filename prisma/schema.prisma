@@ -117,6 +117,7 @@ model User {
   proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
+  proTournamentEntries        ProTournamentEntry[]
 
   @@index([leaderboardStatus])
 }
@@ -1741,6 +1742,58 @@ model ProHallOfFameDedication {
   @@unique([hallOfFameId, userId])
   @@index([userId])
   @@index([hallOfFameId, createdAt])
+}
+
+/// Lot P.B.2 — Tournois Pro League payants. **Sink Crowns** : un user
+/// s'inscrit (entry fee 100 Crowns par defaut, configurable par
+/// tournoi). Idempotent : un user ne peut s'inscrire qu'une fois par
+/// tournoi (unique [tournamentId, userId]).
+///
+/// `status` workflow : `open` → `closed` (plus d'inscription possible)
+/// → `in_progress` (matchs lances) → `completed`. Pas de cron pour le
+/// moment : un admin set le status manuellement via une future UI.
+///
+/// `maxEntries` est optionnel ; null = pas de cap. Quand cap atteint,
+/// le service refuse les inscriptions suivantes (sans changer le
+/// status — l'admin decide quand fermer).
+model ProTournament {
+  id              String                @id @default(cuid())
+  /// Slug stable URL-safe (ex: "winter-cup-2026"). Unique.
+  slug            String                @unique
+  name            String
+  description     String?
+  /// Crowns requis pour s'inscrire (debit unique au moment de l'entry).
+  entryFeeCrowns  Int                   @default(100)
+  /// Cap optionnel d'inscriptions. null = illimite.
+  maxEntries      Int?
+  /// "open" | "closed" | "in_progress" | "completed".
+  status          String                @default("open")
+  /// Dates indicatives (UI). Pas de logique business derivee.
+  startsAt        DateTime?
+  endsAt          DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  entries         ProTournamentEntry[]
+
+  @@index([status, createdAt])
+}
+
+/// Lot P.B.2 — Entry payee d'un user dans un ProTournament. Unique
+/// (tournamentId, userId) garantit qu'un user ne paie qu'une fois.
+/// `paidCrowns` snapshot du fee au moment de l'entry (resilient si
+/// l'admin modifie le fee plus tard).
+model ProTournamentEntry {
+  id           String        @id @default(cuid())
+  tournamentId String
+  tournament   ProTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paidCrowns   Int
+  createdAt    DateTime      @default(now())
+
+  @@unique([tournamentId, userId])
+  @@index([userId])
+  @@index([tournamentId, createdAt])
 }
 
 /// S27.6 — Trace immuable des actions admin (compliance + tracabilite).

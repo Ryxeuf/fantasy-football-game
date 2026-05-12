@@ -18,6 +18,7 @@ import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
 import adminProTeamRoutes from "./routes/admin-pro-team";
 import adminProRosterRoutes from "./routes/admin-pro-roster";
+import adminProTournamentRoutes from "./routes/admin-pro-tournament";
 import proPredictionLeaguesRoutes from "./routes/pro-prediction-leagues";
 import proSurvivorRoutes from "./routes/pro-survivor";
 import {
@@ -245,6 +246,8 @@ app.use("/admin/pro-league", adminProSeasonRoutes);
 app.use("/admin/pro-league", adminProTeamRoutes);
 // Gestion rosters Pro League (regen, replenish, retire joueur).
 app.use("/admin/pro-league", adminProRosterRoutes);
+// Lot P.B.2 — Tournois Pro League payants (sink Crowns).
+app.use("/admin/pro-league", adminProTournamentRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);
