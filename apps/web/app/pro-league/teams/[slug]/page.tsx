@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../../lib/api-client";
+import { TeamRivalriesSection } from "./_components/TeamRivalriesSection";
 
 /**
  * Page détail d'une équipe Pro League — sprint Pro League lot 1.C.2.
@@ -902,7 +903,7 @@ export default function ProLeagueTeamPage({
               )}
             </section>
 
-            <section>
+            <section className="mb-6">
               <h2 className="mb-2 text-lg font-semibold text-slate-100">
                 Derniers matchs
               </h2>
@@ -918,6 +919,8 @@ export default function ProLeagueTeamPage({
                 </div>
               )}
             </section>
+
+            <TeamRivalriesSection teamSlug={params.slug} />
           </div>
         </>
       )}

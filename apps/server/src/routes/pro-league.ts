@@ -102,6 +102,11 @@ import {
   getProTeamDetail,
 } from "../services/pro-league-team";
 import {
+  TeamNotFoundError as RivalryTeamNotFoundError,
+  getHeadToHead,
+  getTopRivals,
+} from "../services/pro-league-rivalry";
+import {
   ProPlayerNotFoundError,
   getProPlayerDetail,
 } from "../services/pro-player-detail";
@@ -322,6 +327,71 @@ export async function handleGetTeamDetail(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/teams/${slug}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint Q lot Q.A.3 — Top rivaux d'une team (par totalMatches desc).
+ * Limit par defaut = 3, max = 10.
+ */
+export async function handleGetTeamRivalries(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const slug = req.params.slug;
+  if (!slug || typeof slug !== "string") {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  const limitRaw = req.query.limit;
+  let limit = 3;
+  if (typeof limitRaw === "string" && /^\d+$/.test(limitRaw)) {
+    limit = Math.min(10, Math.max(1, Number.parseInt(limitRaw, 10)));
+  }
+  try {
+    const rivals = await getTopRivals(slug, limit);
+    res.json({ rivals });
+  } catch (err: unknown) {
+    if (err instanceof RivalryTeamNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/teams/${slug}/rivalries] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint Q lot Q.A.3 — Detail head-to-head entre 2 teams.
+ */
+export async function handleGetHeadToHead(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const slug = req.params.slug;
+  const opponentSlug = req.params.opponentSlug;
+  if (!slug || !opponentSlug) {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  if (slug === opponentSlug) {
+    res.status(400).json({ error: "same-team" });
+    return;
+  }
+  try {
+    const summary = await getHeadToHead(slug, opponentSlug);
+    res.json({ summary });
+  } catch (err: unknown) {
+    if (err instanceof RivalryTeamNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/teams/${slug}/head-to-head/${opponentSlug}] failed: ${msg}`,
+    );
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1018,6 +1088,8 @@ const router = Router();
 router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
+router.get("/teams/:slug/rivalries", handleGetTeamRivalries);
+router.get("/teams/:slug/head-to-head/:opponentSlug", handleGetHeadToHead);
 router.get("/players/:id", handleGetPlayerDetail);
 router.get("/players/:id/history", handleGetPlayerHistory);
 router.get("/players/:id/career", handleGetPlayerCareer);
