@@ -1,3 +1,36 @@
+## [1.112.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.111.0...v1.112.0) (2026-05-12)
+
+
+### ✨ Features
+
+* **admin:** edition branding teams Pro League ([#773](https://github.com/Ryxeuf/fantasy-football-game/issues/773)) ([6ebef6f](https://github.com/Ryxeuf/fantasy-football-game/commit/6ebef6f479efcb267ecd30ce3b68e1b0eec936eb))
+* **admin:** gestion rosters Pro League (replenish/regenerate/retire) ([#774](https://github.com/Ryxeuf/fantasy-football-game/issues/774)) ([331ded5](https://github.com/Ryxeuf/fantasy-football-game/commit/331ded5a7c337b4460945d9f167960e4945999f0))
+* **images:** add new competence images for web application ([c0f418f](https://github.com/Ryxeuf/fantasy-football-game/commit/c0f418ff3b08f451e067f8e62ba057d6af7125de))
+* **pro-league:** career stats persistees joueur (Sprint Q lot Q.A.1) ([#777](https://github.com/Ryxeuf/fantasy-football-game/issues/777)) ([dff6d84](https://github.com/Ryxeuf/fantasy-football-game/commit/dff6d846c88140b421b7e98378138349aebd5018))
+* **pro-league:** commentaires Gazette + moderation (Sprint Q lot Q.B.2) ([#783](https://github.com/Ryxeuf/fantasy-football-game/issues/783)) ([a4550a5](https://github.com/Ryxeuf/fantasy-football-game/commit/a4550a5356e6d66ff684a3599ff0775902cf2d9b))
+* **pro-league:** fan predictions thread (Sprint Q lot Q.B.3) ([#784](https://github.com/Ryxeuf/fantasy-football-game/issues/784)) ([95ed53c](https://github.com/Ryxeuf/fantasy-football-game/commit/95ed53c781df2df9aa4cdc1acc282929f0cfebee))
+* **pro-league:** mini-leagues de pronostics privees (Sprint Q lot Q.D.1) ([#775](https://github.com/Ryxeuf/fantasy-football-game/issues/775)) ([13b8849](https://github.com/Ryxeuf/fantasy-football-game/commit/13b88497913568ecf84b485e0305583d36098b6d))
+* **pro-league:** page career joueur dediee (Sprint Q lot Q.A.2) ([#778](https://github.com/Ryxeuf/fantasy-football-game/issues/778)) ([dec9b3b](https://github.com/Ryxeuf/fantasy-football-game/commit/dec9b3b16585f9c6fb147323fac4245929cfac5a))
+* **pro-league:** Player-of-the-week vote (Sprint Q lot Q.B.1) ([#782](https://github.com/Ryxeuf/fantasy-football-game/issues/782)) ([a7244f8](https://github.com/Ryxeuf/fantasy-football-game/commit/a7244f8d757bdb367439e90d547aa715d3a54005))
+* **pro-league:** rivalry narrative dans la Gazette (Sprint Q lot Q.A.4) ([#781](https://github.com/Ryxeuf/fantasy-football-game/issues/781)) ([d1e5949](https://github.com/Ryxeuf/fantasy-football-game/commit/d1e5949dd7fa32513b8e3da82feb7748fe4a2835))
+* **pro-league:** Survivor Pick'em hebdo (Sprint Q lot Q.D.2) ([#776](https://github.com/Ryxeuf/fantasy-football-game/issues/776)) ([a78ee8b](https://github.com/Ryxeuf/fantasy-football-game/commit/a78ee8bec8994692cbfd1d38168af30bd780c25d))
+* **pro-league:** team head-to-head card + page detail (Sprint Q lot Q.A.3) ([#779](https://github.com/Ryxeuf/fantasy-football-game/issues/779)) ([88e7c2c](https://github.com/Ryxeuf/fantasy-football-game/commit/88e7c2c2629b2be24d55b24587b6eb3c864e07db))
+* **sim-engine:** engine 0.17.0 — tune TDs (option F combo C+D) ([#787](https://github.com/Ryxeuf/fantasy-football-game/issues/787)) ([bf648a3](https://github.com/Ryxeuf/fantasy-football-game/commit/bf648a326c094c5019dbc4ceff8b5a3aa2e73d41))
+* **sim-engine:** engine 0.18.0 — starting yardline 4→6 (option A) ([#788](https://github.com/Ryxeuf/fantasy-football-game/issues/788)) ([303f42d](https://github.com/Ryxeuf/fantasy-football-game/commit/303f42d64b81f0eef6068bd693b5e7e73a31421c))
+
+
+### 🐛 Bug Fixes
+
+* **ci:** deploy workflow filter unit tests metier (drop E2E packages) ([#770](https://github.com/Ryxeuf/fantasy-football-game/issues/770)) ([131c1c9](https://github.com/Ryxeuf/fantasy-football-game/commit/131c1c93325bbd8e9cd5cfc93b66f3b7461f0f91))
+* **ci:** deploy workflow GHCR auth + permissions deployments + retire script_stop ([#771](https://github.com/Ryxeuf/fantasy-football-game/issues/771)) ([a50acd0](https://github.com/Ryxeuf/fantasy-football-game/commit/a50acd006ce0338207311e05ec0a37201be32c1a))
+* **web:** live button respecte le kickoff pour status='ready' ([#789](https://github.com/Ryxeuf/fantasy-football-game/issues/789)) ([3b6a2de](https://github.com/Ryxeuf/fantasy-football-game/commit/3b6a2dee8f08e7eb69da900dad73b5301a502169))
+
+
+### 📝 Documentation
+
+* **session:** Sprint Q 9/13 livre + patterns recurrents ([#785](https://github.com/Ryxeuf/fantasy-football-game/issues/785)) ([4914320](https://github.com/Ryxeuf/fantasy-football-game/commit/49143203408f2ba59515c293c82e7c64a2c240a8)), closes [#772](https://github.com/Ryxeuf/fantasy-football-game/issues/772) [-#784](https://github.com/Ryxeuf/-/issues/784)
+* **sim-engine:** investigation matchs 0-0 + script debug-match ([#786](https://github.com/Ryxeuf/fantasy-football-game/issues/786)) ([1701f2a](https://github.com/Ryxeuf/fantasy-football-game/commit/1701f2a31a2fdee53cd57e812ac3af38defcfc02)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+
 ## [1.111.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.110.1...v1.111.0) (2026-05-11)
 
 
