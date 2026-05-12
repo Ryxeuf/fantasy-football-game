@@ -1,7 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { getSkillDescription } from "../me/teams/skills-data";
 import { useLanguage } from "../contexts/LanguageContext";
+import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 
 interface SkillTooltipProps {
   skillSlug: string;
@@ -115,14 +117,37 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
           onMouseEnter={() => setHoveredSkill(skillSlug)}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="font-semibold text-blue-300 mb-1.5">
-            {skillDescription.name}
+          <div className="flex items-start gap-2 mb-1.5">
+            {SKILL_CATEGORY_ICONS[skillDescription.category] && (
+              <Image
+                src={SKILL_CATEGORY_ICONS[skillDescription.category]}
+                alt=""
+                width={24}
+                height={24}
+                className="object-contain flex-shrink-0 mt-0.5"
+              />
+            )}
+            <div className="font-semibold text-blue-300">
+              {skillDescription.name}
+            </div>
           </div>
           <div className="text-gray-200 text-xs leading-relaxed mb-2">
             {skillDescription.description}
           </div>
-          <div className="text-gray-400 text-xs pt-2 border-t border-gray-700">
-            {language === "fr" ? "Catégorie" : "Category"}: {skillDescription.category}
+          <div className="text-gray-400 text-xs pt-2 border-t border-gray-700 flex items-center gap-1.5">
+            {SKILL_CATEGORY_ICONS[skillDescription.category] && (
+              <Image
+                src={SKILL_CATEGORY_ICONS[skillDescription.category]}
+                alt=""
+                width={14}
+                height={14}
+                className="object-contain"
+              />
+            )}
+            <span>
+              {language === "fr" ? "Catégorie" : "Category"}:{" "}
+              {skillDescription.category}
+            </span>
           </div>
           
           {/* Flèche */}

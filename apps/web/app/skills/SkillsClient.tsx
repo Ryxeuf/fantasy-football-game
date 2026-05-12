@@ -1,7 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
+import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 
 export interface Skill {
   id: string;
@@ -19,13 +21,13 @@ const RULESET_OPTIONS = [
   { value: "season_3", label: "Saison 3 (2025)", labelEn: "Season 3 (2025)" },
 ] as const;
 
-const categoryNames: Record<string, { fr: string; en: string }> = {
-  General: { fr: "Compétences Générales", en: "General Skills" },
-  Agility: { fr: "Compétences d'Agilité", en: "Agility Skills" },
-  Strength: { fr: "Compétences de Force", en: "Strength Skills" },
-  Passing: { fr: "Compétences de Passe", en: "Passing Skills" },
-  Mutation: { fr: "Mutations", en: "Mutations" },
-  Trait: { fr: "Traits", en: "Traits" },
+const categoryNames: Record<string, { fr: string; en: string; key: string }> = {
+  General: { fr: "Compétences Générales", en: "General Skills", key: "General" },
+  Agility: { fr: "Compétences d'Agilité", en: "Agility Skills", key: "Agility" },
+  Strength: { fr: "Compétences de Force", en: "Strength Skills", key: "Strength" },
+  Passing: { fr: "Compétences de Passe", en: "Passing Skills", key: "Passing" },
+  Mutation: { fr: "Mutations", en: "Mutations", key: "Mutation" },
+  Trait: { fr: "Traits", en: "Traits", key: "Trait" },
 };
 
 interface SkillsClientProps {
@@ -53,6 +55,7 @@ export default function SkillsClient({
     return Object.entries(grouped).map(([category, categorySkills]) => ({
       name: categoryNames[category]?.fr || category,
       nameEn: categoryNames[category]?.en || category,
+      key: categoryNames[category]?.key || category,
       skills: categorySkills.sort((a, b) => a.nameFr.localeCompare(b.nameFr)),
     }));
   }, [skills]);
@@ -83,7 +86,11 @@ export default function SkillsClient({
     return filtered;
   }, [searchTerm, selectedCategory, skillsByCategory]);
 
-  const categories = skillsByCategory.map((category) => category.name);
+  const categories = skillsByCategory.map((category) => ({
+    name: category.name,
+    nameEn: category.nameEn,
+    key: category.key,
+  }));
 
   const handleRulesetChange = (ruleset: string) => {
     if (ruleset === selectedRuleset) return;
@@ -162,22 +169,31 @@ export default function SkillsClient({
             >
               {t.skills.allCategories}
             </button>
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {language === "fr"
-                  ? category
-                  : skillsByCategory.find((c) => c.name === category)?.nameEn ||
-                    category}
-              </button>
-            ))}
+            {categories.map((category) => {
+              const iconSrc = SKILL_CATEGORY_ICONS[category.key];
+              return (
+                <button
+                  key={category.name}
+                  onClick={() => setSelectedCategory(category.name)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category.name
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {iconSrc && (
+                    <Image
+                      src={iconSrc}
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
+                  )}
+                  {language === "fr" ? category.name : category.nameEn}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -194,8 +210,9 @@ export default function SkillsClient({
                 ` ${t.skills.in} "${
                   language === "fr"
                     ? selectedCategory
-                    : skillsByCategory.find((c) => c.name === selectedCategory)
-                        ?.nameEn || selectedCategory
+                    : skillsByCategory.find(
+                        (c) => c.name === selectedCategory,
+                      )?.nameEn || selectedCategory
                 }"`}
             </>
           ) : (
@@ -205,21 +222,34 @@ export default function SkillsClient({
       </div>
 
       <div className="space-y-6 sm:space-y-8">
-        {filteredData.map((category) => (
+        {filteredData.map((category) => {
+          const headerIcon = SKILL_CATEGORY_ICONS[category.key];
+          return (
           <div
             key={category.name}
             className="bg-white rounded-lg shadow-sm border border-gray-200"
           >
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                {language === "fr" ? category.name : category.nameEn}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                {category.skills.length}{" "}
-                {category.skills.length === 1
-                  ? t.footer.items
-                  : t.footer.itemsPlural}
-              </p>
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center gap-3 sm:gap-4">
+              {headerIcon && (
+                <Image
+                  src={headerIcon}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="object-contain flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12"
+                />
+              )}
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  {language === "fr" ? category.name : category.nameEn}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                  {category.skills.length}{" "}
+                  {category.skills.length === 1
+                    ? t.footer.items
+                    : t.footer.itemsPlural}
+                </p>
+              </div>
             </div>
             <div className="p-4 sm:p-6">
               <div className="grid gap-3 sm:gap-4">
@@ -243,7 +273,7 @@ export default function SkillsClient({
                       </div>
                       <div className="sm:ml-4 flex-shrink-0">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             skill.category === "General"
                               ? "bg-blue-100 text-blue-800"
                               : skill.category === "Agility"
@@ -252,15 +282,26 @@ export default function SkillsClient({
                                   ? "bg-red-100 text-red-800"
                                   : skill.category === "Passing"
                                     ? "bg-purple-100 text-purple-800"
-                                    : skill.category === "Mutations"
+                                    : skill.category === "Mutation" ||
+                                        skill.category === "Mutations"
                                       ? "bg-orange-100 text-orange-800"
-                                      : skill.category === "Traits"
+                                      : skill.category === "Trait" ||
+                                          skill.category === "Traits"
                                         ? "bg-gray-100 text-gray-800"
                                         : skill.category === "Extraordinary"
                                           ? "bg-yellow-100 text-yellow-800"
                                           : "bg-gray-100 text-gray-600"
                           }`}
                         >
+                          {SKILL_CATEGORY_ICONS[skill.category] && (
+                            <Image
+                              src={SKILL_CATEGORY_ICONS[skill.category]}
+                              alt=""
+                              width={16}
+                              height={16}
+                              className="object-contain"
+                            />
+                          )}
                           {skill.category}
                         </span>
                       </div>
@@ -270,7 +311,8 @@ export default function SkillsClient({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredData.length === 0 && (
@@ -290,37 +332,40 @@ export default function SkillsClient({
 
       <div className="mt-8 sm:mt-12 bg-gray-50 rounded-lg p-4 sm:p-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-          {language === "fr" ? "Légende des couleurs" : "Color Legend"}
+          {language === "fr" ? "Catégories de compétences" : "Skill Categories"}
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></span>
-            <span className="text-gray-700">General</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-green-100 border border-green-300 rounded"></span>
-            <span className="text-gray-700">Agility</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-red-100 border border-red-300 rounded"></span>
-            <span className="text-gray-700">Strength</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-purple-100 border border-purple-300 rounded"></span>
-            <span className="text-gray-700">Passing</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-orange-100 border border-orange-300 rounded"></span>
-            <span className="text-gray-700">Mutations</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></span>
-            <span className="text-gray-700">Traits</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></span>
-            <span className="text-gray-700">Extraordinary</span>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 text-xs sm:text-sm">
+          {(
+            [
+              { key: "General", fr: "Générale", en: "General" },
+              { key: "Agility", fr: "Agilité", en: "Agility" },
+              { key: "Strength", fr: "Force", en: "Strength" },
+              { key: "Passing", fr: "Passe", en: "Passing" },
+              { key: "Mutation", fr: "Mutation", en: "Mutation" },
+              { key: "Trait", fr: "Scélérate", en: "Trait" },
+            ] as const
+          ).map((cat) => {
+            const iconSrc = SKILL_CATEGORY_ICONS[cat.key];
+            return (
+              <div
+                key={cat.key}
+                className="flex flex-col items-center gap-2 text-center"
+              >
+                {iconSrc && (
+                  <Image
+                    src={iconSrc}
+                    alt={language === "fr" ? cat.fr : cat.en}
+                    width={56}
+                    height={56}
+                    className="object-contain w-12 h-12 sm:w-14 sm:h-14"
+                  />
+                )}
+                <span className="text-gray-700 font-medium">
+                  {language === "fr" ? cat.fr : cat.en}
+                </span>
+              </div>
+            );
+          })}
         </div>
         <div className="mt-4 text-xs text-gray-500">
           {language === "fr" ? "Les compétences marquées " : "Skills marked "}
