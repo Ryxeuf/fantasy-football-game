@@ -103,6 +103,7 @@ model User {
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
+  passwordResetTokens         PasswordResetToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -157,6 +158,42 @@ model RefreshToken {
   expiresAt DateTime
   /// null = actif. DateTime = revoqué (rotation, logout, reuse detection).
   revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Lot P.C.1 — token de password reset self-service. Genere a la
+/// requete `POST /auth/forgot-password`, consomme par `POST
+/// /auth/reset-password`.
+///
+/// Anti-enumeration : la route forgot retourne toujours 200 OK
+/// peu importe si l'email existe. Le token est cree silencieusement
+/// et logue cote serveur.
+///
+/// Securite :
+///   - `token` est un secret 32 octets base64url (256 bits) hashe
+///     SHA-256 dans la DB (jamais persisted en clair). Le plain text
+///     est uniquement dans le lien d'email/log.
+///   - Single-use : `usedAt` set des qu'un reset reussit ; toute
+///     tentative ulterieure renvoie 400.
+///   - Expiration : `expiresAt` = createdAt + 24h. Les tokens expires
+///     sont rejetes et peuvent etre purges par un cron mensuel.
+///   - Au reset reussi : tous les RefreshToken du user sont revoqued
+///     (force re-login).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  /// SHA-256 hex du token plain text. Lookup via `where: { tokenHash }`.
+  tokenHash String    @unique
+  /// Date d'expiration absolue (createdAt + 24h).
+  expiresAt DateTime
+  /// null = inutilise. DateTime = consomme (single-use).
+  usedAt    DateTime?
+  /// IP a la requete forgot, audit forensique. Optionnel.
+  requestIp String?
   createdAt DateTime  @default(now())
 
   @@index([userId])

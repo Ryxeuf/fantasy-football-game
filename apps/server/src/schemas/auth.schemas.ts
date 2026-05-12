@@ -56,3 +56,24 @@ export const refreshTokenSchema = z.object({
 export const updatePrivacySchema = z.object({
   privateProfile: z.boolean(),
 });
+
+/**
+ * Lot P.C.1 — password reset self-service.
+ *
+ * `forgotPasswordSchema` accepte juste un email valide. La route
+ * retourne toujours 200 OK (anti-enumeration).
+ *
+ * `resetPasswordSchema` valide le couple {token, newPassword}. Le
+ * token a une longueur de 43 chars (32 bytes base64url sans padding) ;
+ * on tolere 32-64 pour rester robuste sans hardcoder.
+ */
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email invalide"),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(32).max(64, "Token invalide"),
+  newPassword: z
+    .string()
+    .min(8, "Le nouveau mot de passe doit contenir au moins 8 caracteres"),
+});

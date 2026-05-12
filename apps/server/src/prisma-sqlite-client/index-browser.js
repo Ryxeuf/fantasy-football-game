@@ -170,6 +170,16 @@ exports.Prisma.RefreshTokenScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  requestIp: 'requestIp',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.KofiTransactionScalarFieldEnum = {
   id: 'id',
   kofiTransactionId: 'kofiTransactionId',
@@ -1029,6 +1039,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   EloSnapshot: 'EloSnapshot',
   RefreshToken: 'RefreshToken',
+  PasswordResetToken: 'PasswordResetToken',
   KofiTransaction: 'KofiTransaction',
   TutorialCompletion: 'TutorialCompletion',
   UserAchievement: 'UserAchievement',
