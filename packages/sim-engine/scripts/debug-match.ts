@@ -63,7 +63,7 @@ for (const [type, count] of sorted) {
 
 // MOVE breakdown by kind
 const moveKinds = new Map<string, { count: number; sumYards: number }>();
-let totalMoveYards = { home: 0, away: 0 };
+const totalMoveYards = { home: 0, away: 0 };
 for (const ev of result.events) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const e = ev as any;
