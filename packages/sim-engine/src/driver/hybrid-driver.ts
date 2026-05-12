@@ -486,10 +486,17 @@ function rollYards(
   return Math.max(0, Math.min(MAX_TURN_YARDS, total));
 }
 
+// Engine 0.18.0 — starting yardline 4 → 6 (option A modeste). Le ball
+// BB atterrit cote receiver typiquement vers yard 6 (pas yard 4 qui
+// supposait 22 yds a traverser). Ramene le drive a 20 yds = ~3 turns
+// avec mean 6-7 yds/turn (vs ~4 turns avant). Cible : TD/match mean
+// 1.22 → ~1.5 (FUMBBL Dwarf ref).
+const STARTING_YARDLINE = 6;
+
 function nextDrive(prev: DriveState): DriveState {
   return {
     drivingTeam: otherSide(prev.drivingTeam),
-    ballYardline: 4,
+    ballYardline: STARTING_YARDLINE,
   };
 }
 
@@ -837,7 +844,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
       turn: 1,
       scoreHome: 0,
       scoreAway: 0,
-      drive: { drivingTeam: initialReceiver, ballYardline: 4 },
+      drive: { drivingTeam: initialReceiver, ballYardline: STARTING_YARDLINE },
       clockMs: kickoffAtMs,
     },
     events: [
@@ -885,7 +892,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     half: 2,
     turn: 1,
     clockMs: m.state.clockMs + MS_HALFTIME,
-    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: 4 },
+    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: STARTING_YARDLINE },
   };
 
   // Second half.
