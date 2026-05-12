@@ -90,6 +90,9 @@ model User {
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
+  proPredictionLeagues        ProPredictionLeague[]
+  proPredictionLeagueMembers  ProPredictionLeagueMember[]
+  proPredictionPicks          ProPredictionPick[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1014,7 +1017,8 @@ model ProLeagueMatch {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  betMarkets ProBetMarket[]
+  betMarkets       ProBetMarket[]
+  predictionPicks  ProPredictionPick[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1260,4 +1264,51 @@ model EngineComparison {
 
   @@index([engineVer, createdAt])
   @@index([homeTeamId, awayTeamId, createdAt])
+}
+
+model ProPredictionLeague {
+  id        String   @id @default(cuid())
+  name      String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  joinCode  String   @unique
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ProPredictionLeagueMember[]
+  picks   ProPredictionPick[]
+
+  @@index([ownerId])
+}
+
+model ProPredictionLeagueMember {
+  id        String              @id @default(cuid())
+  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  joinedAt  DateTime            @default(now())
+
+  @@unique([leagueId, userId])
+  @@index([userId])
+}
+
+model ProPredictionPick {
+  id        String              @id @default(cuid())
+  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  match     ProLeagueMatch      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  selection String
+  result    String?
+  correct   Boolean?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([leagueId, userId, matchId])
+  @@index([leagueId, matchId])
+  @@index([userId, createdAt])
 }

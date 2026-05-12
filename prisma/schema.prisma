@@ -110,6 +110,9 @@ model User {
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
+  proPredictionLeagues        ProPredictionLeague[]
+  proPredictionLeagueMembers  ProPredictionLeagueMember[]
+  proPredictionPicks          ProPredictionPick[]
 
   @@index([leaderboardStatus])
 }
@@ -1364,7 +1367,8 @@ model ProLeagueMatch {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  betMarkets ProBetMarket[]
+  betMarkets       ProBetMarket[]
+  predictionPicks  ProPredictionPick[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1813,4 +1817,82 @@ model EngineComparison {
 
   @@index([engineVer, createdAt])
   @@index([homeTeamId, awayTeamId, createdAt])
+}
+
+/// Sprint Q lot Q.D.1 — Mini-ligue de pronostics privee.
+///
+/// Un user cree une ligue avec un `name` et un `joinCode` unique de
+/// 8 chars. Il devient automatiquement membre. D'autres users
+/// rejoignent via le code. Le score est calcule a partir des picks
+/// `ProPredictionPick` (1 point par pick correct).
+model ProPredictionLeague {
+  id        String   @id @default(cuid())
+  name      String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  /// Code de jonction unique de 8 chars (ex: "ABC12XYZ"). Case-sensitive
+  /// (uppercase pour faciliter le partage oral).
+  joinCode  String   @unique
+  /// `true` (default) = privee, accessible via code uniquement.
+  /// `false` = publique, listee sur une page de decouverte (future).
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ProPredictionLeagueMember[]
+  picks   ProPredictionPick[]
+
+  @@index([ownerId])
+}
+
+/// Sprint Q lot Q.D.1 — Membre d'une ProPredictionLeague.
+///
+/// Unicite (leagueId, userId) : un user ne peut etre membre qu'une
+/// fois par ligue. La presence du record = appartenance ; le retrait
+/// efface le record.
+model ProPredictionLeagueMember {
+  id        String              @id @default(cuid())
+  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  joinedAt  DateTime            @default(now())
+
+  @@unique([leagueId, userId])
+  @@index([userId])
+}
+
+/// Sprint Q lot Q.D.1 — Pick d'un user sur un match dans le contexte
+/// d'une ligue de pronostics.
+///
+/// `selection` : "home" | "draw" | "away" (winner pick MVP). Une
+/// version future pourra etendre a "exact_score" (string libre type
+/// "3-1") via un champ `selectionType` mais pour le MVP on reste
+/// simple.
+///
+/// Unicite (leagueId, userId, matchId) : un user ne peut soumettre
+/// qu'un pick par (ligue, match). Update via upsert tant que le match
+/// est `scheduled` ; verrouille apres `kickoff` (verifie au niveau
+/// service).
+model ProPredictionPick {
+  id        String              @id @default(cuid())
+  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  match     ProLeagueMatch      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  /// "home" | "draw" | "away".
+  selection String
+  /// Resultat (`null` tant que match pas complete). Set au settlement :
+  /// "home" | "draw" | "away" base sur scoreHome vs scoreAway du match.
+  result    String?
+  /// `true` si selection == result. Set au settlement.
+  correct   Boolean?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([leagueId, userId, matchId])
+  @@index([leagueId, matchId])
+  @@index([userId, createdAt])
 }

@@ -890,6 +890,35 @@ exports.Prisma.EngineComparisonScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ProPredictionLeagueScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  ownerId: 'ownerId',
+  joinCode: 'joinCode',
+  isPrivate: 'isPrivate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProPredictionLeagueMemberScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  userId: 'userId',
+  joinedAt: 'joinedAt'
+};
+
+exports.Prisma.ProPredictionPickScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  userId: 'userId',
+  matchId: 'matchId',
+  selection: 'selection',
+  result: 'result',
+  correct: 'correct',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -978,7 +1007,10 @@ exports.Prisma.ModelName = {
   ProHallOfFame: 'ProHallOfFame',
   ProHallOfFameDedication: 'ProHallOfFameDedication',
   AuditLog: 'AuditLog',
-  EngineComparison: 'EngineComparison'
+  EngineComparison: 'EngineComparison',
+  ProPredictionLeague: 'ProPredictionLeague',
+  ProPredictionLeagueMember: 'ProPredictionLeagueMember',
+  ProPredictionPick: 'ProPredictionPick'
 };
 
 /**

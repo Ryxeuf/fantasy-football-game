@@ -18,6 +18,7 @@ import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
 import adminProTeamRoutes from "./routes/admin-pro-team";
 import adminProRosterRoutes from "./routes/admin-pro-roster";
+import proPredictionLeaguesRoutes from "./routes/pro-prediction-leagues";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -242,6 +243,8 @@ app.use("/admin/pro-league", adminProRosterRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);
+// Sprint Q lot Q.D.1 — mini-leagues prediction privees.
+app.use("/pro-league/prediction-leagues", proPredictionLeaguesRoutes);
 // Console admin : auth + role admin appliques dans le router.
 app.use("/admin/feedback", feedbackAdminRouter);
 
