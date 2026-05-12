@@ -8,6 +8,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useWallet } from "../../../lib/use-wallet";
 
 import { MarketsList } from "../../_components/MarketsList";
+import { MvpVoteSection } from "./_components/MvpVoteSection";
 import { WalletBadge } from "../../_components/WalletBadge";
 import ShareButtons from "../../_components/ShareButtons";
 
@@ -466,7 +467,10 @@ export default function ProLeagueMatchDetailPage({
                 </Link>
               </section>
             ) : data.status === "completed" ? (
-              <PostMatchCard match={data} />
+              <>
+                <PostMatchCard match={data} />
+                <MvpVoteSection matchId={data.id} />
+              </>
             ) : (
               <p className="text-sm text-rose-300">
                 {t.proLeague.match.matchInError.replace(

@@ -960,6 +960,14 @@ exports.Prisma.ProPlayerCareerSnapshotScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProPlayerOfMatchVoteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  matchId: 'matchId',
+  votedRosterId: 'votedRosterId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1053,7 +1061,8 @@ exports.Prisma.ModelName = {
   ProPredictionLeagueMember: 'ProPredictionLeagueMember',
   ProPredictionPick: 'ProPredictionPick',
   ProSurvivorEntry: 'ProSurvivorEntry',
-  ProPlayerCareerSnapshot: 'ProPlayerCareerSnapshot'
+  ProPlayerCareerSnapshot: 'ProPlayerCareerSnapshot',
+  ProPlayerOfMatchVote: 'ProPlayerOfMatchVote'
 };
 
 /**

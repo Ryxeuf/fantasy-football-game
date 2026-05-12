@@ -94,6 +94,7 @@ model User {
   proPredictionLeagueMembers  ProPredictionLeagueMember[]
   proPredictionPicks          ProPredictionPick[]
   proSurvivorEntries          ProSurvivorEntry[]
+  proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -942,6 +943,7 @@ model ProTeamRoster {
   updatedAt   DateTime @updatedAt
 
   careerSnapshot ProPlayerCareerSnapshot?
+  mvpVotes       ProPlayerOfMatchVote[]
 
   @@index([teamId, status])
   @@index([teamId, spp])
@@ -1025,6 +1027,7 @@ model ProLeagueMatch {
 
   betMarkets      ProBetMarket[]
   predictionPicks ProPredictionPick[]
+  mvpVotes        ProPlayerOfMatchVote[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1371,4 +1374,19 @@ model ProPlayerCareerSnapshot {
   updatedAt          DateTime      @updatedAt
 
   @@index([recomputedAt])
+}
+
+model ProPlayerOfMatchVote {
+  id            String         @id @default(cuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  match         ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId       String
+  votedRoster   ProTeamRoster  @relation(fields: [votedRosterId], references: [id], onDelete: Cascade)
+  votedRosterId String
+  createdAt     DateTime       @default(now())
+
+  @@unique([userId, matchId])
+  @@index([matchId, votedRosterId])
+  @@index([votedRosterId, createdAt])
 }
