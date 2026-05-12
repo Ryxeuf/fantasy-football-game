@@ -113,6 +113,7 @@ model User {
   proPredictionLeagues        ProPredictionLeague[]
   proPredictionLeagueMembers  ProPredictionLeagueMember[]
   proPredictionPicks          ProPredictionPick[]
+  proSurvivorEntries          ProSurvivorEntry[]
 
   @@index([leaderboardStatus])
 }
@@ -1183,11 +1184,12 @@ model ProTeam {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  roster      ProTeamRoster[]
-  homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
-  awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
-  standings   ProLeagueStandings[]
-  followers   ProSpectatorFollow[]
+  roster          ProTeamRoster[]
+  homeMatches     ProLeagueMatch[]     @relation("ProMatchHome")
+  awayMatches     ProLeagueMatch[]     @relation("ProMatchAway")
+  standings       ProLeagueStandings[]
+  followers       ProSpectatorFollow[]
+  survivorEntries ProSurvivorEntry[]
 
   @@index([leagueId])
 }
@@ -1281,9 +1283,10 @@ model ProLeagueSeason {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  rounds    ProLeagueRound[]
-  matches   ProLeagueMatch[]
-  standings ProLeagueStandings[]
+  rounds         ProLeagueRound[]
+  matches        ProLeagueMatch[]
+  standings      ProLeagueStandings[]
+  survivorEntries ProSurvivorEntry[]
 
   @@unique([leagueId, year])
   @@index([status])
@@ -1306,7 +1309,8 @@ model ProLeagueRound {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  matches ProLeagueMatch[]
+  matches        ProLeagueMatch[]
+  survivorEntries ProSurvivorEntry[]
 
   @@unique([seasonId, roundNumber])
   @@index([status])
@@ -1895,4 +1899,51 @@ model ProPredictionPick {
   @@unique([leagueId, userId, matchId])
   @@index([leagueId, matchId])
   @@index([userId, createdAt])
+}
+
+/// Sprint Q lot Q.D.2 — Survivor Pick'em hebdo.
+///
+/// Concept BB Survivor :
+///   - Une saison Pro League en cours fait office de "ligue survivor".
+///   - Chaque round = une semaine de survivor.
+///   - L'utilisateur pique 1 equipe parmi celles qui jouent ce round
+///     avant le kickoff (round.status = "pending").
+///   - Si l'equipe gagne son match → status="alive".
+///   - Si elle perd ou egalise → status="eliminated".
+///   - Une equipe ne peut pas etre re-piquee dans la meme saison (unique
+///     `seasonId + userId + pickedTeamId`).
+///   - Un user peut piquer 1 fois par round (unique `seasonId + userId +
+///     roundId`).
+///   - Le dernier alive (ou tous les alive a la fin) gagne.
+model ProSurvivorEntry {
+  id            String          @id @default(cuid())
+  season        ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId      String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  round         ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId       String
+  /// Mirroir de `round.roundNumber` materialise pour le tri/affichage.
+  weekN         Int
+  pickedTeam    ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
+  pickedTeamId  String
+  /// "pending" tant que le round n'est pas completed. Apres : "alive"
+  /// (equipe a gagne) ou "eliminated" (perdu ou nul).
+  status        String          @default("pending")
+  /// Resultat du match correspondant : "win" | "loss" | "draw". Set au
+  /// settlement (en meme temps que `status`).
+  result        String?
+  /// Reference au match settle (pour faciliter le replay UI).
+  matchId       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  /// 1 pick par (user, round) — un user ne peut piquer qu'une fois
+  /// par semaine.
+  @@unique([seasonId, userId, roundId])
+  /// Pas de re-pick de la meme equipe dans la meme saison.
+  @@unique([seasonId, userId, pickedTeamId])
+  @@index([seasonId, weekN])
+  @@index([userId, seasonId])
+  @@index([status])
 }
