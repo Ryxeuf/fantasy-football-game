@@ -96,6 +96,7 @@ model User {
   proSurvivorEntries          ProSurvivorEntry[]
   proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
   proGazetteComments          ProGazetteComment[]
+  proMatchPredictions         ProMatchPrediction[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1029,6 +1030,7 @@ model ProLeagueMatch {
   betMarkets       ProBetMarket[]
   predictionPicks  ProPredictionPick[]
   mvpVotes         ProPlayerOfMatchVote[]
+  fanPredictions   ProMatchPrediction[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1411,4 +1413,21 @@ model ProGazetteComment {
   @@index([userId, createdAt])
   @@index([flaggedAt])
   @@index([deletedAt])
+}
+
+model ProMatchPrediction {
+  id              String         @id @default(cuid())
+  match           ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId         String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  body            String
+  score           String?
+  scoredAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([matchId, userId])
+  @@index([matchId, createdAt])
+  @@index([userId, score])
 }

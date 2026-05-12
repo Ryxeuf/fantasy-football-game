@@ -31,6 +31,7 @@ import {
   type PickSelection,
 } from "./pro-prediction-leagues";
 import { settleSurvivorRound } from "./pro-survivor";
+import { settlePredictions } from "./pro-match-predictions";
 import { serverLog } from "../utils/server-log";
 
 const TYPES_WITH_OVER_UNDER = new Set(["OVER_UNDER_TD", "CAS_COUNT"]);
@@ -312,6 +313,55 @@ export async function settleMarketsForMatch(
       `[pro-survivor] settle failed for round ${match.roundId}`,
       e,
     );
+  }
+
+  // Sprint Q lot Q.B.3 — settle aussi les fan predictions. Requiert
+  // un context complet (scores + team meta) : on recharge le match
+  // avec les relations teams. Encapsule dans try/catch isole.
+  if (
+    match.outcome === "home" ||
+    match.outcome === "away" ||
+    match.outcome === "draw"
+  ) {
+    try {
+      const fullMatch = (await prisma.proLeagueMatch.findUnique({
+        where: { id: matchId },
+        select: {
+          scoreHome: true,
+          scoreAway: true,
+          homeTeam: { select: { slug: true, name: true } },
+          awayTeam: { select: { slug: true, name: true } },
+        },
+      })) as {
+        scoreHome: number | null;
+        scoreAway: number | null;
+        homeTeam: { slug: string; name: string };
+        awayTeam: { slug: string; name: string };
+      } | null;
+      if (
+        fullMatch &&
+        fullMatch.scoreHome !== null &&
+        fullMatch.scoreAway !== null
+      ) {
+        await settlePredictions({
+          matchId,
+          ctx: {
+            homeTeamSlug: fullMatch.homeTeam.slug,
+            homeTeamName: fullMatch.homeTeam.name,
+            awayTeamSlug: fullMatch.awayTeam.slug,
+            awayTeamName: fullMatch.awayTeam.name,
+            scoreHome: fullMatch.scoreHome,
+            scoreAway: fullMatch.scoreAway,
+            outcome: match.outcome as "home" | "away" | "draw",
+          },
+        });
+      }
+    } catch (e) {
+      serverLog.error(
+        `[pro-match-predictions] settle failed for match ${matchId}`,
+        e,
+      );
+    }
   }
 
   return { matchId, settled, skipped, summaries };

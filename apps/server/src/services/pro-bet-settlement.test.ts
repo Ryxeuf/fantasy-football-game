@@ -302,9 +302,11 @@ describe("sweepUnsettledMarkets — sprint 1.D.5", () => {
       { id: "m1" },
       { id: "m2" },
     ]);
-    // m1 OK, m2 throw
+    // m1 OK, m2 throw. Q.B.3 consomme un findUnique supplementaire
+    // pour fan predictions ; on lui sert null pour skip propre.
     mocked.proLeagueMatch.findUnique
       .mockResolvedValueOnce(buildCompletedMatch({ id: "m1" }))
+      .mockResolvedValueOnce(null) // Q.B.3 fullMatch pour m1 → skip
       .mockResolvedValueOnce(null); // m2 introuvable → throw
     mocked.proBetMarket.findMany.mockResolvedValue([
       {
