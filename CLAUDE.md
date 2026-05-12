@@ -211,6 +211,151 @@ la regle BB officielle. Pattern fix :
    `applyApothecaryChoice`.
 3. Pas d'apothecary disponible → regen directe en fallback path.
 
+### Snapshot lazy compute avec staleness window (Q.A.1+Q.A.2)
+Pour un compute couteux (scan replays + attributeSpp), persister un
+modele `Snapshot` 1-1 (`@unique playerId`) avec un timestamp
+`recomputedAt`. Au read, si `Date.now() - recomputedAt >= STALE_WINDOW_MS`
+(ou snapshot inexistant), declenche le recompute synchrone et upsert.
+Pas de cron — l'utilisateur "paye" le recompute en ouvrant la page.
+
+```ts
+const STALE_WINDOW_MS = 60 * 60 * 1000;
+export async function getCareerSnapshot(playerId: string) {
+  const existing = await prisma.proPlayerCareerSnapshot.findUnique({
+    where: { playerId },
+  });
+  const isStale = !existing ||
+    Date.now() - existing.recomputedAt.getTime() >= STALE_WINDOW_MS;
+  if (isStale) return recomputeCareerSnapshot(playerId);
+  return mapToView(existing);
+}
+```
+
+### Hook post-settlement encapsule (Q.D.1, Q.D.2, Q.B.3)
+Quand `settleMarketsForMatch` doit aussi settle d'autres entites
+(picks, survivor entries, fan predictions), chaque call est dans un
+`try/catch` isole pour ne pas faire echouer le bet settlement principal :
+
+```ts
+try {
+  await settlePicksForMatch({ matchId, result: match.outcome as PickSelection });
+} catch (e) {
+  serverLog.error(`[pro-prediction-leagues] settle failed for match ${matchId}`, e);
+}
+```
+
+Le service externe doit etre idempotent (skip si deja settled).
+
+### Blocklist regex auto-flag pour user-generated text (Q.B.2)
+Pour moderer les inputs texte sans Perspective API, un array de regex
+case-insensitive verifie a la creation. Si match, `flaggedAt` +
+`flagReason='blocklist:<pattern>'` set automatiquement. `listComments`
+filtre alors selon perspective (auteur+admin voient flagged, autres non).
+
+```ts
+const BLOCKLIST_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
+  { name: "slur-1", regex: /\bn[\W_]*i[\W_]*g[\W_]*g[\W_]*(?:e[\W_]*r|a)\b/i },
+];
+export function detectBlocklist(body: string): string | null {
+  for (const { name, regex } of BLOCKLIST_PATTERNS) {
+    if (regex.test(body)) return name;
+  }
+  return null;
+}
+```
+
+### Heuristique scoring pure pour user-generated text (Q.B.3)
+Pour scorer une prediction texte fan vs resultat reel : regex parsing
+du score "X-Y" + substring case-insensitive du slug/nom equipe.
+Accepte les 2 ordres (home-away ET away-home). `"perfect"` si team +
+score, `"winner"` si team seul, `"wrong"` sinon. 100% pur, testable
+en unit sans Prisma.
+
+### Window post-action avec auto-close cote service (Q.B.1)
+Pour les actions valides N heures apres un event (vote MVP 24h),
+check `Date.now() - completedAt.getTime() > WINDOW_MS` au submit.
+Cote UI, calculer `windowClosesAt` et disable les boutons. Pas
+besoin de cron pour close si on accepte "silent close" — l'API
+rejette, l'UI affiche fermee.
+
+### Settle progressif multi-match round (Q.D.2)
+Pour le Survivor : chaque entry reference un round (pas un match
+specifique). Au fil des matches completed d'un round, on appelle
+`settleSurvivorRound(roundId)` qui :
+1. Charge entries pending du round
+2. Pour chaque entry, cherche le match ou la team piquee a joue
+3. Si `match.outcome` existe → settle (alive/eliminated)
+4. Sinon → skip, l'entry reste pending pour le prochain call
+
+Evite un trigger explicite "round completed", marche par accumulation.
+
+### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
+Pour les champs `Json?` qui peuvent etre array natif (PG), string
+JSON serialisee (sqlite mirror), null ou undefined :
+
+```ts
+export function parseStringArrayJson(raw: unknown): readonly string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((s): s is string => typeof s === "string");
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((s): s is string => typeof s === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+```
+
+### Composant section autonome avec `/auth/me` fetch interne (Q.B.2/Q.B.3)
+Pour un composant de section (thread comments, predictions, etc.) qui
+doit savoir si l'utilisateur est connecte sans propager `currentUserId`
+depuis le parent :
+
+```ts
+useEffect(() => {
+  apiRequest<MeResponse>("/auth/me")
+    .then((m) => setCurrentUserId(m.user?.id ?? null))
+    .catch(() => setCurrentUserId(null));
+}, []);
+```
+
+Permet d'integrer le composant n'importe ou sans refactor parent.
+
+### `vi.resetAllMocks` au lieu de `vi.clearAllMocks` (Q.D.1)
+`clearAllMocks` clear seulement les calls/instances/results, **pas** la
+queue `mockResolvedValueOnce`. Si les tests utilisent cette queue,
+utiliser `resetAllMocks` qui vide aussi la queue. Sinon les valeurs
+queue persistent entre tests et contaminent les fixtures suivantes.
+
+```ts
+beforeEach(() => {
+  vi.resetAllMocks(); // vide aussi mockResolvedValueOnce queue
+});
+```
+
+### `vi.mock` factory pour service avec class d'erreur typee (Q.D.1/Q.B.1)
+Quand on mock un service qui exporte une class d'erreur (`MvpError`,
+`SeasonFactoryError`, etc.), la class doit etre **dans la factory**
+`vi.mock` — sinon "Cannot access X before initialization" :
+
+```ts
+vi.mock("../services/pro-mvp-vote", () => {
+  class MvpError extends Error {
+    constructor(public readonly code: string, message: string) {
+      super(message);
+      this.name = "MvpError";
+    }
+  }
+  return { MvpError, submitVote: vi.fn() };
+});
+```
+
 ## Pieges connus
 
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)
@@ -330,3 +475,9 @@ vi.mock("./pro-roster-spp", () => ({
   → fixes regen/apothecary BB order, onboarding modal, daily bonus,
   badge toast, OG image, share buttons, match report banner. Voir
   [`docs/roadmap/sessions/2026-05-11-sprint-O.md`](./docs/roadmap/sessions/2026-05-11-sprint-O.md).
+- **2026-05-12** : Sprint Q (Differenciation fan), 12 PRs (#772-#784).
+  Q.A complete (career page + rivalries + Gazette narrative),
+  Q.B complete (vote MVP + commentaires + fan predictions), Q.D
+  complete (mini-leagues prediction + Survivor). Q.C (clips MP4)
+  differe. 8 nouveaux modeles Prisma. Voir
+  [`docs/roadmap/sessions/2026-05-12-sprint-Q.md`](./docs/roadmap/sessions/2026-05-12-sprint-Q.md).

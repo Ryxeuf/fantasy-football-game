@@ -1,7 +1,11 @@
 # SPRINT Q — Differenciation fan / engagement narratif Pro League
 
-> **Statut** : PLANIFIE — demarre apres Sprint P.
-> **Duree estimee** : 6-8 semaines.
+> **Statut** : 9/13 LIVRES (Q.A, Q.B, Q.D complets) — session 2026-05-12.
+> Q.C (clips highlights MP4) differe a un sprint video dedie.
+> Voir [`docs/roadmap/sessions/2026-05-12-sprint-Q.md`](../sessions/2026-05-12-sprint-Q.md).
+>
+> **Duree estimee** : 6-8 semaines (Q.A+Q.B+Q.D livres en 1 session
+> 2026-05-12, Q.C reporte).
 > **Pre-requis** : Sprint O (acquisition) + Sprint P (ops + sinks
 > Crowns).
 
@@ -42,10 +46,10 @@ communaute.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| Q.A.1 | Career stats persistees joueur | DB + Backend | M | [ ] | Nouvelle table `ProPlayerCareerSnapshot` qui agrege par joueur : `matchesPlayed`, `tdTotal`, `casTotal`, `mvpTotal`, `bestMatchId`, `worstMatchId`, `topNemesisTeamId`, `topVictoryTeamId`, `currentStreak`. Cron post-match recompute (incremental). Read-only API `GET /api/pro-league/players/:id/career`. |
-| Q.A.2 | Page `/pro-league/players/[id]/career` | Frontend | M | [ ] | Nouvelle sub-page de la fiche joueur : graphique SPP/TV sur saison, table top 5 matches (les plus marquants), section "Rivalries" (top 3 teams qui ont battu/blesse le joueur), liste casualties recues + infligees. Cards visuelles, partageable. |
-| Q.A.3 | Team head-to-head card | Frontend + Backend | M | [ ] | Service `pro-league-rivalry.ts` : pour 2 teams, calcule W-D-L historique sur N saisons, top scorers head-to-head, casualties causes. UI sur `/pro-league/teams/[slug]` : section "Rivalries" liste top 3 rivaux + boutton "Voir l'historique vs X". |
-| Q.A.4 | Rivalry narrative dans Gazette | Backend | M | [ ] | Extend `pro-storyline-detector.ts` : detecte "rivalry_buildup" (>= 3 matchs en 30j entre 2 teams) → trigger article Gazette specifique "Storyline of the Rivalry". Persona "statistician" raconte l'historique. Test : 3 matchs Buffalo vs GB en 30j → article auto-publie. |
+| Q.A.1 | Career stats persistees joueur | DB + Backend | M | [x] #777 | Nouvelle table `ProPlayerCareerSnapshot` qui agrege par joueur : `matchesPlayed`, `tdTotal`, `casTotal`, `mvpTotal`, `bestMatchId`, `worstMatchId`, `topNemesisTeamId`, `topVictoryTeamId`, `currentStreak`. Cron post-match recompute (incremental). Read-only API `GET /api/pro-league/players/:id/career`. |
+| Q.A.2 | Page `/pro-league/players/[id]/career` | Frontend | M | [x] #778 | Nouvelle sub-page de la fiche joueur : graphique SPP/TV sur saison, table top 5 matches (les plus marquants), section "Rivalries" (top 3 teams qui ont battu/blesse le joueur), liste casualties recues + infligees. Cards visuelles, partageable. |
+| Q.A.3 | Team head-to-head card | Frontend + Backend | M | [x] #779 | Service `pro-league-rivalry.ts` : pour 2 teams, calcule W-D-L historique sur N saisons, top scorers head-to-head, casualties causes. UI sur `/pro-league/teams/[slug]` : section "Rivalries" liste top 3 rivaux + boutton "Voir l'historique vs X". |
+| Q.A.4 | Rivalry narrative dans Gazette | Backend | M | [x] #781 | Extend `pro-storyline-detector.ts` : detecte "rivalry_buildup" (>= 3 matchs en 30j entre 2 teams) → trigger article Gazette specifique "Storyline of the Rivalry". Persona "statistician" raconte l'historique. Test : 3 matchs Buffalo vs GB en 30j → article auto-publie. |
 
 **DoD lot Q.A** : un joueur fictif a une page career complete avec
 trajectoire visible, on peut raconter son histoire. Une equipe a des
@@ -55,9 +59,9 @@ rivaux nommes avec un historique W-D-L.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| Q.B.1 | Player-of-the-week vote | Backend + Frontend | M | [ ] | Modele Prisma `ProPlayerOfMatchVote {userId, matchId, votedRosterId, createdAt}`. Window 24h post-match. UI : sur `/pro-league/matches/[id]` apres `completed`, montre cards des MVPs potentiels (top SPP gagne du match) avec bouton "Voter". Tally final : top voted recoit badge `carried_my_team` + bonus 25 Crowns. Weekly leaderboard "Player of the Week". |
-| Q.B.2 | Commentaires Gazette | Backend + Frontend | L | [ ] | Modele `ProGazetteComment {id, articleId, userId, body, createdAt, deletedAt}`. Max 500 chars. UI thread sous chaque article Gazette. Moderation : `flagComment` + auto-flag Perspective API si configure (sinon manual flagging). Page admin `/admin/gazette/comments` pour bulk moderate. Test : commentaire avec slur → flag auto + masque pour autres users. |
-| Q.B.3 | Fan predictions thread | Backend + Frontend | M | [ ] | Pre-match, fans peuvent poster prediction publique (max 200 chars, ex: "Orcs gagnent 3-1"). Modele `ProMatchPrediction {userId, matchId, body, createdAt}`. Post-match, badge `seer` si la prediction "match" le resultat (heuristique simple : contient mention de l'equipe gagnante + diff TD coherent). UI thread integre sur fiche match. |
+| Q.B.1 | Player-of-the-week vote | Backend + Frontend | M | [x] #782 | Modele Prisma `ProPlayerOfMatchVote {userId, matchId, votedRosterId, createdAt}`. Window 24h post-match. UI : sur `/pro-league/matches/[id]` apres `completed`, montre cards des MVPs potentiels (top SPP gagne du match) avec bouton "Voter". Tally final : top voted recoit badge `carried_my_team` + bonus 25 Crowns. Weekly leaderboard "Player of the Week". |
+| Q.B.2 | Commentaires Gazette | Backend + Frontend | L | [x] #783 | Modele `ProGazetteComment {id, articleId, userId, body, createdAt, deletedAt}`. Max 500 chars. UI thread sous chaque article Gazette. Moderation : `flagComment` + auto-flag Perspective API si configure (sinon manual flagging). Page admin `/admin/gazette/comments` pour bulk moderate. Test : commentaire avec slur → flag auto + masque pour autres users. |
+| Q.B.3 | Fan predictions thread | Backend + Frontend | M | [x] #784 | Pre-match, fans peuvent poster prediction publique (max 200 chars, ex: "Orcs gagnent 3-1"). Modele `ProMatchPrediction {userId, matchId, body, createdAt}`. Post-match, badge `seer` si la prediction "match" le resultat (heuristique simple : contient mention de l'equipe gagnante + diff TD coherent). UI thread integre sur fiche match. |
 
 **DoD lot Q.B** : un fan peut voter MVP, commenter un article, poster
 une prediction. Au moins 100 commentaires generes en 1 semaine
@@ -80,8 +84,8 @@ publication 1er clip viral.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| Q.D.1 | Prediction mini-leagues | Backend + Frontend | L | [ ] | Modeles `ProPredictionLeague {id, name, ownerId, isPrivate, joinCode, createdAt}`, `ProPredictionLeagueMember {leagueId, userId, joinedAt}`, `ProPredictionPick {leagueId, userId, matchId, selection, createdAt}`. Endpoints : create, join via code, list members, pick. UI `apps/web/app/pro-league/leagues/page.tsx` (mes ligues) + `[id]/page.tsx` (leaderboard custom). Score = correct picks dans la ligue. |
-| Q.D.2 | Survivor Pick'em hebdo | Backend + Frontend | M | [ ] | 1 match selectionne / semaine. User pique 1 equipe → si elle gagne, il survive a la semaine, sinon eliminate. Modele `ProSurvivorEntry {userId, seasonId, weekN, pickedTeamId, status enum(alive/eliminated)}`. UI countdown "Survivor cette semaine : Round 5 - mardi 21h". Last survivor recoit 5000 Crowns. |
+| Q.D.1 | Prediction mini-leagues | Backend + Frontend | L | [x] #775 | Modeles `ProPredictionLeague {id, name, ownerId, isPrivate, joinCode, createdAt}`, `ProPredictionLeagueMember {leagueId, userId, joinedAt}`, `ProPredictionPick {leagueId, userId, matchId, selection, createdAt}`. Endpoints : create, join via code, list members, pick. UI `apps/web/app/pro-league/leagues/page.tsx` (mes ligues) + `[id]/page.tsx` (leaderboard custom). Score = correct picks dans la ligue. |
+| Q.D.2 | Survivor Pick'em hebdo | Backend + Frontend | M | [x] #776 | 1 match selectionne / semaine. User pique 1 equipe → si elle gagne, il survive a la semaine, sinon eliminate. Modele `ProSurvivorEntry {userId, seasonId, weekN, pickedTeamId, status enum(alive/eliminated)}`. UI countdown "Survivor cette semaine : Round 5 - mardi 21h". Last survivor recoit 5000 Crowns. |
 
 **DoD lot Q.D** : 50+ ligues prediction crees, Survivor pick'em a 200+
 entries la 1ere semaine.
