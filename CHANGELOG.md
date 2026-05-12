@@ -1,3 +1,17 @@
+## [1.114.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.113.0...v1.114.0) (2026-05-12)
+
+
+### ✨ Features
+
+* **admin:** responsive layout pour mobile ([c37d35a](https://github.com/Ryxeuf/fantasy-football-game/commit/c37d35aefe013a96078671ef030c6be56baa4844))
+* **auth:** Sprint P.C.1 — password reset self-service ([#790](https://github.com/Ryxeuf/fantasy-football-game/issues/790)) ([c06b119](https://github.com/Ryxeuf/fantasy-football-game/commit/c06b1193630ed71d5b4da88ac907e76432eed3ac))
+* **i18n:** Sprint R.A.1 — i18n routing + locale auto-detection ([#795](https://github.com/Ryxeuf/fantasy-football-game/issues/795)) ([d56f27a](https://github.com/Ryxeuf/fantasy-football-game/commit/d56f27ac23d6442ea2bb0235941e512489ef4f8e))
+* **leagues:** Sprint R.E.3 — ligues v2 mode async par ligue ([#794](https://github.com/Ryxeuf/fantasy-football-game/issues/794)) ([11382fb](https://github.com/Ryxeuf/fantasy-football-game/commit/11382fb8a57545482e9c79dcb71501017c3e4e03))
+* **match:** Sprint R.E.1 — game mode async backend (FUMBBL-killer) ([#792](https://github.com/Ryxeuf/fantasy-football-game/issues/792)) ([39269ae](https://github.com/Ryxeuf/fantasy-football-game/commit/39269ae661f1babf8c30f218e9e0b71d0039243f))
+* **match:** Sprint R.E.2 — UI async web (countdown + listing) ([#793](https://github.com/Ryxeuf/fantasy-football-game/issues/793)) ([e93c73a](https://github.com/Ryxeuf/fantasy-football-game/commit/e93c73a71d7311d17c5897cdbd15a0f40907ff82))
+* **pro-league:** Sprint P.B.2 — tournois Pro League payants (sink Crowns) ([#791](https://github.com/Ryxeuf/fantasy-football-game/issues/791)) ([cc020be](https://github.com/Ryxeuf/fantasy-football-game/commit/cc020be05ebd77f5e6e735714a33bf4dfb216302))
+* **seo:** Sprint R.A.4 — SEO multi-langue (hreflang + sitemap) ([#796](https://github.com/Ryxeuf/fantasy-football-game/issues/796)) ([3f51656](https://github.com/Ryxeuf/fantasy-football-game/commit/3f51656ce315dc9512f5e7951e590223f3fa79e4))
+
 ## [1.113.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.112.0...v1.113.0) (2026-05-12)
 
 
