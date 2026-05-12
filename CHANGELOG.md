@@ -1,3 +1,10 @@
+## [1.115.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.114.0...v1.115.0) (2026-05-12)
+
+
+### ✨ Features
+
+* **supporter:** Sprint R.B.3 — supporter status (ad-free + early access) ([459666d](https://github.com/Ryxeuf/fantasy-football-game/commit/459666d8f2ed34e3a5c7b0107439b28dbd3d4410))
+
 ## [1.114.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.113.0...v1.114.0) (2026-05-12)
 
 
