@@ -1,6 +1,46 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decodeJWT, isAdminToken } from "./lib/jwt-utils";
+import {
+  DEFAULT_LOCALE,
+  SUPPORTED_LOCALES,
+  detectLocaleFromHeader,
+  type Locale,
+} from "./app/lib/locale-detection";
+
+const LOCALE_COOKIE = "NEXT_LOCALE";
+const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 an
+
+/**
+ * Sprint R lot R.A.1 — detection de locale.
+ *
+ * Set un cookie `NEXT_LOCALE` au premier visit selon `Accept-Language`.
+ * Le LanguageContext lit ce cookie au mount cote client si rien n'est
+ * stocke en `localStorage`. Les locales SUPPORTED_LOCALES sont
+ * "fr" et "en" pour l'instant ; les extensions futures (de, pl)
+ * peuvent etre ajoutees en modifiant uniquement `locale-detection.ts`.
+ */
+function maybeSetLocaleCookie(
+  request: NextRequest,
+  response: NextResponse,
+): void {
+  const existing = request.cookies.get(LOCALE_COOKIE)?.value;
+  if (
+    existing &&
+    (SUPPORTED_LOCALES as readonly string[]).includes(existing)
+  ) {
+    return;
+  }
+  const detected: Locale = detectLocaleFromHeader(
+    request.headers.get("accept-language"),
+    DEFAULT_LOCALE,
+  );
+  response.cookies.set(LOCALE_COOKIE, detected, {
+    maxAge: LOCALE_COOKIE_MAX_AGE,
+    sameSite: "lax",
+    path: "/",
+  });
+}
 
 function verifyAdminAccess(request: NextRequest): boolean {
   // Récupère le token depuis les cookies ou les headers
@@ -31,6 +71,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
+
+  // Sprint R lot R.A.1 — set NEXT_LOCALE cookie au 1er visit. Pas de
+  // matcher specifique : on l'ajoute a chaque response, idempotent.
+  const localeResponse = NextResponse.next();
+  maybeSetLocaleCookie(request, localeResponse);
 
   // Protège toutes les routes commençant par /admin
   if (pathname.startsWith("/admin")) {
@@ -80,10 +125,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return localeResponse;
 }
 
+// Matcher elargi pour le cookie locale : toutes les pages sauf
+// `/api/*`, `/_next/*` (statics), `/favicon.*`, etc. Les routes
+// `/admin/*` et `/me/*` continuent de beneficier des verifs auth.
 export const config = {
-  matcher: ["/admin/:path*", "/me/:path*"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon|images|fonts|icons|.*\\.).*)",
+  ],
 };
 
