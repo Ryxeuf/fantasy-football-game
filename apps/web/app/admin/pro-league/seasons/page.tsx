@@ -164,9 +164,9 @@ export default function AdminProLeagueSeasonsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
             🏆 Saisons Pro League
           </h1>
           <p className="text-sm text-gray-600">
@@ -190,17 +190,18 @@ export default function AdminProLeagueSeasonsPage() {
       )}
 
       <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left p-3">Annee</th>
-              <th className="text-left p-3">Statut</th>
-              <th className="text-left p-3">Driver</th>
-              <th className="text-left p-3">Engine</th>
-              <th className="text-right p-3">Rounds</th>
-              <th className="text-right p-3">Matches</th>
-              <th className="text-right p-3">Joues</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3 whitespace-nowrap">Annee</th>
+              <th className="text-left p-3 whitespace-nowrap">Statut</th>
+              <th className="text-left p-3 whitespace-nowrap">Driver</th>
+              <th className="text-left p-3 whitespace-nowrap">Engine</th>
+              <th className="text-right p-3 whitespace-nowrap">Rounds</th>
+              <th className="text-right p-3 whitespace-nowrap">Matches</th>
+              <th className="text-right p-3 whitespace-nowrap">Joues</th>
+              <th className="text-left p-3 whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -321,6 +322,7 @@ export default function AdminProLeagueSeasonsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <CreateSeasonModal

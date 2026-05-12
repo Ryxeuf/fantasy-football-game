@@ -122,7 +122,7 @@ export default function AdminSimPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
           🎲 Simulateur Pro League
         </h1>
         <p className="text-sm text-gray-600">
@@ -138,7 +138,7 @@ export default function AdminSimPage() {
         </div>
       )}
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Parametres</h2>
         {loading ? (
           <p className="text-gray-500">Chargement des equipes…</p>
@@ -223,9 +223,9 @@ export default function AdminSimPage() {
       </section>
 
       {result && (
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-          <header className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">
+        <section className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+          <header className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+            <h2 className="text-lg font-semibold break-words">
               {result.pairing.home.name} vs {result.pairing.away.name}
             </h2>
             <span className="text-xs text-gray-500">

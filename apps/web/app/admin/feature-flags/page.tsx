@@ -83,9 +83,9 @@ export default function AdminFeatureFlagsPage() {
 
   return (
     <div className="max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-nuffle-anthracite flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite flex items-center gap-2">
             <span>🚩</span> Feature Flags
           </h1>
           <p className="text-sm text-gray-600 mt-1">
@@ -96,7 +96,7 @@ export default function AdminFeatureFlagsPage() {
         <button
           type="button"
           onClick={() => setCreateOpen((prev) => !prev)}
-          className="px-4 py-2 rounded-lg bg-nuffle-gold text-white hover:bg-nuffle-bronze transition"
+          className="self-start sm:self-auto px-4 py-2 rounded-lg bg-nuffle-gold text-white hover:bg-nuffle-bronze transition"
         >
           {createOpen ? "Annuler" : "+ Nouveau flag"}
         </button>
@@ -166,14 +166,15 @@ export default function AdminFeatureFlagsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
               <tr>
-                <th className="px-4 py-3">Clé</th>
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3">Global</th>
-                <th className="px-4 py-3">Utilisateurs</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Clé</th>
+                <th className="px-3 sm:px-4 py-3">Description</th>
+                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Global</th>
+                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Utilisateurs</th>
+                <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -222,6 +223,7 @@ export default function AdminFeatureFlagsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

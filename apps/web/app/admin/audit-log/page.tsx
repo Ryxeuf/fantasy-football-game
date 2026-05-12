@@ -101,7 +101,7 @@ export default function AdminAuditLogPage() {
   return (
     <div className="max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-nuffle-anthracite flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite flex items-center gap-2">
           <span>📜</span> Journal d&apos;audit admin
         </h1>
         <p className="text-sm text-gray-600 mt-1">
@@ -112,7 +112,7 @@ export default function AdminAuditLogPage() {
 
       <form
         onSubmit={applyFilters}
-        className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-white rounded-lg shadow-sm p-4 border border-gray-200"
+        className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-white rounded-lg shadow-sm p-3 sm:p-4 border border-gray-200"
       >
         <label className="flex flex-col text-sm">
           <span className="text-gray-700 font-medium mb-1">Action</span>
@@ -183,31 +183,33 @@ export default function AdminAuditLogPage() {
             {data.total} entree{data.total > 1 ? "s" : ""} (page {data.page} /{" "}
             {totalPages})
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-              <tr>
-                <th className="px-3 py-2">Date</th>
-                <th className="px-3 py-2">Admin</th>
-                <th className="px-3 py-2">Action</th>
-                <th className="px-3 py-2">Entite</th>
-                <th className="px-3 py-2">Cible</th>
-                <th className="px-3 py-2">IP</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.entries.map((e) => (
-                <AuditLogRow
-                  key={e.id}
-                  entry={e}
-                  expanded={expandedId === e.id}
-                  onToggle={() =>
-                    setExpandedId(expandedId === e.id ? null : e.id)
-                  }
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                <tr>
+                  <th className="px-3 py-2 whitespace-nowrap">Date</th>
+                  <th className="px-3 py-2 whitespace-nowrap">Admin</th>
+                  <th className="px-3 py-2 whitespace-nowrap">Action</th>
+                  <th className="px-3 py-2 whitespace-nowrap">Entite</th>
+                  <th className="px-3 py-2 whitespace-nowrap">Cible</th>
+                  <th className="px-3 py-2 whitespace-nowrap">IP</th>
+                  <th className="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.entries.map((e) => (
+                  <AuditLogRow
+                    key={e.id}
+                    entry={e}
+                    expanded={expandedId === e.id}
+                    onToggle={() =>
+                      setExpandedId(expandedId === e.id ? null : e.id)
+                    }
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

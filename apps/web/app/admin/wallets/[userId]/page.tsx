@@ -173,30 +173,30 @@ export default function AdminWalletDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="min-w-0">
           <h1
             data-testid="admin-wallet-title"
-            className="text-3xl font-heading font-bold text-nuffle-anthracite"
+            className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite break-words"
           >
             Wallet de {data.user.coachName}
           </h1>
-          <p className="text-sm text-gray-600">{data.user.email}</p>
+          <p className="text-sm text-gray-600 break-all">{data.user.email}</p>
         </div>
         <Link
           href="/admin/users"
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-blue-600 hover:underline whitespace-nowrap"
         >
-          ← Retour aux utilisateurs
+          ← Retour
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow border border-gray-200 p-6 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-white rounded-xl shadow border border-gray-200 p-4 sm:p-6 flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
         <div>
           <div className="text-sm text-gray-600">Solde courant</div>
           <div
             data-testid="wallet-balance"
-            className="text-4xl font-bold text-nuffle-anthracite"
+            className="text-3xl sm:text-4xl font-bold text-nuffle-anthracite"
           >
             {data.wallet.crowns.toLocaleString("fr-FR")}{" "}
             <span className="text-base font-normal text-gray-500">Crowns</span>
@@ -205,7 +205,7 @@ export default function AdminWalletDetailPage() {
         <button
           onClick={() => setAdjustOpen(true)}
           data-testid="btn-adjust-balance"
-          className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg"
+          className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded-lg whitespace-nowrap"
         >
           Ajuster le solde
         </button>
@@ -218,6 +218,7 @@ export default function AdminWalletDetailPage() {
         {data.pendingBets.length === 0 ? (
           <p className="text-sm text-gray-500 italic">Aucun pari en attente.</p>
         ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -252,11 +253,12 @@ export default function AdminWalletDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
       <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
           <h2 className="text-lg font-semibold">
             Transactions ({data.pagination.total})
           </h2>
@@ -267,6 +269,7 @@ export default function AdminWalletDetailPage() {
         {data.transactions.length === 0 ? (
           <p className="text-sm text-gray-500 italic">Aucune transaction.</p>
         ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -308,6 +311,7 @@ export default function AdminWalletDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {data.pagination.totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">

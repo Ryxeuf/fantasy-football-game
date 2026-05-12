@@ -76,14 +76,14 @@ export default function AdminGazetteCommentsPage(): JSX.Element {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-100">
-          Gazette · Moderation commentaires
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">
+          💬 Gazette · Moderation
         </h1>
       </div>
 
       <div
-        className="flex gap-2 text-sm"
+        className="flex gap-2 text-sm flex-wrap"
         data-testid="admin-comments-filters"
       >
         {(["flagged", "deleted", "all"] as const).map((f) => (
@@ -136,8 +136,8 @@ export default function AdminGazetteCommentsPage(): JSX.Element {
               className={`rounded border p-3 ${c.deleted ? "border-rose-800 bg-rose-950/30" : c.flagged ? "border-amber-700 bg-amber-950/30" : "border-slate-800 bg-slate-900"}`}
               data-testid={`admin-comment-${c.id}`}
             >
-              <div className="mb-1 flex items-center gap-2 text-xs text-slate-400">
-                <span className="font-mono text-slate-200">
+              <div className="mb-1 flex items-center gap-2 text-xs text-slate-400 flex-wrap">
+                <span className="font-mono text-slate-200 break-all">
                   {c.userName ?? c.userEmail}
                 </span>
                 <span className="text-slate-600">
