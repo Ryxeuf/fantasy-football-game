@@ -47,6 +47,8 @@ model User {
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
   privateProfile              Boolean              @default(false)
+  /// Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
+  nafName                     String?
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                       Boolean              @default(true)
   /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
