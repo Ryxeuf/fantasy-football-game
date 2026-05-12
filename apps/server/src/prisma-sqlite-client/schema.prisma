@@ -236,17 +236,21 @@ model FeatureFlagUser {
 }
 
 model Match {
-  id                String          @id @default(cuid())
-  createdAt         DateTime        @default(now())
-  status            String
-  seed              String
-  creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
-  creatorId         String?
-  currentTurnUserId String?
-  lastMoveAt        DateTime?
-  players           User[]
-  turns             Turn[]
-  teamSelections    TeamSelection[]
+  id                  String          @id @default(cuid())
+  createdAt           DateTime        @default(now())
+  status              String
+  seed                String
+  creator             User?           @relation("MatchCreator", fields: [creatorId], references: [id])
+  creatorId           String?
+  currentTurnUserId   String?
+  lastMoveAt          DateTime?
+  /// Sprint R lot R.E.1 — mode "realtime" (defaut) | "async". Mirror PG.
+  mode                String          @default("realtime")
+  currentTurnDeadline DateTime?
+  turnDeadlineHours   Int             @default(24)
+  players             User[]
+  turns               Turn[]
+  teamSelections      TeamSelection[]
 
   /// Lot P.B.4 — moderation matchs humains. Miroir des colonnes Postgres.
   forfeitedAt       DateTime?
@@ -280,6 +284,7 @@ model Match {
   @@index([aiOpponent])
   @@index([leagueSeasonId])
   @@index([leagueRoundId])
+  @@index([mode, currentTurnDeadline])
 }
 
 model Turn {

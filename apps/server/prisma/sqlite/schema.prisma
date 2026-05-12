@@ -244,6 +244,10 @@ model Match {
   creatorId         String?
   currentTurnUserId String?
   lastMoveAt        DateTime?
+  /// Sprint R lot R.E.1 — mode "realtime" (defaut) | "async". Mirror PG.
+  mode              String          @default("realtime")
+  currentTurnDeadline DateTime?
+  turnDeadlineHours   Int           @default(24)
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
@@ -280,6 +284,7 @@ model Match {
   @@index([aiOpponent])
   @@index([leagueSeasonId])
   @@index([leagueRoundId])
+  @@index([mode, currentTurnDeadline])
 }
 
 model Turn {
