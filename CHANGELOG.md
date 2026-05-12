@@ -1,3 +1,10 @@
+## [1.113.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.112.0...v1.113.0) (2026-05-12)
+
+
+### ✨ Features
+
+* **skill-tooltip:** integrate skill category icons in tooltip and skills client ([d259fc8](https://github.com/Ryxeuf/fantasy-football-game/commit/d259fc8eb69abf62648d3d41fe6b17ca72cfd262))
+
 ## [1.112.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.111.0...v1.112.0) (2026-05-12)
 
 
