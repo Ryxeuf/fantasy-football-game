@@ -796,6 +796,41 @@ if (!inTestBetSettleEnv && betSettleTickMs > 0) {
   );
 }
 
+// =============================================================================
+// Sprint R lot R.E.1 — Async match deadline sweep cron.
+// =============================================================================
+// Scan les async matches actifs dont `currentTurnDeadline < now()` et
+// force un END_TURN. Index `(mode, currentTurnDeadline)` rend la query
+// O(log n).
+//
+// Tick par defaut : 5 min. Configurable via ASYNC_MATCH_SWEEP_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestAsyncSweepEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const asyncSweepTickMsEnv = Number(process.env.ASYNC_MATCH_SWEEP_TICK_MS);
+const asyncSweepTickMs = Number.isFinite(asyncSweepTickMsEnv)
+  ? asyncSweepTickMsEnv
+  : 5 * 60 * 1000;
+if (!inTestAsyncSweepEnv && asyncSweepTickMs > 0) {
+  void import("./services/async-match").then(({ sweepExpiredAsyncMatches }) => {
+    const tick = async () => {
+      try {
+        const out = await sweepExpiredAsyncMatches();
+        if (out.forced > 0 || out.failed > 0) {
+          serverLog.info(
+            `[async-match] sweep: forced=${out.forced} failed=${out.failed} (inspected=${out.inspected})`,
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[async-match] sweep failed: ${msg}`);
+      }
+    };
+    setInterval(() => {
+      void tick();
+    }, asyncSweepTickMs).unref();
+  });
+}
 
 // =============================================================================
 // Pro League casualty sweep cron (Lot 3.C.1 — wiring).

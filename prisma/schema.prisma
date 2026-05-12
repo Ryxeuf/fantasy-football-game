@@ -275,6 +275,19 @@ model Match {
   creatorId         String?
   currentTurnUserId String? // Qui doit jouer actuellement
   lastMoveAt        DateTime? // Dernière action de jeu
+
+  /// Sprint R lot R.E.1 — mode de jeu. "realtime" (defaut) ou "async".
+  /// En mode async, pas de socket required : chaque coup est commit via
+  /// REST `POST /match/:id/move`, et un cron deadline check force-end-turn
+  /// si l'utilisateur ne joue pas dans le delai imparti.
+  mode              String          @default("realtime")
+  /// Sprint R lot R.E.1 — deadline pour le tour courant en mode async.
+  /// Set par le hook move-processor a chaque move applique. null en mode
+  /// realtime ou si le match n'est pas active.
+  currentTurnDeadline DateTime?
+  /// Sprint R lot R.E.1 — duree par tour en heures (default 24h). Permet
+  /// aux ligues async de configurer leur rythme (12h speedrun vs 48h slow).
+  turnDeadlineHours   Int           @default(24)
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
@@ -324,6 +337,8 @@ model Match {
   @@index([aiOpponent])
   @@index([leagueSeasonId])
   @@index([leagueRoundId])
+  /// R.E.1 — index pour le cron deadline qui scan les async matches actifs.
+  @@index([mode, currentTurnDeadline])
 }
 
 model Turn {

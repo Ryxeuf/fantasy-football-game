@@ -8,6 +8,7 @@ import { cancelMatch } from "../services/match-cancel";
 import type { Move } from "@bb/game-engine";
 import { validate } from "../middleware/validate";
 import { processMove } from "../services/move-processor";
+import { getAsyncMatchView } from "../services/async-match";
 import {
   joinMatchSchema,
   acceptMatchSchema,
@@ -165,6 +166,29 @@ export async function handleSubmitMove(
 }
 
 router.post("/:id/move", authUser, validate(moveSchema), handleSubmitMove);
+
+// Sprint R lot R.E.1 — vue async d'un match : deadline + isYourTurn +
+// countdown. Marche aussi pour realtime (retourne hoursRemaining=null).
+// Auth requis pour calculer `isYourTurn` correctement.
+export async function handleAsyncMatchStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const matchId = req.params.id;
+    const view = await getAsyncMatchView(matchId, req.user!.id);
+    if (!view) {
+      sendError(res, "Match introuvable", 404);
+      return;
+    }
+    sendSuccess(res, view);
+  } catch (e: unknown) {
+    serverLog.error("[match/:id/async-status] failed:", e);
+    sendError(res, errorMessage(e), 500);
+  }
+}
+
+router.get("/:id/async-status", authUser, handleAsyncMatchStatus);
 
 export default router;
 

@@ -15,6 +15,8 @@ import { scheduleAILoop } from "./ai-loop";
 import { runAISetupIfNeeded } from "./ai-setup";
 import { runAIKickoffIfNeeded } from "./ai-kickoff";
 import { recordLeagueMatchResult } from "./league-match-result";
+import { markTurnDeadline } from "./async-match";
+import { serverLog } from "../utils/server-log";
 
 export interface MoveResult {
   success: true;
@@ -182,6 +184,18 @@ export async function processMove(
       lastMoveAt: new Date(),
     },
   });
+
+  // Sprint R lot R.E.1 — match async : update la deadline du prochain
+  // tour (no-op si le match est realtime). Apres `match.update` pour
+  // que markTurnDeadline lise le bon status si matchEnded.
+  try {
+    await markTurnDeadline(matchId, { matchEnded });
+  } catch (deadlineErr: unknown) {
+    // Best-effort : si le hook deadline plante, le match continue. Un
+    // refresh future ou le cron rattrapera.
+    const msg = deadlineErr instanceof Error ? deadlineErr.message : "unknown";
+    serverLog.warn(`[move-processor] markTurnDeadline failed: ${msg}`);
+  }
 
   // Persist post-match data when the match ends
   if (matchEnded && newState.players) {
