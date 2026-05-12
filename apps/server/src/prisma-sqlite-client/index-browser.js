@@ -968,6 +968,18 @@ exports.Prisma.ProPlayerOfMatchVoteScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ProGazetteCommentScalarFieldEnum = {
+  id: 'id',
+  articleId: 'articleId',
+  userId: 'userId',
+  body: 'body',
+  deletedAt: 'deletedAt',
+  flaggedAt: 'flaggedAt',
+  flagReason: 'flagReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1062,7 +1074,8 @@ exports.Prisma.ModelName = {
   ProPredictionPick: 'ProPredictionPick',
   ProSurvivorEntry: 'ProSurvivorEntry',
   ProPlayerCareerSnapshot: 'ProPlayerCareerSnapshot',
-  ProPlayerOfMatchVote: 'ProPlayerOfMatchVote'
+  ProPlayerOfMatchVote: 'ProPlayerOfMatchVote',
+  ProGazetteComment: 'ProGazetteComment'
 };
 
 /**

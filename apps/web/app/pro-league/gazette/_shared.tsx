@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useLanguage } from "../../contexts/LanguageContext";
+import { GazetteCommentsThread } from "./_components/GazetteCommentsThread";
 
 /**
  * Shared types + components — sprint 1.E.2 + i18n.3.
@@ -88,6 +89,7 @@ export function ArticleCard({
           ))}
         </div>
       ) : null}
+      <GazetteCommentsThread articleId={article.id} />
     </article>
   );
 }
