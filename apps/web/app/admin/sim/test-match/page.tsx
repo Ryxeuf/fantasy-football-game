@@ -218,7 +218,7 @@ export default function AdminTestMatchPage() {
           Match simulé : <code>{lastResult.matchId}</code> (engineVer{" "}
           {lastResult.engineVer}) ·{" "}
           <Link
-            href={`/pro-league/match/${lastResult.matchId}` as never}
+            href={`/pro-league/matches/${lastResult.matchId}` as never}
             className="underline text-green-700"
           >
             Voir le replay
@@ -264,7 +264,7 @@ export default function AdminTestMatchPage() {
                 </td>
                 <td className="p-2 text-right">
                   <Link
-                    href={`/pro-league/match/${m.id}` as never}
+                    href={`/pro-league/matches/${m.id}` as never}
                     className="text-blue-600 underline"
                   >
                     Replay
