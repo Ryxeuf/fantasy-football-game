@@ -116,6 +116,7 @@ model User {
   proSurvivorEntries          ProSurvivorEntry[]
   proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
   proGazetteComments          ProGazetteComment[]
+  proMatchPredictions         ProMatchPrediction[]
 
   @@index([leaderboardStatus])
 }
@@ -1379,6 +1380,7 @@ model ProLeagueMatch {
   betMarkets       ProBetMarket[]
   predictionPicks  ProPredictionPick[]
   mvpVotes         ProPlayerOfMatchVote[]
+  fanPredictions   ProMatchPrediction[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -2066,4 +2068,38 @@ model ProGazetteComment {
   @@index([userId, createdAt])
   @@index([flaggedAt])
   @@index([deletedAt])
+}
+
+/// Sprint Q lot Q.B.3 — Prediction publique d'un fan pre-match.
+///
+/// Un user poste une prediction texte (max 200 chars) avant le match.
+/// Apres completion, l'heuristique scoring evalue chaque prediction :
+///   - winnerMatched: contient mention de l'equipe gagnante (slug ou
+///     nom, case-insensitive)
+///   - scoreMatched: contient un score "X-Y" coherent avec le score
+///     reel (ou un proche, tolerance ±1 TD)
+/// Si winnerMatched ET scoreMatched → score='perfect'
+///   sinon si winnerMatched → 'winner'
+///   sinon → 'wrong'
+/// Le badge 'seer' est attribue (en lot subsequent) aux users qui
+/// accumulent N predictions 'perfect'/semaine.
+model ProMatchPrediction {
+  id              String         @id @default(cuid())
+  match           ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId         String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  /// Texte libre, max 200 chars.
+  body            String
+  /// "perfect" | "winner" | "wrong" — null tant que match pas settle.
+  score           String?
+  /// Settled timestamp.
+  scoredAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  /// 1 prediction par user par match.
+  @@unique([matchId, userId])
+  @@index([matchId, createdAt])
+  @@index([userId, score])
 }

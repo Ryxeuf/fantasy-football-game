@@ -114,6 +114,13 @@ import {
   submitVote,
 } from "../services/pro-mvp-vote";
 import {
+  PredictionError as FanPredictionError,
+  createOrUpdatePrediction,
+  deletePrediction as deleteFanPrediction,
+  getSeerLeaderboard,
+  listPredictions as listFanPredictions,
+} from "../services/pro-match-predictions";
+import {
   ProPlayerNotFoundError,
   getProPlayerDetail,
 } from "../services/pro-player-detail";
@@ -641,6 +648,142 @@ export async function handleGetWeeklyMvp(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/mvp/weekly] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Q.B.3 — Fan predictions thread
+// ─────────────────────────────────────────────────────────────────────
+
+function fanPredictionStatus(code: FanPredictionError["code"]): number {
+  switch (code) {
+    case "MATCH_NOT_FOUND":
+    case "PREDICTION_NOT_FOUND":
+      return 404;
+    case "MATCH_LOCKED":
+      return 409;
+    case "BODY_EMPTY":
+    case "BODY_TOO_LONG":
+      return 400;
+    case "NOT_OWNER":
+      return 403;
+    default:
+      return 500;
+  }
+}
+
+/** GET /pro-league/matches/:id/predictions (public). */
+export async function handleListFanPredictions(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const list = await listFanPredictions(id);
+    res.json({ predictions: list });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/matches/${id}/predictions] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** POST /pro-league/matches/:id/predictions (auth). */
+export async function handleSubmitFanPrediction(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  const auth = req as AuthenticatedRequest;
+  const userId = auth.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Non authentifie" });
+    return;
+  }
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  const body = (req.body ?? {}) as { body?: unknown };
+  if (typeof body.body !== "string") {
+    res.status(400).json({ error: "missing-body" });
+    return;
+  }
+  try {
+    const result = await createOrUpdatePrediction({
+      matchId: id,
+      userId,
+      body: body.body,
+    });
+    res.status(result.isUpdate ? 200 : 201).json(result);
+  } catch (err: unknown) {
+    if (err instanceof FanPredictionError) {
+      res
+        .status(fanPredictionStatus(err.code))
+        .json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/matches/${id}/predictions POST] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** DELETE /pro-league/matches/:id/predictions/me (auth). */
+export async function handleDeleteFanPrediction(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  const auth = req as AuthenticatedRequest;
+  const userId = auth.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Non authentifie" });
+    return;
+  }
+  try {
+    await deleteFanPrediction(id, userId);
+    res.status(204).end();
+  } catch (err: unknown) {
+    if (err instanceof FanPredictionError) {
+      res
+        .status(fanPredictionStatus(err.code))
+        .json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/matches/${id}/predictions DELETE] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** GET /pro-league/seers/weekly */
+export async function handleGetSeerLeaderboard(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const limitRaw = req.query.limit;
+  let limit = 10;
+  if (typeof limitRaw === "string" && /^\d+$/.test(limitRaw)) {
+    limit = Math.min(50, Math.max(1, Number.parseInt(limitRaw, 10)));
+  }
+  try {
+    const entries = await getSeerLeaderboard(limit);
+    res.json({ entries });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/seers/weekly] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1227,6 +1370,14 @@ router.get("/matches/:id/mvp-candidates", handleGetMvpCandidates);
 router.get("/matches/:id/mvp-tally", handleGetMvpTally);
 router.post("/matches/:id/mvp-vote", authUser, handleSubmitMvpVote);
 router.get("/mvp/weekly", handleGetWeeklyMvp);
+router.get("/matches/:id/predictions", handleListFanPredictions);
+router.post("/matches/:id/predictions", authUser, handleSubmitFanPrediction);
+router.delete(
+  "/matches/:id/predictions/me",
+  authUser,
+  handleDeleteFanPrediction,
+);
+router.get("/seers/weekly", handleGetSeerLeaderboard);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/matches/:id/replay", handleGetMatchReplay);

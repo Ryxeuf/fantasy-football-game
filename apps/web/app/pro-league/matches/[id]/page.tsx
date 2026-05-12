@@ -9,6 +9,7 @@ import { useWallet } from "../../../lib/use-wallet";
 
 import { MarketsList } from "../../_components/MarketsList";
 import { MvpVoteSection } from "./_components/MvpVoteSection";
+import { FanPredictionsThread } from "./_components/FanPredictionsThread";
 import { WalletBadge } from "../../_components/WalletBadge";
 import ShareButtons from "../../_components/ShareButtons";
 
@@ -450,6 +451,10 @@ export default function ProLeagueMatchDetailPage({
                   </h2>
                   <MatchMarkets matchId={data.id} />
                 </section>
+                <FanPredictionsThread
+                  matchId={data.id}
+                  matchStatus={data.status}
+                />
               </>
             ) : data.status === "in_progress" ? (
               <section
@@ -470,6 +475,10 @@ export default function ProLeagueMatchDetailPage({
               <>
                 <PostMatchCard match={data} />
                 <MvpVoteSection matchId={data.id} />
+                <FanPredictionsThread
+                  matchId={data.id}
+                  matchStatus={data.status}
+                />
               </>
             ) : (
               <p className="text-sm text-rose-300">
