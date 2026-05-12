@@ -170,11 +170,20 @@ export async function getDailyRecap(
   }
 
   // Compte les matchups passés sur les 30 derniers jours pour les
-  // pairings de la journée.
+  // pairings de la journée. Q.A.4 — enrichit avec W-D-L + streak
+  // (perspective home du match courant).
   const rivalryFromAt = new Date(at.getTime() - RIVALRY_WINDOW_DAYS * DAY_MS);
   const priorMatchups = new Map<
     string,
-    { count: number; firstAt: string }
+    {
+      count: number;
+      firstAt: string;
+      winsHome: number;
+      winsAway: number;
+      draws: number;
+      streakKind: "win" | "loss" | "draw" | "none";
+      streakLength: number;
+    }
   >();
   for (const m of matches) {
     const key = matchupKey(m.homeTeamSlug, m.awayTeamSlug);
@@ -195,13 +204,64 @@ export async function getDailyRecap(
           },
         ],
       },
-      orderBy: { completedAt: "asc" },
-      select: { completedAt: true },
-    })) as { completedAt: Date | null }[];
+      orderBy: { completedAt: "desc" },
+      select: {
+        completedAt: true,
+        homeTeam: { select: { slug: true } },
+        awayTeam: { select: { slug: true } },
+        outcome: true,
+      },
+    })) as Array<{
+      completedAt: Date | null;
+      homeTeam: { slug: string };
+      awayTeam: { slug: string };
+      outcome: string | null;
+    }>;
     if (past.length > 0) {
+      // Compte W-D-L perspective home du match courant.
+      let winsHome = 0;
+      let winsAway = 0;
+      let draws = 0;
+      function pastResultForCurrentHome(
+        rec: typeof past[number],
+      ): "win" | "loss" | "draw" | null {
+        if (rec.outcome === null) return null;
+        const curHomeWasHome = rec.homeTeam.slug === m.homeTeamSlug;
+        if (rec.outcome === "draw") return "draw";
+        if (rec.outcome === "home") return curHomeWasHome ? "win" : "loss";
+        return curHomeWasHome ? "loss" : "win";
+      }
+      for (const rec of past) {
+        const r = pastResultForCurrentHome(rec);
+        if (r === "win") winsHome += 1;
+        else if (r === "loss") winsAway += 1;
+        else if (r === "draw") draws += 1;
+      }
+      // Streak depuis le plus recent.
+      let streakKind: "win" | "loss" | "draw" | "none" = "none";
+      let streakLength = 0;
+      for (const rec of past) {
+        const r = pastResultForCurrentHome(rec);
+        if (r === null) continue;
+        if (streakLength === 0) {
+          streakKind = r;
+          streakLength = 1;
+        } else if (r === streakKind) {
+          streakLength += 1;
+        } else {
+          break;
+        }
+      }
+      // `past` est order desc → firstAt = dernier element.
+      const firstAt = past[past.length - 1].completedAt as Date;
       priorMatchups.set(key, {
         count: past.length,
-        firstAt: (past[0].completedAt as Date).toISOString(),
+        firstAt: firstAt.toISOString(),
+        winsHome,
+        winsAway,
+        draws,
+        streakKind,
+        streakLength,
       });
     }
   }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   type DetectStorylinesInput,
   type MatchSnapshot,
+  type PriorMatchupCounts,
   type StandingEntry,
   detectStorylines,
   matchupKey,
@@ -235,5 +236,144 @@ describe("detectStorylines — sprint 1.E.3", () => {
     );
     expect(out.some((s) => s.type === "blowout")).toBe(true);
     expect(out.some((s) => s.type === "bloodbath")).toBe(true);
+  });
+});
+
+// Q.A.4 — Tests enrichissement rivalry_buildup
+describe("rivalry_buildup enrichi — Q.A.4", () => {
+  it("inclut suggestedPersona statistician dans les refs", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [matchupKey("buf", "kc"), { count: 3, firstAt: "2026-08-25" }],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [
+          match({ homeTeamSlug: "buf", awayTeamSlug: "kc" }),
+        ],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r).toBeTruthy();
+    expect(r?.refs.suggestedPersona).toBe("statistician");
+  });
+
+  it("inclut bilan W-D-L quand fourni", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [
+        matchupKey("buf", "kc"),
+        {
+          count: 3,
+          firstAt: "2026-08-25",
+          winsHome: 2,
+          winsAway: 0,
+          draws: 1,
+        },
+      ],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [
+          match({
+            homeTeamSlug: "buf",
+            homeTeamName: "Buffalo",
+            awayTeamSlug: "kc",
+            awayTeamName: "KC",
+          }),
+        ],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r?.refs.winsHome).toBe(2);
+    expect(r?.refs.winsAway).toBe(0);
+    expect(r?.refs.drawsHistorical).toBe(1);
+    expect(r?.summary).toMatch(/2-1-0/);
+    expect(r?.summary).toMatch(/Buffalo/);
+  });
+
+  it("weight=90 quand streak >= 2 (rivalry qui chauffe)", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [
+        matchupKey("buf", "kc"),
+        {
+          count: 3,
+          firstAt: "2026-08-25",
+          streakKind: "win",
+          streakLength: 2,
+        },
+      ],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [match({ homeTeamSlug: "buf", awayTeamSlug: "kc" })],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r?.weight).toBe(90);
+  });
+
+  it("weight=85 quand streak < 2 (rivalry standard)", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [
+        matchupKey("buf", "kc"),
+        {
+          count: 3,
+          firstAt: "2026-08-25",
+          streakKind: "win",
+          streakLength: 1,
+        },
+      ],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [match({ homeTeamSlug: "buf", awayTeamSlug: "kc" })],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r?.weight).toBe(85);
+  });
+
+  it("inclut streak dans les refs", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [
+        matchupKey("buf", "kc"),
+        {
+          count: 3,
+          firstAt: "2026-08-25",
+          streakKind: "loss",
+          streakLength: 2,
+        },
+      ],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [match({ homeTeamSlug: "buf", awayTeamSlug: "kc" })],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r?.refs.streakKind).toBe("loss");
+    expect(r?.refs.streakLength).toBe(2);
+  });
+
+  it("retro-compat : marche sans W-D-L ni streak (signature pre-Q.A.4)", () => {
+    const matchups = new Map<string, PriorMatchupCounts>([
+      [matchupKey("buf", "kc"), { count: 3, firstAt: "2026-08-25" }],
+    ]);
+    const out = detectStorylines(
+      emptyInput({
+        matches: [match({ homeTeamSlug: "buf", awayTeamSlug: "kc" })],
+        priorMatchups: matchups,
+      }),
+    );
+    const r = out.find((s) => s.type === "rivalry_buildup");
+    expect(r).toBeTruthy();
+    // Pas de winsHome / streakKind si pas fourni
+    expect(r?.refs.winsHome).toBeUndefined();
+    expect(r?.refs.streakKind).toBeUndefined();
+    expect(r?.weight).toBe(85);
   });
 });
