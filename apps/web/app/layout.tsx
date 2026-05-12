@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import { buildHreflangAlternates } from "./seo/hreflang";
 import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/font/google";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -96,11 +97,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   alternates: {
     canonical: baseUrl,
-    languages: {
-      "fr-FR": baseUrl,
-      en: baseUrl,
-      "x-default": baseUrl,
-    },
+    // Sprint R.A.4 — `buildHreflangAlternates` retourne le map BCP 47
+    // (fr-FR, en, x-default) pour le path racine. Quand R.A.2 introduira
+    // les segments /fr/* /en/*, ce helper prefixera automatiquement.
+    languages: buildHreflangAlternates("/"),
   },
   openGraph: {
     type: "website",
