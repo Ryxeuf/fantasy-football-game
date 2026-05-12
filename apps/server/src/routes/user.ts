@@ -2,8 +2,19 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
+import { getSupporterStatus } from "../services/supporter-status";
 
 const router = Router();
+
+// Sprint R lot R.B.3 — statut supporter (ad-free + early access).
+router.get(
+  "/supporter",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    const status = await getSupporterStatus(req.user!.id);
+    res.json(status);
+  },
+);
 
 router.get("/matches", authUser, async (req: AuthenticatedRequest, res) => {
   const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
