@@ -459,18 +459,27 @@ function rollYards(
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
+  // Engine 0.17.0 tuning (matchs 0-0 fix) : cap defensiveDisruption a -2
+  // (previously -3). Combine avec bashCounter (-3 max), la penalite
+  // defense max etait -6 yds/turn — trop punitive vs Dwarf bash. Reduit
+  // a -5 max permet de re-equilibrer le TD/match mean (0.95 → ~1.4).
   const defensiveDisruption = -Math.min(
-    3,
+    2,
     Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
   );
   const tvBonus = Math.max(-3, Math.min(3, Math.round(tvDelta / 80)));
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.18) {
+  // Engine 0.17.0 tuning : breakthrough probability 18% → 25% pour
+  // augmenter la frequence des "long plays" dramaturgiques sans toucher
+  // aux magnitudes (que le panel feedback avait critiquees a 30/35/40).
+  // Magnitudes 12/15/18 inchangees. Breakthrough negatif (-10) deplacé
+  // proportionellement (0.34 → 0.41).
+  if (fatTail < 0.25) {
     if (defenseProfile.bashIndex < 50) breakthrough = 18;
     else if (defenseProfile.bashIndex < 70) breakthrough = 15;
     else breakthrough = 12;
-  } else if (fatTail < 0.34) {
+  } else if (fatTail < 0.41) {
     breakthrough = -10;
   }
   const total = dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough;
