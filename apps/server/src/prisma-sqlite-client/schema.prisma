@@ -1344,26 +1344,31 @@ model ProSurvivorEntry {
 }
 
 model ProPlayerCareerSnapshot {
-  id               String        @id @default(cuid())
-  player           ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId         String        @unique
-  matchesPlayed    Int           @default(0)
-  tdTotal          Int           @default(0)
-  casTotal         Int           @default(0)
-  compTotal        Int           @default(0)
-  mvpTotal         Int           @default(0)
-  sppTotal         Int           @default(0)
-  bestMatchId      String?
-  bestMatchSpp     Int?
-  worstMatchId     String?
-  worstMatchSpp    Int?
-  topNemesisTeamId String?
-  topVictoryTeamId String?
-  streakKind       String        @default("none")
-  streakLength     Int           @default(0)
-  recomputedAt     DateTime      @default(now())
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  player             ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId           String        @unique
+  matchesPlayed      Int           @default(0)
+  tdTotal            Int           @default(0)
+  casTotal           Int           @default(0)
+  compTotal          Int           @default(0)
+  mvpTotal           Int           @default(0)
+  sppTotal           Int           @default(0)
+  bestMatchId        String?
+  bestMatchSpp       Int?
+  worstMatchId       String?
+  worstMatchSpp      Int?
+  topNemesisTeamId   String?
+  topVictoryTeamId   String?
+  topMatchesJson     Json?
+  topNemesisIdsJson  Json?
+  topVictoryIdsJson  Json?
+  casualtiesReceived Int           @default(0)
+  casualtiesDealt    Int           @default(0)
+  streakKind         String        @default("none")
+  streakLength       Int           @default(0)
+  recomputedAt       DateTime      @default(now())
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@index([recomputedAt])
 }

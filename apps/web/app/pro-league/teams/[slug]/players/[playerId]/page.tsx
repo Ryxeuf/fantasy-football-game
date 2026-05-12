@@ -481,9 +481,18 @@ export default function ProLeaguePlayerPage({
           className="mb-6 rounded-lg border border-slate-700 bg-slate-900/40 p-4"
           data-testid="player-career-snapshot"
         >
-          <h2 className="mb-3 text-sm font-medium uppercase text-slate-400">
-            Career
-          </h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium uppercase text-slate-400">
+              Career
+            </h2>
+            <Link
+              href={`/pro-league/teams/${slug}/players/${playerId}/career` as never}
+              className="text-xs text-amber-300 hover:underline"
+              data-testid="career-page-link"
+            >
+              Voir la carriere complete →
+            </Link>
+          </div>
           <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
             <div>
               <div className="text-xs text-slate-500">Matchs joues</div>
