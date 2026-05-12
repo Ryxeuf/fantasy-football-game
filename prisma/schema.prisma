@@ -1979,6 +1979,20 @@ model ProPlayerCareerSnapshot {
   worstMatchSpp    Int?
   topNemesisTeamId String?
   topVictoryTeamId String?
+  /// Lot Q.A.2 — top 5 matches par totalSpp (desc). Stocke en JSON
+  /// pour eviter une jointure : `[{ matchId, sppTotal }, ...]`.
+  topMatchesJson   Json?
+  /// Lot Q.A.2 — top 3 teams nemesis (most loss vs). JSON array de
+  /// team ids ordonne par count desc.
+  topNemesisIdsJson Json?
+  /// Lot Q.A.2 — top 3 teams souffre-douleur (most win vs).
+  topVictoryIdsJson Json?
+  /// Lot Q.A.2 — count casualties subies (CASUALTY events ou le
+  /// playerId == this.player.id).
+  casualtiesReceived Int          @default(0)
+  /// Lot Q.A.2 — count casualties infligees (alias semantique de
+  /// `casTotal` pour clarte UI).
+  casualtiesDealt   Int           @default(0)
   /// "win" | "loss" | "draw" | "none" — direction du streak en cours.
   streakKind       String        @default("none")
   /// Longueur du streak (>= 0).

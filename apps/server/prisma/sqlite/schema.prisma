@@ -1359,6 +1359,11 @@ model ProPlayerCareerSnapshot {
   worstMatchSpp    Int?
   topNemesisTeamId String?
   topVictoryTeamId String?
+  topMatchesJson    Json?
+  topNemesisIdsJson Json?
+  topVictoryIdsJson Json?
+  casualtiesReceived Int          @default(0)
+  casualtiesDealt   Int           @default(0)
   streakKind       String        @default("none")
   streakLength     Int           @default(0)
   recomputedAt     DateTime      @default(now())
