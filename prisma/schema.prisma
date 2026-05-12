@@ -47,6 +47,12 @@ model User {
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// `true` = profil retire de la lookup publique et du sitemap.
   privateProfile              Boolean                 @default(false)
+  /// Sprint R lot R.D.3 — NAF (Naffinity Federation) opt-in pour
+  /// afficher les tournois IRL sur le profil coach. Identifiant NAF
+  /// renseigne par le user (case-sensitive, ex: "Ryxeuf"). null = pas
+  /// d'opt-in. Le service `naf-sync.ts` fetch les resultats via NAF API
+  /// quand `naf_integration` flag est ON.
+  nafName                     String?
   valid                       Boolean                 @default(false)
   /// Lot P.B.4 — moderation. Date de debut du dernier bannissement. null = jamais banni.
   bannedAt                    DateTime?
