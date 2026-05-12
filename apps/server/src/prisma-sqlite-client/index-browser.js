@@ -919,6 +919,20 @@ exports.Prisma.ProPredictionPickScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProSurvivorEntryScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  userId: 'userId',
+  roundId: 'roundId',
+  weekN: 'weekN',
+  pickedTeamId: 'pickedTeamId',
+  status: 'status',
+  result: 'result',
+  matchId: 'matchId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1010,7 +1024,8 @@ exports.Prisma.ModelName = {
   EngineComparison: 'EngineComparison',
   ProPredictionLeague: 'ProPredictionLeague',
   ProPredictionLeagueMember: 'ProPredictionLeagueMember',
-  ProPredictionPick: 'ProPredictionPick'
+  ProPredictionPick: 'ProPredictionPick',
+  ProSurvivorEntry: 'ProSurvivorEntry'
 };
 
 /**

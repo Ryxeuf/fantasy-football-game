@@ -30,6 +30,7 @@ import {
   settlePicksForMatch,
   type PickSelection,
 } from "./pro-prediction-leagues";
+import { settleSurvivorRound } from "./pro-survivor";
 import { serverLog } from "../utils/server-log";
 
 const TYPES_WITH_OVER_UNDER = new Set(["OVER_UNDER_TD", "CAS_COUNT"]);
@@ -65,6 +66,7 @@ interface MatchSnapshot {
   readonly id: string;
   readonly status: string;
   readonly outcome: string | null;
+  readonly roundId: string;
   readonly touchdownCount: number | null;
   readonly casualtyCount: number | null;
   readonly nuffleCount: number | null;
@@ -143,6 +145,7 @@ export async function settleMarketsForMatch(
       id: true,
       status: true,
       outcome: true,
+      roundId: true,
       touchdownCount: true,
       casualtyCount: true,
       nuffleCount: true,
@@ -296,6 +299,19 @@ export async function settleMarketsForMatch(
         e,
       );
     }
+  }
+
+  // Sprint Q lot Q.D.2 — settle aussi les survivor entries du round.
+  // Idempotent : skip les entries non pending ou dont le match n'a
+  // pas encore d'outcome. Au fil des matchs completed du round, les
+  // entries seront settled progressivement.
+  try {
+    await settleSurvivorRound({ roundId: match.roundId });
+  } catch (e) {
+    serverLog.error(
+      `[pro-survivor] settle failed for round ${match.roundId}`,
+      e,
+    );
   }
 
   return { matchId, settled, skipped, summaries };

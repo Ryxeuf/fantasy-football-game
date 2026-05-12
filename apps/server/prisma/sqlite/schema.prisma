@@ -93,6 +93,7 @@ model User {
   proPredictionLeagues        ProPredictionLeague[]
   proPredictionLeagueMembers  ProPredictionLeagueMember[]
   proPredictionPicks          ProPredictionPick[]
+  proSurvivorEntries          ProSurvivorEntry[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -891,11 +892,12 @@ model ProTeam {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  roster      ProTeamRoster[]
-  homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
-  awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
-  standings   ProLeagueStandings[]
-  followers   ProSpectatorFollow[]
+  roster          ProTeamRoster[]
+  homeMatches     ProLeagueMatch[]     @relation("ProMatchHome")
+  awayMatches     ProLeagueMatch[]     @relation("ProMatchAway")
+  standings       ProLeagueStandings[]
+  followers       ProSpectatorFollow[]
+  survivorEntries ProSurvivorEntry[]
 
   @@index([leagueId])
 }
@@ -957,9 +959,10 @@ model ProLeagueSeason {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  rounds    ProLeagueRound[]
-  matches   ProLeagueMatch[]
-  standings ProLeagueStandings[]
+  rounds         ProLeagueRound[]
+  matches        ProLeagueMatch[]
+  standings      ProLeagueStandings[]
+  survivorEntries ProSurvivorEntry[]
 
   @@unique([leagueId, year])
   @@index([status])
@@ -977,7 +980,8 @@ model ProLeagueRound {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  matches ProLeagueMatch[]
+  matches         ProLeagueMatch[]
+  survivorEntries ProSurvivorEntry[]
 
   @@unique([seasonId, roundNumber])
   @@index([status])
@@ -1311,4 +1315,28 @@ model ProPredictionPick {
   @@unique([leagueId, userId, matchId])
   @@index([leagueId, matchId])
   @@index([userId, createdAt])
+}
+
+model ProSurvivorEntry {
+  id            String          @id @default(cuid())
+  season        ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId      String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  round         ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId       String
+  weekN         Int
+  pickedTeam    ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
+  pickedTeamId  String
+  status        String          @default("pending")
+  result        String?
+  matchId       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([seasonId, userId, roundId])
+  @@unique([seasonId, userId, pickedTeamId])
+  @@index([seasonId, weekN])
+  @@index([userId, seasonId])
+  @@index([status])
 }
