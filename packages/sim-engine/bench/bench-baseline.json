@@ -1,5 +1,5 @@
 {
-  "engineVer": "0.17.0",
+  "engineVer": "0.18.0",
   "snapshotAt": "2026-05-12",
   "tolerance": 0.05,
   "pairings": [
@@ -9,12 +9,12 @@
       "runs": 200,
       "seedOffset": 0,
       "expected": {
-        "tdMean": 1.6,
-        "tdStd": 0.9591663046625445,
-        "casualtyMean": 0.97,
-        "turnoverMean": 4.09,
-        "homeWinRate": 0.285,
-        "awayWinRate": 0.435,
+        "tdMean": 1.865,
+        "tdStd": 1.0376776956261513,
+        "casualtyMean": 0.945,
+        "turnoverMean": 4.165,
+        "homeWinRate": 0.28,
+        "awayWinRate": 0.44,
         "drawRate": 0.28
       }
     },
@@ -24,13 +24,13 @@
       "runs": 200,
       "seedOffset": 0,
       "expected": {
-        "tdMean": 1.52,
-        "tdStd": 1.0486181383134658,
-        "casualtyMean": 1.135,
-        "turnoverMean": 5.08,
-        "homeWinRate": 0.735,
-        "awayWinRate": 0.055,
-        "drawRate": 0.21
+        "tdMean": 1.625,
+        "tdStd": 1.1110243021644486,
+        "casualtyMean": 1.12,
+        "turnoverMean": 5.22,
+        "homeWinRate": 0.745,
+        "awayWinRate": 0.05,
+        "drawRate": 0.205
       }
     },
     {
@@ -39,13 +39,13 @@
       "runs": 200,
       "seedOffset": 0,
       "expected": {
-        "tdMean": 1.455,
-        "tdStd": 0.988926185314151,
-        "casualtyMean": 0.96,
-        "turnoverMean": 4.19,
-        "homeWinRate": 0.35,
-        "awayWinRate": 0.325,
-        "drawRate": 0.325
+        "tdMean": 1.68,
+        "tdStd": 1.038075141788878,
+        "casualtyMean": 0.955,
+        "turnoverMean": 4.31,
+        "homeWinRate": 0.325,
+        "awayWinRate": 0.385,
+        "drawRate": 0.29
       }
     }
   ]
