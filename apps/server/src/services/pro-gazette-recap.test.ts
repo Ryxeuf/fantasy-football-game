@@ -152,13 +152,43 @@ describe("getDailyRecap — sprint 1.E.3", () => {
       },
     ]);
     mocked.proLeagueSeason.findFirst.mockResolvedValueOnce(null);
-    // Rivalry query : 3 matchs passés entre Buffalo & KC
+    // Rivalry query : 3 matchs passés entre Buffalo & KC (ordre desc).
+    // Q.A.4 : on inclut maintenant homeTeam/awayTeam/outcome.
     mocked.proLeagueMatch.findMany.mockResolvedValue([
-      { completedAt: new Date("2026-08-25T22:00:00Z") },
-      { completedAt: new Date("2026-09-05T22:00:00Z") },
-      { completedAt: new Date("2026-09-15T22:00:00Z") },
+      {
+        completedAt: new Date("2026-09-15T22:00:00Z"),
+        homeTeam: { slug: "buf" },
+        awayTeam: { slug: "kc" },
+        outcome: "home",
+      },
+      {
+        completedAt: new Date("2026-09-05T22:00:00Z"),
+        homeTeam: { slug: "kc" },
+        awayTeam: { slug: "buf" },
+        outcome: "home",
+      },
+      {
+        completedAt: new Date("2026-08-25T22:00:00Z"),
+        homeTeam: { slug: "buf" },
+        awayTeam: { slug: "kc" },
+        outcome: "draw",
+      },
     ]);
     const out = await getDailyRecap(new Date("2026-09-15T00:00:00Z"));
-    expect(out.storylines.some((s) => s.type === "rivalry_buildup")).toBe(true);
+    const rivalry = out.storylines.find(
+      (s) => s.type === "rivalry_buildup",
+    );
+    expect(rivalry).toBeTruthy();
+    // Q.A.4 — verifie les refs enrichis : bilan W-D-L + streak +
+    // suggestedPersona.
+    expect(rivalry?.refs.suggestedPersona).toBe("statistician");
+    // Buffalo (curHome) : m1 = home win (W), m2 = kc home win → buf loss (L),
+    // m3 = draw (D). Donc 1-1-1.
+    expect(rivalry?.refs.winsHome).toBe(1);
+    expect(rivalry?.refs.winsAway).toBe(1);
+    expect(rivalry?.refs.drawsHistorical).toBe(1);
+    // Streak depuis le plus recent : 1 win.
+    expect(rivalry?.refs.streakKind).toBe("win");
+    expect(rivalry?.refs.streakLength).toBe(1);
   });
 });

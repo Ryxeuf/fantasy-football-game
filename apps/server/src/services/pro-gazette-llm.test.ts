@@ -94,6 +94,65 @@ describe("buildUserPrompt — sprint 1.E.1", () => {
     expect(prompt).toContain('"score": "4-0"');
     expect(prompt).toContain("MAIN");
   });
+
+  // Q.A.4 — Tests enrichissement rivalry_buildup
+  it("expose les refs de rivalry_buildup au LLM (Q.A.4)", () => {
+    const recapWithRivalry: DailyRecap = {
+      ...RECAP_FIXTURE,
+      storylines: [
+        ...RECAP_FIXTURE.storylines,
+        {
+          type: "rivalry_buildup",
+          weight: 90,
+          refs: {
+            matchId: "m1",
+            home: "buf-snow-ogres",
+            away: "kc-soaring-hawks",
+            priorCount: 3,
+            since: "2026-08-25",
+            suggestedPersona: "statistician",
+            winsHome: 2,
+            winsAway: 0,
+            drawsHistorical: 1,
+            streakKind: "win",
+            streakLength: 2,
+          },
+          summary:
+            "Buffalo et KC : 4e affrontement. Bilan : 2-1-0 pour Buffalo.",
+        },
+      ],
+    };
+    const prompt = buildUserPrompt({
+      recap: recapWithRivalry,
+      date: "2026-05-06",
+    });
+    // Le prompt doit contenir les refs (winsHome/winsAway/streakKind)
+    expect(prompt).toContain("rivalry_buildup");
+    expect(prompt).toContain('"winsHome": 2');
+    expect(prompt).toContain('"streakKind": "win"');
+    expect(prompt).toContain('"suggestedPersona": "statistician"');
+    // Et l'instruction supplementaire pour le statistician
+    expect(prompt).toContain("EDITO 'statistician'");
+  });
+
+  it("n'ajoute pas d'instruction statistician si pas de rivalry_buildup", () => {
+    const prompt = buildUserPrompt({
+      recap: RECAP_FIXTURE,
+      date: "2026-05-06",
+    });
+    expect(prompt).not.toContain("EDITO 'statistician'");
+  });
+
+  it("n'expose pas les refs pour les autres types de storyline", () => {
+    const prompt = buildUserPrompt({
+      recap: RECAP_FIXTURE,
+      date: "2026-05-06",
+    });
+    // RECAP_FIXTURE a un blowout avec refs.matchId mais on ne doit
+    // pas l'exposer (seul rivalry_buildup expose ses refs).
+    expect(prompt).toContain('"summary":');
+    expect(prompt).not.toContain('"matchId": "m1"');
+  });
 });
 
 function expectCode(fn: () => unknown, code: string): void {

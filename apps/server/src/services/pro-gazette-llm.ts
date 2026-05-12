@@ -113,11 +113,20 @@ export function buildUserPrompt(opts: BuildPromptOptions): string {
   const standingsTop = recap.standings
     .slice(0, 5)
     .map((s) => `#${s.rank} ${s.teamName} (${s.wins}-${s.draws}-${s.losses}, ${s.points} pts)`);
-  const storylines = recap.storylines.map((s) => ({
-    type: s.type,
-    weight: s.weight,
-    summary: s.summary,
-  }));
+  // Q.A.4 — expose les refs complets pour rivalry_buildup afin que
+  // le LLM puisse citer le bilan W-D-L et le streak. Les autres types
+  // n'ont pas besoin des refs (le summary leur suffit).
+  const storylines = recap.storylines.map((s) => {
+    const base: Record<string, unknown> = {
+      type: s.type,
+      weight: s.weight,
+      summary: s.summary,
+    };
+    if (s.type === "rivalry_buildup") {
+      base.refs = s.refs;
+    }
+    return base;
+  });
   const payload = {
     date,
     matchesPlayed: recap.matchesPlayed,
@@ -125,6 +134,17 @@ export function buildUserPrompt(opts: BuildPromptOptions): string {
     standingsTop5: standingsTop,
     storylines,
   };
+
+  // Q.A.4 — instruction supplementaire si une rivalry_buildup est
+  // detectee : le LLM est invite a signer un EDITO statistician sur
+  // l'historique de la rivalite (W-D-L, streak).
+  const hasRivalry = recap.storylines.some(
+    (s) => s.type === "rivalry_buildup",
+  );
+  const rivalryInstruction = hasRivalry
+    ? "\nUne storyline 'rivalry_buildup' est detectee : SIGNE un EDITO 'statistician' sur cette rivalite (cite winsHome/winsAway/draws/streak depuis ses refs)."
+    : "";
+
   return [
     `Genere l'edition Nuffle Gazette pour le ${date}.`,
     "Donnees factuelles (recap aggregator) :",
@@ -132,7 +152,8 @@ export function buildUserPrompt(opts: BuildPromptOptions): string {
     JSON.stringify(payload, null, 2),
     "```",
     "",
-    "Cible : 1 MAIN (story principale, base sur la storyline la plus ponderee), 2 BREVE (storylines secondaires), 1 EDITO (signe par 1 persona).",
+    "Cible : 1 MAIN (story principale, base sur la storyline la plus ponderee), 2 BREVE (storylines secondaires), 1 EDITO (signe par 1 persona)." +
+      rivalryInstruction,
     "Reponds UNIQUEMENT en JSON strict.",
   ].join("\n");
 }

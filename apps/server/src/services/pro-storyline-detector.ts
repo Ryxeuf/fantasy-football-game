@@ -71,6 +71,17 @@ export interface PriorMatchupCounts {
   readonly count: number;
   /** Date du plus ancien match du compte, pour aider le LLM. */
   readonly firstAt: string;
+  /** Q.A.4 — Bilan W-D-L de l'historique (perspective home du match
+   *  courant). Optionnel — si absent la storyline n'expose pas le
+   *  bilan dans ses refs. */
+  readonly winsHome?: number;
+  readonly winsAway?: number;
+  readonly draws?: number;
+  /** Q.A.4 — Streak en cours (perspective home du match courant) :
+   *  "win" / "loss" / "draw" / "none". */
+  readonly streakKind?: "win" | "loss" | "draw" | "none";
+  /** Q.A.4 — Longueur du streak (>= 0). */
+  readonly streakLength?: number;
 }
 
 export interface DetectStorylinesInput {
@@ -252,22 +263,55 @@ export function detectStorylines(
       });
     }
 
-    // rivalry_buildup
+    // rivalry_buildup (Q.A.4 enrichi avec W-D-L + streak)
     if (input.priorMatchups) {
       const key = matchupKey(m.homeTeamSlug, m.awayTeamSlug);
       const matchup = input.priorMatchups.get(key);
       if (matchup && matchup.count >= 3) {
+        const refs: Record<string, string | number> = {
+          matchId: m.id,
+          home: m.homeTeamSlug,
+          away: m.awayTeamSlug,
+          homeName: m.homeTeamName,
+          awayName: m.awayTeamName,
+          priorCount: matchup.count,
+          since: matchup.firstAt,
+          // Q.A.4 — la rivalry storyline preconise une persona
+          // "statistician" : le LLM est invite a signer cet article
+          // dans un EDITO chiffre.
+          suggestedPersona: "statistician",
+        };
+        // Optionnels : ajoute uniquement si fourni cote caller.
+        if (
+          matchup.winsHome !== undefined &&
+          matchup.winsAway !== undefined &&
+          matchup.draws !== undefined
+        ) {
+          refs.winsHome = matchup.winsHome;
+          refs.winsAway = matchup.winsAway;
+          refs.drawsHistorical = matchup.draws;
+        }
+        if (matchup.streakKind && matchup.streakLength !== undefined) {
+          refs.streakKind = matchup.streakKind;
+          refs.streakLength = matchup.streakLength;
+        }
+
+        const balance =
+          matchup.winsHome !== undefined &&
+          matchup.winsAway !== undefined &&
+          matchup.draws !== undefined
+            ? ` Bilan : ${matchup.winsHome}-${matchup.draws}-${matchup.winsAway} pour ${m.homeTeamName}.`
+            : "";
+
         out.push({
           type: "rivalry_buildup",
-          weight: 85,
-          refs: {
-            matchId: m.id,
-            home: m.homeTeamSlug,
-            away: m.awayTeamSlug,
-            priorCount: matchup.count,
-            since: matchup.firstAt,
-          },
-          summary: `${m.homeTeamName} et ${m.awayTeamName} : ${matchup.count}e affrontement, la rivalité s'enracine.`,
+          // Weight +5 si on a un streak >= 2 (rivalry "qui chauffe")
+          weight:
+            matchup.streakLength !== undefined && matchup.streakLength >= 2
+              ? 90
+              : 85,
+          refs,
+          summary: `${m.homeTeamName} et ${m.awayTeamName} : ${matchup.count}e affrontement, la rivalité s'enracine.${balance}`,
         });
       }
     }
