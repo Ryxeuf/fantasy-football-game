@@ -9,7 +9,14 @@ import {
   registerSchema,
   updateProfileSchema,
   changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "../schemas/auth.schemas";
+import {
+  PasswordResetError,
+  consumeResetToken,
+  requestPasswordReset,
+} from "../services/password-reset";
 import {
   claimOrphanKofiTransactions,
   ensureKofiLinkCode,
@@ -22,8 +29,10 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../services/auth-tokens";
-import { type RefreshTokenStore } from "../services/refresh-token-store";
-import { PrismaRefreshTokenStore } from "../services/prisma-refresh-token-store";
+import {
+  getRefreshTokenStore,
+  setRefreshTokenStore,
+} from "../services/refresh-token-store-singleton";
 import {
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
   isEnabled as isFeatureEnabled,
@@ -31,19 +40,11 @@ import {
 
 const router = Router();
 
-/**
- * Default Prisma-backed store. Tests inject a fake via `setRefreshTokenStore`
- * to avoid coupling to the database layer.
- */
-let refreshTokenStore: RefreshTokenStore = new PrismaRefreshTokenStore();
-
-export function setRefreshTokenStore(store: RefreshTokenStore): void {
-  refreshTokenStore = store;
-}
-
-export function getRefreshTokenStore(): RefreshTokenStore {
-  return refreshTokenStore;
-}
+// Lot P.C.1 — getRefreshTokenStore/setRefreshTokenStore extraits dans
+// `services/refresh-token-store-singleton.ts` pour casser le cycle
+// d'import auth.ts ↔ password-reset.ts. Les tests existants importent
+// toujours via `./auth` (re-export ci-dessus pour back-compat).
+export { getRefreshTokenStore, setRefreshTokenStore };
 
 /**
  * S24.3 — Issues a fresh access/refresh pair for `userId` and registers the
@@ -61,7 +62,7 @@ async function issueTokenPair(params: {
   });
   const refreshToken = signRefreshToken({ sub: params.userId });
   const refreshPayload = verifyRefreshToken(refreshToken);
-  await refreshTokenStore.register({
+  await getRefreshTokenStore().register({
     jti: refreshPayload.jti,
     sub: params.userId,
     expiresAt: Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECONDS,
@@ -272,7 +273,7 @@ export async function handleLogout(req: Request, res: Response): Promise<Respons
   }
   try {
     const payload = verifyRefreshToken(refreshToken);
-    await refreshTokenStore.revoke(payload.jti);
+    await getRefreshTokenStore().revoke(payload.jti);
   } catch {
     // ignore: malformed/expired tokens are already useless
   }
@@ -308,6 +309,76 @@ router.delete("/me", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Lot P.C.1 — Password reset self-service.
+//
+// POST /auth/forgot-password : retourne toujours 200 OK (anti-
+// enumeration). Si l'email matche un user actif, un token est genere
+// et logue serveur-side. En dev (NODE_ENV !== "production"), la
+// response inclut `devLink` pour faciliter les tests.
+//
+// POST /auth/reset-password : valide le token + applique le nouveau
+// password. Revoque toutes les sessions actives. Erreurs typees :
+// INVALID_TOKEN / TOKEN_EXPIRED / TOKEN_USED / WEAK_PASSWORD.
+router.post(
+  "/forgot-password",
+  validate(forgotPasswordSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body as { email: string };
+      // Lit l'origin depuis le header (X-Forwarded-Host / Origin) en
+      // fallback vers l'env publique. Cap a 256 chars pour eviter un
+      // injection log.
+      const origin =
+        (req.get("Origin") || process.env.FRONTEND_PUBLIC_URL || "")
+          .toString()
+          .slice(0, 256) || "https://nufflearena.fr";
+      const ip =
+        (req.headers["x-forwarded-for"] as string | undefined)
+          ?.split(",")[0]
+          ?.trim() || req.ip;
+      const result = await requestPasswordReset({
+        email,
+        requestIp: ip,
+        origin,
+      });
+      res.json(result);
+    } catch (e: unknown) {
+      serverLog.error("[auth/forgot-password] failed:", e);
+      // Meme en erreur on retourne 200 anti-enumeration. L'erreur est
+      // tracee cote serveur uniquement.
+      res.json({ requested: true, devLink: null });
+    }
+  },
+);
+
+router.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body as {
+        token: string;
+        newPassword: string;
+      };
+      const result = await consumeResetToken({ token, newPassword });
+      res.json({ success: true, email: result.email });
+    } catch (e: unknown) {
+      if (e instanceof PasswordResetError) {
+        const status =
+          e.code === "WEAK_PASSWORD"
+            ? 400
+            : e.code === "TOKEN_EXPIRED"
+              ? 410
+              : 400;
+        res.status(status).json({ error: e.message, code: e.code });
+        return;
+      }
+      serverLog.error("[auth/reset-password] failed:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
 
 export default router;
 
