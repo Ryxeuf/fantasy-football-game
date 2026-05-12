@@ -165,6 +165,7 @@ export const translations = {
       submit: "Se connecter",
       noAccount: "Pas de compte ?",
       register: "Inscrivez-vous",
+      forgotPassword: "Mot de passe oublie ?",
       error: "Erreur",
     },
     // Register page
@@ -1157,6 +1158,7 @@ export const translations = {
       submit: "Log in",
       noAccount: "No account?",
       register: "Sign up",
+      forgotPassword: "Forgot password?",
       error: "Error",
     },
     // Register page

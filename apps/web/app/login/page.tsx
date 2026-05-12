@@ -117,6 +117,15 @@ export default function LoginPage() {
           {t.login.register}
         </a>
       </p>
+      <p className="text-xs sm:text-sm mt-2 text-center text-gray-500">
+        <a
+          className="text-blue-600 hover:underline"
+          href="/forgot-password"
+          data-testid="forgot-password-link"
+        >
+          {t.login.forgotPassword}
+        </a>
+      </p>
       </div>
     </div>
   );

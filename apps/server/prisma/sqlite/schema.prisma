@@ -83,6 +83,7 @@ model User {
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
+  passwordResetTokens         PasswordResetToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -121,6 +122,20 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  requestIp String?
   createdAt DateTime  @default(now())
 
   @@index([userId])
