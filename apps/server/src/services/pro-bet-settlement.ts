@@ -26,6 +26,11 @@
 import { prisma } from "../prisma";
 
 import { credit } from "./pro-wallet";
+import {
+  settlePicksForMatch,
+  type PickSelection,
+} from "./pro-prediction-leagues";
+import { serverLog } from "../utils/server-log";
 
 const TYPES_WITH_OVER_UNDER = new Set(["OVER_UNDER_TD", "CAS_COUNT"]);
 
@@ -273,6 +278,24 @@ export async function settleMarketsForMatch(
       lostCount,
       voidCount,
     });
+  }
+
+  // Sprint Q lot Q.D.1 — settle aussi les picks des mini-ligues
+  // de prediction. Encapsule dans try/catch isole car ce settlement
+  // est secondaire au bet settlement et ne doit pas faire echouer
+  // l'ensemble si la table n'existe pas (rollback partiel migration).
+  if (match.outcome === "home" || match.outcome === "draw" || match.outcome === "away") {
+    try {
+      await settlePicksForMatch({
+        matchId,
+        result: match.outcome as PickSelection,
+      });
+    } catch (e) {
+      serverLog.error(
+        `[pro-prediction-leagues] settle failed for match ${matchId}`,
+        e,
+      );
+    }
   }
 
   return { matchId, settled, skipped, summaries };

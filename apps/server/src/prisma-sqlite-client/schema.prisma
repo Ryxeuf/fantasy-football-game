@@ -15,8 +15,8 @@ enum Ruleset {
 }
 
 model User {
-  id                          String                    @id @default(cuid())
-  email                       String                    @unique
+  id                          String                      @id @default(cuid())
+  email                       String                      @unique
   passwordHash                String
   name                        String? // Conservé pour rétrocompatibilité
   coachName                   String // Nom de coach (obligatoire)
@@ -24,62 +24,62 @@ model User {
   lastName                    String? // Nom (optionnel)
   dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                        String                    @default("user")
+  role                        String                      @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles                       String                    @default("[]")
+  roles                       String                      @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon                     Boolean                   @default(false)
+  patreon                     Boolean                     @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode                String?                   @unique
+  kofiLinkCode                String?                     @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi).
-  discordUserId               String?                   @unique
+  discordUserId               String?                     @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
   supporterTier               String?
   /// Fin de la période de supporter payée.
   supporterActiveUntil        DateTime?
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
-  totalDonatedCentsByCurrency String                    @default("{}")
+  totalDonatedCentsByCurrency String                      @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
-  privateProfile              Boolean                   @default(false)
+  privateProfile              Boolean                     @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid                       Boolean                   @default(true)
+  valid                       Boolean                     @default(true)
   /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
   /// services admin/ban puissent etre testes en SQLite sans diverger.
   bannedAt                    DateTime?
   bannedUntil                 DateTime?
   banReason                   String?
   /// Lot P.C.2 — admin password reset override. Mirror du flag Postgres.
-  mustChangePassword          Boolean                   @default(false)
+  mustChangePassword          Boolean                     @default(false)
   /// Lot P.A.2 — soft-delete RGPD-compatible. Mirror PG.
   deletedAt                   DateTime?
   deletionReason              String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   /// Mirror PG — Visibilite dans le classement ELO ("visible" | "hidden_admin").
-  leaderboardStatus           String                    @default("visible")
+  leaderboardStatus           String                      @default("visible")
   leaderboardStatusReason     String?
   leaderboardStatusUpdatedAt  DateTime?
   leaderboardStatusUpdatedBy  String?
-  createdAt                   DateTime                  @default(now())
-  updatedAt                   DateTime                  @updatedAt
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
   matches                     Match[]
-  createdMatches              Match[]                   @relation("MatchCreator")
+  createdMatches              Match[]                     @relation("MatchCreator")
   teams                       Team[]
   teamSelections              TeamSelection[]
-  createdCups                 Cup[]                     @relation("CupCreator")
-  createdLeagues              League[]                  @relation("LeagueCreator")
-  createdLocalMatches         LocalMatch[]              @relation("LocalMatchCreator")
-  eloRating                   Int                       @default(1000)
+  createdCups                 Cup[]                       @relation("CupCreator")
+  createdLeagues              League[]                    @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]                @relation("LocalMatchCreator")
+  eloRating                   Int                         @default(1000)
   matchQueue                  MatchQueue?
   featureFlagOverrides        FeatureFlagUser[]
-  friendshipsSent             Friendship[]              @relation("FriendshipRequester")
-  friendshipsReceived         Friendship[]              @relation("FriendshipReceiver")
+  friendshipsSent             Friendship[]                @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]                @relation("FriendshipReceiver")
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
@@ -90,6 +90,9 @@ model User {
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
+  proPredictionLeagues        ProPredictionLeague[]
+  proPredictionLeagueMembers  ProPredictionLeagueMember[]
+  proPredictionPicks          ProPredictionPick[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1014,7 +1017,8 @@ model ProLeagueMatch {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  betMarkets ProBetMarket[]
+  betMarkets      ProBetMarket[]
+  predictionPicks ProPredictionPick[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1260,4 +1264,51 @@ model EngineComparison {
 
   @@index([engineVer, createdAt])
   @@index([homeTeamId, awayTeamId, createdAt])
+}
+
+model ProPredictionLeague {
+  id        String   @id @default(cuid())
+  name      String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+  joinCode  String   @unique
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ProPredictionLeagueMember[]
+  picks   ProPredictionPick[]
+
+  @@index([ownerId])
+}
+
+model ProPredictionLeagueMember {
+  id       String              @id @default(cuid())
+  league   ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId String
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime            @default(now())
+
+  @@unique([leagueId, userId])
+  @@index([userId])
+}
+
+model ProPredictionPick {
+  id        String              @id @default(cuid())
+  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  match     ProLeagueMatch      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  selection String
+  result    String?
+  correct   Boolean?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([leagueId, userId, matchId])
+  @@index([leagueId, matchId])
+  @@index([userId, createdAt])
 }
