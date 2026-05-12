@@ -109,6 +109,10 @@ import {
   PlayerHistoryNotFoundError,
   getPlayerMatchHistory,
 } from "../services/pro-player-match-history";
+import {
+  PlayerCareerNotFoundError,
+  getCareerSnapshot,
+} from "../services/pro-player-career-stats";
 import { serverLog } from "../utils/server-log";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -383,6 +387,33 @@ export async function handleGetPlayerHistory(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/players/${id}/history] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint Q lot Q.A.1 — Snapshot career du joueur.
+ * Compute lazy : recomputed si stale (> 1h).
+ */
+export async function handleGetPlayerCareer(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  try {
+    const snapshot = await getCareerSnapshot(id);
+    res.json({ snapshot });
+  } catch (err: unknown) {
+    if (err instanceof PlayerCareerNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/players/${id}/career] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -989,6 +1020,7 @@ router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/players/:id", handleGetPlayerDetail);
 router.get("/players/:id/history", handleGetPlayerHistory);
+router.get("/players/:id/career", handleGetPlayerCareer);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);

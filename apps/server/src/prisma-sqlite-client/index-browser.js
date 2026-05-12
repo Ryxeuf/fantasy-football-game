@@ -933,6 +933,28 @@ exports.Prisma.ProSurvivorEntryScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProPlayerCareerSnapshotScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  matchesPlayed: 'matchesPlayed',
+  tdTotal: 'tdTotal',
+  casTotal: 'casTotal',
+  compTotal: 'compTotal',
+  mvpTotal: 'mvpTotal',
+  sppTotal: 'sppTotal',
+  bestMatchId: 'bestMatchId',
+  bestMatchSpp: 'bestMatchSpp',
+  worstMatchId: 'worstMatchId',
+  worstMatchSpp: 'worstMatchSpp',
+  topNemesisTeamId: 'topNemesisTeamId',
+  topVictoryTeamId: 'topVictoryTeamId',
+  streakKind: 'streakKind',
+  streakLength: 'streakLength',
+  recomputedAt: 'recomputedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1025,7 +1047,8 @@ exports.Prisma.ModelName = {
   ProPredictionLeague: 'ProPredictionLeague',
   ProPredictionLeagueMember: 'ProPredictionLeagueMember',
   ProPredictionPick: 'ProPredictionPick',
-  ProSurvivorEntry: 'ProSurvivorEntry'
+  ProSurvivorEntry: 'ProSurvivorEntry',
+  ProPlayerCareerSnapshot: 'ProPlayerCareerSnapshot'
 };
 
 /**

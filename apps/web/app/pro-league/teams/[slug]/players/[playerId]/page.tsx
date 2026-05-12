@@ -208,6 +208,29 @@ interface PlayerMatchHistoryEntry {
   spp: PlayerMatchSpp;
 }
 
+interface PlayerCareerSnapshot {
+  playerId: string;
+  matchesPlayed: number;
+  tdTotal: number;
+  casTotal: number;
+  compTotal: number;
+  mvpTotal: number;
+  sppTotal: number;
+  bestMatchId: string | null;
+  bestMatchSpp: number | null;
+  worstMatchId: string | null;
+  worstMatchSpp: number | null;
+  topNemesisTeamId: string | null;
+  topVictoryTeamId: string | null;
+  streakKind: "win" | "loss" | "draw" | "none";
+  streakLength: number;
+  recomputedAt: string;
+}
+
+interface PlayerCareerResponse {
+  snapshot: PlayerCareerSnapshot;
+}
+
 interface PlayerHistoryResponse {
   matches: PlayerMatchHistoryEntry[];
 }
@@ -218,6 +241,7 @@ export default function ProLeaguePlayerPage({
   const { slug, playerId } = params;
   const [data, setData] = useState<PlayerDetail | null>(null);
   const [history, setHistory] = useState<PlayerMatchHistoryEntry[]>([]);
+  const [career, setCareer] = useState<PlayerCareerSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -230,11 +254,15 @@ export default function ProLeaguePlayerPage({
       apiRequest<PlayerHistoryResponse>(
         `/api/pro-league/players/${playerId}/history`,
       ).catch(() => ({ matches: [] }) as PlayerHistoryResponse),
+      apiRequest<PlayerCareerResponse>(
+        `/api/pro-league/players/${playerId}/career`,
+      ).catch(() => ({ snapshot: null }) as unknown as PlayerCareerResponse),
     ])
-      .then(([d, h]) => {
+      .then(([d, h, c]) => {
         if (cancelled) return;
         setData(d);
         setHistory(h.matches);
+        setCareer(c.snapshot ?? null);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError((e as Error).message);
@@ -447,6 +475,81 @@ export default function ProLeaguePlayerPage({
           </div>
         </div>
       </section>
+
+      {career && (
+        <section
+          className="mb-6 rounded-lg border border-slate-700 bg-slate-900/40 p-4"
+          data-testid="player-career-snapshot"
+        >
+          <h2 className="mb-3 text-sm font-medium uppercase text-slate-400">
+            Career
+          </h2>
+          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+            <div>
+              <div className="text-xs text-slate-500">Matchs joues</div>
+              <div className="font-mono text-base text-slate-200">
+                {career.matchesPlayed}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">SPP total</div>
+              <div className="font-mono text-base text-slate-200">
+                {career.sppTotal}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">TD / CAS / MVP</div>
+              <div className="font-mono text-base text-slate-200">
+                {career.tdTotal} / {career.casTotal} / {career.mvpTotal}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Streak</div>
+              <div
+                className={`font-mono text-base ${career.streakKind === "win" ? "text-emerald-400" : career.streakKind === "loss" ? "text-rose-400" : "text-slate-300"}`}
+                data-testid="career-streak"
+              >
+                {career.streakKind === "none"
+                  ? "—"
+                  : `${career.streakLength} ${career.streakKind}${career.streakLength > 1 ? "s" : ""}`}
+              </div>
+            </div>
+          </div>
+          {(career.bestMatchId ||
+            career.topNemesisTeamId ||
+            career.topVictoryTeamId) && (
+            <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-3">
+              {career.bestMatchId && (
+                <div data-testid="career-best-match">
+                  <span className="text-slate-500">Meilleur match : </span>
+                  <Link
+                    href={`/pro-league/matches/${career.bestMatchId}`}
+                    className="text-emerald-400 hover:underline"
+                  >
+                    {career.bestMatchSpp} SPP
+                  </Link>
+                </div>
+              )}
+              {career.topNemesisTeamId && (
+                <div data-testid="career-nemesis">
+                  <span className="text-slate-500">Nemesis : </span>
+                  <span className="text-rose-400">
+                    {career.topNemesisTeamId}
+                  </span>
+                </div>
+              )}
+              {career.topVictoryTeamId && (
+                <div data-testid="career-victory">
+                  <span className="text-slate-500">Souffre-douleur : </span>
+                  <span className="text-emerald-400">
+                    {career.topVictoryTeamId}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="mb-6">
         <h2 className="mb-2 text-sm font-medium uppercase text-slate-400">
