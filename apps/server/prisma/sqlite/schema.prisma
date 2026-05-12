@@ -673,6 +673,9 @@ model League {
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
   tieBreakRules   String?
+  /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
+  matchMode         String   @default("realtime")
+  turnDeadlineHours Int      @default(24)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -883,6 +883,14 @@ model League {
   // (false = DESC, default ; pas exprimable dans le JSON pour
   // l'instant — toujours DESC sauf "name" qui est ASC).
   tieBreakRules   String?
+  /// Sprint R lot R.E.3 — mode de jeu propage aux matches crees pour
+  /// cette ligue. "realtime" (defaut) | "async" (1 coup par jour).
+  /// Modifiable via PATCH /admin/leagues/:id/match-mode tant que la
+  /// ligue n'a pas demarre (status='draft' ou 'open').
+  matchMode         String   @default("realtime")
+  /// Sprint R lot R.E.3 — duree par tour en heures pour les matches
+  /// async de cette ligue. 1-168h (default 24h).
+  turnDeadlineHours Int      @default(24)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

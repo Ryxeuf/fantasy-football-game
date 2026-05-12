@@ -1,128 +1,112 @@
 import { MetadataRoute } from 'next';
 
+import { sitemapEntryWithAlternates } from './seo/hreflang';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nufflearena.fr';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  // Pages statiques publiques
+  // Sprint R.A.4 — chaque entree sitemap inclut `alternates.languages`
+  // hreflang (FR + EN + x-default) via `sitemapEntryWithAlternates`.
+  // Pages statiques publiques.
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: BASE_URL,
+    sitemapEntryWithAlternates('/', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 1,
-    },
-    {
-      url: `${BASE_URL}/teams`,
+    }),
+    sitemapEntryWithAlternates('/teams', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/star-players`,
+    }),
+    sitemapEntryWithAlternates('/star-players', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/skills`,
+    }),
+    sitemapEntryWithAlternates('/skills', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/tutoriel`,
+    }),
+    sitemapEntryWithAlternates('/tutoriel', {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tutoriel/mon-premier-match`,
+    }),
+    sitemapEntryWithAlternates('/tutoriel/mon-premier-match', {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/support`,
+    }),
+    sitemapEntryWithAlternates('/support', {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/a-propos`,
+    }),
+    sitemapEntryWithAlternates('/a-propos', {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/changelog`,
+    }),
+    sitemapEntryWithAlternates('/changelog', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/legal/mentions-legales`,
+    }),
+    sitemapEntryWithAlternates('/legal/mentions-legales', {
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/conditions-utilisation`,
+    }),
+    sitemapEntryWithAlternates('/legal/conditions-utilisation', {
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/politique-de-confidentialite`,
+    }),
+    sitemapEntryWithAlternates('/legal/politique-de-confidentialite', {
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/politique-de-cookies`,
+    }),
+    sitemapEntryWithAlternates('/legal/politique-de-cookies', {
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    // Pro League — sprint 1.F.3
-    {
-      url: `${BASE_URL}/pro-league`,
+    }),
+    sitemapEntryWithAlternates('/pro-league', {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/pro-league/about`,
+    }),
+    sitemapEntryWithAlternates('/pro-league/about', {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/pro-league/standings`,
+    }),
+    sitemapEntryWithAlternates('/pro-league/standings', {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/pro-league/leaderboard`,
+    }),
+    sitemapEntryWithAlternates('/pro-league/leaderboard', {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/pro-league/gazette`,
+    }),
+    sitemapEntryWithAlternates('/pro-league/gazette', {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/pro-league/hall-of-fame`,
+    }),
+    sitemapEntryWithAlternates('/pro-league/hall-of-fame', {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.6,
-    },
+    }),
   ];
 
   // Pages dynamiques - Teams
@@ -134,12 +118,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (teamsResponse.ok) {
       const teamsData = await teamsResponse.json();
-      teamPages = (teamsData.rosters || []).map((team: { slug: string }) => ({
-        url: `${BASE_URL}/teams/${team.slug}`,
-        lastModified: now,
-        changeFrequency: 'monthly' as const,
-        priority: 0.7,
-      }));
+      teamPages = (teamsData.rosters || []).map((team: { slug: string }) =>
+        sitemapEntryWithAlternates(`/teams/${team.slug}`, {
+          lastModified: now,
+          changeFrequency: 'monthly' as const,
+          priority: 0.7,
+        }),
+      );
     }
   } catch (error) {
     console.error('Erreur lors de la récupération des équipes pour le sitemap:', error);
@@ -155,12 +140,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (starPlayersResponse.ok) {
       const starPlayersData = await starPlayersResponse.json();
       if (starPlayersData.success && starPlayersData.data) {
-        starPlayerPages = starPlayersData.data.map((player: { slug: string }) => ({
-          url: `${BASE_URL}/star-players/${player.slug}`,
-          lastModified: now,
-          changeFrequency: 'monthly' as const,
-          priority: 0.6,
-        }));
+        starPlayerPages = starPlayersData.data.map((player: { slug: string }) =>
+          sitemapEntryWithAlternates(`/star-players/${player.slug}`, {
+            lastModified: now,
+            changeFrequency: 'monthly' as const,
+            priority: 0.6,
+          }),
+        );
       }
     }
   } catch (error) {
@@ -184,12 +170,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           )
         : [];
       if (body?.success && slugs.length > 0) {
-        coachPages = slugs.map((slug) => ({
-          url: `${BASE_URL}/coach/${slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly' as const,
-          priority: 0.5,
-        }));
+        coachPages = slugs.map((slug) =>
+          sitemapEntryWithAlternates(`/coach/${slug}`, {
+            lastModified: now,
+            changeFrequency: 'weekly' as const,
+            priority: 0.5,
+          }),
+        );
       }
     }
   } catch (error) {
@@ -218,12 +205,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     'buf-snow-ogres',
   ] as const;
   const proLeagueTeamPages: MetadataRoute.Sitemap = PRO_LEAGUE_TEAM_SLUGS.map(
-    (slug) => ({
-      url: `${BASE_URL}/pro-league/teams/${slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }),
+    (slug) =>
+      sitemapEntryWithAlternates(`/pro-league/teams/${slug}`, {
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }),
   );
 
   return [

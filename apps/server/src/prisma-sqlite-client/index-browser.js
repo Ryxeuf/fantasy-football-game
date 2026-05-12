@@ -495,6 +495,8 @@ exports.Prisma.LeagueScalarFieldEnum = {
   lossPoints: 'lossPoints',
   forfeitPoints: 'forfeitPoints',
   tieBreakRules: 'tieBreakRules',
+  matchMode: 'matchMode',
+  turnDeadlineHours: 'turnDeadlineHours',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

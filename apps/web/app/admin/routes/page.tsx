@@ -201,7 +201,7 @@ export default function AdminRoutesPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
           📋 Routes disponibles
         </h1>
         <p className="text-sm text-gray-600">
@@ -224,12 +224,12 @@ export default function AdminRoutesPage() {
         </h2>
         {apiRoutes.map((category) => (
           <div key={category.category} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5 px-6 py-3 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5 px-4 sm:px-6 py-3 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-nuffle-anthracite">
                 {category.category}
               </h3>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="space-y-2">
                 {category.routes.map((route, index) => (
                   <div

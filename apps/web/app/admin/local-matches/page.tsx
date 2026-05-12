@@ -220,21 +220,19 @@ export default function AdminLocalMatchesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50 p-6">
-        <div className="text-center py-12">
-          <p className="text-gray-600">Chargement...</p>
-        </div>
+      <div className="text-center py-12">
+        <p className="text-gray-600">Chargement...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50">
+    <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-2">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-2">
           🎯 Gestion des Matchs Locaux
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           Administration de toutes les parties offline (Match Local)
         </p>
       </div>
@@ -246,8 +244,8 @@ export default function AdminLocalMatchesPage() {
       )}
 
       {/* Filtres */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
-        <div className="grid md:grid-cols-2 gap-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 mb-6">
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Rechercher
@@ -280,30 +278,30 @@ export default function AdminLocalMatchesPage() {
       </div>
 
       {/* Statistiques */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-nuffle-anthracite">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
             {localMatches.length}
           </div>
-          <div className="text-sm text-gray-600">Total</div>
+          <div className="text-xs sm:text-sm text-gray-600">Total</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-yellow-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-yellow-600">
             {localMatches.filter((m) => m.status === "pending").length}
           </div>
-          <div className="text-sm text-gray-600">En attente</div>
+          <div className="text-xs sm:text-sm text-gray-600">En attente</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-blue-600">
             {localMatches.filter((m) => m.status === "in_progress").length}
           </div>
-          <div className="text-sm text-gray-600">En cours</div>
+          <div className="text-xs sm:text-sm text-gray-600">En cours</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-green-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-green-600">
             {localMatches.filter((m) => m.status === "completed").length}
           </div>
-          <div className="text-sm text-gray-600">Terminées</div>
+          <div className="text-xs sm:text-sm text-gray-600">Terminées</div>
         </div>
       </div>
 

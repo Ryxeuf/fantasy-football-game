@@ -303,7 +303,7 @@ export default function AdminMatchesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
           Gestion des Parties
         </h1>
         <p className="text-sm text-gray-600">
@@ -326,50 +326,50 @@ export default function AdminMatchesPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-nuffle-anthracite">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
             {totalMatches}
           </div>
-          <div className="text-sm text-gray-600">Total</div>
+          <div className="text-xs sm:text-sm text-gray-600">Total</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-yellow-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-yellow-600">
             {statusCounts?.pending ?? 0}
           </div>
-          <div className="text-sm text-gray-600">En attente</div>
+          <div className="text-xs sm:text-sm text-gray-600">En attente</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-orange-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-orange-600">
             {(statusCounts?.prematch ?? 0) +
               (statusCounts?.["prematch-setup"] ?? 0)}
           </div>
-          <div className="text-sm text-gray-600">Pré-match</div>
+          <div className="text-xs sm:text-sm text-gray-600">Pré-match</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-blue-600">
             {statusCounts?.active ?? 0}
           </div>
-          <div className="text-sm text-gray-600">En cours</div>
+          <div className="text-xs sm:text-sm text-gray-600">En cours</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-green-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-green-600">
             {statusCounts?.ended ?? 0}
           </div>
-          <div className="text-sm text-gray-600">Terminées</div>
+          <div className="text-xs sm:text-sm text-gray-600">Terminées</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="text-2xl font-bold text-red-600">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-red-600">
             {statusCounts?.cancelled ?? 0}
           </div>
-          <div className="text-sm text-gray-600">Annulées</div>
+          <div className="text-xs sm:text-sm text-gray-600">Annulées</div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid md:grid-cols-3 gap-4">
-          <div>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="md:col-span-1 sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Rechercher
             </label>
@@ -380,11 +380,11 @@ export default function AdminMatchesPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="ID, seed, coach, equipe..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-transparent"
+                className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-transparent"
               />
               <button
                 onClick={handleSearch}
-                className="px-4 py-2 bg-nuffle-gold text-white rounded-lg hover:bg-nuffle-bronze transition-colors"
+                className="px-4 py-2 bg-nuffle-gold text-white rounded-lg hover:bg-nuffle-bronze transition-colors whitespace-nowrap"
               >
                 Chercher
               </button>
@@ -411,7 +411,7 @@ export default function AdminMatchesPage() {
           <div className="flex items-end">
             <button
               onClick={loadMatches}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Rafraichir
             </button>

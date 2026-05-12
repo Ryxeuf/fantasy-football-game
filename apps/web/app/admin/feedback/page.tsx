@@ -116,8 +116,8 @@ export default function AdminFeedbackPage() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-nuffle-anthracite mb-1">
-          Feedback
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+          💬 Feedback
         </h1>
         <p className="text-sm text-gray-600">
           Retours envoyes via la page publique <code>/feedback</code>. Total :{" "}
@@ -125,9 +125,9 @@ export default function AdminFeedbackPage() {
         </p>
       </header>
 
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
+      <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-3 sm:gap-4">
+          <div className="w-full sm:w-auto">
             <label
               htmlFor="filter-status"
               className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1"
@@ -141,7 +141,7 @@ export default function AdminFeedbackPage() {
                 setStatusFilter(e.target.value as FeedbackStatus | "");
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-lg border border-gray-300"
+              className="w-full sm:w-auto px-3 py-2 rounded-lg border border-gray-300"
             >
               <option value="">Tous</option>
               {STATUS_OPTIONS.map((o) => (
@@ -152,7 +152,7 @@ export default function AdminFeedbackPage() {
             </select>
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto">
             <label
               htmlFor="filter-type"
               className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1"
@@ -166,7 +166,7 @@ export default function AdminFeedbackPage() {
                 setTypeFilter(e.target.value as FeedbackType | "");
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-lg border border-gray-300"
+              className="w-full sm:w-auto px-3 py-2 rounded-lg border border-gray-300"
             >
               <option value="">Tous</option>
               {TYPE_OPTIONS.map((o) => (
@@ -177,7 +177,7 @@ export default function AdminFeedbackPage() {
             </select>
           </div>
 
-          <form onSubmit={onSearchSubmit} className="flex items-end gap-2 flex-1 min-w-[200px]">
+          <form onSubmit={onSearchSubmit} className="flex items-end gap-2 flex-1 w-full sm:min-w-[200px]">
             <div className="flex-1">
               <label
                 htmlFor="filter-search"
