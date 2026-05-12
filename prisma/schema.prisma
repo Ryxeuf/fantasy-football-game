@@ -1256,6 +1256,8 @@ model ProTeamRoster {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  careerSnapshot ProPlayerCareerSnapshot?
+
   @@index([teamId, status])
   @@index([teamId, spp])
   @@index([teamId, tvCached])
@@ -1946,4 +1948,45 @@ model ProSurvivorEntry {
   @@index([seasonId, weekN])
   @@index([userId, seasonId])
   @@index([status])
+}
+
+/// Sprint Q lot Q.A.1 — Snapshot agrege des stats career d'un joueur.
+///
+/// Materialise par un compute "best-effort lazy" : computes lorsque la
+/// route /api/pro-league/players/:id/career est appelee et que le
+/// snapshot existant est obsolete (recomputedAt > STALE_WINDOW). Permet
+/// d'eviter de re-scanner toute l'histoire des matchs a chaque appel.
+///
+/// Les fields a vraie valeur ajoutee (vs simples lookups sur
+/// ProTeamRoster) :
+///   - bestMatchId / worstMatchId (max/min totalSpp du match)
+///   - topNemesisTeamId / topVictoryTeamId (top opponent par loss / win)
+///   - currentStreak : longueur du streak en cours (kind + length)
+///   - matchesPlayed : count des matchs avec status completed
+model ProPlayerCareerSnapshot {
+  id               String        @id @default(cuid())
+  player           ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId         String        @unique
+  matchesPlayed    Int           @default(0)
+  tdTotal          Int           @default(0)
+  casTotal         Int           @default(0)
+  compTotal        Int           @default(0)
+  mvpTotal         Int           @default(0)
+  sppTotal         Int           @default(0)
+  bestMatchId      String?
+  bestMatchSpp     Int?
+  worstMatchId     String?
+  worstMatchSpp    Int?
+  topNemesisTeamId String?
+  topVictoryTeamId String?
+  /// "win" | "loss" | "draw" | "none" — direction du streak en cours.
+  streakKind       String        @default("none")
+  /// Longueur du streak (>= 0).
+  streakLength     Int           @default(0)
+  /// Timestamp du dernier compute. Sert au staleness check.
+  recomputedAt     DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([recomputedAt])
 }
