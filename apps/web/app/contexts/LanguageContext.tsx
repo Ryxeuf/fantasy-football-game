@@ -16,10 +16,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("fr");
 
   useEffect(() => {
-    // Après le montage, charger la langue depuis localStorage
+    // Après le montage, charger la langue depuis localStorage en
+    // priorite (choix explicite user), sinon depuis le cookie
+    // `NEXT_LOCALE` (auto-detecte au middleware via Accept-Language —
+    // Sprint R lot R.A.1).
     const stored = localStorage.getItem("language") as Language | null;
     if (stored === "fr" || stored === "en") {
       setLanguageState(stored);
+      return;
+    }
+    if (typeof document !== "undefined") {
+      const match = /(?:^|; )NEXT_LOCALE=([^;]+)/.exec(document.cookie);
+      const cookie = match ? decodeURIComponent(match[1]) : null;
+      if (cookie === "fr" || cookie === "en") {
+        setLanguageState(cookie);
+      }
     }
   }, []);
 
@@ -33,8 +44,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("language", lang);
-    // Mettre à jour l'attribut lang du html
+    // Sprint R.A.1 — sync le cookie NEXT_LOCALE pour que le serveur
+    // SSR/middleware voie la meme langue au prochain reload.
     if (typeof document !== "undefined") {
+      const oneYear = 60 * 60 * 24 * 365;
+      document.cookie = `NEXT_LOCALE=${encodeURIComponent(lang)}; Max-Age=${oneYear}; Path=/; SameSite=Lax`;
       document.documentElement.lang = lang;
     }
   };
