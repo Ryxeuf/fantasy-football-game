@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe("useMatchModeRedirect — sprint 1.G.3", () => {
   it("ne redirige pas si on est sur /live et que status='in_progress'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "in_progress" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "in_progress", scheduledAt: new Date().toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "live"));
     await waitFor(() => expect(result.current.status).toBe("in_progress"));
     expect(result.current.redirecting).toBe(false);
@@ -33,7 +33,7 @@ describe("useMatchModeRedirect — sprint 1.G.3", () => {
   });
 
   it("ne redirige pas si on est sur /replay et que status='completed'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "completed" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "completed", scheduledAt: new Date().toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "replay"));
     await waitFor(() => expect(result.current.status).toBe("completed"));
     expect(result.current.redirecting).toBe(false);
@@ -41,7 +41,7 @@ describe("useMatchModeRedirect — sprint 1.G.3", () => {
   });
 
   it("redirige /live -> /replay si status='completed'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "completed" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "completed", scheduledAt: new Date().toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "live"));
     await waitFor(() => expect(result.current.redirecting).toBe(true));
     expect(mockReplace).toHaveBeenCalledWith(
@@ -50,7 +50,7 @@ describe("useMatchModeRedirect — sprint 1.G.3", () => {
   });
 
   it("redirige /replay -> /live si status='in_progress'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "in_progress" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "in_progress", scheduledAt: new Date().toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "replay"));
     await waitFor(() => expect(result.current.redirecting).toBe(true));
     expect(mockReplace).toHaveBeenCalledWith(
@@ -59,21 +59,36 @@ describe("useMatchModeRedirect — sprint 1.G.3", () => {
   });
 
   it("redirige vers la page parent si status='scheduled'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "scheduled" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "scheduled", scheduledAt: new Date(Date.now() + 60_000).toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "live"));
     await waitFor(() => expect(result.current.redirecting).toBe(true));
     expect(mockReplace).toHaveBeenCalledWith("/pro-league/matches/m1");
   });
 
-  it("redirige vers la page parent si status='ready'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "ready" });
-    const { result } = renderHook(() => useMatchModeRedirect("m1", "replay"));
+  it("redirige vers la page parent si status='ready' + kickoff futur", async () => {
+    mockedRequest.mockResolvedValue({ id: "m1", status: "ready", scheduledAt: new Date(Date.now() + 60 * 60_000).toISOString() });
+    const { result } = renderHook(() => useMatchModeRedirect("m1", "live"));
     await waitFor(() => expect(result.current.redirecting).toBe(true));
     expect(mockReplace).toHaveBeenCalledWith("/pro-league/matches/m1");
   });
 
+  it("ne redirige PAS si /live + status='ready' + kickoff passe", async () => {
+    mockedRequest.mockResolvedValue({ id: "m1", status: "ready", scheduledAt: new Date(Date.now() - 60_000).toISOString() });
+    const { result } = renderHook(() => useMatchModeRedirect("m1", "live"));
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(result.current.redirecting).toBe(false);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("redirige /replay -> /live si status='ready' + kickoff passe", async () => {
+    mockedRequest.mockResolvedValue({ id: "m1", status: "ready", scheduledAt: new Date(Date.now() - 60_000).toISOString() });
+    const { result } = renderHook(() => useMatchModeRedirect("m1", "replay"));
+    await waitFor(() => expect(result.current.redirecting).toBe(true));
+    expect(mockReplace).toHaveBeenCalledWith("/pro-league/matches/m1/live");
+  });
+
   it("redirige vers la page parent si status='failed'", async () => {
-    mockedRequest.mockResolvedValue({ id: "m1", status: "failed" });
+    mockedRequest.mockResolvedValue({ id: "m1", status: "failed", scheduledAt: new Date().toISOString() });
     const { result } = renderHook(() => useMatchModeRedirect("m1", "replay"));
     await waitFor(() => expect(result.current.redirecting).toBe(true));
     expect(mockReplace).toHaveBeenCalledWith("/pro-league/matches/m1");

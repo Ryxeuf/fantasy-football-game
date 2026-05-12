@@ -783,9 +783,12 @@ export const translations = {
         kickoffLabel: "Kickoff",
         preMatchReady:
           "Pré-simulation faite — le match sera streamé en direct au kickoff.",
+        preMatchReadyWaitingKickoff:
+          "Direct disponible au kickoff dans {countdown}.",
         preMatchScheduled:
           "La pré-simulation aura lieu T-24h avant le kickoff.",
         followLive: "Suivre en direct →",
+        followLiveDisabled: "Direct au kickoff →",
         liveCardBody: "Match en cours — suivez les events en direct.",
         viewLive: "Voir le live →",
         bettingTitle: "Paris",
@@ -1771,9 +1774,12 @@ export const translations = {
         kickoffLabel: "Kickoff",
         preMatchReady:
           "Pre-simulation done — the match will stream live at kickoff.",
+        preMatchReadyWaitingKickoff:
+          "Live available at kickoff in {countdown}.",
         preMatchScheduled:
           "Pre-simulation will run T-24h before kickoff.",
         followLive: "Follow live →",
+        followLiveDisabled: "Live at kickoff →",
         liveCardBody: "Match in progress — follow events live.",
         viewLive: "Watch live →",
         bettingTitle: "Bets",

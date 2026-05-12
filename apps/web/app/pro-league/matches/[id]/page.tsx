@@ -248,6 +248,14 @@ function PreMatchCard({
     minute: "2-digit",
   });
   const isReady = match.status === "ready";
+  // Option A + C : le button "Suivre en direct" n'est actif que si
+  // le kickoff est passe (status=ready ne suffit pas — broadcaster
+  // ne streame qu'a partir de scheduledAt). `now` est rafraichi
+  // toutes les 30s par le parent → countdown auto-update + auto-
+  // activation du button au kickoff.
+  const kickoffPassed = at.getTime() <= now.getTime();
+  const liveAvailable = isReady && kickoffPassed;
+  const countdownText = formatRelative(at, now, t.proLeague.match);
   return (
     <section
       data-testid="pre-match-card"
@@ -261,20 +269,36 @@ function PreMatchCard({
           <span className="text-sm text-slate-200">{formattedDate}</span>
         </div>
         <span className="font-mono text-lg text-emerald-300">
-          {formatRelative(at, now, t.proLeague.match)}
+          {countdownText}
         </span>
       </div>
       <p className="mt-3 text-xs text-slate-400">
-        {isReady
-          ? t.proLeague.match.preMatchReady
-          : t.proLeague.match.preMatchScheduled}
+        {!isReady
+          ? t.proLeague.match.preMatchScheduled
+          : liveAvailable
+            ? t.proLeague.match.preMatchReady
+            : t.proLeague.match.preMatchReadyWaitingKickoff.replace(
+                "{countdown}",
+                countdownText,
+              )}
       </p>
-      <Link
-        href={`/pro-league/matches/${match.id}/live`}
-        className="mt-3 inline-block rounded bg-emerald-700 px-3 py-1.5 text-sm text-emerald-50 hover:bg-emerald-600"
-      >
-        {t.proLeague.match.followLive}
-      </Link>
+      {liveAvailable ? (
+        <Link
+          data-testid="follow-live-link"
+          href={`/pro-league/matches/${match.id}/live`}
+          className="mt-3 inline-block rounded bg-emerald-700 px-3 py-1.5 text-sm text-emerald-50 hover:bg-emerald-600"
+        >
+          {t.proLeague.match.followLive}
+        </Link>
+      ) : (
+        <span
+          data-testid="follow-live-disabled"
+          aria-disabled="true"
+          className="mt-3 inline-block rounded bg-slate-800 px-3 py-1.5 text-sm text-slate-500 cursor-not-allowed"
+        >
+          {t.proLeague.match.followLiveDisabled}
+        </span>
+      )}
     </section>
   );
 }
