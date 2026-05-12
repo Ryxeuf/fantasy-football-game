@@ -30,6 +30,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (path === "/admin/sim") {
       return pathname === "/admin/sim";
     }
+    // Idem pour /admin/pro-league vs /admin/pro-league/seasons (et /teams).
+    if (path === "/admin/pro-league") {
+      return pathname === "/admin/pro-league";
+    }
     return pathname?.startsWith(path);
   };
 
