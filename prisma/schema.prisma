@@ -114,6 +114,7 @@ model User {
   proPredictionLeagueMembers  ProPredictionLeagueMember[]
   proPredictionPicks          ProPredictionPick[]
   proSurvivorEntries          ProSurvivorEntry[]
+  proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
 
   @@index([leaderboardStatus])
 }
@@ -1257,6 +1258,7 @@ model ProTeamRoster {
   updatedAt   DateTime @updatedAt
 
   careerSnapshot ProPlayerCareerSnapshot?
+  mvpVotes       ProPlayerOfMatchVote[]
 
   @@index([teamId, status])
   @@index([teamId, spp])
@@ -1375,6 +1377,7 @@ model ProLeagueMatch {
 
   betMarkets       ProBetMarket[]
   predictionPicks  ProPredictionPick[]
+  mvpVotes         ProPlayerOfMatchVote[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -2003,4 +2006,26 @@ model ProPlayerCareerSnapshot {
   updatedAt        DateTime      @updatedAt
 
   @@index([recomputedAt])
+}
+
+/// Sprint Q lot Q.B.1 — Vote MVP (Player of the Match) post-match.
+///
+/// Un user vote pour 1 joueur sur 1 match. La window est ouverte 24h
+/// apres `match.completedAt` ; verifie cote service au submitVote.
+/// Le winner du tally final peut etre award via un endpoint admin
+/// (closeMvpVote) ou un cron post-window.
+model ProPlayerOfMatchVote {
+  id            String         @id @default(cuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  match         ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId       String
+  votedRoster   ProTeamRoster  @relation(fields: [votedRosterId], references: [id], onDelete: Cascade)
+  votedRosterId String
+  createdAt     DateTime       @default(now())
+
+  /// 1 vote par user par match.
+  @@unique([userId, matchId])
+  @@index([matchId, votedRosterId])
+  @@index([votedRosterId, createdAt])
 }

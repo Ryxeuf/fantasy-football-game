@@ -107,6 +107,13 @@ import {
   getTopRivals,
 } from "../services/pro-league-rivalry";
 import {
+  MvpError,
+  getMvpCandidates,
+  getVoteTally,
+  getWeeklyMvpLeaderboard,
+  submitVote,
+} from "../services/pro-mvp-vote";
+import {
   ProPlayerNotFoundError,
   getProPlayerDetail,
 } from "../services/pro-player-detail";
@@ -512,6 +519,128 @@ export async function handleGetMatchDetail(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/matches/${id}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+function mvpErrorStatus(code: MvpError["code"]): number {
+  switch (code) {
+    case "MATCH_NOT_FOUND":
+      return 404;
+    case "MATCH_NOT_COMPLETED":
+    case "NO_CANDIDATES":
+      return 422;
+    case "VOTE_WINDOW_CLOSED":
+    case "INVALID_CANDIDATE":
+      return 409;
+    default:
+      return 500;
+  }
+}
+
+/** Q.B.1 — GET /pro-league/matches/:id/mvp-candidates */
+export async function handleGetMvpCandidates(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const candidates = await getMvpCandidates(id);
+    res.json({ candidates });
+  } catch (err: unknown) {
+    if (err instanceof MvpError) {
+      res.status(mvpErrorStatus(err.code)).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/matches/${id}/mvp-candidates] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** Q.B.1 — GET /pro-league/matches/:id/mvp-tally */
+export async function handleGetMvpTally(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const tally = await getVoteTally(id);
+    res.json(tally);
+  } catch (err: unknown) {
+    if (err instanceof MvpError) {
+      res.status(mvpErrorStatus(err.code)).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/matches/${id}/mvp-tally] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** Q.B.1 — POST /pro-league/matches/:id/mvp-vote (auth) */
+export async function handleSubmitMvpVote(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  const auth = req as AuthenticatedRequest;
+  const userId = auth.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Non authentifie" });
+    return;
+  }
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  const body = (req.body ?? {}) as { votedRosterId?: unknown };
+  if (typeof body.votedRosterId !== "string" || !body.votedRosterId) {
+    res.status(400).json({ error: "missing-votedRosterId" });
+    return;
+  }
+  try {
+    const result = await submitVote({
+      userId,
+      matchId: id,
+      votedRosterId: body.votedRosterId,
+    });
+    res.status(result.isUpdate ? 200 : 201).json(result);
+  } catch (err: unknown) {
+    if (err instanceof MvpError) {
+      res.status(mvpErrorStatus(err.code)).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/matches/${id}/mvp-vote] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/** Q.B.1 — GET /pro-league/mvp/weekly */
+export async function handleGetWeeklyMvp(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const limitRaw = req.query.limit;
+  let limit = 10;
+  if (typeof limitRaw === "string" && /^\d+$/.test(limitRaw)) {
+    limit = Math.min(50, Math.max(1, Number.parseInt(limitRaw, 10)));
+  }
+  try {
+    const entries = await getWeeklyMvpLeaderboard(limit);
+    res.json({ entries });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/mvp/weekly] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1094,6 +1223,10 @@ router.get("/players/:id", handleGetPlayerDetail);
 router.get("/players/:id/history", handleGetPlayerHistory);
 router.get("/players/:id/career", handleGetPlayerCareer);
 router.get("/matches/:id", handleGetMatchDetail);
+router.get("/matches/:id/mvp-candidates", handleGetMvpCandidates);
+router.get("/matches/:id/mvp-tally", handleGetMvpTally);
+router.post("/matches/:id/mvp-vote", authUser, handleSubmitMvpVote);
+router.get("/mvp/weekly", handleGetWeeklyMvp);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/matches/:id/replay", handleGetMatchReplay);
