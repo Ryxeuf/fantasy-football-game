@@ -20,6 +20,10 @@ import adminProTeamRoutes from "./routes/admin-pro-team";
 import adminProRosterRoutes from "./routes/admin-pro-roster";
 import proPredictionLeaguesRoutes from "./routes/pro-prediction-leagues";
 import proSurvivorRoutes from "./routes/pro-survivor";
+import {
+  userRouter as gazetteCommentsUserRouter,
+  adminRouter as gazetteCommentsAdminRouter,
+} from "./routes/pro-gazette-comments";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -248,6 +252,9 @@ app.use("/pro-league", proLeagueRoutes);
 app.use("/pro-league/prediction-leagues", proPredictionLeaguesRoutes);
 // Sprint Q lot Q.D.2 — Survivor Pick'em hebdo.
 app.use("/pro-league/survivor", proSurvivorRoutes);
+// Sprint Q lot Q.B.2 — Commentaires Gazette.
+app.use("/pro-league/gazette", gazetteCommentsUserRouter);
+app.use("/admin/gazette", gazetteCommentsAdminRouter);
 // Console admin : auth + role admin appliques dans le router.
 app.use("/admin/feedback", feedbackAdminRouter);
 

@@ -115,6 +115,7 @@ model User {
   proPredictionPicks          ProPredictionPick[]
   proSurvivorEntries          ProSurvivorEntry[]
   proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
+  proGazetteComments          ProGazetteComment[]
 
   @@index([leaderboardStatus])
 }
@@ -1660,6 +1661,8 @@ model ProGazetteArticle {
   relatedPlayerIds Json?
   createdAt        DateTime @default(now())
 
+  comments ProGazetteComment[]
+
   @@index([date])
   @@index([type, date])
 }
@@ -2028,4 +2031,39 @@ model ProPlayerOfMatchVote {
   @@unique([userId, matchId])
   @@index([matchId, votedRosterId])
   @@index([votedRosterId, createdAt])
+}
+
+/// Sprint Q lot Q.B.2 — Commentaires sur un article Gazette.
+///
+/// Moderation simple :
+///   - `deletedAt` set par admin ou auteur → soft delete (masque pour
+///     tous sauf admin si filter actif).
+///   - `flaggedAt` + `flagReason` set par auto-blocklist a la creation,
+///     ou par admin/user "report". Si flagged → hiddenForOthers=true
+///     (masque pour tous sauf auteur et admin).
+///
+/// Pour le MVP, pas de Perspective API : blocklist hardcodee dans le
+/// service. Etend en lot subsequent si volume justifie.
+model ProGazetteComment {
+  id              String            @id @default(cuid())
+  article         ProGazetteArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId       String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  /// Max 500 chars (verifie cote service).
+  body            String            @db.Text
+  /// Soft delete : si set, le commentaire n'est plus visible.
+  deletedAt       DateTime?
+  /// Si set, commentaire flagged (auto-blocklist ou report). Masque
+  /// pour les autres users.
+  flaggedAt       DateTime?
+  /// Raison du flag (ex: "blocklist:slur", "admin:spam", "user:report").
+  flagReason      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([articleId, createdAt])
+  @@index([userId, createdAt])
+  @@index([flaggedAt])
+  @@index([deletedAt])
 }
