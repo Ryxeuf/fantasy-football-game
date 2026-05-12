@@ -46,7 +46,16 @@ interface PairingWithRelations {
   id: string;
   status: string;
   match: { id: string } | null;
-  round: { id: string; seasonId: string };
+  round: {
+    id: string;
+    seasonId: string;
+    season?: {
+      league?: {
+        matchMode?: string | null;
+        turnDeadlineHours?: number | null;
+      } | null;
+    } | null;
+  };
   homeParticipant: {
     id: string;
     teamId: string;
@@ -72,7 +81,21 @@ export async function createMatchFromPairing(
     where: { id: input.pairingId },
     include: {
       match: { select: { id: true } },
-      round: { select: { id: true, seasonId: true } },
+      round: {
+        select: {
+          id: true,
+          seasonId: true,
+          // Sprint R.E.3 — recupere le mode + deadlineHours de la
+          // League pour les propager sur le Match cree.
+          season: {
+            select: {
+              league: {
+                select: { matchMode: true, turnDeadlineHours: true },
+              },
+            },
+          },
+        },
+      },
       homeParticipant: {
         include: {
           team: { select: { id: true, ownerId: true, name: true } },
@@ -128,6 +151,14 @@ export async function createMatchFromPairing(
   // Transaction : creation Match + TeamSelection + update pairing en
   // une seule operation pour garantir la coherence (pas de pairing
   // `in_progress` sans Match associe).
+  // Sprint R.E.3 — propage le mode async de la ligue sur le Match.
+  // Default realtime / 24h si la ligue n'a pas configure.
+  const leagueMatchMode =
+    (pairing.round.season?.league?.matchMode as string | undefined) ?? "realtime";
+  const leagueTurnDeadlineHours =
+    (pairing.round.season?.league?.turnDeadlineHours as number | undefined) ??
+    24;
+
   const result = await prisma.$transaction(async (tx: typeof prisma) => {
     const match = await tx.match.create({
       data: {
@@ -139,6 +170,8 @@ export async function createMatchFromPairing(
         leagueSeasonId: pairing.round.seasonId,
         leagueRoundId: pairing.round.id,
         leaguePairingId: pairing.id,
+        mode: leagueMatchMode,
+        turnDeadlineHours: leagueTurnDeadlineHours,
       },
       select: { id: true },
     });

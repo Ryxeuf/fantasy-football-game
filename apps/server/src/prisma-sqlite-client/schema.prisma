@@ -654,25 +654,28 @@ model LocalMatchAction {
 
 // L.1 — Modeles de ligue (Sprint 17). Mirror SQLite du schema Postgres.
 model League {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  creator         User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId       String
-  ruleset         Ruleset  @default(season_3)
-  status          String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
-  isPublic        Boolean  @default(true)
-  maxParticipants Int      @default(16)
-  allowedRosters  String? // JSON array des rosters autorises (null = tous)
-  winPoints       Int      @default(3)
-  drawPoints      Int      @default(1)
-  lossPoints      Int      @default(0)
-  forfeitPoints   Int      @default(-1)
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  ruleset           Ruleset  @default(season_3)
+  status            String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  isPublic          Boolean  @default(true)
+  maxParticipants   Int      @default(16)
+  allowedRosters    String? // JSON array des rosters autorises (null = tous)
+  winPoints         Int      @default(3)
+  drawPoints        Int      @default(1)
+  lossPoints        Int      @default(0)
+  forfeitPoints     Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
-  tieBreakRules   String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  tieBreakRules     String?
+  /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
+  matchMode         String   @default("realtime")
+  turnDeadlineHours Int      @default(24)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   seasons LeagueSeason[]
 
