@@ -245,9 +245,9 @@ export default function AdminProgressPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
             🗺️ Avancement
           </h1>
           <p className="text-sm text-gray-600">

@@ -131,11 +131,11 @@ export default function AdminAnalyticsPage(): JSX.Element {
   }, [refreshTick]);
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <header className="mb-6 flex items-center justify-between">
+    <main className="mx-auto max-w-5xl">
+      <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Analytics — Tableau de bord
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            📈 Analytics
           </h1>
           {data && (
             <p className="mt-1 text-xs text-gray-500">

@@ -414,9 +414,9 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
             👥 Gestion des Utilisateurs
           </h1>
           <p className="text-sm text-gray-600">
@@ -424,16 +424,16 @@ export default function AdminUsersPage() {
           </p>
         </div>
         {pagination && (
-          <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200">
+          <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 self-start sm:self-auto">
             {pagination.total} utilisateur{pagination.total !== 1 ? "s" : ""}
           </div>
         )}
       </div>
 
       {/* Filtres et recherche */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-        <div className="flex gap-4 items-center flex-wrap">
-          <div className="flex-1 min-w-[200px]">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 sm:p-4">
+        <div className="flex gap-3 sm:gap-4 items-stretch sm:items-center flex-col sm:flex-row sm:flex-wrap">
+          <div className="flex-1 sm:min-w-[200px]">
             <input
               type="text"
               placeholder="Rechercher (email, nom)..."
@@ -448,7 +448,7 @@ export default function AdminUsersPage() {
               setRoleFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+            className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
           >
             <option value="">Tous les rôles</option>
             <option value="user">User</option>
@@ -715,14 +715,14 @@ export default function AdminUsersPage() {
       {/* Modal de détails */}
       {selectedUser && userDetails && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50"
           onClick={() => {
             setSelectedUser(null);
             setUserDetails(null);
           }}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl p-6 max-w-3xl max-h-[90vh] overflow-y-auto w-full mx-4"
+            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto w-full sm:mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -743,7 +743,7 @@ export default function AdminUsersPage() {
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Informations</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Email:</span>{" "}
                     <span className="font-mono">{userDetails.email}</span>
@@ -1049,7 +1049,7 @@ export default function AdminUsersPage() {
 
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 text-sm">
                   <div className="bg-blue-50 p-3 rounded">
                     <div className="text-gray-600">Équipes</div>
                     <div className="text-2xl font-bold">{userDetails._count.teams}</div>
@@ -1162,14 +1162,14 @@ export default function AdminUsersPage() {
       {/* Modal de détails d'équipe */}
       {selectedTeam && teamDetails && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50"
           onClick={() => {
             setSelectedTeam(null);
             setTeamDetails(null);
           }}
         >
           <div
-            className="bg-white rounded-xl shadow-2xl p-6 max-w-4xl max-h-[90vh] overflow-y-auto w-full mx-4"
+            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto w-full sm:mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -1190,7 +1190,7 @@ export default function AdminUsersPage() {
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Informations générales</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Nom:</span>{" "}
                     <span className="font-medium">{teamDetails.name}</span>
@@ -1232,7 +1232,7 @@ export default function AdminUsersPage() {
 
               <div>
                 <h3 className="font-semibold mb-2">Équipement</h3>
-                <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm">
                   <div className="bg-blue-50 p-3 rounded">
                     <div className="text-gray-600">Relances</div>
                     <div className="text-2xl font-bold">{teamDetails.rerolls || 0}</div>

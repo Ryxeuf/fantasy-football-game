@@ -111,10 +111,10 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
           📊 Aperçu
         </h1>
         <p className="text-sm text-gray-600">
@@ -132,15 +132,15 @@ export default function AdminPage() {
 
       {/* Stats Cards */}
       <section id="overview">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {/* Utilisateurs */}
-          <div className="rounded-xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+          <div className="rounded-xl p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                onClick={() => router.push("/admin/users")}>
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-medium text-blue-700">Utilisateurs</div>
               <span className="text-3xl">👥</span>
             </div>
-            <div className="text-4xl font-bold text-blue-900 mb-2">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-900 mb-2">
               {stats?.users.total ?? "—"}
             </div>
             <div className="flex gap-4 text-xs text-blue-600">
@@ -153,13 +153,13 @@ export default function AdminPage() {
           </div>
 
           {/* Parties */}
-          <div className="rounded-xl p-6 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+          <div className="rounded-xl p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                onClick={() => router.push("/admin/matches")}>
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-medium text-green-700">Parties</div>
               <span className="text-3xl">🎮</span>
             </div>
-            <div className="text-4xl font-bold text-green-900">
+            <div className="text-3xl sm:text-4xl font-bold text-green-900">
               {stats?.matches.total ?? "—"}
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function AdminPage() {
               <div className="text-sm font-medium text-pink-700">Matchs locaux</div>
               <span className="text-3xl">🎯</span>
             </div>
-            <div className="text-4xl font-bold text-pink-900 mb-2">
+            <div className="text-3xl sm:text-4xl font-bold text-pink-900 mb-2">
               {stats?.localMatches?.total ?? "—"}
             </div>
             <div className="flex flex-wrap gap-2 text-xs text-pink-700">
@@ -184,25 +184,25 @@ export default function AdminPage() {
           </div>
 
           {/* Équipes */}
-          <div className="rounded-xl p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+          <div className="rounded-xl p-4 sm:p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                onClick={() => router.push("/admin/users")}>
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-medium text-purple-700">Équipes</div>
               <span className="text-3xl">⚽</span>
             </div>
-            <div className="text-4xl font-bold text-purple-900">
+            <div className="text-3xl sm:text-4xl font-bold text-purple-900">
               {stats?.teams.total ?? "—"}
             </div>
           </div>
 
           {/* Coupes */}
-          <div className="rounded-xl p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+          <div className="rounded-xl p-4 sm:p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                onClick={() => router.push("/admin/cups")}>
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-medium text-yellow-700">Coupes</div>
               <span className="text-3xl">🏆</span>
             </div>
-            <div className="text-4xl font-bold text-yellow-900 mb-2">
+            <div className="text-3xl sm:text-4xl font-bold text-yellow-900 mb-2">
               {stats?.cups.total ?? "—"}
             </div>
             <div className="flex gap-2 text-xs text-yellow-600">
@@ -219,7 +219,7 @@ export default function AdminPage() {
         <h2 className="text-xl font-heading font-semibold text-nuffle-anthracite mb-4">
           🚀 Actions rapides
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <button
             onClick={() => router.push("/admin/users")}
             className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-blue-50"
@@ -265,9 +265,9 @@ export default function AdminPage() {
 
       {/* Recent Activity */}
       <section>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
           {/* Recent Users */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-heading font-semibold text-nuffle-anthracite">
                 👥 Utilisateurs récents
@@ -305,7 +305,7 @@ export default function AdminPage() {
           </div>
 
           {/* Recent Matches */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-heading font-semibold text-nuffle-anthracite">
                 🎮 Parties récentes
@@ -366,16 +366,16 @@ export default function AdminPage() {
             <table className="min-w-full">
               <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Nom
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Rôle
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Créé le
                   </th>
                 </tr>
@@ -437,16 +437,16 @@ export default function AdminPage() {
             <table className="min-w-full">
               <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Statut
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Seed
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                     Créée le
                   </th>
                 </tr>

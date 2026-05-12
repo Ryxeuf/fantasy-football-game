@@ -113,7 +113,7 @@ export default function AdminUtilitiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
           🛠️ Utilitaires
         </h1>
         <p className="text-sm text-gray-600">
