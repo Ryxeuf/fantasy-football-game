@@ -60,6 +60,11 @@ import {
   listDedications,
 } from "../services/pro-hall-of-fame-dedicate";
 import {
+  TournamentError,
+  enterTournament,
+  listOpenTournaments,
+} from "../services/pro-tournament-entry";
+import {
   InsufficientFundsError,
   getBalance,
   getRecentTransactions,
@@ -1223,6 +1228,71 @@ export async function handleDedicateHallOfFame(
 }
 
 /**
+ * Lot P.B.2 — Liste les tournois Pro League ouverts aux inscriptions.
+ * Public (pas d'auth requis).
+ */
+export async function handleListTournaments(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const tournaments = await listOpenTournaments();
+    res.json({ tournaments });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/tournaments] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Lot P.B.2 — Inscrit l'user courant a un tournoi (debit entry fee).
+ * Auth requis. Idempotent : 200 si deja inscrit, 201 si nouvelle entry.
+ */
+export async function handleEnterTournament(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  try {
+    const out = await enterTournament(userId, id);
+    res.status(out.granted ? 201 : 200).json(out);
+  } catch (err: unknown) {
+    if (err instanceof TournamentError) {
+      const status =
+        err.code === "TOURNAMENT_NOT_FOUND"
+          ? 404
+          : err.code === "TOURNAMENT_FULL"
+            ? 409
+            : 400;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    if (err instanceof InsufficientFundsError) {
+      res.status(402).json({
+        error: err.message,
+        code: "WALLET_INSUFFICIENT_FUNDS",
+      });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/tournaments/${id}/enter] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
  * Sprint 1.E.2 — Liste les dates publiées (archive). `?limit=N`.
  */
 export async function handleListEditionDates(
@@ -1395,6 +1465,15 @@ router.post(
   authUser,
   handleDedicateHallOfFame,
 );
+
+// Lot P.B.2 — Tournois Pro League (sink Crowns).
+router.get("/tournaments", handleListTournaments);
+router.post(
+  "/tournaments/:id/enter",
+  authUser,
+  handleEnterTournament,
+);
+
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".

@@ -98,6 +98,7 @@ model User {
   proPlayerOfMatchVotes       ProPlayerOfMatchVote[]
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
+  proTournamentEntries        ProTournamentEntry[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1248,6 +1249,38 @@ model ProHallOfFameDedication {
   @@unique([hallOfFameId, userId])
   @@index([userId])
   @@index([hallOfFameId, createdAt])
+}
+
+// Lot P.B.2 — Tournois Pro League payants (sink Crowns).
+model ProTournament {
+  id             String               @id @default(cuid())
+  slug           String               @unique
+  name           String
+  description    String?
+  entryFeeCrowns Int                  @default(100)
+  maxEntries     Int?
+  status         String               @default("open")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  entries        ProTournamentEntry[]
+
+  @@index([status, createdAt])
+}
+
+model ProTournamentEntry {
+  id           String        @id @default(cuid())
+  tournamentId String
+  tournament   ProTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paidCrowns   Int
+  createdAt    DateTime      @default(now())
+
+  @@unique([tournamentId, userId])
+  @@index([userId])
+  @@index([tournamentId, createdAt])
 }
 
 // S27.6 — Audit log admin. Schema SQLite : `oldValue`/`newValue`

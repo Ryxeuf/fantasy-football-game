@@ -868,6 +868,28 @@ exports.Prisma.ProHallOfFameDedicationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ProTournamentScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  description: 'description',
+  entryFeeCrowns: 'entryFeeCrowns',
+  maxEntries: 'maxEntries',
+  status: 'status',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProTournamentEntryScalarFieldEnum = {
+  id: 'id',
+  tournamentId: 'tournamentId',
+  userId: 'userId',
+  paidCrowns: 'paidCrowns',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1089,6 +1111,8 @@ exports.Prisma.ModelName = {
   ProGazetteArticle: 'ProGazetteArticle',
   ProHallOfFame: 'ProHallOfFame',
   ProHallOfFameDedication: 'ProHallOfFameDedication',
+  ProTournament: 'ProTournament',
+  ProTournamentEntry: 'ProTournamentEntry',
   AuditLog: 'AuditLog',
   EngineComparison: 'EngineComparison',
   ProPredictionLeague: 'ProPredictionLeague',
