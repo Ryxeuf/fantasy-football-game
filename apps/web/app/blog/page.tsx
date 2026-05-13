@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchServerJson, getServerApiBase } from "../lib/serverApi";
+import { getServerApiBase, safeServerJson } from "../lib/serverApi";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
@@ -25,7 +25,12 @@ interface BlogListResponse {
 
 async function fetchBlogPosts(): Promise<BlogListResponse> {
   const base = getServerApiBase();
-  const data = await fetchServerJson<BlogListResponse>(
+  // `safeServerJson` swallows 5xx / network errors et renvoie null, ce
+  // qui evite que le prerender du build casse quand l'API n'est pas
+  // joignable (CI sans backend up). L'UI gere deja l'etat vide
+  // ("Aucun article pour le moment"), et un eventuel hit transient en
+  // prod sera caped a la fenetre `revalidate=300` avant retry.
+  const data = await safeServerJson<BlogListResponse>(
     `${base}/api/blog/posts`,
     { next: { revalidate: 300 } },
   );

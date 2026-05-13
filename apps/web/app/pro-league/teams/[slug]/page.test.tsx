@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 vi.mock("../../../lib/api-client", () => ({
   apiRequest: vi.fn(),
@@ -127,8 +133,14 @@ describe("ProLeagueTeamPage — sprint 1.C.2", () => {
     await waitFor(() => {
       expect(screen.getByTestId("team-record")).toBeTruthy();
     });
-    expect(screen.getByText(/3V 0N 1D/)).toBeTruthy();
-    expect(screen.getByText(/12.5/)).toBeTruthy(); // td for-against
+    const record = screen.getByTestId("team-record");
+    // Scope les queries au bloc team-record pour eviter de matcher des
+    // numeros equivalents ailleurs (ex: TV joueur "1100", spp "16",
+    // etc.) qui rendaient ces assertions flaky sous coverage CI.
+    // `12–5` utilise un en-dash unicode (cf. page.tsx l.840), pas un
+    // hyphen-minus.
+    expect(within(record).getByText(/3V 0N 1D/)).toBeTruthy();
+    expect(within(record).getByText("12–5")).toBeTruthy();
     const formBadges = screen.getByTestId("form-badges");
     expect(formBadges.children.length).toBe(4);
   });
