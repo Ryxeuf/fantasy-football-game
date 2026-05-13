@@ -1,3 +1,10 @@
+## [1.117.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.117.0...v1.117.1) (2026-05-13)
+
+
+### 🐛 Bug Fixes
+
+* **i18n:** update beta banner translations for clarity ([e65918e](https://github.com/Ryxeuf/fantasy-football-game/commit/e65918eac57339d8b57ee08f36f809487eb2e142))
+
 ## [1.117.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.2...v1.117.0) (2026-05-13)
 
 
