@@ -1,3 +1,10 @@
+## [1.117.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.2...v1.117.0) (2026-05-13)
+
+
+### ✨ Features
+
+* **ops:** daily backup script with 5-day rotation ([d07ae0d](https://github.com/Ryxeuf/fantasy-football-game/commit/d07ae0d79aba1cbebe16c0a3d70f90f818d1ab04))
+
 ## [1.116.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.1...v1.116.2) (2026-05-13)
 
 
