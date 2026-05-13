@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
 import { getMoveActivePlayerId } from "../../../../lib/move-active-player";
+import { getReplayAnnotations } from "../../../../lib/replay-annotations";
 import {
   PLAYBACK_SPEEDS,
   formatReplayClock,
@@ -26,6 +27,8 @@ import {
   type FullReplayTeamPaint,
   useFullReplay,
 } from "../../../../lib/use-full-replay";
+
+import ReplayAnnotationsOverlay from "./ReplayAnnotationsOverlay";
 
 /**
  * Lot 3.D.5 — convertit une race "Wood Elf" (telle qu'écrite dans le
@@ -136,6 +139,16 @@ export default function FullReplayField({
   // sans joueur (END_TURN, REROLL_CHOOSE, KICKOFF_BLITZ_RESOLVE...).
   const selectedPlayerId = getMoveActivePlayerId(replay.currentMove);
 
+  // Lot 3.E.3 — annotations on-pitch (flèches, halos block/dodge, ligne
+  // pass) dérivées de la transition prev → curr du move courant.
+  const annotations = getReplayAnnotations(
+    replay.currentMove,
+    replay.previousState,
+    replay.currentState,
+  );
+  const boardW = replay.currentState.width ?? 26;
+  const boardH = replay.currentState.height ?? 15;
+
   return (
     <div className="flex flex-col gap-3" data-testid="full-replay-field">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm">
@@ -177,7 +190,7 @@ export default function FullReplayField({
         </div>
       </header>
 
-      <div data-testid="full-replay-pixi">
+      <div className="relative" data-testid="full-replay-pixi">
         <GameBoardWithDugouts
           state={replay.currentState}
           selectedPlayerId={selectedPlayerId}
@@ -187,6 +200,13 @@ export default function FullReplayField({
             teamB: awayOverride,
           }}
         />
+        {annotations.length > 0 ? (
+          <ReplayAnnotationsOverlay
+            annotations={annotations}
+            boardWidth={boardW}
+            boardHeight={boardH}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm">

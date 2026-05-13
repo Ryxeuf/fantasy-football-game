@@ -82,6 +82,12 @@ export interface UseFullReplayResult {
   readonly errorCode: string | null;
   readonly dump: FullReplayDump | null;
   readonly currentState: GameState | null;
+  /**
+   * Lot 3.E.3 — état *avant* le move courant (utile pour les
+   * annotations on-pitch qui ont besoin de la position d'origine).
+   * Vaut `initialState` quand `currentMoveIndex === -1`.
+   */
+  readonly previousState: GameState | null;
   readonly currentMove: Move | null;
   readonly currentMoveIndex: number;
   readonly totalMoves: number;
@@ -191,6 +197,12 @@ export function useFullReplay(
     return sequence.moves[currentMoveIndex] ?? null;
   }, [sequence, currentMoveIndex]);
 
+  const previousState: GameState | null = useMemo(() => {
+    if (!dump || !sequence) return null;
+    if (currentMoveIndex <= 0) return dump.initialState;
+    return sequence.states[currentMoveIndex - 1] ?? dump.initialState;
+  }, [dump, sequence, currentMoveIndex]);
+
   const stepForward = useMemo(
     () => () => {
       if (!sequence) return;
@@ -218,6 +230,7 @@ export function useFullReplay(
     errorCode,
     dump,
     currentState,
+    previousState,
     currentMove,
     currentMoveIndex,
     totalMoves: sequence?.moves.length ?? 0,
