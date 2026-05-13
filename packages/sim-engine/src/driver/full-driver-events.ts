@@ -267,10 +267,17 @@ export function diffStatesToEvents(
     });
   }
 
-  // 7) TURN_START : turn ou half avancé.
+  // 7) TURN_START : nouveau tour pour l'équipe active. En BB, un "turn"
+  // compte un tour A + un tour B ; donc `state.turn` n'incrémente qu'un
+  // END_TURN sur deux. Pour émettre un TURN_START à chaque demi-tour
+  // (A puis B puis A...), on déclenche dès que `currentPlayer` change
+  // (en plus de l'avance turn/half pour le tout premier tour de mi-temps).
+  const turnAdvanced = next.turn > prev.turn || next.half > prev.half;
+  const playerSwitched = next.currentPlayer !== prev.currentPlayer;
   if (
     next.gamePhase !== 'ended' &&
-    (next.turn > prev.turn || next.half > prev.half)
+    next.gamePhase !== 'halftime' &&
+    (turnAdvanced || playerSwitched)
   ) {
     events.push({
       type: 'TURN_START',

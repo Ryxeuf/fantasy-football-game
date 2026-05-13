@@ -96,4 +96,37 @@ describe('runFullDriver — Lot 3.A.2.a (MVP smoke)', () => {
     expect(result.events[0].type).toBe('KICKOFF');
     expect(result.events[result.events.length - 1].type).toBe('END');
   });
+
+  it('joue les 2 mi-temps complètes (HALFTIME + ≥10 TURN_START)', () => {
+    // Régression : avant le fix stale-detection, le driver break à
+    // turn 3 first half (5 END_TURN consécutifs comptés comme stale
+    // alors qu'en BB un END_TURN sur deux n'avance pas state.turn).
+    const result = runFullDriver(buildInput({ seed: 42 }));
+    const turnStarts = result.events.filter((e) => e.type === 'TURN_START');
+    const halftimes = result.events.filter((e) => e.type === 'HALFTIME');
+    expect(halftimes.length).toBe(1);
+    // Un match complet émet ≥10 TURN_START (cap conservateur ; en
+    // pratique on observe ~16 sur les seeds testés).
+    expect(turnStarts.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('alterne drivingTeam home/away dans les TURN_START', () => {
+    // Régression : avant le fix, TURN_START n'était émis que quand
+    // `state.turn` avançait — or `state.turn` ne change qu'un END_TURN
+    // sur deux, donc tous les TURN_START portaient drivingTeam=home.
+    const result = runFullDriver(buildInput({ seed: 42 }));
+    const drivingTeams = result.events
+      .filter((e) => e.type === 'TURN_START')
+      .map((e) => (e.meta as { drivingTeam?: string }).drivingTeam ?? '');
+    expect(drivingTeams).toContain('home');
+    expect(drivingTeams).toContain('away');
+  });
+
+  it('summary.durationMs > 0 et match le displayAtMs du dernier event', () => {
+    // Régression : `durationMs` était hardcodé à 0 dans le summary.
+    const result = runFullDriver(buildInput({ seed: 42 }));
+    expect(result.summary.durationMs).toBeGreaterThan(0);
+    const lastEvent = result.events[result.events.length - 1];
+    expect(result.summary.durationMs).toBe(lastEvent.displayAtMs);
+  });
 });

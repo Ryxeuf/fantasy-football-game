@@ -279,23 +279,10 @@ export function runFullDriver(input: SimInput): SimResult {
 
   let actionsApplied = 0;
   let staleEndTurns = 0;
-  let lastTurn = state.turn;
-  let lastHalf = state.half;
 
   while (state.gamePhase !== 'ended' && actionsApplied < MAX_ACTIONS_PER_MATCH) {
     const move = selectMoveForActiveTeam(state, ctx);
     if (!move) break;
-
-    // Stale-detection : si N END_TURN consécutifs n'ont rien changé
-    // (turn + half), on considère qu'on est coincé et on force end.
-    if (move.type === 'END_TURN') {
-      if (state.turn === lastTurn && state.half === lastHalf) {
-        staleEndTurns += 1;
-      } else {
-        staleEndTurns = 0;
-      }
-      if (staleEndTurns > MAX_STALE_END_TURNS) break;
-    }
 
     const prev = state;
     let next: GameState;
@@ -311,6 +298,25 @@ export function runFullDriver(input: SimInput): SimResult {
       }
     }
 
+    // Stale-detection : si N END_TURN consécutifs n'ont *vraiment* rien
+    // changé (turn + half + currentPlayer identiques entre prev et next),
+    // on considère que le moteur est coincé et on force end. Note : en BB
+    // un END_TURN sur deux fait alterner currentPlayer sans incrémenter
+    // turn (cycle A turn N → B turn N → A turn N+1) — c'est NORMAL ;
+    // seuls les END_TURN qui ne font *rien* avancer sont stale.
+    if (move.type === 'END_TURN') {
+      const advanced =
+        next.turn !== prev.turn ||
+        next.half !== prev.half ||
+        next.currentPlayer !== prev.currentPlayer;
+      if (advanced) {
+        staleEndTurns = 0;
+      } else {
+        staleEndTurns += 1;
+        if (staleEndTurns > MAX_STALE_END_TURNS) break;
+      }
+    }
+
     // Lot 3.A.2.b — diff prev → next pour émettre les events
     // narratifs (BLOCK/PASS/DODGE/TD/CASUALTY/KO/TURNOVER/HALFTIME/
     // END/TURN_START). Timestamps incrémentaux 1s/action.
@@ -322,8 +328,6 @@ export function runFullDriver(input: SimInput): SimResult {
     events.push(...newEvents);
 
     state = next;
-    lastTurn = state.turn;
-    lastHalf = state.half;
     actionsApplied += 1;
   }
 
@@ -354,10 +358,17 @@ export function runFullDriver(input: SimInput): SimResult {
   // diffStatesToEvents au-dessus. On compte les turnovers réels en
   // post-process pour cohérence avec le hybrid driver summary.
   const turnoverCount = events.filter((e) => e.type === 'TURNOVER').length;
+  // durationMs : `displayAtMs` du dernier event (END synthétique ou natif) —
+  // les events sont émis avec un timestamp incrémental 1s/action, donc la
+  // borne supérieure reflète bien la durée logique du match. `events` est
+  // garanti non-vide ici (KICKOFF + TURN_START initial sont push avant la
+  // boucle), donc on peut lire `events.at(-1)` sans guard.
+  const lastEvent = events[events.length - 1];
+  const durationMs = lastEvent ? lastEvent.displayAtMs : 0;
   const summary: MatchSummary = {
     score: stats.score,
     outcome,
-    durationMs: 0,
+    durationMs,
     touchdownCount: stats.touchdownCount,
     turnoverCount,
     nuffleCount: 0,
