@@ -1,3 +1,15 @@
+## [1.118.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.117.1...v1.118.0) (2026-05-13)
+
+
+### ✨ Features
+
+* **blog:** implement admin blog management routes and functionality ([70758c9](https://github.com/Ryxeuf/fantasy-football-game/commit/70758c980b505ce2479d210561f225677304f246))
+
+
+### 🐛 Bug Fixes
+
+* **i18n:** update skill category keys for consistency ([a1ec1c9](https://github.com/Ryxeuf/fantasy-football-game/commit/a1ec1c907e1b78e1478e038f5b3ca63d87edff76))
+
 ## [1.117.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.117.0...v1.117.1) (2026-05-13)
 
 
