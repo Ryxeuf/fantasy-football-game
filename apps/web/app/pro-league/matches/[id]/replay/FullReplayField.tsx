@@ -15,7 +15,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { getMoveActivePlayerId } from "../../../../lib/move-active-player";
 import {
@@ -83,7 +83,11 @@ export default function FullReplayField({
   matchId,
   onFallback,
 }: FullReplayFieldProps): JSX.Element {
-  const replay = useFullReplay(matchId);
+  // Lot 3.E.2 — toggle compact (par défaut activé) qui retire les
+  // moves filler sans effet visuel. Permet de basculer en mode "all
+  // moves" pour audit fin de la séquence game-engine.
+  const [compact, setCompact] = useState<boolean>(true);
+  const replay = useFullReplay(matchId, { compact });
 
   // Notifie le parent si l'API retourne 404 (replay legacy ou hybrid).
   useMemo(() => {
@@ -146,10 +150,30 @@ export default function FullReplayField({
           <span className="text-slate-500">·</span>
           <span>
             Move {replay.currentMoveIndex + 1} / {replay.totalMoves}
+            {replay.compact && replay.fillerCount > 0 ? (
+              <span
+                className="ml-1 text-xs text-slate-500"
+                data-testid="full-replay-filler-count"
+              >
+                (+{replay.fillerCount} filler)
+              </span>
+            ) : null}
           </span>
         </div>
-        <div className="font-mono text-xl font-bold tracking-wide">
-          {score.home} – {score.away}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1 text-xs text-slate-400">
+            <input
+              type="checkbox"
+              checked={compact}
+              onChange={(e) => setCompact(e.target.checked)}
+              data-testid="full-replay-compact-toggle"
+              className="accent-emerald-600"
+            />
+            Compact
+          </label>
+          <div className="font-mono text-xl font-bold tracking-wide">
+            {score.home} – {score.away}
+          </div>
         </div>
       </header>
 

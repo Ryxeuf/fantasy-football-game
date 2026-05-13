@@ -107,6 +107,61 @@ describe("useFullReplay — Lot 3.D.3", () => {
     expect(result.current.currentState).toBe(fakeState2);
   });
 
+  it("compact=true (défaut) retire les moves filler de la séquence visionnée", async () => {
+    const filled = {
+      ...fakeDump,
+      moves: [
+        { type: "MOVE" },
+        { type: "BLOCK" },
+        { type: "BLOCK_CHOOSE" },
+        { type: "PUSH_CHOOSE" },
+        { type: "FOLLOW_UP_CHOOSE" },
+        { type: "END_TURN" },
+      ],
+      states: Array.from({ length: 6 }, (_, i) => ({
+        ...(fakeInitialState as object),
+        turn: i,
+      })),
+    };
+    mockedApi.mockResolvedValue(filled);
+    const { result } = renderHook(() => useFullReplay("m1"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.compact).toBe(true);
+    expect(result.current.totalMoves).toBe(3);
+    expect(result.current.fillerCount).toBe(3);
+    expect(result.current.durationMs).toBe(3000);
+    act(() => result.current.controls.stepForward());
+    expect(result.current.currentMove?.type).toBe("MOVE");
+    act(() => result.current.controls.stepForward());
+    expect(result.current.currentMove?.type).toBe("BLOCK");
+    act(() => result.current.controls.stepForward());
+    // BLOCK_CHOOSE, PUSH_CHOOSE, FOLLOW_UP_CHOOSE skipped
+    expect(result.current.currentMove?.type).toBe("END_TURN");
+  });
+
+  it("compact=false → moves bruts (filler inclus)", async () => {
+    const filled = {
+      ...fakeDump,
+      moves: [
+        { type: "MOVE" },
+        { type: "BLOCK_CHOOSE" },
+        { type: "END_TURN" },
+      ],
+      states: Array.from({ length: 3 }, (_, i) => ({
+        ...(fakeInitialState as object),
+        turn: i,
+      })),
+    };
+    mockedApi.mockResolvedValue(filled);
+    const { result } = renderHook(() =>
+      useFullReplay("m1", { compact: false }),
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.compact).toBe(false);
+    expect(result.current.totalMoves).toBe(3);
+    expect(result.current.fillerCount).toBe(0);
+  });
+
   it("erreur 404 FULL_REPLAY_NOT_AVAILABLE remontée via errorCode", async () => {
     class ApiErr extends Error {
       code = "FULL_REPLAY_NOT_AVAILABLE";
