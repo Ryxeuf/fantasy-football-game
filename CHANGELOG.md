@@ -1,3 +1,10 @@
+## [1.116.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.0...v1.116.1) (2026-05-13)
+
+
+### 🐛 Bug Fixes
+
+* **team:** prevent player duplication on seed reruns and protect creation atomicity ([beb3a84](https://github.com/Ryxeuf/fantasy-football-game/commit/beb3a8443928013f4aebefdff42011c37ae9640e))
+
 ## [1.116.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.115.0...v1.116.0) (2026-05-13)
 
 
