@@ -290,33 +290,14 @@ export async function handleCreateFromRoster(
     }
   }
 
-  const team = await prisma.team.create({
-    data: {
-      ownerId: req.user!.id,
-      name,
-      roster,
-      ruleset,
-      teamValue: finalTeamValue,
-      initialBudget: finalTeamValue,
-      treasury: 0,
-      rerolls: 0,
-      cheerleaders: 0,
-      assistants: 0,
-      apothecary: false,
-      dedicatedFans: 1,
-      currentValue: 0,
-    },
-  });
-
-  // Creer les joueurs
+  // Creer les joueurs (sans teamId, injecte dans la transaction)
   const templates = rosterTemplates(roster as AllowedRoster);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const players: any[] = [];
+  const playerRows: any[] = [];
   let number = 1;
   for (const t of templates) {
     for (let i = 0; i < t.count; i += 1) {
-      players.push({
-        teamId: team.id,
+      playerRows.push({
         name: `${t.position} ${i + 1}`,
         position: t.position,
         number: number++,
@@ -333,12 +314,11 @@ export async function handleCreateFromRoster(
   }
 
   // Assurer au moins 11 joueurs
-  while (players.length < 11) {
-    players.push({
-      teamId: team.id,
-      name: `Lineman ${players.length + 1}`,
+  while (playerRows.length < 11) {
+    playerRows.push({
+      name: `Lineman ${playerRows.length + 1}`,
       position: 'Lineman',
-      number: players.length + 1,
+      number: playerRows.length + 1,
       ma: 6,
       st: 3,
       ag: 3,
@@ -347,22 +327,42 @@ export async function handleCreateFromRoster(
       skills: '',
     });
   }
+  const safePlayerRows = playerRows.slice(0, 16);
 
-  await prisma.teamPlayer.createMany({ data: players.slice(0, 16) });
+  const starPlayersData = starPlayersToHire.map((slug: string) => {
+    const sp = getStarPlayerBySlug(slug, ruleset);
+    return { starPlayerSlug: slug, cost: sp?.cost || 0 };
+  });
 
-  // Recruter les Star Players si fournis
-  if (starPlayersToHire.length > 0) {
-    const starPlayersData = starPlayersToHire.map((slug: string) => {
-      const sp = getStarPlayerBySlug(slug, ruleset);
-      return {
-        teamId: team.id,
-        starPlayerSlug: slug,
-        cost: sp?.cost || 0,
-      };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const team = await (prisma as any).$transaction(async (tx: any) => {
+    const newTeam = await tx.team.create({
+      data: {
+        ownerId: req.user!.id,
+        name,
+        roster,
+        ruleset,
+        teamValue: finalTeamValue,
+        initialBudget: finalTeamValue,
+        treasury: 0,
+        rerolls: 0,
+        cheerleaders: 0,
+        assistants: 0,
+        apothecary: false,
+        dedicatedFans: 1,
+        currentValue: 0,
+      },
     });
-
-    await prisma.teamStarPlayer.createMany({ data: starPlayersData });
-  }
+    await tx.teamPlayer.createMany({
+      data: safePlayerRows.map((p: any) => ({ ...p, teamId: newTeam.id })),
+    });
+    if (starPlayersData.length > 0) {
+      await tx.teamStarPlayer.createMany({
+        data: starPlayersData.map((sp: any) => ({ ...sp, teamId: newTeam.id })),
+      });
+    }
+    return newTeam;
+  });
 
   // Calculer automatiquement les valeurs d'equipe
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

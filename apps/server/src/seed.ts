@@ -896,13 +896,15 @@ async function main() {
     ]
       : [];
 
-    await prisma.teamPlayer.createMany({
-      data: skavenPlayers,
-    });
+    const existingSkavenCount = await prisma.teamPlayer.count({ where: { teamId: teamA.id } });
+    if (existingSkavenCount === 0) {
+      await prisma.teamPlayer.createMany({ data: skavenPlayers });
+    }
     if (lizardmenPlayers.length > 0) {
-      await prisma.teamPlayer.createMany({
-        data: lizardmenPlayers,
-      });
+      const existingLizardmenCount = await prisma.teamPlayer.count({ where: { teamId: teamB.id } });
+      if (existingLizardmenCount === 0) {
+        await prisma.teamPlayer.createMany({ data: lizardmenPlayers });
+      }
     }
   }
 

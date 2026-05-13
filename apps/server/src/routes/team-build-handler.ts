@@ -219,32 +219,13 @@ export async function handleBuildTeam(
       return;
     }
 
-    const team = await prisma.team.create({
-      data: {
-        ownerId: req.user!.id,
-        name,
-        roster,
-        ruleset,
-        teamValue: finalTeamValue,
-        initialBudget: finalTeamValue,
-        treasury: 0,
-        rerolls,
-        cheerleaders,
-        assistants,
-        apothecary,
-        dedicatedFans,
-        currentValue: 0,
-      },
-    });
-
     let number = 1;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const players: any[] = [];
+    const playerRows: any[] = [];
     for (const p of def.positions) {
       const c = Math.max(0, choices.find((x) => x.key === p.slug)?.count ?? 0);
       for (let i = 0; i < c; i += 1) {
-        players.push({
-          teamId: team.id,
+        playerRows.push({
           name: `${p.displayName} ${i + 1}`,
           position: p.slug,
           number: number++,
@@ -257,20 +238,42 @@ export async function handleBuildTeam(
         });
       }
     }
-    await prisma.teamPlayer.createMany({ data: players });
+    const safePlayerRows = playerRows.slice(0, 16);
 
-    if (starPlayersToHire.length > 0) {
-      const starPlayersData = starPlayersToHire.map((slug: string) => {
-        const sp = getStarPlayerBySlug(slug, ruleset);
-        return {
-          teamId: team.id,
-          starPlayerSlug: slug,
-          cost: sp?.cost || 0,
-        };
+    const starPlayersData = starPlayersToHire.map((slug: string) => {
+      const sp = getStarPlayerBySlug(slug, ruleset);
+      return { starPlayerSlug: slug, cost: sp?.cost || 0 };
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const team = await (prisma as any).$transaction(async (tx: any) => {
+      const newTeam = await tx.team.create({
+        data: {
+          ownerId: req.user!.id,
+          name,
+          roster,
+          ruleset,
+          teamValue: finalTeamValue,
+          initialBudget: finalTeamValue,
+          treasury: 0,
+          rerolls,
+          cheerleaders,
+          assistants,
+          apothecary,
+          dedicatedFans,
+          currentValue: 0,
+        },
       });
-
-      await prisma.teamStarPlayer.createMany({ data: starPlayersData });
-    }
+      await tx.teamPlayer.createMany({
+        data: safePlayerRows.map((p: any) => ({ ...p, teamId: newTeam.id })),
+      });
+      if (starPlayersData.length > 0) {
+        await tx.teamStarPlayer.createMany({
+          data: starPlayersData.map((sp: any) => ({ ...sp, teamId: newTeam.id })),
+        });
+      }
+      return newTeam;
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, team.id);

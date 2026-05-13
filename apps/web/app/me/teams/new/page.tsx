@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../auth-client";
@@ -72,6 +72,7 @@ export default function NewTeamBuilder() {
   const [selectedStarPlayers, setSelectedStarPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [loadingRosters, setLoadingRosters] = useState(true);
 
@@ -180,7 +181,8 @@ export default function NewTeamBuilder() {
   }
 
   async function submit() {
-    if (saving) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     setError(null);
     try {
@@ -215,6 +217,7 @@ export default function NewTeamBuilder() {
       const message = e?.message || t.teams.error;
       setError(message);
       toast.error(message);
+      submittingRef.current = false;
       setSaving(false);
     }
   }
