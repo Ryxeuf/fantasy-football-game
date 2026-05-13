@@ -22,12 +22,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 COMPOSE_PROD="$PROJECT_DIR/docker-compose.prod.yml"
 
+# Par défaut : push uniquement. Le seed NE doit JAMAIS tourner automatiquement
+# en production (risque de perte de données). Utiliser --seed uniquement manuellement.
 DO_PUSH=true
-DO_SEED=true
+DO_SEED=false
 for arg in "$@"; do
   case "$arg" in
     --push) DO_PUSH=true;  DO_SEED=false ;;
     --seed) DO_PUSH=false; DO_SEED=true  ;;
+    --push-and-seed) DO_PUSH=true; DO_SEED=true ;;
     *) echo "Unknown arg: $arg"; exit 2 ;;
   esac
 done

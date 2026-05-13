@@ -177,7 +177,8 @@ if [ "$SKIP_MIGRATE" = true ]; then
 else
   log_section "3/5 - Migration DB (db push + seed)"
   # IMAGE_TAG est exporte au-dessus, db-migrate.sh lit la nouvelle image.
-  run "$DB_MIGRATE_SCRIPT"
+  # --push uniquement : le seed NE doit JAMAIS tourner automatiquement en prod.
+  run "$DB_MIGRATE_SCRIPT" --push
 fi
 
 # =============================================================================
