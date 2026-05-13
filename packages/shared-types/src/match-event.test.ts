@@ -13,7 +13,10 @@ describe('EventType — sprint Pro League 0.A.3 catalogue', () => {
     const expected = new Set<EventType>([
       'KICKOFF',
       'TURN_START',
+      'PLAYER_ACTIVATION',
+      'BLITZ_DECLARED',
       'BLOCK',
+      'KNOCKDOWN',
       'DODGE',
       'PASS',
       'MOVE',

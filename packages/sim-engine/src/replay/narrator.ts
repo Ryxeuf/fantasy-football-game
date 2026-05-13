@@ -21,7 +21,7 @@
 
 import type { MatchEvent } from '@bb/shared-types';
 
-import type { SimResult } from '../types';
+import type { SimResult, SimRosterPlayer } from '../types';
 
 export interface NarrateOptions {
   /** Override the default `=== Home vs Away ===` header. */
@@ -30,6 +30,47 @@ export interface NarrateOptions {
   hideFooter?: boolean;
   /** Hide the `[T+MM:SS]` timestamp prefix (default: shown). */
   hideTimestamps?: boolean;
+  /**
+   * Lot 3.A.4 — rosters roster-aware. Quand fournis, les playerIds
+   * référencés dans les events sont résolus en "Nom (#numero, Position)"
+   * au lieu de l'id brut "A1". Cohérent avec
+   * `buildGameStateFromRosters` (Lot 3.A.2.c) qui pose `player.id =
+   * roster.id`. Optionnel — si absent, narrator retombe sur l'id brut
+   * (mode legacy archetype-vs-archetype / hybrid driver).
+   */
+  rosters?: {
+    readonly home?: readonly SimRosterPlayer[];
+    readonly away?: readonly SimRosterPlayer[];
+  };
+}
+
+/**
+ * Lot 3.A.4 — index `playerId → SimRosterPlayer` consolidé sur les deux
+ * équipes. Construit une fois par appel `narrateMatch` et capturé par
+ * fermeture dans les fonctions render*().
+ */
+type RosterIndex = ReadonlyMap<string, SimRosterPlayer>;
+
+function buildRosterIndex(opts: NarrateOptions): RosterIndex {
+  const map = new Map<string, SimRosterPlayer>();
+  const all = [...(opts.rosters?.home ?? []), ...(opts.rosters?.away ?? [])];
+  for (const r of all) map.set(r.id, r);
+  return map;
+}
+
+/**
+ * Lot 3.A.4 — formate un playerId en "Nom (#numero Position)" si le
+ * roster est connu, sinon retourne l'id brut. `unknown` reste rendu
+ * "?" pour rester aligné avec le helper `n()`.
+ */
+function formatPlayer(
+  rawId: unknown,
+  rosters: RosterIndex,
+): string {
+  if (typeof rawId !== 'string' || rawId.length === 0) return '?';
+  const r = rosters.get(rawId);
+  if (!r) return rawId;
+  return `${r.name} (#${r.number} ${r.position})`;
 }
 
 interface MetaShape {
@@ -95,23 +136,43 @@ function renderTurnStart(ev: MatchEvent, ctx: TurnStartContext): string {
   return `Half ${n(meta.half)} • Turn ${n(meta.turn)} — ${drivingTeam} in possession at yardline ${n(meta.ballYardline)} (score ${score.home}-${score.away})${delta}`;
 }
 
-function renderBlock(ev: MatchEvent): string {
+function renderBlock(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
   if (meta.kind === 'foul') {
     const armorTotal = n(meta.armorTotal);
     const armorBroken = meta.armorBroken === true;
     const sentOff = meta.sentOff === true;
     const injury = meta.injuryOutcome ? ` → ${n(meta.injuryOutcome)}` : '';
-    return `  FOUL — ${n(meta.foulerId)} fouls ${n(meta.victimId)} (armor=${armorTotal}, broken=${armorBroken}${injury}${sentOff ? ', sent off!' : ''}).`;
+    return `  FOUL — ${formatPlayer(meta.foulerId, rosters)} fouls ${formatPlayer(meta.victimId, rosters)} (armor=${armorTotal}, broken=${armorBroken}${injury}${sentOff ? ', sent off!' : ''}).`;
   }
   const dice = (meta.rolls as string[] | undefined)?.join('/') ?? '?';
   const chosen = n(meta.chosen);
   const resolution = n(meta.resolution);
   const wrestle = meta.useWrestle === true ? ', wrestled' : '';
-  return `  BLOCK — ${n(meta.attackerId)} blocks ${n(meta.defenderId)}: dice [${dice}], chose ${chosen}, ${resolution}${wrestle}.`;
+  return `  BLOCK — ${formatPlayer(meta.attackerId, rosters)} blocks ${formatPlayer(meta.defenderId, rosters)}: dice [${dice}], chose ${chosen}, ${resolution}${wrestle}.`;
 }
 
-function renderDodge(ev: MatchEvent): string {
+function renderBlitzDeclared(ev: MatchEvent, rosters: RosterIndex): string {
+  const meta = getMeta(ev);
+  return `  BLITZ! — ${formatPlayer(meta.attackerId, rosters)} charges ${formatPlayer(meta.defenderId, rosters)}.`;
+}
+
+function renderKnockdown(ev: MatchEvent, rosters: RosterIndex): string {
+  const meta = getMeta(ev);
+  const causedBy =
+    typeof meta.causedBy === 'string'
+      ? ` by ${formatPlayer(meta.causedBy, rosters)}`
+      : '';
+  return `  KNOCKDOWN — ${formatPlayer(meta.playerId, rosters)} is knocked down${causedBy} (stunned).`;
+}
+
+function renderPlayerActivation(ev: MatchEvent, rosters: RosterIndex): string {
+  const meta = getMeta(ev);
+  const team = n(meta.team);
+  return `  > ${formatPlayer(meta.playerId, rosters)} (${team}) takes action.`;
+}
+
+function renderDodge(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
   const success = meta.success === true;
   const target = n(meta.target);
@@ -119,17 +180,17 @@ function renderDodge(ev: MatchEvent): string {
   const reroll = meta.usedReroll === true ? ' (rerolled)' : '';
   const tackleNote =
     meta.rerollSuppressedByTackle === true ? ' [tackle blocks reroll]' : '';
-  return `  DODGE — ${n(meta.playerId)} dodges to ${formatPos(meta.to)}${reroll}${tackleNote}: needs ${target}+, rolled ${roll} → ${success ? 'success' : 'fail'}.`;
+  return `  DODGE — ${formatPlayer(meta.playerId, rosters)} dodges to ${formatPos(meta.to)}${reroll}${tackleNote}: needs ${target}+, rolled ${roll} → ${success ? 'success' : 'fail'}.`;
 }
 
-function renderPass(ev: MatchEvent): string {
+function renderPass(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
   const success = meta.success === true;
   const range = n(meta.range);
   const target = n(meta.target);
   const roll = n(meta.roll);
   const fumble = meta.fumble === true ? ' (fumble!)' : '';
-  return `  PASS — ${n(meta.passerId)} attempts a ${range} pass: needs ${target}+, rolled ${roll}${fumble} → ${success ? 'caught' : 'failed'}.`;
+  return `  PASS — ${formatPlayer(meta.passerId, rosters)} attempts a ${range} pass: needs ${target}+, rolled ${roll}${fumble} → ${success ? 'caught' : 'failed'}.`;
 }
 
 function renderTd(ev: MatchEvent): string {
@@ -175,20 +236,20 @@ function renderTurnover(ev: MatchEvent): string {
   return `  TURNOVER — ${cause}.`;
 }
 
-function renderKO(ev: MatchEvent): string {
+function renderKO(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
   const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
   const injury =
     typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
-  return `  KO — ${n(meta.playerId)} is knocked unconscious${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}${armor}${injury}.`;
+  return `  KO — ${formatPlayer(meta.playerId, rosters)} is knocked unconscious${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${armor}${injury}.`;
 }
 
-function renderCasualty(ev: MatchEvent): string {
+function renderCasualty(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
   const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
   const injury =
     typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
-  return `  CASUALTY — ${n(meta.playerId)} is taken off${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}${armor}${injury}.`;
+  return `  CASUALTY — ${formatPlayer(meta.playerId, rosters)} is taken off${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${armor}${injury}.`;
 }
 
 function renderNuffle(ev: MatchEvent): string {
@@ -229,18 +290,28 @@ function formatPos(value: unknown): string {
   return '?';
 }
 
-function renderEvent(ev: MatchEvent, ctx: TurnStartContext): string {
+function renderEvent(
+  ev: MatchEvent,
+  ctx: TurnStartContext,
+  rosters: RosterIndex,
+): string {
   switch (ev.type) {
     case 'KICKOFF':
       return renderKickoff(ev);
     case 'TURN_START':
       return renderTurnStart(ev, ctx);
+    case 'PLAYER_ACTIVATION':
+      return renderPlayerActivation(ev, rosters);
+    case 'BLITZ_DECLARED':
+      return renderBlitzDeclared(ev, rosters);
     case 'BLOCK':
-      return renderBlock(ev);
+      return renderBlock(ev, rosters);
+    case 'KNOCKDOWN':
+      return renderKnockdown(ev, rosters);
     case 'DODGE':
-      return renderDodge(ev);
+      return renderDodge(ev, rosters);
     case 'PASS':
-      return renderPass(ev);
+      return renderPass(ev, rosters);
     case 'MOVE':
       return renderMove(ev);
     case 'TD':
@@ -248,9 +319,9 @@ function renderEvent(ev: MatchEvent, ctx: TurnStartContext): string {
     case 'TURNOVER':
       return renderTurnover(ev);
     case 'KO':
-      return renderKO(ev);
+      return renderKO(ev, rosters);
     case 'CASUALTY':
-      return renderCasualty(ev);
+      return renderCasualty(ev, rosters);
     case 'NUFFLE':
       return renderNuffle(ev);
     case 'HALFTIME':
@@ -282,6 +353,7 @@ function withTimestamp(
 
 export function narrateMatch(result: SimResult, options: NarrateOptions = {}): string {
   const showTimestamps = options.hideTimestamps !== true;
+  const rosters = buildRosterIndex(options);
   const lines: string[] = [];
 
   // Header — extract team names from the KICKOFF event meta when possible.
@@ -300,7 +372,7 @@ export function narrateMatch(result: SimResult, options: NarrateOptions = {}): s
   // mini header ; subsequent events are indented inside it).
   const ctx: TurnStartContext = {};
   for (const ev of result.events) {
-    const raw = renderEvent(ev, ctx);
+    const raw = renderEvent(ev, ctx, rosters);
     lines.push(withTimestamp(raw, ev, showTimestamps));
     if (ev.type === 'TURN_START') {
       const m = getMeta(ev);

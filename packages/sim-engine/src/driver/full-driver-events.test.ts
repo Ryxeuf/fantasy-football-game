@@ -249,4 +249,132 @@ describe('diffStatesToEvents — Lot 3.A.2.b', () => {
     expect(events.some((e) => e.type === 'TD')).toBe(true);
     expect(events.some((e) => e.type === 'TURN_START')).toBe(true);
   });
+
+  describe('Lot 3.A.3 — events enrichis', () => {
+    it('émet PLAYER_ACTIVATION quand selectedPlayerId passe à un nouveau id', () => {
+      const baseline = setup();
+      const target = baseline.players.find((p) => p.team === 'A');
+      if (!target) throw new Error('No team A player in setup');
+      const prev = modify(baseline, { selectedPlayerId: null });
+      const next = modify(prev, { selectedPlayerId: target.id });
+      const move: Move = { type: 'MOVE', playerId: target.id, to: { x: 1, y: 1 } } as Move;
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      const activation = events.find((e) => e.type === 'PLAYER_ACTIVATION');
+      expect(activation).toBeDefined();
+      const meta = activation?.meta as { playerId: string; team: string };
+      expect(meta.playerId).toBe(target.id);
+      expect(meta.team).toBe('home');
+    });
+
+    it("n'émet pas PLAYER_ACTIVATION sur END_TURN (le selectedPlayerId reset ne compte pas)", () => {
+      const baseline = setup();
+      const target = baseline.players.find((p) => p.team === 'A');
+      if (!target) throw new Error('No team A player in setup');
+      const prev = modify(baseline, { selectedPlayerId: null });
+      const next = modify(prev, { selectedPlayerId: target.id });
+      const move: Move = { type: 'END_TURN' };
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      expect(events.some((e) => e.type === 'PLAYER_ACTIVATION')).toBe(false);
+    });
+
+    it('émet BLITZ_DECLARED avant le BLOCK sur un Move BLITZ', () => {
+      const prev = setup();
+      const next = prev;
+      const move: Move = { type: 'BLITZ', playerId: 'A1', targetId: 'B1' };
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      const blitzIdx = events.findIndex((e) => e.type === 'BLITZ_DECLARED');
+      const blockIdx = events.findIndex((e) => e.type === 'BLOCK');
+      expect(blitzIdx).toBeGreaterThanOrEqual(0);
+      expect(blockIdx).toBeGreaterThanOrEqual(0);
+      expect(blitzIdx).toBeLessThan(blockIdx);
+      const meta = events[blitzIdx].meta as {
+        attackerId: string;
+        defenderId: string;
+      };
+      expect(meta.attackerId).toBe('A1');
+      expect(meta.defenderId).toBe('B1');
+    });
+
+    it("n'émet pas BLITZ_DECLARED sur un BLOCK standard", () => {
+      const prev = setup();
+      const next = prev;
+      const move: Move = { type: 'BLOCK', playerId: 'A1', targetId: 'B1' };
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      expect(events.some((e) => e.type === 'BLITZ_DECLARED')).toBe(false);
+    });
+
+    it('émet KNOCKDOWN quand un joueur passe active → stunned avec causedBy', () => {
+      const baseline = setup();
+      const victim = baseline.players.find((p) => p.team === 'B');
+      if (!victim) throw new Error('No team B player in setup');
+      const prev = modify(baseline, {
+        players: baseline.players.map((p) =>
+          p.id === victim.id ? { ...p, state: 'active' as const } : p,
+        ),
+      });
+      const next = modify(prev, {
+        players: prev.players.map((p) =>
+          p.id === victim.id ? { ...p, state: 'stunned' as const } : p,
+        ),
+      });
+      const move: Move = {
+        type: 'BLOCK',
+        playerId: 'A1',
+        targetId: victim.id,
+      };
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      const knock = events.find((e) => e.type === 'KNOCKDOWN');
+      expect(knock).toBeDefined();
+      const meta = knock?.meta as {
+        playerId: string;
+        team: string;
+        causedBy?: string;
+      };
+      expect(meta.playerId).toBe(victim.id);
+      expect(meta.team).toBe('away');
+      expect(meta.causedBy).toBe('A1');
+    });
+
+    it("n'émet pas KNOCKDOWN si le joueur passe direct en knocked_out (KO l'absorbe)", () => {
+      const baseline = setup();
+      const victim = baseline.players.find((p) => p.team === 'B');
+      if (!victim) throw new Error('No team B player in setup');
+      const prev = modify(baseline, {
+        players: baseline.players.map((p) =>
+          p.id === victim.id ? { ...p, state: 'active' as const } : p,
+        ),
+      });
+      const next = modify(prev, {
+        players: prev.players.map((p) =>
+          p.id === victim.id ? { ...p, state: 'knocked_out' as const } : p,
+        ),
+      });
+      const move: Move = {
+        type: 'BLOCK',
+        playerId: 'A1',
+        targetId: victim.id,
+      };
+      const events = diffStatesToEvents(prev, next, {
+        displayAtMs: 1000,
+        move,
+      });
+      expect(events.some((e) => e.type === 'KNOCKDOWN')).toBe(false);
+      expect(events.some((e) => e.type === 'KO')).toBe(true);
+    });
+  });
 });

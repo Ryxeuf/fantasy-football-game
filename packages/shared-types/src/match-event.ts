@@ -22,7 +22,29 @@
 export const EVENT_TYPES = Object.freeze([
   'KICKOFF',
   'TURN_START',
+  /**
+   * Lot 3.A.3 — `PLAYER_ACTIVATION` marque le moment où un joueur entame
+   * son action dans le tour (ex: "A3 Blitzer is now acting"). Émis quand
+   * `state.selectedPlayerId` change vers une nouvelle valeur non-null.
+   * Permet au narrator de structurer la timeline par joueur plutôt que
+   * par action brute, et au frontend d'highlight le joueur actif.
+   */
+  'PLAYER_ACTIVATION',
+  /**
+   * Lot 3.A.3 — `BLITZ_DECLARED` annonce qu'un joueur déclare un blitz
+   * (move + block dans le même tour). Émis avant le `BLOCK` qui en
+   * résulte. Sert à distinguer un block stationnaire (réagi sur place)
+   * d'un blitz (parcours puis charge), info utile au narrator BB.
+   */
+  'BLITZ_DECLARED',
   'BLOCK',
+  /**
+   * Lot 3.A.3 — `KNOCKDOWN` détaille le résultat d'un BLOCK quand le
+   * défenseur tombe (state passe à `prone` ou `stunned`) mais sans
+   * armor break. Pre-cursor des KO/CASUALTY (qui ne sont émis que si
+   * l'armor casse). Améliore la granularité narrative.
+   */
+  'KNOCKDOWN',
   'DODGE',
   'PASS',
   /**

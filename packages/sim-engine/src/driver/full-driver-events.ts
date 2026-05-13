@@ -147,7 +147,50 @@ export function diffStatesToEvents(
   ctx: DiffContext
 ): MatchEvent[] {
   const events: MatchEvent[] = [];
-  const { displayAtMs } = ctx;
+  const { displayAtMs, move } = ctx;
+
+  // 0a) Lot 3.A.3 — PLAYER_ACTIVATION : nouveau joueur actif. On compare
+  // sur `prev` (avant applyMove) pour que l'event précède le coup que
+  // ce joueur s'apprête à exécuter. Vu que `selectedPlayerId` peut
+  // rester null entre deux activations (selection cleared post-action),
+  // on déclenche sur la transition `null|other → newId`.
+  const prevSelected = (prev as { selectedPlayerId?: string | null })
+    .selectedPlayerId;
+  const nextSelected = (next as { selectedPlayerId?: string | null })
+    .selectedPlayerId;
+  if (
+    nextSelected &&
+    nextSelected !== prevSelected &&
+    move.type !== 'END_TURN'
+  ) {
+    const player = next.players.find((p) => p.id === nextSelected);
+    if (player) {
+      events.push({
+        type: 'PLAYER_ACTIVATION',
+        displayAtMs,
+        engineVer: ENGINE_VER,
+        meta: {
+          playerId: nextSelected,
+          team: sideOf(player.team as TeamId),
+        },
+      });
+    }
+  }
+
+  // 0b) Lot 3.A.3 — BLITZ_DECLARED : émis avant le BLOCK qui résulte
+  // d'un blitz. Distingue narrativement "Bob charge sur Carla et la
+  // plaque" (blitz) vs "Bob plaque Carla sur place" (block).
+  if (move.type === 'BLITZ') {
+    events.push({
+      type: 'BLITZ_DECLARED',
+      displayAtMs,
+      engineVer: ENGINE_VER,
+      meta: {
+        attackerId: (move as { playerId?: string }).playerId,
+        defenderId: (move as { targetId?: string }).targetId,
+      },
+    });
+  }
 
   // 1) Event Move-specific (BLOCK / PASS / DODGE / FOUL).
   const primary = buildMoveSpecificEvent(ctx, next);
@@ -195,7 +238,12 @@ export function diffStatesToEvents(
     });
   }
 
-  // 3) KO / CASUALTY : joueurs qui ont changé de state.
+  // 3) KO / CASUALTY / KNOCKDOWN : joueurs qui ont changé de state.
+  // Lot 3.A.3 — KNOCKDOWN couvre le cas active→stunned (defender down
+  // sans armor break). Les deux autres transitions (→knocked_out,
+  // →casualty) restent émises comme KO / CASUALTY ; on n'émet pas de
+  // KNOCKDOWN supplémentaire pour ces cas (le KO/CAS porte déjà la
+  // sémantique "tombé + sorti du jeu").
   const prevById = new Map(prev.players.map((p) => [p.id, p]));
   for (const p of next.players) {
     const old = prevById.get(p.id);
@@ -218,6 +266,24 @@ export function diffStatesToEvents(
         meta: {
           playerId: p.id,
           team: sideOf(p.team as TeamId),
+        },
+      });
+    } else if (p.state === 'stunned' && old.state === 'active') {
+      events.push({
+        type: 'KNOCKDOWN',
+        displayAtMs,
+        engineVer: ENGINE_VER,
+        meta: {
+          playerId: p.id,
+          team: sideOf(p.team as TeamId),
+          // Best-effort attribution : si le coup est un BLOCK/BLITZ/FOUL
+          // ciblant ce joueur, c'est très probablement le causedBy.
+          ...((move.type === 'BLOCK' ||
+            move.type === 'BLITZ' ||
+            move.type === 'FOUL') &&
+          (move as { targetId?: string }).targetId === p.id
+            ? { causedBy: (move as { playerId?: string }).playerId }
+            : {}),
         },
       });
     }

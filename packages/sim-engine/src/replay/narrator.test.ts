@@ -131,4 +131,195 @@ describe('narrateMatch — sprint Pro League 0.E.2', () => {
     }
     expect(withDetail).not.toBeNull();
   });
+
+  describe('Lot 3.A.4 — roster-aware rendering', () => {
+    const homeRoster = [
+      {
+        id: 'roster-home-1',
+        name: 'Bob Smasher',
+        number: 3,
+        position: 'Blitzer',
+        ma: 7,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+      },
+      {
+        id: 'roster-home-2',
+        name: 'Joe Lineman',
+        number: 4,
+        position: 'Lineman',
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+      },
+    ];
+    const awayRoster = [
+      {
+        id: 'roster-away-1',
+        name: 'Carla Catcher',
+        number: 7,
+        position: 'Catcher',
+        ma: 8,
+        st: 2,
+        ag: 4,
+        pa: 5,
+        av: 8,
+      },
+    ];
+
+    it('remplace playerId par "Nom (#numero Position)" sur un event BLOCK', () => {
+      const result = {
+        result: 'draw' as const,
+        engineVer: '0.19.0',
+        events: [
+          { type: 'KICKOFF' as const, displayAtMs: 0, engineVer: '0.19.0', meta: { home: 'h', away: 'a' } },
+          {
+            type: 'BLOCK' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: {
+              attackerId: 'roster-home-1',
+              defenderId: 'roster-away-1',
+              kind: 'block',
+            },
+          },
+        ],
+        casualties: [],
+        summary: {
+          outcome: 'draw' as const,
+          score: { home: 0, away: 0 },
+          durationMs: 1000,
+          touchdownCount: 0,
+          casualtyCount: 0,
+          turnoverCount: 0,
+          nuffleCount: 0,
+          underdogBoostCount: 0,
+          momentum: [],
+        },
+      };
+      const out = narrateMatch(result, {
+        rosters: { home: homeRoster, away: awayRoster },
+        hideTimestamps: true,
+      });
+      expect(out).toContain('Bob Smasher (#3 Blitzer) blocks Carla Catcher (#7 Catcher)');
+    });
+
+    it('fallback sur l\'id brut quand le roster ne mappe pas le playerId', () => {
+      const result = {
+        result: 'draw' as const,
+        engineVer: '0.19.0',
+        events: [
+          { type: 'KICKOFF' as const, displayAtMs: 0, engineVer: '0.19.0', meta: {} },
+          {
+            type: 'BLOCK' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: { attackerId: 'unknown-id', defenderId: 'B1', kind: 'block' },
+          },
+        ],
+        casualties: [],
+        summary: {
+          outcome: 'draw' as const,
+          score: { home: 0, away: 0 },
+          durationMs: 1000,
+          touchdownCount: 0,
+          casualtyCount: 0,
+          turnoverCount: 0,
+          nuffleCount: 0,
+          underdogBoostCount: 0,
+          momentum: [],
+        },
+      };
+      const out = narrateMatch(result, { rosters: { home: [], away: [] } });
+      expect(out).toContain('unknown-id blocks B1');
+    });
+
+    it('render PLAYER_ACTIVATION / BLITZ_DECLARED / KNOCKDOWN avec noms du roster', () => {
+      const result = {
+        result: 'draw' as const,
+        engineVer: '0.19.0',
+        events: [
+          { type: 'KICKOFF' as const, displayAtMs: 0, engineVer: '0.19.0', meta: {} },
+          {
+            type: 'PLAYER_ACTIVATION' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: { playerId: 'roster-home-1', team: 'home' },
+          },
+          {
+            type: 'BLITZ_DECLARED' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: {
+              attackerId: 'roster-home-1',
+              defenderId: 'roster-away-1',
+            },
+          },
+          {
+            type: 'KNOCKDOWN' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: {
+              playerId: 'roster-away-1',
+              team: 'away',
+              causedBy: 'roster-home-1',
+            },
+          },
+        ],
+        casualties: [],
+        summary: {
+          outcome: 'draw' as const,
+          score: { home: 0, away: 0 },
+          durationMs: 1000,
+          touchdownCount: 0,
+          casualtyCount: 0,
+          turnoverCount: 0,
+          nuffleCount: 0,
+          underdogBoostCount: 0,
+          momentum: [],
+        },
+      };
+      const out = narrateMatch(result, {
+        rosters: { home: homeRoster, away: awayRoster },
+        hideTimestamps: true,
+      });
+      expect(out).toContain('Bob Smasher (#3 Blitzer) (home) takes action');
+      expect(out).toContain('BLITZ! — Bob Smasher (#3 Blitzer) charges Carla Catcher (#7 Catcher)');
+      expect(out).toContain('KNOCKDOWN — Carla Catcher (#7 Catcher) is knocked down by Bob Smasher (#3 Blitzer)');
+    });
+
+    it('mode legacy (sans rosters) reste fonctionnel avec playerId brut', () => {
+      const result = {
+        result: 'draw' as const,
+        engineVer: '0.19.0',
+        events: [
+          { type: 'KICKOFF' as const, displayAtMs: 0, engineVer: '0.19.0', meta: {} },
+          {
+            type: 'BLOCK' as const,
+            displayAtMs: 1000,
+            engineVer: '0.19.0',
+            meta: { attackerId: 'A1', defenderId: 'B1', kind: 'block' },
+          },
+        ],
+        casualties: [],
+        summary: {
+          outcome: 'draw' as const,
+          score: { home: 0, away: 0 },
+          durationMs: 1000,
+          touchdownCount: 0,
+          casualtyCount: 0,
+          turnoverCount: 0,
+          nuffleCount: 0,
+          underdogBoostCount: 0,
+          momentum: [],
+        },
+      };
+      const out = narrateMatch(result);
+      expect(out).toContain('A1 blocks B1');
+    });
+  });
 });

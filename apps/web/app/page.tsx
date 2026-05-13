@@ -3,6 +3,7 @@ import Image from "next/image";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
 import HomeStructuredData from "./components/HomeStructuredData";
+import LatestBlogPosts from "./components/LatestBlogPosts";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 
@@ -263,6 +264,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Latest blog posts */}
+        <LatestBlogPosts />
 
         {/* Play Online (feature-flagged) */}
         {onlinePlayEnabled && (
