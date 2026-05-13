@@ -93,6 +93,13 @@ export interface MatchFullReplayDump {
   readonly initialState: GameState;
   readonly moves: readonly Move[];
   /**
+   * Lot 3.D.1 — états BB *après* chaque move appliqué. `states[i]`
+   * correspond à `applyMove(states[i-1] ?? initialState, moves[i], rng)`
+   * tel que produit par `runFullDriver`. Le client rejoue donc le
+   * match step-by-step sans avoir à exposer le seed RNG.
+   */
+  readonly states: readonly GameState[];
+  /**
    * Données d'équipe utiles au rendu visuel (couleurs primaires /
    * secondaires, slug pour les variantes Pixi). `null` côté si la
    * ProTeam a été retirée depuis (cas dégénéré).
@@ -197,6 +204,7 @@ export async function getMatchFullReplayDump(
     durationMs: replay.durationMs,
     initialState: wrapper.fullReplay.initialState,
     moves: wrapper.fullReplay.moves,
+    states: wrapper.fullReplay.states,
     teams: {
       home: match.homeTeam
         ? {

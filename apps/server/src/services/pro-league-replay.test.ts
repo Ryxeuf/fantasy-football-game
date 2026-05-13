@@ -185,17 +185,20 @@ describe("getMatchFullReplayDump — Lot 3.D.2", () => {
     );
   });
 
-  it("renvoie initialState + moves + teams quand disponible", async () => {
+  it("renvoie initialState + moves + states + teams quand disponible", async () => {
     mocked.proLeagueMatch.findUnique.mockResolvedValue(matchSelect);
     mocked.replay.findUnique.mockResolvedValue({
       payload: Buffer.from([1, 2, 3]),
       durationMs: 60_000,
     });
+    const initial = { gamePhase: "playing", half: 1, turn: 1 };
+    const state1 = { gamePhase: "playing", half: 1, turn: 2 };
     mockedDecompressReplay.mockResolvedValue({
       events: [],
       fullReplay: {
-        initialState: { gamePhase: "playing", half: 1, turn: 1 } as never,
+        initialState: initial as never,
         moves: [{ type: "END_TURN" }] as never,
+        states: [state1] as never,
       },
     } as never);
 
@@ -203,6 +206,8 @@ describe("getMatchFullReplayDump — Lot 3.D.2", () => {
     expect(out.matchId).toBe("m1");
     expect(out.durationMs).toBe(60_000);
     expect(out.moves).toEqual([{ type: "END_TURN" }]);
+    expect(out.states).toEqual([state1]);
+    expect(out.initialState).toEqual(initial);
     expect(out.teams.home?.slug).toBe("sf-gold-rush");
     expect(out.teams.home?.primaryColor).toBe("#ffaa00");
     expect(out.teams.away?.slug).toBe("chi-iron-bears");
