@@ -179,6 +179,27 @@ export const adminRosterRegenerateSchema = z.object({
   count: z.number().int().min(1).max(30).default(12),
 });
 
+// ── Sprint test-leagues — saisons Pro League de test ──
+
+/** Creation d'une saison Pro League "test" : isolee de la production
+ *  (invisible cote user), matchs simules immediatement (replays prets),
+ *  supprimable d'un coup. Tous les champs sont optionnels — defaults
+ *  raisonnables pour un usage rapide depuis l'admin UI. */
+export const adminCreateTestSeasonSchema = z.object({
+  /** Label libre (max 120 chars). */
+  label: z.string().min(1).max(120).optional(),
+  driverKind: z.enum(["hybrid", "full"]).optional(),
+  engineVer: z.string().min(1).max(50).optional(),
+  /** Sous-ensemble optionnel de slugs. Min 2 si fourni, max 16 (cap
+   *  ligue). Limite max 16 matchs/round + 15 rounds = 120 matchs en
+   *  hybrid (~6s) ou ~4min en full driver. */
+  teamSlugs: z
+    .array(z.string().min(1).max(80))
+    .min(2, "Au moins 2 teamSlugs requis")
+    .max(16, "Max 16 teamSlugs")
+    .optional(),
+});
+
 /** Branding admin d'une ProTeam : couleurs, motto, headline, nflFlavor.
  *  Tous les champs sont optionnels — l'endpoint applique seulement ceux
  *  fournis, ne touche pas aux autres. `null` explicite = effacer le champ. */

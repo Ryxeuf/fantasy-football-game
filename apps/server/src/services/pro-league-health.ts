@@ -48,7 +48,7 @@ function worstStatus(checks: readonly CheckResult[]): CheckStatus {
 async function checkSeason(): Promise<CheckResult> {
   try {
     const season = await prisma.proLeagueSeason.findFirst({
-      where: { status: "in_progress" },
+      where: { status: "in_progress", isTest: false },
       select: { id: true, year: true },
     });
     if (!season) {

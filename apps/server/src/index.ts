@@ -16,6 +16,7 @@ import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import adminWalletRoutes from "./routes/admin-wallet";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
+import adminProTestSeasonRoutes from "./routes/admin-pro-test-season";
 import adminProTeamRoutes from "./routes/admin-pro-team";
 import adminProRosterRoutes from "./routes/admin-pro-roster";
 import adminProTournamentRoutes from "./routes/admin-pro-tournament";
@@ -252,6 +253,9 @@ app.use("/admin/pro-league", adminProTeamRoutes);
 app.use("/admin/pro-league", adminProRosterRoutes);
 // Lot P.B.2 — Tournois Pro League payants (sink Crowns).
 app.use("/admin/pro-league", adminProTournamentRoutes);
+// Sprint test-leagues — saisons Pro League de test (creation full +
+// suppression cascade). Invisibles cote user.
+app.use("/admin/pro-league/test-seasons", adminProTestSeasonRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);

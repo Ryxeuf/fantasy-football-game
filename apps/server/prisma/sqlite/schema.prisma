@@ -986,6 +986,12 @@ model ProLeagueSeason {
   status     String    @default("scheduled")
   engineVer  String
   driverKind String    @default("hybrid")
+  /// Sprint test-leagues — saison "test" cree depuis l'admin via la
+  /// test-factory. `true` = la saison + tous ses matchs + standings sont
+  /// invisibles cote user.
+  isTest     Boolean   @default(false)
+  /// Label libre pour les saisons test (ex: "Engine v2.1 regression").
+  testLabel  String?
   startsAt   DateTime?
   endsAt     DateTime?
   createdAt  DateTime  @default(now())
@@ -998,6 +1004,7 @@ model ProLeagueSeason {
 
   @@unique([leagueId, year])
   @@index([status])
+  @@index([isTest])
 }
 
 model ProLeagueRound {
