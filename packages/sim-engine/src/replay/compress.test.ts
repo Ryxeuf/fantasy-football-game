@@ -15,10 +15,14 @@ import type { MatchEvent } from '@bb/shared-types';
 import { simulateMatch } from '../simulate-match';
 import { PRO_LEAGUE_TEAMS } from '../tactics/race-profiles';
 
+import { setup } from '@bb/game-engine';
+
 import {
   compressEvents,
+  compressReplay,
   computeCompressionStats,
   decompressEvents,
+  decompressReplay,
 } from './compress';
 
 describe('compressEvents / decompressEvents — sprint 1.A.2', () => {
@@ -103,5 +107,67 @@ describe('compressEvents / decompressEvents — sprint 1.A.2', () => {
     await expect(decompressEvents(corrupt)).rejects.toThrow();
     // Sanité : le bon payload, lui, fonctionne.
     await expect(decompressEvents(events)).resolves.toEqual([]);
+  });
+
+  describe('Lot 3.D.1 — wrapper avec fullReplay', () => {
+    it('compressReplay sans fullReplay produit le même format que compressEvents (rétro-compat)', async () => {
+      const events: MatchEvent[] = [
+        { type: 'KICKOFF', displayAtMs: 0, engineVer: '0.20.0' },
+        { type: 'END', displayAtMs: 1000, engineVer: '0.20.0' },
+      ];
+      const wrapped = await compressReplay({ events });
+      const direct = await compressEvents(events);
+      // Mêmes bytes : l'absence de fullReplay déclenche le path legacy.
+      expect(wrapped.equals(direct)).toBe(true);
+    });
+
+    it('roundtrip wrapper (events + fullReplay) preserve initialState + moves', async () => {
+      const initialState = setup();
+      const events: MatchEvent[] = [
+        { type: 'KICKOFF', displayAtMs: 0, engineVer: '0.20.0' },
+      ];
+      const wrapper = {
+        events,
+        fullReplay: {
+          initialState,
+          moves: [
+            { type: 'END_TURN' as const },
+            { type: 'BLOCK' as const, playerId: 'A1', targetId: 'B1' },
+          ],
+          states: [initialState, initialState],
+        },
+      };
+      const compressed = await compressReplay(wrapper);
+      const decoded = await decompressReplay(compressed);
+      expect(decoded.events).toEqual(events);
+      expect(decoded.fullReplay).toBeDefined();
+      expect(decoded.fullReplay?.moves).toEqual(wrapper.fullReplay.moves);
+      expect(decoded.fullReplay?.states.length).toBe(2);
+      expect(decoded.fullReplay?.initialState.gamePhase).toBe(
+        initialState.gamePhase,
+      );
+    });
+
+    it('decompressEvents accepte le format wrapper et extrait events', async () => {
+      const events: MatchEvent[] = [
+        { type: 'KICKOFF', displayAtMs: 0, engineVer: '0.20.0' },
+      ];
+      const compressed = await compressReplay({
+        events,
+        fullReplay: { initialState: setup(), moves: [], states: [] },
+      });
+      const decoded = await decompressEvents(compressed);
+      expect(decoded).toEqual(events);
+    });
+
+    it('decompressReplay sur payload legacy retourne fullReplay=undefined', async () => {
+      const events: MatchEvent[] = [
+        { type: 'KICKOFF', displayAtMs: 0, engineVer: '0.20.0' },
+      ];
+      const legacy = await compressEvents(events);
+      const wrapper = await decompressReplay(legacy);
+      expect(wrapper.events).toEqual(events);
+      expect(wrapper.fullReplay).toBeUndefined();
+    });
   });
 });

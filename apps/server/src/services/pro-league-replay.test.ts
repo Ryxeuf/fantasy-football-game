@@ -9,12 +9,14 @@ vi.mock("../prisma", () => ({
 
 vi.mock("@bb/sim-engine", () => ({
   decompressEvents: vi.fn(),
+  decompressReplay: vi.fn(),
 }));
 
 import { prisma } from "../prisma";
-import { decompressEvents } from "@bb/sim-engine";
+import { decompressEvents, decompressReplay } from "@bb/sim-engine";
 import {
   ReplayDumpError,
+  getMatchFullReplayDump,
   getMatchReplayDump,
 } from "./pro-league-replay";
 
@@ -24,6 +26,7 @@ interface MockedPrisma {
 }
 const mocked = prisma as unknown as MockedPrisma;
 const mockedDecompress = vi.mocked(decompressEvents);
+const mockedDecompressReplay = vi.mocked(decompressReplay);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -120,5 +123,88 @@ describe("getMatchReplayDump — sprint 1.G.1", () => {
     const out = await getMatchReplayDump("m1");
     expect(out.eventCount).toBe(0);
     expect(out.events).toEqual([]);
+  });
+});
+
+describe("getMatchFullReplayDump — Lot 3.D.2", () => {
+  const matchSelect = {
+    id: "m1",
+    status: "completed",
+    homeTeam: {
+      id: "team-h",
+      slug: "sf-gold-rush",
+      name: "Gold Rush",
+      city: "San Francisco",
+      race: "Skaven",
+      primaryColor: "#ffaa00",
+      secondaryColor: "#000000",
+    },
+    awayTeam: {
+      id: "team-a",
+      slug: "chi-iron-bears",
+      name: "Iron Bears",
+      city: "Chicago",
+      race: "Dwarf",
+      primaryColor: "#aa0000",
+      secondaryColor: "#ffffff",
+    },
+  };
+
+  it("throw MATCH_NOT_FOUND si match inconnu", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(null);
+    await expectCode(getMatchFullReplayDump("missing"), "MATCH_NOT_FOUND");
+  });
+
+  it("throw MATCH_NOT_REPLAYABLE si status != completed", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      ...matchSelect,
+      status: "ready",
+    });
+    await expectCode(getMatchFullReplayDump("m1"), "MATCH_NOT_REPLAYABLE");
+  });
+
+  it("throw REPLAY_NOT_FOUND si Replay manquant", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(matchSelect);
+    mocked.replay.findUnique.mockResolvedValue(null);
+    await expectCode(getMatchFullReplayDump("m1"), "REPLAY_NOT_FOUND");
+  });
+
+  it("throw FULL_REPLAY_NOT_AVAILABLE si wrapper sans fullReplay", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(matchSelect);
+    mocked.replay.findUnique.mockResolvedValue({
+      payload: Buffer.from([1, 2, 3]),
+      durationMs: 600_000,
+    });
+    mockedDecompressReplay.mockResolvedValue({
+      events: [],
+      // pas de fullReplay → hybrid driver / pre-3.D.1
+    } as never);
+    await expectCode(
+      getMatchFullReplayDump("m1"),
+      "FULL_REPLAY_NOT_AVAILABLE",
+    );
+  });
+
+  it("renvoie initialState + moves + teams quand disponible", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(matchSelect);
+    mocked.replay.findUnique.mockResolvedValue({
+      payload: Buffer.from([1, 2, 3]),
+      durationMs: 60_000,
+    });
+    mockedDecompressReplay.mockResolvedValue({
+      events: [],
+      fullReplay: {
+        initialState: { gamePhase: "playing", half: 1, turn: 1 } as never,
+        moves: [{ type: "END_TURN" }] as never,
+      },
+    } as never);
+
+    const out = await getMatchFullReplayDump("m1");
+    expect(out.matchId).toBe("m1");
+    expect(out.durationMs).toBe(60_000);
+    expect(out.moves).toEqual([{ type: "END_TURN" }]);
+    expect(out.teams.home?.slug).toBe("sf-gold-rush");
+    expect(out.teams.home?.primaryColor).toBe("#ffaa00");
+    expect(out.teams.away?.slug).toBe("chi-iron-bears");
   });
 });

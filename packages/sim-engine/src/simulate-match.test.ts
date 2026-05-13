@@ -111,6 +111,17 @@ describe('simulateMatch — driver toggle hybrid/full (sprint Pro League 3.B.1)'
   it('driverKind: "full" reste déterministe pour un même seed', () => {
     const a = simulateMatch(baseInput({ seed: 99 }), { driverKind: 'full' });
     const b = simulateMatch(baseInput({ seed: 99 }), { driverKind: 'full' });
-    expect(b).toEqual(a);
+    // Comparaison sur les parties strictement déterministes. Le
+    // `GameState.gameLog` injecté par le game-engine porte des
+    // `Date.now()` + random ID par entry ; il n'est pas reproductible
+    // byte-for-byte mais ne participe pas à la logique de match.
+    // Lot 3.D.1 — `fullReplay.initialState`/`states` portent ces logs,
+    // donc on exclut `fullReplay` du diff strict.
+    expect(b.events).toEqual(a.events);
+    expect(b.casualties).toEqual(a.casualties);
+    expect(b.summary).toEqual(a.summary);
+    expect(b.result).toEqual(a.result);
+    expect(b.fullReplay?.moves).toEqual(a.fullReplay?.moves);
+    expect(b.fullReplay?.states.length).toBe(a.fullReplay?.states.length);
   });
 });

@@ -100,6 +100,7 @@ import {
 } from "../services/pro-league-match";
 import {
   ReplayDumpError,
+  getMatchFullReplayDump,
   getMatchReplayDump,
 } from "../services/pro-league-replay";
 import {
@@ -271,6 +272,45 @@ export async function handleGetMatchReplay(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/matches/${matchId}/replay] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Lot 3.D.2 — dump du re-jeu visuel BB (initialState + moves + teams).
+ * Le client `<MatchReplayPlayer>` Vue terrain rejoue les moves
+ * step-by-step pour rendre le `<GameBoardWithDugouts>` à chaque
+ * instant. 404 si pas dispo (hybrid driver, pré-3.D.1).
+ */
+export async function handleGetMatchFullReplay(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const matchId = req.params.id;
+  if (!matchId || typeof matchId !== "string") {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const dump = await getMatchFullReplayDump(matchId);
+    res.json(dump);
+  } catch (err: unknown) {
+    if (err instanceof ReplayDumpError) {
+      const status =
+        err.code === "MATCH_NOT_REPLAYABLE"
+          ? 409
+          : err.code === "MATCH_NOT_FOUND" ||
+              err.code === "REPLAY_NOT_FOUND" ||
+              err.code === "FULL_REPLAY_NOT_AVAILABLE"
+            ? 404
+            : 500;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/matches/${matchId}/full-replay] failed: ${msg}`,
+    );
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1451,6 +1491,7 @@ router.get("/seers/weekly", handleGetSeerLeaderboard);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/matches/:id/replay", handleGetMatchReplay);
+router.get("/matches/:id/full-replay", handleGetMatchFullReplay);
 router.get("/leaderboard", handleGetBetLeaderboard);
 router.get("/gazette/latest", handleGetLatestEdition);
 router.get("/gazette/dates", handleListEditionDates);

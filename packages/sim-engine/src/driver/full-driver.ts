@@ -235,7 +235,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // retombe sur `setup()` minimal (legacy MVP).
   const homeRoster = input.home.roster;
   const awayRoster = input.away.roster;
-  let state =
+  const initialState: GameState =
     homeRoster && homeRoster.length > 0 && awayRoster && awayRoster.length > 0
       ? buildGameStateFromRosters({
           homeRoster,
@@ -245,6 +245,17 @@ export function runFullDriver(input: SimInput): SimResult {
           receivingTeam: 'B', // away receives par convention sim-engine
         })
       : setup();
+  let state: GameState = initialState;
+
+  // Lot 3.D.1 — capture (moves, states) à chaque itération pour permettre
+  // au client de rendre le terrain Pixi pas-à-pas (Lots 3.D.3 → 3.D.4).
+  // On persiste les states (vs les recalculer client-side) pour
+  // contourner l'asynchronicité RNG : `applyMove` consomme du RNG pour
+  // résoudre les dés, et le RNG du sim-engine est déjà entamé par
+  // `selectMoveForActiveTeam` (IA). Stocker `states[]` directement
+  // évite d'avoir à mocker le RNG côté browser.
+  const appliedMoves: Move[] = [];
+  const postStates: GameState[] = [];
 
   // Lot 3.A.2.b — collect MatchEvent[] via state diff après chaque
   // applyMove. Le KICKOFF event est émis avant la boucle et l'END
@@ -286,6 +297,7 @@ export function runFullDriver(input: SimInput): SimResult {
 
     const prev = state;
     let next: GameState;
+    let appliedMove: Move = move;
     try {
       next = applyMove(state, move, engineRng);
     } catch {
@@ -293,10 +305,13 @@ export function runFullDriver(input: SimInput): SimResult {
       // pour avancer.
       try {
         next = applyMove(state, { type: 'END_TURN' }, engineRng);
+        appliedMove = { type: 'END_TURN' };
       } catch {
         break;
       }
     }
+    appliedMoves.push(appliedMove);
+    postStates.push(next);
 
     // Stale-detection : si N END_TURN consécutifs n'ont *vraiment* rien
     // changé (turn + half + currentPlayer identiques entre prev et next),
@@ -382,5 +397,10 @@ export function runFullDriver(input: SimInput): SimResult {
     events,
     casualties,
     summary,
+    fullReplay: {
+      initialState,
+      moves: appliedMoves,
+      states: postStates,
+    },
   };
 }

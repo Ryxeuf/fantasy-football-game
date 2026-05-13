@@ -7,7 +7,7 @@
  * and the spectate UI can consume it without pulling the whole engine.
  */
 
-import type { CasualtyOutcome, TeamId } from '@bb/game-engine';
+import type { CasualtyOutcome, GameState, Move, TeamId } from '@bb/game-engine';
 import type { MatchEvent } from '@bb/shared-types';
 
 import type { PlayerMomentum } from './tactics/momentum';
@@ -15,7 +15,7 @@ import type { TacticalProfile } from './tactics/tactical-profile';
 
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5). */
-export const ENGINE_VER = '0.20.0';
+export const ENGINE_VER = '0.21.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */
@@ -140,4 +140,24 @@ export interface SimResult {
   summary: MatchSummary;
   casualties: readonly Casualty[];
   engineVer: EngineVersion;
+  /**
+   * Lot 3.D.1 — re-jeu visuel pas-à-pas. Quand le driver utilisé est le
+   * full driver, on capture la séquence (initialState, states post-move,
+   * moves appliqués) pour que le client puisse rendre le terrain Pixi
+   * pas-à-pas comme dans `/play`. Vide pour le hybrid driver (synthèse
+   * archétype, pas de GameState BB précis).
+   *
+   * `states[i]` est le `GameState` produit par `applyMove(prev, moves[i],
+   * rng)`. `states.length === moves.length` ; `states[states.length - 1]`
+   * est l'état final du match. On persiste les states (vs les recalculer
+   * côté client) pour éviter d'avoir à exposer le seed RNG et garantir
+   * un déterminisme strict (`applyMove` consomme du RNG pour les dés).
+   * Tradeoff : payload plus gros mais re-jeu instantané sans dépendance
+   * sur le sim-engine côté browser.
+   */
+  fullReplay?: {
+    readonly initialState: GameState;
+    readonly moves: readonly Move[];
+    readonly states: readonly GameState[];
+  };
 }

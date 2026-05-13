@@ -30,7 +30,7 @@
 import {
   ENGINE_VER as CURRENT_ENGINE_VER,
   PRO_LEAGUE_TEAM_BY_ID,
-  compressEvents,
+  compressReplay,
   computeCompressionStats,
   simulateMatch,
   type MatchEvent,
@@ -349,7 +349,14 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     }
   }
 
-  const compressed = await compressEvents(result.events);
+  // Lot 3.D.1 — si le full driver a fourni `fullReplay` (initialState
+  // + moves), on persiste le tout via le format wrapper. Sinon (hybrid
+  // driver, ou full driver pré-3.D.1), on garde l'ancien format array.
+  // `compressReplay` choisit automatiquement le bon encodage.
+  const compressed = await compressReplay({
+    events: result.events,
+    fullReplay: result.fullReplay,
+  });
   const stats = computeCompressionStats(result.events, compressed);
   const highlights = extractHighlights(result.events);
   appMetrics.observeReplaySize({ engineVer }, compressed.byteLength);

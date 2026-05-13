@@ -69,9 +69,12 @@ function deriveScore(events: readonly MatchEvent[]): ScoreState {
 const EVENT_BADGE_STYLES: Record<string, string> = {
   KICKOFF: "bg-slate-700 text-slate-100",
   TURN_START: "bg-slate-800 text-slate-300",
+  BLITZ_DECLARED: "bg-yellow-700 text-yellow-50 font-semibold",
   BLOCK: "bg-amber-900 text-amber-100",
+  KNOCKDOWN: "bg-orange-800 text-orange-50",
   DODGE: "bg-sky-900 text-sky-100",
   PASS: "bg-blue-900 text-blue-100",
+  MOVE: "bg-slate-700 text-slate-200",
   TD: "bg-emerald-700 text-emerald-50 font-semibold",
   KO: "bg-orange-900 text-orange-100",
   CASUALTY: "bg-red-700 text-red-50 font-semibold",
@@ -80,6 +83,12 @@ const EVENT_BADGE_STYLES: Record<string, string> = {
   HALFTIME: "bg-indigo-900 text-indigo-100",
   END: "bg-slate-900 text-slate-100 font-semibold",
 };
+
+// Lot 3.A.3 — events trop bruyants pour le ticker (PLAYER_ACTIVATION
+// ~28/match). Filtrés par défaut ; restent disponibles dans le payload
+// MatchEvent pour le narrator détaillé et un futur highlight sur le
+// terrain Pixi.
+const HIDDEN_EVENT_TYPES = new Set<string>(["PLAYER_ACTIVATION"]);
 
 function formatClock(displayAtMs: number): string {
   const seconds = Math.floor(displayAtMs / 1000);
@@ -98,6 +107,15 @@ interface EventsT {
   nuffle: string;
   halftime: string;
   matchEnd: string;
+  blitzDeclared: string;
+  knockdown: string;
+  knockdownWithCause: string;
+  block: string;
+  blockBetween: string;
+  pass: string;
+  dodge: string;
+  ko: string;
+  turnover: string;
 }
 
 function summarizeMeta(ev: MatchEvent, e: EventsT): string {
@@ -118,9 +136,48 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
         .replace("{turn}", turn)
         .replace("{team}", drivingTeam);
     }
+    case "BLITZ_DECLARED": {
+      const attacker = String(meta.attackerId ?? "?");
+      const defender = String(meta.defenderId ?? "?");
+      return e.blitzDeclared
+        .replace("{attacker}", attacker)
+        .replace("{defender}", defender);
+    }
+    case "BLOCK": {
+      const attacker = String(meta.attackerId ?? "");
+      const defender = String(meta.defenderId ?? "");
+      if (attacker && defender) {
+        return e.blockBetween
+          .replace("{attacker}", attacker)
+          .replace("{defender}", defender);
+      }
+      return e.block;
+    }
+    case "KNOCKDOWN": {
+      const player = String(meta.playerId ?? "?");
+      const cause = meta.causedBy ? String(meta.causedBy) : "";
+      if (cause) {
+        return e.knockdownWithCause
+          .replace("{player}", player)
+          .replace("{cause}", cause);
+      }
+      return e.knockdown.replace("{player}", player);
+    }
+    case "DODGE": {
+      const player = String(meta.playerId ?? "?");
+      return e.dodge.replace("{player}", player);
+    }
+    case "PASS": {
+      const passer = String(meta.passerId ?? "?");
+      return e.pass.replace("{passer}", passer);
+    }
     case "TD": {
       const team = String(meta.team ?? "").toUpperCase();
       return e.touchdownTeam.replace("{team}", team);
+    }
+    case "KO": {
+      const player = String(meta.playerId ?? "?");
+      return e.ko.replace("{player}", player);
     }
     case "CASUALTY": {
       if (meta.causedBy) {
@@ -130,6 +187,10 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
         );
       }
       return e.casualty;
+    }
+    case "TURNOVER": {
+      const cause = meta.cause ? String(meta.cause) : "";
+      return cause ? `${e.turnover} (${cause})` : e.turnover;
     }
     case "NUFFLE": {
       const id = String(meta.id ?? meta.eventId ?? "?");
@@ -254,6 +315,7 @@ export default function LiveProMatchPage({
           </li>
         ) : (
           events
+            .filter((ev) => !HIDDEN_EVENT_TYPES.has(ev.type))
             .slice()
             .reverse()
             .map((ev, idx) => (

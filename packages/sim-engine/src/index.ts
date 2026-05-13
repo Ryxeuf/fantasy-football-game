@@ -212,9 +212,12 @@ export {
 
 export {
   compressEvents,
+  compressReplay,
   decompressEvents,
+  decompressReplay,
   computeCompressionStats,
   type CompressionStats,
+  type ReplayWrapper,
 } from './replay/compress';
 
 export {

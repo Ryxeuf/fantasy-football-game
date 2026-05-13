@@ -129,4 +129,38 @@ describe('runFullDriver — Lot 3.A.2.a (MVP smoke)', () => {
     const lastEvent = result.events[result.events.length - 1];
     expect(result.summary.durationMs).toBe(lastEvent.displayAtMs);
   });
+
+  describe('Lot 3.D.1 — fullReplay (initialState + moves + states)', () => {
+    it('expose fullReplay.initialState + moves + states', () => {
+      const result = runFullDriver(buildInput({ seed: 42 }));
+      expect(result.fullReplay).toBeDefined();
+      expect(result.fullReplay?.initialState).toBeDefined();
+      expect(result.fullReplay?.initialState.half).toBe(1);
+      expect(result.fullReplay?.initialState.turn).toBe(1);
+      expect(Array.isArray(result.fullReplay?.moves)).toBe(true);
+      expect(Array.isArray(result.fullReplay?.states)).toBe(true);
+      expect((result.fullReplay?.moves.length ?? 0)).toBeGreaterThan(0);
+    });
+
+    it('states.length === moves.length (un state post chaque move)', () => {
+      const result = runFullDriver(buildInput({ seed: 42 }));
+      expect(result.fullReplay?.states.length).toBe(
+        result.fullReplay?.moves.length,
+      );
+    });
+
+    it('moves[] contient des END_TURN (cycle home/away en BB)', () => {
+      const result = runFullDriver(buildInput({ seed: 42 }));
+      const endTurns =
+        result.fullReplay?.moves.filter((m) => m.type === 'END_TURN') ?? [];
+      expect(endTurns.length).toBeGreaterThan(0);
+    });
+
+    it('même seed → même séquence de moves (déterminisme strict)', () => {
+      const a = runFullDriver(buildInput({ seed: 314 }));
+      const b = runFullDriver(buildInput({ seed: 314 }));
+      expect(b.fullReplay?.moves.length).toBe(a.fullReplay?.moves.length);
+      expect(b.fullReplay?.moves).toEqual(a.fullReplay?.moves);
+    });
+  });
 });

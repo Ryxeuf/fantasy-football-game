@@ -49,6 +49,21 @@ const ProLeagueField = dynamic(
   },
 );
 
+// Lot 3.D.4 — vue terrain BB (full driver replay). Lazy-load séparé
+// pour ne pas charger le bundle Pixi roster-aware quand l'utilisateur
+// reste sur la vue classique.
+const FullReplayField = dynamic(() => import("./FullReplayField"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="aspect-[3/1] w-full animate-pulse rounded bg-slate-800/60"
+      aria-label="Loading full replay field"
+    />
+  ),
+});
+
+type ReplayViewMode = "classic" | "field";
+
 interface ReplayDump {
   readonly matchId: string;
   readonly status: string;
@@ -64,9 +79,12 @@ interface PlayerProps {
 const EVENT_BADGE_STYLES: Record<string, string> = {
   KICKOFF: "bg-slate-700 text-slate-100",
   TURN_START: "bg-slate-800 text-slate-300",
+  BLITZ_DECLARED: "bg-yellow-700 text-yellow-50 font-semibold",
   BLOCK: "bg-amber-900 text-amber-100",
+  KNOCKDOWN: "bg-orange-800 text-orange-50",
   DODGE: "bg-sky-900 text-sky-100",
   PASS: "bg-blue-900 text-blue-100",
+  MOVE: "bg-slate-700 text-slate-200",
   TD: "bg-emerald-700 text-emerald-50 font-semibold",
   KO: "bg-orange-900 text-orange-100",
   CASUALTY: "bg-red-700 text-red-50 font-semibold",
@@ -75,6 +93,8 @@ const EVENT_BADGE_STYLES: Record<string, string> = {
   HALFTIME: "bg-indigo-900 text-indigo-100",
   END: "bg-slate-900 text-slate-100 font-semibold",
 };
+
+const HIDDEN_EVENT_TYPES = new Set<string>(["PLAYER_ACTIVATION"]);
 
 interface EventsT {
   kickoffPair: string;
@@ -86,6 +106,15 @@ interface EventsT {
   nuffle: string;
   halftime: string;
   matchEnd: string;
+  blitzDeclared: string;
+  knockdown: string;
+  knockdownWithCause: string;
+  block: string;
+  blockBetween: string;
+  pass: string;
+  dodge: string;
+  ko: string;
+  turnover: string;
 }
 
 function summarizeMeta(ev: MatchEvent, e: EventsT): string {
@@ -106,9 +135,48 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
         .replace("{turn}", turn)
         .replace("{team}", drivingTeam);
     }
+    case "BLITZ_DECLARED": {
+      const attacker = String(meta.attackerId ?? "?");
+      const defender = String(meta.defenderId ?? "?");
+      return e.blitzDeclared
+        .replace("{attacker}", attacker)
+        .replace("{defender}", defender);
+    }
+    case "BLOCK": {
+      const attacker = String(meta.attackerId ?? "");
+      const defender = String(meta.defenderId ?? "");
+      if (attacker && defender) {
+        return e.blockBetween
+          .replace("{attacker}", attacker)
+          .replace("{defender}", defender);
+      }
+      return e.block;
+    }
+    case "KNOCKDOWN": {
+      const player = String(meta.playerId ?? "?");
+      const cause = meta.causedBy ? String(meta.causedBy) : "";
+      if (cause) {
+        return e.knockdownWithCause
+          .replace("{player}", player)
+          .replace("{cause}", cause);
+      }
+      return e.knockdown.replace("{player}", player);
+    }
+    case "DODGE": {
+      const player = String(meta.playerId ?? "?");
+      return e.dodge.replace("{player}", player);
+    }
+    case "PASS": {
+      const passer = String(meta.passerId ?? "?");
+      return e.pass.replace("{passer}", passer);
+    }
     case "TD": {
       const team = String(meta.team ?? "").toUpperCase();
       return e.touchdownTeam.replace("{team}", team);
+    }
+    case "KO": {
+      const player = String(meta.playerId ?? "?");
+      return e.ko.replace("{player}", player);
     }
     case "CASUALTY": {
       if (meta.causedBy) {
@@ -118,6 +186,10 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
         );
       }
       return e.casualty;
+    }
+    case "TURNOVER": {
+      const cause = meta.cause ? String(meta.cause) : "";
+      return cause ? `${e.turnover} (${cause})` : e.turnover;
     }
     case "NUFFLE": {
       const id = String(meta.id ?? meta.eventId ?? "?");
@@ -282,6 +354,11 @@ export default function MatchReplayPlayer({
   const redirect = useMatchModeRedirect(matchId, "replay");
   const [dump, setDump] = useState<ReplayDump | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Lot 3.D.4 — bascule entre vue classique (events + ProLeagueField
+  // abstrait) et vue terrain BB (GameBoardWithDugouts + states[]).
+  // Vue classique par défaut : disponible pour tous les replays.
+  const [viewMode, setViewMode] = useState<ReplayViewMode>("classic");
+  const [fieldUnavailable, setFieldUnavailable] = useState<string | null>(null);
 
   useEffect(() => {
     if (redirect.redirecting) return;
@@ -401,9 +478,73 @@ export default function MatchReplayPlayer({
         </span>
       </header>
 
-      <div className="px-4 pt-4" data-testid="replay-field-wrapper">
-        <ProLeagueField fieldState={fieldState} />
+      <div className="flex items-center justify-end gap-2 px-4 pt-3">
+        <div
+          role="tablist"
+          aria-label="Replay view mode"
+          className="inline-flex rounded border border-slate-700 bg-slate-900 p-0.5 text-xs"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "classic"}
+            data-testid="replay-view-classic"
+            onClick={() => setViewMode("classic")}
+            className={`rounded px-3 py-1 font-mono ${
+              viewMode === "classic"
+                ? "bg-emerald-700 text-emerald-50"
+                : "text-slate-300 hover:bg-slate-800"
+            }`}
+          >
+            Classique
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "field"}
+            data-testid="replay-view-field"
+            onClick={() => setViewMode("field")}
+            className={`rounded px-3 py-1 font-mono ${
+              viewMode === "field"
+                ? "bg-emerald-700 text-emerald-50"
+                : "text-slate-300 hover:bg-slate-800"
+            }`}
+          >
+            Terrain
+          </button>
+        </div>
       </div>
+
+      {viewMode === "field" && fieldUnavailable && (
+        <div
+          role="alert"
+          data-testid="replay-field-unavailable"
+          className="mx-4 mt-2 rounded border border-amber-700 bg-amber-950 px-3 py-2 text-xs text-amber-200"
+        >
+          Vue terrain indisponible ({fieldUnavailable}). Revenir en{" "}
+          <button
+            type="button"
+            onClick={() => setViewMode("classic")}
+            className="underline"
+          >
+            vue classique
+          </button>
+          .
+        </div>
+      )}
+
+      {viewMode === "classic" ? (
+        <div className="px-4 pt-4" data-testid="replay-field-wrapper">
+          <ProLeagueField fieldState={fieldState} />
+        </div>
+      ) : (
+        <div className="px-4 pt-4" data-testid="replay-field-wrapper-full">
+          <FullReplayField
+            matchId={matchId}
+            onFallback={({ message }) => setFieldUnavailable(message)}
+          />
+        </div>
+      )}
 
       <section
         data-testid="replay-scrubber"
@@ -459,6 +600,7 @@ export default function MatchReplayPlayer({
           </li>
         ) : (
           visibleEvents
+            .filter((ev) => !HIDDEN_EVENT_TYPES.has(ev.type))
             .slice()
             .reverse()
             .map((ev, idx) => (
