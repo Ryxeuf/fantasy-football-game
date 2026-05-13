@@ -1,3 +1,10 @@
+## [1.116.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.1...v1.116.2) (2026-05-13)
+
+
+### 🐛 Bug Fixes
+
+* **deploy:** disable auto-seed in production deploy pipeline ([29a2251](https://github.com/Ryxeuf/fantasy-football-game/commit/29a2251190c95aa6019408270cb79991335cd77b))
+
 ## [1.116.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.116.0...v1.116.1) (2026-05-13)
 
 
