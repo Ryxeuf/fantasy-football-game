@@ -1,3 +1,16 @@
+## [1.116.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.115.0...v1.116.0) (2026-05-13)
+
+
+### ✨ Features
+
+* **naf:** Sprint R.D.3 — NAF tournaments integration (opt-in) ([#799](https://github.com/Ryxeuf/fantasy-football-game/issues/799)) ([670fd6b](https://github.com/Ryxeuf/fantasy-football-game/commit/670fd6b6c054b68c460159417ad0302cabdb2e19))
+
+
+### 🐛 Bug Fixes
+
+* **match-summary:** extract real score from last gameState ([#800](https://github.com/Ryxeuf/fantasy-football-game/issues/800)) ([97f4552](https://github.com/Ryxeuf/fantasy-football-game/commit/97f455266898fd69f865efe1eb1f56518741ccb2))
+* **star-players:** implement roster filter using engine data ([4d518cc](https://github.com/Ryxeuf/fantasy-football-game/commit/4d518cc4e8a8c9f54856b84bb40928fb68e727fb))
+
 ## [1.115.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.114.0...v1.115.0) (2026-05-12)
 
 
