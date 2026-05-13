@@ -342,7 +342,7 @@ export default function SkillsClient({
               { key: "Strength", fr: "Force", en: "Strength" },
               { key: "Passing", fr: "Passe", en: "Passing" },
               { key: "Mutation", fr: "Mutation", en: "Mutation" },
-              { key: "Trait", fr: "Scélérate", en: "Trait" },
+              { key: "Scélérates", fr: "Scélérate", en: "Villain" },
             ] as const
           ).map((cat) => {
             const iconSrc = SKILL_CATEGORY_ICONS[cat.key];

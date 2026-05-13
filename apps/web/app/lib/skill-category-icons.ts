@@ -4,8 +4,7 @@ export const SKILL_CATEGORY_ICONS: Record<string, string> = {
   Strength: "/images/Competence-Force.png",
   Passing: "/images/Competence-Passe.png",
   Mutation: "/images/Competence-Mutation.png",
-  Trait: "/images/Competence-Scelerate.png",
-  Extraordinary: "/images/Competence-Scelerate.png",
+  "Scélérates": "/images/Competence-Scelerate.png",
 };
 
 export function getSkillCategoryIcon(category: string): string | null {
