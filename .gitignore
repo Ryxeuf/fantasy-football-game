@@ -107,3 +107,5 @@ screenshots/
 # Deploy state (ecrit par scripts/deploy.sh apres chaque deploy reussi)
 .last-deployed-commit
 snapshots/
+
+backups/
