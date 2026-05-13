@@ -56,9 +56,15 @@ router.get("/seasons/:id/overview", async (req, res) => {
         id: true,
         year: true,
         status: true,
+        isTest: true,
       },
-    })) as { id: string; year: number; status: string } | null;
-    if (!season) {
+    })) as {
+      id: string;
+      year: number;
+      status: string;
+      isTest: boolean;
+    } | null;
+    if (!season || season.isTest) {
       return res.status(404).json({ error: "Saison introuvable" });
     }
 

@@ -105,15 +105,20 @@ export async function getProLeagueCurrentStandings(
   }
 
   // Saison courante : in_progress > completed (la plus récente).
+  // `isTest: false` exclut les test seasons admin.
   const inProgress = await prisma.proLeagueSeason.findFirst({
-    where: { league: { slug: leagueSlug }, status: "in_progress" },
+    where: {
+      league: { slug: leagueSlug },
+      status: "in_progress",
+      isTest: false,
+    },
     orderBy: { year: "asc" },
     select: { id: true, year: true, status: true },
   });
   const season =
     inProgress ??
     (await prisma.proLeagueSeason.findFirst({
-      where: { league: { slug: leagueSlug } },
+      where: { league: { slug: leagueSlug }, isTest: false },
       orderBy: { year: "desc" },
       select: { id: true, year: true, status: true },
     }));

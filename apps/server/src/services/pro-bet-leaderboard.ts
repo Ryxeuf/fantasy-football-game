@@ -98,14 +98,17 @@ async function resolveFromDate(
     return new Date(now.getTime() - WEEK_MS);
   }
   if (period === "season") {
+    // Exclut les test seasons (isTest=true) — le leaderboard de paris
+    // doit refleter la prod uniquement.
     const inProgress = await prisma.proLeagueSeason.findFirst({
-      where: { status: "in_progress" },
+      where: { status: "in_progress", isTest: false },
       orderBy: { year: "asc" },
       select: { startsAt: true, createdAt: true },
     });
     const season =
       inProgress ??
       (await prisma.proLeagueSeason.findFirst({
+        where: { isTest: false },
         orderBy: { year: "desc" },
         select: { startsAt: true, createdAt: true },
       }));

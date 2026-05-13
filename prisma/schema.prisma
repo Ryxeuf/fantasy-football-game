@@ -1351,6 +1351,17 @@ model ProLeagueSeason {
   /// "full"   = auto-play game-engine roster-aware (lot 3.A.2).
   /// Override possible par match via `ProLeagueMatch.driverKindOverride`.
   driverKind String    @default("hybrid")
+  /// Sprint test-leagues — saison "test" cree depuis l'admin via la
+  /// test-factory. `true` = la saison + tous ses matchs + standings sont
+  /// invisibles cote user (filtre `isTest=false` partout cote
+  /// agregateurs/hub/standings/leaderboards). Permet de generer une
+  /// saison complete avec replays disponibles immediatement, isolee
+  /// des donnees prod, et supprimable d'un coup avec tous ses matchs.
+  /// Default false : toutes les saisons existantes restent "prod".
+  isTest     Boolean   @default(false)
+  /// Label libre pour les saisons test (ex: "Engine v2.1 regression").
+  /// null pour les saisons prod ; visible uniquement aux admins.
+  testLabel  String?
   startsAt   DateTime?
   endsAt     DateTime?
   createdAt  DateTime  @default(now())
@@ -1363,6 +1374,7 @@ model ProLeagueSeason {
 
   @@unique([leagueId, year])
   @@index([status])
+  @@index([isTest])
 }
 
 /// Une journee (matchday). 16 equipes round-robin = 15 journees x 8

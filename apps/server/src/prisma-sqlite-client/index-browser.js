@@ -693,6 +693,8 @@ exports.Prisma.ProLeagueSeasonScalarFieldEnum = {
   status: 'status',
   engineVer: 'engineVer',
   driverKind: 'driverKind',
+  isTest: 'isTest',
+  testLabel: 'testLabel',
   startsAt: 'startsAt',
   endsAt: 'endsAt',
   createdAt: 'createdAt',

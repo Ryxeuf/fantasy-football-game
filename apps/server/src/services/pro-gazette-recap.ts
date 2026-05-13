@@ -125,15 +125,16 @@ export async function getDailyRecap(
     }));
 
   // Standings courants : on prend la saison `in_progress` (fallback
-  // la plus récente).
+  // la plus récente). `isTest: false` exclut les test seasons admin.
   const inProgress = await prisma.proLeagueSeason.findFirst({
-    where: { status: "in_progress" },
+    where: { status: "in_progress", isTest: false },
     orderBy: { year: "asc" },
     select: { id: true },
   });
   const season =
     inProgress ??
     (await prisma.proLeagueSeason.findFirst({
+      where: { isTest: false },
       orderBy: { year: "desc" },
       select: { id: true },
     }));
