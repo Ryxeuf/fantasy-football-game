@@ -174,6 +174,11 @@ export default function Header() {
             )}
           </div>
 
+          {/* Blog */}
+          <a href="/blog" className={navLinkClass}>
+            📝 {t.nav.blog}
+          </a>
+
           {/* Soutenir */}
           <a
             href="/support"
@@ -318,6 +323,17 @@ export default function Header() {
                 className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 ⭐ {t.nav.starPlayers}
+              </a>
+            </nav>
+
+            {/* Blog */}
+            <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+              <a
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                📝 {t.nav.blog}
               </a>
             </nav>
 

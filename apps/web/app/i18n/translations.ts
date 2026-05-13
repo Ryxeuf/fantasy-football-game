@@ -13,6 +13,16 @@ export const translations = {
       leagues: "Ligues",
       cups: "Coupes",
       compendium: "Compendium",
+      blog: "Blog",
+    },
+    blog: {
+      title: "Blog",
+      description: "Articles, guides et actualités autour de Blood Bowl et de Nuffle Arena.",
+      empty: "Aucun article pour le moment. Reviens bientôt !",
+      readMore: "Lire l'article",
+      backToList: "Tous les articles",
+      publishedOn: "Publié le",
+      by: "par",
     },
     // Auth
     auth: {
@@ -1006,6 +1016,16 @@ export const translations = {
       leagues: "Leagues",
       cups: "Cups",
       compendium: "Compendium",
+      blog: "Blog",
+    },
+    blog: {
+      title: "Blog",
+      description: "Articles, guides and news around Blood Bowl and Nuffle Arena.",
+      empty: "No articles yet. Come back soon!",
+      readMore: "Read article",
+      backToList: "All articles",
+      publishedOn: "Published on",
+      by: "by",
     },
     // Auth
     auth: {

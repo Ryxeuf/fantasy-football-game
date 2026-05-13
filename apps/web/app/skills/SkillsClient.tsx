@@ -28,6 +28,7 @@ const categoryNames: Record<string, { fr: string; en: string; key: string }> = {
   Passing: { fr: "Compétences de Passe", en: "Passing Skills", key: "Passing" },
   Mutation: { fr: "Mutations", en: "Mutations", key: "Mutation" },
   Trait: { fr: "Traits", en: "Traits", key: "Trait" },
+  "Scélérates": { fr: "Scélérates", en: "Villainous", key: "Scélérates" },
 };
 
 interface SkillsClientProps {

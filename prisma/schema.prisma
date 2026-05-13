@@ -125,6 +125,7 @@ model User {
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
+  blogPosts                   BlogPost[]              @relation("BlogPostAuthor")
 
   @@index([leaderboardStatus])
 }
@@ -2221,4 +2222,38 @@ model ProMatchPrediction {
   @@unique([matchId, userId])
   @@index([matchId, createdAt])
   @@index([userId, score])
+}
+
+/// Articles de blog rédigés depuis l'admin via éditeur WYSIWYG.
+/// HTML stocké dans `contentHtml` après sanitization côté serveur.
+/// Statut "draft" invisible côté public ; "published" expose l'article.
+/// publishedAt = première date de publication (set quand status passe à
+/// published). Réversible : repasser en draft conserve publishedAt pour
+/// l'historique mais cache l'article.
+model BlogPost {
+  id           String    @id @default(cuid())
+  /// Slug URL-safe unique (ex: "lancement-saison-2025"). Sert de route
+  /// publique `/blog/<slug>`.
+  slug         String    @unique
+  title        String
+  /// Résumé court (max ~280 chars) pour les listings et meta description.
+  excerpt      String?
+  /// HTML sanitizé côté serveur via sanitize-html (allowlist stricte).
+  contentHtml  String
+  /// URL absolue ou path `/images/...` pour la cover. Optionnelle.
+  coverImageUrl String?
+  /// "draft" | "published". Seuls les "published" sont exposés publiquement.
+  status       String    @default("draft")
+  /// Date de publication initiale (set côté serveur quand status devient
+  /// "published" pour la première fois). Sert au tri public et à l'OG date.
+  publishedAt  DateTime?
+  /// Auteur (lien vers User pour audit + affichage). Préservé même si user
+  /// supprimé : SetNull plutôt que Cascade.
+  author       User?     @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorId     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([authorId])
 }
