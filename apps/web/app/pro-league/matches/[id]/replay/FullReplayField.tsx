@@ -17,6 +17,7 @@
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 
+import { getMoveActivePlayerId } from "../../../../lib/move-active-player";
 import {
   PLAYBACK_SPEEDS,
   formatReplayClock,
@@ -126,6 +127,11 @@ export default function FullReplayField({
     away: replay.currentState.score.teamB,
   };
 
+  // Lot 3.E.1 — surligne sur le terrain le joueur dont vient de jouer
+  // le move courant. `null` au kickoff (index = -1) et sur les moves
+  // sans joueur (END_TURN, REROLL_CHOOSE, KICKOFF_BLITZ_RESOLVE...).
+  const selectedPlayerId = getMoveActivePlayerId(replay.currentMove);
+
   return (
     <div className="flex flex-col gap-3" data-testid="full-replay-field">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm">
@@ -150,6 +156,7 @@ export default function FullReplayField({
       <div data-testid="full-replay-pixi">
         <GameBoardWithDugouts
           state={replay.currentState}
+          selectedPlayerId={selectedPlayerId}
           teamRosters={{ teamA: homeRosterSlug, teamB: awayRosterSlug }}
           teamColorOverrides={{
             teamA: homeOverride,
