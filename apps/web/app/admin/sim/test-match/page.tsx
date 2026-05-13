@@ -291,6 +291,17 @@ export default function AdminTestMatchPage() {
                     >
                       Replay
                     </Link>
+                    {m.status === "completed" ? (
+                      <a
+                        href={`${API_BASE}/admin/sim/matches/${m.id}/narration?format=text`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-purple-600 underline"
+                        title="Narration texte enrichie (Lot 3.E.4)"
+                      >
+                        Narration
+                      </a>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => void resimulate(m.id)}

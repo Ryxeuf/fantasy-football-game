@@ -20,6 +20,10 @@ import {
   runVersionComparison,
 } from "../services/pro-league-admin-tools";
 import {
+  NarrationError,
+  getMatchNarration,
+} from "../services/pro-league-narration";
+import {
   createTestMatch,
   listTestMatches,
   resimulateTestMatch,
@@ -274,6 +278,43 @@ export async function handleResimulateTestMatch(
   }
 }
 
+/**
+ * Handler `GET /admin/sim/matches/:id/narration` — Lot 3.E.4.
+ *
+ * Retourne la narration texte du match (events reformatés en langage
+ * naturel avec noms réels du roster). Mime `text/plain` quand
+ * `?format=text`, sinon JSON `{ matchId, narration, ... }`.
+ */
+export async function handleGetMatchNarration(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { id } = req.params as { id: string };
+  const format = (req.query.format as string | undefined) ?? "json";
+  try {
+    const out = await getMatchNarration(id);
+    if (format === "text") {
+      res.type("text/plain; charset=utf-8").send(out.narration);
+      return;
+    }
+    res.json(out);
+  } catch (err: unknown) {
+    if (err instanceof NarrationError) {
+      const status =
+        err.code === "MATCH_NOT_REPLAYABLE"
+          ? 409
+          : err.code === "MATCH_NOT_FOUND" ||
+              err.code === "REPLAY_NOT_FOUND"
+            ? 404
+            : 500;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    res.status(500).json({ error: msg });
+  }
+}
+
 /** Handler `GET /admin/sim/test-matches` — Lot 2.C.4. */
 export async function handleListTestMatches(
   req: Request,
@@ -465,6 +506,7 @@ router.post(
   handleCreateTestMatch,
 );
 router.get("/test-matches", handleListTestMatches);
+router.get("/matches/:id/narration", handleGetMatchNarration);
 router.post(
   "/test-match/:id/resimulate",
   validate(resimulateTestMatchSchema),

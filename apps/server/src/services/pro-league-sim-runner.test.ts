@@ -24,6 +24,9 @@ vi.mock("../prisma", () => ({
     replay: {
       upsert: vi.fn(),
     },
+    proTeamRoster: {
+      findMany: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -54,6 +57,7 @@ interface MockedPrisma {
     findMany: ReturnType<typeof vi.fn>;
   };
   replay: { upsert: ReturnType<typeof vi.fn> };
+  proTeamRoster: { findMany: ReturnType<typeof vi.fn> };
   $transaction: ReturnType<typeof vi.fn>;
 }
 
@@ -65,8 +69,8 @@ function makeMatch(overrides: Record<string, unknown> = {}) {
   return {
     id: MATCH_ID,
     status: "scheduled",
-    homeTeam: { slug: "pit-smashers", name: "Smashers" },
-    awayTeam: { slug: "kc-soaring-hawks", name: "Soaring Hawks" },
+    homeTeam: { id: "team-h", slug: "pit-smashers", name: "Smashers" },
+    awayTeam: { id: "team-a", slug: "kc-soaring-hawks", name: "Soaring Hawks" },
     season: { engineVer: CURRENT_ENGINE_VER, driverKind: "hybrid" },
     driverKindOverride: null,
     ...overrides,
@@ -75,6 +79,10 @@ function makeMatch(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Lot 3.E.4 — par défaut, retourne un roster vide pour les tests
+  // historiques qui ne se soucient pas du roster Pro. Le sim-runner
+  // tombe alors sur le path "no roster" (events synthétiques `A1`/`B1`).
+  mocked.proTeamRoster.findMany.mockResolvedValue([]);
   mocked.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
     fn(prisma),
   );

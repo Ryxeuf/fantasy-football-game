@@ -36,6 +36,7 @@ import {
   type MatchEvent,
   type SimInput,
   type SimResult,
+  type SimRosterPlayer,
 } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
@@ -109,6 +110,58 @@ const DEFAULT_MAX_BATCH = 50;
  * Hash FNV1a 32-bit pour dériver un seed numérique d'un cuid string.
  * Pas cryptographique — juste déterministe et bien distribué pour seeds.
  */
+interface RawProRoster {
+  readonly id: string;
+  readonly name: string;
+  readonly position: string;
+  readonly ma: number;
+  readonly st: number;
+  readonly ag: number;
+  readonly pa: number | null;
+  readonly av: number;
+  readonly skills: unknown;
+}
+
+function parseRosterSkills(raw: unknown): readonly string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((s): s is string => typeof s === "string");
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((s): s is string => typeof s === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Lot 3.E.4 — convertit un `ProTeamRoster[]` Prisma en
+ * `SimRosterPlayer[]` (forme attendue par `SimInput.home.roster` /
+ * `SimInput.away.roster`). Le numéro de jersey n'étant pas stocké
+ * en DB, on suit l'ordre d'insertion (1..n) pour stabilité.
+ */
+function mapToSimRoster(
+  raws: readonly RawProRoster[],
+): readonly SimRosterPlayer[] {
+  return raws.map((r, idx) => ({
+    id: r.id,
+    number: idx + 1,
+    name: r.name,
+    position: r.position,
+    ma: r.ma,
+    st: r.st,
+    ag: r.ag,
+    pa: r.pa ?? 0,
+    av: r.av,
+    skills: parseRosterSkills(r.skills),
+  }));
+}
+
 function hashSeed(input: string): number {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i += 1) {
@@ -148,8 +201,8 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     where: { id: matchId },
     include: {
       season: { select: { id: true, engineVer: true, driverKind: true } },
-      homeTeam: { select: { slug: true, name: true } },
-      awayTeam: { select: { slug: true, name: true } },
+      homeTeam: { select: { id: true, slug: true, name: true } },
+      awayTeam: { select: { id: true, slug: true, name: true } },
     },
   });
   if (!match) {
@@ -182,6 +235,47 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   const seed = hashSeed(matchId);
   const engineVer = (match.season.engineVer as string) || CURRENT_ENGINE_VER;
 
+  // Lot 3.E.4 — charge les rosters actifs des deux équipes pour
+  // alimenter le full driver. Sans ça, les events portent des ids
+  // synthétiques (`A1`, `B1`) et le narrator ne peut pas remonter
+  // les noms réels. Avec roster, les playerIds des events = roster.id
+  // Prisma → le narrator résout "Vraskar (#3 Lineman)".
+  const [homeRosterRaw, awayRosterRaw] = await Promise.all([
+    prisma.proTeamRoster.findMany({
+      where: { teamId: match.homeTeam.id as string, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        position: true,
+        ma: true,
+        st: true,
+        ag: true,
+        pa: true,
+        av: true,
+        skills: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.proTeamRoster.findMany({
+      where: { teamId: match.awayTeam.id as string, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        position: true,
+        ma: true,
+        st: true,
+        ag: true,
+        pa: true,
+        av: true,
+        skills: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const homeRoster = mapToSimRoster(homeRosterRaw);
+  const awayRoster = mapToSimRoster(awayRosterRaw);
+
   const input: SimInput = {
     seed,
     home: {
@@ -190,6 +284,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       side: "home",
       tactics: homeProfile.tactics,
       tv: homeProfile.tv,
+      roster: homeRoster.length > 0 ? homeRoster : undefined,
     },
     away: {
       id: awayProfile.id,
@@ -197,6 +292,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       side: "away",
       tactics: awayProfile.tactics,
       tv: awayProfile.tv,
+      roster: awayRoster.length > 0 ? awayRoster : undefined,
     },
   };
 
