@@ -1,3 +1,10 @@
+## [1.119.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.118.0...v1.119.0) (2026-05-13)
+
+
+### ✨ Features
+
+* **pro-league:** test seasons full sim + cascade delete (admin) ([b45ef0a](https://github.com/Ryxeuf/fantasy-football-game/commit/b45ef0a90d76661ee10bf6c5096bcd1c53a0516e))
+
 ## [1.118.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.117.1...v1.118.0) (2026-05-13)
 
 
