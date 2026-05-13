@@ -257,3 +257,76 @@ export async function listTestMatches(
       : null,
   }));
 }
+
+export interface ResimulateTestMatchInput {
+  readonly matchId: string;
+  /** Optional driver override for the re-simulation. */
+  readonly driverKind?: "hybrid" | "full";
+}
+
+export interface ResimulateTestMatchResult {
+  readonly matchId: string;
+  readonly engineVer: string;
+  readonly driverKind: string | null;
+}
+
+/**
+ * Re-simulate an existing sandbox match. Wipes the previous Replay,
+ * resets the match to `scheduled` (so `simulateProMatch` will run),
+ * optionally overrides the driver, then triggers a fresh simulation.
+ *
+ * Refuse explicit si `isTest !== true` — on ne re-simule pas un match
+ * de prod (would corrupt standings / ELO / bets).
+ */
+export async function resimulateTestMatch(
+  input: ResimulateTestMatchInput,
+): Promise<ResimulateTestMatchResult> {
+  const match = await prisma.proLeagueMatch.findUnique({
+    where: { id: input.matchId },
+    select: { id: true, isTest: true, season: { select: { engineVer: true } } },
+  });
+  if (!match) {
+    throw new Error(`ProLeagueMatch '${input.matchId}' introuvable`);
+  }
+  if (match.isTest !== true) {
+    throw new Error(
+      `ProLeagueMatch '${input.matchId}' n'est pas un test match (isTest=false) — re-simulation refusée`,
+    );
+  }
+
+  const driverKindOverride =
+    input.driverKind && isValidDriverKind(input.driverKind)
+      ? input.driverKind
+      : null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    await tx.replay.deleteMany({ where: { matchId: input.matchId } });
+    await tx.proLeagueMatch.update({
+      where: { id: input.matchId },
+      data: {
+        status: "scheduled",
+        simulatedAt: null,
+        completedAt: null,
+        replayId: null,
+        scoreHome: null,
+        scoreAway: null,
+        outcome: null,
+        touchdownCount: null,
+        casualtyCount: null,
+        turnoverCount: null,
+        nuffleCount: null,
+        engineVer: null,
+        driverKindOverride,
+      },
+    });
+  });
+
+  await simulateProMatch(input.matchId);
+
+  return {
+    matchId: input.matchId,
+    engineVer: (match.season.engineVer as string) || CURRENT_ENGINE_VER,
+    driverKind: driverKindOverride,
+  };
+}

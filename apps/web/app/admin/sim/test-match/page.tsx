@@ -78,6 +78,7 @@ export default function AdminTestMatchPage() {
   const [running, setRunning] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<CreateResult | null>(null);
+  const [resimulatingId, setResimulatingId] = useState<string | null>(null);
 
   const loadTeams = async () => {
     const data = await fetchJSON<{ teams: Team[] }>("/admin/sim/teams");
@@ -107,6 +108,26 @@ export default function AdminTestMatchPage() {
       }
     })();
   }, []);
+
+  const resimulate = async (matchId: string) => {
+    setResimulatingId(matchId);
+    setError(null);
+    try {
+      const body: { driverKind?: "hybrid" | "full" } = {};
+      if (driverKindChoice !== "season-default") {
+        body.driverKind = driverKindChoice;
+      }
+      await fetchJSON(`/admin/sim/test-match/${matchId}/resimulate`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      await loadList();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setResimulatingId(null);
+    }
+  };
 
   const launch = async () => {
     if (homeTeamId === awayTeamId) {
@@ -263,12 +284,25 @@ export default function AdminTestMatchPage() {
                   {m.engineVer ?? "-"}
                 </td>
                 <td className="p-2 text-right">
-                  <Link
-                    href={`/pro-league/matches/${m.id}` as never}
-                    className="text-blue-600 underline"
-                  >
-                    Replay
-                  </Link>
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/pro-league/matches/${m.id}` as never}
+                      className="text-blue-600 underline"
+                    >
+                      Replay
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => void resimulate(m.id)}
+                      disabled={resimulatingId !== null}
+                      className="text-xs px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50"
+                      title="Supprime le replay actuel et relance la simulation avec le driver sélectionné en haut."
+                    >
+                      {resimulatingId === m.id
+                        ? "Re-simulation…"
+                        : "Re-simuler"}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

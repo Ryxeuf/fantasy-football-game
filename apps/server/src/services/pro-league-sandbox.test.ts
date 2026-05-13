@@ -14,8 +14,15 @@ vi.mock("../prisma", () => ({
   prisma: {
     proLeagueSeason: { findFirst: vi.fn() },
     proLeagueRound: { findUnique: vi.fn(), create: vi.fn() },
-    proLeagueMatch: { create: vi.fn(), findMany: vi.fn() },
+    proLeagueMatch: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     proTeam: { findMany: vi.fn() },
+    replay: { deleteMany: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -25,7 +32,11 @@ vi.mock("./pro-league-sim-runner", () => ({
 
 import { prisma } from "../prisma";
 import { simulateProMatch } from "./pro-league-sim-runner";
-import { createTestMatch, listTestMatches } from "./pro-league-sandbox";
+import {
+  createTestMatch,
+  listTestMatches,
+  resimulateTestMatch,
+} from "./pro-league-sandbox";
 
 interface MockedPrisma {
   proLeagueSeason: { findFirst: ReturnType<typeof vi.fn> };
@@ -36,8 +47,12 @@ interface MockedPrisma {
   proLeagueMatch: {
     create: ReturnType<typeof vi.fn>;
     findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
   };
   proTeam: { findMany: ReturnType<typeof vi.fn> };
+  replay: { deleteMany: ReturnType<typeof vi.fn> };
+  $transaction: ReturnType<typeof vi.fn>;
 }
 
 const mocked = prisma as unknown as MockedPrisma;
@@ -274,5 +289,86 @@ describe("listTestMatches — Lot 2.C.2", () => {
         simulatedAt: now.toISOString(),
       },
     ]);
+  });
+});
+
+describe("resimulateTestMatch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocked.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn(prisma),
+    );
+  });
+
+  it("refuse si le match n'existe pas", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(null);
+    await expect(
+      resimulateTestMatch({ matchId: "missing" }),
+    ).rejects.toThrow(/introuvable/);
+    expect(mockedSim).not.toHaveBeenCalled();
+  });
+
+  it("refuse de re-simuler un match de prod (isTest=false)", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m1",
+      isTest: false,
+      season: { engineVer: "0.18.0" },
+    });
+    await expect(
+      resimulateTestMatch({ matchId: "m1" }),
+    ).rejects.toThrow(/pas un test match/);
+    expect(mockedSim).not.toHaveBeenCalled();
+    expect(mocked.replay.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("wipe le replay + reset le match + relance la sim", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m1",
+      isTest: true,
+      season: { engineVer: "0.18.0" },
+    });
+
+    await resimulateTestMatch({ matchId: "m1", driverKind: "hybrid" });
+
+    expect(mocked.replay.deleteMany).toHaveBeenCalledWith({
+      where: { matchId: "m1" },
+    });
+    expect(mocked.proLeagueMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "m1" },
+        data: expect.objectContaining({
+          status: "scheduled",
+          simulatedAt: null,
+          completedAt: null,
+          replayId: null,
+          scoreHome: null,
+          scoreAway: null,
+          outcome: null,
+          engineVer: null,
+          driverKindOverride: "hybrid",
+        }),
+      }),
+    );
+    expect(mockedSim).toHaveBeenCalledWith("m1");
+  });
+
+  it("driverKind invalide → driverKindOverride: null (inherit saison)", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m1",
+      isTest: true,
+      season: { engineVer: "0.18.0" },
+    });
+
+    await resimulateTestMatch({
+      matchId: "m1",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      driverKind: "garbage" as any,
+    });
+
+    expect(mocked.proLeagueMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ driverKindOverride: null }),
+      }),
+    );
   });
 });

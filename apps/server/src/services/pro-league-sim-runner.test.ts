@@ -145,6 +145,20 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     expect(typeof updateCall.data.scoreAway).toBe("number");
   });
 
+  it("test match (isTest=true) passe direct à status='completed'", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ isTest: true }),
+    );
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+
+    await simulateProMatch(MATCH_ID);
+
+    const updateCall = mocked.proLeagueMatch.update.mock.calls[0][0];
+    expect(updateCall.data.status).toBe("completed");
+    expect(updateCall.data.completedAt).toBeInstanceOf(Date);
+  });
+
   it("seed déterministe : 2 appels successifs produisent le même résultat", async () => {
     mocked.proLeagueMatch.findUnique.mockResolvedValue(makeMatch());
     mocked.replay.upsert.mockResolvedValue({});

@@ -22,6 +22,7 @@ import {
 import {
   createTestMatch,
   listTestMatches,
+  resimulateTestMatch,
 } from "../services/pro-league-sandbox";
 import { computeSimHealthSnapshot } from "../services/pro-league-sim-health";
 import { runBroadcasterLoadTest } from "../services/pro-league-broadcaster-loadtest";
@@ -240,6 +241,39 @@ export async function handleCreateTestMatch(
   }
 }
 
+export const resimulateTestMatchSchema = z.object({
+  driverKind: z.enum(["hybrid", "full"]).optional(),
+});
+
+export type ResimulateTestMatchBody = z.infer<typeof resimulateTestMatchSchema>;
+
+/**
+ * Handler `POST /admin/sim/test-match/:id/resimulate`. Wipes the
+ * existing Replay, resets the match to `scheduled` and triggers a
+ * fresh simulation. Refuses non-test matches (isTest=false) — never
+ * touch a production match's replay.
+ */
+export async function handleResimulateTestMatch(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { id } = req.params as { id: string };
+  const { driverKind } = (req.body ?? {}) as ResimulateTestMatchBody;
+  try {
+    const result = await resimulateTestMatch({ matchId: id, driverKind });
+    res.status(200).json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    if (msg.includes("introuvable")) {
+      res.status(404).json({ error: msg });
+    } else if (msg.includes("pas un test match")) {
+      res.status(400).json({ error: msg });
+    } else {
+      res.status(500).json({ error: msg });
+    }
+  }
+}
+
 /** Handler `GET /admin/sim/test-matches` — Lot 2.C.4. */
 export async function handleListTestMatches(
   req: Request,
@@ -431,6 +465,11 @@ router.post(
   handleCreateTestMatch,
 );
 router.get("/test-matches", handleListTestMatches);
+router.post(
+  "/test-match/:id/resimulate",
+  validate(resimulateTestMatchSchema),
+  handleResimulateTestMatch,
+);
 router.post(
   "/comparison",
   validate(comparisonSchema),

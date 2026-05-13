@@ -374,11 +374,19 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       },
     });
 
+    // Test matches (sandbox admin) skip the live broadcast window —
+    // they go straight to `completed` so the replay UI (with play/pause/
+    // scrub controls) is the correct mode immediately. Production
+    // matches stay at `ready` so the broadcaster + `useMatchModeRedirect`
+    // can drive the live SSE timeline until `completedAt` is set.
+    const now = new Date();
+    const isTest = match.isTest === true;
     await tx.proLeagueMatch.update({
       where: { id: matchId },
       data: {
-        status: "ready",
-        simulatedAt: new Date(),
+        status: isTest ? "completed" : "ready",
+        simulatedAt: now,
+        completedAt: isTest ? now : undefined,
         seed: BigInt(seed),
         engineVer,
         replayId: matchId,
