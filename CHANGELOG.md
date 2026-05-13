@@ -1,3 +1,23 @@
+## [1.120.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.119.0...v1.120.0) (2026-05-13)
+
+
+### ✨ Features
+
+* **pro-league-replay:** admin narration endpoint with real player names (Lot 3.E.4) ([31cafd1](https://github.com/Ryxeuf/fantasy-football-game/commit/31cafd1a78a4baf31fa9550e6c7f0d6f2b8625e7)), closes [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3)
+* **pro-league-replay:** highlight active player on full-replay field (Lot 3.E.1) ([9febd4e](https://github.com/Ryxeuf/fantasy-football-game/commit/9febd4e6518e44c1a7cdaca58b5072f6a3ab6a72))
+* **pro-league-replay:** on-pitch SVG annotations overlay (Lot 3.E.3) ([3e0bece](https://github.com/Ryxeuf/fantasy-football-game/commit/3e0becedf81129d9b6308255f4b95286b00de0f8)), closes [#22c55](https://github.com/Ryxeuf/fantasy-football-game/issues/22c55) [#f97316](https://github.com/Ryxeuf/fantasy-football-game/issues/f97316)
+* **pro-league-replay:** skip filler moves to densify full-replay (Lot 3.E.2) ([13885f2](https://github.com/Ryxeuf/fantasy-football-game/commit/13885f244d9e1409dc3536535e1e9f32c97cca9c))
+
+
+### 🐛 Bug Fixes
+
+* **pro-league-replay:** expose states[] in full-replay endpoint ([02cbe0e](https://github.com/Ryxeuf/fantasy-football-game/commit/02cbe0e9019c06df4654f21818a0e4eadbdbbae6))
+
+
+### 📝 Documentation
+
+* récap Lots 3.E.1 → 3.E.4 (replay polish) ([f1d7553](https://github.com/Ryxeuf/fantasy-football-game/commit/f1d75531e43ed13acfb1ee0e95a9257c3d71576b))
+
 ## [1.119.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.118.0...v1.119.0) (2026-05-13)
 
 
