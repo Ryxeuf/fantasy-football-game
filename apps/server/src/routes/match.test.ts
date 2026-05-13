@@ -1189,6 +1189,9 @@ describe("Route: GET /match/:id/summary (S25.5k)", () => {
       { payload: { type: "init" } },
     ]);
     mockPrisma.turn.count.mockResolvedValue(3);
+    // Cleanup TODO match-summary score : extract from last gameState
+    // turn. Aucun gameState ici → fallback 0-0.
+    mockPrisma.turn.findFirst.mockResolvedValue(null);
 
     const req = createReq({ params: { id: "m1" } });
     const res = createRes();
@@ -1207,6 +1210,50 @@ describe("Route: GET /match/:id/summary (S25.5k)", () => {
         half: 1,
         turn: 4,
         acceptances: { local: true, visitor: false },
+      },
+    });
+  });
+
+  it("returns real score from last turn gameState when available", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m2",
+      status: "active",
+      seed: "seed-2",
+      creatorId: "user-1",
+      createdAt: new Date("2026-04-28T09:00:00Z"),
+    });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        userId: "user-1",
+        user: { id: "user-1", name: "Alice", email: "a@x", eloRating: 1200 },
+        teamRef: { id: "t1", name: "Reds", roster: "skaven" },
+      },
+      {
+        userId: "user-2",
+        user: { id: "user-2", name: "Bob", email: "b@x", eloRating: 1100 },
+        teamRef: { id: "t2", name: "Blues", roster: "lizardmen" },
+      },
+    ]);
+    mockPrisma.turn.findMany.mockResolvedValue([
+      { payload: { type: "accept", userId: "user-1" } },
+      { payload: { type: "accept", userId: "user-2" } },
+    ]);
+    mockPrisma.turn.count.mockResolvedValue(8);
+    mockPrisma.turn.findFirst.mockResolvedValue({
+      payload: {
+        gameState: { score: { teamA: 3, teamB: 1 } },
+      },
+    });
+
+    const req = createReq({ params: { id: "m2" } });
+    const res = createRes();
+    await handleGetMatchSummary(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        score: { teamA: 3, teamB: 1 },
+        acceptances: { local: true, visitor: true },
       },
     });
   });

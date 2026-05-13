@@ -87,6 +87,35 @@ export async function handleGetMatchSummary(
     const half = turnsCount < 16 ? 1 : 2; // approximation
     const turn = (turnsCount % 16) + 1; // approximation
 
+    // Cleanup TODO : extrait le score du dernier gameState persiste
+    // (meme pattern que match-readonly-handlers.ts). Si pas de turn
+    // ou pas de gameState valide → fallback {teamA: 0, teamB: 0}.
+    const lastTurn = await prisma.turn.findFirst({
+      where: { matchId },
+      orderBy: { number: 'desc' },
+      select: { payload: true },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastPayload = (lastTurn as any)?.payload ?? {};
+    const rawGameState = lastPayload.gameState;
+    let parsedGameState: { score?: { teamA?: number; teamB?: number } } | null =
+      null;
+    if (typeof rawGameState === 'string') {
+      try {
+        parsedGameState = JSON.parse(rawGameState);
+      } catch {
+        parsedGameState = null;
+      }
+    } else if (rawGameState && typeof rawGameState === 'object') {
+      parsedGameState = rawGameState as {
+        score?: { teamA?: number; teamB?: number };
+      };
+    }
+    const score = {
+      teamA: parsedGameState?.score?.teamA ?? 0,
+      teamB: parsedGameState?.score?.teamB ?? 0,
+    };
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pickName = (sel: any) =>
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || '';
@@ -130,7 +159,7 @@ export async function handleGetMatchSummary(
           eloRating: pickElo(visitor),
         },
       },
-      score: { teamA: 0, teamB: 0 }, // TODO: remplacer par score reel quand disponible
+      score,
       half,
       turn,
       acceptances: { local: localAccepted, visitor: visitorAccepted },
