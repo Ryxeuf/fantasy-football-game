@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StarPlayerCard from '../components/StarPlayerCard';
 import CopyrightFooter from '../components/CopyrightFooter';
-import type { StarPlayerDefinition } from '@bb/game-engine';
+import {
+  TEAM_REGIONAL_RULES,
+  type StarPlayerDefinition,
+} from '@bb/game-engine';
 import { useLanguage } from '../contexts/LanguageContext';
 import { UMAMI_EVENTS, trackUmamiEvent } from '../lib/umami-events';
 
@@ -79,10 +82,21 @@ export default function StarPlayersPage() {
       );
     }
 
-    // Filtre par roster
+    // Filtre par roster.
+    //
+    // Un star player est recrutable par un roster si :
+    //   - `hirableBy.includes("all")` (mercenaire universel), OU
+    //   - intersection non-vide entre `hirableBy` (regles speciales
+    //     du player) et `regionalRules` du roster.
+    //
+    // `TEAM_REGIONAL_RULES` map les slugs de roster vers leur set de
+    // regional rules (donnees engine, source de verite).
     if (selectedRoster !== 'all') {
-      // TODO: Implémenter le filtrage par roster via l'API
-      // Pour l'instant, on garde tous les joueurs
+      const rosterRules = TEAM_REGIONAL_RULES[selectedRoster] ?? [];
+      filtered = filtered.filter((sp) => {
+        if (sp.hirableBy.includes('all')) return true;
+        return sp.hirableBy.some((rule) => rosterRules.includes(rule));
+      });
     }
 
     // Filtre par coût
