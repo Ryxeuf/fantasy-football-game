@@ -3,10 +3,11 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
+import type { GameState, Player } from "@bb/game-engine";
 import type { MatchEvent } from "@bb/shared-types";
 
 import { useLanguage } from "../../../../contexts/LanguageContext";
-import { apiRequest } from "../../../../lib/api-client";
+import { ApiClientError, apiRequest } from "../../../../lib/api-client";
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
 import {
   type ScrubMarker,
@@ -72,8 +73,57 @@ interface ReplayDump {
   readonly events: readonly MatchEvent[];
 }
 
+/**
+ * Sous-ensemble du dump `/full-replay` utilisé par `MatchReplayPlayer` :
+ * - `initialState.players` permet de résoudre les playerIds bruts (cuids)
+ *   en "Nom (#N Position)" dans le feed d'évents.
+ * - La simple présence du dump signale que la vue terrain BB est dispo
+ *   (donc on l'active par défaut).
+ */
+interface FullReplayDumpLite {
+  readonly initialState: GameState;
+  readonly states?: readonly GameState[];
+}
+
 interface PlayerProps {
   readonly matchId: string;
+}
+
+/**
+ * Construit un index `playerId → "Nom (#N Position)"` à partir des players
+ * du `initialState` (les 22 starters) plus des `states` ultérieurs (qui
+ * peuvent contenir des reserves ramenées sur le terrain en cours de match).
+ * Fallback gracieux : si l'ID n'est pas dans la map, on retourne l'ID brut.
+ */
+function buildPlayerNameIndex(
+  dump: FullReplayDumpLite | null,
+): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  if (!dump) return map;
+  const addPlayers = (players: readonly Player[] | undefined): void => {
+    if (!players) return;
+    for (const p of players) {
+      if (!p?.id || map.has(p.id)) continue;
+      const name = typeof p.name === "string" && p.name ? p.name : p.id;
+      const num = typeof p.number === "number" ? `#${p.number}` : "";
+      const pos = typeof p.position === "string" ? p.position : "";
+      const suffix = [num, pos].filter(Boolean).join(" ");
+      map.set(p.id, suffix ? `${name} (${suffix})` : name);
+    }
+  };
+  addPlayers(dump.initialState?.players);
+  if (dump.states) {
+    for (const s of dump.states) addPlayers(s.players);
+  }
+  return map;
+}
+
+function resolvePlayer(
+  rawId: unknown,
+  names: ReadonlyMap<string, string>,
+): string {
+  if (typeof rawId !== "string" || !rawId) return "?";
+  return names.get(rawId) ?? rawId;
 }
 
 const EVENT_BADGE_STYLES: Record<string, string> = {
@@ -117,7 +167,11 @@ interface EventsT {
   turnover: string;
 }
 
-function summarizeMeta(ev: MatchEvent, e: EventsT): string {
+function summarizeMeta(
+  ev: MatchEvent,
+  e: EventsT,
+  playerNames: ReadonlyMap<string, string>,
+): string {
   const meta = (ev.meta ?? {}) as Record<string, unknown>;
   switch (ev.type) {
     case "KICKOFF": {
@@ -136,25 +190,28 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
         .replace("{team}", drivingTeam);
     }
     case "BLITZ_DECLARED": {
-      const attacker = String(meta.attackerId ?? "?");
-      const defender = String(meta.defenderId ?? "?");
+      const attacker = resolvePlayer(meta.attackerId, playerNames);
+      const defender = resolvePlayer(meta.defenderId, playerNames);
       return e.blitzDeclared
         .replace("{attacker}", attacker)
         .replace("{defender}", defender);
     }
     case "BLOCK": {
-      const attacker = String(meta.attackerId ?? "");
-      const defender = String(meta.defenderId ?? "");
-      if (attacker && defender) {
+      const hasAttacker = typeof meta.attackerId === "string" && meta.attackerId;
+      const hasDefender = typeof meta.defenderId === "string" && meta.defenderId;
+      if (hasAttacker && hasDefender) {
         return e.blockBetween
-          .replace("{attacker}", attacker)
-          .replace("{defender}", defender);
+          .replace("{attacker}", resolvePlayer(meta.attackerId, playerNames))
+          .replace("{defender}", resolvePlayer(meta.defenderId, playerNames));
       }
       return e.block;
     }
     case "KNOCKDOWN": {
-      const player = String(meta.playerId ?? "?");
-      const cause = meta.causedBy ? String(meta.causedBy) : "";
+      const player = resolvePlayer(meta.playerId, playerNames);
+      const cause =
+        typeof meta.causedBy === "string" && meta.causedBy
+          ? resolvePlayer(meta.causedBy, playerNames)
+          : "";
       if (cause) {
         return e.knockdownWithCause
           .replace("{player}", player)
@@ -163,11 +220,11 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
       return e.knockdown.replace("{player}", player);
     }
     case "DODGE": {
-      const player = String(meta.playerId ?? "?");
+      const player = resolvePlayer(meta.playerId, playerNames);
       return e.dodge.replace("{player}", player);
     }
     case "PASS": {
-      const passer = String(meta.passerId ?? "?");
+      const passer = resolvePlayer(meta.passerId, playerNames);
       return e.pass.replace("{passer}", passer);
     }
     case "TD": {
@@ -175,7 +232,7 @@ function summarizeMeta(ev: MatchEvent, e: EventsT): string {
       return e.touchdownTeam.replace("{team}", team);
     }
     case "KO": {
-      const player = String(meta.playerId ?? "?");
+      const player = resolvePlayer(meta.playerId, playerNames);
       return e.ko.replace("{player}", player);
     }
     case "CASUALTY": {
@@ -354,22 +411,53 @@ export default function MatchReplayPlayer({
   const redirect = useMatchModeRedirect(matchId, "replay");
   const [dump, setDump] = useState<ReplayDump | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Lot 3.D.4 — bascule entre vue classique (events + ProLeagueField
-  // abstrait) et vue terrain BB (GameBoardWithDugouts + states[]).
-  // Vue classique par défaut : disponible pour tous les replays.
-  const [viewMode, setViewMode] = useState<ReplayViewMode>("classic");
-  const [fieldUnavailable, setFieldUnavailable] = useState<string | null>(null);
+  // Vue terrain BB (GameBoardWithDugouts + states[]) par défaut quand le
+  // dump full-replay est disponible — c'est ce que l'utilisateur voit en
+  // direct sur `/play` ou `/live`. Bascule sur la vue classique (terrain
+  // abstrait + ball trail) si le full driver n'est pas disponible (replays
+  // legacy / driver hybrid).
+  const [viewMode, setViewMode] = useState<ReplayViewMode>("field");
+  // Lot replay-fix — dump léger du full-replay pour résoudre les playerIds
+  // bruts en "Nom (#N Position)" dans le feed, et savoir si la vue terrain
+  // est dispo. Fetch en parallèle du `/replay` ; null si 404 (legacy).
+  const [fullDump, setFullDump] = useState<FullReplayDumpLite | null>(null);
+  const [fullDumpUnavailable, setFullDumpUnavailable] =
+    useState<string | null>(null);
 
   useEffect(() => {
     if (redirect.redirecting) return;
     if (redirect.status !== null && redirect.status !== "completed") return;
     let cancelled = false;
-    apiRequest<ReplayDump>(
-      `/pro-league/matches/${encodeURIComponent(matchId)}/replay`,
-    )
-      .then((d) => {
+    // Pattern `Promise.all([detail, optional])` (cf. CLAUDE.md) : le
+    // dump events est obligatoire, le full-replay est optionnel et n'a
+    // pas le droit de bloquer l'affichage si 404 (replay legacy).
+    Promise.all([
+      apiRequest<ReplayDump>(
+        `/pro-league/matches/${encodeURIComponent(matchId)}/replay`,
+      ),
+      apiRequest<FullReplayDumpLite>(
+        `/pro-league/matches/${encodeURIComponent(matchId)}/full-replay`,
+      ).catch((e: unknown) => {
+        // 404 / FULL_REPLAY_NOT_AVAILABLE → on basculera en vue classique.
+        if (e instanceof ApiClientError) {
+          return { __unavailable: e.message } as const;
+        }
+        return {
+          __unavailable: e instanceof Error ? e.message : "fetch error",
+        } as const;
+      }),
+    ])
+      .then(([d, f]) => {
         if (cancelled) return;
         setDump(d);
+        if ("__unavailable" in f) {
+          setFullDump(null);
+          setFullDumpUnavailable(f.__unavailable);
+          setViewMode("classic");
+        } else {
+          setFullDump(f);
+          setFullDumpUnavailable(null);
+        }
       })
       .catch((e: unknown) => {
         if (cancelled) return;
@@ -403,6 +491,10 @@ export default function MatchReplayPlayer({
     [visibleEvents],
   );
   const score = useMemo(() => deriveScore(visibleEvents), [visibleEvents]);
+  const playerNames = useMemo(
+    () => buildPlayerNameIndex(fullDump),
+    [fullDump],
+  );
   const markers = useMemo(() => {
     if (!dump) return [];
     return buildScrubMarkers({
@@ -502,12 +594,24 @@ export default function MatchReplayPlayer({
             type="button"
             role="tab"
             aria-selected={viewMode === "field"}
+            aria-disabled={fullDumpUnavailable !== null}
+            disabled={fullDumpUnavailable !== null}
             data-testid="replay-view-field"
-            onClick={() => setViewMode("field")}
+            onClick={() => {
+              if (fullDumpUnavailable !== null) return;
+              setViewMode("field");
+            }}
+            title={
+              fullDumpUnavailable
+                ? `Vue terrain indisponible (${fullDumpUnavailable})`
+                : undefined
+            }
             className={`rounded px-3 py-1 font-mono ${
               viewMode === "field"
                 ? "bg-emerald-700 text-emerald-50"
-                : "text-slate-300 hover:bg-slate-800"
+                : fullDumpUnavailable !== null
+                  ? "cursor-not-allowed text-slate-600"
+                  : "text-slate-300 hover:bg-slate-800"
             }`}
           >
             Terrain
@@ -515,13 +619,13 @@ export default function MatchReplayPlayer({
         </div>
       </div>
 
-      {viewMode === "field" && fieldUnavailable && (
+      {viewMode === "field" && fullDumpUnavailable !== null && (
         <div
           role="alert"
           data-testid="replay-field-unavailable"
           className="mx-4 mt-2 rounded border border-amber-700 bg-amber-950 px-3 py-2 text-xs text-amber-200"
         >
-          Vue terrain indisponible ({fieldUnavailable}). Revenir en{" "}
+          Vue terrain indisponible ({fullDumpUnavailable}). Revenir en{" "}
           <button
             type="button"
             onClick={() => setViewMode("classic")}
@@ -541,7 +645,10 @@ export default function MatchReplayPlayer({
         <div className="px-4 pt-4" data-testid="replay-field-wrapper-full">
           <FullReplayField
             matchId={matchId}
-            onFallback={({ message }) => setFieldUnavailable(message)}
+            onFallback={({ message }) => {
+              setFullDumpUnavailable(message);
+              setViewMode("classic");
+            }}
           />
         </div>
       )}
@@ -617,7 +724,7 @@ export default function MatchReplayPlayer({
                   {ev.type}
                 </span>
                 <span className="flex-1 text-slate-200">
-                  {summarizeMeta(ev, t.proLeague.events)}
+                  {summarizeMeta(ev, t.proLeague.events, playerNames)}
                 </span>
               </li>
             ))
