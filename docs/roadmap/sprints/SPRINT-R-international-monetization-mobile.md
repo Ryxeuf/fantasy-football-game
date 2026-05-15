@@ -1,6 +1,12 @@
 # SPRINT R — International + monetisation + mobile release
 
-> **Statut** : PLANIFIE — demarre apres Sprint Q.
+> **Statut** : **EN COURS** — 7/19 lots livres (audit 2026-05-15).
+> Shipped : R.A.1 (i18n routing #795), R.A.4 (SEO i18n #796), R.B.3
+> (supporter ad-free #797), R.D.3 (NAF integration #799),
+> R.E.1/E.2/E.3 (PvP async #792-#794). Reste : R.A.2-3 (traductions
+> massives + Gazette LLM multi-langue), R.B.1-2 (Patreon API +
+> cosmetics shop), R.C.1-5 (mobile release), R.D.1-2 (Discord + bot
+> Gazette + programme casters).
 > **Duree estimee** : 3-6 mois (multi-streams en parallele possible).
 > **Pre-requis** : Sprint O + P + Q.
 
@@ -47,10 +53,10 @@ BB online** (FR + EN + DE) a 12 mois.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| R.A.1 | Routing i18n native Next.js | Frontend | L | [ ] | Migration de `localStorage lang switch` vers `/fr/*`, `/en/*`, `/de/*`, `/pl/*` segments. `middleware.ts` route auto selon Accept-Language. Sitemap genere par locale. Hreflang inject auto sur chaque page. |
+| R.A.1 | Routing i18n native Next.js | Frontend | L | [x] #795 | **DONE** — locale routing + auto-detection middleware. |
 | R.A.2 | Traductions EN/DE/PL completes | Frontend + Content | XL | [ ] | Externaliser `apps/web/app/i18n/translations.ts` vers fichier JSON par locale (`fr.json`, `en.json`, `de.json`, `pl.json`). Traduire les ~800 cles existantes. Outils : DeepL Pro pour 1ere passe, relecture humaine native par locale (3 freelances 1 sem chacun). |
 | R.A.3 | Gazette LLM multi-langue | Backend | M | [ ] | Extend `pro-gazette-llm.ts` : prompt template par locale, persona adaptee (cynic FR vs cynic DE), prefixage "Date FR" → "Date DE". Generation parallele : 1 edition × 4 langues = 4 API calls. Coup ~4× existant, ajuster prompt cache aggressif. |
-| R.A.4 | SEO multi-langue | Frontend | M | [ ] | Hreflang complet (FR/EN/DE/PL/x-default). Meta title/description par locale. Sitemap par locale. Robots.txt update. JSON-LD Schema localized. Test : Google Search Console verifie indexation par locale. |
+| R.A.4 | SEO multi-langue | Frontend | M | [x] #796 | **DONE** — hreflang + sitemap localized + JSON-LD. |
 
 **DoD lot R.A** : 100% UI + Gazette traduit. Site indexable Google
 DE/PL avec hreflang. 4 locales en prod.
@@ -61,7 +67,7 @@ DE/PL avec hreflang. 4 locales en prod.
 |---|-------|-----|--------|--------|--------|
 | R.B.1 | Integration Patreon API | Backend | M | [ ] | OAuth Patreon + webhook subscription events. Modele Prisma `UserPatreonLink {userId, patreonUserId, tier, since, until}`. Service `apps/server/src/services/patreon-sync.ts` qui sync 1x/jour les statuses tier. Badge profil "Founders Club" pour patrons actifs. |
 | R.B.2 | Season Pass cosmetique | DB + Backend + Frontend | L | [ ] | Modeles `CosmeticPack {id, slug, name, priceCrowns, priceEur}`, `UserCosmeticUnlock {userId, cosmeticId, since}`. Cosmetics initiaux : 5 skins terrain (BB classic / Khorne fire / Nurgle rot / Skaven sewer / Wood Elf forest), 30 blasons custom, 3 dice 3D variants, 10 Gazette persona avatars. Payment Stripe checkout 10€. Equivalent 5000 Crowns earnable in-game (alt path). UI shop `/me/cosmetics`. |
-| R.B.3 | Ad-free + early replay access | Backend + Frontend | S | [ ] | Tier "Supporter" 3€/mois : ad-free (no Google AdSense banners if added later), early replay access (peut voir replays archived 0-7j avant les free users). Patreon webhook sync. |
+| R.B.3 | Ad-free + early replay access | Backend + Frontend | S | [x] #797 | **DONE** — supporter tier (ad-free + early replay access). Mappage statut Ko-fi en attendant Patreon API. |
 
 **DoD lot R.B** : 50+ paying supporters / patrons dans le 1er mois,
 revenu mensuel 200€+ minimum (signal floor).
@@ -85,7 +91,7 @@ semaine, crash-free rate > 99%.
 |---|-------|-----|--------|--------|--------|
 | R.D.1 | Discord officiel + bot Gazette | DevOps + Backend | M | [ ] | Creer serveur Discord officiel `Nuffle Arena`. Bot Node.js qui auto-post : Gazette daily edition (avec OG image), match results (avec scores), Hall of Fame inductions, badges majeurs. Channels : #general, #pro-league, #ligues-humaines, #tournois, #feedback. Recrute 3-5 moderateurs benevoles. |
 | R.D.2 | Programme ambassadeur casters | Marketing | M | [ ] | Brief 1 page : valeur prop, deliverables (1 stream/mois minimum, 1 video YT/trimestre), recompenses (compte Patreon Supporter offert, 5000 Crowns/mois, badge "Ambassador", early access features). Identifier 10 candidats (Bonehead Podcast, Iron Mike, Both Down, Eat Da Rookie, etc.). Contact email + Discord. Onboarding kit (logos, brand guide). |
-| R.D.3 | NAF API integration | Backend | L | [ ] | NAF (Naffinity Federation) expose API resultats tournois IRL. Service `apps/server/src/services/naf-sync.ts` : import resultats par joueur NAF ID, link a profile Nuffle Arena via opt-in (`User.nafId` champ). Fiche joueur publique enrichie "Tournois IRL : 3 wins NAF 2025". Differenciateur unique vs FUMBBL/Cyanide. |
+| R.D.3 | NAF API integration | Backend | L | [x] #799 | **DONE** — `services/naf-sync.ts` + `User.nafName` opt-in + feature flag `naf_integration`. Fiche joueur enrichie tournois IRL. |
 
 **DoD lot R.D** : Discord 500+ membres en 2 mois, 5 casters actifs en
 programme ambassadeur, 100+ joueurs NAF link a leur profile.
@@ -94,9 +100,9 @@ programme ambassadeur, 100+ joueurs NAF link a leur profile.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| R.E.1 | Game mode "async" backend | Backend | L | [ ] | Etendre `Match` model avec `mode enum(realtime/async)`. En mode async, pas de socket required : `POST /match/:id/move` accept un move avec deadline auto-calcule (24h par tour). Cron deadline-check : si timeout, force-end-turn + notif. |
-| R.E.2 | UI mobile + web async | Frontend + Mobile | L | [ ] | UI difference : afficher countdown "X heures restantes pour jouer". Notifications push quand c'est ton tour. Joueurs peuvent jouer plusieurs matches async en parallele. |
-| R.E.3 | Migration ligues v2 vers async | Backend | M | [ ] | Ligues v2 existing : option "async league" au create. Matches schedules avec deadline auto. Compatible BB rules existing (replay deterministe). |
+| R.E.1 | Game mode "async" backend | Backend | L | [x] #792 | **DONE** — `Match.mode` async + deadline + cron timeout. |
+| R.E.2 | UI mobile + web async | Frontend + Mobile | L | [x] #793 | **DONE** — countdown UI web (mobile en attente parite Lot R.C). |
+| R.E.3 | Migration ligues v2 vers async | Backend | M | [x] #794 | **DONE** — option async par ligue + deadline schedule. |
 
 **DoD lot R.E** : 50+ matches async termines en alpha. Format public
 launch a Sprint S.
