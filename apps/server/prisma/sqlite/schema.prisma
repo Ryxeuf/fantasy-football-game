@@ -61,6 +61,8 @@ model User {
   /// Lot P.A.2 — soft-delete RGPD-compatible. Mirror PG.
   deletedAt                   DateTime?
   deletionReason              String?
+  /// Lot O.B.2 — email verification. Mirror PG. null = pas verifie.
+  emailVerifiedAt             DateTime?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   /// Mirror PG — Visibilite dans le classement ELO ("visible" | "hidden_admin").
@@ -86,6 +88,7 @@ model User {
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   passwordResetTokens         PasswordResetToken[]
+  emailVerificationTokens     EmailVerificationToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -131,6 +134,21 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  requestIp String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Lot O.B.2 — Mirror SQLite du token de verification email.
+model EmailVerificationToken {
   id        String    @id @default(cuid())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String

@@ -18,6 +18,11 @@ import {
   requestPasswordReset,
 } from "../services/password-reset";
 import {
+  EmailVerificationError,
+  consumeEmailVerificationToken,
+  requestEmailVerification,
+} from "../services/email-verification";
+import {
   claimOrphanKofiTransactions,
   ensureKofiLinkCode,
 } from "../services/kofi-claim";
@@ -118,6 +123,31 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       await claimOrphanKofiTransactions(created.id, created.email);
     } catch (kofiErr) {
       serverLog.error("[register] kofi post-create hooks failed:", kofiErr);
+    }
+
+    // Lot O.B.2 — envoie automatique d'un email de verification.
+    // Best-effort : on ne bloque pas l'inscription si la creation du
+    // token echoue (ex: DB blip). L'utilisateur pourra resender via
+    // `POST /auth/resend-verification` une fois connecte.
+    try {
+      const origin =
+        (req.get("Origin") || process.env.FRONTEND_PUBLIC_URL || "")
+          .toString()
+          .slice(0, 256) || "https://nufflearena.fr";
+      const ip =
+        (req.headers["x-forwarded-for"] as string | undefined)
+          ?.split(",")[0]
+          ?.trim() || req.ip;
+      await requestEmailVerification({
+        userId: created.id,
+        origin,
+        requestIp: ip,
+      });
+    } catch (verifyErr) {
+      serverLog.error(
+        "[register] email verification token creation failed:",
+        verifyErr,
+      );
     }
 
     const roles = normalizeRoles((created as any).roles ?? created.role);
@@ -375,6 +405,84 @@ router.post(
         return;
       }
       serverLog.error("[auth/reset-password] failed:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+// Lot O.B.2 — Email verification (light).
+//
+// GET /auth/verify-email?token=... : consomme le token et set
+// `User.emailVerifiedAt`. Public (le token est la garantie).
+// Idempotent : 2eme clic sur le meme lien apres verification → 200 OK
+// avec le verifiedAt existant.
+router.get(
+  "/verify-email",
+  async (req: Request, res: Response) => {
+    const tokenRaw = req.query.token;
+    const token =
+      typeof tokenRaw === "string" && tokenRaw.length > 0 && tokenRaw.length <= 512
+        ? tokenRaw
+        : null;
+    if (!token) {
+      res.status(400).json({ error: "Token manquant ou invalide.", code: "INVALID_TOKEN" });
+      return;
+    }
+    try {
+      const result = await consumeEmailVerificationToken({ token });
+      res.json({
+        success: true,
+        email: result.email,
+        verifiedAt: result.verifiedAt.toISOString(),
+      });
+    } catch (e: unknown) {
+      if (e instanceof EmailVerificationError) {
+        const status =
+          e.code === "TOKEN_EXPIRED"
+            ? 410
+            : e.code === "INVALID_TOKEN" || e.code === "USER_DELETED"
+              ? 400
+              : 409;
+        res.status(status).json({ error: e.message, code: e.code });
+        return;
+      }
+      serverLog.error("[auth/verify-email] failed:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+// POST /auth/resend-verification (auth required) : regenere un token de
+// verification. Pas de throttle au MVP — l'utilisateur peut spam mais le
+// cout est minimal (cuid + insert + log). A reactiver via rate-limit
+// middleware si abuse constate.
+router.post(
+  "/resend-verification",
+  authUser,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const origin =
+        (req.get("Origin") || process.env.FRONTEND_PUBLIC_URL || "")
+          .toString()
+          .slice(0, 256) || "https://nufflearena.fr";
+      const ip =
+        (req.headers["x-forwarded-for"] as string | undefined)
+          ?.split(",")[0]
+          ?.trim() || req.ip;
+      const result = await requestEmailVerification({
+        userId,
+        origin,
+        requestIp: ip,
+      });
+      res.json(result);
+    } catch (e: unknown) {
+      if (e instanceof EmailVerificationError) {
+        const status = e.code === "USER_DELETED" ? 404 : 409;
+        res.status(status).json({ error: e.message, code: e.code });
+        return;
+      }
+      serverLog.error("[auth/resend-verification] failed:", e);
       res.status(500).json({ error: "Erreur serveur" });
     }
   },

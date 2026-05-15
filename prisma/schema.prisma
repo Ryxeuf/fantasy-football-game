@@ -75,6 +75,12 @@ model User {
   deletedAt                   DateTime?
   /// Lot P.A.2 — raison de la suppression (visible admin + audit log).
   deletionReason              String?
+  /// Lot O.B.2 — email verification. null = pas encore verifie ;
+  /// DateTime = timestamp de la verification reussie via
+  /// `GET /auth/verify-email?token=...`. Pas bloquant pour la connexion
+  /// au MVP : seule l'UI affiche une banniere "verifie ton email" tant
+  /// que c'est null. Reset si l'email est change.
+  emailVerifiedAt             DateTime?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   /// Statut de visibilite dans le classement ELO public + sections ELO
@@ -110,6 +116,7 @@ model User {
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   passwordResetTokens         PasswordResetToken[]
+  emailVerificationTokens     EmailVerificationToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -201,6 +208,34 @@ model PasswordResetToken {
   /// null = inutilise. DateTime = consomme (single-use).
   usedAt    DateTime?
   /// IP a la requete forgot, audit forensique. Optionnel.
+  requestIp String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Lot O.B.2 — token de verification email (light).
+///
+/// Meme pattern que PasswordResetToken : token plain envoye par email
+/// (link clear), seul le hash SHA-256 est persiste. Single-use via
+/// `usedAt`, expiration absolue via `expiresAt` (24h). Cree :
+///   - automatiquement sur `POST /auth/register` (best-effort),
+///   - manuellement sur `POST /auth/resend-verification` (auth, throttle
+///     1/min via le cron de purge cote service).
+/// Consomme via `GET /auth/verify-email?token=...` qui set
+/// `User.emailVerifiedAt` et marque le token used.
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  /// SHA-256 hex du token plain text. Lookup via `where: { tokenHash }`.
+  tokenHash String    @unique
+  /// Date d'expiration absolue (createdAt + 24h).
+  expiresAt DateTime
+  /// null = inutilise. DateTime = consomme (single-use).
+  usedAt    DateTime?
+  /// IP a la requete resend, audit forensique. Optionnel.
   requestIp String?
   createdAt DateTime  @default(now())
 

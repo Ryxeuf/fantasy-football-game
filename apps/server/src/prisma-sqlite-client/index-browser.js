@@ -143,6 +143,7 @@ exports.Prisma.UserScalarFieldEnum = {
   mustChangePassword: 'mustChangePassword',
   deletedAt: 'deletedAt',
   deletionReason: 'deletionReason',
+  emailVerifiedAt: 'emailVerifiedAt',
   lastLoginAt: 'lastLoginAt',
   leaderboardStatus: 'leaderboardStatus',
   leaderboardStatusReason: 'leaderboardStatusReason',
@@ -172,6 +173,16 @@ exports.Prisma.RefreshTokenScalarFieldEnum = {
 };
 
 exports.Prisma.PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  requestIp: 'requestIp',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmailVerificationTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   tokenHash: 'tokenHash',
@@ -1070,6 +1081,7 @@ exports.Prisma.ModelName = {
   EloSnapshot: 'EloSnapshot',
   RefreshToken: 'RefreshToken',
   PasswordResetToken: 'PasswordResetToken',
+  EmailVerificationToken: 'EmailVerificationToken',
   KofiTransaction: 'KofiTransaction',
   TutorialCompletion: 'TutorialCompletion',
   UserAchievement: 'UserAchievement',
