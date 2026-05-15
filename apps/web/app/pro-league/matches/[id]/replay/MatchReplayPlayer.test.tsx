@@ -10,9 +10,20 @@ import { act, render, screen, fireEvent } from "@testing-library/react";
 
 import type { MatchEvent } from "@bb/shared-types";
 
-vi.mock("../../../../lib/api-client", () => ({
-  apiRequest: vi.fn(),
-}));
+vi.mock("../../../../lib/api-client", () => {
+  class ApiClientError extends Error {
+    readonly status?: number;
+    constructor(message: string, status?: number) {
+      super(message);
+      this.name = "ApiClientError";
+      this.status = status;
+    }
+  }
+  return {
+    apiRequest: vi.fn(),
+    ApiClientError,
+  };
+});
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
@@ -327,5 +338,189 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
       await Promise.resolve();
     });
     expect(screen.queryByTestId("scrub-markers")).toBeNull();
+  });
+});
+
+describe("<MatchReplayPlayer> — vue terrain par défaut + résolution noms", () => {
+  const PID_ATTACKER = "cmp3w1e2a045dqpfv74lkun5b";
+  const PID_DEFENDER = "cmp3w1egr04apqpfv5so0ex47";
+
+  const BLOCK_FIXTURE_EVENTS: MatchEvent[] = [
+    {
+      type: "KICKOFF",
+      displayAtMs: 0,
+      engineVer: "0.13.0",
+      meta: { home: "home", away: "away", weather: "nice" },
+    },
+    {
+      type: "BLOCK",
+      displayAtMs: 30_000,
+      engineVer: "0.13.0",
+      meta: { attackerId: PID_ATTACKER, defenderId: PID_DEFENDER },
+    },
+    {
+      type: "END",
+      displayAtMs: 600_000,
+      engineVer: "0.13.0",
+      meta: { score: { home: 0, away: 0 } },
+    },
+  ];
+
+  const REPLAY_FIXTURE = {
+    matchId: "m1",
+    status: "completed",
+    durationMs: 600_000,
+    eventCount: BLOCK_FIXTURE_EVENTS.length,
+    events: BLOCK_FIXTURE_EVENTS,
+  };
+
+  const FULL_REPLAY_FIXTURE = {
+    matchId: "m1",
+    status: "completed",
+    durationMs: 600_000,
+    initialState: {
+      players: [
+        {
+          id: PID_ATTACKER,
+          team: "A",
+          pos: { x: 5, y: 7 },
+          name: "Tartar Steve",
+          number: 5,
+          position: "Blitzer",
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+          skills: ["block"],
+          pm: 7,
+        },
+        {
+          id: PID_DEFENDER,
+          team: "B",
+          pos: { x: 20, y: 7 },
+          name: "Slick Bob",
+          number: 12,
+          position: "Lineman",
+          ma: 6,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: [],
+          pm: 6,
+        },
+      ],
+    },
+  };
+
+  function mockBothEndpoints(opts: {
+    replay?: unknown;
+    fullReplay?: unknown;
+    fullReplayError?: unknown;
+  }): void {
+    mockedRequest.mockImplementation((path: string) => {
+      if (path.includes("/full-replay")) {
+        if (opts.fullReplayError) return Promise.reject(opts.fullReplayError);
+        return Promise.resolve(opts.fullReplay ?? FULL_REPLAY_FIXTURE);
+      }
+      return Promise.resolve(opts.replay ?? REPLAY_FIXTURE);
+    });
+  }
+
+  it("résout les playerIds en 'Nom (#N Position)' dans le feed des events", async () => {
+    mockBothEndpoints({});
+    renderPlayer("m1");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    // Avance jusqu'au BLOCK event pour le faire apparaître.
+    const scrub = screen.getByTestId("replay-scrub") as HTMLInputElement;
+    await act(async () => {
+      fireEvent.change(scrub, { target: { value: "60000" } });
+    });
+    const feed = screen.getByTestId("replay-event-feed");
+    expect(feed.textContent).toContain("Tartar Steve (#5 Blitzer)");
+    expect(feed.textContent).toContain("Slick Bob (#12 Lineman)");
+    // Les IDs bruts ne doivent plus apparaître à l'écran.
+    expect(feed.textContent).not.toContain(PID_ATTACKER);
+    expect(feed.textContent).not.toContain(PID_DEFENDER);
+  });
+
+  it("retombe sur l'ID brut si le playerId n'est pas dans le roster", async () => {
+    mockBothEndpoints({
+      fullReplay: {
+        ...FULL_REPLAY_FIXTURE,
+        initialState: { players: [] },
+      },
+    });
+    renderPlayer("m1");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const scrub = screen.getByTestId("replay-scrub") as HTMLInputElement;
+    await act(async () => {
+      fireEvent.change(scrub, { target: { value: "60000" } });
+    });
+    const feed = screen.getByTestId("replay-event-feed");
+    expect(feed.textContent).toContain(PID_ATTACKER);
+  });
+
+  it("par défaut, rend la vue terrain (replay-field-wrapper-full)", async () => {
+    mockBothEndpoints({});
+    renderPlayer("m1");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.queryByTestId("replay-field-wrapper-full")).not.toBeNull();
+    expect(screen.queryByTestId("replay-field-wrapper")).toBeNull();
+    expect(
+      screen
+        .getByTestId("replay-view-field")
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+  });
+
+  it("bascule sur la vue classique si le full-replay est 404", async () => {
+    mockBothEndpoints({
+      fullReplayError: new Error("FULL_REPLAY_NOT_AVAILABLE"),
+    });
+    renderPlayer("m1");
+    // Le .catch() interne sur le full-replay introduit une micro-tâche
+    // supplémentaire avant que Promise.all ne résolve. On flush deux ticks
+    // pour s'assurer que setState propage avant l'assertion.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.queryByTestId("replay-field-wrapper-full")).toBeNull();
+    expect(screen.queryByTestId("replay-field-wrapper")).not.toBeNull();
+    expect(
+      screen
+        .getByTestId("replay-view-classic")
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+    // L'onglet Terrain doit être désactivé.
+    expect(
+      screen.getByTestId("replay-view-field").getAttribute("disabled"),
+    ).not.toBeNull();
+  });
+
+  it("l'onglet Terrain reste cliquable si le full-replay est disponible", async () => {
+    mockBothEndpoints({});
+    renderPlayer("m1");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("replay-view-classic"));
+    });
+    expect(screen.queryByTestId("replay-field-wrapper")).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("replay-view-field"));
+    });
+    expect(screen.queryByTestId("replay-field-wrapper-full")).not.toBeNull();
   });
 });
