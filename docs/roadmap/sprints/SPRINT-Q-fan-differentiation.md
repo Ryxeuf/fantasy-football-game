@@ -27,18 +27,19 @@ communaute.
 
 ## Definition of done sprint
 
-- [ ] Career page joueur durable : 50 matchs historique, greatest
-  match, top rival, statistiques cumulees, trajectoire SPP/TV.
-- [ ] Player-of-the-week vote : 24h post-match, top voted recoit badge
-  "Carried My Team" + bonus Crowns.
+- [x] Career page joueur durable : 50 matchs historique, greatest
+  match, top rival, statistiques cumulees, trajectoire SPP/TV. **(Q.A.1+Q.A.2)**
+- [x] Player-of-the-week vote : 24h post-match, top voted recoit badge
+  "Carried My Team" + bonus Crowns. **(Q.B.1)**
 - [ ] Clips highlight auto : top 3 moments d'un match → MP4 vertical
   1080×1920 (TikTok/Shorts) generes via Pixi headless + ffmpeg.
-- [ ] Prediction mini-leagues privees : un user cree une ligue,
-  invite 5-50 amis, weekly pick → leaderboard custom.
-- [ ] Gazette commentaires moderes + fan predictions thread.
-- [ ] Team head-to-head card : historique W-D-L 2 equipes, narrative
-  rivalry detect (`storyline-detector` deja en place).
-- [ ] Survivor Pick'em hebdo (1 match / semaine, FOMO engine).
+  **(Q.C — DEFERE sprint video dedie)**
+- [x] Prediction mini-leagues privees : un user cree une ligue,
+  invite 5-50 amis, weekly pick → leaderboard custom. **(Q.D.1)**
+- [x] Gazette commentaires moderes + fan predictions thread. **(Q.B.2+Q.B.3)**
+- [x] Team head-to-head card : historique W-D-L 2 equipes, narrative
+  rivalry detect (`storyline-detector` deja en place). **(Q.A.3+Q.A.4)**
+- [x] Survivor Pick'em hebdo (1 match / semaine, FOMO engine). **(Q.D.2)**
 
 ## Decoupage en lots
 

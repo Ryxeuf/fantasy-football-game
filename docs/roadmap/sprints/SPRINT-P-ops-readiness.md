@@ -1,6 +1,8 @@
 # SPRINT P — Ops readiness + scaling 10k MAU
 
-> **Statut** : PLANIFIE — demarre apres Sprint O.
+> **Statut** : **TERMINE** — verifie 2026-05-15. Tous les 10 lots
+> (P.A.1-3, P.B.1-4, P.C.1-3) sont livres et tests. Voir audit
+> ci-dessous.
 > **Duree estimee** : 3 semaines.
 > **Pre-requis** : Sprint O merge (bugs critiques + acquisition).
 
@@ -42,9 +44,9 @@ actuel sans plomb. Decoupage en 7 lots de < 3j chacun.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| P.A.1 | Mode maintenance global | Backend + Frontend | M | [ ] | Feature flag `MAINTENANCE_MODE` (existing system). Middleware `apps/server/src/middleware/maintenance.ts` qui intercept toutes les routes non-`/admin/*` + retourne 503 avec `Retry-After: 3600`. Page Next.js `/maintenance/page.tsx` avec timer estime. Toggle via admin UI `/admin/feature-flags`. |
-| P.A.2 | Soft-delete users | DB + Backend | M | [ ] | Migration Prisma : `User.deletedAt DateTime?` (null par defaut). Tous les `findMany/findUnique/findFirst` ajoutent `where: { deletedAt: null }` (helper `apps/server/src/lib/prisma-soft-delete.ts`). `DELETE /admin/users/:id` set `deletedAt = now` au lieu de hard delete. Audit log conserve `userId` reference. Endpoint `/admin/users/:id/restore` pour annuler. |
-| P.A.3 | GDPR export endpoint | Backend | M | [ ] | `GET /me/gdpr-export` (auth required) : retourne JSON complet user (account, teams, matches, bets, transactions, badges, follows, audit_log entries). Format conforme RGPD (lisible). Limite 1 export / 24h. Idempotent. Audit log "user.gdpr.export". |
+| P.A.1 | Mode maintenance global | Backend + Frontend | M | [x] | **DONE** : middleware `apps/server/src/middleware/maintenance.ts` (kill-switch flag), page `apps/web/app/maintenance/page.tsx`. Toggle admin via feature-flags UI. |
+| P.A.2 | Soft-delete users | DB + Backend | M | [x] | **DONE** : `User.deletedAt` (schema.prisma:75) + `apps/server/src/lib/prisma-soft-delete.ts` (helpers `whereActiveUser` / `isActiveUser`), restore endpoint admin (admin.ts:732). |
+| P.A.3 | GDPR export endpoint | Backend | M | [x] | **DONE** : `GET /me/gdpr-export` dans `apps/server/src/routes/auth-privacy.ts:83` + `services/gdpr-export.ts` (audit log, throttle 1/24h). |
 
 **DoD lot P.A** : test e2e mode maintenance, test e2e soft-delete +
 restore, test JSON GDPR-export contient toutes les sections.
@@ -53,10 +55,10 @@ restore, test JSON GDPR-export contient toutes les sections.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| P.B.1 | Admin wallet UI + endpoints | Backend + Frontend | M | [ ] | Nouvelle route serveur `apps/server/src/routes/admin-wallet.ts` : `GET /admin/wallets/:userId/transactions` (paginee), `PATCH /admin/wallets/:userId/balance` (ajustement avec reason obligatoire, audit log strict), `POST /admin/bets/:betId/refund` (annule un pari, credit le wallet, log audit). UI `apps/web/app/admin/wallets/page.tsx` + `/admin/wallets/[userId]/page.tsx`. |
-| P.B.2 | Crowns sinks (HoF inscriptions + tournois entry) | Backend + Frontend | M | [ ] | 2 nouveaux markets sinks : (a) `POST /pro-league/hall-of-fame/dedicate` (cout 500 Crowns, ajoute message custom sur fiche joueur HoF), (b) `POST /pro-league/tournaments/:id/enter` (entry fee 100 Crowns, payable une fois). Audit log + transaction wallet. UI : bouton "Dedicate" sur HoF entries + section "Tournois ouverts" sur hub. |
-| P.B.3 | Season factory CLI + admin UI | Backend + Frontend | L | [ ] | Service `apps/server/src/services/pro-season-factory.ts` : `cloneSeason(fromSeasonId)`, `regenerateSchedule(seasonId)`, `resetStandings(seasonId)`, `forceForfeit(matchId, winnerId)`, `cancelSeason(seasonId)`. CLI `pnpm pro:season:clone --from=...`. UI `apps/web/app/admin/pro-league/seasons/page.tsx` avec actions par saison. Tous audites + idempotents. |
-| P.B.4 | Moderation matchs humains | Backend + Frontend | M | [ ] | Endpoint `POST /admin/matches/:id/forfeit` (admin force forfait avec raison), `POST /admin/matches/:id/cancel` (annule + refund bets associes), `POST /admin/users/:id/ban` (deja existant, ajouter raison + duree). UI `/admin/matches/[id]/page.tsx` enrichi avec ces actions. Audit log strict. |
+| P.B.1 | Admin wallet UI + endpoints | Backend + Frontend | M | [x] | **DONE** : `routes/admin-wallet.ts` + UI `apps/web/app/admin/wallets/[userId]/page.tsx`. |
+| P.B.2 | Crowns sinks (HoF inscriptions + tournois entry) | Backend + Frontend | M | [x] | **DONE** : `services/pro-hall-of-fame-dedicate.ts` (`dedicateHallOfFame`) + `services/pro-tournament-entry.ts` (`enterTournament`). |
+| P.B.3 | Season factory CLI + admin UI | Backend + Frontend | L | [x] | **DONE** : `services/pro-season-factory.ts` + `routes/admin-pro-season.ts` + UI `apps/web/app/admin/pro-league/seasons/`. |
+| P.B.4 | Moderation matchs humains | Backend + Frontend | M | [x] | **DONE** : endpoints forfeit/cancel/ban dans `admin.ts:975` / `:450` / `:527` (unban). Tests `admin-moderation.test.ts`. |
 
 **DoD lot P.B** : un admin peut creer une saison en moins de 60s,
 faire un refund de pari frauduleux en < 30s, forfaiter un match
@@ -66,9 +68,9 @@ toxique. Tests integration + audit log entries.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| P.C.1 | Password reset self-service | Backend + Frontend | M | [ ] | POST `/auth/forgot-password` : genere token JWT expirant 24h, envoie email avec lien `/reset-password?token=...`. POST `/auth/reset-password` : valide token, update `User.password` (bcrypt), invalidate sessions actives. Pages Next.js `/forgot-password` + `/reset-password`. Audit log. Tests securite : token unique, expire, single-use. |
-| P.C.2 | Admin password reset override | Backend + Frontend | S | [ ] | POST `/admin/users/:id/password-reset` : generate temp password, retourne pour transmission a l'utilisateur (out-of-band). Force re-login + change-on-next-login. Audit log strict. |
-| P.C.3 | Dashboard analytics admin | Backend + Frontend | L | [ ] | Service `apps/server/src/services/admin-analytics.ts` : `getDailyActiveUsers(days)`, `getMonthlyActiveUsers(months)`, `getSignupToFirstMatchFunnel()`, `getCrownsInflation30d()`. Endpoint `GET /admin/analytics` agrege. UI `apps/web/app/admin/analytics/page.tsx` avec 4 charts (Recharts) + delta vs periode precedente. |
+| P.C.1 | Password reset self-service | Backend + Frontend | M | [x] | **DONE** : `services/password-reset.ts` + routes `auth.ts:324/356` + pages `forgot-password` / `reset-password`. Token hash SHA-256, single-use, expire 24h. |
+| P.C.2 | Admin password reset override | Backend + Frontend | S | [x] | **DONE** : `admin.ts:587` + `services/temp-password.ts`. `User.mustChangePassword` flag pour forcer le change a la prochaine connexion. |
+| P.C.3 | Dashboard analytics admin | Backend + Frontend | L | [x] | **DONE** : `services/admin-analytics.ts` + `routes/admin-analytics.ts` + UI `apps/web/app/admin/analytics/page.tsx`. |
 
 **DoD lot P.C** : un user qui a perdu son password peut se
 reconnecter en < 5 min sans contacter le support. Admin voit le DAU
