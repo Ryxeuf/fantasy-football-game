@@ -66,6 +66,50 @@ describe('createRng — xoroshiro PRNG (sprint Pro League 0.A.4)', () => {
     expect(seqOther).not.toEqual(seq1);
   });
 
+  it('rng.fork avec le MÊME label appelé plusieurs fois produit des flux DISTINCTS', () => {
+    // BUG fix : avant, deux appels successifs `parent.fork('foo')`
+    // produisaient exactement le même flux enfant (seul `parentSeed`
+    // était utilisé, indépendamment du nombre de re-forks). Un caller
+    // qui aurait fork le même label pour deux phases distinctes (e.g.
+    // drive 1 puis drive 2) cassait la pseudo-indépendance.
+    const parent = createRng(42);
+    const childA = parent.fork('phase');
+    const childB = parent.fork('phase');
+    const childC = parent.fork('phase');
+    const seqA = Array.from({ length: 8 }, () => childA.next());
+    const seqB = Array.from({ length: 8 }, () => childB.next());
+    const seqC = Array.from({ length: 8 }, () => childC.next());
+    expect(seqB).not.toEqual(seqA);
+    expect(seqC).not.toEqual(seqA);
+    expect(seqC).not.toEqual(seqB);
+  });
+
+  it('rng.fork préserve le comportement legacy pour la première occurrence (backward-compat)', () => {
+    // La première fork(label) doit produire la même séquence qu'avant le
+    // fix — sinon les bench baselines et replays existants cassent.
+    const parent = createRng(100);
+    const child = parent.fork('block-resolver');
+    const seq = Array.from({ length: 4 }, () => child.next());
+    // Si quelqu'un re-fork plus tard, la première occurrence doit rester
+    // identique à un fork "frais" depuis un nouveau parent.
+    const parentFresh = createRng(100);
+    const childFresh = parentFresh.fork('block-resolver');
+    const seqFresh = Array.from({ length: 4 }, () => childFresh.next());
+    expect(seq).toEqual(seqFresh);
+  });
+
+  it('seedToState dérive `hi` des bits hauts (pas de collision pour seed > 2^32)', () => {
+    // BUG fix : avant, tous les seeds positifs avaient hi=0 dans
+    // seedToState. Donc createRng(2^32) collidait avec createRng(0)
+    // (qui tombait sur le fallback dead_beef après hi=0,lo=0).
+    // Maintenant on calcule hi depuis Math.floor(seed / 2^32).
+    const rngLow = createRng(5);
+    const rngHigh = createRng(5 + 2 ** 32);
+    const seqLow = Array.from({ length: 8 }, () => rngLow.next());
+    const seqHigh = Array.from({ length: 8 }, () => rngHigh.next());
+    expect(seqHigh).not.toEqual(seqLow);
+  });
+
   it('rng.fork does not consume the parent stream (children are derived hashes)', () => {
     const parent = createRng(50);
     const beforeFork = parent.next();

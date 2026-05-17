@@ -144,8 +144,15 @@ function seedToState(seed: number): XoroState {
     throw new Error('createRng: seed must be a finite number');
   }
   const normalized = Math.trunc(seed);
+  // BUG fix : avant, `hi` était toujours 0 pour les seeds positifs
+  // (seule la branche `< 0` calculait `Math.floor / 2^32`). Donc
+  // `createRng(2^32)`, `createRng(2^33)`, etc. collidaient avec
+  // `createRng(0)` après le fallback dead_beef. On dérive maintenant
+  // `hi` des bits hauts pour TOUT seed. Comportement identique pour
+  // les seeds < 2^32 (positifs ou négatifs) — pas de régression sur
+  // les replays/bench existants.
   let sm: U64 = u64(
-    normalized < 0 ? Math.floor(normalized / TWO_POW_32) >>> 0 : 0,
+    Math.floor(normalized / TWO_POW_32) >>> 0,
     normalized >>> 0
   );
   if (sm.hi === 0 && sm.lo === 0) {
@@ -194,6 +201,18 @@ function hashLabel(label: string): U64 {
 class XoroRng implements Rng {
   private state: XoroState;
   private readonly parentSeed: number;
+  /**
+   * BUG fix : avant, `fork(label)` réutilisait uniquement `parentSeed`
+   * (immuable) XOR hash(label). Conséquence : deux appels successifs
+   * `parent.fork('foo')` produisaient **exactement le même flux enfant**.
+   * Un consommateur qui fork le même label pour deux phases distinctes
+   * (ex: drive 1 puis drive 2) cassait la pseudo-indépendance des
+   * sub-streams. On compte maintenant les occurrences par label pour
+   * mixer un offset unique sur les re-forks. La PREMIÈRE occurrence
+   * d'un label conserve le comportement legacy (préserve la déterminisme
+   * des replays / bench existants où chaque label n'est forké qu'une fois).
+   */
+  private readonly forkedLabels = new Map<string, number>();
 
   constructor(seed: number) {
     this.parentSeed = seed;
@@ -209,7 +228,14 @@ class XoroRng implements Rng {
       throw new Error('rng.fork: label must be a non-empty string');
     }
     const labelHash = hashLabel(label);
-    const blended = (this.parentSeed >>> 0) ^ labelHash.lo ^ labelHash.hi;
+    const occurrence = this.forkedLabels.get(label) ?? 0;
+    this.forkedLabels.set(label, occurrence + 1);
+    // First occurrence : pre-fix behavior. Re-forks of the same label
+    // mix in an occurrence-specific hash to produce distinct streams.
+    const occurrenceMix =
+      occurrence > 0 ? hashLabel(`${label}:${occurrence}`).lo : 0;
+    const blended =
+      (this.parentSeed >>> 0) ^ labelHash.lo ^ labelHash.hi ^ occurrenceMix;
     return new XoroRng(blended >>> 0);
   }
 
