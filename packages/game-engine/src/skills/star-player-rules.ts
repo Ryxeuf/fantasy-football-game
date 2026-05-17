@@ -177,6 +177,7 @@ registerSkill({
     hasSkill(ctx.player, 'crushing-blow') &&
     !isStarPlayerRuleUsed(ctx.state, ctx.player.id, 'crushing-blow'),
   getModifiers: () => ({ armorModifier: 1 }),
+  oncePerMatchSlug: 'crushing-blow',
 });
 
 // ─── 7. LORD OF CHAOS (Lord Borak The Despoiler) ───────────────────────
@@ -211,6 +212,7 @@ registerSkill({
     hasSkill(ctx.player, 'pirouette') &&
     !isStarPlayerRuleUsed(ctx.state, ctx.player.id, 'pirouette'),
   getModifiers: () => ({ dodgeModifier: 1 }),
+  oncePerMatchSlug: 'pirouette',
 });
 
 // ─── 9. CASSE-OS (Mighty Zug) ──────────────────────────────────────────
@@ -224,6 +226,7 @@ registerSkill({
     hasSkill(ctx.player, 'casse-os') &&
     !isStarPlayerRuleUsed(ctx.state, ctx.player.id, 'casse-os'),
   getModifiers: () => ({ strengthModifier: 1 }),
+  oncePerMatchSlug: 'casse-os',
 });
 
 // ─── 10. RELIABLE (Deeproot Strongbranch) ───────────────────────────────

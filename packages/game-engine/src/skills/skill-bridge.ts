@@ -5,9 +5,31 @@
  */
 
 import type { Player, GameState, Position } from '../core/types';
-import type { SkillTrigger } from './skill-registry';
-import { collectModifiers, getSkillEffect } from './skill-registry';
+import type { SkillTrigger, SkillContext } from './skill-registry';
+import { collectModifiers, getSkillEffect, getOncePerMatchSlugsToConsume } from './skill-registry';
+import { markStarPlayerRuleUsed } from './star-player-rules';
 import { getAdjacentOpponents } from '../mechanics/movement';
+
+/**
+ * Marque les star player rules « once-per-match » consommés par un
+ * trigger. À appeler après que le caller a effectivement utilisé les
+ * modifiers retournés par `collectModifiers` (jet d'armure, esquive,
+ * etc.). Sans cet appel, les skills une-fois-par-match (Crushing Blow,
+ * Pirouette, Casse-Os) firent à chaque trigger → infinite uses.
+ */
+export function consumeOncePerMatchSkills(
+  state: GameState,
+  player: Player,
+  trigger: SkillTrigger,
+  ctx: Omit<SkillContext, 'player' | 'currentTrigger'> = { state },
+): GameState {
+  const slugs = getOncePerMatchSlugsToConsume(player, trigger, ctx);
+  let newState = state;
+  for (const slug of slugs) {
+    newState = markStarPlayerRuleUsed(newState, player.id, slug);
+  }
+  return newState;
+}
 
 /**
  * Calcule les modificateurs de compétences pour un jet d'esquive.
