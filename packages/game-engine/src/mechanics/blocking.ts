@@ -401,22 +401,30 @@ function getAdjacentOpponents(state: GameState, position: Position, team: TeamId
 }
 
 /**
- * Calcule le nombre de dés de blocage à lancer
- * @param attackerStrength - Force totale de l'attaquant
- * @param targetStrength - Force totale de la cible
- * @returns Nombre de dés à lancer
+ * Calcule le nombre de dés de blocage à lancer.
+ *
+ * BB2020 rule : 3 dés (camp avantagé choisit) lorsque la force d'un camp
+ * est **exactement le double ou plus** de l'autre. 2 dés lorsque
+ * différence sans 2×. 1 dé sur égalité.
+ *
+ * BUG fix : avant, la condition côté défenseur `attackerStrength <
+ * targetStrength / 2` était strictement `<`, donc attacker=1, target=2
+ * (ratio 2×) retournait 2 dés au lieu de 3. Asymétrie avec la branche
+ * attaquant `attackerStrength < targetStrength * 2` qui mettait 1 vs 2
+ * ratio défavorable / 2 vs 1 ratio favorable dans des cases différentes.
+ * Maintenant symétrique via `attackerStrength * 2 <= targetStrength`.
  */
 export function calculateBlockDiceCount(attackerStrength: number, targetStrength: number): number {
-  if (attackerStrength < targetStrength / 2) {
-    return 3; // 3 dés, le défenseur choisit
+  if (attackerStrength * 2 <= targetStrength) {
+    return 3; // 3 dés, le défenseur choisit (target ≥ 2× attacker)
   } else if (attackerStrength < targetStrength) {
     return 2; // 2 dés, le défenseur choisit
   } else if (attackerStrength === targetStrength) {
     return 1; // 1 dé
-  } else if (attackerStrength < targetStrength * 2) {
-    return 2; // 2 dés, l'attaquant choisit
+  } else if (targetStrength * 2 <= attackerStrength) {
+    return 3; // 3 dés, l'attaquant choisit (attacker ≥ 2× target)
   } else {
-    return 3; // 3 dés, l'attaquant choisit
+    return 2; // 2 dés, l'attaquant choisit
   }
 }
 

@@ -118,6 +118,42 @@ describe('Pass Action', () => {
     // L'état ne devrait pas changer
     expect(result).toEqual(state);
   });
+
+  it('fumble (naturel 1) lâche le ballon aux pieds du PASSEUR (pas de la cible)', () => {
+    // BUG fix : avant, tout échec de passe faisait rebondir le ballon
+    // depuis la case CIBLE — même un fumble (naturel 1) qui devrait laisser
+    // tomber le ballon aux pieds du passeur. Sur un long-bomb fumble,
+    // cela donnait un énorme avantage indu (ballon au bout du terrain).
+    const state = createPassTestState();
+    // RNG: pass roll = 1 (fumble), puis bounces (utilisent les valeurs suivantes)
+    const rng = makeTestRNG([0.01, 0.5, 0.5, 0.5, 0.5]);
+
+    const passerPos = { ...state.players[0].pos };
+    const targetPos = { ...state.players[1].pos };
+
+    const move: Move = { type: 'PASS', playerId: 'A1', targetId: 'A2' };
+    const result = applyMove(state, move, rng);
+
+    expect(result.isTurnover).toBe(true);
+    // Le passeur n'a plus la balle (fumble = drop).
+    expect(result.players.find(p => p.id === 'A1')?.hasBall).toBeFalsy();
+    // Le ballon est aux pieds du passeur (initial pos), pas chez la cible.
+    // Note : après bounce, il a peut-être dérivé d'1 case ; on vérifie
+    // que la distance initiale du ballon au passeur << distance au target.
+    expect(result.ball).toBeDefined();
+    if (result.ball) {
+      const distToPasser = Math.max(
+        Math.abs(result.ball.x - passerPos.x),
+        Math.abs(result.ball.y - passerPos.y),
+      );
+      const distToTarget = Math.max(
+        Math.abs(result.ball.x - targetPos.x),
+        Math.abs(result.ball.y - targetPos.y),
+      );
+      expect(distToPasser).toBeLessThanOrEqual(1); // ≤ 1 case du passeur (bounce inclus)
+      expect(distToTarget).toBeGreaterThan(1); // loin de la cible
+    }
+  });
 });
 
 describe('Interception', () => {
