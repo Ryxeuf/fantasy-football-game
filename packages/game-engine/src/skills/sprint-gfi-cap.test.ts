@@ -103,4 +103,29 @@ describe("getGfiCap", () => {
     const player = makePlayer({ skills: ["sure-feet"] });
     expect(getGfiCap(FAKE_STATE, player)).toBe(2);
   });
+
+  it("respecte rulesConfig.enableGFI=false (mode simplified)", () => {
+    // BUG fix : avant, getGfiCap ignorait rulesConfig et retournait
+    // toujours 2 même en mode simplified (enableGFI=false, maxGFI=0).
+    const player = makePlayer({ skills: ["sprint"] });
+    const simplifiedState = {
+      rulesConfig: { enableGFI: false, maxGFI: 0 },
+    } as unknown as GameState;
+    expect(getGfiCap(simplifiedState, player)).toBe(0);
+  });
+
+  it("base cap suit rulesConfig.maxGFI (extensible par skill)", () => {
+    // maxGFI=2 (full) + Sprint=+1 → 3
+    const sprintPlayer = makePlayer({ skills: ["sprint"] });
+    const fullState = {
+      rulesConfig: { enableGFI: true, maxGFI: 2 },
+    } as unknown as GameState;
+    expect(getGfiCap(fullState, sprintPlayer)).toBe(3);
+
+    // Si jamais maxGFI=1 dans une rulesConfig custom, Sprint donne 2.
+    const reducedState = {
+      rulesConfig: { enableGFI: true, maxGFI: 1 },
+    } as unknown as GameState;
+    expect(getGfiCap(reducedState, sprintPlayer)).toBe(2);
+  });
 });
