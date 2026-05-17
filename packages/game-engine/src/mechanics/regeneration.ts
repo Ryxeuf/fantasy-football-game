@@ -28,7 +28,15 @@ export function hasRegeneration(state: GameState, playerId: string): boolean {
  * Returns a new GameState if regeneration succeeds, or null if it fails.
  *
  * On success: moves the player to Reserves, clears casualty data, logs the result.
- * On failure: logs the failed roll, returns null (caller continues with normal flow).
+ * On failure: logs the failed roll to `state.gameLog` (in-place append) and
+ * returns null. Le caller doit travailler avec son state existant (qui contient
+ * désormais le log d'échec ajouté).
+ *
+ * Note immutability : la mutation in-place du `gameLog` sur l'échec est
+ * volontaire pour préserver l'API legacy `GameState | null`. Le caller
+ * passe toujours un state déjà cloné (via `structuredClone` au niveau de
+ * `injury.ts:performInjuryRoll`), donc la mutation reste « safe » du point
+ * de vue de l'appelant externe.
  */
 export function tryRegeneration(
   state: GameState,
@@ -47,7 +55,6 @@ export function tryRegeneration(
   if (success) {
     // Move player from current zone to reserves
     const team = player.team;
-    const fromZone = injuryType === 'ko' ? 'knockedOut' : 'casualty';
     const newState = movePlayerToDugoutZone(state, playerId, 'reserves', team);
 
     // Clear casualty data if applicable

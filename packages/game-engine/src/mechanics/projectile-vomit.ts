@@ -18,7 +18,6 @@ import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
-import { getMightyBlowBonusFromRegistry, getArmorSkillContext } from '../skills/skill-bridge';
 import { bounceBall } from './ball';
 
 /**
@@ -113,30 +112,24 @@ export function executeProjectileVomit(
       newState = bounceBall(newState, rng);
     }
 
-    // Jet d'armure avec bonus Mighty Blow éventuel.
-    // Iron Hard Skin annule les modificateurs positifs de l'attaquant
-    // sur le jet d'armure (ex. Mighty Blow).
-    const mightyBlowBonusRaw = getMightyBlowBonusFromRegistry(vomiter, newState);
-    const { ironHardSkinActive } = getArmorSkillContext(
-      newState,
-      vomiter,
-      newState.players[targetIdx],
-    );
-    const mightyBlowBonus = ironHardSkinActive ? 0 : mightyBlowBonusRaw;
-    const armorResult = performArmorRoll(newState.players[targetIdx], rng, -mightyBlowBonus);
+    // BB2020 rule : Mighty Blow ne s'applique PAS aux jets d'armure ni
+    // de blessure issus de Projectile Vomit. C'est une exclusion explicite
+    // dans le texte de Projectile Vomit. Avant ce fix, Mighty Blow donnait
+    // +1 à l'armure de PV, ce qui sur-évaluait les profils Mighty Blow +
+    // Projectile Vomit (rare mais existant via inducements / skill access).
+    const armorResult = performArmorRoll(newState.players[targetIdx], rng, 0);
     newState.lastDiceResult = armorResult;
 
-    const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
     const armorLog = createLogEntry(
       'dice',
-      `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
+      `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '(tient)' : '(percée)'}`,
       target.id,
       target.team,
-      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus, ironHardSkin: ironHardSkinActive },
+      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber },
     );
     newState.gameLog = [...newState.gameLog, armorLog];
 
-    // Si l'armure est percée (success = false), jet de blessure
+    // Si l'armure est percée, jet de blessure (sans bonus Mighty Blow non plus).
     if (!armorResult.success) {
       newState = performInjuryRoll(newState, newState.players[targetIdx], rng, 0, vomiter.id);
     }
