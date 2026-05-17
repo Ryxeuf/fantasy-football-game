@@ -96,18 +96,20 @@ export function resolveFoul(
   const armorTotal = armorRoll[0] + armorRoll[1] + assistDelta + dirtyPlayerBonus;
   const armorTarget = victim.av + 1;
   const armorBroken = armorTotal >= armorTarget;
-  const sentOff = armorRoll[0] === armorRoll[1]; // doubles → ref spots foul
+  const armorDoubles = armorRoll[0] === armorRoll[1];
 
   const events: MatchEvent[] = [];
   let newState: ResolverState = state;
   let injuryRoll: [number, number] | undefined;
   let injuryOutcome: FoulInjuryOutcome | undefined;
+  let injuryDoubles = false;
 
   if (armorBroken) {
     injuryRoll = [
       rollD6(rng as Parameters<typeof rollD6>[0]),
       rollD6(rng as Parameters<typeof rollD6>[0]),
     ];
+    injuryDoubles = injuryRoll[0] === injuryRoll[1];
     const injuryTotal = injuryRoll[0] + injuryRoll[1] + dirtyPlayerBonus;
     if (injuryTotal >= 10) injuryOutcome = 'casualty';
     else if (injuryTotal >= 8) injuryOutcome = 'ko';
@@ -130,6 +132,13 @@ export function resolveFoul(
       });
     }
   }
+
+  // BB2020/BB3 : doubles sur Armour OR Injury roll → fouleur expulsé. Avant
+  // ce fix, seul le double armor déclenchait — sous-estimation des
+  // expulsions sur foul. Skill `sneaky_git` permettrait d'ignorer le double
+  // armor si l'armure ne casse pas, mais on garde le simplification BB2020
+  // base : tout double sur l'un des deux rolls envoie au vestiaire.
+  const sentOff = armorDoubles || injuryDoubles;
 
   if (sentOff) {
     newState = updatePlayer(newState, fouler.id, { state: 'casualty' });

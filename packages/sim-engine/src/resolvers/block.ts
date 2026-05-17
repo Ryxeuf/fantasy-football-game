@@ -208,15 +208,19 @@ export function resolveBlock(
     }
   }
 
+  // BB2020/BB3 Wrestle : sur BOTH_DOWN, les deux joueurs sont *Placed Prone*
+  // (pas de Knock-Down) — donc PAS d'armor/injury roll et PAS de turnover.
+  // La balle est lâchée si l'attaquant ou le défenseur en avait possession.
+  const isWrestle = resolution === 'wrestle';
   if (attackerDown) {
     newState = updatePlayer(newState, attacker.id, { state: 'prone' });
     if (attacker.hasBall) newState = updatePlayer(newState, attacker.id, { hasBall: false });
-    rollArmorAndInjury(attacker, defender.id);
+    if (!isWrestle) rollArmorAndInjury(attacker, defender.id);
   }
   if (defenderDown) {
     newState = updatePlayer(newState, defender.id, { state: 'prone' });
     if (defender.hasBall) newState = updatePlayer(newState, defender.id, { hasBall: false });
-    rollArmorAndInjury(defender, attacker.id);
+    if (!isWrestle) rollArmorAndInjury(defender, attacker.id);
   }
 
   events.unshift({
@@ -234,7 +238,10 @@ export function resolveBlock(
       useWrestle: input.useWrestle === true,
     },
   });
-  if (attackerDown) {
+  // Wrestle ne déclenche pas de turnover (BB rule). Pour les autres
+  // attacker_down (PLAYER_DOWN, BOTH_DOWN sans Block), turnover normal.
+  const turnover = attackerDown && !isWrestle;
+  if (turnover) {
     events.push({
       type: 'TURNOVER',
       displayAtMs: input.displayAtMs,
@@ -244,8 +251,8 @@ export function resolveBlock(
   }
 
   return {
-    success: !attackerDown,
-    turnover: attackerDown,
+    success: !turnover,
+    turnover,
     newState,
     events,
     trace: {

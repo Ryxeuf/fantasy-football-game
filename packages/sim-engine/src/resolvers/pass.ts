@@ -90,7 +90,12 @@ export function resolvePass(
   const tzMod = -tzCount;
   // Skills
   const accurateMod = hasSkill(passer, 'accurate') && (range === 'quick' || range === 'short') ? 1 : 0;
-  const strongArmMod = hasSkill(passer, 'strong_arm') && (range === 'long' || range === 'bomb') ? 1 : 0;
+  // BB2020 Strong Arm : « Add 1 to any Short, Long or Long Bomb passes. »
+  // L'ancien code excluait Short, ce qui sous-évaluait les Throwers.
+  const strongArmMod =
+    hasSkill(passer, 'strong_arm') && (range === 'short' || range === 'long' || range === 'bomb')
+      ? 1
+      : 0;
 
   const totalModifier = rangeMod + tzMod + accurateMod + strongArmMod;
 
@@ -120,15 +125,16 @@ export function resolvePass(
     newState = updatePlayer(newState, passer.id, { rerollAvailable: false });
   }
 
+  // Un fumble peut survenir au premier ou au reroll. Dans les deux cas, la
+  // balle tombe aux pieds du passer (BB rule) — le scatter est driver-side.
+  // Avant ce fix, un reroll-fumble laissait `hasBall` sur le passer alors
+  // que `meta.fumble` était `true`, créant un state incohérent.
+  const fumbleOccurred = isFumble || (usedReroll && secondRoll === 1);
   if (success) {
     newState = updatePlayer(newState, passer.id, { hasBall: false });
     newState = { ...newState, ballAt: { ...input.to } };
-  } else {
-    // On fumble, ball drops at passer's feet ; on inaccurate pass scatter
-    // is driver-side. We just clear `hasBall` on the passer.
-    if (isFumble) {
-      newState = updatePlayer(newState, passer.id, { hasBall: false });
-    }
+  } else if (fumbleOccurred) {
+    newState = updatePlayer(newState, passer.id, { hasBall: false });
   }
 
   const events: MatchEvent[] = [
@@ -146,7 +152,7 @@ export function resolvePass(
         roll: firstRoll,
         rerollRoll: secondRoll,
         usedReroll,
-        fumble: isFumble || (usedReroll && secondRoll === 1),
+        fumble: fumbleOccurred,
         success,
       },
     },
@@ -157,7 +163,7 @@ export function resolvePass(
       displayAtMs: input.displayAtMs,
       engineVer: state.engineVer,
       meta: {
-        cause: isFumble ? 'pass_fumble' : 'pass_failed',
+        cause: fumbleOccurred ? 'pass_fumble' : 'pass_failed',
         passerId: passer.id,
       },
     });
@@ -173,7 +179,7 @@ export function resolvePass(
       target,
       modifier: totalModifier,
       roll: firstRoll,
-      fumble: isFumble,
+      fumble: fumbleOccurred,
       rerollRoll: secondRoll,
       usedReroll,
     },
