@@ -121,8 +121,12 @@ export function handleBlitz(
     const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
     newState.players[attackerIdx].pos = { ...to };
 
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+    // BB rule : le coût en PM d'un déplacement est la distance Chebyshev
+    // (king-move) — 1 PM par case adjacente, diagonales incluses. Avant ce
+    // fix, on utilisait la distance Manhattan (|dx| + |dy|) qui comptait
+    // un déplacement diagonal comme 2 PM au lieu d'1. `getLegalMoves` énumère
+    // pourtant les 8 directions comme BLITZ steps single-PM.
+    const distance = Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y));
     newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
 
     // Shadowing : tentative de suivi après le mouvement (BB3).
@@ -213,8 +217,9 @@ export function handleBlitz(
     const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
     newState.players[attackerIdx].pos = { ...to };
 
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+    // BB rule : distance Chebyshev (king-move) — 1 PM par case adjacente.
+    // Cf. commentaire au-dessus pour le bug fix Manhattan → Chebyshev.
+    const distance = Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y));
     newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
 
     // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown

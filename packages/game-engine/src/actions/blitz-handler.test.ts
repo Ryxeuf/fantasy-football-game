@@ -118,4 +118,43 @@ describe('S27.8.13 — handleBlitz', () => {
     );
     expect(JSON.stringify(state)).toBe(snapshot);
   });
+
+  it("un déplacement diagonal coûte 1 PM (Chebyshev), pas 2 (BB rule)", () => {
+    // BUG fix : avant, le coût en PM était calculé en Manhattan
+    // (|dx| + |dy|), donc une diagonale coûtait 2 PM au lieu d'1. BB
+    // utilise Chebyshev (king-move) : 1 PM par case adjacente, diagonales
+    // incluses. `getLegalMoves` énumère pourtant les 8 directions comme
+    // single-PM BLITZ steps — incohérence corrigée ici.
+    //
+    // Setup : attaquant (4,5), cible (6,7). Le blitz consiste à se
+    // déplacer en (5,6) (diagonale, distance Chebyshev=1 / Manhattan=2)
+    // puis bloquer la cible adjacente.
+    const attacker = makePlayer({
+      id: 'A',
+      team: 'A',
+      pos: { x: 4, y: 5 },
+      ma: 6,
+      pm: 6,
+      skills: [],
+    });
+    const target = makePlayer({
+      id: 'T',
+      team: 'B',
+      pos: { x: 6, y: 7 },
+      ma: 6,
+      pm: 6,
+    });
+    const state = makeState({
+      players: [attacker, target],
+      currentPlayer: 'A',
+    });
+    const next = handleBlitz(
+      state,
+      { type: 'BLITZ', playerId: 'A', to: { x: 5, y: 6 }, targetId: 'T' },
+      rng,
+    );
+    // L'attaquant a maintenant pm = 6 - 1 = 5 (Chebyshev), pas 6 - 2 = 4 (Manhattan).
+    const movedAttacker = next.players.find(p => p.id === 'A');
+    expect(movedAttacker?.pm).toBe(5);
+  });
 });
