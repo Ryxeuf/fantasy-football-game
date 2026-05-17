@@ -37,7 +37,28 @@ export function validateMove(state: GameState, move: Move): ValidationResult {
     return { valid: false, errors, warnings };
   }
 
-  // END_TURN est toujours valide
+  // Vérifier les états pending AVANT le shortcut END_TURN.
+  //
+  // BUG fix : avant, le early-return `if (move.type === 'END_TURN')` arrivait
+  // ligne 41, AVANT les checks pending* (lignes 53-62). Le validator
+  // retournait donc `valid: true` pour un END_TURN soumis pendant qu'un
+  // pendingBlock/Push/FollowUp était ouvert, alors que le dispatcher
+  // principal rejette (avec raison). Désordre validator ↔ dispatcher :
+  // le caller croyait son END_TURN accepté puis voyait l'état inchangé.
+  if (state.pendingBlock && move.type !== 'BLOCK_CHOOSE') {
+    errors.push({ code: 'PENDING_BLOCK', message: 'Un choix de blocage est en attente' });
+  }
+  if (state.pendingPushChoice && move.type !== 'PUSH_CHOOSE') {
+    errors.push({ code: 'PENDING_PUSH', message: 'Un choix de poussée est en attente' });
+  }
+  if (state.pendingFollowUpChoice && move.type !== 'FOLLOW_UP_CHOOSE') {
+    errors.push({ code: 'PENDING_FOLLOWUP', message: 'Un choix de follow-up est en attente' });
+  }
+  if (errors.length > 0) {
+    return { valid: false, errors, warnings };
+  }
+
+  // END_TURN est toujours valide (en l'absence de pendings checked ci-dessus).
   if (move.type === 'END_TURN') {
     return { valid: true, errors, warnings };
   }
@@ -48,17 +69,6 @@ export function validateMove(state: GameState, move: Move): ValidationResult {
       errors.push({ code: 'NO_PENDING_REROLL', message: 'Aucune relance en attente' });
     }
     return { valid: errors.length === 0, errors, warnings };
-  }
-
-  // Vérifier les états pending
-  if (state.pendingBlock && move.type !== 'BLOCK_CHOOSE') {
-    errors.push({ code: 'PENDING_BLOCK', message: 'Un choix de blocage est en attente' });
-  }
-  if (state.pendingPushChoice && move.type !== 'PUSH_CHOOSE') {
-    errors.push({ code: 'PENDING_PUSH', message: 'Un choix de poussée est en attente' });
-  }
-  if (state.pendingFollowUpChoice && move.type !== 'FOLLOW_UP_CHOOSE') {
-    errors.push({ code: 'PENDING_FOLLOWUP', message: 'Un choix de follow-up est en attente' });
   }
 
   // Vérifier que le move est dans la liste des moves légaux
