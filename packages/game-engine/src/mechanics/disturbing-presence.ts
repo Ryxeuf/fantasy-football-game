@@ -28,9 +28,16 @@ export function hasDisturbingPresence(player: Player): boolean {
  * Indique si ce joueur peut exercer sa presence perturbante :
  * il doit etre sur le terrain et actif (ni stunned, ni KO, ni casualty,
  * ni expulse, ni hypnotise).
+ *
+ * BUG fix : avant, on ne vérifiait pas `pos.x >= 0`. Un joueur en
+ * réserves (`state === 'active'` mais `pos = (-1, -1)`) passait le
+ * filtre. Le `chebyshev` bloque en pratique (distance énorme), mais
+ * c'est un fallback fragile. Maintenant on exclut explicitement les
+ * joueurs hors-terrain.
  */
 function canExertDisturbingPresence(state: GameState, player: Player): boolean {
   if (player.stunned) return false;
+  if (player.pos.x < 0 || player.pos.y < 0) return false;
   const s = player.state;
   if (s === 'knocked_out' || s === 'casualty' || s === 'sent_off') return false;
   const hypnotized = state.hypnotizedPlayers ?? [];

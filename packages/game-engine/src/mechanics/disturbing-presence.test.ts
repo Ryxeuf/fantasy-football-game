@@ -134,6 +134,24 @@ describe('getDisturbingPresenceModifier', () => {
     expect(getDisturbingPresenceModifier(state, { x: 5, y: 5 }, TEAM_A)).toBe(0);
   });
 
+  it("ne compte pas un adversaire en réserves (hors terrain, pos = -1)", () => {
+    // BUG fix : avant, le filtre `canExertDisturbingPresence` ne vérifiait
+    // pas `pos.x >= 0`. Un adversaire en réserves (state='active', pos=-1)
+    // passait — le `chebyshev` bloquait en pratique mais c'était un
+    // fallback fragile.
+    const state = makeState([
+      makePlayer({
+        id: 'B1',
+        team: TEAM_B,
+        pos: { x: -1, y: -1 },
+        skills: ['disturbing-presence'],
+        state: 'active',
+      }),
+    ]);
+    expect(getDisturbingPresenceModifier(state, { x: -1, y: -1 }, TEAM_A)).toBe(0);
+    expect(getDisturbingPresenceModifier(state, { x: 0, y: 0 }, TEAM_A)).toBe(0);
+  });
+
   it('ne compte pas un adversaire stunned', () => {
     const state = makeState([
       makePlayer({

@@ -77,6 +77,12 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
         && p.pos.y === checkPos.y
         && !p.stunned
         && !hypnotized.includes(p.id)
+        // BB rule : un joueur KO / blessé / expulsé n'exerce pas de zone
+        // de tacle (cf. tackle-zones.ts:53). Avant ce fix, seul `!stunned`
+        // était vérifié — un joueur KO dont la `pos` n'avait pas été
+        // zéroée comptait quand même comme TZ adjacente, biaisant dodge /
+        // pickup / pass modifiers.
+        && (!p.state || p.state === 'active')
         // O.1 batch 3g : un joueur Titchy n'exerce pas de zone de tacle.
         && !p.skills.includes('titchy')
     );
