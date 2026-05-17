@@ -48,7 +48,9 @@ export interface GfiResult extends ResolverResult {
 }
 
 export function gfiTargetForWeather(weather: ResolverState['weather']): number {
-  return weather === 'blizzard' || weather === 'pouring_rain' ? 3 : 2;
+  // BB2020/BB3 : seul Blizzard impose GFI 3+. Pouring Rain affecte uniquement
+  // les pickup/catch/handoff/passing — pas la GFI.
+  return weather === 'blizzard' ? 3 : 2;
 }
 
 export function resolveGfi(
@@ -81,6 +83,39 @@ export function resolveGfi(
   const events: MatchEvent[] = [];
   if (!success) {
     newState = updatePlayer(newState, player.id, { state: 'prone' });
+    if (player.hasBall) newState = updatePlayer(newState, player.id, { hasBall: false });
+    // BB rule (cf. docstring ligne 9-10) : sur fail GFI, le joueur tombe →
+    // armour roll → injury roll. Sans ce chain, le sim sous-estime fortement
+    // les casualties induites par les GFI manquées (mirrors le block resolver
+    // sprint 0.E.1 iter #2).
+    const a1 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const a2 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const armorTotal = a1 + a2;
+    if (armorTotal >= player.av + 1) {
+      const i1 = rollD6(rng as Parameters<typeof rollD6>[0]);
+      const i2 = rollD6(rng as Parameters<typeof rollD6>[0]);
+      const injury = i1 + i2;
+      let outcome: 'stunned' | 'ko' | 'casualty';
+      if (injury >= 10) outcome = 'casualty';
+      else if (injury >= 8) outcome = 'ko';
+      else outcome = 'stunned';
+      newState = updatePlayer(newState, player.id, { state: outcome });
+      if (outcome === 'ko') {
+        events.push({
+          type: 'KO',
+          displayAtMs: input.displayAtMs,
+          engineVer: state.engineVer,
+          meta: { playerId: player.id, via: 'gfi', armor: armorTotal, injury },
+        });
+      } else if (outcome === 'casualty') {
+        events.push({
+          type: 'CASUALTY',
+          displayAtMs: input.displayAtMs,
+          engineVer: state.engineVer,
+          meta: { playerId: player.id, via: 'gfi', armor: armorTotal, injury },
+        });
+      }
+    }
     events.push({
       type: 'TURNOVER',
       displayAtMs: input.displayAtMs,
