@@ -119,6 +119,40 @@ describe('compareBaselines — Lot 4.B.1', () => {
     expect(out.summary.maxAbsDeltaByMetric.tdMean).toBeCloseTo(0.3, 5);
   });
 
+  it('quand base=0, severity utilise |delta| absolu (pas Infinity → critical silencieux)', () => {
+    // BUG fix : relativeDelta(0, delta) retournait Infinity → severity
+    // toujours critical → sérialisation JSON convertissait Infinity en
+    // null silencieusement. Maintenant on traite base=0 comme un proxy
+    // absolu (delta=0.05 ≈ 5% → normal sous warn 0.1 ; delta=0.3 → critical
+    // sous critical 0.25).
+    const aZero = baseline('0.15.0', [entry('a', 'b', { drawRate: 0 })]);
+    const bSmall = baseline('0.16.0', [entry('a', 'b', { drawRate: 0.04 })]);
+    const out = compareBaselines(aZero, bSmall, {
+      warnThreshold: 0.1,
+      criticalThreshold: 0.25,
+    });
+    expect(out.pairings[0].severity).toBe('normal');
+    expect(Number.isFinite(out.pairings[0].maxAbsRelativeDelta)).toBe(true);
+
+    // Delta plus large → warn.
+    const bMid = baseline('0.16.0', [entry('a', 'b', { drawRate: 0.15 })]);
+    const outMid = compareBaselines(aZero, bMid, {
+      warnThreshold: 0.1,
+      criticalThreshold: 0.25,
+    });
+    expect(outMid.pairings[0].severity).toBe('warn');
+
+    // Delta très large → critical.
+    const bBig = baseline('0.16.0', [entry('a', 'b', { drawRate: 0.4 })]);
+    const outBig = compareBaselines(aZero, bBig, {
+      warnThreshold: 0.1,
+      criticalThreshold: 0.25,
+    });
+    expect(outBig.pairings[0].severity).toBe('critical');
+    // Et finiment sérialisable JSON.
+    expect(() => JSON.stringify(outBig)).not.toThrow();
+  });
+
   it('flag pairings avec |delta| au-dessus du threshold (severity warn/critical)', () => {
     const a = baseline('0.15.0', [
       entry('a', 'b', { tdMean: 2.0 }),
