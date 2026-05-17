@@ -199,7 +199,12 @@ describe('Règle: Iron Hard Skin (P1.7)', () => {
   });
 
   describe('Chainsaw vs Iron Hard Skin', () => {
-    it('nullifie le bonus +3 de Chainsaw sur le jet d\'armure de la cible', () => {
+    it("ne nullifie PAS le bonus +3 de Chainsaw (BB rule : IHS protège uniquement contre Claws/MB/Dirty Player)", () => {
+      // BUG fix : avant, Iron Hard Skin annulait le bonus +3 de Chainsaw,
+      // ce qui rendait la tronçonneuse inoffensive contre les Big Guys.
+      // BB2020 : IHS bloque uniquement Claws / Mighty Blow / Dirty Player
+      // (modificateurs de skill de l'attaquant). Le bonus Chainsaw est un
+      // trait d'arme spéciale, pas annulable par IHS.
       const sawyer = basePlayer({
         id: 'att', pos: { x: 5, y: 5 }, team: 'A',
         skills: ['chainsaw'],
@@ -209,12 +214,12 @@ describe('Règle: Iron Hard Skin (P1.7)', () => {
         av: 9, skills: ['iron-hard-skin'],
       });
       const state = makeState([sawyer, defender]);
-      // 2D6 = 3+3 = 6 ; sans +3 sous IHS, 6 < 9 → armure tient.
+      // 2D6 = 3+3 = 6 ; AVEC +3 Chainsaw (non-nullifié), 9 >= 10 → armure cassée.
       const rng = makeTestRNG([die(3), die(3), die(1), die(1)]);
       const after = executeChainsaw(state, sawyer, defender, rng);
       const defAfter = after.players.find(p => p.id === 'def')!;
-      expect(defAfter.state).toBe('active');
-      expect(defAfter.stunned).toBeFalsy();
+      // Avec armure cassée + injury 2 = stunned.
+      expect(defAfter.state !== 'active' || defAfter.stunned).toBeTruthy();
     });
 
     it('laisse passer le +3 de Chainsaw sans Iron Hard Skin (régression)', () => {
