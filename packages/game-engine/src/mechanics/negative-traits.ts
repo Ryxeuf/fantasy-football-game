@@ -15,6 +15,8 @@ import { movePlayerToDugoutZone } from './dugout';
 import { getPushDirections } from './blocking';
 import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
 import { bounceBall } from './ball';
+import { isApothecaryAvailable } from './apothecary';
+import { hasRegeneration, tryRegeneration } from './regeneration';
 
 export interface ActivationCheckResult {
   passed: boolean;
@@ -814,7 +816,11 @@ export function checkAlwaysHungry(
   };
 
   if (eaten) {
-    // Teammate is removed from play as a casualty (no armor/injury roll)
+    // Teammate is removed from play as a casualty (Dead). BB rule :
+    // l'apothicaire peut tenter de sauver la victime, et Regeneration
+    // s'applique aussi en fallback. Avant ce fix, on force-positionnait
+    // `state='casualty'` et `casualtyResults='dead'` sans passer par le
+    // flow apothecary/regen — privant la victime de ses sauvegardes.
     newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
     newState = {
       ...newState,
@@ -837,6 +843,25 @@ export function checkAlwaysHungry(
       ...newState,
       gameLog: [...newState.gameLog, eatenLog],
     };
+
+    // Donne sa chance à l'apothecaire / regen — pattern identique à
+    // `handleCasualty` (cf. injury.ts:262-269).
+    if (isApothecaryAvailable(newState, thrown.id)) {
+      newState = {
+        ...newState,
+        pendingApothecary: {
+          playerId: thrown.id,
+          team: thrown.team,
+          injuryType: 'casualty',
+          originalCasualtyOutcome: 'dead',
+          causedById: thrower.id,
+          fallbackToRegeneration: hasRegeneration(newState, thrown.id),
+        },
+      };
+    } else if (hasRegeneration(newState, thrown.id)) {
+      const regenResult = tryRegeneration(newState, thrown.id, rng, 'casualty');
+      if (regenResult) newState = regenResult;
+    }
 
     return { passed: false, eaten: true, escaped: false, newState };
   }

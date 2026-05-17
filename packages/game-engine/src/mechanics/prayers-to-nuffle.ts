@@ -7,6 +7,8 @@
 import { GameState, TeamId, Player, RNG } from '../core/types';
 import { createLogEntry } from '../utils/logging';
 import { rollD6, roll2D6 } from '../utils/dice';
+import { isApothecaryAvailable as isApothecaryAvailableFn } from './apothecary';
+import { hasRegeneration as hasRegenerationFn, tryRegeneration as tryRegenerationFn } from './regeneration';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -518,11 +520,40 @@ export function applyPrayerEffect(
           }));
           break;
         case 'casualty':
+          // BUG fix : avant, on forçait `state='casualty'` directement
+          // sans set `casualtyResults`, ni proposer apothecaire/regen.
+          // Maintenant on enregistre une casualty 'badly_hurt' (par
+          // défaut Prayer 14 — pas de D16 spécifié dans la règle) ET
+          // on offre les sauvegardes (apothecary/regen) comme tout
+          // jet de casualty normal.
           newState = updatePlayer(state, target.id, (p) => ({
             ...p,
             state: 'casualty',
             pos: { x: -1, y: -1 },
           }));
+          newState = {
+            ...newState,
+            casualtyResults: {
+              ...(newState.casualtyResults ?? {}),
+              [target.id]: 'badly_hurt',
+            },
+          };
+          // Apothecary check (cf. injury.ts:handleCasualty pattern).
+          if (isApothecaryAvailableFn(newState, target.id)) {
+            newState = {
+              ...newState,
+              pendingApothecary: {
+                playerId: target.id,
+                team: target.team,
+                injuryType: 'casualty',
+                originalCasualtyOutcome: 'badly_hurt',
+                fallbackToRegeneration: hasRegenerationFn(newState, target.id),
+              },
+            };
+          } else if (hasRegenerationFn(newState, target.id)) {
+            const regenResult = tryRegenerationFn(newState, target.id, rng, 'casualty');
+            if (regenResult) newState = regenResult;
+          }
           break;
       }
 
