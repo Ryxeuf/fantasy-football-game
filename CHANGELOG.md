@@ -1,3 +1,22 @@
+## [1.120.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.0...v1.120.1) (2026-05-17)
+
+
+### 🐛 Bug Fixes
+
+* **game-engine/blitz:** coût PM diagonal = 1 (Chebyshev) au lieu de 2 (Manhattan) ([4619a57](https://github.com/Ryxeuf/fantasy-football-game/commit/4619a5707456e63c84d4b79e07e908b9286067ad))
+* **game-engine/mechanics:** Mighty Blow exclus de Projectile Vomit + bombardier self-credit ([#814](https://github.com/Ryxeuf/fantasy-football-game/issues/814)) ([1d229fc](https://github.com/Ryxeuf/fantasy-football-game/commit/1d229fcee3cf3ff490822923243ab42eeca45320))
+* **game-engine/skills:** hasSkill normalise séparateurs (cohérent avec getSkillEffect) ([#813](https://github.com/Ryxeuf/fantasy-football-game/issues/813)) ([a43224c](https://github.com/Ryxeuf/fantasy-football-game/commit/a43224c44ac4538bc4b61da490b4e36c3b03b053))
+* **game-engine:** 4 bugs BB rules critiques (block dice, pass fumble, turn counter, GFI weather) ([#811](https://github.com/Ryxeuf/fantasy-football-game/issues/811)) ([92271d1](https://github.com/Ryxeuf/fantasy-football-game/commit/92271d150847adeb9f555aa9e04c7f562697c803))
+* **game-engine:** joueurs KO récupérés deviennent state='active' à la mi-temps ([#805](https://github.com/Ryxeuf/fantasy-football-game/issues/805)) ([d86647e](https://github.com/Ryxeuf/fantasy-football-game/commit/d86647e1d3725d58d9f4092e2baab6686009fdf3))
+* **game-engine:** post-touchdown fallback scoringTeam + handleEndTurn clear pending* states ([87b9736](https://github.com/Ryxeuf/fantasy-football-game/commit/87b9736c75afda1f89840468bb90b4fd270b98dc))
+* **game-engine:** TZ + secret-weapon + disturbing-presence pour joueurs hors-terrain ([#812](https://github.com/Ryxeuf/fantasy-football-game/issues/812)) ([ae3410d](https://github.com/Ryxeuf/fantasy-football-game/commit/ae3410dcce79fde551393014b713a6768aed0445))
+* **pro-league-replay:** vue terrain par défaut + résolution playerIds en noms ([#804](https://github.com/Ryxeuf/fantasy-football-game/issues/804)) ([4bd28c8](https://github.com/Ryxeuf/fantasy-football-game/commit/4bd28c8a0d38122a993ebdf7f4b26348523c71bb))
+* **sim-engine/ai:** 3 bugs tactique (momentum decay, blitz-train, fallback offense) ([#809](https://github.com/Ryxeuf/fantasy-football-game/issues/809)) ([8374568](https://github.com/Ryxeuf/fantasy-football-game/commit/837456821b27b6874319c4bc3a3d9af1f5d4f8aa))
+* **sim-engine/driver:** emit events for appliedMove, stale-detect on fallback ([#807](https://github.com/Ryxeuf/fantasy-football-game/issues/807)) ([1f9c106](https://github.com/Ryxeuf/fantasy-football-game/commit/1f9c1066cfe66390265904fd3031ba4a1962da33))
+* **sim-engine/resolvers:** 6 bugs BB rules (wrestle, GFI, foul, pass) ([#806](https://github.com/Ryxeuf/fantasy-football-game/issues/806)) ([a3703d6](https://github.com/Ryxeuf/fantasy-football-game/commit/a3703d6049a04acf9384c8756ab3cbbcc349d497))
+* **sim-engine/rng:** fork re-forks distincts + seedToState gère seed > 2^32 ([#810](https://github.com/Ryxeuf/fantasy-football-game/issues/810)) ([4d98b3a](https://github.com/Ryxeuf/fantasy-football-game/commit/4d98b3a97b0f5643b4315593b9c1109e0055d50b))
+* **sim-engine:** 4 bugs replay/bench (narrator parens, fumbbl cas, Infinity → critical) ([#808](https://github.com/Ryxeuf/fantasy-football-game/issues/808)) ([bc736c5](https://github.com/Ryxeuf/fantasy-football-game/commit/bc736c5db054dc8e94cb07d4f52df7124300d8f1))
+
 ## [1.120.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.119.0...v1.120.0) (2026-05-13)
 
 
