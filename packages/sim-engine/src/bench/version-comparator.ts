@@ -111,7 +111,14 @@ function computeDeltas(
 }
 
 function relativeDelta(base: number, delta: number): number {
-  if (base === 0) return delta === 0 ? 0 : Number.POSITIVE_INFINITY;
+  // BUG fix : retourner POSITIVE_INFINITY quand base=0 propage dans
+  // `maxAbsRelativeDelta` puis devient `null` à la sérialisation JSON
+  // (Infinity n'est pas JSON-serializable). Conséquence : tout pairing
+  // avec une metric à 0 dans le baseline déclenchait severity=critical
+  // silencieusement, même pour une dérive minuscule. Quand base=0,
+  // on utilise l'absolu de delta comme proxy "ressemblant" à un %
+  // (delta=0.05 sur drawRate=0 → 0.05 ≈ 5%, classifié 'warn' standard).
+  if (base === 0) return Math.abs(delta);
   return Math.abs(delta) / Math.abs(base);
 }
 

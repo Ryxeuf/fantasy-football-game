@@ -132,6 +132,57 @@ describe('narrateMatch — sprint Pro League 0.E.2', () => {
     expect(withDetail).not.toBeNull();
   });
 
+  it('ne produit pas de parenthèse fermante orpheline si armor absent', () => {
+    // BUG fix : avant, `renderKO`/`renderCasualty` produisaient
+    // `..., injury=N).` quand `meta.armor` était undefined mais
+    // `meta.injury` un number — `)` orphelin sans `(`. Test sur un
+    // event KO synthétique sans armor pour cibler ce cas exact.
+    const result = {
+      result: 'home' as const,
+      summary: {
+        score: { home: 1, away: 0 },
+        outcome: 'home' as const,
+        durationMs: 1000,
+        touchdownCount: 1,
+        turnoverCount: 0,
+        nuffleCount: 0,
+      },
+      casualties: [],
+      engineVer: '0.22.0',
+      events: [
+        {
+          type: 'KICKOFF' as const,
+          displayAtMs: 0,
+          engineVer: '0.22.0',
+          seed: 42,
+          meta: { homeName: 'A', awayName: 'B', weather: 'nice', receivingTeam: 'home' },
+        },
+        {
+          type: 'KO' as const,
+          displayAtMs: 1000,
+          engineVer: '0.22.0',
+          meta: { playerId: 'A1', injury: 8 }, // armor manquant ! seul injury défini.
+        },
+        {
+          type: 'END' as const,
+          displayAtMs: 2000,
+          engineVer: '0.22.0',
+          meta: { score: { home: 1, away: 0 } },
+        },
+      ],
+    };
+    const out = narrateMatch(result);
+    // Pas de `)` orphelin (sans `(` ouvrante avant lui dans la ligne).
+    const koLine = out.split('\n').find((l) => l.includes('KO —'));
+    expect(koLine).toBeDefined();
+    // Vérifie parens balanced sur la ligne KO.
+    const opens = (koLine?.match(/\(/g) ?? []).length;
+    const closes = (koLine?.match(/\)/g) ?? []).length;
+    expect(opens).toBe(closes);
+    // Doit contenir l'info injury (sans armor).
+    expect(koLine).toContain('injury=8');
+  });
+
   describe('Lot 3.A.4 — roster-aware rendering', () => {
     const homeRoster = [
       {

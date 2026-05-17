@@ -236,20 +236,30 @@ function renderTurnover(ev: MatchEvent): string {
   return `  TURNOVER — ${cause}.`;
 }
 
+/**
+ * Formate la parenthèse `(armor=N, injury=N)` pour les events KO/CASUALTY.
+ * Gère correctement les 4 combinaisons (avant fix : si `armor=undefined`
+ * et `injury=number`, le résultat était `, injury=N).` avec une `)`
+ * orpheline).
+ */
+function formatArmorInjury(meta: Record<string, unknown>): string {
+  const hasArmor = typeof meta.armor === 'number';
+  const hasInjury = typeof meta.injury === 'number';
+  if (!hasArmor && !hasInjury) return '';
+  const parts: string[] = [];
+  if (hasArmor) parts.push(`armor=${meta.armor as number}`);
+  if (hasInjury) parts.push(`injury=${meta.injury as number}`);
+  return ` (${parts.join(', ')})`;
+}
+
 function renderKO(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
-  const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
-  const injury =
-    typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
-  return `  KO — ${formatPlayer(meta.playerId, rosters)} is knocked unconscious${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${armor}${injury}.`;
+  return `  KO — ${formatPlayer(meta.playerId, rosters)} is knocked unconscious${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${formatArmorInjury(meta)}.`;
 }
 
 function renderCasualty(ev: MatchEvent, rosters: RosterIndex): string {
   const meta = getMeta(ev);
-  const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
-  const injury =
-    typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
-  return `  CASUALTY — ${formatPlayer(meta.playerId, rosters)} is taken off${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${armor}${injury}.`;
+  return `  CASUALTY — ${formatPlayer(meta.playerId, rosters)} is taken off${meta.causedBy ? ` by ${formatPlayer(meta.causedBy, rosters)}` : ''}${formatArmorInjury(meta)}.`;
 }
 
 function renderNuffle(ev: MatchEvent): string {
@@ -361,8 +371,17 @@ export function narrateMatch(result: SimResult, options: NarrateOptions = {}): s
   // the slug ids when the meta is missing.
   const kickoff = result.events.find((e) => e.type === 'KICKOFF');
   const meta = kickoff ? getMeta(kickoff) : {};
-  const homeName = String(meta.homeName ?? meta.home ?? 'home');
-  const awayName = String(meta.awayName ?? meta.away ?? 'away');
+  // BUG fix : `??` ne fallback que sur null/undefined — pas sur les
+  // objets. Certains drivers populent `meta.home` avec un objet riche
+  // (id+name+roster), ce qui rendait `String(meta.home)` = "[object
+  // Object]". On garde le path nominal `homeName` -> `home` (string
+  // seulement) -> fallback.
+  const homeName = String(
+    meta.homeName ?? (typeof meta.home === 'string' ? meta.home : 'home')
+  );
+  const awayName = String(
+    meta.awayName ?? (typeof meta.away === 'string' ? meta.away : 'away')
+  );
   const title = options.title ?? `${homeName} vs ${awayName}`;
   lines.push(`=== ${title} ===`);
   lines.push(`engine ${result.engineVer}`);

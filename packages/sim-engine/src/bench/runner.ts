@@ -161,7 +161,16 @@ export function formatBenchReport(pairings: readonly BenchPairing[]): string {
   const lines: string[] = [];
   for (const p of pairings) {
     const m = p.metrics;
-    const fumbbl = compareToFumbbl(p.pairing.home.race, m.td.mean / 2, m.casualties.mean);
+    // BUG fix : `m.td.mean` et `m.casualties.mean` sont des totaux par
+    // match (home + away). FUMBBL reference est `per race / per match`
+    // par équipe. Avant : casualty était passé brut (total/match) alors
+    // que TD était divisé par 2 → comparaison incohérente, faux
+    // FUMBBL OUTSIDE systématique sur casualty.
+    const fumbbl = compareToFumbbl(
+      p.pairing.home.race,
+      m.td.mean / 2,
+      m.casualties.mean / 2
+    );
     lines.push('');
     lines.push(`=== ${p.pairing.home.name} (home) vs ${p.pairing.away.name} (away)${fumbbl} ===`);
     lines.push(`  matches      : ${m.matches}`);
