@@ -125,6 +125,65 @@ describe('chooseStrategy — Pass 2', () => {
     const b = chooseStrategy(createRng(99), ctx, profile);
     expect(b).toBe(a);
   });
+
+  it('blitz-train est favorisée quand l\'adversaire avance (pastMidfield) en défense', () => {
+    // BUG fix : avant, le bonus pastMidfield de BLITZ_TRAIN était inversé
+    // (+0.15 quand NON-pastMidfield). Comparaison ratio (défense, profil
+    // bash uniforme) : pastMidfield doit choisir BLITZ_TRAIN plus souvent
+    // que sans (docstring : « ramener la cavalerie sur le porteur »).
+    const profile = parseTacticalProfile({
+      blitzPriority: 90,
+      bashIndex: 90,
+      screenAffinity: 0,
+      pressingDefense: 0,
+      foulFrequency: 0,
+      riskAppetite: 0,
+    });
+    // pastMidfield (ballYardline 18 > 13) en défense → blitz-train doit dominer.
+    const ctxPastMid = evaluateSituation(
+      baseSnap({ hasPossession: false, ballYardline: 18 })
+    );
+    let blitzPicks = 0;
+    for (let seed = 0; seed < 50; seed += 1) {
+      if (chooseStrategy(createRng(seed), ctxPastMid, profile) === 'blitz-train') {
+        blitzPicks += 1;
+      }
+    }
+    // Avec bonus +0.15 sur un profil neutre (somme ≈ 0.9 + 0.45 + 0.15 = 1.5),
+    // blitz-train doit dominer sur la majorité des seeds.
+    expect(blitzPicks).toBeGreaterThanOrEqual(30);
+  });
+
+  it('fallback en défense ne choisit JAMAIS une stratégie offensive (hard-gated)', () => {
+    // BUG fix : avant, quand toutes les stratégies scoraient 0 (e.g. profil
+    // neutre + défense), le fallback re-mettait toutes les stratégies à
+    // 0.01, y compris CAGE_BUILD/BREAKAWAY/STALL qui hard-gate sur
+    // hasPossession=true. L'AI pouvait alors exécuter des patterns
+    // offensifs en défense. Maintenant on filtre par contexte.
+    const offensiveOnly = new Set(['cage-build', 'breakaway', 'stall']);
+    // Profil "neutre" qui ne pousse aucune stratégie au-dessus de 0 côté défense.
+    const profile = parseTacticalProfile({
+      bashIndex: 0,
+      breakawayInstinct: 0,
+      passingFrequency: 0,
+      foulFrequency: 0,
+      screenAffinity: 0,
+      pressingDefense: 0,
+      blitzPriority: 0,
+      stallTendency: 0,
+      cageAffinity: 0,
+      patience: 0,
+      pace: 50,
+      gfiTolerance: 50,
+      riskAppetite: 0,
+    });
+    const ctxDef = evaluateSituation(baseSnap({ hasPossession: false }));
+    // Sur 20 seeds, aucune stratégie offensive ne doit sortir.
+    for (let seed = 0; seed < 20; seed += 1) {
+      const choice = chooseStrategy(createRng(seed), ctxDef, profile);
+      expect(offensiveOnly.has(choice)).toBe(false);
+    }
+  });
 });
 
 describe('aiPlay — full 3-pass orchestration', () => {

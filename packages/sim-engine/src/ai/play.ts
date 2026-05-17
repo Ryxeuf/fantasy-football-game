@@ -50,6 +50,30 @@ export function evaluateSituation(snap: DriveSnapshot): DriveContext {
   };
 }
 
+/**
+ * Strategies whose score functions hard-gate on possession (return 0
+ * when the gate is off). Used pour filtrer le fallback du softmax
+ * quand toutes les stratégies scoreraient 0 — éviter de laisser un
+ * `CAGE_BUILD` (offensive) être choisi en défense.
+ */
+const STRATEGY_REQUIRES_POSSESSION: Readonly<Record<StrategyId, boolean>> = {
+  'cage-build': true,
+  'breakaway': true,
+  'stall': true,
+  // Les stratégies suivantes sont défensives ou agnostiques.
+  'defensive-screen': false,
+  'blitz-train': false,
+  'foul-fest': false,
+};
+
+function isStrategyEligibleForContext(
+  s: Strategy,
+  context: DriveContext
+): boolean {
+  if (STRATEGY_REQUIRES_POSSESSION[s.id] && !context.hasPossession) return false;
+  return true;
+}
+
 /** Pass 2 : softmax over the 6 strategies given context+profile. */
 export function chooseStrategy(
   rng: Pick<Rng, 'next'>,
@@ -62,9 +86,20 @@ export function chooseStrategy(
   }));
   // Filter out strategies with zero score so they are never sampled.
   const live = candidates.filter((c) => c.score > 0);
-  // Fallback : if every strategy scored 0 (e.g. no possession + bash team),
-  // use the full list with a tiny epsilon so the softmax still works.
-  const finalCandidates = live.length > 0 ? live : candidates.map((c) => ({ ...c, score: 0.01 }));
+  // BUG fix : avant, le fallback re-mettait TOUTES les stratégies (y
+  // compris CAGE_BUILD/BREAKAWAY/STALL qui hard-gate sur `hasPossession`)
+  // à 0.01 → l'AI pouvait exécuter des patterns offensifs en défense.
+  // Maintenant on garde uniquement les stratégies eligibles pour le
+  // contexte (e.g. en défense : defensive-screen, blitz-train, foul-fest).
+  const finalCandidates =
+    live.length > 0
+      ? live
+      : candidates
+          .filter((c) => {
+            const s = STRATEGY_BY_ID[c.value];
+            return isStrategyEligibleForContext(s, context);
+          })
+          .map((c) => ({ ...c, score: 0.01 }));
   return softmaxSample(rng, finalCandidates, riskAppetiteToTemperature(profile.riskAppetite));
 }
 

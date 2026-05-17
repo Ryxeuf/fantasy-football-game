@@ -157,6 +157,32 @@ describe('applyDecay — cross-match decay (consumed by lot 0.C.4 PlayerForm)', 
     applyDecay(t);
     expect(t.get('p1').state).toBe<MomentumState>('normal');
   });
+
+  it('reset les compteurs per-match à 0 (docstring contract)', () => {
+    // BUG fix : avant, `applyDecay` ne faisait que `-1` sur les compteurs.
+    // Conséquence : un joueur sortant d'un match avec touchdowns=2 (hot)
+    // avait après decay touchdowns=1 → au match suivant, 1 seul TD
+    // suffisait à le repasser hot. Inflation systématique des états hot.
+    const t = createMomentumTracker();
+    recordTouchdown(t, 'p1');
+    recordTouchdown(t, 'p1');
+    recordTouchdown(t, 'p1');
+    recordBlock(t, 'p1', { success: true });
+    recordBlock(t, 'p1', { success: true });
+    expect(t.get('p1').touchdowns).toBe(3);
+    expect(t.get('p1').successfulBlocks).toBe(2);
+
+    applyDecay(t);
+    expect(t.get('p1').touchdowns).toBe(0);
+    expect(t.get('p1').successfulBlocks).toBe(0);
+    expect(t.get('p1').failureStreak).toBe(0);
+    expect(t.get('p1').state).toBe<MomentumState>('normal');
+
+    // Vérif : 1 TD ne doit PAS suffire à repasser hot (compteurs vraiment
+    // remis à 0, pas juste -1 → 2 → ≥ HOT_TD_THRESHOLD).
+    recordTouchdown(t, 'p1');
+    expect(t.get('p1').state).toBe<MomentumState>('normal');
+  });
 });
 
 describe('snapshot — public read API for Gazette / odds', () => {

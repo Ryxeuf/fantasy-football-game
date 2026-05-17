@@ -162,25 +162,28 @@ export function confidenceBoostFor(state: MomentumState): -1 | 0 | 1 {
 }
 
 /**
- * Cross-match decay — moves every tracked player one notch toward
- * `normal`. The sprint specifies "decay sur 3 matchs" (lot 0.C.4) ; the
- * server-side cross-match orchestrator is expected to call this once
- * per match boundary on the persisted `PlayerForm` snapshot.
+ * End-of-match cleanup — reset les compteurs per-match et ramène l'état
+ * qualitatif à `normal`. Conforme au docstring de `PlayerMomentum`
+ * (« touchdowns: Touchdowns scored this match (resets on applyDecay) »).
  *
- * Counters are NOT reset (they represent the within-match cumulative
- * activity) — only the qualitative state moves toward normal.
+ * Le multi-match decay « sur 3 matchs » (sprint 0.C.4) est géré par
+ * `player-form.ts` au niveau persistant ; cette fonction n'est qu'une
+ * cleanup de boundary de match côté tracker en-mémoire.
+ *
+ * BUG fix : avant, les compteurs ne faisaient que `-1` au lieu de reset
+ * à 0. Conséquence : un joueur sortant d'un match avec `touchdowns=2`
+ * (hot) avait après decay `touchdowns=1` ; au match suivant, 1 seul TD
+ * suffisait pour repasser hot (touchdowns=2 ≥ HOT_TD_THRESHOLD).
+ * Inflation systématique des états hot entre matchs.
  */
 export function applyDecay(tracker: MomentumTracker): void {
   for (const [, e] of tracker._entries()) {
-    if (e.state === 'hot') {
-      e.state = 'normal';
-    } else if (e.state === 'cold') {
+    if (e.state === 'hot' || e.state === 'cold') {
       e.state = 'normal';
     }
-    // Drop counters by 1 on each decay tick so the in-match thresholds
-    // are not "sticky" forever.
-    e.touchdowns = Math.max(0, e.touchdowns - 1);
-    e.successfulBlocks = Math.max(0, e.successfulBlocks - 1);
-    e.failureStreak = Math.max(0, e.failureStreak - 1);
+    // Reset à 0 (conforme au docstring), pas un decrement -1.
+    e.touchdowns = 0;
+    e.successfulBlocks = 0;
+    e.failureStreak = 0;
   }
 }
