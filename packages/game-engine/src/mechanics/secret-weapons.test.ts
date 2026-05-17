@@ -98,6 +98,26 @@ describe('Regle: Secret Weapons — expulsion en fin de drive', () => {
       const result = getSecretWeaponPlayers(state, 'A');
       expect(result).toHaveLength(1);
     });
+
+    it("ne devrait PAS inclure un joueur secret-weapon resté en réserves (n'a pas participé)", () => {
+      // BUG fix : avant, un Goblin Fanatic resté en réserves toute la
+      // mi-temps était quand même expulsé. Un joueur en réserves a
+      // state='active' AND pos=-1 — distinct des KO (state='knocked_out',
+      // pos=-1) qui ont participé au drive. Maintenant on exclut
+      // explicitement le pattern actif-mais-hors-terrain.
+      const state = createTestState({
+        players: [
+          createTestPlayer({
+            id: 'A1',
+            skills: ['secret-weapon'],
+            state: 'active',
+            pos: { x: -1, y: -1 }, // jamais joué le drive
+          }),
+        ],
+      });
+      const result = getSecretWeaponPlayers(state, 'A');
+      expect(result).toHaveLength(0);
+    });
   });
 
   describe('expelSecretWeapons — sans bribe', () => {

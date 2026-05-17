@@ -14,7 +14,17 @@ import { createLogEntry } from '../utils/logging';
 
 /**
  * Retourne les joueurs d'une équipe possédant secret-weapon et éligibles
- * à l'expulsion (non déjà casualty ou sent_off).
+ * à l'expulsion en fin de drive.
+ *
+ * BB rule : un joueur ayant **participé au drive** est expulsé.
+ *  - Joueur encore sur le terrain (`state === 'active'`, `pos.x >= 0`) → participe.
+ *  - Joueur KO durant le drive (`state === 'knocked_out'`, `pos === -1`) → participe.
+ *  - Joueur en réserves n'ayant jamais joué (`state === 'active'`, `pos === -1`)
+ *    → n'a PAS participé, ne doit pas être expulsé. Avant ce fix, un Goblin
+ *    Fanatic en réserves toute la mi-temps était quand même expulsé.
+ *
+ * Exclusions : déjà casualty / sent_off (déjà sorti pour autre raison) et
+ * réserves actifs hors-terrain (n'ont jamais joué le drive).
  */
 export function getSecretWeaponPlayers(state: GameState, teamId: TeamId): Player[] {
   return state.players.filter(
@@ -22,7 +32,10 @@ export function getSecretWeaponPlayers(state: GameState, teamId: TeamId): Player
       p.team === teamId &&
       hasSkill(p, 'secret-weapon') &&
       p.state !== 'casualty' &&
-      p.state !== 'sent_off'
+      p.state !== 'sent_off' &&
+      // Exclure le cas spécifique « actif en réserves, jamais joué » :
+      // state='active' AND pos.x<0 → n'a pas participé au drive.
+      !((p.state === 'active' || !p.state) && p.pos.x < 0)
   );
 }
 

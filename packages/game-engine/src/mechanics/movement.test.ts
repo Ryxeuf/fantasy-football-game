@@ -450,6 +450,28 @@ describe('Jets de désquive', () => {
 
       expect(opponents).toHaveLength(0);
     });
+
+    it("ne devrait pas inclure les adversaires KO / blessés / expulsés (TZ filter)", () => {
+      // BUG fix : avant, `getAdjacentOpponents` ne filtrait que `!stunned`.
+      // Un joueur KO / casualty / sent_off dont la `pos` n'avait pas été
+      // zéroée comptait quand même comme TZ adjacente → biaisait dodge,
+      // pickup, pass modifiers. Cohérent avec `tackle-zones.ts:53`.
+      const playerA = state.players.find(p => p.team === 'A');
+      const playerB = state.players.find(p => p.team === 'B');
+      if (!playerA || !playerB) return;
+      const adjPos = { x: playerA.pos.x + 1, y: playerA.pos.y };
+
+      for (const blockedState of ['knocked_out', 'casualty', 'sent_off'] as const) {
+        const stateWithBlocked = {
+          ...state,
+          players: state.players.map(p =>
+            p.id === playerB.id ? { ...p, pos: adjPos, state: blockedState } : p
+          ),
+        };
+        const opponents = getAdjacentOpponents(stateWithBlocked, playerA.pos, 'A');
+        expect(opponents).toHaveLength(0);
+      }
+    });
   });
 
   describe('calculateDodgeModifiers', () => {
