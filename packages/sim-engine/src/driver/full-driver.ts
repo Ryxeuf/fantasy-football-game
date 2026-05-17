@@ -318,8 +318,12 @@ export function runFullDriver(input: SimInput): SimResult {
     // on considère que le moteur est coincé et on force end. Note : en BB
     // un END_TURN sur deux fait alterner currentPlayer sans incrémenter
     // turn (cycle A turn N → B turn N → A turn N+1) — c'est NORMAL ;
-    // seuls les END_TURN qui ne font *rien* avancer sont stale.
-    if (move.type === 'END_TURN') {
+    // seuls les END_TURN qui ne font *rien* avancer sont stale. On teste
+    // `appliedMove` (le coup réellement passé à `applyMove`) plutôt que
+    // `move` : si l'IA retourne un coup illégal et qu'on retombe sur
+    // END_TURN via le catch, c'est ce END_TURN qui peut stagner — pas
+    // le coup IA initial.
+    if (appliedMove.type === 'END_TURN') {
       const advanced =
         next.turn !== prev.turn ||
         next.half !== prev.half ||
@@ -335,10 +339,17 @@ export function runFullDriver(input: SimInput): SimResult {
     // Lot 3.A.2.b — diff prev → next pour émettre les events
     // narratifs (BLOCK/PASS/DODGE/TD/CASUALTY/KO/TURNOVER/HALFTIME/
     // END/TURN_START). Timestamps incrémentaux 1s/action.
+    //
+    // On passe `appliedMove` (le coup effectivement appliqué) au lieu de
+    // `move` (le coup retourné par l'IA). Sans cette correction, lorsqu'un
+    // coup IA était illégal et qu'on retombait sur END_TURN, on émettait
+    // faussement les events Move-specific (BLITZ_DECLARED, BLOCK, PASS,
+    // DODGE, FOUL) correspondant au coup initial qui n'a jamais été
+    // appliqué — corruption sémantique du timeline narratif.
     const displayAtMs = (actionsApplied + 1) * MS_PER_ACTION;
     const newEvents = diffStatesToEvents(prev, next, {
       displayAtMs,
-      move,
+      move: appliedMove,
     });
     events.push(...newEvents);
 
