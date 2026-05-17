@@ -112,7 +112,13 @@ function applyBombImpact(
   if (!armorResult.success) {
     const currentVictim = newState.players.find(p => p.id === victim.id);
     if (currentVictim) {
-      newState = performInjuryRoll(newState, currentVictim, rng, 0, attackerId);
+      // BUG fix : en cas de fumble, la bombe explose sur le bombardier
+      // lui-même (`victim.id === attackerId`). Avant, le `causedById` était
+      // toujours `attackerId` → le bombardier se créditait sa propre
+      // casualty (SPP indu). On ne credit que si la victime est différente
+      // de l'attaquant.
+      const causedById = victim.id === attackerId ? undefined : attackerId;
+      newState = performInjuryRoll(newState, currentVictim, rng, 0, causedById);
     }
   }
 

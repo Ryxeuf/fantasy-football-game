@@ -229,6 +229,31 @@ describe('Regle: Bombardier', () => {
       // Activation terminee
       expect(result.players.find(p => p.id === 'A2')!.pm).toBe(0);
     });
+
+    it("sur fumble auto-explosion, le bombardier ne se credite PAS sa propre casualty (SPP)", () => {
+      // BUG fix : en cas de fumble (bombe explose sur le lanceur),
+      // `applyBombImpact` appelait `performInjuryRoll(... attackerId)`
+      // qui créditait la casualty au bombardier lui-même → SPP indu.
+      // Maintenant, on passe `undefined` comme causedById si victim === attacker.
+      let s = patchPlayer(state, 'A2', {
+        skills: ['bombardier'],
+        pos: { x: 5, y: 5 },
+        pa: 3,
+        pm: 6,
+        av: 7, // av faible pour casser facilement
+      });
+      s = patchPlayer(s, 'A1', { pos: { x: 0, y: 0 } });
+      s = patchPlayer(s, 'B1', { pos: { x: 25, y: 14 } });
+      s = patchPlayer(s, 'B2', { pos: { x: 25, y: 0 } });
+
+      // rng : pass D6=1 (fumble), armor 6+6=12 (casse), injury 6+6=12 (casualty)
+      const rng = scriptedRng([0.01, 0.99, 0.99, 0.99, 0.99, 0.5, 0.5, 0.5]);
+      const result = executeBombThrow(s, 'A2', { x: 8, y: 5 }, rng);
+
+      // Le bombardier A2 ne doit PAS avoir +1 casualty dans matchStats.
+      const a2Stats = result.matchStats?.['A2'];
+      expect(a2Stats?.casualties ?? 0).toBe(0);
+    });
   });
 
   describe('executeBombThrow - invariants', () => {

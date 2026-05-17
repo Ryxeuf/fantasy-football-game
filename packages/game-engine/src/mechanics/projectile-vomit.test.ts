@@ -209,6 +209,37 @@ describe('Regle: Projectile Vomit', () => {
       expect(injuryLogs.length).toBeGreaterThan(0);
     });
 
+    it("Mighty Blow ne s'applique PAS au jet d'armure de Projectile Vomit (BB rule)", () => {
+      // BUG fix : avant, Mighty Blow donnait +1 à l'armor roll de PV.
+      // BB2020 stipule explicitement que Mighty Blow ne s'applique pas
+      // aux jets d'armure / blessure issus de Projectile Vomit, Stab,
+      // Chainsaw, etc. Cf. line break dans le test "armor roll: need 2D6
+      // >= 7 (AV with mighty blow -1 = 6)" qui assumait MB appliqué.
+      const state = createVomitTestState();
+      // Target AV 7, vomiter a 'mighty-blow'. Avec MB appliqué (bug),
+      // l'armure target serait 7+1 = 8 (puis -MB = 7). Sans MB (fix),
+      // l'armure target reste 8 (AV+1).
+      state.players = state.players.map(p =>
+        p.id === 'B1' ? { ...p, av: 7 } : p
+      );
+      const vomiter = state.players.find(p => p.id === 'A1')!;
+      const target = state.players.find(p => p.id === 'B1')!;
+      // Roll 6 vomit success, puis dés d'armure 3+4 = 7. Avec MB → 8 (casse).
+      // Sans MB (fix correct) → 7 < 8 → armure tient.
+      const rng = makeTestRNG([0.84, 0.4, 0.55]); // ~ vomit 6, armor [3, 4]
+      const result = executeProjectileVomit(state, vomiter, target, rng);
+
+      // Avec le fix, armure tient (sans MB). On vérifie qu'il n'y a pas
+      // de log mentionnant Mighty Blow sur l'armor.
+      const armorLog = result.gameLog.find(l =>
+        l.message.includes("armure de") && l.message.includes(target.name)
+      );
+      expect(armorLog).toBeDefined();
+      // Pas de mention "+Mighty Blow" sur l'armure de PV.
+      expect(armorLog?.message ?? '').not.toContain('Mighty Blow');
+      expect((armorLog?.details as Record<string, unknown>)?.mightyBlowBonus).toBeUndefined();
+    });
+
     it('bounces ball if knocked down target had the ball', () => {
       const state = createVomitTestState();
       // Give ball to B1
