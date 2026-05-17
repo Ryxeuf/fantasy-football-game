@@ -91,6 +91,15 @@ export interface SkillEffect {
 
   /** Effet spécial non-standard */
   specialEffect?: (ctx: SkillContext) => Partial<GameState> | null;
+
+  /**
+   * Si défini, marque ce slug comme « utilisé pour ce match » via
+   * `markStarPlayerRuleUsed` après que le skill ait été consommé (ie.
+   * canApply==true ET son effet a été appliqué). Utilisé par les star
+   * player rules « once-per-match » (Crushing Blow, Pirouette,
+   * Casse-Os, etc.).
+   */
+  oncePerMatchSlug?: string;
 }
 
 // ─── Registre global des skills ──────────────────────────────────────────
@@ -141,6 +150,37 @@ export function collectModifiers(
   }
 
   return result;
+}
+
+/**
+ * Retourne les slugs `oncePerMatchSlug` des skills `getModifiers` du
+ * joueur qui SE SERAIENT déclenchés pour ce trigger (canApply==true).
+ *
+ * Le caller doit appeler `markStarPlayerRuleUsed` pour chacun après
+ * avoir effectivement consommé l'effet (i.e. après le jet d'armure,
+ * d'esquive, etc.).
+ *
+ * BUG fix : avant, `markStarPlayerRuleUsed` n'était jamais invoqué
+ * depuis la production code. Les star player rules « once-per-match »
+ * (Crushing Blow, Pirouette, Casse-Os) firaient à chaque trigger →
+ * infinite uses. Cette fonction expose le set de slugs à consommer.
+ */
+export function getOncePerMatchSlugsToConsume(
+  player: Player,
+  trigger: SkillTrigger,
+  ctx: Omit<SkillContext, 'player' | 'currentTrigger'>
+): string[] {
+  const fullCtx: SkillContext = { ...ctx, player, currentTrigger: trigger };
+  const slugs: string[] = [];
+  for (const skill of player.skills) {
+    const effect = getSkillEffect(skill);
+    if (!effect) continue;
+    if (!effect.oncePerMatchSlug) continue;
+    if (!effect.triggers.includes(trigger)) continue;
+    if (!effect.canApply(fullCtx)) continue;
+    slugs.push(effect.oncePerMatchSlug);
+  }
+  return slugs;
 }
 
 // ─── Enregistrement des compétences de base ──────────────────────────────

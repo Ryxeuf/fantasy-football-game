@@ -13,7 +13,7 @@ import {
   Player,
 } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
-import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
+import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers, consumeOncePerMatchSkills } from '../skills/skill-bridge';
 import { hasSkill } from '../skills/skill-effects';
 import { collectModifiers } from '../skills/skill-registry';
 import { performArmorRoll, roll2D6 } from '../utils/dice';
@@ -197,6 +197,12 @@ function armorAndInjuryWithMightyBlow(
     const injuryDefenderMod = getInjurySkillModifiers(state, victim);
     state = performInjuryRoll(state, victim, rng, injuryBonus + injuryDefenderMod, attacker.id);
   }
+
+  // BUG fix : consommer les star player rules « once-per-match » qui ont
+  // contribué au jet d'armure côté attaquant (Crushing Blow notamment).
+  // Sans cet appel, Crushing Blow firait son +1 armure à chaque block,
+  // pas une seule fois par match.
+  state = consumeOncePerMatchSkills(state, attacker, 'on-armor', { state, opponent: victim });
 
   return state;
 }
