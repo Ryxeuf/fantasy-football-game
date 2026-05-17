@@ -201,6 +201,92 @@ describe('Règle: Mi-temps complète (B1.7)', () => {
       }
       expect(recoveredAtLeastOnce).toBe(true);
     });
+
+    it('devrait remettre player.state à "active" sur les joueurs KO récupérés', () => {
+      // Bug halftime-substitution : `recoverKOPlayers` ne mettait à jour que
+      // les zones de dugout sans toucher `player.state`. Conséquence : les
+      // joueurs récupérés du KO restaient flagés `state='knocked_out'` et
+      // étaient rejetés par `autoSetupAITeam` / `placePlayerInSetup`, donc
+      // jamais re-placés sur le terrain en 2e mi-temps.
+      const base = setup();
+      const state = createHalftimeState({
+        players: base.players.map(p =>
+          p.id === 'A2'
+            ? { ...p, state: 'knocked_out' as const, stunned: true, pos: { x: -1, y: -1 } }
+            : p
+        ),
+        dugouts: {
+          ...base.dugouts,
+          teamA: {
+            ...base.dugouts.teamA,
+            zones: {
+              ...base.dugouts.teamA.zones,
+              knockedOut: {
+                ...base.dugouts.teamA.zones.knockedOut,
+                players: ['A2'],
+              },
+            },
+          },
+        },
+      });
+
+      let recoveredAtLeastOnce = false;
+      for (let i = 0; i < 20; i++) {
+        const rng = makeRNG(`halftime-ko-state-${i}`);
+        const result = advanceHalfIfNeeded(state, rng);
+        const koZone = result.dugouts.teamA.zones.knockedOut;
+        if (!koZone.players.includes('A2')) {
+          recoveredAtLeastOnce = true;
+          const recovered = result.players.find(p => p.id === 'A2');
+          expect(recovered).toBeDefined();
+          expect(recovered?.state).toBe('active');
+          expect(recovered?.stunned).toBe(false);
+          break;
+        }
+      }
+      expect(recoveredAtLeastOnce).toBe(true);
+    });
+
+    it('ne devrait pas modifier player.state des joueurs qui restent KO', () => {
+      // Avec un seed où le D6 sort < 4, le joueur reste KO. Il doit garder
+      // `state='knocked_out'` pour rester en boîte KO côté UI et exclu du
+      // re-setup. On vérifie qu'aucun side-effect ne tape sur les non-récupérés.
+      const base = setup();
+      const state = createHalftimeState({
+        players: base.players.map(p =>
+          p.id === 'A2'
+            ? { ...p, state: 'knocked_out' as const, pos: { x: -1, y: -1 } }
+            : p
+        ),
+        dugouts: {
+          ...base.dugouts,
+          teamA: {
+            ...base.dugouts.teamA,
+            zones: {
+              ...base.dugouts.teamA.zones,
+              knockedOut: {
+                ...base.dugouts.teamA.zones.knockedOut,
+                players: ['A2'],
+              },
+            },
+          },
+        },
+      });
+
+      let foundStillKO = false;
+      for (let i = 0; i < 20; i++) {
+        const rng = makeRNG(`halftime-ko-still-${i}`);
+        const result = advanceHalfIfNeeded(state, rng);
+        const koZone = result.dugouts.teamA.zones.knockedOut;
+        if (koZone.players.includes('A2')) {
+          foundStillKO = true;
+          const stillKO = result.players.find(p => p.id === 'A2');
+          expect(stillKO?.state).toBe('knocked_out');
+          break;
+        }
+      }
+      expect(foundStillKO).toBe(true);
+    });
   });
 
   describe('advanceHalfIfNeeded — half 2 → end', () => {

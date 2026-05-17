@@ -761,9 +761,17 @@ function calculateMatchResult(state: GameState, rng: RNG): {
 
 /**
  * Récupération des joueurs KO (4+ sur D6)
+ *
+ * Bug halftime-substitution : sans la mise à jour de `player.state`, les
+ * joueurs récupérés du KO restaient flagés `state='knocked_out'` côté objet
+ * Player. `autoSetupAITeam` (filtre `state === 'active' || !state`) et
+ * `placePlayerInSetup` (rejet `state !== 'active'`) les excluaient alors du
+ * re-setup, et ils ne pouvaient plus revenir sur le terrain en 2e mi-temps
+ * ou au drive post-touchdown.
  */
 function recoverKOPlayers(state: GameState, rng: RNG): GameState {
   const newState = { ...state };
+  const allRecoveredIds = new Set<string>();
 
   for (const teamId of ['A', 'B'] as TeamId[]) {
     const dugoutKey = teamId === 'A' ? 'teamA' : 'teamB';
@@ -799,6 +807,8 @@ function recoverKOPlayers(state: GameState, rng: RNG): GameState {
           },
         };
 
+        for (const id of recoveredIds) allRecoveredIds.add(id);
+
         const recoveryLog = createLogEntry(
           'info',
           `${recoveredIds.length} joueur(s) de l'équipe ${teamId} récupèrent du KO`,
@@ -808,6 +818,16 @@ function recoverKOPlayers(state: GameState, rng: RNG): GameState {
         newState.gameLog = [...newState.gameLog, recoveryLog];
       }
     }
+  }
+
+  // Sync player.state pour les joueurs récupérés : passage 'knocked_out' →
+  // 'active' afin que le re-setup les considère éligibles. On clear aussi
+  // le flag `stunned` carry-over éventuel — un joueur de retour des réserves
+  // est frais.
+  if (allRecoveredIds.size > 0) {
+    newState.players = newState.players.map(p =>
+      allRecoveredIds.has(p.id) ? { ...p, state: 'active', stunned: false } : p
+    );
   }
 
   return newState;

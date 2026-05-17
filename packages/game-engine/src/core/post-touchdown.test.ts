@@ -208,5 +208,48 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       }
       expect(recoveredAtLeastOnce).toBe(true);
     });
+
+    it('devrait remettre player.state à "active" sur les joueurs KO récupérés', () => {
+      // Même bug que halftime : sans cette mise à jour, les joueurs récupérés
+      // du KO restent `state='knocked_out'` et `placePlayerInSetup` les rejette,
+      // bloquant le re-setup du drive post-TD.
+      const base = setup();
+      const state = createPostTdState({
+        players: base.players.map(p =>
+          p.id === 'A2'
+            ? { ...p, state: 'knocked_out' as const, stunned: true, hasBall: false, pos: { x: -1, y: -1 } }
+            : { ...p, hasBall: false }
+        ),
+        dugouts: {
+          ...base.dugouts,
+          teamA: {
+            ...base.dugouts.teamA,
+            zones: {
+              ...base.dugouts.teamA.zones,
+              knockedOut: {
+                ...base.dugouts.teamA.zones.knockedOut,
+                players: ['A2'],
+              },
+            },
+          },
+        },
+      });
+
+      let recoveredAtLeastOnce = false;
+      for (let i = 0; i < 20; i++) {
+        const rng = makeRNG(`ko-recovery-state-${i}`);
+        const result = handlePostTouchdown(state, rng);
+        const koZone = result.dugouts.teamA.zones.knockedOut;
+        if (!koZone.players.includes('A2')) {
+          recoveredAtLeastOnce = true;
+          const recovered = result.players.find(p => p.id === 'A2');
+          expect(recovered).toBeDefined();
+          expect(recovered?.state).toBe('active');
+          expect(recovered?.stunned).toBe(false);
+          break;
+        }
+      }
+      expect(recoveredAtLeastOnce).toBe(true);
+    });
   });
 });
