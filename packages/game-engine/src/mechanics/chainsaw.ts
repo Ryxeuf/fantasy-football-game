@@ -26,7 +26,6 @@ import { rollD6, calculateArmorTarget } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
-import { getArmorSkillContext } from '../skills/skill-bridge';
 
 const CHAINSAW_ARMOR_BONUS = 3;
 
@@ -134,21 +133,23 @@ export function executeChainsaw(
     newState.isTurnover = true;
   } else {
     // Jet d'armure sur la cible avec +3 (pas de Mighty Blow).
-    // Iron Hard Skin annule le bonus Chainsaw (modificateur de trait de
-    // l'attaquant sur le jet d'armure).
-    const { ironHardSkinActive } = getArmorSkillContext(newState, attacker, target);
-    const chainsawBonus = ironHardSkinActive ? 0 : CHAINSAW_ARMOR_BONUS;
+    //
+    // BUG fix : Iron Hard Skin ne bloque PAS le bonus de Chainsaw.
+    // BB2020 : Iron Hard Skin protège contre Claws / Mighty Blow / Dirty
+    // Player, mais le bonus Chainsaw vient d'un trait d'arme spéciale,
+    // pas d'un skill modifier annulable. Avant ce fix, IHS annulait le
+    // +3 → la Chainsaw devenait inoffensive contre les Big Guys avec IHS.
+    const chainsawBonus = CHAINSAW_ARMOR_BONUS;
     const armorResult = buildArmorResult(target, die1, die2, chainsawBonus);
     newState.lastDiceResult = armorResult;
 
     const bonusSign = chainsawBonus > 0 ? `+${chainsawBonus}` : '';
-    const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
     const armorLog = createLogEntry(
       'dice',
-      `Jet d'armure de ${target.name}: ${die1 + die2}${bonusSign} vs ${target.av}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
+      `Jet d'armure de ${target.name}: ${die1 + die2}${bonusSign} vs ${target.av} ${armorResult.success ? '(tient)' : '(percée)'}`,
       target.id,
       target.team,
-      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, chainsawBonus, ironHardSkin: ironHardSkinActive },
+      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, chainsawBonus },
     );
     newState.gameLog = [...newState.gameLog, armorLog];
 

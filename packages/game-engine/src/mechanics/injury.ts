@@ -154,15 +154,23 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
   // Le joueur va en zone blessés
   const newState = movePlayerToDugoutZone(state, player.id, 'casualty', player.team);
 
-  // Jet de casualty (D16)
-  const casualtyRoll = Math.floor(rng() * 16) + 1;
+  // Jet de casualty (D16).
+  //
+  // BB2020 rule : « Stunty players suffer +1 modifier to any Casualty roll
+  // made against them. » Avant ce fix, le modifier Stunty était omis —
+  // les joueurs Stunty (Halfling, Goblin, Skink, Snotling) avaient le
+  // même taux de blessures graves que les joueurs normaux malgré leur
+  // fragilité réglementaire.
+  const stuntyMod = hasSkill(player, 'stunty') ? 1 : 0;
+  const rawCasualtyRoll = Math.floor(rng() * 16) + 1;
+  const casualtyRoll = Math.min(16, rawCasualtyRoll + stuntyMod);
 
   const casualtyLog = createLogEntry(
     'dice',
-    `Jet de casualty: ${casualtyRoll}`,
+    `Jet de casualty: ${casualtyRoll}${stuntyMod > 0 ? ` (D16=${rawCasualtyRoll} +1 Stunty)` : ''}`,
     player.id,
     player.team,
-    { casualtyRoll }
+    { casualtyRoll, rawCasualtyRoll, stuntyMod }
   );
   newState.gameLog = [...newState.gameLog, casualtyLog];
 
