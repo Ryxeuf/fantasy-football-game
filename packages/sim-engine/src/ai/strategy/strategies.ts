@@ -58,7 +58,11 @@ const BLITZ_TRAIN: Strategy = {
   patterns: ['wedge'],
   score: (ctx, p) => {
     if (ctx.hasPossession) return 0.05; // useable at low base when in possession
-    return p.blitzPriority / 100 + p.bashIndex / 200 + (ctx.pastMidfield ? 0 : 0.15);
+    // BUG fix : signe inversé du bonus pastMidfield. La défense doit
+    // blitzer DAVANTAGE quand l'adversaire a avancé (pastMidfield),
+    // pas moins. Comparer `CAGE_BUILD` (l.24) qui donne +0.2 quand
+    // pastMidfield (signe normal).
+    return p.blitzPriority / 100 + p.bashIndex / 200 + (ctx.pastMidfield ? 0.15 : 0);
   },
 };
 
