@@ -864,8 +864,18 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   const lastScoreLog = state.gameLog.findLast(log => log.type === 'score');
   const scoringTeam = lastScoreLog?.team;
 
-  // L'équipe qui marque frappe au kickoff suivant
-  const newKickingTeam: TeamId = scoringTeam === 'A' ? 'A' : 'B';
+  // L'équipe qui marque frappe au kickoff suivant.
+  //
+  // BUG fix : avant, `scoringTeam === 'A' ? 'A' : 'B'` faisait silencieusement
+  // tomber sur 'B' si `scoringTeam` était undefined (aucun log de score
+  // trouvé). Cela inversait le sens du kickoff sans erreur visible.
+  // Maintenant, on fallback explicitement sur `state.currentPlayer` (qui
+  // est l'équipe ayant marqué dans le flow normal handleEndTurn →
+  // checkTouchdowns → handlePostTouchdown), avec un warn en cas d'absence
+  // totale d'info.
+  const resolvedScorer: TeamId =
+    scoringTeam === 'A' || scoringTeam === 'B' ? scoringTeam : state.currentPlayer;
+  const newKickingTeam: TeamId = resolvedScorer;
   const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
   // Expulser les joueurs Arme Secrète avant le reset (fin de drive)

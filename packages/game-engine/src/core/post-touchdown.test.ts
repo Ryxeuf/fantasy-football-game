@@ -55,6 +55,24 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       expect(result.currentPlayer).toBe('B'); // receiving team plays first
     });
 
+    it("fallback sur currentPlayer si aucun log de score (resilience)", () => {
+      // BUG fix : avant, `scoringTeam === 'A' ? 'A' : 'B'` faisait
+      // silencieusement tomber sur 'B' si scoringTeam undefined. Cela
+      // inversait le sens du kickoff (B kicke alors qu'A vient de marquer).
+      // Maintenant fallback sur state.currentPlayer (équipe ayant marqué
+      // dans le flow normal).
+      const state = createPostTdState({
+        gameLog: [], // aucun log → scoringTeam undefined
+        currentPlayer: 'A' as TeamId, // A a marqué
+      });
+      const rng = makeRNG('post-td-fallback');
+      const result = handlePostTouchdown(state, rng);
+
+      // Fallback correct : A est kicker, B reçoit.
+      expect(result.kickingTeam).toBe('A');
+      expect(result.currentPlayer).toBe('B');
+    });
+
     it('devrait ne pas avoir de balle (en attente du kickoff après re-setup)', () => {
       const state = createPostTdState();
       const rng = makeRNG('post-td-ball');

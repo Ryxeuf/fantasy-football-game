@@ -131,6 +131,24 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
     usedRunningPassThisTurn: [],
     usedOnTheBallThisTurn: [],
     usedMultipleBlockThisTurn: [],
+    // BUG fix : avant, les états pending* étaient conservés entre les
+    // tours. Si un coach force END_TURN (timer-out, AI fallback) alors
+    // qu'un pending est ouvert (pendingBlock, pendingReroll,
+    // pendingApothecary, pendingPushChoice, pendingDumpOff,
+    // pendingMultipleBlock, pendingFrenzyBlock, pendingOnTheBall,
+    // pendingKickoffEvent), le tour de l'adversaire commençait gated
+    // par ces pendings — softlock. Tous les pendings sont per-turn et
+    // doivent être clear au changement de tour.
+    pendingBlock: undefined,
+    pendingPushChoice: undefined,
+    pendingFollowUpChoice: undefined,
+    pendingReroll: undefined,
+    pendingApothecary: undefined,
+    pendingDumpOff: undefined,
+    pendingMultipleBlock: undefined,
+    pendingFrenzyBlock: undefined,
+    pendingOnTheBall: undefined,
+    pendingKickoffEvent: undefined,
   };
 
   // Log du changement de tour
