@@ -267,6 +267,10 @@ export interface GameState {
   usedStarPlayerRules: Record<string, boolean>;
   // Nombre de bribes restantes par équipe (achetées via inducements ou prières)
   bribesRemaining: { teamA: number; teamB: number };
+  // Bloodweiser Kegs achetés (inducement) — chaque keg donne +1 aux jets de
+  // KO recovery de l'équipe (BB rule, max 2 kegs). Optional pour compat avec
+  // les états sérialisés pré-fix.
+  bloodweiserKegs?: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
   // IDs des joueurs qui ont déjà utilisé Running Pass ce tour (une fois par tour par joueur).

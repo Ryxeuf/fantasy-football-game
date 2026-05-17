@@ -778,14 +778,21 @@ function recoverKOPlayers(state: GameState, rng: RNG): GameState {
     const dugout = newState.dugouts[dugoutKey];
     const koZone = dugout.zones.knockedOut;
 
+    // BUG fix : appliquer le bonus Bloodweiser Kegs (+1 par keg acheté,
+    // max 2). Avant, le bonus était déclaré dans inducements mais jamais
+    // lu — le jet était `>= 4` hardcodé. Maintenant on lit
+    // `state.bloodweiserKegs[teamKey]` (initialisé depuis preMatch dans
+    // startMatchFromKickoff) et on relâche le seuil en conséquence.
+    const kegBonus = newState.bloodweiserKegs?.[dugoutKey] ?? 0;
+    const recoveryThreshold = Math.max(2, 4 - kegBonus);
+
     if (koZone.players.length > 0) {
       const recoveredIds: string[] = [];
       const stillKOIds: string[] = [];
 
       for (const playerId of koZone.players) {
-        // Simple 4+ check using seeded RNG
         const roll = Math.floor(rng() * 6) + 1;
-        if (roll >= 4) {
+        if (roll >= recoveryThreshold) {
           recoveredIds.push(playerId);
         } else {
           stillKOIds.push(playerId);
@@ -953,16 +960,27 @@ export function canPlayerAct(state: GameState, playerId: string): boolean {
 }
 
 /**
- * S27.7.2 — Cap de GFI pour un joueur, derive du registry des skills.
+ * S27.7.2 — Cap de GFI pour un joueur, derive du registry des skills
+ * et du rulesConfig actif.
  *
  * Defaut 2 (regle BB3). Sprint ajoute +1 (cap = 3) via le modifier
  * `gfiCapBonus` collecte sur le trigger `on-gfi`. Tout futur skill
  * qui modifie le cap (ex: Big Hand variant, Tarpit, etc.) n'aura
  * qu'a poser un `gfiCapBonus` sans toucher aux call-sites.
+ *
+ * BUG fix : avant, le rulesConfig (`maxGFI`, `enableGFI`) n'etait pas
+ * respecte. Le mode `simplified` declare `maxGFI: 0` et `enableGFI: false`,
+ * mais la GFI continuait a etre autorisee jusqu'a 2 cases par joueur.
+ * Maintenant on plafonne avec `min(skill-based, rulesConfig.maxGFI)`,
+ * et retourne 0 si `enableGFI === false`.
  */
 export function getGfiCap(state: GameState, player: Player): number {
+  const rules = getRulesConfigForState(state);
+  if (rules.enableGFI === false) return 0;
   const mods = collectModifiers(player, 'on-gfi', { state });
-  return 2 + (mods.gfiCapBonus ?? 0);
+  // Cap de base = rulesConfig.maxGFI (2 en full, 0 en simplified).
+  // Les skills (ex. Sprint) ajoutent leur bonus par-dessus le cap de base.
+  return rules.maxGFI + (mods.gfiCapBonus ?? 0);
 }
 
 /**
@@ -1551,6 +1569,9 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
     bribesRemaining: isInitialStart
       ? initializeBribesFromInducements(preMatch, state.prayerEffects)
       : state.bribesRemaining,
+    bloodweiserKegs: isInitialStart
+      ? initializeBloodweiserKegsFromInducements(preMatch)
+      : state.bloodweiserKegs,
     fanAttendance,
     dedicatedFans,
     weatherCondition,
@@ -1611,6 +1632,31 @@ function initializeBribesFromInducements(preMatch: PreMatchState, prayerEffects?
     }
   }
   return bribes;
+}
+
+/**
+ * Bloodweiser Kegs inducement (`bloodweiser_kegs`) — chaque keg donne +1
+ * aux jets de KO recovery de l'équipe propriétaire (max 2 kegs).
+ *
+ * BUG fix : avant, le bonus était déclaré dans `inducements.ts:107` mais
+ * jamais lu — `recoverKOPlayers` utilisait un `>= 4` hardcodé sans bonus.
+ * Désormais on persiste le count par équipe dans le state (similaire à
+ * `bribesRemaining`) et on l'applique dans `recoverKOPlayers`.
+ */
+function initializeBloodweiserKegsFromInducements(
+  preMatch: PreMatchState,
+): { teamA: number; teamB: number } {
+  const kegs = { teamA: 0, teamB: 0 };
+  if (preMatch.inducements) {
+    for (const teamKey of ['teamA', 'teamB'] as const) {
+      const items = preMatch.inducements[teamKey].items;
+      const kegItem = items.find(i => i.slug === 'bloodweiser_kegs');
+      if (kegItem) {
+        kegs[teamKey] = kegItem.quantity;
+      }
+    }
+  }
+  return kegs;
 }
 
 /**

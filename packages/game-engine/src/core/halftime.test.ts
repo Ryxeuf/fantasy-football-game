@@ -164,6 +164,50 @@ describe('Règle: Mi-temps complète (B1.7)', () => {
       expect(result.casualtyResults).toEqual({ A2: 'bh' });
     });
 
+    it('Bloodweiser Kegs (+1 KO recovery) augmente le taux de récupération', () => {
+      // BUG fix : avant, l'inducement Bloodweiser Kegs (+1 KO recovery)
+      // était déclaré dans inducements.ts mais jamais lu. Le jet était
+      // un `>= 4` hardcodé sans bonus. Maintenant `state.bloodweiserKegs`
+      // est lu et abaisse le seuil de recovery (e.g. 2 kegs → seuil 2+).
+      const base = setup();
+      const koPlayerIds = ['A1', 'A2'];
+      const stateWithKegs = createHalftimeState({
+        bloodweiserKegs: { teamA: 2, teamB: 0 }, // 2 kegs → seuil 2+ (presque tout récupère)
+        players: base.players.map(p =>
+          koPlayerIds.includes(p.id)
+            ? { ...p, state: 'knocked_out' as const, pos: { x: -1, y: -1 } }
+            : p
+        ),
+        dugouts: {
+          ...base.dugouts,
+          teamA: {
+            ...base.dugouts.teamA,
+            zones: {
+              ...base.dugouts.teamA.zones,
+              knockedOut: {
+                ...base.dugouts.teamA.zones.knockedOut,
+                players: koPlayerIds,
+              },
+            },
+          },
+        },
+      });
+
+      // Avec 2 kegs (seuil=2+), un jet à 2,3,4,5,6 = recovery (5/6 chance).
+      // En moyenne sur 100 seeds, on devrait avoir bcp plus de recoveries
+      // qu'avec le seuil 4+ baseline (3/6 chance).
+      let recoveriesWithKegs = 0;
+      for (let i = 0; i < 100; i++) {
+        const rng = makeRNG(`bloodweiser-${i}`);
+        const result = advanceHalfIfNeeded(stateWithKegs, rng);
+        const koZone = result.dugouts.teamA.zones.knockedOut;
+        recoveriesWithKegs += koPlayerIds.filter(id => !koZone.players.includes(id)).length;
+      }
+      // 200 attempts (2 players × 100 seeds), seuil 2+ = ~5/6 = ~167.
+      // Permet une variance large pour passer en CI.
+      expect(recoveriesWithKegs).toBeGreaterThan(140);
+    });
+
     it('devrait tenter de récupérer les joueurs KO', () => {
       const base = setup();
       const state = createHalftimeState({
