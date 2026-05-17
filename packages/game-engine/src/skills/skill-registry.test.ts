@@ -5,6 +5,7 @@ import {
   getSkillsForTrigger,
   collectModifiers,
 } from './skill-registry';
+import { hasSkill } from './skill-effects';
 import type { Player, GameState } from '../core/types';
 import { setup } from '../core/game-state';
 
@@ -72,6 +73,39 @@ describe('Skill Registry', () => {
       const effect = getSkillEffect('sidestep');
       expect(effect).toBeDefined();
       expect(effect!.canApply({ player, state: setup() })).toBe(true);
+    });
+  });
+
+  describe('hasSkill — normalisation cohérente avec getSkillEffect', () => {
+    // BUG fix : avant, `hasSkill` ne normalisait que la casse, alors que
+    // `getSkillEffect` normalise aussi `_` / espace → `-`. Conséquence :
+    // un skill stocké en snake_case dans player.skills (ex. `'crushing_blow'`)
+    // n'était PAS détecté par `hasSkill(player, 'crushing-blow')` côté
+    // canApply, même si `getSkillEffect('crushing_blow')` trouvait bien
+    // le slug `'crushing-blow'`. Maintenant les deux fonctions normalisent
+    // pareil.
+    it("match les variantes snake_case (player.skills = ['crushing_blow'])", () => {
+      const player = makePlayer({ skills: ['crushing_blow'] });
+      expect(hasSkill(player, 'crushing-blow')).toBe(true);
+      expect(hasSkill(player, 'crushing_blow')).toBe(true);
+      expect(hasSkill(player, 'Crushing-Blow')).toBe(true);
+      expect(hasSkill(player, 'Crushing Blow')).toBe(true);
+    });
+
+    it("match les variantes kebab-case (player.skills = ['crushing-blow'])", () => {
+      const player = makePlayer({ skills: ['crushing-blow'] });
+      expect(hasSkill(player, 'crushing-blow')).toBe(true);
+      expect(hasSkill(player, 'crushing_blow')).toBe(true);
+    });
+
+    it("retourne false pour un skill absent", () => {
+      const player = makePlayer({ skills: ['block', 'dodge'] });
+      expect(hasSkill(player, 'crushing-blow')).toBe(false);
+    });
+
+    it("space-separated 'big hand' matche 'big-hand'", () => {
+      const player = makePlayer({ skills: ['big hand'] });
+      expect(hasSkill(player, 'big-hand')).toBe(true);
     });
   });
 

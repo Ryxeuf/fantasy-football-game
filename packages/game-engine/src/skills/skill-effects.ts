@@ -5,11 +5,29 @@
 
 import type { Player } from '../core/types';
 
-/** Vérifie si un joueur possède une compétence donnée (par slug) */
+/**
+ * Normalise un slug de skill : lowercase + remplace `_` et espaces par `-`.
+ * Cohérent avec `getSkillEffect` dans skill-registry.ts.
+ */
+function normalizeSkillSlug(slug: string): string {
+  return slug.toLowerCase().replace(/[_ ]/g, '-');
+}
+
+/**
+ * Vérifie si un joueur possède une compétence donnée (par slug).
+ *
+ * BUG fix : avant, seul `toLowerCase()` était appliqué. `hasSkill` était
+ * donc inconsistant avec `getSkillEffect` (skill-registry.ts:104-107)
+ * qui normalise aussi les séparateurs `_` / espace → `-`. Conséquence :
+ * `getSkillEffect('crushing_blow')` trouvait le slug `'crushing-blow'`,
+ * mais le `canApply` de l'effet appelait `hasSkill(player, 'crushing-blow')`
+ * qui ne matchait pas un skill `'crushing_blow'` dans `player.skills`.
+ * Les variantes snake_case dans les rosters/tests étaient silencieusement
+ * ignorées.
+ */
 export function hasSkill(player: Player, skillSlug: string): boolean {
-  return player.skills.some(
-    s => s.toLowerCase() === skillSlug.toLowerCase()
-  );
+  const target = normalizeSkillSlug(skillSlug);
+  return player.skills.some((s) => normalizeSkillSlug(s) === target);
 }
 
 // ─── BLOCK ────────────────────────────────────────────────────
