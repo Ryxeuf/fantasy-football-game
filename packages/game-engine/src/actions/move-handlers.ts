@@ -41,6 +41,20 @@ import { isInOpponentEndzone, awardTouchdown } from '../mechanics/ball';
 import { getArmBarBonus } from '../mechanics/arm-bar';
 import { applyRollFailure } from './failure-helpers';
 import { handleBallPickup } from './ball-pickup';
+import { getWeatherModifiers } from '../mechanics/weather-effects';
+
+/**
+ * BB rule : GFI target = 2+ par défaut, 3+ en Blizzard / Neige forte.
+ * Avant ce fix, le code hardcodait `>= 2` sans consulter
+ * `state.weatherCondition`, donc les modificateurs météo (`gfiModifier`
+ * de `getWeatherModifiers`) n'étaient jamais appliqués au seuil GFI.
+ *
+ * Le modifier météo est négatif (-1 en Blizzard) → seuil = 2 - (-1) = 3.
+ */
+function gfiTargetFromWeather(state: GameState): number {
+  const mods = getWeatherModifiers(state.weatherCondition);
+  return 2 - mods.gfiModifier;
+}
 
 /**
  * Gere un jet d'esquive complet : modifiers, relance Dodge / Break
@@ -162,10 +176,12 @@ export function handleDodgeRoll(
   }
 
   if (finalDodgeSuccess) {
-    // Si c'est aussi un GFI, jet supplementaire de GFI (2+ sur D6)
+    // Si c'est aussi un GFI, jet supplementaire de GFI (2+ sur D6, 3+ en
+    // Blizzard / Neige forte via `gfiTargetFromWeather`).
     if (isDodgeGFI) {
+      const gfiTarget = gfiTargetFromWeather(state);
       let gfiRoll = Math.floor(rng() * 6) + 1;
-      let gfiSuccess = gfiRoll >= 2;
+      let gfiSuccess = gfiRoll >= gfiTarget;
 
       // Sure Feet auto-reroll (via skill registry)
       if (!gfiSuccess && canSkillReroll(player, 'on-gfi', state)) {
@@ -177,24 +193,24 @@ export function handleDodgeRoll(
         );
         next.gameLog = [...next.gameLog, sfLog];
         gfiRoll = Math.floor(rng() * 6) + 1;
-        gfiSuccess = gfiRoll >= 2;
+        gfiSuccess = gfiRoll >= gfiTarget;
       }
 
       const gfiLogEntry = createLogEntry(
         'dice',
-        `GFI (Going For It) après esquive: ${gfiRoll}/2 ${
+        `GFI (Going For It) après esquive: ${gfiRoll}/${gfiTarget} ${
           gfiSuccess ? '✓' : '✗'
         }`,
         player.id,
         player.team,
-        { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess },
+        { diceRoll: gfiRoll, targetNumber: gfiTarget, success: gfiSuccess },
       );
       next.gameLog = [...next.gameLog, gfiLogEntry];
       next.lastDiceResult = {
         type: 'dodge' as never,
         playerId: player.id,
         diceRoll: gfiRoll,
-        targetNumber: 2,
+        targetNumber: gfiTarget,
         success: gfiSuccess,
         modifiers: 0,
         playerName: player.name,
@@ -207,7 +223,7 @@ export function handleDodgeRoll(
             rollType: 'gfi',
             playerId: player.id,
             team: player.team,
-            targetNumber: 2,
+            targetNumber: gfiTarget,
             modifiers: 0,
             playerIndex: idx,
             to,
@@ -275,9 +291,10 @@ export function handleNormalMove(
     // GFI : ne decremente pas pm, incremente gfiUsed
     next.players[idx].gfiUsed = (next.players[idx].gfiUsed ?? 0) + 1;
 
-    // Jet de GFI : 2+ sur D6
+    // Jet de GFI : 2+ par défaut, 3+ en Blizzard / Neige forte.
+    const gfiTarget = gfiTargetFromWeather(state);
     let gfiRoll = Math.floor(rng() * 6) + 1;
-    let gfiSuccess = gfiRoll >= 2;
+    let gfiSuccess = gfiRoll >= gfiTarget;
 
     // Sure Feet : relance automatique du GFI rate (via skill registry)
     if (!gfiSuccess && canSkillReroll(player, 'on-gfi', state)) {
@@ -289,22 +306,22 @@ export function handleNormalMove(
       );
       next.gameLog = [...next.gameLog, rerollLog];
       gfiRoll = Math.floor(rng() * 6) + 1;
-      gfiSuccess = gfiRoll >= 2;
+      gfiSuccess = gfiRoll >= gfiTarget;
     }
 
     const gfiLogEntry = createLogEntry(
       'dice',
-      `GFI (Going For It): ${gfiRoll}/2 ${gfiSuccess ? '✓' : '✗'}`,
+      `GFI (Going For It): ${gfiRoll}/${gfiTarget} ${gfiSuccess ? '✓' : '✗'}`,
       player.id,
       player.team,
-      { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess },
+      { diceRoll: gfiRoll, targetNumber: gfiTarget, success: gfiSuccess },
     );
     next.gameLog = [...next.gameLog, gfiLogEntry];
     next.lastDiceResult = {
       type: 'dodge' as never,
       playerId: player.id,
       diceRoll: gfiRoll,
-      targetNumber: 2,
+      targetNumber: gfiTarget,
       success: gfiSuccess,
       modifiers: 0,
       playerName: player.name,
@@ -322,7 +339,7 @@ export function handleNormalMove(
           rollType: 'gfi',
           playerId: player.id,
           team: player.team,
-          targetNumber: 2,
+          targetNumber: gfiTarget,
           modifiers: 0,
           playerIndex: idx,
           to,

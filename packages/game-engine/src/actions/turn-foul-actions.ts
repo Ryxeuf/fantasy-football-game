@@ -14,7 +14,7 @@
  * Reduction de bruit dans `actions.ts` : ~134 lignes en moins.
  */
 
-import type { GameState, RNG, ActionType } from '../core/types';
+import type { GameState, RNG, ActionType, TeamId } from '../core/types';
 import {
   hasPlayerActed,
   setPlayerAction,
@@ -98,11 +98,27 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
     };
   }
 
-  // Changement de tour - le porteur de ballon garde le ballon
+  // Changement de tour - le porteur de ballon garde le ballon.
+  //
+  // BB rule : un "round" = équipe receveuse joue puis équipe kickeuse joue.
+  // Le compteur `turn` représente le numéro de round (1..8 par half). On
+  // l'incrémente après l'END_TURN de l'équipe **kickeuse** (la 2e à
+  // jouer dans le round), pas après la 1ère.
+  //
+  // BUG fix : avant, l'incrément était hardcodé à `currentPlayer === 'B'`,
+  // ce qui supposait que A joue toujours en premier (A = receveur). Quand
+  // A kicke en half 1 (donc B reçoit et joue en premier), l'incrément
+  // bumpait après B = receveur → après 8 END_TURN de B, turn=9 → halftime
+  // alors que A n'avait joué que 7 activations. Inéquité 8 vs 7. Fix : on
+  // bump quand l'équipe qui finit son tour est `kickingTeam`. Fallback sur
+  // 'B' (= comportement legacy) quand `kickingTeam` est undefined, pour
+  // préserver la compat des tests qui ne définissent pas explicitement
+  // l'équipe kickeuse.
+  const bumpingTeam: TeamId = state.kickingTeam ?? 'B';
   const newState: GameState = {
     ...state,
     currentPlayer: state.currentPlayer === 'A' ? 'B' : 'A',
-    turn: state.currentPlayer === 'B' ? state.turn + 1 : state.turn,
+    turn: state.currentPlayer === bumpingTeam ? state.turn + 1 : state.turn,
     selectedPlayerId: null,
     players: state.players.map((p) => ({ ...p, pm: p.ma, gfiUsed: 0 })),
     isTurnover: false,

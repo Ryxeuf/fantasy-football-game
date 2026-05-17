@@ -430,16 +430,29 @@ export function executePass(
       return newState;
     }
 
-    // Passe ratée : le ballon dévie depuis la cible
+    // BB2020 rule : un fumble (jet naturel de 1) lâche le ballon aux pieds
+    // du passeur ; une passe inaccurée (autre échec) part de la case cible
+    // et rebondit. Avant ce fix, tout échec faisait rebondir depuis la
+    // cible — perte de la distinction fumble/inaccurate, qui donnait un
+    // énorme avantage indu sur les long-bomb fumbles (le ballon partait
+    // au bout du terrain au lieu de rester aux pieds du passeur).
+    const isFumble = passResult.diceRoll === 1;
     const failLog = createLogEntry(
       'turnover',
-      `Passe ratée - Turnover !`,
+      isFumble
+        ? `Passe ratée (fumble) — ballon aux pieds de ${passer.name}. Turnover !`
+        : `Passe ratée (inaccurate) — Turnover !`,
       passer.id,
-      passer.team
+      passer.team,
+      { fumble: isFumble },
     );
     newState.gameLog = [...newState.gameLog, failLog];
     newState.isTurnover = true;
-    newState.ball = { ...target.pos };
+    // Le passeur perd la balle dans les deux cas.
+    newState.players = newState.players.map(p =>
+      p.id === passer.id ? { ...p, hasBall: false } : p
+    );
+    newState.ball = isFumble ? { ...passer.pos } : { ...target.pos };
     return bounceBall(newState, rng);
   }
 

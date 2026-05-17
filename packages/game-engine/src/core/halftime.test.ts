@@ -311,8 +311,33 @@ describe('Règle: Mi-temps complète (B1.7)', () => {
   });
 
   describe('END_TURN trigger halftime', () => {
-    it('devrait déclencher la mi-temps via END_TURN quand turn passe à 9', () => {
-      // Set up state at turn 8, player B's turn (B's END_TURN increments turn 8→9)
+    it('devrait déclencher la mi-temps via END_TURN du kicker au tour 8', () => {
+      // Setup : kickingTeam='B', A reçoit (joue en premier). Round 8 : A puis B.
+      // Après l'END_TURN du kicker B → bump turn → 9 → halftime triggers.
+      const base = setup();
+      const state: GameState = {
+        ...base,
+        gamePhase: 'playing' as const,
+        half: 1,
+        turn: 8,
+        currentPlayer: 'B' as TeamId, // kicker B finit son round 8
+        kickingTeam: 'B' as TeamId,
+      };
+      const rng = makeRNG('end-turn-halftime');
+      const result = applyMove(state, { type: 'END_TURN' }, rng) as ExtendedGameState;
+
+      expect(result.half).toBe(2);
+      expect(result.turn).toBe(1);
+      expect(result.gamePhase).toBe('halftime');
+      expect(result.preMatch?.phase).toBe('setup');
+    });
+
+    it("l'END_TURN du receveur n'incrémente PAS le tour (équité 8 vs 8 activations)", () => {
+      // BUG fix : avant, le bump était hardcodé à `currentPlayer === 'B'`.
+      // Quand A kickait et B recevait, B (receveur, joue en premier) bumpait
+      // → 8 END_TURN de B suffisaient à atteindre turn=9, mais A n'avait
+      // joué que 7 activations. Maintenant le bump suit `kickingTeam`,
+      // donc B END_TURN ne bump pas si A est kicker. A doit encore jouer.
       const base = setup();
       const state: GameState = {
         ...base,
@@ -322,13 +347,13 @@ describe('Règle: Mi-temps complète (B1.7)', () => {
         currentPlayer: 'B' as TeamId,
         kickingTeam: 'A' as TeamId,
       };
-      const rng = makeRNG('end-turn-halftime');
-      const result = applyMove(state, { type: 'END_TURN' }, rng) as ExtendedGameState;
+      const rng = makeRNG('end-turn-no-halftime-on-receiver');
+      const result = applyMove(state, { type: 'END_TURN' }, rng);
 
-      expect(result.half).toBe(2);
-      expect(result.turn).toBe(1);
-      expect(result.gamePhase).toBe('halftime');
-      expect(result.preMatch?.phase).toBe('setup');
+      expect(result.half).toBe(1);
+      expect(result.turn).toBe(8);
+      expect(result.gamePhase).toBe('playing');
+      expect(result.currentPlayer).toBe('A');
     });
   });
 

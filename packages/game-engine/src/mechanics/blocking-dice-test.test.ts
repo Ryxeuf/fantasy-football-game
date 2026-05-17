@@ -122,6 +122,24 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       expect(calculateBlockDiceCount(1, 3)).toBe(3);
     });
 
+    it("3 dés sur ratio EXACTEMENT 2× (BB rule: ≥ 2× = 3 dés)", () => {
+      // BUG fix : avant, la condition côté défenseur `attacker < target / 2`
+      // était strictement `<`, donc attacker=1 / target=2 (ratio 2×) → 2 dés
+      // au lieu de 3. Asymétrie avec l'autre direction (2 vs 1 → 3 dés).
+      // Maintenant symétrique : ratio 2× exact = 3 dés dans les deux sens.
+      expect(calculateBlockDiceCount(1, 2)).toBe(3); // défenseur 2× → 3 dés (défenseur choisit)
+      expect(calculateBlockDiceCount(2, 4)).toBe(3); // défenseur 2× → 3 dés
+      expect(calculateBlockDiceCount(2, 1)).toBe(3); // attacker 2× → 3 dés (attaquant choisit)
+      expect(calculateBlockDiceCount(4, 2)).toBe(3); // attacker 2× → 3 dés
+    });
+
+    it('2 dés pour différence sans ratio 2×', () => {
+      // Différence sans atteindre 2× → 2 dés.
+      expect(calculateBlockDiceCount(2, 3)).toBe(2); // 2 vs 3 (target 1.5× attacker)
+      expect(calculateBlockDiceCount(3, 5)).toBe(2); // 3 vs 5 (target 1.67×)
+      expect(calculateBlockDiceCount(4, 5)).toBe(2); // 4 vs 5 (target 1.25×)
+    });
+
     it('devrait déterminer correctement qui choisit le résultat', () => {
       // Force égale : 1 dé (pas de choix)
       expect(getBlockDiceChooser(3, 3)).toBe('attacker');
