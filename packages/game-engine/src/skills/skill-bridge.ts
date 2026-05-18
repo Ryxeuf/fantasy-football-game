@@ -10,6 +10,7 @@ import { collectModifiers, getSkillEffect, getOncePerMatchSlugsToConsume } from 
 import { markStarPlayerRuleUsed } from './star-player-rules';
 import { getAdjacentOpponents } from '../mechanics/movement';
 import { hasSkill } from './skill-effects';
+import { createLogEntry } from '../utils/logging';
 
 /**
  * Marque les star player rules « once-per-match » consommés par un
@@ -84,23 +85,22 @@ export function applyDivingTacklePronePostDodge(
 
   let newState = state;
   for (const tackler of tacklers) {
+    // BUG fix audit round 4 : avant, `Date.now()` etait utilise pour
+    // construire l'id de log, cassant la determinisme replay. Maintenant
+    // on passe par `createLogEntry` qui derive l'id du contenu (hash).
+    const dtLog = createLogEntry(
+      'action',
+      `${tackler.name} se place au sol pour Diving Tackle.`,
+      tackler.id,
+      tackler.team,
+      { skill: 'diving-tackle' },
+    );
     newState = {
       ...newState,
       players: newState.players.map((p) =>
         p.id === tackler.id ? { ...p, stunned: true } : p,
       ),
-      gameLog: [
-        ...newState.gameLog,
-        {
-          id: `log-${Date.now()}-dt-${tackler.id}`,
-          timestamp: Date.now(),
-          type: 'action' as const,
-          message: `${tackler.name} se place au sol pour Diving Tackle.`,
-          playerId: tackler.id,
-          team: tackler.team,
-          details: { skill: 'diving-tackle' },
-        },
-      ],
+      gameLog: [...newState.gameLog, dtLog],
     };
   }
   return newState;

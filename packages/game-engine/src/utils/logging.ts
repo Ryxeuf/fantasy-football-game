@@ -15,6 +15,22 @@ import { GameState, GameLogEntry, TeamId } from '../core/types';
 export type GameStateWithoutLog = Omit<GameState, 'gameLog'>;
 
 /**
+ * FNV-1a 32-bit hash, deterministe et rapide. Utilise pour generer un
+ * `id` deterministe pour chaque GameLogEntry a partir de son contenu
+ * (audit determinisme replay : avant, `id` utilisait `Date.now()` +
+ * `Math.random()` ce qui rendait deux replays identiques non-egaux,
+ * cassant tout test `expect(state).toEqual(replay)`).
+ */
+function fnv1a32(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = (hash + ((hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24))) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
+/**
  * Crée une nouvelle entrée de log
  * @param type - Type de l'entrée de log
  * @param message - Message à logger
@@ -30,9 +46,25 @@ export function createLogEntry(
   team?: TeamId,
   details?: Record<string, unknown>
 ): GameLogEntry {
+  // BUG fix audit round 4 : id et timestamp sont desormais derives de
+  // maniere deterministe du contenu de l'entree. Avant, `Date.now()` +
+  // `Math.random()` cassaient la determinisme du `gameLog` entre deux
+  // replays avec la meme seed. Le hash FNV-1a sur le contenu suffit a
+  // l'unicite pratique (deux entrees distinctes ont quasi toujours un
+  // contenu different). timestamp=0 — UI accepte le perte cosmetique
+  // (formatTime affiche epoch mais c'est tolere en mode replay).
+  let detailsKey = '';
+  if (details !== undefined) {
+    try {
+      detailsKey = JSON.stringify(details);
+    } catch {
+      detailsKey = '[unserializable]';
+    }
+  }
+  const seed = `${type}|${message}|${playerId ?? ''}|${team ?? ''}|${detailsKey}`;
   return {
-    id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    timestamp: Date.now(),
+    id: `log-${fnv1a32(seed)}`,
+    timestamp: 0,
     type,
     message,
     playerId,

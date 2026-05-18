@@ -239,7 +239,7 @@ export function handleDodgeRoll(
       );
       next.gameLog = [...next.gameLog, gfiLogEntry];
       next.lastDiceResult = {
-        type: 'dodge' as never,
+        type: 'gfi',
         playerId: player.id,
         diceRoll: gfiRoll,
         targetNumber: gfiTarget,
@@ -366,7 +366,7 @@ export function handleNormalMove(
     );
     next.gameLog = [...next.gameLog, gfiLogEntry];
     next.lastDiceResult = {
-      type: 'dodge' as never,
+      type: 'gfi',
       playerId: player.id,
       diceRoll: gfiRoll,
       targetNumber: gfiTarget,
