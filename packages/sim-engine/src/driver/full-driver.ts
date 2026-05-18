@@ -82,8 +82,25 @@ const MAX_ACTIONS_PER_MATCH = 1500;
  * Si l'IA produit N END_TURN consécutifs sur le même état (no-op),
  * on force la fin du match. Garde-fou contre les états qui auraient
  * `getLegalMoves === [{ END_TURN }]` mais ne progressent pas.
+ *
+ * BUG fix : avant, la detection s'appuyait sur `turn/half/currentPlayer`
+ * — or `currentPlayer` flippe a chaque END_TURN normal, donc `advanced`
+ * etait quasi-toujours true et le compteur reset a 0. La detection
+ * etait neutralisee. Voir aussi `gamePhase` qui peut rester bloque
+ * en `'halftime'` ou `'post-td'` (pas de retour automatique vers
+ * `'playing'` sans completer le setup). On compte maintenant les
+ * END_TURN consecutifs en `gamePhase !== 'playing'` separement avec
+ * un seuil plus aggressif.
  */
 const MAX_STALE_END_TURNS = 4;
+
+/**
+ * Detection complementaire : si on emet plus de N END_TURN consecutifs
+ * pendant que `gamePhase !== 'playing'` (halftime/post-td), on force
+ * le break. Pendant ces phases, la boucle ne peut pas progresser
+ * sans completer un setup interactif que le full driver ne gere pas.
+ */
+const MAX_NON_PLAYING_END_TURNS = 3;
 
 /** Adapte un seed numérique au type RNG `() => number` du game-engine. */
 function adaptRng(rng: ReturnType<typeof createRng>): RNG {
@@ -297,6 +314,10 @@ export function runFullDriver(input: SimInput): SimResult {
 
   let actionsApplied = 0;
   let staleEndTurns = 0;
+  // BUG fix : compteur dedie aux END_TURN pendant `gamePhase !== 'playing'`.
+  // Le full driver n'a pas de chemin pour completer un kickoff setup ;
+  // pendant halftime/post-td, la boucle ne peut que spinning sur END_TURN.
+  let nonPlayingEndTurns = 0;
 
   while (state.gamePhase !== 'ended' && actionsApplied < MAX_ACTIONS_PER_MATCH) {
     const move = selectMoveForActiveTeam(state, ctx);
@@ -331,15 +352,31 @@ export function runFullDriver(input: SimInput): SimResult {
     // END_TURN via le catch, c'est ce END_TURN qui peut stagner — pas
     // le coup IA initial.
     if (appliedMove.type === 'END_TURN') {
-      const advanced =
+      // BUG fix : on detecte le « vraiment rien ne change » via un
+      // critere plus strict que `turn/half/currentPlayer` (qui flippe a
+      // chaque END_TURN normal). On regarde la phase et le tour.
+      const advancedPhase =
+        next.gamePhase !== prev.gamePhase ||
         next.turn !== prev.turn ||
-        next.half !== prev.half ||
-        next.currentPlayer !== prev.currentPlayer;
-      if (advanced) {
+        next.half !== prev.half;
+      const flippedTeam = next.currentPlayer !== prev.currentPlayer;
+      if (advancedPhase || flippedTeam) {
         staleEndTurns = 0;
       } else {
         staleEndTurns += 1;
         if (staleEndTurns > MAX_STALE_END_TURNS) break;
+      }
+
+      // BUG fix C1 : detecter les END_TURN pendant halftime/post-td.
+      // Le full driver n'a pas de chemin pour completer un kickoff
+      // setup interactif → la boucle spin jusqu'a MAX_ACTIONS_PER_MATCH.
+      // On force le break apres un petit nombre d'iterations en phase
+      // non-playing pour eviter de generer ~1300 events fantomes.
+      if (next.gamePhase !== 'playing' && next.gamePhase !== 'ended') {
+        nonPlayingEndTurns += 1;
+        if (nonPlayingEndTurns > MAX_NON_PLAYING_END_TURNS) break;
+      } else {
+        nonPlayingEndTurns = 0;
       }
     }
 
