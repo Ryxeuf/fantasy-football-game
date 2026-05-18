@@ -28,6 +28,13 @@ import { createLogEntry } from '../utils/logging';
  * Applique les consequences d'un echec de jet (chute, turnover,
  * armure, perte de balle).
  *
+ * BUG fix immutabilite : avant, le code mutait directement
+ * `state.players[playerIndex] = ...` (ecriture sur l'array partage avec
+ * le caller). `reroll-choose-handler.ts:87` passe un shallow clone
+ * `{...state, pendingReroll: undefined}` → `newState.players` est la
+ * MEME ref que `state.players` du dispatcher → corruption cross-state.
+ * Maintenant chaque mutation passe par un spread immutable.
+ *
  * @param armorBonus Bonus optionnel applique au jet d'armure (ex:
  *   +1 d'Arm Bar quand une esquive a echoue dans la zone de tacle
  *   d'un adversaire avec ce skill).
@@ -39,20 +46,22 @@ export function applyRollFailure(
   armorBonus = 0,
 ): GameState {
   const player = state.players[playerIndex];
-  state.isTurnover = true;
-  state.players[playerIndex] = { ...player, stunned: true };
 
-  // Jet d'armure (avec bonus eventuel d'Arm Bar). `armorBonus` est
-  // exprime comme bonus a l'attaquant (i.e. +1 facilite la cassure
-  // d'armure). Il est negativise ici car
-  // `performArmorRollWithNotification` attend un modificateur a
-  // appliquer au TARGET (positif = armure plus difficile a percer).
+  // Immutable : marque le joueur comme tombe + turnover.
+  let newState: GameState = {
+    ...state,
+    isTurnover: true,
+    players: state.players.map((p, i) =>
+      i === playerIndex ? { ...p, stunned: true } : p,
+    ),
+  };
+
+  // Jet d'armure (avec bonus eventuel d'Arm Bar).
   const armorResult = performArmorRollWithNotification(
-    state.players[playerIndex],
+    newState.players[playerIndex],
     rng,
     -armorBonus,
   );
-  state.lastDiceResult = armorResult;
   const armorLog = createLogEntry(
     'dice',
     `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${
@@ -67,42 +76,54 @@ export function applyRollFailure(
       armBar: armorBonus > 0,
     },
   );
-  state.gameLog = [...state.gameLog, armorLog];
+  newState = {
+    ...newState,
+    lastDiceResult: armorResult,
+    gameLog: [...newState.gameLog, armorLog],
+  };
 
-  // Si l'armure est percee (success = false), faire un jet de
-  // blessure
+  // Si l'armure est percee, faire un jet de blessure.
   if (!armorResult.success) {
-    state = performInjuryRoll(state, state.players[playerIndex], rng);
+    newState = performInjuryRoll(newState, newState.players[playerIndex], rng);
   }
 
-  // Perte de balle si le joueur la portait
+  // Perte de balle si le joueur la portait.
   if (player.hasBall) {
-    state.players[playerIndex] = {
-      ...state.players[playerIndex],
-      hasBall: false,
+    const fallenPlayer = newState.players[playerIndex];
+    newState = {
+      ...newState,
+      ball: { ...fallenPlayer.pos },
+      players: newState.players.map((p, i) =>
+        i === playerIndex ? { ...p, hasBall: false } : p,
+      ),
     };
-    state.ball = { ...state.players[playerIndex].pos };
-    return bounceBall(state, rng);
+    return bounceBall(newState, rng);
   }
 
-  return state;
+  return newState;
 }
 
 /**
  * Applique les consequences d'un echec de pickup (rebond + turnover).
+ *
+ * BUG fix immutabilite : avant, `state.isTurnover = true` et
+ * `state.gameLog = [...]` mutaient le parametre. Maintenant spread.
  */
 export function applyPickupFailure(
   state: GameState,
   playerIndex: number,
   rng: RNG,
 ): GameState {
-  state.isTurnover = true;
   const failLog = createLogEntry(
     'turnover',
     `Échec du ramassage - Turnover`,
     state.players[playerIndex].id,
     state.players[playerIndex].team,
   );
-  state.gameLog = [...state.gameLog, failLog];
-  return bounceBall(state, rng);
+  const newState: GameState = {
+    ...state,
+    isTurnover: true,
+    gameLog: [...state.gameLog, failLog],
+  };
+  return bounceBall(newState, rng);
 }

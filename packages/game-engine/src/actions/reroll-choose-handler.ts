@@ -84,7 +84,14 @@ export function handleRerollChoose(
     from,
     to,
   } = state.pendingReroll;
-  let newState: GameState = { ...state, pendingReroll: undefined };
+  // BUG fix immutabilite : shallow clone `{...state}` ne suffit pas car
+  // les helpers `applyRollFailure` / `applyPickupFailure` / `handleBallPickup`
+  // ont historiquement mute `state.players[idx]` directement. Avec un
+  // shallow clone, `newState.players` est la MEME ref que `state.players`
+  // du caller → corruption cross-state. Apres le fix immutabilite de ces
+  // helpers (cette PR), le shallow clone est SUFFISANT. On garde le
+  // structuredClone par defense-in-depth contre une regression future.
+  let newState: GameState = structuredClone({ ...state, pendingReroll: undefined }) as GameState;
 
   if (!move.useReroll) {
     // Relance refusee : appliquer les consequences de l'echec

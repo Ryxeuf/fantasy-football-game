@@ -36,6 +36,16 @@ import { canUseTeamReroll } from '../core/game-state';
  *  - echec -> propose relance d'equipe si dispo, sinon turnover +
  *    rebond.
  */
+/**
+ * BUG fix immutabilite : avant, `handleBallPickup` mutait directement
+ * le parametre `state` (state.gameLog = ..., state.players[idx].hasBall
+ * = true, state.ball = undefined, state.pendingReroll = ...). Certains
+ * callers (`reroll-choose-handler.ts:215`) passent un shallow clone
+ * `{...state, pendingReroll: undefined}`, donc `state.players` est la
+ * MEME reference que celle du caller original — la mutation
+ * `state.players[idx].hasBall = true` corrompait le state d'origine.
+ * Maintenant chaque mutation passe par un spread immutable.
+ */
 export function handleBallPickup(
   state: GameState,
   player: Player,
@@ -82,6 +92,9 @@ export function handleBallPickup(
     pickupModifiers,
   );
 
+  // Tracker les logs et state via accumulateur immutable.
+  let newState: GameState = state;
+
   // Sure Hands : relance automatique du pickup rate (via skill registry)
   if (!pickupResult.success && canSkillReroll(player, 'on-pickup', state)) {
     const rerollLog = createLogEntry(
@@ -90,16 +103,13 @@ export function handleBallPickup(
       player.id,
       player.team,
     );
-    state.gameLog = [...state.gameLog, rerollLog];
+    newState = { ...newState, gameLog: [...newState.gameLog, rerollLog] };
     pickupResult = performPickupRollWithNotification(
       player,
       rng,
       pickupModifiers,
     );
   }
-
-  // Stocker le resultat pour l'affichage
-  state.lastDiceResult = pickupResult;
 
   // Log du jet de pickup
   const pickupLogEntry = createLogEntry(
@@ -116,55 +126,65 @@ export function handleBallPickup(
       modifiers: pickupModifiers,
     },
   );
-  state.gameLog = [...state.gameLog, pickupLogEntry];
+  newState = {
+    ...newState,
+    lastDiceResult: pickupResult,
+    gameLog: [...newState.gameLog, pickupLogEntry],
+  };
 
   if (pickupResult.success) {
-    // Ramassage reussi : attacher la balle au joueur
-    state.ball = undefined;
-    state.players[idx].hasBall = true;
-
-    // Log du ramassage reussi
+    // Ramassage reussi : attacher la balle au joueur (immutable update).
     const successLogEntry = createLogEntry(
       'action',
       `Ballon ramassé avec succès`,
       player.id,
       player.team,
     );
-    state.gameLog = [...state.gameLog, successLogEntry];
+    newState = {
+      ...newState,
+      ball: undefined,
+      players: newState.players.map((p) =>
+        p.id === player.id ? { ...p, hasBall: true } : p,
+      ),
+      gameLog: [...newState.gameLog, successLogEntry],
+    };
 
     // Si pickup dans l'en-but adverse, touchdown immediat
-    const picker = state.players[idx];
-    if (isInOpponentEndzone(state, picker)) {
-      return awardTouchdown(state, picker.team, picker);
+    const picker = newState.players.find((p) => p.id === player.id);
+    if (picker && isInOpponentEndzone(newState, picker)) {
+      return awardTouchdown(newState, picker.team, picker);
     }
-  } else {
-    // Echec de pickup : offrir relance d'equipe si disponible
-    if (canUseTeamReroll(state, player.team)) {
-      state.pendingReroll = {
+    return newState;
+  }
+
+  // Echec de pickup : offrir relance d'equipe si disponible
+  if (canUseTeamReroll(newState, player.team)) {
+    return {
+      ...newState,
+      pendingReroll: {
         rollType: 'pickup',
         playerId: player.id,
         team: player.team,
         targetNumber: pickupResult.targetNumber,
         modifiers: pickupModifiers,
         playerIndex: idx,
-      };
-      return state;
-    }
-    // Pas de relance : la balle rebondit et turnover
-    state.isTurnover = true;
-
-    // Log du ramassage echoue
-    const failLogEntry = createLogEntry(
-      'turnover',
-      `Échec du ramassage - Turnover`,
-      player.id,
-      player.team,
-    );
-    state.gameLog = [...state.gameLog, failLogEntry];
-
-    // Faire rebondir la balle
-    return bounceBall(state, rng);
+      },
+    };
   }
 
-  return state;
+  // Pas de relance : la balle rebondit et turnover
+  const failLogEntry = createLogEntry(
+    'turnover',
+    `Échec du ramassage - Turnover`,
+    player.id,
+    player.team,
+  );
+  newState = {
+    ...newState,
+    isTurnover: true,
+    gameLog: [...newState.gameLog, failLogEntry],
+  };
+
+  // Faire rebondir la balle
+  return bounceBall(newState, rng);
 }
