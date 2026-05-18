@@ -475,4 +475,55 @@ describe('Règle: Mi-temps complète (B1.7)', () => {
       expect(finalState.weatherCondition).toEqual({ condition: 'Nice', description: 'Beau temps' });
     });
   });
+
+  describe('advanceHalfIfNeeded — pending cleanup (audit round 4)', () => {
+    it('clear tous les pending* mid-action au passage de mi-temps', () => {
+      const state = createHalftimeState({
+        // Simule un drive 1ere mi-temps qui se termine sur turnover
+        // alors qu'un pending mid-action n'a pas ete resolu.
+        pendingApothecary: {
+          playerId: 'A1',
+          team: 'A',
+          severity: 'badly-hurt',
+          fallbackToRegeneration: false,
+        } as any,
+        pendingReroll: {
+          rollType: 'gfi',
+          playerId: 'A1',
+          team: 'A',
+        } as any,
+        pendingBlock: { attackerId: 'A2', defenderId: 'B1' } as any,
+        pendingDumpOff: {
+          passer: { id: 'B1', team: 'B' },
+          pendingBlockMove: { type: 'BLOCK', attackerId: 'A2', defenderId: 'B1' },
+        } as any,
+        pendingPushChoice: { attackerId: 'A2', defenderId: 'B1', squares: [] } as any,
+        pendingFollowUpChoice: {
+          attackerId: 'A2',
+          fromPos: { x: 5, y: 5 },
+          toPos: { x: 6, y: 5 },
+        } as any,
+        pendingMultipleBlock: { attackerId: 'A2', defenderIds: ['B1', 'B2'] } as any,
+        pendingFrenzyBlock: { attackerId: 'A2', defenderId: 'B1' } as any,
+        pendingOnTheBall: {
+          interceptor: 'B3',
+          pendingPassMove: { type: 'PASS', playerId: 'A1', targetId: 'A2' },
+        } as any,
+        pendingKickoffEvent: { id: 'time-out' } as any,
+      });
+      const rng = makeRNG('halftime-pendings');
+      const result = advanceHalfIfNeeded(state, rng);
+
+      expect(result.pendingApothecary).toBeUndefined();
+      expect(result.pendingReroll).toBeUndefined();
+      expect(result.pendingBlock).toBeUndefined();
+      expect(result.pendingDumpOff).toBeUndefined();
+      expect(result.pendingPushChoice).toBeUndefined();
+      expect(result.pendingFollowUpChoice).toBeUndefined();
+      expect(result.pendingMultipleBlock).toBeUndefined();
+      expect(result.pendingFrenzyBlock).toBeUndefined();
+      expect(result.pendingOnTheBall).toBeUndefined();
+      expect(result.pendingKickoffEvent).toBeUndefined();
+    });
+  });
 });
