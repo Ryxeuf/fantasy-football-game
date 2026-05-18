@@ -128,6 +128,10 @@ export interface GameState {
   pendingKickoffEvent?: PendingKickoffEvent;
   // Tour de blitz kickoff en cours (équipe qui botte joue un tour immédiat)
   kickoffBlitzTurn?: boolean;
+  // Officious Ref (kickoff event 11) : pour ce drive, tout foul declenche
+  // un check D6 supplementaire ; sur 1 = expulsion automatique (en plus
+  // du doublet armor/injury). BB2020 LRB. Reset au prochain kickoff/TD.
+  officiousRefForDrive?: boolean;
   // Zones de dugout pour chaque équipe
   dugouts: {
     teamA: TeamDugout;

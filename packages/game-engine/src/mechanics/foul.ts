@@ -141,18 +141,79 @@ export function executeFoul(
   const isDoubles = armorDoubles || injuryDoubles;
   // Expulsion si doublet, sauf si l'attaquant possede Sneaky Git
   const sneakyGit = isSneakyGitActive(newState, attacker);
-  if (isDoubles && !sneakyGit) {
+
+  // BB2020 Officious Ref (kickoff event 11) : ce drive, chaque foul
+  // declenche un D6 supplementaire ; sur 1, le fouleur est expulse
+  // (en plus du doublet armor/injury). Le check s'ajoute, ne remplace pas.
+  let officiousRefSendOff = false;
+  if (newState.officiousRefForDrive) {
+    const refRoll = rollD6(rng);
+    const refLog = createLogEntry(
+      'dice',
+      `Officious Ref D6: ${refRoll}${refRoll === 1 ? ' → expulsion automatique' : ''}`,
+      attacker.id,
+      attacker.team,
+      { refRoll, officiousRef: true }
+    );
+    newState.gameLog = [...newState.gameLog, refLog];
+    officiousRefSendOff = refRoll === 1;
+  }
+
+  const sendOffTriggered = (isDoubles && !sneakyGit) || officiousRefSendOff;
+
+  if (sendOffTriggered) {
     const attackerPlayer = newState.players.find(p => p.id === attacker.id);
     if (attackerPlayer) {
-      const doublesSource = armorDoubles ? 'armure' : 'blessure';
-      const expulsionLog = createLogEntry(
-        'action',
-        `Doublet ${doublesSource} ! ${attacker.name} est expulsé par l'arbitre !`,
-        attacker.id,
-        attacker.team
-      );
-      newState.gameLog = [...newState.gameLog, expulsionLog];
-      newState = handleSentOff(newState, attackerPlayer);
+      // BB2020 Bribe : un coach peut depenser un Pot-de-vin pour eviter
+      // l'expulsion sur foul (D6 2+). Avant le fix, les bribes n'etaient
+      // jamais consultes sur foul send-off — l'inducement Bribe acheté
+      // specifiquement pour cet usage primaire (cf. catalogue.description)
+      // etait silencieusement mort. Roll D6 sur 2+ = bribe consume + skip.
+      const teamKey = attacker.team === 'A' ? 'teamA' : 'teamB';
+      const bribesAvailable = (newState.bribesRemaining?.[teamKey] ?? 0) > 0;
+      let bribeUsed = false;
+      if (bribesAvailable) {
+        const bribeRoll = rollD6(rng);
+        // Consommer le bribe que le jet reussisse ou non (BB rule).
+        newState.bribesRemaining = {
+          ...newState.bribesRemaining!,
+          [teamKey]: newState.bribesRemaining![teamKey] - 1,
+        };
+        if (bribeRoll >= 2) {
+          bribeUsed = true;
+          const bribeLog = createLogEntry(
+            'action',
+            `Pot-de-vin utilisé (D6: ${bribeRoll}) — ${attacker.name} échappe à l'expulsion. Bribes restantes : ${newState.bribesRemaining[teamKey]}`,
+            attacker.id,
+            attacker.team,
+            { bribeRoll, bribesRemaining: newState.bribesRemaining[teamKey] }
+          );
+          newState.gameLog = [...newState.gameLog, bribeLog];
+        } else {
+          const bribeFailLog = createLogEntry(
+            'action',
+            `Pot-de-vin gaspillé (D6: ${bribeRoll}) — ${attacker.name} sera expulsé. Bribes restantes : ${newState.bribesRemaining[teamKey]}`,
+            attacker.id,
+            attacker.team,
+            { bribeRoll, bribesRemaining: newState.bribesRemaining[teamKey] }
+          );
+          newState.gameLog = [...newState.gameLog, bribeFailLog];
+        }
+      }
+
+      if (!bribeUsed) {
+        const source = officiousRefSendOff && !isDoubles
+          ? 'Officious Ref'
+          : (armorDoubles ? 'Doublet armure' : 'Doublet blessure');
+        const expulsionLog = createLogEntry(
+          'action',
+          `${source} ! ${attacker.name} est expulsé par l'arbitre !`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, expulsionLog];
+        newState = handleSentOff(newState, attackerPlayer);
+      }
     }
   } else if (isDoubles && sneakyGit) {
     const sneakyLog = createLogEntry(
