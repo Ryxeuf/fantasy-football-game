@@ -45,7 +45,7 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     gameLog: [],
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     ...overrides,
   };
 }
@@ -53,7 +53,7 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
 describe('Regle: Apothecaire', () => {
   describe('Eligibilite', () => {
     it('ne devrait PAS proposer l\'apothecaire pour un resultat Stunned', () => {
-      const state = createTestState({ apothecaryAvailable: { teamA: true, teamB: false } });
+      const state = createTestState({ apothecaryAvailable: { teamA: 1, teamB: 0 } });
       // RNG: low rolls → stunned (2-7)
       const rng = () => 0.01;
       const result = performInjuryRoll(state, state.players[0], rng);
@@ -64,7 +64,7 @@ describe('Regle: Apothecaire', () => {
     });
 
     it('devrait proposer l\'apothecaire pour un resultat KO quand disponible', () => {
-      const state = createTestState({ apothecaryAvailable: { teamA: true, teamB: false } });
+      const state = createTestState({ apothecaryAvailable: { teamA: 1, teamB: 0 } });
       // RNG: 0.5 per die → 4+4 = 8 (KO range)
       const rng = () => 0.5;
       const result = performInjuryRoll(state, state.players[0], rng);
@@ -76,7 +76,7 @@ describe('Regle: Apothecaire', () => {
     });
 
     it('devrait proposer l\'apothecaire pour un resultat Casualty quand disponible', () => {
-      const state = createTestState({ apothecaryAvailable: { teamA: true, teamB: false } });
+      const state = createTestState({ apothecaryAvailable: { teamA: 1, teamB: 0 } });
       let callCount = 0;
       const rng = () => {
         callCount++;
@@ -92,7 +92,7 @@ describe('Regle: Apothecaire', () => {
     });
 
     it('ne devrait PAS proposer l\'apothecaire si deja utilise', () => {
-      const state = createTestState({ apothecaryAvailable: { teamA: false, teamB: false } });
+      const state = createTestState({ apothecaryAvailable: { teamA: 0, teamB: 0 } });
       // KO roll
       const rng = () => 0.5;
       const result = performInjuryRoll(state, state.players[0], rng);
@@ -102,7 +102,7 @@ describe('Regle: Apothecaire', () => {
 
     it('ne devrait PAS proposer l\'apothecaire pour l\'equipe adverse', () => {
       // Team A player injured, only team B has apothecary
-      const state = createTestState({ apothecaryAvailable: { teamA: false, teamB: true } });
+      const state = createTestState({ apothecaryAvailable: { teamA: 0, teamB: 1 } });
       const rng = () => 0.5; // KO
       const result = performInjuryRoll(state, state.players[0], rng);
 
@@ -114,7 +114,7 @@ describe('Regle: Apothecaire', () => {
     it('devrait deplacer le joueur en Reserves quand apothecaire utilise sur KO', () => {
       // Setup: player already in KO zone with pendingApothecary
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -132,14 +132,14 @@ describe('Regle: Apothecaire', () => {
       expect(result.dugouts.teamA.zones.knockedOut.players).not.toContain('A1');
       expect(result.dugouts.teamA.zones.reserves.players).toContain('A1');
       // Apothecary consumed
-      expect(result.apothecaryAvailable.teamA).toBe(false);
+      expect(result.apothecaryAvailable.teamA).toBe(0);
       // Pending cleared
       expect(result.pendingApothecary).toBeUndefined();
     });
 
     it('devrait laisser le joueur KO quand apothecaire refuse', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -155,7 +155,7 @@ describe('Regle: Apothecaire', () => {
       // Player stays in KO
       expect(result.dugouts.teamA.zones.knockedOut.players).toContain('A1');
       // Apothecary NOT consumed
-      expect(result.apothecaryAvailable.teamA).toBe(true);
+      expect(result.apothecaryAvailable.teamA).toBe(1);
       // Pending cleared
       expect(result.pendingApothecary).toBeUndefined();
     });
@@ -164,7 +164,7 @@ describe('Regle: Apothecaire', () => {
   describe('Utilisation sur Casualty', () => {
     it('devrait re-lancer le D16 et garder le meilleur resultat', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -187,13 +187,13 @@ describe('Regle: Apothecaire', () => {
       // Better casualty result applied
       expect(result.casualtyResults['A1']).toBe('badly_hurt');
       // Apothecary consumed
-      expect(result.apothecaryAvailable.teamA).toBe(false);
+      expect(result.apothecaryAvailable.teamA).toBe(0);
       expect(result.pendingApothecary).toBeUndefined();
     });
 
     it('devrait garder le resultat original si le re-roll est pire', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -215,12 +215,12 @@ describe('Regle: Apothecaire', () => {
       // Keeps original better result
       expect(result.casualtyResults['A1']).toBe('badly_hurt');
       // Apothecary consumed
-      expect(result.apothecaryAvailable.teamA).toBe(false);
+      expect(result.apothecaryAvailable.teamA).toBe(0);
     });
 
     it('devrait laisser le joueur en Casualty quand apothecaire refuse', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -240,13 +240,13 @@ describe('Regle: Apothecaire', () => {
       expect(result.dugouts.teamA.zones.casualty.players).toContain('A1');
       expect(result.casualtyResults['A1']).toBe('seriously_hurt');
       // Apothecary NOT consumed
-      expect(result.apothecaryAvailable.teamA).toBe(true);
+      expect(result.apothecaryAvailable.teamA).toBe(1);
       expect(result.pendingApothecary).toBeUndefined();
     });
 
     it('devrait conserver les lasting injury details du meilleur resultat', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -284,7 +284,7 @@ describe('Regle: Apothecaire', () => {
       const playerB = createTestPlayer({ id: 'B1', team: 'B', name: 'Team B Player' });
       const state = createTestState({
         players: [playerB],
-        apothecaryAvailable: { teamA: false, teamB: true },
+        apothecaryAvailable: { teamA: 0, teamB: 1 },
       });
 
       // KO roll
@@ -299,7 +299,7 @@ describe('Regle: Apothecaire', () => {
   describe('Game log', () => {
     it('devrait ajouter une entree de log quand l\'apothecaire est utilise', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',
@@ -318,7 +318,7 @@ describe('Regle: Apothecaire', () => {
 
     it('devrait ajouter une entree de log quand l\'apothecaire est refuse', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
         pendingApothecary: {
           playerId: 'A1',
           team: 'A',

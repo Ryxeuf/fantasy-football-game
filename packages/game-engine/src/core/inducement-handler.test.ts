@@ -24,7 +24,7 @@ function createMockState(overrides: Partial<ExtendedGameState> = {}): ExtendedGa
     teamNames: { teamA: "Skaven", teamB: "Lizardmen" },
     dugouts: { teamA: { reserves: [], ko: [], casualties: [], dead: [], expelled: [] }, teamB: { reserves: [], ko: [], casualties: [], dead: [], expelled: [] } },
     matchStats: {},
-    apothecaryAvailable: { teamA: true, teamB: false },
+    apothecaryAvailable: { teamA: 1, teamB: 0 },
     preMatch: {
       phase: "inducements",
       currentCoach: "A",

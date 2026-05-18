@@ -35,7 +35,7 @@ function makeStateWithApothecary(player: Player): GameState {
       originalLastingInjury: undefined,
       fallbackToRegeneration: false,
     },
-    apothecaryAvailable: { teamA: true, teamB: true },
+    apothecaryAvailable: { teamA: 1, teamB: 1 },
   };
 }
 

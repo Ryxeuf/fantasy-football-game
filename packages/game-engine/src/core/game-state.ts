@@ -148,8 +148,8 @@ export function setupPreMatchWithTeams(
     },
     rerollUsedThisTurn: false,
     apothecaryAvailable: {
-      teamA: options?.teamAApothecary ?? false,
-      teamB: options?.teamBApothecary ?? false,
+      teamA: options?.teamAApothecary ? 1 : 0,
+      teamB: options?.teamBApothecary ? 1 : 0,
     },
     // Informations de match
     gamePhase: 'playing' as const,
@@ -306,7 +306,7 @@ export function setupPreMatch(): GameState {
     teamFoulCount: {} as Record<string, number>,
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     // Informations de match
     gamePhase: 'playing' as const,
     half: 0, // Pas de mi-temps en phase pré-match
@@ -422,7 +422,7 @@ export function setup(): GameState {
     // Relances d'équipe (3 par défaut pour les matchs de démonstration)
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     // Informations de match
     gamePhase: 'playing' as const,
     half: 1,

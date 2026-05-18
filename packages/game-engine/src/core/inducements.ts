@@ -372,13 +372,18 @@ export function applyInducementEffects(
 
       case 'wandering_apothecary':
       case 'igor': {
-        // Grant apothecary availability (or extra use for wandering apothecary)
+        // BB2020 : Wandering Apothecary = +1 use (cumulatif avec un
+        // apothecary natif). Igor = idem pour les equipes sans apothecary
+        // natif. Avant le fix, `apothecaryAvailable` etait boolean :
+        // l'achat sur une equipe deja apothecary etait un silent no-op.
+        // Maintenant on incremente le compteur par `quantity`.
         const apoKey = teamId === 'A' ? 'teamA' : 'teamB';
+        const current = newState.apothecaryAvailable[apoKey] ?? 0;
         newState = {
           ...newState,
           apothecaryAvailable: {
             ...newState.apothecaryAvailable,
-            [apoKey]: true,
+            [apoKey]: current + item.quantity,
           },
         };
         break;

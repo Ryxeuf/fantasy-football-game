@@ -34,7 +34,10 @@ export function isApothecaryAvailable(state: GameState, playerId: string): boole
 
   if (!state.apothecaryAvailable) return false;
   const teamKey = player.team === 'A' ? 'teamA' : 'teamB';
-  return state.apothecaryAvailable[teamKey] === true;
+  // BB2020 : apothecaryAvailable est un compteur (un apothecary natif
+  // ou achete via Wandering Apothecary/Igor inducement = +1 use). Le
+  // joueur peut soigner si compteur > 0.
+  return (state.apothecaryAvailable[teamKey] ?? 0) > 0;
 }
 
 /**
@@ -106,11 +109,12 @@ export function applyApothecaryChoice(
     return newState;
   }
 
-  // Consume apothecary
+  // Consume apothecary (decrement count, min 0)
   const teamKey = pending.team === 'A' ? 'teamA' : 'teamB';
+  const current = newState.apothecaryAvailable[teamKey] ?? 0;
   newState.apothecaryAvailable = {
     ...newState.apothecaryAvailable,
-    [teamKey]: false,
+    [teamKey]: Math.max(0, current - 1),
   };
 
   const playerName = getPlayerName(newState, pending.playerId);

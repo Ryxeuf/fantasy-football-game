@@ -52,7 +52,7 @@ function makeState(players: Player[]): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
-    apothecaryAvailable: { teamA: true, teamB: true },
+    apothecaryAvailable: { teamA: 1, teamB: 1 },
     teamNames: { teamA: 'Team A', teamB: 'Team B' },
     gameLog: [],
     half: 1,

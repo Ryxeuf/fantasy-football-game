@@ -250,7 +250,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     case 'BLOCK_CHOOSE':
       return resolveMultipleBlock(resolveFrenzyBlock(handleBlockChoose(activeState, move, rng), rng), rng);
     case 'PUSH_CHOOSE':
-      return resolveMultipleBlock(resolveFrenzyBlock(handlePushChoose(activeState, move), rng), rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handlePushChoose(activeState, move, rng), rng), rng);
     case 'FOLLOW_UP_CHOOSE':
       return resolveMultipleBlock(resolveFrenzyBlock(handleFollowUpChoose(activeState, move), rng), rng);
     case 'BLITZ':
