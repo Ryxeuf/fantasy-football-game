@@ -1,3 +1,17 @@
+## [1.121.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.1...v1.121.2) (2026-05-18)
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** bribes sur foul send-off + Officious Ref drive flag ([#829](https://github.com/Ryxeuf/fantasy-football-game/issues/829)) ([b1a49be](https://github.com/Ryxeuf/fantasy-football-game/commit/b1a49be6e858e3b7a4569ab1814230f0e5c90706))
+* **game-engine:** combat misc BB3 S3 — Stab+MB exclusif + Wrestle turnover ([#831](https://github.com/Ryxeuf/fantasy-football-game/issues/831)) ([77137c3](https://github.com/Ryxeuf/fantasy-football-game/commit/77137c3f5bca1d2889f8738b4706de828b085c03))
+* **game-engine:** déterminisme push chain + Wandering Apothecary cumulatif (CRITICAL) ([#828](https://github.com/Ryxeuf/fantasy-football-game/issues/828)) ([6416d0d](https://github.com/Ryxeuf/fantasy-football-game/commit/6416d0d985096310c29ce96fef5393a02830ed74))
+* **game-engine:** edge cases BB3 S3 — PA=0 + Pitch Invasion réserves ([#833](https://github.com/Ryxeuf/fantasy-football-game/issues/833)) ([8e9112d](https://github.com/Ryxeuf/fantasy-football-game/commit/8e9112d135ee4d1412923f6f1600ccc50bd80579))
+* **game-engine:** lasting injury stat reduction immediate (BB3 S3) ([a9f6fc1](https://github.com/Ryxeuf/fantasy-football-game/commit/a9f6fc18227378b922879cb673bcb208eefe5db6))
+* **game-engine:** once-per-match consumption élargi + Diving Tackle Prone (BB3 S3) ([#832](https://github.com/Ryxeuf/fantasy-football-game/issues/832)) ([dccec13](https://github.com/Ryxeuf/fantasy-football-game/commit/dccec1311adf11d54bfd82a8c46ec236db1378fb))
+* **game-engine:** règles core BB3 S3 — Dauntless, Frenzy/Fend, Hypnotic Gaze, Bloodlust ([#830](https://github.com/Ryxeuf/fantasy-football-game/issues/830)) ([3d71891](https://github.com/Ryxeuf/fantasy-football-game/commit/3d71891445d1d31c3d1801dffc8396fd95f79fec))
+* **sim-engine:** resolver corrections BB3 — sent_off + pa pour passes ([94577fa](https://github.com/Ryxeuf/fantasy-football-game/commit/94577fa18d4c47ef23ce84c9a525e4ce8d53d734)), closes [#823](https://github.com/Ryxeuf/fantasy-football-game/issues/823) [#824](https://github.com/Ryxeuf/fantasy-football-game/issues/824) [#834](https://github.com/Ryxeuf/fantasy-football-game/issues/834)
+
 ## [1.121.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.0...v1.121.1) (2026-05-18)
 
 
