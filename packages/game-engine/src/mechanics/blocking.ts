@@ -832,31 +832,32 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
     !juggernautNegatesTargetWrestle && checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;
 
-  // Wrestle: les deux tombent, pas de jet d'armure, pas de turnover
+  // BB3 S3 Wrestle : « Both players are Placed Prone. No Armour rolls
+  // are made. A Turnover is caused as the active team's Block action
+  // ends without successfully resolving (the attacker has been knocked
+  // down). » Avant le fix, le turnover etait conditionne a la perte du
+  // ballon — incorrect. L'attaquant est tombe → turnover automatique.
   if (wrestleActive) {
     state.players = state.players.map(p => {
       if (p.id === attacker.id) return { ...p, stunned: true };
       if (p.id === target.id) return { ...p, stunned: true };
       return p;
     });
+    state.isTurnover = true; // BB3 S3 : attaquant tombe → turnover.
 
     const wrestleUser = attackerHasWrestle ? attacker.name : target.name;
     const wrestleLog = createLogEntry(
       'action',
-      `Les Deux Plaqués — ${wrestleUser} utilise Wrestle : ${attacker.name} et ${target.name} sont mis au sol (pas de jet d'armure)`,
+      `Les Deux Plaqués — ${wrestleUser} utilise Wrestle : ${attacker.name} et ${target.name} sont mis au sol (pas de jet d'armure, turnover)`,
       attacker.id,
       attacker.team
     );
     state.gameLog = [...state.gameLog, wrestleLog];
 
-    // Pas de jets d'armure avec Wrestle
-    // Mais si l'attaquant perd le ballon en tombant, c'est un turnover (BB2020)
-
-    // Si l'attaquant avait le ballon, il le perd → turnover
+    // Si l'attaquant avait le ballon, il le perd
     if (attacker.hasBall) {
       state.players = state.players.map(p => (p.id === attacker.id ? { ...p, hasBall: false } : p));
       state.ball = { ...attacker.pos };
-      state.isTurnover = true;
     }
 
     // Si le défenseur avait le ballon, il le perd

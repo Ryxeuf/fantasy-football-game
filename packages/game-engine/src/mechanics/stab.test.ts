@@ -170,7 +170,10 @@ describe('Regle: Stab', () => {
       expect(result.isTurnover).toBe(false);
     });
 
-    it('applies Mighty Blow bonus on the armor roll when stabber has mighty-blow', () => {
+    it("BB3 S3 : Stab N'EST PAS combine avec Mighty Blow", () => {
+      // BB3 S3 LRB Stab : « Stab may NOT be combined with the Mighty
+      // Blow skill. » Avant le fix, Mighty Blow donnait +1 a l'armure
+      // de Stab. Maintenant le bonus est explicitement exclu.
       const state = createStabTestState();
       state.players = state.players.map(p =>
         p.id === 'A1' ? { ...p, skills: ['stab', 'mighty-blow'] } : p
@@ -180,13 +183,13 @@ describe('Regle: Stab', () => {
       );
       const stabber = state.players.find(p => p.id === 'A1')!;
       const target = state.players.find(p => p.id === 'B1')!;
-      // Armor roll 2D6 = 8 → without MB fails vs AV 9; with MB -1 → target 8 → broken
-      const rng = makeTestRNG([0.5, 0.5]); // each 0.5 → 4, total 8
+      const rng = makeTestRNG([0.5, 0.5]); // 4+4=8
       const result = executeStab(state, stabber, target, rng);
-      // Because target is exactly 8 and armor roll is 8, broken happens if modifier applied
+
       const armorResult = result.lastDiceResult;
       expect(armorResult).toBeDefined();
-      expect(armorResult!.modifiers).toBe(-1);
+      // BB3 S3 : aucun modifier Mighty Blow sur Stab armor.
+      expect(armorResult!.modifiers).toBe(0);
     });
 
     it('adds log entries for the stab action', () => {
