@@ -245,12 +245,28 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
       injuryType,
       missNextMatch: true,
     };
+    // BB3 S3 : la lasting injury reduit immediatement la stat du joueur
+    // sur le terrain. Avant le fix, le type etait stocke dans
+    // `lastingInjuryDetails` mais `player.ma/av/ag/pa/st` n'etait jamais
+    // decrement. La casualty etait purement cosmetique. Maintenant on
+    // applique la reduction immediatement (clamp min 1 pour eviter 0).
+    newState.players = newState.players.map(p => {
+      if (p.id !== player.id) return p;
+      switch (injuryType) {
+        case '-1ma': return { ...p, ma: Math.max(1, p.ma - 1) };
+        case '-1av': return { ...p, av: Math.max(1, p.av - 1) };
+        case '-1ag': return { ...p, ag: Math.max(1, p.ag - 1) };
+        case '-1pa': return { ...p, pa: Math.max(0, p.pa - 1) };
+        case '-1st': return { ...p, st: Math.max(1, p.st - 1) };
+        default: return p;
+      }
+    });
     const lastingInjuryLog = createLogEntry(
       'action',
       `${player.name} a une blessure permanente - ${LASTING_INJURY_LABELS[injuryType]} + manquera le prochain match`,
       player.id,
       player.team,
-      { injuryType }
+      { injuryType, statReduced: true }
     );
     newState.gameLog = [...newState.gameLog, lastingInjuryLog];
   } else {
