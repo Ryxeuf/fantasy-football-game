@@ -146,7 +146,9 @@ function calculateStaffCost(data: TeamValueData): number {
   }
   
   // Fans Dévoués: 10k po chacun au-dessus du premier (gratuit)
-  cost += (data.dedicatedFans - 1) * 10000;
+  // BUG fix : si `dedicatedFans` = 0 (equipe nouvelle pas encore loggee),
+  // (0 - 1) * 10000 = -10000 → cout total negatif. Clamp via Math.max(0).
+  cost += Math.max(0, data.dedicatedFans - 1) * 10000;
   
   return cost;
 }

@@ -7,6 +7,7 @@
 import { GameState, TeamId, Player, RNG } from '../core/types';
 import { createLogEntry } from '../utils/logging';
 import { rollD6, roll2D6 } from '../utils/dice';
+import { hasSkill } from '../skills/skill-effects';
 import { isApothecaryAvailable as isApothecaryAvailableFn } from './apothecary';
 import { hasRegeneration as hasRegenerationFn, tryRegeneration as tryRegenerationFn } from './regeneration';
 
@@ -187,8 +188,21 @@ function getOpponentTeam(team: TeamId): TeamId {
 // Injury roll helper (simplified for pre-match prayer context)
 // ---------------------------------------------------------------------------
 
-function performPrayerInjuryRoll(rng: RNG): 'stunned' | 'knocked_out' | 'casualty' {
-  const injuryRoll = roll2D6(rng);
+function performPrayerInjuryRoll(
+  rng: RNG,
+  target?: Player,
+): 'stunned' | 'knocked_out' | 'casualty' {
+  // BUG fix : aligner le jet de Prayer 14 (Throw a Rock!) avec
+  // `performInjuryRoll` :
+  //  - Stunty cible : -1 a l'injury (le caillou les fait moins de
+  //    degats par rapport a la table de blessure standard) — non,
+  //    Stunty s'applique au jet de CASUALTY, pas au jet de blessure.
+  //  - Armored Skull : -1 a tout injury roll (BB3 S2/S3).
+  // Avant le fix, le jet de Prayer 14 etait nu (pas de modificateurs
+  // de skill defensifs), ce qui surevaluait les KOs / casualties sur
+  // les cibles armored.
+  const armoredSkullMod = target && hasSkill(target, 'armored-skull') ? -1 : 0;
+  const injuryRoll = roll2D6(rng) + armoredSkullMod;
   if (injuryRoll <= 7) return 'stunned';
   if (injuryRoll <= 9) return 'knocked_out';
   return 'casualty';
@@ -502,7 +516,7 @@ export function applyPrayerEffect(
         return { state, description: `${prayer.nameFr} — Aucun joueur adverse disponible.` };
       }
 
-      const injuryOutcome = performPrayerInjuryRoll(rng);
+      const injuryOutcome = performPrayerInjuryRoll(rng, target);
       let newState: GameState;
 
       switch (injuryOutcome) {
