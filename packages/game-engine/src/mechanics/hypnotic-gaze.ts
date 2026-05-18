@@ -73,10 +73,18 @@ export function executeHypnoticGaze(
   );
   newState.gameLog = [...newState.gameLog, actionLog];
 
-  // Calcul des modificateurs et jet de dé
+  // BB3 Season 3 Hypnotic Gaze : « Il faut un 3+ pour reussir tout le
+  // temps. Plus de malus pour marquage. » (cf. skill description
+  // index.ts:650 — BB3 simplification du BB2020 LRB). Le seuil est
+  // FLAT 3+ sans malus de marquage. Avant le fix, le seuil etait base
+  // sur l'AG du gazer (max(2, min(6, gazer.ag - modifiers))) — un
+  // gazer AG3+ obtenait 3+ par accident, mais un AG4+ obtenait un seuil
+  // 2+ injuste, ET les TZ adverses penalisaient le jet contre la regle BB3.
   const modifiers = calculateGazeModifiers(newState, gazer, target);
   const diceRoll = rollD6(rng);
-  const targetNumber = Math.max(2, Math.min(6, gazer.ag - modifiers));
+  // BB3 S3 : flat 3+, ignore marking modifier. `modifiers` n'est plus
+  // applique au seuil (log conserve pour traçabilite).
+  const targetNumber = 3;
   const success = diceRoll >= targetNumber && diceRoll !== 1;
 
   const diceResult: DiceResult = {

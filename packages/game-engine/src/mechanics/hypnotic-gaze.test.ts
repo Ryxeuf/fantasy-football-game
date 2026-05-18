@@ -167,9 +167,11 @@ describe('Regle: Hypnotic Gaze', () => {
       const state = createGazeTestState();
       const gazer = state.players.find(p => p.id === 'A1')!;
       const target = state.players.find(p => p.id === 'B1')!;
-      // AG 2+ → target number 2, roll 2 → success
-      // RNG value (0..1): for roll of 2 on d6, need value in [1/6, 2/6) → 0.17
-      const rng = makeTestRNG([0.17]);
+      // BB2020 : target number fixe a 3+ (modifie par TZ adverses).
+      // Avant le fix, target etait base sur gazer.ag, ce qui donnait 2+ pour
+      // un gazer AG3+ — c'etait incorrect. Maintenant 3+ avec roll=3 -> success.
+      // RNG value for roll=3: [2/6, 3/6) → 0.4.
+      const rng = makeTestRNG([0.4]);
       const result = executeHypnoticGaze(state, gazer, target, rng);
       expect(result.hypnotizedPlayers).toContain('B1');
     });

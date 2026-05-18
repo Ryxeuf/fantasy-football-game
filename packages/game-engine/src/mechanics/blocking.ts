@@ -1086,23 +1086,18 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
 
     state = applyChainPush(state, target.id, pushDirection, rng);
 
-    if (fendActive) {
-      const fendLog = createLogEntry(
-        'action',
-        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
-        target.id,
-        target.team,
-        { skill: 'fend' },
-      );
-      state.gameLog = [...state.gameLog, fendLog];
-    } else if (frenzyActive) {
-      // Frenzy : follow-up obligatoire + second bloc
+    // BB2020 LRB Fend : « This skill has no effect against the Frenzy skill. »
+    // → Frenzy bypass Fend. Avant le fix, Fend bloquait Frenzy (l'inverse
+    // de la regle officielle). Maintenant Frenzy a la priorite ; Fend
+    // s'applique uniquement si l'attaquant n'a pas Frenzy active.
+    if (frenzyActive) {
+      // Frenzy : follow-up obligatoire + second bloc (priorite sur Fend)
       state.players = state.players.map(p =>
         p.id === attacker.id ? { ...p, pos: target.pos } : p
       );
       const frenzyFollowLog = createLogEntry(
         'action',
-        `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
+        `${attacker.name} suit ${target.name} (Frenzy — obligatoire, ignore Fend)`,
         attacker.id,
         attacker.team,
         { skill: 'frenzy' },
@@ -1112,6 +1107,15 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
         attackerId: attacker.id,
         targetId: target.id,
       };
+    } else if (fendActive) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      state.gameLog = [...state.gameLog, fendLog];
     } else {
       // Follow-up is optional on PUSH_BACK — let the attacker choose
       state.pendingFollowUpChoice = {
