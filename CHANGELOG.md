@@ -1,3 +1,12 @@
+## [1.120.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.2...v1.120.3) (2026-05-18)
+
+
+### 🐛 Bug Fixes
+
+* **game-engine,sim-engine:** corrections BB2020 sur les fouls ([#823](https://github.com/Ryxeuf/fantasy-football-game/issues/823)) ([7f2913f](https://github.com/Ryxeuf/fantasy-football-game/commit/7f2913f9751a1add484d9105058dbd5dcbae265c)), closes [#822](https://github.com/Ryxeuf/fantasy-football-game/issues/822) [post-#822](https://github.com/Ryxeuf/post-/issues/822)
+* **game-engine:** corrections combat misc BB2020 ([60d521f](https://github.com/Ryxeuf/fantasy-football-game/commit/60d521f96787b4f423ece8b03f0f63b8be1add9a))
+* **game-engine:** Frenzy chain limitée + handleBlitz immutable (CRITICAL) ([#822](https://github.com/Ryxeuf/fantasy-football-game/issues/822)) ([59f60fe](https://github.com/Ryxeuf/fantasy-football-game/commit/59f60fef30e031e200708dde58a000d615ca6b25))
+
 ## [1.120.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.1...v1.120.2) (2026-05-18)
 
 
