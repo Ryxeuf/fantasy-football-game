@@ -24,10 +24,17 @@ vi.mock("../prisma", () => ({
       upsert: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     proLeagueMatch: {
       findUnique: vi.fn(),
     },
+    // Audit round 5 : settlePicksForMatch wrap dans $transaction([...])
+    // — Prisma s'attend a un tableau de PrismaPromise. On simule en
+    // resolvant juste avec le tableau (les operations sont deja
+    // mockees individuellement).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: vi.fn(async (ops: any[]) => Promise.all(ops)),
   },
 }));
 
@@ -445,11 +452,11 @@ describe("getLeagueLeaderboard", () => {
 
     const lb = await getLeagueLeaderboard("l1");
 
+    // Audit round 5 : `userEmail` retire du leaderboard (PII).
     expect(lb).toEqual([
       {
         userId: "u1",
         userName: "Alice",
-        userEmail: "a@x.com",
         totalPicks: 0,
         correctPicks: 0,
         accuracy: 0,
@@ -478,11 +485,14 @@ describe("settlePicksForMatch", () => {
       picksSettled: 3,
       correctPicks: 1,
     });
-    expect(mockedPrisma.proPredictionPick.update).toHaveBeenCalledTimes(3);
-    const firstUpdate = mockedPrisma.proPredictionPick.update.mock.calls[0][0];
-    expect(firstUpdate.data).toEqual({ result: "home", correct: true });
-    const secondUpdate = mockedPrisma.proPredictionPick.update.mock.calls[1][0];
-    expect(secondUpdate.data).toEqual({ result: "home", correct: false });
+    // Audit round 5 : settlePicksForMatch utilise maintenant 2
+    // updateMany (correct=true + correct=false) dans une $transaction.
+    expect(mockedPrisma.proPredictionPick.updateMany).toHaveBeenCalledTimes(2);
+    const calls = mockedPrisma.proPredictionPick.updateMany.mock.calls;
+    expect(calls[0][0].data).toEqual({ result: "home", correct: true });
+    expect(calls[0][0].where).toEqual({ id: { in: ["p1"] } });
+    expect(calls[1][0].data).toEqual({ result: "home", correct: false });
+    expect(calls[1][0].where).toEqual({ id: { in: ["p2", "p3"] } });
   });
 
   it("draw → tous les pickers draw sont corrects", async () => {
@@ -515,5 +525,8 @@ describe("settlePicksForMatch", () => {
       correctPicks: 0,
     });
     expect(mockedPrisma.proPredictionPick.update).not.toHaveBeenCalled();
+    // Audit round 5 : updateMany est appele meme avec un id-in vide,
+    // mais Prisma le no-op cote DB. Le test verifie juste qu'on ne
+    // touche pas .update() (loop sequentiel ancien).
   });
 });

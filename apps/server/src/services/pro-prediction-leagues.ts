@@ -257,7 +257,12 @@ export async function submitPick(input: SubmitPickInput): Promise<{
 export interface LeaderboardEntry {
   readonly userId: string;
   readonly userName: string | null;
-  readonly userEmail: string;
+  // BUG fix audit round 5 (HIGH/PII) : avant, `userEmail` etait
+  // expose dans la response du leaderboard. Tout membre d'une mini-
+  // ligue de prediction pouvait alors harvester les emails des
+  // autres membres via l'API → fuite PII / GDPR. Champ supprime ;
+  // le UI doit utiliser `userName` (fallback sur un alias derive de
+  // `userId` cote frontend si besoin).
   readonly totalPicks: number;
   readonly correctPicks: number;
   readonly accuracy: number;
@@ -274,15 +279,16 @@ export interface LeaderboardEntry {
 export async function getLeagueLeaderboard(
   leagueId: string,
 ): Promise<LeaderboardEntry[]> {
+  // Audit round 5 : drop `email` du select pour eviter la fuite PII.
   const members = (await prisma.proPredictionLeagueMember.findMany({
     where: { leagueId },
     select: {
       userId: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as Array<{
     userId: string;
-    user: { name: string | null; email: string };
+    user: { name: string | null };
   }>;
 
   if (members.length === 0) return [];
@@ -314,7 +320,6 @@ export async function getLeagueLeaderboard(
     return {
       userId: m.userId,
       userName: m.user.name,
-      userEmail: m.user.email,
       totalPicks: s.total,
       correctPicks: s.correct,
       accuracy,
@@ -326,8 +331,9 @@ export async function getLeagueLeaderboard(
       return b.correctPicks - a.correctPicks;
     }
     if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
-    const nameA = a.userName ?? a.userEmail;
-    const nameB = b.userName ?? b.userEmail;
+    // Audit round 5 : fallback sur userId (pas email) pour le sort.
+    const nameA = a.userName ?? a.userId;
+    const nameB = b.userName ?? b.userId;
     return nameA.localeCompare(nameB);
   });
 
@@ -363,20 +369,37 @@ export async function settlePicksForMatch(
     select: { id: true, selection: true },
   })) as Array<{ id: string; selection: string }>;
 
-  let correctPicks = 0;
+  // BUG fix audit round 5 (HIGH) : avant, le loop d'updates etait
+  // sequentiel hors transaction. Mid-failure laissait certains picks
+  // settled et d'autres pending → re-run n'est PAS idempotent sur
+  // les picks deja settled (correct=true devient correct=true OK, mais
+  // si le result reel changeait entre temps, on aurait drift).
+  // Fix : wrap dans $transaction pour all-or-nothing.
+  const correctIds: string[] = [];
+  const wrongIds: string[] = [];
   for (const pick of picks) {
-    const isCorrect = pick.selection === input.result;
-    if (isCorrect) correctPicks += 1;
-    await prisma.proPredictionPick.update({
-      where: { id: pick.id },
-      data: { result: input.result, correct: isCorrect },
-    });
+    if (pick.selection === input.result) {
+      correctIds.push(pick.id);
+    } else {
+      wrongIds.push(pick.id);
+    }
   }
+
+  await prisma.$transaction([
+    prisma.proPredictionPick.updateMany({
+      where: { id: { in: correctIds } },
+      data: { result: input.result, correct: true },
+    }),
+    prisma.proPredictionPick.updateMany({
+      where: { id: { in: wrongIds } },
+      data: { result: input.result, correct: false },
+    }),
+  ]);
 
   return {
     matchId: input.matchId,
     result: input.result,
     picksSettled: picks.length,
-    correctPicks,
+    correctPicks: correctIds.length,
   };
 }

@@ -129,12 +129,17 @@ export async function getProLeagueCurrentStandings(
     );
   }
 
+  // BUG fix audit round 5 (HIGH) : avant, l'orderBy etait
+  // `[points desc, tdFor desc]` — utilise tdFor brut comme tiebreaker
+  // au lieu de la difference de TD. Une equipe avec 30 TD pour / 50
+  // contre se classait devant une equipe avec 25 pour / 5 contre,
+  // malgre une difference de TD largement meilleure pour la seconde.
+  // Standard BB / football : points → diff TD → TD pour.
+  // Prisma ne supporte pas l'orderBy sur une colonne computee ; on
+  // recupere tous les rows et on trie cote JS (les ligues sont
+  // bornees a 16 equipes par saison, sort trivial).
   const rowsRaw = await prisma.proLeagueStandings.findMany({
     where: { seasonId: season.id as string },
-    orderBy: [
-      { points: "desc" },
-      { tdFor: "desc" },
-    ],
     select: {
       played: true,
       wins: true,
@@ -158,6 +163,20 @@ export async function getProLeagueCurrentStandings(
         },
       },
     },
+  });
+
+  // Audit round 5 : sort cote JS car Prisma ne supporte pas
+  // l'orderBy sur une expression. Ordre : points desc → diff TD desc
+  // → TD pour desc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rowsRaw.sort((a: any, b: any) => {
+    const pA = (a.points as number) ?? 0;
+    const pB = (b.points as number) ?? 0;
+    if (pB !== pA) return pB - pA;
+    const diffA = ((a.tdFor as number) ?? 0) - ((a.tdAgainst as number) ?? 0);
+    const diffB = ((b.tdFor as number) ?? 0) - ((b.tdAgainst as number) ?? 0);
+    if (diffB !== diffA) return diffB - diffA;
+    return ((b.tdFor as number) ?? 0) - ((a.tdFor as number) ?? 0);
   });
 
   // Lot I — TV par équipe : somme(tvCached) des joueurs status='active'.
