@@ -147,6 +147,7 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
     pendingDumpOff: undefined,
     pendingMultipleBlock: undefined,
     pendingFrenzyBlock: undefined,
+    frenzySecondBlockTriggered: [],
     pendingOnTheBall: undefined,
     pendingKickoffEvent: undefined,
   };

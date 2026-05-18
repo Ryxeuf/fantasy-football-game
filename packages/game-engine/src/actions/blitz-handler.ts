@@ -117,20 +117,33 @@ export function handleBlitz(
     );
     newState.gameLog = [...newState.gameLog, dodgeLogEntry];
 
-    // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
     // BB rule : le coût en PM d'un déplacement est la distance Chebyshev
     // (king-move) — 1 PM par case adjacente, diagonales incluses. Avant ce
     // fix, on utilisait la distance Manhattan (|dx| + |dy|) qui comptait
     // un déplacement diagonal comme 2 PM au lieu d'1. `getLegalMoves` énumère
     // pourtant les 8 directions comme BLITZ steps single-PM.
     const distance = Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y));
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
+    // BUG fix : `handlePlayerSwitch` retourne `{...state, selectedPlayerId}`
+    // donc `newState.players` est la MÊME référence que `state.players`.
+    // Toute mutation via `newState.players[i].x = ...` casse l'invariant
+    // d'immutabilite et corrompt le state du caller (les autres joueurs
+    // gardent un alias vers le snapshot d'avant). On remplace par un
+    // `map` qui produit une nouvelle copie du joueur deplacé.
+    newState = {
+      ...newState,
+      players: newState.players.map((p) =>
+        p.id === attacker.id
+          ? { ...p, pos: { ...to }, pm: Math.max(0, p.pm - distance) }
+          : p,
+      ),
+    };
 
     // Shadowing : tentative de suivi après le mouvement (BB3).
     newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
+
+    // Re-resolve l'attaquant apres shadowing (pos peut avoir change).
+    const attackerAfterMove = newState.players.find((p) => p.id === attacker.id);
+    if (!attackerAfterMove) return newState;
 
     // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
     // pendant un Blitz.
@@ -138,7 +151,7 @@ export function handleBlitz(
     if (!blitzDodgeSuccess) {
       const breakTackleCheck = checkBreakTackle(
         newState,
-        newState.players[attackerIdx],
+        attackerAfterMove,
         dodgeResult.diceRoll,
         dodgeResult.targetNumber,
         dodgeResult.success
@@ -151,48 +164,63 @@ export function handleBlitz(
 
     if (blitzDodgeSuccess) {
       // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-      const mover = newState.players[attackerIdx];
-      if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+      const mover = newState.players.find((p) => p.id === attacker.id);
+      if (mover && mover.hasBall && isInOpponentEndzone(newState, mover)) {
         return awardTouchdown(newState, mover.team, mover);
       }
     } else {
       // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
-      newState.isTurnover = true;
-
       // Vérifier si le joueur avait le ballon AVANT de le mettre à terre
-      const hadBall = newState.players[attackerIdx].hasBall;
+      const beforeFall = newState.players.find((p) => p.id === attacker.id);
+      if (!beforeFall) return newState;
+      const hadBall = beforeFall.hasBall;
 
-      // Le joueur chute (est mis à terre)
-      newState.players[attackerIdx].stunned = true;
+      // Le joueur chute (est mis à terre) — immutable update.
+      newState = {
+        ...newState,
+        isTurnover: true,
+        players: newState.players.map((p) =>
+          p.id === attacker.id ? { ...p, stunned: true } : p,
+        ),
+      };
+
+      const downed = newState.players.find((p) => p.id === attacker.id);
+      if (!downed) return newState;
 
       // Effectuer le jet d'armure
-      const armorResult = performArmorRollWithNotification(newState.players[attackerIdx], rng);
-      newState.lastDiceResult = armorResult;
+      const armorResult = performArmorRollWithNotification(downed, rng);
+      newState = { ...newState, lastDiceResult: armorResult };
 
       // Log du jet d'armure
       const armorLogEntry = createLogEntry(
         'dice',
         `Jet d'armure (Blitz échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
-        newState.players[attackerIdx].id,
-        newState.players[attackerIdx].team,
+        downed.id,
+        downed.team,
         {
           diceRoll: armorResult.diceRoll,
           targetNumber: armorResult.targetNumber,
           success: armorResult.success,
         }
       );
-      newState.gameLog = [...newState.gameLog, armorLogEntry];
+      newState = { ...newState, gameLog: [...newState.gameLog, armorLogEntry] };
 
       // Si l'armure est percée (success = false), faire un jet de blessure
       if (!armorResult.success) {
-        newState = performInjuryRoll(newState, newState.players[attackerIdx], rng);
+        newState = performInjuryRoll(newState, downed, rng);
       }
 
       // Si le joueur avait le ballon, il le perd et le ballon rebondit
       // (même si l'armure n'est pas percée, le joueur chute et perd le ballon)
       if (hadBall) {
-        newState.players[attackerIdx].hasBall = false;
-        newState.ball = { ...newState.players[attackerIdx].pos };
+        const ballPos = { ...downed.pos };
+        newState = {
+          ...newState,
+          ball: ballPos,
+          players: newState.players.map((p) =>
+            p.id === attacker.id ? { ...p, hasBall: false } : p,
+          ),
+        };
 
         // Log de la perte de ballon
         const ballLossLogEntry = createLogEntry(
@@ -201,7 +229,7 @@ export function handleBlitz(
           attacker.id,
           attacker.team
         );
-        newState.gameLog = [...newState.gameLog, ballLossLogEntry];
+        newState = { ...newState, gameLog: [...newState.gameLog, ballLossLogEntry] };
 
         // Faire rebondir le ballon depuis la position du joueur
         return bounceBall(newState, rng);
@@ -213,18 +241,21 @@ export function handleBlitz(
       return newState;
     }
   } else {
-    // Pas de jet d'esquive nécessaire, déplacer directement
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
+    // Pas de jet d'esquive nécessaire, déplacer directement (immutable).
     // BB rule : distance Chebyshev (king-move) — 1 PM par case adjacente.
-    // Cf. commentaire au-dessus pour le bug fix Manhattan → Chebyshev.
     const distance = Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y));
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
+    newState = {
+      ...newState,
+      players: newState.players.map((p) =>
+        p.id === attacker.id
+          ? { ...p, pos: { ...to }, pm: Math.max(0, p.pm - distance) }
+          : p,
+      ),
+    };
 
     // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-    const mover = newState.players[attackerIdx];
-    if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+    const mover = newState.players.find((p) => p.id === attacker.id);
+    if (mover && mover.hasBall && isInOpponentEndzone(newState, mover)) {
       return awardTouchdown(newState, mover.team, mover);
     }
   }
