@@ -46,6 +46,13 @@ if [ -f "$PROJECT_DIR/.env.local" ]; then
   set +a
 fi
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
+GHCR_PAT="${GHCR_PAT:-}"
+
+# Authentification GHCR — nécessaire si le token Docker local est expiré.
+# GHCR_PAT doit être un PAT GitHub avec scope read:packages (défini dans .env.local).
+if [ -n "$GHCR_PAT" ]; then
+  echo "$GHCR_PAT" | docker login ghcr.io -u Ryxeuf --password-stdin >/dev/null
+fi
 
 # --- Args ---
 IMAGE_TAG_ARG=""
