@@ -14,18 +14,27 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    match: { findUnique: vi.fn() },
-    teamPlayer: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
-    team: { update: vi.fn(), findUnique: vi.fn() },
-    leaguePostMatchSequence: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
+// Audit round 5 : `applyAdvancementChoice` wrap maintenant les 2 updates
+// (teamPlayer + team) + re-read final dans une seule $transaction. Simule
+// en partageant les memes mocks.
+vi.mock("../prisma", () => {
+  const teamPlayer = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() };
+  const team = { update: vi.fn(), findUnique: vi.fn() };
+  return {
+    prisma: {
+      match: { findUnique: vi.fn() },
+      teamPlayer,
+      team,
+      leaguePostMatchSequence: {
+        findUnique: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) => cb({ teamPlayer, team })),
     },
-  },
-}));
+  };
+});
 
 import { prisma } from "../prisma";
 import {

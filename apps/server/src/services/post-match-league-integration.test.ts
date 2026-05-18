@@ -213,6 +213,15 @@ vi.mock("../prisma", () => ({
         },
       ),
     },
+    // Audit round 5 : `applyAdvancementChoice` wrap les 2 updates dans
+    // une $transaction. Le mock execute simplement le callback en
+    // passant `this` (le meme stub stateful) — `tx.teamPlayer.update`
+    // resout vers la meme fonction que `prisma.teamPlayer.update`.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: vi.fn(async function (this: any, cb: any) {
+      // `this` est le stub prisma au moment de l'appel — on le repasse.
+      return cb(this);
+    }),
   },
 }));
 

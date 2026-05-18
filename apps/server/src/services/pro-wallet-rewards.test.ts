@@ -72,19 +72,28 @@ beforeEach(() => {
 
 describe("grantFirstTimeBonus — sprint 1.D.6", () => {
   it("crédite 1000 si jamais réclamé", async () => {
+    // Audit round 5 : passe par $transaction directement, plus de
+    // delegation a `credit()`.
     mocked.proTransaction.findFirst.mockResolvedValue(null);
-    mockedCredit.mockResolvedValue(1000);
+    mocked.proWallet.findUnique.mockResolvedValue({ crowns: 0 });
+    mocked.proWallet.update.mockResolvedValue({ crowns: 1000 });
+    mocked.proTransaction.create.mockResolvedValue({ id: "tx_new" });
 
     const out = await grantFirstTimeBonus(USER);
     expect(out.granted).toBe(true);
     expect(out.amount).toBe(FIRST_TIME_BONUS_AMOUNT);
     expect(out.balance).toBe(1000);
     expect(out.nextEligibleAt).toBeNull();
-    expect(mockedCredit).toHaveBeenCalledWith(
-      USER,
-      1000,
-      "REWARD",
-      "first_signup",
+    expect(mocked.$transaction).toHaveBeenCalledTimes(1);
+    expect(mocked.proTransaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          walletId: USER,
+          type: "REWARD",
+          amount: FIRST_TIME_BONUS_AMOUNT,
+          ref: "first_signup",
+        }),
+      }),
     );
   });
 
