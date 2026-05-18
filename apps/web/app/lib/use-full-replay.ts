@@ -35,6 +35,7 @@ import { compactReplaySequence } from "./compact-replay";
 import {
   type PlaybackSpeed,
   type ReplayClockControls,
+  type ReplayClockState,
   formatReplayClock,
   useReplayClock,
 } from "./use-replay-clock";
@@ -72,8 +73,19 @@ export interface UseFullReplayOptions {
    * FOLLOW_UP_CHOOSE, REROLL_CHOOSE, APOTHECARY_CHOOSE,
    * DUMP_OFF_CHOOSE) de la séquence visionnée. Densifie l'expérience
    * de re-jeu sans changer le contenu logique du match.
+   *
+   * Ignoré (forcé à `false`) lorsqu'un `externalClock` est fourni : le
+   * parent pilote alors un `currentMs` aligné sur les `displayAtMs`
+   * d'origine des events, et retirer des moves casserait la
+   * synchronisation entre le log textuel et le terrain visuel.
    */
   readonly compact?: boolean;
+  /**
+   * Si fourni, le hook n'instancie pas son propre `useReplayClock` et
+   * lit / écrit dans le clock externe partagé par un parent (cf. bug
+   * désynchronisation log textuel ↔ terrain visuel sur la page replay).
+   */
+  readonly externalClock?: ReplayClockState & ReplayClockControls;
 }
 
 export interface UseFullReplayResult {
@@ -116,7 +128,10 @@ export function useFullReplay(
   matchId: string,
   options: UseFullReplayOptions = {},
 ): UseFullReplayResult {
-  const { compact = true } = options;
+  const externalClock = options.externalClock;
+  // Avec un clock externe, on doit conserver l'alignement
+  // `displayAtMs ↔ moveIndex` du dump complet — donc pas de filtrage compact.
+  const compact = externalClock ? false : (options.compact ?? true);
   const [dump, setDump] = useState<FullReplayDump | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +192,10 @@ export function useFullReplay(
   // Durée logique : 1 move = 1 seconde. `KICKOFF` à T+0 puis chaque
   // move à T+(i+1)s. Borne supérieure = `moves.length * 1000` ms.
   const durationMs = sequence ? sequence.moves.length * MS_PER_MOVE : 0;
-  const clock = useReplayClock({ durationMs });
+  // useReplayClock interne — toujours appelé pour respecter les règles
+  // hooks, mais ignoré si `externalClock` est fourni.
+  const internalClock = useReplayClock({ durationMs });
+  const clock = externalClock ?? internalClock;
 
   // Index courant = floor(currentMs / MS_PER_MOVE) - 1. -1 = kickoff.
   const currentMoveIndex = useMemo(() => {

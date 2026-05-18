@@ -1,11 +1,14 @@
 /**
  * AI setup placement — Blood Bowl legal auto-placement for an AI team.
  *
- * Places 11 players for `teamId` during the `setup` phase, respecting:
- *  - 3 players on the Line of Scrimmage (x = 12 for A, 13 for B)
- *  - max 2 players per wide zone (y in 0..2 and 12..14)
- *  - max 11 players on the pitch
- *  - no overlaps
+ * Blood Bowl 2025 (Season 3) setup rules on a 26x15 pitch:
+ *  - 3 players minimum on the Line of Scrimmage (x = 12 for A, 13 for B),
+ *    counted only on the central rows y in 4..10 (wide-zone players do NOT
+ *    count for the LOS minimum).
+ *  - max 2 players per wide zone. Wide zones are 4 rows wide:
+ *    LEFT  = y in 0..3, RIGHT = y in 11..14.
+ *  - max 11 players on the pitch.
+ *  - no overlaps with teammates or opponents.
  *
  * Pure function: returns a new `ExtendedGameState` via `placePlayerInSetup`.
  */
@@ -15,10 +18,15 @@ import {
   type ExtendedGameState,
 } from '../core/game-state';
 
-const LEFT_WIDE_ZONE_ROWS: readonly number[] = [1, 0, 2];
-const RIGHT_WIDE_ZONE_ROWS: readonly number[] = [13, 12, 14];
-const LOS_CENTER_ROWS: readonly number[] = [7, 6, 8, 5, 9, 4, 10, 3, 11];
-const MIDFIELD_ROWS: readonly number[] = [7, 6, 8, 5, 9, 4, 10, 3, 11];
+// 4-row wide zones (BB 2025): y in 0..3 (LEFT) and 11..14 (RIGHT).
+// Order them so the AI prefers the rows closest to the center column.
+const LEFT_WIDE_ZONE_ROWS: readonly number[] = [2, 1, 3, 0];
+const RIGHT_WIDE_ZONE_ROWS: readonly number[] = [12, 13, 11, 14];
+// Central 7 rows (y in 4..10). LOS slots and the mid-field reinforcements
+// must stay inside this band, otherwise they would land in a wide zone and
+// not count toward the 3-player LOS minimum.
+const LOS_CENTER_ROWS: readonly number[] = [7, 6, 8, 5, 9, 4, 10];
+const MIDFIELD_ROWS: readonly number[] = [7, 6, 8, 5, 9, 4, 10];
 
 /**
  * Build an ordered list of 11 legal positions for `teamId`.

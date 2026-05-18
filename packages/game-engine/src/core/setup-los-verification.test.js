@@ -58,13 +58,13 @@ describe('Vérification LOS en phase setup', () => {
             legalPositions[105], // (8, 0) - left wide zone (mais on va utiliser y=7)
             legalPositions[120], // (9, 0) - left wide zone (mais on va utiliser y=8)
         ];
-        // Corriger les positions pour éviter les wide zones
-        spacedPositions[2] = { x: 4, y: 3 }; // Au lieu de (4, 0)
-        spacedPositions[3] = { x: 5, y: 4 }; // Au lieu de (5, 0)
-        spacedPositions[4] = { x: 6, y: 5 }; // Au lieu de (6, 0)
-        spacedPositions[5] = { x: 7, y: 6 }; // Au lieu de (7, 0)
-        spacedPositions[6] = { x: 8, y: 7 }; // Au lieu de (8, 0)
-        spacedPositions[7] = { x: 9, y: 8 }; // Au lieu de (9, 0)
+        // Corriger les positions pour éviter les wide zones (BB 2025 : y∈[0..3] et [11..14])
+        spacedPositions[2] = { x: 4, y: 4 }; // Au lieu de (4, 0)
+        spacedPositions[3] = { x: 5, y: 5 }; // Au lieu de (5, 0)
+        spacedPositions[4] = { x: 6, y: 6 }; // Au lieu de (6, 0)
+        spacedPositions[5] = { x: 7, y: 7 }; // Au lieu de (7, 0)
+        spacedPositions[6] = { x: 8, y: 8 }; // Au lieu de (8, 0)
+        spacedPositions[7] = { x: 9, y: 9 }; // Au lieu de (9, 0)
         for (let i = 0; i < 8; i++) {
             const playerId = `A${i + 1}`;
             const pos = spacedPositions[i];
@@ -74,8 +74,8 @@ describe('Vérification LOS en phase setup', () => {
         }
         // Le 9e joueur doit être accepté s'il est sur la LOS
         const playerId = 'A9';
-        // Utiliser une position sur la LOS qui n'est pas dans une wide zone (y=3..11)
-        const posSurLos = legalPositions.find(p => p.x === 12 && p.y >= 3 && p.y <= 11);
+        // Utiliser une position sur la LOS qui n'est pas dans une wide zone (BB 2025 centre : y=4..10)
+        const posSurLos = legalPositions.find(p => p.x === 12 && p.y >= 4 && p.y <= 10);
         if (posSurLos) {
             const resultSurLos = applyPlacement(currentState, playerId, posSurLos);
             expect(resultSurLos).not.toBe(currentState); // Doit être accepté

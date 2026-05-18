@@ -36,7 +36,7 @@ describe('Setup Modal Prevention', () => {
         // Placer quelques joueurs
         let currentState = setupState;
         for (let i = 0; i < 3; i++) {
-            currentState = applyPlacement(currentState, players[i].id, { x: 10 + i, y: 3 });
+            currentState = applyPlacement(currentState, players[i].id, { x: 10 + i, y: 4 });
         }
         // Vérifier que selectedPlayerId reste null après placement
         expect(currentState.selectedPlayerId).toBeNull();
@@ -50,13 +50,13 @@ describe('Setup Modal Prevention', () => {
         // Entrer en phase setup
         const setupState = enterSetupPhase(state, 'A');
         // Placer un joueur
-        const stateWithPlayer = applyPlacement(setupState, players[0].id, { x: 10, y: 3 });
+        const stateWithPlayer = applyPlacement(setupState, players[0].id, { x: 10, y: 4 });
         // Simuler un clic sur le joueur placé
         // En phase setup, cela ne devrait pas définir selectedPlayerId
         const player = stateWithPlayer.players.find(p => p.id === players[0].id);
         expect(player).toBeDefined();
         expect(player?.pos.x).toBe(10);
-        expect(player?.pos.y).toBe(3);
+        expect(player?.pos.y).toBe(4);
         // Vérifier que selectedPlayerId reste null
         expect(stateWithPlayer.selectedPlayerId).toBeNull();
         // Vérifier que le joueur peut être sélectionné pour repositionnement
@@ -71,11 +71,15 @@ describe('Setup Modal Prevention', () => {
         const setupState = enterSetupPhase(state, 'A');
         // Placer tous les joueurs (positions valides dans la moitié de terrain de l'équipe A: x=1..12)
         let currentState = setupState;
+        // BB 2025 setup légal : 3 LoS (x=12, y centrale 4..10),
+        // ≤2 wide LEFT (y∈[0..3]), ≤2 wide RIGHT (y∈[11..14]),
+        // reste en zone centrale.
         const setupPositions = [
-            { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 },
-            { x: 12, y: 6 }, { x: 12, y: 7 }, { x: 12, y: 8 },
-            { x: 12, y: 9 }, { x: 12, y: 10 }, { x: 12, y: 11 },
-            { x: 11, y: 3 }, { x: 11, y: 4 },
+            { x: 12, y: 5 }, { x: 12, y: 6 }, { x: 12, y: 7 },
+            { x: 11, y: 5 }, { x: 11, y: 6 }, { x: 11, y: 7 },
+            { x: 10, y: 5 }, { x: 10, y: 6 },
+            { x: 10, y: 2 }, { x: 11, y: 1 },
+            { x: 10, y: 12 },
         ];
         for (let i = 0; i < 11; i++) {
             currentState = applyPlacement(currentState, players[i].id, setupPositions[i]);

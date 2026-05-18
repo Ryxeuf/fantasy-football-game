@@ -72,7 +72,7 @@ export default function PixiBoard({
   state,
   onCellClick,
   onPlayerClick,
-  cellSize = 28,
+  cellSize = 36,
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
@@ -175,7 +175,7 @@ export default function PixiBoard({
         (containerRef as any).current = el;
         if (ref && typeof ref === "object") (ref as any).current = el;
       }}
-      className="w-full max-w-[480px] mx-auto relative"
+      className="w-full max-w-[600px] mx-auto relative"
       onContextMenu={(e: React.MouseEvent) => e.preventDefault()}
     >
       <Stage

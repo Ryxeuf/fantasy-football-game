@@ -21,6 +21,8 @@ import { getMoveActivePlayerId } from "../../../../lib/move-active-player";
 import { getReplayAnnotations } from "../../../../lib/replay-annotations";
 import {
   PLAYBACK_SPEEDS,
+  type ReplayClockControls,
+  type ReplayClockState,
   formatReplayClock,
 } from "../../../../lib/use-replay-clock";
 import {
@@ -67,6 +69,13 @@ interface FullReplayFieldProps {
   readonly matchId: string;
   /** Callback pour signaler au parent qu'il faut retomber sur la vue textuelle. */
   readonly onFallback?: (reason: { code: string | null; message: string }) => void;
+  /**
+   * Si fourni, le terrain partage l'horloge du parent. Le scrub bar et
+   * les contrôles play/pause internes sont alors masqués pour éviter
+   * d'avoir deux UI pendulaires qui dérivent — cf. bug désync log
+   * textuel ↔ visuel sur la page replay.
+   */
+  readonly externalClock?: ReplayClockState & ReplayClockControls;
 }
 
 const GameBoardWithDugouts = dynamic(
@@ -85,12 +94,19 @@ const GameBoardWithDugouts = dynamic(
 export default function FullReplayField({
   matchId,
   onFallback,
+  externalClock,
 }: FullReplayFieldProps): JSX.Element {
   // Lot 3.E.2 — toggle compact (par défaut activé) qui retire les
   // moves filler sans effet visuel. Permet de basculer en mode "all
   // moves" pour audit fin de la séquence game-engine.
+  // Forcé à `false` quand le parent partage son clock (sinon les events
+  // textuels et les moves visuels se désalignent).
   const [compact, setCompact] = useState<boolean>(true);
-  const replay = useFullReplay(matchId, { compact });
+  const replay = useFullReplay(matchId, {
+    compact: externalClock ? false : compact,
+    externalClock,
+  });
+  const hasExternalClock = externalClock !== undefined;
 
   // Notifie le parent si l'API retourne 404 (replay legacy ou hybrid).
   useMemo(() => {
@@ -174,16 +190,18 @@ export default function FullReplayField({
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-1 text-xs text-slate-400">
-            <input
-              type="checkbox"
-              checked={compact}
-              onChange={(e) => setCompact(e.target.checked)}
-              data-testid="full-replay-compact-toggle"
-              className="accent-emerald-600"
-            />
-            Compact
-          </label>
+          {!hasExternalClock && (
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
+                data-testid="full-replay-compact-toggle"
+                className="accent-emerald-600"
+              />
+              Compact
+            </label>
+          )}
           <div className="font-mono text-xl font-bold tracking-wide">
             {score.home} – {score.away}
           </div>
@@ -209,6 +227,7 @@ export default function FullReplayField({
         ) : null}
       </div>
 
+      {!hasExternalClock && (
       <div className="flex flex-wrap items-center gap-2 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm">
         <button
           type="button"
@@ -275,7 +294,9 @@ export default function FullReplayField({
           ))}
         </div>
       </div>
+      )}
 
+      {!hasExternalClock && (
       <input
         type="range"
         min={0}
@@ -289,6 +310,7 @@ export default function FullReplayField({
         aria-label="Scrub"
         className="w-full accent-emerald-600"
       />
+      )}
     </div>
   );
 }

@@ -645,6 +645,7 @@ export default function MatchReplayPlayer({
         <div className="px-4 pt-4" data-testid="replay-field-wrapper-full">
           <FullReplayField
             matchId={matchId}
+            externalClock={clock}
             onFallback={({ message }) => {
               setFullDumpUnavailable(message);
               setViewMode("classic");

@@ -645,7 +645,7 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
           kickingTeam: newKickingTeam,
           receivingTeam,
           placedPlayers: [],
-          legalSetupPositions: [],
+          legalSetupPositions: computeLegalSetupPositions(receivingTeam, newState.height),
           // Nettoyer tout résidu de kickoff précédent
           kickoffStep: undefined,
           ballPosition: null,
@@ -1349,12 +1349,16 @@ export function placePlayerInSetup(
   const simulatedPlayers = state.players.map(p => (p.id === playerId ? { ...p, pos } : p));
   const simulatedPlaced = [...currentPlacedPlayers, playerId];
 
-  // Contraintes Blood Bowl (setup)
+  // Contraintes Blood Bowl 2025 (Saison 3) — pitch 26x15.
+  // Wide zones: 4 rangées de chaque côté (y in 0..3 et 11..14).
+  // LoS: x=12 (équipe A) ou x=13 (équipe B), comptée uniquement sur les
+  // rangées centrales y in 4..10 (les wide-zoners ne comptent pas).
   const teamId = player.team;
-  // Largeurs BB 2020: 3 colonnes de chaque côté sur un terrain 15 colonnes (0..14)
-  const isLeftWideZone = (y: number) => y >= 0 && y <= 2;
-  const isRightWideZone = (y: number) => y >= 12 && y <= 14;
-  const isOnLos = (x: number) => (teamId === 'A' ? x === 12 : x === 13);
+  const isLeftWideZone = (y: number) => y >= 0 && y <= 3;
+  const isRightWideZone = (y: number) => y >= 11 && y <= 14;
+  const isInWideZone = (y: number) => isLeftWideZone(y) || isRightWideZone(y);
+  const isOnLos = (pos: Position) =>
+    (teamId === 'A' ? pos.x === 12 : pos.x === 13) && !isInWideZone(pos.y);
 
   const teamPlayersOnPitch = simulatedPlayers.filter(p => p.team === teamId && p.pos.x >= 0);
   if (teamPlayersOnPitch.length > 11) {
@@ -1370,16 +1374,17 @@ export function placePlayerInSetup(
   // Contrainte LOS (≥ 3) : on la vérifie quand il ne reste qu'1 ou 2 joueurs
   // à placer. Le calcul est basé sur le nombre de joueurs réellement placables
   // (active uniquement) plafonné à 11, pour gérer les drives post-TD où une
-  // équipe peut être réduite par les KO/sent-off.
+  // équipe peut être réduite par les KO/sent-off. Si l'équipe a moins de 3
+  // joueurs disponibles, BB 2025 demande "autant que possible" sur la LoS
+  // mais ne bloque pas le placement (sinon ingérable post-KO en cascade).
   const placeableTotal = state.players.filter(
     p => p.team === teamId && (!p.state || p.state === 'active')
   ).length;
   const targetTotal = Math.min(11, placeableTotal);
   const remainingPlayers = Math.max(0, targetTotal - simulatedPlaced.length);
   if (targetTotal >= 3 && remainingPlayers <= 2) {
-    const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
+    const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos)).length;
     const minLosRequired = 3;
-
     if (losCount < minLosRequired && losCount + remainingPlayers < minLosRequired) {
       return { success: false, state }; // Impossible d'atteindre 3 joueurs sur la LOS
     }
