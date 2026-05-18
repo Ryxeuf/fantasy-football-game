@@ -1,3 +1,16 @@
+## [1.121.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.2...v1.121.3) (2026-05-18)
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** ensure ball follows player during dodge, leap, and normal moves ([375c6be](https://github.com/Ryxeuf/fantasy-football-game/commit/375c6bed58ebbe98d8f6c2f16e28b7ad3fc72136))
+* **game-engine:** immutabilité ball-pickup + failure-helpers (CRITICAL) ([#837](https://github.com/Ryxeuf/fantasy-football-game/issues/837)) ([0a84306](https://github.com/Ryxeuf/fantasy-football-game/commit/0a84306350144fab532e170984cb7542a5099c11))
+* **game-engine:** immutabilité move handlers (HIGH anti-pattern) ([#840](https://github.com/Ryxeuf/fantasy-football-game/issues/840)) ([88e6a68](https://github.com/Ryxeuf/fantasy-football-game/commit/88e6a6802897b884b42cb3fbc071ccdcb6519215))
+* **sim-engine:** full driver — ball carrier idx variable + ballYardline initial ([#839](https://github.com/Ryxeuf/fantasy-football-game/issues/839)) ([7146fef](https://github.com/Ryxeuf/fantasy-football-game/commit/7146fef372a47d4c2bc7df06022acff4624bb110))
+* **sim-engine:** halftime softlock + stale-detection (CRITICAL) ([#836](https://github.com/Ryxeuf/fantasy-football-game/issues/836)) ([ff6841f](https://github.com/Ryxeuf/fantasy-football-game/commit/ff6841fd9eb6c5af4c33b0f52009411c8b68c4e0))
+* **sim-engine:** hybrid driver — recordBlock + casualty team + pass-TD clip ([#838](https://github.com/Ryxeuf/fantasy-football-game/issues/838)) ([2ed6d05](https://github.com/Ryxeuf/fantasy-football-game/commit/2ed6d055456ca266f7b32c8639fb47cc25377b55))
+* **sim-engine:** hybrid tuning — B12 disruption + B4 momentCount + B8 luck RNG ([6a69015](https://github.com/Ryxeuf/fantasy-football-game/commit/6a69015b6ca0f2497a70b26110a1f2ea9ffea3b7))
+
 ## [1.121.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.1...v1.121.2) (2026-05-18)
 
 
