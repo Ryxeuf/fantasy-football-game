@@ -99,11 +99,12 @@ export function resolvePass(
 
   const totalModifier = rangeMod + tzMod + accurateMod + strongArmMod;
 
-  // BB target : raw d6 >= 7 - pa - modifier, clamped to [2, 6].
-  const rawTarget = 7 - passer.ag - totalModifier;
-  // Note: in BB3 PA replaces AG for passing — sim-engine's `ResolverPlayer`
-  // uses `ag` as the generic skill stat ; the driver maps PA→ag for the
-  // passer when calling this resolver.
+  // BB3 target : raw d6 >= 7 - pa - modifier, clamped to [2, 6].
+  // BUG fix : utilise PA (Passing Ability) au lieu d'AG. Avant le fix,
+  // `passer.ag` etait utilise (workaround « le driver mappe PA→ag »).
+  // ResolverPlayer expose maintenant `pa` directement → utilise. Cf.
+  // BB3 LRB : PA remplace AG pour les passes.
+  const rawTarget = 7 - passer.pa - totalModifier;
   const target = Math.max(2, Math.min(6, rawTarget));
 
   const firstRoll = rollD6(rng as Parameters<typeof rollD6>[0]);
