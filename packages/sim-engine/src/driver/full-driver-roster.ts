@@ -128,25 +128,32 @@ export function buildGameStateFromRosters(input: {
   receivingTeam: TeamId;
 }): GameState {
   const baseline = setup();
+  // BUG fix C3 audit round 3 : avant, le ball carrier etait hardcode
+  // `idx === 9`. Si un roster a moins de 10 joueurs (KO antérieur,
+  // casualty pre-match, roster court < 11), `players[9]` est undefined
+  // → personne n'a la balle, l'equipe receveuse ne marque jamais.
+  // Maintenant on prend le dernier joueur place (ou idx=9 si dispo).
+  const homeBallIdx = Math.min(9, input.homeRoster.length - 1);
+  const awayBallIdx = Math.min(9, input.awayRoster.length - 1);
   const teamAPlayers = input.homeRoster
     .slice(0, MAX_PLAYERS_ON_FIELD)
     .map((roster, idx) => {
       const pos = TEAM_A_FORMATION[idx];
-      const hasBall = input.receivingTeam === 'A' && idx === 9;
+      const hasBall = input.receivingTeam === 'A' && idx === homeBallIdx;
       return rosterPlayerToGameEnginePlayer(roster, 'A', pos, hasBall);
     });
   const teamBPlayers = input.awayRoster
     .slice(0, MAX_PLAYERS_ON_FIELD)
     .map((roster, idx) => {
       const pos = TEAM_B_FORMATION[idx];
-      const hasBall = input.receivingTeam === 'B' && idx === 9;
+      const hasBall = input.receivingTeam === 'B' && idx === awayBallIdx;
       return rosterPlayerToGameEnginePlayer(roster, 'B', pos, hasBall);
     });
 
   const carrier =
     input.receivingTeam === 'A'
-      ? teamAPlayers[9]
-      : teamBPlayers[9];
+      ? teamAPlayers[homeBallIdx]
+      : teamBPlayers[awayBallIdx];
   const ball = carrier ? { x: carrier.pos.x, y: carrier.pos.y } : undefined;
 
   return {

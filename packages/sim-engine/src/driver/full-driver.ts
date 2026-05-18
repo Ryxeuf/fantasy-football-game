@@ -67,7 +67,11 @@ import {
 } from '../tactics/tactical-profile';
 import type { MatchEvent } from '@bb/shared-types';
 
-import { MS_PER_ACTION, diffStatesToEvents } from './full-driver-events';
+import {
+  MS_PER_ACTION,
+  diffStatesToEvents,
+  getInitialBallYardline,
+} from './full-driver-events';
 import { buildGameStateFromRosters } from './full-driver-roster';
 
 /**
@@ -290,7 +294,10 @@ export function runFullDriver(input: SimInput): SimResult {
         turn: state.turn,
         drivingTeam: state.currentPlayer === 'A' ? 'home' : 'away',
         score: { home: state.score.teamA, away: state.score.teamB },
-        ballYardline: 4,
+        // BUG fix H2 audit round 3 : avant, hardcode 4. Si le roster
+        // place le ball carrier ailleurs (post-fix C3 ball idx variable),
+        // le narrator affichait un placement initial incorrect.
+        ballYardline: getInitialBallYardline(state),
       },
     },
   ];
