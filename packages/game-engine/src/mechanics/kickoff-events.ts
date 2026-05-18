@@ -236,10 +236,21 @@ export function applyKickoffEvent(
     }
 
     case 'pitch-invasion': {
-      // Pour chaque joueur adverse, D6 = 6 => stunned
+      // BB3 S3 : « Each Coach rolls a D6 for each opposing player on the
+      // pitch ; on 6+, that player is Stunned. » BUG fix : avant, le filtre
+      // sur `p.state === 'active'` et `!p.stunned` n'excluait pas les
+      // reservistes (pos.x = -1, en dugout) — leur state peut etre
+      // 'active' s'ils n'ont pas encore joue. Resultat : joueurs en
+      // reserves stunned a tort. Maintenant on filtre aussi sur
+      // `pos.x >= 0` (sur le terrain).
       for (const team of ['A', 'B'] as const) {
         const opponents = newState.players.filter(
-          p => p.team === team && !p.stunned && p.state === 'active'
+          p =>
+            p.team === team &&
+            !p.stunned &&
+            p.state === 'active' &&
+            p.pos.x >= 0 && // exclure les reservistes en dugout
+            p.pos.y >= 0
         );
         let stunnedCount = 0;
         for (const player of opponents) {
