@@ -37,6 +37,7 @@ import {
 import { createLogEntry } from '../utils/logging';
 import { applyRollFailure, applyPickupFailure } from './failure-helpers';
 import { handleBallPickup } from './ball-pickup';
+import { getWeatherModifiers } from '../mechanics/weather-effects';
 
 /**
  * Retourne le seuil Loner du joueur (3, 4 ou 5) ou `null` s'il n'a
@@ -199,15 +200,21 @@ export function handleRerollChoose(
       return applyRollFailure(newState, playerIndex, rng, armBarBonus);
     }
   } else if (rollType === 'gfi') {
-    // Relancer le jet de GFI
+    // BUG fix audit round 4 : avant, le seuil de relance GFI etait
+    // hardcode a 2+. En Blizzard, le seuil normal devient 3+ (modifier
+    // meteo -1) → la relance ignorait cette penalite et passait sur
+    // 2+, donnant un avantage incorrect au joueur. Fix : utiliser la
+    // meme fonction de seuil que le jet original (gfiTargetFromWeather).
+    const weatherMods = getWeatherModifiers(newState.weatherCondition);
+    const gfiTarget = 2 - weatherMods.gfiModifier;
     const gfiRoll = Math.floor(rng() * 6) + 1;
-    const gfiSuccess = gfiRoll >= 2;
+    const gfiSuccess = gfiRoll >= gfiTarget;
     const logEntry = createLogEntry(
       'dice',
-      `Relance GFI: ${gfiRoll}/2 ${gfiSuccess ? '✓' : '✗'}`,
+      `Relance GFI: ${gfiRoll}/${gfiTarget} ${gfiSuccess ? '✓' : '✗'}`,
       playerId,
       team,
-      { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess },
+      { diceRoll: gfiRoll, targetNumber: gfiTarget, success: gfiSuccess },
     );
     newState.gameLog = [...newState.gameLog, logEntry];
 

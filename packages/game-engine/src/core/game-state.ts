@@ -615,6 +615,15 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       // startKickoffSequence → placeKickoffBall → calculateKickDeviation →
       // resolveKickoffEvent → startMatchFromKickoff) — même contrat que
       // handlePostTouchdown et que la séquence pré-match initiale.
+      //
+      // BUG fix audit round 4 : avant, les champs `pending*` (apothecary,
+      // reroll, block, dumpOff, push/follow-up choice, multipleBlock,
+      // frenzyBlock, onTheBall, kickoffEvent) n'etaient PAS clears au
+      // passage de mi-temps. Si un drive 1ere mi-temps se terminait sur
+      // turnover avec un pending mid-action (ex: apothecary choice non
+      // resolu), le pending survivait au halftime → UI affichait un
+      // modal stale au debut de la 2e mi-temps, ou pire le pending etait
+      // applique au joueur d'une autre equipe. Fix : reset explicite.
       const extState = newState as ExtendedGameState;
       const resultState: GameState = {
         ...newState,
@@ -624,6 +633,16 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         currentPlayer: receivingTeam,
         kickingTeam: newKickingTeam,
         isTurnover: false,
+        pendingApothecary: undefined,
+        pendingKickoffEvent: undefined,
+        pendingBlock: undefined,
+        pendingDumpOff: undefined,
+        pendingPushChoice: undefined,
+        pendingFollowUpChoice: undefined,
+        pendingReroll: undefined,
+        pendingMultipleBlock: undefined,
+        pendingFrenzyBlock: undefined,
+        pendingOnTheBall: undefined,
         ball: undefined,
         selectedPlayerId: null,
         playerActions: {} as Record<string, ActionType>,
