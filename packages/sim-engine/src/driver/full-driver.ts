@@ -188,8 +188,10 @@ function deriveStats(state: GameState): DriverStats {
     home: state.score.teamA,
     away: state.score.teamB,
   };
+  // BUG fix : exclure les `sent_off` (expulsion sur foul) du compteur
+  // casualty — c'est un etat joueur distinct, pas une blessure.
   const casualties = state.players.filter(
-    (p) => p.state === 'casualty' || p.state === 'sent_off'
+    (p) => p.state === 'casualty'
   ).length;
   return {
     score,
@@ -200,13 +202,18 @@ function deriveStats(state: GameState): DriverStats {
 }
 
 function buildCasualties(state: GameState): Casualty[] {
+  // BUG fix : avant, les joueurs `sent_off` (expulsion sur foul) etaient
+  // inclus dans les casualties avec `outcome: 'badly_hurt'` — ce qui
+  // polluait les stats de victimes et faussait les SPP/casualty count
+  // post-match. Un fouleur expulse n'est PAS une casualty. PR #823
+  // (sim-engine `resolveFoul`) avait fixe le state cote resolver, mais
+  // ce builder ici re-mergait `sent_off` comme `badly_hurt`. Maintenant
+  // on n'inclut QUE les `state === 'casualty'` (vraies blessures).
   // Casualty.outcome n'a pas de variante 'sent_off' (c'est un état joueur,
-  // pas une issue casualty). Pour le MVP on rapporte les sorties de jeu
-  // comme `badly_hurt` ; Lot 3.C.1 affinera la classification (lasting
-  // injuries, dead, etc.) en lisant les events qui auront leur place
-  // dans les MatchEvent[] de Lot 3.A.2.b.
+  // pas une issue casualty). Lot 3.C.1 affinera la classification
+  // (lasting injuries, dead, etc.) en lisant les events.
   return state.players
-    .filter((p) => p.state === 'casualty' || p.state === 'sent_off')
+    .filter((p) => p.state === 'casualty')
     .map<Casualty>((p) => ({
       playerId: p.id,
       team: p.team as TeamId,

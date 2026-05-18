@@ -17,6 +17,7 @@ function player(p: Partial<ResolverPlayer> & Pick<ResolverPlayer, 'id' | 'team' 
   return {
     st: 3,
     ag: 3,
+    pa: 4,
     ma: 6,
     av: 9,
     skills: [],
@@ -271,15 +272,16 @@ describe('Pass resolver — sprint 0.A.5', () => {
   });
 
   it('reroll fumble drop la balle (state coherent avec event)', () => {
-    // Cherche un seed : premier roll fail non-fumble (>=2, <target), reroll = 1 (fumble).
-    // Avec ag=3 target=4 (quick range), firstRoll=2 fail puis secondRoll=1 fumble.
+    // BB3 fix : resolvePass utilise maintenant `passer.pa` (BB3) au lieu de
+    // `passer.ag`. Avec pa=3 target=4 (quick range), firstRoll=2 fail puis
+    // secondRoll=1 fumble.
     for (let seed = 0; seed < 5000; seed += 1) {
       const probe = createRng(seed);
       const first = Math.floor(probe.next() * 6) + 1;
       const second = Math.floor(probe.next() * 6) + 1;
       if (first === 2 && second === 1) {
         const state = baseState({
-          players: [{ ...passer, ag: 3, skills: ['pass'] }],
+          players: [{ ...passer, pa: 3, skills: ['pass'] }],
         });
         const out = resolvePass(
           state,

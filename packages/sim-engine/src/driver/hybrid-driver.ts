@@ -231,19 +231,23 @@ function otherSide(s: Side): Side {
 function deriveLosStats(profile: TacticalProfile): {
   st: number;
   ag: number;
+  pa: number;
   ma: number;
   av: number;
   skills: string[];
 } {
   const st = Math.max(2, Math.min(6, 2 + Math.round(profile.bashIndex / 25)));
   const ag = Math.max(1, Math.min(4, 1 + Math.round(profile.breakawayInstinct / 33)));
+  // BB3 PA : derive du passingFrequency (proxy synthetique LOS).
+  // Plus passingFrequency est haut, meilleur le PA (1 = elite, 6 = nul).
+  const pa = Math.max(1, Math.min(6, 5 - Math.round(profile.passingFrequency / 25)));
   const ma = Math.max(4, Math.min(8, 4 + Math.round(profile.pace / 25)));
   const skills: string[] = [];
   if (profile.bashIndex >= 80) skills.push('block');
   if (profile.breakawayInstinct >= 75) skills.push('dodge');
   if (profile.passingFrequency >= 75) skills.push('pass');
   if (profile.foulFrequency >= 75) skills.push('dirty_player');
-  return { st, ag, ma, av: 9, skills };
+  return { st, ag, pa, ma, av: 9, skills };
 }
 
 function buildKeyMomentState(

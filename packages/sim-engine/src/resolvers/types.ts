@@ -46,10 +46,12 @@ export interface ResolverPosition {
 export interface ResolverPlayer {
   id: string;
   team: ResolverSide;
-  /** Strength stat (BB2020 / BB3 — typically 2..6+). */
+  /** Strength stat (BB3 — typically 2..6+). */
   st: number;
   /** Agility stat — used as `7 - ag` target on a d6 (BB3 stat scale). */
   ag: number;
+  /** Passing stat (BB3) — used as `7 - pa` target on a d6 for passes. */
+  pa: number;
   /** Movement Allowance — used by GFI (no roll under MA), passing range. */
   ma: number;
   /** Armour Value — used by armour rolls on foul / KD. */
