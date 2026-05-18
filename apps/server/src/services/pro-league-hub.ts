@@ -235,13 +235,13 @@ export async function getProLeagueHubSnapshot(
   });
 
   // Standings top N.
-  const standingsRaw = await prisma.proLeagueStandings.findMany({
+  // BUG fix audit round 5 (HIGH) : avant, orderBy `[points desc,
+  // tdFor desc]` ignorait la difference de TD. Maintenant on charge
+  // toutes les standings et on trie cote JS par (points, diffTD,
+  // tdFor) — pas de take(LIMIT) cote DB car on doit voir tout pour
+  // trier correctement. Bornees a 16 equipes max → tri trivial.
+  const standingsAll = await prisma.proLeagueStandings.findMany({
     where: { seasonId },
-    orderBy: [
-      { points: "desc" },
-      { tdFor: "desc" },
-    ],
-    take: STANDINGS_LIMIT,
     select: {
       played: true,
       wins: true,
@@ -310,7 +310,21 @@ export async function getProLeagueHubSnapshot(
       },
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    standings: standingsRaw.map((s: any) => ({
+    standings: (() => {
+      // Audit round 5 : sort cote JS par (points, diffTD, tdFor),
+      // puis slice au LIMIT — voir commentaire au findMany.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sorted = [...standingsAll].sort((a: any, b: any) => {
+        const pA = (a.points as number) ?? 0;
+        const pB = (b.points as number) ?? 0;
+        if (pB !== pA) return pB - pA;
+        const diffA = ((a.tdFor as number) ?? 0) - ((a.tdAgainst as number) ?? 0);
+        const diffB = ((b.tdFor as number) ?? 0) - ((b.tdAgainst as number) ?? 0);
+        if (diffB !== diffA) return diffB - diffA;
+        return ((b.tdFor as number) ?? 0) - ((a.tdFor as number) ?? 0);
+      });
+      return sorted.slice(0, STANDINGS_LIMIT);
+    })().map((s: any) => ({
       teamSlug: s.team.slug as string,
       teamName: s.team.name as string,
       teamCity: s.team.city as string,
