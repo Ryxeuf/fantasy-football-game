@@ -9,11 +9,12 @@
  * - Ne peut PAS etre utilise sur Stunned
  */
 
-import { GameState, TeamId, RNG, CasualtyOutcome, PendingApothecary } from '../core/types';
+import { GameState, TeamId, RNG, CasualtyOutcome, PendingApothecary, Player } from '../core/types';
 import { movePlayerToDugoutZone } from './dugout';
 import { rollLastingInjuryType } from './injury';
 import { tryRegeneration } from './regeneration';
 import { createLogEntry } from '../utils/logging';
+import { hasSkill } from '../skills/skill-effects';
 
 /** Severity ranking for casualty outcomes (lower = less severe) */
 const CASUALTY_SEVERITY: Record<CasualtyOutcome, number> = {
@@ -38,15 +39,27 @@ export function isApothecaryAvailable(state: GameState, playerId: string): boole
 
 /**
  * Rolls a D16 casualty outcome (same logic as in injury.ts handleCasualty)
+ *
+ * BB2020 rule : « Stunty players suffer +1 modifier to any Casualty roll
+ * made against them. » Le modificateur s'applique aussi au re-roll
+ * apothecary. Avant le fix, le re-roll D16 ne tenait pas compte du
+ * Stunty → la mecanique cherchait a soigner un Goblin/Halfling avec un
+ * D16 base alors que la regle veut +1 (rendant les blessures graves
+ * plus probables, donc le re-roll moins "sain" qu'il devrait).
  */
-function rollCasualtyOutcome(rng: RNG): { roll: number; outcome: CasualtyOutcome } {
-  const roll = Math.floor(rng() * 16) + 1;
+function rollCasualtyOutcome(
+  rng: RNG,
+  player?: Player,
+): { roll: number; outcome: CasualtyOutcome; stuntyMod: number } {
+  const stuntyMod = player && hasSkill(player, 'stunty') ? 1 : 0;
+  const rawRoll = Math.floor(rng() * 16) + 1;
+  const roll = Math.min(16, rawRoll + stuntyMod);
 
-  if (roll <= 6) return { roll, outcome: 'badly_hurt' };
-  if (roll <= 9) return { roll, outcome: 'seriously_hurt' };
-  if (roll <= 12) return { roll, outcome: 'serious_injury' };
-  if (roll <= 14) return { roll, outcome: 'lasting_injury' };
-  return { roll, outcome: 'dead' };
+  if (roll <= 6) return { roll, outcome: 'badly_hurt', stuntyMod };
+  if (roll <= 9) return { roll, outcome: 'seriously_hurt', stuntyMod };
+  if (roll <= 12) return { roll, outcome: 'serious_injury', stuntyMod };
+  if (roll <= 14) return { roll, outcome: 'lasting_injury', stuntyMod };
+  return { roll, outcome: 'dead', stuntyMod };
 }
 
 /**
@@ -145,15 +158,16 @@ function applyApothecaryOnCasualty(
   rng: RNG
 ): GameState {
   // Re-roll casualty
-  const newCasualty = rollCasualtyOutcome(rng);
   const player = state.players.find(p => p.id === pending.playerId);
+  const newCasualty = rollCasualtyOutcome(rng, player);
 
+  const stuntySuffix = newCasualty.stuntyMod > 0 ? ` (+${newCasualty.stuntyMod} Stunty)` : '';
   const rerollLog = createLogEntry(
     'dice',
-    `Apothecaire - re-lancer casualty: ${newCasualty.roll} (${newCasualty.outcome})`,
+    `Apothecaire - re-lancer casualty: ${newCasualty.roll} (${newCasualty.outcome})${stuntySuffix}`,
     pending.playerId,
     pending.team,
-    { casualtyRoll: newCasualty.roll, outcome: newCasualty.outcome }
+    { casualtyRoll: newCasualty.roll, outcome: newCasualty.outcome, stuntyMod: newCasualty.stuntyMod }
   );
   state.gameLog = [...state.gameLog, rerollLog];
 
