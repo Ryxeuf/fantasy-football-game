@@ -22,7 +22,7 @@ export const KICKOFF_EVENTS: Record<number, KickoffEvent> = {
     id: 'get-the-ref',
     name: 'Get the Ref!',
     nameFr: 'Corrompre l\'arbitre !',
-    description: 'Chaque équipe reçoit 1 relance d\'équipe supplémentaire gratuite pour ce drive. Elle est perdue si elle n\'est pas utilisée avant la fin du drive.',
+    description: 'Chaque équipe reçoit 1 Pot-de-vin (Bribe) supplémentaire pour le reste du match.',
   },
   3: {
     id: 'riot',
@@ -118,12 +118,17 @@ export function applyKickoffEvent(
 
   switch (event.id) {
     case 'get-the-ref': {
-      // +1 relance gratuite pour chaque équipe
-      newState.teamRerolls = {
-        teamA: (newState.teamRerolls?.teamA ?? 0) + 1,
-        teamB: (newState.teamRerolls?.teamB ?? 0) + 1,
+      // BUG fix : BB2020 dit « Each team receives one additional Bribe to
+      // use during the game », pas +1 relance. Avant le fix, l'event Get
+      // the Ref! donnait des relances comme Brilliant Coaching ou Cheering
+      // Fans — c'etait redondant avec ces 2 events et ignorait la mecanique
+      // Bribe (qui annule l'expulsion sur fouls, eject sur secret weapons).
+      const bribes = newState.bribesRemaining ?? { teamA: 0, teamB: 0 };
+      newState.bribesRemaining = {
+        teamA: bribes.teamA + 1,
+        teamB: bribes.teamB + 1,
       };
-      const log = createLogEntry('action', 'Chaque équipe reçoit 1 relance supplémentaire');
+      const log = createLogEntry('action', 'Chaque équipe reçoit 1 Pot-de-vin (Bribe) supplémentaire');
       newState.gameLog = [...newState.gameLog, log];
       break;
     }

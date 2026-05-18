@@ -256,6 +256,9 @@ export function validateInducementSelection(
 
   // Track quantities per slug to enforce maxQuantity
   const quantityMap = new Map<InducementSlug, number>();
+  // BB2020 : un meme Star Player ne peut pas etre embauche en double par
+  // une meme equipe. Track les starPlayerSlug deja utilises.
+  const usedStarPlayerSlugs = new Set<string>();
 
   for (const item of selection.items) {
     const def = CATALOGUE_MAP.get(item.slug);
@@ -274,6 +277,24 @@ export function validateInducementSelection(
     if (def.canPurchase && !def.canPurchase(ctx)) {
       errors.push(`${def.displayName} n'est pas disponible pour cette équipe.`);
       continue;
+    }
+
+    // BB2020 : dedup star players. Un meme Star Player ne peut pas etre
+    // embauche en double (quantity > 1) ni via deux items separes.
+    if (item.slug === 'star_player' && item.starPlayerSlug) {
+      if (item.quantity > 1) {
+        errors.push(
+          `Un Star Player ne peut etre embauche qu'une seule fois (${item.starPlayerSlug}, demandé ${item.quantity}).`,
+        );
+        continue;
+      }
+      if (usedStarPlayerSlugs.has(item.starPlayerSlug)) {
+        errors.push(
+          `Star Player ${item.starPlayerSlug} deja embauche (un meme Star Player ne peut pas etre pris en double).`,
+        );
+        continue;
+      }
+      usedStarPlayerSlugs.add(item.starPlayerSlug);
     }
 
     // Accumulate quantities
