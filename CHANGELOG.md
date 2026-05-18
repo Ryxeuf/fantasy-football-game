@@ -1,3 +1,17 @@
+## [1.121.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.3...v1.121.0) (2026-05-18)
+
+
+### ✨ Features
+
+* **deploy:** add GitHub Container Registry authentication support ([37a1864](https://github.com/Ryxeuf/fantasy-football-game/commit/37a18645ecbf7e8c631f26603de70ef626a8a58a))
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** filtre TZ défensif sur trois sites manquants ([#824](https://github.com/Ryxeuf/fantasy-football-game/issues/824)) ([6ba6b8f](https://github.com/Ryxeuf/fantasy-football-game/commit/6ba6b8fa9998fbb1fe44f45f4592e3c8d87cc4ca))
+* **game-engine:** Get the Ref! → +1 Bribe + dedup Star Player ([#826](https://github.com/Ryxeuf/fantasy-football-game/issues/826)) ([6e10a72](https://github.com/Ryxeuf/fantasy-football-game/commit/6e10a72250e50b86b50b7c105aebb79e610c5117))
+* **game-engine:** skills/utils — Stunty apothecary reroll + team value clamp + Armored Skull prayer ([#827](https://github.com/Ryxeuf/fantasy-football-game/issues/827)) ([3c07381](https://github.com/Ryxeuf/fantasy-football-game/commit/3c073811505b9c385641e8d2f7667b550ed36e40))
+
 ## [1.120.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.2...v1.120.3) (2026-05-18)
 
 
