@@ -1,6 +1,23 @@
 /**
  * Système de notifications pour les jets de dés
- * Intègre les notifications toaster avec le système de dés existant
+ * Intègre les notifications toaster avec le système de dés existant.
+ *
+ * AUDIT round 4 — Note de dette technique
+ * ----------------------------------------
+ * Les callbacks sont stockes dans des variables module-level. Cela
+ * pose plusieurs problemes connus mais difficile a fix sans
+ * refactor invasif :
+ *   - Pas de support concurrent : deux matchs en parallele dans le
+ *     meme process partagent le meme callback.
+ *   - Pas d'isolation entre tests : un test qui set un callback peut
+ *     contaminer le suivant — d'ou le helper `resetDiceNotifications`
+ *     ci-dessous a appeler en `beforeEach`.
+ *   - Aucun impact sur la determinisme du sim (les callbacks ne sont
+ *     PAS appeles dans le path full-driver, juste depuis l'UI demo).
+ *
+ * Refactor cible (pas dans ce PR) : passer le callback en argument
+ * de `rollD6WithNotification` etc., ou utiliser un Context React. La
+ * seule consommatrice actuelle est `DiceNotificationDemo` (sandbox UI).
  */
 
 import { RNG, Player, DiceResult, BlockResult } from '../core/types';
@@ -10,7 +27,7 @@ import { calculateArmorTarget } from './dice';
 export type DiceNotificationCallback = (playerName: string, diceResult: DiceResult) => void;
 export type BlockDiceNotificationCallback = (playerName: string, blockResult: BlockResult) => void;
 
-// Variables globales pour stocker les callbacks
+// Variables globales pour stocker les callbacks. Cf. note ci-dessus.
 let diceNotificationCallback: DiceNotificationCallback | null = null;
 let blockDiceNotificationCallback: BlockDiceNotificationCallback | null = null;
 
@@ -26,6 +43,16 @@ export function setDiceNotificationCallback(callback: DiceNotificationCallback |
  */
 export function setBlockDiceNotificationCallback(callback: BlockDiceNotificationCallback | null) {
   blockDiceNotificationCallback = callback;
+}
+
+/**
+ * Audit round 4 — helper pour reset les 2 globals en `beforeEach`
+ * test ou au demarrage d'un match isole. Evite les fuites de callback
+ * entre suites de tests / matchs.
+ */
+export function resetDiceNotifications(): void {
+  diceNotificationCallback = null;
+  blockDiceNotificationCallback = null;
 }
 
 /**
