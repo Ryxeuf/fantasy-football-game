@@ -44,7 +44,7 @@ function createTestGameState(playersPerTeam: number = 6): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     dugouts: {
       teamA: {
         teamId: 'A',

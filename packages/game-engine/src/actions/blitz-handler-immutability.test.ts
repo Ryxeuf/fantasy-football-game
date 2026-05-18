@@ -43,7 +43,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
-    apothecaryAvailable: { teamA: true, teamB: true },
+    apothecaryAvailable: { teamA: 1, teamB: 1 },
     dugouts: {
       teamA: { reserves: [], ko: [], casualties: [] },
       teamB: { reserves: [], ko: [], casualties: [] },

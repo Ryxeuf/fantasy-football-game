@@ -122,7 +122,13 @@ export interface GameState {
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
   // Apothecaire
-  apothecaryAvailable: { teamA: boolean; teamB: boolean };
+  // BB2020 : un apothecary peut etre utilise UNE fois par match. Une
+  // equipe avec apothecary natif (Human, Dwarf, etc.) demarre avec
+  // teamA/teamB = 1. L'inducement Wandering Apothecary INCREMENTE ce
+  // compteur (deuxieme usage), Igor pareil pour les equipes sans
+  // apothecary natif. Stocker en number permet de cumuler plusieurs
+  // achats. Avant le fix, c'etait un boolean -> 2e achat etait un no-op.
+  apothecaryAvailable: { teamA: number; teamB: number };
   pendingApothecary?: PendingApothecary;
   // Événement de kickoff en attente de résolution UI
   pendingKickoffEvent?: PendingKickoffEvent;

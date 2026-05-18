@@ -45,7 +45,7 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     gameLog: [],
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     turnTimerSeconds: 0,
     usedStarPlayerRules: {},
     bribesRemaining: { teamA: 0, teamB: 0 },

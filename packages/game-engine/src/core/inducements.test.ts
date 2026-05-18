@@ -294,7 +294,24 @@ describe('Règle: Effets des inducements', () => {
       { slug: 'wandering_apothecary', displayName: 'Wandering Apothecary', cost: 100_000, quantity: 1 },
     ]);
 
-    expect(newState.apothecaryAvailable.teamB).toBe(true);
+    expect(newState.apothecaryAvailable.teamB).toBe(1);
+  });
+
+  it('Wandering Apothecary cumule avec un apothecary natif (BB2020)', () => {
+    // BUG fix : avant, apothecaryAvailable etait boolean. Achat d'un
+    // Wandering Apothecary sur une equipe deja apothecary etait un
+    // silent no-op. Maintenant, le compteur cumule (1 natif + 1 = 2).
+    const state = makeState();
+    const stateWithNative = {
+      ...state,
+      apothecaryAvailable: { teamA: 1, teamB: 0 },
+    };
+
+    const newState = applyInducementEffects(stateWithNative, 'A', [
+      { slug: 'wandering_apothecary', displayName: 'Wandering Apothecary', cost: 100_000, quantity: 1 },
+    ]);
+
+    expect(newState.apothecaryAvailable.teamA).toBe(2);
   });
 
   it('devrait activer l\'apothicaire avec Igor pour une équipe sans apothicaire', () => {
@@ -302,14 +319,14 @@ describe('Règle: Effets des inducements', () => {
     // Simulate team without apothecary
     const stateNoApo = {
       ...state,
-      apothecaryAvailable: { teamA: false, teamB: false },
+      apothecaryAvailable: { teamA: 0, teamB: 0 },
     };
 
     const newState = applyInducementEffects(stateNoApo, 'A', [
       { slug: 'igor', displayName: 'Igor', cost: 100_000, quantity: 1 },
     ]);
 
-    expect(newState.apothecaryAvailable.teamA).toBe(true);
+    expect(newState.apothecaryAvailable.teamA).toBe(1);
   });
 
   it('ne devrait pas modifier l\'état pour les inducements in-match (bribe, wizard, etc.)', () => {

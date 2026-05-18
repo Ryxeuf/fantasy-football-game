@@ -45,7 +45,7 @@ function createTestState(overrides: Partial<GameState> = {}): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     gameLog: [],
-    apothecaryAvailable: { teamA: false, teamB: false },
+    apothecaryAvailable: { teamA: 0, teamB: 0 },
     ...overrides,
   };
 }
@@ -107,7 +107,7 @@ describe('Regle: Regeneration', () => {
       // BB Season 2/3 : apothecaire est toujours offert en premier si
       // disponible. La regen sert de fallback si le coach decline.
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
       });
       const rng = () => 0.5; // 4+4=8 (KO)
       const result = performInjuryRoll(state, state.players[0], rng);
@@ -122,7 +122,7 @@ describe('Regle: Regeneration', () => {
 
     it('Lot O.A.1 — refus apothecaire → regen tentee en fallback (succes, KO)', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
       });
       let callCount = 0;
       const rng = () => {
@@ -142,7 +142,7 @@ describe('Regle: Regeneration', () => {
 
     it('Lot O.A.1 — refus apothecaire → regen tentee en fallback (echec, KO)', () => {
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
       });
       let callCount = 0;
       const rng = () => {
@@ -202,7 +202,7 @@ describe('Regle: Regeneration', () => {
       // BB Season 2/3 : apothecaire offert en premier pour casualty
       // aussi. Permet au coach de re-roller le D16 (typique pour dead).
       const state = createTestState({
-        apothecaryAvailable: { teamA: true, teamB: false },
+        apothecaryAvailable: { teamA: 1, teamB: 0 },
       });
       let callCount = 0;
       const rng = () => {

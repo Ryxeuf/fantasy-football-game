@@ -140,6 +140,12 @@ export function handleBlockChoose(
 
 /**
  * Gere le choix de direction de poussee.
+ *
+ * BUG fix : avant, l'appel a `applyChainPush` utilisait
+ * `() => Math.random()` localement. Le chain push peut surfer un
+ * joueur dans la foule (jet d'injury crowd) : avec Math.random,
+ * le resultat etait non-deterministe et brisait la rejouabilite
+ * des replays (seed -> outcome). Passer le RNG seede du dispatcher.
  */
 export function handlePushChoose(
   state: GameState,
@@ -149,6 +155,7 @@ export function handlePushChoose(
     targetId: string;
     direction: Position;
   },
+  rng: RNG,
 ): GameState {
   const attacker = state.players.find((p) => p.id === move.playerId);
   const target = state.players.find((p) => p.id === move.targetId);
@@ -182,8 +189,9 @@ export function handlePushChoose(
   const fendActive = isFendActiveForFollowUp(newState, attacker, target);
 
   // Chain push : si la destination est occupee, pousser le joueur qui
-  // y est d'abord
-  const rng = () => Math.random(); // RNG pour les surfs en chaine
+  // y est d'abord. Utilise le RNG seede du dispatcher pour conserver
+  // la rejouabilite (surfs en chaine peuvent declencher des injury
+  // crowd rolls).
   newState = applyChainPush(newState, target.id, move.direction, rng);
 
   const frenzyActive = hasFrenzy(attacker) && !!newState.pendingFrenzyBlock;
