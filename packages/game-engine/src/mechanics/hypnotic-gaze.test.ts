@@ -206,6 +206,20 @@ describe('Regle: Hypnotic Gaze', () => {
       expect(resultGazer.pm).toBe(0);
     });
 
+    it('audit round 5 — bloque aussi le GFI sur echec (gfiUsed=2)', () => {
+      // Avant fix : seul `pm = 0` etait set, mais `gfiUsed` restait a 0
+      // → le joueur pouvait GFI 2 cases apres un Gaze rate (puisque
+      // gfiUsed < cap). Aligne avec Bone Head / Wild Animal / Really
+      // Stupid qui set { pm: 0, gfiUsed: 2 } sur echec.
+      const state = createGazeTestState();
+      const gazer = state.players.find(p => p.id === 'A1')!;
+      const target = state.players.find(p => p.id === 'B1')!;
+      const rng = makeTestRNG([0.0]); // fail
+      const result = executeHypnoticGaze(state, gazer, target, rng);
+      const resultGazer = result.players.find(p => p.id === 'A1')!;
+      expect(resultGazer.gfiUsed).toBe(2);
+    });
+
     it('does NOT cause turnover on failure', () => {
       const state = createGazeTestState();
       const gazer = state.players.find(p => p.id === 'A1')!;

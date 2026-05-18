@@ -6,6 +6,7 @@
 import { GameState, RNG, TeamId } from '../core/types';
 import { roll2D6, rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
+import { getWeatherCondition, type WeatherType } from '../core/weather-types';
 
 export interface KickoffEvent {
   id: string;
@@ -205,8 +206,38 @@ export function applyKickoffEvent(
     }
 
     case 'changing-weather': {
-      const log = createLogEntry('action', 'La météo change ! Un nouveau jet de météo est nécessaire.');
-      newState.gameLog = [...newState.gameLog, log];
+      // BUG fix audit round 5 (CRITICAL) : avant, le case ne faisait que
+      // logger "La meteo change" SANS re-roll le 2D6 ni mettre a jour
+      // state.weatherCondition. Resultat : les modificateurs (gfi, dodge,
+      // pass) etaient figes sur la meteo initiale du match alors que la
+      // regle BB dit "Roll on the weather table again. If the result is
+      // Perfect Conditions, the weather does not change."
+      const weatherType: WeatherType =
+        ((newState as GameState & { preMatch?: { weatherType?: WeatherType } })
+          .preMatch?.weatherType ?? 'classique') as WeatherType;
+      const dice1 = Math.floor(rng() * 6) + 1;
+      const dice2 = Math.floor(rng() * 6) + 1;
+      const total = dice1 + dice2;
+      const newWeather = getWeatherCondition(weatherType, total);
+      if (newWeather && newWeather.condition !== 'Conditions parfaites') {
+        // "Conditions parfaites" (total=6-7 selon la table) : on garde
+        // la meteo courante par regle BB. Sinon, on remplace.
+        newState.weatherCondition = {
+          condition: newWeather.condition,
+          description: newWeather.description,
+        };
+        const log = createLogEntry(
+          'action',
+          `La meteo change ! 2D6=${total} → ${newWeather.condition} : ${newWeather.description}`,
+        );
+        newState.gameLog = [...newState.gameLog, log];
+      } else {
+        const log = createLogEntry(
+          'action',
+          `La meteo change ! 2D6=${total} → temps clement, pas de changement.`,
+        );
+        newState.gameLog = [...newState.gameLog, log];
+      }
       break;
     }
 
