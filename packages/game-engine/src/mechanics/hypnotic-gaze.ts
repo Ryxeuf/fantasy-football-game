@@ -119,9 +119,15 @@ export function executeHypnoticGaze(
     );
     newState.gameLog = [...newState.gameLog, successLog];
   } else {
-    // Échec : l'activation du joueur prend fin (pm = 0), PAS de turnover
+    // Echec : l'activation du joueur prend fin, PAS de turnover.
+    // BUG fix audit round 5 (CRITICAL) : avant, seul `pm = 0` etait
+    // set, mais `gfiUsed` restait inchange → le joueur pouvait quand
+    // meme effectuer un GFI (Math.max(1, ma + 2 - gfiUsed) > 0 si
+    // gfiUsed < 2). Aligne avec tous les autres negative-traits
+    // failures (Bone Head, Wild Animal, Really Stupid) qui set
+    // `{ pm: 0, gfiUsed: 2 }`.
     newState.players = newState.players.map(p =>
-      p.id === gazer.id ? { ...p, pm: 0 } : p,
+      p.id === gazer.id ? { ...p, pm: 0, gfiUsed: 2 } : p,
     );
 
     const failLog = createLogEntry(

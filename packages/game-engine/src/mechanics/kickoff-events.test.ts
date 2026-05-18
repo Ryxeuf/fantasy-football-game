@@ -144,5 +144,44 @@ describe('Kickoff Events', () => {
         expect(actionLog!.message).toMatch(/D3.*\+.*fans/i);
       });
     });
+
+    describe('audit round 5 — changing-weather re-roll', () => {
+      const changingWeatherEvent = KICKOFF_EVENTS[8];
+
+      it("re-roll un 2D6 et met a jour state.weatherCondition", () => {
+        // Avant fix : le case ne faisait que logger sans rouler les
+        // dés ni mettre à jour le state. Resultat : modificateurs
+        // (gfi, dodge, pass) figes sur la météo initiale du match.
+        const state = {
+          ...setup(),
+          weatherCondition: { condition: 'Nice', description: 'temps clement' },
+          preMatch: { weatherType: 'classique' } as any,
+        };
+        // rng = 0.99 → dice = 6+6 = 12 → "Sweltering Heat" en classique
+        const rng = () => 0.99;
+        const result = applyKickoffEvent(state, changingWeatherEvent, rng, 'A');
+
+        expect(result.weatherCondition?.condition).not.toBe('Nice');
+        expect(result.weatherCondition?.condition).toBeTruthy();
+      });
+
+      it("garde la meteo si re-roll donne 7 = Nice (Perfect Conditions)", () => {
+        // rng tel que 2D6 = 7 (e.g. dice=3+4 ou 4+3) : Nice → keep
+        const state = {
+          ...setup(),
+          weatherCondition: { condition: 'Rain', description: 'Pluie' },
+          preMatch: { weatherType: 'classique' } as any,
+        };
+        // 0.5 → floor(3) + 1 = 4. 4+4=8 → not 7. Need to craft 2D6=7.
+        // rng(0.34) → floor(2.04)+1 = 3, rng(0.5)→ 4. Total = 7.
+        const rngVals = [0.34, 0.5];
+        let i = 0;
+        const rng = () => rngVals[i++ % rngVals.length];
+        const result = applyKickoffEvent(state, changingWeatherEvent, rng, 'A');
+
+        // Pas de changement : on conserve la pluie initiale.
+        expect(result.weatherCondition?.condition).toBe('Rain');
+      });
+    });
   });
 });
