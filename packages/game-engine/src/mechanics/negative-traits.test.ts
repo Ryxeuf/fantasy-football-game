@@ -322,20 +322,22 @@ describe('Regle: Bloodlust (Soif de Sang)', () => {
       expect(result.passed).toBe(true);
     });
 
-    it('should pass on roll=3 for BLOCK action (3+1=4 >= 4)', () => {
+    it('BLOCK/BLITZ ne donnent PLUS de +1 BB2020 — roll=3 sur cible 4+ echoue', () => {
+      // BB2020 : aucun modificateur Block/Blitz n'existe pour Bloodlust.
+      // Avant le fix, le code ajoutait +1 si BLOCK/BLITZ (modificateur invente).
       let state = setup();
       state = withSkill(state, 'A1', 'bloodlust');
       const player = getPlayer(state, 'A1');
-      const result = checkBloodlust(state, player, fixedRNG(0.4), 'BLOCK');
-      expect(result.passed).toBe(true);
-    });
+      // bloodlust cible 4+, roll=3 (rng 0.4) → 3 < 4 echec, meme sur BLOCK.
+      const blockResult = checkBloodlust(state, player, fixedRNG(0.4), 'BLOCK');
+      expect(blockResult.passed).toBe(false);
 
-    it('should pass on roll=3 for BLITZ action (3+1=4 >= 4)', () => {
-      let state = setup();
-      state = withSkill(state, 'A1', 'bloodlust');
-      const player = getPlayer(state, 'A1');
-      const result = checkBloodlust(state, player, fixedRNG(0.4), 'BLITZ');
-      expect(result.passed).toBe(true);
+      // idem pour BLITZ
+      let state2 = setup();
+      state2 = withSkill(state2, 'A1', 'bloodlust');
+      const player2 = getPlayer(state2, 'A1');
+      const blitzResult = checkBloodlust(state2, player2, fixedRNG(0.4), 'BLITZ');
+      expect(blitzResult.passed).toBe(false);
     });
 
     it('should fail on natural 1 even with BLOCK modifier', () => {
@@ -421,12 +423,14 @@ describe('Regle: Bloodlust (Soif de Sang)', () => {
       expect(result.passed).toBe(true);
     });
 
-    it('should pass on roll=2 for BLOCK action (2+1=3 >= 3)', () => {
+    it('BB2020 : aucun bonus +1 sur BLOCK pour bloodlust-3 (roll=2 sur 3+ echoue)', () => {
+      // BB2020 supprime le modificateur Block/Blitz invente.
       let state = setup();
       state = withSkill(state, 'A1', 'bloodlust-3');
       const player = getPlayer(state, 'A1');
+      // bloodlust-3, roll=2 (rng 0.2 → 2) < 3 → echec.
       const result = checkBloodlust(state, player, fixedRNG(0.2), 'BLOCK');
-      expect(result.passed).toBe(true);
+      expect(result.passed).toBe(false);
     });
 
     it('should fail on natural 1 even with BLITZ modifier', () => {

@@ -270,20 +270,21 @@ describe('Integration: Dauntless dans le flow de blocage complet', () => {
 // ── Dauntless: checkDauntless unit integration with roster players ───────
 
 describe('Integration: Dauntless — checkDauntless avec joueurs roster', () => {
-  it('Troll Slayer vs Kroxigor : utilise ST de base (3) pas les assists', () => {
+  it('Troll Slayer vs Kroxigor : utilise ST de base (5) pas les assists', () => {
     const slayer = makeTrollSlayer();
     const krox = makeKroxigor();
     const state = makeState([slayer, krox]);
 
-    // Attaquant total=3, defenseur total=6 (ST5+1 assist)
-    // Dauntless: D6=3 (rng 0.4). 3+3=6 >= 6 → succes
-    const rng = makeTestRNG([0.4]);
+    // BB2020 : Dauntless compare au ST de base de la cible (krox.st=5),
+    // pas au total avec assists. attacker.st=3, D6=2 → 3+2=5 >= 5 → succes.
+    // newAttackerStrength = krox.st(5) + offensiveAssists(0) = 5.
+    const rng = makeTestRNG([0.25]); // D6=2
     const result = checkDauntless(state, slayer, krox, 3, 6, rng);
 
     expect(result.triggered).toBe(true);
     expect(result.success).toBe(true);
-    expect(result.diceRoll).toBe(3);
-    expect(result.newAttackerStrength).toBe(6);
+    expect(result.diceRoll).toBe(2);
+    expect(result.newAttackerStrength).toBe(5);
   });
 
   it('Dwarf Blocker SANS dauntless vs Saurus : ne declenche pas', () => {

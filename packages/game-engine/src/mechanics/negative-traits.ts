@@ -589,21 +589,20 @@ export function checkBloodlust(
     return { passed: true, newState: state };
   }
 
-  // Roll D6
+  // BB2020 Bloodlust : jet D6 fixe contre `targetNumber` (variant
+  // 2+/3+/4+). Aucun modificateur Block/Blitz n'existe dans la regle.
+  // Avant le fix, on ajoutait +1 si BLOCK/BLITZ — modificateur invente
+  // qui rendait Bloodlust trop facile pour les Vampires qui blitzent.
   const roll = Math.floor(rng() * 6) + 1;
-  const isBlockOrBlitz = moveType === 'BLOCK' || moveType === 'BLITZ';
-  const modifier = isBlockOrBlitz ? 1 : 0;
-  const total = roll + modifier;
-  // Natural 1 always fails, regardless of modifier
-  const success = roll !== 1 && total >= targetNumber;
+  // Natural 1 always fails (BB2020 standard).
+  const success = roll !== 1 && roll >= targetNumber;
 
-  const modifierText = modifier > 0 ? ` (+${modifier})` : '';
   const rollLog = createLogEntry(
     'dice',
-    `Soif de Sang: ${roll}${modifierText}/${targetNumber} ${success ? '✓' : '✗'}`,
+    `Soif de Sang: ${roll}/${targetNumber} ${success ? '✓' : '✗'}`,
     player.id,
     player.team,
-    { diceRoll: roll, targetNumber, success, skill: 'bloodlust', modifier }
+    { diceRoll: roll, targetNumber, success, skill: 'bloodlust' }
   );
 
   let newState: GameState = {

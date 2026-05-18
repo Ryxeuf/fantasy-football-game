@@ -111,36 +111,37 @@ describe('Regle: Dauntless — activation', () => {
     expect(result.diceRoll).toBe(1);
   });
 
-  it('le calcul utilise uniquement la ST de base (pas les assists)', () => {
+  it('le calcul utilise uniquement la ST de base (pas les assists) — BB2020', () => {
     const attacker = makePlayer({ skills: ['dauntless'], st: 3 });
     const defender = makePlayer({ id: 'd1', team: 'B', st: 4 });
     const state = setup();
 
-    // Attaquant a 3 ST + 0 assist = 3 ; cible = 4 ST + 2 assists = 6 total
-    // Dauntless roll : ST(3) + D6 doit etre >= 6 → D6 >= 3
-    // D6 = 3 (rng 0.4 → 3). 3 + 3 = 6 >= 6 → succes → force = 6
-    const rng = makeTestRNG([0.4]);
+    // BB2020 : compare au ST de base (defender.st=4), PAS au total avec assists.
+    // Attaquant.st=3, D6=1 → 3+1=4 >= 4 → SUCCES.
+    // newAttackerStrength = defender.st (4) + offensiveAssists (0) = 4.
+    const rng = makeTestRNG([0.0]); // D6=1
     const result = checkDauntless(state, attacker, defender, 3, 6, rng);
 
     expect(result.triggered).toBe(true);
     expect(result.success).toBe(true);
-    expect(result.diceRoll).toBe(3);
-    expect(result.newAttackerStrength).toBe(6);
+    expect(result.diceRoll).toBe(1);
+    expect(result.newAttackerStrength).toBe(4); // defender.st base, pas 6
   });
 
-  it('le calcul utilise uniquement la ST de base (echec marginal)', () => {
-    const attacker = makePlayer({ skills: ['dauntless'], st: 3 });
+  it("le calcul utilise uniquement la ST de base (echec si D6 trop bas)", () => {
+    const attacker = makePlayer({ skills: ['dauntless'], st: 2 });
     const defender = makePlayer({ id: 'd1', team: 'B', st: 4 });
     const state = setup();
 
-    // Cible totale = 6. D6 = 2 → 3 + 2 = 5 < 6 → echec
-    const rng = makeTestRNG([0.25]);
-    const result = checkDauntless(state, attacker, defender, 3, 6, rng);
+    // attacker.st=2, defender.st=4 (base). D6 doit etre >= 2 pour reussir.
+    // D6=1 (rng=0.0 → floor(0*6)+1=1) → 2+1=3 < 4 → echec.
+    const rng = makeTestRNG([0.0]);
+    const result = checkDauntless(state, attacker, defender, 2, 6, rng);
 
     expect(result.triggered).toBe(true);
     expect(result.success).toBe(false);
-    expect(result.diceRoll).toBe(2);
-    expect(result.newAttackerStrength).toBe(3);
+    expect(result.diceRoll).toBe(1);
+    expect(result.newAttackerStrength).toBe(2);
   });
 
   it('ajoute une entree de log au GameState', () => {

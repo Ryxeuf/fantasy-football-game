@@ -196,7 +196,23 @@ export function handlePushChoose(
 
   const frenzyActive = hasFrenzy(attacker) && !!newState.pendingFrenzyBlock;
 
-  if (fendActive) {
+  // BB2020 LRB Fend : « This skill has no effect against the Frenzy skill. »
+  // → Frenzy bypass Fend. Avant le fix, Fend bloquait le follow-up Frenzy
+  // ET annulait pendingFrenzyBlock, ce qui inverse la regle officielle.
+  if (frenzyActive) {
+    // Frenzy : follow-up obligatoire (priorite sur Fend)
+    newState.players = newState.players.map((p) =>
+      p.id === attacker.id ? { ...p, pos: target.pos } : p,
+    );
+    const frenzyFollowLog = createLogEntry(
+      'action',
+      `${attacker.name} suit ${target.name} (Frenzy — obligatoire, ignore Fend)`,
+      attacker.id,
+      attacker.team,
+      { skill: 'frenzy' },
+    );
+    newState.gameLog = [...newState.gameLog, frenzyFollowLog];
+  } else if (fendActive) {
     const fendLog = createLogEntry(
       'action',
       `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
@@ -205,21 +221,6 @@ export function handlePushChoose(
       { skill: 'fend' },
     );
     newState.gameLog = [...newState.gameLog, fendLog];
-    // Fend annule le suivi -> pas de second bloc frenzy
-    newState.pendingFrenzyBlock = undefined;
-  } else if (frenzyActive) {
-    // Frenzy : follow-up obligatoire
-    newState.players = newState.players.map((p) =>
-      p.id === attacker.id ? { ...p, pos: target.pos } : p,
-    );
-    const frenzyFollowLog = createLogEntry(
-      'action',
-      `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
-      attacker.id,
-      attacker.team,
-      { skill: 'frenzy' },
-    );
-    newState.gameLog = [...newState.gameLog, frenzyFollowLog];
   } else {
     // Demander confirmation pour le follow-up
     newState.pendingFollowUpChoice = {
