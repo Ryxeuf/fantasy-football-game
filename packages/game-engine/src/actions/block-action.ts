@@ -51,8 +51,17 @@ export function resolveFrenzyBlock(state: GameState, rng: RNG): GameState {
   const attacker = state.players.find((p) => p.id === attackerId);
   const target = state.players.find((p) => p.id === targetId);
 
-  // Consommer le pending
-  const next: GameState = { ...state, pendingFrenzyBlock: undefined };
+  // BB2020 : marquer l'attaquant comme ayant deja consomme son second bloc
+  // Frenzy. handlePushBack lira ce flag et N'ARMERA PAS pendingFrenzyBlock
+  // pour un troisieme bloc en cas de second PUSH_BACK.
+  const alreadyTriggered = state.frenzySecondBlockTriggered ?? [];
+  const next: GameState = {
+    ...state,
+    pendingFrenzyBlock: undefined,
+    frenzySecondBlockTriggered: alreadyTriggered.includes(attackerId)
+      ? alreadyTriggered
+      : [...alreadyTriggered, attackerId],
+  };
 
   // Conditions pour le second bloc : attaquant et cible debout et adjacents
   if (!attacker || !target) return next;

@@ -1054,7 +1054,12 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
 
     // Fend : verifier avant la poussee (la cible doit etre debout)
     const fendActive = isFendActiveForFollowUp(state, attacker, target);
-    const frenzyActive = hasFrenzy(attacker);
+    // BB2020 : Frenzy donne EXACTEMENT un second bloc par action Block.
+    // Si l'attaquant a deja consomme ce bonus dans la sequence en cours,
+    // ne pas armer un nouveau pendingFrenzyBlock (sinon chaine infinie).
+    const frenzyAlreadyConsumed =
+      state.frenzySecondBlockTriggered?.includes(attacker.id) ?? false;
+    const frenzyActive = hasFrenzy(attacker) && !frenzyAlreadyConsumed;
 
     state = applyChainPush(state, target.id, pushDirection, rng);
 
@@ -1114,8 +1119,11 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       targetStrength: 2,
     };
     // Frenzy : marquer le second bloc en attente pour après le choix de
-    // direction + follow-up automatique
-    if (hasFrenzy(attacker)) {
+    // direction + follow-up automatique. BB2020 : pas de troisième bloc
+    // si le second a déjà été consommé dans la séquence en cours.
+    const frenzyAlreadyConsumedMulti =
+      state.frenzySecondBlockTriggered?.includes(attacker.id) ?? false;
+    if (hasFrenzy(attacker) && !frenzyAlreadyConsumedMulti) {
       state.pendingFrenzyBlock = {
         attackerId: attacker.id,
         targetId: target.id,

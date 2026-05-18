@@ -298,6 +298,12 @@ export interface GameState {
     attackerId: string;
     targetId: string;
   };
+  // BB2020 : Frenzy donne EXACTEMENT un second bloc par action Block,
+  // jamais un troisième. Cette liste contient les attackerIds qui ont
+  // déjà déclenché leur second bloc Frenzy dans la séquence en cours.
+  // Reset au changement de tour (END_TURN). Avant ce flag, une suite
+  // de PUSH_BACK déclenchait un 3e, 4e, … bloc en chaîne infinie.
+  frenzySecondBlockTriggered?: string[];
   // On the Ball en attente : un joueur adverse peut réagir avant la passe.
   pendingOnTheBall?: {
     passerTeam: TeamId;
