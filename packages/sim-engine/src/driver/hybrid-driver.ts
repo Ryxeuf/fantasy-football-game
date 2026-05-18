@@ -463,13 +463,20 @@ function rollYards(
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
-  // Engine 0.17.0 tuning (matchs 0-0 fix) : cap defensiveDisruption a -2
-  // (previously -3). Combine avec bashCounter (-3 max), la penalite
-  // defense max etait -6 yds/turn — trop punitive vs Dwarf bash. Reduit
-  // a -5 max permet de re-equilibrer le TD/match mean (0.95 → ~1.4).
+  // BUG fix audit round 3 B12 : avant, le divisor `/2000` saturait pour
+  // ~90% des equipes (stall × bash > 2000 = clamp -2). Le seul cas non
+  // sature etait les equipes a faible stall ET faible bash (Halfling
+  // hors stall, Snotling, Goblin) — un fringe de 5%. Le levier
+  // bash-vs-pace etait donc neutralise pour la grande majorite des
+  // teams. Diviseur reduit a /1000 + clamp augmente a [-3, 0] pour
+  // re-introduire de la variance entre profiles tactiques.
+  // Engine 0.17.0 tuning (matchs 0-0 fix) historique : la combinaison
+  // bashCounter (-3) + disruption (-2) atteignait -5 max. Avec le nouveau
+  // diviseur, max devient -3 (cap explicite) → combine = -6 si bash
+  // pur ; on garde le meme plafond effectif mais on retrouve la granularite.
   const defensiveDisruption = -Math.min(
-    2,
-    Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
+    3,
+    Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 1000)
   );
   const tvBonus = Math.max(-3, Math.min(3, Math.round(tvDelta / 80)));
   const fatTail = rng.next();
@@ -605,16 +612,29 @@ function processTurn(
     m.nuffleEvents += 1;
     // Sprint 0.E.1 iter #10 (engineVer 0.11.0) : encore élargi la
     // casualty injection. 8 events injectent maintenant des casualties.
-    if (
-      nuffleEvent.id === 'bombardier_gone_wild' ||
-      (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.6) ||
-      (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25) ||
-      (nuffleEvent.id === 'tantrum_star' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'cocky_drop' && rngs.luck.next() < 0.3) ||
-      (nuffleEvent.id === 'equipment_failure' && rngs.luck.next() < 0.3) ||
-      (nuffleEvent.id === 'wardrobe_malfunction' && rngs.luck.next() < 0.2)
-    ) {
+    // BUG fix audit round 3 B8 : avant, la chaine `||` shortcircuitait
+    // au premier match → le nombre de `rngs.luck.next()` calls dependait
+    // de `nuffleEvent.id`. Le luck stream etait donc « entangle » avec
+    // nuffle, contredisant le commentaire L173-175 (« Independent so
+    // toggling the boost on/off doesn't shift any other stream »).
+    // Toggler les Nuffle events shiftait toutes les decisions
+    // underdog en aval.
+    //
+    // Maintenant on calcule UN luck.next() au debut (proba dependante
+    // de l'event id) et on la teste contre 0 ou non — luck stream
+    // appelee une seule fois, pas de short-circuit.
+    const nuffleCasualtyChance =
+      nuffleEvent.id === 'bombardier_gone_wild' ? 1.0 :
+      nuffleEvent.id === 'banana_skin' ? 0.5 :
+      nuffleEvent.id === 'crowd_riot' ? 0.6 :
+      nuffleEvent.id === 'nemesis_clash' ? 0.25 :
+      nuffleEvent.id === 'tantrum_star' ? 0.5 :
+      nuffleEvent.id === 'cocky_drop' ? 0.3 :
+      nuffleEvent.id === 'equipment_failure' ? 0.3 :
+      nuffleEvent.id === 'wardrobe_malfunction' ? 0.2 :
+      0;
+    const nuffleCasualtyRoll = rngs.luck.next();
+    if (nuffleCasualtyChance > 0 && nuffleCasualtyRoll < nuffleCasualtyChance) {
       const victimSide: Side = otherSide(m.state.drive.drivingTeam);
       const victimId = `${victimSide}-NUFFLE-${m.state.half}-${m.state.turn}`;
       m.casualties.push({
@@ -645,7 +665,17 @@ function processTurn(
   const isBashy =
     activeProfile.bashIndex >= 60 || activeProfile.foulFrequency >= 60;
   const baseCount = m.state.turn % 3 === 0 ? 2 : 1;
-  const momentCount = isBashy && m.state.turn % 2 === 0 ? baseCount + 1 : baseCount;
+  // BUG fix audit round 3 B4 : avant, `turn % 2 === 0` stackait sur
+  // tous les tours pairs (turn=2,4,6,8). En half 2 (turn reset a 1),
+  // les memes equipes bashy gardent leur flag — le double-moment
+  // s'applique encore. Resultat : 6 tours bashy sur les 16 totaux,
+  // soit ~40% de blocks supplementaires. Casualty rate de 1.0/match
+  // (cible FUMBBL) explose.
+  //
+  // Maintenant : limiter le bonus bashy a UN tour par half (turn === 4,
+  // milieu de la half) au lieu de tous les tours pairs. Reduit l'impact
+  // a 1 moment supplementaire / half / equipe bashy.
+  const momentCount = isBashy && m.state.turn === 4 ? baseCount + 1 : baseCount;
   // Bug #1 fix : a turnover terminates the active team's turn. The
   // opponent must NOT advance yards (and possibly score) on the same
   // turn — that produced absurd "pickup_failed → opponent TD"
