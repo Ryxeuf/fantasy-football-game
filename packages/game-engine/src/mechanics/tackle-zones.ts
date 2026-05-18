@@ -4,6 +4,7 @@
  */
 
 import { GameState, TeamId, Position } from '../core/types';
+import { hasSkill } from '../skills/skill-effects';
 
 /**
  * Données de heatmap pour une case du terrain
@@ -47,13 +48,21 @@ export function calculateTackleZoneHeatmap(state: GameState): TackleZoneHeatmap 
     }
   }
 
-  // Pour chaque joueur actif (non stunned, non hypnotisé), marquer les 8 cases adjacentes
+  // Pour chaque joueur actif (non stunned, non hypnotisé, non Titchy),
+  // marquer les 8 cases adjacentes.
+  // BUG fix : avant, les joueurs Titchy contribuaient a la heatmap des
+  // tackle zones alors que le skill BB2020 dit explicitement « Ce joueur
+  // n'exerce pas de zone de tacle. » Les zones Halfling Hopeful/Snotling
+  // etaient affichees a tort, faussant les decisions tactiques.
   const hypnotized = state.hypnotizedPlayers ?? [];
   for (const player of state.players) {
     if (player.stunned || player.state === 'knocked_out' || player.state === 'casualty' || player.state === 'sent_off') {
       continue;
     }
     if (hypnotized.includes(player.id)) {
+      continue;
+    }
+    if (hasSkill(player, 'titchy')) {
       continue;
     }
 
@@ -91,6 +100,8 @@ export function getTeamTackleZones(state: GameState, team: TeamId): Position[] {
 
   for (const player of state.players) {
     if (player.team !== team || player.stunned || player.state !== 'active') continue;
+    // BUG fix : Titchy n'exerce pas de zone de tacle.
+    if (hasSkill(player, 'titchy')) continue;
 
     for (const dir of DIRS) {
       const nx = player.pos.x + dir.x;
@@ -114,6 +125,8 @@ export function countTackleZonesAt(state: GameState, pos: Position, team: TeamId
   let count = 0;
   for (const player of state.players) {
     if (player.team !== team || player.stunned || player.state !== 'active') continue;
+    // BUG fix : Titchy n'exerce pas de zone de tacle.
+    if (hasSkill(player, 'titchy')) continue;
     const dx = Math.abs(player.pos.x - pos.x);
     const dy = Math.abs(player.pos.y - pos.y);
     if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0)) {

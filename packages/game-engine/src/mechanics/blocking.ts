@@ -395,8 +395,20 @@ function getAdjacentOpponents(state: GameState, position: Position, team: TeamId
 
   for (const dir of dirs) {
     const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
+    // BUG fix : avant, le filtre ne testait que `!p.stunned`. Les
+    // joueurs en zone KO / casualty / sent_off ont pos=(-1,-1) ou
+    // similaire en dugout — ils pouvaient match `checkPos` près de
+    // (0,0) et compter comme adversaire adjacent. Filtrer par état
+    // exclut explicitement les joueurs hors terrain.
     const opponent = state.players.find(
-      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned
+      p =>
+        p.team !== team &&
+        p.pos.x === checkPos.x &&
+        p.pos.y === checkPos.y &&
+        !p.stunned &&
+        p.state !== 'knocked_out' &&
+        p.state !== 'casualty' &&
+        p.state !== 'sent_off'
     );
     if (opponent) {
       opponents.push(opponent);

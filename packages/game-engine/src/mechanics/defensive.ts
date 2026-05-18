@@ -58,6 +58,17 @@ export function isGuardCancelledByDefensive(
     if (other.id === guardPlayer.id) continue;
     if (other.team === guardPlayer.team) continue;
     if (other.stunned) continue;
+    // BUG fix : exclure les joueurs hors terrain (KO/casualty/sent_off).
+    // Leur pos en dugout (-1,-1) ne fournit plus de zone de tacle, donc
+    // ne marque plus le porteur de Guard. Filtre defensif explicite
+    // pour suivre l'invariant de tackle-zones.ts.
+    if (
+      other.state === 'knocked_out' ||
+      other.state === 'casualty' ||
+      other.state === 'sent_off'
+    ) {
+      continue;
+    }
     if (!isAdjacent(other.pos, guardPlayer.pos)) continue;
     if (hasDefensive(other)) return true;
   }
