@@ -56,6 +56,24 @@ export const EVAL_WEIGHTS = {
    * sans incidence directe) en faveur du jeu actif.
    */
   END_TURN_PENALTY: 1,
+  /**
+   * Audit round 4 — scoring FOUL. Avant, ces valeurs etaient hardcodees
+   * dans `scoreMoveFoul` (baseValue 90 carrier / 30 non-carrier, malus
+   * -40 pour le risque turnover). Resultat : impossibles a moduler via
+   * `TacticalProfile` (Goblins / Underworld avec haut `foulFrequency`
+   * devraient valoriser plus les fouls, mais le score ignorait les
+   * weights). Maintenant dans `EvalWeights` → modulables par profile.
+   */
+  FOUL_CARRIER_VALUE: 90,
+  FOUL_NON_CARRIER_VALUE: 30,
+  FOUL_TURNOVER_RISK: 40,
+  /**
+   * Audit round 4 — scoring PASS. Avant : malus hardcode -8 pour PASS,
+   * 0 pour HANDOFF. Maintenant modulable via `PASS_RISK_PENALTY` (un
+   * profil pace+pass-heavy peut le baisser, un profil bash le hausser).
+   */
+  PASS_RISK_PENALTY: 8,
+  HANDOFF_RISK_PENALTY: 0,
 } as const;
 
 /**
@@ -436,20 +454,31 @@ function scoreMovePass(
   const delta =
     evaluatePosition(simulated, team, weightsOverride).total -
     evaluatePosition(state, team, weightsOverride).total;
-  const risk = move.type === 'PASS' ? -8 : 0;
+  // BUG fix audit round 4 : avant le risque etait hardcode -8 pour
+  // PASS et 0 pour HANDOFF. Maintenant modulable via weights.
+  const weights = resolveWeights(weightsOverride);
+  const risk =
+    move.type === 'PASS' ? -weights.PASS_RISK_PENALTY : -weights.HANDOFF_RISK_PENALTY;
   return delta + risk;
 }
 
 function scoreMoveFoul(
   state: GameState,
   move: Extract<Move, { type: 'FOUL' }>,
-  team: TeamId
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
   const target = findPlayer(state, move.targetId);
   if (!target) return -Infinity;
   if (target.team === team) return -Infinity;
-  const baseValue = target.hasBall ? 90 : 30;
-  return baseValue - 40;
+  // BUG fix audit round 4 : avant ces valeurs etaient hardcodees
+  // (90 / 30 / -40). Maintenant modulables via weights pour permettre
+  // aux profils foul-happy (Goblins / Underworld) de valoriser plus.
+  const weights = resolveWeights(weightsOverride);
+  const baseValue = target.hasBall
+    ? weights.FOUL_CARRIER_VALUE
+    : weights.FOUL_NON_CARRIER_VALUE;
+  return baseValue - weights.FOUL_TURNOVER_RISK;
 }
 
 /**
@@ -488,7 +517,7 @@ export function scoreMove(
     case 'HANDOFF':
       return scoreMovePass(state, move, team, weightsOverride);
     case 'FOUL':
-      return scoreMoveFoul(state, move, team);
+      return scoreMoveFoul(state, move, team, weightsOverride);
     case 'END_PLAYER_TURN':
       return -5;
     default:

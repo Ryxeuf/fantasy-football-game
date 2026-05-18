@@ -92,4 +92,56 @@ describe('opening book — Lot 3.A.0.c', () => {
       }
     }
   });
+
+  describe('audit round 4 — couverture etendue BB3 S3 + case-insensitive', () => {
+    it('expose un book pour les 8+ races BB3 S3 ajoutees', () => {
+      const races = RACE_OPENING_BOOKS.map((b) => b.race);
+      for (const r of [
+        'Chaos Chosen',
+        'Chaos Renegades',
+        'Chaos Dwarf',
+        'Black Orc',
+        'Khorne',
+        'Nurgle',
+        'Goblin',
+        'Underworld Denizens',
+        'Vampire',
+        'Necromantic Horror',
+        'Shambling Undead',
+        'High Elf',
+        'Elven Union',
+        'Human',
+        'Imperial Nobility',
+        'Old World Alliance',
+        'Snotling',
+        'Slann',
+        'Gnome',
+      ]) {
+        expect(races).toContain(r);
+      }
+    });
+
+    it('lookup case-insensitive : matche les variantes de casse', () => {
+      expect(getOpeningBookForRace('wood elf')?.race).toBe('Wood Elf');
+      expect(getOpeningBookForRace('WOOD ELF')?.race).toBe('Wood Elf');
+      expect(getOpeningBookForRace('Wood elf')?.race).toBe('Wood Elf');
+      expect(getOpeningBookForRace('  wood elf  ')?.race).toBe('Wood Elf');
+    });
+
+    it('Goblins valorisent fortement le FOUL', () => {
+      const goblin = getOpeningBookForRace('Goblin');
+      expect(openingBookBonus(goblin, 1, 'FOUL')).toBeGreaterThan(0);
+      expect(openingBookBonus(goblin, 5, 'FOUL')).toBeGreaterThan(0);
+    });
+
+    it('Black Orcs detestent encore plus passer que Orcs', () => {
+      const bo = openingBookBonusForRace('Black Orc', 1, 'PASS');
+      const o = openingBookBonusForRace('Orc', 1, 'PASS');
+      expect(bo).toBeLessThan(o); // plus negatif
+    });
+
+    it('Shambling Undead a un bonus BLOCK (alias de Undead)', () => {
+      expect(openingBookBonusForRace('Shambling Undead', 1, 'BLOCK')).toBeGreaterThan(0);
+    });
+  });
 });

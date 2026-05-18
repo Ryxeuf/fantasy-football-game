@@ -29,8 +29,12 @@
  * - breakawayInstinct (haut = sprint au porteur, Wood Elves) :
  *     ↑ POSSESSION (récupérer/conserver la balle vaut plus)
  * - foulFrequency (haut = Goblins / Underworld) :
- *     traité dans le mapping de `scoreMoveFoul` côté evaluator
- *     (constante interne) — pas de modulation ici au MVP.
+ *     ↑ FOUL_CARRIER_VALUE et FOUL_NON_CARRIER_VALUE (foul-happy teams
+ *       valorisent plus le foul)
+ *     ↓ FOUL_TURNOVER_RISK (acceptent davantage le risque d'expulsion)
+ *     Audit round 4 — avant, foulFrequency n'avait AUCUNE incidence
+ *     sur le scoring AI : un Goblin foulait au meme rythme qu'un
+ *     Wood Elf.
  *
  * Tous les multiplicateurs sont bornés à `[0.4, 1.6]` pour éviter
  * qu'un profil extrême ne casse l'IA (poids négatifs ou explosifs).
@@ -84,6 +88,8 @@ export function weightsFromProfile(
   const stall = paramFactor(profile.stallTendency, 0.4);
   const patience = paramFactor(profile.patience, 0.25);
   const breakaway = paramFactor(profile.breakawayInstinct, 0.25);
+  // Audit round 4 : foulFrequency module desormais le scoring foul.
+  const foul = paramFactor(profile.foulFrequency, 0.4);
 
   // Bash teams pénalisent moins les pertes (1 - (bash - 1))
   const casualtyMul = 2 - bash;
@@ -95,6 +101,10 @@ export function weightsFromProfile(
   const protectionMul = patience;
   // Breakaway teams valorisent plus la possession
   const possessionMul = breakaway;
+  // Foul-happy teams valorisent plus le foul + acceptent plus le
+  // risque d'expulsion (FOUL_TURNOVER_RISK module inversement).
+  const foulValueMul = foul;
+  const foulRiskMul = 2 - foul;
 
   return {
     PLAYER_CASUALTY_PENALTY: Math.round(150 * clamp(casualtyMul)),
@@ -111,5 +121,8 @@ export function weightsFromProfile(
     ),
     CARRIER_PROTECTION_ALLY: Math.round(20 * clamp(protectionMul)),
     POSSESSION: Math.round(300 * clamp(possessionMul)),
+    FOUL_CARRIER_VALUE: Math.round(90 * clamp(foulValueMul)),
+    FOUL_NON_CARRIER_VALUE: Math.round(30 * clamp(foulValueMul)),
+    FOUL_TURNOVER_RISK: Math.round(40 * clamp(foulRiskMul)),
   };
 }
