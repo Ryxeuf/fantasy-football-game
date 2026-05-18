@@ -68,13 +68,13 @@ describe('Regle: Wrestle', () => {
       expect(defender.stunned).toBe(true);
     });
 
-    it('pas de turnover sur BOTH_DOWN', () => {
+    it('BB3 S3 : Wrestle BOTH_DOWN cause turnover', () => {
       const testState = placePlayersForBlock(state, ['Wrestle'], []);
       const blockResult = makeBlockResult('A2', 'B2', 'BOTH_DOWN');
 
       const result = resolveBlockResult(testState, blockResult, rng);
 
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
     });
 
     it('pas de jet d\'armure pour les deux joueurs', () => {
@@ -104,13 +104,13 @@ describe('Regle: Wrestle', () => {
       expect(defender.stunned).toBe(true);
     });
 
-    it('pas de turnover quand le defenseur a Wrestle', () => {
+    it('BB3 S3 : Wrestle defenseur cause turnover', () => {
       const testState = placePlayersForBlock(state, [], ['Wrestle']);
       const blockResult = makeBlockResult('A2', 'B2', 'BOTH_DOWN');
 
       const result = resolveBlockResult(testState, blockResult, rng);
 
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
     });
 
     it('pas de jet d\'armure', () => {
@@ -140,7 +140,7 @@ describe('Regle: Wrestle', () => {
       // Les deux tombent malgre le Block du defenseur
       expect(attacker.stunned).toBe(true);
       expect(defender.stunned).toBe(true);
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
     });
 
     it('Wrestle override Block: defenseur a Wrestle, attaquant a Block', () => {
@@ -156,12 +156,12 @@ describe('Regle: Wrestle', () => {
       // Les deux tombent malgre le Block de l'attaquant
       expect(attacker.stunned).toBe(true);
       expect(defender.stunned).toBe(true);
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
     });
   });
 
   describe('Les deux ont Wrestle', () => {
-    it('les deux tombent, pas de turnover, pas de jet d\'armure', () => {
+    it('BB3 S3 : les deux tombent, turnover, pas de jet d\'armure', () => {
       const testState = placePlayersForBlock(state, ['Wrestle'], ['Wrestle']);
       const blockResult = makeBlockResult('A2', 'B2', 'BOTH_DOWN');
 
@@ -172,7 +172,7 @@ describe('Regle: Wrestle', () => {
 
       expect(attacker.stunned).toBe(true);
       expect(defender.stunned).toBe(true);
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
 
       const armorLogs = result.gameLog.filter(
         log => log.type === 'dice' && log.message.includes("Jet d'armure"),

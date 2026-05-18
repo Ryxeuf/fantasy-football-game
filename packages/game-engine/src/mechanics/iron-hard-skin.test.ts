@@ -122,7 +122,10 @@ describe('Règle: Iron Hard Skin (P1.7)', () => {
       expect(log).toContain('Iron Hard Skin');
     });
 
-    it('laisse passer Mighty Blow contre une cible sans Iron Hard Skin (régression)', () => {
+    it("BB3 S3 : Mighty Blow ne s'applique PAS sur Stab (regle exclusive)", () => {
+      // BB3 S3 LRB Stab : « Stab may NOT be combined with the Mighty
+      // Blow skill. » Le bonus MB n'apparait pas, donc 4+4=8 contre
+      // AV 9 → tient. Avant le fix, MB donnait +1 → 8 percee.
       const stabber = basePlayer({
         id: 'att', pos: { x: 5, y: 5 }, team: 'A',
         skills: ['stab', 'mighty-blow'],
@@ -131,11 +134,12 @@ describe('Règle: Iron Hard Skin (P1.7)', () => {
         id: 'def', pos: { x: 6, y: 5 }, team: 'B', av: 9, skills: [],
       });
       const state = makeState([stabber, defender]);
-      // 4+4 = 8, -1 (MB) → target 8 ≤ 8 = percée. Injury 6+6 → casualty.
       const rng = makeTestRNG([die(4), die(4), die(6), die(6), die(6), die(6)]);
       const after = executeStab(state, stabber, defender, rng);
       const defAfter = after.players.find(p => p.id === 'def')!;
-      expect(defAfter.state !== 'active' || defAfter.stunned).toBeTruthy();
+      // Defender survives (no MB → 8 < 9 → tient).
+      expect(defAfter.state).toBe('active');
+      expect(defAfter.stunned).toBeFalsy();
     });
   });
 

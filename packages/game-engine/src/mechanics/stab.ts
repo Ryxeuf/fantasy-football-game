@@ -21,7 +21,7 @@ import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
-import { getMightyBlowBonusFromRegistry, getArmorSkillContext } from '../skills/skill-bridge';
+import { getArmorSkillContext } from '../skills/skill-bridge';
 
 /**
  * Indique si un joueur peut utiliser Stab sur une cible donnée.
@@ -59,13 +59,13 @@ export function executeStab(
   );
   newState.gameLog = [...newState.gameLog, actionLog];
 
-  // Jet d'armure direct, avec bonus Mighty Blow éventuel.
-  // Iron Hard Skin annule les modificateurs positifs de l'attaquant
-  // sur le jet d'armure (ex. Mighty Blow).
-  const mightyBlowBonusRaw = getMightyBlowBonusFromRegistry(stabber, newState);
+  // BUG fix : BB3 S3 Stab rule explicite : « Stab may NOT be combined
+  // with the Mighty Blow skill. » Avant le fix, Mighty Blow donnait
+  // +1 a l'armor roll de Stab tant que IHS n'etait pas actif. Le code
+  // mixait deux skills exclusifs. Fix : ignorer Mighty Blow sur Stab.
+  // IHS reste applicable pour la coherence du log.
   const { ironHardSkinActive } = getArmorSkillContext(newState, stabber, target);
-  const mightyBlowBonus = ironHardSkinActive ? 0 : mightyBlowBonusRaw;
-  const armorResult = performArmorRoll(target, rng, -mightyBlowBonus);
+  const armorResult = performArmorRoll(target, rng, 0);
   newState.lastDiceResult = armorResult;
 
   const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
@@ -74,7 +74,7 @@ export function executeStab(
     `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
     target.id,
     target.team,
-    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus, ironHardSkin: ironHardSkinActive },
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowExcluded: true, ironHardSkin: ironHardSkinActive },
   );
   newState.gameLog = [...newState.gameLog, armorLog];
 

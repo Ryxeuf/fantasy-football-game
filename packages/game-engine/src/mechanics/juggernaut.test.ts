@@ -197,7 +197,7 @@ describe('Regle: Juggernaut', () => {
       expect(result.isTurnover).toBe(true);
     });
 
-    it('ne modifie pas un BOTH_DOWN avec Wrestle si ce n\'est pas un blitz', () => {
+    it('ne modifie pas un BOTH_DOWN avec Wrestle si ce n\'est pas un blitz (BB3 S3 turnover applique)', () => {
       // Juggernaut mais NON-blitz + defenseur a Wrestle : Wrestle s'applique normalement.
       const testState = placePlayersForBlock(state, ['juggernaut'], ['wrestle'], {
         isBlitz: false,
@@ -206,12 +206,12 @@ describe('Regle: Juggernaut', () => {
 
       const result = resolveBlockResult(testState, blockResult, rng);
 
-      // Wrestle force les deux au sol sans jet d'armure et sans turnover.
+      // Wrestle force les deux au sol sans jet d'armure ; BB3 S3 cause turnover.
       const attacker = result.players.find(p => p.id === 'A2')!;
       const defender = result.players.find(p => p.id === 'B2')!;
       expect(attacker.stunned).toBe(true);
       expect(defender.stunned).toBe(true);
-      expect(result.isTurnover).toBe(false);
+      expect(result.isTurnover).toBe(true);
 
       const armorLogs = result.gameLog.filter(
         log => log.type === 'dice' && log.message.includes("Jet d'armure"),
