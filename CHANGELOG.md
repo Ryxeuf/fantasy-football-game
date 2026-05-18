@@ -1,3 +1,10 @@
+## [1.121.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.0...v1.121.1) (2026-05-18)
+
+
+### 🐛 Bug Fixes
+
+* **replay:** synchronize visual and textual logs by implementing external clock support ([079a366](https://github.com/Ryxeuf/fantasy-football-game/commit/079a36614ebfe66daeedc0b3c4aca94f6c5b554c))
+
 ## [1.121.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.3...v1.121.0) (2026-05-18)
 
 
