@@ -375,6 +375,16 @@ function estimateBallYardline(state: GameState): number {
 }
 
 /**
+ * Variante exportee de `estimateBallYardline` — utilisee par
+ * `full-driver.ts` pour le TURN_START initial. Avant le fix, le
+ * yardline initial etait hardcode a 4, ce qui est faux si le roster
+ * place le ball carrier ailleurs (post-fix C3 ball idx variable).
+ */
+export function getInitialBallYardline(state: GameState): number {
+  return estimateBallYardline(state);
+}
+
+/**
  * Inférence best-effort de la cause d'un turnover à partir du Move
  * qui l'a déclenché. La taxonomie matche celle du hybrid driver
  * pour que les consommateurs (narrator, gazette) restent uniformes.
