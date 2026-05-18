@@ -581,13 +581,13 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       const ctxA: InducementContext = {
         teamId: "A",
         regionalRules: [],
-        hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+        hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
         rosterSlug: localMatch.teamA.roster,
       };
       const ctxB: InducementContext = {
         teamId: "B",
         regionalRules: [],
-        hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+        hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
         rosterSlug: localMatch.teamB.roster,
       };
 
@@ -707,13 +707,13 @@ router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema),
     const ctxA: InducementContext = {
       teamId: "A",
       regionalRules: [],
-      hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+      hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
       rosterSlug: rosterA,
     };
     const ctxB: InducementContext = {
       teamId: "B",
       regionalRules: [],
-      hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+      hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
       rosterSlug: rosterB,
     };
 

@@ -1,29 +1,50 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    proLeagueMatch: { findUnique: vi.fn(), findMany: vi.fn() },
-    proBetMarket: {
-      findMany: vi.fn(),
-      update: vi.fn(),
+// Audit round 4 : settlement wrap maintenant update bets + credit users
+// + create settlement + update market dans une seule $transaction. On
+// simule en partageant les memes mocks entre prisma top-level et le `tx`
+// passe au callback du $transaction.
+vi.mock("../prisma", () => {
+  const proBet = { findMany: vi.fn(), update: vi.fn() };
+  const proBetMarket = {
+    findMany: vi.fn(),
+    update: vi.fn(),
+  };
+  const proBetSettlement = { findUnique: vi.fn(), create: vi.fn() };
+  return {
+    prisma: {
+      proLeagueMatch: { findUnique: vi.fn(), findMany: vi.fn() },
+      proBet,
+      proBetMarket,
+      proBetSettlement,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) =>
+        cb({ proBet, proBetMarket, proBetSettlement }),
+      ),
     },
-    proBet: {
-      findMany: vi.fn(),
-      update: vi.fn(),
-    },
-    proBetSettlement: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-  },
-}));
+  };
+});
 
 vi.mock("./pro-wallet", () => ({
   credit: vi.fn(),
+  creditInTx: vi.fn(),
+  ensureWalletExists: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Q.D.1 / Q.D.2 / Q.B.3 — hooks post-settlement mockes pour eviter de
+// drag in tout l'arbre Prisma dans ce test.
+vi.mock("./pro-prediction-leagues", () => ({
+  settlePicksForMatch: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("./pro-survivor", () => ({
+  settleSurvivorRound: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("./pro-match-predictions", () => ({
+  settlePredictions: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { prisma } from "../prisma";
-import { credit } from "./pro-wallet";
+import { creditInTx, ensureWalletExists } from "./pro-wallet";
 import {
   SettlementError,
   settleMarketsForMatch,
@@ -47,10 +68,12 @@ interface MockedPrisma {
     findUnique: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
   };
+  $transaction: ReturnType<typeof vi.fn>;
 }
 
 const mocked = prisma as unknown as MockedPrisma;
-const mockedCredit = vi.mocked(credit);
+const mockedCreditInTx = vi.mocked(creditInTx);
+const mockedEnsureWallet = vi.mocked(ensureWalletExists);
 
 const MATCH_ID = "m_1";
 
@@ -72,6 +95,18 @@ beforeEach(() => {
   mocked.proBet.update.mockResolvedValue({});
   mocked.proBetSettlement.findUnique.mockResolvedValue(null);
   mocked.proBetSettlement.create.mockResolvedValue({});
+  mockedEnsureWallet.mockResolvedValue(undefined);
+  // Re-attache le comportement par defaut du $transaction (clearAllMocks
+  // l'a vide).
+  mocked.$transaction.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (cb: any) =>
+      cb({
+        proBet: mocked.proBet,
+        proBetMarket: mocked.proBetMarket,
+        proBetSettlement: mocked.proBetSettlement,
+      }),
+  );
 });
 
 describe("settleMarketsForMatch — sprint 1.D.5", () => {
@@ -105,7 +140,7 @@ describe("settleMarketsForMatch — sprint 1.D.5", () => {
     expect(out.settled).toBe(0);
     expect(out.skipped).toBe(0);
     expect(out.summaries).toEqual([]);
-    expect(mockedCredit).not.toHaveBeenCalled();
+    expect(mockedCreditInTx).not.toHaveBeenCalled();
   });
 
   it("settle 1X2 : home win → bets home gagnent, draw/away perdent", async () => {
@@ -153,8 +188,19 @@ describe("settleMarketsForMatch — sprint 1.D.5", () => {
     expect(s.totalPayout).toBe(200);
 
     // u1 (home) credité 200, u2/u3 non.
-    expect(mockedCredit).toHaveBeenCalledTimes(1);
-    expect(mockedCredit).toHaveBeenCalledWith("u1", 200, "WIN", "b_home");
+    expect(mockedCreditInTx).toHaveBeenCalledTimes(1);
+    expect(mockedCreditInTx).toHaveBeenCalledWith(
+      expect.anything(),
+      "u1",
+      200,
+      "WIN",
+      "b_home",
+    );
+    // Pre-ensure wallet uniquement pour les gagnants (1 ici).
+    expect(mockedEnsureWallet).toHaveBeenCalledTimes(1);
+    expect(mockedEnsureWallet).toHaveBeenCalledWith("u1");
+    // Tout settle dans une seule $transaction par market.
+    expect(mocked.$transaction).toHaveBeenCalledTimes(1);
 
     // proBet.update : 3 fois (1 won + 2 lost)
     expect(mocked.proBet.update).toHaveBeenCalledTimes(3);
@@ -199,7 +245,8 @@ describe("settleMarketsForMatch — sprint 1.D.5", () => {
     ]);
     const out = await settleMarketsForMatch(MATCH_ID);
     expect(out.summaries[0].winningSelection).toBe("over");
-    expect(mockedCredit).toHaveBeenCalledWith(
+    expect(mockedCreditInTx).toHaveBeenCalledWith(
+      expect.anything(),
       "u1",
       170, // round(100 * 1.7)
       "WIN",
@@ -254,7 +301,7 @@ describe("settleMarketsForMatch — sprint 1.D.5", () => {
     expect(out.settled).toBe(0);
     expect(out.skipped).toBe(1);
     expect(mocked.proBet.findMany).not.toHaveBeenCalled();
-    expect(mockedCredit).not.toHaveBeenCalled();
+    expect(mockedCreditInTx).not.toHaveBeenCalled();
   });
 
   it("skip si winningSelection introuvable (counter null)", async () => {

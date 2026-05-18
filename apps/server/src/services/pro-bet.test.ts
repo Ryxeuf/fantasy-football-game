@@ -1,14 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Helper: chaque appel a `$transaction(cb)` execute le callback avec un
+// `tx` qui partage les memes mocks (proBet, proWallet, proTransaction).
+// Audit round 4 : placeBet utilise une seule $transaction qui wrap
+// debit + create, donc on simule ce comportement ici.
+const txMocks = {
+  proWallet: { findUnique: vi.fn(), update: vi.fn() },
+  proTransaction: { create: vi.fn() },
+  proBet: { create: vi.fn() },
+};
+
 vi.mock("../prisma", () => ({
   prisma: {
     proBetMarket: { findMany: vi.fn(), findUnique: vi.fn() },
     proBet: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn() },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: vi.fn(async (cb: any) => cb(txMocks)),
   },
 }));
 
 vi.mock("./pro-wallet", () => ({
-  debit: vi.fn(),
+  ensureWalletExists: vi.fn().mockResolvedValue(undefined),
+  debitInTx: vi.fn(),
   InsufficientFundsError: class InsufficientFundsError extends Error {
     code = "WALLET_INSUFFICIENT_FUNDS";
     available = 0;
@@ -17,7 +30,7 @@ vi.mock("./pro-wallet", () => ({
 }));
 
 import { prisma } from "../prisma";
-import { debit } from "./pro-wallet";
+import { debitInTx, ensureWalletExists } from "./pro-wallet";
 import {
   BetValidationError,
   MarketNotFoundError,
@@ -36,16 +49,23 @@ interface MockedPrisma {
     findMany: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
   };
+  $transaction: ReturnType<typeof vi.fn>;
 }
 
 const mocked = prisma as unknown as MockedPrisma;
-const mockedDebit = vi.mocked(debit);
+const mockedDebitInTx = vi.mocked(debitInTx);
+const mockedEnsureWallet = vi.mocked(ensureWalletExists);
 
 const USER = "user_1";
 const VALID_TOKEN = "ckabc12345xyz";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  txMocks.proBet.create.mockReset();
+  // Re-attache le comportement par defaut du $transaction apres clear.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mocked.$transaction.mockImplementation(async (cb: any) => cb(txMocks));
+  mockedEnsureWallet.mockResolvedValue(undefined);
 });
 
 describe("listMarketsForMatch — sprint 1.D.4", () => {
@@ -143,8 +163,8 @@ describe("placeBet — sprint 1.D.4", () => {
       clientToken: VALID_TOKEN,
     });
     expect(out.id).toBe("b1");
-    expect(mocked.proBet.create).not.toHaveBeenCalled();
-    expect(mockedDebit).not.toHaveBeenCalled();
+    expect(txMocks.proBet.create).not.toHaveBeenCalled();
+    expect(mockedDebitInTx).not.toHaveBeenCalled();
   });
 
   async function expectCode(
@@ -298,8 +318,8 @@ describe("placeBet — sprint 1.D.4", () => {
   it("accepte un drift < 2%", async () => {
     mocked.proBet.findUnique.mockResolvedValue(null);
     mocked.proBetMarket.findUnique.mockResolvedValue(buildOpenMarket());
-    mockedDebit.mockResolvedValue(900);
-    mocked.proBet.create.mockResolvedValue(
+    mockedDebitInTx.mockResolvedValue(900);
+    txMocks.proBet.create.mockResolvedValue(
       buildBetRow({ oddsAtPlace: 2.01 }),
     );
     const out = await placeBet({
@@ -311,14 +331,19 @@ describe("placeBet — sprint 1.D.4", () => {
       clientToken: VALID_TOKEN,
     });
     expect(out.id).toBe("b1");
-    expect(mockedDebit).toHaveBeenCalledWith(USER, 100, "BET");
+    expect(mockedDebitInTx).toHaveBeenCalledWith(
+      txMocks,
+      USER,
+      100,
+      "BET",
+    );
   });
 
-  it("place pari OK : debit + create + renvoie summary", async () => {
+  it("place pari OK : debit + create dans une seule $transaction", async () => {
     mocked.proBet.findUnique.mockResolvedValue(null);
     mocked.proBetMarket.findUnique.mockResolvedValue(buildOpenMarket());
-    mockedDebit.mockResolvedValue(900);
-    mocked.proBet.create.mockResolvedValue(buildBetRow());
+    mockedDebitInTx.mockResolvedValue(900);
+    txMocks.proBet.create.mockResolvedValue(buildBetRow());
 
     const out = await placeBet({
       userId: USER,
@@ -335,8 +360,15 @@ describe("placeBet — sprint 1.D.4", () => {
     expect(out.selection).toBe("home");
     expect(out.stake).toBe(100);
     expect(out.status).toBe("pending");
-    expect(mockedDebit).toHaveBeenCalledWith(USER, 100, "BET");
-    expect(mocked.proBet.create).toHaveBeenCalledWith(
+    expect(mockedEnsureWallet).toHaveBeenCalledWith(USER);
+    expect(mocked.$transaction).toHaveBeenCalledTimes(1);
+    expect(mockedDebitInTx).toHaveBeenCalledWith(
+      txMocks,
+      USER,
+      100,
+      "BET",
+    );
+    expect(txMocks.proBet.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           userId: USER,
@@ -348,6 +380,35 @@ describe("placeBet — sprint 1.D.4", () => {
         }),
       }),
     );
+  });
+
+  it("rollback : si create-bet throw, le debit doit etre rollback (atomicite)", async () => {
+    mocked.proBet.findUnique.mockResolvedValue(null);
+    mocked.proBetMarket.findUnique.mockResolvedValue(buildOpenMarket());
+    mockedDebitInTx.mockResolvedValue(900);
+    txMocks.proBet.create.mockRejectedValue(new Error("DB crashed"));
+    // Simule Prisma : si le callback throw, la $transaction propage
+    // l'erreur (et n'aurait pas commit en vrai).
+    mocked.$transaction.mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (cb: any) => {
+        return cb(txMocks);
+      },
+    );
+    await expect(
+      placeBet({
+        userId: USER,
+        marketId: "mkt1",
+        selection: "home",
+        stake: 100,
+        oddsAtPlace: 2.0,
+        clientToken: VALID_TOKEN,
+      }),
+    ).rejects.toThrow("DB crashed");
+    // L'important : debit ET create ont ete tentes dans la meme
+    // $transaction (le rollback est garanti par Prisma cote runtime).
+    expect(mockedDebitInTx).toHaveBeenCalled();
+    expect(mocked.$transaction).toHaveBeenCalledTimes(1);
   });
 });
 

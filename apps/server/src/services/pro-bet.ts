@@ -21,7 +21,8 @@ import { prisma } from "../prisma";
 
 import {
   type ProTransactionEntry,
-  debit,
+  debitInTx,
+  ensureWalletExists,
 } from "./pro-wallet";
 
 const MARKET_STATUS_OPEN = "open";
@@ -286,22 +287,29 @@ export async function placeBet(input: PlaceBetInput): Promise<ProBetSummary> {
     );
   }
 
-  // Debit wallet + create bet — atomique via service wallet
-  // (lui-même $transaction). En cas d'échec wallet, le bet n'est
-  // pas créé — la cohérence est garantie par l'ordre.
-  await debit(input.userId, input.stake, "BET");
+  // BUG fix audit round 4 (CRITICAL) : avant, `debit()` ouvrait sa
+  // propre transaction Prisma. En cas de crash entre `debit` et
+  // `create proBet`, l'utilisateur etait debite SANS bet associe
+  // (money loss). Maintenant tout est dans une seule $transaction :
+  // soit le debit ET le bet sont crees, soit aucun. Ensure-wallet
+  // hors transaction pour ne pas creer une commit cassee.
+  await ensureWalletExists(input.userId);
 
-  const created = await prisma.proBet.create({
-    data: {
-      userId: input.userId,
-      marketId: input.marketId,
-      selection: input.selection,
-      stake: input.stake,
-      oddsAtPlace: input.oddsAtPlace,
-      status: "pending",
-      clientToken: input.clientToken,
-    },
-    select: betSelect(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const created = await prisma.$transaction(async (tx: any) => {
+    await debitInTx(tx, input.userId, input.stake, "BET");
+    return tx.proBet.create({
+      data: {
+        userId: input.userId,
+        marketId: input.marketId,
+        selection: input.selection,
+        stake: input.stake,
+        oddsAtPlace: input.oddsAtPlace,
+        status: "pending",
+        clientToken: input.clientToken,
+      },
+      select: betSelect(),
+    });
   });
 
   return toBetSummary(created);
