@@ -89,6 +89,13 @@ export async function grantFirstTimeBonus(
  * Crédite le daily bonus (50 Crowns) si la dernière transaction
  * DAILY date d'il y a > 24h. Renvoie `granted=false` + `nextEligibleAt`
  * sinon (UI peut afficher un compte à rebours).
+ *
+ * BUG fix audit round 4 : avant, le check de la fenetre DAILY etait
+ * fait HORS transaction → deux appels concurrents pouvaient tous deux
+ * passer la verif et crediter deux fois (race condition). Fix : tout
+ * le check + credit dans une seule $transaction, en se basant sur la
+ * derniere transaction DAILY lue DANS la transaction (lecture
+ * sequentielle par Prisma → coherente).
  */
 export async function claimDailyBonus(
   userId: string,
@@ -96,32 +103,60 @@ export async function claimDailyBonus(
 ): Promise<RewardOutcome> {
   await getOrCreateWallet(userId);
 
-  const lastDaily = await prisma.proTransaction.findFirst({
-    where: { walletId: userId, type: "DAILY" },
-    orderBy: { createdAt: "desc" },
-    select: { createdAt: true },
-  });
-  if (lastDaily) {
-    const lastAt = (lastDaily.createdAt as Date).getTime();
-    const windowEnd = lastAt + DAILY_BONUS_WINDOW_MS;
-    if (now.getTime() < windowEnd) {
-      const balance = await getCurrentBalance(userId);
-      return {
-        granted: false,
-        balance,
-        amount: 0,
-        nextEligibleAt: new Date(windowEnd).toISOString(),
-      };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await prisma.$transaction(async (tx: any) => {
+    const lastDaily = await tx.proTransaction.findFirst({
+      where: { walletId: userId, type: "DAILY" },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    if (lastDaily) {
+      const lastAt = (lastDaily.createdAt as Date).getTime();
+      const windowEnd = lastAt + DAILY_BONUS_WINDOW_MS;
+      if (now.getTime() < windowEnd) {
+        const w = await tx.proWallet.findUnique({
+          where: { userId },
+          select: { crowns: true },
+        });
+        return {
+          granted: false as const,
+          balance: (w?.crowns as number | undefined) ?? 0,
+          amount: 0,
+          nextEligibleAt: new Date(windowEnd).toISOString(),
+        };
+      }
     }
-  }
 
-  const balance = await credit(userId, DAILY_BONUS_AMOUNT, "DAILY");
-  return {
-    granted: true,
-    balance,
-    amount: DAILY_BONUS_AMOUNT,
-    nextEligibleAt: new Date(now.getTime() + DAILY_BONUS_WINDOW_MS).toISOString(),
-  };
+    // Credit dans la meme transaction. La lecture suivante est garantie
+    // de voir nos writes intermediaires (snapshot isolation).
+    const w = await tx.proWallet.findUnique({
+      where: { userId },
+      select: { crowns: true },
+    });
+    const current = (w?.crowns as number | undefined) ?? 0;
+    const updated = await tx.proWallet.update({
+      where: { userId },
+      data: { crowns: current + DAILY_BONUS_AMOUNT },
+      select: { crowns: true },
+    });
+    await tx.proTransaction.create({
+      data: {
+        walletId: userId,
+        type: "DAILY",
+        amount: DAILY_BONUS_AMOUNT,
+        ref: null,
+      },
+    });
+    return {
+      granted: true as const,
+      balance: updated.crowns as number,
+      amount: DAILY_BONUS_AMOUNT,
+      nextEligibleAt: new Date(
+        now.getTime() + DAILY_BONUS_WINDOW_MS,
+      ).toISOString(),
+    };
+  });
+  return result;
 }
 
 /**

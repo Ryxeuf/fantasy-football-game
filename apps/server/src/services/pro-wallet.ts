@@ -249,6 +249,97 @@ export async function credit(
 }
 
 /**
+ * Garantit que le wallet existe pour `userId`. Idempotent. A appeler
+ * AVANT une transaction qui utilise `debitInTx` / `creditInTx`, pour
+ * eviter d'inserer le wallet et la transaction debit dans la meme
+ * commit (qui peut casser la coherence en cas de rollback partiel).
+ */
+export async function ensureWalletExists(userId: string): Promise<void> {
+  await getOrCreateWallet(userId);
+}
+
+/**
+ * Variante de `debit` qui s'execute dans une transaction Prisma existante
+ * (passee en argument `tx`). Permet de composer debit + create-bet dans
+ * la meme transaction atomique. Cf. `pro-bet.ts:placeBet` qui doit garantir
+ * « debit + create bet » all-or-nothing (avant fix, debit pouvait reussir
+ * et create-bet echouer → money loss).
+ *
+ * @param tx Prisma transaction client passe par le caller.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function debitInTx(
+  tx: any,
+  userId: string,
+  amount: number,
+  type: ProTxType,
+  ref?: string,
+): Promise<number> {
+  ensureValidAmount(amount);
+  ensureValidType(type);
+  // Note : pas de getOrCreateWallet ici — le caller doit s'assurer que
+  // le wallet existe (ou appeler en dehors de la $transaction si neuf).
+  const w = await tx.proWallet.findUnique({
+    where: { userId },
+    select: { crowns: true },
+  });
+  const current = (w?.crowns as number | undefined) ?? 0;
+  if (current < amount) {
+    throw new InsufficientFundsError(current, amount);
+  }
+  const updated = await tx.proWallet.update({
+    where: { userId },
+    data: { crowns: current - amount },
+    select: { crowns: true },
+  });
+  await tx.proTransaction.create({
+    data: {
+      walletId: userId,
+      type,
+      amount: -amount,
+      ref: ref ?? null,
+    },
+  });
+  return updated.crowns as number;
+}
+
+/**
+ * Variante de `credit` qui s'execute dans une transaction Prisma
+ * existante. Cf. `pro-bet-settlement.ts` qui doit garantir
+ * « update bet status + credit user » all-or-nothing.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function creditInTx(
+  tx: any,
+  userId: string,
+  amount: number,
+  type: ProTxType,
+  ref?: string,
+): Promise<number> {
+  ensureValidAmount(amount);
+  ensureValidType(type);
+  const w = await tx.proWallet.findUnique({
+    where: { userId },
+    select: { crowns: true },
+  });
+  const current = (w?.crowns as number | undefined) ?? 0;
+  const updated = await tx.proWallet.update({
+    where: { userId },
+    data: { crowns: current + amount },
+    select: { crowns: true },
+  });
+  await tx.proTransaction.create({
+    data: {
+      walletId: userId,
+      type,
+      amount: amount,
+      ref: ref ?? null,
+    },
+  });
+  return updated.crowns as number;
+}
+
+/**
  * Liste les `limit` dernières transactions de l'user, ordre desc
  * (plus récentes d'abord). Renvoie [] si le wallet n'existe pas.
  */

@@ -25,7 +25,7 @@
 
 import { prisma } from "../prisma";
 
-import { credit } from "./pro-wallet";
+import { creditInTx, ensureWalletExists } from "./pro-wallet";
 import {
   settlePicksForMatch,
   type PickSelection,
@@ -226,49 +226,67 @@ export async function settleMarketsForMatch(
     let lostCount = 0;
     const voidCount = 0;
 
+    // BUG fix audit round 4 (CRITICAL) : avant, le loop update bet +
+    // credit user n'etait PAS atomique. Si le process crashait entre
+    // l'update bet.status='won' et le credit user, le bet etait marque
+    // comme `won` (status !== 'pending') donc le sweep ulterieur skipait
+    // le credit (cf. filter `status: 'pending'` ligne 213) → user perdait
+    // son gain.
+    // Inversement : crash entre boucle complete et `proBetSettlement.create`
+    // ligne 260 → bets settled mais market reste non-settled → re-run de
+    // settlement skip les wons (filter pending) → market jamais settled
+    // → boucle infinie au sweep.
+    // Fix : tout le settlement (update bets + credit users + create
+    // settlement row + update market.status) dans UNE seule $transaction.
+    // Pre-ensure wallets HORS transaction pour eviter rollback partiel.
     for (const bet of bets) {
-      const stake = bet.stake as number;
-      const oddsAtPlace = bet.oddsAtPlace as number;
-      const userId = bet.userId as string;
-      const won = (bet.selection as string) === winningSelection;
-      totalStake += stake;
-      if (won) {
-        const payoutAmount = Math.round(stake * oddsAtPlace);
-        totalPayout += payoutAmount;
-        wonCount += 1;
-        await prisma.proBet.update({
-          where: { id: bet.id as string },
-          data: {
-            status: "won",
-            payoutAmount,
-          },
-        });
-        await credit(userId, payoutAmount, "WIN", bet.id as string);
-      } else {
-        lostCount += 1;
-        await prisma.proBet.update({
-          where: { id: bet.id as string },
-          data: {
-            status: "lost",
-            payoutAmount: 0,
-          },
-        });
+      if ((bet.selection as string) === winningSelection) {
+        await ensureWalletExists(bet.userId as string);
       }
     }
 
-    // Audit row + market settled.
-    await prisma.proBetSettlement.create({
-      data: {
-        marketId,
-        winningSelection,
-        totalStake,
-        totalPayout,
-        betCount: bets.length,
-      },
-    });
-    await prisma.proBetMarket.update({
-      where: { id: marketId },
-      data: { status: "settled" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await prisma.$transaction(async (tx: any) => {
+      for (const bet of bets) {
+        const stake = bet.stake as number;
+        const oddsAtPlace = bet.oddsAtPlace as number;
+        const userId = bet.userId as string;
+        const won = (bet.selection as string) === winningSelection;
+        if (won) {
+          const payoutAmount = Math.round(stake * oddsAtPlace);
+          totalPayout += payoutAmount;
+          wonCount += 1;
+          await tx.proBet.update({
+            where: { id: bet.id as string },
+            data: { status: "won", payoutAmount },
+          });
+          await creditInTx(tx, userId, payoutAmount, "WIN", bet.id as string);
+        } else {
+          lostCount += 1;
+          await tx.proBet.update({
+            where: { id: bet.id as string },
+            data: { status: "lost", payoutAmount: 0 },
+          });
+        }
+        totalStake += stake;
+      }
+
+      // Audit row + market settled — meme transaction pour garantir
+      // que market.status='settled' apparait UNIQUEMENT si tous les
+      // bets sont traites + tous les wins credites.
+      await tx.proBetSettlement.create({
+        data: {
+          marketId,
+          winningSelection,
+          totalStake,
+          totalPayout,
+          betCount: bets.length,
+        },
+      });
+      await tx.proBetMarket.update({
+        where: { id: marketId },
+        data: { status: "settled" },
+      });
     });
 
     settled += 1;

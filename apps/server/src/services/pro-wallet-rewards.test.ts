@@ -1,11 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    proTransaction: { findFirst: vi.fn() },
-    proWallet: { findUnique: vi.fn() },
-  },
-}));
+// Audit round 4 : `claimDailyBonus` execute desormais le check + credit
+// dans une seule $transaction Prisma. On simule en faisant que
+// `prisma.$transaction(cb)` execute le callback avec un `tx` qui
+// partage les memes mocks (proTransaction, proWallet) — comme ca le test
+// peut configurer les retours via `mocked.proTransaction.findFirst.mockResolvedValue`
+// et le code voit le meme mock dans la $transaction.
+vi.mock("../prisma", () => {
+  const proTransaction = { findFirst: vi.fn(), create: vi.fn() };
+  const proWallet = { findUnique: vi.fn(), update: vi.fn() };
+  return {
+    prisma: {
+      proTransaction,
+      proWallet,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) =>
+        cb({ proTransaction, proWallet }),
+      ),
+    },
+  };
+});
 
 vi.mock("./pro-wallet", () => ({
   credit: vi.fn(),
@@ -23,8 +37,15 @@ import {
 } from "./pro-wallet-rewards";
 
 interface MockedPrisma {
-  proTransaction: { findFirst: ReturnType<typeof vi.fn> };
-  proWallet: { findUnique: ReturnType<typeof vi.fn> };
+  proTransaction: {
+    findFirst: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
+  proWallet: {
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
+  $transaction: ReturnType<typeof vi.fn>;
 }
 
 const mocked = prisma as unknown as MockedPrisma;
@@ -37,6 +58,16 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockedEnsure.mockResolvedValue({ userId: USER, crowns: 0 });
   mocked.proWallet.findUnique.mockResolvedValue({ crowns: 0 });
+  // Re-attache le comportement par defaut du $transaction (vi.clearAllMocks
+  // l'a vide).
+  mocked.$transaction.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (cb: any) =>
+      cb({
+        proTransaction: mocked.proTransaction,
+        proWallet: mocked.proWallet,
+      }),
+  );
 });
 
 describe("grantFirstTimeBonus — sprint 1.D.6", () => {
@@ -72,14 +103,33 @@ describe("grantFirstTimeBonus — sprint 1.D.6", () => {
 describe("claimDailyBonus — sprint 1.D.6", () => {
   it("crédite 50 si pas de DAILY antérieur", async () => {
     mocked.proTransaction.findFirst.mockResolvedValue(null);
-    mockedCredit.mockResolvedValue(50);
+    // Le code lit le solde via findUnique DANS la $transaction, puis
+    // update. On simule current=0 → updated=50.
+    mocked.proWallet.findUnique.mockResolvedValue({ crowns: 0 });
+    mocked.proWallet.update.mockResolvedValue({ crowns: 50 });
+    mocked.proTransaction.create.mockResolvedValue({ id: "tx_new" });
 
     const out = await claimDailyBonus(USER);
     expect(out.granted).toBe(true);
     expect(out.amount).toBe(DAILY_BONUS_AMOUNT);
     expect(out.balance).toBe(50);
     expect(out.nextEligibleAt).not.toBeNull();
-    expect(mockedCredit).toHaveBeenCalledWith(USER, 50, "DAILY");
+    expect(mocked.$transaction).toHaveBeenCalledTimes(1);
+    expect(mocked.proWallet.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: USER },
+        data: { crowns: 50 },
+      }),
+    );
+    expect(mocked.proTransaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          walletId: USER,
+          type: "DAILY",
+          amount: DAILY_BONUS_AMOUNT,
+        }),
+      }),
+    );
   });
 
   it("rejette si dernier DAILY < 24h", async () => {
@@ -96,6 +146,8 @@ describe("claimDailyBonus — sprint 1.D.6", () => {
     expect(out.balance).toBe(250);
     // nextEligibleAt = recentDaily + 24h
     expect(out.nextEligibleAt).toBe("2026-09-16T08:00:00.000Z");
+    expect(mocked.proWallet.update).not.toHaveBeenCalled();
+    expect(mocked.proTransaction.create).not.toHaveBeenCalled();
     expect(mockedCredit).not.toHaveBeenCalled();
   });
 
@@ -105,11 +157,14 @@ describe("claimDailyBonus — sprint 1.D.6", () => {
     mocked.proTransaction.findFirst.mockResolvedValue({
       createdAt: oldDaily,
     });
-    mockedCredit.mockResolvedValue(300);
+    mocked.proWallet.findUnique.mockResolvedValue({ crowns: 250 });
+    mocked.proWallet.update.mockResolvedValue({ crowns: 300 });
+    mocked.proTransaction.create.mockResolvedValue({ id: "tx_new" });
 
     const out = await claimDailyBonus(USER, now);
     expect(out.granted).toBe(true);
     expect(out.amount).toBe(DAILY_BONUS_AMOUNT);
+    expect(out.balance).toBe(300);
   });
 });
 

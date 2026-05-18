@@ -125,13 +125,13 @@ export async function processInducementSubmission(
   const ctxA: InducementContext = {
     teamId: "A",
     regionalRules: [],
-    hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+    hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
     rosterSlug: teamA?.roster || "",
   };
   const ctxB: InducementContext = {
     teamId: "B",
     regionalRules: [],
-    hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+    hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
     rosterSlug: teamB?.roster || "",
   };
 
