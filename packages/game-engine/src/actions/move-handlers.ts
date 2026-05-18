@@ -34,6 +34,8 @@ import { createLogEntry } from '../utils/logging';
 import {
   getDodgeSkillModifiers,
   canSkillReroll,
+  consumeOncePerMatchSkills,
+  applyDivingTacklePronePostDodge,
 } from '../skills/skill-bridge';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -75,6 +77,14 @@ export function handleDodgeRoll(
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
 
+  // BUG fix : consommer les star player rules « once-per-match » qui
+  // contribuent au jet d'esquive (Pirouette = Roxanna Darknail). Avant
+  // le fix, `consumeOncePerMatchSkills` n'etait pas appele dans le path
+  // dodge — Pirouette donnait +1 esquive a chaque dodge du match.
+  const stateAfterPirouette = consumeOncePerMatchSkills(
+    state, player, 'on-dodge', { state }
+  );
+
   // Effectuer le jet d'esquive avec les modificateurs
   const dodgeResult = performDodgeRollWithNotification(
     player,
@@ -82,7 +92,16 @@ export function handleDodgeRoll(
     dodgeModifiers,
   );
 
-  let next = structuredClone(state) as GameState;
+  // BB3 S3 : Diving Tackle place le tackleur Prone apres une tentative
+  // d'esquive ou il a contribue le -2. Avant le fix, le -2 etait applique
+  // gratuitement (tackleur restait debout).
+  const stateAfterDivingTackle = applyDivingTacklePronePostDodge(
+    stateAfterPirouette,
+    player.team,
+    from,
+  );
+
+  let next = structuredClone(stateAfterDivingTackle) as GameState;
   next.lastDiceResult = dodgeResult;
 
   // Log du jet d'esquive
