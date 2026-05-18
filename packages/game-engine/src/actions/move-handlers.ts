@@ -122,14 +122,23 @@ export function handleDodgeRoll(
   next.gameLog = [...next.gameLog, logEntry];
 
   // Le joueur se deplace toujours, que le jet d'esquive reussisse ou
-  // echoue
+  // echoue. Immutable spread (avant : mutation directe `next.players[idx]
+  // .pos = ...` etc. — safe sur clone mais anti-pattern fragile).
   const isDodgeGFI = next.players[idx].pm <= 0;
-  next.players[idx].pos = { ...to };
-  if (isDodgeGFI) {
-    next.players[idx].gfiUsed = (next.players[idx].gfiUsed ?? 0) + 1;
-  } else {
-    next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
-  }
+  next = {
+    ...next,
+    players: next.players.map((p, i) =>
+      i === idx
+        ? {
+            ...p,
+            pos: { ...to },
+            ...(isDodgeGFI
+              ? { gfiUsed: (p.gfiUsed ?? 0) + 1 }
+              : { pm: Math.max(0, p.pm - 1) }),
+          }
+        : p,
+    ),
+  };
 
   // Enregistrer l'action de mouvement seulement si c'est le premier
   // mouvement
@@ -303,12 +312,22 @@ export function handleNormalMove(
   let next = structuredClone(state) as GameState;
   const isGFI = next.players[idx].pm <= 0;
 
-  // Deplacer le joueur
-  next.players[idx].pos = { ...to };
+  // Deplacer le joueur (immutable). Avant : `next.players[idx].pos = ...`
+  // mutait l'objet player du clone (safe local, mais anti-pattern).
+  next = {
+    ...next,
+    players: next.players.map((p, i) =>
+      i === idx
+        ? {
+            ...p,
+            pos: { ...to },
+            ...(isGFI ? { gfiUsed: (p.gfiUsed ?? 0) + 1 } : {}),
+          }
+        : p,
+    ),
+  };
 
   if (isGFI) {
-    // GFI : ne decremente pas pm, incremente gfiUsed
-    next.players[idx].gfiUsed = (next.players[idx].gfiUsed ?? 0) + 1;
 
     // Jet de GFI : 2+ par défaut, 3+ en Blizzard / Neige forte.
     const gfiTarget = gfiTargetFromWeather(state);
@@ -386,8 +405,13 @@ export function handleNormalMove(
     return next;
   }
 
-  // Mouvement normal (a des PM)
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+  // Mouvement normal (a des PM) — immutable update.
+  next = {
+    ...next,
+    players: next.players.map((p, i) =>
+      i === idx ? { ...p, pm: Math.max(0, p.pm - 1) } : p,
+    ),
+  };
 
   // Enregistrer l'action de mouvement seulement si c'est le premier
   // mouvement
