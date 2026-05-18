@@ -73,10 +73,24 @@ describe('logging helpers', () => {
   describe('createLogEntry', () => {
     it('crée une entrée avec id, timestamp et type', () => {
       const e = createLogEntry('info', 'hello');
-      expect(e.id).toMatch(/^log-/);
-      expect(e.timestamp).toBeGreaterThan(0);
+      expect(e.id).toMatch(/^log-[0-9a-f]{8}$/);
+      // Audit round 4 : timestamp deterministe = 0 pour permettre le
+      // diff de replays (avant, Date.now() cassait la determinisme).
+      expect(e.timestamp).toBe(0);
       expect(e.type).toBe('info');
       expect(e.message).toBe('hello');
+    });
+
+    it('id deterministe : meme contenu => meme id (replay-safe)', () => {
+      const e1 = createLogEntry('action', 'A tackle B', 'p1', 'A', { x: 1 });
+      const e2 = createLogEntry('action', 'A tackle B', 'p1', 'A', { x: 1 });
+      expect(e1.id).toBe(e2.id);
+    });
+
+    it('id different pour contenu different', () => {
+      const e1 = createLogEntry('action', 'msg-1');
+      const e2 = createLogEntry('action', 'msg-2');
+      expect(e1.id).not.toBe(e2.id);
     });
   });
 

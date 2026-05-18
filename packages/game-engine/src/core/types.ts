@@ -365,7 +365,10 @@ export interface PreMatchState {
 }
 
 export interface DiceResult {
-  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing' | 'gaze' | 'vomit';
+  // Lot audit round 4 : ajout 'gfi' (Going For It) qui etait abusivement
+  // taggue 'dodge' as never dans move-handlers.ts. Le UI peut maintenant
+  // discriminer GFI vs dodge pour des messages corrects.
+  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing' | 'gaze' | 'vomit' | 'gfi';
   playerId: string;
   diceRoll: number;
   targetNumber: number;
