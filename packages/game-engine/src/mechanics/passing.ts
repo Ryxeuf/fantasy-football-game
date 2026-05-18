@@ -110,8 +110,19 @@ export function calculatePassModifiers(
  */
 export function performPassRoll(passer: Player, rng: RNG, modifiers: number): DiceResult {
   const diceRoll = rollD6(rng);
-  // PA (Passing Ability) est le target de base, ajusté par les modificateurs
-  const targetNumber = Math.max(2, Math.min(6, passer.pa - modifiers));
+  // BB3 S3 PA (Passing Ability) : target de base ajuste par les
+  // modificateurs. BUG fix : si pa = 0 (joueur sans stat passing, ex.
+  // certaines positions Big Guy), le clamp `Math.max(2, ...)` rendait
+  // la passe trop facile (target=2). BB3 S3 : un joueur avec PA=0 ne
+  // peut PAS tenter de passe — on force target=6 et clamp `1` au
+  // diceRoll (donc echec quasi systematique), matchant la regle qui
+  // veut qu'un Big Guy ne devrait jamais reussir une passe.
+  let targetNumber: number;
+  if (passer.pa <= 0) {
+    targetNumber = 6; // PA=0 force le seuil maximum.
+  } else {
+    targetNumber = Math.max(2, Math.min(6, passer.pa - modifiers));
+  }
   const success = diceRoll >= targetNumber;
 
   return {
