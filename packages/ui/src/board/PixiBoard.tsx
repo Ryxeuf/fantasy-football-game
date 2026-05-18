@@ -72,7 +72,7 @@ export default function PixiBoard({
   state,
   onCellClick,
   onPlayerClick,
-  cellSize = 36,
+  cellSize = 32,
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,

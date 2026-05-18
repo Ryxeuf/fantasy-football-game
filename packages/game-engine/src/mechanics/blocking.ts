@@ -115,6 +115,14 @@ export function applyChainPush(
     ),
   };
 
+  // Invariant ball : si le poussé portait le ballon, state.ball suit jusqu'à
+  // sa nouvelle case. Si plus tard il tombe (KD post-block), `bounceBall`
+  // sera appelé depuis sa case actuelle, ce qui est correct.
+  const pushedNow = newState.players.find(p => p.id === pushedPlayerId);
+  if (pushedNow && pushedNow.hasBall) {
+    newState = { ...newState, ball: { ...newPos } };
+  }
+
   return newState;
 }
 

@@ -139,6 +139,10 @@ export function handleDodgeRoll(
         : p,
     ),
   };
+  // Invariant ball : maintient state.ball aligné sur le porteur après dodge.
+  if (next.players[idx].hasBall) {
+    next = { ...next, ball: { ...to } };
+  }
 
   // Enregistrer l'action de mouvement seulement si c'est le premier
   // mouvement
@@ -326,6 +330,12 @@ export function handleNormalMove(
         : p,
     ),
   };
+  // Invariant ball : si le joueur porte le ballon, state.ball suit sa
+  // position. Sinon le visuel et l'IA voient le ballon figé sur la case
+  // d'origine alors que le porteur a bougé (cf. bug "PASS sans ballon").
+  if (next.players[idx].hasBall) {
+    next = { ...next, ball: { ...to } };
+  }
 
   if (isGFI) {
 

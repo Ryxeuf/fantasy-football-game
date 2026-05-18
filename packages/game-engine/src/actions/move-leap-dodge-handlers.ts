@@ -112,6 +112,10 @@ export function handleLeap(
         : p,
     ),
   };
+  // Invariant ball : si le joueur porte le ballon, state.ball suit le leap.
+  if (next.players[idx].hasBall) {
+    next = { ...next, ball: { ...move.to } };
+  }
 
   // Enregistrer l'action de mouvement si c'est le premier mouvement
   if (!hasPlayerActed(next, player.id)) {
@@ -231,6 +235,11 @@ export function handleDodge(
         : p,
     ),
   };
+  // Invariant ball : si le joueur porte le ballon, state.ball suit le dodge.
+  // Note : si l'esquive échoue, le ballon est explicitement bouncé plus bas.
+  if (next.players[idx].hasBall) {
+    next = { ...next, ball: { ...move.to } };
+  }
 
   // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
   next = resolveShadowingAfterDodge(next, player, from, rng);
