@@ -1,3 +1,14 @@
+## [1.120.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.1...v1.120.2) (2026-05-18)
+
+
+### 🐛 Bug Fixes
+
+* **game-engine/skills:** star player rules once-per-match marquées comme utilisées (Crushing Blow) ([#820](https://github.com/Ryxeuf/fantasy-football-game/issues/820)) ([1d3be5e](https://github.com/Ryxeuf/fantasy-football-game/commit/1d3be5e618dba520a2c9f101fad57a9497f4e7ce))
+* **game-engine:** Always Hungry eaten + Prayer 14 donnent leur chance à l'apothicaire ([#819](https://github.com/Ryxeuf/fantasy-football-game/issues/819)) ([2a0a781](https://github.com/Ryxeuf/fantasy-football-game/commit/2a0a7810eeda024ddfa040d94ebbafef564d6fac))
+* **game-engine:** Bloodweiser Kegs +1 KO recovery + getGfiCap honore rulesConfig ([#817](https://github.com/Ryxeuf/fantasy-football-game/issues/817)) ([af332ba](https://github.com/Ryxeuf/fantasy-football-game/commit/af332ba61895c54cb9f31480cc2a89e0ec1c01de))
+* **game-engine:** Stunty +1 casualty + Chainsaw bonus non bloqué par Iron Hard Skin ([#818](https://github.com/Ryxeuf/fantasy-football-game/issues/818)) ([c3599c0](https://github.com/Ryxeuf/fantasy-football-game/commit/c3599c0d737aac4a938cb29cf7e34588b98367d4))
+* **game-engine:** turnover gate softlock + referee validateMove order + armor target min clamp ([e01a8d6](https://github.com/Ryxeuf/fantasy-football-game/commit/e01a8d618073abd9442555ac97c04145b0cb977a))
+
 ## [1.120.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.120.0...v1.120.1) (2026-05-17)
 
 
