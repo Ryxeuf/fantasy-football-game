@@ -40,6 +40,11 @@ import {
   computeOverUnderProbabilities,
   probabilityToDecimalOdds,
 } from "./pro-bet-odds-math";
+import { resolveDriverKind } from "./pro-league-driver-resolver";
+import {
+  mapToSimRoster,
+  type RawProRoster,
+} from "./pro-league-sim-runner";
 
 /** Types de markets supportés. */
 export type ProMarketType =
@@ -113,11 +118,25 @@ async function gatherSamples(
   casCounts: number[];
   nuffleCounts: number[];
 }> {
+  // BUG fix audit round 4 : avant, l'odds calculator chargeait
+  // uniquement les slugs des deux teams et appelait `simulateMatch`
+  // sans `driverKind` (default 'hybrid' avec teams synthetiques) et
+  // sans `roster`. Resultat : les odds etaient calculees sur le
+  // hybrid driver alors que le match reel pouvait tourner en 'full'
+  // avec les vrais rosters → odds miscalibrees (notamment si une
+  // team avait des joueurs morts/blesses non remplaces, le full
+  // driver les reflete mais le hybrid avec teams synthetiques ne
+  // les voit pas).
+  // Fix : charger season.driverKind, match.driverKindOverride et les
+  // rosters actifs des deux teams, puis passer driverKind + roster
+  // au simulateMatch.
   const match = await prisma.proLeagueMatch.findUnique({
     where: { id: matchId },
     select: {
-      homeTeam: { select: { slug: true, name: true } },
-      awayTeam: { select: { slug: true, name: true } },
+      driverKindOverride: true,
+      homeTeam: { select: { id: true, slug: true, name: true } },
+      awayTeam: { select: { id: true, slug: true, name: true } },
+      season: { select: { driverKind: true } },
     },
   });
   if (!match) {
@@ -131,6 +150,50 @@ async function gatherSamples(
     throw new ProMatchNotReadyForOddsError(
       `Slugs ProTeam introuvables : home='${match.homeTeam.slug}' away='${match.awayTeam.slug}'`,
     );
+  }
+
+  const driverKind = resolveDriverKind({
+    seasonDriverKind: (match.season?.driverKind as string) ?? "hybrid",
+    matchOverride: (match.driverKindOverride as string | null) ?? null,
+  });
+
+  // Charge les rosters actifs uniquement si on tourne en 'full' —
+  // hybrid n'utilise pas roster, eviter le round-trip DB inutile.
+  let homeRoster: ReturnType<typeof mapToSimRoster> | undefined;
+  let awayRoster: ReturnType<typeof mapToSimRoster> | undefined;
+  if (driverKind === "full") {
+    const [homeRaws, awayRaws] = await Promise.all([
+      prisma.proTeamRoster.findMany({
+        where: { teamId: match.homeTeam.id as string, status: "active" },
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          ma: true,
+          st: true,
+          ag: true,
+          pa: true,
+          av: true,
+          skills: true,
+        },
+      }),
+      prisma.proTeamRoster.findMany({
+        where: { teamId: match.awayTeam.id as string, status: "active" },
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          ma: true,
+          st: true,
+          ag: true,
+          pa: true,
+          av: true,
+          skills: true,
+        },
+      }),
+    ]);
+    homeRoster = mapToSimRoster(homeRaws as readonly RawProRoster[]);
+    awayRoster = mapToSimRoster(awayRaws as readonly RawProRoster[]);
   }
 
   const baseSeed = hashSeed(`odds:${matchId}`);
@@ -149,6 +212,7 @@ async function gatherSamples(
         side: "home",
         tactics: homeProfile.tactics,
         tv: homeProfile.tv,
+        roster: homeRoster,
       },
       away: {
         id: awayProfile.id,
@@ -156,9 +220,10 @@ async function gatherSamples(
         side: "away",
         tactics: awayProfile.tactics,
         tv: awayProfile.tv,
+        roster: awayRoster,
       },
     };
-    const result: SimResult = simulateMatch(sim);
+    const result: SimResult = simulateMatch(sim, { driverKind });
     if (result.summary.outcome === "home") oneXTwoCounts.home += 1;
     else if (result.summary.outcome === "away") oneXTwoCounts.away += 1;
     else oneXTwoCounts.draws += 1;

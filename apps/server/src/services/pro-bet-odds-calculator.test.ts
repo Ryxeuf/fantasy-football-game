@@ -169,6 +169,115 @@ describe("computeMarketsForMatch — sprint 1.D.3", () => {
     const cas = out[2].config as { line: number };
     expect(cas.line).toBe(0.5);
   });
+
+  describe("audit round 4 — driverKind + roster", () => {
+    it("hybrid (default) : ne charge pas les rosters et passe driverKind='hybrid'", async () => {
+      const simSpy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockReturnValue(
+          buildSimResult({ outcome: "home", td: 2, cas: 0, nuffle: 0 }) as ReturnType<
+            typeof simEngine.simulateMatch
+          >,
+        );
+      mocked.proLeagueMatch.findUnique.mockResolvedValue({
+        ...FAKE_MATCH,
+        driverKindOverride: null,
+        homeTeam: { id: "ht1", slug: "pit-smashers", name: "Smashers" },
+        awayTeam: { id: "at1", slug: "kc-soaring-hawks", name: "Soaring Hawks" },
+        season: { driverKind: "hybrid" },
+      });
+
+      await computeMarketsForMatch(MATCH_ID, { runs: 1, houseMargin: 0 });
+
+      expect(simSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          home: expect.objectContaining({ roster: undefined }),
+          away: expect.objectContaining({ roster: undefined }),
+        }),
+        { driverKind: "hybrid" },
+      );
+    });
+
+    it("full driver : charge les rosters des 2 teams et passe driverKind='full'", async () => {
+      const simSpy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockReturnValue(
+          buildSimResult({ outcome: "home", td: 2, cas: 0, nuffle: 0 }) as ReturnType<
+            typeof simEngine.simulateMatch
+          >,
+        );
+      mocked.proLeagueMatch.findUnique.mockResolvedValue({
+        ...FAKE_MATCH,
+        driverKindOverride: null,
+        homeTeam: { id: "ht1", slug: "pit-smashers", name: "Smashers" },
+        awayTeam: { id: "at1", slug: "kc-soaring-hawks", name: "Soaring Hawks" },
+        season: { driverKind: "full" },
+      });
+      // Le test n'a pas mock proTeamRoster.findMany dans la fixture
+      // de test top-level — on l'ajoute en ad-hoc via le mocked.
+      const rosterRow = {
+        id: "p1",
+        name: "Player 1",
+        position: "Lineman",
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        skills: [],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (prisma as any).proTeamRoster = {
+        findMany: vi.fn().mockResolvedValue([rosterRow]),
+      };
+
+      await computeMarketsForMatch(MATCH_ID, { runs: 1, houseMargin: 0 });
+
+      expect(simSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          home: expect.objectContaining({
+            roster: expect.arrayContaining([
+              expect.objectContaining({ id: "p1", name: "Player 1" }),
+            ]),
+          }),
+          away: expect.objectContaining({
+            roster: expect.arrayContaining([
+              expect.objectContaining({ id: "p1" }),
+            ]),
+          }),
+        }),
+        { driverKind: "full" },
+      );
+    });
+
+    it("match.driverKindOverride='full' a precedence sur season.driverKind='hybrid'", async () => {
+      const simSpy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockReturnValue(
+          buildSimResult({ outcome: "home", td: 2, cas: 0, nuffle: 0 }) as ReturnType<
+            typeof simEngine.simulateMatch
+          >,
+        );
+      mocked.proLeagueMatch.findUnique.mockResolvedValue({
+        ...FAKE_MATCH,
+        driverKindOverride: "full",
+        homeTeam: { id: "ht1", slug: "pit-smashers", name: "Smashers" },
+        awayTeam: { id: "at1", slug: "kc-soaring-hawks", name: "Soaring Hawks" },
+        season: { driverKind: "hybrid" },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (prisma as any).proTeamRoster = {
+        findMany: vi.fn().mockResolvedValue([]),
+      };
+
+      await computeMarketsForMatch(MATCH_ID, { runs: 1, houseMargin: 0 });
+
+      expect(simSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        { driverKind: "full" },
+      );
+    });
+  });
 });
 
 describe("createOrRefreshMarketsForMatch — sprint 1.D.3", () => {

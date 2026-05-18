@@ -358,24 +358,33 @@ export async function applyMatchSpp(
   for (const r of homeRoster) allById.set(r.id, r);
   for (const r of awayRoster) allById.set(r.id, r);
 
-  for (const reward of rewards) {
-    const cur = allById.get(reward.rosterId);
-    if (!cur) continue;
-    await prisma.proTeamRoster.update({
-      where: { id: reward.rosterId },
-      data: {
-        spp: cur.spp + reward.totalSpp,
-        tdCount: cur.tdCount + reward.tdCount,
-        casCount: cur.casCount + reward.casCount,
-        compCount: cur.compCount + reward.compCount,
-        mvpCount: cur.mvpCount + reward.mvpCount,
-      },
+  // BUG fix audit round 4 (CRITICAL) : avant, les updates `proTeamRoster`
+  // et le marqueur `proLeagueMatch.sppAppliedAt` etaient executes
+  // sequentiellement sans transaction. Crash entre 2 updates de rosters
+  // → SPP partiellement distribues + `sppAppliedAt` non-set → re-run
+  // double-applique sur les rosters deja mis a jour (corruption SPP).
+  // Fix : tout le bloc updates + sppAppliedAt dans une seule
+  // $transaction Prisma.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    for (const reward of rewards) {
+      const cur = allById.get(reward.rosterId);
+      if (!cur) continue;
+      await tx.proTeamRoster.update({
+        where: { id: reward.rosterId },
+        data: {
+          spp: cur.spp + reward.totalSpp,
+          tdCount: cur.tdCount + reward.tdCount,
+          casCount: cur.casCount + reward.casCount,
+          compCount: cur.compCount + reward.compCount,
+          mvpCount: cur.mvpCount + reward.mvpCount,
+        },
+      });
+    }
+    await tx.proLeagueMatch.update({
+      where: { id: matchId },
+      data: { sppAppliedAt: new Date() },
     });
-  }
-
-  await prisma.proLeagueMatch.update({
-    where: { id: matchId },
-    data: { sppAppliedAt: new Date() },
   });
 
   return {
