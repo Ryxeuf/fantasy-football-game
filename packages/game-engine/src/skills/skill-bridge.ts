@@ -4,11 +4,12 @@
  * de compétences lors des jets de dés (dodge, pickup, etc.).
  */
 
-import type { Player, GameState, Position } from '../core/types';
+import type { Player, GameState, Position, TeamId } from '../core/types';
 import type { SkillTrigger, SkillContext } from './skill-registry';
 import { collectModifiers, getSkillEffect, getOncePerMatchSlugsToConsume } from './skill-registry';
 import { markStarPlayerRuleUsed } from './star-player-rules';
 import { getAdjacentOpponents } from '../mechanics/movement';
+import { hasSkill } from './skill-effects';
 
 /**
  * Marque les star player rules « once-per-match » consommés par un
@@ -54,6 +55,55 @@ export function getDodgeSkillModifiers(
   }
 
   return playerBonus + opponentPenalty;
+}
+
+/**
+ * BB3 S3 Diving Tackle : « Place this player Prone, and the dodge roll
+ * suffers -2 ». Le coût « Prone » manquait — Diving Tackle donnait le
+ * -2 sans poser le tackleur au sol. Maintenant, les tackleurs adjacents
+ * qui ont contribue au -2 sont mis Prone (stunned=true). Le caller
+ * decide a quel moment appliquer (typiquement apres la resolution
+ * dodge — meme si le dodger reussit/echoue, le tackleur tombe).
+ *
+ * NOTE : la regle officielle est opt-in cote defenseur. Le moteur
+ * applique auto (le -2 est toujours avantageux contre la perte du
+ * Prone qui dure 1 tour). Future amelioration : passer par une UI
+ * prompt « may declare Diving Tackle ».
+ */
+export function applyDivingTacklePronePostDodge(
+  state: GameState,
+  dodgerTeam: TeamId,
+  from: Position,
+): GameState {
+  const opponents = getAdjacentOpponents(state, from, dodgerTeam);
+  const tacklers = opponents.filter(
+    (opp) =>
+      hasSkill(opp, 'diving-tackle') || hasSkill(opp, 'diving_tackle'),
+  );
+  if (tacklers.length === 0) return state;
+
+  let newState = state;
+  for (const tackler of tacklers) {
+    newState = {
+      ...newState,
+      players: newState.players.map((p) =>
+        p.id === tackler.id ? { ...p, stunned: true } : p,
+      ),
+      gameLog: [
+        ...newState.gameLog,
+        {
+          id: `log-${Date.now()}-dt-${tackler.id}`,
+          timestamp: Date.now(),
+          type: 'action' as const,
+          message: `${tackler.name} se place au sol pour Diving Tackle.`,
+          playerId: tackler.id,
+          team: tackler.team,
+          details: { skill: 'diving-tackle' },
+        },
+      ],
+    };
+  }
+  return newState;
 }
 
 /**

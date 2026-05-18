@@ -43,6 +43,7 @@ import { canDumpOff, getDumpOffReceivers } from '../mechanics/dump-off';
 import { checkFoulAppearance } from '../mechanics/negative-traits';
 import { checkDauntless } from '../mechanics/dauntless';
 import { collectModifiers } from '../skills/skill-registry';
+import { consumeOncePerMatchSkills } from '../skills/skill-bridge';
 import { blockResultFromRoll } from '../utils/dice';
 import { rollBlockDiceManyWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
@@ -152,6 +153,19 @@ export function handleBlock(
     isBlitz: isBlitzDuringMove,
   });
   const attackerSkillStBonus = attackerSkillStMods.strengthModifier ?? 0;
+  // BUG fix : consommer les star player rules « once-per-match » qui
+  // contribuent au calcul de force du blocage (Casse-Os = Mighty Zug).
+  // Avant le fix, `consumeOncePerMatchSkills` n'etait appele que sur
+  // l'armor roll (mechanics/blocking.ts:205). Casse-Os donnait donc
+  // un +1 ST a chaque blocage du match, contre la regle « une seule
+  // fois ». Le bonus est consume meme si le bloc echoue (rule BB3 S3).
+  const stateAfterCasseOs = attackerSkillStBonus !== 0
+    ? consumeOncePerMatchSkills(stateAfterFA, attacker, 'on-block-attacker', {
+        state: stateAfterFA,
+        opponent: target,
+        isBlitz: isBlitzDuringMove,
+      })
+    : stateAfterFA;
 
   // Forces de base avant Dauntless (penalite Multiple Block et bonus
   // Horns inclus via `attackerSkillStBonus`).
@@ -163,7 +177,7 @@ export function handleBlock(
   // Si l'attaquant a Dauntless et est en desavantage, il tente
   // d'egaliser la force.
   const dauntlessResult = checkDauntless(
-    stateAfterFA,
+    stateAfterCasseOs,
     attacker,
     target,
     baseAttackerStrength,
