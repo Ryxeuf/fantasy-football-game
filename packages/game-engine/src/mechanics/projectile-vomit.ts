@@ -133,6 +133,18 @@ export function executeProjectileVomit(
     if (!armorResult.success) {
       newState = performInjuryRoll(newState, newState.players[targetIdx], rng, 0, vomiter.id);
     }
+
+    // BB2020 rule : « After Projectile Vomit has been used, the activated
+    // player's activation ends. » L'activation termine APRES un succes
+    // comme apres un echec. Avant le fix, pm n'etait set a 0 que sur
+    // echec — un PV reussi laissait le joueur continuer son tour, contre
+    // la regle officielle.
+    newState = {
+      ...newState,
+      players: newState.players.map((p) =>
+        p.id === vomiter.id ? { ...p, pm: 0 } : p,
+      ),
+    };
   } else {
     // Échec : l'activation du joueur prend fin (pm = 0), PAS de turnover
     newState.players = newState.players.map(p =>

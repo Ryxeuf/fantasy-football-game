@@ -125,7 +125,13 @@ export function executeChainsaw(
     if (!selfArmor.success) {
       const currentAttacker = newState.players.find(p => p.id === attacker.id);
       if (currentAttacker) {
-        newState = performInjuryRoll(newState, currentAttacker, rng, 0, attacker.id);
+        // BUG fix : sur une auto-blessure (double 1), l'attaquant N'est PAS
+        // credite de la casualty — il se blesse lui-meme. Avant le fix,
+        // `causedById: attacker.id` faisait grimper le compteur de
+        // casualties de l'attaquant comme s'il l'avait infligee a un
+        // adversaire, faussant les SPP / stats. Cf. PR #814 bombardier
+        // pour le meme pattern. `undefined` = casualty non-creditee.
+        newState = performInjuryRoll(newState, currentAttacker, rng, 0, undefined);
       }
     }
 

@@ -21,7 +21,7 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
-import { shouldConvertBothDownToPushBack } from './juggernaut';
+import { shouldConvertBothDownToPushBack, isJuggernautActiveForBlock } from './juggernaut';
 import { bounceBall } from './ball';
 import {
   isStandFirmActiveForBlock,
@@ -525,10 +525,15 @@ export function handlePushWithChoice(
   blockResult: string,
   rng: RNG
 ): GameState {
-  // Stand Firm : la cible peut refuser la poussee. Note : pour POW, la cible
-  // est deja marquee stunned=true AVANT cet appel, donc elle tombera bien sur
-  // sa case actuelle sans etre deplacee.
-  if (isStandFirmActiveForBlock(state, attacker, target)) {
+  // BUG fix : pour POW/STUMBLE le caller marque target.stunned=true AVANT
+  // d'appeler cette fonction, mais le parametre `target` capture l'objet
+  // pre-knockdown (immutabilite : map() cree un nouveau Player). Le check
+  // Stand Firm voyait donc target.stunned=false et autorisait Stand Firm
+  // alors que BB2020 dit Stand Firm requiert le joueur DEBOUT — un joueur
+  // tout juste tombe par POW/STUMBLE ne peut PAS utiliser Stand Firm.
+  // Re-fetch le target depuis le state actuel pour lire le bon stunned.
+  const currentTarget = state.players.find((p) => p.id === target.id) ?? target;
+  if (isStandFirmActiveForBlock(state, attacker, currentTarget)) {
     const standFirmLog = createLogEntry(
       'action',
       `${target.name} utilise Stand Firm : refuse d'etre pousse`,
@@ -805,8 +810,14 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
     return handlePushBack(stateWithLog, attacker, target, rng);
   }
 
+  // BB2020 : Juggernaut sur Blitz annule Wrestle de la cible. Avant le fix,
+  // un attaquant Juggernaut+Block contre une cible Wrestle voyait Wrestle
+  // s'activer (les deux tombent), alors que Juggernaut anti-Wrestle
+  // devrait laisser l'attaquant debout (Block) et la cible au sol.
+  const juggernautNegatesTargetWrestle = isJuggernautActiveForBlock(state, attacker);
   const attackerHasWrestle = checkWrestleOnBothDown(attacker, state);
-  const targetHasWrestle = checkWrestleOnBothDown(target, state);
+  const targetHasWrestle =
+    !juggernautNegatesTargetWrestle && checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;
 
   // Wrestle: les deux tombent, pas de jet d'armure, pas de turnover
