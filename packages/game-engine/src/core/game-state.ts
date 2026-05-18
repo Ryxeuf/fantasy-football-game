@@ -916,6 +916,9 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     teamFoulCount: {} as Record<string, number>,
     rerollUsedThisTurn: false,
     lastDiceResult: undefined,
+    // BB2020 : Officious Ref effect lasts only for the current drive.
+    // Reset at touchdown (= drive end).
+    officiousRefForDrive: false,
     gameLog: [...newState.gameLog, resetLog],
     preMatch: {
       ...extState.preMatch,

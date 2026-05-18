@@ -225,7 +225,12 @@ export function applyKickoffEvent(
     }
 
     case 'officious-ref': {
-      const log = createLogEntry('action', 'Arbitre zélé : toute faute entraîne une expulsion automatique ce drive');
+      // BB2020 : « Each Coach rolls a D6 each time their Player commits a
+      // Foul this drive. If they roll a 1, the player is Sent Off. »
+      // Avant le fix, le log etait emis mais aucun flag n'etait pose sur
+      // state ; `executeFoul` ne pouvait pas declencher ce check.
+      newState.officiousRefForDrive = true;
+      const log = createLogEntry('action', 'Arbitre zélé : toute faute peut entraîner une expulsion (D6=1) ce drive');
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
