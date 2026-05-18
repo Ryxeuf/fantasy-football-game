@@ -86,4 +86,30 @@ describe('weightsFromProfile — Lot 3.A.0.a', () => {
     const b = weightsFromProfile(DEFAULT_TACTICAL_PROFILE);
     expect(a).toEqual(b);
   });
+
+  it('audit round 4 — profil foul-happy (Goblin) augmente FOUL_*_VALUE et baisse FOUL_TURNOVER_RISK', () => {
+    const foulHappy = weightsFromProfile({
+      ...DEFAULT_TACTICAL_PROFILE,
+      foulFrequency: 100,
+    });
+    const neutral = weightsFromProfile(DEFAULT_TACTICAL_PROFILE);
+    expect(foulHappy.FOUL_CARRIER_VALUE).toBeGreaterThan(
+      neutral.FOUL_CARRIER_VALUE ?? 90,
+    );
+    expect(foulHappy.FOUL_NON_CARRIER_VALUE).toBeGreaterThan(
+      neutral.FOUL_NON_CARRIER_VALUE ?? 30,
+    );
+    expect(foulHappy.FOUL_TURNOVER_RISK).toBeLessThan(
+      neutral.FOUL_TURNOVER_RISK ?? 40,
+    );
+  });
+
+  it('audit round 4 — profil clean (foulFrequency=0) baisse FOUL_*_VALUE', () => {
+    const clean = weightsFromProfile({
+      ...DEFAULT_TACTICAL_PROFILE,
+      foulFrequency: 0,
+    });
+    expect(clean.FOUL_CARRIER_VALUE).toBeLessThan(90);
+    expect(clean.FOUL_NON_CARRIER_VALUE).toBeLessThan(30);
+  });
 });

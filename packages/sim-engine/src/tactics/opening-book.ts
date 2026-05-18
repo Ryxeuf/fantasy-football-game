@@ -165,16 +165,161 @@ export const RACE_OPENING_BOOKS: readonly RaceOpeningBook[] = Object.freeze([
       { turnRange: [1, 4], moveType: 'BLITZ', bonus: 12 },
     ],
   },
+  // Audit round 4 — ajout de 8 races BB3 S3 manquantes pour eviter
+  // que le full driver tombe sur `undefined` (= comportement neutre)
+  // au lieu d'un opening race-aware.
+  {
+    race: 'Chaos Chosen',
+    rules: [
+      { turnRange: [1, 6], moveType: 'BLOCK', bonus: 14, note: 'Chaos warriors grind' },
+      { turnRange: [1, 4], moveType: 'BLITZ', bonus: 10 },
+      { turnRange: [1, 3], moveType: 'PASS', bonus: -12, note: 'Chaos rarely passes' },
+    ],
+  },
+  {
+    race: 'Chaos Renegades',
+    rules: [
+      { turnRange: [1, 6], moveType: 'BLOCK', bonus: 12 },
+      { turnRange: [1, 4], moveType: 'BLITZ', bonus: 10 },
+    ],
+  },
+  {
+    race: 'Chaos Dwarf',
+    rules: [
+      { turnRange: [1, 8], moveType: 'BLOCK', bonus: 12, note: 'Hobgoblin + Bull Centaur grind' },
+      { turnRange: [3, 8], moveType: 'END_TURN', bonus: -2, note: 'Burn clock' },
+    ],
+  },
+  {
+    race: 'Black Orc',
+    rules: [
+      { turnRange: [1, 6], moveType: 'BLOCK', bonus: 14, note: 'Pure bash' },
+      { turnRange: [1, 3], moveType: 'PASS', bonus: -18, note: 'Black Orcs never pass' },
+    ],
+  },
+  {
+    race: 'Khorne',
+    rules: [
+      { turnRange: [1, 6], moveType: 'BLITZ', bonus: 14, note: 'Frenzy hunger' },
+      { turnRange: [1, 6], moveType: 'BLOCK', bonus: 12 },
+      { turnRange: [1, 3], moveType: 'PASS', bonus: -15 },
+    ],
+  },
+  {
+    race: 'Nurgle',
+    rules: [
+      { turnRange: [1, 8], moveType: 'BLOCK', bonus: 14, note: 'Disturbing presence + foul appearance' },
+      { turnRange: [1, 4], moveType: 'FOUL', bonus: 6 },
+      { turnRange: [3, 8], moveType: 'END_TURN', bonus: -2 },
+    ],
+  },
+  {
+    race: 'Goblin',
+    rules: [
+      { turnRange: [1, 5], moveType: 'FOUL', bonus: 18, note: 'Foul everything' },
+      { turnRange: [1, 4], moveType: 'BLOCK', bonus: -8, note: 'Tiny — avoid fights' },
+      { turnRange: [1, 8], moveType: 'END_TURN', bonus: -2 },
+    ],
+  },
+  {
+    race: 'Underworld Denizens',
+    rules: [
+      { turnRange: [1, 5], moveType: 'FOUL', bonus: 15, note: 'Goblin fouls' },
+      { turnRange: [1, 3], moveType: 'PASS', bonus: 10, note: 'Skaven gutter pass' },
+    ],
+  },
+  {
+    race: 'Vampire',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 12, note: 'Hypnotic gaze + pass' },
+      { turnRange: [1, 5], moveType: 'BLITZ', bonus: 8 },
+    ],
+  },
+  {
+    race: 'Necromantic Horror',
+    rules: [
+      { turnRange: [1, 6], moveType: 'BLOCK', bonus: 10, note: 'Werewolves + Flesh Golems' },
+      { turnRange: [1, 4], moveType: 'BLITZ', bonus: 10 },
+    ],
+  },
+  {
+    race: 'Shambling Undead',
+    rules: [
+      { turnRange: [1, 8], moveType: 'BLOCK', bonus: 8, note: 'Mummies grind (alias of Undead)' },
+      { turnRange: [1, 5], moveType: 'BLITZ', bonus: 6 },
+    ],
+  },
+  {
+    race: 'High Elf',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 15, note: 'Elite passers' },
+      { turnRange: [1, 3], moveType: 'MOVE', bonus: 4, note: 'Spread receivers' },
+    ],
+  },
+  {
+    race: 'Elven Union',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 14 },
+      { turnRange: [1, 3], moveType: 'MOVE', bonus: 4 },
+    ],
+  },
+  {
+    race: 'Human',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 10, note: 'Balanced passer' },
+      { turnRange: [1, 5], moveType: 'BLOCK', bonus: 6 },
+    ],
+  },
+  {
+    race: 'Imperial Nobility',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 10 },
+      { turnRange: [1, 5], moveType: 'BLOCK', bonus: 6 },
+    ],
+  },
+  {
+    race: 'Old World Alliance',
+    rules: [
+      { turnRange: [1, 5], moveType: 'BLOCK', bonus: 8 },
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 6 },
+    ],
+  },
+  {
+    race: 'Snotling',
+    rules: [
+      { turnRange: [1, 5], moveType: 'FOUL', bonus: 15 },
+      { turnRange: [1, 4], moveType: 'BLOCK', bonus: -10, note: 'Tiny — avoid fights' },
+    ],
+  },
+  {
+    race: 'Slann',
+    rules: [
+      { turnRange: [1, 4], moveType: 'PASS', bonus: 10, note: 'Catchers + leap' },
+      { turnRange: [1, 5], moveType: 'BLITZ', bonus: 8 },
+    ],
+  },
+  {
+    race: 'Gnome',
+    rules: [
+      { turnRange: [1, 8], moveType: 'END_TURN', bonus: -1 },
+      { turnRange: [1, 5], moveType: 'BLOCK', bonus: -5, note: 'Tiny — avoid fights' },
+    ],
+  },
 ]);
 
+// Audit round 4 : lookup case-insensitive (lowercase key) pour eviter
+// les misses sur des variantes comme 'wood elf', 'Wood elf', 'WOOD ELF'
+// venant d'un parse de DB ou d'API.
 const BOOK_BY_RACE: ReadonlyMap<string, RaceOpeningBook> = new Map(
-  RACE_OPENING_BOOKS.map((b) => [b.race, b])
+  RACE_OPENING_BOOKS.map((b) => [b.race.toLowerCase(), b])
 );
 
-/** Lookup case-sensitive sur le nom de race. Retourne `undefined` si
- *  la race n'a pas d'entry (utile pour les tests / mock teams). */
+/** Lookup case-insensitive sur le nom de race. Retourne `undefined`
+ *  si la race n'a pas d'entry (utile pour les tests / mock teams).
+ *  Avant audit round 4 : case-sensitive → mismatch silencieux. */
 export function getOpeningBookForRace(race: string): RaceOpeningBook | undefined {
-  return BOOK_BY_RACE.get(race);
+  if (typeof race !== 'string') return undefined;
+  return BOOK_BY_RACE.get(race.trim().toLowerCase());
 }
 
 /**
