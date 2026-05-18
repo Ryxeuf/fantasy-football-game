@@ -707,16 +707,44 @@ function processTurn(
 
     for (const ev of keyEvents) {
       if (ev.type === 'CASUALTY') {
+        // BUG fix B2 : avant, le team etait derivé du `drivingTeam`
+        // (assume victime = adversaire). C'est faux quand un block
+        // `attacker_down` ou `both_down` blesse l'attaquant lui-meme.
+        // On derive maintenant le team du `meta.playerId` ('home-LOS'
+        // ou 'away-LOS' = LOS synthetique). En fallback : drivingTeam
+        // = team adverse (old behavior pour les casualties sans
+        // playerId explicite).
         const meta = ev.meta as { playerId?: string; causedBy?: string } | undefined;
+        const victimId = meta?.playerId ?? 'unknown';
+        let team: 'A' | 'B';
+        if (victimId.startsWith('home')) {
+          team = 'A';
+        } else if (victimId.startsWith('away')) {
+          team = 'B';
+        } else {
+          team = m.state.drive.drivingTeam === 'home' ? 'B' : 'A';
+        }
         m.casualties.push({
-          playerId: meta?.playerId ?? 'unknown',
-          team: m.state.drive.drivingTeam === 'home' ? 'B' : 'A',
+          playerId: victimId,
+          team,
           outcome: 'badly_hurt',
           causedById: meta?.causedBy,
         });
       } else if (ev.type === 'BLOCK') {
+        // BUG fix B1 : avant, seul `defender_down` etait classé succes.
+        // `push_only` et `wrestle` etaient marques comme echecs → momentum
+        // `failureStreak` incrementait sur la sortie BB la plus commune
+        // (push back). Distribution `hot/cold` biaisee.
+        // BB3 S3 : un block « reussi » au sens momentum = l'attaquant a
+        // gagne du terrain ou knocked down (defender_down, push_only,
+        // wrestle si attacker pas Down). `attacker_down` et `both_down`
+        // (sans wrestle qui empeche les armor rolls) restent des echecs.
         const meta = ev.meta as { resolution?: string } | undefined;
-        const success = meta?.resolution === 'defender_down';
+        const resolution = meta?.resolution;
+        const success =
+          resolution === 'defender_down' ||
+          resolution === 'push_only' ||
+          resolution === 'wrestle';
         recordBlock(m.momentum, drivingPlayerId, { success });
       }
     }
@@ -737,7 +765,19 @@ function processTurn(
     // into a single-turn LOS-to-TD.
     const yardsGained = attempt.yardsGained ?? 0;
     if (yardsGained > 0) {
-      const allowed = Math.min(yardsGained, MAX_TURN_YARDS - yardsThisTurn);
+      // BUG fix B6 : avant, `allowed = Math.min(yardsGained, cap)` puis
+      // `newYard = ballYardline + allowed`. Si un pass aurait franchi
+      // la ligne mais que `cap = 0` (yardsThisTurn saturate), `allowed`
+      // tombe a 0 et la TD est silencieusement refusee. Maintenant on
+      // verifie d'abord la TD avec `yardsGained` non-clip — un pass
+      // qui PHYSIQUEMENT atteint l'en-but score, indep du cap (le cap
+      // existe pour limiter le compound pass+bulk, pas pour denier
+      // un score legitime).
+      const naturalNewYard = m.state.drive.ballYardline + yardsGained;
+      const naturallyScores = naturalNewYard >= FIELD_YARDS;
+      const allowed = naturallyScores
+        ? yardsGained
+        : Math.min(yardsGained, MAX_TURN_YARDS - yardsThisTurn);
       yardsThisTurn += allowed;
       const newYard = m.state.drive.ballYardline + allowed;
       if (newYard >= FIELD_YARDS) {
