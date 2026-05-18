@@ -162,9 +162,28 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
-  // Si c'est un turnover, on ne peut que finir le tour
-  // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
-  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE' && move.type !== 'ON_THE_BALL_MOVE' && move.type !== 'ON_THE_BALL_DECLINE') {
+  // Si c'est un turnover, on ne peut que finir le tour OU compléter la
+  // résolution d'un coup en cours (push/follow-up choice, reroll,
+  // apothecary, on-the-ball, block-choice multi-dés, dump-off receiver).
+  //
+  // BUG fix : avant, BLOCK_CHOOSE et DUMP_OFF_CHOOSE étaient absents de
+  // cette whitelist. Si un turnover était set après le jet de dés d'un
+  // BLOCK multi-dés mais AVANT que le coach ne choisisse le résultat
+  // (e.g. cascade Frenzy / chained Push), le dispatcher rejetait le
+  // BLOCK_CHOOSE → seul END_TURN restait → **softlock** car le choix
+  // de dé n'était jamais résolu.
+  if (
+    state.isTurnover &&
+    move.type !== 'END_TURN' &&
+    move.type !== 'PUSH_CHOOSE' &&
+    move.type !== 'FOLLOW_UP_CHOOSE' &&
+    move.type !== 'REROLL_CHOOSE' &&
+    move.type !== 'APOTHECARY_CHOOSE' &&
+    move.type !== 'ON_THE_BALL_MOVE' &&
+    move.type !== 'ON_THE_BALL_DECLINE' &&
+    move.type !== 'BLOCK_CHOOSE' &&
+    move.type !== 'DUMP_OFF_CHOOSE'
+  ) {
     return state;
   }
 

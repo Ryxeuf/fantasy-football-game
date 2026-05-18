@@ -260,10 +260,11 @@ describe('calculateArmorTarget', () => {
     expect(calculateArmorTarget(player, 5)).toBe(12);
   });
 
-  it('does not clamp the minimum (can go below 2)', () => {
-    // av=2, modifiers=-5 → -3 (no minimum clamp in this function)
+  it('clamp le minimum à 2 (le D6 minimal sur 2D6)', () => {
+    // BUG fix : avant, pas de min clamp → av=2, modifiers=-5 → -3.
+    // Maintenant : clamp à 2 (cible minimale atteignable par 2D6).
     const player = mockPlayer({ av: 2 });
-    expect(calculateArmorTarget(player, -5)).toBe(-3);
+    expect(calculateArmorTarget(player, -5)).toBe(2);
   });
 
   it('returns 12 when av is already 12 with zero modifier', () => {

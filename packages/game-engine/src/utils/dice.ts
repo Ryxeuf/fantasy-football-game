@@ -70,8 +70,15 @@ export function calculateArmorTarget(player: Player, modifiers: number = 0): num
   // La valeur de base est l'armure du joueur (av), et on ajoute les modificateurs positifs
   // Stunty : la valeur d'armure est réduite de 1 (plus fragile), ce qui rend la
   // cassure plus facile. S'applique toujours, cumulatif avec tout autre modificateur.
+  //
+  // BUG fix : avant, seul `Math.min(12, ...)` était appliqué (pas de min
+  // clamp). Si le total descendait à 0 ou négatif (debuffs cumulés),
+  // l'armure « tient » seulement si roll >= target, et 2D6 ≥ 2 toujours
+  // vrai → l'armure cassait dans 100% des cas mais avec une cible
+  // illisible. Clamper à `2` (le minimum atteignable par 2D6) garde
+  // le contrat « 2D6 >= target » cohérent.
   const stuntyAdjust = hasSkill(player, 'stunty') ? -1 : 0;
-  return Math.min(12, player.av + modifiers + stuntyAdjust);
+  return Math.max(2, Math.min(12, player.av + modifiers + stuntyAdjust));
 }
 
 /**
