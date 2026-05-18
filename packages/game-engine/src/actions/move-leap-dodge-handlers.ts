@@ -99,9 +99,19 @@ export function handleLeap(
   );
   next.gameLog = [...next.gameLog, leapLogEntry];
 
-  // Déplacer le joueur vers la case d'arrivée et consommer 2 PM
-  next.players[idx].pos = { ...move.to };
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 2);
+  // Déplacer le joueur vers la case d'arrivée et consommer 2 PM (immutable).
+  // BUG fix : avant, `next.players[idx].pos = ...` / `.pm = ...` mutaient
+  // l'objet player dans le clone. Le clone est `structuredClone` donc safe
+  // localement, mais cette convention est dangereuse — toute reassignation
+  // future de `next` casserait la chaine. Maintenant via `players.map`.
+  next = {
+    ...next,
+    players: next.players.map((p, i) =>
+      i === idx
+        ? { ...p, pos: { ...move.to }, pm: Math.max(0, p.pm - 2) }
+        : p,
+    ),
+  };
 
   // Enregistrer l'action de mouvement si c'est le premier mouvement
   if (!hasPlayerActed(next, player.id)) {
@@ -210,9 +220,17 @@ export function handleDodge(
   );
   next.gameLog = [...next.gameLog, dodgeLogEntry];
 
-  // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
-  next.players[idx].pos = { ...move.to };
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+  // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue.
+  // BUG fix immutabilite : avant, `next.players[idx].pos = ...` / `.pm = ...`
+  // mutaient l'objet player dans le clone. Maintenant via spread immutable.
+  next = {
+    ...next,
+    players: next.players.map((p, i) =>
+      i === idx
+        ? { ...p, pos: { ...move.to }, pm: Math.max(0, p.pm - 1) }
+        : p,
+    ),
+  };
 
   // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
   next = resolveShadowingAfterDodge(next, player, from, rng);
