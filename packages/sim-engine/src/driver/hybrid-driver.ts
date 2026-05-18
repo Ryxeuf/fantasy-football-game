@@ -548,23 +548,35 @@ function emitTurnStart(m: MutableMatch): void {
   });
 }
 
+/**
+ * BUG fix audit round 5 (HIGH) : avant, `emitTd` computait son propre
+ * `scorerId` via `pickHybridScorer` mais l'appelant utilisait
+ * `${team}-LOS` pour `recordTouchdown`. Resultat : la `momentum`
+ * snapshot du MatchSummary attribuait le TD a la LOS proxy alors
+ * que l'event MatchEvent portait le vrai scorer → consommateurs
+ * cross-referencant les 2 (stats per-player) avaient des donnees
+ * incoherentes. Fix : exposer un helper `pickTdScorerId` que le
+ * caller peut utiliser pour `recordTouchdown` ET passer ici, garant
+ * d'une attribution unique.
+ */
+function pickTdScorerId(
+  m: MutableMatch,
+  scoringTeam: Side,
+  rngs: DriverRng,
+): string | null {
+  const roster =
+    scoringTeam === 'home' ? m.homeRoster : m.awayRoster;
+  return roster.length > 0
+    ? pickHybridScorer(roster, () => rngs.scorer.next())
+    : null;
+}
+
 function emitTd(
   m: MutableMatch,
   scoringTeam: Side,
   displayAtMs: number,
-  rngs: DriverRng,
+  scorerId: string | null,
 ): void {
-  // Lot 4.D.4 — quand un roster reel est fourni cote `SimInput`, on
-  // attribue un `scorerId` pseudo-aleatoire pondere par position
-  // (Catcher / Runner > Lineman > Big Guy). Sans roster (mode legacy
-  // archetype-vs-archetype), on omet `scorerId` -> SPP service
-  // ignore le TD.
-  const roster =
-    scoringTeam === 'home' ? m.homeRoster : m.awayRoster;
-  const scorerId =
-    roster.length > 0
-      ? pickHybridScorer(roster, () => rngs.scorer.next())
-      : null;
   m.events.push({
     type: 'TD',
     displayAtMs,
@@ -815,8 +827,10 @@ function processTurn(
         if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
         else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
         m.touchdowns += 1;
-        recordTouchdown(m.momentum, drivingPlayerId);
-        emitTd(m, scoring, momentAtMs, rngs);
+        // Audit round 5 : un seul pick scorer pour TD event + momentum.
+        const scorerId = pickTdScorerId(m, scoring, rngs);
+        recordTouchdown(m.momentum, scorerId ?? drivingPlayerId);
+        emitTd(m, scoring, momentAtMs, scorerId);
         m.state = { ...m.state, drive: nextDrive(m.state.drive) };
         // A scoring play ends the team's turn ; treat it like a
         // turnover-on-the-positive-side so the bulk yard advancement
@@ -880,8 +894,10 @@ function processTurn(
       if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
       m.touchdowns += 1;
-      recordTouchdown(m.momentum, `${scoring}-LOS`);
-      emitTd(m, scoring, bulkAtMs, rngs);
+      // Audit round 5 : un seul pick scorer pour TD event + momentum.
+      const scorerId = pickTdScorerId(m, scoring, rngs);
+      recordTouchdown(m.momentum, scorerId ?? `${scoring}-LOS`);
+      emitTd(m, scoring, bulkAtMs, scorerId);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
     } else {
       m.state = {

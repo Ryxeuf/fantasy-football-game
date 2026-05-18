@@ -366,12 +366,23 @@ export function diffStatesToEvents(
  * Heuristique : transforme la position de la balle (cellule x) en
  * yardline 0..26 du modèle hybrid. La position du porteur est
  * privilégiée si la balle a un porteur.
+ *
+ * BUG fix audit round 5 (HIGH) : la convention hybrid est
+ * `ballYardline ∈ [0..26]` ou **0 = own goal de l'equipe qui drive**
+ * et **26 = endzone adverse**. Avant, le full driver retournait `ballX`
+ * brut, ce qui est correct pour team A (driving vers x=26) mais
+ * inverse pour team B (driving vers x=0 → un porteur a x=21 etait
+ * yardline=21 alors qu'il devrait etre yardline=5). Tous les
+ * consommateurs (Gazette narrator, hybrid vs full comparison, odds
+ * calculator) lisaient des valeurs incorrectes pour les tours team B.
+ * Fix : normaliser via `currentPlayer` (A → ballX, B → 26-ballX).
  */
 function estimateBallYardline(state: GameState): number {
   const carrier = state.players.find((p) => p.hasBall);
   const ballX = carrier?.pos.x ?? state.ball?.x ?? 0;
-  // Le board fait 26 cells de large = yardline.
-  return Math.max(0, Math.min(26, ballX));
+  const drivingIsA = state.currentPlayer === 'A';
+  const normalized = drivingIsA ? ballX : 26 - ballX;
+  return Math.max(0, Math.min(26, normalized));
 }
 
 /**
@@ -402,7 +413,12 @@ function causeFromMove(move: Move): string {
       return 'dodge_failed';
     case 'MOVE':
     case 'LEAP':
-      return 'gfi_failed';
+      // BUG fix audit round 5 (HIGH) : avant, tout MOVE/LEAP turnover
+      // etait tag `gfi_failed`. Or un MOVE peut turnover sur dodge
+      // rate, GFI rate, ou Both Down/negative-trait trigger. Le tag
+      // `movement_failed` est un fallback honnete ; les consommateurs
+      // (Gazette narrator) ont desormais a distinguer eux-memes.
+      return 'movement_failed';
     case 'FOUL':
       return 'foul_sent_off';
     default:

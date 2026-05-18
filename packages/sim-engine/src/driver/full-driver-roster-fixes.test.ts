@@ -57,7 +57,7 @@ describe('Ball carrier idx variable (C3)', () => {
 });
 
 describe('getInitialBallYardline (H2)', () => {
-  it("retourne la position du carrier au lieu d'un hardcode 4", () => {
+  it("retourne la position du carrier normalisee selon l'equipe qui drive", () => {
     const homeRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
     );
@@ -69,8 +69,26 @@ describe('getInitialBallYardline (H2)', () => {
     });
 
     const yardline = getInitialBallYardline(state);
-    // Le carrier est place sur TEAM_B_FORMATION[9] — sa position x est
-    // utilisee comme yardline.
+    // Audit round 5 : la convention hybrid est yardline ∈ [0..26] ou
+    // 0 = own goal de l'equipe qui drive. Team B drive (receivingTeam),
+    // donc yardline = 26 - carrier.pos.x (B drive vers x=0, donc
+    // commence pres de son own goal qui est x=26).
+    const carrier = state.players.find((p) => p.hasBall)!;
+    expect(yardline).toBe(26 - carrier.pos.x);
+  });
+
+  it("audit round 5 : team A driving → yardline = ballX (non normalise)", () => {
+    const homeRoster = Array.from({ length: 11 }, (_, i) =>
+      rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
+    );
+    const awayRoster = Array.from({ length: 11 }, (_, i) =>
+      rosterPlayer({ id: `A${i}`, name: `A${i}`, number: i + 1 }),
+    );
+    const state = buildGameStateFromRosters({
+      homeRoster, awayRoster, receivingTeam: 'A',
+    });
+
+    const yardline = getInitialBallYardline(state);
     const carrier = state.players.find((p) => p.hasBall)!;
     expect(yardline).toBe(carrier.pos.x);
   });
