@@ -110,7 +110,7 @@ const DEFAULT_MAX_BATCH = 50;
  * Hash FNV1a 32-bit pour dériver un seed numérique d'un cuid string.
  * Pas cryptographique — juste déterministe et bien distribué pour seeds.
  */
-interface RawProRoster {
+export interface RawProRoster {
   readonly id: string;
   readonly name: string;
   readonly position: string;
@@ -122,7 +122,7 @@ interface RawProRoster {
   readonly skills: unknown;
 }
 
-function parseRosterSkills(raw: unknown): readonly string[] {
+export function parseRosterSkills(raw: unknown): readonly string[] {
   if (Array.isArray(raw)) {
     return raw.filter((s): s is string => typeof s === "string");
   }
@@ -145,7 +145,7 @@ function parseRosterSkills(raw: unknown): readonly string[] {
  * `SimInput.away.roster`). Le numéro de jersey n'étant pas stocké
  * en DB, on suit l'ordre d'insertion (1..n) pour stabilité.
  */
-function mapToSimRoster(
+export function mapToSimRoster(
   raws: readonly RawProRoster[],
 ): readonly SimRosterPlayer[] {
   return raws.map((r, idx) => ({
