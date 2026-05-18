@@ -24,8 +24,12 @@ import type { Rng } from '../rng/seeded';
 export type ResolverSide = 'home' | 'away';
 
 /** Minimal set of player states the resolvers care about. The driver
- *  expands this when needed (e.g. `ko` / `casualty` for benching). */
-export type ResolverPlayerState = 'standing' | 'prone' | 'stunned' | 'ko' | 'casualty';
+ *  expands this when needed (e.g. `ko` / `casualty` for benching).
+ *  `sent_off` : foul expulsion par l'arbitre (BB2020 doubles on armor or
+ *  injury). Distinct de `casualty` car le joueur n'est PAS blessé et
+ *  ne peut pas être ramené par un apothecary — il sort définitivement
+ *  pour la mi-temps en cours. */
+export type ResolverPlayerState = 'standing' | 'prone' | 'stunned' | 'ko' | 'casualty' | 'sent_off';
 
 export type ResolverWeather =
   | 'nice'

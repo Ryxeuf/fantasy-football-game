@@ -25,14 +25,29 @@ function armoredSkullModifier(player: Player): number {
  * @param state - État du jeu
  * @param player - Joueur blessé
  * @param rng - Générateur de nombres aléatoires
+ * @param bonus - Bonus de jet (Mighty Blow, etc.)
+ * @param causedById - ID du joueur causant la blessure
+ * @param preRolledDice - Dés pre-rollés (utilisé par foul pour check doubles)
  * @returns Nouvel état du jeu après le jet de blessure
  */
-export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bonus: number = 0, causedById?: string): GameState {
+export function performInjuryRoll(
+  state: GameState,
+  player: Player,
+  rng: RNG,
+  bonus: number = 0,
+  causedById?: string,
+  preRolledDice?: [number, number],
+): GameState {
   const newState = structuredClone(state) as GameState;
 
   // Jet de 2D6 pour la blessure (+ bonus de Mighty Blow éventuel, - Armored Skull si applicable)
+  // BUG fix : foul send-off check requires access to the raw injury dice
+  // (doubles sur ARMOR or INJURY → expulsion BB2020). Pre-rolled dice
+  // peuvent etre fournies par `executeFoul` pour conserver les valeurs.
+  const die1 = preRolledDice ? preRolledDice[0] : Math.floor(rng() * 6) + 1;
+  const die2 = preRolledDice ? preRolledDice[1] : Math.floor(rng() * 6) + 1;
   const armoredSkullMod = armoredSkullModifier(player);
-  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1 + bonus + armoredSkullMod;
+  const injuryRoll = die1 + die2 + bonus + armoredSkullMod;
 
   // Log du jet de blessure
   const injuryLog = createLogEntry(
@@ -40,7 +55,7 @@ export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bo
     `Jet de blessure: ${injuryRoll}`,
     player.id,
     player.team,
-    { injuryRoll }
+    { injuryRoll, die1, die2 }
   );
   newState.gameLog = [...newState.gameLog, injuryLog];
 

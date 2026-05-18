@@ -33,12 +33,21 @@ export function canFoul(state: GameState, attacker: Player, target: Player): boo
 }
 
 /**
- * Calcule les assists de foul (joueurs amis adjacents à la cible - joueurs adverses adjacents à la cible)
+ * Calcule les assists de foul (BB2020 / BB3) :
+ *  - Offensifs : joueurs amis (hors fouleur) adjacents à la VICTIME → +1 chacun.
+ *  - Défensifs : joueurs adverses (hors victime) adjacents au FOULEUR → -1 chacun.
+ *
+ * BUG fix : avant, les défensifs étaient comptés adjacents à la VICTIME
+ * (la même position que les offensifs). Sous-estimation des modificateurs
+ * négatifs quand un défenseur entoure le fouleur sans entourer la victime.
+ * Source : BB2020 LRB "Fouls" §p.65 — "each team-mate of the fouler
+ * adjacent to the player being fouled adds +1 ; each team-mate of the
+ * victim adjacent to the fouler subtracts -1."
  */
 export function calculateFoulAssists(state: GameState, attacker: Player, target: Player): number {
   let assists = 0;
 
-  // Joueurs amis adjacents à la cible (hors attaquant)
+  // Offensifs : amis adjacents à la VICTIME (hors fouleur)
   for (const player of state.players) {
     if (player.id === attacker.id) continue;
     if (player.team !== attacker.team) continue;
@@ -48,12 +57,12 @@ export function calculateFoulAssists(state: GameState, attacker: Player, target:
     }
   }
 
-  // Joueurs adverses adjacents à la cible (défenseurs, hors la cible elle-même)
+  // Défensifs : adverses adjacents au FOULEUR (hors victime)
   for (const player of state.players) {
     if (player.id === target.id) continue;
     if (player.team !== target.team) continue;
     if (player.stunned || player.state === 'knocked_out' || player.state === 'casualty') continue;
-    if (isAdjacent(player.pos, target.pos)) {
+    if (isAdjacent(player.pos, attacker.pos)) {
       assists -= 1;
     }
   }
@@ -105,23 +114,40 @@ export function executeFoul(
   );
   newState.gameLog = [...newState.gameLog, armorLog];
 
-  // Vérifier l'expulsion AVANT d'appliquer la blessure (doublet sur les dés bruts)
-  const isDoubles = die1 === die2;
+  // Doublet armor (sur les dés bruts) — check pour expulsion.
+  const armorDoubles = die1 === die2;
 
+  // BB2020 : si l'armure casse, jet de blessure. Roule les dés ICI pour
+  // pouvoir tester le doublet sur le jet d'injury et déclencher
+  // l'expulsion (BB rule : doubles sur armor OR injury → fouleur expulsé).
+  // Avant ce fix, seul le doublet armor déclenchait l'expulsion ; les
+  // doublets injury (3-3, 4-4 etc.) étaient ignorés.
+  let injuryDoubles = false;
   if (armorBroken) {
-    // Jet de blessure (l'attaquant est crédité pour la casualty)
+    const injuryDie1 = rollD6(rng);
+    const injuryDie2 = rollD6(rng);
+    injuryDoubles = injuryDie1 === injuryDie2;
     const targetPlayer = newState.players.find(p => p.id === target.id)!;
-    newState = performInjuryRoll(newState, targetPlayer, rng, 0, attacker.id);
+    newState = performInjuryRoll(
+      newState,
+      targetPlayer,
+      rng,
+      0,
+      attacker.id,
+      [injuryDie1, injuryDie2],
+    );
   }
 
+  const isDoubles = armorDoubles || injuryDoubles;
   // Expulsion si doublet, sauf si l'attaquant possede Sneaky Git
   const sneakyGit = isSneakyGitActive(newState, attacker);
   if (isDoubles && !sneakyGit) {
     const attackerPlayer = newState.players.find(p => p.id === attacker.id);
     if (attackerPlayer) {
+      const doublesSource = armorDoubles ? 'armure' : 'blessure';
       const expulsionLog = createLogEntry(
         'action',
-        `Doublet (${die1}-${die2}) ! ${attacker.name} est expulsé par l'arbitre !`,
+        `Doublet ${doublesSource} ! ${attacker.name} est expulsé par l'arbitre !`,
         attacker.id,
         attacker.team
       );
@@ -131,7 +157,7 @@ export function executeFoul(
   } else if (isDoubles && sneakyGit) {
     const sneakyLog = createLogEntry(
       'action',
-      `Doublet (${die1}-${die2}) ! ${attacker.name} evite l'expulsion grâce à Sneaky Git.`,
+      `Doublet ! ${attacker.name} evite l'expulsion grâce à Sneaky Git.`,
       attacker.id,
       attacker.team
     );
