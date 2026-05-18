@@ -141,7 +141,12 @@ export function resolveFoul(
   const sentOff = armorDoubles || injuryDoubles;
 
   if (sentOff) {
-    newState = updatePlayer(newState, fouler.id, { state: 'casualty' });
+    // BUG fix : utiliser `sent_off` (BB2020 expulsion) au lieu de
+    // `casualty`. Le joueur expulsé n'est PAS blessé — il sort
+    // définitivement pour la mi-temps en cours sans jet apothecary.
+    // Avant le fix, le `casualty` faussait les stats de victimes et
+    // ouvrait la voie à un apothecary erroné côté driver.
+    newState = updatePlayer(newState, fouler.id, { state: 'sent_off' });
   }
 
   events.unshift({
