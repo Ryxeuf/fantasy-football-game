@@ -33,13 +33,19 @@ describe('Kickoff Events', () => {
   });
 
   describe('applyKickoffEvent', () => {
-    it('applies Get the Ref (+1 reroll each team)', () => {
+    it('applies Get the Ref (+1 Bribe each team — BB2020)', () => {
+      // BB2020 LRB : "Get the Ref! — Each team receives one additional
+      // Bribe to use during the game." Avant le fix, l'event donnait
+      // +1 relance (test legacy) au lieu de +1 Bribe.
       const state = setup();
       const event = KICKOFF_EVENTS[2]; // Get the Ref
       const rng = makeRNG('test');
       const result = applyKickoffEvent(state, event, rng, 'A');
-      expect(result.teamRerolls.teamA).toBe(state.teamRerolls.teamA + 1);
-      expect(result.teamRerolls.teamB).toBe(state.teamRerolls.teamB + 1);
+      expect(result.bribesRemaining.teamA).toBe(state.bribesRemaining.teamA + 1);
+      expect(result.bribesRemaining.teamB).toBe(state.bribesRemaining.teamB + 1);
+      // Rerolls inchangees
+      expect(result.teamRerolls.teamA).toBe(state.teamRerolls.teamA);
+      expect(result.teamRerolls.teamB).toBe(state.teamRerolls.teamB);
     });
 
     it('applies Riot (turn counter change)', () => {
