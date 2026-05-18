@@ -233,12 +233,19 @@ function buildCasualties(state: GameState): Casualty[] {
   // Casualty.outcome n'a pas de variante 'sent_off' (c'est un état joueur,
   // pas une issue casualty). Lot 3.C.1 affinera la classification
   // (lasting injuries, dead, etc.) en lisant les events.
+  // BUG fix audit round 5 (HIGH) : avant, TOUS les casualties etaient
+  // tagges `outcome: 'badly_hurt'`. Le game-engine stocke pourtant la
+  // severite reelle dans `state.casualtyResults[playerId]` (badly_hurt
+  // | seriously_hurt | serious_injury | lasting_injury | dead). Le pro-
+  // league wiring (lasting-injury accumulation, retire/dead transitions,
+  // apothecary stats) perdait ce signal. Fix : lire `casualtyResults`
+  // pour chaque casualty, fallback `'badly_hurt'` si absent.
   return state.players
     .filter((p) => p.state === 'casualty')
     .map<Casualty>((p) => ({
       playerId: p.id,
       team: p.team as TeamId,
-      outcome: 'badly_hurt',
+      outcome: (state.casualtyResults?.[p.id] as Casualty['outcome'] | undefined) ?? 'badly_hurt',
     }));
 }
 
