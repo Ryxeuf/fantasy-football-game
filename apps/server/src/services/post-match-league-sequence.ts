@@ -360,27 +360,34 @@ export async function applyAdvancementChoice(
   // Calcul du surcout en po pour la TV courante.
   const surcharge = SURCHARGE_PER_ADVANCEMENT[input.type];
 
-  await prisma.teamPlayer.update({
-    where: { id: input.playerId },
-    data: {
-      spp: { decrement: cost },
-      advancements: JSON.stringify(updatedAdvancements),
-      skills: updatedSkills,
-    },
-  });
-
-  // Update Team.currentValue (additif : on ne recalcule pas tout,
-  // juste increment by surcharge — la baseline reste correcte tant
-  // que les autres composants de currentValue ne changent pas dans
-  // cette transaction).
-  await prisma.team.update({
-    where: { id: input.teamId },
-    data: { currentValue: { increment: surcharge } },
-  });
-
-  const team = await prisma.team.findUnique({
-    where: { id: input.teamId },
-    select: { currentValue: true },
+  // BUG fix audit round 5 (CRITICAL) : avant, les 2 updates (player.spp
+  // + advancements + skills) et (team.currentValue increment by surcharge)
+  // etaient executes sequentiellement hors transaction. Crash entre les
+  // deux → joueur a paye le SPP et appris le skill, mais TV de l'equipe
+  // non incrementee → TV stale forever (impact futurs petty cash + odds).
+  // Fix : les 2 updates + le re-read final dans une seule $transaction.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const team = await prisma.$transaction(async (tx: any) => {
+    await tx.teamPlayer.update({
+      where: { id: input.playerId },
+      data: {
+        spp: { decrement: cost },
+        advancements: JSON.stringify(updatedAdvancements),
+        skills: updatedSkills,
+      },
+    });
+    // Update Team.currentValue (additif : on ne recalcule pas tout,
+    // juste increment by surcharge — la baseline reste correcte tant
+    // que les autres composants de currentValue ne changent pas dans
+    // cette transaction).
+    await tx.team.update({
+      where: { id: input.teamId },
+      data: { currentValue: { increment: surcharge } },
+    });
+    return tx.team.findUnique({
+      where: { id: input.teamId },
+      select: { currentValue: true },
+    });
   });
 
   return {

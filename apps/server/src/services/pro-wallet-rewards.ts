@@ -45,44 +45,73 @@ export interface RewardOutcome {
 /**
  * Crédite le first-time bonus (1000 Crowns) si l'user ne l'a jamais
  * réclamé. Idempotent : appel répété renvoie `granted=false`.
+ *
+ * BUG fix audit round 5 (CRITICAL) : avant, le check `existing` etait
+ * fait HORS transaction, puis `credit()` ouvrait sa propre transaction.
+ * Deux appels concurrents pouvaient tous deux passer la verif (existing
+ * === null pour les deux) et tous deux crediter 1000 Crowns → user
+ * recoit 2000 au lieu de 1000 (inflation monetaire). Meme pattern que
+ * la fix `claimDailyBonus` du round 4. Fix : tout dans une seule
+ * `prisma.$transaction`.
  */
 export async function grantFirstTimeBonus(
   userId: string,
 ): Promise<RewardOutcome> {
-  // Garantit l'existence du wallet (création silencieuse).
+  // Garantit l'existence du wallet (creation silencieuse) HORS transaction
+  // pour eviter une commit cassee si le wallet est neuf.
   await getOrCreateWallet(userId);
 
-  // Idempotence : check ProTransaction REWARD + ref="first_signup".
-  const existing = await prisma.proTransaction.findFirst({
-    where: {
-      walletId: userId,
-      type: "REWARD",
-      ref: FIRST_TIME_BONUS_REF,
-    },
-    select: { id: true },
-  });
-  if (existing) {
-    const balance = await getCurrentBalance(userId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await prisma.$transaction(async (tx: any) => {
+    // Idempotence : check ProTransaction REWARD + ref="first_signup"
+    // DANS la transaction.
+    const existing = await tx.proTransaction.findFirst({
+      where: {
+        walletId: userId,
+        type: "REWARD",
+        ref: FIRST_TIME_BONUS_REF,
+      },
+      select: { id: true },
+    });
+    if (existing) {
+      const w = await tx.proWallet.findUnique({
+        where: { userId },
+        select: { crowns: true },
+      });
+      return {
+        granted: false as const,
+        balance: (w?.crowns as number | undefined) ?? 0,
+        amount: 0,
+        nextEligibleAt: null,
+      };
+    }
+    // Credit dans la meme transaction.
+    const w = await tx.proWallet.findUnique({
+      where: { userId },
+      select: { crowns: true },
+    });
+    const current = (w?.crowns as number | undefined) ?? 0;
+    const updated = await tx.proWallet.update({
+      where: { userId },
+      data: { crowns: current + FIRST_TIME_BONUS_AMOUNT },
+      select: { crowns: true },
+    });
+    await tx.proTransaction.create({
+      data: {
+        walletId: userId,
+        type: "REWARD",
+        amount: FIRST_TIME_BONUS_AMOUNT,
+        ref: FIRST_TIME_BONUS_REF,
+      },
+    });
     return {
-      granted: false,
-      balance,
-      amount: 0,
+      granted: true as const,
+      balance: updated.crowns as number,
+      amount: FIRST_TIME_BONUS_AMOUNT,
       nextEligibleAt: null,
     };
-  }
-
-  const balance = await credit(
-    userId,
-    FIRST_TIME_BONUS_AMOUNT,
-    "REWARD",
-    FIRST_TIME_BONUS_REF,
-  );
-  return {
-    granted: true,
-    balance,
-    amount: FIRST_TIME_BONUS_AMOUNT,
-    nextEligibleAt: null,
-  };
+  });
+  return result;
 }
 
 /**

@@ -331,7 +331,19 @@ export async function applyMatchCasualties(
   }
 
   const rng = mulberry32(hashSeed(`cas:${matchId}`));
-  const outcomes: AppliedCasualty[] = [];
+  // Audit round 5 : on accumule d'abord les outcomes + updates en memoire
+  // pour les appliquer ENSUITE dans une seule prisma.$transaction (avec
+  // le flag casualtiesAppliedAt). Avant : updates sequentiels hors tx +
+  // flag a la fin → crash mid-loop = corruption permanente niggling /
+  // stReduction sur les premiers rosters touches.
+  interface PendingCasualty {
+    readonly side: "home" | "away";
+    readonly rosterId: string;
+    readonly playerName: string;
+    readonly outcome: CasualtyOutcome;
+    readonly updateData: Record<string, unknown>;
+  }
+  const pending: PendingCasualty[] = [];
 
   // Cache du roster par teamId pour éviter une lookup par event.
   const rosterCache = new Map<string, RosterPick[]>();
@@ -354,6 +366,15 @@ export async function applyMatchCasualties(
     return roster;
   };
 
+  // BUG fix audit round 5 (CRITICAL) : avant, les updates `proTeamRoster`
+  // (niggling, maReduction, etc.) etaient executes sequentiellement
+  // hors transaction, puis `casualtiesAppliedAt` etait set en dernier.
+  // Crash mid-loop → quelques joueurs deja blesses + flag non-set →
+  // re-run du sweep applique a nouveau les casualties sur les memes
+  // rosters (niggling/maReduction doublees, corruption permanente).
+  // Fix : tout le bloc (loop updates + flag final) dans une seule
+  // prisma.$transaction. Le pick random / outcome roll reste hors tx
+  // car ils sont purs (rng deterministe).
   for (const target of targets) {
     const teamId = target.side === "home" ? homeTeamId : awayTeamId;
     const roster = await loadRoster(teamId);
@@ -367,7 +388,7 @@ export async function applyMatchCasualties(
     // 2) Sinon (synthétique OU CUID orphan) → pick random parmi les
     //    actifs encore non touchés dans ce match.
     const alreadyHitIds = new Set(
-      outcomes
+      pending
         .filter((o) => o.side === target.side)
         .map((o) => o.rosterId),
     );
@@ -382,22 +403,35 @@ export async function applyMatchCasualties(
 
     const outcome = rollCasualtyOutcome(rng());
     const { data } = applyOutcomeToData(outcome, picked);
-    await prisma.proTeamRoster.update({
-      where: { id: picked.id },
-      data,
-    });
-    outcomes.push({
+    pending.push({
       side: target.side,
       rosterId: picked.id,
       playerName: picked.name,
       outcome,
+      updateData: data,
     });
   }
 
-  await prisma.proLeagueMatch.update({
-    where: { id: matchId },
-    data: { casualtiesAppliedAt: new Date() },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    for (const o of pending) {
+      await tx.proTeamRoster.update({
+        where: { id: o.rosterId },
+        data: o.updateData,
+      });
+    }
+    await tx.proLeagueMatch.update({
+      where: { id: matchId },
+      data: { casualtiesAppliedAt: new Date() },
+    });
   });
+
+  const outcomes: AppliedCasualty[] = pending.map((p) => ({
+    side: p.side,
+    rosterId: p.rosterId,
+    playerName: p.playerName,
+    outcome: p.outcome,
+  }));
 
   return {
     matchId,

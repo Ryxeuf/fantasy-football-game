@@ -1,12 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    proLeagueMatch: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
-    replay: { findUnique: vi.fn() },
-    proTeamRoster: { findMany: vi.fn(), update: vi.fn() },
-  },
-}));
+// Audit round 5 : `applyMatchCasualties` wrap maintenant les updates
+// rosters + flag dans une seule $transaction. Simule en partageant les
+// memes mocks entre prisma top-level et le `tx` du callback.
+vi.mock("../prisma", () => {
+  const proLeagueMatch = { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() };
+  const proTeamRoster = { findMany: vi.fn(), update: vi.fn() };
+  return {
+    prisma: {
+      proLeagueMatch,
+      replay: { findUnique: vi.fn() },
+      proTeamRoster,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) =>
+        cb({ proLeagueMatch, proTeamRoster }),
+      ),
+    },
+  };
+});
 
 vi.mock("@bb/sim-engine", () => ({
   decompressEvents: vi.fn(),
@@ -33,6 +44,7 @@ interface MockedPrisma {
     findMany: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  $transaction: ReturnType<typeof vi.fn>;
 }
 const mocked = prisma as unknown as MockedPrisma;
 const mockedDecompress = vi.mocked(decompressEvents);
@@ -41,6 +53,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocked.proLeagueMatch.update.mockResolvedValue({});
   mocked.proTeamRoster.update.mockResolvedValue({});
+  mocked.$transaction.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (cb: any) =>
+      cb({
+        proLeagueMatch: mocked.proLeagueMatch,
+        proTeamRoster: mocked.proTeamRoster,
+      }),
+  );
 });
 
 describe("rollCasualtyOutcome — sprint 1.E.4", () => {
