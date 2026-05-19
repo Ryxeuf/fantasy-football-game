@@ -11,3 +11,14 @@ export {
   getTeamsByRace,
   tryGetTeamMeta,
 } from './team-to-race.js';
+export type {
+  BbPosition,
+  BbPositionRole,
+  NflPosition,
+} from './position-to-bb.js';
+export {
+  NFL_POSITIONS,
+  getBbPosition,
+  getBbPositionRole,
+  getBbPositionsForRace,
+} from './position-to-bb.js';
