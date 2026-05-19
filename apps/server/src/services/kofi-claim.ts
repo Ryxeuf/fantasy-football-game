@@ -51,22 +51,33 @@ export async function claimOrphanKofiTransactions(
   const email = normaliseEmail(userEmail);
   if (!email) return { claimed: 0 };
 
-  const orphans = await prisma.kofiTransaction.findMany({
-    where: { userId: null, email },
-    select: { id: true },
-  });
-
-  if (orphans.length === 0) {
-    return { claimed: 0 };
-  }
-
-  const orphanIds = orphans.map((o: { id: string }) => o.id);
-
+  // BUG fix audit round 8 (CRITICAL/race) : avant, le `findMany`
+  // orphan etait fait HORS transaction, puis `updateMany({ id: { in } })`
+  // sans filter `userId: null`. Si deux logins concurrents pour le
+  // meme email (e.g. account-merge case, ou admin re-assignment), le
+  // 2e claim pouvait re-assigner les memes tx (qui appartiennent deja
+  // au 1er user) → supporter state mis-attributed.
+  // Fix : tout dans la $transaction, et updateMany WHERE conditionnel
+  // `{ userId: null, email }` → garantit qu'on ne touche que les vrais
+  // orphans au moment du commit.
+  let claimed = 0;
   await prisma.$transaction(async (tx: typeof prisma) => {
-    await tx.kofiTransaction.updateMany({
-      where: { id: { in: orphanIds } },
+    // Audit round 8 : findMany DANS la tx pour cohérence.
+    const orphans = await tx.kofiTransaction.findMany({
+      where: { userId: null, email },
+      select: { id: true },
+    });
+    if (orphans.length === 0) return;
+    const orphanIds = orphans.map((o: { id: string }) => o.id);
+
+    // WHERE conditionnel : userId: null + email pour re-verifier que
+    // les rows ne sont pas deja claimed par un autre login concurrent.
+    const updateResult = await tx.kofiTransaction.updateMany({
+      where: { id: { in: orphanIds }, userId: null, email },
       data: { userId, matchedVia: "email" },
     });
+    claimed = updateResult.count;
+    if (claimed === 0) return;
 
     // Recompute supporter state from ALL transactions (fresh + past).
     const allTx = await tx.kofiTransaction.findMany({
@@ -93,5 +104,5 @@ export async function claimOrphanKofiTransactions(
     });
   });
 
-  return { claimed: orphans.length };
+  return { claimed };
 }

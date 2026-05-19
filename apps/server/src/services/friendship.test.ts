@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// Audit round 8 : respondToFriendRequest utilise maintenant updateMany
+// conditionnel WHERE { id, receiverId, status: 'pending' } + re-fetch.
 vi.mock("../prisma", () => ({
   prisma: {
     friendship: {
@@ -8,6 +10,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       delete: vi.fn(),
     },
     user: {
@@ -92,14 +95,11 @@ describe("Rule: Friendship service", () => {
   });
 
   describe("respondToFriendRequest", () => {
+    // Audit round 8 : la fonction utilise updateMany conditionnel.
+    // count: 1 = happy path ; count: 0 = race / authz fail.
     it("accepts a pending request addressed to the current user", async () => {
+      mockPrisma.friendship.updateMany.mockResolvedValueOnce({ count: 1 });
       mockPrisma.friendship.findUnique.mockResolvedValue({
-        id: "f-1",
-        requesterId: alice,
-        receiverId: bob,
-        status: "pending",
-      });
-      mockPrisma.friendship.update.mockResolvedValue({
         id: "f-1",
         requesterId: alice,
         receiverId: bob,
@@ -109,20 +109,15 @@ describe("Rule: Friendship service", () => {
       const result = await respondToFriendRequest("f-1", bob, "accept");
 
       expect(result.status).toBe("accepted");
-      expect(mockPrisma.friendship.update).toHaveBeenCalledWith({
-        where: { id: "f-1" },
+      expect(mockPrisma.friendship.updateMany).toHaveBeenCalledWith({
+        where: { id: "f-1", receiverId: bob, status: "pending" },
         data: { status: "accepted" },
       });
     });
 
     it("declines a pending request addressed to the current user", async () => {
+      mockPrisma.friendship.updateMany.mockResolvedValueOnce({ count: 1 });
       mockPrisma.friendship.findUnique.mockResolvedValue({
-        id: "f-1",
-        requesterId: alice,
-        receiverId: bob,
-        status: "pending",
-      });
-      mockPrisma.friendship.update.mockResolvedValue({
         id: "f-1",
         requesterId: alice,
         receiverId: bob,
@@ -135,6 +130,7 @@ describe("Rule: Friendship service", () => {
     });
 
     it("rejects if the current user is not the receiver", async () => {
+      mockPrisma.friendship.updateMany.mockResolvedValueOnce({ count: 0 });
       mockPrisma.friendship.findUnique.mockResolvedValue({
         id: "f-1",
         requesterId: alice,
@@ -145,10 +141,10 @@ describe("Rule: Friendship service", () => {
       await expect(
         respondToFriendRequest("f-1", "user-other", "accept"),
       ).rejects.toThrow(/autorise|unauthorized/i);
-      expect(mockPrisma.friendship.update).not.toHaveBeenCalled();
     });
 
     it("rejects if the request is not pending", async () => {
+      mockPrisma.friendship.updateMany.mockResolvedValueOnce({ count: 0 });
       mockPrisma.friendship.findUnique.mockResolvedValue({
         id: "f-1",
         requesterId: alice,
@@ -162,6 +158,7 @@ describe("Rule: Friendship service", () => {
     });
 
     it("rejects unknown friendship id", async () => {
+      mockPrisma.friendship.updateMany.mockResolvedValueOnce({ count: 0 });
       mockPrisma.friendship.findUnique.mockResolvedValue(null);
       await expect(
         respondToFriendRequest("missing", bob, "accept"),

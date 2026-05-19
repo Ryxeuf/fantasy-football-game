@@ -109,8 +109,14 @@ describe("Rule: kofi claim service", () => {
       );
 
       expect(result).toEqual({ claimed: 2 });
+      // Audit round 8 : WHERE inclut maintenant `userId: null, email`
+      // pour eviter le hijack d'orphan deja claimed par un autre login.
       expect(mockPrisma.kofiTransaction.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: ["tx-1", "tx-2"] } },
+        where: {
+          id: { in: ["tx-1", "tx-2"] },
+          userId: null,
+          email: "jane@example.com",
+        },
         data: { userId: "user-1", matchedVia: "email" },
       });
 

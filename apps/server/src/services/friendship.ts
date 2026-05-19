@@ -86,28 +86,53 @@ export async function respondToFriendRequest(
   currentUserId: string,
   action: FriendshipResponseAction,
 ): Promise<FriendshipRow> {
-  const friendship = await prisma.friendship.findUnique({
-    where: { id: friendshipId },
-  });
-  if (!friendship) {
-    throw new Error("Demande d'ami introuvable");
-  }
-  if (friendship.receiverId !== currentUserId) {
-    throw new Error("Non autorise a repondre a cette demande");
-  }
-  if (friendship.status !== FriendshipStatus.Pending) {
-    throw new Error("La demande n'est pas en attente (pending)");
-  }
-
   const newStatus =
     action === "accept"
       ? FriendshipStatus.Accepted
       : FriendshipStatus.Declined;
 
-  return prisma.friendship.update({
-    where: { id: friendshipId },
+  // BUG fix audit round 8 (CRITICAL/race) : avant, read `friendship`,
+  // 3 checks separes (existence, receiverId, status === Pending), puis
+  // update inconditionnel. Deux POSTs simultanes a /friends/:id/respond
+  // pouvaient tous deux passer les checks et tous deux update — last
+  // writer wins (un accept + un decline → resultat non-deterministe).
+  // Pire, un attaquant non-receveur pouvait race apres le receveur
+  // legitime puisque l'authz est verifiee sur le READ stale.
+  // Fix : updateMany avec WHERE conditionnel { id, receiverId:
+  // currentUserId, status: 'pending' } → un seul appel reussit.
+  // Si count===0, soit l'authz a echoue soit deja resolved.
+  const updateResult = await prisma.friendship.updateMany({
+    where: {
+      id: friendshipId,
+      receiverId: currentUserId,
+      status: FriendshipStatus.Pending,
+    },
     data: { status: newStatus },
   });
+  if (updateResult.count === 0) {
+    // Lookup pour discriminer entre les causes d'echec.
+    const fresh = await prisma.friendship.findUnique({
+      where: { id: friendshipId },
+    });
+    if (!fresh) {
+      throw new Error("Demande d'ami introuvable");
+    }
+    if (fresh.receiverId !== currentUserId) {
+      throw new Error("Non autorise a repondre a cette demande");
+    }
+    // Doit etre deja resolved (race detectee).
+    throw new Error("La demande n'est pas en attente (pending)");
+  }
+
+  // Re-fetch pour retourner la version courante (Prisma updateMany ne
+  // renvoie pas la row).
+  const updated = await prisma.friendship.findUnique({
+    where: { id: friendshipId },
+  });
+  if (!updated) {
+    throw new Error("Demande d'ami introuvable (post-update)");
+  }
+  return updated;
 }
 
 // ---------------------------------------------------------------------------
