@@ -124,7 +124,8 @@ export async function handleGetMatchResults(
       where: { matchId },
       orderBy: { createdAt: 'asc' },
       include: {
-        user: { select: { id: true, name: true, email: true, eloRating: true } },
+        // Audit round 6 (CRITICAL/PII) : retire `email` du select public.
+        user: { select: { id: true, name: true, eloRating: true } },
         teamRef: { select: { name: true, roster: true } },
       },
     });
@@ -149,7 +150,8 @@ export async function handleGetMatchResults(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const teamName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || '';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || '';
+    // Audit round 6 : drop fallback sur user.email pour eviter le PII leak.
+    const coachName = (sel: any) => sel?.user?.name || '';
 
     const currentEloA = selA?.user?.eloRating ?? 1000;
     const currentEloB = selB?.user?.eloRating ?? 1000;

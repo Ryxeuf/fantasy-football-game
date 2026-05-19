@@ -94,7 +94,9 @@ export interface GazetteCommentView {
   readonly articleId: string;
   readonly userId: string;
   readonly userName: string | null;
-  readonly userEmail: string;
+  // BUG fix audit round 6 (CRITICAL/PII) : `userEmail` retire. Avant,
+  // l'API publique des comments Gazette exposait l'email de chaque
+  // auteur → PII / GDPR.
   readonly body: string;
   readonly createdAt: string;
   readonly flagged: boolean;
@@ -143,7 +145,7 @@ export async function createComment(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as {
     id: string;
@@ -154,7 +156,7 @@ export async function createComment(
     flaggedAt: Date | null;
     flagReason: string | null;
     deletedAt: Date | null;
-    user: { name: string | null; email: string };
+    user: { name: string | null };
   };
 
   return toView(created);
@@ -169,7 +171,7 @@ interface CommentRow {
   flaggedAt: Date | null;
   flagReason: string | null;
   deletedAt: Date | null;
-  user: { name: string | null; email: string };
+  user: { name: string | null };
 }
 
 function toView(row: CommentRow): GazetteCommentView {
@@ -178,7 +180,6 @@ function toView(row: CommentRow): GazetteCommentView {
     articleId: row.articleId,
     userId: row.userId,
     userName: row.user.name,
-    userEmail: row.user.email,
     body: row.body,
     createdAt: row.createdAt.toISOString(),
     flagged: row.flaggedAt !== null,
@@ -215,7 +216,7 @@ export async function listComments(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow[];
 
@@ -266,7 +267,7 @@ export async function flagComment(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow;
 
@@ -300,7 +301,7 @@ export async function unflagComment(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow;
 
@@ -355,7 +356,7 @@ export async function softDeleteComment(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow;
 
@@ -389,7 +390,7 @@ export async function restoreComment(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow;
 
@@ -427,7 +428,7 @@ export async function adminListComments(
       flaggedAt: true,
       flagReason: true,
       deletedAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as CommentRow[];
 

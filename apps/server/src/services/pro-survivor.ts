@@ -369,7 +369,9 @@ export async function getMySurvivorStatus(
 export interface SurvivorStandingsEntry {
   readonly userId: string;
   readonly userName: string | null;
-  readonly userEmail: string;
+  // BUG fix audit round 6 (CRITICAL/PII) : `userEmail` retire.
+  // Avant, le standings public exposait chaque email participant via
+  // GET /pro-league/survivor/:seasonId/standings → PII / GDPR.
   readonly weeksSurvived: number;
   readonly isAlive: boolean;
 }
@@ -382,17 +384,19 @@ export interface SurvivorStandingsEntry {
 export async function getSurvivorStandings(
   seasonId: string,
 ): Promise<SurvivorStandingsEntry[]> {
+  // Audit round 6 (CRITICAL/PII) : drop `email` du select. Le sort
+  // fallback utilise userId (non plus email).
   const entries = (await prisma.proSurvivorEntry.findMany({
     where: { seasonId },
     select: {
       userId: true,
       status: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as Array<{
     userId: string;
     status: string;
-    user: { name: string | null; email: string };
+    user: { name: string | null };
   }>;
 
   if (entries.length === 0) return [];
@@ -401,7 +405,6 @@ export async function getSurvivorStandings(
     string,
     {
       userName: string | null;
-      userEmail: string;
       alive: number;
       eliminated: number;
       pending: number;
@@ -412,7 +415,6 @@ export async function getSurvivorStandings(
     if (!byUser.has(e.userId)) {
       byUser.set(e.userId, {
         userName: e.user.name,
-        userEmail: e.user.email,
         alive: 0,
         eliminated: 0,
         pending: 0,
@@ -429,7 +431,6 @@ export async function getSurvivorStandings(
     standings.push({
       userId,
       userName: b.userName,
-      userEmail: b.userEmail,
       weeksSurvived: b.alive,
       isAlive: b.eliminated === 0,
     });
@@ -440,8 +441,9 @@ export async function getSurvivorStandings(
       return b.weeksSurvived - a.weeksSurvived;
     }
     if (a.isAlive !== b.isAlive) return a.isAlive ? -1 : 1;
-    const nA = a.userName ?? a.userEmail;
-    const nB = b.userName ?? b.userEmail;
+    // Audit round 6 : fallback sur userId (pas email) pour le sort.
+    const nA = a.userName ?? a.userId;
+    const nB = b.userName ?? b.userId;
     return nA.localeCompare(nB);
   });
 

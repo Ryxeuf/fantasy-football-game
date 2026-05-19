@@ -662,7 +662,8 @@ export async function getLeagueById(leagueId: string) {
   return prisma.league.findUnique({
     where: { id: leagueId },
     include: {
-      creator: { select: { id: true, coachName: true, email: true } },
+      // Audit round 6 (CRITICAL/PII) : retire `email` du select public.
+      creator: { select: { id: true, coachName: true } },
       seasons: { orderBy: { seasonNumber: "asc" } },
     },
   });

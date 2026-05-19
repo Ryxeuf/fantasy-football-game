@@ -165,7 +165,9 @@ export interface PredictionView {
   readonly matchId: string;
   readonly userId: string;
   readonly userName: string | null;
-  readonly userEmail: string;
+  // BUG fix audit round 6 (CRITICAL/PII) : `userEmail` retire. Avant,
+  // /pro-league/matches/:id/predictions exposait l'email de chaque
+  // fan ayant poste une prediction → PII / GDPR.
   readonly body: string;
   readonly score: PredictionScore | null;
   readonly createdAt: string;
@@ -180,7 +182,7 @@ interface PredictionRow {
   score: string | null;
   scoredAt: Date | null;
   createdAt: Date;
-  user: { name: string | null; email: string };
+  user: { name: string | null };
 }
 
 function toView(row: PredictionRow): PredictionView {
@@ -189,7 +191,6 @@ function toView(row: PredictionRow): PredictionView {
     matchId: row.matchId,
     userId: row.userId,
     userName: row.user.name,
-    userEmail: row.user.email,
     body: row.body,
     score: (row.score as PredictionScore | null) ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -255,7 +256,7 @@ export async function createOrUpdatePrediction(
       score: true,
       scoredAt: true,
       createdAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as PredictionRow;
 
@@ -279,7 +280,7 @@ export async function listPredictions(
       score: true,
       scoredAt: true,
       createdAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as PredictionRow[];
 
@@ -353,7 +354,8 @@ export async function settlePredictions(
 export interface SeerLeaderboardEntry {
   readonly userId: string;
   readonly userName: string | null;
-  readonly userEmail: string;
+  // BUG fix audit round 6 (CRITICAL/PII) : `userEmail` retire de
+  // /pro-league/seer-leaderboard (etait public).
   readonly perfectCount: number;
   readonly winnerCount: number;
   readonly totalScored: number;
@@ -375,12 +377,12 @@ export async function getSeerLeaderboard(
     select: {
       userId: true,
       score: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true } },
     },
   })) as Array<{
     userId: string;
     score: string | null;
-    user: { name: string | null; email: string };
+    user: { name: string | null };
   }>;
 
   if (rows.length === 0) return [];
@@ -389,7 +391,6 @@ export async function getSeerLeaderboard(
     string,
     {
       userName: string | null;
-      userEmail: string;
       perfect: number;
       winner: number;
       wrong: number;
@@ -399,7 +400,6 @@ export async function getSeerLeaderboard(
     if (!byUser.has(r.userId)) {
       byUser.set(r.userId, {
         userName: r.user.name,
-        userEmail: r.user.email,
         perfect: 0,
         winner: 0,
         wrong: 0,
@@ -416,7 +416,6 @@ export async function getSeerLeaderboard(
     entries.push({
       userId,
       userName: b.userName,
-      userEmail: b.userEmail,
       perfectCount: b.perfect,
       winnerCount: b.winner,
       totalScored: b.perfect + b.winner + b.wrong,
@@ -427,8 +426,9 @@ export async function getSeerLeaderboard(
       return b.perfectCount - a.perfectCount;
     }
     if (b.winnerCount !== a.winnerCount) return b.winnerCount - a.winnerCount;
-    const nA = a.userName ?? a.userEmail;
-    const nB = b.userName ?? b.userEmail;
+    // Audit round 6 : fallback userId (pas email).
+    const nA = a.userName ?? a.userId;
+    const nB = b.userName ?? b.userId;
     return nA.localeCompare(nB);
   });
 
