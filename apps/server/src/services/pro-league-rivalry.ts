@@ -79,6 +79,13 @@ export interface TopRivalEntry {
 }
 
 const HEAD_TO_HEAD_LIMIT = 20;
+// Audit round 10 (HIGH/perf) : avant, `getHeadToHead` et `getTopRivals`
+// faisaient un findMany sans `take` sur ProLeagueMatch.
+// Pour une equipe pro qui joue chaque semaine pendant plusieurs saisons,
+// le result set grandit indefiniment. Cap a 200 matches recents :
+// au-dela, les matches plus anciens n'influencent ni le top rival ni
+// la `recentMatches` slice (HEAD_TO_HEAD_LIMIT = 20).
+const RIVALRY_MATCH_SCAN_CAP = 200;
 
 interface MatchRow {
   id: string;
@@ -243,6 +250,7 @@ export async function getHeadToHead(
       ],
     },
     orderBy: { scheduledAt: "desc" },
+    take: RIVALRY_MATCH_SCAN_CAP,
     select: {
       id: true,
       seasonId: true,
@@ -290,6 +298,7 @@ export async function getTopRivals(
       OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
     },
     orderBy: { scheduledAt: "desc" },
+    take: RIVALRY_MATCH_SCAN_CAP,
     select: {
       id: true,
       seasonId: true,

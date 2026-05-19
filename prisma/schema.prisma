@@ -2234,6 +2234,13 @@ model ProMatchPrediction {
   @@unique([matchId, userId])
   @@index([matchId, createdAt])
   @@index([userId, score])
+  /// Audit round 10 (MEDIUM/perf) : settlePredictions filtre
+  /// `{ matchId, score: null }`. Sans index dedie, Postgres scanne
+  /// toutes les rows pour ce matchId.
+  @@index([matchId, score])
+  /// Round 10 : getSeerLeaderboard filtre
+  /// `{ score: { not: null }, scoredAt: { gte: ... } }`.
+  @@index([score, scoredAt])
 }
 
 /// Articles de blog rédigés depuis l'admin via éditeur WYSIWYG.
