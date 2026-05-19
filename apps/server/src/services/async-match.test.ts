@@ -4,21 +4,35 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    match: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      update: vi.fn(),
+// Audit round 6 : `forceEndTurnOnDeadline` wrap maintenant turn.create +
+// match.updateMany (optimistic-lock sur currentTurnDeadline) dans une
+// $transaction. Le mock partage les memes mocks entre prisma top-level
+// et le `tx` du callback.
+vi.mock("../prisma", () => {
+  const match = {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+  };
+  const turn = { create: vi.fn() };
+  return {
+    prisma: {
+      match,
+      turn,
+      teamSelection: {
+        findMany: vi.fn(),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) => {
+        if (typeof cb === "function") {
+          return cb({ match, turn });
+        }
+        return Promise.all(cb);
+      }),
     },
-    turn: {
-      create: vi.fn(),
-    },
-    teamSelection: {
-      findMany: vi.fn(),
-    },
-  },
-}));
+  };
+});
 
 vi.mock("../utils/server-log", () => ({
   serverLog: {
@@ -281,9 +295,10 @@ describe("forceEndTurnOnDeadline", () => {
       }),
     });
 
-    // Match update : currentTurnUserId + nouvelle deadline
-    expect(mocked.match.update).toHaveBeenCalledWith({
-      where: { id: "m_1" },
+    // Audit round 6 : match.update remplace par match.updateMany avec
+    // optimistic-lock WHERE currentTurnDeadline = expected.
+    expect(mocked.match.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({ id: "m_1" }),
       data: expect.objectContaining({
         currentTurnUserId: "u_b",
         currentTurnDeadline: new Date("2026-05-13T10:00:00Z"),
@@ -311,8 +326,10 @@ describe("forceEndTurnOnDeadline", () => {
 
     expect(out.matchEnded).toBe(true);
     expect(out.newDeadline).toBeNull();
-    expect(mocked.match.update).toHaveBeenCalledWith({
-      where: { id: "m_1" },
+    // Audit round 6 : match.update remplace par match.updateMany avec
+    // optimistic-lock WHERE currentTurnDeadline = expected.
+    expect(mocked.match.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({ id: "m_1" }),
       data: expect.objectContaining({
         status: "ended",
         currentTurnUserId: null,

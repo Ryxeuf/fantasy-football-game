@@ -45,7 +45,8 @@ export type AsyncMatchErrorCode =
   | "MATCH_NOT_ASYNC"
   | "MATCH_NOT_ACTIVE"
   | "NO_GAMESTATE"
-  | "DEADLINE_NOT_EXPIRED";
+  | "DEADLINE_NOT_EXPIRED"
+  | "ALREADY_FORCED";
 
 export class AsyncMatchError extends Error {
   constructor(
@@ -253,22 +254,6 @@ export async function forceEndTurnOnDeadline(
   }
 
   const turnNumber = turns.length + 1;
-  await prisma.turn.create({
-    data: {
-      matchId,
-      number: turnNumber,
-      payload: {
-        type: "gameplay-move",
-        userId: null,
-        move: endTurnMove,
-        forced: true,
-        forcedReason: "deadline",
-        gameState: newState,
-        timestamp: now.toISOString(),
-      },
-    },
-  });
-
   const nextTeamSide: "A" | "B" = newState.currentPlayer;
   const selections = await prisma.teamSelection.findMany({
     where: { matchId },
@@ -285,15 +270,61 @@ export async function forceEndTurnOnDeadline(
     ? null
     : computeDeadline(now, match.turnDeadlineHours as number);
 
-  await prisma.match.update({
-    where: { id: matchId },
-    data: {
-      ...(matchEnded ? { status: "ended" } : {}),
-      currentTurnUserId: matchEnded ? null : nextUserId,
-      lastMoveAt: now,
-      currentTurnDeadline: newDeadline,
-    },
+  // BUG fix audit round 6 (CRITICAL) : avant, `turn.create` + `match.update`
+  // etaient 2 awaits separes. Crash entre les deux → turn persiste mais
+  // currentTurnDeadline stale → sweep ulterieur retombe dessus,
+  // double-applique le END_TURN. Aussi : 2 sweep ticks concurrents
+  // (single-instance double-trigger, multi-pod) pouvaient tous deux
+  // passer le check `deadline < now` avant qu'un n'ecrive le new
+  // deadline. Fix : wrap turn.create + match.update dans une seule
+  // $transaction avec WHERE optimistic-lock sur currentTurnDeadline
+  // (= la deadline qu'on a lue) pour rejeter tout sweep concurrent.
+  const expectedDeadline = match.currentTurnDeadline as Date | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateResult = await prisma.$transaction(async (tx: any) => {
+    const matchUpdate = await tx.match.updateMany({
+      where: {
+        id: matchId,
+        currentTurnDeadline: expectedDeadline,
+      },
+      data: {
+        ...(matchEnded ? { status: "ended" } : {}),
+        currentTurnUserId: matchEnded ? null : nextUserId,
+        lastMoveAt: now,
+        currentTurnDeadline: newDeadline,
+      },
+    });
+    if (matchUpdate.count === 0) {
+      // Optimistic lock : un autre sweep a deja avance la deadline → on
+      // skip silencieusement pour rester idempotent.
+      return { skipped: true as const };
+    }
+    await tx.turn.create({
+      data: {
+        matchId,
+        number: turnNumber,
+        payload: {
+          type: "gameplay-move",
+          userId: null,
+          move: endTurnMove,
+          forced: true,
+          forcedReason: "deadline",
+          gameState: newState,
+          timestamp: now.toISOString(),
+        },
+      },
+    });
+    return { skipped: false as const };
   });
+
+  if (updateResult.skipped) {
+    // Un autre sweep a deja forced END_TURN — on renvoie un resultat
+    // sentinel pour que le cron loop n'en tienne pas compte 2x.
+    throw new AsyncMatchError(
+      "ALREADY_FORCED",
+      `Le match '${matchId}' a deja eu son tour force-ended par un sweep concurrent.`,
+    );
+  }
 
   return {
     matchId,
