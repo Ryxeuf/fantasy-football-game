@@ -159,7 +159,13 @@ export async function handleHireStarPlayer(
       }
     }
 
-    const createdStarPlayers = await Promise.all(
+    // BUG fix audit round 6 (HIGH) : avant, `Promise.all(creates)` lancait
+    // chaque create dans une transaction Prisma independante. Pour un
+    // pairing (e.g. Morg + partner), si le 2e create echoue (unique
+    // constraint, partner deja hire par une autre team), le 1er
+    // persiste et la team est laissee avec un demi-pairing illegal.
+    // Fix : `prisma.$transaction([...creates])` pour all-or-nothing.
+    const createdStarPlayers = await prisma.$transaction(
       starPlayersToHire.map((sp) =>
         prisma.teamStarPlayer.create({
           data: {

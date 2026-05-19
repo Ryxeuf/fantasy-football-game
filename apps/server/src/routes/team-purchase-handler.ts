@@ -189,9 +189,13 @@ export async function handlePurchase(
               skills: positionData.skills,
             },
           }),
+          // Audit round 6 (CRITICAL/race) : avant, `treasury - cost`
+          // sur le snapshot read pre-transaction → 2 player buys
+          // concurrents pouvaient overwrite la treasury avec la meme
+          // valeur stale. Fix : decrement atomique au niveau DB.
           prisma.team.update({
             where: { id: teamId },
-            data: { treasury: team.treasury - cost },
+            data: { treasury: { decrement: cost } },
           }),
         ]);
 
@@ -200,136 +204,154 @@ export async function handlePurchase(
       }
 
       case 'reroll': {
-        if (team.rerolls >= 8) {
-          sendError(res, 'Maximum 8 relances par equipe', 400);
-          return;
-        }
+        // BUG fix audit round 6 (CRITICAL/race) : avant, le check
+        // `team.treasury < cost` et l'update `treasury - cost` etaient
+        // fait sur un snapshot read pre-transaction → 2 requetes
+        // concurrentes pouvaient toutes deux passer la verif et
+        // toutes deux ecrire `stale - cost` (lost-update). Fix :
+        // updateMany conditionnelle WHERE treasury >= cost AND
+        // rerolls < 8, avec decrement/increment atomiques. Si
+        // count===0, soit budget insuffisant soit limite atteinte.
         cost = getRerollCost(team.roster) * 2;
-
-        if (team.treasury < cost) {
-          sendError(
-            res,
-            `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po, Tresorerie: ${Math.round(team.treasury / 1000)}k po`,
-            400,
-          );
-          return;
-        }
-
-        await prisma.team.update({
-          where: { id: teamId },
+        const updateResult = await prisma.team.updateMany({
+          where: { id: teamId, treasury: { gte: cost }, rerolls: { lt: 8 } },
           data: {
-            rerolls: team.rerolls + 1,
-            treasury: team.treasury - cost,
+            rerolls: { increment: 1 },
+            treasury: { decrement: cost },
           },
         });
+        if (updateResult.count === 0) {
+          const fresh = await prisma.team.findUnique({
+            where: { id: teamId },
+            select: { rerolls: true, treasury: true },
+          });
+          if (fresh && fresh.rerolls >= 8) {
+            sendError(res, 'Maximum 8 relances par equipe', 400);
+          } else {
+            sendError(
+              res,
+              `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po`,
+              400,
+            );
+          }
+          return;
+        }
         description = `Relance achetee (cout double: ${Math.round(cost / 1000)}k po)`;
         break;
       }
 
       case 'cheerleader': {
-        if (team.cheerleaders >= 12) {
-          sendError(res, 'Maximum 12 cheerleaders', 400);
-          return;
-        }
         cost = 10000;
-
-        if (team.treasury < cost) {
-          sendError(
-            res,
-            `Tresorerie insuffisante. Cout: 10k po, Tresorerie: ${Math.round(team.treasury / 1000)}k po`,
-            400,
-          );
-          return;
-        }
-
-        await prisma.team.update({
-          where: { id: teamId },
+        const updateResult = await prisma.team.updateMany({
+          where: {
+            id: teamId,
+            treasury: { gte: cost },
+            cheerleaders: { lt: 12 },
+          },
           data: {
-            cheerleaders: team.cheerleaders + 1,
-            treasury: team.treasury - cost,
+            cheerleaders: { increment: 1 },
+            treasury: { decrement: cost },
           },
         });
+        if (updateResult.count === 0) {
+          const fresh = await prisma.team.findUnique({
+            where: { id: teamId },
+            select: { cheerleaders: true },
+          });
+          if (fresh && fresh.cheerleaders >= 12) {
+            sendError(res, 'Maximum 12 cheerleaders', 400);
+          } else {
+            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+          }
+          return;
+        }
         description = 'Cheerleader recrutee';
         break;
       }
 
       case 'assistant': {
-        if (team.assistants >= 6) {
-          sendError(res, 'Maximum 6 assistants', 400);
-          return;
-        }
         cost = 10000;
-
-        if (team.treasury < cost) {
-          sendError(
-            res,
-            `Tresorerie insuffisante. Cout: 10k po, Tresorerie: ${Math.round(team.treasury / 1000)}k po`,
-            400,
-          );
-          return;
-        }
-
-        await prisma.team.update({
-          where: { id: teamId },
+        const updateResult = await prisma.team.updateMany({
+          where: {
+            id: teamId,
+            treasury: { gte: cost },
+            assistants: { lt: 6 },
+          },
           data: {
-            assistants: team.assistants + 1,
-            treasury: team.treasury - cost,
+            assistants: { increment: 1 },
+            treasury: { decrement: cost },
           },
         });
+        if (updateResult.count === 0) {
+          const fresh = await prisma.team.findUnique({
+            where: { id: teamId },
+            select: { assistants: true },
+          });
+          if (fresh && fresh.assistants >= 6) {
+            sendError(res, 'Maximum 6 assistants', 400);
+          } else {
+            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+          }
+          return;
+        }
         description = 'Assistant recrute';
         break;
       }
 
       case 'apothecary': {
-        if (team.apothecary) {
-          sendError(res, "L'equipe a deja un apothicaire", 400);
-          return;
-        }
         cost = 50000;
-
-        if (team.treasury < cost) {
-          sendError(
-            res,
-            `Tresorerie insuffisante. Cout: 50k po, Tresorerie: ${Math.round(team.treasury / 1000)}k po`,
-            400,
-          );
-          return;
-        }
-
-        await prisma.team.update({
-          where: { id: teamId },
+        const updateResult = await prisma.team.updateMany({
+          where: {
+            id: teamId,
+            treasury: { gte: cost },
+            apothecary: false,
+          },
           data: {
             apothecary: true,
-            treasury: team.treasury - cost,
+            treasury: { decrement: cost },
           },
         });
+        if (updateResult.count === 0) {
+          const fresh = await prisma.team.findUnique({
+            where: { id: teamId },
+            select: { apothecary: true },
+          });
+          if (fresh && fresh.apothecary) {
+            sendError(res, "L'equipe a deja un apothicaire", 400);
+          } else {
+            sendError(res, 'Tresorerie insuffisante. Cout: 50k po', 400);
+          }
+          return;
+        }
         description = 'Apothicaire recrute';
         break;
       }
 
       case 'dedicated_fan': {
-        if (team.dedicatedFans >= 6) {
-          sendError(res, 'Maximum 6 fans devoues', 400);
-          return;
-        }
         cost = 10000;
-
-        if (team.treasury < cost) {
-          sendError(
-            res,
-            `Tresorerie insuffisante. Cout: 10k po, Tresorerie: ${Math.round(team.treasury / 1000)}k po`,
-            400,
-          );
-          return;
-        }
-
-        await prisma.team.update({
-          where: { id: teamId },
+        const updateResult = await prisma.team.updateMany({
+          where: {
+            id: teamId,
+            treasury: { gte: cost },
+            dedicatedFans: { lt: 6 },
+          },
           data: {
-            dedicatedFans: team.dedicatedFans + 1,
-            treasury: team.treasury - cost,
+            dedicatedFans: { increment: 1 },
+            treasury: { decrement: cost },
           },
         });
+        if (updateResult.count === 0) {
+          const fresh = await prisma.team.findUnique({
+            where: { id: teamId },
+            select: { dedicatedFans: true },
+          });
+          if (fresh && fresh.dedicatedFans >= 6) {
+            sendError(res, 'Maximum 6 fans devoues', 400);
+          } else {
+            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+          }
+          return;
+        }
         description = 'Fan devoue recrute';
         break;
       }
