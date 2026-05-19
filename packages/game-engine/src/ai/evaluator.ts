@@ -17,6 +17,11 @@ import type { GameState, Move, Player, Position, TeamId } from '../core/types';
 import { getAdjacentOpponents, isAdjacent } from '../mechanics/movement';
 import { getLegalMoves } from '../actions/actions';
 import { hasSkill } from '../skills/skill-effects';
+import {
+  findPlayerById,
+  getActiveTeamPlayers,
+  getBallCarrier as cachedBallCarrier,
+} from '../core/state-cache';
 
 export interface EvaluationBreakdown {
   score: number;
@@ -138,11 +143,16 @@ function distanceToEndzone(state: GameState, pos: Position, team: TeamId): numbe
 }
 
 function findPlayer(state: GameState, playerId: string): Player | undefined {
-  return state.players.find(p => p.id === playerId);
+  // Sprint Perf : delegation au cache WeakMap (O(1) via Map) au lieu
+  // du O(n) precedent. Comportement identique pour les ids manquants
+  // (retourne undefined).
+  return findPlayerById(state, playerId);
 }
 
 function findBallCarrier(state: GameState): Player | undefined {
-  return state.players.find(p => p.hasBall);
+  // Sprint Perf : cache WeakMap, cache aussi l'absence de porteur
+  // (frequent en debut de drive / apres turnover).
+  return cachedBallCarrier(state);
 }
 
 function attritionScore(
@@ -188,13 +198,15 @@ function carrierSafetyScore(
   if (!carrier) return 0;
   const sign = carrier.team === team ? 1 : -1;
 
-  const allies = state.players.filter(
-    p =>
-      p.team === carrier.team &&
-      p.id !== carrier.id &&
-      isActive(p) &&
-      isAdjacent(p.pos, carrier.pos)
-  ).length;
+  // Sprint Perf : iteration sur les actifs deja filtres (cache
+  // WeakMap), evite le re-filtre `isActive` sur l'integralite des
+  // joueurs a chaque appel.
+  let allies = 0;
+  for (const p of getActiveTeamPlayers(state, carrier.team)) {
+    if (p.id !== carrier.id && isAdjacent(p.pos, carrier.pos)) {
+      allies++;
+    }
+  }
   const opponentsInTz = getAdjacentOpponents(state, carrier.pos, carrier.team).length;
 
   return (
@@ -286,17 +298,31 @@ function scoreDifferenceScore(
 }
 
 /**
- * Score global d'un GameState du point de vue de `team`.
- * Plus haut = meilleur pour `team`.
+ * Sprint Perf (audit 2026-05-19 §13) — cache des resultats
+ * `evaluatePosition` par state immuable. `scoreMoveMove` /
+ * `scoreMovePass` calculent un `before = evaluatePosition(state, team)`
+ * pour chaque coup candidat : meme state, meme team, meme weights.
+ * Avec N coups candidats, on faisait N appels identiques au calcul ;
+ * desormais on en fait un seul.
  *
- * Lot 3.A.0.a — accepte un override `weights` partiel pour modulation
- * tactique (sim-engine full driver passe les poids dérivés du
- * `TacticalProfile` de l'équipe).
+ * Cache uniquement les appels sans override de poids : l'override est
+ * une reference partielle dont on ne peut pas hasher proprement, et
+ * en pratique le hot path standard (tests, gameplay direct) n'en
+ * utilise pas. Le full driver sim-engine passe des weights — il
+ * tombera sur le slow path mais c'est acceptable (cf. roadmap
+ * S27.x : refacto futur pour figer un EvalWeights stable et cacher
+ * par profile).
  */
-export function evaluatePosition(
+interface EvalCacheEntry {
+  A?: PositionEvaluation;
+  B?: PositionEvaluation;
+}
+const evalCache: WeakMap<GameState, EvalCacheEntry> = new WeakMap();
+
+function evaluatePositionUncached(
   state: GameState,
   team: TeamId,
-  weightsOverride?: Partial<EvalWeights>
+  weights: EvalWeights
 ): PositionEvaluation {
   if (state.gamePhase === 'ended' && state.score.teamA === 0 && state.score.teamB === 0) {
     const zero: EvaluationBreakdown = {
@@ -311,7 +337,6 @@ export function evaluatePosition(
     return { total: 0, breakdown: zero };
   }
 
-  const weights = resolveWeights(weightsOverride);
   const breakdown: EvaluationBreakdown = {
     score: scoreDifferenceScore(state, team, weights),
     possession: possessionScore(state, team, weights),
@@ -332,6 +357,34 @@ export function evaluatePosition(
     breakdown.positioning;
 
   return { total, breakdown };
+}
+
+/**
+ * Score global d'un GameState du point de vue de `team`.
+ * Plus haut = meilleur pour `team`.
+ *
+ * Lot 3.A.0.a — accepte un override `weights` partiel pour modulation
+ * tactique (sim-engine full driver passe les poids dérivés du
+ * `TacticalProfile` de l'équipe).
+ */
+export function evaluatePosition(
+  state: GameState,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): PositionEvaluation {
+  // Slow path : un override de poids casse le cache (cf. note ci-dessus).
+  if (weightsOverride) {
+    return evaluatePositionUncached(state, team, resolveWeights(weightsOverride));
+  }
+  let entry = evalCache.get(state);
+  if (!entry) {
+    entry = {};
+    evalCache.set(state, entry);
+  }
+  if (!entry[team]) {
+    entry[team] = evaluatePositionUncached(state, team, EVAL_WEIGHTS);
+  }
+  return entry[team]!;
 }
 
 /**
@@ -387,17 +440,21 @@ function computeEffectiveStrength(
   target: Player,
   isBlitz: boolean
 ): { atk: number; def: number; dauntlessUpscaleProb: number } {
-  const atkAssists = state.players.filter(
-    p =>
-      p.team === attacker.team &&
-      p.id !== attacker.id &&
-      isActive(p) &&
-      isAdjacent(p.pos, target.pos)
-  ).length;
-  const defAssists = state.players.filter(
-    p =>
-      p.team === target.team && p.id !== target.id && isActive(p) && isAdjacent(p.pos, attacker.pos)
-  ).length;
+  // Sprint Perf : cache WeakMap des actifs par equipe — eligibles ont
+  // deja le filtre isActive applique, on n'en a que la proximite a
+  // verifier.
+  let atkAssists = 0;
+  for (const p of getActiveTeamPlayers(state, attacker.team)) {
+    if (p.id !== attacker.id && isAdjacent(p.pos, target.pos)) {
+      atkAssists++;
+    }
+  }
+  let defAssists = 0;
+  for (const p of getActiveTeamPlayers(state, target.team)) {
+    if (p.id !== target.id && isAdjacent(p.pos, attacker.pos)) {
+      defAssists++;
+    }
+  }
   const hornsBonus = isBlitz && hasSkill(attacker, 'horns') ? 1 : 0;
   const atk = attacker.st + atkAssists + hornsBonus;
   const def = target.st + defAssists;
