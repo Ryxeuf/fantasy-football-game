@@ -140,21 +140,28 @@ export function getLegalMoves(state: GameState): Move[] {
   const occ = new Map<string, Player>();
   state.players.forEach(p => occ.set(`${p.pos.x},${p.pos.y}`, p));
 
+  // Sprint Perf : hoist hors de la boucle des invariants par joueur.
+  // `dirs` etait recree 11x/appel, `allOpponents` filtrait 22 joueurs
+  // a chaque iteration de blitz (`myPlayers.length * 8 = ~80 scans` au
+  // pire), et `activeTeammates` etait re-filtre 4 fois par joueur (PASS,
+  // HANDOFF, TTM, etc.). Tous sont independants de `p` (sauf
+  // `id !== p.id` ajoute en filtre rapide a l'usage).
+  const DIRS = [
+    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 },
+  ];
+  const allOpponentsStanding = state.players.filter(
+    opp => opp.team !== team && !opp.stunned
+  );
+  const activeTeammates = state.players.filter(
+    t => t.team === team && !t.stunned && t.state === 'active'
+  );
+  const groundedOpponents = state.players.filter(
+    opp => opp.team !== team && opp.stunned
+  );
+
   for (const p of myPlayers) {
-    // Mouvements orthogonaux ET diagonaux (Blood Bowl rules)
-    const dirs = [
-      // Orthogonaux
-      { x: 1, y: 0 }, // droite
-      { x: -1, y: 0 }, // gauche
-      { x: 0, y: 1 }, // bas
-      { x: 0, y: -1 }, // haut
-      // Diagonaux
-      { x: 1, y: 1 }, // bas-droite
-      { x: 1, y: -1 }, // haut-droite
-      { x: -1, y: 1 }, // bas-gauche
-      { x: -1, y: -1 }, // haut-gauche
-    ];
-    for (const d of dirs) {
+    for (const d of DIRS) {
       const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
       if (!inBounds(state, to)) continue;
       if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
@@ -202,13 +209,12 @@ export function getLegalMoves(state: GameState): Move[] {
 
     // Actions de blitz (mouvement + blocage atomique, pour les joueurs pas encore déplacés)
     if (!playerAction) {
-      for (const d of dirs) {
+      for (const d of DIRS) {
         const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
         if (!inBounds(state, to)) continue;
         if (occ.has(`${to.x},${to.y}`)) continue;
 
-        const allOpponents = state.players.filter(opp => opp.team !== p.team && !opp.stunned);
-        for (const opponent of allOpponents) {
+        for (const opponent of allOpponentsStanding) {
           if (canBlitz(state, p.id, to, opponent.id)) {
             moves.push({ type: 'BLITZ', playerId: p.id, to, targetId: opponent.id });
           }
@@ -220,10 +226,8 @@ export function getLegalMoves(state: GameState): Move[] {
     // Passes interdites pendant le tour de blitz kickoff
     // Instable: prohibition — le joueur ne peut pas declarer d'action de passe
     if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'PASS')) {
-      const teammates = state.players.filter(
-        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
-      );
-      for (const target of teammates) {
+      for (const target of activeTeammates) {
+        if (target.id === p.id) continue;
         const range = getPassRange(p.pos, target.pos);
         if (canAttemptPassForRange(p, range)) {
           moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
@@ -235,10 +239,8 @@ export function getLegalMoves(state: GameState): Move[] {
     // Remises interdites pendant le tour de blitz kickoff
     // Instable: prohibition — le joueur ne peut pas declarer d'action de remise
     if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'HANDOFF')) {
-      const teammates = state.players.filter(
-        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
-      );
-      for (const target of teammates) {
+      for (const target of activeTeammates) {
+        if (target.id === p.id) continue;
         if (isAdjacent(p.pos, target.pos)) {
           moves.push({ type: 'HANDOFF', playerId: p.id, targetId: target.id });
         }
@@ -253,11 +255,10 @@ export function getLegalMoves(state: GameState): Move[] {
       !state.kickoffBlitzTurn &&
       ((state.teamFoulCount && state.teamFoulCount[team]) || 0) === 0
     ) {
-      const groundedOpponents = state.players.filter(
-        opp => opp.team !== team && opp.stunned && isAdjacent(p.pos, opp.pos)
-      );
       for (const target of groundedOpponents) {
-        moves.push({ type: 'FOUL', playerId: p.id, targetId: target.id });
+        if (isAdjacent(p.pos, target.pos)) {
+          moves.push({ type: 'FOUL', playerId: p.id, targetId: target.id });
+        }
       }
     }
 
