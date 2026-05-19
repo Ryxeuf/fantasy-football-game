@@ -1,7 +1,30 @@
 import { Router, type Request, type Response } from "express";
 import bodyParser from "body-parser";
+import { timingSafeEqual } from "crypto";
 import { prisma } from "../prisma";
 import { KOFI_VERIFICATION_TOKEN } from "../config";
+
+/**
+ * Audit round 7 (CRITICAL/security) : compare le token en temps constant
+ * pour eviter une attaque timing-based qui pourrait recuperer le secret
+ * byte-by-byte. Avant, `!==` ouvrait une attaque sur le matching prefix.
+ * `timingSafeEqual` necessite des buffers de meme longueur — on check
+ * d'abord la longueur, sinon `timingSafeEqual` throw RangeError.
+ */
+function isValidKofiToken(received: string, expected: string): boolean {
+  if (
+    typeof received !== "string" ||
+    typeof expected !== "string" ||
+    received.length !== expected.length
+  ) {
+    return false;
+  }
+  try {
+    return timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
 import {
   kofiWebhookPayloadSchema,
   amountToCents,
@@ -88,7 +111,7 @@ export async function handleKofiWebhook(
     return res.status(400).json({ error: "Invalid Ko-fi payload" });
   }
 
-  if (payload.verification_token !== KOFI_VERIFICATION_TOKEN) {
+  if (!isValidKofiToken(payload.verification_token, KOFI_VERIFICATION_TOKEN)) {
     return res.status(401).json({ error: "Invalid verification token" });
   }
 
