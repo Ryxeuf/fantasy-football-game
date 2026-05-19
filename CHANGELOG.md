@@ -1,3 +1,10 @@
+## [1.126.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.0...v1.126.1) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **cup:** drop email PII from 17 select sites in cup endpoints ([36cffd0](https://github.com/Ryxeuf/fantasy-football-game/commit/36cffd0f1093fb0efffa0d2c1dd7469d5af08d0f)), closes [#855](https://github.com/Ryxeuf/fantasy-football-game/issues/855)
+
 ## [1.126.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.125.0...v1.126.0) (2026-05-19)
 
 
