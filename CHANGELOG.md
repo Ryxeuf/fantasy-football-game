@@ -1,3 +1,18 @@
+## [1.129.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.128.1...v1.129.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **nfl-mapper:** position-to-bb mapping NFL pos x race -> BB pos (Phase 1.B) ([e8b3e54](https://github.com/Ryxeuf/fantasy-football-game/commit/e8b3e54ac63ff36d5992a5a4c01dc35ef871690d))
+* **nfl-mapper:** pseudonymisation BB-flavored (Phase 1.D, Q8) ([53471c6](https://github.com/Ryxeuf/fantasy-football-game/commit/53471c672afe61c8ea4e3f24b3e980ad989a032e)), closes [#15](https://github.com/Ryxeuf/fantasy-football-game/issues/15)
+* **nfl-mapper:** stats-to-spp + applyCaptainMultiplier (Phase 1.C) ([5d1ba05](https://github.com/Ryxeuf/fantasy-football-game/commit/5d1ba0546d1a7fc01f1967d1165e9b3ad3adc106))
+* **prisma:** schema NFL Fantasy module (Phase 1.E) ([d86d0a2](https://github.com/Ryxeuf/fantasy-football-game/commit/d86d0a29e8e4da0f6a7147fc2d07eb16c0f4702b))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** bump README pour Phase 1.B-1.E ([3e6c9b8](https://github.com/Ryxeuf/fantasy-football-game/commit/3e6c9b8ac9b8aef040f14d1c70ce5dbd13200962))
+
 ## [1.128.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.128.0...v1.128.1) (2026-05-19)
 
 
