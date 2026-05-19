@@ -1,5 +1,6 @@
 import { runNflversePoc } from "./fetch-nflverse.js";
 import { runEspnPoc } from "./fetch-espn.js";
+import { runNormalizePoc } from "./normalize.js";
 
 const [, , cmd] = process.argv;
 
@@ -16,15 +17,19 @@ async function main(): Promise<void> {
     case "espn":
       await runEspnPoc(TARGET_ESPN_DATE);
       break;
+    case "normalize":
+      await runNormalizePoc(TARGET_YEAR, TARGET_WEEK);
+      break;
     case "all":
       await runNflversePoc(TARGET_YEAR, TARGET_WEEK);
       console.log("");
       await runEspnPoc(TARGET_ESPN_DATE);
-      console.log("\n[nfl-poc] normalize — not implemented yet (commit 5)");
+      console.log("");
+      await runNormalizePoc(TARGET_YEAR, TARGET_WEEK);
       break;
     default:
       console.log(
-        "Usage: npm run poc:nflverse | poc:espn | poc:all\n" +
+        "Usage: npm run poc:nflverse | poc:espn | poc:normalize | poc:all\n" +
           `Cible courante: saison ${TARGET_YEAR}, week ${TARGET_WEEK}, espn date ${TARGET_ESPN_DATE}.`
       );
   }

@@ -8,6 +8,7 @@
     "poc": "tsx src/cli.ts",
     "poc:nflverse": "tsx src/cli.ts nflverse",
     "poc:espn": "tsx src/cli.ts espn",
+    "poc:normalize": "tsx src/cli.ts normalize",
     "poc:all": "tsx src/cli.ts all"
   },
   "dependencies": {
