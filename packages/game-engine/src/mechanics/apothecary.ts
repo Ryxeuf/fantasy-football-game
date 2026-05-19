@@ -11,7 +11,11 @@
 
 import { GameState, TeamId, RNG, CasualtyOutcome, PendingApothecary, Player } from '../core/types';
 import { movePlayerToDugoutZone } from './dugout';
-import { rollLastingInjuryType } from './injury';
+import {
+  rollLastingInjuryType,
+  applyLastingInjuryStat,
+  revertLastingInjuryStat,
+} from './injury';
 import { tryRegeneration } from './regeneration';
 import { createLogEntry } from '../utils/logging';
 import { hasSkill } from '../skills/skill-effects';
@@ -184,6 +188,25 @@ function applyApothecaryOnCasualty(
   // Update casualty result
   state.casualtyResults = { ...state.casualtyResults, [pending.playerId]: chosenOutcome };
 
+  // BUG fix audit round 6 (CRITICAL) : avant, l'apothecary reroll mettait
+  // a jour `state.casualtyResults` et `state.lastingInjuryDetails`, mais
+  // NE REVERTAIT JAMAIS le stat-reduction applique par `handleCasualty`
+  // a `player.ma/av/ag/pa/st`. Si l'apothecary choisit un outcome moins
+  // severe (e.g. lasting_injury → badly_hurt), ou un lasting injury
+  // different (e.g. -1ma → -1av), le stat original etait reduit a vie.
+  // Fix : revertir le stat de l'injury type courant (lu depuis
+  // `state.lastingInjuryDetails` AVANT l'update), puis appliquer le
+  // nouveau stat si lasting injury choisi.
+  const currentLasting = state.lastingInjuryDetails[pending.playerId];
+  // Revert l'ancien stat-reduction si lasting injury appliquee.
+  if (currentLasting) {
+    state.players = state.players.map(p =>
+      p.id === pending.playerId
+        ? revertLastingInjuryStat(p, currentLasting.injuryType)
+        : p,
+    );
+  }
+
   // Handle lasting injury details
   if (keepOriginal) {
     // Keep original lasting injury (or clear if badly_hurt)
@@ -192,6 +215,12 @@ function applyApothecaryOnCasualty(
         ...state.lastingInjuryDetails,
         [pending.playerId]: pending.originalLastingInjury,
       };
+      // Re-apply stat reduction for the original type.
+      state.players = state.players.map(p =>
+        p.id === pending.playerId
+          ? applyLastingInjuryStat(p, pending.originalLastingInjury!.injuryType)
+          : p,
+      );
     } else {
       // badly_hurt or seriously_hurt without lasting injury
       const { [pending.playerId]: _, ...rest } = state.lastingInjuryDetails;
@@ -200,6 +229,15 @@ function applyApothecaryOnCasualty(
   } else {
     // Apply new casualty's lasting injury
     updateLastingInjuryForOutcome(state, pending.playerId, newCasualty.outcome, newCasualty.roll, rng, player?.pa ?? 0);
+    // Re-apply stat reduction for the new lasting injury (if any).
+    const newLasting = state.lastingInjuryDetails[pending.playerId];
+    if (newLasting) {
+      state.players = state.players.map(p =>
+        p.id === pending.playerId
+          ? applyLastingInjuryStat(p, newLasting.injuryType)
+          : p,
+      );
+    }
   }
 
   // Move player from casualty to reserves
