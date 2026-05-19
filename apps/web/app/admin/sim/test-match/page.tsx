@@ -109,6 +109,46 @@ export default function AdminTestMatchPage() {
     })();
   }, []);
 
+  /**
+   * Ouvre la narration texte dans un nouvel onglet. Un `<a target="_blank">`
+   * direct vers l'URL serveur ne fonctionne pas : le navigateur n'envoie
+   * pas le header `Authorization: Bearer` lors d'une navigation, et le
+   * cookie `auth_token` est posé sur le domaine du front (pas du serveur
+   * `server.nuffle-arena.orb.local`) → 401 « Non authentifié ». On fait
+   * donc un fetch authentifié puis on ouvre un blob URL local.
+   */
+  const openNarration = async (matchId: string) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(
+        `${API_BASE}/admin/sim/matches/${matchId}/narration?format=text`,
+        { headers: { Authorization: token ? `Bearer ${token}` : "" } },
+      );
+      if (!res.ok) {
+        setError(`Narration : ${res.status} ${res.statusText}`);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (!win) {
+        // Bloqué par le bloqueur de popups : déclencher un téléchargement
+        // de secours.
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `narration-${matchId}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      // Libère l'URL après quelques secondes (laisse le temps au navigateur
+      // de charger le contenu).
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      setError(`Narration : ${(e as Error).message}`);
+    }
+  };
+
   const resimulate = async (matchId: string) => {
     setResimulatingId(matchId);
     setError(null);
@@ -292,15 +332,14 @@ export default function AdminTestMatchPage() {
                       Replay
                     </Link>
                     {m.status === "completed" ? (
-                      <a
-                        href={`${API_BASE}/admin/sim/matches/${m.id}/narration?format=text`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-purple-600 underline"
+                      <button
+                        type="button"
+                        onClick={() => void openNarration(m.id)}
+                        className="text-xs text-purple-600 underline hover:text-purple-800"
                         title="Narration texte enrichie (Lot 3.E.4)"
                       >
                         Narration
-                      </a>
+                      </button>
                     ) : null}
                     <button
                       type="button"
