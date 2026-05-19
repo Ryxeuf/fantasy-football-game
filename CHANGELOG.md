@@ -1,3 +1,15 @@
+## [1.122.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.5...v1.122.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **admin:** add engine versions endpoint and display in admin UI ([e99c552](https://github.com/Ryxeuf/fantasy-football-game/commit/e99c55206189e1305ec2dbdccf14428d821d8645))
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** apothecary + regeneration revert lasting injury stats ([#859](https://github.com/Ryxeuf/fantasy-football-game/issues/859)) ([bb39f2d](https://github.com/Ryxeuf/fantasy-football-game/commit/bb39f2d5095da88535641410919bf4ffdabc6236))
+
 ## [1.121.5](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.4...v1.121.5) (2026-05-19)
 
 
