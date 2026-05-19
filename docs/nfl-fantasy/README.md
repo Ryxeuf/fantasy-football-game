@@ -37,7 +37,7 @@
 |---|---|---|---|
 | Vision & scope | Draft v1 | Haute | Validation produit |
 | Légal | Draft v1 | Moyenne | À faire valider par juriste (FR/EU) |
-| API stratégie | Draft v1 | Haute | POC nflverse + ESPN |
+| API stratégie | Draft v1.4 | Haute | POC nflverse + ESPN ✅ — Tank01 V1.5 à intégrer |
 | Race mapping (teams) | Draft v1 | Haute | Stable identités équipes |
 | Position mapping | Draft v1 | Haute | Mapping logique |
 | Scoring (stats → SPP) | Draft v1 | Moyenne | À calibrer sur saison entière |
@@ -62,6 +62,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.1 | Tranchage Q1/Q3/Q4/Q5 : snake draft, captain ×1.5 + vice ×1.2, prayers par TV, race fixe par équipe |
 | 2026-05-19 | v1.2 | Tranchage Q2/Q6/Q7/Q8 : 10 users/league, silos séparés Pro League, freemium V1, pseudo full + flag DB `realNameDisplay` |
 | 2026-05-19 | v1.3 | Schéma Prisma 10-architecture.md : ajout `realNameDisplay` Bool (Q8), retrait `archetype` Json + fichier `archetype.ts` (V2, Q5 race fixe par équipe) |
+| 2026-05-19 | v1.4 | 03-api-strategy.md : correctif tag nflverse (`stats_player` ≥ 2025), correction MSF (free non-commercial uniquement), ajout Tier 1.5 Tank01 + V1.5 cost ($120/an), ajout Sleeper + Odds API + SDX, avertissements ToS (Sofascore, DK/FD WS, SerpAPI), refs repos ESPN (pseudo-r/Public-ESPN-API, mkreiser/ESPN-Fantasy-Football-API), POC findings W10 2025 |
 
 ## Source de cette session
 
