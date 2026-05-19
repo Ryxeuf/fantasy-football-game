@@ -75,6 +75,7 @@ import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 import { invalidateAllMemo } from "./utils/memoize-async";
 import { serverLog, setServerLogImpl } from "./utils/server-log";
+import { runOnceAtATime } from "./utils/cron-overlap-guard";
 import { pinoServerLogImpl } from "./utils/pino-logger";
 import { requestContext } from "./middleware/requestContext";
 import { liveness, readiness } from "./utils/healthcheck";
@@ -784,7 +785,9 @@ const betSettleTickMs = Number.isFinite(betSettleTickMsEnv)
 if (!inTestBetSettleEnv && betSettleTickMs > 0) {
   void import("./services/pro-bet-settlement").then(
     ({ sweepUnsettledMarkets }) => {
-      const tick = async () => {
+      // Audit round 7 : runOnceAtATime evite que 2 sweeps concurrents
+      // re-processent les memes matchs si le tick depasse l'intervalle.
+      const tick = runOnceAtATime("pro-bet-settle", async () => {
         try {
           const out = await sweepUnsettledMarkets();
           if (out.settled > 0 || out.failed > 0) {
@@ -796,7 +799,7 @@ if (!inTestBetSettleEnv && betSettleTickMs > 0) {
           const msg = e instanceof Error ? e.message : "unknown";
           serverLog.error(`[pro-bet-settle] sweep failed: ${msg}`);
         }
-      };
+      });
       setInterval(() => {
         void tick();
       }, betSettleTickMs).unref();
@@ -864,7 +867,7 @@ const casualtyTickMs = Number.isFinite(casualtyTickMsEnv)
 if (!inTestCasualtyEnv && casualtyTickMs > 0) {
   void import("./services/pro-roster-casualties").then(
     ({ sweepMatchCasualties }) => {
-      const tick = async () => {
+      const tick = runOnceAtATime("pro-casualty", async () => {
         try {
           const out = await sweepMatchCasualties();
           if (out.processed > 0 || out.failed > 0) {
@@ -876,7 +879,7 @@ if (!inTestCasualtyEnv && casualtyTickMs > 0) {
           const msg = e instanceof Error ? e.message : "unknown";
           serverLog.error(`[pro-casualty] sweep failed: ${msg}`);
         }
-      };
+      });
       setInterval(() => {
         void tick();
       }, casualtyTickMs).unref();
@@ -903,7 +906,7 @@ const sppTickMs = Number.isFinite(sppTickMsEnv)
   : 30 * 60 * 1000;
 if (!inTestSppEnv && sppTickMs > 0) {
   void import("./services/pro-roster-spp").then(({ sweepMatchSpp }) => {
-    const tick = async () => {
+    const tick = runOnceAtATime("pro-spp", async () => {
       try {
         const out = await sweepMatchSpp();
         if (out.processed > 0 || out.failed > 0) {
@@ -915,7 +918,7 @@ if (!inTestSppEnv && sppTickMs > 0) {
         const msg = e instanceof Error ? e.message : "unknown";
         serverLog.error(`[pro-spp] sweep failed: ${msg}`);
       }
-    };
+    });
     setInterval(() => {
       void tick();
     }, sppTickMs).unref();
@@ -945,7 +948,7 @@ const levelUpTickMs = Number.isFinite(levelUpTickMsEnv)
   : 30 * 60 * 1000;
 if (!inTestLevelUpEnv && levelUpTickMs > 0) {
   void import("./services/pro-roster-level-up").then(({ sweepLevelUps }) => {
-    const tick = async () => {
+    const tick = runOnceAtATime("pro-levelup", async () => {
       try {
         const out = await sweepLevelUps();
         if (out.processed > 0 || out.failed > 0) {
@@ -957,7 +960,7 @@ if (!inTestLevelUpEnv && levelUpTickMs > 0) {
         const msg = e instanceof Error ? e.message : "unknown";
         serverLog.error(`[pro-levelup] sweep failed: ${msg}`);
       }
-    };
+    });
     setInterval(() => {
       void tick();
     }, levelUpTickMs).unref();
@@ -987,7 +990,7 @@ const tvTickMs = Number.isFinite(tvTickMsEnv)
   : 30 * 60 * 1000;
 if (!inTestTvEnv && tvTickMs > 0) {
   void import("./services/pro-roster-tv").then(({ sweepRecomputeTvs }) => {
-    const tick = async () => {
+    const tick = runOnceAtATime("pro-tv", async () => {
       try {
         const out = await sweepRecomputeTvs();
         if (out.processed > 0 || out.failed > 0) {
@@ -999,7 +1002,7 @@ if (!inTestTvEnv && tvTickMs > 0) {
         const msg = e instanceof Error ? e.message : "unknown";
         serverLog.error(`[pro-tv] sweep failed: ${msg}`);
       }
-    };
+    });
     setInterval(() => {
       void tick();
     }, tvTickMs).unref();
