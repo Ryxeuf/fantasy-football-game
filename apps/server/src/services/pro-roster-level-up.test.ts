@@ -12,11 +12,19 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    proTeamRoster: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
-  },
-}));
+// Audit round 5 : applyLevelUps wrap maintenant read+write dans une
+// $transaction. Simule en partageant le meme mock proTeamRoster entre
+// prisma top-level et le `tx` du callback.
+vi.mock("../prisma", () => {
+  const proTeamRoster = { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() };
+  return {
+    prisma: {
+      proTeamRoster,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) => cb({ proTeamRoster })),
+    },
+  };
+});
 
 import { prisma } from "../prisma";
 import {
@@ -484,7 +492,10 @@ describe("sweepLevelUps — Lot 3.C.4", () => {
         status: "active",
         position: "Lineman",
       })
-      .mockResolvedValueOnce(null); // 2eme = ROSTER_NOT_FOUND
+      // Audit round 5 : 2eme findUnique INSIDE $transaction pour
+      // re-read niggling+skills frais (fix race condition).
+      .mockResolvedValueOnce({ niggling: 0, skills: [] })
+      .mockResolvedValueOnce(null); // 3eme = ROSTER_NOT_FOUND pour "fail"
     const out = await sweepLevelUps();
     expect(out.inspected).toBe(2);
     expect(out.processed).toBe(1);
