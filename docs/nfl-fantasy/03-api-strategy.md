@@ -54,7 +54,14 @@
 - Scoring users tranquillement le lundi
 - Source de vérité pour rosters + stats annuelles
 
-**POC validé** : 963 rows pour Week 10 2025, 19421 rows toute la saison, toutes les positions BB cibles présentes (cf. `scripts/nfl-poc/`).
+**POC validé** : 963 rows W10 / 1071 rows W1 / 1067 rows W18 (saison 2025), 19421 rows toute la saison, toutes les positions BB cibles présentes (cf. `scripts/nfl-poc/`).
+
+**Gotchas découverts au POC** :
+- 1 CSV unifié couvre toute la saison → un seul fetch + cache local suffit pour tous les weeks (très friendly côté ingestion)
+- Filtrer par `week` (Number) sur les rows : valeurs 1-22 (regular 1-18 + post 19-22)
+- Toujours filtrer aussi `season_type` (`REG` / `POST` / `PRE`) pour ne pas mixer preseason quand on settle un weekend
+- 1 row avec `position_group` vide observée sur W10 (joueur sans poste assigné, edge case à logger sans crasher)
+- Format `.qs` / `.rds` à ignorer côté ingestion JS (R-specific) ; choisir `.csv` ou `.parquet`
 
 ### ESPN Hidden API
 
@@ -91,7 +98,14 @@ GET /news                                → news NFL
 - [`pseudo-r/Public-ESPN-API`](https://github.com/pseudo-r/Public-ESPN-API) — référence la plus complète des endpoints cachés ESPN, NFL inclus
 - [`mkreiser/ESPN-Fantasy-Football-API`](https://github.com/mkreiser/ESPN-Fantasy-Football-API) — wrapper JS/TS (utile pour notre stack), ~340 stars
 
-**POC validé** : 12 events Final retournés pour 2025-11-09 (Sunday Week 10), summary expose 19 keys (boxscore, drives, leaders, scoringPlays). Latence ~200ms par appel, aucun rate limit observé sur 2 appels (cf. `scripts/nfl-poc/`).
+**POC validé** : 13 events W1 (Sunday Sep 7 + SNF) / 12 events W10 / 14 events W18 — tous Final. Latence ~200ms par appel, aucun rate limit observé.
+
+**Gotchas découverts au POC** :
+- `?dates=YYYYMMDD` filtre par **kickoff en ET local time**, pas UTC. Conséquence : un TNF dont le kickoff UTC est `2025-09-05T00:20Z` apparaît bien dans `?dates=20250904` (Thursday ET).
+- En pratique pour une semaine NFL complète, polling **Thu + Fri (rare, jeux internationaux) + Sun + Mon** depuis ET → 4 dates max.
+- Le champ `season` n'est **pas** au top-level mais sous `leagues[0].season`. Le champ `season.type` est un **objet** (`{id, type, name, abbreviation}`), pas un Int. Code défensif requis.
+- `/summary?event={id}` retourne **18 ou 19 keys** top-level selon les events (la clé `article` est absente sur les events sans recap éditorial). Toujours utiliser `?.` à la lecture.
+- Pas de WebSocket public connu (polling only — 30-60s TTL côté cache strato recommandé).
 
 ### Pro-Football-Reference (scraping)
 
