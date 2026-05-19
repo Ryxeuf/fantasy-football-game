@@ -235,7 +235,8 @@ export async function processMove(
               teamARoster: rosterA,
               teamBRoster: rosterB,
             });
-          } catch {
+          } catch (e) {
+            serverLog.error("[move-processor] league context load failed", e);
             leagueContext = undefined;
           }
           await persistMatchSPP(
@@ -246,24 +247,34 @@ export async function processMove(
             leagueContext,
           );
         }
-      } catch {
-        // SPP persistence error — non-blocking
+      } catch (e) {
+        // BUG fix audit round 5 : avant, `catch {}` muet. Maintenant
+        // on log structurellement pour que les erreurs SPP ne soient
+        // pas perdues. Le persist reste best-effort (non-blocking) car
+        // une erreur ne doit pas bloquer la fin du match cote UI.
+        serverLog.error("[move-processor] persistMatchSPP failed", e);
+      }
+
+      // BUG fix audit round 5 (HIGH) : avant, l'ordre etait
+      // persistPlayerDeaths PUIS persistPermanentInjuries → un joueur
+      // marque `dead=true` pouvait quand meme recevoir un increment
+      // niggling/stat. La regle BB est : apothecary → regen → death.
+      // Inverter pour appliquer les blessures permanentes AVANT les
+      // morts. Egalement, swap les silent catch en log structure.
+      try {
+        if (newState.lastingInjuryDetails) {
+          await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
+        }
+      } catch (e) {
+        serverLog.error("[move-processor] persistPermanentInjuries failed", e);
       }
 
       try {
         if (newState.casualtyResults) {
           await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
         }
-      } catch {
-        // Death persistence error — non-blocking
-      }
-
-      try {
-        if (newState.lastingInjuryDetails) {
-          await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
-        }
-      } catch {
-        // Injury persistence error — non-blocking
+      } catch (e) {
+        serverLog.error("[move-processor] persistPlayerDeaths failed", e);
       }
 
       // Update ELO ratings based on match result
@@ -278,8 +289,8 @@ export async function processMove(
             newState.score.teamA,
             newState.score.teamB,
           );
-        } catch {
-          // ELO update error — non-blocking
+        } catch (e) {
+          serverLog.error("[move-processor] updateEloAfterMatch failed", e);
         }
       }
 
@@ -287,38 +298,53 @@ export async function processMove(
       if (newState.matchResult) {
         const { winnings, dedicatedFansChange } = newState.matchResult;
 
+        // BUG fix audit round 5 (HIGH) : avant, 2 updates `team.update`
+        // (treasury teamA puis teamB) sequentiels hors transaction.
+        // Si le 2e fail, team A est paye mais team B non → money loss
+        // / unfair standings. Fix : $transaction([...]). Idem pour
+        // dedicatedFansChange ci-dessous.
         try {
           if (winnings) {
-            await prisma.team.update({
-              where: { id: teamAId },
-              data: { treasury: { increment: winnings.teamA } },
-            });
-            await prisma.team.update({
-              where: { id: teamBId },
-              data: { treasury: { increment: winnings.teamB } },
-            });
+            await prisma.$transaction([
+              prisma.team.update({
+                where: { id: teamAId },
+                data: { treasury: { increment: winnings.teamA } },
+              }),
+              prisma.team.update({
+                where: { id: teamBId },
+                data: { treasury: { increment: winnings.teamB } },
+              }),
+            ]);
           }
-        } catch {
-          // Treasury update error — non-blocking
+        } catch (e) {
+          serverLog.error("[move-processor] winnings update failed", e);
         }
 
         try {
           if (dedicatedFansChange) {
+            const ops = [];
             if (dedicatedFansChange.teamA !== 0) {
-              await prisma.team.update({
-                where: { id: teamAId },
-                data: { dedicatedFans: { increment: dedicatedFansChange.teamA } },
-              });
+              ops.push(
+                prisma.team.update({
+                  where: { id: teamAId },
+                  data: { dedicatedFans: { increment: dedicatedFansChange.teamA } },
+                }),
+              );
             }
             if (dedicatedFansChange.teamB !== 0) {
-              await prisma.team.update({
-                where: { id: teamBId },
-                data: { dedicatedFans: { increment: dedicatedFansChange.teamB } },
-              });
+              ops.push(
+                prisma.team.update({
+                  where: { id: teamBId },
+                  data: { dedicatedFans: { increment: dedicatedFansChange.teamB } },
+                }),
+              );
+            }
+            if (ops.length > 0) {
+              await prisma.$transaction(ops);
             }
           }
-        } catch {
-          // Dedicated fans update error — non-blocking
+        } catch (e) {
+          serverLog.error("[move-processor] dedicatedFans update failed", e);
         }
       }
 

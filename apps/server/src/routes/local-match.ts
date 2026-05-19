@@ -1022,6 +1022,26 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
         // Non-blocking: match completion succeeds even if SPP persistence fails
       }
 
+      // BUG fix audit round 5 (HIGH) : avant, l'ordre etait
+      // persistPlayerDeaths PUIS persistPermanentInjuries. Un joueur
+      // marque `dead=true` pouvait quand meme recevoir un increment
+      // niggling/stat reduction. Aligne avec la regle BB
+      // (apothecary → regen → death) : applique les blessures
+      // permanentes AVANT les morts.
+      try {
+        if (gameState.lastingInjuryDetails && gameState.players) {
+          injuriesPersistedCount = await persistPermanentInjuries(
+            prisma as any,
+            gameState,
+            localMatch.teamAId,
+            localMatch.teamBId,
+          );
+        }
+      } catch (injuryError) {
+        serverLog.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
+        // Non-blocking: match completion succeeds even if injury persistence fails
+      }
+
       // Persist player deaths from casualty results
       try {
         if (gameState.casualtyResults && gameState.players) {
@@ -1035,21 +1055,6 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
       } catch (deathError) {
         serverLog.error("Erreur lors de la persistence des morts:", deathError);
         // Non-blocking: match completion succeeds even if death persistence fails
-      }
-
-      // Persist permanent injuries (niggling, stat reductions, miss next match)
-      try {
-        if (gameState.lastingInjuryDetails && gameState.players) {
-          injuriesPersistedCount = await persistPermanentInjuries(
-            prisma as any,
-            gameState,
-            localMatch.teamAId,
-            localMatch.teamBId,
-          );
-        }
-      } catch (injuryError) {
-        serverLog.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
-        // Non-blocking: match completion succeeds even if injury persistence fails
       }
     }
 
