@@ -197,16 +197,31 @@ export async function consumeResetToken(
 
   const passwordHash = await bcrypt.hash(input.newPassword, 10);
 
-  await prisma.$transaction([
-    prisma.user.update({
+  // BUG fix audit round 7 (HIGH/TOCTOU) : avant, `record.usedAt` etait
+  // check hors transaction, et l'update du token etait inconditionnel
+  // (`update({ where: { id }, data: { usedAt } })`). Deux soumissions
+  // simultanees du meme token : both check usedAt=null, both succeed,
+  // last passwordHash wins. Pire, un attaquant qui steal le token et
+  // race le user legitime peut set son propre password.
+  // Fix : updateMany conditionnel WHERE usedAt: null → un seul appel
+  // reussit. Si count === 0, throw TOKEN_USED (race detectee).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    const tokenUpdate = await tx.passwordResetToken.updateMany({
+      where: { id: record.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (tokenUpdate.count === 0) {
+      throw new PasswordResetError(
+        "TOKEN_USED",
+        "Ce lien a deja ete utilise.",
+      );
+    }
+    await tx.user.update({
       where: { id: record.userId },
       data: { passwordHash, mustChangePassword: false },
-    }),
-    prisma.passwordResetToken.update({
-      where: { id: record.id },
-      data: { usedAt: new Date() },
-    }),
-  ]);
+    });
+  });
 
   // Revoque toutes les sessions actives — force re-login avec le
   // nouveau password. Best-effort : si la revocation echoue, le

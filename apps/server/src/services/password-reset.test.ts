@@ -4,20 +4,31 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("../prisma", () => ({
-  prisma: {
-    user: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
+// Audit round 7 : consumeResetToken utilise maintenant updateMany
+// conditionnel WHERE usedAt: null + $transaction(cb). Mock partage les
+// mocks entre prisma top-level et le `tx` callback.
+vi.mock("../prisma", () => {
+  const user = { findUnique: vi.fn(), update: vi.fn() };
+  const passwordResetToken = {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(async () => ({ count: 1 })),
+  };
+  return {
+    prisma: {
+      user,
+      passwordResetToken,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $transaction: vi.fn(async (cb: any) => {
+        if (typeof cb === "function") {
+          return cb({ user, passwordResetToken });
+        }
+        return Promise.all(cb);
+      }),
     },
-    passwordResetToken: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops as Promise<unknown>[])),
-  },
-}));
+  };
+});
 
 vi.mock("./refresh-token-store-singleton", () => ({
   getRefreshTokenStore: () => ({
@@ -44,9 +55,20 @@ const mocked = vi.mocked(prisma, true);
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocked.$transaction.mockImplementation(async (ops: unknown[]) =>
-    Promise.all(ops as Promise<unknown>[]),
-  );
+  // Audit round 7 : $transaction accepte maintenant un callback. Mock
+  // execute le callback avec les memes prisma mocks comme `tx`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mocked.$transaction.mockImplementation(async (cb: any) => {
+    if (typeof cb === "function") {
+      return cb({
+        user: mocked.user,
+        passwordResetToken: mocked.passwordResetToken,
+      });
+    }
+    return Promise.all(cb as Promise<unknown>[]);
+  });
+  // updateMany default = count: 1 (happy path).
+  mocked.passwordResetToken.updateMany.mockResolvedValue({ count: 1 } as never);
 });
 
 describe("requestPasswordReset", () => {
@@ -252,13 +274,14 @@ describe("consumeResetToken", () => {
     });
 
     expect(result).toEqual({ userId: "u_1", email: "user@ex.com" });
-    // transaction lance user.update + token.update
+    // Audit round 7 : transaction utilise maintenant updateMany
+    // conditionnel WHERE usedAt: null pour le token, suivi de user.update.
     expect(mocked.user.update).toHaveBeenCalledWith({
       where: { id: "u_1" },
       data: expect.objectContaining({ mustChangePassword: false }),
     });
-    expect(mocked.passwordResetToken.update).toHaveBeenCalledWith({
-      where: { id: "tk_1" },
+    expect(mocked.passwordResetToken.updateMany).toHaveBeenCalledWith({
+      where: { id: "tk_1", usedAt: null },
       data: { usedAt: expect.any(Date) },
     });
   });
