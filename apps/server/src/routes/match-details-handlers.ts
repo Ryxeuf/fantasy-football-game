@@ -65,7 +65,8 @@ export async function handleGetMatchDetailsByToken(
         where: { matchId },
         orderBy: { createdAt: 'asc' },
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          // Audit round 6 (CRITICAL/PII) : retire `email` du select public.
+          user: { select: { id: true, name: true } },
           teamRef: { select: { name: true, roster: true } },
         },
       }),
@@ -144,7 +145,8 @@ export async function handleGetMatchDetails(
         where: { matchId },
         orderBy: { createdAt: 'asc' },
         include: {
-          user: { select: { id: true, name: true, email: true, eloRating: true } },
+          // Audit round 6 (CRITICAL/PII) : retire `email` du select public.
+          user: { select: { id: true, name: true, eloRating: true } },
           teamRef: { select: { name: true, roster: true } },
         },
       }),
@@ -181,7 +183,8 @@ export async function handleGetMatchDetails(
     const teamName = (sel: any) =>
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || '';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || '';
+    // Audit round 6 : drop fallback sur user.email pour eviter le PII leak.
+    const coachName = (sel: any) => sel?.user?.name || '';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eloRating = (sel: any) => sel?.user?.eloRating ?? 1000;
     sendSuccess(res, {

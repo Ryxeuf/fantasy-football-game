@@ -51,7 +51,10 @@ export async function handleGetMatchSummary(
         where: { matchId },
         include: {
           user: {
-            select: { id: true, name: true, email: true, eloRating: true },
+            // Audit round 6 (CRITICAL/PII) : retire `email` du select.
+            // Avant, `pickCoach` fallback sur user.email → endpoint public
+            // permettait de scraper les emails via le match ID.
+            select: { id: true, name: true, eloRating: true },
           },
           teamRef: { select: { id: true, name: true, roster: true } },
         },
@@ -120,7 +123,8 @@ export async function handleGetMatchSummary(
     const pickName = (sel: any) =>
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || '';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pickCoach = (sel: any) => sel?.user?.name || sel?.user?.email || '';
+    // Audit round 6 : drop fallback sur user.email pour eviter le PII leak.
+    const pickCoach = (sel: any) => sel?.user?.name || '';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pickElo = (sel: any) => sel?.user?.eloRating ?? 1000;
     const acceptedUserIds = Array.from(
