@@ -34,7 +34,6 @@ describe('cloneGameState — micro-bench', () => {
     const refElapsed = performance.now() - refStart;
 
     const ratio = refElapsed / fastElapsed;
-    // eslint-disable-next-line no-console
     console.log(
       `[bench] cloneGameState=${fastElapsed.toFixed(2)}ms structuredClone=${refElapsed.toFixed(2)}ms ratio=${ratio.toFixed(2)}x`
     );
