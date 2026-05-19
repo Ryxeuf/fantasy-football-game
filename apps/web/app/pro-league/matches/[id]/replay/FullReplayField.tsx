@@ -208,7 +208,17 @@ export default function FullReplayField({
         </div>
       </header>
 
-      <div className="relative" data-testid="full-replay-pixi">
+      {/*
+        Container responsive : largeur fluide jusqu'au max 1200px,
+        hauteur capée à `calc(100vh - 280px)` pour laisser de la place
+        aux contrôles + log textuel. Scroll vertical interne si le terrain
+        (portrait 15×26 cases) dépasse la hauteur viewport.
+      */}
+      <div
+        className="relative mx-auto w-full max-w-[1200px] overflow-auto rounded border border-slate-800 bg-slate-950"
+        style={{ maxHeight: "calc(100vh - 280px)" }}
+        data-testid="full-replay-pixi"
+      >
         <GameBoardWithDugouts
           state={replay.currentState}
           selectedPlayerId={selectedPlayerId}
@@ -217,6 +227,7 @@ export default function FullReplayField({
             teamA: homeOverride,
             teamB: awayOverride,
           }}
+          boardMaxWidth="100%"
         />
         {annotations.length > 0 ? (
           <ReplayAnnotationsOverlay

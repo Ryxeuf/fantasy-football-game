@@ -41,19 +41,19 @@ const MAX_PLAYERS_ON_FIELD = 11;
 
 /**
  * Positions LOS (line of scrimmage) + backfield pour 11 joueurs.
- * Coordonnées x/y sur un terrain 26×15 :
- *   - team A defensive line à x=12 (LOS adverse)
- *   - team B defensive line à x=13
- *   - center y=7, wings y=4 et y=10
+ * Coordonnées x/y sur un terrain 26×15 (médiane entre x=12 et x=13) :
+ *   - team A LoS à x=12 (rangée centrale côté A, juste avant médiane)
+ *   - team B LoS à x=13 (rangée centrale côté B, juste après médiane)
+ *   - center y=7, wings y=4 et y=10 (zone centrale BB 2025 : y in 4..10)
  */
 const TEAM_A_FORMATION: ReadonlyArray<{ x: number; y: number }> = Object.freeze([
-  // 3 LOS centrals
-  { x: 11, y: 6 },
-  { x: 11, y: 7 },
-  { x: 11, y: 8 },
-  // 2 wings
-  { x: 10, y: 4 },
-  { x: 10, y: 10 },
+  // 3 LOS centrals (x=12)
+  { x: 12, y: 6 },
+  { x: 12, y: 7 },
+  { x: 12, y: 8 },
+  // 2 wings (zone centrale, y in 4..10)
+  { x: 11, y: 4 },
+  { x: 11, y: 10 },
   // 3 mid
   { x: 8, y: 5 },
   { x: 8, y: 7 },
@@ -65,13 +65,13 @@ const TEAM_A_FORMATION: ReadonlyArray<{ x: number; y: number }> = Object.freeze(
 ]);
 
 const TEAM_B_FORMATION: ReadonlyArray<{ x: number; y: number }> = Object.freeze([
-  // 3 LOS centrals
-  { x: 14, y: 6 },
-  { x: 14, y: 7 },
-  { x: 14, y: 8 },
-  // 2 wings
-  { x: 15, y: 4 },
-  { x: 15, y: 10 },
+  // 3 LOS centrals (x=13)
+  { x: 13, y: 6 },
+  { x: 13, y: 7 },
+  { x: 13, y: 8 },
+  // 2 wings (zone centrale, y in 4..10)
+  { x: 14, y: 4 },
+  { x: 14, y: 10 },
   // 3 mid
   { x: 17, y: 5 },
   { x: 17, y: 7 },

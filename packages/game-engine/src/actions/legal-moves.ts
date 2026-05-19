@@ -171,17 +171,23 @@ export function getLegalMoves(state: GameState): Move[] {
       }
     }
 
-    // Actions de blocage
+    // Actions de blocage — BB 2025 : un BLOCK ne peut être déclaré qu'en
+    // début d'activation du joueur (avant tout mouvement). Si le joueur
+    // a déjà bougé ce tour, il faut passer par un BLITZ. Cette contrainte
+    // est encodée via `playerAction` : si l'activation a déjà enregistré
+    // une action (MOVE typiquement), un BLOCK simple n'est plus légal.
+    const playerAction = state.playerActions?.[p.id];
     const adjacentOpponents = getAdjacentOpponents(state, p.pos, p.team);
-    for (const opponent of adjacentOpponents) {
-      if (canBlock(state, p.id, opponent.id)) {
-        moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
+    if (!playerAction) {
+      for (const opponent of adjacentOpponents) {
+        if (canBlock(state, p.id, opponent.id)) {
+          moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
+        }
       }
     }
 
     // Blitz au contact : un joueur qui a commencé à se déplacer peut bloquer
     // un adversaire adjacent si l'équipe peut encore blitzer
-    const playerAction = state.playerActions?.[p.id];
     if (playerAction === 'MOVE' && canTeamBlitz(state, p.team) && p.pm > 0) {
       for (const opponent of adjacentOpponents) {
         // Éviter les doublons si canBlock a déjà ajouté ce BLOCK

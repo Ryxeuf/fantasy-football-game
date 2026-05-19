@@ -39,6 +39,12 @@ interface GameBoardWithDugoutsProps {
   };
   /** H.7 — initial terrain skin (from match options). */
   initialTerrainSkin?: TerrainSkinId;
+  /**
+   * Optionnel : largeur max du board (utilisé sur la page replay pour
+   * permettre un rendu pleine largeur dans un container scrollable).
+   * Défaut : 600px (legacy compact embed).
+   */
+  boardMaxWidth?: string;
 }
 
 export default function GameBoardWithDugouts({
@@ -59,6 +65,7 @@ export default function GameBoardWithDugouts({
   teamRosters,
   teamColorOverrides,
   initialTerrainSkin,
+  boardMaxWidth,
 }: GameBoardWithDugoutsProps) {
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
@@ -268,6 +275,7 @@ export default function GameBoardWithDugouts({
             teamRosters={effectiveTeamRosters}
             teamColorOverrides={teamColorOverrides}
             terrainSkin={terrainSkin}
+            maxWidth={boardMaxWidth}
           />
         </div>
 

@@ -66,6 +66,12 @@ type Props = {
   teamColorOverrides?: TeamColorOverridesMap;
   /** H.7 — terrain skin variant (grass/ruins/snow). Defaults to grass. */
   terrainSkin?: TerrainSkinId;
+  /**
+   * Si fourni, override la largeur max du wrapper. Par défaut `max-w-[600px]`
+   * (mode embedded compact). La page replay passe `"100%"` pour utiliser
+   * toute la largeur disponible.
+   */
+  maxWidth?: string;
 };
 
 export default function PixiBoard({
@@ -88,6 +94,7 @@ export default function PixiBoard({
   teamRosters,
   teamColorOverrides,
   terrainSkin: terrainSkinId,
+  maxWidth,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -101,24 +108,35 @@ export default function PixiBoard({
   const safeWidth = typeof state.width === "number" && !isNaN(state.width) ? state.width : 26;
   const safeHeight = typeof state.height === "number" && !isNaN(state.height) ? state.height : 15;
 
-  // Auto-scale to fit container width
+  // Auto-scale to fit container. Le board est rendu en mode portrait
+  // (safeHeight cells de large × safeWidth cells de haut, ici 15×26 par
+  // défaut). On contraint cellSize à la fois par la largeur du container
+  // ET par la hauteur viewport disponible, pour éviter qu'un terrain
+  // 26×cs ne dépasse l'écran et nécessite un scroll global de la page.
   React.useEffect(() => {
     function updateSize() {
       const el = containerRef.current;
       if (!el) return;
       const containerWidth = el.clientWidth;
       if (containerWidth <= 0) return;
-      // Board width = safeHeight * cellSize (15 cells wide)
-      const maxCellSize = Math.floor(containerWidth / safeHeight);
-      // Clamp between 18 (min usable) and the prop cellSize
-      const newCellSize = Math.max(18, Math.min(maxCellSize, cellSize));
+      const widthCap = Math.floor(containerWidth / safeHeight);
+      // Hauteur dispo : viewport moins ~280px (header sticky + controls
+      // + log textuel sous le terrain). Si le composant parent n'utilise
+      // pas de viewport cap, ce calcul reste valide grâce au max(18, ...).
+      const viewportH =
+        typeof window !== "undefined" ? window.innerHeight : 800;
+      const heightCap = Math.floor((viewportH - 280) / safeWidth);
+      const newCellSize = Math.max(
+        18,
+        Math.min(widthCap, heightCap, cellSize),
+      );
       setResponsiveCellSize(newCellSize);
       onCellSizeChange?.(newCellSize);
     }
     updateSize();
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
-  }, [cellSize, safeHeight]);
+  }, [cellSize, safeHeight, safeWidth]);
 
   const cs = responsiveCellSize;
   const width = safeHeight * cs;
@@ -175,7 +193,8 @@ export default function PixiBoard({
         (containerRef as any).current = el;
         if (ref && typeof ref === "object") (ref as any).current = el;
       }}
-      className="w-full max-w-[600px] mx-auto relative"
+      className="w-full mx-auto relative"
+      style={maxWidth ? { maxWidth } : { maxWidth: "600px" }}
       onContextMenu={(e: React.MouseEvent) => e.preventDefault()}
     >
       <Stage

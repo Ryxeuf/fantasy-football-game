@@ -177,7 +177,34 @@ function summarizeMeta(
     case "KICKOFF": {
       const home = String(meta.homeName ?? meta.home ?? "home");
       const away = String(meta.awayName ?? meta.away ?? "away");
-      return e.kickoffPair.replace("{home}", home).replace("{away}", away);
+      // BB pré-match : enrichir le kickoff avec qui frappe et la météo
+      // pour donner du contexte au lecteur (toss → kicker → météo).
+      const weatherLabels: Record<string, string> = {
+        nice: "Beau temps",
+        sweltering_heat: "Chaleur étouffante",
+        very_sunny: "Très ensoleillé",
+        pouring_rain: "Pluie battante",
+        blizzard: "Blizzard",
+      };
+      const receivingTeam = String(meta.receivingTeam ?? "");
+      const kickingTeam = receivingTeam === "home"
+        ? "away"
+        : receivingTeam === "away"
+          ? "home"
+          : "";
+      const kickerName = kickingTeam === "home" ? home : kickingTeam === "away" ? away : "";
+      const receiverName = receivingTeam === "home" ? home : receivingTeam === "away" ? away : "";
+      const weatherKey = String(meta.weather ?? "");
+      const weatherLabel = weatherLabels[weatherKey] ?? weatherKey;
+      const base = e.kickoffPair.replace("{home}", home).replace("{away}", away);
+      const extras: string[] = [];
+      if (kickerName && receiverName) {
+        extras.push(`${kickerName} engage, ${receiverName} reçoit`);
+      }
+      if (weatherLabel) {
+        extras.push(`météo : ${weatherLabel}`);
+      }
+      return extras.length > 0 ? `${base} — ${extras.join(" · ")}` : base;
     }
     case "TURN_START": {
       const half = String(meta.half ?? "");
@@ -245,8 +272,21 @@ function summarizeMeta(
       return e.casualty;
     }
     case "TURNOVER": {
-      const cause = meta.cause ? String(meta.cause) : "";
-      return cause ? `${e.turnover} (${cause})` : e.turnover;
+      const rawCause = meta.cause ? String(meta.cause) : "";
+      // BB cause technique → libellé humain. "unknown" est filtré : il
+      // signifie que `causeFromMove` n'a pas pu inférer la raison
+      // (déclencheur hors Move courant) — autant ne rien afficher
+      // plutôt qu'un faux libellé.
+      const causeLabels: Record<string, string> = {
+        pass_failed: "passe ratée",
+        handoff_failed: "transmission ratée",
+        dodge_failed: "esquive ratée",
+        movement_failed: "mouvement raté",
+        block_attacker_down: "attaquant à terre",
+        foul_sent_off: "faute (expulsion)",
+      };
+      const label = causeLabels[rawCause];
+      return label ? `${e.turnover} (${label})` : e.turnover;
     }
     case "NUFFLE": {
       const id = String(meta.id ?? meta.eventId ?? "?");
