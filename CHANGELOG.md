@@ -1,3 +1,25 @@
+## [1.121.4](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.3...v1.121.4) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **ai:** scoring foul/pass via weights + opening book 19 races + case-insensitive ([#846](https://github.com/Ryxeuf/fantasy-football-game/issues/846)) ([ccf5e93](https://github.com/Ryxeuf/fantasy-football-game/commit/ccf5e9378ee8fcff91e67044b6b9d6f93a881efc))
+* **auth:** redact PII dans les logs (emails, roles) — GDPR ([#853](https://github.com/Ryxeuf/fantasy-football-game/issues/853)) ([c4a921b](https://github.com/Ryxeuf/fantasy-football-game/commit/c4a921b7e60810ebe5fd79bdea24dabcdfd0070a))
+* **game-engine:** changing-weather re-roll + hypnotic-gaze GFI lock ([#849](https://github.com/Ryxeuf/fantasy-football-game/issues/849)) ([7abce4a](https://github.com/Ryxeuf/fantasy-football-game/commit/7abce4a1a7734df119689d8a3d7845e2290d2ee5))
+* **game-engine:** cleanup blitzingPlayerId + helper reset dice notifications ([#847](https://github.com/Ryxeuf/fantasy-football-game/issues/847)) ([1dad76b](https://github.com/Ryxeuf/fantasy-football-game/commit/1dad76b9c84b9de968364e740675963a675fbfd7))
+* **game-engine:** clear pending* a la mi-temps + GFI reroll Blizzard target ([#844](https://github.com/Ryxeuf/fantasy-football-game/issues/844)) ([6e22f9d](https://github.com/Ryxeuf/fantasy-football-game/commit/6e22f9d2b8b292e620e50e2a67b8fc8e8b2f4529))
+* **game-engine:** determinisme replay du gameLog et type GFI ([#843](https://github.com/Ryxeuf/fantasy-football-game/issues/843)) ([9d4365d](https://github.com/Ryxeuf/fantasy-football-game/commit/9d4365dfb5cf10e2384f92181d864f408517f554))
+* **pro-league:** 3 transactions critiques (casualty, first-time bonus, advancement) ([#848](https://github.com/Ryxeuf/fantasy-football-game/issues/848)) ([49160be](https://github.com/Ryxeuf/fantasy-football-game/commit/49160beb0e00ee9c694573f028116945a6f4890d))
+* **pro-league:** atomicité wallet/bet/settlement transactions (CRITICAL) ([#842](https://github.com/Ryxeuf/fantasy-football-game/issues/842)) ([5993029](https://github.com/Ryxeuf/fantasy-football-game/commit/5993029fde114cb96c08eab6170509b031a8d65d))
+* **pro-league:** MVP eligibility par participants + applyLevelUps tx ([#854](https://github.com/Ryxeuf/fantasy-football-game/issues/854)) ([25ca1fc](https://github.com/Ryxeuf/fantasy-football-game/commit/25ca1fc3afada4aeb21cd38db1409b888e788420))
+* **pro-league:** SPP transactionnel + odds calculator driverKind/roster ([#845](https://github.com/Ryxeuf/fantasy-football-game/issues/845)) ([562091b](https://github.com/Ryxeuf/fantasy-football-game/commit/562091bed8a2ec23e79c984c46e38fd2b4d76426))
+* **pro-league:** standings TD diff tiebreaker + PII leak + settle picks tx ([#851](https://github.com/Ryxeuf/fantasy-football-game/issues/851)) ([e83f518](https://github.com/Ryxeuf/fantasy-football-game/commit/e83f5182ace11c067a52d1d8f786bd54ebac0d03))
+* **server:** drop email PII from public APIs (round 6) ([#855](https://github.com/Ryxeuf/fantasy-football-game/issues/855)) ([2bade47](https://github.com/Ryxeuf/fantasy-football-game/commit/2bade47101e1a67dbd9ab62e3a4225961d0a0f9b))
+* **server:** ELO update + async-match force-end-turn dans $transaction ([#857](https://github.com/Ryxeuf/fantasy-football-game/issues/857)) ([34df26f](https://github.com/Ryxeuf/fantasy-football-game/commit/34df26f82175ee951ad867d37addb14cdb3f754b))
+* **server:** persist ordering BB + winnings transaction + structured logs ([#852](https://github.com/Ryxeuf/fantasy-football-game/issues/852)) ([7e0e3f1](https://github.com/Ryxeuf/fantasy-football-game/commit/7e0e3f139c5b645fb557c71a7de4d2c80e718720))
+* **sim-engine:** full driver casualty outcome + yardline + cause + TD scorer ([#850](https://github.com/Ryxeuf/fantasy-football-game/issues/850)) ([ee224f2](https://github.com/Ryxeuf/fantasy-football-game/commit/ee224f2f579f2b6da856a100ac8a850d8621c7e1))
+* **team:** atomic treasury/count updates + star-player hire tx (round 6) ([#856](https://github.com/Ryxeuf/fantasy-football-game/issues/856)) ([5fa21c0](https://github.com/Ryxeuf/fantasy-football-game/commit/5fa21c01d014380fd91b5a90d823df12b2b545b1))
+
 ## [1.121.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.2...v1.121.3) (2026-05-18)
 
 
