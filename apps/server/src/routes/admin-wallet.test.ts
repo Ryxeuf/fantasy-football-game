@@ -13,16 +13,25 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Audit round 7 : admin refund utilise maintenant `updateMany` avec
+// WHERE conditionnel + creditInTx dans la $transaction. Mock retourne
+// `count: 1` par defaut pour simuler le happy path.
 vi.mock("../prisma", () => ({
   prisma: {
     user: { findUnique: vi.fn() },
     proWallet: { findUnique: vi.fn() },
     proTransaction: { findMany: vi.fn(), count: vi.fn() },
-    proBet: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    proBet: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+    },
     $transaction: vi.fn(async (fn: any) =>
       fn({
         proBet: {
           update: vi.fn(async () => ({ id: "bet-1", status: "void" })),
+          updateMany: vi.fn(async () => ({ count: 1 })),
         },
       }),
     ),
@@ -57,7 +66,9 @@ vi.mock("../services/pro-wallet", () => {
   }
   return {
     credit: vi.fn(async () => 1000),
+    creditInTx: vi.fn(async () => 1000),
     debit: vi.fn(async () => 500),
+    ensureWalletExists: vi.fn(async () => undefined),
     InsufficientFundsError,
   };
 });
@@ -361,7 +372,9 @@ describe("POST /admin/bets/:betId/refund", () => {
       status: "pending",
       marketId: "m-1",
     });
-    credit.mockResolvedValueOnce(1100);
+    // Audit round 7 : creditInTx remplace credit dans la $transaction.
+    const { creditInTx: creditInTxMock } = await import("../services/pro-wallet");
+    vi.mocked(creditInTxMock).mockResolvedValueOnce(1100);
 
     const res = await request("POST", "/bets/bet-pending/refund", {
       reason: "double-event-bug",
@@ -372,7 +385,13 @@ describe("POST /admin/bets/:betId/refund", () => {
     expect(res.body.refundedStake).toBe(100);
     expect(res.body.newBalance).toBe(1100);
     expect(res.body.wasPostSettlement).toBe(false);
-    expect(credit).toHaveBeenCalledWith("u-1", 100, "ADMIN_REFUND", "bet-pending");
+    expect(creditInTxMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "u-1",
+      100,
+      "ADMIN_REFUND",
+      "bet-pending",
+    );
     expect(mockedAudit).toHaveBeenCalledWith(
       prisma,
       expect.anything(),

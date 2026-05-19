@@ -28,7 +28,9 @@ import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 import {
   credit,
+  creditInTx,
   debit,
+  ensureWalletExists,
   InsufficientFundsError,
 } from "../services/pro-wallet";
 
@@ -256,28 +258,44 @@ router.post(
       const refTruncated =
         reason.length > 255 ? `${reason.slice(0, 252)}...` : reason;
 
-      // Operation atomique : void + credit. Utilise $transaction Prisma
-      // pour eviter qu'un refund partiel reste si une etape echoue.
+      // BUG fix audit round 7 (CRITICAL/money loss) : avant, le check
+      // `bet.status === "void"` etait fait hors transaction, et la
+      // void-update etait dans une $transaction SEPAREE du `credit()`
+      // call (qui ouvrait sa propre tx). Deux clics simultanes :
+      //  - Both read `status='pending'`
+      //  - Both `update` to `"void"` (idempotent)
+      //  - Both call `credit` → DOUBLE credit du stake.
+      // Pire, si `credit` throw apres le void, le stake est voided
+      // mais jamais refunde (money perdu).
+      // Fix : `updateMany({ where: { id, status: { not: "void" } } })`
+      // garantit qu'un seul appel reussit a flip status → void.
+      // Le credit + audit log dans la MEME $transaction → atomicite.
       const wasPostSettlement = bet.status === "won" || bet.status === "lost";
 
+      // Pre-ensure wallet HORS transaction (pattern round 4).
+      await ensureWalletExists(bet.userId);
+
+      let newBalance: number | null = null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await prisma.$transaction(async (tx: any) => {
-        await tx.proBet.update({
-          where: { id: betId },
+        // Optimistic-lock : un seul appel passe (status flip atomique).
+        const voidResult = await tx.proBet.updateMany({
+          where: { id: betId, status: { not: "void" } },
           data: { status: "void" },
         });
+        if (voidResult.count === 0) {
+          // Un autre admin a deja refund (ou le bet etait deja void).
+          throw new Error("ALREADY_REFUNDED");
+        }
+        // Credit dans la meme transaction → atomicite garantie.
+        newBalance = await creditInTx(
+          tx,
+          bet.userId,
+          bet.stake,
+          "ADMIN_REFUND",
+          bet.id,
+        );
       });
-
-      // Le credit utilise le service `pro-wallet` qui fait sa propre
-      // $transaction. On le fait apres le void pour preserver
-      // l'idempotence : si le credit echoue, le void est applique et
-      // un retry refusera (status='void').
-      const newBalance = await credit(
-        bet.userId,
-        bet.stake,
-        "ADMIN_REFUND",
-        bet.id,
-      );
 
       await safeRecordAdminActionFromRequest(prisma, req as AuthenticatedRequest, {
         action: "bet.refund",
@@ -300,6 +318,10 @@ router.post(
         wasPostSettlement,
       });
     } catch (e) {
+      // Race condition handle : un autre admin a deja refund.
+      if (e instanceof Error && e.message === "ALREADY_REFUNDED") {
+        return res.status(409).json({ error: "Pari deja annule (race)" });
+      }
       serverLog.error(e);
       res.status(500).json({ error: "Erreur lors du refund" });
     }
