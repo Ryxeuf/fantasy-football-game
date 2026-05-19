@@ -204,9 +204,31 @@ export async function listComments(
   articleId: string,
   options: ListCommentsOptions = {},
 ): Promise<readonly GazetteCommentView[]> {
+  // BUG fix audit round 8 (HIGH/DoS) : avant, `findMany` sans `take`.
+  // Une article populaire avec des milliers de comments retournait
+  // l'ensemble complet a chaque page load (filtering en JS post-
+  // fetch). Trivial DoS par spam de comments sur un article puis
+  // load. Cap a 500 comments visibles. Pour non-admins, filtre les
+  // deleted/flagged au niveau DB pour ne pas charger inutilement.
+  const COMMENTS_LIMIT = 500;
+  const isAdmin = options.isAdmin === true;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseWhere: any = { articleId };
+  if (!isAdmin) {
+    // Soft-deleted toujours masques pour non-admins → filtre DB.
+    baseWhere.deletedAt = null;
+    // Flagged : si non-admin et pas l'auteur, on les filtre cote DB.
+    // Si auteur, on les laisse passer ; flatMap final fera le tri.
+    // On charge tous les flagged si currentUserId est set (auteur
+    // potentiel) ; sinon on filtre.
+    if (!options.currentUserId) {
+      baseWhere.flaggedAt = null;
+    }
+  }
   const all = (await prisma.proGazetteComment.findMany({
-    where: { articleId },
+    where: baseWhere,
     orderBy: { createdAt: "asc" },
+    take: COMMENTS_LIMIT,
     select: {
       id: true,
       articleId: true,
@@ -221,9 +243,8 @@ export async function listComments(
   })) as CommentRow[];
 
   return all.flatMap((row): GazetteCommentView[] => {
-    const isAdmin = options.isAdmin === true;
     const isAuthor = row.userId === options.currentUserId;
-    // Deleted : admin seulement
+    // Deleted : admin seulement (defense in depth ; DB filter ci-dessus).
     if (row.deletedAt !== null && !isAdmin) return [];
     // Flagged : admin ou auteur
     if (row.flaggedAt !== null && !isAdmin && !isAuthor) return [];

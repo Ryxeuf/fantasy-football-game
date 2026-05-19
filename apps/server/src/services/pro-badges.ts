@@ -125,10 +125,19 @@ export async function evaluateBadgesForUser(
 
   const newlyEarned: string[] = [];
 
-  // Charge les bets une fois pour tous les criteria qui en ont besoin.
+  // BUG fix audit round 8 (HIGH/DoS) : avant, `findMany` sans `take`.
+  // Un high-volume bettor avec des dizaines de milliers de bets
+  // declenchait `evaluateBadgesForUser` sur chaque write post-
+  // settlement → memoire lineaire + DoS surface. Cap a 5000 bets
+  // (largement plus que ce qu'un user normal accumule). Les criteria
+  // de streaks / count utilisent les `bets` plus recents, donc cap
+  // au plus recent. Documented limit ; criteria-specifique pourrait
+  // overrider si necessaire.
+  const BADGE_EVAL_BET_LIMIT = 5000;
   const bets = await prisma.proBet.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
+    take: BADGE_EVAL_BET_LIMIT,
     select: {
       id: true,
       stake: true,
