@@ -102,21 +102,14 @@ export async function enterTournament(
     };
   }
 
-  // Verification cap maxEntries (best-effort hors transaction ; un
-  // race condition peut creer une entry de plus, considere acceptable
-  // pour ce sink).
+  // BUG fix audit round 7 (HIGH) : avant, le count `maxEntries` etait
+  // verifie HORS transaction, puis l'entry etait creee dans une
+  // $transaction separee. Deux requetes concurrentes pouvaient toutes
+  // deux passer le check a N entries et toutes deux creer leur entry
+  // → tournament excede maxEntries de plusieurs (impact si maxEntries
+  // small, ou si payment tier important). Fix : deplacer le count
+  // dans la $transaction qui fait debit + create entry → all-or-nothing.
   const maxEntries = tournament.maxEntries as number | null;
-  if (maxEntries !== null && maxEntries !== undefined) {
-    const currentCount = await prisma.proTournamentEntry.count({
-      where: { tournamentId },
-    });
-    if (currentCount >= maxEntries) {
-      throw new TournamentError(
-        "TOURNAMENT_FULL",
-        `Tournoi complet (${maxEntries} inscrits).`,
-      );
-    }
-  }
 
   await getOrCreateWallet(userId);
 
@@ -124,6 +117,20 @@ export async function enterTournament(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await prisma.$transaction(async (tx: any) => {
+    // Audit round 7 : count DANS la tx. Si depasse cap apres notre
+    // increment, on throw TOURNAMENT_FULL → la tx rollback, aucune
+    // entry creee, aucun crown debite.
+    if (maxEntries !== null && maxEntries !== undefined) {
+      const currentCount = await tx.proTournamentEntry.count({
+        where: { tournamentId },
+      });
+      if (currentCount >= maxEntries) {
+        throw new TournamentError(
+          "TOURNAMENT_FULL",
+          `Tournoi complet (${maxEntries} inscrits).`,
+        );
+      }
+    }
     const w = await tx.proWallet.findUnique({
       where: { userId },
       select: { crowns: true },

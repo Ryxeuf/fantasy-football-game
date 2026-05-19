@@ -5,6 +5,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => {
+  // Audit round 7 : count maxEntries DANS la $transaction. Le `tx`
+  // mock doit aussi exposer `proTournamentEntry.count`.
   const tx = {
     proWallet: {
       findUnique: vi.fn(),
@@ -15,6 +17,7 @@ vi.mock("../prisma", () => {
     },
     proTournamentEntry: {
       create: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
   };
   return {
@@ -164,7 +167,11 @@ describe("enterTournament", () => {
       status: "open",
     } as never);
     mocked.proTournamentEntry.findUnique.mockResolvedValue(null as never);
-    mocked.proTournamentEntry.count.mockResolvedValue(10 as never);
+    // Audit round 7 : le count est maintenant fait DANS la $transaction
+    // (via mocked.__tx.proTournamentEntry.count), pas sur le mock
+    // prisma top-level.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (mocked as any).__tx.proTournamentEntry.count.mockResolvedValueOnce(10);
 
     await expect(enterTournament("u_1", "t_1")).rejects.toMatchObject({
       code: "TOURNAMENT_FULL",

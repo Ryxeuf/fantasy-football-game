@@ -17,7 +17,12 @@ vi.mock("../prisma", () => ({
     proLeague: { findUnique: vi.fn() },
     proLeagueSeason: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     proLeagueStandings: { updateMany: vi.fn(), createMany: vi.fn() },
-    proLeagueMatch: { findUnique: vi.fn(), update: vi.fn() },
+    proLeagueMatch: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      // Audit round 7 : forceForfeit utilise updateMany conditionnel.
+      updateMany: vi.fn(async () => ({ count: 1 })),
+    },
     proTeam: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -154,17 +159,20 @@ describe("forceForfeit", () => {
       id: "m1",
       status: "scheduled",
     });
-    mocked.proLeagueMatch.update.mockResolvedValueOnce({});
+    // Audit round 7 : updateMany remplace update (optimistic-lock race).
+    mocked.proLeagueMatch.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await forceForfeit({ matchId: "m1", winnerSide: "home" });
 
     expect(result.previousStatus).toBe("scheduled");
-    const call = mocked.proLeagueMatch.update.mock.calls[0]![0];
+    const call = mocked.proLeagueMatch.updateMany.mock.calls[0]![0];
     expect(call.data.status).toBe("completed");
     expect(call.data.outcome).toBe("home");
     expect(call.data.scoreHome).toBe(1);
     expect(call.data.scoreAway).toBe(0);
     expect(call.data.completedAt).toBeInstanceOf(Date);
+    // WHERE filtre les matches deja completed (race guard).
+    expect(call.where).toEqual({ id: "m1", status: { not: "completed" } });
   });
 
   it("away winner : scores 0-1", async () => {
@@ -172,9 +180,9 @@ describe("forceForfeit", () => {
       id: "m1",
       status: "ready",
     });
-    mocked.proLeagueMatch.update.mockResolvedValueOnce({});
+    mocked.proLeagueMatch.updateMany.mockResolvedValueOnce({ count: 1 });
     await forceForfeit({ matchId: "m1", winnerSide: "away" });
-    const call = mocked.proLeagueMatch.update.mock.calls[0]![0];
+    const call = mocked.proLeagueMatch.updateMany.mock.calls[0]![0];
     expect(call.data.scoreHome).toBe(0);
     expect(call.data.scoreAway).toBe(1);
     expect(call.data.outcome).toBe("away");
