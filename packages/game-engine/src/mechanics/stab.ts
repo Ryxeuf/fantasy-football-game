@@ -16,6 +16,7 @@
  */
 
 import { GameState, Player, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { hasSkill } from '../skills/skill-effects';
 import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
@@ -48,7 +49,7 @@ export function executeStab(
   target: Player,
   rng: RNG,
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  let newState = cloneGameState(state);
 
   // Log d'action
   const actionLog = createLogEntry(

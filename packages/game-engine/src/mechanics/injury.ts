@@ -4,6 +4,7 @@
  */
 
 import { GameState, Player, RNG, CasualtyOutcome, LastingInjuryType, LastingInjuryDetail, PendingApothecary } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
@@ -38,7 +39,7 @@ export function performInjuryRoll(
   causedById?: string,
   preRolledDice?: [number, number],
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
 
   // Jet de 2D6 pour la blessure (+ bonus de Mighty Blow éventuel, - Armored Skull si applicable)
   // BUG fix : foul send-off check requires access to the raw injury dice
@@ -365,7 +366,7 @@ export function handleSentOff(state: GameState, player: Player): GameState {
  * Pas de jet d'armure. Le résultat minimum est KO (Stunned est promu en KO).
  */
 export function handleInjuryByCrowd(state: GameState, player: Player, rng: RNG): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
 
   // Jet de 2D6 pour la blessure (pas de bonus, - Armored Skull si applicable)
   const armoredSkullMod = armoredSkullModifier(player);

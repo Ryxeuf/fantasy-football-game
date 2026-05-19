@@ -10,6 +10,7 @@
  */
 
 import { GameState, TeamId, RNG, CasualtyOutcome, PendingApothecary, Player } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { movePlayerToDugoutZone } from './dugout';
 import {
   rollLastingInjuryType,
@@ -85,7 +86,7 @@ export function applyApothecaryChoice(
   const pending = state.pendingApothecary;
   if (!pending) return state;
 
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   newState.pendingApothecary = undefined;
 
   if (!useApothecary) {

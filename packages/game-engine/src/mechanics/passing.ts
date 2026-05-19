@@ -4,6 +4,7 @@
  */
 
 import { GameState, Player, Position, TeamId, RNG, DiceResult } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { rollD6 } from '../utils/dice';
 import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
@@ -329,7 +330,7 @@ export function executePass(
   target: Player,
   rng: RNG
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
 
   // Retirer le ballon du passeur
   newState.players = newState.players.map(p =>
@@ -591,7 +592,7 @@ export function executeHandoff(
   target: Player,
   rng: RNG
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
 
   // Retirer le ballon du passeur
   newState.players = newState.players.map(p =>

@@ -4,6 +4,7 @@
  */
 
 import { GameState, Player, Position, TeamId, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { samePos, calculatePickupModifiers } from './movement';
 import { performPickupRoll } from '../utils/dice';
 import { createLogEntry, addLogEntry } from '../utils/logging';
@@ -31,7 +32,7 @@ export function isInOpponentEndzone(state: GameState, player: Player): boolean {
  * @returns Nouvel état du jeu avec le touchdown
  */
 export function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: Player): GameState {
-  let next = structuredClone(state) as GameState;
+  let next = cloneGameState(state);
 
   // Mettre à jour le score
   const newScore = {
@@ -175,7 +176,7 @@ type BounceStepResult =
 function bounceBallStep(state: GameState, rng: RNG): BounceStepResult {
   if (!state.ball) return { kind: 'final', state };
 
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const currentBallPos = { ...state.ball };
 
   // Calculer la nouvelle position après rebond

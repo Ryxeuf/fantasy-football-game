@@ -19,6 +19,7 @@
  */
 
 import type { GameState, Player, Position, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import {
   hasPlayerActed,
   setPlayerAction,
@@ -101,7 +102,7 @@ export function handleDodgeRoll(
     from,
   );
 
-  let next = structuredClone(stateAfterDivingTackle) as GameState;
+  let next = cloneGameState(stateAfterDivingTackle);
   next.lastDiceResult = dodgeResult;
 
   // Log du jet d'esquive
@@ -313,7 +314,7 @@ export function handleNormalMove(
   rng: RNG,
   idx: number,
 ): GameState {
-  let next = structuredClone(state) as GameState;
+  let next = cloneGameState(state);
   const isGFI = next.players[idx].pm <= 0;
 
   // Deplacer le joueur (immutable). Avant : `next.players[idx].pos = ...`

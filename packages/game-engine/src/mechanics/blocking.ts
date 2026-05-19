@@ -12,6 +12,7 @@ import {
   RNG,
   Player,
 } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers, consumeOncePerMatchSkills } from '../skills/skill-bridge';
 import { hasSkill } from '../skills/skill-effects';
@@ -725,7 +726,7 @@ export function resolveBlockResult(
 
   if (!attacker || !target) return state;
 
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
 
   // Log du résultat de blocage
   const blockLogEntry = createLogEntry(
