@@ -145,6 +145,65 @@ describe('Kickoff Events', () => {
       });
     });
 
+    describe('audit round 10 — Brilliant Coaching adds assistant coaches', () => {
+      const brilliantCoachingEvent = KICKOFF_EVENTS[7];
+
+      it('adds assistantCoaches to D3 roll for each team', () => {
+        // teamA: D3 (1-3) + 5 coaches = score 6-8.
+        // teamB: D3 (1-3) + 1 coach  = score 2-4.
+        // teamA should ALWAYS win.
+        const state = {
+          ...setup(),
+          assistantCoaches: { teamA: 5, teamB: 1 },
+        };
+        let teamAWins = 0;
+        for (let i = 0; i < 20; i++) {
+          const rng = makeRNG(`brilliant-coaching-A-${i}`);
+          const result = applyKickoffEvent(state, brilliantCoachingEvent, rng, 'A');
+          if (result.teamRerolls.teamA > state.teamRerolls.teamA) {
+            teamAWins++;
+          }
+        }
+        expect(teamAWins).toBe(20);
+      });
+
+      it('works when assistantCoaches is undefined (defaults to 0)', () => {
+        const state = setup(); // no assistantCoaches
+        const rng = makeRNG('brilliant-no-coaches');
+        const result = applyKickoffEvent(state, brilliantCoachingEvent, rng, 'A');
+        expect(result.gameLog.length).toBeGreaterThan(state.gameLog.length);
+      });
+
+      it('grants reroll to teamB when teamB has higher assistant coaches', () => {
+        const state = {
+          ...setup(),
+          assistantCoaches: { teamA: 1, teamB: 5 },
+        };
+        let teamBWins = 0;
+        for (let i = 0; i < 10; i++) {
+          const rng = makeRNG(`brilliant-coaching-B-${i}`);
+          const result = applyKickoffEvent(state, brilliantCoachingEvent, rng, 'A');
+          if (result.teamRerolls.teamB > state.teamRerolls.teamB) {
+            teamBWins++;
+          }
+        }
+        expect(teamBWins).toBe(10);
+      });
+
+      it('includes assistant coaches in log message', () => {
+        const state = {
+          ...setup(),
+          assistantCoaches: { teamA: 3, teamB: 1 },
+        };
+        const rng = makeRNG('brilliant-coaching-log');
+        const result = applyKickoffEvent(state, brilliantCoachingEvent, rng, 'A');
+        const lastLogs = result.gameLog.slice(state.gameLog.length);
+        const actionLog = lastLogs.find(l => l.type === 'action');
+        expect(actionLog).toBeDefined();
+        expect(actionLog!.message).toMatch(/D3.*\+.*coach/i);
+      });
+    });
+
     describe('audit round 5 — changing-weather re-roll', () => {
       const changingWeatherEvent = KICKOFF_EVENTS[8];
 

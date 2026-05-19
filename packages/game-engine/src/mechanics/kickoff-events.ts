@@ -188,18 +188,28 @@ export function applyKickoffEvent(
     }
 
     case 'brilliant-coaching': {
+      // Audit round 10 (HIGH/regle BB3) : la regle BB3 dit
+      // "Each coach rolls a D3 and adds the number of Assistant
+      // Coaches they have. The team with the highest total gains
+      // an extra Team Re-roll." Avant ce fix, seul le D3 brut etait
+      // compare — une equipe avec 6 assistant coaches gagnait 50/50.
+      // Pattern aligne sur 'cheering-fans' qui ajoute dedicatedFans.
       const d3A = Math.floor(rng() * 3) + 1;
       const d3B = Math.floor(rng() * 3) + 1;
-      if (d3A > d3B) {
+      const acA = newState.assistantCoaches?.teamA ?? 0;
+      const acB = newState.assistantCoaches?.teamB ?? 0;
+      const scoreA = d3A + acA;
+      const scoreB = d3B + acB;
+      if (scoreA > scoreB) {
         newState.teamRerolls = { ...newState.teamRerolls, teamA: (newState.teamRerolls?.teamA ?? 0) + 1 };
-        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamA} gagne 1 relance`);
+        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamA} gagne 1 relance (D3:${d3A} + ${acA} coachs = ${scoreA} vs D3:${d3B} + ${acB} coachs = ${scoreB})`);
         newState.gameLog = [...newState.gameLog, log];
-      } else if (d3B > d3A) {
+      } else if (scoreB > scoreA) {
         newState.teamRerolls = { ...newState.teamRerolls, teamB: (newState.teamRerolls?.teamB ?? 0) + 1 };
-        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamB} gagne 1 relance`);
+        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamB} gagne 1 relance (D3:${d3B} + ${acB} coachs = ${scoreB} vs D3:${d3A} + ${acA} coachs = ${scoreA})`);
         newState.gameLog = [...newState.gameLog, log];
       } else {
-        const log = createLogEntry('action', 'Coaching brillant : égalité, pas de relance');
+        const log = createLogEntry('action', `Coaching brillant : égalité (D3:${d3A} + ${acA} coachs = ${scoreA} vs D3:${d3B} + ${acB} coachs = ${scoreB}), pas de relance`);
         newState.gameLog = [...newState.gameLog, log];
       }
       break;

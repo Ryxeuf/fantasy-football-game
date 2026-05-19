@@ -253,6 +253,13 @@ export interface GameState {
   fanAttendance?: number;
   // Dedicated fans par équipe (préservés depuis pré-match pour calcul post-match)
   dedicatedFans?: { teamA: number; teamB: number };
+  // Audit round 10 (HIGH/regle BB3) : assistant coaches par equipe,
+  // utilises au kickoff event 'brilliant-coaching' : chaque coach jette
+  // 1D3 + son nombre d'assistant coaches ; le plus haut total gagne une
+  // relance d'equipe. Avant ce champ, seul le D3 etait compare → une
+  // equipe avec 6 assistant coaches devrait quasi toujours gagner mais
+  // gagnait 50/50. Optionnel pour back-compat ; defaut 0 par equipe.
+  assistantCoaches?: { teamA: number; teamB: number };
   // Résultats finaux (rempli en fin de match)
   matchResult?: {
     winner?: TeamId;
