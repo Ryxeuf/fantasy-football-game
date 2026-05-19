@@ -24,10 +24,20 @@ interface EspnEvent {
   readonly competitions?: ReadonlyArray<{ readonly competitors?: readonly EspnCompetitor[] }>;
 }
 
+interface EspnSeasonInfo {
+  readonly year?: number;
+  readonly type?: { readonly name?: string; readonly abbreviation?: string };
+}
+
+interface EspnLeague {
+  readonly id?: string;
+  readonly season?: EspnSeasonInfo;
+}
+
 interface EspnScoreboard {
   readonly events?: readonly EspnEvent[];
   readonly week?: { readonly number?: number };
-  readonly season?: { readonly year?: number; readonly type?: number };
+  readonly leagues?: readonly EspnLeague[];
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -73,8 +83,9 @@ export async function runEspnPoc(dateYmd: string): Promise<void> {
   console.log(`[espn] saved scoreboard → ${sbPath}`);
 
   const events = scoreboard.events ?? [];
+  const season = scoreboard.leagues?.[0]?.season;
   console.log(
-    `[espn] season=${scoreboard.season?.year ?? "?"} type=${scoreboard.season?.type ?? "?"} week=${scoreboard.week?.number ?? "?"} events=${events.length}`
+    `[espn] season=${season?.year ?? "?"} type=${season?.type?.abbreviation ?? "?"} week=${scoreboard.week?.number ?? "?"} events=${events.length}`
   );
 
   if (events.length === 0) {
