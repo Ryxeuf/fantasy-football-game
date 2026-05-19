@@ -27,6 +27,7 @@ import {
 } from '../utils/dice-notifications';
 import { performInjuryRoll } from '../mechanics/injury';
 import { createLogEntry } from '../utils/logging';
+import { rejectMove } from './reject-move';
 import {
   isInOpponentEndzone,
   awardTouchdown,
@@ -68,10 +69,21 @@ export function handleBlitz(
   const attacker = state.players.find(p => p.id === move.playerId);
   const target = state.players.find(p => p.id === move.targetId);
 
-  if (!attacker || !target) return state;
+  if (!attacker || !target) {
+    return rejectMove(state, 'BLITZ : attaquant ou cible introuvable', {
+      attackerId: move.playerId,
+      targetId: move.targetId,
+    });
+  }
 
   // Vérifier que le blitz est légal
-  if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
+  if (!canBlitz(state, move.playerId, move.to, move.targetId)) {
+    return rejectMove(state, 'BLITZ non legal', {
+      attackerId: move.playerId,
+      targetId: move.targetId,
+      to: move.to,
+    });
+  }
 
   // ─── Foul Appearance check ─────────────────────────────────────────────
   // Rolled by the attacker before the blitz begins. On 1, the declared

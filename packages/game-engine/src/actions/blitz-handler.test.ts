@@ -80,7 +80,11 @@ describe('S27.8.13 — handleBlitz', () => {
       { type: 'BLITZ', playerId: 'missing', to: { x: 6, y: 5 }, targetId: 'T' },
       rng,
     );
-    expect(next).toBe(state);
+    // Audit 2026-05-19 QW ST3 : rejectMove ajoute un log [reject]
+    // mais ne modifie pas le state metier.
+    expect(next.players).toBe(state.players);
+    expect(next.turn).toBe(state.turn);
+    expect(next.gameLog[next.gameLog.length - 1].message).toContain('[reject]');
   });
 
   it('retourne le state inchange si la cible est introuvable', () => {
@@ -91,7 +95,8 @@ describe('S27.8.13 — handleBlitz', () => {
       { type: 'BLITZ', playerId: 'A', to: { x: 5, y: 5 }, targetId: 'missing' },
       rng,
     );
-    expect(next).toBe(state);
+    expect(next.players).toBe(state.players);
+    expect(next.gameLog[next.gameLog.length - 1].message).toContain('[reject]');
   });
 
   it('retourne le state inchange si le blitz est illegal (cible amie)', () => {
@@ -104,7 +109,8 @@ describe('S27.8.13 — handleBlitz', () => {
       { type: 'BLITZ', playerId: 'A', to: { x: 5, y: 5 }, targetId: 'M' },
       rng,
     );
-    expect(next).toBe(state);
+    expect(next.players).toBe(state.players);
+    expect(next.gameLog[next.gameLog.length - 1].message).toContain('[reject]');
   });
 
   it('ne mute pas le state passe en argument quand court-circuite par un gate', () => {
