@@ -325,6 +325,37 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@22.18.0)(jsdom@29.1.1)(terser@5.43.1)
 
+  packages/nfl-mapper:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.35.0
+        version: 9.35.0
+      '@types/node':
+        specifier: ^22.5.1
+        version: 22.18.0
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.18.0)(jsdom@29.1.1)(terser@5.43.1))
+      eslint:
+        specifier: ^9.8.0
+        version: 9.34.0(jiti@2.5.1)
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.2
+      typescript-eslint:
+        specifier: ^8.43.0
+        version: 8.43.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.18.0)(jsdom@29.1.1)(terser@5.43.1)
+
   packages/shared-types:
     devDependencies:
       '@eslint/js':
@@ -1805,7 +1836,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {node: '>=0.10.0'}
+    engines: {'0': node >=0.10.0}
 
   '@expo/cli@0.18.31':
     resolution: {integrity: sha512-v9llw9fT3Uv+TCM6Xllo54t672CuYtinEQZ2LPJ2EJsCwuTc4Cd2gXQaouuIVD21VoeGQnr5JtJuWbF97sBKzQ==}

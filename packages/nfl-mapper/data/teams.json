@@ -1,0 +1,54 @@
+{
+  "$comment": "32 equipes NFL -> 8 races BB (Q5 race fixe par equipe). Source: docs/nfl-fantasy/04-race-mapping.md. Les palettes sont themees par race BB (PAS les couleurs NFL officielles -> Q8 pseudonymisation, respect du skin Blood Bowl). raceLabel = 'Ville Race' pour le branding UI.",
+  "teams": [
+    { "code": "KC",  "city": "Kansas City",       "race": "Skaven",      "raceLabel": "Kansas City Skaven" },
+    { "code": "MIA", "city": "Miami",             "race": "Skaven",      "raceLabel": "Miami Skaven" },
+    { "code": "HOU", "city": "Houston",           "race": "Skaven",      "raceLabel": "Houston Skaven" },
+    { "code": "ARI", "city": "Arizona",           "race": "Skaven",      "raceLabel": "Arizona Skaven" },
+
+    { "code": "CIN", "city": "Cincinnati",        "race": "WoodElf",     "raceLabel": "Cincinnati Wood Elf" },
+    { "code": "LAR", "city": "Los Angeles (R)",   "race": "WoodElf",     "raceLabel": "Los Angeles Wood Elf" },
+    { "code": "JAX", "city": "Jacksonville",      "race": "WoodElf",     "raceLabel": "Jacksonville Wood Elf" },
+    { "code": "WAS", "city": "Washington",        "race": "WoodElf",     "raceLabel": "Washington Wood Elf" },
+
+    { "code": "BAL", "city": "Baltimore",         "race": "Orc",         "raceLabel": "Baltimore Orcs" },
+    { "code": "PHI", "city": "Philadelphia",      "race": "Orc",         "raceLabel": "Philadelphia Orcs" },
+    { "code": "PIT", "city": "Pittsburgh",        "race": "Orc",         "raceLabel": "Pittsburgh Orcs" },
+    { "code": "SF",  "city": "San Francisco",     "race": "Orc",         "raceLabel": "San Francisco Orcs" },
+
+    { "code": "DAL", "city": "Dallas",            "race": "Human",       "raceLabel": "Dallas Humans" },
+    { "code": "GB",  "city": "Green Bay",         "race": "Human",       "raceLabel": "Green Bay Humans" },
+    { "code": "ATL", "city": "Atlanta",           "race": "Human",       "raceLabel": "Atlanta Humans" },
+    { "code": "SEA", "city": "Seattle",           "race": "Human",       "raceLabel": "Seattle Humans" },
+
+    { "code": "BUF", "city": "Buffalo",           "race": "Norse",       "raceLabel": "Buffalo Norse" },
+    { "code": "MIN", "city": "Minnesota",         "race": "Norse",       "raceLabel": "Minnesota Norse" },
+    { "code": "DET", "city": "Detroit",           "race": "Norse",       "raceLabel": "Detroit Norse" },
+    { "code": "CHI", "city": "Chicago",           "race": "Norse",       "raceLabel": "Chicago Norse" },
+
+    { "code": "NYG", "city": "New York (G)",      "race": "Dwarf",       "raceLabel": "New York Dwarfs" },
+    { "code": "CLE", "city": "Cleveland",         "race": "Dwarf",       "raceLabel": "Cleveland Dwarfs" },
+    { "code": "IND", "city": "Indianapolis",      "race": "Dwarf",       "raceLabel": "Indianapolis Dwarfs" },
+    { "code": "NE",  "city": "New England",       "race": "Dwarf",       "raceLabel": "New England Dwarfs" },
+
+    { "code": "NYJ", "city": "New York (J)",      "race": "Khorne",      "raceLabel": "New York Khorne" },
+    { "code": "LV",  "city": "Las Vegas",         "race": "Khorne",      "raceLabel": "Las Vegas Khorne" },
+    { "code": "LAC", "city": "Los Angeles (C)",   "race": "Khorne",      "raceLabel": "Los Angeles Khorne" },
+    { "code": "TB",  "city": "Tampa Bay",         "race": "Khorne",      "raceLabel": "Tampa Bay Khorne" },
+
+    { "code": "TEN", "city": "Tennessee",         "race": "Necromantic", "raceLabel": "Tennessee Necromantic" },
+    { "code": "DEN", "city": "Denver",            "race": "Necromantic", "raceLabel": "Denver Necromantic" },
+    { "code": "CAR", "city": "Carolina",          "race": "Necromantic", "raceLabel": "Carolina Necromantic" },
+    { "code": "NO",  "city": "New Orleans",       "race": "Necromantic", "raceLabel": "New Orleans Necromantic" }
+  ],
+  "palettesByRace": {
+    "Skaven":      { "primary": "#5C6F2F", "secondary": "#B8B055", "accent": "#2A2A1F" },
+    "WoodElf":     { "primary": "#2F5C3E", "secondary": "#A8B86E", "accent": "#4A3520" },
+    "Orc":         { "primary": "#3A4A2F", "secondary": "#1A1A1A", "accent": "#8B6F2F" },
+    "Human":       { "primary": "#1E3A5F", "secondary": "#B8344A", "accent": "#D4AF37" },
+    "Norse":       { "primary": "#1F3A5F", "secondary": "#A0A8AE", "accent": "#8C2A2A" },
+    "Dwarf":       { "primary": "#5C3520", "secondary": "#B8902F", "accent": "#3A2418" },
+    "Khorne":      { "primary": "#8C1A1A", "secondary": "#1A1A1A", "accent": "#D4AF37" },
+    "Necromantic": { "primary": "#3A2A4A", "secondary": "#1A1A1A", "accent": "#7A7A8C" }
+  }
+}
