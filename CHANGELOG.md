@@ -1,3 +1,10 @@
+## [1.123.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.122.0...v1.123.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **admin:** implement openNarration function for authenticated text narration ([82d24b2](https://github.com/Ryxeuf/fantasy-football-game/commit/82d24b272b17c6e901cc8180ba54e8daf4320c81))
+
 ## [1.122.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.5...v1.122.0) (2026-05-19)
 
 
