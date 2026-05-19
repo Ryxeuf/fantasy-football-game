@@ -18,6 +18,9 @@ vi.mock("../prisma", () => ({
       findFirst: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      // Audit round 6 : updateMany conditionnel pour eviter race
+      // condition sur le treasury / counters.
+      updateMany: vi.fn(),
       count: vi.fn(),
     },
     teamSelection: {
@@ -1185,6 +1188,10 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
       teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
       teamFindUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
       teamUpdate: prismaMock.team.update as ReturnType<typeof vi.fn>,
+      // Audit round 6 : team purchase utilise maintenant updateMany
+      // conditionnel (where treasury >= cost AND count < max) pour
+      // eviter le race condition lost-update.
+      teamUpdateMany: prismaMock.team.updateMany as ReturnType<typeof vi.fn>,
       selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
         typeof vi.fn
       >,
@@ -1237,7 +1244,7 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
     const {
       teamFindFirst,
       teamFindUnique,
-      teamUpdate,
+      teamUpdateMany,
       selectionFindFirst,
       updateValues,
     } = await getMocks();
@@ -1253,7 +1260,9 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
       players: [],
     });
     selectionFindFirst.mockResolvedValue(null);
-    teamUpdate.mockResolvedValue({});
+    // Audit round 6 : updateMany conditionnel renvoie { count: 1 } si
+    // OK (treasury suffisante + count < max).
+    teamUpdateMany.mockResolvedValue({ count: 1 });
     updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
     const updatedTeam = { id: "team-1", players: [], cheerleaders: 1 };
     teamFindUnique.mockResolvedValue(updatedTeam);
@@ -1265,11 +1274,16 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
     const res = createRes();
     await handlePurchase(req, res);
 
-    expect(teamUpdate).toHaveBeenCalledWith(
+    expect(teamUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({
+          id: "team-1",
+          treasury: { gte: 10000 },
+          cheerleaders: { lt: 12 },
+        }),
         data: expect.objectContaining({
-          cheerleaders: 1,
-          treasury: 40000,
+          cheerleaders: { increment: 1 },
+          treasury: { decrement: 10000 },
         }),
       }),
     );
@@ -1284,7 +1298,8 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
   });
 
   it("returns 400 ApiError when treasury insufficient (cheerleader)", async () => {
-    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    const { teamFindFirst, teamFindUnique, teamUpdateMany, selectionFindFirst } =
+      await getMocks();
     teamFindFirst.mockResolvedValue({
       id: "team-1",
       ownerId: "user-1",
@@ -1297,6 +1312,10 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
       players: [],
     });
     selectionFindFirst.mockResolvedValue(null);
+    // Audit round 6 : updateMany retourne count=0 si treasury insuffisante.
+    teamUpdateMany.mockResolvedValue({ count: 0 });
+    // Re-fetch pour discriminer treasury vs limite max → ici treasury bas.
+    teamFindUnique.mockResolvedValue({ cheerleaders: 0 });
 
     const req = createReq({
       params: { id: "team-1" },
@@ -1313,7 +1332,8 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
   });
 
   it("returns 400 ApiError when apothecary already hired", async () => {
-    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    const { teamFindFirst, teamFindUnique, teamUpdateMany, selectionFindFirst } =
+      await getMocks();
     teamFindFirst.mockResolvedValue({
       id: "team-1",
       ownerId: "user-1",
@@ -1326,6 +1346,9 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
       players: [],
     });
     selectionFindFirst.mockResolvedValue(null);
+    // Audit round 6 : updateMany retourne count=0 si limite atteinte.
+    teamUpdateMany.mockResolvedValue({ count: 0 });
+    teamFindUnique.mockResolvedValue({ apothecary: true });
 
     const req = createReq({
       params: { id: "team-1" },
@@ -2135,6 +2158,7 @@ describe("Route: POST /team/:id/star-players (S25.5ab)", () => {
       mockValidate,
       mockRequiresPair,
     } = await getMocks();
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
     teamFindFirst.mockResolvedValue({
       id: "team-1",
       ownerId: "user-1",
@@ -2152,6 +2176,15 @@ describe("Route: POST /team/:id/star-players (S25.5ab)", () => {
     mockRequiresPair.mockReturnValue(null);
     starPlayerCreate.mockRejectedValue(
       Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
+    );
+    // Audit round 6 : star-player hire wrap maintenant les creates dans
+    // un $transaction([...]). On simule en attendant chaque promise.
+    (prismaMock.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (ops: any) => {
+        if (Array.isArray(ops)) return Promise.all(ops);
+        return ops(prismaMock);
+      },
     );
 
     const req = createReq({
