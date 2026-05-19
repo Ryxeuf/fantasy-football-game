@@ -433,38 +433,59 @@ export async function applyLevelUps(
   }
 
   const newSkills = [...skills, ...newSkillsAcc];
-  // Lot 3.C.5 + 4.D.1 + 4.D.2 + 4.D.3 — recompute TV inline avec :
-  //   - slugs pour pricing primary/secondary (20k/30k)
-  //   - niggling courant (-10k chacun, lu depuis le casualty applier)
-  //   - stat bonuses cumules (existing + accrued de cette session)
-  const totalStatBonuses: StatBonuses = {
-    ma: ((roster.maBonus as number) ?? 0) + accruedStats.ma,
-    ag: ((roster.agBonus as number) ?? 0) + accruedStats.ag,
-    pa: ((roster.paBonus as number) ?? 0) + accruedStats.pa,
-    av: ((roster.avBonus as number) ?? 0) + accruedStats.av,
-    st: ((roster.stBonus as number) ?? 0) + accruedStats.st,
-  };
-  const newTvCached = computePlayerTv(
-    position,
-    newSkills,
-    (roster.niggling as number) ?? 0,
-    totalStatBonuses,
-  );
-  await prisma.proTeamRoster.update({
-    where: { id: rosterId },
-    data: {
-      level: currentLevel,
-      skills: newSkills,
-      tvCached: newTvCached,
-      // Lot 4.D.1 — Prisma `increment` evite les race conditions
-      // (un casualty applier qui tournerait en parallele ne casse
-      // pas la valeur).
-      maBonus: { increment: accruedStats.ma },
-      agBonus: { increment: accruedStats.ag },
-      paBonus: { increment: accruedStats.pa },
-      avBonus: { increment: accruedStats.av },
-      stBonus: { increment: accruedStats.st },
-    },
+
+  // BUG fix audit round 5 (HIGH) : avant, le read du roster (l.316)
+  // et le write (l.453) etaient en dehors d'une transaction. Si un
+  // autre process (casualty applier d'un match concurrent) modifiait
+  // `niggling` ou `skills` entre les deux, l'update ecrasait la
+  // version fraiche avec une version stale (skills explicite + tvCached
+  // calcule avec un niggling potentiellement obsolete). Les
+  // increments de stat bonuses sont safe (Prisma `increment`), mais
+  // les champs fixes (skills, tvCached) sont vulnerables.
+  // Fix : wrap read+compute+write dans une seule $transaction, et
+  // re-read niggling/skills DANS la tx pour utiliser des valeurs
+  // fraiches au moment du commit. Le re-read est cheap (meme row).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    const fresh = (await tx.proTeamRoster.findUnique({
+      where: { id: rosterId },
+      select: { niggling: true, skills: true },
+    })) as { niggling: number | null; skills: unknown } | null;
+    if (!fresh) return;
+    // Merge skills : on prend les skills frais + les nouvelles que
+    // ce level-up ajoute. Si un casualty applier a ajoute un
+    // niggling skill entre temps, on ne l'ecrase pas.
+    const freshSkills = parseSkillsJson(fresh.skills);
+    const mergedSkills = Array.from(
+      new Set([...freshSkills, ...newSkillsAcc]),
+    );
+    const totalStatBonuses: StatBonuses = {
+      ma: ((roster.maBonus as number) ?? 0) + accruedStats.ma,
+      ag: ((roster.agBonus as number) ?? 0) + accruedStats.ag,
+      pa: ((roster.paBonus as number) ?? 0) + accruedStats.pa,
+      av: ((roster.avBonus as number) ?? 0) + accruedStats.av,
+      st: ((roster.stBonus as number) ?? 0) + accruedStats.st,
+    };
+    const newTvCached = computePlayerTv(
+      position,
+      mergedSkills,
+      (fresh.niggling as number) ?? 0,
+      totalStatBonuses,
+    );
+    await tx.proTeamRoster.update({
+      where: { id: rosterId },
+      data: {
+        level: currentLevel,
+        skills: mergedSkills,
+        tvCached: newTvCached,
+        // Prisma `increment` reste safe vs concurrent updates.
+        maBonus: { increment: accruedStats.ma },
+        agBonus: { increment: accruedStats.ag },
+        paBonus: { increment: accruedStats.pa },
+        avBonus: { increment: accruedStats.av },
+        stBonus: { increment: accruedStats.st },
+      },
+    });
   });
 
   return {

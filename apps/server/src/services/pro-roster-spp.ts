@@ -179,9 +179,51 @@ export function attributeSpp(
   }
 
   // 3) MVP : 1 random par team eligible (deterministe via seed).
+  // BUG fix audit round 5 (HIGH) : avant, `eligibleHome` etait
+  // `[...input.homeRosterIds]` — incluait TOUS les rosters actifs de
+  // la team, meme ceux qui n'avaient pas joue. Un joueur nouvellement
+  // achete entre la sim et le replay processing pouvait gagner le MVP
+  // (et 4 SPP) sans avoir mis un pied sur le terrain. Fix : filtrer
+  // a partir des `actorId` rencontres dans `events` (PASS passer, TD
+  // scorer, BLOCK attacker, MOVE player, etc.). Fallback : si aucun
+  // participant identifie (sim purement synthetique), on retombe sur
+  // la liste complete pour ne pas casser la determinisme du seed.
+  const participantIds = new Set<string>();
+  for (const ev of input.events) {
+    if (!ev || typeof ev !== "object") continue;
+    const e = ev as { meta?: unknown };
+    const meta = (e.meta ?? {}) as Record<string, unknown>;
+    for (const key of [
+      "playerId",
+      "passerId",
+      "receiverId",
+      "scorerId",
+      "attackerId",
+      "defenderId",
+      "actorId",
+    ]) {
+      const v = meta[key];
+      if (typeof v === "string" && v.length > 0 && !isSyntheticId(v)) {
+        participantIds.add(v);
+      }
+    }
+  }
+  const eligibleHomeAll = [...input.homeRosterIds];
+  const eligibleAwayAll = [...input.awayRosterIds];
+  const eligibleHomeFiltered = eligibleHomeAll.filter((id) =>
+    participantIds.has(id),
+  );
+  const eligibleAwayFiltered = eligibleAwayAll.filter((id) =>
+    participantIds.has(id),
+  );
+  // Si la sim n'a remonte AUCUN participant pour une team (ex: hybrid
+  // sans roster), on retombe sur la liste complete pour conserver
+  // l'attribution MVP determinste a partir du seed.
+  const eligibleHome =
+    eligibleHomeFiltered.length > 0 ? eligibleHomeFiltered : eligibleHomeAll;
+  const eligibleAway =
+    eligibleAwayFiltered.length > 0 ? eligibleAwayFiltered : eligibleAwayAll;
   const rng = mulberry32(input.seed);
-  const eligibleHome = [...input.homeRosterIds];
-  const eligibleAway = [...input.awayRosterIds];
   if (eligibleHome.length > 0) {
     const idx = Math.floor(rng() * eligibleHome.length);
     bump(eligibleHome[idx], "mvpCount");
