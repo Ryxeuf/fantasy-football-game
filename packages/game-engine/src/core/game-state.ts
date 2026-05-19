@@ -17,6 +17,7 @@ import { getWeatherCondition, type WeatherType } from './weather-types';
 import { hasSkill } from '../skills/skill-effects';
 import { collectModifiers } from '../skills/skill-registry';
 import { isSneakyGitActive } from '../skills/skill-bridge';
+import { assertSinglePending } from './pending-state';
 
 export type { PreMatchState };
 
@@ -692,6 +693,9 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         },
       };
 
+      // Audit 2026-05-19 QW ST4 : verifier qu'aucun pendingX n'a
+      // survecu au reset halftime (sinon → modal stale 2e MT).
+      assertSinglePending(resultState, 'advanceHalfIfNeeded');
       return resultState;
     } else {
       const endLog = createLogEntry(
@@ -976,6 +980,9 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     },
   };
 
+  // Audit 2026-05-19 QW ST4 : verifier qu'aucun pendingX n'a survecu
+  // au reset post-TD (bug B1 historique : pendingPushChoice persistait).
+  assertSinglePending(resultState, 'handlePostTouchdown');
   return resultState;
 }
 
