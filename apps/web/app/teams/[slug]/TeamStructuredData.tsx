@@ -2,6 +2,7 @@ import {
   buildTeamSchema,
   type BuildTeamSchemaInput,
 } from "./team-structured-data";
+import { safeJsonLd } from "../../lib/safe-json-ld";
 
 /**
  * Composant serveur emettant le JSON-LD SportsTeam + BreadcrumbList
@@ -16,7 +17,7 @@ export default function TeamStructuredData(props: BuildTeamSchemaInput) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }

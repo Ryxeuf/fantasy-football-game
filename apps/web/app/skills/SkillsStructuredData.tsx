@@ -2,6 +2,7 @@ import {
   buildSkillsSchema,
   type BuildSkillsSchemaInput,
 } from "./skills-structured-data";
+import { safeJsonLd } from "../lib/safe-json-ld";
 
 /**
  * Composant serveur emettant le JSON-LD DefinedTermSet + ItemList +
@@ -12,7 +13,7 @@ export default function SkillsStructuredData(props: BuildSkillsSchemaInput) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }

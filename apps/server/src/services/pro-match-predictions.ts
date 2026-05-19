@@ -326,21 +326,40 @@ export async function settlePredictions(
   }
 
   const now = new Date();
-  let perfect = 0;
-  let winner = 0;
-  let wrong = 0;
-
+  // BUG fix audit round 9 (HIGH) : avant, le loop d'updates etait
+  // sequentiel hors transaction. Mid-failure laissait certaines
+  // predictions scored et d'autres pending → re-run partiel ; admin
+  // correction d'outcome ne peut plus settle proprement le reste.
+  // Meme pattern que le fix round 5 sur pro-prediction-leagues.
+  // Fix : grouper par score puis 3 `updateMany` dans une seule
+  // $transaction([...]).
+  const perfectIds: string[] = [];
+  const winnerIds: string[] = [];
+  const wrongIds: string[] = [];
   for (const p of pending) {
     const score = scorePrediction(p.body, input.ctx);
-    if (score === "perfect") perfect += 1;
-    else if (score === "winner") winner += 1;
-    else wrong += 1;
-
-    await prisma.proMatchPrediction.update({
-      where: { id: p.id },
-      data: { score, scoredAt: now },
-    });
+    if (score === "perfect") perfectIds.push(p.id);
+    else if (score === "winner") winnerIds.push(p.id);
+    else wrongIds.push(p.id);
   }
+  const perfect = perfectIds.length;
+  const winner = winnerIds.length;
+  const wrong = wrongIds.length;
+
+  await prisma.$transaction([
+    prisma.proMatchPrediction.updateMany({
+      where: { id: { in: perfectIds } },
+      data: { score: "perfect", scoredAt: now },
+    }),
+    prisma.proMatchPrediction.updateMany({
+      where: { id: { in: winnerIds } },
+      data: { score: "winner", scoredAt: now },
+    }),
+    prisma.proMatchPrediction.updateMany({
+      where: { id: { in: wrongIds } },
+      data: { score: "wrong", scoredAt: now },
+    }),
+  ]);
 
   return {
     matchId: input.matchId,

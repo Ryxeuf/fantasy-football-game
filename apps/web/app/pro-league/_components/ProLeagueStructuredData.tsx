@@ -1,6 +1,7 @@
 import Script from "next/script";
 
 import { buildProLeagueSchema } from "./pro-league-schema";
+import { safeJsonLd } from "../../lib/safe-json-ld";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://nufflearena.fr";
@@ -15,7 +16,7 @@ export default function ProLeagueStructuredData(): JSX.Element {
     <Script
       id="pro-league-structured-data"
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }

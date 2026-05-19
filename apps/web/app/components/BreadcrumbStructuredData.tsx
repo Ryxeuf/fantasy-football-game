@@ -2,6 +2,7 @@ import {
   buildBreadcrumbSchema,
   type BuildBreadcrumbSchemaInput,
 } from "./breadcrumb-schema";
+import { safeJsonLd } from "../lib/safe-json-ld";
 
 /**
  * Composant serveur emettant un JSON-LD `BreadcrumbList` autonome.
@@ -18,7 +19,7 @@ export default function BreadcrumbStructuredData(
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }

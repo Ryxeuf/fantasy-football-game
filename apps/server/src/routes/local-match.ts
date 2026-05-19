@@ -138,7 +138,7 @@ router.get("/", authUser, validateQuery(localMatchListQuerySchema), async (req: 
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 9 (CRITICAL/PII) : email retire du select public.
             },
           },
           teamA: {
@@ -199,7 +199,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 9 (CRITICAL/PII) : email retire du select public.
           },
         },
         teamA: {
@@ -1147,7 +1147,7 @@ router.patch("/:id/status", authUser, validate(updateLocalMatchStatusSchema), as
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 9 (CRITICAL/PII) : email retire du select public.
           },
         },
       },
@@ -1385,7 +1385,7 @@ router.get("/share/:token", async (req, res) => {
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 9 (CRITICAL/PII) : email retire du select public.
           },
         },
         teamA: {

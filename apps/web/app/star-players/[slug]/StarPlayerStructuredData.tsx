@@ -1,4 +1,5 @@
 import { buildStarPlayerSchema, type StarPlayerInput } from "./star-player-structured-data";
+import { safeJsonLd } from "../../lib/safe-json-ld";
 
 interface StarPlayerStructuredDataProps {
   starPlayer: StarPlayerInput;
@@ -21,7 +22,7 @@ export default function StarPlayerStructuredData(
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }
