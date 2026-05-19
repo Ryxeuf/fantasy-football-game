@@ -1,3 +1,15 @@
+## [1.126.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.1...v1.126.2) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **security:** admin bet refund double-credit + Kofi token timing-safe ([#861](https://github.com/Ryxeuf/fantasy-football-game/issues/861)) ([b17fa84](https://github.com/Ryxeuf/fantasy-football-game/commit/b17fa841d4b9ec3a0178c83ac67dc579ccfaba44))
+
+
+### ♻️ Code Refactoring
+
+* **replay:** enhance layout and responsiveness of match replay components ([897535c](https://github.com/Ryxeuf/fantasy-football-game/commit/897535c6b3bd1fffe2b16b00a35dee8ccae24a9f))
+
 ## [1.126.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.0...v1.126.1) (2026-05-19)
 
 
