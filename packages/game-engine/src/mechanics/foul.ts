@@ -4,7 +4,7 @@
  */
 
 import { GameState, Player, RNG } from '../core/types';
-import { rollD6 } from '../utils/dice';
+import { rollD6, calculateArmorTarget } from '../utils/dice';
 import { isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { performInjuryRoll, handleSentOff } from './injury';
@@ -101,16 +101,23 @@ export function executeFoul(
   const { ironHardSkinActive } = getArmorSkillContext(newState, attacker, target);
   const dirtyPlayerBonus = ironHardSkinActive ? 0 : dirtyPlayerBonusRaw;
   const armorRoll = die1 + die2 + assists + dirtyPlayerBonus;
-  const armorBroken = armorRoll >= target.av;
+  // BUG fix audit round 6 (HIGH) : avant, `armorRoll >= target.av` utilisait
+  // la valeur d'armure brute → le malus Stunty (-1 AV) etait silencieusement
+  // ignore sur les fouls. Une faute contre un Halfling/Goblin/Skink utilisait
+  // AV=7 au lieu de 6. La regle BB applique Stunty a TOUS les jets d'armure,
+  // y compris les fouls. Fix : utiliser `calculateArmorTarget` qui inclut le
+  // -1 Stunty (et clamp 2-12).
+  const armorTarget = calculateArmorTarget(target, 0);
+  const armorBroken = armorRoll >= armorTarget;
 
   const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
   const dpTag = dirtyPlayerBonus > 0 ? ` [Dirty Player +${dirtyPlayerBonus}]` : '';
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure (foul): ${die1}+${die2}${assists !== 0 ? (assists > 0 ? '+' + assists : assists.toString()) : ''}${dpTag}${ihsTag} = ${armorRoll}/${target.av} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}`,
+    `Jet d'armure (foul): ${die1}+${die2}${assists !== 0 ? (assists > 0 ? '+' + assists : assists.toString()) : ''}${dpTag}${ihsTag} = ${armorRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}`,
     target.id,
     target.team,
-    { die1, die2, assists, total: armorRoll, target: target.av, ironHardSkin: ironHardSkinActive }
+    { die1, die2, assists, total: armorRoll, target: armorTarget, ironHardSkin: ironHardSkinActive }
   );
   newState.gameLog = [...newState.gameLog, armorLog];
 

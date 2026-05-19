@@ -104,8 +104,18 @@ export function applyWeatherDriveEffects(
     );
     const toReserve = Math.min(d3, activePlayers.length);
 
-    // Choisir aléatoirement
-    const shuffled = [...activePlayers].sort(() => rng() - 0.5);
+    // BUG fix audit round 6 (CRITICAL/determinisme) : avant,
+    // `activePlayers.sort(() => rng() - 0.5)` etait l'anti-pattern
+    // V8-dependent biased-sort. Le comparateur non-transitif rend
+    // l'ordre (a) statistiquement biaise et (b) implementation-defined.
+    // Si V8 change son algorithme de tri, les replays divergent meme
+    // pour la meme seed → casse la determinisme cross-runtimes.
+    // Fix : Fisher-Yates shuffle pure piloted par rng().
+    const shuffled = [...activePlayers];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rng() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     for (let i = 0; i < toReserve; i++) {
       const player = shuffled[i];
       const idx = newState.players.findIndex(p => p.id === player.id);

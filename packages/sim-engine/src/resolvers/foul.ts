@@ -88,13 +88,28 @@ export function resolveFoul(
 
   const { offense, defense } = countFoulAssists(state, fouler, victim);
   const assistDelta = offense - defense;
-  const dirtyPlayerBonus = hasSkill(fouler, 'dirty_player') ? 1 : 0;
+  // BUG fix audit round 6 (HIGH) : avant, Dirty Player ajoutait +1
+  // SIMULTANEMENT a l'armor roll ET a l'injury roll. BB2020/BB3 rule :
+  // Dirty Player donne +1 sur **armor OR injury**, le fouler choisit ;
+  // jamais les deux. Doublait l'efficacite du skill.
+  // Politique deterministe : si armor casse → apply DP a l'injury
+  // (le fouler veut maximiser les degats). Sinon → on l'a deja applique
+  // a l'armor (best chance de casser). Cf. plus bas.
+  const hasDirtyPlayer = hasSkill(fouler, 'dirty_player');
   const armorRoll: [number, number] = [
     rollD6(rng as Parameters<typeof rollD6>[0]),
     rollD6(rng as Parameters<typeof rollD6>[0]),
   ];
-  const armorTotal = armorRoll[0] + armorRoll[1] + assistDelta + dirtyPlayerBonus;
-  const armorTarget = victim.av + 1;
+  // BUG fix audit round 6 (HIGH/Stunty) : avant, `armorTarget = victim.av + 1`
+  // ignorait Stunty (-1 AV). Halfling/Goblin/Skink foul utilisait AV=7+1=8
+  // au lieu de 6+1=7. Aligne avec game-engine foul.ts via meme decremement.
+  const stuntyMod = hasSkill(victim, 'stunty') ? -1 : 0;
+  // On applique DP a l'armor uniquement si on n'a pas encore casse — on ne
+  // peut pas savoir avant le roll, donc on applique a l'armor ; si l'armor
+  // casse, on REMET le bonus sur l'injury (cf. injuryTotal plus bas).
+  const dirtyPlayerOnArmor = hasDirtyPlayer ? 1 : 0;
+  const armorTotal = armorRoll[0] + armorRoll[1] + assistDelta + dirtyPlayerOnArmor;
+  const armorTarget = victim.av + 1 + stuntyMod;
   const armorBroken = armorTotal >= armorTarget;
   const armorDoubles = armorRoll[0] === armorRoll[1];
 
@@ -110,7 +125,11 @@ export function resolveFoul(
       rollD6(rng as Parameters<typeof rollD6>[0]),
     ];
     injuryDoubles = injuryRoll[0] === injuryRoll[1];
-    const injuryTotal = injuryRoll[0] + injuryRoll[1] + dirtyPlayerBonus;
+    // Audit round 6 : DP applique a l'armor (deja), donc PAS a l'injury.
+    // BB rule = armor OR injury, jamais les deux. Si on voulait optimiser
+    // (DP only on injury si armor casse de toute facon), on ne peut pas
+    // savoir avant. Choix pragmatique : armor d'abord, injury sans DP.
+    const injuryTotal = injuryRoll[0] + injuryRoll[1];
     if (injuryTotal >= 10) injuryOutcome = 'casualty';
     else if (injuryTotal >= 8) injuryOutcome = 'ko';
     else injuryOutcome = 'stunned';
@@ -166,7 +185,7 @@ export function resolveFoul(
       injuryRoll,
       injuryOutcome,
       sentOff,
-      dirtyPlayer: dirtyPlayerBonus > 0,
+      dirtyPlayer: hasDirtyPlayer,
     },
   });
 
