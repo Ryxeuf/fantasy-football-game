@@ -14,8 +14,8 @@ enum Ruleset {
 }
 
 model User {
-  id                          String                  @id @default(cuid())
-  email                       String                  @unique
+  id                          String                      @id @default(cuid())
+  email                       String                      @unique
   passwordHash                String
   name                        String? // Conservé pour rétrocompatibilité
   coachName                   String // Nom de coach (obligatoire)
@@ -23,19 +23,19 @@ model User {
   lastName                    String? // Nom (optionnel)
   dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                        String                  @default("user")
+  role                        String                      @default("user")
   /// Liste complète des rôles (ex: ["user","admin"])
-  roles                       String[]                @default([])
+  roles                       String[]                    @default([])
   /// Override manuel admin (cadeau, etc.). Conservé pour compatibilité.
   /// Le statut de supporter réel se lit via supporterActiveUntil.
-  patreon                     Boolean                 @default(false)
+  patreon                     Boolean                     @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
   /// Format : "KFI-XXXXXX" (base32 Crockford).
-  kofiLinkCode                String?                 @unique
+  kofiLinkCode                String?                     @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi : si Ko-fi expose discord_userid et qu'il correspond, on
   /// rattache le don automatiquement).
-  discordUserId               String?                 @unique
+  discordUserId               String?                     @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif. null = pas d'abo.
   supporterTier               String?
   /// Fin de la période de supporter payée. null ou < now() = pas actif.
@@ -43,17 +43,17 @@ model User {
   /// Total des dons par devise, en centimes. Map ISO currency → centimes.
   /// Pas de conversion : chaque devise reste indépendante (USD ≠ EUR).
   /// Exemple : {"USD": 300, "EUR": 1000}.
-  totalDonatedCentsByCurrency Json                    @default("{}")
+  totalDonatedCentsByCurrency Json                        @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// `true` = profil retire de la lookup publique et du sitemap.
-  privateProfile              Boolean                 @default(false)
+  privateProfile              Boolean                     @default(false)
   /// Sprint R lot R.D.3 — NAF (Naffinity Federation) opt-in pour
   /// afficher les tournois IRL sur le profil coach. Identifiant NAF
   /// renseigne par le user (case-sensitive, ex: "Ryxeuf"). null = pas
   /// d'opt-in. Le service `naf-sync.ts` fetch les resultats via NAF API
   /// quand `naf_integration` flag est ON.
   nafName                     String?
-  valid                       Boolean                 @default(false)
+  valid                       Boolean                     @default(false)
   /// Lot P.B.4 — moderation. Date de debut du dernier bannissement. null = jamais banni.
   bannedAt                    DateTime?
   /// Lot P.B.4 — fin du bannissement. Si > now() le user ne peut pas se logger.
@@ -65,7 +65,7 @@ model User {
   /// changer son mot de passe a la prochaine connexion. Mis a true par
   /// `POST /admin/users/:id/password-reset` ; remis a false des qu'un
   /// password change reussit (handler /auth/change-password).
-  mustChangePassword          Boolean                 @default(false)
+  mustChangePassword          Boolean                     @default(false)
   /// Lot P.A.2 — soft-delete RGPD-compatible. Quand non-null, le compte
   /// est considere supprime : login refuse, profil public masque, mais
   /// les references foreign-key (audit log, replays, classements) sont
@@ -83,7 +83,7 @@ model User {
   /// ELO / historique ELO sur `/coach/{slug}` ; un badge "Non classe"
   /// s'affiche en remplacement. Modifiable uniquement par un admin
   /// via PATCH /admin/users/:id/leaderboard-status.
-  leaderboardStatus           String                  @default("visible")
+  leaderboardStatus           String                      @default("visible")
   /// Note admin libre (max 500 chars) sur le motif de masquage. Visible
   /// admin uniquement, sert d'audit interne.
   leaderboardStatusReason     String?
@@ -91,21 +91,21 @@ model User {
   leaderboardStatusUpdatedAt  DateTime?
   /// userId de l'admin auteur du dernier changement de statut.
   leaderboardStatusUpdatedBy  String?
-  createdAt                   DateTime                @default(now())
-  updatedAt                   DateTime                @updatedAt
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
   matches                     Match[]
-  createdMatches              Match[]                 @relation("MatchCreator")
+  createdMatches              Match[]                     @relation("MatchCreator")
   teams                       Team[]
   teamSelections              TeamSelection[]
-  createdCups                 Cup[]                   @relation("CupCreator")
-  createdLeagues              League[]                @relation("LeagueCreator")
-  createdLocalMatches         LocalMatch[]            @relation("LocalMatchCreator")
-  eloRating                   Int                     @default(1000) // ELO rating for ranked matchmaking
+  createdCups                 Cup[]                       @relation("CupCreator")
+  createdLeagues              League[]                    @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]                @relation("LocalMatchCreator")
+  eloRating                   Int                         @default(1000) // ELO rating for ranked matchmaking
   matchQueue                  MatchQueue?
   notificationPreference      NotificationPreference?
   featureFlagOverrides        FeatureFlagUser[]
-  friendshipsSent             Friendship[]            @relation("FriendshipRequester")
-  friendshipsReceived         Friendship[]            @relation("FriendshipReceiver")
+  friendshipsSent             Friendship[]                @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]                @relation("FriendshipReceiver")
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
@@ -125,7 +125,7 @@ model User {
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
-  blogPosts                   BlogPost[]              @relation("BlogPostAuthor")
+  blogPosts                   BlogPost[]                  @relation("BlogPostAuthor")
 
   @@index([leaderboardStatus])
 }
@@ -274,11 +274,11 @@ model FeatureFlagUser {
 }
 
 model Match {
-  id                String          @id @default(cuid())
-  createdAt         DateTime        @default(now())
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
   status            String
   seed              String
-  creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
+  creator           User?     @relation("MatchCreator", fields: [creatorId], references: [id])
   creatorId         String?
   currentTurnUserId String? // Qui doit jouer actuellement
   lastMoveAt        DateTime? // Dernière action de jeu
@@ -287,17 +287,17 @@ model Match {
   /// En mode async, pas de socket required : chaque coup est commit via
   /// REST `POST /match/:id/move`, et un cron deadline check force-end-turn
   /// si l'utilisateur ne joue pas dans le delai imparti.
-  mode              String          @default("realtime")
+  mode                String          @default("realtime")
   /// Sprint R lot R.E.1 — deadline pour le tour courant en mode async.
   /// Set par le hook move-processor a chaque move applique. null en mode
   /// realtime ou si le match n'est pas active.
   currentTurnDeadline DateTime?
   /// Sprint R lot R.E.1 — duree par tour en heures (default 24h). Permet
   /// aux ligues async de configurer leur rythme (12h speedrun vs 48h slow).
-  turnDeadlineHours   Int           @default(24)
-  players           User[]
-  turns             Turn[]
-  teamSelections    TeamSelection[]
+  turnDeadlineHours   Int             @default(24)
+  players             User[]
+  turns               Turn[]
+  teamSelections      TeamSelection[]
 
   /// Lot P.B.4 — moderation. Date a laquelle un admin a force un forfait. null = pas de forfait.
   forfeitedAt       DateTime?
@@ -856,24 +856,24 @@ model NotificationPreference {
 // Une League est le conteneur persistant. Chaque edition concrete
 // est une LeagueSeason (round-robin, playoffs...).
 model League {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  creator         User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId       String
-  ruleset         Ruleset  @default(season_3)
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  ruleset           Ruleset  @default(season_3)
   // "draft" | "open" | "in_progress" | "completed" | "archived"
-  status          String   @default("draft")
-  isPublic        Boolean  @default(true)
-  maxParticipants Int      @default(16)
+  status            String   @default("draft")
+  isPublic          Boolean  @default(true)
+  maxParticipants   Int      @default(16)
   // JSON array de slugs de rosters autorises. null = tous rosters autorises.
   // Ex: ["skaven","gnomes","lizardmen","dwarf","imperial_nobility"]
   // pour la ligue L.9 "Open 5 Teams".
-  allowedRosters  String?
-  winPoints       Int      @default(3)
-  drawPoints      Int      @default(1)
-  lossPoints      Int      @default(0)
-  forfeitPoints   Int      @default(-1)
+  allowedRosters    String?
+  winPoints         Int      @default(3)
+  drawPoints        Int      @default(1)
+  lossPoints        Int      @default(0)
+  forfeitPoints     Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable. JSON array de slugs
   // parmi : "points" / "td_diff" / "td_for" / "td_against" /
   // "cas_diff" / "cas_for" / "season_elo" / "wins" / "name".
@@ -883,7 +883,7 @@ model League {
   // important). Tous les slugs sauf "name" supportent reverse
   // (false = DESC, default ; pas exprimable dans le JSON pour
   // l'instant — toujours DESC sauf "name" qui est ASC).
-  tieBreakRules   String?
+  tieBreakRules     String?
   /// Sprint R lot R.E.3 — mode de jeu propage aux matches crees pour
   /// cette ligue. "realtime" (defaut) | "async" (1 coup par jour).
   /// Modifiable via PATCH /admin/leagues/:id/match-mode tant que la
@@ -892,8 +892,8 @@ model League {
   /// Sprint R lot R.E.3 — duree par tour en heures pour les matches
   /// async de cette ligue. 1-168h (default 24h).
   turnDeadlineHours Int      @default(24)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   seasons LeagueSeason[]
 
@@ -1338,15 +1338,15 @@ model ProTeamRoster {
 /// Une saison instancie une ProLeague pour une annee donnee. engineVer
 /// est gele a la creation pour garantir replay-determinisme.
 model ProLeagueSeason {
-  id        String    @id @default(cuid())
-  league    ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId  String
-  year      Int
+  id         String    @id @default(cuid())
+  league     ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId   String
+  year       Int
   /// Status : "scheduled" | "in_progress" | "completed" | "archived".
-  status    String    @default("scheduled")
+  status     String    @default("scheduled")
   /// engineVer pinne a la creation. Tous les matches de cette saison
   /// utilisent cette version pour la deterministe replay (lot 1.A.5).
-  engineVer String
+  engineVer  String
   /// Lot 3.B.1 — driver de simulation par defaut pour la saison.
   /// "hybrid" = synthese archetype-vs-archetype (lot 0.A.2, default).
   /// "full"   = auto-play game-engine roster-aware (lot 3.A.2).
@@ -1368,9 +1368,9 @@ model ProLeagueSeason {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  rounds         ProLeagueRound[]
-  matches        ProLeagueMatch[]
-  standings      ProLeagueStandings[]
+  rounds          ProLeagueRound[]
+  matches         ProLeagueMatch[]
+  standings       ProLeagueStandings[]
   survivorEntries ProSurvivorEntry[]
 
   @@unique([leagueId, year])
@@ -1395,7 +1395,7 @@ model ProLeagueRound {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  matches        ProLeagueMatch[]
+  matches         ProLeagueMatch[]
   survivorEntries ProSurvivorEntry[]
 
   @@unique([seasonId, roundNumber])
@@ -1457,10 +1457,10 @@ model ProLeagueMatch {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  betMarkets       ProBetMarket[]
-  predictionPicks  ProPredictionPick[]
-  mvpVotes         ProPlayerOfMatchVote[]
-  fanPredictions   ProMatchPrediction[]
+  betMarkets      ProBetMarket[]
+  predictionPicks ProPredictionPick[]
+  mvpVotes        ProPlayerOfMatchVote[]
+  fanPredictions  ProMatchPrediction[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1761,7 +1761,7 @@ model ProGazetteArticle {
 /// roster d'origine peut disparaitre via cleanup futur). Idempotence
 /// par `unique([rosterId, reason])`.
 model ProHallOfFame {
-  id          String   @id @default(cuid())
+  id          String                    @id @default(cuid())
   /// Lien vers le roster d'origine (peut etre supprime a terme — ne
   /// pas cascade pour preserver l'archive Hall of Fame).
   rosterId    String
@@ -1790,7 +1790,7 @@ model ProHallOfFame {
   reason      String
   /// Description humaine optionnelle (pour rendu UI).
   citation    String?
-  inductedAt  DateTime @default(now())
+  inductedAt  DateTime                  @default(now())
   /// Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
   dedications ProHallOfFameDedication[]
 
@@ -1836,23 +1836,23 @@ model ProHallOfFameDedication {
 /// le service refuse les inscriptions suivantes (sans changer le
 /// status — l'admin decide quand fermer).
 model ProTournament {
-  id              String                @id @default(cuid())
+  id             String               @id @default(cuid())
   /// Slug stable URL-safe (ex: "winter-cup-2026"). Unique.
-  slug            String                @unique
-  name            String
-  description     String?
+  slug           String               @unique
+  name           String
+  description    String?
   /// Crowns requis pour s'inscrire (debit unique au moment de l'entry).
-  entryFeeCrowns  Int                   @default(100)
+  entryFeeCrowns Int                  @default(100)
   /// Cap optionnel d'inscriptions. null = illimite.
-  maxEntries      Int?
+  maxEntries     Int?
   /// "open" | "closed" | "in_progress" | "completed".
-  status          String                @default("open")
+  status         String               @default("open")
   /// Dates indicatives (UI). Pas de logique business derivee.
-  startsAt        DateTime?
-  endsAt          DateTime?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  entries         ProTournamentEntry[]
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  entries        ProTournamentEntry[]
 
   @@index([status, createdAt])
 }
@@ -1927,39 +1927,39 @@ model AuditLog {
 /// gauges `nuffle_engine_compare_*` sont mises a jour par le meme
 /// service au moment de la persistence.
 model EngineComparison {
-  id          String   @id @default(cuid())
+  id                  String   @id @default(cuid())
   /// engineVer pour lequel la comparaison a ete lancee (les deux
   /// drivers utilisent forcement la meme version a un instant T).
-  engineVer   String
+  engineVer           String
   /// Slug de l'equipe a domicile (ex: 'pit-smashers'). Pas de FK car
   /// le comparator peut etre lance sur des profils PRO_LEAGUE_TEAMS qui
   /// existent uniquement dans le code, pas en DB (ex: bench dev).
-  homeTeamId  String
+  homeTeamId          String
   /// Slug de l'equipe a l'exterieur.
-  awayTeamId  String
+  awayTeamId          String
   /// Nombre de matchs simulés dans cette comparaison.
-  matches     Int
+  matches             Int
   /// Seed offset utilisé (premier seed = `seedOffset`, dernier = `seedOffset + matches - 1`).
-  seedOffset  Int
+  seedOffset          Int
   /// scoreTotal — moyenne du delta absolu home+away.
-  meanScoreDelta   Float
+  meanScoreDelta      Float
   /// scoreTotal — p95 du delta absolu (Prometheus gauge).
-  p95ScoreDelta    Float
+  p95ScoreDelta       Float
   /// scoreTotal — max du delta absolu (worst-case audit).
-  maxScoreDelta    Float
+  maxScoreDelta       Float
   /// turnoverCount — moyenne du delta.
-  meanTurnoverDelta Float
+  meanTurnoverDelta   Float
   /// touchdownCount — moyenne du delta.
-  meanTouchdownDelta Float
+  meanTouchdownDelta  Float
   /// casualtyCount — moyenne du delta.
-  meanCasualtyDelta Float
+  meanCasualtyDelta   Float
   /// Nombre de matchs avec outcome flip (home<->away ou draw shift).
   outcomeFlippedCount Int
   /// Pct (0..1) de matchs avec scoreTotal>0 OR outcomeChanged.
-  divergedPct      Float
+  divergedPct         Float
   /// Source d'invocation : 'cli' | 'admin' (provenance audit).
-  source     String   @default("admin")
-  createdAt  DateTime @default(now())
+  source              String   @default("admin")
+  createdAt           DateTime @default(now())
 
   @@index([engineVer, createdAt])
   @@index([homeTeamId, awayTeamId, createdAt])
@@ -1997,12 +1997,12 @@ model ProPredictionLeague {
 /// fois par ligue. La presence du record = appartenance ; le retrait
 /// efface le record.
 model ProPredictionLeagueMember {
-  id        String              @id @default(cuid())
-  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId  String
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  joinedAt  DateTime            @default(now())
+  id       String              @id @default(cuid())
+  league   ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId String
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime            @default(now())
 
   @@unique([leagueId, userId])
   @@index([userId])
@@ -2058,27 +2058,27 @@ model ProPredictionPick {
 ///     roundId`).
 ///   - Le dernier alive (ou tous les alive a la fin) gagne.
 model ProSurvivorEntry {
-  id            String          @id @default(cuid())
-  season        ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId      String
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  round         ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId       String
+  id           String          @id @default(cuid())
+  season       ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId     String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  round        ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId      String
   /// Mirroir de `round.roundNumber` materialise pour le tri/affichage.
-  weekN         Int
-  pickedTeam    ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
-  pickedTeamId  String
+  weekN        Int
+  pickedTeam   ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
+  pickedTeamId String
   /// "pending" tant que le round n'est pas completed. Apres : "alive"
   /// (equipe a gagne) ou "eliminated" (perdu ou nul).
-  status        String          @default("pending")
+  status       String          @default("pending")
   /// Resultat du match correspondant : "win" | "loss" | "draw". Set au
   /// settlement (en meme temps que `status`).
-  result        String?
+  result       String?
   /// Reference au match settle (pour faciliter le replay UI).
-  matchId       String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  matchId      String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   /// 1 pick par (user, round) — un user ne peut piquer qu'une fois
   /// par semaine.
@@ -2104,43 +2104,43 @@ model ProSurvivorEntry {
 ///   - currentStreak : longueur du streak en cours (kind + length)
 ///   - matchesPlayed : count des matchs avec status completed
 model ProPlayerCareerSnapshot {
-  id               String        @id @default(cuid())
-  player           ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId         String        @unique
-  matchesPlayed    Int           @default(0)
-  tdTotal          Int           @default(0)
-  casTotal         Int           @default(0)
-  compTotal        Int           @default(0)
-  mvpTotal         Int           @default(0)
-  sppTotal         Int           @default(0)
-  bestMatchId      String?
-  bestMatchSpp     Int?
-  worstMatchId     String?
-  worstMatchSpp    Int?
-  topNemesisTeamId String?
-  topVictoryTeamId String?
+  id                 String        @id @default(cuid())
+  player             ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId           String        @unique
+  matchesPlayed      Int           @default(0)
+  tdTotal            Int           @default(0)
+  casTotal           Int           @default(0)
+  compTotal          Int           @default(0)
+  mvpTotal           Int           @default(0)
+  sppTotal           Int           @default(0)
+  bestMatchId        String?
+  bestMatchSpp       Int?
+  worstMatchId       String?
+  worstMatchSpp      Int?
+  topNemesisTeamId   String?
+  topVictoryTeamId   String?
   /// Lot Q.A.2 — top 5 matches par totalSpp (desc). Stocke en JSON
   /// pour eviter une jointure : `[{ matchId, sppTotal }, ...]`.
-  topMatchesJson   Json?
+  topMatchesJson     Json?
   /// Lot Q.A.2 — top 3 teams nemesis (most loss vs). JSON array de
   /// team ids ordonne par count desc.
-  topNemesisIdsJson Json?
+  topNemesisIdsJson  Json?
   /// Lot Q.A.2 — top 3 teams souffre-douleur (most win vs).
-  topVictoryIdsJson Json?
+  topVictoryIdsJson  Json?
   /// Lot Q.A.2 — count casualties subies (CASUALTY events ou le
   /// playerId == this.player.id).
-  casualtiesReceived Int          @default(0)
+  casualtiesReceived Int           @default(0)
   /// Lot Q.A.2 — count casualties infligees (alias semantique de
   /// `casTotal` pour clarte UI).
-  casualtiesDealt   Int           @default(0)
+  casualtiesDealt    Int           @default(0)
   /// "win" | "loss" | "draw" | "none" — direction du streak en cours.
-  streakKind       String        @default("none")
+  streakKind         String        @default("none")
   /// Longueur du streak (>= 0).
-  streakLength     Int           @default(0)
+  streakLength       Int           @default(0)
   /// Timestamp du dernier compute. Sert au staleness check.
-  recomputedAt     DateTime      @default(now())
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  recomputedAt       DateTime      @default(now())
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@index([recomputedAt])
 }
@@ -2179,22 +2179,22 @@ model ProPlayerOfMatchVote {
 /// Pour le MVP, pas de Perspective API : blocklist hardcodee dans le
 /// service. Etend en lot subsequent si volume justifie.
 model ProGazetteComment {
-  id              String            @id @default(cuid())
-  article         ProGazetteArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  articleId       String
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
+  id         String            @id @default(cuid())
+  article    ProGazetteArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId  String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
   /// Max 500 chars (verifie cote service).
-  body            String            @db.Text
+  body       String            @db.Text
   /// Soft delete : si set, le commentaire n'est plus visible.
-  deletedAt       DateTime?
+  deletedAt  DateTime?
   /// Si set, commentaire flagged (auto-blocklist ou report). Masque
   /// pour les autres users.
-  flaggedAt       DateTime?
+  flaggedAt  DateTime?
   /// Raison du flag (ex: "blocklist:slur", "admin:spam", "user:report").
-  flagReason      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  flagReason String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
   @@index([articleId, createdAt])
   @@index([userId, createdAt])
@@ -2216,19 +2216,19 @@ model ProGazetteComment {
 /// Le badge 'seer' est attribue (en lot subsequent) aux users qui
 /// accumulent N predictions 'perfect'/semaine.
 model ProMatchPrediction {
-  id              String         @id @default(cuid())
-  match           ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId         String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
   /// Texte libre, max 200 chars.
-  body            String
+  body      String
   /// "perfect" | "winner" | "wrong" — null tant que match pas settle.
-  score           String?
+  score     String?
   /// Settled timestamp.
-  scoredAt        DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  scoredAt  DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   /// 1 prediction par user par match.
   @@unique([matchId, userId])
@@ -2250,29 +2250,209 @@ model ProMatchPrediction {
 /// published). Réversible : repasser en draft conserve publishedAt pour
 /// l'historique mais cache l'article.
 model BlogPost {
-  id           String    @id @default(cuid())
+  id            String    @id @default(cuid())
   /// Slug URL-safe unique (ex: "lancement-saison-2025"). Sert de route
   /// publique `/blog/<slug>`.
-  slug         String    @unique
-  title        String
+  slug          String    @unique
+  title         String
   /// Résumé court (max ~280 chars) pour les listings et meta description.
-  excerpt      String?
+  excerpt       String?
   /// HTML sanitizé côté serveur via sanitize-html (allowlist stricte).
-  contentHtml  String
+  contentHtml   String
   /// URL absolue ou path `/images/...` pour la cover. Optionnelle.
   coverImageUrl String?
   /// "draft" | "published". Seuls les "published" sont exposés publiquement.
-  status       String    @default("draft")
+  status        String    @default("draft")
   /// Date de publication initiale (set côté serveur quand status devient
   /// "published" pour la première fois). Sert au tri public et à l'OG date.
-  publishedAt  DateTime?
+  publishedAt   DateTime?
   /// Auteur (lien vers User pour audit + affichage). Préservé même si user
   /// supprimé : SetNull plutôt que Cascade.
-  author       User?     @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  authorId     String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  author        User?     @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorId      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([status, publishedAt])
   @@index([authorId])
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// NFL Fantasy module — Phase 1.E
+// Source : docs/nfl-fantasy/10-architecture.md § "Schéma Prisma"
+// Décisions appliquées :
+//   - Q5 : race fixe par équipe (NflPlayer.bbRace dérivé via NflTeam,
+//          pas de champ archetype en V1)
+//   - Q6 : silos séparés Pro League — modèles NflXxx indépendants
+//          des Pro* / Match (pas de FK cross-module)
+//   - Q8 : pseudonymisation full + flag DB realNameDisplay sur NflPlayer
+// ─────────────────────────────────────────────────────────────────────
+
+model NflSeason {
+  /// ID de saison NFL au format "{yearStart}" (ex: "2025" pour la saison 2025-26).
+  id        String   @id
+  startDate DateTime
+  endDate   DateTime
+  /// "upcoming" | "in_progress" | "completed"
+  status    String
+
+  weeks   NflWeek[]
+  games   NflGame[]
+  rosters NflRosterSnapshot[]
+}
+
+model NflWeek {
+  /// ID au format "{seasonId}:W{weekNumber}" (ex: "2025:W10").
+  id         String   @id
+  seasonId   String
+  /// 1-18 regular season + 19-22 post-season (Wildcard=19, Div=20, Conf=21, SB=22).
+  /// Note POC: nflverse utilise 19-22 continu, ESPN reset à 1 en post-season
+  /// (Wildcard=1, SB=5, Pro Bowl=4 skip). Mapping géré dans nfl-ingest.ts.
+  weekNumber Int
+  startDate  DateTime
+  endDate    DateTime
+  isPlayoffs Boolean  @default(false)
+
+  season NflSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  games  NflGame[]
+
+  @@unique([seasonId, weekNumber])
+  @@index([seasonId, weekNumber])
+}
+
+model NflTeam {
+  /// Code NFL standard (ex: "KC", "MIA", "NYG"). Aligné avec
+  /// data/teams.json de @bb/nfl-mapper et avec le champ `team` du CSV nflverse.
+  code      String @id
+  /// Ville pseudonymisée (cf. Q8 + docs/nfl-fantasy/01-legal.md).
+  /// Ex: "Kansas City", "Los Angeles (R)", "New York (G)".
+  city      String
+  /// Race BB attribuée (Q5 fixe par équipe). Valeurs alignées avec BbRace
+  /// de @bb/nfl-mapper : Skaven | WoodElf | Orc | Human | Norse | Dwarf |
+  /// Khorne | Necromantic.
+  bbRace    String
+  /// Label public utilisé en UI (ex: "Kansas City Skaven").
+  raceLabel String
+
+  homeGames NflGame[]   @relation("NflHomeTeam")
+  awayGames NflGame[]   @relation("NflAwayTeam")
+  players   NflPlayer[]
+}
+
+model NflPlayer {
+  /// ID stable joueur. Source de vérité = nflverse `player_id` (alias
+  /// gsis_id, format "00-0033873"). Standard NFL officiel.
+  id String @id
+
+  /// PRIVÉ — jamais exposé publiquement en V1 (Q8 pseudonymisation full).
+  /// Conservé pour mapping interne et upgrade futur si licence NIL/NFLPA.
+  realName String
+
+  /// Pseudonyme public (cf. @bb/nfl-mapper generatePseudonym).
+  /// Ex: "Le Sidearm Wizard de Kansas City, #15".
+  pseudonym String
+
+  /// Q8 flag : false en V1 (pseudo full). Bascule à true par joueur
+  /// uniquement si licence individuelle obtenue (deal NIL ou NFLPA GLA).
+  /// Permet le pivot futur sans migration lourde.
+  realNameDisplay Boolean @default(false)
+
+  /// Code équipe NFL actuel (peut être null si FA / retired).
+  teamCode     String?
+  jerseyNumber Int?
+  /// Position NFL d'origine (QB/RB/WR/TE/OL/DT/DE/LB/CB/S/...).
+  nflPosition  String
+  /// Position BB dérivée via getBbPosition(nflPosition, race).
+  bbPosition   String
+  /// Stats BB { ma, st, ag, pa, av }. Format JSON pour flexibilité V2.
+  bbStats      Json
+  /// Skills BB (string[]). Format JSON.
+  bbSkills     Json
+  /// "active" | "ir" | "retired" | "suspended"
+  status       String    @default("active")
+  retiredAt    DateTime?
+
+  team      NflTeam?      @relation(fields: [teamCode], references: [code], onDelete: SetNull)
+  gameStats NflGameStat[]
+
+  @@index([teamCode, bbPosition])
+  @@index([status])
+}
+
+model NflGame {
+  /// nflverse game_id.
+  id        String   @id
+  seasonId  String
+  weekId    String
+  homeTeam  String
+  awayTeam  String
+  homeScore Int?
+  awayScore Int?
+  kickoffAt DateTime
+  /// "scheduled" | "in_progress" | "final"
+  status    String
+
+  season NflSeason     @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  week   NflWeek       @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  home   NflTeam       @relation("NflHomeTeam", fields: [homeTeam], references: [code])
+  away   NflTeam       @relation("NflAwayTeam", fields: [awayTeam], references: [code])
+  stats  NflGameStat[]
+
+  @@index([weekId])
+  @@index([seasonId, kickoffAt])
+}
+
+model NflGameStat {
+  id String @id @default(cuid())
+
+  gameId   String
+  playerId String
+
+  /// Stats brutes (toutes colonnes nflverse pertinentes). Format JSON pour
+  /// supporter les évolutions du payload upstream.
+  rawStats Json
+
+  /// SPP calculé via @bb/nfl-mapper computeSpp(). Null si pas encore settle.
+  computedSpp Int?
+
+  /// Détail des events SPP (SppEvent[]). JSON pour audit Gazette.
+  sppBreakdown Json?
+
+  /// "nflverse" | "espn" | "manual"
+  ingestSource String
+  ingestedAt   DateTime @default(now())
+
+  game   NflGame   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player NflPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, playerId])
+  @@index([playerId])
+}
+
+model NflRosterSnapshot {
+  id         String   @id @default(cuid())
+  seasonId   String
+  teamCode   String
+  snapshotAt DateTime @default(now())
+  /// Liste joueurs au format JSON : [{ id, jersey, pos, bbPos, ... }]
+  roster     Json
+
+  season NflSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@index([seasonId, teamCode])
+}
+
+model NflIngestRun {
+  id          String    @id @default(cuid())
+  /// "nflverse" | "espn"
+  source      String
+  weekId      String?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  /// "success" | "partial" | "failed"
+  status      String
+  /// { gamesUpdated, playersUpdated, errors: [...] }
+  result      Json
+
+  @@index([source, startedAt])
 }
