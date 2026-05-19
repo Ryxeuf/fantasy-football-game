@@ -64,6 +64,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.3 | Schéma Prisma 10-architecture.md : ajout `realNameDisplay` Bool (Q8), retrait `archetype` Json + fichier `archetype.ts` (V2, Q5 race fixe par équipe) |
 | 2026-05-19 | v1.4 | 03-api-strategy.md : correctif tag nflverse (`stats_player` ≥ 2025), correction MSF (free non-commercial uniquement), ajout Tier 1.5 Tank01 + V1.5 cost ($120/an), ajout Sleeper + Odds API + SDX, avertissements ToS (Sofascore, DK/FD WS, SerpAPI), refs repos ESPN (pseudo-r/Public-ESPN-API, mkreiser/ESPN-Fantasy-Football-API), POC findings W10 2025 |
 | 2026-05-19 | v1.5 | 03-api-strategy.md gotchas: POC validé sur W1/W10/W18 2025 (testé sur 3 weeks). ESPN `?dates` filtre par ET local (TNF→Thu), summary 18/19 keys variable, season sous `leagues[0]`. nflverse: 1 CSV/saison cache-friendly, filter aussi `season_type`, position_group peut être vide. |
+| 2026-05-19 | v1.6 | 03-api-strategy.md edge cases playoffs + intl : POC éprouvé sur Friday Sao Paulo (KC@LAC), Wildcard W19 (LAR@CAR, BUF@JAX, SF@PHI), Super Bowl LX (SEA 29 @ NE 13). Bug ESPN découvert : `leagues[0].season.type` figé à `reg` même en playoffs ; source de vérité = `event.season.slug=post-season`. Numérotation post-season ESPN : Wildcard=1, Div=2, Conf=3, SB=5 (skip 4=Pro Bowl). Mapping nflverse W19-22 ↔ ESPN post-season W1-5 documenté. |
 
 ## Source de cette session
 

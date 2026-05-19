@@ -54,7 +54,7 @@
 - Scoring users tranquillement le lundi
 - Source de vérité pour rosters + stats annuelles
 
-**POC validé** : 963 rows W10 / 1071 rows W1 / 1067 rows W18 (saison 2025), 19421 rows toute la saison, toutes les positions BB cibles présentes (cf. `scripts/nfl-poc/`).
+**POC validé** : 963 rows W10 / 1071 rows W1 / 1067 rows W18 / 398 rows W19 (Wildcard) / 280 W20 (Divisional) / 137 W21 (Conf) / 67 W22 (SB) sur la saison 2025. Total 19421 rows. Toutes les positions BB cibles présentes (cf. `scripts/nfl-poc/`).
 
 **Gotchas découverts au POC** :
 - 1 CSV unifié couvre toute la saison → un seul fetch + cache local suffit pour tous les weeks (très friendly côté ingestion)
@@ -62,6 +62,11 @@
 - Toujours filtrer aussi `season_type` (`REG` / `POST` / `PRE`) pour ne pas mixer preseason quand on settle un weekend
 - 1 row avec `position_group` vide observée sur W10 (joueur sans poste assigné, edge case à logger sans crasher)
 - Format `.qs` / `.rds` à ignorer côté ingestion JS (R-specific) ; choisir `.csv` ou `.parquet`
+- **Mapping playoffs nflverse ↔ ESPN** (cf. section ESPN ci-dessous) :
+  - nflverse W19 (POST) = ESPN post-season `week.number=1` = **Wildcard** (6 games)
+  - nflverse W20 (POST) = ESPN post-season `week.number=2` = **Divisional** (4 games)
+  - nflverse W21 (POST) = ESPN post-season `week.number=3` = **Conference Champ** (2 games)
+  - nflverse W22 (POST) = ESPN post-season `week.number=5` = **Super Bowl** (1 game ; ESPN saute 4 = Pro Bowl)
 
 ### ESPN Hidden API
 
@@ -98,12 +103,14 @@ GET /news                                → news NFL
 - [`pseudo-r/Public-ESPN-API`](https://github.com/pseudo-r/Public-ESPN-API) — référence la plus complète des endpoints cachés ESPN, NFL inclus
 - [`mkreiser/ESPN-Fantasy-Football-API`](https://github.com/mkreiser/ESPN-Fantasy-Football-API) — wrapper JS/TS (utile pour notre stack), ~340 stars
 
-**POC validé** : 13 events W1 (Sunday Sep 7 + SNF) / 12 events W10 / 14 events W18 — tous Final. Latence ~200ms par appel, aucun rate limit observé.
+**POC validé** : éprouvé sur W1 (regular kickoff), W10/W18 (regular mid+late), W19 Wildcard, Super Bowl LX (`SEA 29 @ NE 13`, 2026-02-08). Latence ~200ms par appel, aucun rate limit observé.
 
 **Gotchas découverts au POC** :
 - `?dates=YYYYMMDD` filtre par **kickoff en ET local time**, pas UTC. Conséquence : un TNF dont le kickoff UTC est `2025-09-05T00:20Z` apparaît bien dans `?dates=20250904` (Thursday ET).
-- En pratique pour une semaine NFL complète, polling **Thu + Fri (rare, jeux internationaux) + Sun + Mon** depuis ET → 4 dates max.
+- En pratique pour une semaine NFL complète, polling **Thu + Fri (international weeks) + Sat (W15-17 + playoffs) + Sun + Mon** depuis ET. **W1 complet 2025 = 4 dates / 16 games** (1 Thu, 1 Fri São Paulo, 13 Sun, 1 Mon).
 - Le champ `season` n'est **pas** au top-level mais sous `leagues[0].season`. Le champ `season.type` est un **objet** (`{id, type, name, abbreviation}`), pas un Int. Code défensif requis.
+- **Bug ESPN piège** : `leagues[0].season.type` reste figé à `"Regular Season"` même sur des dates de playoffs. Source de vérité = `event.season.slug` (`"post-season"`) ou `event.season.type=3`. Toujours lire au niveau event, pas league.
+- **Numérotation playoffs ESPN** : `event.week.number` reset à 1 en post-season : Wildcard=1, Divisional=2, Conference=3, Pro Bowl=4 (skip), **Super Bowl=5**. Mapping avec nflverse : nflverse W19-22 ≠ ESPN W1-5. À traduire dans `nfl-ingest.ts`.
 - `/summary?event={id}` retourne **18 ou 19 keys** top-level selon les events (la clé `article` est absente sur les events sans recap éditorial). Toujours utiliser `?.` à la lecture.
 - Pas de WebSocket public connu (polling only — 30-60s TTL côté cache strato recommandé).
 
