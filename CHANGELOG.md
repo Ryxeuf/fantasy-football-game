@@ -1,3 +1,10 @@
+## [1.121.5](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.4...v1.121.5) (2026-05-19)
+
+
+### 🐛 Bug Fixes
+
+* **engine:** weather Fisher-Yates + foul Stunty + blitz Chebyshev + DP one-or-other ([2def90b](https://github.com/Ryxeuf/fantasy-football-game/commit/2def90b96978bd3e30fc9affc8ec6dfef339f156))
+
 ## [1.121.4](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.121.3...v1.121.4) (2026-05-19)
 
 
