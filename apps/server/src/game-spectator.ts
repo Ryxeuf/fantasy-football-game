@@ -132,6 +132,20 @@ export function isSpectator(socketId: string): boolean {
   return socketToSpectateMatch.has(socketId);
 }
 
+/**
+ * Audit round 11 (CRITICAL) : retourne le matchId que ce socket
+ * spectate, ou `undefined` si pas spectateur. Avant cette helper,
+ * `isSpectator` etait global → un attaquant pouvait spectate
+ * n'importe quelle matchId publique, puis appeler `request-resync`
+ * sur l'id d'un match prive auquel il n'appartient pas. Le bypass
+ * sautait la verification participant a cause d'un check global.
+ * Maintenant le caller doit comparer le matchId vise au matchId
+ * effectivement spectate par ce socket.
+ */
+export function getSpectateMatchId(socketId: string): string | undefined {
+  return socketToSpectateMatch.get(socketId);
+}
+
 /** Reset all spectator tracking (for testing). */
 export function resetSpectators(): void {
   spectatorSockets.clear();

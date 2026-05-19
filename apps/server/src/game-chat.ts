@@ -81,6 +81,17 @@ export function registerGameChatHandlers(gameNamespace: Namespace): void {
           return;
         }
 
+        // Audit round 11 (HIGH) : avant, n'importe quel socket
+        // authentifie pouvait broadcast `game:chat-message` a
+        // n'importe quel matchId sans avoir rejoint la room — spam
+        // cross-match, harcelement, ad injection. socket.io track
+        // les rooms natively dans `socket.rooms`, donc verifier
+        // l'appartenance est O(1).
+        if (!socket.rooms.has(matchId)) {
+          ack?.({ ok: false, error: "Not in this match room" });
+          return;
+        }
+
         // Broadcast to everyone in the room (including sender)
         const broadcast: ChatBroadcast = {
           matchId,
