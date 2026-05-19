@@ -55,9 +55,11 @@ describe('Skill: Catch (personal reroll)', () => {
 });
 
 describe('Skill: Pass (personal reroll)', () => {
-  it('relance une passe ratee si le passeur a pass', () => {
+  it('relance une passe ratee (non-Fumble) si le passeur a pass', () => {
     const passer = makePasser(['pass']);
-    const rng = scriptedRng([0.01, 0.8]);
+    // Target ag=pa=3 → target=3. 0.3 → roll 2 (echec sans Fumble),
+    // 0.8 → roll 5 (succes apres reroll).
+    const rng = scriptedRng([0.3, 0.8]);
     const { result, rerolled } = performPassRollWithSkill(passer, rng, 0);
     expect(rerolled).toBe(true);
     expect(result.success).toBe(true);
@@ -65,7 +67,7 @@ describe('Skill: Pass (personal reroll)', () => {
 
   it('ne relance pas si le passeur n\'a pas pass', () => {
     const passer = makePasser([]);
-    const rng = scriptedRng([0.01, 0.8]);
+    const rng = scriptedRng([0.3, 0.8]);
     const { result, rerolled } = performPassRollWithSkill(passer, rng, 0);
     expect(rerolled).toBe(false);
     expect(result.success).toBe(false);
@@ -73,8 +75,8 @@ describe('Skill: Pass (personal reroll)', () => {
 
   it('relance une seule fois (succes apres reroll)', () => {
     const passer = makePasser(['pass']);
-    // echec -> reroll -> succes
-    const rng = scriptedRng([0.01, 0.9]);
+    // echec non-Fumble -> reroll -> succes
+    const rng = scriptedRng([0.3, 0.9]);
     const { result, rerolled } = performPassRollWithSkill(passer, rng, 0);
     expect(rerolled).toBe(true);
     expect(result.success).toBe(true);
@@ -82,10 +84,25 @@ describe('Skill: Pass (personal reroll)', () => {
 
   it('echec apres reroll reste un echec', () => {
     const passer = makePasser(['pass']);
-    // echec -> reroll -> echec
-    const rng = scriptedRng([0.01, 0.01]);
+    // echec non-Fumble -> reroll -> echec non-Fumble
+    const rng = scriptedRng([0.3, 0.3]);
     const { result, rerolled } = performPassRollWithSkill(passer, rng, 0);
     expect(rerolled).toBe(true);
     expect(result.success).toBe(false);
+  });
+
+  // Audit round 11 (HIGH/regle BB) : Fumble = naturel 1 sur le D6
+  // de passe. BB2020 : un Fumble n'est PAS relancable par le skill
+  // Pass (ni par un team reroll) — c'est un Turnover immediat et le
+  // ballon est lache au feet du passeur. Avant ce fix, le skill
+  // donnait un free reroll d'un Fumble.
+  it('le skill Pass ne relance PAS un Fumble (naturel 1)', () => {
+    const passer = makePasser(['pass']);
+    // 1er jet = 1 (Fumble). Si on rerollait, 2eme = 5 = succes.
+    const rng = scriptedRng([0.01, 0.8]);
+    const { result, rerolled } = performPassRollWithSkill(passer, rng, 0);
+    expect(rerolled).toBe(false);
+    expect(result.success).toBe(false);
+    expect(result.diceRoll).toBe(1);
   });
 });

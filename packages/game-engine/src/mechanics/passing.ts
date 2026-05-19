@@ -213,6 +213,16 @@ export function performPassRollWithSkill(
   if (first.success) {
     return { result: first, rerolled: false };
   }
+  // Audit round 11 (HIGH/regle BB) : avant, le skill `Pass` relancait
+  // n'importe quel echec, y compris un naturel 1 (Fumble). Or BB2020 :
+  // un Fumble (D6 = 1 sur le jet de passe) n'est PAS un echec
+  // ordinaire — c'est un Turnover immediat et le ballon est lache,
+  // qui ne peut PAS etre relance par le skill `Pass` (ni par un team
+  // reroll). Seuls les echecs sans Fumble peuvent etre relances.
+  // Fix : court-circuit sur diceRoll === 1.
+  if (first.diceRoll === 1) {
+    return { result: first, rerolled: false };
+  }
   const hasPass = passer.skills.some(s => s.toLowerCase() === 'pass');
   if (!hasPass) {
     return { result: first, rerolled: false };
