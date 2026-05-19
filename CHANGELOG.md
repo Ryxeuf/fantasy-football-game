@@ -1,3 +1,10 @@
+## [1.125.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.124.0...v1.125.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **kickoff:** implement headless kickoff sequence for BB 2025 ([6fd1f84](https://github.com/Ryxeuf/fantasy-football-game/commit/6fd1f84c6f8558486f98916c26bd6d0eebc7eadc))
+
 ## [1.124.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.123.0...v1.124.0) (2026-05-19)
 
 
