@@ -1,3 +1,41 @@
+## [1.128.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.127.0...v1.128.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **ai:** skill awareness on block knockdown estimation ([4f826ba](https://github.com/Ryxeuf/fantasy-football-game/commit/4f826badc58bea494596b3be0d800477ff5d62af)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2) [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1)
+* **game-engine:** rejectMove helper for silent move rejections ([c01a382](https://github.com/Ryxeuf/fantasy-football-game/commit/c01a382727e02de948b5a31a26a3f6d767f7e71f))
+* **game-engine:** runtime guard for pendingX mutual exclusivity ([28cd13d](https://github.com/Ryxeuf/fantasy-football-game/commit/28cd13d2e2e0338ee924a627b0325bb4b41853ca))
+* **replay:** enhance replay functionality with DICE event and overlay support ([a3c2068](https://github.com/Ryxeuf/fantasy-football-game/commit/a3c2068403b73e0789c325e75b621a3fc3e5f624))
+
+
+### 🐛 Bug Fixes
+
+* **admin:** ban optimistic-lock pour eviter le clobber concurrent ([#868](https://github.com/Ryxeuf/fantasy-football-game/issues/868)) ([2d73fce](https://github.com/Ryxeuf/fantasy-football-game/commit/2d73fcea99f25b65f13cc3fbddcd08886031f7d7))
+* **engine:** Brilliant Coaching kickoff event adds assistant coaches ([#873](https://github.com/Ryxeuf/fantasy-football-game/issues/873)) ([21f0b5c](https://github.com/Ryxeuf/fantasy-football-game/commit/21f0b5c6105edc58861062d8171af7bc2e9d8899))
+* **engine:** Pass skill ne relance pas un Fumble (naturel 1) ([#877](https://github.com/Ryxeuf/fantasy-football-game/issues/877)) ([bf9086a](https://github.com/Ryxeuf/fantasy-football-game/commit/bf9086aef72a00f44bae7cb31670b7e08b145367))
+* **game-engine:** clear all pendingX on drive transitions ([34f7e1f](https://github.com/Ryxeuf/fantasy-football-game/commit/34f7e1f70ea4c446d714d0cbd09543bfc48290c7)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+* **game-engine:** forbid FOUL during kickoffBlitzTurn ([5b32ef1](https://github.com/Ryxeuf/fantasy-football-game/commit/5b32ef110e24e396fc8f8120d0cb336494cb6c46)), closes [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3)
+* **game-engine:** immutable PM update in handleBlockChoose ([da17cf8](https://github.com/Ryxeuf/fantasy-football-game/commit/da17cf8101f63c7a5d0befb8d6ede4b736406ec1)), closes [#4](https://github.com/Ryxeuf/fantasy-football-game/issues/4)
+* **game-engine:** tolerant replay parsing with shape guard ([56775df](https://github.com/Ryxeuf/fantasy-football-game/commit/56775df10b3b4c270cf029f022b5541f4908ca07))
+* leap type + season factory guards (reset + cancel races) ([#866](https://github.com/Ryxeuf/fantasy-football-game/issues/866)) ([49edc80](https://github.com/Ryxeuf/fantasy-football-game/commit/49edc809fa715acfd55baca4e4d3e71e0ae78f09))
+* **perf:** seer leaderboard groupBy + rivalry scan cap + ProMatchPrediction indexes ([#872](https://github.com/Ryxeuf/fantasy-football-game/issues/872)) ([94ec1d2](https://github.com/Ryxeuf/fantasy-football-game/commit/94ec1d2780f0bcdb1dd5bbcc74ca4d32fb94825b))
+* **perf:** single-flight lock sur getCareerSnapshot (thunder-herd) ([#870](https://github.com/Ryxeuf/fantasy-football-game/issues/870)) ([3c1b25c](https://github.com/Ryxeuf/fantasy-football-game/commit/3c1b25c698810e6e203ac72898a3c280fb8981eb))
+* **security:** forgot-password origin allowlist + metrics auth + join code CSPRNG ([#871](https://github.com/Ryxeuf/fantasy-football-game/issues/871)) ([cf57a44](https://github.com/Ryxeuf/fantasy-football-game/commit/cf57a44efae8e077f2f44b83bd340eb3f052157d))
+* **security:** share-token PII + settlePredictions tx + JSON-LD XSS escape ([#869](https://github.com/Ryxeuf/fantasy-football-game/issues/869)) ([2647253](https://github.com/Ryxeuf/fantasy-football-game/commit/2647253729e7a9278cfcdd01ba6ab8e08c489aa8))
+* **server:** cron overlap guards sur les sweeps Pro League ([#864](https://github.com/Ryxeuf/fantasy-football-game/issues/864)) ([f25fc84](https://github.com/Ryxeuf/fantasy-football-game/commit/f25fc84bf57ac4790a33c4cf92260c94d38e54a2))
+* **server:** DoS guards sur pro-badges + listComments ([#867](https://github.com/Ryxeuf/fantasy-football-game/issues/867)) ([2a017de](https://github.com/Ryxeuf/fantasy-football-game/commit/2a017de0bd0ed08ca4a2d32137d41dc8409a150e))
+* **server:** friendship + kofi-claim race conditions (optimistic-lock) ([#865](https://github.com/Ryxeuf/fantasy-football-game/issues/865)) ([8d01004](https://github.com/Ryxeuf/fantasy-football-game/commit/8d01004c3936ca9e1060a5a53ac8bd9ae31c1d29))
+* **socket/security:** spectator bypass + chat broadcast membership check ([d318942](https://github.com/Ryxeuf/fantasy-football-game/commit/d31894261adec5cc7cfdc4ab32a1574b8ea6fd8e))
+* **web/security:** admin middleware bypass + open redirect + JSON-LD XSS + SW URL guard ([#875](https://github.com/Ryxeuf/fantasy-football-game/issues/875)) ([29d454e](https://github.com/Ryxeuf/fantasy-football-game/commit/29d454eb3347e5be7178e4ca2e7d76edec56ce14))
+
+
+### 📝 Documentation
+
+* add game-engine + AI audit 2026-05-19 ([f110c77](https://github.com/Ryxeuf/fantasy-football-game/commit/f110c77c8e84cc8d2f58e8b682ac4ef6d99d2a1b))
+* Add NFL Fantasy module documentation (10 files) ([#874](https://github.com/Ryxeuf/fantasy-football-game/issues/874)) ([fd9ac36](https://github.com/Ryxeuf/fantasy-football-game/commit/fd9ac36d3c2b30b05712d77afca32d254386e7dc))
+* update engine audit with QW + ST sprint completion status ([028e20f](https://github.com/Ryxeuf/fantasy-football-game/commit/028e20f4e7cbc5a07b2a36b0c2792053ab84d352))
+
 ## [1.127.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.2...v1.127.0) (2026-05-19)
 
 
