@@ -1,20 +1,26 @@
+import { runNflversePoc } from "./fetch-nflverse.js";
+
 const [, , cmd] = process.argv;
+
+const TARGET_YEAR = 2025;
+const TARGET_WEEK = 10;
 
 async function main(): Promise<void> {
   switch (cmd) {
     case "nflverse":
-      console.log("[nfl-poc] nflverse pull — not implemented yet (commit 3)");
+      await runNflversePoc(TARGET_YEAR, TARGET_WEEK);
       break;
     case "espn":
       console.log("[nfl-poc] espn poll — not implemented yet (commit 4)");
       break;
     case "all":
-      console.log("[nfl-poc] all — not implemented yet (commits 3 + 4 + 5)");
+      await runNflversePoc(TARGET_YEAR, TARGET_WEEK);
+      console.log("\n[nfl-poc] espn + normalize — not implemented yet (commits 4 + 5)");
       break;
     default:
       console.log(
         "Usage: npm run poc:nflverse | poc:espn | poc:all\n" +
-          "Bootstrap OK — commits feat suivants vont implementer les sous-commandes."
+          `Cible courante: saison ${TARGET_YEAR}, week ${TARGET_WEEK}.`
       );
   }
 }
