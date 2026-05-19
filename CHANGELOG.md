@@ -1,3 +1,16 @@
+## [1.127.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.2...v1.127.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **replay:** enhance MatchReplayPlayer with active team display ([286b838](https://github.com/Ryxeuf/fantasy-football-game/commit/286b8385b736d33d3a6cb576e48a46fa9bc485e8))
+
+
+### 🐛 Bug Fixes
+
+* password reset TOCTOU + bounceBall recursion guard ([#862](https://github.com/Ryxeuf/fantasy-football-game/issues/862)) ([341b068](https://github.com/Ryxeuf/fantasy-football-game/commit/341b068fda1ea39c55a084ef8d637e68a4f14d9a))
+* **server:** tournament entry + forceForfeit race conditions ([#863](https://github.com/Ryxeuf/fantasy-football-game/issues/863)) ([4b9fab4](https://github.com/Ryxeuf/fantasy-football-game/commit/4b9fab4700fd9fa88e51a97fb4137c393e213695))
+
 ## [1.126.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.126.1...v1.126.2) (2026-05-19)
 
 
