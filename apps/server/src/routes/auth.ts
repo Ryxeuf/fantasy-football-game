@@ -23,6 +23,7 @@ import {
 } from "../services/kofi-claim";
 import { isSupporter } from "../services/kofi";
 import { serverLog } from "../utils/server-log";
+import { redactEmail, userTag } from "../utils/redact";
 import {
   REFRESH_TOKEN_TTL_SECONDS,
   signAccessToken,
@@ -166,21 +167,26 @@ router.post("/login", validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // BUG fix audit round 5 (HIGH/PII) : tous les logs auth utilisaient
+    // l'email brut + le role + le flag valid. Les logs typiquement
+    // flow vers un aggregator (Loki/Sentry) ; emails = PII sous GDPR,
+    // role = aide attaquant qui gagne acces aux logs. Maintenant on
+    // redacte l'email (`u***@example.com`) et on drop role/valid.
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      serverLog.log(`[LOGIN] Utilisateur non trouvé: ${email}`);
+      serverLog.log(`[LOGIN] Utilisateur non trouve: ${redactEmail(email)}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    serverLog.log(
-      `[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`,
-    );
-    
+    // Audit round 5 : log par userTag (8 premiers chars de l'id) au
+    // lieu d'email + role + valid. Le tag suffit pour debug operationnel.
+    serverLog.debug(`[LOGIN] Tentative de connexion ${userTag(user.id)}`);
+
     // Le champ `valid` n'existe que dans le schéma Postgres (pré-alpha gate).
     // Sur les autres schémas (ex: SQLite de test), il est undefined et le
     // compte doit être traité comme valide.
     if (user.valid === false) {
-      serverLog.log(`[LOGIN] Compte non validé pour ${email}`);
+      serverLog.log(`[LOGIN] Compte non valide ${userTag(user.id)}`);
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
@@ -188,7 +194,7 @@ router.post("/login", validate(loginSchema), async (req, res) => {
     // ban pour les memes raisons (pas de leak). Message neutre.
     const deletedAt = (user as { deletedAt?: Date | null }).deletedAt ?? null;
     if (deletedAt !== null) {
-      serverLog.log(`[LOGIN] Compte supprime pour ${email} (deletedAt=${deletedAt.toISOString()})`);
+      serverLog.log(`[LOGIN] Compte supprime ${userTag(user.id)}`);
       return res.status(403).json({
         error: "Identifiants invalides",
       });
@@ -199,7 +205,7 @@ router.post("/login", validate(loginSchema), async (req, res) => {
     // arret. Le message reste neutre, sans exposer la raison interne.
     const bannedUntil = (user as { bannedUntil?: Date | null }).bannedUntil ?? null;
     if (bannedUntil && bannedUntil.getTime() > Date.now()) {
-      serverLog.log(`[LOGIN] Compte banni pour ${email} jusqu'a ${bannedUntil.toISOString()}`);
+      serverLog.log(`[LOGIN] Compte banni ${userTag(user.id)} jusqu'a ${bannedUntil.toISOString()}`);
       return res.status(403).json({
         error: "Compte suspendu. Contactez un administrateur pour plus d'informations.",
         bannedUntil: bannedUntil.toISOString(),
@@ -208,11 +214,11 @@ router.post("/login", validate(loginSchema), async (req, res) => {
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
-      serverLog.log(`[LOGIN] Mot de passe incorrect pour ${email}`);
+      serverLog.log(`[LOGIN] Mot de passe incorrect ${userTag(user.id)}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    serverLog.log(`[LOGIN] Connexion réussie pour ${email}`);
+    serverLog.debug(`[LOGIN] Connexion reussie ${userTag(user.id)}`);
 
     // Rattrape les dons orphelins reçus avant l'inscription et garantit que
     // le compte a un kofiLinkCode. Jamais bloquant sur le login.
