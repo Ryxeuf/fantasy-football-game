@@ -44,7 +44,7 @@ describe('cloneGameState — micro-bench', () => {
     expect(fastElapsed).toBeLessThan(refElapsed * 1.5);
   });
 
-  it('clone realiste sous 5ms pour 100 iterations sur state initial', () => {
+  it('clone realiste sous 50ms pour 100 iterations sur state initial', () => {
     const state = setup();
     cloneGameState(state); // warmup
     const start = performance.now();
@@ -52,6 +52,11 @@ describe('cloneGameState — micro-bench', () => {
       cloneGameState(state);
     }
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(5);
+    // Seuil large (50ms) pour absorber l'overhead de l'instrumentation
+    // v8 coverage et la variance des runners CI : sous coverage on
+    // observe ~13ms vs ~1-2ms sans. Le sanity check reste utile mais
+    // ne doit pas etre flaky (cf. commentaire en tete : "Pas de seuil
+    // strict en CI"). Le test ratio au-dessus reste la garde principale.
+    expect(elapsed).toBeLessThan(50);
   });
 });
