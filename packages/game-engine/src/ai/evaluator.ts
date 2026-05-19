@@ -16,6 +16,7 @@
 import type { GameState, Move, Player, Position, TeamId } from '../core/types';
 import { getAdjacentOpponents, isAdjacent } from '../mechanics/movement';
 import { getLegalMoves } from '../actions/actions';
+import { hasSkill } from '../skills/skill-effects';
 
 export interface EvaluationBreakdown {
   score: number;
@@ -334,11 +335,58 @@ export function evaluatePosition(
 }
 
 /**
- * Estimation simple de la probabilite de knockdown de la cible lors d'un
- * blocage : fonction monotone de la difference de force (incluant les
- * assistances indirectes via les joueurs adjacents).
+ * Probabilites de knockdown calibrees sur les faces de des de Blood Bowl
+ * 2020 (POW, POW/PUSH, PUSH, BOTH_DOWN, ATTACKER_DOWN) — l'attaquant
+ * (ou le defenseur) choisit le meilleur (pire) parmi N des selon le
+ * ratio de force.
  */
-function estimateBlockKnockdown(state: GameState, attacker: Player, target: Player): number {
+const KNOCKDOWN_BASE = {
+  /** Attaquant >= 2x defenseur : 3 des, attaquant choisit. */
+  attackerThreeDice: 0.7,
+  /** Attaquant > defenseur : 2 des, attaquant choisit. */
+  attackerTwoDice: 0.56,
+  /** Force egale : 1 de. */
+  equal: 0.33,
+  /** Defenseur > attaquant (sans 2x) : 2 des, defenseur choisit. */
+  defenderTwoDice: 0.11,
+  /** Defenseur >= 2x attaquant : 3 des, defenseur choisit. */
+  defenderThreeDice: 0.05,
+} as const;
+
+/**
+ * Probabilite que l'attaquant tombe lui-meme apres son block (ATTACKER_DOWN
+ * ou BOTH_DOWN sans skill Block). Sans skill, BOTH_DOWN (1/6) + ATTACKER_DOWN
+ * (1/6) = 2/6 sur un de. Avec Block, BOTH_DOWN ne fait pas tomber l'attaquant.
+ */
+const SELFDOWN_BASE = {
+  attackerThreeDice: 0.02,
+  attackerTwoDice: 0.06,
+  equal: 0.33,
+  defenderTwoDice: 0.55,
+  defenderThreeDice: 0.7,
+} as const;
+
+const SELFDOWN_WITH_BLOCK_MULT = 0.5; // BOTH_DOWN annule pour l'attaquant
+const DEFENDER_BLOCK_KD_MULT = 0.83; // BOTH_DOWN n'abat plus le defenseur
+const DEFENDER_DODGE_KD_MULT = 0.83; // STUMBLE devient PUSH sans Tackle adverse
+const DEFENDER_WRESTLE_KD_MULT = 0.92; // BOTH_DOWN: choix mutuel down
+
+interface BlockProbabilities {
+  readonly knockdown: number;
+  readonly selfDown: number;
+}
+
+/**
+ * Determine le ratio de force pour un block, en tenant compte des
+ * assistances et du skill Dauntless (qui permet de jouer comme si la force
+ * etait egale a celle de la cible — modelise ici en probabilite-pondere).
+ */
+function computeEffectiveStrength(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+  isBlitz: boolean
+): { atk: number; def: number; dauntlessUpscaleProb: number } {
   const atkAssists = state.players.filter(
     p =>
       p.team === attacker.team &&
@@ -350,14 +398,96 @@ function estimateBlockKnockdown(state: GameState, attacker: Player, target: Play
     p =>
       p.team === target.team && p.id !== target.id && isActive(p) && isAdjacent(p.pos, attacker.pos)
   ).length;
-  const atkStrength = attacker.st + atkAssists;
-  const defStrength = target.st + defAssists;
+  const hornsBonus = isBlitz && hasSkill(attacker, 'horns') ? 1 : 0;
+  const atk = attacker.st + atkAssists + hornsBonus;
+  const def = target.st + defAssists;
 
-  if (atkStrength >= 2 * defStrength) return 0.7;
-  if (atkStrength > defStrength) return 0.55;
-  if (atkStrength === defStrength) return 0.33;
-  if (defStrength >= 2 * atkStrength) return 0.08;
-  return 0.18;
+  // Dauntless : si la cible est plus forte, l'attaquant lance 1D6 + sa ST.
+  // Si le total >= ST cible, il joue comme si ST egales. Probabilite =
+  // (7 - delta) / 6 si delta in [1..6], sinon 0.
+  let dauntlessUpscaleProb = 0;
+  if (hasSkill(attacker, 'dauntless') && def > atk) {
+    const delta = def - atk;
+    if (delta >= 1 && delta <= 6) {
+      dauntlessUpscaleProb = (7 - delta) / 6;
+    }
+  }
+  return { atk, def, dauntlessUpscaleProb };
+}
+
+function probsFromRatio(atk: number, def: number): BlockProbabilities {
+  if (atk >= 2 * def) {
+    return { knockdown: KNOCKDOWN_BASE.attackerThreeDice, selfDown: SELFDOWN_BASE.attackerThreeDice };
+  }
+  if (atk > def) {
+    return { knockdown: KNOCKDOWN_BASE.attackerTwoDice, selfDown: SELFDOWN_BASE.attackerTwoDice };
+  }
+  if (atk === def) {
+    return { knockdown: KNOCKDOWN_BASE.equal, selfDown: SELFDOWN_BASE.equal };
+  }
+  if (def >= 2 * atk) {
+    return { knockdown: KNOCKDOWN_BASE.defenderThreeDice, selfDown: SELFDOWN_BASE.defenderThreeDice };
+  }
+  return { knockdown: KNOCKDOWN_BASE.defenderTwoDice, selfDown: SELFDOWN_BASE.defenderTwoDice };
+}
+
+/**
+ * Estimation des probabilites d'issue d'un block, avec prise en compte
+ * des skills cles (Block, Dodge, Tackle, Wrestle, Dauntless, Horns).
+ *
+ * Retourne deux probabilites independantes :
+ *  - `knockdown` : la cible tombe (= valeur offensive du block)
+ *  - `selfDown`  : l'attaquant tombe (= turnover potentiel, risque)
+ *
+ * Les deux peuvent coexister (BOTH_DOWN sans skills), c'est pour cela
+ * qu'on ne les modelise pas en somme = 1.
+ */
+function estimateBlockProbabilities(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+  isBlitz = false
+): BlockProbabilities {
+  const { atk, def, dauntlessUpscaleProb } = computeEffectiveStrength(state, attacker, target, isBlitz);
+
+  const baseProbs = probsFromRatio(atk, def);
+  // Dauntless : avec probabilite p, on joue a force egale (meilleur que sub-force).
+  const probs: BlockProbabilities =
+    dauntlessUpscaleProb > 0
+      ? {
+          knockdown:
+            baseProbs.knockdown * (1 - dauntlessUpscaleProb) +
+            KNOCKDOWN_BASE.equal * dauntlessUpscaleProb,
+          selfDown:
+            baseProbs.selfDown * (1 - dauntlessUpscaleProb) +
+            SELFDOWN_BASE.equal * dauntlessUpscaleProb,
+        }
+      : baseProbs;
+
+  // Skills defensifs reduisent le knockdown.
+  let kdMult = 1;
+  if (hasSkill(target, 'block')) kdMult *= DEFENDER_BLOCK_KD_MULT;
+  if (hasSkill(target, 'dodge') && !hasSkill(attacker, 'tackle')) {
+    kdMult *= DEFENDER_DODGE_KD_MULT;
+  }
+  if (hasSkill(target, 'wrestle')) kdMult *= DEFENDER_WRESTLE_KD_MULT;
+
+  // Skill Block attaquant : reduit fortement le selfDown (annule BOTH_DOWN).
+  const selfMult = hasSkill(attacker, 'block') ? SELFDOWN_WITH_BLOCK_MULT : 1;
+
+  return {
+    knockdown: probs.knockdown * kdMult,
+    selfDown: probs.selfDown * selfMult,
+  };
+}
+
+/**
+ * Backward-compat shim : meme signature que l'ancien `estimateBlockKnockdown`,
+ * pour eviter de toucher les callers qui ne consomment que la probabilite
+ * de knockdown (lookahead, tests existants).
+ */
+function estimateBlockKnockdown(state: GameState, attacker: Player, target: Player): number {
+  return estimateBlockProbabilities(state, attacker, target, false).knockdown;
 }
 
 function scoreMoveMove(
@@ -381,26 +511,39 @@ function scoreMoveMove(
   return after - before;
 }
 
-function scoreMoveBlock(
+function scoreMoveBlockInternal(
   state: GameState,
-  move: Extract<Move, { type: 'BLOCK' }>,
+  attackerId: string,
+  targetId: string,
   team: TeamId,
+  isBlitz: boolean,
   weightsOverride?: Partial<EvalWeights>
 ): number {
-  const attacker = findPlayer(state, move.playerId);
-  const target = findPlayer(state, move.targetId);
+  const attacker = findPlayer(state, attackerId);
+  const target = findPlayer(state, targetId);
   if (!attacker || !target) return -Infinity;
 
   const weights = resolveWeights(weightsOverride);
-  const knockdown = estimateBlockKnockdown(state, attacker, target);
+  const { knockdown, selfDown } = estimateBlockProbabilities(state, attacker, target, isBlitz);
+
   const knockoutValue =
     target.team === team
       ? -weights.PLAYER_ACTIVE - weights.PLAYER_STUNNED_PENALTY
       : weights.PLAYER_ACTIVE + weights.PLAYER_STUNNED_PENALTY;
 
   const possessionSwing = target.hasBall ? weights.POSSESSION * 0.5 : 0;
-  const selfRisk = knockdown < 0.2 ? -30 : knockdown < 0.4 ? -10 : 0;
+  // selfRisk = perte de valeur attendue si l'attaquant tombe (turnover + lui-meme stunned).
+  const selfRisk = -selfDown * (weights.PLAYER_ACTIVE + weights.PLAYER_STUNNED_PENALTY);
   return knockdown * (knockoutValue + possessionSwing) + selfRisk;
+}
+
+function scoreMoveBlock(
+  state: GameState,
+  move: Extract<Move, { type: 'BLOCK' }>,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): number {
+  return scoreMoveBlockInternal(state, move.playerId, move.targetId, team, false, weightsOverride);
 }
 
 function scoreMoveBlitz(
@@ -423,10 +566,12 @@ function scoreMoveBlitz(
     ...state,
     players: state.players.map(p => (p.id === attacker.id ? { ...p, pos: move.to } : p)),
   };
-  const blockDelta = scoreMoveBlock(
+  const blockDelta = scoreMoveBlockInternal(
     simulated,
-    { type: 'BLOCK', playerId: move.playerId, targetId: move.targetId },
+    move.playerId,
+    move.targetId,
     team,
+    true, // isBlitz=true → active Horns si present
     weightsOverride
   );
   return moveDelta + blockDelta;
