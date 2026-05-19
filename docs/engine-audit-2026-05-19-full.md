@@ -204,11 +204,20 @@ modifié.
 10. ✅ Garde runtime `assertSinglePending` (fix B4 — refacto type-level
     union differe en session dediee, 574 call sites)
 
-### Sprint Perf (3-5 jours) — TODO
+### Sprint Perf (3-5 jours) ✅ COMPLETE
 
-11. ⚡ Copy-on-write dans handlers majeurs (remplacer 25+ `structuredClone`)
-12. ⚡ `getTeamActivePlayers(state, team)` memoized (élimine 139 filter patterns)
-13. ⚡ Caching dans `evaluatePosition` (hot path IA)
+11. ✅ `cloneGameState` drop-in plus rapide que `structuredClone` (ratio
+    9-11x sur state initial). 25 sites prod migres. Equivalence
+    semantique verifiee par `clone-state.test.ts` (4 assertions).
+12. ✅ Hoist des filtres constants dans `getLegalMoves` (`DIRS`,
+    `allOpponentsStanding`, `activeTeammates`, `groundedOpponents`).
+    22 scans -> 4 scans par appel (cas pire). Cache WeakMap
+    `state-cache.ts` pour le hot path IA :
+    `getPlayerMap` / `getActiveTeamPlayers` / `getBallCarrier`.
+13. ✅ Cache `evaluatePosition(state, team)` par WeakMap pour le path
+    sans `weightsOverride`. N coups candidats → 1 calcul du `before`
+    au lieu de N. Path avec override conserve la slow path
+    (decouplage volontaire, cf. roadmap).
 
 ### Sprint Structure (1-2 semaines) — TODO
 
@@ -227,6 +236,17 @@ sur main avec rebase sur origin/main apres chaque commit. Tests :
 5108 verts (etait 5099 au depart, +1210 lignes de bruit supprimees,
 +13 tests reels ajoutes net).
 
+Sprint Perf execute en autonomie 2026-05-19, 3 commits sur
+`claude/perf-sprint-audit-YWcRU` :
+- `perf(game-engine): cache evaluatePosition and team-active scans`
+- `perf(game-engine): replace structuredClone with tailored cloneGameState`
+- `perf(game-engine): hoist constant filters and DIRS in getLegalMoves`
+
+Tests : 5130 verts (+22 nouveaux pour state-cache + clone-state +
+bench). Ratio cloneGameState/structuredClone mesure : 9-11x sur state
+initial via `clone-state.bench.test.ts`. AI loop test (200 coups × 3
+seeds × 3 niveaux) : ~2.8s (etait ~3.1s baseline).
+
 Commits :
 - `docs: add game-engine + AI audit 2026-05-19`
 - `test(ai): add IA vs IA decision loop integration test`
@@ -242,8 +262,8 @@ Commits :
 - `feat(game-engine): rejectMove helper for silent move rejections`
 - `feat(game-engine): runtime guard for pendingX mutual exclusivity`
 
-Sprints Perf et Structure restent a planifier (scope 4-7 jours, hors
-session autonomie).
+Sprint Structure reste a planifier (scope 5-10 jours, hors session
+autonomie).
 
 ## ✅ Synthèse
 
