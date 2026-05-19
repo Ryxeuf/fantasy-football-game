@@ -1,7 +1,7 @@
 # BlooBowl - Makefile
 # Commandes utiles pour le développement du jeu Blood Bowl
 
-.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data deploy deploy-no-cache maintenance-on maintenance-off maintenance-status seed reset-db tunnel snapshot-prod
+.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint check-shadow format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data deploy deploy-no-cache maintenance-on maintenance-off maintenance-status seed reset-db tunnel snapshot-prod
 
 # Variables
 PNPM := pnpm
@@ -69,9 +69,12 @@ build-server: ## Build seulement le serveur
 	cd apps/server && $(PNPM) run build
 
 # Qualité du code
-lint: ## Lance le linting sur tout le projet
+lint: check-shadow ## Lance le linting sur tout le projet
 	@echo "🔍 Linting du projet..."
 	$(PNPM) run lint
+
+check-shadow: ## Verifie l'absence de fichiers .js shadow dans game-engine
+	@bash scripts/check-no-js-shadow.sh
 
 format: ## Formate le code avec Prettier
 	@echo "✨ Formatage du code..."
