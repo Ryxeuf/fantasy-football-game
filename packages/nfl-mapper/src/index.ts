@@ -29,3 +29,9 @@ export type {
   SppEvent,
 } from './stats-to-spp.js';
 export { applyCaptainMultiplier, computeSpp } from './stats-to-spp.js';
+export type { PlayerArchetype, PseudonymOptions } from './pseudonymize.js';
+export {
+  generatePseudonym,
+  generateShortPseudonym,
+  getDescriptor,
+} from './pseudonymize.js';
