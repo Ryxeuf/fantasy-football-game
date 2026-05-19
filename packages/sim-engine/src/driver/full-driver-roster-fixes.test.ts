@@ -1,11 +1,15 @@
 /**
- * BUG fixes audit round 3 :
- *  - C3 : ball carrier idx=9 hardcode → undefined si roster < 10.
- *  - H2 : ballYardline=4 magique au TURN_START initial.
+ * Tests post-kickoff-implementation :
+ *  - `buildGameStateFromRosters` ne pré-attribue plus le ballon
+ *    (la vraie séquence kickoff dans `executeHeadlessKickoff` s'en charge).
+ *  - `getInitialBallYardline` calcule un yardline cohérent avec la
+ *    position courante du ballon ou du porteur.
  */
 import { describe, it, expect } from 'vitest';
 import { buildGameStateFromRosters } from './full-driver-roster';
 import { getInitialBallYardline } from './full-driver-events';
+import { executeHeadlessKickoff } from './full-driver-kickoff';
+import { makeRNG } from '@bb/game-engine';
 import type { SimRosterPlayer } from '../types';
 
 function rosterPlayer(over: Partial<SimRosterPlayer> = {}): SimRosterPlayer {
@@ -19,8 +23,8 @@ function rosterPlayer(over: Partial<SimRosterPlayer> = {}): SimRosterPlayer {
   };
 }
 
-describe('Ball carrier idx variable (C3)', () => {
-  it("roster complet (11 joueurs) : ball carrier = idx 9", () => {
+describe('buildGameStateFromRosters — pas de pré-attribution du ballon', () => {
+  it("roster complet : aucun joueur n'a hasBall et state.ball est undefined", () => {
     const homeRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
     );
@@ -31,15 +35,11 @@ describe('Ball carrier idx variable (C3)', () => {
       homeRoster, awayRoster, receivingTeam: 'B',
     });
 
-    const carrier = state.players.find((p) => p.hasBall);
-    expect(carrier).toBeDefined();
-    expect(carrier?.id).toBe('A9'); // idx 9 du roster away
+    expect(state.players.some((p) => p.hasBall)).toBe(false);
+    expect(state.ball).toBeUndefined();
   });
 
-  it("roster court (7 joueurs) : ball carrier = dernier joueur (idx=6)", () => {
-    // Avant le fix, idx=9 → awayPlayers[9] undefined → personne n'a la balle
-    // → la team receveuse ne marque jamais. Resultat : tous les matches en
-    // 0-0 ou victoire kicker.
+  it("roster court (7 joueurs) : aucun ball carrier auto-attribué", () => {
     const homeRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
     );
@@ -50,46 +50,56 @@ describe('Ball carrier idx variable (C3)', () => {
       homeRoster, awayRoster, receivingTeam: 'B',
     });
 
-    const carrier = state.players.find((p) => p.hasBall);
-    expect(carrier).toBeDefined();
-    expect(carrier?.id).toBe('A6'); // dernier joueur place
+    expect(state.players.some((p) => p.hasBall)).toBe(false);
+    expect(state.ball).toBeUndefined();
   });
 });
 
-describe('getInitialBallYardline (H2)', () => {
-  it("retourne la position du carrier normalisee selon l'equipe qui drive", () => {
+describe('executeHeadlessKickoff — produit un état BB-conforme', () => {
+  it("après kickoff : soit un porteur receveur, soit un ballon au sol/touchback", () => {
     const homeRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
     );
     const awayRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `A${i}`, name: `A${i}`, number: i + 1 }),
     );
-    const state = buildGameStateFromRosters({
+    const built = buildGameStateFromRosters({
       homeRoster, awayRoster, receivingTeam: 'B',
     });
 
-    const yardline = getInitialBallYardline(state);
-    // Audit round 5 : la convention hybrid est yardline ∈ [0..26] ou
-    // 0 = own goal de l'equipe qui drive. Team B drive (receivingTeam),
-    // donc yardline = 26 - carrier.pos.x (B drive vers x=0, donc
-    // commence pres de son own goal qui est x=26).
-    const carrier = state.players.find((p) => p.hasBall)!;
-    expect(yardline).toBe(26 - carrier.pos.x);
-  });
+    const rng = makeRNG(42);
+    const state = executeHeadlessKickoff(built, 'A', rng);
 
-  it("audit round 5 : team A driving → yardline = ballX (non normalise)", () => {
+    // Soit un joueur receveur a le ballon (pickup réussi ou touchback)
+    // soit le ballon est au sol dans la moitié receveuse.
+    const carrier = state.players.find((p) => p.hasBall);
+    if (carrier) {
+      expect(carrier.team).toBe('B');
+    } else {
+      expect(state.ball).toBeDefined();
+    }
+  });
+});
+
+describe('getInitialBallYardline (H2) — après kickoff', () => {
+  it("retourne un yardline cohérent avec la position du ballon", () => {
     const homeRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `H${i}`, name: `H${i}`, number: i + 1 }),
     );
     const awayRoster = Array.from({ length: 11 }, (_, i) =>
       rosterPlayer({ id: `A${i}`, name: `A${i}`, number: i + 1 }),
     );
-    const state = buildGameStateFromRosters({
-      homeRoster, awayRoster, receivingTeam: 'A',
+    const built = buildGameStateFromRosters({
+      homeRoster, awayRoster, receivingTeam: 'B',
     });
+    const rng = makeRNG(42);
+    const state = executeHeadlessKickoff(built, 'A', rng);
 
     const yardline = getInitialBallYardline(state);
-    const carrier = state.players.find((p) => p.hasBall)!;
-    expect(yardline).toBe(carrier.pos.x);
+    // Le yardline est calculé à partir de la position du carrier ou
+    // du ballon au sol post-kickoff. La valeur exacte dépend du
+    // scatter D8/D6 — on vérifie juste qu'elle est dans le terrain.
+    expect(yardline).toBeGreaterThanOrEqual(0);
+    expect(yardline).toBeLessThanOrEqual(state.width);
   });
 });

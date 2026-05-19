@@ -73,6 +73,7 @@ import {
   getInitialBallYardline,
 } from './full-driver-events';
 import { buildGameStateFromRosters } from './full-driver-roster';
+import { executeHeadlessKickoff } from './full-driver-kickoff';
 
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
@@ -270,7 +271,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // retombe sur `setup()` minimal (legacy MVP).
   const homeRoster = input.home.roster;
   const awayRoster = input.away.roster;
-  const initialState: GameState =
+  const builtState: GameState =
     homeRoster && homeRoster.length > 0 && awayRoster && awayRoster.length > 0
       ? buildGameStateFromRosters({
           homeRoster,
@@ -280,6 +281,17 @@ export function runFullDriver(input: SimInput): SimResult {
           receivingTeam: 'B', // away receives par convention sim-engine
         })
       : setup();
+
+  // BB 2025 : exécute la vraie séquence kickoff (placement balle +
+  // scatter D8/D6 + kickoff event 2D6 + landing pickup/bounce/touchback)
+  // pour produire un état de jeu réaliste au démarrage. Sans cette
+  // séquence, l'ancien comportement attribuait la balle directement à
+  // un joueur receveur (idx=9 hardcodé) — court-circuitant tout le
+  // mécanisme officiel.
+  const initialState: GameState =
+    builtState.players.length > 0
+      ? executeHeadlessKickoff(builtState, 'A', engineRng)
+      : builtState;
   let state: GameState = initialState;
 
   // Lot 3.D.1 — capture (moves, states) à chaque itération pour permettre

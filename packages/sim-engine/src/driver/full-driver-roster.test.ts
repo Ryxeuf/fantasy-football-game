@@ -90,15 +90,19 @@ describe('buildGameStateFromRosters — Lot 3.A.2.c', () => {
     expect(bob?.av).toBe(10);
   });
 
-  it('place le ballon sur le joueur receveur (index 9 de la receiving team)', () => {
+  it('ne pré-attribue plus le ballon : le kickoff (executeHeadlessKickoff) le posera après scatter', () => {
+    // BB 2025 : `buildGameStateFromRosters` ne court-circuite plus le
+    // kickoff en donnant la balle à un index hardcodé. Aucun joueur
+    // n'a `hasBall=true`, et `state.ball` est undefined. La vraie
+    // séquence kickoff est invoquée séparément dans `runFullDriver`.
     const state = buildGameStateFromRosters({
       homeRoster: buildRoster('home', 11),
       awayRoster: buildRoster('away', 11),
       receivingTeam: 'B',
     });
     const carriers = state.players.filter((p) => p.hasBall);
-    expect(carriers).toHaveLength(1);
-    expect(carriers[0].team).toBe('B');
+    expect(carriers).toHaveLength(0);
+    expect(state.ball).toBeUndefined();
   });
 
   it("place les joueurs sur des positions distinctes (pas de doublons)", () => {

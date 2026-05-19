@@ -128,38 +128,29 @@ export function buildGameStateFromRosters(input: {
   receivingTeam: TeamId;
 }): GameState {
   const baseline = setup();
-  // BUG fix C3 audit round 3 : avant, le ball carrier etait hardcode
-  // `idx === 9`. Si un roster a moins de 10 joueurs (KO antérieur,
-  // casualty pre-match, roster court < 11), `players[9]` est undefined
-  // → personne n'a la balle, l'equipe receveuse ne marque jamais.
-  // Maintenant on prend le dernier joueur place (ou idx=9 si dispo).
-  const homeBallIdx = Math.min(9, input.homeRoster.length - 1);
-  const awayBallIdx = Math.min(9, input.awayRoster.length - 1);
+  // BB 2025 : le ballon n'est PAS posé directement sur un joueur de
+  // l'équipe receveuse. La séquence kickoff (`executeHeadlessKickoff`
+  // dans `full-driver-kickoff.ts`) prend en charge le placement +
+  // scatter + landing après que l'état initial soit prêt. On retourne
+  // donc un état avec joueurs placés mais sans porteur — la balle sera
+  // posée par le kicker dans la moitié receveuse.
   const teamAPlayers = input.homeRoster
     .slice(0, MAX_PLAYERS_ON_FIELD)
     .map((roster, idx) => {
       const pos = TEAM_A_FORMATION[idx];
-      const hasBall = input.receivingTeam === 'A' && idx === homeBallIdx;
-      return rosterPlayerToGameEnginePlayer(roster, 'A', pos, hasBall);
+      return rosterPlayerToGameEnginePlayer(roster, 'A', pos, false);
     });
   const teamBPlayers = input.awayRoster
     .slice(0, MAX_PLAYERS_ON_FIELD)
     .map((roster, idx) => {
       const pos = TEAM_B_FORMATION[idx];
-      const hasBall = input.receivingTeam === 'B' && idx === awayBallIdx;
-      return rosterPlayerToGameEnginePlayer(roster, 'B', pos, hasBall);
+      return rosterPlayerToGameEnginePlayer(roster, 'B', pos, false);
     });
-
-  const carrier =
-    input.receivingTeam === 'A'
-      ? teamAPlayers[homeBallIdx]
-      : teamBPlayers[awayBallIdx];
-  const ball = carrier ? { x: carrier.pos.x, y: carrier.pos.y } : undefined;
 
   return {
     ...baseline,
     players: [...teamAPlayers, ...teamBPlayers],
-    ball,
+    ball: undefined,
     currentPlayer: input.receivingTeam,
   };
 }
