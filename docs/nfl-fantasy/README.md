@@ -38,13 +38,14 @@
 | Vision & scope | Draft v1 | Haute | Validation produit |
 | Légal | Draft v1 | Moyenne | À faire valider par juriste (FR/EU) |
 | API stratégie | Draft v1.4 | Haute | POC nflverse + ESPN ✅ — Tank01 V1.5 à intégrer |
-| Race mapping (teams) | Draft v1 | Haute | Stable identités équipes |
-| Position mapping | Draft v1 | Haute | Mapping logique |
-| Scoring (stats → SPP) | Draft v1 | Moyenne | À calibrer sur saison entière |
+| Race mapping (teams) | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` team-to-race (32 teams, 24 tests) |
+| Position mapping | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` position-to-bb (8 races × 26 NflPos, 55 tests) |
+| Scoring (stats → SPP) | Implementé v1 ✅ | Moyenne | `@bb/nfl-mapper` stats-to-spp + captain multiplier (43 tests). À calibrer sur saison entière |
 | Mechanics (BB) | Draft v1 | Haute | Validation prototype |
 | Rosters 2025 | Draft v1 | Moyenne | Coupure jan 2026 — à updater |
 | Transitions 2026 | Draft v1 | Faible | FA/Draft post mars-avril 2026 |
-| Architecture | Draft v1 | Haute | Pattern monorepo existant |
+| Architecture | Implementé v1 ✅ | Haute | Schéma Prisma 8 modèles NflXxx mergé sur main local. Migration à générer dans container. |
+| Pseudonymisation | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` pseudonymize (Q8, 31 tests) |
 
 ## Convention de mise à jour
 
@@ -65,6 +66,8 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.4 | 03-api-strategy.md : correctif tag nflverse (`stats_player` ≥ 2025), correction MSF (free non-commercial uniquement), ajout Tier 1.5 Tank01 + V1.5 cost ($120/an), ajout Sleeper + Odds API + SDX, avertissements ToS (Sofascore, DK/FD WS, SerpAPI), refs repos ESPN (pseudo-r/Public-ESPN-API, mkreiser/ESPN-Fantasy-Football-API), POC findings W10 2025 |
 | 2026-05-19 | v1.5 | 03-api-strategy.md gotchas: POC validé sur W1/W10/W18 2025 (testé sur 3 weeks). ESPN `?dates` filtre par ET local (TNF→Thu), summary 18/19 keys variable, season sous `leagues[0]`. nflverse: 1 CSV/saison cache-friendly, filter aussi `season_type`, position_group peut être vide. |
 | 2026-05-19 | v1.6 | 03-api-strategy.md edge cases playoffs + intl : POC éprouvé sur Friday Sao Paulo (KC@LAC), Wildcard W19 (LAR@CAR, BUF@JAX, SF@PHI), Super Bowl LX (SEA 29 @ NE 13). Bug ESPN découvert : `leagues[0].season.type` figé à `reg` même en playoffs ; source de vérité = `event.season.slug=post-season`. Numérotation post-season ESPN : Wildcard=1, Div=2, Conf=3, SB=5 (skip 4=Pro Bowl). Mapping nflverse W19-22 ↔ ESPN post-season W1-5 documenté. |
+| 2026-05-19 | v1.7 | Phase 1.A : package `@bb/nfl-mapper` créé avec `team-to-race` (24 tests, mergé via PR #880). |
+| 2026-05-19 | v1.8 | Phase 1.B-1.E livrée en commits atomiques sur main local : position-to-bb (55 tests, 8 races × 26 NflPos), stats-to-spp + captain multiplier (43 tests, examples doc validés Mahomes/Henry/Jefferson/Donald/Watt/Sauce), pseudonymize Q8 (31 tests, 29 BbPosition + 8 archetype overrides), schéma Prisma 8 modèles NflXxx (NflSeason/Week/Team/Player/Game/GameStat/RosterSnapshot/IngestRun) avec `realNameDisplay` flag + sans `archetype` (Q5/Q8). Total package : 153 tests passent, coverage >96%. Migration Prisma à générer dans container `nufflearena_server`. |
 
 ## Source de cette session
 
