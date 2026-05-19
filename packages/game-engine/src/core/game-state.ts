@@ -564,6 +564,33 @@ export function isSimplifiedMode(state: Pick<GameState, 'rulesConfig'>): boolean
  * N.2 — Detection centralisee de fin de match, remplace `newState.half === 2 && newState.turn > 8 && newState.isTurnover`
  * dans move-processor. Honore `rulesConfig.turnsPerHalf` (6 en mode simplifie).
  */
+/**
+ * Reset tous les champs `pendingX` du GameState à `undefined`.
+ *
+ * À utiliser systématiquement aux transitions de drive (halftime,
+ * post-touchdown, fin de match) : si un drive se termine pendant qu'un
+ * choix coach est en attente (apothecary, reroll, push, etc.), le
+ * pending survivait au reset → modal stale au prochain drive, voire
+ * application à un joueur de l'autre équipe.
+ *
+ * Cf. docs/engine-audit-2026-05-19-full.md (bug B1).
+ */
+export function clearAllPendingStates(state: GameState): GameState {
+  return {
+    ...state,
+    pendingApothecary: undefined,
+    pendingKickoffEvent: undefined,
+    pendingBlock: undefined,
+    pendingDumpOff: undefined,
+    pendingPushChoice: undefined,
+    pendingFollowUpChoice: undefined,
+    pendingReroll: undefined,
+    pendingMultipleBlock: undefined,
+    pendingFrenzyBlock: undefined,
+    pendingOnTheBall: undefined,
+  };
+}
+
 export function isMatchEnded(state: Pick<GameState, 'rulesConfig' | 'half' | 'turn' | 'isTurnover'>): boolean {
   const turnsPerHalf = getTurnsPerHalf(state);
   return state.half === 2 && state.turn > turnsPerHalf && state.isTurnover === true;
@@ -625,24 +652,15 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       // modal stale au debut de la 2e mi-temps, ou pire le pending etait
       // applique au joueur d'une autre equipe. Fix : reset explicite.
       const extState = newState as ExtendedGameState;
+      const clearedState = clearAllPendingStates(newState);
       const resultState: GameState = {
-        ...newState,
+        ...clearedState,
         gamePhase: 'halftime' as const,
         half: 2,
         turn: 1,
         currentPlayer: receivingTeam,
         kickingTeam: newKickingTeam,
         isTurnover: false,
-        pendingApothecary: undefined,
-        pendingKickoffEvent: undefined,
-        pendingBlock: undefined,
-        pendingDumpOff: undefined,
-        pendingPushChoice: undefined,
-        pendingFollowUpChoice: undefined,
-        pendingReroll: undefined,
-        pendingMultipleBlock: undefined,
-        pendingFrenzyBlock: undefined,
-        pendingOnTheBall: undefined,
         ball: undefined,
         selectedPlayerId: null,
         playerActions: {} as Record<string, ActionType>,
@@ -650,7 +668,7 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         teamFoulCount: {} as Record<string, number>,
         rerollUsedThisTurn: false,
         lastDiceResult: undefined,
-        gameLog: [...newState.gameLog, halftimeResetLog],
+        gameLog: [...clearedState.gameLog, halftimeResetLog],
         preMatch: {
           ...(extState.preMatch ?? {
             currentCoach: receivingTeam,
@@ -922,8 +940,13 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
 
   // Entrer en phase de setup pour le nouveau drive (les joueurs doivent être replacés)
   const extState = newState as ExtendedGameState;
+  // Clear tous les pendingX : sans cela, un drive termine sur un push
+  // vers endzone (pendingPushChoice actif) ou un apothecary non resolu
+  // laisse l'UI avec une modale fantome au drive suivant.
+  // Cf. docs/engine-audit-2026-05-19-full.md (bug B1).
+  const clearedState = clearAllPendingStates(newState);
   const resultState = {
-    ...newState,
+    ...clearedState,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
     currentPlayer: receivingTeam,
@@ -938,7 +961,7 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     // BB2020 : Officious Ref effect lasts only for the current drive.
     // Reset at touchdown (= drive end).
     officiousRefForDrive: false,
-    gameLog: [...newState.gameLog, resetLog],
+    gameLog: [...clearedState.gameLog, resetLog],
     preMatch: {
       ...extState.preMatch,
       phase: 'setup' as const,
