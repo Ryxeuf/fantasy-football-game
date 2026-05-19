@@ -85,7 +85,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 7 (CRITICAL/PII) : email retire du select public.
           },
         },
         participants: {
@@ -100,7 +100,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
                   select: {
                     id: true,
                     coachName: true,
-                    email: true,
+                    // Audit round 7 (CRITICAL/PII) : email retire du select public.
                   },
                 },
               },
@@ -182,7 +182,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 7 (CRITICAL/PII) : email retire du select public.
           },
         },
         participants: {
@@ -197,7 +197,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
                   select: {
                     id: true,
                     coachName: true,
-                    email: true,
+                    // Audit round 7 (CRITICAL/PII) : email retire du select public.
                   },
                 },
               },
@@ -318,7 +318,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 7 (CRITICAL/PII) : email retire du select public.
           },
         },
         participants: {
@@ -333,7 +333,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                   select: {
                     id: true,
                     coachName: true,
-                    email: true,
+                    // Audit round 7 (CRITICAL/PII) : email retire du select public.
                   },
                 },
               },
@@ -379,7 +379,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 7 (CRITICAL/PII) : email retire du select public.
             },
           },
           participants: {
@@ -393,7 +393,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                     select: {
                       id: true,
                       coachName: true,
-                      email: true,
+                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
                     },
                   },
                 },
@@ -624,7 +624,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
           select: {
             id: true,
             coachName: true,
-            email: true,
+            // Audit round 7 (CRITICAL/PII) : email retire du select public.
           },
         },
         participants: true,
@@ -733,7 +733,7 @@ router.post(
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 7 (CRITICAL/PII) : email retire du select public.
             },
           },
           participants: {
@@ -747,7 +747,7 @@ router.post(
                     select: {
                       id: true,
                       coachName: true,
-                      email: true,
+                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
                     },
                   },
                 },
@@ -853,7 +853,7 @@ router.post(
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 7 (CRITICAL/PII) : email retire du select public.
             },
           },
           participants: {
@@ -867,7 +867,7 @@ router.post(
                     select: {
                       id: true,
                       coachName: true,
-                      email: true,
+                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
                     },
                   },
                 },
@@ -948,7 +948,7 @@ router.post(
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 7 (CRITICAL/PII) : email retire du select public.
             },
           },
           participants: {
@@ -962,7 +962,7 @@ router.post(
                     select: {
                       id: true,
                       coachName: true,
-                      email: true,
+                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
                     },
                   },
                 },
@@ -1060,7 +1060,7 @@ router.post(
             select: {
               id: true,
               coachName: true,
-              email: true,
+              // Audit round 7 (CRITICAL/PII) : email retire du select public.
             },
           },
           participants: {
@@ -1074,7 +1074,7 @@ router.post(
                     select: {
                       id: true,
                       coachName: true,
-                      email: true,
+                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
                     },
                   },
                 },
