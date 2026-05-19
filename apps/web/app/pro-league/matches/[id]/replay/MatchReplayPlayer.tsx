@@ -177,8 +177,8 @@ function summarizeMeta(
     case "KICKOFF": {
       const home = String(meta.homeName ?? meta.home ?? "home");
       const away = String(meta.awayName ?? meta.away ?? "away");
-      // BB pré-match : enrichir le kickoff avec qui frappe et la météo
-      // pour donner du contexte au lecteur (toss → kicker → météo).
+      // BB pré-match : on relate le coin toss, qui engage et la météo
+      // pour donner du contexte au lecteur.
       const weatherLabels: Record<string, string> = {
         nice: "Beau temps",
         sweltering_heat: "Chaleur étouffante",
@@ -187,17 +187,20 @@ function summarizeMeta(
         blizzard: "Blizzard",
       };
       const receivingTeam = String(meta.receivingTeam ?? "");
-      const kickingTeam = receivingTeam === "home"
-        ? "away"
-        : receivingTeam === "away"
-          ? "home"
-          : "";
-      const kickerName = kickingTeam === "home" ? home : kickingTeam === "away" ? away : "";
-      const receiverName = receivingTeam === "home" ? home : receivingTeam === "away" ? away : "";
+      const kickingTeam = String(meta.kickingTeam ?? "");
+      const tossWinner = String(meta.tossWinner ?? "");
+      const teamName = (slot: string): string =>
+        slot === "home" ? home : slot === "away" ? away : "";
+      const winnerName = teamName(tossWinner);
+      const kickerName = teamName(kickingTeam);
+      const receiverName = teamName(receivingTeam);
       const weatherKey = String(meta.weather ?? "");
       const weatherLabel = weatherLabels[weatherKey] ?? weatherKey;
       const base = e.kickoffPair.replace("{home}", home).replace("{away}", away);
       const extras: string[] = [];
+      if (winnerName) {
+        extras.push(`${winnerName} remporte le toss et choisit de recevoir`);
+      }
       if (kickerName && receiverName) {
         extras.push(`${kickerName} engage, ${receiverName} reçoit`);
       }

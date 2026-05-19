@@ -271,6 +271,17 @@ export function runFullDriver(input: SimInput): SimResult {
   // retombe sur `setup()` minimal (legacy MVP).
   const homeRoster = input.home.roster;
   const awayRoster = input.away.roster;
+
+  // BB 2025 — Pré-match coin toss :
+  //  - Un coach gagne le toss (50/50 sur RNG seedé → déterministe).
+  //  - Le gagnant choisit kick ou receive. Heuristique IA : reçoit
+  //    (avantage d'avoir 2 chances de scorer au premier drive). Si
+  //    plus tard on modélise des coachs préférant kick (defensive
+  //    style), ce sera surchargeable via `input.coinTossStrategy`.
+  const tossWinner: TeamId = engineRng() < 0.5 ? 'A' : 'B';
+  const receivingTeam: TeamId = tossWinner; // gagnant reçoit (heuristique)
+  const kickingTeam: TeamId = receivingTeam === 'A' ? 'B' : 'A';
+
   const builtState: GameState =
     homeRoster && homeRoster.length > 0 && awayRoster && awayRoster.length > 0
       ? buildGameStateFromRosters({
@@ -278,7 +289,7 @@ export function runFullDriver(input: SimInput): SimResult {
           awayRoster,
           homeName: input.home.name,
           awayName: input.away.name,
-          receivingTeam: 'B', // away receives par convention sim-engine
+          receivingTeam,
         })
       : setup();
 
@@ -290,7 +301,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // mécanisme officiel.
   const initialState: GameState =
     builtState.players.length > 0
-      ? executeHeadlessKickoff(builtState, 'A', engineRng)
+      ? executeHeadlessKickoff(builtState, kickingTeam, engineRng)
       : builtState;
   let state: GameState = initialState;
 
@@ -316,7 +327,9 @@ export function runFullDriver(input: SimInput): SimResult {
         home: input.home.id,
         away: input.away.id,
         weather: input.weather ?? 'nice',
-        receivingTeam: 'away',
+        receivingTeam: receivingTeam === 'A' ? 'home' : 'away',
+        kickingTeam: kickingTeam === 'A' ? 'home' : 'away',
+        tossWinner: tossWinner === 'A' ? 'home' : 'away',
       },
     },
     // TURN_START initial pour le premier tour — sans cet event,
