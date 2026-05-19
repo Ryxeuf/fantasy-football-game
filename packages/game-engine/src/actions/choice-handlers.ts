@@ -107,16 +107,19 @@ export function handleBlockChoose(
     getPlayerAction(state, attacker.id) === 'BLITZ';
 
   if (isBlitz) {
-    // Pour un blitz, consommer 1 PM supplementaire pour le blocage
-    const attackerIdx = newState.players.findIndex(
-      (p) => p.id === attacker.id,
-    );
-    if (attackerIdx !== -1) {
-      newState.players[attackerIdx].pm = Math.max(
-        0,
-        newState.players[attackerIdx].pm - 1,
-      );
-    }
+    // Pour un blitz, consommer 1 PM supplementaire pour le blocage.
+    //
+    // BUG fix audit 2026-05-19 (B3) : avant, mutation indexee
+    // `newState.players[attackerIdx].pm = ...` cassait l'immutabilite
+    // si players array etait aliase avec le state caller (BLITZ ->
+    // BLOCK_CHOOSE chaine, sans deep clone garanti). Maintenant via
+    // .map() qui produit un nouvel array.
+    newState = {
+      ...newState,
+      players: newState.players.map((p) =>
+        p.id === attacker.id ? { ...p, pm: Math.max(0, p.pm - 1) } : p,
+      ),
+    };
 
     // Enregistrer l'action de blitz
     newState = setPlayerAction(newState, attacker.id, 'BLITZ');
