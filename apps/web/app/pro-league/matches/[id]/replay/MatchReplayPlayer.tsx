@@ -80,13 +80,54 @@ interface ReplayDump {
  * - La simple présence du dump signale que la vue terrain BB est dispo
  *   (donc on l'active par défaut).
  */
+interface ReplayTeamPaint {
+  readonly id: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly city: string | null;
+  readonly race: string;
+  readonly primaryColor: string | null;
+  readonly secondaryColor: string | null;
+}
+
 interface FullReplayDumpLite {
   readonly initialState: GameState;
   readonly states?: readonly GameState[];
+  readonly teams?: {
+    readonly home: ReplayTeamPaint | null;
+    readonly away: ReplayTeamPaint | null;
+  };
 }
 
 interface PlayerProps {
   readonly matchId: string;
+}
+
+/**
+ * Badge "▶ Nom équipe" coloré avec la primaryColor de l'équipe active.
+ * `side` = null pendant la phase kickoff ou avant le premier TURN_START.
+ */
+function ActiveTeamBadge({
+  side,
+  teams,
+}: {
+  side: "home" | "away" | null;
+  teams: FullReplayDumpLite["teams"] | undefined;
+}): JSX.Element | null {
+  if (!side) return null;
+  const team = side === "home" ? teams?.home : teams?.away;
+  const color = team?.primaryColor || (side === "home" ? "#dc2626" : "#0085CA");
+  const label = team?.name || (side === "home" ? "Home" : "Away");
+  return (
+    <span
+      data-testid="replay-active-team"
+      className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow"
+      style={{ backgroundColor: color }}
+    >
+      <span aria-hidden="true">▶</span>
+      <span>{label}</span>
+    </span>
+  );
 }
 
 /**
@@ -534,6 +575,35 @@ export default function MatchReplayPlayer({
     [visibleEvents],
   );
   const score = useMemo(() => deriveScore(visibleEvents), [visibleEvents]);
+  // Équipe active = `drivingTeam` du dernier `TURN_START` <= currentMs.
+  // Permet d'afficher dans le header sticky qui joue actuellement, en
+  // utilisant les couleurs primary/secondary de l'équipe correspondante.
+  const activeTeamSide: "home" | "away" | null = useMemo(() => {
+    for (let i = visibleEvents.length - 1; i >= 0; i -= 1) {
+      const ev = visibleEvents[i];
+      if (ev.type === "TURN_START") {
+        const meta = (ev.meta ?? {}) as Record<string, unknown>;
+        const drivingTeam = String(meta.drivingTeam ?? "");
+        if (drivingTeam === "home" || drivingTeam === "away") {
+          return drivingTeam;
+        }
+      }
+    }
+    return null;
+  }, [visibleEvents]);
+  const currentTurnInfo = useMemo(() => {
+    for (let i = visibleEvents.length - 1; i >= 0; i -= 1) {
+      const ev = visibleEvents[i];
+      if (ev.type === "TURN_START") {
+        const meta = (ev.meta ?? {}) as Record<string, unknown>;
+        return {
+          half: Number(meta.half ?? 0),
+          turn: Number(meta.turn ?? 0),
+        };
+      }
+    }
+    return null;
+  }, [visibleEvents]);
   const playerNames = useMemo(
     () => buildPlayerNameIndex(fullDump),
     [fullDump],
@@ -601,7 +671,7 @@ export default function MatchReplayPlayer({
         </div>
       )}
 
-      {/* Header sticky : score, half/turn, view tabs */}
+      {/* Header sticky : score, half/turn, équipe active, view tabs */}
       <header
         data-testid="replay-header"
         className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 px-4 py-2 shadow backdrop-blur"
@@ -612,7 +682,15 @@ export default function MatchReplayPlayer({
             className="rounded bg-slate-800 px-2 py-1 font-mono text-xs uppercase tracking-wider text-slate-300"
           >
             {halfLabel}
+            {currentTurnInfo && currentTurnInfo.turn > 0
+              ? ` · Tour ${currentTurnInfo.turn}`
+              : ""}
           </span>
+          {/* Indicateur équipe active : couleur primary + nom de l'équipe */}
+          <ActiveTeamBadge
+            side={activeTeamSide}
+            teams={fullDump?.teams}
+          />
           <span
             data-testid="replay-score"
             className="font-mono text-xl font-bold tracking-wide"
@@ -739,24 +817,57 @@ export default function MatchReplayPlayer({
                 .filter((ev) => !HIDDEN_EVENT_TYPES.has(ev.type))
                 .slice()
                 .reverse()
-                .map((ev, idx) => (
-                  <li
-                    key={`${visibleEvents.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
-                    className="flex items-start gap-2 rounded border border-slate-800 bg-slate-900 px-2 py-1.5 text-xs leading-relaxed"
-                  >
-                    <span className="shrink-0 font-mono text-[10px] text-slate-500">
-                      {formatReplayClock(ev.displayAtMs)}
-                    </span>
-                    <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-mono ${EVENT_BADGE_STYLES[ev.type] ?? "bg-slate-700 text-slate-100"}`}
+                .map((ev, idx) => {
+                  // TURN_START : séparateur de tour stylisé en bandeau
+                  // avec accent latéral coloré (couleur primary de l'équipe
+                  // qui démarre son tour) pour faciliter la navigation
+                  // visuelle dans le journal.
+                  if (ev.type === "TURN_START") {
+                    const meta = (ev.meta ?? {}) as Record<string, unknown>;
+                    const side = String(meta.drivingTeam ?? "");
+                    const team =
+                      side === "home"
+                        ? fullDump?.teams?.home
+                        : side === "away"
+                          ? fullDump?.teams?.away
+                          : null;
+                    const accent =
+                      team?.primaryColor ||
+                      (side === "home" ? "#dc2626" : "#0085CA");
+                    return (
+                      <li
+                        key={`${visibleEvents.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
+                        className="mt-1 flex items-center gap-2 rounded bg-slate-950/60 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-200"
+                        style={{ borderLeft: `4px solid ${accent}` }}
+                      >
+                        <span className="font-mono text-[10px] text-slate-500">
+                          {formatReplayClock(ev.displayAtMs)}
+                        </span>
+                        <span className="flex-1">
+                          {summarizeMeta(ev, t.proLeague.events, playerNames)}
+                        </span>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li
+                      key={`${visibleEvents.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
+                      className="flex items-start gap-2 rounded border border-slate-800 bg-slate-900 px-2 py-1.5 text-xs leading-relaxed"
                     >
-                      {ev.type}
-                    </span>
-                    <span className="flex-1 text-slate-200">
-                      {summarizeMeta(ev, t.proLeague.events, playerNames)}
-                    </span>
-                  </li>
-                ))
+                      <span className="shrink-0 font-mono text-[10px] text-slate-500">
+                        {formatReplayClock(ev.displayAtMs)}
+                      </span>
+                      <span
+                        className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-mono ${EVENT_BADGE_STYLES[ev.type] ?? "bg-slate-700 text-slate-100"}`}
+                      >
+                        {ev.type}
+                      </span>
+                      <span className="flex-1 text-slate-200">
+                        {summarizeMeta(ev, t.proLeague.events, playerNames)}
+                      </span>
+                    </li>
+                  );
+                })
             )}
           </ol>
         </aside>
