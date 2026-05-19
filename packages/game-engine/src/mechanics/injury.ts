@@ -155,6 +155,47 @@ const LASTING_INJURY_LABELS: Record<LastingInjuryType, string> = {
 };
 
 /**
+ * BUG fix audit round 6 (CRITICAL) — helper deterministe pour appliquer
+ * ou REVERTIR un stat-reduction de lasting injury. Avant, `handleCasualty`
+ * appliquait `-1` immediatement sur `player.ma/av/pa/ag/st`, mais
+ * l'apothecary reroll ou la regen reussie ne revertaient JAMAIS le
+ * stat → player permanently de-statte.
+ *
+ *  - `applyLastingInjuryStat(player, type)` : applique -1 (clamp).
+ *  - `revertLastingInjuryStat(player, type)` : applique +1.
+ *  - `niggling` : pas de stat reduction, no-op.
+ */
+export function applyLastingInjuryStat(
+  player: Player,
+  type: LastingInjuryType,
+): Player {
+  switch (type) {
+    case '-1ma': return { ...player, ma: Math.max(1, player.ma - 1) };
+    case '-1av': return { ...player, av: Math.max(1, player.av - 1) };
+    case '-1ag': return { ...player, ag: Math.max(1, player.ag - 1) };
+    case '-1pa': return { ...player, pa: Math.max(0, player.pa - 1) };
+    case '-1st': return { ...player, st: Math.max(1, player.st - 1) };
+    case 'niggling': return player;
+    default: return player;
+  }
+}
+
+export function revertLastingInjuryStat(
+  player: Player,
+  type: LastingInjuryType,
+): Player {
+  switch (type) {
+    case '-1ma': return { ...player, ma: player.ma + 1 };
+    case '-1av': return { ...player, av: player.av + 1 };
+    case '-1ag': return { ...player, ag: player.ag + 1 };
+    case '-1pa': return { ...player, pa: player.pa + 1 };
+    case '-1st': return { ...player, st: player.st + 1 };
+    case 'niggling': return player;
+    default: return player;
+  }
+}
+
+/**
  * Gère un joueur blessé (10+)
  */
 function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?: string): GameState {
@@ -246,21 +287,14 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
       missNextMatch: true,
     };
     // BB3 S3 : la lasting injury reduit immediatement la stat du joueur
-    // sur le terrain. Avant le fix, le type etait stocke dans
-    // `lastingInjuryDetails` mais `player.ma/av/ag/pa/st` n'etait jamais
-    // decrement. La casualty etait purement cosmetique. Maintenant on
-    // applique la reduction immediatement (clamp min 1 pour eviter 0).
-    newState.players = newState.players.map(p => {
-      if (p.id !== player.id) return p;
-      switch (injuryType) {
-        case '-1ma': return { ...p, ma: Math.max(1, p.ma - 1) };
-        case '-1av': return { ...p, av: Math.max(1, p.av - 1) };
-        case '-1ag': return { ...p, ag: Math.max(1, p.ag - 1) };
-        case '-1pa': return { ...p, pa: Math.max(0, p.pa - 1) };
-        case '-1st': return { ...p, st: Math.max(1, p.st - 1) };
-        default: return p;
-      }
-    });
+    // sur le terrain. Le type est stocke dans `lastingInjuryDetails` ET
+    // applique directement via `applyLastingInjuryStat` (clamp min 1).
+    // Audit round 6 : factorise via helper `applyLastingInjuryStat` (partage
+    // avec apothecary revert path qui doit savoir REVERT cette stat
+    // sur reroll less-severe outcome / regen success).
+    newState.players = newState.players.map(p =>
+      p.id === player.id ? applyLastingInjuryStat(p, injuryType) : p,
+    );
     const lastingInjuryLog = createLogEntry(
       'action',
       `${player.name} a une blessure permanente - ${LASTING_INJURY_LABELS[injuryType]} + manquera le prochain match`,

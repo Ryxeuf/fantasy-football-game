@@ -9,10 +9,11 @@
  * - Si la Régénération échoue, l'Apothicaire peut encore être utilisé.
  */
 
-import type { GameState, RNG } from '../core/types';
+import type { GameState, Player, RNG } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { movePlayerToDugoutZone } from './dugout';
 import { createLogEntry } from '../utils/logging';
+import { revertLastingInjuryStat } from './injury';
 
 /**
  * Checks if a player has the Regeneration skill.
@@ -57,6 +58,15 @@ export function tryRegeneration(
     const team = player.team;
     const newState = movePlayerToDugoutZone(state, playerId, 'reserves', team);
 
+    // BUG fix audit round 6 (CRITICAL) : avant, Regeneration reussie
+    // sur une casualty avec lasting injury clearait `casualtyResults` +
+    // `lastingInjuryDetails` mais NE REVERTAIT JAMAIS le stat-reduction
+    // applique par `handleCasualty` a `player.ma/av/ag/pa/st`. Player
+    // revenait en reserves avec stats permanently corrompues.
+    // Fix : revertir le stat du lasting injury type AVANT de clear
+    // les details (besoin du type pour determiner quel stat).
+    const currentLasting = newState.lastingInjuryDetails[playerId];
+
     // Clear casualty data if applicable
     if (injuryType === 'casualty') {
       const { [playerId]: _, ...restCasualty } = newState.casualtyResults;
@@ -65,10 +75,16 @@ export function tryRegeneration(
       newState.lastingInjuryDetails = restInjury;
     }
 
-    // Update player state
-    newState.players = newState.players.map(p =>
-      p.id === playerId ? { ...p, state: 'active', stunned: false } : p
-    );
+    // Update player state + revert stat reduction if a lasting injury
+    // was applied to this casualty.
+    newState.players = newState.players.map(p => {
+      if (p.id !== playerId) return p;
+      let next: Player = { ...p, state: 'active', stunned: false };
+      if (currentLasting) {
+        next = revertLastingInjuryStat(next, currentLasting.injuryType);
+      }
+      return next;
+    });
 
     const log = createLogEntry(
       'action',
