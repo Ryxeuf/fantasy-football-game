@@ -68,7 +68,10 @@ export function performLeapRoll(
   const success = diceRoll !== 1 && (diceRoll === 6 || diceRoll >= targetNumber);
 
   return {
-    type: 'dodge',
+    // BUG fix audit round 8 (HIGH) : avant, `type: 'dodge'` polluait
+    // les stats dodge (histogrammes, achievements, leaderboards).
+    // Aligne avec le fix similaire 'gfi' du round 4.
+    type: 'leap',
     playerId: player.id,
     diceRoll,
     targetNumber,
