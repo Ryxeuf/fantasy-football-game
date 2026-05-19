@@ -124,17 +124,26 @@ export async function requestPasswordReset(
   });
 
   const link = `${input.origin}/reset-password?token=${tokenPlain}`;
+  // Audit round 10 (HIGH) : avant, on loggait `link` complet (donc le
+  // token plain) en prod. Un attaquant qui POST forgot-password avec
+  // `Origin: https://evil.com` pour l'email d'une victime laissait
+  // dans les logs un lien `evil.com/reset-password?token=<live>`.
+  // N'importe qui avec acces aux logs (scraper Loki/Datadog mal
+  // configure, support reading prod logs) pouvait recuperer un token
+  // exploitable pendant son TTL.
+  // Fix : en prod on log uniquement les metadata (tokenId, expiresAt) ;
+  // le link n'est conserve qu'en dev pour faciliter le debug.
+  const isProd = process.env.NODE_ENV === "production";
   serverLog.info("[password-reset] link generated", {
     event: "auth.password_reset.requested",
     userId: user.id,
     tokenId: persisted.id,
     expiresAt: expiresAt.toISOString(),
-    // Le link contient le token plain — visible UNIQUEMENT cote logs
-    // serveur. Ne pas le retourner via response API en prod.
-    link,
+    // En prod : pas de link (contient le token plain + un origin
+    // potentiellement attacker-controlled). En dev : link complet.
+    link: isProd ? undefined : link,
   });
 
-  const isProd = process.env.NODE_ENV === "production";
   return {
     requested: true,
     devLink: isProd ? null : link,

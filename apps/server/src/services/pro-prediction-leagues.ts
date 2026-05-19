@@ -13,6 +13,7 @@
  * ProPredictionPick. Erreurs typees via `PredictionLeagueError`.
  */
 
+import { randomInt } from "node:crypto";
 import { prisma } from "../prisma";
 
 export type PredictionLeagueErrorCode =
@@ -40,7 +41,20 @@ const JOIN_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans 0/O/1/I
 const JOIN_CODE_LENGTH = 8;
 const MAX_GENERATION_RETRIES = 5;
 
-export function generateJoinCode(rng: () => number = Math.random): string {
+/**
+ * Audit round 10 (MEDIUM/sec) : avant, on utilisait `Math.random()`
+ * pour generer les join codes. PRNG non-CSPRNG → un attaquant peut
+ * brute-forcer les codes de ligues privees a ~6000 tentatives/min IP
+ * (le rate-limiter global est 100 req/min mais on peut tourner sur
+ * plusieurs IP). 8 chars * 32-alphabet = 2^40 valeurs nominales.
+ *
+ * Fix : `crypto.randomInt` (CSPRNG). Le parametre `rng` reste pour
+ * permettre l'injection deterministe en tests, mais en prod on
+ * delegue toujours a `randomInt`.
+ */
+export function generateJoinCode(
+  rng: () => number = () => randomInt(0, JOIN_CODE_ALPHABET.length) / JOIN_CODE_ALPHABET.length,
+): string {
   let code = "";
   for (let i = 0; i < JOIN_CODE_LENGTH; i += 1) {
     code += JOIN_CODE_ALPHABET[Math.floor(rng() * JOIN_CODE_ALPHABET.length)];

@@ -23,6 +23,7 @@ import {
 } from "../services/kofi-claim";
 import { isSupporter } from "../services/kofi";
 import { serverLog } from "../utils/server-log";
+import { CORS_ORIGINS } from "../config";
 import { redactEmail, userTag } from "../utils/redact";
 import {
   REFRESH_TOKEN_TTL_SECONDS,
@@ -332,13 +333,20 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { email } = req.body as { email: string };
-      // Lit l'origin depuis le header (X-Forwarded-Host / Origin) en
-      // fallback vers l'env publique. Cap a 256 chars pour eviter un
-      // injection log.
+      // Audit round 10 (HIGH) : avant, on lisait `req.get("Origin")`
+      // brut. Un attaquant pouvait POST avec `Origin: https://evil.com`
+      // pour fabriquer un lien malveillant integre dans l'email de
+      // reset (ou dans les logs serveur). Maintenant on valide le
+      // header contre `CORS_ORIGINS` ; si absent ou invalide, fallback
+      // sur `FRONTEND_PUBLIC_URL` puis sur le defaut prod.
+      const rawOrigin = (req.get("Origin") || "").toString().slice(0, 256);
+      const allowedOrigin = CORS_ORIGINS.includes(rawOrigin)
+        ? rawOrigin
+        : null;
       const origin =
-        (req.get("Origin") || process.env.FRONTEND_PUBLIC_URL || "")
-          .toString()
-          .slice(0, 256) || "https://nufflearena.fr";
+        allowedOrigin ||
+        process.env.FRONTEND_PUBLIC_URL ||
+        "https://nufflearena.fr";
       const ip =
         (req.headers["x-forwarded-for"] as string | undefined)
           ?.split(",")[0]
