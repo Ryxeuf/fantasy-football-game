@@ -42,11 +42,26 @@ self.addEventListener("push", (event) => {
 
 /**
  * Notification click — open or focus the target URL.
+ *
+ * Audit round 11 (HIGH) : avant, on passait `data?.url` brut a
+ * `openWindow`. Si la cle VAPID etait volee ou si le serveur push
+ * etait compromis, un attaquant pouvait envoyer
+ * `{data: {url: "https://evil.com/phishing"}}` et chaque user qui
+ * clique sur la notif partait sur le domaine attaquant. Maintenant
+ * on restreint a des chemins internes commencant par `/`.
  */
+function isSafeInternalUrl(url) {
+  return typeof url === "string"
+    && url.startsWith("/")
+    && !url.startsWith("//")
+    && !url.startsWith("/\\");
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetUrl = event.notification.data?.url || "/";
+  const rawUrl = event.notification.data?.url;
+  const targetUrl = isSafeInternalUrl(rawUrl) ? rawUrl : "/";
 
   event.waitUntil(
     self.clients
