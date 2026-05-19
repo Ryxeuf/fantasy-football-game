@@ -22,3 +22,10 @@ export {
   getBbPositionRole,
   getBbPositionsForRace,
 } from './position-to-bb.js';
+export type {
+  BbEventType,
+  NflPlayerStatLine,
+  SppBreakdown,
+  SppEvent,
+} from './stats-to-spp.js';
+export { applyCaptainMultiplier, computeSpp } from './stats-to-spp.js';
