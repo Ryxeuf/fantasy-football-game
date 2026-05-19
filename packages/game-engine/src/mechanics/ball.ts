@@ -125,8 +125,55 @@ export function getRandomDirection(rng: RNG): Position {
  * @param rng - Générateur de nombres aléatoires
  * @returns Nouvel état du jeu après rebond
  */
+/**
+ * BUG fix audit round 7 (HIGH) — bounceBall avait une recursion non
+ * bornee : chaque rebond echoue → recurse, chaque No-Hands deflection
+ * → recurse. Avec une suite de No-Hands players adjacents ou une
+ * RNG pathologique, la pile pouvait deborder (stack overflow) → sim
+ * crash. Fix : convertir la recursion en boucle iterative avec un
+ * compteur d'echappement (MAX_BOUNCES). Si depasse, la balle s'arrete
+ * sur la case courante et on log un BOUNCE_TIMEOUT info entry.
+ */
+const MAX_BOUNCES = 32;
+
 export function bounceBall(state: GameState, rng: RNG): GameState {
   if (!state.ball) return state;
+
+  let workingState: GameState = state;
+  for (let iter = 0; iter < MAX_BOUNCES; iter += 1) {
+    const result = bounceBallStep(workingState, rng);
+    if (result.kind === 'final') {
+      return result.state;
+    }
+    workingState = result.state;
+  }
+  // Garde-fou : si on depasse MAX_BOUNCES (cas pathologique), on
+  // arrete la balle ou elle est et on log un avertissement.
+  const timeoutLog = createLogEntry(
+    'info',
+    `Ballon : limite de rebonds atteinte (${MAX_BOUNCES}). Balle arretee.`,
+    undefined,
+    undefined,
+    { bounceTimeout: true },
+  );
+  return {
+    ...workingState,
+    gameLog: [...workingState.gameLog, timeoutLog],
+  };
+}
+
+/**
+ * Une iteration de rebond. Retourne soit `final` (la balle s'est
+ * arretee, a ete recue, ou un TD a ete marque) — l'appelant arrete la
+ * boucle ; soit `bounce_again` avec le state intermediaire pour la
+ * prochaine iteration. Pas de recursion.
+ */
+type BounceStepResult =
+  | { kind: 'final'; state: GameState }
+  | { kind: 'bounce_again'; state: GameState };
+
+function bounceBallStep(state: GameState, rng: RNG): BounceStepResult {
+  if (!state.ball) return { kind: 'final', state };
 
   const newState = structuredClone(state) as GameState;
   const currentBallPos = { ...state.ball };
@@ -164,7 +211,7 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
       );
       newState.gameLog = [...newState.gameLog, noHandsLog];
       newState.ball = newBallPos;
-      return bounceBall(newState, rng);
+      return { kind: 'bounce_again', state: newState };
     }
 
     // Le joueur doit tenter de réceptionner la balle
@@ -214,8 +261,9 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
       // Si réception dans l'en-but adverse, touchdown immédiat
       const scorer = newState.players.find(p => p.id === playerAtNewPos.id)!;
       if (isInOpponentEndzone(newState, scorer)) {
-        return awardTouchdown(newState, scorer.team, scorer);
+        return { kind: 'final', state: awardTouchdown(newState, scorer.team, scorer) };
       }
+      return { kind: 'final', state: checkTouchdowns(newState) };
     } else {
       // Échec de réception : la balle continue à rebondir
       newState.ball = newBallPos;
@@ -229,8 +277,7 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
       );
       newState.gameLog = [...newState.gameLog, failCatchLogEntry];
 
-      // Appel récursif pour continuer le rebond
-      return bounceBall(newState, rng);
+      return { kind: 'bounce_again', state: newState };
     }
   } else {
     // Case vide ou joueur sans Zone de Tackle : la balle s'arrête là
@@ -246,7 +293,7 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
     newState.gameLog = [...newState.gameLog, stopLogEntry];
   }
 
-  return checkTouchdowns(newState);
+  return { kind: 'final', state: checkTouchdowns(newState) };
 }
 
 /**
