@@ -302,9 +302,17 @@ export async function forceForfeit(
     );
   }
 
+  // BUG fix audit round 7 (HIGH/race) : avant, read `match.status`,
+  // check, puis `update()` sequentiel hors transaction. Deux admin
+  // forfeit racing pouvaient tous deux passer le check et tous deux
+  // overwrite outcome / scoreHome / scoreAway → inversion possible
+  // (un admin set winner='home', l'autre 'away' → resultat final
+  // depend de l'ordre des writes, pas du premier admin).
+  // Fix : updateMany conditionnel WHERE status: { not: "completed" }
+  // → un seul appel reussit. Si count===0, throw MATCH_ALREADY_COMPLETED.
   const now = new Date();
-  await prisma.proLeagueMatch.update({
-    where: { id: matchId },
+  const updateResult = await prisma.proLeagueMatch.updateMany({
+    where: { id: matchId, status: { not: "completed" } },
     data: {
       status: "completed",
       outcome: winnerSide,
@@ -314,6 +322,12 @@ export async function forceForfeit(
       completedAt: now,
     },
   });
+  if (updateResult.count === 0) {
+    throw new SeasonFactoryError(
+      "MATCH_ALREADY_COMPLETED",
+      "Le match est deja completed (race condition concurrent forfeit)",
+    );
+  }
 
   return {
     matchId,
