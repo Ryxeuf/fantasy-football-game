@@ -2,9 +2,10 @@
  * Tests for the replay module — extracts replay frames from stored turn payloads.
  * TDD RED phase: these tests define the expected API before implementation.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   buildReplayFrames,
+  parseReplayGameState,
   type ReplayFrame,
   type ReplayTurnPayload,
 } from './replay';
@@ -184,5 +185,63 @@ describe('Replay: buildReplayFrames', () => {
 
     expect(frames.length).toBe(1);
     expect(frames[0].gameState.turn).toBe(5);
+  });
+});
+
+describe('parseReplayGameState — robustesse (audit bug B2)', () => {
+  it('retourne null pour string JSON malformee (au lieu de crash)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = parseReplayGameState('{not valid json');
+    expect(result).toBeNull();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('retourne null pour gameState manquant les champs critiques', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Pas de players, pas de turn, pas de half, pas de score.
+    const result = parseReplayGameState({} as unknown as GameState);
+    expect(result).toBeNull();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('retourne null pour null/undefined', () => {
+    expect(parseReplayGameState(null)).toBeNull();
+    expect(parseReplayGameState(undefined)).toBeNull();
+  });
+
+  it('accepte un GameState bien forme (object natif)', () => {
+    const gs = makeGameState({ turn: 3 });
+    const result = parseReplayGameState(gs);
+    expect(result).not.toBeNull();
+    expect(result?.turn).toBe(3);
+  });
+
+  it('accepte un GameState serialise valide', () => {
+    const gs = makeGameState({ turn: 7 });
+    const result = parseReplayGameState(JSON.stringify(gs));
+    expect(result).not.toBeNull();
+    expect(result?.turn).toBe(7);
+  });
+
+  it('buildReplayFrames skip les frames invalides sans crasher', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const gs = makeGameState({ turn: 1 });
+    const turns: ReplayTurnPayload[] = [
+      makeTurnPayload('start', gs),
+      // Frame corrompue : string JSON malformee.
+      {
+        type: 'gameplay-move',
+        gameState: '{garbage' as unknown as GameState,
+        timestamp: new Date().toISOString(),
+      },
+      makeTurnPayload('gameplay-move', makeGameState({ turn: 2 })),
+    ];
+    const frames = buildReplayFrames(turns);
+    expect(frames.length).toBe(2); // Frame corrompue skippee, pas de crash.
+    expect(frames[0].gameState.turn).toBe(1);
+    expect(frames[1].gameState.turn).toBe(2);
+    warn.mockRestore();
   });
 });
