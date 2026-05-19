@@ -1,3 +1,17 @@
+## [1.128.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.128.0...v1.128.1) (2026-05-19)
+
+
+### ⚡ Performance Improvements
+
+* **game-engine:** cache evaluatePosition and team-active scans ([05fad36](https://github.com/Ryxeuf/fantasy-football-game/commit/05fad366c4006f7bdd90157ecaf7fedada0b9926))
+* **game-engine:** hoist constant filters and DIRS in getLegalMoves ([8d2405e](https://github.com/Ryxeuf/fantasy-football-game/commit/8d2405e482c323aab279a3e351cdb6a69abe843d))
+* **game-engine:** replace structuredClone with tailored cloneGameState ([d50de42](https://github.com/Ryxeuf/fantasy-football-game/commit/d50de42493a2f465f23cc810c62c3a5dc9d37e6d))
+
+
+### 📝 Documentation
+
+* mark Sprint Perf complete in audit 2026-05-19 ([57d6ca9](https://github.com/Ryxeuf/fantasy-football-game/commit/57d6ca91e2b9b1eaae3a6a16a90b648773dc0c8e))
+
 ## [1.128.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.127.0...v1.128.0) (2026-05-19)
 
 
