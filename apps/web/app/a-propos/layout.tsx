@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import BreadcrumbStructuredData from "../components/BreadcrumbStructuredData";
 import { buildHreflangAlternates } from "../lib/hreflang";
+import { safeJsonLd } from "../lib/safe-json-ld";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const URL = `${BASE_URL}/a-propos`;
@@ -73,7 +74,7 @@ export default function AboutLayout({ children }: { children: React.ReactNode })
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutPageSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(aboutPageSchema) }}
       />
       {children}
     </>

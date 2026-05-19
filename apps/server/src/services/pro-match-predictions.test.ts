@@ -12,8 +12,10 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       upsert: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
     },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -38,8 +40,10 @@ const mockedPrisma = prisma as unknown as {
     findMany: ReturnType<typeof vi.fn>;
     upsert: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
+  $transaction: ReturnType<typeof vi.fn>;
 };
 
 beforeEach(() => {
@@ -302,7 +306,12 @@ describe("settlePredictions", () => {
       { id: "p2", body: "Buf wins easy" }, // winner
       { id: "p3", body: "GB by 4" }, // wrong
     ]);
-    mockedPrisma.proMatchPrediction.update.mockResolvedValue({});
+    mockedPrisma.proMatchPrediction.updateMany.mockResolvedValue({ count: 1 });
+    mockedPrisma.$transaction.mockResolvedValue([
+      { count: 1 },
+      { count: 1 },
+      { count: 1 },
+    ]);
 
     const out = await settlePredictions({
       matchId: "m1",
@@ -315,10 +324,18 @@ describe("settlePredictions", () => {
       winner: 1,
       wrong: 1,
     });
-    expect(mockedPrisma.proMatchPrediction.update).toHaveBeenCalledTimes(3);
-    const firstUpdate =
-      mockedPrisma.proMatchPrediction.update.mock.calls[0][0];
-    expect(firstUpdate.data.score).toBe("perfect");
+    // Round 9 (HIGH) : settle bulk via 3 updateMany dans $transaction.
+    expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(mockedPrisma.proMatchPrediction.updateMany).toHaveBeenCalledTimes(3);
+    const calls = mockedPrisma.proMatchPrediction.updateMany.mock.calls.map(
+      (c: unknown[]) => c[0] as { where: { id: { in: string[] } }; data: { score: string } },
+    );
+    const perfectCall = calls.find((c) => c.data.score === "perfect");
+    const winnerCall = calls.find((c) => c.data.score === "winner");
+    const wrongCall = calls.find((c) => c.data.score === "wrong");
+    expect(perfectCall?.where.id.in).toEqual(["p1"]);
+    expect(winnerCall?.where.id.in).toEqual(["p2"]);
+    expect(wrongCall?.where.id.in).toEqual(["p3"]);
   });
 });
 

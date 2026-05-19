@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
+import { safeJsonLd } from "../../lib/safe-json-ld";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
@@ -100,7 +101,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <div className="w-full">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
 
       <nav className="max-w-3xl mx-auto mb-6 text-sm">
