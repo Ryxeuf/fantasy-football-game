@@ -12,39 +12,10 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { setup } from '../core/game-state';
-import type { GameState, Player } from '../core/types';
-
 import { scoreMove } from './evaluator';
 import { pickBestMove2Ply, scoreMove2Ply } from './lookahead';
 
-function makePlayer(overrides: Partial<Player> = {}): Player {
-  return {
-    id: 'p1',
-    team: 'A',
-    pos: { x: 5, y: 5 },
-    name: 'Lineman',
-    number: 1,
-    position: 'Lineman',
-    ma: 6,
-    st: 3,
-    ag: 3,
-    pa: 4,
-    av: 8,
-    skills: [],
-    pm: 6,
-    state: 'active',
-    ...overrides,
-  };
-}
-
-function baseState(
-  players: Player[],
-  overrides: Partial<GameState> = {}
-): GameState {
-  const state = setup();
-  return { ...state, players, ...overrides };
-}
+import { makePlayer, baseState } from '../__tests__/helpers';
 
 describe('scoreMove2Ply — Lot 3.A.0.b', () => {
   it('retourne le score 1-ply pour les coups non-END_TURN', () => {

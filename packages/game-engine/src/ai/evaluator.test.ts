@@ -1,32 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { setup } from '../core/game-state';
-import type { GameState, Player, Move } from '../core/types';
+import type { Move } from '../core/types';
 import { evaluatePosition, scoreMove, pickBestMove, EVAL_WEIGHTS } from './evaluator';
-
-function makePlayer(overrides: Partial<Player> = {}): Player {
-  return {
-    id: 'p1',
-    team: 'A',
-    pos: { x: 5, y: 5 },
-    name: 'Lineman',
-    number: 1,
-    position: 'Lineman',
-    ma: 6,
-    st: 3,
-    ag: 3,
-    pa: 4,
-    av: 8,
-    skills: [],
-    pm: 6,
-    state: 'active',
-    ...overrides,
-  };
-}
-
-function baseState(players: Player[], overrides: Partial<GameState> = {}): GameState {
-  const state = setup();
-  return { ...state, players, ...overrides };
-}
+import { makePlayer, baseState } from '../__tests__/helpers';
 
 describe('IA: evaluatePosition', () => {
   it('retourne un objet avec total et breakdown detailles', () => {
