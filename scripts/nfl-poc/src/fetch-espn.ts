@@ -22,6 +22,8 @@ interface EspnEvent {
   readonly shortName?: string;
   readonly status?: { readonly type?: { readonly completed?: boolean; readonly description?: string } };
   readonly competitions?: ReadonlyArray<{ readonly competitors?: readonly EspnCompetitor[] }>;
+  readonly season?: { readonly year?: number; readonly type?: number; readonly slug?: string };
+  readonly week?: { readonly number?: number };
 }
 
 interface EspnSeasonInfo {
@@ -83,9 +85,18 @@ export async function runEspnPoc(dateYmd: string): Promise<void> {
   console.log(`[espn] saved scoreboard → ${sbPath}`);
 
   const events = scoreboard.events ?? [];
-  const season = scoreboard.leagues?.[0]?.season;
+  // ⚠️ leagues[0].season.type est figé à "Regular Season" même sur du
+  // post-season. Source de vérité = event.season (slug "post-season" ou
+  // type=3). On agrège les types par event.
+  const eventTypes = new Set<string>();
+  for (const ev of events) {
+    const slug = ev.season?.slug;
+    if (slug) eventTypes.add(slug);
+  }
+  const types = eventTypes.size > 0 ? [...eventTypes].join(",") : "?";
+  const seasonYear = scoreboard.leagues?.[0]?.season?.year ?? events[0]?.season?.year;
   console.log(
-    `[espn] season=${season?.year ?? "?"} type=${season?.type?.abbreviation ?? "?"} week=${scoreboard.week?.number ?? "?"} events=${events.length}`
+    `[espn] season=${seasonYear ?? "?"} eventTypes=${types} week=${scoreboard.week?.number ?? "?"} events=${events.length}`
   );
 
   if (events.length === 0) {
