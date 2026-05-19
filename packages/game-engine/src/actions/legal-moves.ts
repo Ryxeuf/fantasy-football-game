@@ -245,8 +245,14 @@ export function getLegalMoves(state: GameState): Move[] {
       }
     }
 
-    // Actions de faute (FOUL) - sur un joueur au sol, max 1 par tour
-    if (!hasPlayerActed(state, p.id) && ((state.teamFoulCount && state.teamFoulCount[team]) || 0) === 0) {
+    // Actions de faute (FOUL) - sur un joueur au sol, max 1 par tour.
+    // Interdit pendant kickoffBlitzTurn (regle BB2020 : blitz kickoff
+    // = move + block uniquement). Cf. audit 2026-05-19 bug H1.
+    if (
+      !hasPlayerActed(state, p.id) &&
+      !state.kickoffBlitzTurn &&
+      ((state.teamFoulCount && state.teamFoulCount[team]) || 0) === 0
+    ) {
       const groundedOpponents = state.players.filter(
         opp => opp.team !== team && opp.stunned && isAdjacent(p.pos, opp.pos)
       );

@@ -157,8 +157,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
-  // Pendant le tour de blitz kickoff, les passes et remises sont interdites
-  if (state.kickoffBlitzTurn && (move.type === 'PASS' || move.type === 'HANDOFF')) {
+  // Pendant le tour de blitz kickoff, seuls move/block sont autorises
+  // (regle BB2020 : blitz kickoff = un coup tactique limite). PASS,
+  // HANDOFF et FOUL sont interdits.
+  // Cf. docs/engine-audit-2026-05-19-full.md (bug H1).
+  if (
+    state.kickoffBlitzTurn &&
+    (move.type === 'PASS' || move.type === 'HANDOFF' || move.type === 'FOUL')
+  ) {
     return state;
   }
 
