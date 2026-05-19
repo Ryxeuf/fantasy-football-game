@@ -459,7 +459,22 @@ export async function recomputeCareerSnapshot(
 /**
  * Retourne le snapshot. Si manquant ou stale (recomputedAt >
  * STALE_WINDOW_MS), declenche un recompute synchrone.
+ *
+ * Audit round 9 (HIGH/perf) : single-flight lock in-process pour eviter
+ * la thunder-herd au moment ou la TTL expire. Sans cela, N requetes
+ * concurrentes pour le meme `playerId` declenchent N
+ * `recomputeCareerSnapshot` (scan replays + attributeSpp + upsert),
+ * saturent le pool DB et upsertent en concurrent. Le lock par `playerId`
+ * partage la promesse de recompute entre les appelants concurrents ; le
+ * gagnant fait le travail, les autres attendent le meme resultat. Reset
+ * automatique sur completion / failure via `.finally`.
+ *
+ * Limite : in-process uniquement (par worker Node). Multi-replica n'est
+ * pas couvert — acceptable car le pire cas est N recomputes par worker
+ * et la finalite (upsert idempotent) reste correcte.
  */
+const inflightRecomputes = new Map<string, Promise<CareerSnapshotData>>();
+
 export async function getCareerSnapshot(
   playerId: string,
 ): Promise<CareerSnapshotData> {
@@ -494,7 +509,15 @@ export async function getCareerSnapshot(
     Date.now() - new Date(existing.recomputedAt).getTime() >= STALE_WINDOW_MS;
 
   if (isStale) {
-    return recomputeCareerSnapshot(playerId);
+    const inflight = inflightRecomputes.get(playerId);
+    if (inflight) {
+      return inflight;
+    }
+    const promise = recomputeCareerSnapshot(playerId).finally(() => {
+      inflightRecomputes.delete(playerId);
+    });
+    inflightRecomputes.set(playerId, promise);
+    return promise;
   }
 
   return {

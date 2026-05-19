@@ -544,6 +544,46 @@ describe("getCareerSnapshot", () => {
     expect(snap.topNemesisIds).toEqual(["n1"]);
     expect(snap.topVictoryIds).toEqual(["v1"]);
   });
+
+  // Audit round 9 (HIGH/perf) : single-flight lock contre la thunder-herd.
+  it("partage la promesse de recompute entre N appels concurrents pour le meme playerId", async () => {
+    // Snapshot stale ou absent → 2 appels concurrents devraient partager
+    // le meme recompute (un seul upsert, pas N).
+    mockedPrisma.proPlayerCareerSnapshot.findUnique.mockResolvedValue(null);
+    mockedPrisma.proTeamRoster.findUnique.mockResolvedValue({
+      teamId: "team-A",
+    });
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValue([]);
+    mockedPrisma.proPlayerCareerSnapshot.upsert.mockResolvedValue({});
+
+    const [s1, s2, s3] = await Promise.all([
+      getCareerSnapshot("p-thunder"),
+      getCareerSnapshot("p-thunder"),
+      getCareerSnapshot("p-thunder"),
+    ]);
+
+    expect(s1.playerId).toBe("p-thunder");
+    expect(s2.playerId).toBe("p-thunder");
+    expect(s3.playerId).toBe("p-thunder");
+    // 3 appels concurrents → 1 seul recompute partage.
+    expect(mockedPrisma.proPlayerCareerSnapshot.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-cree un recompute apres completion (lock libere en .finally)", async () => {
+    mockedPrisma.proPlayerCareerSnapshot.findUnique.mockResolvedValue(null);
+    mockedPrisma.proTeamRoster.findUnique.mockResolvedValue({
+      teamId: "team-A",
+    });
+    mockedPrisma.proLeagueMatch.findMany.mockResolvedValue([]);
+    mockedPrisma.proPlayerCareerSnapshot.upsert.mockResolvedValue({});
+
+    await getCareerSnapshot("p-seq");
+    await getCareerSnapshot("p-seq");
+
+    // 2 appels sequentiels (pas concurrents) → lock libere apres le 1er
+    // → 2 recomputes distincts.
+    expect(mockedPrisma.proPlayerCareerSnapshot.upsert).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("topOpponents", () => {
