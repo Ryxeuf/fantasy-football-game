@@ -183,6 +183,7 @@ const EVENT_BADGE_STYLES: Record<string, string> = {
   NUFFLE: "bg-purple-700 text-purple-50 font-semibold",
   HALFTIME: "bg-indigo-900 text-indigo-100",
   END: "bg-slate-900 text-slate-100 font-semibold",
+  DICE: "bg-slate-800 text-slate-200 font-mono",
 };
 
 const HIDDEN_EVENT_TYPES = new Set<string>(["PLAYER_ACTIVATION"]);
@@ -340,6 +341,13 @@ function summarizeMeta(
       return e.halftime;
     case "END":
       return e.matchEnd;
+    case "DICE": {
+      const raw = typeof meta.message === "string" ? meta.message : "";
+      // Le message brut du gameLog est déjà lisible (ex: "Joueur X dodge
+      // Dés: 4 (besoin 3+)"). On le renvoie tel quel pour préserver la
+      // transparence (résultats numériques visibles).
+      return raw || "Jet de dés";
+    }
     default:
       return ev.type;
   }

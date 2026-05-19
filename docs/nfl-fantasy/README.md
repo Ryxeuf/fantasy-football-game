@@ -59,6 +59,9 @@ Cette doc évolue en suivant les patterns du projet :
 | Date | Version | Notes |
 |---|---|---|
 | 2026-05-19 | v1 | Création initiale (session exploratoire) |
+| 2026-05-19 | v1.1 | Tranchage Q1/Q3/Q4/Q5 : snake draft, captain ×1.5 + vice ×1.2, prayers par TV, race fixe par équipe |
+| 2026-05-19 | v1.2 | Tranchage Q2/Q6/Q7/Q8 : 10 users/league, silos séparés Pro League, freemium V1, pseudo full + flag DB `realNameDisplay` |
+| 2026-05-19 | v1.3 | Schéma Prisma 10-architecture.md : ajout `realNameDisplay` Bool (Q8), retrait `archetype` Json + fichier `archetype.ts` (V2, Q5 race fixe par équipe) |
 
 ## Source de cette session
 

@@ -333,6 +333,33 @@ export function diffStatesToEvents(
     });
   }
 
+  // 6b) DICE : nouvelles entrées `type: 'dice'` dans `state.gameLog`.
+  // Le moteur enregistre chaque jet de dés (block, dodge, GFI, pickup,
+  // armor, injury, KO recovery, etc.) avec son résultat. On diff les
+  // entries pour émettre un DICE event par nouveau jet, ce qui permet
+  // à la timeline replay d'afficher la transparence des dés sans
+  // refeuilleter le gameLog brut côté client.
+  const prevLogLen = prev.gameLog?.length ?? 0;
+  const nextLog = next.gameLog ?? [];
+  if (nextLog.length > prevLogLen) {
+    for (let i = prevLogLen; i < nextLog.length; i += 1) {
+      const entry = nextLog[i];
+      if (entry?.type === 'dice') {
+        events.push({
+          type: 'DICE',
+          displayAtMs,
+          engineVer: ENGINE_VER,
+          meta: {
+            message: entry.message,
+            playerId: entry.playerId,
+            team: entry.team ? sideOf(entry.team as TeamId) : undefined,
+            details: entry.details ?? {},
+          },
+        });
+      }
+    }
+  }
+
   // 7) TURN_START : nouveau tour pour l'équipe active. En BB, un "turn"
   // compte un tour A + un tour B ; donc `state.turn` n'incrémente qu'un
   // END_TURN sur deux. Pour émettre un TURN_START à chaque demi-tour

@@ -43,8 +43,8 @@ fantasy-football-game/
 │   │   │   ├── inducements.ts             # Logique inducements
 │   │   │   ├── prayers.ts                 # Logique prières Nuffle
 │   │   │   ├── pseudonymize.ts            # Génération pseudos
-│   │   │   ├── archetype.ts               # Player → archetype (speed/power/...)
 │   │   │   └── narrative.ts               # Stat line → Gazette text
+│   │   │   # archetype.ts (V2 — non requis en V1 : Q5 = race fixe par équipe)
 │   │   ├── data/
 │   │   │   ├── teams.json                 # 32 teams + race assignment
 │   │   │   ├── rosters-2025.json          # Rosters 2025 mapped
@@ -276,21 +276,22 @@ model NflTeam {
 }
 
 model NflPlayer {
-  id              String   @id // ID stable (e.g. nflverse player_id)
-  realName        String   // PRIVÉ — pour mapping seulement
-  pseudonym       String   // "Le Sidearm Wizard de Kansas City, #15"
-  teamCode        String?
-  jerseyNumber    Int?
-  nflPosition     String   // "QB", "WR", "RB", ...
-  bbPosition      String   // "Thrower", "Catcher", ...
-  bbStats         Json     // { ma, st, ag, pa, av }
-  bbSkills        Json     // string[]
-  archetype       Json     // { speedScore, powerScore, ... }
-  status          String   @default("active") // active | ir | retired | suspended
-  retiredAt       DateTime?
+  id                String   @id // ID stable (e.g. nflverse player_id)
+  realName          String   // PRIVÉ — pour mapping seulement (jamais exposé en V1)
+  pseudonym         String   // "Le Sidearm Wizard de Kansas City, #15"
+  realNameDisplay   Boolean  @default(false) // Q8 V1 = false (pseudo full). Pivot futur via update si licence NIL/NFLPA.
+  teamCode          String?
+  jerseyNumber      Int?
+  nflPosition       String   // "QB", "WR", "RB", ...
+  bbPosition        String   // "Thrower", "Catcher", ...
+  bbStats           Json     // { ma, st, ag, pa, av }
+  bbSkills          Json     // string[]
+  // archetype       Json     // V2 — non utilisé en V1 (Q5 : race fixe par équipe via teamCode → NflTeam.bbRace)
+  status            String   @default("active") // active | ir | retired | suspended
+  retiredAt         DateTime?
 
-  team            NflTeam? @relation(fields: [teamCode], references: [code])
-  gameStats       NflGameStat[]
+  team              NflTeam? @relation(fields: [teamCode], references: [code])
+  gameStats         NflGameStat[]
 
   @@index([teamCode, bbPosition])
   @@index([status])

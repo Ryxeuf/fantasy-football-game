@@ -45,6 +45,12 @@ interface GameBoardWithDugoutsProps {
    * Défaut : 600px (legacy compact embed).
    */
   boardMaxWidth?: string;
+  /**
+   * Overlay rendu absolument sur le Stage Pixi (mêmes dimensions). Sert
+   * notamment aux annotations on-pitch du replay (flèches, halos block,
+   * ligne pass). Le pass-through laisse PixiBoard gérer l'alignement.
+   */
+  overlay?: React.ReactNode;
 }
 
 export default function GameBoardWithDugouts({
@@ -66,6 +72,7 @@ export default function GameBoardWithDugouts({
   teamColorOverrides,
   initialTerrainSkin,
   boardMaxWidth,
+  overlay,
 }: GameBoardWithDugoutsProps) {
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
@@ -276,6 +283,7 @@ export default function GameBoardWithDugouts({
             teamColorOverrides={teamColorOverrides}
             terrainSkin={terrainSkin}
             maxWidth={boardMaxWidth}
+            overlay={overlay}
           />
         </div>
 

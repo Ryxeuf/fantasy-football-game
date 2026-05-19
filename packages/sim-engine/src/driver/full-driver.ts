@@ -74,6 +74,7 @@ import {
 } from './full-driver-events';
 import { buildGameStateFromRosters } from './full-driver-roster';
 import { executeHeadlessKickoff } from './full-driver-kickoff';
+import { executeHeadlessHalftime } from './full-driver-halftime';
 
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
@@ -406,12 +407,11 @@ export function runFullDriver(input: SimInput): SimResult {
         if (staleEndTurns > MAX_STALE_END_TURNS) break;
       }
 
-      // BUG fix C1 : detecter les END_TURN pendant halftime/post-td.
-      // Le full driver n'a pas de chemin pour completer un kickoff
-      // setup interactif → la boucle spin jusqu'a MAX_ACTIONS_PER_MATCH.
-      // On force le break apres un petit nombre d'iterations en phase
-      // non-playing pour eviter de generer ~1300 events fantomes.
-      if (next.gamePhase !== 'playing' && next.gamePhase !== 'ended') {
+      // BUG fix C1 : detecter les END_TURN pendant `gamePhase !== 'playing'`.
+      // Pour halftime spécifiquement, on tente une reprise headless plus bas
+      // après l'émission des events de transition ; cette détection couvre
+      // les autres phases (post-td en attente de setup interactif).
+      if (next.gamePhase !== 'playing' && next.gamePhase !== 'ended' && next.gamePhase !== 'halftime') {
         nonPlayingEndTurns += 1;
         if (nonPlayingEndTurns > MAX_NON_PLAYING_END_TURNS) break;
       } else {
@@ -438,6 +438,46 @@ export function runFullDriver(input: SimInput): SimResult {
 
     state = next;
     actionsApplied += 1;
+
+    // Halftime headless : juste après émission des events de transition
+    // (HALFTIME, etc.), on rejoue la séquence BB 2025 officielle pour la
+    // 2e mi-temps : auto-placement des deux équipes + kickoff scatter +
+    // event 2D6 + landing. Le state passe de `halftime` à `playing` et
+    // la boucle peut reprendre. Sans ça, advanceHalfIfNeeded sortait sur
+    // `halftime` et la boucle terminait sur timeout/MAX_NON_PLAYING_END_TURNS,
+    // produisant un match figé en début de H2.
+    if (state.gamePhase === 'halftime') {
+      const resumed = executeHeadlessHalftime(state, engineRng);
+      if (resumed !== state && resumed.gamePhase === 'playing') {
+        appliedMoves.push({ type: 'END_TURN' });
+        postStates.push(resumed);
+        const htDisplayAtMs = (actionsApplied + 1) * MS_PER_ACTION;
+        events.push({
+          type: 'KICKOFF',
+          displayAtMs: htDisplayAtMs,
+          engineVer: ENGINE_VER,
+          meta: {
+            half: resumed.half,
+            kickingTeam: resumed.kickingTeam === 'A' ? 'home' : 'away',
+            receivingTeam: resumed.currentPlayer === 'A' ? 'home' : 'away',
+          },
+        });
+        events.push({
+          type: 'TURN_START',
+          displayAtMs: htDisplayAtMs,
+          engineVer: ENGINE_VER,
+          meta: {
+            half: resumed.half,
+            turn: resumed.turn,
+            drivingTeam: resumed.currentPlayer === 'A' ? 'home' : 'away',
+            score: { home: resumed.score.teamA, away: resumed.score.teamB },
+            ballYardline: getInitialBallYardline(resumed),
+          },
+        });
+        state = resumed;
+        actionsApplied += 1;
+      }
+    }
   }
 
   // Si le match s'est terminé via timeout / break, on émet un END

@@ -63,6 +63,14 @@ export const EVENT_TYPES = Object.freeze([
   'NUFFLE',
   'HALFTIME',
   'END',
+  /**
+   * `DICE` reporte un jet de dés résolu (block, dodge, GFI, pickup,
+   * armor, injury, KO recovery…). Émis par le full driver quand un
+   * nouvel entry `type: 'dice'` apparaît dans `state.gameLog` entre
+   * deux états successifs. Utilisé par la timeline replay pour
+   * afficher la transparence dés sans relire le gameLog brut.
+   */
+  'DICE',
 ] as const);
 
 export type EventType = (typeof EVENT_TYPES)[number];

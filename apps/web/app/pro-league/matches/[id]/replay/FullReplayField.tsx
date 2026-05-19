@@ -228,14 +228,16 @@ export default function FullReplayField({
             teamB: awayOverride,
           }}
           boardMaxWidth="100%"
+          overlay={
+            annotations.length > 0 ? (
+              <ReplayAnnotationsOverlay
+                annotations={annotations}
+                boardWidth={boardW}
+                boardHeight={boardH}
+              />
+            ) : null
+          }
         />
-        {annotations.length > 0 ? (
-          <ReplayAnnotationsOverlay
-            annotations={annotations}
-            boardWidth={boardW}
-            boardHeight={boardH}
-          />
-        ) : null}
       </div>
 
       {!hasExternalClock && (

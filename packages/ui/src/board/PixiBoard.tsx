@@ -72,6 +72,13 @@ type Props = {
    * toute la largeur disponible.
    */
   maxWidth?: string;
+  /**
+   * Slot pour overlay positionné absolument sur le Stage Pixi (mêmes
+   * dimensions en pixels que le canvas). Utilisé par la page replay pour
+   * afficher annotations on-pitch (flèches, halos block, ligne pass)
+   * parfaitement alignées sur les cases du terrain.
+   */
+  overlay?: React.ReactNode;
 };
 
 export default function PixiBoard({
@@ -95,6 +102,7 @@ export default function PixiBoard({
   teamColorOverrides,
   terrainSkin: terrainSkinId,
   maxWidth,
+  overlay,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -772,6 +780,15 @@ export default function PixiBoard({
         </Container>
       </Stage>
 
+      {overlay ? (
+        <div
+          className="pointer-events-none absolute left-0 top-0"
+          style={{ width, height }}
+          data-testid="pixi-board-overlay"
+        >
+          {overlay}
+        </div>
+      ) : null}
     </div>
   );
 }

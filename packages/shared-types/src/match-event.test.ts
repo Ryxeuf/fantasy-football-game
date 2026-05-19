@@ -27,6 +27,7 @@ describe('EventType — sprint Pro League 0.A.3 catalogue', () => {
       'NUFFLE',
       'HALFTIME',
       'END',
+      'DICE',
     ]);
     const declared = new Set<EventType>(EVENT_TYPES);
     expect(declared).toEqual(expected);
