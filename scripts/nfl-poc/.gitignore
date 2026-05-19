@@ -1,0 +1,6 @@
+node_modules/
+*.log
+fixtures/*.csv
+fixtures/*.parquet
+fixtures/*.json
+!fixtures/.gitkeep

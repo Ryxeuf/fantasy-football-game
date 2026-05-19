@@ -8,9 +8,14 @@
 
 | Tier | Coût | Latence | Recommandation |
 |---|---|---|---|
-| Gratuit | 0€ | 5min–24h | **MVP V1** (nflverse + ESPN hidden API) |
+| Gratuit | 0€ | 15min–24h | **MVP V1** (nflverse + ESPN hidden API) |
+| Low-cost commercial | $10-25/mois | minutes | **V1.5** redondance ESPN (Tank01 via RapidAPI) |
 | Abordable | $50-500/mois | ~5-30s | V2 si DAU >5k (MySportsFeeds) |
 | Enterprise | $2000+/mois | <1s | V3 si DFS-grade requis (SportRadar) |
+
+**Compléments free** : Sleeper API (trending/import leagues, no PBP), The Odds API (backup scores + odds).
+**Outil ID standardization** : SDX (V2+ si multi-source).
+**Sources à éviter** : Sofascore, DK/FD WS, SerpAPI, NFL.com Fantasy (cf. avertissements ToS plus bas).
 
 ## Tier 1 — Gratuit (recommandé MVP)
 
@@ -18,7 +23,14 @@
 
 **URL** : <https://github.com/nflverse>
 
-**Format** : GitHub releases (Parquet, CSV), JSON via API REST légère
+**Format** : GitHub releases (Parquet, CSV, RDS, qs), JSON via API REST légère
+
+**⚠️ Tag de release correct** (POC 2026-05-19) :
+- Saison **≤ 2024** : ancien tag `player_stats` (legacy, plus mis à jour)
+- Saison **≥ 2025** : nouveau tag `stats_player` (publié 2025-07-31)
+- URL CSV cible : `https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_{YEAR}.csv`
+- Le CSV est **unifié** : offense (passing/rushing/receiving) + défense (def_tackles, def_sacks, def_interceptions) + special teams dans un seul fichier 115 colonnes. Pas besoin d'un fichier `def` séparé.
+- Découverte des assets via : `GET https://api.github.com/repos/nflverse/nflverse-data/releases/tags/stats_player`
 
 **Couverture** :
 - Play-by-play complet depuis 1999
@@ -35,12 +47,26 @@
 **Limites** :
 - Pas de live in-game (delay 15min minimum)
 - Pas de WebSocket / push
-- Format Parquet → besoin de pipeline conversion
+- Format Parquet → besoin de pipeline conversion (CSV plus simple pour POC)
 
 **Use case pour nous** :
 - Ingestion **post-match** chaque dimanche soir / lundi matin
 - Scoring users tranquillement le lundi
 - Source de vérité pour rosters + stats annuelles
+
+**POC validé** : 963 rows W10 / 1071 rows W1 / 1067 rows W18 / 398 rows W19 (Wildcard) / 280 W20 (Divisional) / 137 W21 (Conf) / 67 W22 (SB) sur la saison 2025. Total 19421 rows. Toutes les positions BB cibles présentes (cf. `scripts/nfl-poc/`).
+
+**Gotchas découverts au POC** :
+- 1 CSV unifié couvre toute la saison → un seul fetch + cache local suffit pour tous les weeks (très friendly côté ingestion)
+- Filtrer par `week` (Number) sur les rows : valeurs 1-22 (regular 1-18 + post 19-22)
+- Toujours filtrer aussi `season_type` (`REG` / `POST` / `PRE`) pour ne pas mixer preseason quand on settle un weekend
+- 1 row avec `position_group` vide observée sur W10 (joueur sans poste assigné, edge case à logger sans crasher)
+- Format `.qs` / `.rds` à ignorer côté ingestion JS (R-specific) ; choisir `.csv` ou `.parquet`
+- **Mapping playoffs nflverse ↔ ESPN** (cf. section ESPN ci-dessous) :
+  - nflverse W19 (POST) = ESPN post-season `week.number=1` = **Wildcard** (6 games)
+  - nflverse W20 (POST) = ESPN post-season `week.number=2` = **Divisional** (4 games)
+  - nflverse W21 (POST) = ESPN post-season `week.number=3` = **Conference Champ** (2 games)
+  - nflverse W22 (POST) = ESPN post-season `week.number=5` = **Super Bowl** (1 game ; ESPN saute 4 = Pro Bowl)
 
 ### ESPN Hidden API
 
@@ -73,6 +99,21 @@ GET /news                                → news NFL
 - Boxscores rapides pour engagement temps réel
 - Compléments rosters (photos non utilisées, mais bio data utile)
 
+**Références communautaires** (utiles pour mapper les endpoints) :
+- [`pseudo-r/Public-ESPN-API`](https://github.com/pseudo-r/Public-ESPN-API) — référence la plus complète des endpoints cachés ESPN, NFL inclus
+- [`mkreiser/ESPN-Fantasy-Football-API`](https://github.com/mkreiser/ESPN-Fantasy-Football-API) — wrapper JS/TS (utile pour notre stack), ~340 stars
+
+**POC validé** : éprouvé sur W1 (regular kickoff), W10/W18 (regular mid+late), W19 Wildcard, Super Bowl LX (`SEA 29 @ NE 13`, 2026-02-08). Latence ~200ms par appel, aucun rate limit observé.
+
+**Gotchas découverts au POC** :
+- `?dates=YYYYMMDD` filtre par **kickoff en ET local time**, pas UTC. Conséquence : un TNF dont le kickoff UTC est `2025-09-05T00:20Z` apparaît bien dans `?dates=20250904` (Thursday ET).
+- En pratique pour une semaine NFL complète, polling **Thu + Fri (international weeks) + Sat (W15-17 + playoffs) + Sun + Mon** depuis ET. **W1 complet 2025 = 4 dates / 16 games** (1 Thu, 1 Fri São Paulo, 13 Sun, 1 Mon).
+- Le champ `season` n'est **pas** au top-level mais sous `leagues[0].season`. Le champ `season.type` est un **objet** (`{id, type, name, abbreviation}`), pas un Int. Code défensif requis.
+- **Bug ESPN piège** : `leagues[0].season.type` reste figé à `"Regular Season"` même sur des dates de playoffs. Source de vérité = `event.season.slug` (`"post-season"`) ou `event.season.type=3`. Toujours lire au niveau event, pas league.
+- **Numérotation playoffs ESPN** : `event.week.number` reset à 1 en post-season : Wildcard=1, Divisional=2, Conference=3, Pro Bowl=4 (skip), **Super Bowl=5**. Mapping avec nflverse : nflverse W19-22 ≠ ESPN W1-5. À traduire dans `nfl-ingest.ts`.
+- `/summary?event={id}` retourne **18 ou 19 keys** top-level selon les events (la clé `article` est absente sur les events sans recap éditorial). Toujours utiliser `?.` à la lecture.
+- Pas de WebSocket public connu (polling only — 30-60s TTL côté cache strato recommandé).
+
 ### Pro-Football-Reference (scraping)
 
 **Pourquoi ne pas l'utiliser** :
@@ -88,6 +129,72 @@ GET /news                                → news NFL
 **Coût** : Gratuit (Patreon $3/mois pour clé patron)
 **Use case** : Backup / cross-check, pas suffisant standalone
 
+### Sleeper API
+
+**URL** : <https://docs.sleeper.com/>
+
+**Coût** : **Free**, no auth, cap informel ~1000 req/min
+**Latence** : 5-10 min polling sur scoring fantasy
+**ToS** : Grey (pas de clause commerciale explicite, "no uptime guarantee")
+
+**Couverture utile** :
+- Trending players (adds/drops)
+- Transactions, drafts, league/matchups
+- Import de leagues Sleeper existantes (cross-promo audience fantasy US)
+- **Pas de PBP**, endpoint player stats deprecated
+
+**Use case pour nous** :
+- Complément engagement (trending widget Gazette)
+- Onboarding "import ta league Sleeper" pour audience US
+
+### The Odds API
+
+**URL** : <https://the-odds-api.com/>
+
+**Coût** : Freemium — 500 req/mois free, plans payants au-delà
+**Latence** : Scores ~30s, in-play odds
+**ToS** : Clear (commercial OK)
+
+**Use case pour nous** :
+- Backup scores (cross-check ESPN)
+- Affichage odds pour narratif Gazette ("underdog upset !")
+- **Pas pour PBP / player stats**
+
+### ⚠️ Sources à éviter (ToS / risque légal)
+
+- **Pro-Football-Reference** : ToS interdit scraping commercial (déjà mentionné)
+- **Sofascore wrappers** (PyPI / Apify) : auteurs préviennent "you may be at risk via Sofascore ToS"
+- **DraftKings / FanDuel WebSocket** : reverse-engineered, illégal pour usage commercial
+- **SerpAPI Google Sports** : Google a poursuivi SerpAPI en DMCA déc 2025, hearing mai 2026 — risque légal actif
+- **NFL.com Fantasy API** (apidocs.fantasy.nfl.com) : instable, 403 régulièrement, undocumented
+
+## Tier 1.5 — Low-cost commercial ($10-25/mois)
+
+### Tank01 NFL Live API (via RapidAPI)
+
+**URL** : <https://rapidapi.com/tank01/api/tank01-nfl-live-in-game-real-time-statistics-nfl>
+
+**Pricing** :
+- Free : 1000 hits/mois (test/POC)
+- Basic : ~$10/mois, 1k req/jour
+- Pro / Ultra : $25/mois, 15k req/jour
+
+**Latence** : "Live, updated multiple times an hour" (~minutes, pas seconde)
+**Auth** : RapidAPI key
+**ToS** : Clear (commercial OK via RapidAPI marketplace)
+
+**Couverture** :
+- Live in-game scores + box scores
+- Player stats par game
+- Schedules, depth charts, injuries
+
+**Use case pour nous** :
+- **Source secondaire commerciale légale** — réduit le risque mono-source ESPN
+- Plus serein que les hidden API non documentées pour un produit commercial
+- Marginal $10/mois → à intégrer dès V1.5 dès que l'audience justifie
+
+**Verdict** : **meilleur ratio prix/sécurité du marché** pour redondance ESPN.
+
 ## Tier 2 — Abordable ($30-500/mois)
 
 ### MySportsFeeds
@@ -95,10 +202,12 @@ GET /news                                → news NFL
 **URL** : <https://www.mysportsfeeds.com>
 
 **Pricing** :
-- Personal use : gratuit (delayed data)
-- Indie ($49/mois) : real-time NFL post-game
+- Personal use : gratuit **(non-commercial uniquement — ne s'applique PAS à Nuffle Arena)**
+- Indie ($49/mois) : minimum requis pour usage commercial, real-time NFL post-game
 - Pro ($249/mois) : live play-by-play, ~5s latence
 - Enterprise : custom
+
+**⚠️ Correction** : le tier gratuit était listé comme utilisable en V1 — c'est faux. Pour un produit commercial (même freemium), il faut **a minima Indie $49/mois**. À budgéter si on dépend de MSF.
 
 **Couverture** :
 - Play-by-play live (~5s latence en Pro)
@@ -261,14 +370,23 @@ export async function ingestEspnLive(): Promise<IngestResult> {
 | Stockage Postgres (déjà payé) | 0€ |
 | **Total V1** | **0€/an** |
 
+## Estimation coût V1.5 (redondance commerciale)
+
+| Poste | Coût |
+|---|---|
+| Tank01 Basic (RapidAPI) | $10/mois = ~$120/an |
+| nflverse + ESPN | 0€ |
+| **Total V1.5** | **~$120/an** |
+
 ## Estimation coût V2 (~5-50k DAU)
 
 | Poste | Coût |
 |---|---|
 | MySportsFeeds Pro | $249/mois = ~$3000/an |
-| Backup nflverse | 0€ |
+| Tank01 Pro (backup) | $25/mois = ~$300/an |
+| nflverse | 0€ |
 | Storage incrémental | ~$50/mois |
-| **Total V2** | **~$3600/an** |
+| **Total V2** | **~$3900/an** |
 
 ## Estimation coût V3 (>50k DAU, DFS-grade)
 
@@ -282,19 +400,42 @@ export async function ingestEspnLive(): Promise<IngestResult> {
 ## Plan de migration tier par tier
 
 ```
-V1 (POC + MVP commercial)
+V1 (POC + MVP commercial) — 0€/mois
 └── nflverse (post-match) + ESPN (gameday live)
     └── Tient jusqu'à ~10k DAU
 
-V2 (Scale)
+V1.5 (Redondance commerciale) — $10-25/mois
+└── Si dépendance mono-source ESPN inquiète
+    └── + Tank01 via RapidAPI (backup commercial légal)
+    └── Effort intégration trivial (REST + key)
+
+V2 (Scale + live PBP) — ~$3000/an
 └── Si DAU >5k OU si engagement live <3min/match
-    └── + MySportsFeeds Pro ($249/mois)
+    └── + MySportsFeeds Pro ($249/mois — live PBP ~5s)
     └── Tient jusqu'à ~50k DAU
 
-V3 (DFS-grade)
+V3 (DFS-grade) — ~$40-65k/an
 └── Si pivot DFS ou audience pro
     └── SportRadar ou Stats Perform
 ```
+
+## Outils complémentaires (pas des sources de data)
+
+### SDX — SportsDataExchange
+
+**URL** : <https://sportsdataexchange.com>
+
+**Nature** : **Registre d'identifiants open standard**, pas un feed de stats. Lancé en 2025 par SportsDataIO + Enetpulse.
+
+**Couverture** : ~2M IDs persistants (leagues, games, teams, players, venues) sur 100+ sports.
+
+**Coût** : Free (registry public + CLI tool). Accès dev complet via "Request Early Access".
+
+**Use case pour nous** :
+- **V1** : Pas pertinent. On utilise une source unique (nflverse) qui fournit déjà `gsis_id` (standard NFL officiel). `NflPlayer.id = gsis_id` suffit.
+- **V2+** : Si on ajoute une 2e source (Tank01, MSF) et que les `player_id` divergent, SDX évite de coder un mapping ad-hoc.
+
+**Verdict** : À surveiller, pas à intégrer en V1.
 
 ## Décisions techniques
 
