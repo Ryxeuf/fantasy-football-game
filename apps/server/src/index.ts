@@ -3,6 +3,7 @@ import cors from "cors";
 import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
+import { timingSafeEqual } from "node:crypto";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -174,8 +175,32 @@ app.get("/health/pro-league", async (_req, res) => {
 
 // Endpoint Prometheus (S25.3). Format texte standard, scrape par
 // Prometheus qui le pousse ensuite vers Grafana LGTM.
-app.get("/metrics", async (_req, res, next) => {
+//
+// Audit round 10 (HIGH) : avant, /metrics etait publiquement reachable
+// sans auth. Permettait de fingerprint la version Node (CVE targeting),
+// le heap, les connexions WS actives, la profondeur de la queue
+// matchmaking. Maintenant : bearer token via env `METRICS_BEARER_TOKEN`.
+// Si la variable n'est pas definie, le endpoint reste accessible
+// (compat dev local) ; en prod un missing token doit etre traite
+// comme misconfig deployment.
+app.get("/metrics", async (req, res, next) => {
   try {
+    const expectedToken = process.env.METRICS_BEARER_TOKEN;
+    if (expectedToken) {
+      const auth = req.header("authorization") || "";
+      const provided = auth.startsWith("Bearer ")
+        ? auth.slice(7).trim()
+        : "";
+      const expectedBuf = Buffer.from(expectedToken, "utf8");
+      const providedBuf = Buffer.from(provided, "utf8");
+      const ok =
+        expectedBuf.length === providedBuf.length &&
+        timingSafeEqual(expectedBuf, providedBuf);
+      if (!ok) {
+        res.status(401).type("text/plain").send("Unauthorized");
+        return;
+      }
+    }
     const body = await metricsExposition(appMetrics.registry);
     res.setHeader("Content-Type", appMetrics.registry.contentType);
     res.send(body);

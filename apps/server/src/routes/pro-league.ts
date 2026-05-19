@@ -28,6 +28,7 @@ import { Router, type Request, type Response } from "express";
 import type { MatchEvent } from "@bb/sim-engine";
 
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { adminOnly } from "../middleware/adminOnly";
 import {
   BetValidationError,
   MarketNotFoundError,
@@ -1515,7 +1516,13 @@ router.post(
   handleEnterTournament,
 );
 
-router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
+// Audit round 10 (MEDIUM/sec) : avant, /_internal/broadcaster-stats
+// etait publiquement reachable malgre son nom `_internal`. Le handler
+// ne leak rien de sensible aujourd'hui (counts d'agregats) mais la
+// convention `_internal` signale "internal-only" — futur ajout de
+// champs sensibles risquerait d'etre expose en prod. Fix : authUser
+// + adminOnly comme pour le namespace /admin/.
+router.get("/_internal/broadcaster-stats", authUser, adminOnly, handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
 router.post("/teams/:slug/follow", authUser, handleFollowTeam);
