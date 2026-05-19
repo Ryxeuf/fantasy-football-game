@@ -287,9 +287,15 @@ export function canBlitz(
   const occupied = state.players.some(p => p.pos.x === to.x && p.pos.y === to.y);
   if (occupied) return false;
 
-  // Vérifier que le joueur a assez de PM pour le mouvement ET le blocage (le blocage coûte 1 PM supplémentaire)
-  const distance = Math.abs(attacker.pos.x - to.x) + Math.abs(attacker.pos.y - to.y);
-  if (attacker.pm < distance + 1) return false; // +1 pour le blocage
+  // BUG fix audit round 6 (HIGH) : avant, la distance etait Manhattan
+  // (|dx| + |dy|), mais le moteur BB utilise Chebyshev (max(|dx|,|dy|))
+  // — chaque MOVE coute 1 PM peu importe diagonal vs orthogonal. Avec
+  // Manhattan, un blitz diagonal a distance 1 etait compte comme 2 PM
+  // (1+1) au lieu de 1 → blitz wrongly rejected pour PM marginal.
+  // Fix : Chebyshev pour aligner avec handleMove/handleNormalMove.
+  // +1 pour le blocage lui-meme (BB rule).
+  const distance = Math.max(Math.abs(attacker.pos.x - to.x), Math.abs(attacker.pos.y - to.y));
+  if (attacker.pm < distance + 1) return false;
 
   // Vérifier que la cible sera adjacente après le mouvement
   return isAdjacent(to, target.pos);
