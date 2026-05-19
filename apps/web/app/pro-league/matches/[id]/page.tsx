@@ -187,44 +187,46 @@ function ScoreboardBanner({
   return (
     <header
       data-testid="match-banner"
-      className="flex flex-col gap-3 px-4 py-6"
+      className="w-full px-4 py-6 sm:py-8"
       style={{
         background: `linear-gradient(135deg, ${home.primaryColor ?? "#1e293b"} 0%, ${away.primaryColor ?? "#0f172a"} 100%)`,
       }}
     >
-      <div className="flex items-center justify-between">
-        <Link
-          href="/pro-league"
-          className="rounded border border-white/30 px-2 py-1 text-xs text-white/90 hover:bg-white/10"
-        >
-          {t.proLeague.common.backToHub}
-        </Link>
-        <span className="font-mono text-xs text-white/70">
-          {t.proLeague.match.bannerSeasonInfo
-            .replace("{year}", String(match.seasonYear))
-            .replace("{round}", String(match.roundNumber))}
-        </span>
-      </div>
-      <div className="flex items-center gap-4">
-        <TeamPanel team={home} />
-        <div
-          data-testid="scoreboard"
-          className="flex flex-col items-center font-mono text-white"
-        >
-          {match.scoreHome !== null && match.scoreAway !== null ? (
-            <span className="text-4xl font-black drop-shadow">
-              {match.scoreHome} – {match.scoreAway}
-            </span>
-          ) : (
-            <span className="text-2xl font-bold text-white/70">
-              {t.proLeague.match.statusVs}
-            </span>
-          )}
-          <span className="mt-1 text-xs uppercase text-white/70">
-            {match.status}
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/pro-league"
+            className="rounded border border-white/30 px-2 py-1 text-xs text-white/90 hover:bg-white/10"
+          >
+            ← {t.proLeague.common.backToHub}
+          </Link>
+          <span className="font-mono text-xs text-white/70">
+            {t.proLeague.match.bannerSeasonInfo
+              .replace("{year}", String(match.seasonYear))
+              .replace("{round}", String(match.roundNumber))}
           </span>
         </div>
-        <TeamPanel team={away} alignRight />
+        <div className="flex items-center justify-between gap-4 sm:gap-8">
+          <TeamPanel team={home} />
+          <div
+            data-testid="scoreboard"
+            className="flex flex-col items-center font-mono text-white"
+          >
+            {match.scoreHome !== null && match.scoreAway !== null ? (
+              <span className="text-5xl font-black tracking-tight drop-shadow sm:text-6xl">
+                {match.scoreHome} – {match.scoreAway}
+              </span>
+            ) : (
+              <span className="text-2xl font-bold text-white/70 sm:text-3xl">
+                {t.proLeague.match.statusVs}
+              </span>
+            )}
+            <span className="mt-1 rounded bg-black/30 px-2 py-0.5 text-xs uppercase tracking-wider text-white/80">
+              {match.status}
+            </span>
+          </div>
+          <TeamPanel team={away} alignRight />
+        </div>
       </div>
     </header>
   );
@@ -326,7 +328,7 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
     <>
       <section
         data-testid="post-match-stats"
-        className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
         <StatBox
           label={t.proLeague.match.statTouchdowns}
@@ -349,16 +351,16 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
       {match.replay && match.replay.highlights.length > 0 ? (
         <section
           data-testid="post-match-highlights"
-          className="mb-6 rounded border border-slate-800 bg-slate-900 px-4 py-3"
+          className="rounded border border-slate-800 bg-slate-900 px-4 py-3"
         >
           <h2 className="mb-2 text-lg font-semibold text-slate-100">
             {t.proLeague.match.highlightsTitle}
           </h2>
-          <ol className="flex flex-col gap-1">
+          <ol className="flex flex-col gap-1.5">
             {match.replay.highlights.map((h, i) => (
               <li
                 key={i}
-                className="flex items-center gap-3 text-sm text-slate-200"
+                className="flex items-center gap-3 rounded bg-slate-950/40 px-2 py-1.5 text-sm text-slate-200"
               >
                 <span className="font-mono text-xs text-slate-500">
                   {formatClock(h.atMs)}
@@ -376,13 +378,6 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
           </ol>
         </section>
       ) : null}
-
-      <Link
-        href={`/pro-league/matches/${match.id}/replay`}
-        className="inline-block rounded bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700"
-      >
-        {t.proLeague.match.replayLink}
-      </Link>
     </>
   );
 }
@@ -435,26 +430,29 @@ export default function ProLeagueMatchDetailPage({
   }, [params.id]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 text-slate-100">
+    <main className="flex min-h-screen w-full flex-col bg-slate-950 text-slate-100">
       {loading ? (
-        <p className="px-4 py-6 text-sm text-slate-400">
+        <p className="mx-auto max-w-3xl px-4 py-6 text-sm text-slate-400">
           {t.proLeague.common.loading}
         </p>
       ) : error ? (
         <p
           role="alert"
-          className="m-4 rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm text-rose-200"
+          className="mx-auto m-4 max-w-3xl rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm text-rose-200"
         >
           {error}
         </p>
       ) : !data ? (
-        <p className="px-4 py-6 text-sm text-slate-400">
+        <p className="mx-auto max-w-3xl px-4 py-6 text-sm text-slate-400">
           {t.proLeague.match.unknownMatch}
         </p>
       ) : (
         <>
+          {/* Scoreboard banner pleine largeur — gradient des deux équipes */}
           <ScoreboardBanner match={data} />
-          <div className="px-4 py-3">
+
+          {/* Toolbar : partage + bouton replay si match terminé */}
+          <div className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3">
             <ShareButtons
               url={`${SITE_URL.replace(/\/$/, "")}/pro-league/matches/${data.id}`}
               text={
@@ -464,46 +462,64 @@ export default function ProLeagueMatchDetailPage({
               }
               hashtags={["bloodbowl", "nufflearena"]}
             />
+            {data.status === "completed" && (
+              <Link
+                href={`/pro-league/matches/${data.id}/replay`}
+                className="inline-flex items-center gap-2 rounded bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-emerald-50 hover:bg-emerald-600"
+              >
+                ▶ {t.proLeague.match.replayLink}
+              </Link>
+            )}
           </div>
-          <div className="px-4 py-6">
+
+          {/* Body : grid 2 colonnes desktop, single col mobile */}
+          <div className="mx-auto w-full max-w-[1400px] px-4 py-4">
             {data.status === "scheduled" || data.status === "ready" ? (
-              <>
-                <PreMatchCard match={data} now={now} />
-                <section data-testid="markets-section" className="mt-4">
-                  <h2 className="mb-2 text-lg font-semibold text-slate-100">
-                    {t.proLeague.match.bettingTitle}
-                  </h2>
-                  <MatchMarkets matchId={data.id} />
-                </section>
-                <FanPredictionsThread
-                  matchId={data.id}
-                  matchStatus={data.status}
-                />
-              </>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px]">
+                <div className="flex flex-col gap-4">
+                  <PreMatchCard match={data} now={now} />
+                  <section data-testid="markets-section">
+                    <h2 className="mb-2 text-lg font-semibold text-slate-100">
+                      {t.proLeague.match.bettingTitle}
+                    </h2>
+                    <MatchMarkets matchId={data.id} />
+                  </section>
+                </div>
+                <aside>
+                  <FanPredictionsThread
+                    matchId={data.id}
+                    matchStatus={data.status}
+                  />
+                </aside>
+              </div>
             ) : data.status === "in_progress" ? (
               <section
                 data-testid="live-card"
-                className="rounded border border-emerald-700 bg-emerald-950 px-4 py-3"
+                className="mx-auto max-w-2xl rounded border border-emerald-700 bg-emerald-950 px-4 py-6 text-center"
               >
                 <p className="text-sm text-emerald-200">
                   {t.proLeague.match.liveCardBody}
                 </p>
                 <Link
                   href={`/pro-league/matches/${data.id}/live`}
-                  className="mt-3 inline-block rounded bg-emerald-700 px-3 py-1.5 text-sm text-emerald-50 hover:bg-emerald-600"
+                  className="mt-4 inline-block rounded bg-emerald-700 px-4 py-2 text-base font-semibold text-emerald-50 hover:bg-emerald-600"
                 >
-                  {t.proLeague.match.viewLive}
+                  ▶ {t.proLeague.match.viewLive}
                 </Link>
               </section>
             ) : data.status === "completed" ? (
-              <>
-                <PostMatchCard match={data} />
-                <MvpVoteSection matchId={data.id} />
-                <FanPredictionsThread
-                  matchId={data.id}
-                  matchStatus={data.status}
-                />
-              </>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_400px]">
+                <div className="flex flex-col gap-4">
+                  <PostMatchCard match={data} />
+                </div>
+                <aside className="flex flex-col gap-4">
+                  <MvpVoteSection matchId={data.id} />
+                  <FanPredictionsThread
+                    matchId={data.id}
+                    matchStatus={data.status}
+                  />
+                </aside>
+              </div>
             ) : (
               <p className="text-sm text-rose-300">
                 {t.proLeague.match.matchInError.replace(

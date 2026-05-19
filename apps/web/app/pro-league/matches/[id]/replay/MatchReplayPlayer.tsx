@@ -558,11 +558,11 @@ export default function MatchReplayPlayer({
 
   if (error) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
+      <main className="flex min-h-screen w-full items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
         <p
           role="alert"
           data-testid="replay-error"
-          className="rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm text-rose-200"
+          className="max-w-md rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm text-rose-200"
         >
           {error}
         </p>
@@ -572,7 +572,7 @@ export default function MatchReplayPlayer({
 
   if (!dump) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
+      <main className="flex min-h-screen w-full items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
         <p data-testid="replay-loading" className="text-sm text-slate-400">
           {t.proLeague.replay.loading}
         </p>
@@ -580,40 +580,46 @@ export default function MatchReplayPlayer({
     );
   }
 
+  const halfLabel =
+    score.half === "final"
+      ? t.proLeague.live.scoreFt
+      : score.half === 1
+        ? t.proLeague.live.scoreHalf1
+        : t.proLeague.live.scoreHalf2;
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 text-slate-100">
+    <main
+      className="flex min-h-screen w-full flex-col bg-slate-950 text-slate-100"
+      data-testid="replay-main"
+    >
       {redirect.isTest && (
         <div
           data-testid="test-match-banner"
-          className="sticky top-0 z-20 bg-amber-500 px-4 py-2 text-center text-sm font-semibold text-amber-950 shadow"
+          className="bg-amber-500 px-4 py-1.5 text-center text-xs font-semibold text-amber-950"
         >
-          🧪 TEST MATCH — sandbox, ne compte ni dans les standings ni
-          dans l&apos;ELO ni dans les paris.
+          🧪 TEST MATCH — sandbox, ne compte ni dans les standings ni dans l&apos;ELO ni dans les paris.
         </div>
       )}
+
+      {/* Header sticky : score, half/turn, view tabs */}
       <header
         data-testid="replay-header"
-        className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-slate-800 bg-slate-900 px-4 py-3 shadow"
+        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 px-4 py-2 shadow backdrop-blur"
       >
-        <span
-          data-testid="replay-half"
-          className="font-mono text-sm text-slate-400"
-        >
-          {score.half === "final"
-            ? t.proLeague.live.scoreFt
-            : score.half === 1
-              ? t.proLeague.live.scoreHalf1
-              : t.proLeague.live.scoreHalf2}
-        </span>
-        <span
-          data-testid="replay-score"
-          className="font-mono text-2xl font-bold tracking-wide"
-        >
-          {score.home} – {score.away}
-        </span>
-      </header>
-
-      <div className="flex items-center justify-end gap-2 px-4 pt-3">
+        <div className="flex items-center gap-3">
+          <span
+            data-testid="replay-half"
+            className="rounded bg-slate-800 px-2 py-1 font-mono text-xs uppercase tracking-wider text-slate-300"
+          >
+            {halfLabel}
+          </span>
+          <span
+            data-testid="replay-score"
+            className="font-mono text-xl font-bold tracking-wide"
+          >
+            {score.home} – {score.away}
+          </span>
+        </div>
         <div
           role="tablist"
           aria-label="Replay view mode"
@@ -660,7 +666,7 @@ export default function MatchReplayPlayer({
             Terrain
           </button>
         </div>
-      </div>
+      </header>
 
       {viewMode === "field" && fullDumpUnavailable !== null && (
         <div
@@ -680,28 +686,88 @@ export default function MatchReplayPlayer({
         </div>
       )}
 
-      {viewMode === "classic" ? (
-        <div className="px-4 pt-4" data-testid="replay-field-wrapper">
-          <ProLeagueField fieldState={fieldState} />
-        </div>
-      ) : (
-        <div className="px-4 pt-4" data-testid="replay-field-wrapper-full">
-          <FullReplayField
-            matchId={matchId}
-            externalClock={clock}
-            onFallback={({ message }) => {
-              setFullDumpUnavailable(message);
-              setViewMode("classic");
-            }}
-          />
-        </div>
-      )}
+      {/*
+        Layout principal : terrain + log côte à côte sur desktop (xl), empilés
+        sur mobile. Le terrain n'est plus contraint en largeur — il prend toute
+        la place disponible dans sa colonne grid. Le log occupe ~360px à droite.
+      */}
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 px-3 py-3 xl:grid-cols-[minmax(0,1fr)_360px] xl:px-4">
+        {/* Colonne terrain */}
+        <section
+          aria-label="Terrain"
+          className="flex min-h-0 flex-col items-center justify-start"
+          data-testid={
+            viewMode === "classic"
+              ? "replay-field-wrapper"
+              : "replay-field-wrapper-full"
+          }
+        >
+          {viewMode === "classic" ? (
+            <div className="w-full max-w-3xl">
+              <ProLeagueField fieldState={fieldState} />
+            </div>
+          ) : (
+            <FullReplayField
+              matchId={matchId}
+              externalClock={clock}
+              onFallback={({ message }) => {
+                setFullDumpUnavailable(message);
+                setViewMode("classic");
+              }}
+            />
+          )}
+        </section>
 
-      <section
+        {/* Colonne log textuel */}
+        <aside
+          aria-label="Journal du match"
+          className="flex min-h-0 flex-col gap-2 rounded border border-slate-800 bg-slate-900/40"
+        >
+          <div className="border-b border-slate-800 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Journal · {visibleEvents.length} évènement{visibleEvents.length > 1 ? "s" : ""}
+          </div>
+          <ol
+            data-testid="replay-event-feed"
+            className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-2 py-2 xl:max-h-[calc(100vh-280px)]"
+          >
+            {visibleEvents.length === 0 ? (
+              <li className="px-2 py-3 text-sm text-slate-500">
+                {t.proLeague.live.awaitingKickoff}
+              </li>
+            ) : (
+              visibleEvents
+                .filter((ev) => !HIDDEN_EVENT_TYPES.has(ev.type))
+                .slice()
+                .reverse()
+                .map((ev, idx) => (
+                  <li
+                    key={`${visibleEvents.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
+                    className="flex items-start gap-2 rounded border border-slate-800 bg-slate-900 px-2 py-1.5 text-xs leading-relaxed"
+                  >
+                    <span className="shrink-0 font-mono text-[10px] text-slate-500">
+                      {formatReplayClock(ev.displayAtMs)}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-mono ${EVENT_BADGE_STYLES[ev.type] ?? "bg-slate-700 text-slate-100"}`}
+                    >
+                      {ev.type}
+                    </span>
+                    <span className="flex-1 text-slate-200">
+                      {summarizeMeta(ev, t.proLeague.events, playerNames)}
+                    </span>
+                  </li>
+                ))
+            )}
+          </ol>
+        </aside>
+      </div>
+
+      {/* Footer sticky : scrub + controls */}
+      <footer
         data-testid="replay-scrubber"
-        className="px-4 py-3 flex flex-col gap-2"
+        className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-slate-800 bg-slate-900/95 px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] backdrop-blur"
       >
-        <div className="flex items-center justify-between font-mono text-xs text-slate-400">
+        <div className="flex items-center justify-between font-mono text-[11px] text-slate-400">
           <span data-testid="replay-current-time">
             {formatReplayClock(clock.currentMs)}
           </span>
@@ -721,59 +787,24 @@ export default function MatchReplayPlayer({
           data-testid="replay-scrub"
           className="w-full accent-emerald-500"
         />
-        <PlayerControls
-          playing={clock.playing}
-          playbackSpeed={clock.playbackSpeed}
-          onToggle={clock.toggle}
-          onSpeedChange={clock.setSpeed}
-          onSkipToEnd={clock.skipToEnd}
-          onRestart={clock.restart}
-        />
-        <p
-          data-testid="replay-shortcuts-hint"
-          className="text-[11px] text-slate-500"
-          // Le texte translation contient des <kbd> qui doivent etre rendus
-          // comme HTML — dangerouslySetInnerHTML est sur ici car la chaine
-          // vient d'une constante de traduction (pas de user input).
-          dangerouslySetInnerHTML={{
-            __html: t.proLeague.replay.shortcutsHint,
-          }}
-        />
-      </section>
-
-      <ol
-        data-testid="replay-event-feed"
-        className="flex flex-1 flex-col gap-1 px-4 py-3"
-      >
-        {visibleEvents.length === 0 ? (
-          <li className="text-sm text-slate-500">
-            {t.proLeague.live.awaitingKickoff}
-          </li>
-        ) : (
-          visibleEvents
-            .filter((ev) => !HIDDEN_EVENT_TYPES.has(ev.type))
-            .slice()
-            .reverse()
-            .map((ev, idx) => (
-              <li
-                key={`${visibleEvents.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
-                className="flex items-start gap-3 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm"
-              >
-                <span className="font-mono text-xs text-slate-500">
-                  {formatReplayClock(ev.displayAtMs)}
-                </span>
-                <span
-                  className={`rounded px-2 py-0.5 text-xs font-mono ${EVENT_BADGE_STYLES[ev.type] ?? "bg-slate-700 text-slate-100"}`}
-                >
-                  {ev.type}
-                </span>
-                <span className="flex-1 text-slate-200">
-                  {summarizeMeta(ev, t.proLeague.events, playerNames)}
-                </span>
-              </li>
-            ))
-        )}
-      </ol>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <PlayerControls
+            playing={clock.playing}
+            playbackSpeed={clock.playbackSpeed}
+            onToggle={clock.toggle}
+            onSpeedChange={clock.setSpeed}
+            onSkipToEnd={clock.skipToEnd}
+            onRestart={clock.restart}
+          />
+          <p
+            data-testid="replay-shortcuts-hint"
+            className="hidden text-[11px] text-slate-500 lg:block"
+            dangerouslySetInnerHTML={{
+              __html: t.proLeague.replay.shortcutsHint,
+            }}
+          />
+        </div>
+      </footer>
     </main>
   );
 }

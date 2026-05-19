@@ -209,14 +209,14 @@ export default function FullReplayField({
       </header>
 
       {/*
-        Container responsive : largeur fluide jusqu'au max 1200px,
-        hauteur capée à `calc(100vh - 280px)` pour laisser de la place
-        aux contrôles + log textuel. Scroll vertical interne si le terrain
-        (portrait 15×26 cases) dépasse la hauteur viewport.
+        Container responsive : largeur fluide (gérée par le grid parent
+        sur la page replay), hauteur capée à `calc(100vh - 200px)` pour
+        laisser place au header + footer sticky. Scroll vertical interne
+        si le terrain (portrait 15×26 cases) dépasse.
       */}
       <div
-        className="relative mx-auto w-full max-w-[1200px] overflow-auto rounded border border-slate-800 bg-slate-950"
-        style={{ maxHeight: "calc(100vh - 280px)" }}
+        className="relative w-full overflow-auto rounded border border-slate-800 bg-slate-950"
+        style={{ maxHeight: "calc(100vh - 200px)" }}
         data-testid="full-replay-pixi"
       >
         <GameBoardWithDugouts
