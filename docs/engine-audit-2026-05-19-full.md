@@ -186,34 +186,64 @@ modifié.
 
 ## 🎯 Plan d'action priorisé (sprints)
 
-### Sprint Quick Wins (< 1 jour)
+### Sprint Quick Wins (< 1 jour) ✅ COMPLETE
 
-1. ✂️ Supprimer 108 `.js` mirror + pre-commit hook bloquant
-2. 🔧 Extraire `clearAllPendingStates(state)` (fix B1)
-3. 🔧 Ajouter FOUL au filtre `kickoffBlitzTurn` (fix H1)
-4. 🔧 Fix mutation indexée dans `handleBlockChoose` (fix B3)
-5. 📦 Extraire `src/__tests__/helpers/{makePlayer,baseState,makeRNG}.ts`
-6. 🗑️ Supprimer 5-6 tests sentinelles bruit
+1. ✅ Supprimer 108 `.js` mirror + pre-commit hook bloquant
+   ([`scripts/check-no-js-shadow.sh`](../scripts/check-no-js-shadow.sh))
+2. ✅ Extraire `clearAllPendingStates(state)` (fix B1)
+3. ✅ Ajouter FOUL au filtre `kickoffBlitzTurn` (fix H1)
+4. ✅ Fix mutation indexée dans `handleBlockChoose` (fix B3)
+5. ✅ Extraire `__tests__/helpers/index.ts` (`makePlayer`, `baseState`)
+6. ✅ Supprimer 6 tests sentinelles bruit (1210 lignes)
 
-### Sprint Stabilité (2-3 jours)
+### Sprint Stabilité (2-3 jours) ✅ COMPLETE
 
-7. 🛡️ Wrapper Zod sur `replay.ts` parsing (fix B2)
-8. 📝 `src/mechanics/regressions.test.ts` avec 20-30 BUG fixes couverts
-9. 🪵 Helper `rejectMove(state, reason)` + 10 silent returns (fix H2)
-10. ⚖️ Discriminated union `PendingState` (fix B4)
+7. ✅ Tolerant replay parsing avec shape guard (fix B2)
+8. ✅ Catalog `__tests__/regressions.test.ts` + 5 tests sentinelles
+9. ✅ Helper `rejectMove(state, reason)` + 3 sites pilotes en blitz-handler (fix H2)
+10. ✅ Garde runtime `assertSinglePending` (fix B4 — refacto type-level
+    union differe en session dediee, 574 call sites)
 
-### Sprint Perf (3-5 jours)
+### Sprint Perf (3-5 jours) — TODO
 
-11. ⚡ Copy-on-write dans handlers majeurs
-12. ⚡ `getTeamActivePlayers(state, team)` memoized
-13. ⚡ Caching dans `evaluatePosition`
+11. ⚡ Copy-on-write dans handlers majeurs (remplacer 25+ `structuredClone`)
+12. ⚡ `getTeamActivePlayers(state, team)` memoized (élimine 139 filter patterns)
+13. ⚡ Caching dans `evaluatePosition` (hot path IA)
 
-### Sprint Structure (1-2 semaines)
+### Sprint Structure (1-2 semaines) — TODO
 
 14. 🏗️ Split `game-state.ts` 1846 → 4 fichiers <500 lignes
 15. 🏗️ Split `negative-traits.ts` 1086 → un fichier par trait
 16. 🏗️ Refacto injury/apothecary/regen en `processInjuryWithMitigations()`
 17. 🧪 Property-based tests (fast-check) sur invariants
+18. 🔁 Migrer les 42 autres fichiers test vers `__tests__/helpers/`
+19. 🪵 Migrer les ~7 autres silent rejects vers `rejectMove`
+20. ⚖️ Refacto `pendingX` → discriminated union `PendingState`
+
+## 📋 Bilan execution sprints (2026-05-19)
+
+Sprints QW + ST executes en autonomie, 10 commits granulaires semantic
+sur main avec rebase sur origin/main apres chaque commit. Tests :
+5108 verts (etait 5099 au depart, +1210 lignes de bruit supprimees,
++13 tests reels ajoutes net).
+
+Commits :
+- `docs: add game-engine + AI audit 2026-05-19`
+- `test(ai): add IA vs IA decision loop integration test`
+- `feat(ai): skill awareness on block knockdown estimation`
+- `chore(game-engine): block .js shadow files via check script`
+- `fix(game-engine): clear all pendingX on drive transitions`
+- `fix(game-engine): forbid FOUL during kickoffBlitzTurn`
+- `fix(game-engine): immutable PM update in handleBlockChoose`
+- `test(game-engine): extract shared makePlayer/baseState helpers`
+- `test(game-engine): remove 6 sentinel .test.js noise files`
+- `fix(game-engine): tolerant replay parsing with shape guard`
+- `test(game-engine): regression catalog scaffold`
+- `feat(game-engine): rejectMove helper for silent move rejections`
+- `feat(game-engine): runtime guard for pendingX mutual exclusivity`
+
+Sprints Perf et Structure restent a planifier (scope 4-7 jours, hors
+session autonomie).
 
 ## ✅ Synthèse
 
