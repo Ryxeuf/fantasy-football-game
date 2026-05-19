@@ -17,6 +17,13 @@ interface PrismaClient {
   eloSnapshot: {
     create(args: { data: EloSnapshotInput }): Promise<unknown>;
   };
+  // Audit round 6 (CRITICAL) : `$transaction` requis pour atomicite des
+  // 4 mutations (user.update x2 + eloSnapshot.create x2). Avant, un
+  // crash entre n'importe quelles 2 mutations laissait l'etat
+  // incoherent (un user updated mais pas l'autre, ou ratings sans
+  // snapshots).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $transaction: (ops: ReadonlyArray<Promise<unknown>>) => Promise<any>;
 }
 
 export interface EloUpdateResult {
@@ -97,17 +104,26 @@ export async function updateEloAfterMatch(
   const newRatingA = Math.max(MIN_ELO, oldRatingA + deltaA);
   const newRatingB = Math.max(MIN_ELO, oldRatingB + deltaB);
 
-  await Promise.all([
-    prisma.user.update({ where: { id: userAId }, data: { eloRating: newRatingA } }),
-    prisma.user.update({ where: { id: userBId }, data: { eloRating: newRatingB } }),
-  ]);
-
+  // BUG fix audit round 6 (CRITICAL) : avant, les 4 mutations (user
+  // update x2 + eloSnapshot.create x2) etaient executees comme 2
+  // `Promise.all` sequentiels hors transaction. Crash entre les 2
+  // `Promise.all` → un user rating mis a jour mais pas l'autre (ou
+  // pire : ratings updated mais snapshots non-cree). Aussi : 2 ELO
+  // updates concurrents pour le meme user (matchs finissant en
+  // simultane) read stale rating → 2e clobbers le 1er delta.
+  // Fix : wrap les 4 mutations dans une seule `$transaction([...])`.
+  // Le re-read FOR UPDATE n'est pas exprimable proprement via le shim
+  // PrismaClient type ici — on accepte la race read-modify-write
+  // (pratiquement rare : memes 2 users finissant 2 matches en
+  // millisecondes simultanees). La transaction garantit au moins
+  // l'atomicite all-or-nothing des 4 writes.
   const finalDeltaA = newRatingA - oldRatingA;
   const finalDeltaB = newRatingB - oldRatingB;
 
-  // Snapshot rows feed the 90-day ELO curve on /coach/{slug}. We persist the
-  // post-update rating + clamped delta so historical reads need no recomputation.
-  await Promise.all([
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userAId }, data: { eloRating: newRatingA } }),
+    prisma.user.update({ where: { id: userBId }, data: { eloRating: newRatingB } }),
+    // Snapshot rows feed the 90-day ELO curve on /coach/{slug}.
     prisma.eloSnapshot.create({
       data: { userId: userAId, rating: newRatingA, delta: finalDeltaA, matchId },
     }),

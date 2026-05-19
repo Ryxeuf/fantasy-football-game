@@ -33,6 +33,17 @@ function createMockPrisma(ratingA = 1000, ratingB = 1000) {
         return data;
       }),
     },
+    // Audit round 6 : `updateEloAfterMatch` wrap maintenant les 4
+    // mutations dans une `$transaction([...])`. Le mock execute
+    // simplement les promises sequentiellement.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: vi.fn(async (ops: any) => {
+      if (Array.isArray(ops)) {
+        return Promise.all(ops);
+      }
+      // Non utilise par elo-update mais defensif.
+      return ops;
+    }),
     _users: users,
     _snapshots: snapshots,
   };
