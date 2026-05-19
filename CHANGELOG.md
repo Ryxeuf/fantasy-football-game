@@ -1,3 +1,10 @@
+## [1.126.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.125.0...v1.126.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **kickoff:** enhance pre-match coin toss mechanics ([a024b6d](https://github.com/Ryxeuf/fantasy-football-game/commit/a024b6dbd6b899c216fc9d0372dc166e9129fd78))
+
 ## [1.125.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.124.0...v1.125.0) (2026-05-19)
 
 
