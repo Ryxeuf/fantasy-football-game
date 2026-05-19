@@ -4,6 +4,7 @@
  */
 
 import { GameState, Player, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { rollD6, calculateArmorTarget } from '../utils/dice';
 import { isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
@@ -79,7 +80,7 @@ export function executeFoul(
   target: Player,
   rng: RNG
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  let newState = cloneGameState(state);
 
   const assists = calculateFoulAssists(newState, attacker, target);
 

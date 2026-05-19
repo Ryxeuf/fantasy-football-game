@@ -23,6 +23,7 @@ import type {
   RNG,
   TeamId,
 } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { getArmBarBonus } from '../mechanics/arm-bar';
 import {
   isInOpponentEndzone,
@@ -90,9 +91,10 @@ export function handleRerollChoose(
   // ont historiquement mute `state.players[idx]` directement. Avec un
   // shallow clone, `newState.players` est la MEME ref que `state.players`
   // du caller → corruption cross-state. Apres le fix immutabilite de ces
-  // helpers (cette PR), le shallow clone est SUFFISANT. On garde le
-  // structuredClone par defense-in-depth contre une regression future.
-  let newState: GameState = structuredClone({ ...state, pendingReroll: undefined }) as GameState;
+  // helpers (cette PR), le shallow clone est SUFFISANT. Sprint Perf : on
+  // utilise `cloneGameState` (drop-in plus rapide que `structuredClone`,
+  // cf. core/clone-state.ts) tout en preservant la defense-in-depth.
+  let newState: GameState = cloneGameState({ ...state, pendingReroll: undefined });
 
   if (!move.useReroll) {
     // Relance refusee : appliquer les consequences de l'echec

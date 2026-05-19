@@ -356,6 +356,33 @@ vi.mock("../services/pro-mvp-vote", () => {
 });
 ```
 
+### `cloneGameState` drop-in pour `structuredClone(state)` (Sprint Perf)
+Le clone deep par defaut etait `structuredClone(state) as GameState`,
+correct mais cher (serialise tout l'arbre). `packages/game-engine/src/
+core/clone-state.ts` fournit `cloneGameState(state)` : shallow spread
+de la racine + deep clone selectif des sous-arbres mutables connus
+(`players`, `dugouts.zones.*.players`, `matchStats`, `gameLog`, etc.).
+Equivalent semantique a `structuredClone` mais ~9-11x plus rapide
+(`clone-state.bench.test.ts`). Drop-in : `let next = cloneGameState(state);`.
+Si tu ajoutes un champ mutable nested au `GameState`, il faut
+l'inclure dans `cloneGameState` ET dans le test d'equivalence
+`clone-state.test.ts`.
+
+### WeakMap cache sur `players` array (Sprint Perf)
+`packages/game-engine/src/core/state-cache.ts` indexe sur la
+reference de `state.players` (stable tant que le state n'est pas
+muté). Lazy : ne calcule qu'a la premiere requete. Utilise dans
+`evaluator.ts` pour `findPlayerById`, `getActiveTeamPlayers`,
+`getBallCarrier`. Les callers ne doivent **pas** muter les arrays
+retournes (convention readonly non type-checked).
+
+### Cache `evaluatePosition` per state (Sprint Perf)
+WeakMap<GameState, { A?, B? }> cache uniquement le path SANS
+`weightsOverride`. La raison : un override est un objet partiel
+dont on ne peut pas hasher proprement. Le full driver sim-engine
+qui passe des poids tactiques tombera sur le slow path. La majorite
+des tests et de gameplay direct ne passe pas de weights -> hot cache.
+
 ## Pieges connus
 
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)

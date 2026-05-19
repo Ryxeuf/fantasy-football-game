@@ -15,6 +15,7 @@
  */
 
 import { GameState, Move, Player, Position, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers } from '../skills/skill-bridge';
 import {
@@ -81,7 +82,7 @@ export function handleLeap(
   // Jet d'Agilité pour le saut
   const leapResult = performLeapRoll(player, rng, modifiers);
 
-  let next = structuredClone(newState) as GameState;
+  let next = cloneGameState(newState);
   next.lastDiceResult = leapResult;
 
   const leapLogEntry = createLogEntry(
@@ -206,7 +207,7 @@ export function handleDodge(
 
   const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
 
-  let next = structuredClone(state) as GameState;
+  let next = cloneGameState(state);
   next.lastDiceResult = dodgeResult;
 
   // Log du jet d'esquive

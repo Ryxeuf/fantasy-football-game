@@ -4,6 +4,7 @@
  */
 
 import { GameState, TeamId, Player, PlayerState, TeamDugout, DugoutZone } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 
 /**
  * Crée une zone de dugout
@@ -101,7 +102,7 @@ export function movePlayerToDugoutZone(
   zoneType: keyof TeamDugout['zones'],
   teamId: TeamId
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const player = newState.players.find(p => p.id === playerId);
 
   if (!player) return state;
@@ -208,7 +209,7 @@ export function bringPlayerFromReserves(
   playerId: string,
   position: { x: number; y: number }
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const player = newState.players.find(p => p.id === playerId);
 
   if (!player) return state;
@@ -246,7 +247,7 @@ export function recoverKnockedOutPlayers(
   teamId: TeamId,
   rng: () => number
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const knockedOutPlayers = getKnockedOutPlayers(newState, teamId);
   const dugout = newState.dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
 

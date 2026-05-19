@@ -4,6 +4,7 @@
  */
 
 import { GameState, RNG, TeamId } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { roll2D6, rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { getWeatherCondition, type WeatherType } from '../core/weather-types';
@@ -105,7 +106,7 @@ export function applyKickoffEvent(
   rng: RNG,
   kickingTeam: TeamId
 ): GameState {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const receivingTeam: TeamId = kickingTeam === 'A' ? 'B' : 'A';
 
   const eventLog = createLogEntry(

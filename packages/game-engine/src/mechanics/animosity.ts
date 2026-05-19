@@ -8,6 +8,7 @@
  */
 
 import type { Player, GameState, RNG } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { hasSkill } from '../skills/skill-effects';
@@ -151,7 +152,7 @@ export function checkAnimosity(
   target: Player,
   rng: RNG,
 ): AnimosityResult {
-  const newState = structuredClone(state) as GameState;
+  const newState = cloneGameState(state);
   const roll = rollD6(rng);
 
   const checkLog = createLogEntry(

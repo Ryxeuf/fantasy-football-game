@@ -21,6 +21,7 @@
  */
 
 import { GameState, Player, RNG, DiceResult } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { hasSkill } from '../skills/skill-effects';
 import { rollD6, calculateArmorTarget } from '../utils/dice';
 import { performInjuryRoll } from './injury';
@@ -81,7 +82,7 @@ export function executeChainsaw(
   target: Player,
   rng: RNG,
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  let newState = cloneGameState(state);
 
   // Log d'action
   const actionLog = createLogEntry(

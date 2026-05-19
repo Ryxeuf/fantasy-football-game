@@ -12,6 +12,7 @@
  */
 
 import { GameState, Player, RNG, DiceResult } from '../core/types';
+import { cloneGameState } from '../core/clone-state';
 import { hasSkill } from '../skills/skill-effects';
 import { rollD6 } from '../utils/dice';
 import { performArmorRoll } from '../utils/dice';
@@ -50,7 +51,7 @@ export function executeProjectileVomit(
   target: Player,
   rng: RNG,
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  let newState = cloneGameState(state);
 
   // Log de l'action
   const actionLog = createLogEntry(
