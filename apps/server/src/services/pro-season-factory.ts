@@ -184,6 +184,22 @@ export async function resetStandings(
       "Impossible de reset une saison archivee",
     );
   }
+  // BUG fix audit round 8 (HIGH) : avant, seul `archived` etait refuse.
+  // Un admin click accidentel sur "reset" pendant un season `in_progress`
+  // (matches deja completed) wipait les standings live → impact direct
+  // sur le classement public. Refuse si au moins 1 match completed
+  // sauf si la saison n'a jamais demarre (status='scheduled').
+  if (season.status === "in_progress") {
+    const completedCount = await prisma.proLeagueMatch.count({
+      where: { seasonId, status: "completed" },
+    });
+    if (completedCount > 0) {
+      throw new SeasonFactoryError(
+        "SEASON_HAS_RESULTS",
+        `Saison en cours avec ${completedCount} matchs completed — reset refuse pour eviter une perte de donnees. Cancel la saison d'abord.`,
+      );
+    }
+  }
 
   const result = await prisma.proLeagueStandings.updateMany({
     where: { seasonId },
@@ -240,8 +256,16 @@ export async function cancelSeason(
 
   const previousStatus = season.status;
   if (previousStatus !== "cancelled") {
-    await prisma.proLeagueSeason.update({
-      where: { id: seasonId },
+    // BUG fix audit round 8 (HIGH/race) : avant, read `season.status`,
+    // branch, puis `update()` inconditionnel. Un autre admin pouvant
+    // archive la saison entre read et write → cancel ecrase l'archive.
+    // Fix : updateMany WHERE conditionnel `status: { notIn: [archived,
+    // cancelled] }` → no-op si la saison est dans un etat protege.
+    await prisma.proLeagueSeason.updateMany({
+      where: {
+        id: seasonId,
+        status: { notIn: ["archived", "cancelled"] },
+      },
       data: { status: "cancelled" },
     });
   }

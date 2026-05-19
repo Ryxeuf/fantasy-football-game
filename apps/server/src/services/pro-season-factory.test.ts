@@ -75,7 +75,7 @@ describe("resetStandings", () => {
   it("zero out tous les standings de la saison", async () => {
     mocked.proLeagueSeason.findUnique.mockResolvedValueOnce({
       id: "s1",
-      status: "in_progress",
+      status: "scheduled", // Audit round 8 : in_progress + matchs completed = refuse.
     });
     mocked.proLeagueStandings.updateMany.mockResolvedValueOnce({ count: 16 });
 
@@ -87,6 +87,20 @@ describe("resetStandings", () => {
     expect(call.data.played).toBe(0);
     expect(call.data.points).toBe(0);
     expect(call.data.form).toEqual([]);
+  });
+
+  it("audit round 8 — SEASON_HAS_RESULTS si in_progress avec matchs completed", async () => {
+    mocked.proLeagueSeason.findUnique.mockResolvedValueOnce({
+      id: "s1",
+      status: "in_progress",
+    });
+    // Mock proLeagueMatch.count : 5 matchs deja completed → reset refuse.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (mocked as any).proLeagueMatch.count = vi.fn().mockResolvedValueOnce(5);
+    await expect(resetStandings("s1")).rejects.toMatchObject({
+      code: "SEASON_HAS_RESULTS",
+    });
+    expect(mocked.proLeagueStandings.updateMany).not.toHaveBeenCalled();
   });
 
   it("SEASON_NOT_FOUND si saison inexistante", async () => {
@@ -114,13 +128,19 @@ describe("cancelSeason", () => {
       id: "s1",
       status: "in_progress",
     });
-    mocked.proLeagueSeason.update.mockResolvedValueOnce({});
+    // Audit round 8 : updateMany conditionnel WHERE status not in
+    // [archived, cancelled]. count: 1 = happy path.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (mocked as any).proLeagueSeason.updateMany = vi
+      .fn()
+      .mockResolvedValueOnce({ count: 1 });
 
     const result = await cancelSeason("s1");
 
     expect(result).toEqual({ seasonId: "s1", previousStatus: "in_progress" });
-    expect(mocked.proLeagueSeason.update).toHaveBeenCalledWith({
-      where: { id: "s1" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((mocked as any).proLeagueSeason.updateMany).toHaveBeenCalledWith({
+      where: { id: "s1", status: { notIn: ["archived", "cancelled"] } },
       data: { status: "cancelled" },
     });
   });
