@@ -22,6 +22,10 @@ vi.mock("../prisma", () => ({
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      // Audit round 8 : admin ban utilise maintenant updateMany
+      // conditionnel WHERE bannedUntil = previous.bannedUntil
+      // (optimistic-lock).
+      updateMany: vi.fn(async () => ({ count: 1 })),
     },
   },
 }));
@@ -288,23 +292,26 @@ describe("POST /admin/matches/:id/cancel", () => {
 });
 
 describe("POST /admin/users/:id/ban", () => {
+  // Audit round 8 : admin ban utilise updateMany conditionnel +
+  // re-fetch. Le `user.update` est remplace par `user.updateMany` +
+  // `user.findUnique` post-update.
   it("ban temporaire : bannedUntil = now + durationDays", async () => {
-    mockedPrisma.user.findUnique.mockResolvedValueOnce({
-      bannedAt: null,
-      bannedUntil: null,
-      banReason: null,
-      role: "user",
-      roles: ["user"],
-    });
-    const updatedBannedUntil = new Date("2026-05-20T10:00:00Z");
-    mockedPrisma.user.update.mockResolvedValueOnce({
-      id: "user-99",
-      email: "toxic@example.com",
-      coachName: "toxic",
-      bannedAt: new Date("2026-05-13T10:00:00Z"),
-      bannedUntil: updatedBannedUntil,
-      banReason: "comportement toxique",
-    });
+    mockedPrisma.user.findUnique
+      .mockResolvedValueOnce({
+        bannedAt: null,
+        bannedUntil: null,
+        banReason: null,
+        role: "user",
+        roles: ["user"],
+      })
+      .mockResolvedValueOnce({
+        id: "user-99",
+        email: "toxic@example.com",
+        coachName: "toxic",
+        bannedAt: new Date("2026-05-13T10:00:00Z"),
+        bannedUntil: new Date("2026-05-20T10:00:00Z"),
+        banReason: "comportement toxique",
+      });
 
     const res = await requestAdmin("POST", "/users/user-99/ban", {
       reason: "comportement toxique",
@@ -314,10 +321,11 @@ describe("POST /admin/users/:id/ban", () => {
     expect(res.status).toBe(200);
     expect(res.body.user.banReason).toBe("comportement toxique");
     expect(res.body.user.bannedUntil).toBeDefined();
-    // Verifie que update a recu une date future (~7j) et reason.
-    const updateCall = mockedPrisma.user.update.mock.calls[0]![0];
+    // Verifie updateMany conditionnel : WHERE bannedUntil=null (initial).
+    const updateCall = mockedPrisma.user.updateMany.mock.calls[0]![0];
     expect(updateCall.data.banReason).toBe("comportement toxique");
     expect(updateCall.data.bannedUntil).toBeInstanceOf(Date);
+    expect(updateCall.where).toMatchObject({ id: "user-99", bannedUntil: null });
     expect(mockedAudit).toHaveBeenCalledWith(
       prisma,
       expect.anything(),
@@ -330,63 +338,62 @@ describe("POST /admin/users/:id/ban", () => {
   });
 
   it("ban permanent : durationDays omis → bannedUntil = year 9999", async () => {
-    mockedPrisma.user.findUnique.mockResolvedValueOnce({
-      bannedAt: null,
-      bannedUntil: null,
-      banReason: null,
-      role: "user",
-      roles: ["user"],
-    });
-    mockedPrisma.user.update.mockResolvedValueOnce({
-      id: "user-99",
-      email: "x@x",
-      coachName: "x",
-      bannedAt: new Date(),
-      bannedUntil: new Date("9999-12-31T23:59:59.999Z"),
-      banReason: "fraude grave",
-    });
+    mockedPrisma.user.findUnique
+      .mockResolvedValueOnce({
+        bannedAt: null,
+        bannedUntil: null,
+        banReason: null,
+        role: "user",
+        roles: ["user"],
+      })
+      .mockResolvedValueOnce({
+        id: "user-99",
+        email: "x@x",
+        coachName: "x",
+        bannedAt: new Date(),
+        bannedUntil: new Date("9999-12-31T23:59:59.999Z"),
+        banReason: "fraude grave",
+      });
 
     const res = await requestAdmin("POST", "/users/user-99/ban", {
       reason: "fraude grave",
     });
 
     expect(res.status).toBe(200);
-    const updateCall = mockedPrisma.user.update.mock.calls[0]![0];
+    const updateCall = mockedPrisma.user.updateMany.mock.calls[0]![0];
     const bUntil = updateCall.data.bannedUntil as Date;
-    // Year 9999 ⇒ approximation : > year 9000.
     expect(bUntil.getFullYear()).toBeGreaterThan(9000);
   });
 
   it("etend la duree existante si plus longue (idempotence preserve la fin la plus tardive)", async () => {
     const longerFuture = new Date("2027-01-01T00:00:00Z");
-    mockedPrisma.user.findUnique.mockResolvedValueOnce({
-      bannedAt: new Date("2026-05-01T00:00:00Z"),
-      bannedUntil: longerFuture,
-      banReason: "ban initial 1 an",
-      role: "user",
-      roles: ["user"],
-    });
-    mockedPrisma.user.update.mockResolvedValueOnce({
-      id: "user-99",
-      email: "x@x",
-      coachName: "x",
-      bannedAt: new Date("2026-05-01T00:00:00Z"),
-      bannedUntil: longerFuture,
-      banReason: "raison mise a jour",
-    });
+    mockedPrisma.user.findUnique
+      .mockResolvedValueOnce({
+        bannedAt: new Date("2026-05-01T00:00:00Z"),
+        bannedUntil: longerFuture,
+        banReason: "ban initial 1 an",
+        role: "user",
+        roles: ["user"],
+      })
+      .mockResolvedValueOnce({
+        id: "user-99",
+        email: "x@x",
+        coachName: "x",
+        bannedAt: new Date("2026-05-01T00:00:00Z"),
+        bannedUntil: longerFuture,
+        banReason: "raison mise a jour",
+      });
 
     const res = await requestAdmin("POST", "/users/user-99/ban", {
       reason: "raison mise a jour",
-      durationDays: 1, // beaucoup plus court que existant
+      durationDays: 1,
     });
 
     expect(res.status).toBe(200);
-    const updateCall = mockedPrisma.user.update.mock.calls[0]![0];
-    // On garde longerFuture, pas now+1j.
+    const updateCall = mockedPrisma.user.updateMany.mock.calls[0]![0];
     expect((updateCall.data.bannedUntil as Date).getTime()).toBe(
       longerFuture.getTime(),
     );
-    // mais reason est mis a jour.
     expect(updateCall.data.banReason).toBe("raison mise a jour");
   });
 

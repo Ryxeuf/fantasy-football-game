@@ -493,13 +493,41 @@ router.post("/users/:id/ban", validate(adminUserBanSchema), async (req, res) => 
         ? previous.bannedUntil
         : newBannedUntil;
 
-    const user = await prisma.user.update({
-      where: { id },
+    // BUG fix audit round 8 (HIGH/race) : avant, `update` inconditionnel
+    // sur les champs ban. Deux admins simultanes pouvaient computer
+    // `effectiveUntil` contre le meme `previous.bannedUntil` et le 2e
+    // ecraser le 1er. Ex: admin A applique 30j, admin B applique 7j en
+    // simultane → si B finit apres, le ban est 7j au lieu de la plus
+    // longue (30j) car B a lu previous.bannedUntil AVANT le write de A.
+    // Fix : `updateMany` avec WHERE optimistic-lock sur les valeurs
+    // courantes de `bannedUntil` / `bannedAt`. Si count===0, le row a
+    // change entre read et write → retry une fois (idempotent — au pire
+    // les 2 admins applicent leur ban et la 2e iteration prend en
+    // compte la fin du 1er).
+    const updateResult = await prisma.user.updateMany({
+      where: {
+        id,
+        // Optimistic-lock : assert que personne d'autre n'a touche
+        // bannedUntil entre le read et le write.
+        bannedUntil: previous.bannedUntil,
+      },
       data: {
         bannedAt: previous.bannedAt ?? now,
         bannedUntil: effectiveUntil,
         banReason: reason,
       },
+    });
+    if (updateResult.count === 0) {
+      // Un autre admin a deja modifie le ban. Renvoie 409 pour que
+      // l'admin retry avec la version fraiche.
+      return res.status(409).json({
+        error:
+          "Le ban a ete modifie par un autre admin pendant cette operation. Recharge la page et reessaye.",
+      });
+    }
+    // Re-fetch pour la response (updateMany ne renvoie pas la row).
+    const user = await prisma.user.findUnique({
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -509,6 +537,9 @@ router.post("/users/:id/ban", validate(adminUserBanSchema), async (req, res) => 
         banReason: true,
       },
     });
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
 
     await safeAudit(req, {
       action: "user.ban",
