@@ -12,8 +12,13 @@ vi.mock("./prisma", () => ({
   },
 }));
 
+vi.mock("./game-spectator", () => ({
+  getSpectateMatchId: vi.fn(),
+}));
+
 import { prisma } from "./prisma";
 import { handleResyncRequest } from "./game-resync";
+import { getSpectateMatchId } from "./game-spectator";
 
 describe("game-resync", () => {
   const userId = "user-abc";
@@ -117,6 +122,47 @@ describe("game-resync", () => {
       success: true,
       gameState,
       matchId,
+    });
+  });
+
+  // Audit round 11 (CRITICAL) : tests anti-bypass spectator.
+  describe("spectator access control", () => {
+    it("autorise un spectateur qui spectate EXACTEMENT le matchId demande", async () => {
+      vi.mocked(getSpectateMatchId).mockReturnValue(matchId);
+      vi.mocked(prisma.turn.findFirst).mockResolvedValue({
+        payload: { gameState: { foo: "bar" } },
+      } as any);
+
+      const result = await handleResyncRequest(matchId, userId, "socket-A");
+
+      expect(result.success).toBe(true);
+      // findFirst sur match NE DOIT PAS etre appele : spectator legitime.
+      expect(prisma.match.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("BLOQUE un spectateur d'un autre match qui tente de resync un match prive", async () => {
+      // Socket spectate match-OTHER, mais tente request-resync sur match-123 (prive).
+      vi.mocked(getSpectateMatchId).mockReturnValue("match-OTHER");
+      vi.mocked(prisma.match.findFirst).mockResolvedValue(null); // pas participant
+
+      const result = await handleResyncRequest(matchId, userId, "socket-attacker");
+
+      expect(result).toEqual({
+        success: false,
+        error: "You are not a participant of this match",
+      });
+      // findFirst DOIT etre appele : pas un spectator legitime → check participant.
+      expect(prisma.match.findFirst).toHaveBeenCalled();
+    });
+
+    it("BLOQUE un socket qui ne spectate rien et n'est pas participant", async () => {
+      vi.mocked(getSpectateMatchId).mockReturnValue(undefined);
+      vi.mocked(prisma.match.findFirst).mockResolvedValue(null);
+
+      const result = await handleResyncRequest(matchId, userId, "socket-X");
+
+      expect(result.success).toBe(false);
+      expect(prisma.match.findFirst).toHaveBeenCalled();
     });
   });
 });

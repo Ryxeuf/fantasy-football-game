@@ -1,6 +1,6 @@
 import type { Namespace, Socket } from "socket.io";
 import { prisma } from "./prisma";
-import { isSpectator } from "./game-spectator";
+import { getSpectateMatchId } from "./game-spectator";
 
 export interface ResyncRequestPayload {
   matchId: string;
@@ -22,10 +22,19 @@ export async function handleResyncRequest(
   userId: string,
   socketId?: string,
 ): Promise<ResyncResponse> {
-  // Spectators can also resync — skip participant check for them
-  const spectator = socketId ? isSpectator(socketId) : false;
+  // Audit round 11 (CRITICAL) : avant, `isSpectator(socketId)` etait
+  // un check global "ce socket est-il spectateur de QUOI QUE CE
+  // SOIT". Un attaquant pouvait :
+  //   1. game:spectate-match {matchId: "any-public"}
+  //   2. game:request-resync {matchId: "<victim-private>"}
+  // → recupere le `gameState` complet d'un match prive. Fix :
+  // verifier que le matchId spectate EST le matchId demande (strict).
+  const spectatedMatchId = socketId
+    ? getSpectateMatchId(socketId)
+    : undefined;
+  const isLegitimateSpectator = spectatedMatchId === matchId;
 
-  if (!spectator) {
+  if (!isLegitimateSpectator) {
     // Verify the user is a participant of this match
     const match = await prisma.match.findFirst({
       where: {
