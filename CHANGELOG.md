@@ -1,3 +1,10 @@
+## [1.124.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.123.0...v1.124.0) (2026-05-19)
+
+
+### ✨ Features
+
+* **replay:** enhance replay UI and game mechanics ([03b31a7](https://github.com/Ryxeuf/fantasy-football-game/commit/03b31a7c974da168179a176bd2c0f9ff99361ba9))
+
 ## [1.123.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.122.0...v1.123.0) (2026-05-19)
 
 
