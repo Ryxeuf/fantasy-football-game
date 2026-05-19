@@ -3,6 +3,7 @@ import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { syncAuthCookie, clearAuthCookie } from "../../lib/auth-cookie";
+import { sanitizeRedirect } from "../../lib/safe-redirect";
 
 /**
  * Page de synchronisation du token depuis localStorage vers les cookies pour les
@@ -27,7 +28,12 @@ export default function AuthSyncPage() {
 function AuthSyncContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectTo = searchParams.get("redirect") || "/me";
+  // Audit round 11 (HIGH/open-redirect) : avant, `redirectTo` etait
+  // accepte brut depuis `?redirect=...`. Un attaquant pouvait forger
+  // `https://app.com/auth/sync?redirect=https://evil.com` et detourner
+  // l'user apres login. `sanitizeRedirect` n'autorise que les paths
+  // internes (`/...`) et rejette `//`, `/\\`, et toute URL absolue.
+  const redirectTo = sanitizeRedirect(searchParams.get("redirect"), "/me");
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");

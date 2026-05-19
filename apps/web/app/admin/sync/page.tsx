@@ -3,6 +3,7 @@ import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { syncAuthCookie } from "../../lib/auth-cookie";
+import { sanitizeRedirect } from "../../lib/safe-redirect";
 
 /**
  * Page de synchronisation du token depuis localStorage vers les cookies
@@ -20,7 +21,9 @@ export default function AdminSyncPage() {
 function AdminSyncContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectTo = searchParams.get("redirect") || "/admin";
+  // Audit round 11 (HIGH/open-redirect) : sanitize avant utilisation.
+  // Voir lib/safe-redirect.ts.
+  const redirectTo = sanitizeRedirect(searchParams.get("redirect"), "/admin");
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");

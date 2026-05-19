@@ -9,13 +9,56 @@ import type { NextRequest } from "next/server";
  * `document.cookie` ni le rejouer en CSRF cross-site. Le token reste
  * disponible cote client via localStorage pour les appels API
  * authentifies par header `Authorization`.
+ *
+ * Audit round 11 (CRITICAL) : avant, on stockait n'importe quel
+ * string fourni par le client sans verifier la signature JWT. Le
+ * `middleware.ts` gate ensuite `/admin/*` via `isAdminToken` qui
+ * decode le JWT SANS verifier la signature (Edge Runtime ne supporte
+ * pas jose). Un attaquant pouvait fabriquer un JWT
+ * `{role: "admin"}` avec une signature arbitraire, POST a cet endpoint,
+ * et bypass le middleware admin → render des pages admin.
+ *
+ * Fix : valider le token contre le backend via `/auth/me` avant de
+ * set le cookie. Si le token est invalide ou si le backend n'est pas
+ * joignable, on refuse le set.
  */
+
+function inferApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE) return process.env.NEXT_PUBLIC_API_BASE;
+  return "http://localhost:4000";
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const token = body?.token;
 
   if (!token || typeof token !== "string") {
     return NextResponse.json({ error: "Token manquant" }, { status: 400 });
+  }
+
+  // Audit round 11 : valide le token cote serveur avant de set le cookie.
+  // Le backend signe le JWT avec un secret connu seulement de lui ;
+  // /auth/me retourne 200 uniquement si la signature est valide.
+  try {
+    const verifyResponse = await fetch(`${inferApiBase()}/auth/me`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      // 5s pour eviter de bloquer le user en cas de backend lent.
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!verifyResponse.ok) {
+      return NextResponse.json(
+        { error: "Token invalide" },
+        { status: 401 },
+      );
+    }
+  } catch {
+    // Backend injoignable ou timeout : on refuse plutot que set un
+    // cookie potentiellement forge.
+    return NextResponse.json(
+      { error: "Verification token impossible" },
+      { status: 503 },
+    );
   }
 
   const response = NextResponse.json({ success: true });

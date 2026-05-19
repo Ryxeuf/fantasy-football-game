@@ -22,6 +22,7 @@ import { apiRequest } from "../../../../../lib/api-client";
 import { SeasonStandings } from "../../../SeasonStandings";
 import type { StandingRow } from "../../../types";
 import { buildSeasonEventSchema } from "../../../../season-event-schema";
+import { safeJsonLd } from "../../../../../lib/safe-json-ld";
 
 interface AwardEntry {
   teamId: string;
@@ -197,8 +198,12 @@ export default function SeasonRecapPage() {
           type="application/ld+json"
           data-testid="season-recap-jsonld"
           // eslint-disable-next-line react/no-danger
+          // Audit round 11 (HIGH/XSS) : escape via safeJsonLd pour eviter
+          // le breakout `</script>` quand des champs user-controlled
+          // (championCoachName, championTeamName, leagueName) contiennent
+          // la sequence. Voir lib/safe-json-ld.ts (round 9).
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(seasonEventSchema),
+            __html: safeJsonLd(seasonEventSchema),
           }}
         />
       ) : null}
