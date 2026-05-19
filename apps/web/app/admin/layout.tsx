@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { syncAuthCookie } from "../lib/auth-cookie";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { LEAGUES_V2_UI_FLAG } from "../lib/featureFlagKeys";
+import EngineVersionsBadge from "./_components/EngineVersionsBadge";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -107,6 +108,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {navItem("/admin/data/positions", "Positions", "🎯")}
         {navItem("/admin/data/star-players", "Star Players", "⭐")}
       </div>
+
+      <EngineVersionsBadge variant="sidebar" />
     </nav>
   );
 

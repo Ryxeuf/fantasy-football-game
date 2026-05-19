@@ -26,6 +26,8 @@ import {
   type RecordAdminActionInput,
 } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
+import { ENGINE_VER as GAME_ENGINE_VER } from "@bb/game-engine";
+import { ENGINE_VER as SIM_ENGINE_VER } from "@bb/sim-engine";
 
 const router = Router();
 
@@ -42,6 +44,19 @@ async function safeAudit(
 ): Promise<void> {
   await safeRecordAdminActionFromRequest(prisma, req, partial);
 }
+
+/**
+ * Versions actives des moteurs de simulation (game-engine = règles de match,
+ * sim-engine = orchestrateur de saisons). Exposées séparément de `/stats`
+ * pour permettre un affichage permanent (sidebar admin) sans tirer toutes
+ * les agrégations Prisma à chaque render.
+ */
+router.get("/engine-versions", (_req, res) => {
+  res.json({
+    gameEngine: GAME_ENGINE_VER,
+    simEngine: SIM_ENGINE_VER,
+  });
+});
 
 // Route améliorée pour lister les utilisateurs avec statistiques
 router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
@@ -1292,6 +1307,10 @@ router.get("/stats", async (_req, res) => {
       recent: {
         users: recentUsers,
         matches: recentMatches,
+      },
+      engines: {
+        gameEngine: GAME_ENGINE_VER,
+        simEngine: SIM_ENGINE_VER,
       },
       health: "ok",
       time: new Date().toISOString(),

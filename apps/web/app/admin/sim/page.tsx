@@ -13,6 +13,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../auth-client";
+import EngineVersionsBadge from "../_components/EngineVersionsBadge";
 
 interface Team {
   id: string;
@@ -121,15 +122,18 @@ export default function AdminSimPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <header>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
-          🎲 Simulateur Pro League
-        </h1>
-        <p className="text-sm text-gray-600">
-          Utilitaire Phase 0 : declenche une simulation deterministe et
-          affiche le rapport stat. Sera remplace par la vraie UI Pro
-          League en Phase 1 (lots 1.A / 1.B / 1.C).
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+            🎲 Simulateur Pro League
+          </h1>
+          <p className="text-sm text-gray-600">
+            Utilitaire Phase 0 : declenche une simulation deterministe et
+            affiche le rapport stat. Sera remplace par la vraie UI Pro
+            League en Phase 1 (lots 1.A / 1.B / 1.C).
+          </p>
+        </div>
+        <EngineVersionsBadge variant="inline" />
       </header>
 
       {error && (

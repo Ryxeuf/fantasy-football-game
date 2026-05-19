@@ -19,6 +19,7 @@ import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
 import CloneSeasonModal from "./_components/CloneSeasonModal";
 import CreateSeasonModal from "./_components/CreateSeasonModal";
+import EngineVersionsBadge from "../../_components/EngineVersionsBadge";
 
 interface Season {
   id: string;
@@ -173,14 +174,22 @@ export default function AdminProLeagueSeasonsPage() {
             Gestion administrative des saisons : creation, clone, regeneration
             de calendrier, reset des standings, annulation.
           </p>
+          <p className="text-xs text-gray-500 mt-1">
+            La colonne <span className="font-mono">engineVer</span> ci-dessous
+            indique le moteur qui a produit chaque saison. Les versions
+            courantes du serveur sont affichées à droite.
+          </p>
         </div>
-        <button
-          onClick={() => setCreateOpen(true)}
-          data-testid="btn-create-season"
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm"
-        >
-          + Creer une saison
-        </button>
+        <div className="flex flex-col items-end gap-2">
+          <EngineVersionsBadge variant="inline" />
+          <button
+            onClick={() => setCreateOpen(true)}
+            data-testid="btn-create-season"
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm"
+          >
+            + Creer une saison
+          </button>
+        </div>
       </div>
 
       {error && (

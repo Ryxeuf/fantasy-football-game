@@ -2,6 +2,16 @@
  * Types et interfaces pour le moteur de jeu Blood Bowl
  */
 
+/**
+ * Version sémantique du moteur de match BB. Bump à chaque changement de
+ * comportement déterministe (règles, dés, ordres d'effet) — sert à
+ * marquer les matchs déjà simulés pour distinguer les replays produits
+ * par des versions différentes du moteur (cf. ProLeagueMatch.engineVer).
+ * Pendant unique à `ENGINE_VER` de `@bb/sim-engine`.
+ */
+export const ENGINE_VER = '1.0.0';
+export type EngineVersion = string;
+
 export type TeamId = 'A' | 'B';
 
 export interface Position {
