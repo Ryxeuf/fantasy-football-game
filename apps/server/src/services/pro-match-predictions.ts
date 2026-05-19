@@ -388,53 +388,63 @@ export async function getSeerLeaderboard(
   limit: number = 10,
 ): Promise<readonly SeerLeaderboardEntry[]> {
   const sinceAt = new Date(Date.now() - SEER_WINDOW_MS);
-  const rows = (await prisma.proMatchPrediction.findMany({
+  // Audit round 10 (HIGH/perf) : avant, findMany sans `take` ramenait
+  // toutes les predictions scored des 7 derniers jours puis agregait
+  // en JS. Sur une semaine active (1000 users x 5 matches x 1 pred =
+  // ~50k rows), ca saturait le pool DB et la heap Node.
+  // Fix : pousser l'agregation cote DB via groupBy → max n_users * 3
+  // rows (perfect/winner/wrong par user). On charge les `name` dans
+  // un second findMany cible sur les top-N userIds apres le sort.
+  const grouped = (await prisma.proMatchPrediction.groupBy({
+    by: ["userId", "score"],
     where: {
       score: { not: null },
       scoredAt: { gte: sinceAt },
     },
-    select: {
-      userId: true,
-      score: true,
-      user: { select: { name: true } },
-    },
+    _count: { _all: true },
   })) as Array<{
     userId: string;
     score: string | null;
-    user: { name: string | null };
+    _count: { _all: number };
   }>;
 
-  if (rows.length === 0) return [];
+  if (grouped.length === 0) return [];
 
   const byUser = new Map<
     string,
     {
-      userName: string | null;
       perfect: number;
       winner: number;
       wrong: number;
     }
   >();
-  for (const r of rows) {
-    if (!byUser.has(r.userId)) {
-      byUser.set(r.userId, {
-        userName: r.user.name,
-        perfect: 0,
-        winner: 0,
-        wrong: 0,
-      });
+  for (const g of grouped) {
+    if (!byUser.has(g.userId)) {
+      byUser.set(g.userId, { perfect: 0, winner: 0, wrong: 0 });
     }
-    const b = byUser.get(r.userId)!;
-    if (r.score === "perfect") b.perfect += 1;
-    else if (r.score === "winner") b.winner += 1;
-    else b.wrong += 1;
+    const b = byUser.get(g.userId)!;
+    const c = g._count._all;
+    if (g.score === "perfect") b.perfect += c;
+    else if (g.score === "winner") b.winner += c;
+    else b.wrong += c;
+  }
+
+  // Second findMany cible sur les userIds pour recuperer le `name`.
+  const userIds = Array.from(byUser.keys());
+  const userRows = (await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true },
+  })) as Array<{ id: string; name: string | null }>;
+  const nameById = new Map<string, string | null>();
+  for (const u of userRows) {
+    nameById.set(u.id, u.name);
   }
 
   const entries: SeerLeaderboardEntry[] = [];
   for (const [userId, b] of byUser) {
     entries.push({
       userId,
-      userName: b.userName,
+      userName: nameById.get(userId) ?? null,
       perfectCount: b.perfect,
       winnerCount: b.winner,
       totalScored: b.perfect + b.winner + b.wrong,

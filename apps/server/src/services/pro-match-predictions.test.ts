@@ -14,7 +14,9 @@ vi.mock("../prisma", () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
       delete: vi.fn(),
+      groupBy: vi.fn(),
     },
+    user: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -42,7 +44,9 @@ const mockedPrisma = prisma as unknown as {
     update: ReturnType<typeof vi.fn>;
     updateMany: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
+    groupBy: ReturnType<typeof vi.fn>;
   };
+  user: { findMany: ReturnType<typeof vi.fn> };
   $transaction: ReturnType<typeof vi.fn>;
 };
 
@@ -341,25 +345,24 @@ describe("settlePredictions", () => {
 
 describe("getSeerLeaderboard", () => {
   it("retourne [] si aucune prediction", async () => {
-    mockedPrisma.proMatchPrediction.findMany.mockResolvedValueOnce([]);
+    mockedPrisma.proMatchPrediction.groupBy.mockResolvedValueOnce([]);
     expect(await getSeerLeaderboard()).toEqual([]);
   });
 
   it("trie par perfect desc, winner desc, nom asc", async () => {
-    mockedPrisma.proMatchPrediction.findMany.mockResolvedValueOnce([
-      // u1 : 2 perfect, 1 winner
-      { userId: "u1", score: "perfect", user: userBrief },
-      { userId: "u1", score: "perfect", user: userBrief },
-      { userId: "u1", score: "winner", user: userBrief },
-      // u2 : 2 perfect, 2 winner (meilleur tie-break)
-      { userId: "u2", score: "perfect", user: { name: "Bob", email: "b@x.com" } },
-      { userId: "u2", score: "perfect", user: { name: "Bob", email: "b@x.com" } },
-      { userId: "u2", score: "winner", user: { name: "Bob", email: "b@x.com" } },
-      { userId: "u2", score: "winner", user: { name: "Bob", email: "b@x.com" } },
-      // u3 : 3 perfect (1er)
-      { userId: "u3", score: "perfect", user: { name: "Charlie", email: "c@x.com" } },
-      { userId: "u3", score: "perfect", user: { name: "Charlie", email: "c@x.com" } },
-      { userId: "u3", score: "perfect", user: { name: "Charlie", email: "c@x.com" } },
+    // Round 10 (HIGH/perf) : agregation pousse cote DB via groupBy.
+    // u1 : 2 perfect, 1 winner ; u2 : 2 perfect, 2 winner ; u3 : 3 perfect.
+    mockedPrisma.proMatchPrediction.groupBy.mockResolvedValueOnce([
+      { userId: "u1", score: "perfect", _count: { _all: 2 } },
+      { userId: "u1", score: "winner", _count: { _all: 1 } },
+      { userId: "u2", score: "perfect", _count: { _all: 2 } },
+      { userId: "u2", score: "winner", _count: { _all: 2 } },
+      { userId: "u3", score: "perfect", _count: { _all: 3 } },
+    ]);
+    mockedPrisma.user.findMany.mockResolvedValueOnce([
+      { id: "u1", name: "Alice" },
+      { id: "u2", name: "Bob" },
+      { id: "u3", name: "Charlie" },
     ]);
 
     const out = await getSeerLeaderboard(10);
@@ -369,9 +372,13 @@ describe("getSeerLeaderboard", () => {
   });
 
   it("respecte limit", async () => {
-    mockedPrisma.proMatchPrediction.findMany.mockResolvedValueOnce([
-      { userId: "u1", score: "perfect", user: userBrief },
-      { userId: "u2", score: "perfect", user: { name: "Bob", email: "b@x.com" } },
+    mockedPrisma.proMatchPrediction.groupBy.mockResolvedValueOnce([
+      { userId: "u1", score: "perfect", _count: { _all: 1 } },
+      { userId: "u2", score: "perfect", _count: { _all: 1 } },
+    ]);
+    mockedPrisma.user.findMany.mockResolvedValueOnce([
+      { id: "u1", name: "Alice" },
+      { id: "u2", name: "Bob" },
     ]);
     const out = await getSeerLeaderboard(1);
     expect(out).toHaveLength(1);
