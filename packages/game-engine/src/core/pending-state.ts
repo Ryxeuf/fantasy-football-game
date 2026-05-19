@@ -72,7 +72,13 @@ export function assertSinglePending(state: GameState, context: string): void {
   if (active.length <= 1) return;
 
   const msg = `[pending-state invariant] ${context}: ${active.length} pendings actifs simultanement: ${active.join(', ')}`;
-  if (process.env.NODE_ENV === 'production') {
+  // Lookup NODE_ENV via globalThis pour rester compatible avec les
+  // consumers qui n'ont pas `@types/node` dans leur tsconfig (e.g.
+  // `@bb/ui`). Le package game-engine est volontairement
+  // environment-agnostic.
+  const nodeEnv = (globalThis as { process?: { env?: { NODE_ENV?: string } } })
+    .process?.env?.NODE_ENV;
+  if (nodeEnv === 'production') {
     console.error(msg);
   } else {
     throw new Error(msg);
