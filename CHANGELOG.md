@@ -1,3 +1,21 @@
+## [1.131.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.130.0...v1.131.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **server:** CLI nfl-ingest gameday + rosters commands ([643e522](https://github.com/Ryxeuf/fantasy-football-game/commit/643e5221d2389c270a5f211b62e80835fd0c1c68))
+* **server:** nfl-ingest-espn service Phase 2.B (gameday + rosters) ([d514b37](https://github.com/Ryxeuf/fantasy-football-game/commit/d514b37a8bc186456a74e7d441957489b59970fa))
+
+
+### 🐛 Bug Fixes
+
+* **nfl-ingest:** normalize legacy LA team code in nflverse game_id ([a8862ce](https://github.com/Ryxeuf/fantasy-football-game/commit/a8862ce128ed036566b3497a001db42df45b7d4b))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** document Phase 2.A/2.B ingestion pipeline ([8d3b9fd](https://github.com/Ryxeuf/fantasy-football-game/commit/8d3b9fd54367a7b94ab26ecef6a4d315b94d661f))
+
 ## [1.130.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.129.0...v1.130.0) (2026-05-20)
 
 
