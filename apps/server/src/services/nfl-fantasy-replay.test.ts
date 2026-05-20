@@ -4,6 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflSeason: { findUnique: vi.fn() },
     nflFantasyEntry: { create: vi.fn(), findMany: vi.fn() },
+    nflGameStat: { findMany: vi.fn() },
   },
 }));
 
@@ -198,5 +199,84 @@ describe("replaySeason - happy path", () => {
       { w: 1, s: "settled" },
       { w: 2, s: "settled" },
     ]);
+  });
+});
+
+describe("replaySeason - lineupMode optimal", () => {
+  it("pick les 11 top SPP earners du roster pour chaque week", async () => {
+    setupHappyPath();
+    // Roster de 15 joueurs P0..P14. Mock NflGameStat pour que les
+    // joueurs IMPAIRS aient SPP=100 et les PAIRS SPP=10. On attend
+    // que setLineup recoive les impairs en priorite.
+    vi.mocked(getRosterWithPlayers).mockResolvedValue(
+      Array.from({ length: 15 }, (_, i) => ({
+        player: { id: `P${i}`, bbPosition: "Lineman" },
+      })) as never,
+    );
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue(
+      Array.from({ length: 15 }, (_, i) => ({
+        playerId: `P${i}`,
+        computedSpp: i % 2 === 1 ? 100 : 10,
+      })) as never,
+    );
+
+    await replaySeason({
+      seasonId: "2024",
+      teamCount: 2,
+      fromWeek: 1,
+      toWeek: 1,
+      lineupMode: "optimal",
+    });
+
+    // 2 entries × 1 week = 2 calls
+    expect(setLineup).toHaveBeenCalledTimes(2);
+    const firstCall = vi.mocked(setLineup).mock.calls[0]![0];
+    const starters = firstCall.starters as Array<{
+      playerId: string;
+      bbPosition: string;
+    }>;
+    expect(starters).toHaveLength(11);
+    // Les 7 impairs (P1,P3,P5,P7,P9,P11,P13) doivent etre dans les 11
+    // premiers (rang 1-7), puis suivis de 4 pairs.
+    const oddCount = starters.filter((s) =>
+      Number(s.playerId.slice(1)) % 2 === 1,
+    ).length;
+    expect(oddCount).toBe(7);
+    // Captain = top earner = un impair
+    expect(Number(firstCall.captainId!.slice(1)) % 2).toBe(1);
+  });
+
+  it("default = first11 (ordre roster preserve)", async () => {
+    setupHappyPath();
+    await replaySeason({
+      seasonId: "2024",
+      teamCount: 2,
+      fromWeek: 1,
+      toWeek: 1,
+    });
+    expect(setLineup).toHaveBeenCalledTimes(2);
+    const firstCall = vi.mocked(setLineup).mock.calls[0]![0];
+    const starters = firstCall.starters as Array<{
+      playerId: string;
+      bbPosition: string;
+    }>;
+    // Ordre roster = P0..P10
+    expect(starters.map((s) => s.playerId)).toEqual(
+      Array.from({ length: 11 }, (_, i) => `P${i}`),
+    );
+    // Pas de query NflGameStat en mode first11
+    expect(prisma.nflGameStat.findMany).not.toHaveBeenCalled();
+  });
+
+  it("expose lineupMode dans le resultat", async () => {
+    setupHappyPath();
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([] as never);
+    const out = await replaySeason({
+      seasonId: "2024",
+      teamCount: 2,
+      toWeek: 1,
+      lineupMode: "optimal",
+    });
+    expect(out.lineupMode).toBe("optimal");
   });
 });

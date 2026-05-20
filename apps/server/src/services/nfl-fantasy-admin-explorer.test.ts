@@ -23,9 +23,16 @@ vi.mock("../prisma", () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
+      deleteMany: vi.fn(),
     },
     nflFantasyEntry: { findMany: vi.fn(), groupBy: vi.fn() },
-    nflFantasyMatchup: { findMany: vi.fn(), groupBy: vi.fn() },
+    nflFantasyMatchup: {
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    nflFantasyLineup: { findMany: vi.fn() },
+    nflFantasyLineupStarter: { findMany: vi.fn() },
   },
 }));
 
@@ -49,7 +56,9 @@ import { computeSpp, getBbPosition } from "@bb/nfl-mapper";
 import { buildStatLineFromRow } from "./nfl-ingest";
 import {
   NflFantasyAdminError,
+  cleanupReplayLeagues,
   getLeagueDetailForAdmin,
+  getMatchupDetailForAdmin,
   getNflIngestRunForAdmin,
   getNflPlayerDetail,
   getNflTeamDetail,
@@ -944,5 +953,237 @@ describe("reDeriveAllPlayersBb", () => {
     const out = await reDeriveAllPlayersBb();
     expect(out.errors).toHaveLength(1);
     expect(out.playersUpdated).toBe(0);
+  });
+});
+
+
+// ────────────────────────────────────────────────────────────────────
+// cleanupReplayLeagues (Phase 3.I)
+// ────────────────────────────────────────────────────────────────────
+
+describe("cleanupReplayLeagues", () => {
+  it("retourne 0 si aucune replay league", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    const out = await cleanupReplayLeagues();
+    expect(out.deletedCount).toBe(0);
+    expect(out.leagueIds).toEqual([]);
+    expect(prisma.nflFantasyLeague.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("supprime toutes les leagues replay matchees et retourne leurs ids", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValueOnce([
+      { id: "L1" },
+      { id: "L2" },
+      { id: "L3" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLeague.deleteMany).mockResolvedValueOnce({
+      count: 3,
+    } as never);
+
+    const out = await cleanupReplayLeagues();
+    expect(out.deletedCount).toBe(3);
+    expect(out.leagueIds).toEqual(["L1", "L2", "L3"]);
+
+    expect(prisma.nflFantasyLeague.findMany).toHaveBeenCalledWith({
+      where: { ownerId: { startsWith: "replay-" } },
+      select: { id: true },
+    });
+    expect(prisma.nflFantasyLeague.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["L1", "L2", "L3"] } },
+    });
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// getMatchupDetailForAdmin (Phase 3.J)
+// ────────────────────────────────────────────────────────────────────
+
+describe("getMatchupDetailForAdmin", () => {
+  it("retourne null si matchup introuvable", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findUnique).mockResolvedValueOnce(
+      null as never,
+    );
+    const out = await getMatchupDetailForAdmin("M-missing");
+    expect(out).toBeNull();
+  });
+
+  it("agrege metadata + 2 sides avec starters + winnerSide", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findUnique).mockResolvedValueOnce({
+      id: "M1",
+      leagueId: "L1",
+      weekId: "2024:W3",
+      homeEntryId: "E-home",
+      awayEntryId: "E-away",
+      homeScore: 100,
+      awayScore: 80,
+      winnerId: "E-home",
+      settledAt: new Date("2024-09-22T22:00:00Z"),
+      createdAt: new Date("2024-09-15T00:00:00Z"),
+    } as never);
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
+      id: "L1",
+      name: "Replay 2024",
+      seasonId: "2024",
+    } as never);
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValueOnce([
+      {
+        id: "E-home",
+        userId: "U1",
+        teamName: "Home Team",
+        bbRace: "Skaven",
+      },
+      {
+        id: "E-away",
+        userId: "U2",
+        teamName: "Away Team",
+        bbRace: "Dwarf",
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValueOnce([
+      {
+        id: "LU-home",
+        entryId: "E-home",
+        weekId: "2024:W3",
+        captainId: "P1",
+        viceCaptainId: "P2",
+        lockedAt: new Date("2024-09-22T17:00:00Z"),
+        totalSpp: 100,
+      },
+      {
+        id: "LU-away",
+        entryId: "E-away",
+        weekId: "2024:W3",
+        captainId: "P3",
+        viceCaptainId: "P4",
+        lockedAt: new Date("2024-09-22T17:00:00Z"),
+        totalSpp: 80,
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineupStarter.findMany).mockResolvedValueOnce([
+      {
+        lineupId: "LU-home",
+        playerId: "P1",
+        bbPosition: "Thrower",
+        isCaptain: true,
+        isViceCaptain: false,
+        rawSpp: 20,
+        finalSpp: 30,
+        sppBreakdown: { events: [{ kind: "PASSING_TD", count: 2 }] },
+      },
+      {
+        lineupId: "LU-home",
+        playerId: "P2",
+        bbPosition: "Catcher",
+        isCaptain: false,
+        isViceCaptain: true,
+        rawSpp: 15,
+        finalSpp: 18,
+        sppBreakdown: { events: [] },
+      },
+      {
+        lineupId: "LU-away",
+        playerId: "P3",
+        bbPosition: "Blitzer",
+        isCaptain: true,
+        isViceCaptain: false,
+        rawSpp: 10,
+        finalSpp: 15,
+        sppBreakdown: { events: [] },
+      },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([
+      { id: "P1", pseudonym: "Captain Star", teamCode: "KC", nflPosition: "QB" },
+      { id: "P2", pseudonym: "Vice Hero", teamCode: "KC", nflPosition: "WR" },
+      { id: "P3", pseudonym: "Opp QB", teamCode: "BUF", nflPosition: "QB" },
+    ] as never);
+
+    const out = await getMatchupDetailForAdmin("M1");
+    expect(out).not.toBeNull();
+    expect(out!.id).toBe("M1");
+    expect(out!.leagueName).toBe("Replay 2024");
+    expect(out!.seasonId).toBe("2024");
+    expect(out!.weekId).toBe("2024:W3");
+    expect(out!.winnerSide).toBe("home");
+    expect(out!.home.teamName).toBe("Home Team");
+    expect(out!.home.score).toBe(100);
+    expect(out!.home.starters).toHaveLength(2);
+    // Trie DESC par finalSpp : 30 avant 18
+    expect(out!.home.starters[0]!.playerId).toBe("P1");
+    expect(out!.home.starters[0]!.playerPseudonym).toBe("Captain Star");
+    expect(out!.home.starters[0]!.isCaptain).toBe(true);
+    expect(out!.away.teamName).toBe("Away Team");
+    expect(out!.away.starters).toHaveLength(1);
+    expect(out!.away.starters[0]!.playerId).toBe("P3");
+  });
+
+  it("winnerSide = 'tie' quand settledAt mais winnerId null", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findUnique).mockResolvedValueOnce({
+      id: "M2",
+      leagueId: "L1",
+      weekId: "2024:W3",
+      homeEntryId: "E-home",
+      awayEntryId: "E-away",
+      homeScore: 50,
+      awayScore: 50,
+      winnerId: null,
+      settledAt: new Date("2024-09-22T22:00:00Z"),
+      createdAt: new Date("2024-09-15T00:00:00Z"),
+    } as never);
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
+      id: "L1",
+      name: "Replay 2024",
+      seasonId: "2024",
+    } as never);
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValueOnce([
+      { id: "E-home", userId: "U1", teamName: "H", bbRace: null },
+      { id: "E-away", userId: "U2", teamName: "A", bbRace: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    vi.mocked(prisma.nflFantasyLineupStarter.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([] as never);
+
+    const out = await getMatchupDetailForAdmin("M2");
+    expect(out!.winnerSide).toBe("tie");
+  });
+
+  it("winnerSide = null quand pas settle", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findUnique).mockResolvedValueOnce({
+      id: "M3",
+      leagueId: "L1",
+      weekId: "2024:W3",
+      homeEntryId: "E-home",
+      awayEntryId: "E-away",
+      homeScore: null,
+      awayScore: null,
+      winnerId: null,
+      settledAt: null,
+      createdAt: new Date("2024-09-15T00:00:00Z"),
+    } as never);
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
+      id: "L1",
+      name: "L1",
+      seasonId: "2024",
+    } as never);
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValueOnce([
+      { id: "E-home", userId: "U1", teamName: "H", bbRace: null },
+      { id: "E-away", userId: "U2", teamName: "A", bbRace: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    vi.mocked(prisma.nflFantasyLineupStarter.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([] as never);
+
+    const out = await getMatchupDetailForAdmin("M3");
+    expect(out!.winnerSide).toBeNull();
+    expect(out!.home.starters).toEqual([]);
   });
 });
