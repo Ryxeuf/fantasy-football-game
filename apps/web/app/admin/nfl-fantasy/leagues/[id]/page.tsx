@@ -226,6 +226,7 @@ export default function AdminNflFantasyLeagueDetailPage(): JSX.Element {
                   <th className="px-3 py-2 text-right">Score</th>
                   <th className="px-3 py-2">Winner</th>
                   <th className="px-3 py-2">Settled</th>
+                  <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -256,6 +257,14 @@ export default function AdminNflFantasyLeagueDetailPage(): JSX.Element {
                       {m.settledAt
                         ? new Date(m.settledAt).toLocaleDateString("fr-FR")
                         : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-right text-xs">
+                      <Link
+                        href={`/admin/nfl-fantasy/matchups/${m.id}`}
+                        className="text-nuffle-bronze underline hover:text-nuffle-gold"
+                      >
+                        Détail
+                      </Link>
                     </td>
                   </tr>
                 ))}

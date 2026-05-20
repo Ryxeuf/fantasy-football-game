@@ -27,20 +27,29 @@ interface RecomputeResult {
   readonly errors: ReadonlyArray<{ statId: string; error: string }>;
 }
 
+type ReplayLineupMode = "first11" | "optimal";
+
 interface ReplayResult {
   readonly leagueId: string;
   readonly seasonId: string;
   readonly teamCount: number;
   readonly fromWeek: number;
   readonly toWeek: number;
+  readonly lineupMode: ReplayLineupMode;
   readonly weeksSettled: number;
   readonly weeksFailed: number;
   readonly errors: ReadonlyArray<{ weekNumber: number; error: string }>;
 }
 
+interface CleanupResult {
+  readonly deletedCount: number;
+  readonly leagueIds: ReadonlyArray<string>;
+}
+
 type ActionFeedback =
   | { kind: "ok-recompute"; data: RecomputeResult }
   | { kind: "ok-replay"; data: ReplayResult }
+  | { kind: "ok-cleanup"; data: CleanupResult }
   | { kind: "error"; message: string };
 
 export default function SeasonActions({
@@ -53,6 +62,7 @@ export default function SeasonActions({
   const [teamCount, setTeamCount] = useState(8);
   const [fromWeek, setFromWeek] = useState(1);
   const [toWeek, setToWeek] = useState(18);
+  const [lineupMode, setLineupMode] = useState<ReplayLineupMode>("first11");
 
   async function recomputeSpp(): Promise<void> {
     if (
@@ -83,6 +93,35 @@ export default function SeasonActions({
     }
   }
 
+  async function cleanupReplays(): Promise<void> {
+    if (
+      !window.confirm(
+        `Supprimer toutes les leagues replay (ownerId LIKE 'replay-%') ? Action irréversible : entries, rosters, lineups et matchups seront supprimés en cascade.`,
+      )
+    ) {
+      return;
+    }
+    setBusy("cleanup");
+    setFeedback(null);
+    try {
+      const out = await apiRequest<CleanupResult>(
+        `/admin/nfl-fantasy/explore/leagues/replay-cleanup`,
+        { method: "POST" },
+      );
+      setFeedback({ kind: "ok-cleanup", data: out });
+    } catch (e) {
+      const msg =
+        e instanceof ApiClientError
+          ? `${e.message}${e.status ? ` (HTTP ${e.status})` : ""}`
+          : e instanceof Error
+            ? e.message
+            : "Erreur";
+      setFeedback({ kind: "error", message: msg });
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function replay(): Promise<void> {
     setBusy("replay");
     setFeedback(null);
@@ -95,6 +134,7 @@ export default function SeasonActions({
             teamCount: Number(teamCount),
             fromWeek: Number(fromWeek),
             toWeek: Number(toWeek),
+            lineupMode,
           }),
         },
       );
@@ -123,7 +163,7 @@ export default function SeasonActions({
         valider standings + matchups).
       </p>
 
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
         {/* Recompute SPP */}
         <div className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900">
@@ -189,6 +229,24 @@ export default function SeasonActions({
               />
             </label>
           </div>
+          <label className="mt-2 block text-xs">
+            <span className="text-gray-500">Lineup mode</span>
+            <select
+              value={lineupMode}
+              onChange={(e) =>
+                setLineupMode(e.target.value as ReplayLineupMode)
+              }
+              data-testid="nfl-fantasy-replay-lineup-mode"
+              className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+            >
+              <option value="first11">
+                first11 — ordre roster (realiste)
+              </option>
+              <option value="optimal">
+                optimal — top 11 SPP/week (hindsight, upper-bound)
+              </option>
+            </select>
+          </label>
           <button
             type="button"
             onClick={replay}
@@ -197,6 +255,26 @@ export default function SeasonActions({
             className="mt-3 rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-white hover:bg-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy === "replay" ? "En cours…" : "Lancer replay"}
+          </button>
+        </div>
+
+        {/* Cleanup replay leagues */}
+        <div className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900">
+            🧹 Cleanup leagues replay
+          </h3>
+          <p className="mt-1 text-xs text-gray-500">
+            Supprime toutes les leagues <code>replay-*</code> (entries,
+            rosters, lineups, matchups en cascade). Toutes saisons confondues.
+          </p>
+          <button
+            type="button"
+            onClick={cleanupReplays}
+            disabled={busy !== null}
+            data-testid="nfl-fantasy-season-cleanup-replays"
+            className="mt-3 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy === "cleanup" ? "En cours…" : "Cleanup replays"}
           </button>
         </div>
       </div>
@@ -224,7 +302,8 @@ export default function SeasonActions({
           )}
           {feedback.kind === "ok-replay" && (
             <span>
-              ✓ Replay OK : {feedback.data.weeksSettled} weeks settled,{" "}
+              ✓ Replay OK ({feedback.data.lineupMode}) :{" "}
+              {feedback.data.weeksSettled} weeks settled,{" "}
               {feedback.data.weeksFailed} failed.{" "}
               <Link
                 href={`/admin/nfl-fantasy/leagues/${feedback.data.leagueId}`}
@@ -232,6 +311,13 @@ export default function SeasonActions({
               >
                 Voir la league
               </Link>
+            </span>
+          )}
+          {feedback.kind === "ok-cleanup" && (
+            <span>
+              ✓ {feedback.data.deletedCount} league
+              {feedback.data.deletedCount > 1 ? "s" : ""} replay supprimée
+              {feedback.data.deletedCount > 1 ? "s" : ""}.
             </span>
           )}
         </div>
