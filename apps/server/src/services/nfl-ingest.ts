@@ -565,8 +565,9 @@ export interface BackfillSeasonResult {
  *      fetchCsv injecte pour reutiliser le CSV mis en cache.
  *
  * Idempotent : si `skipExisting=true` (default) et qu'une
- * `NflIngestRun(source=nflverse, weekId=YYYY:Wn, status=success)`
- * existe deja, la week est skippee.
+ * `NflIngestRun(source=nflverse, weekId=YYYY:Wn, status in [success, partial])`
+ * existe deja, la week est skippee. "partial" est equivalent (les row-level
+ * errors ne se corrigent pas en re-running).
  *
  * Utilise par `scripts/backfill-past-seasons.ts` pour seed les saisons
  * 2023+2024 avant la mise en ligne. Tests unitaires dans
@@ -604,8 +605,15 @@ export async function backfillNflSeason(
     const weekId = `${opts.seasonId}:W${w}`;
 
     if (skipExisting) {
+      // "partial" est aussi considere comme deja-ingere : les erreurs
+      // sont des row-level invalid (header vide, position_group absent)
+      // que re-run ne corrigera pas. Voir docs/nfl-fantasy/11.
       const prev = await prisma.nflIngestRun.findFirst({
-        where: { source: "nflverse", weekId, status: "success" },
+        where: {
+          source: "nflverse",
+          weekId,
+          status: { in: ["success", "partial"] },
+        },
         orderBy: { startedAt: "desc" },
       });
       if (prev) {
