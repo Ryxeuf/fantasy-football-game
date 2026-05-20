@@ -2456,3 +2456,57 @@ model NflIngestRun {
 
   @@index([source, startedAt])
 }
+
+// ─── Fantasy game cote user (Phase 2.C) ─────────────────────────────
+
+model NflFantasyLeague {
+  id        String   @id @default(cuid())
+  /// Nom de la league, 3-50 caracteres (validation cote service).
+  name      String
+  /// User.id du proprietaire (cf. memo : pas de FK explicite pour
+  /// eviter de modifier le modele User).
+  ownerId   String
+  /// Taille cible. Default Q2 = 10 ; range 2-16.
+  size      Int      @default(10)
+  /// "public" | "private". Default Q1 = "private" (invite-only).
+  type      String   @default("private")
+  /// "snake" | "auction" | "free". Default Q1 = "snake".
+  draftMode String   @default("snake")
+  /// "draft" | "in_progress" | "completed"
+  status    String   @default("draft")
+  /// FK logique vers NflSeason.id (string, pas de FK relationnelle).
+  seasonId  String
+  /// Code court (8 chars upper alphanum) pour les private leagues.
+  /// null pour les leagues publiques.
+  inviteCode String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries NflFantasyEntry[]
+
+  @@index([ownerId])
+  @@index([status, type])
+  @@index([seasonId])
+}
+
+model NflFantasyEntry {
+  id        String   @id @default(cuid())
+  leagueId  String
+  /// User.id du membre.
+  userId    String
+  /// Nom d'equipe choisi par l'user, 3-50 char. Unique par league.
+  teamName  String
+  /// Race BB optionnelle (V2 variant "Pure BB"). null en V1 (Q5 = race
+  /// fixe par equipe via NflPlayer.teamCode -> NflTeam.bbRace).
+  bbRace    String?
+  /// Total Team Value (somme des tvCost sur les NflFantasyRoster).
+  /// Mis a jour par le service mercato Phase 2.F.
+  totalTV   Int      @default(0)
+  joinedAt  DateTime @default(now())
+
+  league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, userId])
+  @@unique([leagueId, teamName])
+  @@index([userId])
+}
