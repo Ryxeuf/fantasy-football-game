@@ -31,6 +31,7 @@
 | 09 | [transitions-2026.md](./09-transitions-2026.md) | Free agents 2025 + draftees 2025 à reclasser pour 2026-27 |
 | 10 | [architecture.md](./10-architecture.md) | Intégration dans le monorepo (packages, services, Prisma) |
 | 11 | [ingestion-pipeline.md](./11-ingestion-pipeline.md) | Pipeline d'ingestion Phase 2.A (nflverse) + 2.B (ESPN gameday + rosters) |
+| 12 | [league-crud.md](./12-league-crud.md) | League CRUD Phase 2.C (créer / rejoindre / quitter / config) |
 
 ## Statut des sections
 
@@ -71,6 +72,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.8 | Phase 1.B-1.E livrée en commits atomiques sur main local : position-to-bb (55 tests, 8 races × 26 NflPos), stats-to-spp + captain multiplier (43 tests, examples doc validés Mahomes/Henry/Jefferson/Donald/Watt/Sauce), pseudonymize Q8 (31 tests, 29 BbPosition + 8 archetype overrides), schéma Prisma 8 modèles NflXxx (NflSeason/Week/Team/Player/Game/GameStat/RosterSnapshot/IngestRun) avec `realNameDisplay` flag + sans `archetype` (Q5/Q8). Total package : 153 tests passent, coverage >96%. Migration Prisma à générer dans container `nufflearena_server`. |
 | 2026-05-19 | v1.9 | Phase 2.A — `nfl-ingest.ts` (nflverse) livré : seedNflTeams + seedNflSeason + ingestNflverseWeek (idempotent, audit NflIngestRun). Validation E2E W10 2025 : 962 players + 962 stats + 14 games ingérés sur la DB Postgres réelle. 32 tests verts. CLI `nfl-ingest-cli.ts` pour invocation manuelle dans container. |
 | 2026-05-20 | v2.0 | Phase 2.B — `nfl-ingest-espn.ts` livré : ingestEspnGameday (scoreboard ET local) + ingestEspnRosters (32 teams) + mapping ESPN W1-5 ↔ nflverse W19-22 (skip Pro Bowl) + alias `WSH`↔`WAS`. Validation E2E W10 2025 : 14/14 games scored après merge nflverse+ESPN (Thu+Sun+Mon), 2 roster snapshots KC/MIA (91 athlètes chacun). 38 tests verts. Fix bonus : normalisation `LA`→`LAR` dans `parseRow` (legacy nflverse) qui causait un doublon `2025_10_LA_SF` / `2025_10_LAR_SF`. Doc dédiée [`11-ingestion-pipeline.md`](./11-ingestion-pipeline.md). Total Phase 2.A+2.B : 74 tests verts. |
+| 2026-05-20 | v2.1 | Phase 2.C — `nfl-fantasy-league.ts` livré : créer / rejoindre (id ou inviteCode) / quitter / configurer / supprimer une league. Defaults Q1/Q2 : size=10, snake, private. 2 modèles Prisma (`NflFantasyLeague` + `NflFantasyEntry`) avec FK cascade et indexes (`ownerId`, `status+type`, `seasonId`). Migration appliquée Voie B sur DB réelle. 37 tests verts + script E2E 10 étapes OK sur Postgres (create→join→list→update→pivot type→leave→delete). Erreur typée `NflFantasyLeagueError` avec 12 codes. Doc dédiée [`12-league-crud.md`](./12-league-crud.md). |
 
 ## Source de cette session
 
