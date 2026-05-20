@@ -23,11 +23,17 @@ import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { validateQuery } from "../middleware/validate";
 import {
+  getLeagueDetailForAdmin,
+  getNflIngestRunForAdmin,
   getNflPlayerDetail,
   getNflTeamDetail,
+  getWeekDetail,
+  listAllLeaguesForAdmin,
+  listNflIngestRunsForAdmin,
   listNflPlayersForAdmin,
   listNflSeasonsForAdmin,
   listNflTeamsForAdmin,
+  listWeeksForSeason,
   recomputePlayerSpp,
   reDerivePlayerBb,
 } from "../services/nfl-fantasy-admin-explorer";
@@ -64,6 +70,26 @@ const playersListSchema = z.object({
 
 const playerDetailSchema = z.object({
   seasonId: seasonIdParam,
+});
+
+const ingestRunsListSchema = z.object({
+  source: z.enum(["nflverse", "espn"]).optional(),
+  status: z.enum(["success", "partial", "failed", "in_progress"]).optional(),
+  weekId: z.string().min(1).max(32).optional(),
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+});
+
+const weeksListSchema = z.object({
+  seasonId: z.string().regex(/^\d{4}$/),
+});
+
+const leaguesListSchema = z.object({
+  seasonId: seasonIdParam,
+  status: z.enum(["draft", "in_progress", "completed"]).optional(),
+  type: z.enum(["public", "private"]).optional(),
+  search: z.string().min(1).max(64).optional(),
+  page: z.coerce.number().int().min(1).max(10000).optional(),
+  pageSize: z.coerce.number().int().min(1).max(200).optional(),
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -214,6 +240,138 @@ router.post("/explore/players/:id/re-derive-bb", async (req, res) => {
         "[admin-nfl-fantasy-explorer] re-derive-bb failed",
         err,
       );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Ingest runs (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+router.get(
+  "/explore/ingest-runs",
+  validateQuery(ingestRunsListSchema),
+  async (req, res) => {
+    try {
+      const q = req.query as z.infer<typeof ingestRunsListSchema>;
+      const runs = await listNflIngestRunsForAdmin({
+        source: q.source,
+        status: q.status,
+        weekId: q.weekId,
+        limit: q.limit,
+      });
+      res.json({ runs });
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[admin-nfl-fantasy-explorer] ingest-runs failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+router.get("/explore/ingest-runs/:id", async (req, res) => {
+  try {
+    const run = await getNflIngestRunForAdmin(req.params.id);
+    if (!run) {
+      res
+        .status(404)
+        .json({ error: `NflIngestRun ${req.params.id} introuvable`, code: "NOT_FOUND" });
+      return;
+    }
+    res.json(run);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] ingest-run detail failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Weeks + games (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+router.get(
+  "/explore/weeks",
+  validateQuery(weeksListSchema),
+  async (req, res) => {
+    try {
+      const q = req.query as z.infer<typeof weeksListSchema>;
+      const weeks = await listWeeksForSeason(q.seasonId);
+      res.json({ weeks });
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[admin-nfl-fantasy-explorer] weeks failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+router.get("/explore/weeks/:weekId", async (req, res) => {
+  try {
+    const detail = await getWeekDetail(req.params.weekId);
+    if (!detail) {
+      res
+        .status(404)
+        .json({ error: `NflWeek ${req.params.weekId} introuvable`, code: "WEEK_NOT_FOUND" });
+      return;
+    }
+    res.json(detail);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[admin-nfl-fantasy-explorer] week detail failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Leagues admin (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+router.get(
+  "/explore/leagues",
+  validateQuery(leaguesListSchema),
+  async (req, res) => {
+    try {
+      const q = req.query as z.infer<typeof leaguesListSchema>;
+      const out = await listAllLeaguesForAdmin({
+        seasonId: q.seasonId,
+        status: q.status,
+        type: q.type,
+        search: q.search,
+        page: q.page,
+        pageSize: q.pageSize,
+      });
+      res.json(out);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[admin-nfl-fantasy-explorer] leagues failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+router.get("/explore/leagues/:id", async (req, res) => {
+  try {
+    const detail = await getLeagueDetailForAdmin(req.params.id);
+    if (!detail) {
+      res
+        .status(404)
+        .json({ error: `NflFantasyLeague ${req.params.id} introuvable`, code: "LEAGUE_NOT_FOUND" });
+      return;
+    }
+    res.json(detail);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[admin-nfl-fantasy-explorer] league detail failed", err);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }
