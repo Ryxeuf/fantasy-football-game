@@ -2,20 +2,180 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { syncAuthCookie } from "../lib/auth-cookie";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { LEAGUES_V2_UI_FLAG } from "../lib/featureFlagKeys";
 import EngineVersionsBadge from "./_components/EngineVersionsBadge";
+
+interface NavEntry {
+  readonly href: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly exact?: boolean;
+}
+
+interface NavSection {
+  readonly id: string;
+  readonly title: string;
+  readonly icon: string;
+  readonly items: ReadonlyArray<NavEntry>;
+}
+
+const STORAGE_KEY = "admin_nav_open_sections_v1";
+
+function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
+  const competitionItems: NavEntry[] = [
+    { href: "/admin/teams", label: "Équipes", icon: "⚽" },
+    { href: "/admin/matches", label: "Parties", icon: "🎮" },
+    { href: "/admin/local-matches", label: "Matchs locaux", icon: "🎯" },
+  ];
+  if (leaguesEnabled) {
+    competitionItems.push({ href: "/admin/leagues", label: "Ligues", icon: "🏅" });
+  }
+  competitionItems.push(
+    { href: "/admin/cups", label: "Coupes", icon: "🏆" },
+    { href: "/admin/nfl-fantasy", label: "NFL Fantasy", icon: "🐀" },
+  );
+
+  return [
+    {
+      id: "overview",
+      title: "Vue d'ensemble",
+      icon: "📊",
+      items: [
+        { href: "/admin", label: "Aperçu", icon: "📊", exact: true },
+        { href: "/admin/progress", label: "Avancement", icon: "🗺️" },
+      ],
+    },
+    {
+      id: "community",
+      title: "Communauté",
+      icon: "👥",
+      items: [
+        { href: "/admin/users", label: "Utilisateurs", icon: "👥" },
+        { href: "/admin/feedback", label: "Feedback", icon: "💬" },
+        { href: "/admin/blog", label: "Blog", icon: "📝" },
+      ],
+    },
+    {
+      id: "competitions",
+      title: "Compétitions",
+      icon: "⚽",
+      items: competitionItems,
+    },
+    {
+      id: "pro-league",
+      title: "Pro League",
+      icon: "🏈",
+      items: [
+        { href: "/admin/pro-league", label: "Hub", icon: "🏈", exact: true },
+        { href: "/admin/pro-league/seasons", label: "Saisons", icon: "🏆" },
+        { href: "/admin/sim", label: "Simulation", icon: "🎲", exact: true },
+        { href: "/admin/sim/replays", label: "Replays", icon: "📜" },
+        { href: "/admin/sim/health", label: "Health", icon: "❤️" },
+        { href: "/admin/sim/broadcaster", label: "Broadcaster", icon: "📡" },
+        { href: "/admin/sim/test-match", label: "Test match", icon: "🧪" },
+      ],
+    },
+    {
+      id: "game-data",
+      title: "Données du jeu",
+      icon: "📚",
+      items: [
+        { href: "/admin/data/skills", label: "Compétences", icon: "📚" },
+        { href: "/admin/data/rosters", label: "Rosters", icon: "⚽" },
+        { href: "/admin/data/positions", label: "Positions", icon: "🎯" },
+        { href: "/admin/data/star-players", label: "Star players", icon: "⭐" },
+      ],
+    },
+    {
+      id: "system",
+      title: "Système",
+      icon: "⚙️",
+      items: [
+        { href: "/admin/feature-flags", label: "Feature flags", icon: "🚩" },
+        { href: "/admin/audit-log", label: "Journal d'audit", icon: "📜" },
+        { href: "/admin/routes", label: "Routes", icon: "📋" },
+        { href: "/admin/utilities", label: "Utilitaires", icon: "🛠️" },
+      ],
+    },
+  ];
+}
+
+function matchesPath(entry: NavEntry, pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (entry.exact || entry.href === "/admin") {
+    return pathname === entry.href;
+  }
+  return pathname.startsWith(entry.href);
+}
+
+function findActiveSectionId(
+  sections: ReadonlyArray<NavSection>,
+  pathname: string | null,
+): string | null {
+  for (const section of sections) {
+    if (section.items.some((entry) => matchesPath(entry, pathname))) {
+      return section.id;
+    }
+  }
+  return null;
+}
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const leaguesEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Synchronise le cookie httpOnly auth_token (S24.1). La route est
-  // idempotente et le cookie n'est plus visible cote JS, on tente
-  // donc toujours la synchro.
+  const sections = useMemo(() => buildSections(leaguesEnabled), [leaguesEnabled]);
+  const activeSectionId = useMemo(
+    () => findActiveSectionId(sections, pathname),
+    [sections, pathname],
+  );
+
+  const [openSections, setOpenSections] = useState<ReadonlySet<string>>(() => {
+    const initial = new Set<string>();
+    if (activeSectionId) initial.add(activeSectionId);
+    else initial.add("overview");
+    return initial;
+  });
+
+  // Hydrate open state from localStorage and ensure active section is open.
+  useEffect(() => {
+    let stored: string[] = [];
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          stored = parsed.filter((v): v is string => typeof v === "string");
+        }
+      }
+    } catch {
+      stored = [];
+    }
+    const next = new Set(stored);
+    if (activeSectionId) next.add(activeSectionId);
+    if (next.size === 0) next.add("overview");
+    setOpenSections(next);
+  }, [activeSectionId]);
+
+  const toggleSection = useCallback((id: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
+      } catch {
+        // localStorage may be unavailable (private browsing) — silently skip.
+      }
+      return next;
+    });
+  }, []);
+
+  // Synchronise le cookie httpOnly auth_token (S24.1).
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
     if (token) {
@@ -40,82 +200,79 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     };
   }, [mobileOpen]);
 
-  const isActive = (path: string) => {
-    if (path === "/admin") {
-      return pathname === "/admin";
-    }
-    // /admin/sim et /admin/sim/replays partagent un préfixe : forcer la
-    // comparaison exacte sur /admin/sim pour éviter le double highlight.
-    if (path === "/admin/sim") {
-      return pathname === "/admin/sim";
-    }
-    // Idem pour /admin/pro-league vs /admin/pro-league/seasons (et /teams).
-    if (path === "/admin/pro-league") {
-      return pathname === "/admin/pro-league";
-    }
-    return pathname?.startsWith(path);
+  const renderNavItem = (entry: NavEntry) => {
+    const active = matchesPath(entry, pathname);
+    return (
+      <Link
+        key={entry.href}
+        href={entry.href as any}
+        className={`flex items-center gap-3 pl-9 pr-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
+          active
+            ? "bg-nuffle-gold text-white shadow-sm"
+            : "text-gray-700 hover:bg-gray-100 hover:text-nuffle-bronze"
+        }`}
+        data-testid={`admin-nav-item-${entry.href.replace(/\//g, "-")}`}
+      >
+        <span className="text-base leading-none">{entry.icon}</span>
+        <span>{entry.label}</span>
+      </Link>
+    );
   };
 
-  const navItem = (href: string, label: string, icon: string) => (
-    <Link
-      href={href as any}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-        isActive(href)
-          ? "bg-nuffle-gold text-white shadow-md"
-          : "text-gray-700 hover:bg-gray-100 hover:text-nuffle-bronze"
-      }`}
-    >
-      <span className="text-lg">{icon}</span>
-      <span>{label}</span>
-    </Link>
-  );
+  const renderSection = (section: NavSection) => {
+    const isOpen = openSections.has(section.id);
+    const hasActive = section.items.some((entry) => matchesPath(entry, pathname));
+    return (
+      <div key={section.id} className="mb-1">
+        <button
+          type="button"
+          onClick={() => toggleSection(section.id)}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors ${
+            hasActive
+              ? "text-nuffle-anthracite bg-nuffle-gold/5"
+              : "text-gray-500 hover:text-nuffle-anthracite hover:bg-gray-50"
+          }`}
+          aria-expanded={isOpen}
+          data-testid={`admin-nav-section-${section.id}`}
+        >
+          <span
+            className={`text-[10px] text-gray-400 transition-transform duration-150 ${
+              isOpen ? "rotate-90" : ""
+            }`}
+            aria-hidden="true"
+          >
+            ▶
+          </span>
+          <span className="text-base leading-none" aria-hidden="true">
+            {section.icon}
+          </span>
+          <span className="flex-1 text-left">{section.title}</span>
+          {!isOpen && (
+            <span className="text-[10px] font-normal text-gray-400 normal-case tracking-normal">
+              {section.items.length}
+            </span>
+          )}
+        </button>
+        {isOpen && (
+          <div className="mt-0.5 space-y-0.5">
+            {section.items.map(renderNavItem)}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const navContent = (
-    <nav className="p-4 space-y-1">
-      <div className="mb-4">
-        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Administration
-        </div>
-        {navItem("/admin", "Aperçu", "📊")}
-        {navItem("/admin/progress", "Avancement", "🗺️")}
-        {navItem("/admin/users", "Utilisateurs", "👥")}
-        {navItem("/admin/teams", "Équipes", "⚽")}
-        {navItem("/admin/matches", "Parties", "🎮")}
-        {navItem("/admin/local-matches", "Matchs Locaux", "🎯")}
-        {leaguesEnabled && navItem("/admin/leagues", "Ligues", "🏅")}
-        {navItem("/admin/cups", "Coupes", "🏆")}
-        {navItem("/admin/feature-flags", "Feature Flags", "🚩")}
-        {navItem("/admin/sim", "Sim Pro League", "🎲")}
-        {navItem("/admin/sim/replays", "Replays Panel", "📜")}
-        {navItem("/admin/sim/health", "Sim Health", "❤️")}
-        {navItem("/admin/sim/broadcaster", "Broadcaster", "📡")}
-        {navItem("/admin/sim/test-match", "Test Match", "🧪")}
-        {navItem("/admin/pro-league", "Hub Pro League", "🏈")}
-        {navItem("/admin/pro-league/seasons", "Saisons Pro League", "🏆")}
-        {navItem("/admin/nfl-fantasy", "NFL Fantasy", "🐀")}
-        {navItem("/admin/blog", "Blog", "📝")}
-        {navItem("/admin/feedback", "Feedback", "💬")}
-        {navItem("/admin/audit-log", "Journal d'audit", "📜")}
-        {navItem("/admin/routes", "Routes", "📋")}
-        {navItem("/admin/utilities", "Utilitaires", "🛠️")}
+    <nav className="p-3">
+      <div className="space-y-0.5">{sections.map(renderSection)}</div>
+      <div className="pt-4 mt-4 border-t border-gray-200">
+        <EngineVersionsBadge variant="sidebar" />
       </div>
-
-      <div className="pt-4 border-t border-gray-200">
-        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Données du jeu
-        </div>
-        {navItem("/admin/data/skills", "Compétences", "📚")}
-        {navItem("/admin/data/rosters", "Rosters", "⚽")}
-        {navItem("/admin/data/positions", "Positions", "🎯")}
-        {navItem("/admin/data/star-players", "Star Players", "⭐")}
-      </div>
-
-      <EngineVersionsBadge variant="sidebar" />
     </nav>
   );
 
   const sidebarHeader = (
-    <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-nuffle-gold/10 to-transparent flex items-center justify-between">
+    <div className="p-5 border-b border-gray-200 bg-gradient-to-r from-nuffle-gold/10 to-transparent flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-heading font-bold text-nuffle-anthracite flex items-center gap-2">
           <span className="text-3xl">🔧</span>
