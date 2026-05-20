@@ -143,6 +143,25 @@ export function normalizeNflverseTeamCode(raw: string): NflTeamCode | null {
   return null;
 }
 
+/**
+ * Normalise un game_id nflverse au format "YYYY_WW_AWAY_HOME" :
+ * applique `normalizeNflverseTeamCode` aux deux codes equipe pour eviter
+ * les divergences legacy (ex: "2025_10_LA_SF" -> "2025_10_LAR_SF").
+ *
+ * Important pour la coherence avec ESPN qui emet toujours "LAR".
+ *
+ * Pur. Retourne raw inchange si le format est inattendu.
+ */
+export function normalizeNflverseGameId(raw: string): string {
+  const parts = raw.split("_");
+  if (parts.length !== 4) return raw;
+  const [year, week, away, home] = parts;
+  if (!year || !week || !away || !home) return raw;
+  const awayNorm = normalizeNflverseTeamCode(away) ?? away;
+  const homeNorm = normalizeNflverseTeamCode(home) ?? home;
+  return `${year}_${week}_${awayNorm}_${homeNorm}`;
+}
+
 interface ParsedPlayerRow {
   readonly playerId: string;
   readonly playerName: string;
@@ -212,7 +231,7 @@ export function parseRow(row: NflverseRow): ParsedPlayerRow | null {
   // On le remplira via ingestRosters separement. Pour V1, null.
   const jerseyNumber = null;
 
-  const gameId = row.game_id?.trim() ?? "";
+  const gameId = normalizeNflverseGameId(row.game_id?.trim() ?? "");
 
   return {
     playerId,
@@ -509,9 +528,9 @@ function inferHomeAway(row: NflverseRow): boolean {
   const gameId = row.game_id?.trim() ?? "";
   const parts = gameId.split("_");
   if (parts.length < 4) return true; // fallback raisonnable
-  const homeCode = parts[parts.length - 1];
-  const team = row.team?.trim() ?? "";
-  return homeCode === team;
+  const homeCode = normalizeNflverseTeamCode(parts[parts.length - 1] ?? "");
+  const team = normalizeNflverseTeamCode(row.team?.trim() ?? "");
+  return homeCode !== null && homeCode === team;
 }
 
 // Re-export pour debug/visibilite des constantes utilisees par le service

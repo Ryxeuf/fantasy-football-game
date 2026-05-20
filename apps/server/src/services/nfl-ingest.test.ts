@@ -29,6 +29,7 @@ import {
   buildNflverseUrl,
   filterRowsForWeek,
   ingestNflverseWeek,
+  normalizeNflverseGameId,
   normalizeNflverseTeamCode,
   parseNflverseCsv,
   parseRow,
@@ -122,6 +123,24 @@ describe("normalizeNflverseTeamCode", () => {
   });
 });
 
+describe("normalizeNflverseGameId", () => {
+  it("rewrite legacy LA -> LAR dans le game_id (LA_SF -> LAR_SF)", () => {
+    expect(normalizeNflverseGameId("2025_10_LA_SF")).toBe("2025_10_LAR_SF");
+    expect(normalizeNflverseGameId("2025_10_SF_LA")).toBe("2025_10_SF_LAR");
+  });
+
+  it("laisse intacts les game_id alignes", () => {
+    expect(normalizeNflverseGameId("2025_10_ATL_IND")).toBe("2025_10_ATL_IND");
+    expect(normalizeNflverseGameId("2025_19_GB_PHI")).toBe("2025_19_GB_PHI");
+  });
+
+  it("retourne raw si format inattendu", () => {
+    expect(normalizeNflverseGameId("garbage")).toBe("garbage");
+    expect(normalizeNflverseGameId("")).toBe("");
+    expect(normalizeNflverseGameId("a_b_c")).toBe("a_b_c");
+  });
+});
+
 describe("parseRow", () => {
   const baseRow = {
     player_id: "00-0033873",
@@ -197,6 +216,16 @@ describe("parseRow", () => {
   it("WR Wood Elf -> Catcher (CIN)", () => {
     const r = parseRow({ ...baseRow, team: "CIN", position: "WR" });
     expect(r?.statLine.bbPosition).toBe("Catcher");
+  });
+
+  it("normalise LA legacy en LAR dans le gameId emis", () => {
+    const r = parseRow({
+      ...baseRow,
+      team: "LAR",
+      opponent_team: "SF",
+      game_id: "2025_10_LA_SF",
+    });
+    expect(r?.gameId).toBe("2025_10_LAR_SF");
   });
 });
 
