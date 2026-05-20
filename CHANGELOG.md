@@ -1,3 +1,11 @@
+## [1.130.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.129.0...v1.130.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **server:** nfl-ingest service (Phase 2.A) ([dd27c98](https://github.com/Ryxeuf/fantasy-football-game/commit/dd27c98c8488181bb91854f6bf46fc4d17706312))
+* **server:** script CLI d'invocation nfl-ingest pour validation manuelle ([30f93cb](https://github.com/Ryxeuf/fantasy-football-game/commit/30f93cbadfd0ba9b3f7241bc433c9031e073437b))
+
 ## [1.129.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.128.1...v1.129.0) (2026-05-19)
 
 
