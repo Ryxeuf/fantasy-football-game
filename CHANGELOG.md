@@ -1,3 +1,23 @@
+## [1.133.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.132.0...v1.133.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **prisma:** schema NflFantasyMatchup (Phase 2.E) ([eeee832](https://github.com/Ryxeuf/fantasy-football-game/commit/eeee832c0113b99397a606aee45fbb86993688fe))
+* **prisma:** schema NflFantasyReroll + NflFantasyInducement (Phase 2.F) ([5faf276](https://github.com/Ryxeuf/fantasy-football-game/commit/5faf276b6d654955a8aba6ecb4de99b156998b02))
+* **prisma:** schema NflFantasyRoster + NflFantasyLineup + LineupStarter (Phase 2.D) ([3d17387](https://github.com/Ryxeuf/fantasy-football-game/commit/3d17387a1e6b06411ece57df84a395d92e13b89e))
+* **server:** nfl-fantasy-lineup service Phase 2.D (set + lock) ([5a5b289](https://github.com/Ryxeuf/fantasy-football-game/commit/5a5b2893e1b94bc0fe5fb0241366482236aef156))
+* **server:** nfl-fantasy-mercato service Phase 2.F (rerolls + inducements) ([eebdcb4](https://github.com/Ryxeuf/fantasy-football-game/commit/eebdcb433ab4d2ab28ac8f11dc2ac24af2a2a2fb))
+* **server:** nfl-fantasy-roster service (Phase 2.D) ([04bf43a](https://github.com/Ryxeuf/fantasy-football-game/commit/04bf43a27bc5b06ea73ec60734569205c655c81d))
+* **server:** nfl-fantasy-scoring service Phase 2.E (matchups + settle) ([6045e70](https://github.com/Ryxeuf/fantasy-football-game/commit/6045e701a506a9492bb92be9eb174aba6649111c))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 2.D roster + lineup ([a756dea](https://github.com/Ryxeuf/fantasy-football-game/commit/a756dea08b3c0816010ca77cc4da4b9388cb4c90))
+* **nfl-fantasy:** Phase 2.E matchups + scoring/settle ([492465c](https://github.com/Ryxeuf/fantasy-football-game/commit/492465c54d9311cf4c8fd1ceb93415757ff02d16))
+* **nfl-fantasy:** Phase 2.F mercato (rerolls + inducements) ([7e09452](https://github.com/Ryxeuf/fantasy-football-game/commit/7e09452abd5cfd6ddea85b526007ce288969e9ef))
+
 ## [1.132.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.131.0...v1.132.0) (2026-05-20)
 
 
