@@ -30,6 +30,7 @@
 | 08 | [rosters-2025.md](./08-rosters-2025.md) | Rosters 2025 des 32 équipes mappés en postes BB |
 | 09 | [transitions-2026.md](./09-transitions-2026.md) | Free agents 2025 + draftees 2025 à reclasser pour 2026-27 |
 | 10 | [architecture.md](./10-architecture.md) | Intégration dans le monorepo (packages, services, Prisma) |
+| 11 | [ingestion-pipeline.md](./11-ingestion-pipeline.md) | Pipeline d'ingestion Phase 2.A (nflverse) + 2.B (ESPN gameday + rosters) |
 
 ## Statut des sections
 
@@ -68,6 +69,8 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.6 | 03-api-strategy.md edge cases playoffs + intl : POC éprouvé sur Friday Sao Paulo (KC@LAC), Wildcard W19 (LAR@CAR, BUF@JAX, SF@PHI), Super Bowl LX (SEA 29 @ NE 13). Bug ESPN découvert : `leagues[0].season.type` figé à `reg` même en playoffs ; source de vérité = `event.season.slug=post-season`. Numérotation post-season ESPN : Wildcard=1, Div=2, Conf=3, SB=5 (skip 4=Pro Bowl). Mapping nflverse W19-22 ↔ ESPN post-season W1-5 documenté. |
 | 2026-05-19 | v1.7 | Phase 1.A : package `@bb/nfl-mapper` créé avec `team-to-race` (24 tests, mergé via PR #880). |
 | 2026-05-19 | v1.8 | Phase 1.B-1.E livrée en commits atomiques sur main local : position-to-bb (55 tests, 8 races × 26 NflPos), stats-to-spp + captain multiplier (43 tests, examples doc validés Mahomes/Henry/Jefferson/Donald/Watt/Sauce), pseudonymize Q8 (31 tests, 29 BbPosition + 8 archetype overrides), schéma Prisma 8 modèles NflXxx (NflSeason/Week/Team/Player/Game/GameStat/RosterSnapshot/IngestRun) avec `realNameDisplay` flag + sans `archetype` (Q5/Q8). Total package : 153 tests passent, coverage >96%. Migration Prisma à générer dans container `nufflearena_server`. |
+| 2026-05-19 | v1.9 | Phase 2.A — `nfl-ingest.ts` (nflverse) livré : seedNflTeams + seedNflSeason + ingestNflverseWeek (idempotent, audit NflIngestRun). Validation E2E W10 2025 : 962 players + 962 stats + 14 games ingérés sur la DB Postgres réelle. 32 tests verts. CLI `nfl-ingest-cli.ts` pour invocation manuelle dans container. |
+| 2026-05-20 | v2.0 | Phase 2.B — `nfl-ingest-espn.ts` livré : ingestEspnGameday (scoreboard ET local) + ingestEspnRosters (32 teams) + mapping ESPN W1-5 ↔ nflverse W19-22 (skip Pro Bowl) + alias `WSH`↔`WAS`. Validation E2E W10 2025 : 14/14 games scored après merge nflverse+ESPN (Thu+Sun+Mon), 2 roster snapshots KC/MIA (91 athlètes chacun). 38 tests verts. Fix bonus : normalisation `LA`→`LAR` dans `parseRow` (legacy nflverse) qui causait un doublon `2025_10_LA_SF` / `2025_10_LAR_SF`. Doc dédiée [`11-ingestion-pipeline.md`](./11-ingestion-pipeline.md). Total Phase 2.A+2.B : 74 tests verts. |
 
 ## Source de cette session
 
