@@ -270,8 +270,24 @@ export default function LeagueDetailPage() {
             >
               🐀 Régler mon lineup
             </Link>
+            <Link
+              href={`/nfl-fantasy/leagues/${league.id}/matchups`}
+              className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+              data-testid="nfl-fantasy-matchups-cta"
+            >
+              📊 Matchups &amp; standings
+            </Link>
           </div>
         </section>
+      )}
+
+      {!isMember && league.status === "in_progress" && (
+        <Link
+          href={`/nfl-fantasy/leagues/${league.id}/matchups`}
+          className="inline-block text-sm text-orange-400 hover:text-orange-300"
+        >
+          📊 Voir matchups &amp; standings
+        </Link>
       )}
 
       {(isOwner || isMember) && (
