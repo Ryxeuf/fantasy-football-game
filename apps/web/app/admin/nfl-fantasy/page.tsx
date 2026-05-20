@@ -169,6 +169,11 @@ export default function AdminNflFantasyPage(): JSX.Element {
   const [seedRerollEntryId, setSeedRerollEntryId] = useState("");
   const [seedRerollCount, setSeedRerollCount] = useState(8);
 
+  const [autoFillLeagueId, setAutoFillLeagueId] = useState("");
+  const [autoFillPlayersPerEntry, setAutoFillPlayersPerEntry] = useState(15);
+
+  const [finalizeLeagueId, setFinalizeLeagueId] = useState("");
+
   useEffect(() => {
     let cancelled = false;
     void fetchMe().then(({ isAdmin }) => {
@@ -322,6 +327,66 @@ export default function AdminNflFantasyPage(): JSX.Element {
                 value={rostersTeamCodes}
                 onChange={(e) => setRostersTeamCodes(e.target.value)}
                 placeholder="KC,MIA"
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+          </ActionCard>
+        </div>
+      </section>
+
+      {/* ────────── Draft (A.1) ────────── */}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          🎲 Draft (Phase A.1)
+        </h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ActionCard
+            title="Auto-fill rosters"
+            description="V1 minimum viable : remplit chaque entry avec N joueurs aléatoires deterministes (seed = leagueId). League doit être en status draft."
+            endpoint="/admin/nfl-fantasy/auto-fill-rosters"
+            buildBody={() => ({
+              leagueId: autoFillLeagueId,
+              playersPerEntry: Number(autoFillPlayersPerEntry),
+            })}
+          >
+            <label className="block text-xs font-medium text-gray-700">
+              leagueId
+              <input
+                type="text"
+                required
+                value={autoFillLeagueId}
+                onChange={(e) => setAutoFillLeagueId(e.target.value)}
+                placeholder="cuid…"
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+            <label className="block text-xs font-medium text-gray-700">
+              playersPerEntry (11-30, default 15)
+              <input
+                type="number"
+                min={11}
+                max={30}
+                value={autoFillPlayersPerEntry}
+                onChange={(e) => setAutoFillPlayersPerEntry(Number(e.target.value))}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+          </ActionCard>
+
+          <ActionCard
+            title="Finalize league (draft → in_progress)"
+            description="Transitionne la league + seed 8 rerolls par entry. Idempotent côté rerolls (skip si déjà seedé)."
+            endpoint="/admin/nfl-fantasy/finalize-league"
+            buildBody={() => ({ leagueId: finalizeLeagueId })}
+          >
+            <label className="block text-xs font-medium text-gray-700">
+              leagueId
+              <input
+                type="text"
+                required
+                value={finalizeLeagueId}
+                onChange={(e) => setFinalizeLeagueId(e.target.value)}
+                placeholder="cuid…"
                 className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
               />
             </label>
