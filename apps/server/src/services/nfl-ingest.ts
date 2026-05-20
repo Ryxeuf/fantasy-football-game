@@ -180,7 +180,13 @@ function num(raw: string | undefined): number {
   return Number.isFinite(v) ? v : 0;
 }
 
-function buildStatLine(
+/**
+ * Construit une NflPlayerStatLine depuis une row CSV nflverse + une
+ * bbPosition deja resolue. Pur, deterministe.
+ *
+ * Expose pour reutilisation par `recomputePlayerSpp` (Phase 3.C).
+ */
+export function buildStatLineFromRow(
   row: NflverseRow,
   bbPosition: ReturnType<typeof getBbPosition>,
 ): NflPlayerStatLine {
@@ -241,7 +247,7 @@ export function parseRow(row: NflverseRow): ParsedPlayerRow | null {
     gameId,
     nflPosition: row.position ?? "",
     jerseyNumber,
-    statLine: buildStatLine(row, bbPosition),
+    statLine: buildStatLineFromRow(row, bbPosition),
     rawStats: row,
   };
 }
