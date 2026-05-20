@@ -24,6 +24,13 @@ import type { NextRequest } from "next/server";
  */
 
 function inferApiBase(): string {
+  // Cote server-side Next.js (cette route tourne dans Node, pas Edge),
+  // on prefere SERVER_API_BASE quand il est defini : c'est l'URL HTTP
+  // interne docker (ex: http://nufflearena_server:8201) qui evite les
+  // problemes de TLS self-signed sur les domaines OrbStack *.orb.local.
+  // Sinon, fallback sur NEXT_PUBLIC_API_BASE (utilise par le client),
+  // puis localhost en dernier recours.
+  if (process.env.SERVER_API_BASE) return process.env.SERVER_API_BASE;
   if (process.env.NEXT_PUBLIC_API_BASE) return process.env.NEXT_PUBLIC_API_BASE;
   return "http://localhost:4000";
 }
