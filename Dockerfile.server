@@ -21,6 +21,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/server/package.json ./apps/server/
 COPY packages/game-engine/package.json ./packages/game-engine/
+COPY packages/nfl-mapper/package.json ./packages/nfl-mapper/
 COPY packages/sim-engine/package.json ./packages/sim-engine/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY prisma ./prisma/

@@ -95,6 +95,7 @@ services:
       - /app/apps/web/node_modules
       - /app/apps/server/node_modules
       - /app/packages/game-engine/node_modules
+      - /app/packages/nfl-mapper/node_modules
       - /app/packages/ui/node_modules
     working_dir: /app/apps/server
     networks:
