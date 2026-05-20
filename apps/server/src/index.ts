@@ -1185,3 +1185,47 @@ if (
     },
   );
 }
+
+// =============================================================================
+// NFL Fantasy cron (Phase 2.H).
+// =============================================================================
+// Orchestrateur unique tick toutes les 5 min : verifie chaque fenetre
+// (03h UTC nflverse, gameday ESPN Thu/Fri/Sat/Sun/Mon, Sun 17h UTC
+// lockLineups, Tue 12h UTC settle) et appelle le tick correspondant.
+//
+// Tous les ticks sont idempotents (services 2.A-2.E). runOnceAtATime
+// evite l'empilement si le tick precedent depasse 5 min.
+//
+// Mettre NFL_FANTASY_CRON_TICK_MS=0 pour desactiver (CI / dev local).
+const inTestNflFantasyCronEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const nflFantasyCronTickMsEnv = Number(process.env.NFL_FANTASY_CRON_TICK_MS);
+const nflFantasyCronTickMs = Number.isFinite(nflFantasyCronTickMsEnv)
+  ? nflFantasyCronTickMsEnv
+  : 5 * 60 * 1000;
+if (!inTestNflFantasyCronEnv && nflFantasyCronTickMs > 0) {
+  void import("./services/nfl-fantasy-cron").then(
+    ({ nflFantasyOrchestratorTick }) => {
+      const tick = runOnceAtATime("nfl-fantasy-cron", async () => {
+        try {
+          const out = await nflFantasyOrchestratorTick();
+          // Log uniquement si quelque chose s'est passe pour rester
+          // silencieux (un tick toutes les 5min, 99% du temps idle).
+          const ran =
+            out.nflverse.ran || out.espn.ran || out.lock.ran || out.settle.ran;
+          if (ran) {
+            serverLog.info(
+              `[nfl-fantasy-cron] tick : nflverse=${out.nflverse.ran} espn=${out.espn.ran} lock=${out.lock.ran} settle=${out.settle.ran}`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[nfl-fantasy-cron] tick failed: ${msg}`);
+        }
+      });
+      setInterval(() => {
+        void tick();
+      }, nflFantasyCronTickMs).unref();
+    },
+  );
+}
