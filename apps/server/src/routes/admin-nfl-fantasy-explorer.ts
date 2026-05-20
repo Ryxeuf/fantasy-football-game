@@ -21,7 +21,7 @@ import { z } from "zod";
 
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
-import { validateQuery } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   getLeagueDetailForAdmin,
   getNflIngestRunForAdmin,
@@ -34,9 +34,12 @@ import {
   listNflSeasonsForAdmin,
   listNflTeamsForAdmin,
   listWeeksForSeason,
-  recomputePlayerSpp,
   reDerivePlayerBb,
+  recomputePlayerSpp,
+  recomputeSeasonSpp,
+  reDeriveAllPlayersBb,
 } from "../services/nfl-fantasy-admin-explorer";
+import { replaySeason } from "../services/nfl-fantasy-replay";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -90,6 +93,14 @@ const leaguesListSchema = z.object({
   search: z.string().min(1).max(64).optional(),
   page: z.coerce.number().int().min(1).max(10000).optional(),
   pageSize: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+const replayBodySchema = z.object({
+  teamCount: z.number().int().min(2).max(16).optional(),
+  playersPerEntry: z.number().int().min(11).max(30).optional(),
+  fromWeek: z.number().int().min(1).max(22).optional(),
+  toWeek: z.number().int().min(1).max(22).optional(),
+  nameSuffix: z.string().min(1).max(64).optional(),
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -376,5 +387,67 @@ router.get("/explore/leagues/:id", async (req, res) => {
     }
   }
 });
+
+// ────────────────────────────────────────────────────────────────────
+// Bulk actions saison (Phase 3.F)
+// ────────────────────────────────────────────────────────────────────
+
+router.post("/explore/seasons/:id/recompute-spp", async (req, res) => {
+  try {
+    const out = await recomputeSeasonSpp(req.params.id);
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] recompute-season-spp failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+router.post("/explore/players/re-derive-bb-bulk", async (_req, res) => {
+  try {
+    const out = await reDeriveAllPlayersBb();
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] re-derive-bb-bulk failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Replay saison (Phase 3.G)
+// ────────────────────────────────────────────────────────────────────
+
+router.post(
+  "/explore/seasons/:id/replay",
+  validate(replayBodySchema),
+  async (req, res) => {
+    try {
+      const body = req.body as z.infer<typeof replayBodySchema>;
+      const out = await replaySeason({
+        seasonId: req.params.id,
+        teamCount: body.teamCount,
+        playersPerEntry: body.playersPerEntry,
+        fromWeek: body.fromWeek,
+        toWeek: body.toWeek,
+        nameSuffix: body.nameSuffix,
+      });
+      res.json(out);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[admin-nfl-fantasy-explorer] replay failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 export default router;
