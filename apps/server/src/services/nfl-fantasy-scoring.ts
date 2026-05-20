@@ -439,3 +439,125 @@ export async function listMatchupsForWeek(opts: {
     orderBy: { createdAt: "asc" },
   });
 }
+
+// ────────────────────────────────────────────────────────────────────
+// Standings (vue derivee, computed a la lecture)
+// ────────────────────────────────────────────────────────────────────
+
+export interface StandingsRow {
+  readonly entryId: string;
+  readonly teamName: string;
+  readonly wins: number;
+  readonly losses: number;
+  readonly ties: number;
+  readonly pointsFor: number;
+  readonly pointsAgainst: number;
+  readonly differential: number;
+  readonly games: number;
+}
+
+/**
+ * Compute pur des standings a partir d'une liste de matchups settles.
+ * Pur, testable. Tri : wins desc, then differential desc, then pointsFor desc.
+ *
+ * Les matchups non-settles (settledAt null) sont ignores.
+ */
+export function computeStandings(opts: {
+  entries: ReadonlyArray<{ id: string; teamName: string }>;
+  matchups: ReadonlyArray<{
+    homeEntryId: string;
+    awayEntryId: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    winnerId: string | null;
+    settledAt: Date | null;
+  }>;
+}): StandingsRow[] {
+  const rows = new Map<string, {
+    teamName: string;
+    wins: number;
+    losses: number;
+    ties: number;
+    pointsFor: number;
+    pointsAgainst: number;
+  }>();
+  for (const e of opts.entries) {
+    rows.set(e.id, {
+      teamName: e.teamName,
+      wins: 0,
+      losses: 0,
+      ties: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    });
+  }
+
+  for (const m of opts.matchups) {
+    if (m.settledAt == null || m.homeScore == null || m.awayScore == null) continue;
+    const home = rows.get(m.homeEntryId);
+    const away = rows.get(m.awayEntryId);
+    if (!home || !away) continue;
+    home.pointsFor += m.homeScore;
+    home.pointsAgainst += m.awayScore;
+    away.pointsFor += m.awayScore;
+    away.pointsAgainst += m.homeScore;
+    if (m.winnerId == null) {
+      home.ties++;
+      away.ties++;
+    } else if (m.winnerId === m.homeEntryId) {
+      home.wins++;
+      away.losses++;
+    } else if (m.winnerId === m.awayEntryId) {
+      home.losses++;
+      away.wins++;
+    }
+  }
+
+  const out: StandingsRow[] = [];
+  for (const [entryId, r] of rows) {
+    out.push({
+      entryId,
+      teamName: r.teamName,
+      wins: r.wins,
+      losses: r.losses,
+      ties: r.ties,
+      pointsFor: r.pointsFor,
+      pointsAgainst: r.pointsAgainst,
+      differential: r.pointsFor - r.pointsAgainst,
+      games: r.wins + r.losses + r.ties,
+    });
+  }
+  out.sort((a, b) => {
+    if (a.wins !== b.wins) return b.wins - a.wins;
+    if (a.differential !== b.differential) return b.differential - a.differential;
+    return b.pointsFor - a.pointsFor;
+  });
+  return out;
+}
+
+/**
+ * Fetch + compute des standings d'une league. Read-only, suffisant V1.
+ * V2 introduira une vue persistee + invalidation au settle.
+ */
+export async function getLeagueStandings(
+  leagueId: string,
+): Promise<StandingsRow[]> {
+  const [entries, matchups] = await Promise.all([
+    prisma.nflFantasyEntry.findMany({
+      where: { leagueId },
+      select: { id: true, teamName: true },
+    }),
+    prisma.nflFantasyMatchup.findMany({
+      where: { leagueId, settledAt: { not: null } },
+      select: {
+        homeEntryId: true,
+        awayEntryId: true,
+        homeScore: true,
+        awayScore: true,
+        winnerId: true,
+        settledAt: true,
+      },
+    }),
+  ]);
+  return computeStandings({ entries, matchups });
+}

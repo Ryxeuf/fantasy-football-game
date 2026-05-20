@@ -4,6 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflFantasyLeague: { findUnique: vi.fn() },
     nflWeek: { findUnique: vi.fn() },
+    nflFantasyEntry: { findMany: vi.fn() },
     nflFantasyMatchup: {
       findMany: vi.fn(),
       count: vi.fn(),
@@ -21,8 +22,10 @@ vi.mock("../prisma", () => ({
 import { prisma } from "../prisma";
 import {
   applyCaptainMultiplier,
+  computeStandings,
   determineWinner,
   generateMatchups,
+  getLeagueStandings,
   listMatchupsForWeek,
   NflFantasyScoringError,
   pairEntriesForWeek,
@@ -479,5 +482,148 @@ describe("NflFantasyScoringError", () => {
     const err = new NflFantasyScoringError("ODD_ENTRIES", "boom");
     expect(err.code).toBe("ODD_ENTRIES");
     expect(err.name).toBe("NflFantasyScoringError");
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// computeStandings (helper pur)
+// ────────────────────────────────────────────────────────────────────
+
+describe("computeStandings", () => {
+  const entries = [
+    { id: "A", teamName: "Team A" },
+    { id: "B", teamName: "Team B" },
+    { id: "C", teamName: "Team C" },
+    { id: "D", teamName: "Team D" },
+  ];
+  const ts = new Date("2025-11-11T12:00:00Z");
+
+  it("0 matchup : tous a 0", () => {
+    const rows = computeStandings({ entries, matchups: [] });
+    expect(rows).toHaveLength(4);
+    for (const r of rows) {
+      expect(r.wins).toBe(0);
+      expect(r.games).toBe(0);
+      expect(r.differential).toBe(0);
+    }
+  });
+
+  it("ignore les matchups non settles", () => {
+    const rows = computeStandings({
+      entries,
+      matchups: [
+        {
+          homeEntryId: "A",
+          awayEntryId: "B",
+          homeScore: 100,
+          awayScore: 80,
+          winnerId: "A",
+          settledAt: null, // <- ignore
+        },
+      ],
+    });
+    const a = rows.find((r) => r.entryId === "A");
+    expect(a?.wins).toBe(0);
+    expect(a?.pointsFor).toBe(0);
+  });
+
+  it("W/L/T + PF/PA + differential", () => {
+    const rows = computeStandings({
+      entries,
+      matchups: [
+        // A bat B 100-80
+        {
+          homeEntryId: "A",
+          awayEntryId: "B",
+          homeScore: 100,
+          awayScore: 80,
+          winnerId: "A",
+          settledAt: ts,
+        },
+        // C tie D 50-50
+        {
+          homeEntryId: "C",
+          awayEntryId: "D",
+          homeScore: 50,
+          awayScore: 50,
+          winnerId: null,
+          settledAt: ts,
+        },
+      ],
+    });
+    const a = rows.find((r) => r.entryId === "A")!;
+    expect(a.wins).toBe(1);
+    expect(a.losses).toBe(0);
+    expect(a.pointsFor).toBe(100);
+    expect(a.pointsAgainst).toBe(80);
+    expect(a.differential).toBe(20);
+    expect(a.games).toBe(1);
+
+    const b = rows.find((r) => r.entryId === "B")!;
+    expect(b.losses).toBe(1);
+    expect(b.differential).toBe(-20);
+
+    const c = rows.find((r) => r.entryId === "C")!;
+    expect(c.ties).toBe(1);
+    expect(c.pointsFor).toBe(50);
+    expect(c.differential).toBe(0);
+  });
+
+  it("tri : wins desc -> differential desc -> pointsFor desc", () => {
+    const rows = computeStandings({
+      entries,
+      matchups: [
+        // A: 1W, +30 diff (110-80)
+        { homeEntryId: "A", awayEntryId: "B", homeScore: 110, awayScore: 80, winnerId: "A", settledAt: ts },
+        // C: 1W, +10 diff (60-50)
+        { homeEntryId: "C", awayEntryId: "D", homeScore: 60, awayScore: 50, winnerId: "C", settledAt: ts },
+      ],
+    });
+    // Tri attendu : A (1W +30), C (1W +10), B (0W -30), D (0W -10)
+    // Wait : 0W mais B -30, D -10. Tri pour 0W : differential desc -> D (-10) > B (-30)
+    expect(rows.map((r) => r.entryId)).toEqual(["A", "C", "D", "B"]);
+  });
+
+  it("entry sans matchup reste dans le tableau", () => {
+    const rows = computeStandings({
+      entries: [{ id: "A", teamName: "A" }, { id: "B", teamName: "B" }, { id: "Z", teamName: "Zelfo" }],
+      matchups: [
+        { homeEntryId: "A", awayEntryId: "B", homeScore: 50, awayScore: 30, winnerId: "A", settledAt: ts },
+      ],
+    });
+    expect(rows).toHaveLength(3);
+    const z = rows.find((r) => r.entryId === "Z");
+    expect(z?.games).toBe(0);
+  });
+});
+
+describe("getLeagueStandings", () => {
+  it("fetch entries + settled matchups + compute", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { id: "A", teamName: "Team A" },
+      { id: "B", teamName: "Team B" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      {
+        homeEntryId: "A",
+        awayEntryId: "B",
+        homeScore: 100,
+        awayScore: 60,
+        winnerId: "A",
+        settledAt: new Date(),
+      },
+    ] as never);
+
+    const rows = await getLeagueStandings("lg1");
+    expect(rows[0]?.entryId).toBe("A");
+    expect(rows[0]?.wins).toBe(1);
+    expect(rows[1]?.entryId).toBe("B");
+    expect(rows[1]?.losses).toBe(1);
+
+    expect(prisma.nflFantasyMatchup.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { leagueId: "lg1", settledAt: { not: null } },
+      }),
+    );
   });
 });
