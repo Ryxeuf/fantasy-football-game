@@ -21,6 +21,9 @@ const TABS: ReadonlyArray<TabDef> = [
   { href: "/admin/nfl-fantasy", label: "Actions", icon: "🎛️", exact: true },
   { href: "/admin/nfl-fantasy/teams", label: "Équipes", icon: "🏈" },
   { href: "/admin/nfl-fantasy/players", label: "Joueurs", icon: "🐀" },
+  { href: "/admin/nfl-fantasy/weeks", label: "Calendrier", icon: "📅" },
+  { href: "/admin/nfl-fantasy/leagues", label: "Leagues", icon: "🏆" },
+  { href: "/admin/nfl-fantasy/ingest-runs", label: "Ingest", icon: "📥" },
 ];
 
 function isActive(tab: TabDef, pathname: string | null): boolean {
