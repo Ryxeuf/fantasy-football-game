@@ -46,3 +46,30 @@ export interface NflErrorBody {
   error: string;
   code: string;
 }
+
+/** Matchup retourne par `GET /api/nfl-fantasy/leagues/:id/matchups`. */
+export interface NflFantasyMatchup {
+  id: string;
+  leagueId: string;
+  weekId: string;
+  homeEntryId: string;
+  awayEntryId: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  winnerId: string | null;
+  settledAt: string | null;
+  createdAt: string;
+}
+
+/** Ligne standings calculee a la volee (Phase A.2). */
+export interface StandingsRow {
+  entryId: string;
+  teamName: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  differential: number;
+  games: number;
+}
