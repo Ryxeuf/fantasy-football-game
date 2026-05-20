@@ -1,3 +1,63 @@
+## [1.134.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.133.0...v1.134.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **server:** backfillNflSeason avec CSV cache + idempotent (Phase 3.E) ([ec07f17](https://github.com/Ryxeuf/fantasy-football-game/commit/ec07f178da8c0eed3fc89d8c465d3f40788c3f61))
+* **server:** computeStandings + getLeagueStandings (Phase A.3) ([e5495a9](https://github.com/Ryxeuf/fantasy-football-game/commit/e5495a9fd136a36c497751471fcea47cc1134707))
+* **server:** explorer service admin NFL Fantasy (Phase 3.C) ([e7f231a](https://github.com/Ryxeuf/fantasy-football-game/commit/e7f231ac7b43ed17fcd4bb50e88a3654d87d5568))
+* **server:** explorer service ingest-runs + weeks + leagues (Phase 3.D) ([e72e09c](https://github.com/Ryxeuf/fantasy-football-game/commit/e72e09c8683b367b9067cd87d846a1a94ac783d0))
+* **server:** GET roster joint NflPlayer pour l'UI lineup ([262d268](https://github.com/Ryxeuf/fantasy-football-game/commit/262d2682c5b28fa4435c297cb0210ba917a20959))
+* **server:** nfl-error-mapper util (Phase 2.G) ([9ae4911](https://github.com/Ryxeuf/fantasy-football-game/commit/9ae4911b1e5b31fb028ea69a2433a5b1a1f62e60))
+* **server:** nfl-fantasy-cron service Phase 2.H (orchestrateur 5min) ([c2d7c16](https://github.com/Ryxeuf/fantasy-football-game/commit/c2d7c16c7397b8c6b5ee461c9d43b990c9613ded))
+* **server:** nfl-fantasy-draft service Phase A.1 ([54e88d3](https://github.com/Ryxeuf/fantasy-football-game/commit/54e88d33dd9e752016c819ba30ccaad06e430fb0))
+* **server:** routes admin draft (auto-fill + finalize) + mapper Phase A ([d8fceca](https://github.com/Ryxeuf/fantasy-football-game/commit/d8fceca0fb4f6ba690d1d14e79f052f6bda653d0))
+* **server:** routes admin explorer + mapper NflFantasyAdminError (Phase 3.C) ([bb58aa7](https://github.com/Ryxeuf/fantasy-football-game/commit/bb58aa74bc156c9a778e5852ad4e54d3338c2085))
+* **server:** routes admin ingest-runs + weeks + leagues (Phase 3.D) ([a0a2701](https://github.com/Ryxeuf/fantasy-football-game/commit/a0a27016ae1048624f01dffb017be2fc06c22179))
+* **server:** routes Express NFL Fantasy Phase 2.G (admin + user) ([05b77d9](https://github.com/Ryxeuf/fantasy-football-game/commit/05b77d95b8c4f10adcc34ed5f137101913a89f50))
+* **server:** routes user-facing /matchups + /standings (Phase A.3) ([1a8599c](https://github.com/Ryxeuf/fantasy-football-game/commit/1a8599c0e76c510157037e84ce7c330bdfa247e3))
+* **server:** wire NFL Fantasy cron Phase 2.H dans index.ts ([5b7a022](https://github.com/Ryxeuf/fantasy-football-game/commit/5b7a022e61f751755069bc10db1c0f5ed46cea44))
+* **server:** wire NFL Fantasy routes Phase 2.G dans index.ts ([d39aac7](https://github.com/Ryxeuf/fantasy-football-game/commit/d39aac74df7f3ff33ae0ad2525c528d414576d15))
+* **web:** cartes admin auto-fill + finalize (Phase A) ([17c681b](https://github.com/Ryxeuf/fantasy-football-game/commit/17c681b1e8e08bd536c9bd1c1cba3aa05aee7e3d))
+* **web:** console admin /admin/nfl-fantasy (Phase 3.B) ([aa5fe7d](https://github.com/Ryxeuf/fantasy-football-game/commit/aa5fe7d607713540ad47a4cbe3f816f8a624ca3a))
+* **web:** dashboard /nfl-fantasy "Mes leagues" (Phase 3.A) ([1671c69](https://github.com/Ryxeuf/fantasy-football-game/commit/1671c69ffa87f1d996afa87199566311ef2a0f29))
+* **web:** enhance admin layout with dynamic navigation sections ([5bea705](https://github.com/Ryxeuf/fantasy-football-game/commit/5bea705912683d020a0682e06790cd7ab1482d99))
+* **web:** layout admin NFL Fantasy + season picker + sub-nav (Phase 3.C) ([7559cf3](https://github.com/Ryxeuf/fantasy-football-game/commit/7559cf3b0c56efc8e8dd3ed26e25b960f9498156))
+* **web:** lineup builder + CTA "Régler mon lineup" Phase A ([bde8448](https://github.com/Ryxeuf/fantasy-football-game/commit/bde8448aed5d96c2e52fc0ec7ee51f05e62f5f8c))
+* **web:** nav item NFL Fantasy dans admin layout (Phase 3.B) ([275354e](https://github.com/Ryxeuf/fantasy-football-game/commit/275354ebc981c1146d02a498517f210526ccce6b))
+* **web:** NFL Fantasy layout + types partages (Phase 3.A) ([676f952](https://github.com/Ryxeuf/fantasy-football-game/commit/676f9527d3da86237a21d2e3a2e540ae574b0f13))
+* **web:** page /nfl-fantasy/leagues/[id]/matchups (Phase A.3) ([b3aaff5](https://github.com/Ryxeuf/fantasy-football-game/commit/b3aaff5bb03a3ee2dd2db63a02ba37f7ca0ab5b8))
+* **web:** page detail league NFL Fantasy (Phase 3.A) ([c7bf706](https://github.com/Ryxeuf/fantasy-football-game/commit/c7bf706fbe8dfacceaf745c88df5c1f891813596))
+* **web:** pages admin ingest-runs + weeks + leagues (Phase 3.D) ([abece58](https://github.com/Ryxeuf/fantasy-football-game/commit/abece581233eeb9c7867debf3101e78376dbb70d))
+* **web:** pages admin players + resync actions (Phase 3.C.2) ([6b78e31](https://github.com/Ryxeuf/fantasy-football-game/commit/6b78e3137f33f0202b633fa3fce1fbffa6b3552c))
+* **web:** pages admin teams index + detail (Phase 3.C.1) ([17832aa](https://github.com/Ryxeuf/fantasy-football-game/commit/17832aa7feb601a20780083aa9a803efc145b680))
+* **web:** pages create + join NFL Fantasy (Phase 3.A) ([6d64956](https://github.com/Ryxeuf/fantasy-football-game/commit/6d649564ee1e3be4cdbd34637b87ff4b95f4b281))
+* **web:** types NflFantasyMatchup + StandingsRow (Phase A.3) ([bb4ec98](https://github.com/Ryxeuf/fantasy-football-game/commit/bb4ec98f7c6697b92ba8fc3a53e6758dc2df3826))
+
+
+### 🐛 Bug Fixes
+
+* **server:** backfill skipExisting accepte aussi status=partial ([3a97a25](https://github.com/Ryxeuf/fantasy-football-game/commit/3a97a25c8c3b0abcf6e9cc242517207af123e26f))
+* **server:** ingest fallback schedules.csv pour saison 2024 (Phase 3.E) ([d53ddaa](https://github.com/Ryxeuf/fantasy-football-game/commit/d53ddaa246fe3ae01911894e0a1fd9cc26d07796))
+* **web:** sync-auth-cookie utilise SERVER_API_BASE (TLS dev OrbStack) ([cd3a2a5](https://github.com/Ryxeuf/fantasy-football-game/commit/cd3a2a58ce971cfc289aad2797f1f60774970550))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 2.G routes Express ([21a6755](https://github.com/Ryxeuf/fantasy-football-game/commit/21a67556ed9cde61709354ff2969316b7357188a))
+* **nfl-fantasy:** Phase 2.H crons + cloture Phase 2 ([17d788c](https://github.com/Ryxeuf/fantasy-football-game/commit/17d788c4b3f902e7b5f467b8650da7f863572f87))
+* **nfl-fantasy:** Phase 3.A frontend V1 ([f2c115d](https://github.com/Ryxeuf/fantasy-football-game/commit/f2c115db5de1ec30e692b8116b8dc11c40ddb093))
+* **nfl-fantasy:** Phase 3.B console admin ([e5e28fb](https://github.com/Ryxeuf/fantasy-football-game/commit/e5e28fbf422c9fe1433848881737fe1f79a03d8c))
+* **nfl-fantasy:** Phase 3.C admin data explorer ([cc64a26](https://github.com/Ryxeuf/fantasy-football-game/commit/cc64a26bf90681a91dd900a509aae51c2f5fe7ff))
+* **nfl-fantasy:** Phase 3.E backfill + 3.D admin audit/weeks/leagues ([96bc7b1](https://github.com/Ryxeuf/fantasy-football-game/commit/96bc7b137c93d01ec0bec03696bdf2d421c100b3))
+* **nfl-fantasy:** Phase A draft + gameplay V1 ([39c2d0c](https://github.com/Ryxeuf/fantasy-football-game/commit/39c2d0cff49bb1d3fba237c78c36097dd26b9afe))
+* **nfl-fantasy:** Phase A.3 matchups + standings ([7a605df](https://github.com/Ryxeuf/fantasy-football-game/commit/7a605df4e1e21f41982f0f96e76fb8b9ba507f68))
+
+
+### ♻️ Code Refactoring
+
+* export buildStatLineFromRow ([b4aec77](https://github.com/Ryxeuf/fantasy-football-game/commit/b4aec7754001399b1a736a4f7a63354cf13f66b3))
+
 ## [1.133.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.132.0...v1.133.0) (2026-05-20)
 
 
