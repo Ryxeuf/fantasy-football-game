@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     nflSeason: { findMany: vi.fn() },
-    nflWeek: { groupBy: vi.fn() },
+    nflWeek: { groupBy: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     nflGame: { groupBy: vi.fn(), findMany: vi.fn() },
     nflPlayer: {
       count: vi.fn(),
@@ -13,7 +13,19 @@ vi.mock("../prisma", () => ({
       update: vi.fn(),
     },
     nflTeam: { findMany: vi.fn(), findUnique: vi.fn() },
-    nflGameStat: { findMany: vi.fn(), update: vi.fn() },
+    nflGameStat: {
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
+      update: vi.fn(),
+    },
+    nflIngestRun: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn() },
+    nflFantasyLeague: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+    },
+    nflFantasyEntry: { findMany: vi.fn(), groupBy: vi.fn() },
+    nflFantasyMatchup: { findMany: vi.fn(), groupBy: vi.fn() },
   },
 }));
 
@@ -37,11 +49,17 @@ import { computeSpp, getBbPosition } from "@bb/nfl-mapper";
 import { buildStatLineFromRow } from "./nfl-ingest";
 import {
   NflFantasyAdminError,
+  getLeagueDetailForAdmin,
+  getNflIngestRunForAdmin,
   getNflPlayerDetail,
   getNflTeamDetail,
+  getWeekDetail,
+  listAllLeaguesForAdmin,
+  listNflIngestRunsForAdmin,
   listNflPlayersForAdmin,
   listNflSeasonsForAdmin,
   listNflTeamsForAdmin,
+  listWeeksForSeason,
   recomputePlayerSpp,
   reDerivePlayerBb,
 } from "./nfl-fantasy-admin-explorer";
@@ -498,5 +516,295 @@ describe("reDerivePlayerBb", () => {
     const out = await reDerivePlayerBb("P1");
     expect(out.changed).toBe(false);
     expect(prisma.nflPlayer.update).not.toHaveBeenCalled();
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// listNflIngestRunsForAdmin (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+describe("listNflIngestRunsForAdmin", () => {
+  it("clamp limit a 500 + tri DESC startedAt + duree calculee", async () => {
+    vi.mocked(prisma.nflIngestRun.findMany).mockResolvedValueOnce([
+      {
+        id: "r1",
+        source: "nflverse",
+        weekId: "2025:W10",
+        startedAt: new Date("2025-11-09T10:00:00Z"),
+        completedAt: new Date("2025-11-09T10:00:30Z"),
+        status: "success",
+        result: { gamesUpdated: 14 },
+      },
+      {
+        id: "r2",
+        source: "espn",
+        weekId: null,
+        startedAt: new Date("2025-11-08T10:00:00Z"),
+        completedAt: null,
+        status: "in_progress",
+        result: {},
+      },
+    ] as never);
+
+    const out = await listNflIngestRunsForAdmin({ limit: 1000 });
+    expect(out).toHaveLength(2);
+    expect(out[0]!.id).toBe("r1");
+    expect(out[0]!.durationMs).toBe(30_000);
+    expect(out[1]!.durationMs).toBeNull();
+  });
+
+  it("retourne tableau vide si pas de runs", async () => {
+    vi.mocked(prisma.nflIngestRun.findMany).mockResolvedValueOnce([] as never);
+    const out = await listNflIngestRunsForAdmin({});
+    expect(out).toEqual([]);
+  });
+});
+
+describe("getNflIngestRunForAdmin", () => {
+  it("retourne null si introuvable", async () => {
+    vi.mocked(prisma.nflIngestRun.findUnique).mockResolvedValueOnce(
+      null as never,
+    );
+    const out = await getNflIngestRunForAdmin("nope");
+    expect(out).toBeNull();
+  });
+
+  it("retourne detail avec durationMs", async () => {
+    vi.mocked(prisma.nflIngestRun.findUnique).mockResolvedValueOnce({
+      id: "r1",
+      source: "nflverse",
+      weekId: "2025:W10",
+      startedAt: new Date("2025-11-09T10:00:00Z"),
+      completedAt: new Date("2025-11-09T10:01:00Z"),
+      status: "success",
+      result: { gamesUpdated: 14 },
+    } as never);
+    const out = await getNflIngestRunForAdmin("r1");
+    expect(out?.durationMs).toBe(60_000);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// listWeeksForSeason (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+describe("listWeeksForSeason", () => {
+  it("agrege games + ingest status par week", async () => {
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValueOnce([
+      {
+        id: "2025:W10",
+        seasonId: "2025",
+        weekNumber: 10,
+        startDate: new Date("2025-11-06"),
+        endDate: new Date("2025-11-10"),
+        isPlayoffs: false,
+      },
+      {
+        id: "2025:W19",
+        seasonId: "2025",
+        weekNumber: 19,
+        startDate: new Date("2026-01-10"),
+        endDate: new Date("2026-01-12"),
+        isPlayoffs: true,
+      },
+    ] as never);
+    vi.mocked(prisma.nflGame.groupBy)
+      .mockResolvedValueOnce([
+        { weekId: "2025:W10", _count: { _all: 14 } },
+      ] as never)
+      .mockResolvedValueOnce([
+        { weekId: "2025:W10", _count: { _all: 13 } },
+      ] as never);
+    vi.mocked(prisma.nflIngestRun.findMany).mockResolvedValueOnce([
+      {
+        weekId: "2025:W10",
+        status: "success",
+        startedAt: new Date("2025-11-09"),
+      },
+      {
+        weekId: "2025:W10",
+        status: "partial",
+        startedAt: new Date("2025-11-08"),
+      },
+    ] as never);
+
+    const out = await listWeeksForSeason("2025");
+    expect(out).toHaveLength(2);
+    const w10 = out.find((w) => w.weekNumber === 10)!;
+    expect(w10.gamesCount).toBe(14);
+    expect(w10.gamesFinal).toBe(13);
+    // La plus recente startedAt gagne (success ici)
+    expect(w10.ingestStatus).toBe("success");
+    expect(w10.isPlayoffs).toBe(false);
+    const w19 = out.find((w) => w.weekNumber === 19)!;
+    expect(w19.isPlayoffs).toBe(true);
+    expect(w19.ingestStatus).toBeNull();
+  });
+
+  it("retourne [] si saison sans weeks", async () => {
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValueOnce([] as never);
+    const out = await listWeeksForSeason("9999");
+    expect(out).toEqual([]);
+  });
+});
+
+describe("getWeekDetail", () => {
+  it("retourne null si week introuvable", async () => {
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValueOnce(null as never);
+    const out = await getWeekDetail("nope");
+    expect(out).toBeNull();
+  });
+
+  it("agrege games + statsCount par game", async () => {
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValueOnce({
+      id: "2025:W10",
+      seasonId: "2025",
+      weekNumber: 10,
+      startDate: new Date("2025-11-06"),
+      endDate: new Date("2025-11-10"),
+      isPlayoffs: false,
+    } as never);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([
+      {
+        id: "G1",
+        homeTeam: "KC",
+        awayTeam: "BUF",
+        homeScore: 30,
+        awayScore: 21,
+        status: "final",
+        kickoffAt: new Date("2025-11-09T17:00:00Z"),
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.groupBy).mockResolvedValueOnce([
+      { gameId: "G1", _count: { _all: 60 } },
+    ] as never);
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValueOnce({
+      status: "success",
+    } as never);
+
+    const out = await getWeekDetail("2025:W10");
+    expect(out!.games).toHaveLength(1);
+    expect(out!.games[0]!.statsCount).toBe(60);
+    expect(out!.ingestStatus).toBe("success");
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// listAllLeaguesForAdmin (Phase 3.D)
+// ────────────────────────────────────────────────────────────────────
+
+describe("listAllLeaguesForAdmin", () => {
+  it("retourne pagination + agrege entries/matchups par league", async () => {
+    vi.mocked(prisma.nflFantasyLeague.count).mockResolvedValueOnce(2 as never);
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValueOnce([
+      {
+        id: "L1",
+        name: "Public Test",
+        ownerId: "U1",
+        seasonId: "2025",
+        size: 10,
+        type: "public",
+        draftMode: "snake",
+        status: "in_progress",
+        inviteCode: null,
+        createdAt: new Date("2025-10-01"),
+        updatedAt: new Date("2025-11-01"),
+      },
+      {
+        id: "L2",
+        name: "Private",
+        ownerId: "U2",
+        seasonId: "2025",
+        size: 4,
+        type: "private",
+        draftMode: "snake",
+        status: "draft",
+        inviteCode: "ABC12345",
+        createdAt: new Date("2025-10-05"),
+        updatedAt: new Date("2025-10-05"),
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyEntry.groupBy).mockResolvedValueOnce([
+      { leagueId: "L1", _count: { _all: 8 } },
+      { leagueId: "L2", _count: { _all: 2 } },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.groupBy).mockResolvedValueOnce([
+      { leagueId: "L1", _count: { _all: 4 } },
+    ] as never);
+
+    const out = await listAllLeaguesForAdmin({});
+    expect(out.total).toBe(2);
+    expect(out.leagues).toHaveLength(2);
+    const l1 = out.leagues.find((l) => l.id === "L1")!;
+    expect(l1.entriesCount).toBe(8);
+    expect(l1.matchupsCount).toBe(4);
+    const l2 = out.leagues.find((l) => l.id === "L2")!;
+    expect(l2.entriesCount).toBe(2);
+    expect(l2.matchupsCount).toBe(0);
+  });
+
+  it("clamp page/pageSize", async () => {
+    vi.mocked(prisma.nflFantasyLeague.count).mockResolvedValueOnce(0 as never);
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValueOnce(
+      [] as never,
+    );
+    const out = await listAllLeaguesForAdmin({ page: 0, pageSize: 9999 });
+    expect(out.page).toBe(1);
+    expect(out.pageSize).toBe(200);
+  });
+});
+
+describe("getLeagueDetailForAdmin", () => {
+  it("retourne null si league introuvable", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce(
+      null as never,
+    );
+    const out = await getLeagueDetailForAdmin("nope");
+    expect(out).toBeNull();
+  });
+
+  it("retourne metadata + entries + matchups", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
+      id: "L1",
+      name: "Test",
+      ownerId: "U1",
+      seasonId: "2025",
+      size: 10,
+      type: "private",
+      draftMode: "snake",
+      status: "in_progress",
+      inviteCode: "ABC12345",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as never);
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValueOnce([
+      {
+        id: "E1",
+        userId: "U1",
+        teamName: "Stompers",
+        bbRace: "Skaven",
+        totalTV: 1300,
+        joinedAt: new Date("2025-10-01"),
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValueOnce([
+      {
+        id: "M1",
+        weekId: "2025:W10",
+        homeEntryId: "E1",
+        awayEntryId: "E2",
+        homeScore: 24,
+        awayScore: 15,
+        winnerId: "E1",
+        settledAt: new Date("2025-11-10"),
+      },
+    ] as never);
+
+    const out = await getLeagueDetailForAdmin("L1");
+    expect(out?.entries).toHaveLength(1);
+    expect(out?.matchups).toHaveLength(1);
+    expect(out?.entriesCount).toBe(1);
+    expect(out?.matchupsCount).toBe(1);
+    expect(out?.matchups[0]!.winnerId).toBe("E1");
   });
 });
