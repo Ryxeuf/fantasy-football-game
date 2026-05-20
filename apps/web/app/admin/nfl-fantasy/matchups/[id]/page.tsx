@@ -38,6 +38,12 @@ interface MatchupSideRow {
   readonly starters: ReadonlyArray<MatchupStarterRow>;
 }
 
+interface MatchupGazette {
+  readonly title: string;
+  readonly body: string;
+  readonly generatedAt: string;
+}
+
 interface MatchupDetail {
   readonly id: string;
   readonly leagueId: string;
@@ -50,6 +56,20 @@ interface MatchupDetail {
   readonly winnerSide: "home" | "away" | "tie" | null;
   readonly settledAt: string | null;
   readonly createdAt: string;
+  readonly gazette: MatchupGazette | null;
+}
+
+interface GazetteGenerateResult {
+  readonly matchupId: string;
+  readonly title: string;
+  readonly body: string;
+  readonly generatedAt: string;
+  readonly skipped: boolean;
+  readonly skipReason?: string;
+  readonly usage?: {
+    readonly inputTokens?: number;
+    readonly outputTokens?: number;
+  };
 }
 
 export default function AdminNflFantasyMatchupDetailPage(): JSX.Element {
@@ -61,6 +81,43 @@ export default function AdminNflFantasyMatchupDetailPage(): JSX.Element {
   const [error, setError] = useState<{ message: string; status?: number } | null>(
     null,
   );
+  const [gazetteBusy, setGazetteBusy] = useState(false);
+  const [gazetteError, setGazetteError] = useState<string | null>(null);
+
+  async function generateGazette(force: boolean): Promise<void> {
+    if (!matchupId) return;
+    setGazetteBusy(true);
+    setGazetteError(null);
+    try {
+      const out = await apiRequest<GazetteGenerateResult>(
+        `/admin/nfl-fantasy/explore/matchups/${matchupId}/generate-gazette`,
+        {
+          method: "POST",
+          body: JSON.stringify({ force }),
+        },
+      );
+      setMatchup((prev) =>
+        prev
+          ? {
+              ...prev,
+              gazette: {
+                title: out.title,
+                body: out.body,
+                generatedAt: out.generatedAt,
+              },
+            }
+          : prev,
+      );
+    } catch (e) {
+      if (e instanceof ApiClientError) {
+        setGazetteError(`${e.message}${e.status ? ` (HTTP ${e.status})` : ""}`);
+      } else {
+        setGazetteError(e instanceof Error ? e.message : "Erreur");
+      }
+    } finally {
+      setGazetteBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!matchupId) return;
@@ -156,6 +213,62 @@ export default function AdminNflFantasyMatchupDetailPage(): JSX.Element {
             </>
           )}
         </div>
+      )}
+
+      {matchup.settledAt && (
+        <section className="rounded-md border border-amber-200 bg-amber-50/30 p-4 shadow-sm">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-nuffle-bronze">
+              📜 Nuffle Gazette
+            </h2>
+            <div className="flex gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => generateGazette(false)}
+                disabled={gazetteBusy}
+                data-testid="nfl-fantasy-matchup-gazette-generate"
+                className="rounded-md bg-nuffle-gold px-3 py-1 font-medium text-white hover:bg-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {gazetteBusy ? "En cours…" : matchup.gazette ? "Re-load" : "Générer"}
+              </button>
+              {matchup.gazette && (
+                <button
+                  type="button"
+                  onClick={() => generateGazette(true)}
+                  disabled={gazetteBusy}
+                  className="rounded-md border border-nuffle-bronze px-3 py-1 font-medium text-nuffle-bronze hover:bg-nuffle-bronze/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {gazetteBusy ? "…" : "Régénérer (force)"}
+                </button>
+              )}
+            </div>
+          </div>
+          {gazetteError && (
+            <div className="mt-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {gazetteError}
+            </div>
+          )}
+          {matchup.gazette ? (
+            <article className="mt-3 space-y-2">
+              <h3 className="text-lg font-bold text-gray-900">
+                {matchup.gazette.title}
+              </h3>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+                {matchup.gazette.body}
+              </p>
+              <p className="text-xs text-gray-400">
+                Generee le{" "}
+                {new Date(matchup.gazette.generatedAt).toLocaleString("fr-FR")}
+              </p>
+            </article>
+          ) : (
+            <p className="mt-3 text-sm text-gray-500">
+              Aucune gazette generee pour ce matchup. Clique "Générer" pour
+              produire un article narratif via Claude Haiku (necessite
+              ANTHROPIC_API_KEY cote serveur).
+            </p>
+          )}
+        </section>
       )}
     </div>
   );
