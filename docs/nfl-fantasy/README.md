@@ -34,6 +34,7 @@
 | 12 | [league-crud.md](./12-league-crud.md) | League CRUD Phase 2.C (créer / rejoindre / quitter / config) |
 | 13 | [roster-lineup.md](./13-roster-lineup.md) | Roster + Lineup hebdo Phase 2.D (starters + captain/vice + lock) |
 | 14 | [scoring.md](./14-scoring.md) | Matchups + scoring/settle Phase 2.E (round-robin + captain/vice multipliers) |
+| 15 | [mercato.md](./15-mercato.md) | Mercato Phase 2.F (rerolls 8/saison + inducements 3/matchup) |
 
 ## Statut des sections
 
@@ -77,6 +78,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-20 | v2.1 | Phase 2.C — `nfl-fantasy-league.ts` livré : créer / rejoindre (id ou inviteCode) / quitter / configurer / supprimer une league. Defaults Q1/Q2 : size=10, snake, private. 2 modèles Prisma (`NflFantasyLeague` + `NflFantasyEntry`) avec FK cascade et indexes (`ownerId`, `status+type`, `seasonId`). Migration appliquée Voie B sur DB réelle. 37 tests verts + script E2E 10 étapes OK sur Postgres (create→join→list→update→pivot type→leave→delete). Erreur typée `NflFantasyLeagueError` avec 12 codes. Doc dédiée [`12-league-crud.md`](./12-league-crud.md). |
 | 2026-05-20 | v2.2 | Phase 2.D — `nfl-fantasy-roster.ts` + `nfl-fantasy-lineup.ts` livrés : roster CRUD (add/remove/get/isOn + maj totalTV en transaction), lineup hebdo avec captain ×1.5 et vice ×1.2 (Q3), validation pure `validateLineupStructure` (11 starters, captain/vice ∈ starters et !=, pas de doublon), `lockLineups(weekId)` bulk idempotent. 3 modèles Prisma (`NflFantasyRoster` + `NflFantasyLineup` + `NflFantasyLineupStarter`). 35 tests verts (11 roster + 24 lineup) + E2E 8 étapes OK sur Postgres. Doc dédiée [`13-roster-lineup.md`](./13-roster-lineup.md). |
 | 2026-05-20 | v2.3 | Phase 2.E — `nfl-fantasy-scoring.ts` livré : `generateMatchups` (round-robin "circle method" deterministe, N/2 paires/week, idempotent) + `settleNflFantasyWeek` (lit `NflGameStat.computedSpp` ingéré 2.A, applique captain ×1.5 / vice ×1.2 trunc, persiste rawSpp+finalSpp+sppBreakdown sur starters / totalSpp sur lineups / scores+winnerId+settledAt sur matchups, idempotent skip-si-settled). Modèle `NflFantasyMatchup`. 27 tests verts + E2E 6 étapes OK sur Postgres avec W10 réelle (home=131 vs away=99, captain mult verifié). Helpers purs exportés (`pairEntriesForWeek`, `applyCaptainMultiplier`, `determineWinner`). Doc dédiée [`14-scoring.md`](./14-scoring.md). |
+| 2026-05-20 | v2.4 | Phase 2.F — `nfl-fantasy-mercato.ts` livré : pool reroll dépleté (8/saison V1 vision) + slots inducements 3/matchup. `seedStartingRerolls` idempotent, `grantReroll`/`consumeReroll` avec gardes owner/already-used, `consumeInducement` avec limite 3-par-matchup, `countAvailableRerolls` / `countRemainingInducementSlots`. 2 modèles Prisma (`NflFantasyReroll` + `NflFantasyInducement`). 24 tests verts + E2E 8 étapes OK sur Postgres (seed → grant → consume → reject already-used → 3 inducements limit → isolation par matchup). Wallet/Gold integration documentée TODO V1.5. Doc dédiée [`15-mercato.md`](./15-mercato.md). |
 
 ## Source de cette session
 
