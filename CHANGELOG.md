@@ -1,3 +1,21 @@
+## [1.135.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.134.0...v1.135.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **server:** admin matchup detail + cleanup replays + optimal lineup (Phase 3.I+J+K) ([4a05dbd](https://github.com/Ryxeuf/fantasy-football-game/commit/4a05dbd98ddea152039d390230504e6c12bce3ee))
+* **server:** recomputeSeasonSpp + reDeriveAllPlayersBb bulk (Phase 3.F) ([7718fde](https://github.com/Ryxeuf/fantasy-football-game/commit/7718fde5012cbd8ec866e36a998c8e3bd82ddc81))
+* **server:** replaySeason service Phase 3.G ([d90c033](https://github.com/Ryxeuf/fantasy-football-game/commit/d90c033d6ef78fb04e5153c75df90dc4871d4d58))
+* **server:** routes admin bulk SPP/BB + replay saison (Phase 3.F+G) ([81fc3c3](https://github.com/Ryxeuf/fantasy-football-game/commit/81fc3c30ea284351033c796940dc9f7bf7982a72))
+* **web:** page matchup detail + cleanup card + lineupMode select (Phase 3.I+J+K) ([8c64057](https://github.com/Ryxeuf/fantasy-football-game/commit/8c640570f9d8325dca67d891a3e91b0eb96d71c5))
+* **web:** UI bulk actions saison + replay + re-derive BB (Phase 3.F+G) ([d12c400](https://github.com/Ryxeuf/fantasy-football-game/commit/d12c40000c001931f3063664dae3af01768a77b1))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 3.F+G bulk actions + replay ([c36cfac](https://github.com/Ryxeuf/fantasy-football-game/commit/c36cfac25a5c70f90cd0e5672db44b0561bfd507))
+* **nfl-fantasy:** Phase 3.I+J+K matchup detail + cleanup + optimal lineup ([24fbb83](https://github.com/Ryxeuf/fantasy-football-game/commit/24fbb83bc726c905c6cfe6d8c55e8ada890041eb))
+
 ## [1.134.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.133.0...v1.134.0) (2026-05-20)
 
 
