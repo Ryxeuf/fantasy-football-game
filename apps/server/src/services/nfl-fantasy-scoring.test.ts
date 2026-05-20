@@ -1,0 +1,483 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("../prisma", () => ({
+  prisma: {
+    nflFantasyLeague: { findUnique: vi.fn() },
+    nflWeek: { findUnique: vi.fn() },
+    nflFantasyMatchup: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+    },
+    nflFantasyLineup: { findMany: vi.fn(), update: vi.fn() },
+    nflFantasyLineupStarter: { update: vi.fn() },
+    nflGame: { findMany: vi.fn() },
+    nflGameStat: { findMany: vi.fn() },
+    $transaction: vi.fn(),
+  },
+}));
+
+import { prisma } from "../prisma";
+import {
+  applyCaptainMultiplier,
+  determineWinner,
+  generateMatchups,
+  listMatchupsForWeek,
+  NflFantasyScoringError,
+  pairEntriesForWeek,
+  settleNflFantasyWeek,
+} from "./nfl-fantasy-scoring";
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+// ────────────────────────────────────────────────────────────────────
+// pairEntriesForWeek
+// ────────────────────────────────────────────────────────────────────
+
+describe("pairEntriesForWeek", () => {
+  it("4 entries / W1 : (A,D) (B,C)", () => {
+    const out = pairEntriesForWeek(["A", "B", "C", "D"], 1);
+    expect(out).toEqual([
+      { homeEntryId: "A", awayEntryId: "D" },
+      { homeEntryId: "B", awayEntryId: "C" },
+    ]);
+  });
+
+  it("4 entries / W2 : rotation differente", () => {
+    const w1 = pairEntriesForWeek(["A", "B", "C", "D"], 1);
+    const w2 = pairEntriesForWeek(["A", "B", "C", "D"], 2);
+    const w3 = pairEntriesForWeek(["A", "B", "C", "D"], 3);
+
+    // Aucune des 3 weeks ne doit avoir le meme set de paires que les autres
+    const sig = (ps: { homeEntryId: string; awayEntryId: string }[]) =>
+      ps
+        .map((p) => [p.homeEntryId, p.awayEntryId].sort().join("-"))
+        .sort()
+        .join(",");
+
+    expect(sig(w1)).not.toBe(sig(w2));
+    expect(sig(w2)).not.toBe(sig(w3));
+    expect(sig(w1)).not.toBe(sig(w3));
+  });
+
+  it("10 entries genere 5 paires distinctes", () => {
+    const entries = Array.from({ length: 10 }, (_, i) => `E${i}`);
+    const out = pairEntriesForWeek(entries, 1);
+    expect(out).toHaveLength(5);
+
+    const allIds = new Set<string>();
+    for (const p of out) {
+      expect(allIds.has(p.homeEntryId)).toBe(false);
+      expect(allIds.has(p.awayEntryId)).toBe(false);
+      allIds.add(p.homeEntryId);
+      allIds.add(p.awayEntryId);
+    }
+    expect(allIds.size).toBe(10);
+  });
+
+  it("10 entries : 9 weeks distinctes avant repetition", () => {
+    const entries = Array.from({ length: 10 }, (_, i) => `E${i}`);
+    const sig = (ps: { homeEntryId: string; awayEntryId: string }[]) =>
+      ps
+        .map((p) => [p.homeEntryId, p.awayEntryId].sort().join("-"))
+        .sort()
+        .join(",");
+    const sigs = new Set<string>();
+    for (let w = 1; w <= 9; w++) {
+      sigs.add(sig(pairEntriesForWeek(entries, w)));
+    }
+    expect(sigs.size).toBe(9);
+  });
+
+  it("retourne vide pour <2 entries", () => {
+    expect(pairEntriesForWeek([], 1)).toEqual([]);
+    expect(pairEntriesForWeek(["A"], 1)).toEqual([]);
+  });
+
+  it("throw ODD_ENTRIES si nombre impair", () => {
+    expect(() => pairEntriesForWeek(["A", "B", "C"], 1)).toThrow(
+      /Nombre d'entries impair/,
+    );
+  });
+
+  it("deterministe (meme input -> meme output)", () => {
+    const a = pairEntriesForWeek(["A", "B", "C", "D"], 5);
+    const b = pairEntriesForWeek(["A", "B", "C", "D"], 5);
+    expect(a).toEqual(b);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// applyCaptainMultiplier
+// ────────────────────────────────────────────────────────────────────
+
+describe("applyCaptainMultiplier", () => {
+  it("captain : ×1.5 (Q3)", () => {
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 10,
+        isCaptain: true,
+        isViceCaptain: false,
+      }),
+    ).toBe(15);
+  });
+
+  it("vice : ×1.2 (Q3)", () => {
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 10,
+        isCaptain: false,
+        isViceCaptain: true,
+      }),
+    ).toBe(12);
+  });
+
+  it("normal : raw inchange", () => {
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 10,
+        isCaptain: false,
+        isViceCaptain: false,
+      }),
+    ).toBe(10);
+  });
+
+  it("captain prime sur vice si les deux flags", () => {
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 10,
+        isCaptain: true,
+        isViceCaptain: true,
+      }),
+    ).toBe(15);
+  });
+
+  it("trunc vers 0 (pas d'arrondi)", () => {
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 7,
+        isCaptain: true,
+        isViceCaptain: false,
+      }),
+    ).toBe(10); // 7 * 1.5 = 10.5 -> trunc 10
+    expect(
+      applyCaptainMultiplier({
+        rawSpp: 7,
+        isCaptain: false,
+        isViceCaptain: true,
+      }),
+    ).toBe(8); // 7 * 1.2 = 8.4 -> 8
+  });
+
+  it("rawSpp=0 : reste 0", () => {
+    expect(
+      applyCaptainMultiplier({ rawSpp: 0, isCaptain: true, isViceCaptain: false }),
+    ).toBe(0);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// determineWinner
+// ────────────────────────────────────────────────────────────────────
+
+describe("determineWinner", () => {
+  it("home > away -> home", () => {
+    expect(
+      determineWinner({
+        homeEntryId: "H",
+        awayEntryId: "A",
+        homeScore: 30,
+        awayScore: 20,
+      }),
+    ).toBe("H");
+  });
+
+  it("home < away -> away", () => {
+    expect(
+      determineWinner({
+        homeEntryId: "H",
+        awayEntryId: "A",
+        homeScore: 10,
+        awayScore: 20,
+      }),
+    ).toBe("A");
+  });
+
+  it("tie -> null", () => {
+    expect(
+      determineWinner({
+        homeEntryId: "H",
+        awayEntryId: "A",
+        homeScore: 15,
+        awayScore: 15,
+      }),
+    ).toBeNull();
+  });
+
+  it("scores null -> null", () => {
+    expect(
+      determineWinner({
+        homeEntryId: "H",
+        awayEntryId: "A",
+        homeScore: null,
+        awayScore: null,
+      }),
+    ).toBeNull();
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// generateMatchups
+// ────────────────────────────────────────────────────────────────────
+
+describe("generateMatchups", () => {
+  it("cree N/2 matchups si none existing", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      entries: [
+        { id: "e1" }, { id: "e2" }, { id: "e3" }, { id: "e4" },
+      ],
+    } as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
+      id: "2025:W10",
+      weekNumber: 10,
+    } as never);
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflFantasyMatchup.createMany).mockResolvedValue({ count: 2 } as never);
+
+    const result = await generateMatchups({ leagueId: "lg1", weekId: "2025:W10" });
+
+    expect(result.matchupsCreated).toBe(2);
+    expect(result.matchupsExisting).toBe(0);
+    expect(result.weekNumber).toBe(10);
+  });
+
+  it("idempotent : skip si matchups deja existants", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      entries: [{ id: "e1" }, { id: "e2" }],
+    } as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
+      id: "2025:W10",
+      weekNumber: 10,
+    } as never);
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1" },
+    ] as never);
+
+    const result = await generateMatchups({ leagueId: "lg1", weekId: "2025:W10" });
+
+    expect(result.matchupsCreated).toBe(0);
+    expect(result.matchupsExisting).toBe(1);
+    expect(prisma.nflFantasyMatchup.createMany).not.toHaveBeenCalled();
+  });
+
+  it("LEAGUE_NOT_FOUND", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue(null);
+
+    await expect(
+      generateMatchups({ leagueId: "missing", weekId: "2025:W10" }),
+    ).rejects.toThrow(/League missing introuvable/);
+  });
+
+  it("WEEK_NOT_FOUND", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      entries: [],
+    } as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue(null);
+
+    await expect(
+      generateMatchups({ leagueId: "lg1", weekId: "missing" }),
+    ).rejects.toThrow(/NflWeek missing introuvable/);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// settleNflFantasyWeek
+// ────────────────────────────────────────────────────────────────────
+
+describe("settleNflFantasyWeek", () => {
+  it("settle : sum finalSpp -> matchup scores + winnerId", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      {
+        id: "m1",
+        homeEntryId: "eHome",
+        awayEntryId: "eAway",
+        settledAt: null,
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([
+      { id: "g1" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH1", playerId: "p1", isCaptain: true, isViceCaptain: false, lineupId: "lHome" },
+          { id: "sH2", playerId: "p2", isCaptain: false, isViceCaptain: true, lineupId: "lHome" },
+          { id: "sH3", playerId: "p3", isCaptain: false, isViceCaptain: false, lineupId: "lHome" },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA1", playerId: "p4", isCaptain: true, isViceCaptain: false, lineupId: "lAway" },
+          { id: "sA2", playerId: "p5", isCaptain: false, isViceCaptain: false, lineupId: "lAway" },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p1", computedSpp: 10, sppBreakdown: { x: 1 } },
+      { playerId: "p2", computedSpp: 10, sppBreakdown: null },
+      { playerId: "p3", computedSpp: 5, sppBreakdown: null },
+      // p4 absent -> rawSpp 0
+      { playerId: "p5", computedSpp: 4, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    const result = await settleNflFantasyWeek({
+      leagueId: "lg1",
+      weekId: "2025:W10",
+    });
+
+    expect(result.matchupsSettled).toBe(1);
+    expect(result.startersScored).toBe(5);
+
+    // Inspecter le call a prisma.nflFantasyMatchup.update
+    const matchupCalls = vi.mocked(prisma.nflFantasyMatchup.update).mock.calls;
+    expect(matchupCalls).toHaveLength(1);
+    const updateData = matchupCalls[0]![0].data as {
+      homeScore: number;
+      awayScore: number;
+      winnerId: string;
+    };
+
+    // home : p1 captain (10*1.5=15) + p2 vice (10*1.2=12) + p3 (5) = 32
+    expect(updateData.homeScore).toBe(32);
+    // away : p4 captain (0*1.5=0) + p5 (4) = 4
+    expect(updateData.awayScore).toBe(4);
+    expect(updateData.winnerId).toBe("eHome");
+  });
+
+  it("idempotent : skip matchups deja settles", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(5);
+
+    const result = await settleNflFantasyWeek({
+      leagueId: "lg1",
+      weekId: "2025:W10",
+    });
+
+    expect(result.matchupsSettled).toBe(0);
+    expect(result.matchupsSkipped).toBe(5);
+  });
+
+  it("tie : winnerId null", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      {
+        id: "m1",
+        homeEntryId: "eHome",
+        awayEntryId: "eAway",
+        settledAt: null,
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH", playerId: "p1", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA", playerId: "p2", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p1", computedSpp: 10, sppBreakdown: null },
+      { playerId: "p2", computedSpp: 10, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const calls = vi.mocked(prisma.nflFantasyMatchup.update).mock.calls;
+    const updateData = calls[0]![0].data as { winnerId: string | null };
+    expect(updateData.winnerId).toBeNull();
+  });
+
+  it("starter sans stat (bye) : rawSpp = 0", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH", playerId: "pBye", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA", playerId: "p2", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p2", computedSpp: 8, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const starterCalls = vi.mocked(prisma.nflFantasyLineupStarter.update).mock.calls;
+    const byeCall = starterCalls.find((c) => c[0].where.id === "sH");
+    expect(byeCall).toBeDefined();
+    const data = byeCall![0].data as { rawSpp: number; finalSpp: number };
+    expect(data.rawSpp).toBe(0);
+    expect(data.finalSpp).toBe(0);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// listMatchupsForWeek
+// ────────────────────────────────────────────────────────────────────
+
+describe("listMatchupsForWeek", () => {
+  it("filtre par leagueId + weekId, tri createdAt asc", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([] as never);
+
+    await listMatchupsForWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    expect(prisma.nflFantasyMatchup.findMany).toHaveBeenCalledWith({
+      where: { leagueId: "lg1", weekId: "2025:W10" },
+      orderBy: { createdAt: "asc" },
+    });
+  });
+});
+
+describe("NflFantasyScoringError", () => {
+  it("preserve code + name", () => {
+    const err = new NflFantasyScoringError("ODD_ENTRIES", "boom");
+    expect(err.code).toBe("ODD_ENTRIES");
+    expect(err.name).toBe("NflFantasyScoringError");
+  });
+});
