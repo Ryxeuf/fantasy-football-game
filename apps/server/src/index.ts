@@ -38,6 +38,7 @@ import publicBlogRoutes from "./routes/public-blog";
 import adminBlogRoutes from "./routes/admin-blog";
 import adminNflIngestRoutes from "./routes/admin-nfl-ingest";
 import adminNflFantasyRoutes from "./routes/admin-nfl-fantasy";
+import adminNflFantasyExplorerRoutes from "./routes/admin-nfl-fantasy-explorer";
 import nflFantasyLeaguesRoutes from "./routes/nfl-fantasy-leagues";
 import nflFantasyEntriesRoutes from "./routes/nfl-fantasy-entries";
 import cupRoutes from "./routes/cup";
@@ -305,6 +306,7 @@ app.use("/admin/feedback", feedbackAdminRouter);
 // Admin : ingestion nflverse/ESPN + mass actions (lock, settle).
 app.use("/admin/nfl/ingest", adminNflIngestRoutes);
 app.use("/admin/nfl-fantasy", adminNflFantasyRoutes);
+app.use("/admin/nfl-fantasy", adminNflFantasyExplorerRoutes);
 // User-facing : CRUD leagues + entries (roster/lineup/mercato).
 app.use("/api/nfl-fantasy/leagues", nflFantasyLeaguesRoutes);
 app.use("/api/nfl-fantasy/entries", nflFantasyEntriesRoutes);
