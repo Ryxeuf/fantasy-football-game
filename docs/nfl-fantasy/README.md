@@ -36,6 +36,7 @@
 | 14 | [scoring.md](./14-scoring.md) | Matchups + scoring/settle Phase 2.E (round-robin + captain/vice multipliers) |
 | 15 | [mercato.md](./15-mercato.md) | Mercato Phase 2.F (rerolls 8/saison + inducements 3/matchup) |
 | 16 | [routes.md](./16-routes.md) | Routes Express Phase 2.G (admin + user-facing, mapping NflXxxError → HTTP) |
+| 17 | [crons.md](./17-crons.md) | Crons Phase 2.H (orchestrateur 5min : nflverse 03h, ESPN gameday, lock Sun 17h, settle Tue 12h) |
 
 ## Statut des sections
 
@@ -50,8 +51,15 @@
 | Mechanics (BB) | Draft v1 | Haute | Validation prototype |
 | Rosters 2025 | Draft v1 | Moyenne | Coupure jan 2026 — à updater |
 | Transitions 2026 | Draft v1 | Faible | FA/Draft post mars-avril 2026 |
-| Architecture | Implementé v1 ✅ | Haute | Schéma Prisma 8 modèles NflXxx mergé sur main local. Migration à générer dans container. |
+| Architecture | Implementé v1 ✅ | Haute | Schéma Prisma 14 modèles NflXxx (Phase 1 + 2.C-2.F), migrations appliquées Voie B sur DB réelle. |
 | Pseudonymisation | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` pseudonymize (Q8, 31 tests) |
+| Ingestion (nflverse + ESPN) | Implementé v1 ✅ | Haute | `nfl-ingest.ts` + `nfl-ingest-espn.ts` Phase 2.A/2.B. 74 tests + E2E W10 2025 validé (14 games, 962 stats). Doc [`11-ingestion-pipeline.md`](./11-ingestion-pipeline.md). |
+| League CRUD | Implementé v1 ✅ | Haute | `nfl-fantasy-league.ts` Phase 2.C. 37 tests + E2E 10 étapes. Doc [`12-league-crud.md`](./12-league-crud.md). |
+| Roster + Lineup | Implementé v1 ✅ | Haute | `nfl-fantasy-roster.ts` + `nfl-fantasy-lineup.ts` Phase 2.D. 35 tests + E2E 8 étapes. Doc [`13-roster-lineup.md`](./13-roster-lineup.md). |
+| Matchups + Scoring | Implementé v1 ✅ | Haute | `nfl-fantasy-scoring.ts` Phase 2.E. 27 tests + E2E avec stats W10 réelles (home=131 vs away=99). Doc [`14-scoring.md`](./14-scoring.md). |
+| Mercato (rerolls + inducements) | Implementé v1 ✅ | Moyenne | `nfl-fantasy-mercato.ts` Phase 2.F. 24 tests + E2E. Wallet/Gold + effets SPP : V1.5. Doc [`15-mercato.md`](./15-mercato.md). |
+| Routes Express | Implementé v1 ✅ | Haute | 4 routers (admin + user) + error-mapper. 15 tests pur + E2E 12 étapes API live. Doc [`16-routes.md`](./16-routes.md). |
+| Crons | Implementé v1 ✅ | Haute | Orchestrateur 5min unique (`nfl-fantasy-cron.ts`) avec 4 fenêtres temporelles. 28 tests + E2E 7 étapes. Doc [`17-crons.md`](./17-crons.md). |
 
 ## Convention de mise à jour
 
@@ -81,6 +89,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-20 | v2.3 | Phase 2.E — `nfl-fantasy-scoring.ts` livré : `generateMatchups` (round-robin "circle method" deterministe, N/2 paires/week, idempotent) + `settleNflFantasyWeek` (lit `NflGameStat.computedSpp` ingéré 2.A, applique captain ×1.5 / vice ×1.2 trunc, persiste rawSpp+finalSpp+sppBreakdown sur starters / totalSpp sur lineups / scores+winnerId+settledAt sur matchups, idempotent skip-si-settled). Modèle `NflFantasyMatchup`. 27 tests verts + E2E 6 étapes OK sur Postgres avec W10 réelle (home=131 vs away=99, captain mult verifié). Helpers purs exportés (`pairEntriesForWeek`, `applyCaptainMultiplier`, `determineWinner`). Doc dédiée [`14-scoring.md`](./14-scoring.md). |
 | 2026-05-20 | v2.4 | Phase 2.F — `nfl-fantasy-mercato.ts` livré : pool reroll dépleté (8/saison V1 vision) + slots inducements 3/matchup. `seedStartingRerolls` idempotent, `grantReroll`/`consumeReroll` avec gardes owner/already-used, `consumeInducement` avec limite 3-par-matchup, `countAvailableRerolls` / `countRemainingInducementSlots`. 2 modèles Prisma (`NflFantasyReroll` + `NflFantasyInducement`). 24 tests verts + E2E 8 étapes OK sur Postgres (seed → grant → consume → reject already-used → 3 inducements limit → isolation par matchup). Wallet/Gold integration documentée TODO V1.5. Doc dédiée [`15-mercato.md`](./15-mercato.md). |
 | 2026-05-20 | v2.5 | Phase 2.G — couche HTTP exposant tous les services 2.A-2.F : `utils/nfl-error-mapper.ts` (pur, mapping code → status 404/403/409/422/502/500, 15 tests) + 4 routers Express : `admin-nfl-ingest` (5 endpoints sous `/admin/nfl/ingest`), `admin-nfl-fantasy` (4 endpoints sous `/admin/nfl-fantasy`), `nfl-fantasy-leagues` (8 endpoints user-facing sous `/api/nfl-fantasy/leagues`), `nfl-fantasy-entries` (10 endpoints sous `/api/nfl-fantasy/entries/:entryId` avec ownership check `loadOwnedEntry`). Wired dans `index.ts`. Zod validation body/query partout. E2E 12 étapes OK sur API live (401/403/404/400/200/201/204). Doc dédiée [`16-routes.md`](./16-routes.md). |
+| 2026-05-20 | v2.6 | Phase 2.H — `nfl-fantasy-cron.ts` livré : orchestrateur 5min unique (`nflFantasyOrchestratorTick`) sequence 4 ticks idempotents avec leurs propres fenêtres temporelles UTC (nflverse 03h, ESPN gameday Thu/Fri/Sat/Sun/Mon, lockLineups Sun 17h, settle Tue 12h). Helpers purs `dateYmd` / `currentSeasonId` / `isNflGameday` / `isLockLineupsWindow` / `isSettleWindow` / `isNflverseDailyWindow` exportés. `findCurrentNflWeek` avec tri `[startDate desc, weekNumber desc]` pour gérer le seed approximatif Phase 2.A. Câblé dans `index.ts` avec `runOnceAtATime("nfl-fantasy-cron")` + `setInterval` configurable via `NFL_FANTASY_CRON_TICK_MS` (default 5min). 28 tests verts + E2E 7 étapes OK sur Postgres (force=true sur chaque tick + skip out-of-window vérifié). Doc dédiée [`17-crons.md`](./17-crons.md). **Boucle la Phase 2 NFL Fantasy complète.** |
 
 ## Source de cette session
 
