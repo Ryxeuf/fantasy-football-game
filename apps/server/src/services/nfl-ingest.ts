@@ -88,6 +88,127 @@ export function buildNflverseUrl(year: number): string {
   return `${NFLVERSE_BASE}/stats_player_week_${year}.csv`;
 }
 
+const NFLVERSE_SCHEDULES_URL =
+  "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv";
+
+export function buildNflverseSchedulesUrl(): string {
+  return NFLVERSE_SCHEDULES_URL;
+}
+
+/**
+ * Une row du CSV nflverse games.csv (autoritative pour home/away +
+ * scores + kickoff). Utile en fallback quand `game_id` est absent
+ * du CSV player stats (le cas pour la saison 2024 — cf. POC).
+ */
+export interface ScheduleRow {
+  readonly gameId: string;
+  readonly season: number;
+  readonly week: number;
+  readonly seasonType: string;
+  readonly homeTeam: string;
+  readonly awayTeam: string;
+  readonly homeScore: number | null;
+  readonly awayScore: number | null;
+  readonly kickoffAt: Date | null;
+}
+
+function parseScheduleDate(gameday: string, gametime: string): Date | null {
+  if (!gameday) return null;
+  // gameday: "YYYY-MM-DD", gametime: "HH:MM" (parfois vide).
+  const time = gametime && /^\d{1,2}:\d{2}/.test(gametime) ? gametime : "13:00";
+  const iso = `${gameday}T${time}:00-05:00`;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Parse le CSV nflverse `games.csv` en lignes typees. Filtre sur
+ * `seasonId` pour limiter la taille de la Map en aval (~270 games/an).
+ *
+ * Pure : pas d'I/O, deterministe.
+ */
+export function parseSchedulesCsv(
+  csv: string,
+  seasonId: string,
+): readonly ScheduleRow[] {
+  const rows = parse(csv, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_column_count: true,
+  }) as Array<Record<string, string>>;
+
+  const out: ScheduleRow[] = [];
+  for (const r of rows) {
+    if ((r.season ?? "") !== seasonId) continue;
+    const home = normalizeNflverseTeamCode(r.home_team ?? "");
+    const away = normalizeNflverseTeamCode(r.away_team ?? "");
+    if (!home || !away) continue;
+    const week = Number(r.week);
+    if (!Number.isInteger(week) || week < 1) continue;
+    const homeScore = r.home_score === "" ? null : Number(r.home_score);
+    const awayScore = r.away_score === "" ? null : Number(r.away_score);
+    const gameType = r.game_type ?? "";
+    const seasonType = gameType.startsWith("POST") || ["WC", "DIV", "CON", "SB"].includes(gameType) ? "POST" : "REG";
+    out.push({
+      gameId: r.game_id ?? "",
+      season: Number(r.season),
+      week,
+      seasonType,
+      homeTeam: home,
+      awayTeam: away,
+      homeScore: Number.isFinite(homeScore as number) ? (homeScore as number) : null,
+      awayScore: Number.isFinite(awayScore as number) ? (awayScore as number) : null,
+      kickoffAt: parseScheduleDate(r.gameday ?? "", r.gametime ?? ""),
+    });
+  }
+  return out;
+}
+
+/**
+ * Reconstruit un game_id deterministe au format nflverse
+ * `YYYY_WW_AWAY_HOME` a partir d'une ScheduleRow.
+ *
+ * Equivaut au game_id natif quand il est present, sert de fallback
+ * pour les CSV qui ne l'incluent pas (saison 2024).
+ *
+ * Pur.
+ */
+export function reconstructGameId(s: ScheduleRow): string {
+  const ww = String(s.week).padStart(2, "0");
+  return `${s.season}_${ww}_${s.awayTeam}_${s.homeTeam}`;
+}
+
+/**
+ * Index Map<"{season}:{week}:{teamA}:{teamB}", ScheduleRow> ou (teamA,
+ * teamB) est trie alphabetiquement pour gerer le lookup symetrique
+ * (peu importe quel cote on regarde, on retrouve le meme match).
+ *
+ * Pur.
+ */
+export function buildScheduleLookup(
+  rows: readonly ScheduleRow[],
+): ReadonlyMap<string, ScheduleRow> {
+  const map = new Map<string, ScheduleRow>();
+  for (const s of rows) {
+    const [a, b] = [s.homeTeam, s.awayTeam].sort();
+    const key = `${s.season}:${s.week}:${a}:${b}`;
+    map.set(key, s);
+  }
+  return map;
+}
+
+export function lookupSchedule(
+  map: ReadonlyMap<string, ScheduleRow>,
+  season: string | number,
+  week: number,
+  teamA: string,
+  teamB: string,
+): ScheduleRow | null {
+  const [a, b] = [teamA, teamB].sort();
+  return map.get(`${season}:${week}:${a}:${b}`) ?? null;
+}
+
 export type NflverseRow = Record<string, string>;
 
 /**
@@ -221,8 +342,15 @@ export function buildStatLineFromRow(
  * Parse une row CSV nflverse vers la structure intermediaire prete pour
  * upsert. Skippe les rows invalides (pas de player_id, team inconnue,
  * position_group vide cf. gotcha POC) en retournant null.
+ *
+ * @param schedules Map optionnelle (cf. buildScheduleLookup) utilisee
+ *   pour reconstruire `gameId` quand la row ne contient pas `game_id`
+ *   (cas saison 2024 — nflverse a drop la colonne).
  */
-export function parseRow(row: NflverseRow): ParsedPlayerRow | null {
+export function parseRow(
+  row: NflverseRow,
+  schedules?: ReadonlyMap<string, ScheduleRow>,
+): ParsedPlayerRow | null {
   const playerId = row.player_id?.trim();
   if (!playerId) return null;
 
@@ -237,7 +365,20 @@ export function parseRow(row: NflverseRow): ParsedPlayerRow | null {
   // On le remplira via ingestRosters separement. Pour V1, null.
   const jerseyNumber = null;
 
-  const gameId = normalizeNflverseGameId(row.game_id?.trim() ?? "");
+  let gameId = normalizeNflverseGameId(row.game_id?.trim() ?? "");
+  if (!gameId && schedules && opponentCode) {
+    const week = Number(row.week);
+    if (Number.isInteger(week) && week > 0) {
+      const sched = lookupSchedule(
+        schedules,
+        row.season ?? "",
+        week,
+        teamCode,
+        opponentCode,
+      );
+      if (sched) gameId = reconstructGameId(sched);
+    }
+  }
 
   return {
     playerId,
@@ -343,11 +484,35 @@ async function fetchNflverseSeasonCsv(year: number): Promise<string> {
   return res.text();
 }
 
+/**
+ * Pull le CSV nflverse games.csv (autoritative pour home/away + scores).
+ * Utilise en fallback quand le CSV player stats ne contient pas
+ * `game_id` (cas 2024).
+ */
+async function fetchNflverseSchedulesCsv(): Promise<string> {
+  const url = buildNflverseSchedulesUrl();
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) {
+    throw new NflIngestError(
+      "FETCH_FAILED",
+      `nflverse schedules fetch failed ${res.status} ${res.statusText} - ${url}`,
+    );
+  }
+  return res.text();
+}
+
 interface IngestNflverseOpts {
   readonly seasonId: string;
   readonly weekNumber: number;
   /** Override fetch pour les tests. */
   readonly fetchCsv?: (year: number) => Promise<string>;
+  /** Override fetch schedules pour les tests (CSV games.csv). */
+  readonly fetchSchedulesCsv?: () => Promise<string>;
+  /**
+   * Pour le backfill bulk : passe une lookup deja construite pour
+   * eviter de re-fetcher schedules.csv 22 fois.
+   */
+  readonly schedulesLookup?: ReadonlyMap<string, ScheduleRow>;
 }
 
 /**
@@ -398,17 +563,47 @@ export async function ingestNflverseWeek(
       );
     }
 
+    // Schedules fallback : utilise pour reconstituer game_id quand
+    // le CSV player stats ne le contient pas (cas 2024).
+    let schedulesLookup: ReadonlyMap<string, ScheduleRow> | undefined =
+      opts.schedulesLookup;
+    if (!schedulesLookup) {
+      const needsFallback = weekRows.some(
+        (r) => !(r.game_id?.trim() ?? ""),
+      );
+      if (needsFallback) {
+        const schedulesCsv = await (
+          opts.fetchSchedulesCsv ?? fetchNflverseSchedulesCsv
+        )();
+        const schedules = parseSchedulesCsv(schedulesCsv, opts.seasonId);
+        schedulesLookup = buildScheduleLookup(schedules);
+      }
+    }
+
     for (const row of weekRows) {
-      const parsed = parseRow(row);
+      const parsed = parseRow(row, schedulesLookup);
       if (!parsed) {
         errors.push({ context: row.player_id ?? "(no id)", error: "row invalide" });
         continue;
       }
 
       try {
-        // 1. Upsert le NflGame (idempotent)
+        // 1. Upsert le NflGame (idempotent). Source de verite home/away :
+        //    schedules.csv quand dispo (lookup), sinon parsing du
+        //    game_id natif via inferHomeAway.
         if (!seenGames.has(parsed.gameId) && parsed.gameId && parsed.opponentCode) {
-          const isHomeGame = inferHomeAway(row);
+          const sched = schedulesLookup
+            ? lookupSchedule(
+                schedulesLookup,
+                opts.seasonId,
+                opts.weekNumber,
+                parsed.teamCode,
+                parsed.opponentCode,
+              )
+            : null;
+          const isHomeGame = sched
+            ? sched.homeTeam === parsed.teamCode
+            : inferHomeAway(row);
           await prisma.nflGame.upsert({
             where: { id: parsed.gameId },
             update: { status: "final" },
@@ -418,7 +613,7 @@ export async function ingestNflverseWeek(
               weekId,
               homeTeam: isHomeGame ? parsed.teamCode : parsed.opponentCode,
               awayTeam: isHomeGame ? parsed.opponentCode : parsed.teamCode,
-              kickoffAt: week.startDate,
+              kickoffAt: sched?.kickoffAt ?? week.startDate,
               status: "final",
             },
           });
@@ -542,8 +737,10 @@ export interface BackfillSeasonOpts {
     result?: IngestResult,
     error?: string,
   ) => void;
-  /** Override fetch (tests). */
+  /** Override fetch player stats CSV (tests). */
   readonly fetchCsv?: (year: number) => Promise<string>;
+  /** Override fetch schedules CSV (tests). */
+  readonly fetchSchedulesCsv?: () => Promise<string>;
 }
 
 export interface BackfillSeasonResult {
@@ -593,6 +790,13 @@ export async function backfillNflSeason(
   const csvText = await (opts.fetchCsv ?? fetchNflverseSeasonCsv)(year);
   const cachedFetch = (): Promise<string> => Promise.resolve(csvText);
 
+  // Schedules lookup pre-construit (1 seul fetch pour les N weeks).
+  // Si la saison a `game_id` dans le CSV player stats (cas 2023/2025),
+  // le lookup sert quand meme de source-of-truth home/away.
+  const schedulesCsv = await (opts.fetchSchedulesCsv ?? fetchNflverseSchedulesCsv)();
+  const schedules = parseSchedulesCsv(schedulesCsv, opts.seasonId);
+  const schedulesLookup = buildScheduleLookup(schedules);
+
   let weeksProcessed = 0;
   let weeksSkipped = 0;
   let weeksFailed = 0;
@@ -628,6 +832,7 @@ export async function backfillNflSeason(
         seasonId: opts.seasonId,
         weekNumber: w,
         fetchCsv: cachedFetch,
+        schedulesLookup,
       });
       weeksProcessed++;
       totalPlayers += res.playersUpdated;

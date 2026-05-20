@@ -503,6 +503,7 @@ describe("backfillNflSeason", () => {
   it("skip les weeks deja success quand skipExisting=true (default)", async () => {
     setupSeed();
     const fetchCsv = vi.fn().mockResolvedValue("");
+    const fetchSchedulesCsv = vi.fn().mockResolvedValue("game_id,season\n");
     vi.mocked(prisma.nflIngestRun.findFirst)
       .mockResolvedValueOnce({ id: "prev-1" } as never)
       .mockResolvedValueOnce({ id: "prev-2" } as never)
@@ -513,6 +514,7 @@ describe("backfillNflSeason", () => {
       fromWeek: 1,
       toWeek: 3,
       fetchCsv,
+      fetchSchedulesCsv,
     });
 
     expect(out.weeksProcessed).toBe(0);
@@ -528,6 +530,7 @@ describe("backfillNflSeason", () => {
       "player_id,player_name,team,opponent_team,position,week,season_type,game_id\n" +
       "00-A,Goff,DET,KC,QB,1,REG,2024_01_DET_KC\n";
     const fetchCsv = vi.fn().mockResolvedValue(csv);
+    const fetchSchedulesCsv = vi.fn().mockResolvedValue("game_id,season\n");
     vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
       id: "run-1",
     } as never);
@@ -546,6 +549,7 @@ describe("backfillNflSeason", () => {
       toWeek: 1,
       skipExisting: false,
       fetchCsv,
+      fetchSchedulesCsv,
     });
 
     expect(out.weeksProcessed).toBe(1);
@@ -556,6 +560,7 @@ describe("backfillNflSeason", () => {
   it("reutilise le CSV cache pour toutes les weeks (1 seul fetch)", async () => {
     setupSeed();
     const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    const fetchSchedulesCsv = vi.fn().mockResolvedValue("game_id,season\n");
     vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
       id: "run-x",
@@ -571,6 +576,7 @@ describe("backfillNflSeason", () => {
       fromWeek: 1,
       toWeek: 5,
       fetchCsv,
+      fetchSchedulesCsv,
     });
 
     expect(fetchCsv).toHaveBeenCalledTimes(1);
@@ -579,6 +585,7 @@ describe("backfillNflSeason", () => {
   it("collecte les erreurs par week sans arreter la boucle", async () => {
     setupSeed();
     const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    const fetchSchedulesCsv = vi.fn().mockResolvedValue("game_id,season\n");
     vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
       id: "run",
@@ -595,6 +602,7 @@ describe("backfillNflSeason", () => {
       fromWeek: 1,
       toWeek: 3,
       fetchCsv,
+      fetchSchedulesCsv,
     });
 
     expect(out.weeksProcessed).toBe(2);
@@ -606,6 +614,7 @@ describe("backfillNflSeason", () => {
   it("appelle onProgress pour chaque week (ingested/skipped/failed)", async () => {
     setupSeed();
     const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    const fetchSchedulesCsv = vi.fn().mockResolvedValue("game_id,season\n");
     vi.mocked(prisma.nflIngestRun.findFirst)
       .mockResolvedValueOnce({ id: "prev" } as never) // W1 skipped
       .mockResolvedValueOnce(null); // W2 ingested
@@ -624,6 +633,7 @@ describe("backfillNflSeason", () => {
       fromWeek: 1,
       toWeek: 2,
       fetchCsv,
+      fetchSchedulesCsv,
       onProgress: (w, status) => events.push({ w, status }),
     });
 
