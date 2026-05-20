@@ -2504,9 +2504,77 @@ model NflFantasyEntry {
   totalTV   Int      @default(0)
   joinedAt  DateTime @default(now())
 
-  league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  league  NflFantasyLeague        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  roster  NflFantasyRoster[]
+  lineups NflFantasyLineup[]
 
   @@unique([leagueId, userId])
   @@unique([leagueId, teamName])
   @@index([userId])
+}
+
+// ─── Roster + lineup (Phase 2.D) ──────────────────────────────────
+
+model NflFantasyRoster {
+  id          String   @id @default(cuid())
+  entryId     String
+  /// NflPlayer.id (string, FK logique seulement).
+  playerId    String
+  /// "draft" | "mercato" | "trade" | "free_agent"
+  acquiredVia String   @default("draft")
+  acquiredAt  DateTime @default(now())
+  /// Team Value de ce joueur quand acquis (frozen). Permet de tracker
+  /// l'evolution sans recalculer la valeur courante.
+  tvCost      Int      @default(0)
+
+  entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, playerId])
+  @@index([playerId])
+}
+
+model NflFantasyLineup {
+  id        String    @id @default(cuid())
+  entryId   String
+  /// FK logique vers NflWeek.id (format "{year}:W{n}").
+  weekId    String
+  /// playerId du captain (×1.5). Doit etre dans starters.
+  captainId String?
+  /// playerId du vice-captain (×1.2). Doit etre dans starters,
+  /// different du captain.
+  viceCaptainId String?
+  lockedAt  DateTime?
+  /// Total SPP apres settlement Phase 2.E. Null tant que pas settle.
+  totalSpp  Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  entry    NflFantasyEntry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  starters NflFantasyLineupStarter[]
+
+  @@unique([entryId, weekId])
+  @@index([weekId])
+}
+
+model NflFantasyLineupStarter {
+  id            String  @id @default(cuid())
+  lineupId      String
+  playerId      String
+  /// Position BB attribuee dans le lineup (Thrower, Catcher, Blitzer, ...).
+  /// Snapshot au moment du setLineup pour eviter drift en cas de
+  /// re-mapping NflPlayer.bbPosition entre semaines.
+  bbPosition    String
+  isCaptain     Boolean @default(false)
+  isViceCaptain Boolean @default(false)
+  /// Raw SPP du joueur sur la semaine (avant multipliers). Set par
+  /// Phase 2.E settlement.
+  rawSpp        Int?
+  /// Final SPP apres captain/vice/rerolls/inducements/prayers.
+  finalSpp      Int?
+  sppBreakdown  Json?
+
+  lineup NflFantasyLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+
+  @@unique([lineupId, playerId])
+  @@index([playerId])
 }
