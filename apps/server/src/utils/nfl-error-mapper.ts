@@ -15,6 +15,7 @@ import { NflFantasyScoringError } from "../services/nfl-fantasy-scoring";
 import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
 import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
 import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
+import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
 
 export interface MappedError {
   readonly status: number;
@@ -78,6 +79,8 @@ export function statusForCode(code: string): number {
     case "INVALID_PLAYERS_PER_ENTRY":
     case "PLAYER_NO_TEAM":
     case "INVALID_BB_RACE":
+    case "INVALID_TEAM_COUNT":
+    case "INVALID_WEEK_RANGE":
       return 422;
 
     // 502 — dependance externe
@@ -104,7 +107,8 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyScoringError ||
     err instanceof NflFantasyMercatoError ||
     err instanceof NflFantasyDraftError ||
-    err instanceof NflFantasyAdminError
+    err instanceof NflFantasyAdminError ||
+    err instanceof NflFantasyReplayError
   ) {
     return {
       status: statusForCode(err.code),

@@ -52,7 +52,8 @@ export class NflFantasyAdminError extends Error {
       | "PLAYER_NOT_FOUND"
       | "TEAM_NOT_FOUND"
       | "PLAYER_NO_TEAM"
-      | "INVALID_BB_RACE",
+      | "INVALID_BB_RACE"
+      | "SEASON_NOT_FOUND",
     message: string,
   ) {
     super(message);
@@ -1182,5 +1183,149 @@ export async function getLeagueDetailForAdmin(
       winnerId: m.winnerId,
       settledAt: m.settledAt ? m.settledAt.toISOString() : null,
     })),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Bulk recompute SPP / re-derive BB (Phase 3.F)
+// ────────────────────────────────────────────────────────────────────
+
+export interface RecomputeSeasonSppResult {
+  readonly seasonId: string;
+  readonly statsUpdated: number;
+  readonly previousTotalSpp: number;
+  readonly newTotalSpp: number;
+  readonly errors: ReadonlyArray<{ statId: string; error: string }>;
+}
+
+/**
+ * Relance computeSpp() sur tous les NflGameStat d'une saison. Pour
+ * chaque stat : reconstruit la NflPlayerStatLine via buildStatLineFromRow
+ * + bbPosition courant du joueur, appelle computeSpp, persiste
+ * computedSpp + sppBreakdown.
+ *
+ * Idempotent (meme rawStats → meme SPP). Util quand la formule
+ * `@bb/nfl-mapper computeSpp` evolue : un seul appel re-applique partout.
+ *
+ * NOTE : bloquant et long. Pour 2024 (~19k stats), compter ~30-60s.
+ * Pas de progress streaming en V1 — l'admin attend la reponse.
+ */
+export async function recomputeSeasonSpp(
+  seasonId: string,
+): Promise<RecomputeSeasonSppResult> {
+  const season = (await prisma.nflSeason.findUnique({
+    where: { id: seasonId },
+  })) as NflSeason | null;
+  if (!season) {
+    throw new NflFantasyAdminError(
+      "SEASON_NOT_FOUND",
+      `NflSeason ${seasonId} introuvable`,
+    );
+  }
+
+  type StatWithPlayer = NflGameStat & {
+    player: { bbPosition: string };
+  };
+
+  const stats = (await prisma.nflGameStat.findMany({
+    where: { game: { seasonId } },
+    include: { player: { select: { bbPosition: true } } },
+  })) as StatWithPlayer[];
+
+  let previous = 0;
+  let next = 0;
+  let updated = 0;
+  const errors: Array<{ statId: string; error: string }> = [];
+
+  for (const s of stats) {
+    try {
+      previous += s.computedSpp ?? 0;
+      const row = (s.rawStats ?? {}) as NflverseRow;
+      const statLine: NflPlayerStatLine = buildStatLineFromRow(
+        row,
+        s.player.bbPosition as NflPlayerStatLine["bbPosition"],
+      );
+      const breakdown = computeSpp(statLine);
+      await prisma.nflGameStat.update({
+        where: { id: s.id },
+        data: {
+          computedSpp: breakdown.totalSpp,
+          sppBreakdown: { events: breakdown.events, totalSpp: breakdown.totalSpp },
+        },
+      });
+      next += breakdown.totalSpp;
+      updated++;
+    } catch (e) {
+      errors.push({ statId: s.id, error: (e as Error).message });
+    }
+  }
+
+  return {
+    seasonId,
+    statsUpdated: updated,
+    previousTotalSpp: previous,
+    newTotalSpp: next,
+    errors,
+  };
+}
+
+export interface ReDeriveAllBbResult {
+  readonly playersUpdated: number;
+  readonly playersUnchanged: number;
+  readonly playersSkipped: number;
+  readonly errors: ReadonlyArray<{ playerId: string; error: string }>;
+}
+
+/**
+ * Re-derive bbPosition pour tous les NflPlayer ayant un teamCode (FA
+ * / retired sans teamCode sont skip). Idempotent. Util quand la table
+ * `@bb/nfl-mapper getBbPosition` evolue.
+ */
+export async function reDeriveAllPlayersBb(): Promise<ReDeriveAllBbResult> {
+  const players = (await prisma.nflPlayer.findMany({
+    where: { teamCode: { not: null } },
+    select: { id: true, teamCode: true, nflPosition: true, bbPosition: true },
+  })) as Array<
+    Pick<NflPlayer, "id" | "teamCode" | "nflPosition" | "bbPosition">
+  >;
+
+  const teamRaces = new Map<string, string>();
+  const teams = (await prisma.nflTeam.findMany({
+    select: { code: true, bbRace: true },
+  })) as Array<Pick<NflTeam, "code" | "bbRace">>;
+  for (const t of teams) teamRaces.set(t.code, t.bbRace);
+
+  let updated = 0;
+  let unchanged = 0;
+  let skipped = 0;
+  const errors: Array<{ playerId: string; error: string }> = [];
+
+  for (const p of players) {
+    try {
+      const race = teamRaces.get(p.teamCode!);
+      if (!race) {
+        skipped++;
+        continue;
+      }
+      const newBb = getBbPosition(p.nflPosition, race as BbRace);
+      if (newBb === p.bbPosition) {
+        unchanged++;
+        continue;
+      }
+      await prisma.nflPlayer.update({
+        where: { id: p.id },
+        data: { bbPosition: newBb },
+      });
+      updated++;
+    } catch (e) {
+      errors.push({ playerId: p.id, error: (e as Error).message });
+    }
+  }
+
+  return {
+    playersUpdated: updated,
+    playersUnchanged: unchanged,
+    playersSkipped: skipped,
+    errors,
   };
 }
