@@ -1269,6 +1269,243 @@ export async function recomputeSeasonSpp(
   };
 }
 
+// ────────────────────────────────────────────────────────────────────
+// Detail matchup individuel (Phase 3.J)
+// ────────────────────────────────────────────────────────────────────
+
+export interface AdminMatchupStarterRow {
+  readonly playerId: string;
+  readonly playerPseudonym: string;
+  readonly teamCode: string | null;
+  readonly nflPosition: string;
+  readonly bbPosition: string;
+  readonly isCaptain: boolean;
+  readonly isViceCaptain: boolean;
+  readonly rawSpp: number | null;
+  readonly finalSpp: number | null;
+  readonly sppBreakdown: unknown;
+}
+
+export interface AdminMatchupSideRow {
+  readonly entryId: string;
+  readonly userId: string;
+  readonly teamName: string;
+  readonly bbRace: string | null;
+  readonly score: number | null;
+  readonly lineupId: string | null;
+  readonly captainPlayerId: string | null;
+  readonly viceCaptainPlayerId: string | null;
+  readonly lineupLockedAt: string | null;
+  readonly lineupTotalSpp: number | null;
+  readonly starters: ReadonlyArray<AdminMatchupStarterRow>;
+}
+
+export interface AdminMatchupDetail {
+  readonly id: string;
+  readonly leagueId: string;
+  readonly leagueName: string;
+  readonly seasonId: string;
+  readonly weekId: string;
+  readonly home: AdminMatchupSideRow;
+  readonly away: AdminMatchupSideRow;
+  readonly winnerEntryId: string | null;
+  readonly winnerSide: "home" | "away" | "tie" | null;
+  readonly settledAt: string | null;
+  readonly createdAt: string;
+}
+
+/**
+ * Detail admin d'un matchup : metadata + les 2 entries + leur lineup
+ * + starters (avec finalSpp / rawSpp / breakdown) + infos joueurs.
+ *
+ * Retourne null si matchup introuvable.
+ */
+export async function getMatchupDetailForAdmin(
+  matchupId: string,
+): Promise<AdminMatchupDetail | null> {
+  type MatchupRow = {
+    id: string;
+    leagueId: string;
+    weekId: string;
+    homeEntryId: string;
+    awayEntryId: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    winnerId: string | null;
+    settledAt: Date | null;
+    createdAt: Date;
+  };
+
+  const matchup = (await prisma.nflFantasyMatchup.findUnique({
+    where: { id: matchupId },
+  })) as MatchupRow | null;
+  if (!matchup) return null;
+
+  const league = (await prisma.nflFantasyLeague.findUnique({
+    where: { id: matchup.leagueId },
+    select: { id: true, name: true, seasonId: true },
+  })) as { id: string; name: string; seasonId: string } | null;
+  if (!league) return null;
+
+  const entries = (await prisma.nflFantasyEntry.findMany({
+    where: { id: { in: [matchup.homeEntryId, matchup.awayEntryId] } },
+  })) as NflFantasyEntry[];
+  const entryById = new Map<string, NflFantasyEntry>();
+  for (const e of entries) entryById.set(e.id, e);
+
+  type LineupRow = {
+    id: string;
+    entryId: string;
+    weekId: string;
+    captainId: string | null;
+    viceCaptainId: string | null;
+    lockedAt: Date | null;
+    totalSpp: number | null;
+  };
+  const lineups = (await prisma.nflFantasyLineup.findMany({
+    where: {
+      entryId: { in: [matchup.homeEntryId, matchup.awayEntryId] },
+      weekId: matchup.weekId,
+    },
+  })) as LineupRow[];
+  const lineupByEntry = new Map<string, LineupRow>();
+  for (const l of lineups) lineupByEntry.set(l.entryId, l);
+
+  type StarterRow = {
+    lineupId: string;
+    playerId: string;
+    bbPosition: string;
+    isCaptain: boolean;
+    isViceCaptain: boolean;
+    rawSpp: number | null;
+    finalSpp: number | null;
+    sppBreakdown: unknown;
+  };
+  const lineupIds = lineups.map((l) => l.id);
+  const starters = (lineupIds.length === 0
+    ? []
+    : ((await prisma.nflFantasyLineupStarter.findMany({
+        where: { lineupId: { in: lineupIds } },
+      })) as StarterRow[])) as StarterRow[];
+
+  const playerIds = Array.from(new Set(starters.map((s) => s.playerId)));
+  type PlayerRow = Pick<
+    NflPlayer,
+    "id" | "pseudonym" | "teamCode" | "nflPosition"
+  >;
+  const players = (playerIds.length === 0
+    ? []
+    : ((await prisma.nflPlayer.findMany({
+        where: { id: { in: playerIds } },
+        select: {
+          id: true,
+          pseudonym: true,
+          teamCode: true,
+          nflPosition: true,
+        },
+      })) as PlayerRow[])) as PlayerRow[];
+  const playerById = new Map<string, PlayerRow>();
+  for (const p of players) playerById.set(p.id, p);
+
+  function buildSide(
+    entryId: string,
+    score: number | null,
+  ): AdminMatchupSideRow {
+    const entry = entryById.get(entryId);
+    const lineup = lineupByEntry.get(entryId) ?? null;
+    const lineupStarters: AdminMatchupStarterRow[] = (lineup
+      ? starters.filter((s) => s.lineupId === lineup.id)
+      : []
+    ).map((s) => {
+      const p = playerById.get(s.playerId);
+      return {
+        playerId: s.playerId,
+        playerPseudonym: p?.pseudonym ?? s.playerId,
+        teamCode: p?.teamCode ?? null,
+        nflPosition: p?.nflPosition ?? "",
+        bbPosition: s.bbPosition,
+        isCaptain: s.isCaptain,
+        isViceCaptain: s.isViceCaptain,
+        rawSpp: s.rawSpp,
+        finalSpp: s.finalSpp,
+        sppBreakdown: s.sppBreakdown,
+      };
+    });
+    lineupStarters.sort(
+      (a, b) => (b.finalSpp ?? -Infinity) - (a.finalSpp ?? -Infinity),
+    );
+    return {
+      entryId,
+      userId: entry?.userId ?? "",
+      teamName: entry?.teamName ?? entryId,
+      bbRace: entry?.bbRace ?? null,
+      score,
+      lineupId: lineup?.id ?? null,
+      captainPlayerId: lineup?.captainId ?? null,
+      viceCaptainPlayerId: lineup?.viceCaptainId ?? null,
+      lineupLockedAt: lineup?.lockedAt ? lineup.lockedAt.toISOString() : null,
+      lineupTotalSpp: lineup?.totalSpp ?? null,
+      starters: lineupStarters,
+    };
+  }
+
+  const home = buildSide(matchup.homeEntryId, matchup.homeScore);
+  const away = buildSide(matchup.awayEntryId, matchup.awayScore);
+
+  let winnerSide: "home" | "away" | "tie" | null = null;
+  if (matchup.settledAt) {
+    if (matchup.winnerId === matchup.homeEntryId) winnerSide = "home";
+    else if (matchup.winnerId === matchup.awayEntryId) winnerSide = "away";
+    else winnerSide = "tie";
+  }
+
+  return {
+    id: matchup.id,
+    leagueId: matchup.leagueId,
+    leagueName: league.name,
+    seasonId: league.seasonId,
+    weekId: matchup.weekId,
+    home,
+    away,
+    winnerEntryId: matchup.winnerId,
+    winnerSide,
+    settledAt: matchup.settledAt ? matchup.settledAt.toISOString() : null,
+    createdAt: matchup.createdAt.toISOString(),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Cleanup leagues replay (Phase 3.I)
+// ────────────────────────────────────────────────────────────────────
+
+export interface CleanupReplayLeaguesResult {
+  readonly deletedCount: number;
+  readonly leagueIds: ReadonlyArray<string>;
+}
+
+/**
+ * Supprime toutes les leagues replay (ownerId LIKE 'replay-%') et leur
+ * arborescence (entries / rosters / lineups / starters / matchups /
+ * rerolls / inducements) via cascade ON DELETE.
+ *
+ * Idempotent : 0 deletion si pas de replay leagues.
+ */
+export async function cleanupReplayLeagues(): Promise<CleanupReplayLeaguesResult> {
+  const leagues = (await prisma.nflFantasyLeague.findMany({
+    where: { ownerId: { startsWith: "replay-" } },
+    select: { id: true },
+  })) as Array<{ id: string }>;
+
+  if (leagues.length === 0) {
+    return { deletedCount: 0, leagueIds: [] };
+  }
+
+  const ids = leagues.map((l) => l.id);
+  await prisma.nflFantasyLeague.deleteMany({ where: { id: { in: ids } } });
+
+  return { deletedCount: ids.length, leagueIds: ids };
+}
+
 export interface ReDeriveAllBbResult {
   readonly playersUpdated: number;
   readonly playersUnchanged: number;

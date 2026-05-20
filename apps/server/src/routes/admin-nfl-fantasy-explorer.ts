@@ -23,7 +23,9 @@ import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { validate, validateQuery } from "../middleware/validate";
 import {
+  cleanupReplayLeagues,
   getLeagueDetailForAdmin,
+  getMatchupDetailForAdmin,
   getNflIngestRunForAdmin,
   getNflPlayerDetail,
   getNflTeamDetail,
@@ -100,6 +102,7 @@ const replayBodySchema = z.object({
   playersPerEntry: z.number().int().min(11).max(30).optional(),
   fromWeek: z.number().int().min(1).max(22).optional(),
   toWeek: z.number().int().min(1).max(22).optional(),
+  lineupMode: z.enum(["first11", "optimal"]).optional(),
   nameSuffix: z.string().min(1).max(64).optional(),
 });
 
@@ -423,6 +426,51 @@ router.post("/explore/players/re-derive-bb-bulk", async (_req, res) => {
 });
 
 // ────────────────────────────────────────────────────────────────────
+// Detail matchup individuel (Phase 3.J)
+// ────────────────────────────────────────────────────────────────────
+
+router.get("/explore/matchups/:id", async (req, res) => {
+  try {
+    const detail = await getMatchupDetailForAdmin(req.params.id);
+    if (!detail) {
+      res.status(404).json({
+        error: `NflFantasyMatchup ${req.params.id} introuvable`,
+        code: "MATCHUP_NOT_FOUND",
+      });
+      return;
+    }
+    res.json(detail);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] matchup detail failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Cleanup leagues replay (Phase 3.I)
+// ────────────────────────────────────────────────────────────────────
+
+router.post("/explore/leagues/replay-cleanup", async (_req, res) => {
+  try {
+    const out = await cleanupReplayLeagues();
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] replay-cleanup failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
 // Replay saison (Phase 3.G)
 // ────────────────────────────────────────────────────────────────────
 
@@ -438,6 +486,7 @@ router.post(
         playersPerEntry: body.playersPerEntry,
         fromWeek: body.fromWeek,
         toWeek: body.toWeek,
+        lineupMode: body.lineupMode,
         nameSuffix: body.nameSuffix,
       });
       res.json(out);

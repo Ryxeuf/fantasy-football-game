@@ -46,6 +46,17 @@ export class NflFantasyReplayError extends Error {
 // Replay
 // ────────────────────────────────────────────────────────────────────
 
+/**
+ * Mode de construction du lineup hebdomadaire :
+ *  - `first11` : prend les 11 premiers du roster (ordre acquisition).
+ *    Reproduit un comportement coach passif / fixe.
+ *  - `optimal` : pour chaque week, lit les NflGameStat.computedSpp
+ *    et selectionne les 11 plus hauts scorers du roster pour CETTE
+ *    week. Captain = top 1, vice = top 2. C'est du hindsight cheating
+ *    mais utile pour donner un upper-bound de score atteignable.
+ */
+export type ReplayLineupMode = "first11" | "optimal";
+
 export interface ReplaySeasonOpts {
   readonly seasonId: string;
   /** Default 8, range 2-16. */
@@ -56,6 +67,8 @@ export interface ReplaySeasonOpts {
   readonly fromWeek?: number;
   /** Default 18 (skip playoffs par default). */
   readonly toWeek?: number;
+  /** Default 'first11'. Voir {@link ReplayLineupMode}. */
+  readonly lineupMode?: ReplayLineupMode;
   /** Optionnel — owner Id custom (default: synthetique replay-{ts}). */
   readonly ownerId?: string;
   /** Optionnel — suffixe ajoute au nom de league. */
@@ -74,6 +87,7 @@ export interface ReplaySeasonResult {
   readonly teamCount: number;
   readonly fromWeek: number;
   readonly toWeek: number;
+  readonly lineupMode: ReplayLineupMode;
   readonly weeksSettled: number;
   readonly weeksFailed: number;
   readonly errors: ReadonlyArray<{ weekNumber: number; error: string }>;
@@ -107,6 +121,7 @@ export async function replaySeason(
   const playersPerEntry = opts.playersPerEntry ?? DEFAULT_PLAYERS_PER_ENTRY;
   const fromWeek = opts.fromWeek ?? 1;
   const toWeek = opts.toWeek ?? 18;
+  const lineupMode: ReplayLineupMode = opts.lineupMode ?? "first11";
 
   if (
     !Number.isInteger(teamCount) ||
@@ -186,9 +201,11 @@ export async function replaySeason(
   for (let w = fromWeek; w <= toWeek; w++) {
     const weekId = `${opts.seasonId}:W${w}`;
     try {
-      // 5.1. setLineup pour chaque entry (11 premiers du roster +
-      //      captain=0, vice=1). Si jouer pas de stats sur cette week,
-      //      il scoreront 0 — settle gere ce cas.
+      // 5.1. setLineup pour chaque entry. Le choix des starters depend
+      //      de lineupMode :
+      //   - 'first11' : 11 premiers du roster (ordre acquisition)
+      //   - 'optimal' : top 11 SPP earners du roster pour cette week
+      //                 (lit NflGameStat.computedSpp, hindsight)
       for (const entry of entries) {
         const roster = await getRosterWithPlayers(entry.id);
         if (roster.length < 11) {
@@ -196,7 +213,13 @@ export async function replaySeason(
             `Entry ${entry.id} a seulement ${roster.length} joueurs (besoin >= 11)`,
           );
         }
-        const starters = roster.slice(0, 11).map((r) => ({
+
+        const playerOrder =
+          lineupMode === "optimal"
+            ? await pickOptimalStarters(roster, weekId)
+            : roster.slice(0, 11);
+
+        const starters = playerOrder.map((r) => ({
           playerId: r.player!.id,
           bbPosition: r.player!.bbPosition,
         }));
@@ -239,8 +262,47 @@ export async function replaySeason(
     teamCount,
     fromWeek,
     toWeek,
+    lineupMode,
     weeksSettled,
     weeksFailed,
     errors,
   };
+}
+
+/**
+ * Pour le mode 'optimal' : trie le roster par SPP descending sur la
+ * week donnee (somme des computedSpp des stats de la week) et
+ * retourne les 11 premiers. Les joueurs qui n'ont pas joue (pas de
+ * stat) terminent en queue (SPP = 0). En cas d'egalite, conserve
+ * l'ordre roster (stable).
+ */
+async function pickOptimalStarters<R extends { player: { id: string } | null }>(
+  roster: ReadonlyArray<R>,
+  weekId: string,
+): Promise<R[]> {
+  const playerIds = roster
+    .map((r) => r.player?.id)
+    .filter((id): id is string => typeof id === "string");
+  if (playerIds.length === 0) return [];
+
+  type StatRow = { playerId: string; computedSpp: number | null };
+  const stats = (await prisma.nflGameStat.findMany({
+    where: { playerId: { in: playerIds }, game: { weekId } },
+    select: { playerId: true, computedSpp: true },
+  })) as StatRow[];
+
+  const sppByPlayer = new Map<string, number>();
+  for (const s of stats) {
+    const prev = sppByPlayer.get(s.playerId) ?? 0;
+    sppByPlayer.set(s.playerId, prev + (s.computedSpp ?? 0));
+  }
+
+  // Tri stable : indexe l'ordre roster pour tie-break.
+  const indexed = roster.map((r, i) => ({
+    r,
+    i,
+    spp: r.player ? (sppByPlayer.get(r.player.id) ?? 0) : 0,
+  }));
+  indexed.sort((a, b) => (b.spp - a.spp) || (a.i - b.i));
+  return indexed.slice(0, 11).map((x) => x.r);
 }
