@@ -32,6 +32,7 @@
 | 10 | [architecture.md](./10-architecture.md) | Intégration dans le monorepo (packages, services, Prisma) |
 | 11 | [ingestion-pipeline.md](./11-ingestion-pipeline.md) | Pipeline d'ingestion Phase 2.A (nflverse) + 2.B (ESPN gameday + rosters) |
 | 12 | [league-crud.md](./12-league-crud.md) | League CRUD Phase 2.C (créer / rejoindre / quitter / config) |
+| 13 | [roster-lineup.md](./13-roster-lineup.md) | Roster + Lineup hebdo Phase 2.D (starters + captain/vice + lock) |
 
 ## Statut des sections
 
@@ -73,6 +74,7 @@ Cette doc évolue en suivant les patterns du projet :
 | 2026-05-19 | v1.9 | Phase 2.A — `nfl-ingest.ts` (nflverse) livré : seedNflTeams + seedNflSeason + ingestNflverseWeek (idempotent, audit NflIngestRun). Validation E2E W10 2025 : 962 players + 962 stats + 14 games ingérés sur la DB Postgres réelle. 32 tests verts. CLI `nfl-ingest-cli.ts` pour invocation manuelle dans container. |
 | 2026-05-20 | v2.0 | Phase 2.B — `nfl-ingest-espn.ts` livré : ingestEspnGameday (scoreboard ET local) + ingestEspnRosters (32 teams) + mapping ESPN W1-5 ↔ nflverse W19-22 (skip Pro Bowl) + alias `WSH`↔`WAS`. Validation E2E W10 2025 : 14/14 games scored après merge nflverse+ESPN (Thu+Sun+Mon), 2 roster snapshots KC/MIA (91 athlètes chacun). 38 tests verts. Fix bonus : normalisation `LA`→`LAR` dans `parseRow` (legacy nflverse) qui causait un doublon `2025_10_LA_SF` / `2025_10_LAR_SF`. Doc dédiée [`11-ingestion-pipeline.md`](./11-ingestion-pipeline.md). Total Phase 2.A+2.B : 74 tests verts. |
 | 2026-05-20 | v2.1 | Phase 2.C — `nfl-fantasy-league.ts` livré : créer / rejoindre (id ou inviteCode) / quitter / configurer / supprimer une league. Defaults Q1/Q2 : size=10, snake, private. 2 modèles Prisma (`NflFantasyLeague` + `NflFantasyEntry`) avec FK cascade et indexes (`ownerId`, `status+type`, `seasonId`). Migration appliquée Voie B sur DB réelle. 37 tests verts + script E2E 10 étapes OK sur Postgres (create→join→list→update→pivot type→leave→delete). Erreur typée `NflFantasyLeagueError` avec 12 codes. Doc dédiée [`12-league-crud.md`](./12-league-crud.md). |
+| 2026-05-20 | v2.2 | Phase 2.D — `nfl-fantasy-roster.ts` + `nfl-fantasy-lineup.ts` livrés : roster CRUD (add/remove/get/isOn + maj totalTV en transaction), lineup hebdo avec captain ×1.5 et vice ×1.2 (Q3), validation pure `validateLineupStructure` (11 starters, captain/vice ∈ starters et !=, pas de doublon), `lockLineups(weekId)` bulk idempotent. 3 modèles Prisma (`NflFantasyRoster` + `NflFantasyLineup` + `NflFantasyLineupStarter`). 35 tests verts (11 roster + 24 lineup) + E2E 8 étapes OK sur Postgres. Doc dédiée [`13-roster-lineup.md`](./13-roster-lineup.md). |
 
 ## Source de cette session
 
