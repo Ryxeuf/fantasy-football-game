@@ -1,3 +1,16 @@
+## [1.132.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.131.0...v1.132.0) (2026-05-20)
+
+
+### ✨ Features
+
+* **prisma:** schema NflFantasyLeague + NflFantasyEntry (Phase 2.C) ([c269326](https://github.com/Ryxeuf/fantasy-football-game/commit/c26932689fc35bc185488bc2887e39a3a891e81b))
+* **server:** nfl-fantasy-league service Phase 2.C (CRUD + join/leave) ([c5b37e0](https://github.com/Ryxeuf/fantasy-football-game/commit/c5b37e0ff1998cd46d040d576f11f6ce0407199f))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 2.C league CRUD ([6370f43](https://github.com/Ryxeuf/fantasy-football-game/commit/6370f433f585941206d80358204aaaff48e83055))
+
 ## [1.131.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.130.0...v1.131.0) (2026-05-20)
 
 
