@@ -6,6 +6,7 @@ import { NflFantasyRosterError } from "../services/nfl-fantasy-roster";
 import { NflFantasyLineupError } from "../services/nfl-fantasy-lineup";
 import { NflFantasyScoringError } from "../services/nfl-fantasy-scoring";
 import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
+import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
 import {
   buildErrorResponse,
   sendNflError,
@@ -62,6 +63,9 @@ describe("statusForCode", () => {
       "INVALID_TYPE",
       "INVALID_SLOT",
       "ODD_ENTRIES",
+      "NO_ENTRIES",
+      "POOL_TOO_SMALL",
+      "INVALID_PLAYERS_PER_ENTRY",
     ];
     for (const c of validations) {
       expect(statusForCode(c)).toBe(422);
@@ -133,6 +137,23 @@ describe("buildErrorResponse", () => {
         new NflFantasyMercatoError("REROLL_ALREADY_USED", "x"),
       )?.status,
     ).toBe(409);
+  });
+
+  it("map NflFantasyDraftError -> 404/409/422", () => {
+    expect(
+      buildErrorResponse(new NflFantasyDraftError("LEAGUE_NOT_FOUND", "x"))?.status,
+    ).toBe(404);
+    expect(
+      buildErrorResponse(new NflFantasyDraftError("INVALID_STATUS", "x"))?.status,
+    ).toBe(409);
+    expect(
+      buildErrorResponse(new NflFantasyDraftError("POOL_TOO_SMALL", "x"))?.status,
+    ).toBe(422);
+    expect(
+      buildErrorResponse(
+        new NflFantasyDraftError("INVALID_PLAYERS_PER_ENTRY", "x"),
+      )?.status,
+    ).toBe(422);
   });
 
   it("retourne null pour une erreur non typee", () => {

@@ -13,6 +13,7 @@ import { NflFantasyRosterError } from "../services/nfl-fantasy-roster";
 import { NflFantasyLineupError } from "../services/nfl-fantasy-lineup";
 import { NflFantasyScoringError } from "../services/nfl-fantasy-scoring";
 import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
+import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
 
 export interface MappedError {
   readonly status: number;
@@ -70,6 +71,9 @@ export function statusForCode(code: string): number {
     case "INVALID_SLOT":
     case "ODD_ENTRIES":
     case "NO_MATCHUPS":
+    case "NO_ENTRIES":
+    case "POOL_TOO_SMALL":
+    case "INVALID_PLAYERS_PER_ENTRY":
       return 422;
 
     // 502 — dependance externe
@@ -94,7 +98,8 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyRosterError ||
     err instanceof NflFantasyLineupError ||
     err instanceof NflFantasyScoringError ||
-    err instanceof NflFantasyMercatoError
+    err instanceof NflFantasyMercatoError ||
+    err instanceof NflFantasyDraftError
   ) {
     return {
       status: statusForCode(err.code),

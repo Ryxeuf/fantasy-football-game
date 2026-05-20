@@ -22,6 +22,13 @@ import {
   settleNflFantasyWeek,
 } from "../services/nfl-fantasy-scoring";
 import { seedStartingRerolls } from "../services/nfl-fantasy-mercato";
+import {
+  autoFillRosters,
+  finalizeLeague,
+  getDraftStats,
+  MAX_PLAYERS_PER_ENTRY,
+  MIN_PLAYERS_PER_ENTRY,
+} from "../services/nfl-fantasy-draft";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -37,6 +44,21 @@ const settleSchema = matchupsSchema;
 const seedRerollsSchema = z.object({
   entryId: z.string().min(1),
   count: z.number().int().min(1).max(50).optional(),
+});
+
+const autoFillSchema = z.object({
+  leagueId: z.string().min(1),
+  playersPerEntry: z
+    .number()
+    .int()
+    .min(MIN_PLAYERS_PER_ENTRY)
+    .max(MAX_PLAYERS_PER_ENTRY)
+    .optional(),
+  seed: z.string().optional(),
+});
+
+const finalizeSchema = z.object({
+  leagueId: z.string().min(1),
 });
 
 router.post("/lock-lineups", validate(lockSchema), async (req, res) => {
@@ -98,5 +120,43 @@ router.post(
     }
   },
 );
+
+router.post("/auto-fill-rosters", validate(autoFillSchema), async (req, res) => {
+  try {
+    const body = req.body as z.infer<typeof autoFillSchema>;
+    const out = await autoFillRosters(body);
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[admin-nfl-fantasy] auto-fill-rosters failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+router.post("/finalize-league", validate(finalizeSchema), async (req, res) => {
+  try {
+    const body = req.body as z.infer<typeof finalizeSchema>;
+    const out = await finalizeLeague(body);
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[admin-nfl-fantasy] finalize-league failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+router.get("/draft-stats/:leagueId", async (req, res) => {
+  try {
+    const out = await getDraftStats(req.params.leagueId);
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[admin-nfl-fantasy] draft-stats failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
 
 export default router;
