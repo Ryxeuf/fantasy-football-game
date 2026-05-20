@@ -523,6 +523,129 @@ export async function ingestNflverseWeek(
   }
 }
 
+// ────────────────────────────────────────────────────────────────────
+// Backfill saison complete (Phase 3.E)
+// ────────────────────────────────────────────────────────────────────
+
+export interface BackfillSeasonOpts {
+  readonly seasonId: string;
+  /** Default 1. */
+  readonly fromWeek?: number;
+  /** Default 22 (inclut playoffs W19-22). */
+  readonly toWeek?: number;
+  /** Si true (default), skip les weeks deja ingerees avec succes. */
+  readonly skipExisting?: boolean;
+  /** Callback de progression appele apres chaque week (succes ou skip). */
+  readonly onProgress?: (
+    weekNumber: number,
+    status: "ingested" | "skipped" | "failed",
+    result?: IngestResult,
+    error?: string,
+  ) => void;
+  /** Override fetch (tests). */
+  readonly fetchCsv?: (year: number) => Promise<string>;
+}
+
+export interface BackfillSeasonResult {
+  readonly seasonId: string;
+  readonly weeksProcessed: number;
+  readonly weeksSkipped: number;
+  readonly weeksFailed: number;
+  readonly totalPlayers: number;
+  readonly totalStats: number;
+  readonly totalGames: number;
+  readonly errors: ReadonlyArray<{ weekNumber: number; error: string }>;
+}
+
+/**
+ * Backfill complet d'une saison nflverse :
+ *   1. seedNflSeason (idempotent)
+ *   2. fetch CSV une seule fois (cache en memoire pour les N weeks)
+ *   3. boucle fromWeek..toWeek en appelant ingestNflverseWeek avec
+ *      fetchCsv injecte pour reutiliser le CSV mis en cache.
+ *
+ * Idempotent : si `skipExisting=true` (default) et qu'une
+ * `NflIngestRun(source=nflverse, weekId=YYYY:Wn, status=success)`
+ * existe deja, la week est skippee.
+ *
+ * Utilise par `scripts/backfill-past-seasons.ts` pour seed les saisons
+ * 2023+2024 avant la mise en ligne. Tests unitaires dans
+ * `nfl-ingest.test.ts`. Phase 3.E.
+ */
+export async function backfillNflSeason(
+  opts: BackfillSeasonOpts,
+): Promise<BackfillSeasonResult> {
+  const from = opts.fromWeek ?? 1;
+  const to = opts.toWeek ?? 22;
+  const skipExisting = opts.skipExisting ?? true;
+
+  if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to > 22 || from > to) {
+    throw new NflIngestError(
+      "INVALID_WEEK_NUMBER",
+      `range invalide [${from}, ${to}], attendu 1..22 avec from <= to`,
+    );
+  }
+
+  await seedNflSeason(opts.seasonId);
+
+  const year = Number(opts.seasonId);
+  const csvText = await (opts.fetchCsv ?? fetchNflverseSeasonCsv)(year);
+  const cachedFetch = (): Promise<string> => Promise.resolve(csvText);
+
+  let weeksProcessed = 0;
+  let weeksSkipped = 0;
+  let weeksFailed = 0;
+  let totalPlayers = 0;
+  let totalStats = 0;
+  let totalGames = 0;
+  const errors: Array<{ weekNumber: number; error: string }> = [];
+
+  for (let w = from; w <= to; w++) {
+    const weekId = `${opts.seasonId}:W${w}`;
+
+    if (skipExisting) {
+      const prev = await prisma.nflIngestRun.findFirst({
+        where: { source: "nflverse", weekId, status: "success" },
+        orderBy: { startedAt: "desc" },
+      });
+      if (prev) {
+        weeksSkipped++;
+        opts.onProgress?.(w, "skipped");
+        continue;
+      }
+    }
+
+    try {
+      const res = await ingestNflverseWeek({
+        seasonId: opts.seasonId,
+        weekNumber: w,
+        fetchCsv: cachedFetch,
+      });
+      weeksProcessed++;
+      totalPlayers += res.playersUpdated;
+      totalStats += res.statsUpdated;
+      totalGames += res.gamesUpdated;
+      opts.onProgress?.(w, "ingested", res);
+    } catch (e) {
+      const msg = (e as Error).message;
+      weeksFailed++;
+      errors.push({ weekNumber: w, error: msg });
+      opts.onProgress?.(w, "failed", undefined, msg);
+    }
+  }
+
+  return {
+    seasonId: opts.seasonId,
+    weeksProcessed,
+    weeksSkipped,
+    weeksFailed,
+    totalPlayers,
+    totalStats,
+    totalGames,
+    errors,
+  };
+}
+
 /**
  * Heuristique home/away depuis une row nflverse. La col `home_team` n'est
  * pas dans stats_player_week (qui est player-centric). Approche : on

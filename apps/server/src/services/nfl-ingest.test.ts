@@ -19,13 +19,14 @@ vi.mock("../prisma", () => ({
     nflGame: { upsert: vi.fn() },
     nflPlayer: { upsert: vi.fn() },
     nflGameStat: { upsert: vi.fn() },
-    nflIngestRun: { create: vi.fn(), update: vi.fn() },
+    nflIngestRun: { create: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
   },
 }));
 
 import { prisma } from "../prisma";
 import {
   NflIngestError,
+  backfillNflSeason,
   buildNflverseUrl,
   filterRowsForWeek,
   ingestNflverseWeek,
@@ -474,5 +475,161 @@ describe("NflIngestError", () => {
     for (const code of codes) {
       expect(new NflIngestError(code, "msg").code).toBe(code);
     }
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// backfillNflSeason (Phase 3.E)
+// ────────────────────────────────────────────────────────────────────
+
+describe("backfillNflSeason", () => {
+  function setupSeed(): void {
+    vi.mocked(prisma.nflSeason.upsert).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflWeek.upsert).mockResolvedValue({} as never);
+  }
+
+  it("throw INVALID_WEEK_NUMBER pour range invalide", async () => {
+    await expect(
+      backfillNflSeason({ seasonId: "2024", fromWeek: 5, toWeek: 2 }),
+    ).rejects.toMatchObject({ code: "INVALID_WEEK_NUMBER" });
+    await expect(
+      backfillNflSeason({ seasonId: "2024", fromWeek: 0 }),
+    ).rejects.toMatchObject({ code: "INVALID_WEEK_NUMBER" });
+    await expect(
+      backfillNflSeason({ seasonId: "2024", toWeek: 25 }),
+    ).rejects.toMatchObject({ code: "INVALID_WEEK_NUMBER" });
+  });
+
+  it("skip les weeks deja success quand skipExisting=true (default)", async () => {
+    setupSeed();
+    const fetchCsv = vi.fn().mockResolvedValue("");
+    vi.mocked(prisma.nflIngestRun.findFirst)
+      .mockResolvedValueOnce({ id: "prev-1" } as never)
+      .mockResolvedValueOnce({ id: "prev-2" } as never)
+      .mockResolvedValueOnce({ id: "prev-3" } as never);
+
+    const out = await backfillNflSeason({
+      seasonId: "2024",
+      fromWeek: 1,
+      toWeek: 3,
+      fetchCsv,
+    });
+
+    expect(out.weeksProcessed).toBe(0);
+    expect(out.weeksSkipped).toBe(3);
+    expect(out.weeksFailed).toBe(0);
+    // fetch n'est appele qu'une fois (avant la boucle)
+    expect(fetchCsv).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-ingest si skipExisting=false meme avec NflIngestRun success", async () => {
+    setupSeed();
+    const csv =
+      "player_id,player_name,team,opponent_team,position,week,season_type,game_id\n" +
+      "00-A,Goff,DET,KC,QB,1,REG,2024_01_DET_KC\n";
+    const fetchCsv = vi.fn().mockResolvedValue(csv);
+    vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
+      id: "run-1",
+    } as never);
+    vi.mocked(prisma.nflIngestRun.update).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
+      id: "2024:W1",
+      startDate: new Date("2024-09-05"),
+    } as never);
+    vi.mocked(prisma.nflGame.upsert).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflPlayer.upsert).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflGameStat.upsert).mockResolvedValue({} as never);
+
+    const out = await backfillNflSeason({
+      seasonId: "2024",
+      fromWeek: 1,
+      toWeek: 1,
+      skipExisting: false,
+      fetchCsv,
+    });
+
+    expect(out.weeksProcessed).toBe(1);
+    expect(out.weeksSkipped).toBe(0);
+    expect(prisma.nflIngestRun.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("reutilise le CSV cache pour toutes les weeks (1 seul fetch)", async () => {
+    setupSeed();
+    const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
+      id: "run-x",
+    } as never);
+    vi.mocked(prisma.nflIngestRun.update).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
+      id: "x",
+      startDate: new Date(),
+    } as never);
+
+    await backfillNflSeason({
+      seasonId: "2024",
+      fromWeek: 1,
+      toWeek: 5,
+      fetchCsv,
+    });
+
+    expect(fetchCsv).toHaveBeenCalledTimes(1);
+  });
+
+  it("collecte les erreurs par week sans arreter la boucle", async () => {
+    setupSeed();
+    const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
+      id: "run",
+    } as never);
+    vi.mocked(prisma.nflIngestRun.update).mockResolvedValue({} as never);
+    // W2 → throw WEEK_NOT_FOUND
+    vi.mocked(prisma.nflWeek.findUnique)
+      .mockResolvedValueOnce({ id: "2024:W1", startDate: new Date() } as never)
+      .mockResolvedValueOnce(null) // W2
+      .mockResolvedValueOnce({ id: "2024:W3", startDate: new Date() } as never);
+
+    const out = await backfillNflSeason({
+      seasonId: "2024",
+      fromWeek: 1,
+      toWeek: 3,
+      fetchCsv,
+    });
+
+    expect(out.weeksProcessed).toBe(2);
+    expect(out.weeksFailed).toBe(1);
+    expect(out.errors).toHaveLength(1);
+    expect(out.errors[0]?.weekNumber).toBe(2);
+  });
+
+  it("appelle onProgress pour chaque week (ingested/skipped/failed)", async () => {
+    setupSeed();
+    const fetchCsv = vi.fn().mockResolvedValue("player_id\n");
+    vi.mocked(prisma.nflIngestRun.findFirst)
+      .mockResolvedValueOnce({ id: "prev" } as never) // W1 skipped
+      .mockResolvedValueOnce(null); // W2 ingested
+    vi.mocked(prisma.nflIngestRun.create).mockResolvedValue({
+      id: "run",
+    } as never);
+    vi.mocked(prisma.nflIngestRun.update).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
+      id: "x",
+      startDate: new Date(),
+    } as never);
+
+    const events: Array<{ w: number; status: string }> = [];
+    await backfillNflSeason({
+      seasonId: "2024",
+      fromWeek: 1,
+      toWeek: 2,
+      fetchCsv,
+      onProgress: (w, status) => events.push({ w, status }),
+    });
+
+    expect(events).toEqual([
+      { w: 1, status: "skipped" },
+      { w: 2, status: "ingested" },
+    ]);
   });
 });
