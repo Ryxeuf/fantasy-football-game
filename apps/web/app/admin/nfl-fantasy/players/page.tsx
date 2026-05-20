@@ -43,6 +43,84 @@ const BB_STATUSES: ReadonlyArray<string> = [
   "suspended",
 ];
 
+interface ReDeriveResult {
+  readonly playersUpdated: number;
+  readonly playersUnchanged: number;
+  readonly playersSkipped: number;
+  readonly errors: ReadonlyArray<{ playerId: string; error: string }>;
+}
+
+function ReDeriveBbBulkAction(): JSX.Element {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<
+    | { ok: true; data: ReDeriveResult }
+    | { ok: false; message: string }
+    | null
+  >(null);
+
+  async function run(): Promise<void> {
+    if (
+      !window.confirm(
+        "Re-derive bbPosition pour tous les joueurs avec teamCode ? Idempotent, mais peut update plusieurs joueurs si le mapping race-dependent a changé.",
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setResult(null);
+    try {
+      const out = await apiRequest<ReDeriveResult>(
+        "/admin/nfl-fantasy/explore/players/re-derive-bb-bulk",
+        { method: "POST" },
+      );
+      setResult({ ok: true, data: out });
+    } catch (e) {
+      const msg =
+        e instanceof ApiClientError
+          ? `${e.message}${e.status ? ` (HTTP ${e.status})` : ""}`
+          : e instanceof Error
+            ? e.message
+            : "Erreur";
+      setResult({ ok: false, message: msg });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-orange-200 bg-orange-50/30 p-3">
+      <div className="flex-1">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-nuffle-bronze">
+          🧬 Re-derive BB en masse
+        </h3>
+        <p className="mt-0.5 text-xs text-gray-600">
+          Recalcule <code>bbPosition</code> via{" "}
+          <code>getBbPosition(nflPosition, teamRace)</code> pour TOUS les
+          joueurs avec un teamCode. Idempotent.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        data-testid="nfl-fantasy-players-re-derive-bb-bulk"
+        className="rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-white hover:bg-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {busy ? "En cours…" : "Lancer"}
+      </button>
+      {result?.ok && (
+        <span className="text-xs text-emerald-700">
+          ✓ {result.data.playersUpdated} updated · {result.data.playersUnchanged}{" "}
+          unchanged · {result.data.playersSkipped} skipped
+        </span>
+      )}
+      {result && !result.ok && (
+        <span className="text-xs text-red-700">{result.message}</span>
+      )}
+    </div>
+  );
+}
+
 function statusBadge(status: string): JSX.Element {
   const color =
     status === "active"
@@ -154,6 +232,8 @@ export default function AdminNflFantasyPlayersPage(): JSX.Element {
           {selectedSeasonId ? ` · saison ${selectedSeasonId}` : ""}
         </div>
       </header>
+
+      <ReDeriveBbBulkAction />
 
       <div className="flex flex-wrap gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm">
         <input

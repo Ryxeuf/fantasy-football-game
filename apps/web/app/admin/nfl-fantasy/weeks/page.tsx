@@ -3,6 +3,8 @@
 /**
  * Page admin Phase 3.D — calendrier 22 weeks de la saison selectionnee
  * avec compteurs games + statut ingestion.
+ *
+ * Phase 3.F+G : ajout d'actions bulk saison (recompute SPP + replay).
  */
 
 import Link from "next/link";
@@ -10,6 +12,7 @@ import { useEffect, useState } from "react";
 
 import { ApiClientError, apiRequest } from "../../../lib/api-client";
 import { useNflFantasySeason } from "../_components/SeasonContext";
+import SeasonActions from "../_components/SeasonActions";
 
 interface WeekRow {
   readonly id: string;
@@ -113,6 +116,8 @@ export default function AdminNflFantasyWeeksPage(): JSX.Element {
           Sélectionne une saison dans le picker en haut à droite.
         </div>
       )}
+
+      {selectedSeasonId && <SeasonActions seasonId={selectedSeasonId} />}
 
       {selectedSeasonId && (
         <div
