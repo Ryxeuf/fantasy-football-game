@@ -18,7 +18,7 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
-import { validate } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   createLeague,
   deleteLeague,
@@ -30,6 +30,10 @@ import {
   LEAGUE_SIZE_MAX,
   LEAGUE_SIZE_MIN,
 } from "../services/nfl-fantasy-league";
+import {
+  getLeagueStandings,
+  listMatchupsForWeek,
+} from "../services/nfl-fantasy-scoring";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -165,6 +169,46 @@ router.post("/:id/leave", async (req, res) => {
   } catch (err) {
     if (!sendNflError(res, err)) {
       serverLog.error("[nfl-fantasy-leagues] leave failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────
+// Matchups + standings (read-only views)
+// ──────────────────────────────────────────────────────────────────
+
+const matchupsQuerySchema = z.object({
+  weekId: z.string().min(1),
+});
+
+router.get(
+  "/:id/matchups",
+  validateQuery(matchupsQuerySchema),
+  async (req, res) => {
+    try {
+      const { weekId } = req.query as unknown as z.infer<typeof matchupsQuerySchema>;
+      const matchups = await listMatchupsForWeek({
+        leagueId: req.params.id,
+        weekId,
+      });
+      res.json({ matchups });
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-leagues] matchups failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+router.get("/:id/standings", async (req, res) => {
+  try {
+    const standings = await getLeagueStandings(req.params.id);
+    res.json({ standings });
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] standings failed", err);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }
