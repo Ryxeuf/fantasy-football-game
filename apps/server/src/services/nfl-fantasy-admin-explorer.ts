@@ -21,10 +21,15 @@
  */
 
 import type {
+  NflFantasyEntry,
+  NflFantasyLeague,
+  NflGame,
   NflGameStat,
+  NflIngestRun,
   NflPlayer,
   NflSeason,
   NflTeam,
+  NflWeek,
   Prisma,
 } from "@prisma/client";
 import {
@@ -726,5 +731,456 @@ export async function reDerivePlayerBb(
     previousBbPosition: player.bbPosition,
     newBbPosition: newBb,
     changed,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Ingest runs (Phase 3.D — audit log)
+// ────────────────────────────────────────────────────────────────────
+
+export interface AdminIngestRunRow {
+  readonly id: string;
+  readonly source: string;
+  readonly weekId: string | null;
+  readonly startedAt: string;
+  readonly completedAt: string | null;
+  readonly status: string;
+  readonly durationMs: number | null;
+  readonly result: unknown;
+}
+
+export interface ListIngestRunsOpts {
+  readonly source?: string;
+  readonly status?: string;
+  readonly weekId?: string;
+  readonly limit?: number;
+}
+
+const MAX_INGEST_RUNS_LIMIT = 500;
+const DEFAULT_INGEST_RUNS_LIMIT = 100;
+
+/**
+ * Liste les derniers `NflIngestRun` tries DESC par startedAt. Filtres
+ * optionnels par source (nflverse/espn) et/ou status (success/partial/
+ * failed/in_progress).
+ */
+export async function listNflIngestRunsForAdmin(
+  opts: ListIngestRunsOpts,
+): Promise<AdminIngestRunRow[]> {
+  const limit = Math.min(
+    MAX_INGEST_RUNS_LIMIT,
+    Math.max(1, opts.limit ?? DEFAULT_INGEST_RUNS_LIMIT),
+  );
+
+  const where: Prisma.NflIngestRunWhereInput = {
+    ...(opts.source ? { source: opts.source } : {}),
+    ...(opts.status ? { status: opts.status } : {}),
+    ...(opts.weekId ? { weekId: opts.weekId } : {}),
+  };
+
+  const runs = (await prisma.nflIngestRun.findMany({
+    where,
+    orderBy: { startedAt: "desc" },
+    take: limit,
+  })) as NflIngestRun[];
+
+  return runs.map((r) => ({
+    id: r.id,
+    source: r.source,
+    weekId: r.weekId,
+    startedAt: r.startedAt.toISOString(),
+    completedAt: r.completedAt ? r.completedAt.toISOString() : null,
+    status: r.status,
+    durationMs: r.completedAt
+      ? r.completedAt.getTime() - r.startedAt.getTime()
+      : null,
+    result: r.result,
+  }));
+}
+
+/** Detail d'une NflIngestRun. Retourne null si introuvable. */
+export async function getNflIngestRunForAdmin(
+  id: string,
+): Promise<AdminIngestRunRow | null> {
+  const r = (await prisma.nflIngestRun.findUnique({
+    where: { id },
+  })) as NflIngestRun | null;
+  if (!r) return null;
+  return {
+    id: r.id,
+    source: r.source,
+    weekId: r.weekId,
+    startedAt: r.startedAt.toISOString(),
+    completedAt: r.completedAt ? r.completedAt.toISOString() : null,
+    status: r.status,
+    durationMs: r.completedAt
+      ? r.completedAt.getTime() - r.startedAt.getTime()
+      : null,
+    result: r.result,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Weeks + games (Phase 3.D — calendrier)
+// ────────────────────────────────────────────────────────────────────
+
+export interface AdminWeekRow {
+  readonly id: string;
+  readonly seasonId: string;
+  readonly weekNumber: number;
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly isPlayoffs: boolean;
+  readonly gamesCount: number;
+  readonly gamesFinal: number;
+  readonly ingestStatus: string | null;
+}
+
+/**
+ * Liste les 22 weeks d'une saison avec compteurs games + statut de la
+ * derniere ingestion nflverse (success/partial/failed/in_progress/null).
+ */
+export async function listWeeksForSeason(
+  seasonId: string,
+): Promise<AdminWeekRow[]> {
+  const weeks = (await prisma.nflWeek.findMany({
+    where: { seasonId },
+    orderBy: { weekNumber: "asc" },
+  })) as NflWeek[];
+  if (weeks.length === 0) return [];
+
+  const weekIds = weeks.map((w) => w.id);
+
+  const [allGames, finalGames, runs] = (await Promise.all([
+    prisma.nflGame.groupBy({
+      by: ["weekId"],
+      _count: { _all: true },
+      where: { weekId: { in: weekIds } },
+    }),
+    prisma.nflGame.groupBy({
+      by: ["weekId"],
+      _count: { _all: true },
+      where: { weekId: { in: weekIds }, status: "final" },
+    }),
+    prisma.nflIngestRun.findMany({
+      where: {
+        source: "nflverse",
+        weekId: { in: weekIds },
+      },
+      orderBy: { startedAt: "desc" },
+    }),
+  ])) as [
+    Array<{ weekId: string; _count: { _all: number } }>,
+    Array<{ weekId: string; _count: { _all: number } }>,
+    NflIngestRun[],
+  ];
+
+  const allMap = new Map(allGames.map((g) => [g.weekId, g._count._all]));
+  const finalMap = new Map(finalGames.map((g) => [g.weekId, g._count._all]));
+  const lastRunByWeek = new Map<string, NflIngestRun>();
+  for (const r of runs) {
+    if (r.weekId && !lastRunByWeek.has(r.weekId)) {
+      lastRunByWeek.set(r.weekId, r);
+    }
+  }
+
+  return weeks.map((w) => ({
+    id: w.id,
+    seasonId: w.seasonId,
+    weekNumber: w.weekNumber,
+    startDate: w.startDate.toISOString(),
+    endDate: w.endDate.toISOString(),
+    isPlayoffs: w.isPlayoffs,
+    gamesCount: allMap.get(w.id) ?? 0,
+    gamesFinal: finalMap.get(w.id) ?? 0,
+    ingestStatus: lastRunByWeek.get(w.id)?.status ?? null,
+  }));
+}
+
+export interface AdminWeekGameRow {
+  readonly id: string;
+  readonly homeTeam: string;
+  readonly awayTeam: string;
+  readonly homeScore: number | null;
+  readonly awayScore: number | null;
+  readonly status: string;
+  readonly kickoffAt: string;
+  readonly statsCount: number;
+}
+
+export interface AdminWeekDetail extends AdminWeekRow {
+  readonly games: ReadonlyArray<AdminWeekGameRow>;
+}
+
+/**
+ * Detail d'une week : metadata + games + compteur de stat lines par game.
+ */
+export async function getWeekDetail(
+  weekId: string,
+): Promise<AdminWeekDetail | null> {
+  const week = (await prisma.nflWeek.findUnique({
+    where: { id: weekId },
+  })) as NflWeek | null;
+  if (!week) return null;
+
+  const games = (await prisma.nflGame.findMany({
+    where: { weekId },
+    orderBy: { kickoffAt: "asc" },
+  })) as NflGame[];
+
+  const gameIds = games.map((g) => g.id);
+  const statCounts =
+    gameIds.length > 0
+      ? ((await prisma.nflGameStat.groupBy({
+          by: ["gameId"],
+          _count: { _all: true },
+          where: { gameId: { in: gameIds } },
+        })) as Array<{ gameId: string; _count: { _all: number } }>)
+      : [];
+  const statsMap = new Map(statCounts.map((s) => [s.gameId, s._count._all]));
+
+  const lastRun = (await prisma.nflIngestRun.findFirst({
+    where: { source: "nflverse", weekId },
+    orderBy: { startedAt: "desc" },
+  })) as NflIngestRun | null;
+
+  return {
+    id: week.id,
+    seasonId: week.seasonId,
+    weekNumber: week.weekNumber,
+    startDate: week.startDate.toISOString(),
+    endDate: week.endDate.toISOString(),
+    isPlayoffs: week.isPlayoffs,
+    gamesCount: games.length,
+    gamesFinal: games.filter((g) => g.status === "final").length,
+    ingestStatus: lastRun?.status ?? null,
+    games: games.map((g) => ({
+      id: g.id,
+      homeTeam: g.homeTeam,
+      awayTeam: g.awayTeam,
+      homeScore: g.homeScore,
+      awayScore: g.awayScore,
+      status: g.status,
+      kickoffAt: g.kickoffAt.toISOString(),
+      statsCount: statsMap.get(g.id) ?? 0,
+    })),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Leagues globales (Phase 3.D — admin overview)
+// ────────────────────────────────────────────────────────────────────
+
+export interface AdminLeagueRow {
+  readonly id: string;
+  readonly name: string;
+  readonly ownerId: string;
+  readonly seasonId: string;
+  readonly size: number;
+  readonly type: string;
+  readonly draftMode: string;
+  readonly status: string;
+  readonly inviteCode: string | null;
+  readonly entriesCount: number;
+  readonly matchupsCount: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface ListLeaguesAdminOpts {
+  readonly status?: string;
+  readonly type?: string;
+  readonly seasonId?: string;
+  readonly search?: string;
+  readonly page?: number;
+  readonly pageSize?: number;
+}
+
+export interface ListLeaguesAdminResult {
+  readonly leagues: ReadonlyArray<AdminLeagueRow>;
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+}
+
+const DEFAULT_LEAGUES_PAGE_SIZE = 50;
+const MAX_LEAGUES_PAGE_SIZE = 200;
+
+/**
+ * Liste toutes les NflFantasyLeague (admin only). Pagine + filtree.
+ * Trie DESC par createdAt.
+ */
+export async function listAllLeaguesForAdmin(
+  opts: ListLeaguesAdminOpts,
+): Promise<ListLeaguesAdminResult> {
+  const page = Math.max(1, opts.page ?? 1);
+  const pageSize = Math.min(
+    MAX_LEAGUES_PAGE_SIZE,
+    Math.max(1, opts.pageSize ?? DEFAULT_LEAGUES_PAGE_SIZE),
+  );
+
+  const where: Prisma.NflFantasyLeagueWhereInput = {
+    ...(opts.status ? { status: opts.status } : {}),
+    ...(opts.type ? { type: opts.type } : {}),
+    ...(opts.seasonId ? { seasonId: opts.seasonId } : {}),
+    ...(opts.search
+      ? {
+          OR: [
+            { name: { contains: opts.search, mode: "insensitive" } },
+            { id: { contains: opts.search } },
+            { ownerId: { contains: opts.search } },
+            { inviteCode: { contains: opts.search.toUpperCase() } },
+          ],
+        }
+      : {}),
+  };
+
+  const [total, leagues] = await Promise.all([
+    prisma.nflFantasyLeague.count({ where }) as Promise<number>,
+    prisma.nflFantasyLeague.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }) as Promise<NflFantasyLeague[]>,
+  ]);
+
+  if (leagues.length === 0) {
+    return { total, page, pageSize, leagues: [] };
+  }
+
+  const leagueIds = leagues.map((l) => l.id);
+  const [entries, matchups] = (await Promise.all([
+    prisma.nflFantasyEntry.groupBy({
+      by: ["leagueId"],
+      _count: { _all: true },
+      where: { leagueId: { in: leagueIds } },
+    }),
+    prisma.nflFantasyMatchup.groupBy({
+      by: ["leagueId"],
+      _count: { _all: true },
+      where: { leagueId: { in: leagueIds } },
+    }),
+  ])) as [
+    Array<{ leagueId: string; _count: { _all: number } }>,
+    Array<{ leagueId: string; _count: { _all: number } }>,
+  ];
+
+  const entriesMap = new Map(entries.map((e) => [e.leagueId, e._count._all]));
+  const matchupsMap = new Map(
+    matchups.map((m) => [m.leagueId, m._count._all]),
+  );
+
+  return {
+    total,
+    page,
+    pageSize,
+    leagues: leagues.map((l) => ({
+      id: l.id,
+      name: l.name,
+      ownerId: l.ownerId,
+      seasonId: l.seasonId,
+      size: l.size,
+      type: l.type,
+      draftMode: l.draftMode,
+      status: l.status,
+      inviteCode: l.inviteCode,
+      entriesCount: entriesMap.get(l.id) ?? 0,
+      matchupsCount: matchupsMap.get(l.id) ?? 0,
+      createdAt: l.createdAt.toISOString(),
+      updatedAt: l.updatedAt.toISOString(),
+    })),
+  };
+}
+
+export interface AdminLeagueEntryRow {
+  readonly id: string;
+  readonly userId: string;
+  readonly teamName: string;
+  readonly bbRace: string | null;
+  readonly totalTV: number;
+  readonly joinedAt: string;
+}
+
+export interface AdminLeagueMatchupRow {
+  readonly id: string;
+  readonly weekId: string;
+  readonly homeEntryId: string;
+  readonly awayEntryId: string;
+  readonly homeScore: number | null;
+  readonly awayScore: number | null;
+  readonly winnerId: string | null;
+  readonly settledAt: string | null;
+}
+
+export interface AdminLeagueDetail extends AdminLeagueRow {
+  readonly entries: ReadonlyArray<AdminLeagueEntryRow>;
+  readonly matchups: ReadonlyArray<AdminLeagueMatchupRow>;
+}
+
+/** Detail admin d'une league : metadata + entries + matchups. */
+export async function getLeagueDetailForAdmin(
+  leagueId: string,
+): Promise<AdminLeagueDetail | null> {
+  const league = (await prisma.nflFantasyLeague.findUnique({
+    where: { id: leagueId },
+  })) as NflFantasyLeague | null;
+  if (!league) return null;
+
+  const [entries, matchups] = (await Promise.all([
+    prisma.nflFantasyEntry.findMany({
+      where: { leagueId },
+      orderBy: { joinedAt: "asc" },
+    }),
+    prisma.nflFantasyMatchup.findMany({
+      where: { leagueId },
+      orderBy: [{ weekId: "asc" }, { homeEntryId: "asc" }],
+    }),
+  ])) as [
+    NflFantasyEntry[],
+    Array<{
+      id: string;
+      weekId: string;
+      homeEntryId: string;
+      awayEntryId: string;
+      homeScore: number | null;
+      awayScore: number | null;
+      winnerId: string | null;
+      settledAt: Date | null;
+    }>,
+  ];
+
+  return {
+    id: league.id,
+    name: league.name,
+    ownerId: league.ownerId,
+    seasonId: league.seasonId,
+    size: league.size,
+    type: league.type,
+    draftMode: league.draftMode,
+    status: league.status,
+    inviteCode: league.inviteCode,
+    entriesCount: entries.length,
+    matchupsCount: matchups.length,
+    createdAt: league.createdAt.toISOString(),
+    updatedAt: league.updatedAt.toISOString(),
+    entries: entries.map((e) => ({
+      id: e.id,
+      userId: e.userId,
+      teamName: e.teamName,
+      bbRace: e.bbRace,
+      totalTV: e.totalTV,
+      joinedAt: e.joinedAt.toISOString(),
+    })),
+    matchups: matchups.map((m) => ({
+      id: m.id,
+      weekId: m.weekId,
+      homeEntryId: m.homeEntryId,
+      awayEntryId: m.awayEntryId,
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      winnerId: m.winnerId,
+      settledAt: m.settledAt ? m.settledAt.toISOString() : null,
+    })),
   };
 }
