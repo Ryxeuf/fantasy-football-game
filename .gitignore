@@ -109,3 +109,8 @@ screenshots/
 snapshots/
 
 backups/
+
+# Cache pnpm local (content-addressable store, ~1.4 GB).
+# Cree quand pnpm install s'execute sans store-dir explicite, surtout
+# depuis le container nufflearena_server via le bind mount `.:/app`.
+.pnpm-store/
