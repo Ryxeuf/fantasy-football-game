@@ -2482,7 +2482,8 @@ model NflFantasyLeague {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  entries NflFantasyEntry[]
+  entries  NflFantasyEntry[]
+  matchups NflFantasyMatchup[]
 
   @@index([ownerId])
   @@index([status, type])
@@ -2554,6 +2555,32 @@ model NflFantasyLineup {
 
   @@unique([entryId, weekId])
   @@index([weekId])
+}
+
+// ─── Matchups + settlement (Phase 2.E) ──────────────────────────
+
+model NflFantasyMatchup {
+  id          String   @id @default(cuid())
+  leagueId    String
+  /// FK logique NflWeek.id ("{year}:W{n}").
+  weekId      String
+  /// NflFantasyEntry.id de l'equipe home (premiere position pairing).
+  homeEntryId String
+  /// NflFantasyEntry.id de l'equipe away.
+  awayEntryId String
+  /// Set par settleNflFantasyWeek (sum des finalSpp des starters).
+  homeScore   Int?
+  awayScore   Int?
+  /// NflFantasyEntry.id du winner ; null = tie ou non settle.
+  winnerId    String?
+  settledAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, weekId, homeEntryId, awayEntryId])
+  @@index([leagueId, weekId])
+  @@index([weekId, settledAt])
 }
 
 model NflFantasyLineupStarter {
