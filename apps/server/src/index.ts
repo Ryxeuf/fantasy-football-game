@@ -36,6 +36,10 @@ import publicRostersRoutes from "./routes/public-rosters";
 import publicPositionsRoutes from "./routes/public-positions";
 import publicBlogRoutes from "./routes/public-blog";
 import adminBlogRoutes from "./routes/admin-blog";
+import adminNflIngestRoutes from "./routes/admin-nfl-ingest";
+import adminNflFantasyRoutes from "./routes/admin-nfl-fantasy";
+import nflFantasyLeaguesRoutes from "./routes/nfl-fantasy-leagues";
+import nflFantasyEntriesRoutes from "./routes/nfl-fantasy-entries";
 import cupRoutes from "./routes/cup";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
@@ -294,6 +298,16 @@ app.use("/pro-league/gazette", gazetteCommentsUserRouter);
 app.use("/admin/gazette", gazetteCommentsAdminRouter);
 // Console admin : auth + role admin appliques dans le router.
 app.use("/admin/feedback", feedbackAdminRouter);
+
+// =============================================================================
+// NFL Fantasy module (Phase 2.G) — routes admin + user-facing.
+// =============================================================================
+// Admin : ingestion nflverse/ESPN + mass actions (lock, settle).
+app.use("/admin/nfl/ingest", adminNflIngestRoutes);
+app.use("/admin/nfl-fantasy", adminNflFantasyRoutes);
+// User-facing : CRUD leagues + entries (roster/lineup/mercato).
+app.use("/api/nfl-fantasy/leagues", nflFantasyLeaguesRoutes);
+app.use("/api/nfl-fantasy/entries", nflFantasyEntriesRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {
