@@ -259,6 +259,21 @@ export default function LeagueDetailPage() {
         </ul>
       </section>
 
+      {isMember && league.status === "in_progress" && (
+        <section>
+          <h2 className="text-lg font-semibold text-slate-200">Ma semaine</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/nfl-fantasy/leagues/${league.id}/lineup`}
+              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
+              data-testid="nfl-fantasy-lineup-cta"
+            >
+              🐀 Régler mon lineup
+            </Link>
+          </div>
+        </section>
+      )}
+
       {(isOwner || isMember) && (
         <section>
           <h2 className="text-lg font-semibold text-slate-200">Actions</h2>
