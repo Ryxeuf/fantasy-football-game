@@ -2505,9 +2505,11 @@ model NflFantasyEntry {
   totalTV   Int      @default(0)
   joinedAt  DateTime @default(now())
 
-  league  NflFantasyLeague        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  roster  NflFantasyRoster[]
-  lineups NflFantasyLineup[]
+  league      NflFantasyLeague       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  roster      NflFantasyRoster[]
+  lineups     NflFantasyLineup[]
+  rerolls     NflFantasyReroll[]
+  inducements NflFantasyInducement[]
 
   @@unique([leagueId, userId])
   @@unique([leagueId, teamName])
@@ -2555,6 +2557,54 @@ model NflFantasyLineup {
 
   @@unique([entryId, weekId])
   @@index([weekId])
+}
+
+// ─── Mercato : rerolls + inducements (Phase 2.F) ────────────────
+
+model NflFantasyReroll {
+  id        String   @id @default(cuid())
+  entryId   String
+  /// "team_reroll" | "skill_reroll" | "assistant_coach"
+  type      String   @default("team_reroll")
+  /// "starter" | "purchased" | "achievement" | "mercato" | "reward"
+  source    String   @default("starter")
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  /// FK logique NflWeek.id quand consomme.
+  weekId    String?
+  /// FK logique NflFantasyMatchup.id quand consomme.
+  matchupId String?
+  /// NflPlayer.id sur lequel le reroll est applique (booste son SPP).
+  appliedTo String?
+  createdAt DateTime @default(now())
+
+  entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId, used])
+}
+
+model NflFantasyInducement {
+  id        String   @id @default(cuid())
+  entryId   String
+  /// Type d'inducement choisi (InducementId catalogue 07-mechanics.md).
+  type      String
+  /// "defensive" | "offensive" | "wildcard"
+  slot      String   @default("wildcard")
+  /// "starter" | "purchased" | "achievement"
+  source    String   @default("purchased")
+  /// FK logique NflWeek.id pour le matchup ou il est joue.
+  weekId    String
+  /// FK logique NflFantasyMatchup.id.
+  matchupId String
+  /// NflPlayer.id cible (parfois).
+  targetId  String?
+  meta      Json?
+  usedAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId, weekId, matchupId])
 }
 
 // ─── Matchups + settlement (Phase 2.E) ──────────────────────────
