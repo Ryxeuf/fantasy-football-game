@@ -1300,6 +1300,12 @@ export interface AdminMatchupSideRow {
   readonly starters: ReadonlyArray<AdminMatchupStarterRow>;
 }
 
+export interface AdminMatchupGazette {
+  readonly title: string;
+  readonly body: string;
+  readonly generatedAt: string;
+}
+
 export interface AdminMatchupDetail {
   readonly id: string;
   readonly leagueId: string;
@@ -1312,6 +1318,7 @@ export interface AdminMatchupDetail {
   readonly winnerSide: "home" | "away" | "tie" | null;
   readonly settledAt: string | null;
   readonly createdAt: string;
+  readonly gazette: AdminMatchupGazette | null;
 }
 
 /**
@@ -1334,6 +1341,9 @@ export async function getMatchupDetailForAdmin(
     winnerId: string | null;
     settledAt: Date | null;
     createdAt: Date;
+    gazetteTitle: string | null;
+    gazetteBody: string | null;
+    gazetteGeneratedAt: Date | null;
   };
 
   const matchup = (await prisma.nflFantasyMatchup.findUnique({
@@ -1471,6 +1481,16 @@ export async function getMatchupDetailForAdmin(
     winnerSide,
     settledAt: matchup.settledAt ? matchup.settledAt.toISOString() : null,
     createdAt: matchup.createdAt.toISOString(),
+    gazette:
+      matchup.gazetteGeneratedAt &&
+      matchup.gazetteTitle &&
+      matchup.gazetteBody
+        ? {
+            title: matchup.gazetteTitle,
+            body: matchup.gazetteBody,
+            generatedAt: matchup.gazetteGeneratedAt.toISOString(),
+          }
+        : null,
   };
 }
 

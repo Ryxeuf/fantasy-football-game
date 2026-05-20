@@ -1021,6 +1021,9 @@ describe("getMatchupDetailForAdmin", () => {
       winnerId: "E-home",
       settledAt: new Date("2024-09-22T22:00:00Z"),
       createdAt: new Date("2024-09-15T00:00:00Z"),
+      gazetteTitle: null,
+      gazetteBody: null,
+      gazetteGeneratedAt: null,
     } as never);
     vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
       id: "L1",
@@ -1130,6 +1133,9 @@ describe("getMatchupDetailForAdmin", () => {
       winnerId: null,
       settledAt: new Date("2024-09-22T22:00:00Z"),
       createdAt: new Date("2024-09-15T00:00:00Z"),
+      gazetteTitle: null,
+      gazetteBody: null,
+      gazetteGeneratedAt: null,
     } as never);
     vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
       id: "L1",
@@ -1164,6 +1170,9 @@ describe("getMatchupDetailForAdmin", () => {
       winnerId: null,
       settledAt: null,
       createdAt: new Date("2024-09-15T00:00:00Z"),
+      gazetteTitle: null,
+      gazetteBody: null,
+      gazetteGeneratedAt: null,
     } as never);
     vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValueOnce({
       id: "L1",

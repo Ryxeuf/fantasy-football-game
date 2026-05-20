@@ -16,6 +16,7 @@ import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
 import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
 import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
 import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
+import { NflFantasyGazetteError } from "../services/nfl-fantasy-gazette";
 
 export interface MappedError {
   readonly status: number;
@@ -39,6 +40,7 @@ export function statusForCode(code: string): number {
     case "LEAGUE_NOT_FOUND":
     case "INVALID_INVITE":
     case "TEAM_NOT_FOUND":
+    case "MATCHUP_NOT_FOUND":
       return 404;
 
     // 403 — acces refuse
@@ -81,6 +83,9 @@ export function statusForCode(code: string): number {
     case "INVALID_BB_RACE":
     case "INVALID_TEAM_COUNT":
     case "INVALID_WEEK_RANGE":
+    case "MATCHUP_NOT_SETTLED":
+    case "LLM_INVALID_JSON":
+    case "LLM_INVALID_SHAPE":
       return 422;
 
     // 502 — dependance externe
@@ -108,7 +113,8 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyMercatoError ||
     err instanceof NflFantasyDraftError ||
     err instanceof NflFantasyAdminError ||
-    err instanceof NflFantasyReplayError
+    err instanceof NflFantasyReplayError ||
+    err instanceof NflFantasyGazetteError
   ) {
     return {
       status: statusForCode(err.code),

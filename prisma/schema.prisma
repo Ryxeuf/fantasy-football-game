@@ -2624,6 +2624,12 @@ model NflFantasyMatchup {
   /// NflFantasyEntry.id du winner ; null = tie ou non settle.
   winnerId    String?
   settledAt   DateTime?
+  /// Gazette narrative generee post-settle par LLM (Phase 3.H). Null
+  /// tant que pas genere. Idempotent : skip si gazetteGeneratedAt
+  /// non-null sauf si force=true.
+  gazetteTitle       String?
+  gazetteBody        String?
+  gazetteGeneratedAt DateTime?
   createdAt   DateTime @default(now())
 
   league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)

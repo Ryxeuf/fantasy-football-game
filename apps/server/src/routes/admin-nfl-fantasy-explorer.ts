@@ -42,6 +42,7 @@ import {
   reDeriveAllPlayersBb,
 } from "../services/nfl-fantasy-admin-explorer";
 import { replaySeason } from "../services/nfl-fantasy-replay";
+import { generateMatchupGazette } from "../services/nfl-fantasy-gazette";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -104,6 +105,10 @@ const replayBodySchema = z.object({
   toWeek: z.number().int().min(1).max(22).optional(),
   lineupMode: z.enum(["first11", "optimal"]).optional(),
   nameSuffix: z.string().min(1).max(64).optional(),
+});
+
+const gazetteBodySchema = z.object({
+  force: z.boolean().optional(),
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -424,6 +429,32 @@ router.post("/explore/players/re-derive-bb-bulk", async (_req, res) => {
     }
   }
 });
+
+// ────────────────────────────────────────────────────────────────────
+// Gazette par matchup (Phase 3.H)
+// ────────────────────────────────────────────────────────────────────
+
+router.post(
+  "/explore/matchups/:id/generate-gazette",
+  validate(gazetteBodySchema),
+  async (req, res) => {
+    try {
+      const body = req.body as z.infer<typeof gazetteBodySchema>;
+      const out = await generateMatchupGazette(req.params.id, {
+        force: body.force,
+      });
+      res.json(out);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error(
+          "[admin-nfl-fantasy-explorer] generate-gazette failed",
+          err,
+        );
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 // ────────────────────────────────────────────────────────────────────
 // Detail matchup individuel (Phase 3.J)
