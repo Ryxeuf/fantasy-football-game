@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    nflSeason: { findMany: vi.fn() },
+    nflSeason: { findMany: vi.fn(), findUnique: vi.fn() },
     nflWeek: { groupBy: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     nflGame: { groupBy: vi.fn(), findMany: vi.fn() },
     nflPlayer: {
@@ -61,6 +61,8 @@ import {
   listNflTeamsForAdmin,
   listWeeksForSeason,
   recomputePlayerSpp,
+  recomputeSeasonSpp,
+  reDeriveAllPlayersBb,
   reDerivePlayerBb,
 } from "./nfl-fantasy-admin-explorer";
 
@@ -806,5 +808,141 @@ describe("getLeagueDetailForAdmin", () => {
     expect(out?.entriesCount).toBe(1);
     expect(out?.matchupsCount).toBe(1);
     expect(out?.matchups[0]!.winnerId).toBe("E1");
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// recomputeSeasonSpp (Phase 3.F)
+// ────────────────────────────────────────────────────────────────────
+
+describe("recomputeSeasonSpp", () => {
+  it("throw SEASON_NOT_FOUND si saison absente", async () => {
+    vi.mocked(prisma.nflSeason.findUnique).mockResolvedValueOnce(
+      null as never,
+    );
+    await expect(recomputeSeasonSpp("9999")).rejects.toBeInstanceOf(
+      NflFantasyAdminError,
+    );
+  });
+
+  it("relance computeSpp() + update sur chaque stat de la saison", async () => {
+    vi.mocked(prisma.nflSeason.findUnique).mockResolvedValueOnce({
+      id: "2024",
+    } as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValueOnce([
+      {
+        id: "S1",
+        computedSpp: 10,
+        rawStats: { position: "QB" },
+        player: { bbPosition: "Thrower" },
+      },
+      {
+        id: "S2",
+        computedSpp: 5,
+        rawStats: { position: "WR" },
+        player: { bbPosition: "Catcher" },
+      },
+    ] as never);
+    vi.mocked(buildStatLineFromRow).mockReturnValue({} as never);
+    vi.mocked(computeSpp)
+      .mockReturnValueOnce({ totalSpp: 12, events: [] } as never)
+      .mockReturnValueOnce({ totalSpp: 7, events: [] } as never);
+    vi.mocked(prisma.nflGameStat.update).mockResolvedValue({} as never);
+
+    const out = await recomputeSeasonSpp("2024");
+    expect(out.statsUpdated).toBe(2);
+    expect(out.previousTotalSpp).toBe(15);
+    expect(out.newTotalSpp).toBe(19);
+    expect(out.errors).toEqual([]);
+  });
+
+  it("collecte les erreurs et continue", async () => {
+    vi.mocked(prisma.nflSeason.findUnique).mockResolvedValueOnce({
+      id: "2024",
+    } as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValueOnce([
+      {
+        id: "S1",
+        computedSpp: 10,
+        rawStats: { position: "QB" },
+        player: { bbPosition: "Thrower" },
+      },
+      {
+        id: "S2",
+        computedSpp: 5,
+        rawStats: { position: "WR" },
+        player: { bbPosition: "Catcher" },
+      },
+    ] as never);
+    vi.mocked(buildStatLineFromRow).mockReturnValue({} as never);
+    vi.mocked(computeSpp)
+      .mockImplementationOnce(() => {
+        throw new Error("boom");
+      })
+      .mockReturnValueOnce({ totalSpp: 7, events: [] } as never);
+    vi.mocked(prisma.nflGameStat.update).mockResolvedValue({} as never);
+
+    const out = await recomputeSeasonSpp("2024");
+    expect(out.statsUpdated).toBe(1);
+    expect(out.errors).toHaveLength(1);
+    expect(out.errors[0]?.statId).toBe("S1");
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// reDeriveAllPlayersBb (Phase 3.F)
+// ────────────────────────────────────────────────────────────────────
+
+describe("reDeriveAllPlayersBb", () => {
+  it("update bbPosition uniquement si different", async () => {
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([
+      { id: "P1", teamCode: "KC", nflPosition: "QB", bbPosition: "Thrower" },
+      { id: "P2", teamCode: "KC", nflPosition: "WR", bbPosition: "Catcher" },
+    ] as never);
+    vi.mocked(prisma.nflTeam.findMany).mockResolvedValueOnce([
+      { code: "KC", bbRace: "Skaven" },
+    ] as never);
+    vi.mocked(getBbPosition)
+      .mockReturnValueOnce("Thrower" as never) // P1 unchanged
+      .mockReturnValueOnce("Gutter Runner" as never); // P2 update
+    vi.mocked(prisma.nflPlayer.update).mockResolvedValue({} as never);
+
+    const out = await reDeriveAllPlayersBb();
+    expect(out.playersUpdated).toBe(1);
+    expect(out.playersUnchanged).toBe(1);
+    expect(out.playersSkipped).toBe(0);
+    expect(prisma.nflPlayer.update).toHaveBeenCalledOnce();
+  });
+
+  it("skip si teamRace introuvable", async () => {
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([
+      {
+        id: "P1",
+        teamCode: "GHOST",
+        nflPosition: "QB",
+        bbPosition: "Thrower",
+      },
+    ] as never);
+    vi.mocked(prisma.nflTeam.findMany).mockResolvedValueOnce([] as never);
+
+    const out = await reDeriveAllPlayersBb();
+    expect(out.playersSkipped).toBe(1);
+    expect(out.playersUpdated).toBe(0);
+  });
+
+  it("collecte les erreurs (catch)", async () => {
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValueOnce([
+      { id: "P1", teamCode: "KC", nflPosition: "QB", bbPosition: "Thrower" },
+    ] as never);
+    vi.mocked(prisma.nflTeam.findMany).mockResolvedValueOnce([
+      { code: "KC", bbRace: "Skaven" },
+    ] as never);
+    vi.mocked(getBbPosition).mockImplementationOnce(() => {
+      throw new Error("boom");
+    });
+
+    const out = await reDeriveAllPlayersBb();
+    expect(out.errors).toHaveLength(1);
+    expect(out.playersUpdated).toBe(0);
   });
 });
