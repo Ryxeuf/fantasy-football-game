@@ -31,7 +31,7 @@ import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
   addPlayerToRoster,
-  getRoster,
+  getRosterWithPlayers,
   NflFantasyRosterError,
   removePlayerFromRoster,
 } from "../services/nfl-fantasy-roster";
@@ -93,7 +93,7 @@ router.get("/:entryId/roster", async (req, res) => {
   try {
     const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
     if (!entry) return;
-    const roster = await getRoster(req.params.entryId);
+    const roster = await getRosterWithPlayers(req.params.entryId);
     res.json({ roster });
   } catch (err) {
     if (!sendNflError(res, err)) {

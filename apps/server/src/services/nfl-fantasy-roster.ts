@@ -9,7 +9,7 @@
  * Pas de validation de "cap salarial" en V1 (Q7 freemium tout gratuit).
  */
 
-import type { NflFantasyRoster } from "@prisma/client";
+import type { NflFantasyRoster, NflPlayer } from "@prisma/client";
 
 import { prisma } from "../prisma";
 
@@ -145,6 +145,66 @@ export async function getRoster(entryId: string): Promise<NflFantasyRoster[]> {
     where: { entryId },
     orderBy: { acquiredAt: "asc" },
   });
+}
+
+/**
+ * View pour l'UI : roster + infos NflPlayer joints en JS (NflFantasyRoster
+ * n'a pas de FK Prisma vers NflPlayer en V1, on fait le merge cote service).
+ *
+ * Q8 : on n'expose JAMAIS NflPlayer.realName cote API ; le frontend voit
+ * uniquement `pseudonym`. Le champ `realNameDisplay` est expose pour que
+ * l'UI sache si elle peut afficher le vrai nom (pivot futur licence NIL).
+ * Tant que `realNameDisplay = false`, le `realName` reste interne au backend.
+ */
+export interface RosterPlayerView {
+  rosterId: string;
+  acquiredVia: string;
+  acquiredAt: Date;
+  tvCost: number;
+  /** Player info pseudonymisee (pas de realName ici). */
+  player: {
+    id: NflPlayer["id"];
+    pseudonym: NflPlayer["pseudonym"];
+    realNameDisplay: NflPlayer["realNameDisplay"];
+    teamCode: NflPlayer["teamCode"];
+    nflPosition: NflPlayer["nflPosition"];
+    bbPosition: NflPlayer["bbPosition"];
+    jerseyNumber: NflPlayer["jerseyNumber"];
+    status: NflPlayer["status"];
+  } | null;
+}
+
+export async function getRosterWithPlayers(
+  entryId: string,
+): Promise<RosterPlayerView[]> {
+  const roster = await prisma.nflFantasyRoster.findMany({
+    where: { entryId },
+    orderBy: { acquiredAt: "asc" },
+  });
+  if (roster.length === 0) return [];
+
+  const players = await prisma.nflPlayer.findMany({
+    where: { id: { in: roster.map((r) => r.playerId) } },
+    select: {
+      id: true,
+      pseudonym: true,
+      realNameDisplay: true,
+      teamCode: true,
+      nflPosition: true,
+      bbPosition: true,
+      jerseyNumber: true,
+      status: true,
+    },
+  });
+  const byId = new Map(players.map((p) => [p.id, p]));
+
+  return roster.map((r) => ({
+    rosterId: r.id,
+    acquiredVia: r.acquiredVia,
+    acquiredAt: r.acquiredAt,
+    tvCost: r.tvCost,
+    player: byId.get(r.playerId) ?? null,
+  }));
 }
 
 /**
