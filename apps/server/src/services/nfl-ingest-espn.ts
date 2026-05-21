@@ -32,6 +32,7 @@ import {
 
 import { prisma } from "../prisma";
 import { NflIngestError } from "./nfl-ingest";
+import { serverLog } from "../utils/server-log";
 
 // ────────────────────────────────────────────────────────────────────
 // Types ESPN (shape minimal utilise)
@@ -281,7 +282,42 @@ export function parseEspnRoster(resp: EspnRosterResponse): readonly RosterAthlet
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
 
 async function fetchEspnScoreboardLive(dateYmd: string): Promise<EspnScoreboard> {
-  const url = `${ESPN_BASE}/scoreboard?dates=${dateYmd}`;
+  // ESPN accepte YYYYMMDD (sans tirets). On normalise.
+  const compact = dateYmd.replace(/-/g, "");
+  const url = `${ESPN_BASE}/scoreboard?dates=${compact}`;
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) {
+    throw new NflIngestError(
+      "FETCH_FAILED",
+      `ESPN scoreboard fetch failed ${res.status} ${res.statusText} - ${url}`,
+    );
+  }
+  return (await res.json()) as EspnScoreboard;
+}
+
+/**
+ * Fetch un scoreboard ESPN par saison/week au lieu d'une date precise.
+ * Utile pour rattraper une semaine entiere (~14-16 games sur 3 jours).
+ *
+ * weekNumber 1-18 = regular season, 19-22 = postseason (mapping inverse
+ * de mapEspnWeekToNflverseWeek).
+ */
+async function fetchEspnScoreboardByWeekLive(
+  seasonYear: number,
+  weekNumber: number,
+): Promise<EspnScoreboard> {
+  let seasonType: number;
+  let espnWeek: number;
+  if (weekNumber <= 18) {
+    seasonType = 2;
+    espnWeek = weekNumber;
+  } else {
+    seasonType = 3;
+    // nflverse W19=Wildcard, W20=Div, W21=Conf, W22=SB (skip Pro Bowl=4)
+    const map: Record<number, number> = { 19: 1, 20: 2, 21: 3, 22: 5 };
+    espnWeek = map[weekNumber] ?? 1;
+  }
+  const url = `${ESPN_BASE}/scoreboard?year=${seasonYear}&seasontype=${seasonType}&week=${espnWeek}`;
   const res = await fetch(url, { redirect: "follow" });
   if (!res.ok) {
     throw new NflIngestError(
@@ -434,6 +470,139 @@ export async function ingestEspnGameday(
     });
     throw e;
   }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Backfill scores manquants (Phase 5.B)
+// ────────────────────────────────────────────────────────────────────
+
+export interface BackfillScoresOpts {
+  /** Restreint la recherche a une saison (default = toutes). */
+  readonly seasonId?: string;
+  /** Override fetch par week (tests). */
+  readonly fetchScoreboardByWeek?: (
+    seasonYear: number,
+    weekNumber: number,
+  ) => Promise<EspnScoreboard>;
+}
+
+export interface BackfillScoresResult {
+  readonly weeksProcessed: number;
+  readonly gamesFound: number;
+  readonly gamesUpdated: number;
+  readonly gamesStillMissing: number;
+  readonly weeks: ReadonlyArray<{
+    readonly weekId: string;
+    readonly gamesUpdated: number;
+    readonly gamesSkipped: number;
+    readonly errors: number;
+  }>;
+}
+
+/**
+ * Parse `2025:W11` -> `{ seasonYear: 2025, weekNumber: 11 }`.
+ * Retourne null si format invalide.
+ */
+function parseWeekId(weekId: string): {
+  seasonYear: number;
+  weekNumber: number;
+} | null {
+  const m = weekId.match(/^(\d{4}):W(\d{1,2})$/);
+  if (!m) return null;
+  return { seasonYear: Number(m[1]), weekNumber: Number(m[2]) };
+}
+
+/**
+ * Identifie les games sans score, regroupe par `weekId` et fetch le
+ * scoreboard ESPN par semaine (plus fiable que par date — l'ancien
+ * ingest nflverse fixe `kickoffAt = week.startDate` ce qui rend le
+ * group-by-date inutilisable).
+ *
+ * Pour chaque week, fetch `scoreboard?year=Y&seasontype=T&week=N` puis
+ * reuse la logique parse + upsert de `ingestEspnGameday` via override
+ * `fetchScoreboard`.
+ *
+ * Idempotent : un game qui a deja un score est juste re-update avec
+ * le meme.
+ */
+export async function backfillMissingScores(
+  opts: BackfillScoresOpts = {},
+): Promise<BackfillScoresResult> {
+  type GameRow = { id: string; weekId: string; seasonId: string };
+  const missing = (await prisma.nflGame.findMany({
+    where: {
+      OR: [{ homeScore: null }, { awayScore: null }],
+      ...(opts.seasonId ? { seasonId: opts.seasonId } : {}),
+    },
+    select: { id: true, weekId: true, seasonId: true },
+    orderBy: { weekId: "asc" },
+  })) as GameRow[];
+
+  if (missing.length === 0) {
+    return {
+      weeksProcessed: 0,
+      gamesFound: 0,
+      gamesUpdated: 0,
+      gamesStillMissing: 0,
+      weeks: [],
+    };
+  }
+
+  const weekIds = Array.from(new Set(missing.map((g) => g.weekId))).sort();
+  const fetcher = opts.fetchScoreboardByWeek ?? fetchEspnScoreboardByWeekLive;
+
+  const weeks: Array<{
+    weekId: string;
+    gamesUpdated: number;
+    gamesSkipped: number;
+    errors: number;
+  }> = [];
+  let totalGamesUpdated = 0;
+
+  for (const weekId of weekIds) {
+    const parsed = parseWeekId(weekId);
+    if (!parsed) {
+      weeks.push({ weekId, gamesUpdated: 0, gamesSkipped: 0, errors: 1 });
+      serverLog.error(`[backfill-scores] weekId invalide: ${weekId}`);
+      continue;
+    }
+    try {
+      // Reuse de la logique upsert de ingestEspnGameday via override
+      // fetchScoreboard qui retourne notre fetch par-week.
+      const r = await ingestEspnGameday({
+        dateYmd: weekId, // informational only — logged dans NflIngestRun
+        fetchScoreboard: async () =>
+          fetcher(parsed.seasonYear, parsed.weekNumber),
+      });
+      weeks.push({
+        weekId,
+        gamesUpdated: r.gamesUpdated,
+        gamesSkipped: r.gamesSkipped,
+        errors: r.errors.length,
+      });
+      totalGamesUpdated += r.gamesUpdated;
+    } catch (e) {
+      weeks.push({ weekId, gamesUpdated: 0, gamesSkipped: 0, errors: 1 });
+      serverLog.error(
+        `[backfill-scores] ${weekId} failed: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  const stillMissing = (await prisma.nflGame.count({
+    where: {
+      OR: [{ homeScore: null }, { awayScore: null }],
+      ...(opts.seasonId ? { seasonId: opts.seasonId } : {}),
+    },
+  })) as number;
+
+  return {
+    weeksProcessed: weeks.length,
+    gamesFound: missing.length,
+    gamesUpdated: totalGamesUpdated,
+    gamesStillMissing: stillMissing,
+    weeks,
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────

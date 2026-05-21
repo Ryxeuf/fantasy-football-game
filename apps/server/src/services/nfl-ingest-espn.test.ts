@@ -17,7 +17,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflSeason: { findUnique: vi.fn() },
     nflWeek: { findUnique: vi.fn() },
-    nflGame: { upsert: vi.fn() },
+    nflGame: { upsert: vi.fn(), findMany: vi.fn(), count: vi.fn() },
     nflRosterSnapshot: { create: vi.fn() },
     nflIngestRun: { create: vi.fn(), update: vi.fn() },
   },
@@ -29,6 +29,7 @@ import {
   type EspnEvent,
   type EspnRosterResponse,
   type EspnScoreboard,
+  backfillMissingScores,
   ingestEspnGameday,
   ingestEspnRosters,
   mapEspnStatusToNflGameStatus,
@@ -618,5 +619,98 @@ describe("ingestEspnRosters", () => {
         data: expect.objectContaining({ status: "partial" }),
       }),
     );
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// backfillMissingScores (Phase 5.B)
+// ────────────────────────────────────────────────────────────────────
+
+describe("backfillMissingScores", () => {
+  function mockEmptyScoreboard(): EspnScoreboard {
+    return { events: [] } as never;
+  }
+
+  it("retourne 0 si aucun game manquant", async () => {
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([] as never);
+
+    const out = await backfillMissingScores({});
+    expect(out.gamesFound).toBe(0);
+    expect(out.weeksProcessed).toBe(0);
+    expect(out.weeks).toEqual([]);
+  });
+
+  it("groupe par weekId et appelle ingestEspnGameday par week", async () => {
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([
+      { id: "2025_09_ARI_DAL", weekId: "2025:W9", seasonId: "2025" },
+      { id: "2025_09_SF_NYG", weekId: "2025:W9", seasonId: "2025" },
+      { id: "2025_11_ARI_SF", weekId: "2025:W11", seasonId: "2025" },
+    ] as never);
+    vi.mocked(prisma.nflIngestRun.create)
+      .mockResolvedValueOnce({ id: "run-A" } as never)
+      .mockResolvedValueOnce({ id: "run-B" } as never);
+    vi.mocked(prisma.nflIngestRun.update).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflGame.count).mockResolvedValueOnce(0 as never);
+
+    const calls: Array<[number, number]> = [];
+    const out = await backfillMissingScores({
+      seasonId: "2025",
+      fetchScoreboardByWeek: async (y, w) => {
+        calls.push([y, w]);
+        return mockEmptyScoreboard();
+      },
+    });
+
+    expect(out.gamesFound).toBe(3);
+    expect(out.weeksProcessed).toBe(2);
+    expect(out.weeks.map((w) => w.weekId).sort()).toEqual([
+      "2025:W11",
+      "2025:W9",
+    ]);
+    expect(calls).toEqual([
+      [2025, 11],
+      [2025, 9],
+    ]);
+    expect(out.gamesStillMissing).toBe(0);
+  });
+
+  it("filtre par seasonId si fourni", async () => {
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([] as never);
+    await backfillMissingScores({ seasonId: "2024" });
+    expect(prisma.nflGame.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ seasonId: "2024" }),
+      }),
+    );
+  });
+
+  it("collecte une erreur si ingestEspnGameday throw", async () => {
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([
+      { id: "G1", weekId: "2025:W9", seasonId: "2025" },
+    ] as never);
+    vi.mocked(prisma.nflIngestRun.create).mockRejectedValueOnce(
+      new Error("DB down"),
+    );
+    vi.mocked(prisma.nflGame.count).mockResolvedValueOnce(1 as never);
+
+    const out = await backfillMissingScores({
+      fetchScoreboardByWeek: async () => mockEmptyScoreboard(),
+    });
+    expect(out.weeks).toHaveLength(1);
+    expect(out.weeks[0]!.errors).toBe(1);
+    expect(out.gamesStillMissing).toBe(1);
+  });
+
+  it("flag weekId invalide sans crash", async () => {
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValueOnce([
+      { id: "G1", weekId: "invalid", seasonId: "2025" },
+    ] as never);
+    vi.mocked(prisma.nflGame.count).mockResolvedValueOnce(1 as never);
+
+    const out = await backfillMissingScores({
+      fetchScoreboardByWeek: async () => mockEmptyScoreboard(),
+    });
+    expect(out.weeks).toHaveLength(1);
+    expect(out.weeks[0]!.errors).toBe(1);
   });
 });
