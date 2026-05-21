@@ -205,13 +205,14 @@ export async function setLineup(opts: SetLineupOpts): Promise<LineupWithStarters
   }
 
   // Verifie que tous les starters sont sur le roster
-  const rosterRows = await prisma.nflFantasyRoster.findMany({
-    where: {
-      entryId: opts.entryId,
-      playerId: { in: opts.starters.map((s) => s.playerId) },
-    },
-    select: { playerId: true },
-  });
+  const rosterRows: ReadonlyArray<{ playerId: string }> =
+    await prisma.nflFantasyRoster.findMany({
+      where: {
+        entryId: opts.entryId,
+        playerId: { in: opts.starters.map((s) => s.playerId) },
+      },
+      select: { playerId: true },
+    });
   const onRoster = new Set(rosterRows.map((r) => r.playerId));
   for (const s of opts.starters) {
     if (!onRoster.has(s.playerId)) {

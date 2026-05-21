@@ -177,26 +177,41 @@ export interface RosterPlayerView {
 export async function getRosterWithPlayers(
   entryId: string,
 ): Promise<RosterPlayerView[]> {
-  const roster = await prisma.nflFantasyRoster.findMany({
-    where: { entryId },
-    orderBy: { acquiredAt: "asc" },
-  });
+  const roster: ReadonlyArray<NflFantasyRoster> =
+    await prisma.nflFantasyRoster.findMany({
+      where: { entryId },
+      orderBy: { acquiredAt: "asc" },
+    });
   if (roster.length === 0) return [];
 
-  const players = await prisma.nflPlayer.findMany({
-    where: { id: { in: roster.map((r) => r.playerId) } },
-    select: {
-      id: true,
-      pseudonym: true,
-      realNameDisplay: true,
-      teamCode: true,
-      nflPosition: true,
-      bbPosition: true,
-      jerseyNumber: true,
-      status: true,
-    },
-  });
-  const byId = new Map(players.map((p) => [p.id, p]));
+  type RosterPlayerRow = Pick<
+    NflPlayer,
+    | "id"
+    | "pseudonym"
+    | "realNameDisplay"
+    | "teamCode"
+    | "nflPosition"
+    | "bbPosition"
+    | "jerseyNumber"
+    | "status"
+  >;
+  const players: ReadonlyArray<RosterPlayerRow> =
+    await prisma.nflPlayer.findMany({
+      where: { id: { in: roster.map((r) => r.playerId) } },
+      select: {
+        id: true,
+        pseudonym: true,
+        realNameDisplay: true,
+        teamCode: true,
+        nflPosition: true,
+        bbPosition: true,
+        jerseyNumber: true,
+        status: true,
+      },
+    });
+  const byId = new Map<string, RosterPlayerRow>(
+    players.map((p) => [p.id, p] as const),
+  );
 
   return roster.map((r) => ({
     rosterId: r.id,

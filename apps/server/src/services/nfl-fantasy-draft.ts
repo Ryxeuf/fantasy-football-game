@@ -180,7 +180,10 @@ export async function autoFillRosters(
   }
 
   // Pool des NflPlayer actifs deja sur le roster de la league : a exclure.
-  const alreadyRostered = await prisma.nflFantasyRoster.findMany({
+  const alreadyRostered: ReadonlyArray<{
+    playerId: string;
+    entryId: string;
+  }> = await prisma.nflFantasyRoster.findMany({
     where: { entry: { leagueId: league.id } },
     select: { playerId: true, entryId: true },
   });
@@ -211,7 +214,7 @@ export async function autoFillRosters(
 
   // Pool : NflPlayer actifs non-deja-rostered. Tri stable par id pour
   // que seededShuffle soit reproductible.
-  const pool = await prisma.nflPlayer.findMany({
+  const pool: ReadonlyArray<{ id: string }> = await prisma.nflPlayer.findMany({
     where: { status: "active", id: { notIn: Array.from(alreadyIds) } },
     select: { id: true },
     orderBy: { id: "asc" },
@@ -380,11 +383,13 @@ export async function getDraftStats(leagueId: string): Promise<{
   return {
     leagueId,
     status: league.status,
-    perEntry: league.entries.map((e) => ({
-      entryId: e.id,
-      teamName: e.teamName,
-      rostered: e.roster.length,
-    })),
+    perEntry: league.entries.map(
+      (e: { id: string; teamName: string; roster: ReadonlyArray<unknown> }) => ({
+        entryId: e.id,
+        teamName: e.teamName,
+        rostered: e.roster.length,
+      }),
+    ),
   };
 }
 

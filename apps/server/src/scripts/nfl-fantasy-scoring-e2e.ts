@@ -56,19 +56,26 @@ async function main(): Promise<void> {
       where: { id: leagueId },
       include: { entries: { orderBy: { joinedAt: "asc" } } },
     });
-    const memberEntry = lg2!.entries.find((e) => e.userId === member)!;
+    const memberEntry = lg2!.entries.find(
+      (e: { userId: string }) => e.userId === member,
+    )!;
 
     // 2. Recupere 22 players (11 par entry) qui ONT joue en W10
     //    -> filtre via NflGameStat existants
-    const stats = await prisma.nflGameStat.findMany({
-      where: {
-        gameId: { startsWith: "2025_10_" },
-        computedSpp: { gt: 0 },
-      },
-      take: 22,
-      orderBy: { computedSpp: "desc" }, // top scorers
-      include: { player: true },
-    });
+    type StatWithPlayer = {
+      playerId: string;
+      player: { bbPosition: string };
+    };
+    const stats: ReadonlyArray<StatWithPlayer> =
+      await prisma.nflGameStat.findMany({
+        where: {
+          gameId: { startsWith: "2025_10_" },
+          computedSpp: { gt: 0 },
+        },
+        take: 22,
+        orderBy: { computedSpp: "desc" }, // top scorers
+        include: { player: true },
+      });
     if (stats.length < 22) {
       throw new Error(
         `Pas assez de stats W10 (${stats.length}/22) — relancer ingest-week 2025 10`,

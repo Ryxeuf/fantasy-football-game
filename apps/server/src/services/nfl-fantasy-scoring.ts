@@ -195,7 +195,7 @@ export async function generateMatchups(
     };
   }
 
-  const entryIds = league.entries.map((e) => e.id);
+  const entryIds = league.entries.map((e: { id: string }) => e.id);
   const pairings = pairEntriesForWeek(entryIds, week.weekNumber);
 
   if (pairings.length === 0) {
@@ -282,7 +282,7 @@ export async function settleNflFantasyWeek(
   }
 
   // 2. Charger les games de la semaine + leurs stats (1 query batch)
-  const weekGames = await prisma.nflGame.findMany({
+  const weekGames: ReadonlyArray<{ id: string }> = await prisma.nflGame.findMany({
     where: { weekId: opts.weekId },
     select: { id: true },
   });
@@ -290,21 +290,38 @@ export async function settleNflFantasyWeek(
 
   // 3. Collecter tous les entryIds impliques pour fetch lineups
   const entryIds = Array.from(
-    new Set(matchups.flatMap((m) => [m.homeEntryId, m.awayEntryId])),
+    new Set(
+      matchups.flatMap((m: { homeEntryId: string; awayEntryId: string }) => [
+        m.homeEntryId,
+        m.awayEntryId,
+      ]),
+    ),
   );
 
-  const lineups = await prisma.nflFantasyLineup.findMany({
-    where: { entryId: { in: entryIds }, weekId: opts.weekId },
-    include: { starters: true },
-  });
-  const lineupByEntry = new Map<string, (typeof lineups)[number]>();
+  type LineupWithStarters = {
+    id: string;
+    entryId: string;
+    weekId: string;
+    starters: ReadonlyArray<StarterRow>;
+  };
+  const lineups: ReadonlyArray<LineupWithStarters> =
+    await prisma.nflFantasyLineup.findMany({
+      where: { entryId: { in: entryIds }, weekId: opts.weekId },
+      include: { starters: true },
+    });
+  const lineupByEntry = new Map<string, LineupWithStarters>();
   for (const l of lineups) lineupByEntry.set(l.entryId, l);
 
   // 4. Charger tous les NflGameStat pertinents (1 query batch)
   const allStarterIds = lineups.flatMap((l) =>
-    l.starters.map((s) => s.playerId),
+    l.starters.map((s: StarterRow) => s.playerId),
   );
-  const stats =
+  type StatRow = {
+    playerId: string;
+    computedSpp: number;
+    sppBreakdown: unknown;
+  };
+  const stats: ReadonlyArray<StatRow> =
     gameIds.length === 0 || allStarterIds.length === 0
       ? []
       : await prisma.nflGameStat.findMany({
@@ -315,7 +332,9 @@ export async function settleNflFantasyWeek(
             sppBreakdown: true,
           },
         });
-  const sppByPlayer = new Map(stats.map((s) => [s.playerId, s]));
+  const sppByPlayer = new Map<string, StatRow>(
+    stats.map((s) => [s.playerId, s] as const),
+  );
 
   let matchupsSettled = 0;
   let startersScored = 0;
@@ -325,8 +344,8 @@ export async function settleNflFantasyWeek(
     const home = lineupByEntry.get(m.homeEntryId);
     const away = lineupByEntry.get(m.awayEntryId);
 
-    const homeStarters: StarterRow[] = home?.starters ?? [];
-    const awayStarters: StarterRow[] = away?.starters ?? [];
+    const homeStarters: ReadonlyArray<StarterRow> = home?.starters ?? [];
+    const awayStarters: ReadonlyArray<StarterRow> = away?.starters ?? [];
 
     let homeTotal = 0;
     let awayTotal = 0;

@@ -59,7 +59,9 @@ async function main(): Promise<void> {
       where: { id: leagueId },
       include: { entries: { orderBy: { joinedAt: "asc" } } },
     });
-    const memberEntry = lgFull!.entries.find((e) => e.userId === member)!;
+    const memberEntry = lgFull!.entries.find(
+      (e: { userId: string }) => e.userId === member,
+    )!;
 
     await autoFillRosters({ leagueId });
     await finalizeLeague({ leagueId });

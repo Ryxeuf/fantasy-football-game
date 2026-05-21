@@ -48,7 +48,8 @@ async function main(): Promise<void> {
     entryId = lg.entries[0]!.id;
 
     // Recupere 11 vrais NflPlayer pour le roster (issus de l'ingestion)
-    const players = await prisma.nflPlayer.findMany({ take: 11 });
+    const players: ReadonlyArray<{ id: string; bbPosition: string }> =
+      await prisma.nflPlayer.findMany({ take: 11 });
     if (players.length < 11) {
       throw new Error(`Pas assez de NflPlayer en DB (${players.length}/11)`);
     }

@@ -26,6 +26,7 @@ import {
   generatePseudonym,
   getBbPosition,
   getTeamMeta,
+  type BbPosition,
   type BbRace,
   type NflTeamCode,
 } from "@bb/nfl-mapper";
@@ -265,10 +266,10 @@ export async function ingestNflverseRosters(
       })) as { id: string; teamCode: string | null; bbPosition: string } | null;
 
       const effectiveTeamCode = parsed.teamCode ?? existing?.teamCode ?? null;
-      const bbPosition =
+      const bbPosition: BbPosition =
         effectiveTeamCode && parsed.nflPosition
           ? getBbPosition(parsed.nflPosition, getRace(effectiveTeamCode))
-          : (existing?.bbPosition ?? "Lineman");
+          : ((existing?.bbPosition as BbPosition | undefined) ?? "Lineman");
 
       const cityTag = effectiveTeamCode
         ? getTeamMeta(effectiveTeamCode as NflTeamCode).city
