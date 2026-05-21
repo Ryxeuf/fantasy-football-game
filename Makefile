@@ -320,6 +320,14 @@ db-migrate-deploy: ## Applique les migrations Prisma en production (sans créer 
 	@npx prisma migrate deploy --schema prisma/schema.prisma
 	@echo "🧬 Régénération du client Prisma..."
 	@npx prisma generate --schema prisma/schema.prisma
+
+nfl-bootstrap: ## Populate NFL Fantasy (teams + seasons + rosters + stats + scores) — idempotent, ~5-7min/saison
+	@echo "🏈 Bootstrap NFL Fantasy (2023, 2024, 2025)..."
+	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts
+	@echo "✅ Bootstrap NFL Fantasy terminé"
+
+nfl-bootstrap-2025: ## Populate uniquement la saison 2025 (rapide ~5min, idéal premier déploiement)
+	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts --season 2025
 	@echo "✅ Migrations appliquées et client régénéré"
 
 db-migrate-status: ## Vérifie le statut des migrations Prisma
