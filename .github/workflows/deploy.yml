@@ -169,6 +169,11 @@ jobs:
               : > ~/.gitconfig
               echo "[deploy] ~/.gitconfig corrompu detecte → backup + truncate" >&2
             fi
+            # Apres truncate, git refuse d'operer sur le repo si l'owner
+            # du checkout != utilisateur courant ("dubious ownership"
+            # safety depuis git 2.35.2). On re-trust explicitement le
+            # dossier de deploiement. Idempotent.
+            git config --global --add safe.directory "$(pwd)"
             git fetch origin main
             git reset --hard origin/main
 
