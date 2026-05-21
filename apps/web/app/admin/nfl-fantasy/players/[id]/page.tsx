@@ -344,6 +344,7 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
               src={player.bio.headshotUrl}
               alt={player.realName}
               className="h-24 w-24 rounded-md border border-gray-200 bg-gray-50 object-cover"
+              title="ADMIN UNIQUEMENT — headshot non exposée publiquement (Q8)"
             />
           )}
           <div className="flex-1">
@@ -378,6 +379,8 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
           </div>
         </div>
       </div>
+
+      <PublicProfilePreview player={player} />
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <InfoCard title="Bio">
@@ -846,4 +849,207 @@ function SeasonsTable({
       </table>
     </div>
   );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PublicProfilePreview (Phase 5.D)
+// Visualise ce qui sera expose publiquement (V1 pseudo full, Q8).
+// Tout ce qui touche aux IP NFL (headshot, realName) est masque.
+// Faits factuels publics (height, weight, college, draft) sont OK.
+// ────────────────────────────────────────────────────────────────────
+
+function PublicProfilePreview({
+  player,
+}: {
+  readonly player: PlayerDetail;
+}): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const recentGames = player.stats.slice(0, 5);
+  return (
+    <section className="rounded-md border-2 border-dashed border-violet-300 bg-violet-50/40 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-violet-700">
+            👁 Aperçu profil public
+          </h2>
+          <p className="mt-0.5 text-xs text-violet-600">
+            Ce que les autres utilisateurs verront. Pas de realName, pas de
+            headshot (Q8). Faits factuels publics OK.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="rounded-md border border-violet-300 bg-white px-3 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
+          data-testid="nfl-fantasy-player-public-preview-toggle"
+        >
+          {open ? "▼ Masquer" : "▶ Afficher"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 rounded-md border border-gray-200 bg-white p-4 shadow-inner">
+          <div className="mb-4 flex flex-wrap items-start gap-3 border-b border-gray-100 pb-4">
+            <div className="flex h-20 w-20 items-center justify-center rounded-md bg-gradient-to-br from-violet-200 to-orange-200 text-3xl">
+              {bbPositionEmoji(player.bbPosition)}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-900">
+                {player.pseudonym}
+              </h3>
+              <p className="mt-0.5 text-sm text-gray-600">
+                {player.team
+                  ? `${player.team.city} · ${player.team.raceLabel}`
+                  : "Free agent"}
+                {" · "}
+                <span className="font-mono">{player.bbPosition}</span>
+                {player.jerseyNumber !== null && (
+                  <> · #{player.jerseyNumber}</>
+                )}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Position NFL : <span className="font-mono">{player.nflPosition}</span>
+                {" · "}
+                <PublicStatusBadge status={player.status} />
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Profil
+              </h4>
+              <dl className="space-y-1 text-sm">
+                <PublicRow
+                  label="Taille / Poids"
+                  value={
+                    player.bio.heightInches || player.bio.weightLbs
+                      ? `${formatHeight(player.bio.heightInches)} ${player.bio.weightLbs ? `· ${player.bio.weightLbs} lbs` : ""}`
+                      : "—"
+                  }
+                />
+                <PublicRow
+                  label="Âge"
+                  value={
+                    player.bio.ageYears !== null
+                      ? `${player.bio.ageYears} ans`
+                      : "—"
+                  }
+                />
+                <PublicRow label="College" value={player.bio.college ?? "—"} />
+                <PublicRow label="Draft" value={formatDraft(player.bio)} />
+                <PublicRow
+                  label="Saison rookie"
+                  value={player.bio.rookieYear?.toString() ?? "—"}
+                />
+              </dl>
+            </div>
+
+            <div>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Carrière {player.seasons.length > 0 && `(${player.seasons.length} saison${player.seasons.length > 1 ? "s" : ""})`}
+              </h4>
+              <dl className="space-y-1 text-sm">
+                <PublicRow label="Games joués" value={player.gamesPlayed.toString()} />
+                <PublicRow
+                  label="Total SPP"
+                  value={
+                    <span className="font-mono font-bold text-nuffle-bronze">
+                      {player.totalSpp}
+                    </span>
+                  }
+                />
+                <PublicRow
+                  label="Moy. SPP/game"
+                  value={
+                    player.gamesPlayed > 0
+                      ? (player.totalSpp / player.gamesPlayed).toFixed(2)
+                      : "—"
+                  }
+                />
+                <PublicRow
+                  label="Saisons jouées"
+                  value={player.seasons.map((s) => s.seasonId).join(", ") || "—"}
+                />
+              </dl>
+            </div>
+
+            <div>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                5 derniers games
+              </h4>
+              {recentGames.length === 0 ? (
+                <p className="text-xs text-gray-400">Aucune stat disponible.</p>
+              ) : (
+                <ul className="space-y-1 text-sm">
+                  {recentGames.map((s) => (
+                    <li key={s.gameId} className="flex justify-between gap-2">
+                      <span className="font-mono text-xs text-gray-600">
+                        {s.weekId} {s.isHome ? "vs" : "@"} {s.opponent}
+                      </span>
+                      <span className="font-mono text-xs font-semibold text-gray-900">
+                        {s.computedSpp ?? "—"} SPP
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <p className="mt-4 border-t border-gray-100 pt-3 text-[10px] text-gray-400">
+            Masqué publiquement : realName ({player.realName}), headshot URL,
+            gsis_id, sppBreakdown, ingestSource. Cf. doc 01-legal.md § Q8.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PublicRow({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: ReactNode;
+}): JSX.Element {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-xs uppercase text-gray-500">{label}</dt>
+      <dd className="text-sm text-gray-800">{value}</dd>
+    </div>
+  );
+}
+
+function PublicStatusBadge({ status }: { readonly status: string }): JSX.Element {
+  const label =
+    status === "active"
+      ? "Actif"
+      : status === "ir"
+        ? "Injured Reserve"
+        : status === "retired"
+          ? "Retraité"
+          : status === "suspended"
+            ? "Suspendu"
+            : status;
+  const color =
+    status === "active"
+      ? "text-emerald-700"
+      : status === "ir"
+        ? "text-amber-700"
+        : "text-gray-500";
+  return <span className={color}>{label}</span>;
+}
+
+function bbPositionEmoji(bb: string): string {
+  // Mapping rapide pour donner du visuel a la card pseudonymee.
+  if (["Thrower"].includes(bb)) return "🎯";
+  if (["Catcher", "GutterRunner", "Wardancer"].includes(bb)) return "🏃";
+  if (["Blitzer", "StormVermin", "Berserker", "Khorngor"].includes(bb)) return "⚔️";
+  if (["Lineman", "BlackOrc", "Blocker", "Wight"].includes(bb)) return "🛡";
+  if (["RatOgre", "Ogre", "Troll", "Treeman", "Bloodspawn"].includes(bb)) return "👹";
+  if (["Runner"].includes(bb)) return "💨";
+  return "🏈";
 }
