@@ -254,3 +254,78 @@ describe('pas de noms reels exposes (Q8 + 01-legal.md)', () => {
     expect(result).not.toContain('NFL');
   });
 });
+
+import { deriveSurname } from './pseudonymize.js';
+
+describe('deriveSurname - deterministe & uniformite', () => {
+  it('meme playerId -> meme surname', () => {
+    expect(deriveSurname('00-0033873')).toBe(deriveSurname('00-0033873'));
+  });
+
+  it('playerIds differents -> probablement des surnames differents', () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `00-00${i.toString().padStart(5, '0')}`);
+    const unique = new Set(ids.map(deriveSurname));
+    // Sur 200 ids, on attend une bonne dispersion (>= 100 surnames distincts).
+    expect(unique.size).toBeGreaterThan(100);
+  });
+
+  it('surname respecte le format BB-flavored', () => {
+    const surname = deriveSurname('00-0033873');
+    // Prefixe sans apostrophe + apostrophe + suffixe : "Krak'Skar" etc.
+    expect(surname).toMatch(/^[A-Z][a-z]+'[A-Z][a-z]+$/);
+  });
+});
+
+describe('generatePseudonym - avec playerId (Phase 5.D)', () => {
+  it('format "{Surname} le {Descriptor} de {City}, #{Jersey}"', () => {
+    const result = generatePseudonym({
+      playerId: '00-0033873',
+      cityTag: 'Kansas City',
+      bbPosition: 'Thrower',
+      jerseyNumber: 15,
+    });
+    expect(result).toMatch(/^[A-Z][a-z]+'[A-Z][a-z]+ le Sidearm Wizard de Kansas City, #15$/);
+  });
+
+  it('garantit l\'unicite quand jerseyNumber=0 mais playerId differe', () => {
+    const a = generatePseudonym({
+      playerId: '00-0033873',
+      cityTag: 'Arizona',
+      bbPosition: 'GutterRunner',
+      jerseyNumber: 0,
+    });
+    const b = generatePseudonym({
+      playerId: '00-9999999',
+      cityTag: 'Arizona',
+      bbPosition: 'GutterRunner',
+      jerseyNumber: 0,
+    });
+    expect(a).not.toBe(b);
+  });
+
+  it('backward-compat : sans playerId, garde le format legacy "Le X de City"', () => {
+    expect(
+      generatePseudonym({
+        cityTag: 'Kansas City',
+        bbPosition: 'Thrower',
+        jerseyNumber: 15,
+      }),
+    ).toBe('Le Sidearm Wizard de Kansas City, #15');
+  });
+
+  it('genere pseudonyms uniques pour 100 joueurs ARI GutterRunner #0', () => {
+    const pseudos = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      pseudos.add(
+        generatePseudonym({
+          playerId: `P-ARI-${i.toString().padStart(5, '0')}`,
+          cityTag: 'Arizona',
+          bbPosition: 'GutterRunner',
+          jerseyNumber: 0,
+        }),
+      );
+    }
+    // Sur 100 joueurs au meme poste/ville/jersey, on attend >= 80 pseudos uniques.
+    expect(pseudos.size).toBeGreaterThan(80);
+  });
+});

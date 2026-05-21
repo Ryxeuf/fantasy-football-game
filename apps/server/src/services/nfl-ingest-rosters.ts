@@ -274,6 +274,7 @@ export async function ingestNflverseRosters(
         ? getTeamMeta(effectiveTeamCode as NflTeamCode).city
         : "FA";
       const pseudonym = generatePseudonym({
+        playerId: parsed.playerId,
         cityTag,
         bbPosition,
         jerseyNumber: parsed.jerseyNumber ?? 0,

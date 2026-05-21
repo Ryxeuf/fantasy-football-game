@@ -716,6 +716,7 @@ export async function ingestNflverseWeek(
         // 2. Upsert NflPlayer (idempotent, pseudo deterministe)
         const team = getTeamMeta(parsed.teamCode);
         const pseudonym = generatePseudonym({
+          playerId: parsed.playerId,
           cityTag: team.city,
           bbPosition: parsed.statLine.bbPosition,
           jerseyNumber: parsed.jerseyNumber ?? 0,

@@ -35,6 +35,13 @@ export interface PseudonymOptions {
   readonly jerseyNumber: number;
   /** Archetype optionnel (V2). */
   readonly archetype?: PlayerArchetype;
+  /**
+   * Identifiant stable du joueur (gsis_id). Si fourni, derive un
+   * surnom BB-flavored deterministe a partir du hash → garantit
+   * l'unicite meme quand jersey=0 ou que plusieurs joueurs partagent
+   * le meme (city, position, jersey) au fil des saisons.
+   */
+  readonly playerId?: string;
 }
 
 /**
@@ -109,6 +116,47 @@ const DESCRIPTOR_BY_ARCHETYPE: Readonly<Partial<Record<`${BbPosition}-${PlayerAr
   'Werewolf-speed': 'Moonlight Sprinter',
 };
 
+/**
+ * Pools de syllabes BB-flavored pour generer des surnoms uniques.
+ * Combinaison prefixe x suffixe = 24 x 24 = 576 noms possibles. Avec
+ * le poste + la ville + jersey, virtuellement unique par joueur.
+ */
+const NAME_PREFIX: readonly string[] = [
+  'Krak', 'Vor', 'Throg', 'Skarn', 'Brel', 'Mor', 'Drak', 'Veth',
+  'Kael', 'Yrn', 'Goth', 'Faer', 'Skel', 'Bjor', 'Threx', 'Quel',
+  'Zar', 'Lor', 'Hask', 'Aer', 'Grim', 'Vex', 'Olg', 'Snik',
+];
+
+const NAME_SUFFIX: readonly string[] = [
+  "'Skar", "'Drim", "'Fang", "'Tail", "'Krov", "'Thar", "'Mok", "'Wyn",
+  "'Vir", "'Ren", "'Loth", "'Nar", "'Grim", "'Ven", "'Drog", "'Kar",
+  "'Lith", "'Morn", "'Tag", "'Khan", "'Bron", "'Ryn", "'Skull", "'Hex",
+];
+
+/**
+ * Hash FNV-1a 32 bits sur une string. Deterministe, ~uniform. Reuse
+ * du pattern game-engine/draft (FNV + mulberry32).
+ */
+function fnv1aHash(str: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * Derive un surnom BB-flavored a partir d'un playerId. Deterministe.
+ * Ex: "00-0033873" -> "Krak'Skar".
+ */
+export function deriveSurname(playerId: string): string {
+  const h = fnv1aHash(playerId);
+  const prefix = NAME_PREFIX[h % NAME_PREFIX.length]!;
+  const suffix = NAME_SUFFIX[Math.floor(h / NAME_PREFIX.length) % NAME_SUFFIX.length]!;
+  return `${prefix}${suffix}`;
+}
+
 function pickDescriptor(bbPosition: BbPosition, archetype?: PlayerArchetype): string {
   if (archetype) {
     const key = `${bbPosition}-${archetype}` as const;
@@ -130,28 +178,44 @@ function validateInputs(opts: PseudonymOptions): void {
 /**
  * Genere le pseudonyme public d'un joueur.
  *
- * Format : "Le {Descripteur} de {Ville}, #{Jersey}"
+ * Format (avec playerId) : "{Surname} le {Descripteur} de {Ville}, #{Jersey}"
+ * Format (sans playerId, legacy) : "Le {Descripteur} de {Ville}, #{Jersey}"
+ *
  * Exemples :
- * - { cityTag: 'Kansas City', bbPosition: 'Thrower', jerseyNumber: 15 }
- *   -> "Le Sidearm Wizard de Kansas City, #15"
+ * - { playerId: '00-0033873', cityTag: 'Kansas City', bbPosition: 'Thrower', jerseyNumber: 15 }
+ *   -> "Krak'Skar le Sidearm Wizard de Kansas City, #15"
  * - { cityTag: 'Buffalo', bbPosition: 'Thrower', jerseyNumber: 17, archetype: 'power' }
  *   -> "Le Cannon Thrower de Buffalo, #17"
+ *
+ * Le surname garantit l'unicite (576 combinaisons) meme quand
+ * jerseyNumber=0 ou que plusieurs joueurs partagent (city, position,
+ * jersey) au fil des saisons.
  *
  * @throws si cityTag vide ou jerseyNumber invalide
  */
 export function generatePseudonym(opts: PseudonymOptions): string {
   validateInputs(opts);
   const descriptor = pickDescriptor(opts.bbPosition, opts.archetype);
-  return `Le ${descriptor} de ${opts.cityTag.trim()}, #${opts.jerseyNumber}`;
+  const city = opts.cityTag.trim();
+  if (opts.playerId) {
+    const surname = deriveSurname(opts.playerId);
+    return `${surname} le ${descriptor} de ${city}, #${opts.jerseyNumber}`;
+  }
+  return `Le ${descriptor} de ${city}, #${opts.jerseyNumber}`;
 }
 
 /**
- * Variante courte sans "Le ... de ..." pour les UIs serrees (mobile,
- * leaderboards). Ex: "Sidearm Wizard #15 Kansas City"
+ * Variante courte sans ville pour les UIs serrees (mobile, leaderboards).
+ * Ex: "Krak'Skar #15 KC" ou "Sidearm Wizard #15 Kansas City" si pas
+ * de playerId.
  */
 export function generateShortPseudonym(opts: PseudonymOptions): string {
   validateInputs(opts);
   const descriptor = pickDescriptor(opts.bbPosition, opts.archetype);
+  if (opts.playerId) {
+    const surname = deriveSurname(opts.playerId);
+    return `${surname} #${opts.jerseyNumber} (${descriptor})`;
+  }
   return `${descriptor} #${opts.jerseyNumber} ${opts.cityTag.trim()}`;
 }
 
