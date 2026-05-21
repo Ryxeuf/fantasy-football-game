@@ -1,3 +1,10 @@
+## [1.138.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.2...v1.138.3) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **e2e-ui:** scope replay-player routes a l'API (port 18002) ([8d6ce4b](https://github.com/Ryxeuf/fantasy-football-game/commit/8d6ce4bd15bb18a3094dec4af845cbdf86973b43))
+
 ## [1.138.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.1...v1.138.2) (2026-05-21)
 
 
