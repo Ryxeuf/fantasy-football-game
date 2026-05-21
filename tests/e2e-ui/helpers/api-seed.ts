@@ -34,6 +34,30 @@ export async function seedUser(
   return (await res.json()) as { id: string; email: string };
 }
 
+/**
+ * Variante de `seedUser` qui cree aussi un `EloSnapshot` afin que le
+ * coach passe le filtre `eloSnapshots: { some: {} }` du leaderboard
+ * (cf. apps/server/src/routes/leaderboard.ts). Sans snapshot, un user
+ * fraichement seede n'apparait pas dans /leaderboard.
+ */
+export async function seedUserRanked(
+  email: string,
+  password: string,
+  name: string,
+): Promise<{ id: string; email: string }> {
+  const res = await fetch(`${API_BASE}/__test/seed-user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, name, rankedMatches: 1 }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      `seed-user ${email} failed: ${res.status} ${await res.text()}`,
+    );
+  }
+  return (await res.json()) as { id: string; email: string };
+}
+
 export async function seedTeam(
   ownerId: string,
   name: string,

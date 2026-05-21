@@ -32,9 +32,14 @@ test.describe("E2E UI — register", () => {
     await register.submit();
 
     // Le serveur renvoie un token -> window.location.href = "/me".
+    // `window.location.href` declenche un full reload : on attend que
+    // `/me` soit charge (DOM ready) avant d'evaluer le localStorage,
+    // sinon `page.evaluate` peut tomber pendant la destruction du
+    // contexte d'execution ("Execution context was destroyed").
     await page.waitForURL((url) => url.pathname.startsWith("/me"), {
       timeout: 15_000,
     });
+    await page.waitForLoadState("domcontentloaded");
 
     // Le token doit etre stocke dans localStorage cote client.
     const token = await page.evaluate(() => localStorage.getItem("auth_token"));

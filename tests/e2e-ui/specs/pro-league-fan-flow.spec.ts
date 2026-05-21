@@ -23,12 +23,12 @@ test.describe("E2E UI — Pro League fan flow", () => {
     });
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
 
-    // Le hub charge les donnees ; au minimum le bloc standings est
-    // rendu (meme vide). On ne presse pas sur next-matches qui peut
-    // etre absent en debut de saison.
-    await expect(page.getByTestId("standings")).toBeVisible({
-      timeout: 15_000,
-    });
+    // Le hub charge les donnees ; soit une saison existe et standings
+    // est rendu, soit l'empty-state "Aucune saison active" est affiche.
+    // En CI E2E la DB est fraiche, donc on accepte les deux etats.
+    const standings = page.getByTestId("standings");
+    const noSeason = page.getByTestId("hub-no-season");
+    await expect(standings.or(noSeason)).toBeVisible({ timeout: 15_000 });
   });
 
   test("la page /pro-league/standings est accessible", async ({ page }) => {

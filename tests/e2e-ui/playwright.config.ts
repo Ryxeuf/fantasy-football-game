@@ -35,8 +35,15 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    // permet aux specs d'accéder à l'API directement pour les helpers seed
-    extraHTTPHeaders: {},
+    // Force la locale francaise pour les specs : sans ca, le middleware
+    // `apps/web/middleware.ts` detecte `en-US` depuis Accept-Language
+    // (default CI Chrome) et set NEXT_LOCALE=en, ce qui rend les pages
+    // en anglais et casse les assertions ecrites en francais
+    // (ex: /argent r.el/i sur le disclaimer Pro League).
+    locale: "fr-FR",
+    extraHTTPHeaders: {
+      "Accept-Language": "fr-FR,fr;q=0.9",
+    },
   },
   projects: [
     {

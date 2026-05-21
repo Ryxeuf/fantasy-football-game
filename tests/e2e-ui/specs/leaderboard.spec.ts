@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { resetDb, seedUser } from "../helpers/api-seed";
+import { resetDb, seedUserRanked } from "../helpers/api-seed";
 import { LeaderboardPage } from "../pages/LeaderboardPage";
 
 /**
@@ -18,11 +18,13 @@ test.describe("E2E UI — leaderboard", () => {
   test("affiche les cartes statistiques et le tableau avec des coachs seedés", async ({
     page,
   }) => {
-    // Seed 3 coachs pour remplir le classement.
+    // Seed 3 coachs pour remplir le classement. Le filtre serveur
+    // `eloSnapshots: { some: {} }` exige au moins 1 match ranked
+    // termine — on passe rankedMatches=1 pour creer un EloSnapshot.
     await Promise.all([
-      seedUser("alice@playwright.test", "password-a", "Alice"),
-      seedUser("bob@playwright.test", "password-b", "Bob"),
-      seedUser("carol@playwright.test", "password-c", "Carol"),
+      seedUserRanked("alice@playwright.test", "password-a", "Alice"),
+      seedUserRanked("bob@playwright.test", "password-b", "Bob"),
+      seedUserRanked("carol@playwright.test", "password-c", "Carol"),
     ]);
 
     const leaderboard = new LeaderboardPage(page);
@@ -43,7 +45,7 @@ test.describe("E2E UI — leaderboard", () => {
   test("le tableau affiche le nom du coach pour chaque entrée", async ({
     page,
   }) => {
-    await seedUser("alice@playwright.test", "password-a", "Alice");
+    await seedUserRanked("alice@playwright.test", "password-a", "Alice");
 
     const leaderboard = new LeaderboardPage(page);
     await leaderboard.goto();

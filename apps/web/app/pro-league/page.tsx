@@ -290,7 +290,10 @@ export default function ProLeagueHubPage(): JSX.Element {
           {error}
         </p>
       ) : !data?.season ? (
-        <p className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400">
+        <p
+          data-testid="hub-no-season"
+          className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
+        >
           {t.proLeague.hub.noSeason}
         </p>
       ) : (

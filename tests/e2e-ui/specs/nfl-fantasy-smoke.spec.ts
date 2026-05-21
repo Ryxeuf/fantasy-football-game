@@ -71,7 +71,10 @@ test.describe("E2E UI — NFL Fantasy smoke", () => {
       page.getByRole("heading", { name: /Créer une league NFL Fantasy/i }),
     ).toBeVisible({ timeout: 15_000 });
 
-    await page.getByRole("link", { name: /Mes leagues/i }).click();
+    // Le layout NFL Fantasy expose un lien nav "Mes leagues" en plus du
+    // bouton retour "← Mes leagues" sur la page /new — on cible le lien
+    // de retour explicitement.
+    await page.getByRole("link", { name: "← Mes leagues" }).click();
     await page.waitForURL("**/nfl-fantasy");
     expect(new URL(page.url()).pathname).toBe("/nfl-fantasy");
   });
