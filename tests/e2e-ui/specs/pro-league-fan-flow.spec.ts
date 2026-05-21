@@ -94,16 +94,12 @@ test.describe("E2E UI — Pro League fan flow", () => {
     });
 
     // Soit une edition est publiee, soit l'empty state est affiche.
-    const hasEmpty = await page
-      .getByTestId("gazette-no-edition")
-      .isVisible()
-      .catch(() => false);
-    const hasArchive = await page
-      .getByTestId("gazette-archive")
-      .isVisible()
-      .catch(() => false);
-    // Le rendu doit etre stable : empty OU archive.
-    expect(hasEmpty || hasArchive).toBe(true);
+    // `isVisible()` immediat etait flaky : le fetch des editions peut
+    // mettre quelques 100ms apres le rendu du h1 → on attend qu'un des
+    // deux testids apparaisse via `.or()`.
+    const empty = page.getByTestId("gazette-no-edition");
+    const archive = page.getByTestId("gazette-archive");
+    await expect(empty.or(archive)).toBeVisible({ timeout: 10_000 });
   });
 
   test("la page /pro-league/hall-of-fame rend liste ou empty state", async ({
