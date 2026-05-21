@@ -1,3 +1,10 @@
+## [1.138.4](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.3...v1.138.4) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **e2e-ui:** stabilise gazette empty/archive avec .or() au lieu de isVisible ([d1ebf2c](https://github.com/Ryxeuf/fantasy-football-game/commit/d1ebf2c3ff05b0bc74d417cde4ada4dac6e5fb36)), closes [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1)
+
 ## [1.138.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.2...v1.138.3) (2026-05-21)
 
 
