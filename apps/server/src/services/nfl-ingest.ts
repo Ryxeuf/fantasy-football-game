@@ -713,7 +713,15 @@ export async function ingestNflverseWeek(
           seenGames.add(parsed.gameId);
         }
 
-        // 2. Upsert NflPlayer (idempotent, pseudo deterministe)
+        // 2. Upsert NflPlayer (idempotent).
+        //
+        // ATTENTION : l'ingest stats N'A PAS le jersey (stats CSV
+        // nflverse n'expose pas cette colonne). Si on regenere le
+        // pseudonym ici avec jersey=0, on ECRASE celui calcule par
+        // l'ingest rosters qui, lui, connait le bon jersey.
+        // → Le pseudonym n'est ecrit qu'en `create` (avec jersey=null
+        //   en fallback ; l'ingest rosters le corrigera au prochain
+        //   passage). En `update`, on touche pas au pseudonym.
         const team = getTeamMeta(parsed.teamCode);
         const pseudonym = generatePseudonym({
           playerId: parsed.playerId,
@@ -725,7 +733,6 @@ export async function ingestNflverseWeek(
           where: { id: parsed.playerId },
           update: {
             realName: parsed.playerName,
-            pseudonym,
             teamCode: parsed.teamCode,
             nflPosition: parsed.nflPosition,
             bbPosition: parsed.statLine.bbPosition,
