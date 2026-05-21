@@ -39,6 +39,66 @@ interface StatRow {
   readonly ingestedAt: string;
 }
 
+interface PlayerBio {
+  readonly heightInches: number | null;
+  readonly weightLbs: number | null;
+  readonly birthDate: string | null;
+  readonly ageYears: number | null;
+  readonly college: string | null;
+  readonly headshotUrl: string | null;
+  readonly draftYear: number | null;
+  readonly draftRound: number | null;
+  readonly draftPick: number | null;
+  readonly draftClub: string | null;
+  readonly rookieYear: number | null;
+  readonly yearsExp: number | null;
+}
+
+interface PassingStats {
+  readonly completions: number;
+  readonly attempts: number;
+  readonly passingYards: number;
+  readonly passingTds: number;
+  readonly interceptions: number;
+  readonly sacks: number;
+}
+interface RushingStats {
+  readonly carries: number;
+  readonly rushingYards: number;
+  readonly rushingTds: number;
+  readonly rushingFumblesLost: number;
+}
+interface ReceivingStats {
+  readonly targets: number;
+  readonly receptions: number;
+  readonly receivingYards: number;
+  readonly receivingTds: number;
+  readonly receivingFumblesLost: number;
+}
+interface DefenseStats {
+  readonly tacklesSolo: number;
+  readonly tackleAssists: number;
+  readonly sacks: number;
+  readonly interceptions: number;
+  readonly fumblesForced: number;
+  readonly fumblesRecovered: number;
+  readonly defTds: number;
+  readonly passesDefended: number;
+}
+interface CategoryStats {
+  readonly passing: PassingStats;
+  readonly rushing: RushingStats;
+  readonly receiving: ReceivingStats;
+  readonly defense: DefenseStats;
+}
+
+interface SeasonAggregate {
+  readonly seasonId: string;
+  readonly gamesPlayed: number;
+  readonly totalSpp: number;
+  readonly categoryStats: CategoryStats;
+}
+
 interface PlayerDetail {
   readonly id: string;
   readonly pseudonym: string;
@@ -52,6 +112,7 @@ interface PlayerDetail {
   readonly retiredAt: string | null;
   readonly bbStats: unknown;
   readonly bbSkills: unknown;
+  readonly bio: PlayerBio;
   readonly team: {
     readonly code: string;
     readonly city: string;
@@ -60,7 +121,43 @@ interface PlayerDetail {
   } | null;
   readonly totalSpp: number;
   readonly gamesPlayed: number;
+  readonly categoryStats: CategoryStats;
+  readonly seasons: ReadonlyArray<SeasonAggregate>;
   readonly stats: ReadonlyArray<StatRow>;
+}
+
+function formatHeight(inches: number | null): string {
+  if (inches === null) return "—";
+  const feet = Math.floor(inches / 12);
+  const rest = inches % 12;
+  return `${feet}'${rest}" (${inches} in)`;
+}
+
+function formatDraft(bio: PlayerBio): string {
+  if (!bio.draftYear) return "Undrafted";
+  const parts: string[] = [`${bio.draftYear}`];
+  if (bio.draftRound) parts.push(`R${bio.draftRound}`);
+  if (bio.draftPick) parts.push(`#${bio.draftPick} overall`);
+  if (bio.draftClub) parts.push(`by ${bio.draftClub}`);
+  return parts.join(" · ");
+}
+
+function hasAnyStats(c: CategoryStats): {
+  hasPassing: boolean;
+  hasRushing: boolean;
+  hasReceiving: boolean;
+  hasDefense: boolean;
+} {
+  return {
+    hasPassing: c.passing.attempts > 0 || c.passing.passingYards > 0,
+    hasRushing: c.rushing.carries > 0 || c.rushing.rushingYards > 0,
+    hasReceiving: c.receiving.targets > 0 || c.receiving.receivingYards > 0,
+    hasDefense:
+      c.defense.tacklesSolo > 0 ||
+      c.defense.tackleAssists > 0 ||
+      c.defense.sacks > 0 ||
+      c.defense.interceptions > 0,
+  };
 }
 
 interface ActionFeedback {
@@ -240,8 +337,16 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
         >
           ← Tous les joueurs
         </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="mt-2 flex flex-wrap items-start gap-4">
+          {player.bio.headshotUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={player.bio.headshotUrl}
+              alt={player.realName}
+              className="h-24 w-24 rounded-md border border-gray-200 bg-gray-50 object-cover"
+            />
+          )}
+          <div className="flex-1">
             <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold text-nuffle-anthracite">
               <span>{player.pseudonym}</span>
               <StatusBadge status={player.status} />
@@ -257,6 +362,16 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
                 </span>
               )}
             </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {player.team
+                ? `${player.team.code} · ${player.team.city}`
+                : "FA"}
+              {player.jerseyNumber !== null && ` · #${player.jerseyNumber}`}
+              {" · "}
+              {player.nflPosition}
+              {player.bio.ageYears !== null && ` · ${player.bio.ageYears} ans`}
+              {player.bio.yearsExp !== null && ` · ${player.bio.yearsExp} ans NFL`}
+            </p>
             <p className="mt-1 text-xs font-mono text-gray-400">
               gsis_id : {player.id}
             </p>
@@ -264,7 +379,35 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <InfoCard title="Bio">
+          <InfoRow label="Taille">
+            <span className="font-mono">{formatHeight(player.bio.heightInches)}</span>
+          </InfoRow>
+          <InfoRow label="Poids">
+            <span className="font-mono">
+              {player.bio.weightLbs ? `${player.bio.weightLbs} lbs` : "—"}
+            </span>
+          </InfoRow>
+          <InfoRow label="Né le">
+            <span className="text-gray-700">
+              {player.bio.birthDate
+                ? new Date(player.bio.birthDate).toLocaleDateString("fr-FR")
+                : "—"}
+              {player.bio.ageYears !== null && ` (${player.bio.ageYears} ans)`}
+            </span>
+          </InfoRow>
+          <InfoRow label="College">
+            <span className="text-gray-700">{player.bio.college ?? "—"}</span>
+          </InfoRow>
+          <InfoRow label="Draft">
+            <span className="text-xs text-gray-700">{formatDraft(player.bio)}</span>
+          </InfoRow>
+          <InfoRow label="Rookie year">
+            <span className="font-mono">{player.bio.rookieYear ?? "—"}</span>
+          </InfoRow>
+        </InfoCard>
+
         <InfoCard title="NFL">
           <InfoRow label="Team">
             {player.team ? (
@@ -416,7 +559,24 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
 
       <section>
         <h2 className="mb-2 text-lg font-semibold text-gray-900">
-          Stats par game (
+          Statistiques NFL (
+          {selectedSeasonId ? `saison ${selectedSeasonId}` : "carrière"})
+        </h2>
+        <CategoryStatsCards stats={player.categoryStats} />
+      </section>
+
+      {player.seasons.length > 1 && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">
+            Carrière par saison
+          </h2>
+          <SeasonsTable seasons={player.seasons} />
+        </section>
+      )}
+
+      <section>
+        <h2 className="mb-2 text-lg font-semibold text-gray-900">
+          Game log (
           {selectedSeasonId ? `saison ${selectedSeasonId}` : "toutes saisons"})
         </h2>
         {player.stats.length === 0 ? (
@@ -502,6 +662,188 @@ export default function AdminNflFantasyPlayerDetailPage(): JSX.Element {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CategoryStatsCards (Phase 5.C)
+// ────────────────────────────────────────────────────────────────────
+
+function StatCell({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: number | string;
+}): JSX.Element {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase tracking-wide text-gray-500">
+        {label}
+      </span>
+      <span className="font-mono text-lg font-semibold text-gray-900">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function CategoryStatsCards({
+  stats,
+}: {
+  readonly stats: CategoryStats;
+}): JSX.Element {
+  const flags = hasAnyStats(stats);
+  const any = flags.hasPassing || flags.hasRushing || flags.hasReceiving || flags.hasDefense;
+  if (!any) {
+    return (
+      <div className="rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-500">
+        Aucune stat ingérée pour cette plage.
+      </div>
+    );
+  }
+  return (
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      {flags.hasPassing && (
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            🎯 Passing
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCell
+              label="Cmp / Att"
+              value={`${stats.passing.completions} / ${stats.passing.attempts}`}
+            />
+            <StatCell label="Yds" value={stats.passing.passingYards} />
+            <StatCell label="TD" value={stats.passing.passingTds} />
+            <StatCell label="INT" value={stats.passing.interceptions} />
+            <StatCell label="Sacks pris" value={stats.passing.sacks} />
+            <StatCell
+              label="Comp %"
+              value={
+                stats.passing.attempts > 0
+                  ? `${((stats.passing.completions / stats.passing.attempts) * 100).toFixed(1)}%`
+                  : "—"
+              }
+            />
+          </div>
+        </div>
+      )}
+      {flags.hasRushing && (
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            🏃 Rushing
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCell label="Att" value={stats.rushing.carries} />
+            <StatCell label="Yds" value={stats.rushing.rushingYards} />
+            <StatCell label="TD" value={stats.rushing.rushingTds} />
+            <StatCell label="Fum perdus" value={stats.rushing.rushingFumblesLost} />
+            <StatCell
+              label="Avg"
+              value={
+                stats.rushing.carries > 0
+                  ? (stats.rushing.rushingYards / stats.rushing.carries).toFixed(1)
+                  : "—"
+              }
+            />
+          </div>
+        </div>
+      )}
+      {flags.hasReceiving && (
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            🙌 Receiving
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCell label="Rec / Tgt" value={`${stats.receiving.receptions} / ${stats.receiving.targets}`} />
+            <StatCell label="Yds" value={stats.receiving.receivingYards} />
+            <StatCell label="TD" value={stats.receiving.receivingTds} />
+            <StatCell label="Fum perdus" value={stats.receiving.receivingFumblesLost} />
+            <StatCell
+              label="Avg"
+              value={
+                stats.receiving.receptions > 0
+                  ? (stats.receiving.receivingYards / stats.receiving.receptions).toFixed(1)
+                  : "—"
+              }
+            />
+          </div>
+        </div>
+      )}
+      {flags.hasDefense && (
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            🛡 Defense
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCell label="Tkl solo" value={stats.defense.tacklesSolo} />
+            <StatCell label="Tkl assists" value={stats.defense.tackleAssists} />
+            <StatCell label="Sacks" value={stats.defense.sacks} />
+            <StatCell label="INT" value={stats.defense.interceptions} />
+            <StatCell label="FF" value={stats.defense.fumblesForced} />
+            <StatCell label="FR" value={stats.defense.fumblesRecovered} />
+            <StatCell label="TD def" value={stats.defense.defTds} />
+            <StatCell label="PD" value={stats.defense.passesDefended} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SeasonsTable({
+  seasons,
+}: {
+  readonly seasons: ReadonlyArray<SeasonAggregate>;
+}): JSX.Element {
+  return (
+    <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th className="px-3 py-2">Saison</th>
+            <th className="px-3 py-2 text-right">G</th>
+            <th className="px-3 py-2 text-right">SPP</th>
+            <th className="px-3 py-2 text-right">Pass Yds</th>
+            <th className="px-3 py-2 text-right">Pass TD</th>
+            <th className="px-3 py-2 text-right">Rush Yds</th>
+            <th className="px-3 py-2 text-right">Rush TD</th>
+            <th className="px-3 py-2 text-right">Rec</th>
+            <th className="px-3 py-2 text-right">Rec Yds</th>
+            <th className="px-3 py-2 text-right">Rec TD</th>
+            <th className="px-3 py-2 text-right">Tkl</th>
+            <th className="px-3 py-2 text-right">Sacks</th>
+            <th className="px-3 py-2 text-right">INT def</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {seasons.map((s) => (
+            <tr key={s.seasonId}>
+              <td className="px-3 py-2 font-mono font-semibold text-gray-700">
+                {s.seasonId}
+              </td>
+              <td className="px-3 py-2 text-right font-mono">{s.gamesPlayed}</td>
+              <td className="px-3 py-2 text-right font-mono font-bold text-nuffle-bronze">
+                {s.totalSpp}
+              </td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.passing.passingYards}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.passing.passingTds}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.rushing.rushingYards}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.rushing.rushingTds}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.receiving.receptions}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.receiving.receivingYards}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.receiving.receivingTds}</td>
+              <td className="px-3 py-2 text-right font-mono">
+                {s.categoryStats.defense.tacklesSolo + s.categoryStats.defense.tackleAssists}
+              </td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.defense.sacks}</td>
+              <td className="px-3 py-2 text-right font-mono">{s.categoryStats.defense.interceptions}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
