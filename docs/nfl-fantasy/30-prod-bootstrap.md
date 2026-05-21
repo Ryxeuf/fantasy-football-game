@@ -13,11 +13,19 @@ DATABASE_URL=postgres://... make db-sync-prod-check
 #    existantes tant qu'aucune colonne n'a ete supprimee du schema.prisma)
 DATABASE_URL=postgres://... make db-sync-prod
 
-# 3. Lance le bootstrap NFL Fantasy (idempotent ~5-7min par saison)
-DATABASE_URL=postgres://... make nfl-bootstrap          # 2023 + 2024 + 2025
+# 3. Lance le bootstrap NFL Fantasy via Docker (DATABASE_URL pris dans
+#    l'env du container, pas besoin de la repasser)
+make nfl-bootstrap-prod          # 2023 + 2024 + 2025 (idempotent ~5-7min/saison)
 # OU pour aller vite la premiere fois :
-DATABASE_URL=postgres://... make nfl-bootstrap-2025     # juste 2025
+make nfl-bootstrap-prod-2025     # juste 2025
 ```
+
+> ⚠️ Sur la VM prod, `make nfl-bootstrap` (sans `-prod`) **echoue** :
+> `Cannot find package 'csv-parse'`. Les `node_modules/` du repo Git
+> pulled ne contiennent que les deps du moment du clone — les ajouts
+> recents (csv-parse Phase 5.A) ne sont presents que dans l'image
+> Docker pre-buildee. Le target `-prod` passe par `docker exec` dans
+> le container `nufflearena_server`.
 
 Le cron prend ensuite le relais automatiquement (~03:00 UTC) pour
 maintenir stats + rosters + scores a jour.
@@ -79,8 +87,10 @@ DATABASE_URL=$PROD_URL make db-sync-prod-check
 # 2. Sync schema Prisma (non destructif sauf colonnes supprimees)
 DATABASE_URL=$PROD_URL make db-sync-prod
 
-# 3. Bootstrap data
-DATABASE_URL=$PROD_URL make nfl-bootstrap
+# 3. Bootstrap data via Docker (recommande en prod)
+make nfl-bootstrap-prod
+# Pour re-ingester juste les rosters (apres ajout d'un champ bio) :
+make nfl-bootstrap-prod-rosters
 
 # 4. Verifier : healthcheck + counts
 curl https://api.tonsite.com/health
@@ -115,7 +125,24 @@ pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts --skip-stats --skip-rosters
 pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts --skip-stats
 ```
 
-## Bootstrap depuis le container local (dev / debug)
+## Bootstrap via container (recommande en prod)
+
+Trois targets Makefile dedies qui appellent `docker exec` sur le
+container `nufflearena_server` :
+
+```bash
+make nfl-bootstrap-prod              # toutes saisons (2023 + 2024 + 2025)
+make nfl-bootstrap-prod-2025         # juste 2025 (~5min)
+make nfl-bootstrap-prod-rosters      # re-ingest rosters seuls, skip stats + scores
+```
+
+Override le nom de container si different :
+
+```bash
+NFL_BOOTSTRAP_CONTAINER=mon_container make nfl-bootstrap-prod
+```
+
+Ou en direct sans Makefile :
 
 ```bash
 docker exec nufflearena_server sh -c "cd /app/apps/server && \
@@ -173,7 +200,7 @@ curl -X POST -H "Cookie: $ADMIN_COOKIE" \
   https://api.tonsite.com/admin/nfl-fantasy/explore/seasons/2025/recompute-spp
 
 # Cas 3 : ajout d'un champ bio dans NflPlayer → re-ingest rosters
-make nfl-bootstrap --skip-stats --skip-scores
+make nfl-bootstrap-prod-rosters
 ```
 
 ## Couts data externes

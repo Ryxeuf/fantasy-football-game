@@ -335,14 +335,40 @@ db-sync-prod-check: ## Affiche le diff entre schéma local et DB prod SANS appli
 	  --to-schema-datamodel prisma/schema.prisma \
 	  --script
 
-nfl-bootstrap: ## Populate NFL Fantasy (teams + seasons + rosters + stats + scores) — idempotent, ~5-7min/saison
+nfl-bootstrap: ## Populate NFL Fantasy (teams + seasons + rosters + stats + scores) — idempotent, ~5-7min/saison. LOCAL DEV uniquement (node_modules locaux requis).
 	@echo "🏈 Bootstrap NFL Fantasy (2023, 2024, 2025)..."
 	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts
 	@echo "✅ Bootstrap NFL Fantasy terminé"
 
-nfl-bootstrap-2025: ## Populate uniquement la saison 2025 (rapide ~5min, idéal premier déploiement)
+nfl-bootstrap-2025: ## Populate uniquement la saison 2025 (rapide ~5min, idéal premier déploiement). LOCAL DEV uniquement.
 	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts --season 2025
-	@echo "✅ Migrations appliquées et client régénéré"
+	@echo "✅ Bootstrap saison 2025 terminé"
+
+# ─── Variantes PROD (via docker exec dans le container nufflearena_server) ──
+# Sur la VM, les `node_modules/` du repo Git pulled ne contiennent pas les
+# deps recentes (ex: csv-parse Phase 5.A) — seul le container Docker
+# pre-builde les a. On passe donc par `docker exec`. Le container herite
+# de DATABASE_URL via son env (cf. docker-compose.prod.yml), pas besoin
+# de la repasser.
+#
+# Override le nom de container avec NFL_BOOTSTRAP_CONTAINER=foo make ...
+NFL_BOOTSTRAP_CONTAINER ?= nufflearena_server
+NFL_BOOTSTRAP_CMD = cd /app/apps/server && pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts
+
+nfl-bootstrap-prod: ## (PROD) Populate NFL Fantasy via `docker exec` — toutes saisons (2023, 2024, 2025)
+	@echo "🏈 Bootstrap NFL Fantasy (2023, 2024, 2025) via $(NFL_BOOTSTRAP_CONTAINER)..."
+	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD)"
+	@echo "✅ Bootstrap NFL Fantasy terminé"
+
+nfl-bootstrap-prod-2025: ## (PROD) Populate uniquement la saison 2025 via `docker exec` (~5min, idéal premier déploiement)
+	@echo "🏈 Bootstrap NFL Fantasy 2025 via $(NFL_BOOTSTRAP_CONTAINER)..."
+	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --season 2025"
+	@echo "✅ Bootstrap saison 2025 terminé"
+
+nfl-bootstrap-prod-rosters: ## (PROD) Re-ingest uniquement les rosters (bio + jersey + headshot), skip stats + scores. Utile apres ajout de champ bio NflPlayer.
+	@echo "🏈 Re-ingest rosters NFL via $(NFL_BOOTSTRAP_CONTAINER)..."
+	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --skip-stats --skip-scores"
+	@echo "✅ Rosters re-ingerés"
 
 db-migrate-status: ## Vérifie le statut des migrations Prisma
 	@echo "📊 Statut des migrations Prisma..."
