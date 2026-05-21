@@ -2372,6 +2372,27 @@ model NflPlayer {
   status       String    @default("active")
   retiredAt    DateTime?
 
+  /// Bio remontee via ingestNflverseRosters (Phase 5.A). Tous
+  /// optionnels — pas tous les joueurs ont la donnee.
+  heightInches Int?
+  weightLbs    Int?
+  birthDate    DateTime?
+  college      String?
+  /// URL de la headshot officielle nflverse (CDN GitHub). Stable.
+  headshotUrl  String?
+  /// Annee de draft (ex: 2017). null si UDFA.
+  draftYear    Int?
+  /// Round de draft (1-7). null si UDFA / inconnu.
+  draftRound   Int?
+  /// Pick number overall (1-262). null si UDFA / inconnu.
+  draftPick    Int?
+  /// Equipe qui a drafte (peut differer de teamCode actuel).
+  draftClub    String?
+  /// Premiere annee NFL (rookie_year nflverse). null si inconnu.
+  rookieYear   Int?
+  /// Annees d'experience NFL au moment du roster snapshot.
+  yearsExp     Int?
+
   team      NflTeam?      @relation(fields: [teamCode], references: [code], onDelete: SetNull)
   gameStats NflGameStat[]
 

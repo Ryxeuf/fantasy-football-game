@@ -27,6 +27,7 @@ import {
 } from "./nfl-fantasy-scoring";
 import { ingestEspnGameday } from "./nfl-ingest-espn";
 import { ingestNflverseWeek } from "./nfl-ingest";
+import { ingestNflverseRosters } from "./nfl-ingest-rosters";
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
 
@@ -196,6 +197,39 @@ export async function nflverseIngestTick(opts: {
 }
 
 /**
+ * Pull rosters nflverse pour la saison en cours. Tourne 1x/jour
+ * dans la meme fenetre que le nflverseDailyTick. Backfill jersey +
+ * bio (height/weight/college/headshot/draft).
+ */
+export async function nflverseRostersTick(opts: {
+  now?: Date;
+  force?: boolean;
+} = {}): Promise<TickResult> {
+  const now = opts.now ?? new Date();
+  if (!opts.force && !isNflverseDailyWindow(now)) {
+    return { ran: false, reason: "out_of_window" };
+  }
+
+  const week = await findCurrentNflWeek(now);
+  if (!week) {
+    return { ran: false, reason: "no_current_week" };
+  }
+
+  try {
+    const result = await ingestNflverseRosters({ seasonId: week.seasonId });
+    serverLog.info(
+      `[nfl-cron] rosters ${week.seasonId} : updated=${result.playersUpdated} created=${result.playersCreated} skipped=${result.playersSkipped} errors=${result.errors.length}`,
+    );
+    return { ran: true, detail: result };
+  } catch (e) {
+    serverLog.error(
+      `[nfl-cron] rosters ${week.seasonId} failed: ${(e as Error).message}`,
+    );
+    return { ran: true, reason: "ingest_failed", detail: (e as Error).message };
+  }
+}
+
+/**
  * Pull ESPN scoreboard pour aujourd'hui. Tourne sur les jours NFL
  * uniquement.
  */
@@ -330,6 +364,7 @@ export async function nflFantasyOrchestratorTick(opts: {
   now?: Date;
 } = {}): Promise<{
   nflverse: TickResult;
+  rosters: TickResult;
   espn: TickResult;
   lock: TickResult;
   settle: TickResult;
@@ -338,8 +373,9 @@ export async function nflFantasyOrchestratorTick(opts: {
   // Sequenced pour eviter pression DB simultanee. Chacun retourne
   // immediatement avec { ran:false } hors de sa fenetre.
   const nflverse = await nflverseIngestTick({ now });
+  const rosters = await nflverseRostersTick({ now });
   const espn = await espnGamedayTick({ now });
   const lock = await lockLineupsTick({ now });
   const settle = await settleWeekTick({ now });
-  return { nflverse, espn, lock, settle };
+  return { nflverse, rosters, espn, lock, settle };
 }
