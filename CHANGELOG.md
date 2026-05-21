@@ -1,3 +1,16 @@
+## [1.137.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.136.0...v1.137.0) (2026-05-21)
+
+
+### ✨ Features
+
+* **nfl-mapper:** pseudonyms uniques via surname BB-flavored (Phase 5.D) ([5fe8660](https://github.com/Ryxeuf/fantasy-football-game/commit/5fe8660e3070d615c91322020cb990aafdfbe962)), closes [#15](https://github.com/Ryxeuf/fantasy-football-game/issues/15) [#0](https://github.com/Ryxeuf/fantasy-football-game/issues/0) [#0](https://github.com/Ryxeuf/fantasy-football-game/issues/0)
+* **web:** bloc PublicProfilePreview dans admin player detail (Phase 5.D) ([cf48d2a](https://github.com/Ryxeuf/fantasy-football-game/commit/cf48d2ab7fb9cca223c74a7d5e6cc210e13cf224))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 5.D pseudonyms uniques + apercu profil public ([d6a0417](https://github.com/Ryxeuf/fantasy-football-game/commit/d6a041792922c0a78295d9f9761e8a03ccdbf06d))
+
 ## [1.136.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.135.0...v1.136.0) (2026-05-21)
 
 
