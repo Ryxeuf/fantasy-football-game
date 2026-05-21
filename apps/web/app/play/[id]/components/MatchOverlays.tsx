@@ -141,13 +141,15 @@ export function MatchOverlays({
         setShowDicePopup={setShowDicePopup}
         createRNG={createRNG}
       />
-      {isActiveMatch && (
-        <GameChat
-          messages={chatMessages}
-          sendMessage={sendChatMessage}
-          currentUserId={currentUserId}
-        />
-      )}
+      {/* Le chat est dispo des qu'on est sur la page /play, y compris
+          en pre-match (coordination coin toss / inducements). Gater
+          sur isActiveMatch empechait les coachs de communiquer pendant
+          la phase setup et cassait `chat.spec.ts` (E2E). */}
+      <GameChat
+        messages={chatMessages}
+        sendMessage={sendChatMessage}
+        currentUserId={currentUserId}
+      />
     </>
   );
 }
