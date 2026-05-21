@@ -1,3 +1,11 @@
+## [1.138.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.0...v1.138.1) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **e2e-ui:** 5 specs Playwright en echec (regressions pre-existantes) ([7bc19ff](https://github.com/Ryxeuf/fantasy-football-game/commit/7bc19fffd8d0d92088d5fe9620dacdbb190fb498)), closes [#766](https://github.com/Ryxeuf/fantasy-football-game/issues/766)
+* **web:** ouvre GameChat des le pre-match (regression E2E chat) ([b389a22](https://github.com/Ryxeuf/fantasy-football-game/commit/b389a22350356bed3b3d47436f620c3b4c1a0407))
+
 ## [1.138.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.137.0...v1.138.0) (2026-05-21)
 
 
