@@ -1,3 +1,10 @@
+## [1.138.5](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.4...v1.138.5) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **deploy:** bypass corrupted global git config for deployment ([f87e049](https://github.com/Ryxeuf/fantasy-football-game/commit/f87e049cce95ae0d2cfbce1563997f9de57a6097))
+
 ## [1.138.4](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.3...v1.138.4) (2026-05-21)
 
 
