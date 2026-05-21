@@ -45,6 +45,7 @@ import { replaySeason } from "../services/nfl-fantasy-replay";
 import { generateMatchupGazette } from "../services/nfl-fantasy-gazette";
 import { ingestNflverseRosters } from "../services/nfl-ingest-rosters";
 import { backfillMissingScores } from "../services/nfl-ingest-espn";
+import { backfillScoresFromSchedules } from "../services/nfl-ingest";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -431,6 +432,28 @@ router.post("/explore/seasons/:id/backfill-scores", async (req, res) => {
     }
   }
 });
+
+// Backfill scores via nflverse schedules.csv (Phase 5.B+). Plus
+// fiable que ESPN pour les saisons historiques (ESPN ignore year=X).
+router.post(
+  "/explore/seasons/:id/backfill-scores-schedules",
+  async (req, res) => {
+    try {
+      const out = await backfillScoresFromSchedules({
+        seasonId: req.params.id,
+      });
+      res.json(out);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error(
+          "[admin-nfl-fantasy-explorer] backfill-scores-schedules failed",
+          err,
+        );
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 router.post("/explore/seasons/:id/ingest-rosters", async (req, res) => {
   try {

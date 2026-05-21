@@ -394,6 +394,99 @@ export function parseRow(
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Backfill scores depuis nflverse schedules.csv (Phase 5.B+)
+// ────────────────────────────────────────────────────────────────────
+
+export interface BackfillSchedulesScoresOpts {
+  readonly seasonId: string;
+  /** Override fetch pour les tests. */
+  readonly fetchSchedulesCsv?: () => Promise<string>;
+}
+
+export interface BackfillSchedulesScoresResult {
+  readonly seasonId: string;
+  readonly schedulesRows: number;
+  readonly scoresUpdated: number;
+  readonly kickoffsUpdated: number;
+  readonly notInDb: number;
+}
+
+/**
+ * Backfill `homeScore`/`awayScore`/`kickoffAt` directement depuis
+ * nflverse `games.csv`. Plus fiable que ESPN pour les saisons
+ * historiques (ESPN ignore `?year=X` et retourne la saison courante).
+ *
+ * Met aussi a jour `kickoffAt` (l'ancien ingest fixait W startDate
+ * pour tous les games sans vrai schedule lookup).
+ *
+ * Idempotent : update seulement si score/kickoff differe.
+ */
+export async function backfillScoresFromSchedules(
+  opts: BackfillSchedulesScoresOpts,
+): Promise<BackfillSchedulesScoresResult> {
+  const csv = await (opts.fetchSchedulesCsv ?? fetchNflverseSchedulesCsv)();
+  const rows = parseSchedulesCsv(csv, opts.seasonId);
+
+  let scoresUpdated = 0;
+  let kickoffsUpdated = 0;
+  let notInDb = 0;
+
+  for (const sched of rows) {
+    if (!sched.gameId) continue;
+    const gameId = normalizeNflverseGameId(sched.gameId);
+    const existing = (await prisma.nflGame.findUnique({
+      where: { id: gameId },
+      select: { homeScore: true, awayScore: true, kickoffAt: true },
+    })) as {
+      homeScore: number | null;
+      awayScore: number | null;
+      kickoffAt: Date;
+    } | null;
+
+    if (!existing) {
+      notInDb++;
+      continue;
+    }
+
+    const wantScore =
+      sched.homeScore !== null &&
+      sched.awayScore !== null &&
+      (existing.homeScore !== sched.homeScore ||
+        existing.awayScore !== sched.awayScore);
+    const wantKickoff =
+      sched.kickoffAt !== null &&
+      Math.abs(existing.kickoffAt.getTime() - sched.kickoffAt.getTime()) >
+        60_000; // 1 min tolerance
+
+    if (!wantScore && !wantKickoff) continue;
+
+    const data: {
+      homeScore?: number;
+      awayScore?: number;
+      kickoffAt?: Date;
+    } = {};
+    if (wantScore) {
+      data.homeScore = sched.homeScore as number;
+      data.awayScore = sched.awayScore as number;
+    }
+    if (wantKickoff) {
+      data.kickoffAt = sched.kickoffAt as Date;
+    }
+    await prisma.nflGame.update({ where: { id: gameId }, data });
+    if (wantScore) scoresUpdated++;
+    if (wantKickoff) kickoffsUpdated++;
+  }
+
+  return {
+    seasonId: opts.seasonId,
+    schedulesRows: rows.length,
+    scoresUpdated,
+    kickoffsUpdated,
+    notInDb,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Seed referentiel
 // ────────────────────────────────────────────────────────────────────
 
