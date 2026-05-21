@@ -499,6 +499,71 @@ export interface AdminPlayerStatRow {
   readonly ingestedAt: string;
 }
 
+export interface AdminPlayerBio {
+  readonly heightInches: number | null;
+  readonly weightLbs: number | null;
+  readonly birthDate: string | null;
+  /** Age en annees au moment du fetch. null si birthDate inconnu. */
+  readonly ageYears: number | null;
+  readonly college: string | null;
+  readonly headshotUrl: string | null;
+  readonly draftYear: number | null;
+  readonly draftRound: number | null;
+  readonly draftPick: number | null;
+  readonly draftClub: string | null;
+  readonly rookieYear: number | null;
+  readonly yearsExp: number | null;
+}
+
+export interface PassingStats {
+  readonly completions: number;
+  readonly attempts: number;
+  readonly passingYards: number;
+  readonly passingTds: number;
+  readonly interceptions: number;
+  readonly sacks: number;
+}
+
+export interface RushingStats {
+  readonly carries: number;
+  readonly rushingYards: number;
+  readonly rushingTds: number;
+  readonly rushingFumblesLost: number;
+}
+
+export interface ReceivingStats {
+  readonly targets: number;
+  readonly receptions: number;
+  readonly receivingYards: number;
+  readonly receivingTds: number;
+  readonly receivingFumblesLost: number;
+}
+
+export interface DefenseStats {
+  readonly tacklesSolo: number;
+  readonly tackleAssists: number;
+  readonly sacks: number;
+  readonly interceptions: number;
+  readonly fumblesForced: number;
+  readonly fumblesRecovered: number;
+  readonly defTds: number;
+  readonly passesDefended: number;
+}
+
+export interface AdminPlayerCategoryStats {
+  readonly passing: PassingStats;
+  readonly rushing: RushingStats;
+  readonly receiving: ReceivingStats;
+  readonly defense: DefenseStats;
+}
+
+export interface AdminPlayerSeasonAggregate {
+  readonly seasonId: string;
+  readonly gamesPlayed: number;
+  readonly totalSpp: number;
+  readonly categoryStats: AdminPlayerCategoryStats;
+}
+
 export interface AdminPlayerDetail {
   readonly id: string;
   readonly pseudonym: string;
@@ -512,6 +577,7 @@ export interface AdminPlayerDetail {
   readonly retiredAt: string | null;
   readonly bbStats: unknown;
   readonly bbSkills: unknown;
+  readonly bio: AdminPlayerBio;
   readonly team: {
     readonly code: string;
     readonly city: string;
@@ -520,7 +586,123 @@ export interface AdminPlayerDetail {
   } | null;
   readonly totalSpp: number;
   readonly gamesPlayed: number;
+  /**
+   * Totaux agreges par categorie sur la fenetre filtree (seasonId si
+   * fourni, sinon carriere complete).
+   */
+  readonly categoryStats: AdminPlayerCategoryStats;
+  /**
+   * Aggregats par saison (DESC) pour le tableau "Career". Toujours
+   * retourne meme si seasonId est filtre — permet d'afficher l'onglet
+   * Career sans round-trip.
+   */
+  readonly seasons: ReadonlyArray<AdminPlayerSeasonAggregate>;
   readonly stats: ReadonlyArray<AdminPlayerStatRow>;
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Pure helpers stats (Phase 5.C)
+// ────────────────────────────────────────────────────────────────────
+
+function toNum(raw: unknown): number {
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string") {
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+/**
+ * Aggrege une liste de rawStats nflverse en totaux par categorie.
+ * Tolerant : null/undefined/colonnes manquantes → 0.
+ *
+ * Pure, deterministe.
+ */
+export function aggregateCategoryStats(
+  rawStatsList: ReadonlyArray<unknown>,
+): AdminPlayerCategoryStats {
+  const passing: PassingStats = {
+    completions: 0,
+    attempts: 0,
+    passingYards: 0,
+    passingTds: 0,
+    interceptions: 0,
+    sacks: 0,
+  };
+  const rushing: RushingStats = {
+    carries: 0,
+    rushingYards: 0,
+    rushingTds: 0,
+    rushingFumblesLost: 0,
+  };
+  const receiving: ReceivingStats = {
+    targets: 0,
+    receptions: 0,
+    receivingYards: 0,
+    receivingTds: 0,
+    receivingFumblesLost: 0,
+  };
+  const defense: DefenseStats = {
+    tacklesSolo: 0,
+    tackleAssists: 0,
+    sacks: 0,
+    interceptions: 0,
+    fumblesForced: 0,
+    fumblesRecovered: 0,
+    defTds: 0,
+    passesDefended: 0,
+  };
+
+  // Use mutable accumulators internally, freeze at end.
+  const p = passing as unknown as Record<keyof PassingStats, number>;
+  const ru = rushing as unknown as Record<keyof RushingStats, number>;
+  const rc = receiving as unknown as Record<keyof ReceivingStats, number>;
+  const d = defense as unknown as Record<keyof DefenseStats, number>;
+
+  for (const raw of rawStatsList) {
+    let row: Record<string, unknown> | null = null;
+    if (raw && typeof raw === "object") row = raw as Record<string, unknown>;
+    else if (typeof raw === "string") {
+      try {
+        row = JSON.parse(raw) as Record<string, unknown>;
+      } catch {
+        row = null;
+      }
+    }
+    if (!row) continue;
+
+    p.completions += toNum(row.completions);
+    p.attempts += toNum(row.attempts);
+    p.passingYards += toNum(row.passing_yards);
+    p.passingTds += toNum(row.passing_tds);
+    p.interceptions += toNum(row.passing_interceptions ?? row.interceptions);
+    p.sacks += toNum(row.sacks);
+
+    ru.carries += toNum(row.carries);
+    ru.rushingYards += toNum(row.rushing_yards);
+    ru.rushingTds += toNum(row.rushing_tds);
+    ru.rushingFumblesLost += toNum(row.rushing_fumbles_lost);
+
+    rc.targets += toNum(row.targets);
+    rc.receptions += toNum(row.receptions);
+    rc.receivingYards += toNum(row.receiving_yards);
+    rc.receivingTds += toNum(row.receiving_tds);
+    rc.receivingFumblesLost += toNum(row.receiving_fumbles_lost);
+
+    d.tacklesSolo += toNum(row.tackles_solo ?? row.def_tackles_solo);
+    d.tackleAssists += toNum(row.tackle_assists ?? row.def_tackle_assists);
+    d.sacks += toNum(row.def_sacks);
+    d.interceptions += toNum(row.def_interceptions);
+    d.fumblesForced += toNum(row.def_fumbles_forced);
+    d.fumblesRecovered += toNum(
+      row.def_fumble_recovery_opp ?? row.def_fumbles_recovered,
+    );
+    d.defTds += toNum(row.def_tds);
+    d.passesDefended += toNum(row.def_pass_defended ?? row.def_pds);
+  }
+
+  return { passing, rushing, receiving, defense };
 }
 
 /**
@@ -569,6 +751,52 @@ export async function getNflPlayerDetail(opts: {
     0,
   );
 
+  const categoryStats = aggregateCategoryStats(
+    stats.map((s) => s.rawStats as unknown),
+  );
+
+  // Charge TOUTES les stats (sans filtre seasonId) pour produire le
+  // tableau "Career" — peu importe le seasonId courant.
+  type StatBySeason = { seasonId: string; computedSpp: number | null; rawStats: unknown };
+  const allSeasonStats = (await prisma.nflGameStat.findMany({
+    where: { playerId: opts.id },
+    select: {
+      computedSpp: true,
+      rawStats: true,
+      game: { select: { seasonId: true } },
+    },
+  })) as Array<{
+    computedSpp: number | null;
+    rawStats: unknown;
+    game: { seasonId: string };
+  }>;
+  const bySeason = new Map<string, StatBySeason[]>();
+  for (const s of allSeasonStats) {
+    const sid = s.game.seasonId;
+    const arr = bySeason.get(sid) ?? [];
+    arr.push({
+      seasonId: sid,
+      computedSpp: s.computedSpp,
+      rawStats: s.rawStats,
+    });
+    bySeason.set(sid, arr);
+  }
+  const seasons: AdminPlayerSeasonAggregate[] = Array.from(bySeason.entries())
+    .map(([seasonId, list]) => ({
+      seasonId,
+      gamesPlayed: list.length,
+      totalSpp: list.reduce((acc, s) => acc + (s.computedSpp ?? 0), 0),
+      categoryStats: aggregateCategoryStats(list.map((l) => l.rawStats)),
+    }))
+    .sort((a, b) => (a.seasonId < b.seasonId ? 1 : -1));
+
+  const birthDate = player.birthDate ? new Date(player.birthDate) : null;
+  const ageYears = birthDate
+    ? Math.floor(
+        (Date.now() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000),
+      )
+    : null;
+
   return {
     id: player.id,
     pseudonym: player.pseudonym,
@@ -582,6 +810,20 @@ export async function getNflPlayerDetail(opts: {
     retiredAt: player.retiredAt ? player.retiredAt.toISOString() : null,
     bbStats: player.bbStats,
     bbSkills: player.bbSkills,
+    bio: {
+      heightInches: player.heightInches,
+      weightLbs: player.weightLbs,
+      birthDate: player.birthDate ? player.birthDate.toISOString() : null,
+      ageYears,
+      college: player.college,
+      headshotUrl: player.headshotUrl,
+      draftYear: player.draftYear,
+      draftRound: player.draftRound,
+      draftPick: player.draftPick,
+      draftClub: player.draftClub,
+      rookieYear: player.rookieYear,
+      yearsExp: player.yearsExp,
+    },
     team: team
       ? {
           code: team.code,
@@ -592,6 +834,8 @@ export async function getNflPlayerDetail(opts: {
       : null,
     totalSpp,
     gamesPlayed: stats.length,
+    categoryStats,
+    seasons,
     stats: stats.map((s) => ({
       gameId: s.gameId,
       weekId: s.game.weekId,

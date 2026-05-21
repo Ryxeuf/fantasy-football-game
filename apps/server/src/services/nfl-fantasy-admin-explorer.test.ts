@@ -56,6 +56,7 @@ import { computeSpp, getBbPosition } from "@bb/nfl-mapper";
 import { buildStatLineFromRow } from "./nfl-ingest";
 import {
   NflFantasyAdminError,
+  aggregateCategoryStats,
   cleanupReplayLeagues,
   getLeagueDetailForAdmin,
   getMatchupDetailForAdmin,
@@ -357,46 +358,52 @@ describe("getNflPlayerDetail", () => {
       raceLabel: "KC Skaven",
       bbRace: "Skaven",
     } as never);
-    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValueOnce([
-      {
-        gameId: "G1",
-        computedSpp: 10,
-        sppBreakdown: { events: [], totalSpp: 10 },
-        rawStats: {},
-        ingestSource: "nflverse",
-        ingestedAt: new Date("2025-11-10"),
-        game: {
-          weekId: "2025:W10",
-          seasonId: "2025",
-          homeTeam: "KC",
-          awayTeam: "BUF",
-          homeScore: 30,
-          awayScore: 21,
-          status: "final",
-          kickoffAt: new Date("2025-11-09T17:00:00Z"),
-          week: { weekNumber: 10 },
+    vi.mocked(prisma.nflGameStat.findMany)
+      .mockResolvedValueOnce([
+        {
+          gameId: "G1",
+          computedSpp: 10,
+          sppBreakdown: { events: [], totalSpp: 10 },
+          rawStats: {},
+          ingestSource: "nflverse",
+          ingestedAt: new Date("2025-11-10"),
+          game: {
+            weekId: "2025:W10",
+            seasonId: "2025",
+            homeTeam: "KC",
+            awayTeam: "BUF",
+            homeScore: 30,
+            awayScore: 21,
+            status: "final",
+            kickoffAt: new Date("2025-11-09T17:00:00Z"),
+            week: { weekNumber: 10 },
+          },
         },
-      },
-      {
-        gameId: "G2",
-        computedSpp: 5,
-        sppBreakdown: { events: [], totalSpp: 5 },
-        rawStats: {},
-        ingestSource: "nflverse",
-        ingestedAt: new Date("2025-11-17"),
-        game: {
-          weekId: "2025:W11",
-          seasonId: "2025",
-          homeTeam: "DEN",
-          awayTeam: "KC",
-          homeScore: 14,
-          awayScore: 28,
-          status: "final",
-          kickoffAt: new Date("2025-11-16T17:00:00Z"),
-          week: { weekNumber: 11 },
+        {
+          gameId: "G2",
+          computedSpp: 5,
+          sppBreakdown: { events: [], totalSpp: 5 },
+          rawStats: {},
+          ingestSource: "nflverse",
+          ingestedAt: new Date("2025-11-17"),
+          game: {
+            weekId: "2025:W11",
+            seasonId: "2025",
+            homeTeam: "DEN",
+            awayTeam: "KC",
+            homeScore: 14,
+            awayScore: 28,
+            status: "final",
+            kickoffAt: new Date("2025-11-16T17:00:00Z"),
+            week: { weekNumber: 11 },
+          },
         },
-      },
-    ] as never);
+      ] as never)
+      // 2e findMany pour seasons agreges
+      .mockResolvedValueOnce([
+        { computedSpp: 10, rawStats: {}, game: { seasonId: "2025" } },
+        { computedSpp: 5, rawStats: {}, game: { seasonId: "2025" } },
+      ] as never);
 
     const out = await getNflPlayerDetail({ id: "P1", seasonId: "2025" });
     expect(out).not.toBeNull();
@@ -1194,5 +1201,115 @@ describe("getMatchupDetailForAdmin", () => {
     const out = await getMatchupDetailForAdmin("M3");
     expect(out!.winnerSide).toBeNull();
     expect(out!.home.starters).toEqual([]);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// aggregateCategoryStats (Phase 5.C)
+// ────────────────────────────────────────────────────────────────────
+
+describe("aggregateCategoryStats", () => {
+  it("retourne zeros pour liste vide", () => {
+    const out = aggregateCategoryStats([]);
+    expect(out.passing.passingYards).toBe(0);
+    expect(out.rushing.rushingYards).toBe(0);
+    expect(out.receiving.receivingYards).toBe(0);
+    expect(out.defense.tacklesSolo).toBe(0);
+  });
+
+  it("aggrege un QB sur 2 games", () => {
+    const out = aggregateCategoryStats([
+      {
+        completions: 25,
+        attempts: 40,
+        passing_yards: 320,
+        passing_tds: 3,
+        passing_interceptions: 1,
+        sacks: 2,
+      },
+      {
+        completions: 22,
+        attempts: 35,
+        passing_yards: 280,
+        passing_tds: 2,
+        passing_interceptions: 0,
+        sacks: 1,
+      },
+    ]);
+    expect(out.passing.completions).toBe(47);
+    expect(out.passing.attempts).toBe(75);
+    expect(out.passing.passingYards).toBe(600);
+    expect(out.passing.passingTds).toBe(5);
+    expect(out.passing.interceptions).toBe(1);
+    expect(out.passing.sacks).toBe(3);
+  });
+
+  it("aggrege un RB hybride passing/rushing/receiving", () => {
+    const out = aggregateCategoryStats([
+      {
+        carries: 18,
+        rushing_yards: 95,
+        rushing_tds: 1,
+        targets: 5,
+        receptions: 4,
+        receiving_yards: 38,
+      },
+    ]);
+    expect(out.rushing.carries).toBe(18);
+    expect(out.rushing.rushingYards).toBe(95);
+    expect(out.receiving.targets).toBe(5);
+    expect(out.receiving.receptions).toBe(4);
+    expect(out.receiving.receivingYards).toBe(38);
+  });
+
+  it("aggrege un defenseur (interceptions, sacks, tackles)", () => {
+    const out = aggregateCategoryStats([
+      {
+        tackles_solo: 5,
+        tackle_assists: 3,
+        def_sacks: 1,
+        def_interceptions: 1,
+        def_pass_defended: 2,
+      },
+      {
+        tackles_solo: 7,
+        tackle_assists: 2,
+        def_sacks: 0.5,
+        def_fumbles_forced: 1,
+      },
+    ]);
+    expect(out.defense.tacklesSolo).toBe(12);
+    expect(out.defense.tackleAssists).toBe(5);
+    expect(out.defense.sacks).toBe(1.5);
+    expect(out.defense.interceptions).toBe(1);
+    expect(out.defense.fumblesForced).toBe(1);
+    expect(out.defense.passesDefended).toBe(2);
+  });
+
+  it("tolere les strings (sqlite mirror) et les valeurs absentes", () => {
+    const out = aggregateCategoryStats([
+      {
+        passing_yards: "250",
+        passing_tds: "2",
+        receiving_yards: undefined,
+        carries: null,
+      } as never,
+    ]);
+    expect(out.passing.passingYards).toBe(250);
+    expect(out.passing.passingTds).toBe(2);
+    expect(out.receiving.receivingYards).toBe(0);
+    expect(out.rushing.carries).toBe(0);
+  });
+
+  it("tolere une row serialisee JSON string", () => {
+    const out = aggregateCategoryStats([
+      JSON.stringify({ passing_yards: 100 }),
+    ]);
+    expect(out.passing.passingYards).toBe(100);
+  });
+
+  it("ignore les rows invalides (string non-JSON, null, undefined)", () => {
+    const out = aggregateCategoryStats(["not json", null, undefined]);
+    expect(out.passing.passingYards).toBe(0);
   });
 });

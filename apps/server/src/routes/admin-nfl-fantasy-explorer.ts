@@ -43,6 +43,8 @@ import {
 } from "../services/nfl-fantasy-admin-explorer";
 import { replaySeason } from "../services/nfl-fantasy-replay";
 import { generateMatchupGazette } from "../services/nfl-fantasy-gazette";
+import { ingestNflverseRosters } from "../services/nfl-ingest-rosters";
+import { backfillMissingScores } from "../services/nfl-ingest-espn";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -408,6 +410,36 @@ router.post("/explore/seasons/:id/recompute-spp", async (req, res) => {
     if (!sendNflError(res, err)) {
       serverLog.error(
         "[admin-nfl-fantasy-explorer] recompute-season-spp failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+router.post("/explore/seasons/:id/backfill-scores", async (req, res) => {
+  try {
+    const out = await backfillMissingScores({ seasonId: req.params.id });
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] backfill-scores failed",
+        err,
+      );
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+router.post("/explore/seasons/:id/ingest-rosters", async (req, res) => {
+  try {
+    const out = await ingestNflverseRosters({ seasonId: req.params.id });
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error(
+        "[admin-nfl-fantasy-explorer] ingest-rosters failed",
         err,
       );
       res.status(500).json({ error: "Erreur serveur" });
