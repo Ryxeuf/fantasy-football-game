@@ -321,6 +321,20 @@ db-migrate-deploy: ## Applique les migrations Prisma en production (sans créer 
 	@echo "🧬 Régénération du client Prisma..."
 	@npx prisma generate --schema prisma/schema.prisma
 
+db-sync-prod: ## Synchronise le schéma Prisma en prod SANS toucher aux data (db push, idempotent). Préférer à migrate-deploy si les migrations sont désynchronisées.
+	@echo "🔄 Synchronisation du schéma Prisma (db push, NON destructif)..."
+	@npx prisma db push --schema prisma/schema.prisma
+	@echo "🧬 Régénération du client Prisma..."
+	@npx prisma generate --schema prisma/schema.prisma
+	@echo "✅ Schéma synchronisé sans perte de données"
+
+db-sync-prod-check: ## Affiche le diff entre schéma local et DB prod SANS appliquer (dry-run)
+	@echo "🔍 Diff schéma local vs DB ($$DATABASE_URL) :"
+	@npx prisma migrate diff \
+	  --from-url "$$DATABASE_URL" \
+	  --to-schema-datamodel prisma/schema.prisma \
+	  --script
+
 nfl-bootstrap: ## Populate NFL Fantasy (teams + seasons + rosters + stats + scores) — idempotent, ~5-7min/saison
 	@echo "🏈 Bootstrap NFL Fantasy (2023, 2024, 2025)..."
 	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts

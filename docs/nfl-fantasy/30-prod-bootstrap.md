@@ -6,17 +6,45 @@
 ## TL;DR
 
 ```bash
-# 1. Sur la prod, applique les migrations Prisma
-make db-migrate-deploy
+# 1. Dry-run : voir ce que va faire le sync (recommande la 1e fois)
+DATABASE_URL=postgres://... make db-sync-prod-check
 
-# 2. Lance le bootstrap NFL Fantasy (idempotent ~5-7min par saison)
-make nfl-bootstrap          # 2023 + 2024 + 2025
+# 2. Sync le schema Prisma en prod (db push, NON destructif sur data
+#    existantes tant qu'aucune colonne n'a ete supprimee du schema.prisma)
+DATABASE_URL=postgres://... make db-sync-prod
+
+# 3. Lance le bootstrap NFL Fantasy (idempotent ~5-7min par saison)
+DATABASE_URL=postgres://... make nfl-bootstrap          # 2023 + 2024 + 2025
 # OU pour aller vite la premiere fois :
-make nfl-bootstrap-2025     # juste 2025
+DATABASE_URL=postgres://... make nfl-bootstrap-2025     # juste 2025
 ```
 
 Le cron prend ensuite le relais automatiquement (~03:00 UTC) pour
 maintenir stats + rosters + scores a jour.
+
+## ⚠️ Migrations : pourquoi `db-sync-prod` et pas `db-migrate-deploy`
+
+L'etat des migrations Prisma est **desynchronise** dans ce projet :
+- 9 migrations dans `prisma/migrations/`, mais seule
+  `20260520104028_add_nfl_fantasy_tables` est tracee dans
+  `_prisma_migrations`.
+- Les changements de schema recents (Phase 5.A bio, 5.H gazette,
+  5.J matchup detail) ont ete appliques via `prisma db push` sans
+  generer de fichier migration.
+
+Resultat : `prisma migrate deploy` crasherait soit en disant "table
+already exists", soit en laissant une DB prod incomplete (sans les
+colonnes bio/headshot/gazette).
+
+**Approche choisie pour ce projet (cf. memo CLAUDE.md "Voie B")** :
+`prisma db push` qui synchronise directement schema -> DB. Pas
+destructif tant que les colonnes supprimees doivent etre acceptees
+explicitement via `--accept-data-loss`. Audit/rollback formal en
+moins, mais ergonomie OK pour V1 single-instance.
+
+Au fil du temps, recommande : consolider toutes les migrations
+pending en une seule migration "init_v1" + adopter le workflow
+standard `migrate dev` / `migrate deploy` pour les futurs changements.
 
 ## Ce que fait le bootstrap
 
@@ -45,16 +73,19 @@ crashe, les precedentes restent valides.
 ### Etapes
 
 ```bash
-# 1. Migrations schema Prisma
-make db-migrate-deploy
+# 1. (Recommande) Voir le diff schema sans rien appliquer
+DATABASE_URL=$PROD_URL make db-sync-prod-check
 
-# 2. Bootstrap data
-make nfl-bootstrap
+# 2. Sync schema Prisma (non destructif sauf colonnes supprimees)
+DATABASE_URL=$PROD_URL make db-sync-prod
 
-# 3. Verifier : healthcheck + counts
+# 3. Bootstrap data
+DATABASE_URL=$PROD_URL make nfl-bootstrap
+
+# 4. Verifier : healthcheck + counts
 curl https://api.tonsite.com/health
 # OU directement en DB :
-psql $DATABASE_URL -c "SELECT \"seasonId\", COUNT(*) FROM \"NflGame\" GROUP BY \"seasonId\";"
+psql $PROD_URL -c "SELECT \"seasonId\", COUNT(*) FROM \"NflGame\" GROUP BY \"seasonId\";"
 ```
 
 ### Apres bootstrap : le cron prend le relais
