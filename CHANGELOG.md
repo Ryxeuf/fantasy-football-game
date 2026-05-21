@@ -1,3 +1,22 @@
+## [1.136.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.135.0...v1.136.0) (2026-05-21)
+
+
+### ✨ Features
+
+* **server:** backfill scores ESPN par week (Phase 5.B) ([51f4a95](https://github.com/Ryxeuf/fantasy-football-game/commit/51f4a95ac9dc3f44b775a647ed651b6812f2e2a7))
+* **server:** backfillScoresFromSchedules (nflverse games.csv) (Phase 5.B+) ([1a5cb8b](https://github.com/Ryxeuf/fantasy-football-game/commit/1a5cb8b5332cf00d8c5d3a85fe805320ad5c9dc6))
+* **server:** bio + categoryStats + seasons dans getNflPlayerDetail (Phase 5.C) ([9fab40a](https://github.com/Ryxeuf/fantasy-football-game/commit/9fab40ada78d1a46caf0b34b8540c20308889002))
+* **server:** ingestNflverseRosters (jersey + bio) Phase 5.A ([3bff931](https://github.com/Ryxeuf/fantasy-football-game/commit/3bff93143c2fd8032cb3787dbe89c0f2503ab8db))
+* **server:** Nuffle Gazette par matchup via Claude Haiku (Phase 3.H) ([178f3c1](https://github.com/Ryxeuf/fantasy-football-game/commit/178f3c13a7aeb25bc0e52c716211f893d7a1f69b))
+* **web:** card Nuffle Gazette sur page matchup detail admin (Phase 3.H) ([8e05a44](https://github.com/Ryxeuf/fantasy-football-game/commit/8e05a44f01c3fc82991de5b4ffe8b1ac9c3c9a18))
+* **web:** page joueur ESPN-style (Phase 5.C) ([74b5c6f](https://github.com/Ryxeuf/fantasy-football-game/commit/74b5c6f5e00914711db5b1825d4acdf961d95b2d))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 3.H Nuffle Gazette par matchup ([0fa3728](https://github.com/Ryxeuf/fantasy-football-game/commit/0fa3728afeec7788bda83f2f09839fc68a1a0dbb))
+* **nfl-fantasy:** Phase 5.A+B+C rosters bio + backfill scores + page joueur ([f4bfdd6](https://github.com/Ryxeuf/fantasy-football-game/commit/f4bfdd66a314f6becb1bebd4958ec155e6465872))
+
 ## [1.135.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.134.0...v1.135.0) (2026-05-20)
 
 
