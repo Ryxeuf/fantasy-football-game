@@ -15,6 +15,29 @@ import { test, expect } from "@playwright/test";
 
 const FAKE_MATCH_ID = "fake-replay-match-id";
 
+/**
+ * Mocke `/full-replay` pour eviter que la fetch ne parte vers la VRAIE
+ * API (qui repondra 404 sur un match inexistant, mais peut prendre du
+ * temps a repondre ou voir sa connexion network refusee dans certains
+ * setups CI). 404 = legacy match, la page bascule en vue classique
+ * sans bloquer le rendu du replay-header.
+ */
+async function mockFullReplay(page: import("@playwright/test").Page): Promise<void> {
+  await page.route(
+    `**/pro-league/matches/${FAKE_MATCH_ID}/full-replay`,
+    async (route) => {
+      await route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "Full replay not available",
+          code: "FULL_REPLAY_NOT_AVAILABLE",
+        }),
+      });
+    },
+  );
+}
+
 test.describe("E2E UI — Pro League replay player", () => {
   test("affiche une erreur si l'API replay renvoie 404", async ({ page }) => {
     await page.route(
@@ -44,6 +67,7 @@ test.describe("E2E UI — Pro League replay player", () => {
   test("rend les controls + scrub bar avec un dump mocke", async ({
     page,
   }) => {
+    await mockFullReplay(page);
     // 1) Route metadata du redirect hook : status='completed' => no redirect.
     await page.route(
       `**/pro-league/matches/${FAKE_MATCH_ID}`,
@@ -156,6 +180,7 @@ test.describe("E2E UI — Pro League replay player", () => {
   test("skip-to-end via bouton met le score final + half=FT", async ({
     page,
   }) => {
+    await mockFullReplay(page);
     await page.route(
       `**/pro-league/matches/${FAKE_MATCH_ID}`,
       async (route) => {
@@ -235,6 +260,7 @@ test.describe("E2E UI — Pro League replay player", () => {
   });
 
   test("End key shortcut skip-to-end (1.G.5)", async ({ page }) => {
+    await mockFullReplay(page);
     await page.route(
       `**/pro-league/matches/${FAKE_MATCH_ID}`,
       async (route) => {
