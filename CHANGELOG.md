@@ -1,3 +1,20 @@
+## [1.138.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.137.0...v1.138.0) (2026-05-21)
+
+
+### ✨ Features
+
+* **server:** script bootstrap-nfl-prod (Phase 5.E) ([9be8929](https://github.com/Ryxeuf/fantasy-football-game/commit/9be8929ba3582e6368a46434c6e73fb0a1a9bbad))
+
+
+### 🐛 Bug Fixes
+
+* **server:** types explicites sur queries Prisma NFL fantasy (CI typecheck) ([2d1a7c4](https://github.com/Ryxeuf/fantasy-football-game/commit/2d1a7c4946ce0eccb488fbd61958e879c9f17026))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Phase 5.E bootstrap-nfl-prod workflow ([1bba9e8](https://github.com/Ryxeuf/fantasy-football-game/commit/1bba9e806b6b0964e4411ba33e210df4bc5199ed))
+
 ## [1.137.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.136.0...v1.137.0) (2026-05-21)
 
 
