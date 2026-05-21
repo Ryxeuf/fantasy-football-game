@@ -1,3 +1,15 @@
+## [1.139.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.7...v1.139.0) (2026-05-21)
+
+
+### ✨ Features
+
+* **makefile:** enhance NFL bootstrap process with Docker support ([1faf141](https://github.com/Ryxeuf/fantasy-football-game/commit/1faf14125e43dd1ca1b97bc81b0d22a14f9e4e98))
+
+
+### ♻️ Code Refactoring
+
+* **nfl-ingest:** clarify NflPlayer upsert logic and pseudonym handling ([133901c](https://github.com/Ryxeuf/fantasy-football-game/commit/133901c23c28373bd825a54be44c2cd0633bab21))
+
 ## [1.138.7](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.6...v1.138.7) (2026-05-21)
 
 
