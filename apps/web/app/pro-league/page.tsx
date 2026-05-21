@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { apiRequest } from "../lib/api-client";
+import { ApiClientError, apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
 import { WalletBadge } from "./_components/WalletBadge";
@@ -230,6 +230,12 @@ export default function ProLeagueHubPage(): JSX.Element {
       })
       .catch((e: unknown) => {
         if (cancelled) return;
+        // 404 = pas de saison courante → empty-state legitime, pas une
+        // erreur a afficher en alert (UI E2E + DB fraiche en CI).
+        if (e instanceof ApiClientError && e.status === 404) {
+          setData(null);
+          return;
+        }
         const msg = e instanceof Error ? e.message : "fetch error";
         setError(msg);
       })
