@@ -154,6 +154,14 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             # Pull last code (for compose files + scripts + prisma schema).
+            # On bypasse `~/.gitconfig` (variable `GIT_CONFIG_GLOBAL=/dev/null`)
+            # parce que le fichier de la VM prod est corrompu (~35k lignes,
+            # "bad config line" au runtime). Export = scripts/deploy.sh herite
+            # aussi du bypass pour ses `git rev-parse`. Investiguer l'origine
+            # de la corruption (process qui append en boucle ?) reste a faire
+            # cote VM, mais ici on assure que le deploiement n'est pas
+            # bloque par cet etat.
+            export GIT_CONFIG_GLOBAL=/dev/null
             git fetch origin main
             git reset --hard origin/main
 
