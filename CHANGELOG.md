@@ -1,3 +1,10 @@
+## [1.138.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.1...v1.138.2) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **web:** hub /pro-league traite 404 comme empty-state (E2E) ([24709cb](https://github.com/Ryxeuf/fantasy-football-game/commit/24709cb9ad6bb49e1d15c1d04b763e38d686196a))
+
 ## [1.138.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.0...v1.138.1) (2026-05-21)
 
 
