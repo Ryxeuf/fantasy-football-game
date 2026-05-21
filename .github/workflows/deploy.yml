@@ -154,14 +154,21 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             # Pull last code (for compose files + scripts + prisma schema).
-            # On bypasse `~/.gitconfig` (variable `GIT_CONFIG_GLOBAL=/dev/null`)
-            # parce que le fichier de la VM prod est corrompu (~35k lignes,
-            # "bad config line" au runtime). Export = scripts/deploy.sh herite
-            # aussi du bypass pour ses `git rev-parse`. Investiguer l'origine
-            # de la corruption (process qui append en boucle ?) reste a faire
-            # cote VM, mais ici on assure que le deploiement n'est pas
-            # bloque par cet etat.
-            export GIT_CONFIG_GLOBAL=/dev/null
+            # ~/.gitconfig de la VM prod est corrompu (~35k lignes, "bad
+            # config line 35504"). `GIT_CONFIG_GLOBAL=/dev/null` ne marche
+            # pas — surement git < 2.32 sur la VM. On repare directement
+            # le fichier : backup + truncate au-dessus de 5k lignes (seuil
+            # absurde pour un .gitconfig normal qui en a 10-30). Une fois
+            # repare, git fonctionne sans astuce d'env.
+            #
+            # Investigation residuelle cote VM : identifier qui pollue
+            # ~/.gitconfig en boucle (cron ? hook docker ? plugin shell ?).
+            # Les backups laissent une trace si besoin.
+            if [ -f ~/.gitconfig ] && [ "$(wc -l < ~/.gitconfig 2>/dev/null || echo 0)" -gt 5000 ]; then
+              cp ~/.gitconfig ~/.gitconfig.corrupted.$(date +%s)
+              : > ~/.gitconfig
+              echo "[deploy] ~/.gitconfig corrompu detecte → backup + truncate" >&2
+            fi
             git fetch origin main
             git reset --hard origin/main
 
