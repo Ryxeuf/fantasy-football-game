@@ -1,3 +1,10 @@
+## [1.138.7](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.6...v1.138.7) (2026-05-21)
+
+
+### 🐛 Bug Fixes
+
+* **deploy:** add safe.directory configuration to deployment workflow ([e65b042](https://github.com/Ryxeuf/fantasy-football-game/commit/e65b0421454decb62e28b7f610ec9cd4fcd19b35))
+
 ## [1.138.6](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.5...v1.138.6) (2026-05-21)
 
 
