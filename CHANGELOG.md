@@ -1,3 +1,11 @@
+## [1.143.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.142.0...v1.143.0) (2026-05-22)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** add Nuffle Coach test flag for enhanced league creation ([c2571b6](https://github.com/Ryxeuf/fantasy-football-game/commit/c2571b660f1bf0779f517cf4f58c99a2a039199c))
+* **nfl-fantasy:** enhance league management with test coach population feature ([c25994c](https://github.com/Ryxeuf/fantasy-football-game/commit/c25994c9311ec29b77cebddd3295cb38cdca4ef4))
+
 ## [1.142.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.141.0...v1.142.0) (2026-05-22)
 
 
