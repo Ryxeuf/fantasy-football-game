@@ -59,11 +59,11 @@ export default function LeagueStandingsPage() {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -73,12 +73,12 @@ export default function LeagueStandingsPage() {
 
   if (error?.status === 404 || error?.status === 403) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">League introuvable</h1>
-        <p className="mt-2 text-sm text-slate-400">{error.message}</p>
+        <p className="mt-2 text-sm text-nuffle-anthracite/70">{error.message}</p>
         <Link
           href="/nfl-fantasy"
-          className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300"
+          className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
         >
           ← Retour à mes leagues
         </Link>
@@ -91,30 +91,30 @@ export default function LeagueStandingsPage() {
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${leagueId}`}
-          className="text-sm text-slate-400 hover:text-white"
+          className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
         >
           ← Retour à la league
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Classement</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-nuffle-anthracite/70">
           Bilan computed sur les matchups settled. Tri : victoires, puis
           différentiel, puis points marqués.
         </p>
       </div>
 
       {error && error.status !== 401 && error.status !== 404 && error.status !== 403 && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-700">
           Erreur : {error.message}
         </div>
       )}
 
       {rows === null && !error && (
-        <div className="text-sm text-slate-400">Chargement…</div>
+        <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>
       )}
 
       {rows !== null && rows.length === 0 && (
         <div
-          className="rounded-lg border border-dashed border-slate-800 bg-slate-900/40 p-10 text-center text-sm text-slate-400"
+          className="rounded-lg border border-dashed border-nuffle-bronze/20 bg-white p-10 text-center text-sm text-nuffle-anthracite/70"
           data-testid="standings-empty"
         >
           Aucun matchup settle pour le moment — le classement apparaitra
@@ -123,12 +123,12 @@ export default function LeagueStandingsPage() {
       )}
 
       {rows !== null && rows.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
+        <div className="overflow-x-auto rounded-lg border border-nuffle-bronze/20 bg-white">
           <table
-            className="min-w-full divide-y divide-slate-800 text-sm"
+            className="min-w-full divide-y divide-nuffle-bronze/20 text-sm"
             data-testid="standings-table"
           >
-            <thead className="bg-slate-900/60 text-left text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
               <tr>
                 <th className="px-3 py-2 text-right">#</th>
                 <th className="px-3 py-2">Équipe</th>
@@ -140,21 +140,21 @@ export default function LeagueStandingsPage() {
                 <th className="px-3 py-2 text-right">Diff</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-nuffle-bronze/20">
               {rows.map((r, idx) => (
-                <tr key={r.entryId} className="hover:bg-slate-900/70">
-                  <td className="px-3 py-2 text-right text-slate-500">{idx + 1}</td>
-                  <td className="px-3 py-2 font-medium text-slate-100">
+                <tr key={r.entryId} className="hover:bg-nuffle-ivory/60">
+                  <td className="px-3 py-2 text-right text-nuffle-anthracite/60">{idx + 1}</td>
+                  <td className="px-3 py-2 font-medium text-nuffle-anthracite">
                     {r.teamName}
                   </td>
-                  <td className="px-3 py-2 text-right text-emerald-300">{r.wins}</td>
-                  <td className="px-3 py-2 text-right text-red-300">{r.losses}</td>
-                  <td className="px-3 py-2 text-right text-slate-400">{r.ties}</td>
+                  <td className="px-3 py-2 text-right text-emerald-700">{r.wins}</td>
+                  <td className="px-3 py-2 text-right text-red-700">{r.losses}</td>
+                  <td className="px-3 py-2 text-right text-nuffle-anthracite/70">{r.ties}</td>
                   <td className="px-3 py-2 text-right">{r.pointsFor.toFixed(1)}</td>
                   <td className="px-3 py-2 text-right">{r.pointsAgainst.toFixed(1)}</td>
                   <td
                     className={`px-3 py-2 text-right font-semibold ${
-                      r.differential >= 0 ? "text-emerald-300" : "text-red-300"
+                      r.differential >= 0 ? "text-emerald-700" : "text-red-700"
                     }`}
                   >
                     {r.differential >= 0 ? "+" : ""}

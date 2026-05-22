@@ -259,11 +259,11 @@ export default function LineupBuilderPage(): JSX.Element {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -273,11 +273,11 @@ export default function LineupBuilderPage(): JSX.Element {
 
   if (error?.status === 404 || error?.status === 403) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">League introuvable</h1>
         <Link
           href="/nfl-fantasy"
-          className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300"
+          className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
         >
           ← Retour
         </Link>
@@ -286,16 +286,16 @@ export default function LineupBuilderPage(): JSX.Element {
   }
 
   if (!league) {
-    return <div className="text-sm text-slate-400">Chargement…</div>;
+    return <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>;
   }
 
   if (!myEntry) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Tu n&apos;es pas membre de cette league</h1>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
-          className="mt-4 inline-block text-sm text-orange-400"
+          className="mt-4 inline-block text-sm text-nuffle-gold"
         >
           ← Détail
         </Link>
@@ -310,12 +310,12 @@ export default function LineupBuilderPage(): JSX.Element {
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
-          className="text-sm text-slate-400 hover:text-white"
+          className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
         >
           ← {league.name}
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Lineup hebdo</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-nuffle-anthracite/70">
           {myEntry.teamName} · roster {roster.length} joueurs · objectif{" "}
           {REQUIRED_STARTERS} starters + captain (×1.5) + vice (×1.2)
         </p>
@@ -323,23 +323,23 @@ export default function LineupBuilderPage(): JSX.Element {
 
       <div className="flex items-end gap-4">
         <label className="block text-sm">
-          <span className="text-slate-300">Semaine</span>
+          <span className="text-nuffle-anthracite/80">Semaine</span>
           <input
             type="text"
             value={weekId}
             onChange={(e) => setWeekId(e.target.value)}
             pattern="\d{4}:W\d{1,2}"
-            className="mt-1 w-40 rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-sm text-white focus:border-orange-400 focus:outline-none"
+            className="mt-1 w-40 rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 font-mono text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
           />
         </label>
         {lineup && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-nuffle-anthracite/70">
             Lineup actuel : {lineup.starters.length} starters,{" "}
             {locked
               ? `lockée ${new Date(lineup.lockedAt!).toLocaleString("fr-FR")}`
               : "non lockée"}
             {lineup.totalSpp !== null && (
-              <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300">
+              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">
                 {lineup.totalSpp} SPP
               </span>
             )}
@@ -348,15 +348,15 @@ export default function LineupBuilderPage(): JSX.Element {
       </div>
 
       {locked && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+        <div className="rounded-md border border-amber-300 bg-amber-500/10 p-3 text-sm text-amber-700">
           ⚠ Lineup lockée : tu ne peux plus la modifier pour cette semaine.
         </div>
       )}
 
       {roster.length === 0 && (
-        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/40 p-10 text-center">
-          <p className="text-base text-slate-300">Roster vide.</p>
-          <p className="mt-1 text-sm text-slate-500">
+        <div className="rounded-lg border border-dashed border-nuffle-bronze/20 bg-white p-10 text-center">
+          <p className="text-base text-nuffle-anthracite/80">Roster vide.</p>
+          <p className="mt-1 text-sm text-nuffle-anthracite/60">
             Demande à l&apos;admin de lancer l&apos;auto-fill rosters.
           </p>
         </div>
@@ -364,9 +364,9 @@ export default function LineupBuilderPage(): JSX.Element {
 
       {roster.length > 0 && (
         <>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/40">
+          <div className="rounded-lg border border-nuffle-bronze/20 bg-white">
             <table className="w-full text-sm" data-testid="nfl-fantasy-lineup-table">
-              <thead className="bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
                 <tr>
                   <th className="px-3 py-2">Starter</th>
                   <th className="px-3 py-2">Joueur</th>
@@ -377,7 +377,7 @@ export default function LineupBuilderPage(): JSX.Element {
                   <th className="px-3 py-2 text-center">V ×1.2</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-nuffle-bronze/20">
                 {sortedRoster.map((row) => {
                   const player = row.player;
                   const playerId = player?.id ?? "";
@@ -386,7 +386,7 @@ export default function LineupBuilderPage(): JSX.Element {
                   return (
                     <tr
                       key={row.rosterId}
-                      className={isSelected ? "bg-orange-500/5" : undefined}
+                      className={isSelected ? "bg-nuffle-gold/5" : undefined}
                     >
                       <td className="px-3 py-2">
                         <input
@@ -397,10 +397,10 @@ export default function LineupBuilderPage(): JSX.Element {
                           data-testid={`lineup-select-${playerId}`}
                         />
                       </td>
-                      <td className="px-3 py-2 text-slate-100">{displayName(player)}</td>
-                      <td className="px-3 py-2 text-slate-300">{player?.bbPosition ?? "—"}</td>
-                      <td className="px-3 py-2 text-slate-400">{player?.nflPosition ?? "—"}</td>
-                      <td className="px-3 py-2 text-slate-400">{player?.teamCode ?? "FA"}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite">{displayName(player)}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite/80">{player?.bbPosition ?? "—"}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.nflPosition ?? "—"}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.teamCode ?? "FA"}</td>
                       <td className="px-3 py-2 text-center">
                         <input
                           type="radio"
@@ -427,14 +427,14 @@ export default function LineupBuilderPage(): JSX.Element {
           </div>
 
           <div className="flex items-center justify-between gap-4">
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-nuffle-anthracite/70">
               {selected.size}/{REQUIRED_STARTERS} starters ·
               {captainId ? " captain ✓" : " captain ✗"} ·
               {viceCaptainId ? " vice ✓" : " vice (optionnel)"}
             </div>
             <div className="flex items-center gap-3">
               {actionError && (
-                <span className="text-xs text-red-300">{actionError}</span>
+                <span className="text-xs text-red-700">{actionError}</span>
               )}
               <button
                 onClick={onSubmit}
@@ -444,7 +444,7 @@ export default function LineupBuilderPage(): JSX.Element {
                   selected.size !== REQUIRED_STARTERS ||
                   !captainId
                 }
-                className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-slate-700"
+                className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20"
                 data-testid="lineup-submit"
               >
                 {submitting ? "Enregistrement…" : "Enregistrer le lineup"}

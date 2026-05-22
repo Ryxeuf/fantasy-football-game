@@ -143,11 +143,11 @@ export default function NuffleCoachPlayerDetailPage() {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -157,11 +157,11 @@ export default function NuffleCoachPlayerDetailPage() {
 
   if (error?.status === 404) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Joueur introuvable</h1>
         <Link
           href="/nfl-fantasy/players"
-          className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300"
+          className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
         >
           ← Retour au catalogue
         </Link>
@@ -170,14 +170,14 @@ export default function NuffleCoachPlayerDetailPage() {
   }
 
   if (!data) {
-    return <div className="text-sm text-slate-400">Chargement…</div>;
+    return <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>;
   }
 
   return (
     <div className="space-y-8" data-testid="nuffle-coach-player-detail">
       <Link
         href="/nfl-fantasy/players"
-        className="text-sm text-slate-400 hover:text-white"
+        className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
       >
         ← Catalogue joueurs
       </Link>
@@ -189,61 +189,61 @@ export default function NuffleCoachPlayerDetailPage() {
             alt={data.pseudonym}
             width={128}
             height={128}
-            className="h-32 w-32 rounded-lg border border-slate-800 bg-slate-900/60 object-cover"
+            className="h-32 w-32 rounded-lg border border-nuffle-bronze/20 bg-white object-cover"
             unoptimized
           />
         ) : (
-          <div className="flex h-32 w-32 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/60 text-4xl">
+          <div className="flex h-32 w-32 items-center justify-center rounded-lg border border-nuffle-bronze/20 bg-white text-4xl">
             🏈
           </div>
         )}
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-slate-100">
+          <h1 className="text-3xl font-bold text-nuffle-anthracite">
             {data.pseudonym}
             {data.jerseyNumber !== null && (
-              <span className="ml-2 text-slate-500">#{data.jerseyNumber}</span>
+              <span className="ml-2 text-nuffle-anthracite/60">#{data.jerseyNumber}</span>
             )}
           </h1>
           {data.realNameDisplay && (
-            <p className="mt-1 text-sm text-slate-500">{data.realName}</p>
+            <p className="mt-1 text-sm text-nuffle-anthracite/60">{data.realName}</p>
           )}
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-nuffle-anthracite/80">
             {data.bbPosition} · NFL {data.nflPosition} ·{" "}
             <span
               className={
                 data.status === "active"
-                  ? "rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300"
-                  : "rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300"
+                  ? "rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700"
+                  : "rounded-full bg-nuffle-bronze/20 px-2 py-0.5 text-xs text-nuffle-anthracite/80"
               }
             >
               {data.status}
             </span>
           </p>
           {data.team && (
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-nuffle-anthracite/70">
               {data.team.city} · {data.team.raceLabel} ({data.team.bbRace})
             </p>
           )}
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
             <div>
-              <dt className="text-xs uppercase text-slate-500">Total SPP</dt>
-              <dd className="text-lg font-semibold text-orange-300">
+              <dt className="text-xs uppercase text-nuffle-anthracite/60">Total SPP</dt>
+              <dd className="text-lg font-semibold text-nuffle-gold">
                 {data.totalSpp.toFixed(1)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase text-slate-500">Games</dt>
+              <dt className="text-xs uppercase text-nuffle-anthracite/60">Games</dt>
               <dd className="text-lg font-semibold">{data.gamesPlayed}</dd>
             </div>
             {data.bio.ageYears !== null && (
               <div>
-                <dt className="text-xs uppercase text-slate-500">Âge</dt>
+                <dt className="text-xs uppercase text-nuffle-anthracite/60">Âge</dt>
                 <dd className="text-lg font-semibold">{data.bio.ageYears}</dd>
               </div>
             )}
             {data.bio.college && (
               <div>
-                <dt className="text-xs uppercase text-slate-500">Université</dt>
+                <dt className="text-xs uppercase text-nuffle-anthracite/60">Université</dt>
                 <dd className="text-sm">{data.bio.college}</dd>
               </div>
             )}
@@ -252,7 +252,7 @@ export default function NuffleCoachPlayerDetailPage() {
       </header>
 
       <section data-testid="player-category-stats">
-        <h2 className="text-xl font-semibold text-slate-100">
+        <h2 className="text-xl font-semibold text-nuffle-anthracite">
           Stats agrégées {seasonId ? `· Saison ${seasonId}` : "· Carrière"}
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -289,10 +289,10 @@ export default function NuffleCoachPlayerDetailPage() {
 
       {data.seasons.length > 0 && (
         <section data-testid="player-seasons">
-          <h2 className="text-xl font-semibold text-slate-100">Par saison</h2>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
-            <table className="min-w-full divide-y divide-slate-800 text-sm">
-              <thead className="bg-slate-900/60 text-left text-xs uppercase tracking-wide text-slate-400">
+          <h2 className="text-xl font-semibold text-nuffle-anthracite">Par saison</h2>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-nuffle-bronze/20 bg-white">
+            <table className="min-w-full divide-y divide-nuffle-bronze/20 text-sm">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
                 <tr>
                   <th className="px-3 py-2">Saison</th>
                   <th className="px-3 py-2 text-right">Games</th>
@@ -300,19 +300,19 @@ export default function NuffleCoachPlayerDetailPage() {
                   <th className="px-3 py-2 text-right">SPP/game</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-nuffle-bronze/20">
                 {data.seasons.map((s) => (
-                  <tr key={s.seasonId} className="hover:bg-slate-900/70">
-                    <td className="px-3 py-2 font-medium text-slate-100">
+                  <tr key={s.seasonId} className="hover:bg-nuffle-ivory/60">
+                    <td className="px-3 py-2 font-medium text-nuffle-anthracite">
                       {s.seasonId}
                     </td>
-                    <td className="px-3 py-2 text-right text-slate-300">
+                    <td className="px-3 py-2 text-right text-nuffle-anthracite/80">
                       {s.gamesPlayed}
                     </td>
-                    <td className="px-3 py-2 text-right text-orange-300">
+                    <td className="px-3 py-2 text-right text-nuffle-gold">
                       {s.totalSpp.toFixed(1)}
                     </td>
-                    <td className="px-3 py-2 text-right text-slate-400">
+                    <td className="px-3 py-2 text-right text-nuffle-anthracite/70">
                       {s.gamesPlayed > 0
                         ? (s.totalSpp / s.gamesPlayed).toFixed(2)
                         : "—"}
@@ -327,10 +327,10 @@ export default function NuffleCoachPlayerDetailPage() {
 
       {data.stats.length > 0 && (
         <section data-testid="player-game-log">
-          <h2 className="text-xl font-semibold text-slate-100">Game log</h2>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
-            <table className="min-w-full divide-y divide-slate-800 text-sm">
-              <thead className="bg-slate-900/60 text-left text-xs uppercase tracking-wide text-slate-400">
+          <h2 className="text-xl font-semibold text-nuffle-anthracite">Game log</h2>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-nuffle-bronze/20 bg-white">
+            <table className="min-w-full divide-y divide-nuffle-bronze/20 text-sm">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
                 <tr>
                   <th className="px-3 py-2">Saison/Week</th>
                   <th className="px-3 py-2">Adversaire</th>
@@ -338,22 +338,22 @@ export default function NuffleCoachPlayerDetailPage() {
                   <th className="px-3 py-2 text-right">SPP</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-nuffle-bronze/20">
                 {data.stats.slice(0, 50).map((s) => (
-                  <tr key={s.gameId} className="hover:bg-slate-900/70">
-                    <td className="px-3 py-2 text-slate-300">
+                  <tr key={s.gameId} className="hover:bg-nuffle-ivory/60">
+                    <td className="px-3 py-2 text-nuffle-anthracite/80">
                       {s.seasonId}·W{s.weekNumber}
                     </td>
-                    <td className="px-3 py-2 text-slate-400">
+                    <td className="px-3 py-2 text-nuffle-anthracite/70">
                       {s.isHome ? "vs " : "@ "}
                       {s.opponent}
                     </td>
-                    <td className="px-3 py-2 text-right text-slate-400">
+                    <td className="px-3 py-2 text-right text-nuffle-anthracite/70">
                       {s.homeScore !== null && s.awayScore !== null
                         ? `${s.homeScore}-${s.awayScore}`
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-right text-slate-100">
+                    <td className="px-3 py-2 text-right text-nuffle-anthracite">
                       {s.computedSpp !== null ? s.computedSpp.toFixed(1) : "—"}
                     </td>
                   </tr>
@@ -369,8 +369,8 @@ export default function NuffleCoachPlayerDetailPage() {
 
 function StatCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-      <h3 className="text-xs uppercase tracking-wide text-slate-400">{title}</h3>
+    <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-3">
+      <h3 className="text-xs uppercase tracking-wide text-nuffle-anthracite/70">{title}</h3>
       <dl className="mt-2 space-y-1 text-sm">{children}</dl>
     </div>
   );
@@ -379,8 +379,8 @@ function StatCard({ title, children }: { title: string; children: React.ReactNod
 function Row({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-slate-100">{value}</dd>
+      <dt className="text-nuffle-anthracite/60">{label}</dt>
+      <dd className="font-medium text-nuffle-anthracite">{value}</dd>
     </div>
   );
 }

@@ -126,11 +126,11 @@ export default function MatchupsPage(): JSX.Element {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -139,16 +139,16 @@ export default function MatchupsPage(): JSX.Element {
   }
   if (error?.status === 404 || error?.status === 403) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">League introuvable</h1>
-        <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-orange-400">
+        <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-nuffle-gold">
           ← Retour
         </Link>
       </div>
     );
   }
   if (!league) {
-    return <div className="text-sm text-slate-400">Chargement…</div>;
+    return <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>;
   }
 
   return (
@@ -156,7 +156,7 @@ export default function MatchupsPage(): JSX.Element {
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
-          className="text-sm text-slate-400 hover:text-white"
+          className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
         >
           ← {league.name}
         </Link>
@@ -165,15 +165,15 @@ export default function MatchupsPage(): JSX.Element {
 
       {/* Standings */}
       <section data-testid="nfl-fantasy-standings">
-        <h2 className="text-lg font-semibold text-slate-200">Standings</h2>
+        <h2 className="text-lg font-semibold text-nuffle-anthracite">Standings</h2>
         {standings.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-nuffle-anthracite/60">
             Aucun matchup réglé pour l&apos;instant — les standings s&apos;affichent dès qu&apos;une semaine est settlée.
           </p>
         ) : (
-          <div className="mt-3 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/40">
+          <div className="mt-3 overflow-hidden rounded-lg border border-nuffle-bronze/20 bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
                 <tr>
                   <th className="px-3 py-2">#</th>
                   <th className="px-3 py-2">Équipe</th>
@@ -183,39 +183,39 @@ export default function MatchupsPage(): JSX.Element {
                   <th className="px-3 py-2 text-right">Diff</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-nuffle-bronze/20">
                 {standings.map((row, i) => {
                   const isMine = myEntryId !== null && row.entryId === myEntryId;
                   return (
                     <tr
                       key={row.entryId}
-                      className={isMine ? "bg-orange-500/5" : undefined}
+                      className={isMine ? "bg-nuffle-gold/5" : undefined}
                     >
-                      <td className="px-3 py-2 text-slate-500">{i + 1}</td>
-                      <td className="px-3 py-2 text-slate-100">
+                      <td className="px-3 py-2 text-nuffle-anthracite/60">{i + 1}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite">
                         {row.teamName}
                         {isMine && (
-                          <span className="ml-2 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[10px] uppercase text-orange-300">
+                          <span className="ml-2 rounded-full bg-nuffle-gold/20 px-1.5 py-0.5 text-[10px] uppercase text-nuffle-gold">
                             Toi
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-slate-200">
+                      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite">
                         {formatRecord(row)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-slate-300">
+                      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite/80">
                         {row.pointsFor}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-slate-300">
+                      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite/80">
                         {row.pointsAgainst}
                       </td>
                       <td
                         className={`px-3 py-2 text-right font-mono ${
                           row.differential > 0
-                            ? "text-emerald-300"
+                            ? "text-emerald-700"
                             : row.differential < 0
-                              ? "text-red-300"
-                              : "text-slate-400"
+                              ? "text-red-700"
+                              : "text-nuffle-anthracite/70"
                         }`}
                       >
                         {row.differential > 0 ? "+" : ""}
@@ -228,7 +228,7 @@ export default function MatchupsPage(): JSX.Element {
             </table>
           </div>
         )}
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
           Tri : victoires desc → différentiel desc → points marqués desc.
         </p>
       </section>
@@ -236,7 +236,7 @@ export default function MatchupsPage(): JSX.Element {
       {/* Matchups */}
       <section data-testid="nfl-fantasy-matchups">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold text-slate-200">Matchups</h2>
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">Matchups</h2>
           <label className="block text-sm">
             <span className="sr-only">Semaine</span>
             <input
@@ -244,17 +244,17 @@ export default function MatchupsPage(): JSX.Element {
               value={weekId}
               onChange={(e) => setWeekId(e.target.value)}
               pattern="\d{4}:W\d{1,2}"
-              className="w-40 rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-sm text-white focus:border-orange-400 focus:outline-none"
+              className="w-40 rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 font-mono text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
             />
           </label>
         </div>
 
         {busyMatchups && (
-          <p className="mt-2 text-sm text-slate-500">Chargement…</p>
+          <p className="mt-2 text-sm text-nuffle-anthracite/60">Chargement…</p>
         )}
 
         {!busyMatchups && matchups.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-nuffle-anthracite/60">
             Aucun matchup pour {weekId} — l&apos;admin doit générer les matchups
             (route `generate-matchups`) ou attendre le settle hebdo.
           </p>
@@ -272,28 +272,28 @@ export default function MatchupsPage(): JSX.Element {
               return (
                 <li
                   key={m.id}
-                  className="rounded-lg border border-slate-800 bg-slate-900/40 p-4"
+                  className="rounded-lg border border-nuffle-bronze/20 bg-white p-4"
                   data-testid={`nfl-fantasy-matchup-${m.id}`}
                 >
                   {badge && (
-                    <p className="mb-2 text-[10px] uppercase tracking-wide text-orange-300">
+                    <p className="mb-2 text-[10px] uppercase tracking-wide text-nuffle-gold">
                       {badge}
                     </p>
                   )}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <div className={homeIsWinner ? "text-emerald-300 font-semibold" : "text-slate-200"}>
+                    <div className={homeIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}>
                       {homeName}
                     </div>
-                    <div className="font-mono text-lg text-slate-100">
+                    <div className="font-mono text-lg text-nuffle-anthracite">
                       {settled ? m.homeScore : "—"}{" "}
-                      <span className="text-slate-500">vs</span>{" "}
+                      <span className="text-nuffle-anthracite/60">vs</span>{" "}
                       {settled ? m.awayScore : "—"}
                     </div>
-                    <div className={`text-right ${awayIsWinner ? "text-emerald-300 font-semibold" : "text-slate-200"}`}>
+                    <div className={`text-right ${awayIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}`}>
                       {awayName}
                     </div>
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-500">
+                  <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
                     {settled
                       ? `Settled ${new Date(m.settledAt!).toLocaleDateString("fr-FR")}`
                       : "Non encore réglé"}

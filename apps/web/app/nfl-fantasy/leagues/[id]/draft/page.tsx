@@ -170,11 +170,11 @@ export default function NuffleCoachDraftPage() {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -184,11 +184,11 @@ export default function NuffleCoachDraftPage() {
 
   if (error?.status === 404 || error?.status === 403) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">League introuvable</h1>
         <Link
           href="/nfl-fantasy"
-          className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300"
+          className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
         >
           ← Retour à mes leagues
         </Link>
@@ -197,7 +197,7 @@ export default function NuffleCoachDraftPage() {
   }
 
   if (!league) {
-    return <div className="text-sm text-slate-400">Chargement…</div>;
+    return <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>;
   }
 
   const isDraft = league.status === "draft";
@@ -208,23 +208,23 @@ export default function NuffleCoachDraftPage() {
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
-          className="text-sm text-slate-400 hover:text-white"
+          className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
         >
           ← Retour à la league
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Draft</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-nuffle-anthracite/70">
           {league.name} · Saison {league.seasonId} ·{" "}
           {isDraft ? (
-            <span className="text-amber-300">draft ouverte</span>
+            <span className="text-amber-700">draft ouverte</span>
           ) : (
-            <span className="text-slate-500">draft fermée</span>
+            <span className="text-nuffle-anthracite/60">draft fermée</span>
           )}
         </p>
       </div>
 
       {!isDraft && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200">
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
           La draft de cette league est fermée — les ajouts/retraits de
           joueurs nécessitent un transfert via la page mercato (à venir).
           La saison est en cours.
@@ -232,7 +232,7 @@ export default function NuffleCoachDraftPage() {
       )}
 
       {!myEntry && (
-        <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-300">
+        <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-4 text-sm text-nuffle-anthracite/80">
           Tu n&apos;es pas membre de cette league. Rejoins-la d&apos;abord pour
           pouvoir drafter.
         </div>
@@ -240,25 +240,25 @@ export default function NuffleCoachDraftPage() {
 
       {myEntry && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-200">
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">
             Mon roster · {roster?.length ?? 0} joueurs
           </h2>
           {actionError && (
-            <div className="mt-2 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
+            <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
               {actionError}
             </div>
           )}
           {roster === null && (
-            <div className="mt-3 text-sm text-slate-400">Chargement…</div>
+            <div className="mt-3 text-sm text-nuffle-anthracite/70">Chargement…</div>
           )}
           {roster !== null && roster.length === 0 && (
-            <div className="mt-3 rounded-lg border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
+            <div className="mt-3 rounded-lg border border-dashed border-nuffle-bronze/20 bg-white p-6 text-center text-sm text-nuffle-anthracite/70">
               Ton roster est vide — drafte tes premiers joueurs ci-dessous.
             </div>
           )}
           {roster !== null && roster.length > 0 && (
             <ul
-              className="mt-3 divide-y divide-slate-800 rounded-lg border border-slate-800 bg-slate-900/40"
+              className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
               data-testid="draft-my-roster"
             >
               {roster.map((r) => (
@@ -267,16 +267,16 @@ export default function NuffleCoachDraftPage() {
                   className="flex items-center justify-between p-3 text-sm"
                 >
                   <div>
-                    <p className="font-medium text-slate-100">
+                    <p className="font-medium text-nuffle-anthracite">
                       {r.player?.pseudonym ?? "—"}
                       {r.player?.jerseyNumber !== null &&
                         r.player?.jerseyNumber !== undefined && (
-                          <span className="ml-2 text-slate-500">
+                          <span className="ml-2 text-nuffle-anthracite/60">
                             #{r.player.jerseyNumber}
                           </span>
                         )}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-nuffle-anthracite/60">
                       {r.player?.bbPosition} · {r.player?.teamCode ?? "—"} ·{" "}
                       {r.acquiredVia}
                     </p>
@@ -285,7 +285,7 @@ export default function NuffleCoachDraftPage() {
                     <button
                       disabled={busy === r.player.id}
                       onClick={() => releasePlayer(r.player!.id)}
-                      className="rounded-md border border-red-700/60 bg-red-900/30 px-2 py-1 text-xs text-red-200 hover:border-red-500 disabled:opacity-50"
+                      className="rounded-md border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700 hover:border-red-400 disabled:opacity-50"
                     >
                       {busy === r.player.id ? "…" : "Release"}
                     </button>
@@ -299,7 +299,7 @@ export default function NuffleCoachDraftPage() {
 
       {myEntry && isDraft && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-200">
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">
             Catalogue · saison {SEASON_ID}
           </h2>
           <input
@@ -307,16 +307,16 @@ export default function NuffleCoachDraftPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Recherche pseudo, équipe, position…"
-            className="mt-3 w-full max-w-md rounded-md border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-sm text-slate-100"
+            className="mt-3 w-full max-w-md rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 text-sm text-nuffle-anthracite"
             data-testid="draft-search"
           />
           {catalog === null ? (
-            <div className="mt-3 text-sm text-slate-400">Chargement…</div>
+            <div className="mt-3 text-sm text-nuffle-anthracite/70">Chargement…</div>
           ) : catalog.length === 0 ? (
-            <div className="mt-3 text-sm text-slate-400">Aucun résultat.</div>
+            <div className="mt-3 text-sm text-nuffle-anthracite/70">Aucun résultat.</div>
           ) : (
             <ul
-              className="mt-3 divide-y divide-slate-800 rounded-lg border border-slate-800 bg-slate-900/40"
+              className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
               data-testid="draft-catalog"
             >
               {catalog.map((p) => {
@@ -329,11 +329,11 @@ export default function NuffleCoachDraftPage() {
                     <div>
                       <Link
                         href={`/nfl-fantasy/players/${p.id}?seasonId=${SEASON_ID}`}
-                        className="font-medium text-slate-100 hover:text-orange-300"
+                        className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                       >
                         {p.pseudonym}
                       </Link>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-nuffle-anthracite/60">
                         {p.bbPosition} · {p.teamCode ?? "—"} ·{" "}
                         {p.totalSpp !== undefined
                           ? `${p.totalSpp.toFixed(1)} SPP`
@@ -341,12 +341,12 @@ export default function NuffleCoachDraftPage() {
                       </p>
                     </div>
                     {already ? (
-                      <span className="text-xs text-slate-500">déjà drafté</span>
+                      <span className="text-xs text-nuffle-anthracite/60">déjà drafté</span>
                     ) : (
                       <button
                         disabled={busy === p.id}
                         onClick={() => draftPlayer(p)}
-                        className="rounded-md bg-orange-500 px-3 py-1 text-xs font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+                        className="rounded-md bg-nuffle-gold px-3 py-1 text-xs font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:opacity-50"
                       >
                         {busy === p.id ? "…" : "+ Drafter"}
                       </button>
@@ -359,7 +359,7 @@ export default function NuffleCoachDraftPage() {
         </section>
       )}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-nuffle-anthracite/60">
         V1 minimal : pas de draft snake interactif. Chaque coach drafte
         librement (free-form). La transition vers la saison est lancée
         par l&apos;admin une fois tous les coachs prêts.

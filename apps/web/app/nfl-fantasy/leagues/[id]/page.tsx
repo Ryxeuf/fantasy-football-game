@@ -151,11 +151,11 @@ export default function LeagueDetailPage() {
 
   if (error?.status === 401) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <Link
           href="/login"
-          className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-400"
+          className="mt-4 inline-flex items-center rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
         >
           Se connecter
         </Link>
@@ -165,10 +165,10 @@ export default function LeagueDetailPage() {
 
   if (error?.status === 404 || error?.status === 403) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">League introuvable</h1>
-        <p className="mt-2 text-sm text-slate-400">{error.message}</p>
-        <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-orange-400 hover:text-orange-300">
+        <p className="mt-2 text-sm text-nuffle-anthracite/70">{error.message}</p>
+        <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold">
           ← Retour à mes leagues
         </Link>
       </div>
@@ -176,7 +176,7 @@ export default function LeagueDetailPage() {
   }
 
   if (!league) {
-    return <div className="text-sm text-slate-400">Chargement…</div>;
+    return <div className="text-sm text-nuffle-anthracite/70">Chargement…</div>;
   }
 
   const isOwner = currentUserId !== null && currentUserId === league.ownerId;
@@ -187,7 +187,7 @@ export default function LeagueDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/nfl-fantasy" className="text-sm text-slate-400 hover:text-white">
+        <Link href="/nfl-fantasy" className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze">
           ← Mes leagues
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
@@ -195,65 +195,65 @@ export default function LeagueDetailPage() {
             <h1 className="text-2xl font-semibold" data-testid="nfl-fantasy-league-name">
               {league.name}
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-nuffle-anthracite/70">
               Saison {league.seasonId} · {league.entries.length}/{league.size} membres ·{" "}
               <span className="capitalize">{league.draftMode}</span>
             </p>
           </div>
-          <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-200">
+          <span className="rounded-full bg-nuffle-ivory/60 px-3 py-1 text-xs font-medium uppercase tracking-wide text-nuffle-anthracite">
             {statusLabel(league.status)}
           </span>
         </div>
       </div>
 
       {league.inviteCode && (
-        <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-4">
-          <p className="text-xs uppercase tracking-wide text-orange-300/80">Invite code</p>
+        <div className="rounded-lg border border-nuffle-gold/30 bg-nuffle-gold/5 p-4">
+          <p className="text-xs uppercase tracking-wide text-nuffle-gold">Invite code</p>
           <div className="mt-1 flex items-center gap-3">
             <code
-              className="font-mono text-2xl tracking-widest text-white"
+              className="font-mono text-2xl tracking-widest text-nuffle-bronze"
               data-testid="nfl-fantasy-invite-code"
             >
               {league.inviteCode}
             </code>
             <button
               onClick={copyInvite}
-              className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:border-slate-500"
+              className="rounded-md border border-nuffle-bronze/30 px-2 py-1 text-xs text-nuffle-anthracite/80 hover:border-nuffle-gold"
             >
               {busy === "copied" ? "Copié ✓" : "Copier"}
             </button>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-nuffle-anthracite/60">
             Partage ce code via la page <Link href="/nfl-fantasy/join" className="underline">rejoindre</Link>.
           </p>
         </div>
       )}
 
       <section>
-        <h2 className="text-lg font-semibold text-slate-200">Membres</h2>
+        <h2 className="text-lg font-semibold text-nuffle-anthracite">Membres</h2>
         <ul
-          className="mt-3 divide-y divide-slate-800 rounded-lg border border-slate-800 bg-slate-900/40"
+          className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
           data-testid="nfl-fantasy-entries"
         >
           {league.entries.map((entry) => (
             <li key={entry.id} className="flex items-center justify-between p-3">
               <div>
-                <p className="text-sm font-medium text-slate-100">{entry.teamName}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-nuffle-anthracite">{entry.teamName}</p>
+                <p className="text-xs text-nuffle-anthracite/60">
                   Rejoint le {new Date(entry.joinedAt).toLocaleDateString("fr-FR")}
                   {entry.userId === league.ownerId && (
-                    <span className="ml-2 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[10px] uppercase text-orange-300">
+                    <span className="ml-2 rounded-full bg-nuffle-gold/20 px-1.5 py-0.5 text-[10px] uppercase text-nuffle-gold">
                       Owner
                     </span>
                   )}
                   {entry.userId === currentUserId && entry.userId !== league.ownerId && (
-                    <span className="ml-2 rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] uppercase text-slate-200">
+                    <span className="ml-2 rounded-full bg-nuffle-bronze/20 px-1.5 py-0.5 text-[10px] uppercase text-nuffle-anthracite">
                       Toi
                     </span>
                   )}
                 </p>
               </div>
-              <span className="text-xs text-slate-500">TV {entry.totalTV}</span>
+              <span className="text-xs text-nuffle-anthracite/60">TV {entry.totalTV}</span>
             </li>
           ))}
         </ul>
@@ -261,25 +261,25 @@ export default function LeagueDetailPage() {
 
       {isMember && league.status === "in_progress" && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-200">Ma semaine</h2>
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">Ma semaine</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={`/nfl-fantasy/leagues/${league.id}/lineup`}
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
+              className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
               data-testid="nfl-fantasy-lineup-cta"
             >
               🐀 Régler mon lineup
             </Link>
             <Link
               href={`/nfl-fantasy/leagues/${league.id}/matchups`}
-              className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+              className="rounded-md border border-nuffle-bronze/30 px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:border-nuffle-gold"
               data-testid="nfl-fantasy-matchups-cta"
             >
               📊 Matchups
             </Link>
             <Link
               href={`/nfl-fantasy/leagues/${league.id}/standings`}
-              className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+              className="rounded-md border border-nuffle-bronze/30 px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:border-nuffle-gold"
               data-testid="nfl-fantasy-standings-cta"
             >
               🏆 Classement
@@ -290,11 +290,11 @@ export default function LeagueDetailPage() {
 
       {isMember && isDraft && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-200">Draft</h2>
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">Draft</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={`/nfl-fantasy/leagues/${league.id}/draft`}
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
+              className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
               data-testid="nfl-fantasy-draft-cta"
             >
               📋 Drafter mes joueurs
@@ -307,13 +307,13 @@ export default function LeagueDetailPage() {
         <div className="flex flex-wrap gap-3 text-sm">
           <Link
             href={`/nfl-fantasy/leagues/${league.id}/matchups`}
-            className="text-orange-400 hover:text-orange-300"
+            className="text-nuffle-gold hover:text-nuffle-gold"
           >
             📊 Voir matchups
           </Link>
           <Link
             href={`/nfl-fantasy/leagues/${league.id}/standings`}
-            className="text-orange-400 hover:text-orange-300"
+            className="text-nuffle-gold hover:text-nuffle-gold"
           >
             🏆 Voir classement
           </Link>
@@ -322,9 +322,9 @@ export default function LeagueDetailPage() {
 
       {(isOwner || isMember) && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-200">Actions</h2>
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">Actions</h2>
           {actionError && (
-            <div className="mt-2 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
+            <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
               {actionError}
             </div>
           )}
@@ -334,14 +334,14 @@ export default function LeagueDetailPage() {
                 <button
                   onClick={rename}
                   disabled={busy === "rename"}
-                  className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500 disabled:opacity-50"
+                  className="rounded-md border border-nuffle-bronze/30 px-3 py-1.5 text-sm hover:border-nuffle-gold disabled:opacity-50"
                 >
                   Renommer
                 </button>
                 <button
                   onClick={togglePrivacy}
                   disabled={busy === "privacy"}
-                  className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500 disabled:opacity-50"
+                  className="rounded-md border border-nuffle-bronze/30 px-3 py-1.5 text-sm hover:border-nuffle-gold disabled:opacity-50"
                 >
                   {league.type === "private"
                     ? "Rendre publique"
@@ -350,7 +350,7 @@ export default function LeagueDetailPage() {
                 <button
                   onClick={remove}
                   disabled={busy === "delete"}
-                  className="rounded-md border border-red-700/60 bg-red-900/30 px-3 py-1.5 text-sm text-red-200 hover:border-red-500 disabled:opacity-50"
+                  className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:border-red-400 disabled:opacity-50"
                 >
                   Supprimer
                 </button>
@@ -360,13 +360,13 @@ export default function LeagueDetailPage() {
               <button
                 onClick={leave}
                 disabled={busy === "leave"}
-                className="rounded-md border border-slate-700 px-3 py-1.5 text-sm hover:border-slate-500 disabled:opacity-50"
+                className="rounded-md border border-nuffle-bronze/30 px-3 py-1.5 text-sm hover:border-nuffle-gold disabled:opacity-50"
               >
                 Quitter la league
               </button>
             )}
             {!isDraft && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-nuffle-anthracite/60">
                 La saison est démarrée — les actions de configuration sont verrouillées.
               </p>
             )}
