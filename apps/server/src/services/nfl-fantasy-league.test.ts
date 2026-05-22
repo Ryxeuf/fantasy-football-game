@@ -30,6 +30,19 @@ vi.mock("../prisma", () => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    // Cycles (V3) : createLeague delegate au service cycle qui
+    // utilise findMany sur la table + nflWeek pour determiner le
+    // cycle joignable. On les mock vides => snap-to-next throw
+    // NO_JOINABLE_CYCLE. Les tests qui exercent createLeague avec
+    // un cycle reel doivent re-mock ces appels.
+    nflFantasySeasonCycle: {
+      findMany: vi.fn().mockResolvedValue([]),
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+    },
+    nflWeek: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -51,6 +64,30 @@ import {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // Defaults pour le service cycle : un cycle joignable W1-W6 sur la
+  // saison "2025" + 22 semaines spreaded. Les tests createLeague qui
+  // ne touchent pas explicitement aux cycles peuvent reuser ce defaut.
+  vi.mocked(prisma.nflFantasySeasonCycle.findMany).mockResolvedValue([
+    {
+      id: "cycle-1",
+      seasonId: "2025",
+      cycleNumber: 1,
+      cycleType: "regular",
+      label: "Conférence 1",
+      startWeek: 1,
+      endWeek: 6,
+    },
+    {
+      id: "cycle-2",
+      seasonId: "2025",
+      cycleNumber: 2,
+      cycleType: "regular",
+      label: "Conférence 2",
+      startWeek: 7,
+      endWeek: 12,
+    },
+  ] as never);
+  vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([] as never);
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -216,7 +253,7 @@ describe("getLeague", () => {
     expect(lg.id).toBe("lg1");
     expect(prisma.nflFantasyLeague.findUnique).toHaveBeenCalledWith({
       where: { id: "lg1" },
-      include: { entries: { orderBy: { joinedAt: "asc" } } },
+      include: { entries: { orderBy: { joinedAt: "asc" } }, cycle: true },
     });
   });
 
@@ -240,6 +277,17 @@ describe("listLeaguesForUser", () => {
     expect(prisma.nflFantasyLeague.findMany).toHaveBeenCalledWith({
       where: { entries: { some: { userId: "u1" } } },
       orderBy: { createdAt: "desc" },
+      include: {
+        cycle: {
+          select: {
+            id: true,
+            label: true,
+            startWeek: true,
+            endWeek: true,
+            cycleType: true,
+          },
+        },
+      },
     });
   });
 

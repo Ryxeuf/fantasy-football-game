@@ -43,6 +43,7 @@ import nflFantasyLeaguesRoutes from "./routes/nfl-fantasy-leagues";
 import nflFantasyEntriesRoutes from "./routes/nfl-fantasy-entries";
 import nflFantasyPlayersRoutes from "./routes/nfl-fantasy-players";
 import nflFantasyDraftSessionsRoutes from "./routes/nfl-fantasy-draft-sessions";
+import nflFantasyCyclesRoutes from "./routes/nfl-fantasy-cycles";
 import cupRoutes from "./routes/cup";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
@@ -314,6 +315,7 @@ app.use("/api/nfl-fantasy/leagues", nflFantasyLeaguesRoutes);
 app.use("/api/nfl-fantasy/entries", nflFantasyEntriesRoutes);
 app.use("/api/nfl-fantasy/players", nflFantasyPlayersRoutes);
 app.use("/api/nfl-fantasy/draft-sessions", nflFantasyDraftSessionsRoutes);
+app.use("/api/nfl-fantasy/cycles", nflFantasyCyclesRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {

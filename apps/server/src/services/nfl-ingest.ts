@@ -37,6 +37,7 @@ import {
 } from "@bb/nfl-mapper";
 
 import { prisma } from "../prisma";
+import { seedDefaultCyclesForSeason } from "./nfl-fantasy-season-cycle";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreurs typees
@@ -531,31 +532,52 @@ export async function seedNflSeason(seasonId: string): Promise<void> {
 
   // Approximations dates (kickoff regulier 1er jeudi de septembre).
   // Phase 2 — affinage via ingestion ESPN schedules a venir.
-  const startDate = new Date(Date.UTC(year, 8, 5)); // 5 septembre
-  const endDate = new Date(Date.UTC(year + 1, 1, 15)); // 15 fevrier (post-SB)
+  const seasonStart = new Date(Date.UTC(year, 8, 5)); // 5 septembre
+  const seasonEnd = new Date(Date.UTC(year + 1, 1, 15)); // 15 fevrier (post-SB)
 
   await prisma.nflSeason.upsert({
     where: { id: seasonId },
-    update: { startDate, endDate, status: "in_progress" },
-    create: { id: seasonId, startDate, endDate, status: "in_progress" },
+    update: { startDate: seasonStart, endDate: seasonEnd, status: "in_progress" },
+    create: {
+      id: seasonId,
+      startDate: seasonStart,
+      endDate: seasonEnd,
+      status: "in_progress",
+    },
   });
 
+  // Chaque semaine NFL dure 7 jours (kickoff jeudi -> mercredi suivant).
+  // On etale 22 semaines a partir de seasonStart. Necessaire pour que
+  // findWeekNumberAt (cycles Nuffle Coach) puisse mapper une date a une
+  // semaine sans ambiguite.
+  const WEEK_MS = 7 * 24 * 3600 * 1000;
   for (let w = 1; w <= 22; w++) {
     const weekId = `${seasonId}:W${w}`;
     const isPlayoffs = w >= 19;
+    const weekStart = new Date(seasonStart.getTime() + (w - 1) * WEEK_MS);
+    const weekEnd = new Date(weekStart.getTime() + WEEK_MS);
     await prisma.nflWeek.upsert({
       where: { id: weekId },
-      update: { weekNumber: w, isPlayoffs },
+      update: {
+        weekNumber: w,
+        isPlayoffs,
+        startDate: weekStart,
+        endDate: weekEnd,
+      },
       create: {
         id: weekId,
         seasonId,
         weekNumber: w,
-        startDate,
-        endDate,
+        startDate: weekStart,
+        endDate: weekEnd,
         isPlayoffs,
       },
     });
   }
+
+  // Cycles Nuffle Coach : 3 reguliers (6 sem) + 1 playoffs (4 sem).
+  // Idempotent (upsert), donc safe a chaque re-execution du seed.
+  await seedDefaultCyclesForSeason(seasonId);
 }
 
 // ────────────────────────────────────────────────────────────────────

@@ -20,6 +20,9 @@ vi.mock("../prisma", () => ({
     nflPlayer: { upsert: vi.fn() },
     nflGameStat: { upsert: vi.fn() },
     nflIngestRun: { create: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
+    // V3 cycles : seedNflSeason appelle seedDefaultCyclesForSeason qui
+    // upsert 4 cycles. Mock no-op suffit ici.
+    nflFantasySeasonCycle: { upsert: vi.fn() },
   },
 }));
 

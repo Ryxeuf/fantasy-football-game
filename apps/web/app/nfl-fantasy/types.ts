@@ -8,6 +8,14 @@ export type LeagueStatus = "draft" | "in_progress" | "completed";
 export type LeagueType = "public" | "private";
 export type DraftMode = "snake" | "auction" | "free";
 
+export interface CycleSummary {
+  id: string;
+  label: string;
+  startWeek: number;
+  endWeek: number;
+  cycleType: "regular" | "playoffs";
+}
+
 export interface NflFantasyLeague {
   id: string;
   name: string;
@@ -20,6 +28,10 @@ export interface NflFantasyLeague {
   inviteCode: string | null;
   /** V2 mercato : budget initial alloue a chaque entry. */
   draftBudget?: number;
+  /** Mini-saison sur laquelle est adosse le championnat (V3 cycles). */
+  cycleId?: string | null;
+  /** Optionnel : cycle hydrate (label + bornes) inclu par le serveur. */
+  cycle?: CycleSummary | null;
   createdAt: string;
   updatedAt: string;
 }

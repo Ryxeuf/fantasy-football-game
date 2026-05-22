@@ -7,6 +7,14 @@ import { useEffect, useState, type FormEvent } from "react";
 import { apiRequest, ApiClientError } from "../../lib/api-client";
 import type { LeagueStatus, LeagueType } from "../types";
 
+interface PublicLeagueCycle {
+  readonly id: string;
+  readonly label: string;
+  readonly startWeek: number;
+  readonly endWeek: number;
+  readonly cycleType: "regular" | "playoffs";
+}
+
 interface PublicLeague {
   readonly id: string;
   readonly name: string;
@@ -20,6 +28,7 @@ interface PublicLeague {
   readonly createdAt: string;
   readonly entriesCount: number;
   readonly isJoinable: boolean;
+  readonly cycle?: PublicLeagueCycle | null;
 }
 
 interface ListResponse {
@@ -169,8 +178,19 @@ export default function PublicChampionnatsPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-nuffle-anthracite/60">Saison</dt>
-                  <dd>{lg.seasonId}</dd>
+                  <dt className="text-nuffle-anthracite/60">Mini-saison</dt>
+                  <dd>
+                    {lg.cycle ? (
+                      <>
+                        {lg.cycle.label}{" "}
+                        <span className="text-nuffle-anthracite/50">
+                          (W{lg.cycle.startWeek}-W{lg.cycle.endWeek})
+                        </span>
+                      </>
+                    ) : (
+                      lg.seasonId
+                    )}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-nuffle-anthracite/60">Budget TV</dt>

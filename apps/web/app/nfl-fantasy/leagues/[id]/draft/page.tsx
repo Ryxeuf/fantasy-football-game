@@ -320,11 +320,15 @@ export default function NuffleCoachDraftPage() {
 
   async function createSession(): Promise<void> {
     if (!leagueId) return;
+    const isFirst = (sessions ?? []).length === 0;
+    const confirmMessage = isFirst
+      ? "Démarrer le championnat ? Le compte à rebours de 48h démarre maintenant, et tous les coachs peuvent commencer à enchérir."
+      : "Ouvrir une nouvelle session de mercato ? Le compte à rebours de 48h démarre immédiatement.";
+    if (!window.confirm(confirmMessage)) return;
     setCreatingSession(true);
     setActionError(null);
     try {
       const now = Date.now();
-      // Session par defaut : ouverte maintenant, ferme dans 48h.
       const opensAt = new Date(now).toISOString();
       const closesAt = new Date(now + 48 * 3600 * 1000).toISOString();
       await apiRequest(
@@ -472,7 +476,11 @@ export default function NuffleCoachDraftPage() {
               disabled={creatingSession}
               className="rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:opacity-50"
             >
-              {creatingSession ? "Création…" : "+ Ouvrir une session 48h"}
+              {creatingSession
+                ? "Démarrage…"
+                : (sessions ?? []).length === 0
+                  ? "🚀 Démarrer le championnat (48h)"
+                  : "+ Ouvrir une nouvelle session 48h"}
             </button>
           )}
           {isOwner && activeSession && (
@@ -489,10 +497,20 @@ export default function NuffleCoachDraftPage() {
           <p className="mt-2 text-sm text-nuffle-anthracite/60">Chargement…</p>
         )}
         {sessions !== null && sessions.length === 0 && (
-          <p className="mt-2 text-sm text-nuffle-anthracite/60">
-            Aucune session ouverte pour le moment.
-            {isOwner && " Crée-en une pour démarrer."}
-          </p>
+          <div className="mt-2 rounded-lg border border-dashed border-nuffle-bronze/30 bg-nuffle-ivory/40 p-4 text-sm text-nuffle-anthracite/80">
+            <p>
+              Aucune session de mercato n&apos;a encore été lancée. Le compte à
+              rebours de 48h ne démarre qu&apos;une fois que tu cliques sur{" "}
+              <strong>Démarrer le championnat</strong>.
+            </p>
+            {isOwner && (
+              <p className="mt-2 text-xs text-nuffle-anthracite/60">
+                Astuce : attends que tous les coachs aient rejoint le championnat
+                avant de cliquer — sinon ils risquent de rater la première
+                session.
+              </p>
+            )}
+          </div>
         )}
         {sessions !== null && sessions.length > 0 && (
           <ul className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white">

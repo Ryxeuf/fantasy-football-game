@@ -196,7 +196,20 @@ export default function LeagueDetailPage() {
               {league.name}
             </h1>
             <p className="mt-1 text-sm text-nuffle-anthracite/70">
-              Saison {league.seasonId} · {league.entries.length}/{league.size} membres ·{" "}
+              {league.cycle ? (
+                <>
+                  <span className="font-medium text-nuffle-bronze">
+                    {league.cycle.label}
+                  </span>{" "}
+                  <span className="text-nuffle-anthracite/60">
+                    (W{league.cycle.startWeek}–W{league.cycle.endWeek})
+                  </span>{" "}
+                  · Saison {league.seasonId}
+                </>
+              ) : (
+                <>Saison {league.seasonId}</>
+              )}{" "}
+              · {league.entries.length}/{league.size} membres ·{" "}
               <span className="capitalize">{league.draftMode}</span>
             </p>
           </div>

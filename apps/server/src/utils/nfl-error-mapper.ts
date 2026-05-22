@@ -19,6 +19,7 @@ import { NflFantasyPlayerValueError } from "../services/nfl-fantasy-player-value
 import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
 import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
 import { NflFantasyGazetteError } from "../services/nfl-fantasy-gazette";
+import { NflFantasyCycleError } from "../services/nfl-fantasy-season-cycle";
 
 export interface MappedError {
   readonly status: number;
@@ -45,6 +46,7 @@ export function statusForCode(code: string): number {
     case "MATCHUP_NOT_FOUND":
     case "SESSION_NOT_FOUND":
     case "BID_NOT_FOUND":
+    case "CYCLE_NOT_FOUND":
       return 404;
 
     // 403 — acces refuse
@@ -66,6 +68,8 @@ export function statusForCode(code: string): number {
     case "SESSION_NOT_OPEN":
     case "SESSION_ALREADY_RESOLVED":
     case "ENTRY_NOT_IN_LEAGUE":
+    case "CYCLE_ALREADY_STARTED":
+    case "NO_JOINABLE_CYCLE":
       return 409;
 
     // 422 — validation metier
@@ -125,7 +129,8 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyPlayerValueError ||
     err instanceof NflFantasyAdminError ||
     err instanceof NflFantasyReplayError ||
-    err instanceof NflFantasyGazetteError
+    err instanceof NflFantasyGazetteError ||
+    err instanceof NflFantasyCycleError
   ) {
     return {
       status: statusForCode(err.code),

@@ -26,6 +26,10 @@
 import type { NflFantasyEntry, NflFantasyLeague } from "@prisma/client";
 
 import { prisma } from "../prisma";
+import {
+  assertCycleJoinable,
+  getNextJoinableCycle,
+} from "./nfl-fantasy-season-cycle";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreur typee
@@ -133,6 +137,13 @@ export interface CreateLeagueOpts {
   readonly draftMode?: "snake" | "auction" | "free";
   /** V2 mercato : budget initial par coach. Range [1000, 20000], defaut 5000. */
   readonly draftBudget?: number;
+  /**
+   * Cycle de saison sur lequel adosser le championnat. Optionnel :
+   * si omis, le service applique le snap-to-next-window (premier
+   * cycle non encore demarre). Si fourni, le cycle doit etre encore
+   * "upcoming" sinon NflFantasyCycleError CYCLE_ALREADY_STARTED.
+   */
+  readonly cycleId?: string;
 }
 
 export const DRAFT_BUDGET_MIN = 1000;
@@ -243,6 +254,13 @@ export async function createLeague(
     );
   }
 
+  // Cycle : si fourni, valider qu'il est encore joignable ; sinon
+  // snap-to-next-window. Throws NflFantasyCycleError, propage tel
+  // quel pour mapping HTTP cote route.
+  const cycle = opts.cycleId
+    ? await assertCycleJoinable(opts.cycleId)
+    : await getNextJoinableCycle(opts.seasonId);
+
   const inviteCode = type === "private" ? generateInviteCode() : null;
 
   return prisma.nflFantasyLeague.create({
@@ -253,6 +271,7 @@ export async function createLeague(
       type,
       draftMode,
       seasonId: opts.seasonId,
+      cycleId: cycle.id,
       inviteCode,
       draftBudget,
       entries: {
@@ -273,7 +292,10 @@ export async function createLeague(
 export async function getLeague(leagueId: string): Promise<LeagueWithEntries> {
   const league = await prisma.nflFantasyLeague.findUnique({
     where: { id: leagueId },
-    include: { entries: { orderBy: { joinedAt: "asc" } } },
+    include: {
+      entries: { orderBy: { joinedAt: "asc" } },
+      cycle: true,
+    },
   });
   if (!league) {
     throw new NflFantasyLeagueError(
@@ -314,6 +336,7 @@ export async function listPublicLeagues(opts: {
     take: limit,
     include: {
       entries: { select: { id: true, userId: true } },
+      cycle: { select: { id: true, label: true, startWeek: true, endWeek: true, cycleType: true } },
     },
   });
   type Row = (typeof rows)[number];
@@ -349,6 +372,9 @@ export async function listLeaguesForUser(
       ...(filters.status ? { status: filters.status } : {}),
     },
     orderBy: { createdAt: "desc" },
+    include: {
+      cycle: { select: { id: true, label: true, startWeek: true, endWeek: true, cycleType: true } },
+    },
   });
 }
 

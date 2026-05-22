@@ -148,8 +148,19 @@ export default function NflFantasyDashboardPage() {
                 </div>
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-nuffle-anthracite/70">
                   <div>
-                    <dt className="text-nuffle-anthracite/60">Saison</dt>
-                    <dd>{lg.seasonId}</dd>
+                    <dt className="text-nuffle-anthracite/60">Mini-saison</dt>
+                    <dd>
+                      {lg.cycle ? (
+                        <>
+                          {lg.cycle.label}{" "}
+                          <span className="text-nuffle-anthracite/50">
+                            (W{lg.cycle.startWeek}-W{lg.cycle.endWeek})
+                          </span>
+                        </>
+                      ) : (
+                        `Saison ${lg.seasonId}`
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-nuffle-anthracite/60">Taille</dt>

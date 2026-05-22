@@ -2544,15 +2544,56 @@ model NflFantasyLeague {
   /// Budget initial alloue a chaque entry pour le mercato V2. Default
   /// 5000 TV (~10-15 joueurs, mix stars + rookies selon les prix).
   draftBudget Int    @default(5000)
+  /// FK logique vers NflFantasySeasonCycle.id. Nullable pour
+  /// retro-compat avec les championnats crees avant l'introduction des
+  /// cycles ; pour les nouveaux championnats, la valeur est exigee par
+  /// le service createLeague (snap-to-next-window).
+  cycleId   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   entries        NflFantasyEntry[]
   matchups       NflFantasyMatchup[]
   draftSessions  NflFantasyDraftSession[]
+  cycle          NflFantasySeasonCycle? @relation(fields: [cycleId], references: [id])
 
   @@index([ownerId])
   @@index([status, type])
+  @@index([seasonId])
+  @@index([cycleId])
+}
+
+/// Decoupage de la saison NFL en "mini-saisons" pour les championnats
+/// Nuffle Coach. Une saison NFL (18 semaines reg + 4 playoffs) est
+/// divisee en 3 cycles reguliers de 6 semaines + 1 cycle playoffs de
+/// 4 semaines. Chaque championnat est rattache a un cycle, ce qui
+/// permet :
+///   - Engagement court (6 semaines) plutot que 18.
+///   - Multi-cycle par saison : un coach peut jouer 3 championnats
+///     dans une meme annee NFL.
+///   - Snap-to-next-window pour la creation tardive : on refuse de
+///     creer un championnat dans un cycle deja demarre, et on
+///     redirige vers le cycle suivant.
+model NflFantasySeasonCycle {
+  id          String   @id @default(cuid())
+  /// FK logique vers NflSeason.id (ex: "2025").
+  seasonId    String
+  /// Position du cycle dans la saison (1, 2, 3, 4).
+  cycleNumber Int
+  /// "regular" | "playoffs". Determine le scoring (multipliers
+  /// playoffs futurs) et la duree (6 semaines vs 4).
+  cycleType   String   @default("regular")
+  /// Label public ("Conference 1", "Playoffs", etc.).
+  label       String
+  /// Premiere NflWeek.weekNumber incluse (ex: 1, 7, 13, 19).
+  startWeek   Int
+  /// Derniere NflWeek.weekNumber incluse (ex: 6, 12, 18, 22).
+  endWeek     Int
+  createdAt   DateTime @default(now())
+
+  leagues     NflFantasyLeague[]
+
+  @@unique([seasonId, cycleNumber])
   @@index([seasonId])
 }
 

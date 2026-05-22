@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { apiRequest, ApiClientError } from "../../lib/api-client";
 import type { LeagueType, LeagueWithEntries } from "../types";
@@ -11,21 +11,83 @@ import type { LeagueType, LeagueWithEntries } from "../types";
 // conserves pour future extension snake interactif / vraies encheres).
 const HARDCODED_DRAFT_MODE = "auction" as const;
 
-const DEFAULT_SEASON = "2025";
+// On essaie 2026 (saison NFL a venir) puis 2025 en fallback. Cote
+// snap-to-next-window : la 1ere saison qui a un cycle joignable
+// (status=upcoming) est utilisee comme defaut.
+const CANDIDATE_SEASONS = ["2026", "2025"] as const;
+
+interface CycleStatus {
+  readonly id: string;
+  readonly seasonId: string;
+  readonly cycleNumber: number;
+  readonly cycleType: "regular" | "playoffs";
+  readonly label: string;
+  readonly startWeek: number;
+  readonly endWeek: number;
+  readonly status: "upcoming" | "active" | "closed";
+  readonly startsAt: string | null;
+  readonly endsAt: string | null;
+}
+
+interface CyclesResponse {
+  readonly cycles: CycleStatus[];
+}
 
 export default function NewLeaguePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [teamName, setTeamName] = useState("");
-  const [seasonId, setSeasonId] = useState(DEFAULT_SEASON);
   const [size, setSize] = useState(10);
   const [type, setType] = useState<LeagueType>("private");
   const [draftBudget, setDraftBudget] = useState<number>(5000);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Cycle resolution : on appelle l'API pour chaque saison candidate
+  // jusqu'a en trouver une qui a un cycle "upcoming". Le championnat
+  // sera adosse a ce cycle (snap-to-next-window).
+  const [resolvedCycle, setResolvedCycle] = useState<CycleStatus | null>(null);
+  const [resolvingCycle, setResolvingCycle] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function resolveCycle() {
+      for (const seasonId of CANDIDATE_SEASONS) {
+        try {
+          const out = await apiRequest<CyclesResponse>(
+            `/api/nfl-fantasy/cycles?seasonId=${encodeURIComponent(seasonId)}`,
+          );
+          const upcoming = out.cycles
+            .filter((c) => c.status === "upcoming")
+            .sort((a, b) => a.cycleNumber - b.cycleNumber);
+          if (upcoming.length > 0 && !cancelled) {
+            setResolvedCycle(upcoming[0]);
+            setResolvingCycle(false);
+            return;
+          }
+        } catch {
+          // Ignore, on essaie la saison suivante.
+        }
+      }
+      if (!cancelled) {
+        setResolvingCycle(false);
+        setError(
+          "Aucune mini-saison n'est ouverte pour creation en ce moment. Reviens quand la prochaine debute.",
+        );
+      }
+    }
+    void resolveCycle();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function onSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
+    if (!resolvedCycle) {
+      setError("Aucun cycle joignable disponible.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -36,7 +98,8 @@ export default function NewLeaguePage() {
           body: JSON.stringify({
             name: name.trim(),
             teamName: teamName.trim(),
-            seasonId,
+            seasonId: resolvedCycle.seasonId,
+            cycleId: resolvedCycle.id,
             size,
             type,
             draftMode: HARDCODED_DRAFT_MODE,
@@ -107,35 +170,64 @@ export default function NewLeaguePage() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="seasonId" className="text-sm font-medium text-nuffle-anthracite">
-              Saison
-            </label>
-            <select
-              id="seasonId"
-              value={seasonId}
-              onChange={(e) => setSeasonId(e.target.value)}
-              className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-            >
-              <option value="2025">2025</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="size" className="text-sm font-medium text-nuffle-anthracite">
-              Taille
-            </label>
-            <input
-              id="size"
-              type="number"
-              min={2}
-              max={16}
-              value={size}
-              onChange={(e) => setSize(Number(e.target.value))}
-              className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-            />
-            <p className="mt-1 text-[11px] text-nuffle-anthracite/60">2-16 coachs ; défaut 10</p>
-          </div>
+        <div className="rounded-lg border border-nuffle-bronze/30 bg-nuffle-ivory/40 p-4">
+          <p className="text-xs uppercase tracking-wide text-nuffle-bronze">
+            Mini-saison ciblée
+          </p>
+          {resolvingCycle && (
+            <p className="mt-2 text-sm text-nuffle-anthracite/70">
+              Recherche du prochain cycle joignable…
+            </p>
+          )}
+          {!resolvingCycle && resolvedCycle && (
+            <div className="mt-1">
+              <p className="font-heading text-lg text-nuffle-anthracite">
+                {resolvedCycle.label}{" "}
+                <span className="text-sm font-normal text-nuffle-anthracite/70">
+                  · Saison {resolvedCycle.seasonId}
+                </span>
+              </p>
+              <p className="mt-1 text-xs text-nuffle-anthracite/70">
+                Semaines NFL {resolvedCycle.startWeek}–{resolvedCycle.endWeek}
+                {resolvedCycle.startsAt && (
+                  <>
+                    {" "}
+                    · Démarre le{" "}
+                    {new Date(resolvedCycle.startsAt).toLocaleDateString(
+                      "fr-FR",
+                      { day: "numeric", month: "long", year: "numeric" },
+                    )}
+                  </>
+                )}
+              </p>
+              <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
+                Snap-to-next-window : on ne peut pas créer de championnat sur
+                une mini-saison déjà démarrée. La création tardive bascule
+                automatiquement sur la prochaine.
+              </p>
+            </div>
+          )}
+          {!resolvingCycle && !resolvedCycle && (
+            <p className="mt-2 text-sm text-nuffle-red">
+              Aucune mini-saison joignable pour le moment.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="size" className="text-sm font-medium text-nuffle-anthracite">
+            Taille
+          </label>
+          <input
+            id="size"
+            type="number"
+            min={2}
+            max={16}
+            value={size}
+            onChange={(e) => setSize(Number(e.target.value))}
+            className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] text-nuffle-anthracite/60">2-16 coachs ; défaut 10</p>
         </div>
 
         <div className="rounded-lg border border-nuffle-gold/30 bg-nuffle-gold/5 p-4">
@@ -236,7 +328,7 @@ export default function NewLeaguePage() {
           </Link>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || resolvingCycle || !resolvedCycle}
             className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20"
           >
             {submitting ? "Création…" : "Créer le championnat"}

@@ -56,6 +56,11 @@ const createLeagueSchema = z.object({
     .min(DRAFT_BUDGET_MIN)
     .max(DRAFT_BUDGET_MAX)
     .optional(),
+  /**
+   * Optionnel : id du cycle (NflFantasySeasonCycle) sur lequel adosser
+   * le championnat. Si omis, le service applique snap-to-next-window.
+   */
+  cycleId: z.string().min(1).optional(),
 });
 
 const updateLeagueSchema = z.object({
