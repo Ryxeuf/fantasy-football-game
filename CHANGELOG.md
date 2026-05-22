@@ -1,3 +1,11 @@
+## [1.141.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.140.0...v1.141.0) (2026-05-22)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** enhance draft session and league creation features ([74ae28c](https://github.com/Ryxeuf/fantasy-football-game/commit/74ae28ccd5f354aa92f4b1b464c704e971616dad))
+* **nfl-fantasy:** implement draft session routes and enhance player bidding functionality ([98ea53b](https://github.com/Ryxeuf/fantasy-football-game/commit/98ea53b417d9f6e3f9cbf29efbda812415de3328))
+
 ## [1.140.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.139.0...v1.140.0) (2026-05-22)
 
 
