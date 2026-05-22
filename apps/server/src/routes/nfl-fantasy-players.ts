@@ -17,11 +17,12 @@ import { z } from "zod";
 
 import { authUser } from "../middleware/authUser";
 import { validateQuery } from "../middleware/validate";
+import { prisma } from "../prisma";
 import {
   getNflPlayerDetail,
   listNflPlayersForAdmin,
 } from "../services/nfl-fantasy-admin-explorer";
-import { computeBasePrice } from "../services/nfl-fantasy-draft-session";
+import { getPlayerValueHistory } from "../services/nfl-fantasy-player-value";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -58,15 +59,36 @@ router.get("/", validateQuery(playersListSchema), async (req, res) => {
       page: q.page,
       pageSize: q.pageSize,
     });
-    // Enrichi avec basePrice (V2 mercato) si seasonId fourni : permet
-    // a l'UI mercato d'afficher directement le prix de base sans
-    // round-trip supplementaire.
-    const players = q.seasonId
-      ? out.players.map((p) => ({
-          ...p,
-          basePrice: computeBasePrice(p.totalSpp ?? 0),
-        }))
-      : out.players;
+    // V3 — Enrichi avec currentValue + previousValue (cote dynamique
+    // mise a jour apres chaque settle week). Fournit aussi basePrice
+    // comme alias de currentValue pour retro-compat UI V2.
+    const ids = out.players.map((p) => p.id);
+    const valueByPlayer = new Map<
+      string,
+      { current: number; previous: number }
+    >();
+    if (ids.length > 0) {
+      const rows = await prisma.nflPlayer.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, currentValue: true, previousValue: true },
+      });
+      type ValueRow = (typeof rows)[number];
+      for (const r of rows as ValueRow[]) {
+        valueByPlayer.set(r.id, {
+          current: r.currentValue,
+          previous: r.previousValue,
+        });
+      }
+    }
+    const players = out.players.map((p) => {
+      const v = valueByPlayer.get(p.id) ?? { current: 50, previous: 50 };
+      return {
+        ...p,
+        currentValue: v.current,
+        previousValue: v.previous,
+        basePrice: v.current,
+      };
+    });
     res.json({ ...out, players });
   } catch (err) {
     if (!sendNflError(res, err)) {
@@ -82,10 +104,17 @@ router.get(
   async (req, res) => {
     try {
       const q = req.query as z.infer<typeof playerDetailSchema>;
-      const detail = await getNflPlayerDetail({
-        id: req.params.id,
-        seasonId: q.seasonId,
-      });
+      const [detail, valueRow] = await Promise.all([
+        getNflPlayerDetail({ id: req.params.id, seasonId: q.seasonId }),
+        prisma.nflPlayer.findUnique({
+          where: { id: req.params.id },
+          select: {
+            currentValue: true,
+            previousValue: true,
+            valueRecomputedAt: true,
+          },
+        }),
+      ]);
       if (!detail) {
         res.status(404).json({
           error: `Joueur ${req.params.id} introuvable`,
@@ -93,10 +122,52 @@ router.get(
         });
         return;
       }
-      res.json(detail);
+      // Sanitize bio pour la voie publique : on ne fuit jamais l'image
+      // officielle NFL (droit a l'image / NIL) ni la date de naissance
+      // exacte (donnee perso directement identifiante). Le age estime
+      // reste expose, ainsi que college/draft/exp qui sont des donnees
+      // wikipedia-level partagees publiquement.
+      const safeBio = {
+        ...detail.bio,
+        headshotUrl: null,
+        birthDate: null,
+      };
+      res.json({
+        ...detail,
+        bio: safeBio,
+        currentValue: valueRow?.currentValue ?? 50,
+        previousValue: valueRow?.previousValue ?? 50,
+        valueRecomputedAt: valueRow?.valueRecomputedAt ?? null,
+      });
     } catch (err) {
       if (!sendNflError(res, err)) {
         serverLog.error("[nfl-fantasy-players] detail failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+// V3 — historique des cotes (1 row par week ou la cote a change).
+// Utilise par l'UI pour afficher un graph d'evolution.
+const valueHistorySchema = z.object({
+  seasonId: z.string().regex(/^\d{4}$/),
+});
+
+router.get(
+  "/:id/value-history",
+  validateQuery(valueHistorySchema),
+  async (req, res) => {
+    try {
+      const q = req.query as z.infer<typeof valueHistorySchema>;
+      const history = await getPlayerValueHistory({
+        playerId: req.params.id,
+        seasonId: q.seasonId,
+      });
+      res.json({ history });
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-players] value-history failed", err);
         res.status(500).json({ error: "Erreur serveur" });
       }
     }

@@ -171,6 +171,9 @@ export interface RosterPlayerView {
     bbPosition: NflPlayer["bbPosition"];
     jerseyNumber: NflPlayer["jerseyNumber"];
     status: NflPlayer["status"];
+    /** V3 — cote actuelle (utile pour preview plus-value a la vente). */
+    currentValue: NflPlayer["currentValue"];
+    previousValue: NflPlayer["previousValue"];
   } | null;
 }
 
@@ -194,6 +197,8 @@ export async function getRosterWithPlayers(
     | "bbPosition"
     | "jerseyNumber"
     | "status"
+    | "currentValue"
+    | "previousValue"
   >;
   const players: ReadonlyArray<RosterPlayerRow> =
     await prisma.nflPlayer.findMany({
@@ -207,6 +212,8 @@ export async function getRosterWithPlayers(
         bbPosition: true,
         jerseyNumber: true,
         status: true,
+        currentValue: true,
+        previousValue: true,
       },
     });
   const byId = new Map<string, RosterPlayerRow>(

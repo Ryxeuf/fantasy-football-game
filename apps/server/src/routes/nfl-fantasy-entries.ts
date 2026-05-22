@@ -49,6 +49,7 @@ import {
   listRerolls,
   NflFantasyMercatoError,
 } from "../services/nfl-fantasy-mercato";
+import { sellPlayer } from "../services/nfl-fantasy-player-value";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -134,6 +135,27 @@ router.delete("/:entryId/roster/:playerId", async (req, res) => {
   } catch (err) {
     if (!sendNflError(res, err)) {
       serverLog.error("[nfl-fantasy-entries] removePlayer failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// V3 mercato : vendre un joueur en recuperant sa cote ACTUELLE (vs
+// le tvCost initial pour DELETE /roster). Permet la spéculation
+// MPG-style : un joueur drafté pas cher qui monte en cote rapporte
+// une plus-value au moment de la vente.
+router.post("/:entryId/roster/:playerId/sell", async (req, res) => {
+  try {
+    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    if (!entry) return;
+    const out = await sellPlayer({
+      entryId: req.params.entryId,
+      playerId: req.params.playerId,
+    });
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-entries] sellPlayer failed", err);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }

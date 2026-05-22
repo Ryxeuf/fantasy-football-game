@@ -253,7 +253,7 @@ export async function placeBid(opts: PlaceBidOpts): Promise<{ id: string }> {
 
   const player = await prisma.nflPlayer.findUnique({
     where: { id: opts.playerId },
-    select: { id: true },
+    select: { id: true, currentValue: true },
   });
   if (!player) {
     throw new NflFantasyDraftSessionError(
@@ -274,14 +274,10 @@ export async function placeBid(opts: PlaceBidOpts): Promise<{ id: string }> {
     );
   }
 
-  const league = await prisma.nflFantasyLeague.findUnique({
-    where: { id: session.leagueId },
-    select: { seasonId: true },
-  });
-  const basePrice = await computeBasePriceForPlayer({
-    playerId: opts.playerId,
-    seasonId: league?.seasonId ?? "2025",
-  });
+  // V3 : le prix de base = currentValue (cote dynamique mise a jour
+  // apres chaque settle week). Tant que la recompute n'a pas tourne,
+  // currentValue == 50 (plancher) ce qui revient a la V2 sans cote.
+  const basePrice = player.currentValue;
   if (opts.amount < basePrice) {
     throw new NflFantasyDraftSessionError(
       "BID_AMOUNT_BELOW_BASE_PRICE",

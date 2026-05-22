@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -71,7 +70,6 @@ interface PlayerDetail {
   readonly bbPosition: string;
   readonly status: string;
   readonly bio: {
-    headshotUrl: string | null;
     heightInches: number | null;
     weightLbs: number | null;
     ageYears: number | null;
@@ -183,20 +181,10 @@ export default function NuffleCoachPlayerDetailPage() {
       </Link>
 
       <header className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        {data.bio.headshotUrl ? (
-          <Image
-            src={data.bio.headshotUrl}
-            alt={data.pseudonym}
-            width={128}
-            height={128}
-            className="h-32 w-32 rounded-lg border border-nuffle-bronze/20 bg-white object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="flex h-32 w-32 items-center justify-center rounded-lg border border-nuffle-bronze/20 bg-white text-4xl">
-            🏈
-          </div>
-        )}
+        <PlayerAvatar
+          bbPosition={data.bbPosition}
+          jerseyNumber={data.jerseyNumber}
+        />
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-nuffle-anthracite">
             {data.pseudonym}
@@ -383,4 +371,50 @@ function Row({ label, value }: { label: string; value: number | string }) {
       <dd className="font-medium text-nuffle-anthracite">{value}</dd>
     </div>
   );
+}
+
+/**
+ * Avatar fictif d'un joueur Nuffle. Volontairement abstrait : on
+ * n'utilise PAS la headshot officielle NFL (droit a l'image / NIL).
+ * Un emoji adapte au poste BB + le jersey number font office d'icone
+ * d'identification.
+ */
+function PlayerAvatar({
+  bbPosition,
+  jerseyNumber,
+}: {
+  bbPosition: string;
+  jerseyNumber: number | null;
+}) {
+  const emoji = avatarEmojiForPosition(bbPosition);
+  return (
+    <div className="relative flex h-32 w-32 shrink-0 items-center justify-center rounded-lg border-2 border-nuffle-bronze/30 bg-gradient-to-br from-nuffle-gold/10 via-white to-nuffle-ivory">
+      <span className="text-5xl" aria-hidden>
+        {emoji}
+      </span>
+      {jerseyNumber !== null && (
+        <span className="absolute bottom-1 right-2 font-mono text-sm font-bold text-nuffle-bronze">
+          #{jerseyNumber}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function avatarEmojiForPosition(bbPosition: string): string {
+  switch (bbPosition) {
+    case "Thrower":
+      return "🎯";
+    case "Catcher":
+      return "🧤";
+    case "Runner":
+      return "💨";
+    case "Blitzer":
+      return "⚡";
+    case "Big Guy":
+      return "🪨";
+    case "Lineman":
+    default:
+      return "🛡️";
+  }
 }

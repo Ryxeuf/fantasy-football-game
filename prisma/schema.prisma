@@ -2393,11 +2393,49 @@ model NflPlayer {
   /// Annees d'experience NFL au moment du roster snapshot.
   yearsExp     Int?
 
+  /// V3 cote dynamique (MPG-style). Mise a jour apres chaque settle
+  /// week par computeDynamicValue. C'est la valeur de marche actuelle
+  /// du joueur, utilisee comme :
+  ///   - prix de base pour les nouvelles encheres mercato
+  ///   - credit budget lors d'une revente (sellPlayer)
+  /// Initialisation : 50 TV (plancher) jusqu'a la 1ere recompute.
+  currentValue  Int @default(50)
+  /// Cote precedente (avant le dernier recompute) pour calculer le
+  /// delta affiche cote UI (badge up/down). Snapshot detaille =
+  /// NflPlayerValueSnapshot.
+  previousValue Int @default(50)
+  /// Timestamp du dernier recompute. null si jamais recompute (joueur
+  /// rookie / fresh ingest).
+  valueRecomputedAt DateTime?
+
   team      NflTeam?      @relation(fields: [teamCode], references: [code], onDelete: SetNull)
   gameStats NflGameStat[]
+  valueSnapshots NflPlayerValueSnapshot[]
 
   @@index([teamCode, bbPosition])
   @@index([status])
+}
+
+/// V3 historique des cotes par week. Inserted par
+/// recomputeAllPlayerValues apres chaque settle. Permet de tracer
+/// l'evolution sur une saison et d'afficher des graphs UI.
+model NflPlayerValueSnapshot {
+  id        String   @id @default(cuid())
+  playerId  String
+  /// Format "{year}:W{n}" (FK logique vers NflWeek).
+  weekId    String
+  /// Saison pour faciliter les queries par saison sans rejoindre week.
+  seasonId  String
+  value     Int
+  /// SPP cumules au moment du snapshot (debug / explication UI).
+  sppAtSnapshot Int @default(0)
+  createdAt DateTime @default(now())
+
+  player NflPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, weekId])
+  @@index([seasonId, playerId])
+  @@index([weekId])
 }
 
 model NflGame {

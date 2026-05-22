@@ -17,6 +17,9 @@ interface PlayerRow {
   readonly status: string;
   readonly totalSpp?: number;
   readonly gamesPlayed?: number;
+  /** V3 cote dynamique. */
+  readonly currentValue?: number;
+  readonly previousValue?: number;
 }
 
 interface ListPlayersResponse {
@@ -209,7 +212,7 @@ export default function NuffleCoachPlayersPage() {
                   <th className="px-3 py-2">Pseudo</th>
                   <th className="px-3 py-2">Équipe</th>
                   <th className="px-3 py-2">Poste BB</th>
-                  <th className="px-3 py-2">NFL pos</th>
+                  <th className="px-3 py-2 text-right">Cote</th>
                   <th className="px-3 py-2 text-right">SPP</th>
                   <th className="px-3 py-2 text-right">Games</th>
                   <th className="px-3 py-2">Statut</th>
@@ -221,7 +224,7 @@ export default function NuffleCoachPlayersPage() {
                     <td className="px-3 py-2">
                       <Link
                         href={`/nfl-fantasy/players/${p.id}${seasonId ? `?seasonId=${seasonId}` : ""}`}
-                        className="font-medium text-nuffle-gold hover:text-nuffle-gold"
+                        className="font-medium text-nuffle-gold hover:text-nuffle-red"
                       >
                         {p.pseudonym}
                       </Link>
@@ -231,8 +234,13 @@ export default function NuffleCoachPlayersPage() {
                     </td>
                     <td className="px-3 py-2 text-nuffle-anthracite/80">{p.teamCode ?? "—"}</td>
                     <td className="px-3 py-2 text-nuffle-anthracite/80">{p.bbPosition}</td>
-                    <td className="px-3 py-2 text-nuffle-anthracite/70">{p.nflPosition}</td>
-                    <td className="px-3 py-2 text-right text-nuffle-anthracite">
+                    <td className="px-3 py-2 text-right">
+                      <ValueBadge
+                        current={p.currentValue ?? 50}
+                        previous={p.previousValue ?? 50}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-right text-nuffle-anthracite/70">
                       {p.totalSpp !== undefined ? p.totalSpp.toFixed(1) : "—"}
                     </td>
                     <td className="px-3 py-2 text-right text-nuffle-anthracite/70">
@@ -278,6 +286,40 @@ export default function NuffleCoachPlayersPage() {
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Affiche la cote actuelle d'un joueur + un mini-delta (flèche + %)
+ * pour signaler si elle a monté ou descendu au dernier recompute.
+ */
+function ValueBadge({
+  current,
+  previous,
+}: {
+  current: number;
+  previous: number;
+}) {
+  const delta = current - previous;
+  const pct =
+    previous > 0 ? Math.round((delta / previous) * 1000) / 10 : 0;
+  const trend =
+    delta === 0 ? "flat" : delta > 0 ? "up" : "down";
+  return (
+    <div className="inline-flex flex-col items-end">
+      <span className="font-mono text-sm font-semibold text-nuffle-anthracite">
+        {current} <span className="text-[10px] text-nuffle-anthracite/60">TV</span>
+      </span>
+      {trend !== "flat" && (
+        <span
+          className={`text-[10px] font-medium ${
+            trend === "up" ? "text-emerald-700" : "text-red-700"
+          }`}
+        >
+          {trend === "up" ? "▲" : "▼"} {Math.abs(pct)}%
+        </span>
       )}
     </div>
   );

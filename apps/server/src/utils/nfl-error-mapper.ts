@@ -15,6 +15,7 @@ import { NflFantasyScoringError } from "../services/nfl-fantasy-scoring";
 import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
 import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
 import { NflFantasyDraftSessionError } from "../services/nfl-fantasy-draft-session";
+import { NflFantasyPlayerValueError } from "../services/nfl-fantasy-player-value";
 import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
 import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
 import { NflFantasyGazetteError } from "../services/nfl-fantasy-gazette";
@@ -121,6 +122,7 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyMercatoError ||
     err instanceof NflFantasyDraftError ||
     err instanceof NflFantasyDraftSessionError ||
+    err instanceof NflFantasyPlayerValueError ||
     err instanceof NflFantasyAdminError ||
     err instanceof NflFantasyReplayError ||
     err instanceof NflFantasyGazetteError

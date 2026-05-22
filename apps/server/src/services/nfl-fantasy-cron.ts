@@ -338,6 +338,29 @@ export async function settleWeekTick(opts: {
     );
   }
 
+  // V3 — recompute des cotes dynamiques juste apres le settle.
+  // Independent du resultat du settle : meme si aucune league
+  // settled, les stats nflverse ont ete ingerees et meritent un
+  // recompute pour la prochaine session mercato.
+  try {
+    const { recomputeAllPlayerValues } = await import(
+      "./nfl-fantasy-player-value"
+    );
+    const out = await recomputeAllPlayerValues({
+      weekId: week.id,
+      seasonId: week.seasonId,
+    });
+    if (out.updated > 0) {
+      serverLog.info(
+        `[nfl-cron] value-recompute ${week.id} : updated=${out.updated} top-gainer=${out.topGainers[0]?.delta ?? 0} top-loser=${out.topLosers[0]?.delta ?? 0}`,
+      );
+    }
+  } catch (e) {
+    serverLog.error(
+      `[nfl-cron] value-recompute ${week.id} failed : ${(e as Error).message}`,
+    );
+  }
+
   return {
     ran: true,
     detail: {

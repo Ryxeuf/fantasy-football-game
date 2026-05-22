@@ -46,6 +46,26 @@ interface MyBidsResponse {
   readonly bids: MyBid[];
 }
 
+interface RosterPlayer {
+  readonly rosterId: string;
+  readonly acquiredVia: string;
+  readonly acquiredAt: string;
+  readonly tvCost: number;
+  readonly player: {
+    readonly id: string;
+    readonly pseudonym: string;
+    readonly teamCode: string | null;
+    readonly bbPosition: string;
+    readonly jerseyNumber: number | null;
+    readonly currentValue: number;
+    readonly previousValue: number;
+  } | null;
+}
+
+interface RosterResponse {
+  readonly roster: RosterPlayer[];
+}
+
 interface CatalogPlayer {
   readonly id: string;
   readonly pseudonym: string;
@@ -55,6 +75,8 @@ interface CatalogPlayer {
   readonly status: string;
   readonly totalSpp?: number;
   readonly basePrice?: number;
+  readonly currentValue?: number;
+  readonly previousValue?: number;
 }
 
 interface CatalogResponse {
@@ -80,6 +102,7 @@ export default function NuffleCoachDraftPage() {
   const [sessions, setSessions] = useState<DraftSession[] | null>(null);
   const [myBids, setMyBids] = useState<MyBid[]>([]);
   const [catalog, setCatalog] = useState<CatalogPlayer[] | null>(null);
+  const [roster, setRoster] = useState<RosterPlayer[]>([]);
   const [search, setSearch] = useState<string>("");
   const [bidModalPlayer, setBidModalPlayer] = useState<CatalogPlayer | null>(null);
   const [bidAmount, setBidAmount] = useState<number>(0);
@@ -156,6 +179,21 @@ export default function NuffleCoachDraftPage() {
     }
   }, [activeSession]);
 
+  const loadRoster = useCallback(async () => {
+    if (!myEntry) {
+      setRoster([]);
+      return;
+    }
+    try {
+      const out = await apiRequest<RosterResponse>(
+        `/api/nfl-fantasy/entries/${myEntry.id}/roster`,
+      );
+      setRoster(out.roster);
+    } catch {
+      setRoster([]);
+    }
+  }, [myEntry]);
+
   useEffect(() => {
     void loadLeague();
   }, [loadLeague]);
@@ -167,6 +205,10 @@ export default function NuffleCoachDraftPage() {
   useEffect(() => {
     void loadMyBids();
   }, [loadMyBids]);
+
+  useEffect(() => {
+    void loadRoster();
+  }, [loadRoster]);
 
   // Catalogue (debounce search)
   useEffect(() => {
@@ -219,6 +261,33 @@ export default function NuffleCoachDraftPage() {
       );
       await loadMyBids();
       setBidModalPlayer(null);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function sellPlayerAction(rosterEntry: RosterPlayer): Promise<void> {
+    if (!myEntry || !rosterEntry.player) return;
+    const refund = rosterEntry.player.currentValue;
+    const initial = rosterEntry.tvCost;
+    const pnl = refund - initial;
+    const sign = pnl >= 0 ? "+" : "";
+    if (
+      !window.confirm(
+        `Vendre ${rosterEntry.player.pseudonym} ?\n\nPrix d'achat : ${initial} TV\nCote actuelle : ${refund} TV\nP&L : ${sign}${pnl} TV\n\nTu récupères ${refund} TV sur ton budget.`,
+      )
+    )
+      return;
+    setBusy(rosterEntry.player.id);
+    setActionError(null);
+    try {
+      await apiRequest(
+        `/api/nfl-fantasy/entries/${myEntry.id}/roster/${rosterEntry.player.id}/sell`,
+        { method: "POST" },
+      );
+      await Promise.all([loadRoster(), loadLeague()]);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -378,8 +447,15 @@ export default function NuffleCoachDraftPage() {
           />
           <StatCard
             label="Joueurs draftés"
-            value={`${myEntry ? "?" : 0}`}
-            sub="vois la page league"
+            value={`${roster.length}`}
+            sub={
+              roster.length > 0
+                ? `Valeur totale ${roster.reduce(
+                    (acc, r) => acc + (r.player?.currentValue ?? 0),
+                    0,
+                  )} TV`
+                : "Aucun encore"
+            }
           />
         </section>
       )}
@@ -456,6 +532,72 @@ export default function NuffleCoachDraftPage() {
         )}
       </section>
 
+      {/* Mon roster (joueurs deja draftes) avec bouton Vendre */}
+      {myEntry && roster.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">
+            Mon roster · {roster.length} joueurs
+          </h2>
+          <p className="mt-1 text-xs text-nuffle-anthracite/60">
+            Vendre un joueur te rend sa <strong>cote actuelle</strong>{" "}
+            (pas le prix d&apos;achat). Si elle a monté, plus-value.
+          </p>
+          <ul
+            className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
+            data-testid="mercato-my-roster"
+          >
+            {roster.map((r) => {
+              if (!r.player) return null;
+              const current = r.player.currentValue;
+              const initial = r.tvCost;
+              const pnl = current - initial;
+              const pnlSign = pnl > 0 ? "+" : "";
+              return (
+                <li
+                  key={r.rosterId}
+                  className="flex items-center justify-between gap-3 p-3 text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/nfl-fantasy/players/${r.player.id}?seasonId=${SEASON_ID}`}
+                      className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
+                    >
+                      {r.player.pseudonym}
+                    </Link>
+                    <p className="text-xs text-nuffle-anthracite/60">
+                      {r.player.bbPosition} · {r.player.teamCode ?? "—"} ·
+                      acheté <strong>{initial} TV</strong>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono text-sm font-semibold text-nuffle-anthracite">
+                      {current} TV
+                    </span>
+                    {pnl !== 0 && (
+                      <div
+                        className={`text-[10px] font-medium ${
+                          pnl > 0 ? "text-emerald-700" : "text-red-700"
+                        }`}
+                      >
+                        {pnlSign}
+                        {pnl} TV
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    disabled={busy === r.player.id}
+                    onClick={() => sellPlayerAction(r)}
+                    className="rounded-md border border-nuffle-bronze/30 px-2 py-1 text-xs text-nuffle-anthracite hover:border-nuffle-red hover:text-nuffle-red disabled:opacity-50"
+                  >
+                    {busy === r.player.id ? "…" : "Vendre"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* Mes bids en cours */}
       {myEntry && activeSession && myBids.length > 0 && (
         <section>
@@ -525,12 +667,15 @@ export default function NuffleCoachDraftPage() {
             >
               {catalog.map((p) => {
                 const existingBid = myBidsByPlayer.get(p.id);
+                const current = p.currentValue ?? p.basePrice ?? 50;
+                const previous = p.previousValue ?? current;
+                const trendDelta = current - previous;
                 return (
                   <li
                     key={p.id}
-                    className="flex items-center justify-between p-3 text-sm"
+                    className="flex items-center justify-between gap-3 p-3 text-sm"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={`/nfl-fantasy/players/${p.id}?seasonId=${SEASON_ID}`}
                         className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
@@ -541,12 +686,22 @@ export default function NuffleCoachDraftPage() {
                         {p.bbPosition} · {p.teamCode ?? "—"} ·{" "}
                         {p.totalSpp !== undefined
                           ? `${p.totalSpp.toFixed(1)} SPP`
-                          : "—"}{" "}
-                        · base{" "}
-                        <strong className="text-nuffle-bronze">
-                          {p.basePrice ?? 50} TV
-                        </strong>
+                          : "—"}
                       </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono text-sm font-semibold text-nuffle-anthracite">
+                        {current} TV
+                      </span>
+                      {trendDelta !== 0 && (
+                        <span
+                          className={`ml-1 text-[10px] font-medium ${
+                            trendDelta > 0 ? "text-emerald-700" : "text-red-700"
+                          }`}
+                        >
+                          {trendDelta > 0 ? "▲" : "▼"} {Math.abs(trendDelta)}
+                        </span>
+                      )}
                     </div>
                     <button
                       onClick={() => openBidModal(p)}
@@ -556,7 +711,7 @@ export default function NuffleCoachDraftPage() {
                           : "bg-nuffle-gold text-nuffle-anthracite hover:bg-nuffle-gold/80"
                       }`}
                     >
-                      {existingBid ? `Modifier (${existingBid.amount} TV)` : "+ Enchère"}
+                      {existingBid ? `Modifier (${existingBid.amount})` : "+ Enchère"}
                     </button>
                   </li>
                 );
