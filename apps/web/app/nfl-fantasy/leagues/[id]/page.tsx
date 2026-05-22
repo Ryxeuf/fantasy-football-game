@@ -5,6 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../lib/api-client";
+import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
+import { NUFFLE_COACH_TEST_FLAG } from "../../../lib/featureFlagKeys";
 import type {
   LeagueWithEntries,
   NflFantasyLeague,
@@ -32,6 +34,7 @@ export default function LeagueDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const leagueId = params?.id;
+  const testMode = useFeatureFlag(NUFFLE_COACH_TEST_FLAG);
 
   const [league, setLeague] = useState<LeagueWithEntries | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -87,6 +90,34 @@ export default function LeagueDetailPage() {
         { method: "PATCH", body: JSON.stringify({ name: next.trim() }) },
       );
       setLeague({ ...league, ...updated });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function populateTestCoaches(): Promise<void> {
+    if (!league) return;
+    const slots = league.size - league.entries.length;
+    if (slots <= 0) {
+      setActionError("Le championnat est déjà plein.");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Remplir avec ${slots} coachs de test ? Pioche dans les comptes existants en base et leur attribue des noms d'équipe BB-flavor.`,
+      )
+    )
+      return;
+    setActionError(null);
+    setBusy("populate");
+    try {
+      await apiRequest<{ added: number; totalEntries: number }>(
+        `/api/nfl-fantasy/leagues/${league.id}/populate-test-coaches`,
+        { method: "POST" },
+      );
+      await load();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -367,6 +398,18 @@ export default function LeagueDetailPage() {
                 >
                   Supprimer
                 </button>
+                {testMode && league.entries.length < league.size && (
+                  <button
+                    onClick={populateTestCoaches}
+                    disabled={busy === "populate"}
+                    className="rounded-md border-2 border-dashed border-amber-400 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    title="Remplit le championnat avec des coachs de test (mode debug)"
+                  >
+                    {busy === "populate"
+                      ? "Remplissage…"
+                      : `🧪 Remplir avec ${league.size - league.entries.length} coachs de test`}
+                  </button>
+                )}
               </>
             )}
             {!isOwner && isMember && isDraft && (

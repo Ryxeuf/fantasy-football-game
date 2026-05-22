@@ -93,6 +93,12 @@ export async function apiRequest<T>(
   init: RequestInit = {},
 ): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
+    // Bypass complet du HTTP cache navigateur : un GET fait juste apres
+    // un POST mutateur (join, populate, etc.) doit voir l'etat
+    // a-jour. Le serveur n'envoie pas systematiquement de Cache-Control:
+    // no-store, donc certains navigateurs cachent agressivement. Override
+    // explicite cote client.
+    cache: "no-store",
     ...init,
     headers: {
       "Content-Type": "application/json",

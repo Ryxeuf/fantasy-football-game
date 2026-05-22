@@ -27,8 +27,12 @@ vi.mock("../prisma", () => ({
     nflFantasyEntry: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
+    },
+    user: {
+      findMany: vi.fn(),
     },
     // Cycles (V3) : createLeague delegate au service cycle qui
     // utilise findMany sur la table + nflWeek pour determiner le
@@ -56,6 +60,7 @@ import {
   leaveLeague,
   listLeaguesForUser,
   NflFantasyLeagueError,
+  populateLeagueWithTestCoaches,
   updateLeague,
   DEFAULT_LEAGUE_SIZE,
   LEAGUE_SIZE_MAX,
@@ -643,5 +648,109 @@ describe("limites constants", () => {
     expect(DEFAULT_LEAGUE_SIZE).toBe(10);
     expect(LEAGUE_SIZE_MIN).toBe(2);
     expect(LEAGUE_SIZE_MAX).toBe(16);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// populateLeagueWithTestCoaches (test mode helper)
+// ────────────────────────────────────────────────────────────────────
+
+describe("populateLeagueWithTestCoaches", () => {
+  function mockLeague(overrides: Record<string, unknown> = {}) {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      ownerId: "owner-1",
+      size: 10,
+      status: "draft",
+      draftBudget: 5000,
+      ...overrides,
+    } as never);
+  }
+
+  it("throw NOT_OWNER si caller != owner", async () => {
+    mockLeague();
+    await expect(
+      populateLeagueWithTestCoaches({ leagueId: "lg1", userId: "intruder" }),
+    ).rejects.toThrow(/n'est pas owner/);
+  });
+
+  it("throw INVALID_STATUS si league deja en cours", async () => {
+    mockLeague({ status: "in_progress" });
+    await expect(
+      populateLeagueWithTestCoaches({ leagueId: "lg1", userId: "owner-1" }),
+    ).rejects.toThrow(/status 'draft'/);
+  });
+
+  it("retourne added=0 quand le championnat est plein", async () => {
+    mockLeague({ size: 2 });
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { userId: "owner-1", teamName: "Owner" },
+      { userId: "u2", teamName: "Mate" },
+    ] as never);
+    const out = await populateLeagueWithTestCoaches({
+      leagueId: "lg1",
+      userId: "owner-1",
+    });
+    expect(out.added).toBe(0);
+    expect(out.totalEntries).toBe(2);
+    expect(prisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it("remplit les slots restants avec des users disponibles", async () => {
+    mockLeague({ size: 4 });
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { userId: "owner-1", teamName: "Owner" },
+    ] as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      { id: "u2" },
+      { id: "u3" },
+      { id: "u4" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyEntry.create).mockResolvedValue({} as never);
+
+    const out = await populateLeagueWithTestCoaches({
+      leagueId: "lg1",
+      userId: "owner-1",
+    });
+
+    expect(out.added).toBe(3);
+    expect(out.totalEntries).toBe(4);
+    expect(prisma.nflFantasyEntry.create).toHaveBeenCalledTimes(3);
+    // Verifie que l'owner et les users deja en entry sont exclus du
+    // findMany candidats.
+    const userArgs = vi.mocked(prisma.user.findMany).mock.calls[0]?.[0];
+    expect((userArgs as { where: { id: { notIn: string[] } } }).where.id.notIn)
+      .toContain("owner-1");
+    expect((userArgs as { take: number }).take).toBe(3);
+  });
+
+  it("propage l'erreur create autre que P2002", async () => {
+    mockLeague();
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: "u2" }] as never);
+    vi.mocked(prisma.nflFantasyEntry.create).mockRejectedValue(
+      new Error("DB down"),
+    );
+    await expect(
+      populateLeagueWithTestCoaches({ leagueId: "lg1", userId: "owner-1" }),
+    ).rejects.toThrow(/DB down/);
+  });
+
+  it("skip silencieusement les conflits P2002 (race avec un join manuel)", async () => {
+    mockLeague();
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      { id: "u2" },
+      { id: "u3" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyEntry.create)
+      .mockRejectedValueOnce(Object.assign(new Error("conflict"), { code: "P2002" }))
+      .mockResolvedValueOnce({} as never);
+
+    const out = await populateLeagueWithTestCoaches({
+      leagueId: "lg1",
+      userId: "owner-1",
+    });
+    expect(out.added).toBe(1);
   });
 });

@@ -90,6 +90,76 @@ interface MeResponse {
 
 const SEASON_ID = "2025";
 
+interface TeamRow {
+  readonly code: string;
+  readonly city: string;
+  readonly bbRace: string;
+  readonly raceLabel: string;
+}
+
+interface TeamsResponse {
+  readonly teams: TeamRow[];
+}
+
+// Positions BB exposees dans le filtre. Liste tiree de
+// `packages/nfl-mapper/src/position-to-bb.ts:BbPosition` (29 valeurs).
+// Hardcode plutot qu'un endpoint dedie : le set ne change qu'avec une
+// modification de ruleset, donc le risque de drift est faible et le
+// payload de page est plus leger.
+const BB_POSITIONS = [
+  "Lineman",
+  "Thrower",
+  "Catcher",
+  "Blitzer",
+  "Runner",
+  "GutterRunner",
+  "StormVermin",
+  "RatOgre",
+  "Wardancer",
+  "Treeman",
+  "BlackOrc",
+  "Goblin",
+  "Troll",
+  "Ogre",
+  "Berserker",
+  "Ulfwerener",
+  "Yhetee",
+  "Blocker",
+  "Trollslayer",
+  "Deathroller",
+  "Bloodseeker",
+  "Khorngor",
+  "Bloodspawn",
+  "Bloodthirster",
+  "Zombie",
+  "Ghoul",
+  "Wight",
+  "FleshGolem",
+  "Werewolf",
+] as const;
+
+interface FilterState {
+  readonly search: string;
+  readonly teamCode: string;
+  readonly bbRace: string;
+  readonly bbPosition: string;
+  readonly jerseyNumber: string;
+  readonly freeOnly: boolean;
+  readonly sortBy: "currentValue" | "pseudonym" | "bbPosition" | "teamCode" | "jerseyNumber";
+  readonly sortDir: "asc" | "desc";
+}
+
+const DEFAULT_FILTERS: FilterState = {
+  search: "",
+  teamCode: "",
+  bbRace: "",
+  bbPosition: "",
+  jerseyNumber: "",
+  freeOnly: true,
+  sortBy: "currentValue",
+  sortDir: "desc",
+};
+
 // ─── Composant ──────────────────────────────────────────────────────
 
 export default function NuffleCoachDraftPage() {
@@ -102,8 +172,10 @@ export default function NuffleCoachDraftPage() {
   const [sessions, setSessions] = useState<DraftSession[] | null>(null);
   const [myBids, setMyBids] = useState<MyBid[]>([]);
   const [catalog, setCatalog] = useState<CatalogPlayer[] | null>(null);
+  const [catalogTotal, setCatalogTotal] = useState<number>(0);
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
-  const [search, setSearch] = useState<string>("");
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [teams, setTeams] = useState<TeamRow[]>([]);
   const [bidModalPlayer, setBidModalPlayer] = useState<CatalogPlayer | null>(null);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [busy, setBusy] = useState<string | null>(null);
@@ -210,22 +282,56 @@ export default function NuffleCoachDraftPage() {
     void loadRoster();
   }, [loadRoster]);
 
-  // Catalogue (debounce search)
+  // Charge le catalogue des 32 equipes NFL une fois pour populer les
+  // dropdowns equipe + race. Tres petit payload (~2 KB).
+  useEffect(() => {
+    let cancelled = false;
+    async function loadTeams() {
+      try {
+        const out = await apiRequest<TeamsResponse>("/api/nfl-fantasy/teams");
+        if (!cancelled) setTeams(out.teams);
+      } catch {
+        if (!cancelled) setTeams([]);
+      }
+    }
+    void loadTeams();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Catalogue (debounce search + tous les filtres / tri).
   useEffect(() => {
     let cancelled = false;
     async function loadCatalog() {
+      if (!leagueId) return;
       try {
         const params = new URLSearchParams();
         params.set("page", "1");
         params.set("pageSize", "30");
         params.set("seasonId", SEASON_ID);
-        if (search.trim()) params.set("search", search.trim());
+        if (filters.search.trim()) params.set("search", filters.search.trim());
+        if (filters.teamCode) params.set("teamCode", filters.teamCode);
+        if (filters.bbRace) params.set("bbRace", filters.bbRace);
+        if (filters.bbPosition) params.set("bbPosition", filters.bbPosition);
+        if (filters.jerseyNumber.trim()) {
+          params.set("jerseyNumber", filters.jerseyNumber.trim());
+        }
+        if (filters.freeOnly) params.set("excludeFromLeagueId", leagueId);
+        params.set("sortBy", filters.sortBy);
+        params.set("sortDir", filters.sortDir);
         const out = await apiRequest<CatalogResponse>(
           `/api/nfl-fantasy/players?${params.toString()}`,
         );
-        if (!cancelled) setCatalog(out.players);
+        if (!cancelled) {
+          setCatalog(out.players);
+          setCatalogTotal(out.total);
+        }
       } catch {
-        if (!cancelled) setCatalog([]);
+        if (!cancelled) {
+          setCatalog([]);
+          setCatalogTotal(0);
+        }
       }
     }
     const t = setTimeout(loadCatalog, 250);
@@ -233,7 +339,29 @@ export default function NuffleCoachDraftPage() {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [search]);
+  }, [leagueId, filters]);
+
+  // Liste des races unique extraite des 32 equipes (pour le dropdown).
+  const races = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const t of teams) {
+      if (!seen.has(t.bbRace)) seen.set(t.bbRace, t.raceLabel);
+    }
+    return Array.from(seen.entries())
+      .map(([code, label]) => ({ code, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [teams]);
+
+  function updateFilter<K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K],
+  ): void {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function resetFilters(): void {
+    setFilters(DEFAULT_FILTERS);
+  }
 
   // ─── Actions bids ───────────────────────────────────────────────
 
@@ -659,24 +787,140 @@ export default function NuffleCoachDraftPage() {
       {/* Catalogue + place bid */}
       {myEntry && activeSession && (
         <section>
-          <h2 className="text-lg font-semibold text-nuffle-anthracite">
-            Catalogue · saison {SEASON_ID}
-          </h2>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Recherche pseudo, équipe, position…"
-            className="mt-3 w-full max-w-md rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 text-sm text-nuffle-anthracite"
-            data-testid="mercato-search"
-          />
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold text-nuffle-anthracite">
+              Catalogue · saison {SEASON_ID}
+            </h2>
+            <p className="text-xs text-nuffle-anthracite/60">
+              {catalog === null
+                ? ""
+                : `${catalogTotal} joueur${catalogTotal > 1 ? "s" : ""}${filters.freeOnly ? " libre" + (catalogTotal > 1 ? "s" : "") : ""}`}
+            </p>
+          </div>
+
+          {/* Barre de filtres */}
+          <div
+            className="mt-3 grid gap-2 rounded-lg border border-nuffle-bronze/20 bg-white p-3 sm:grid-cols-2 lg:grid-cols-4"
+            data-testid="mercato-filters"
+          >
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => updateFilter("search", e.target.value)}
+              placeholder="Nom du joueur"
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-search"
+            />
+            <input
+              type="number"
+              value={filters.jerseyNumber}
+              onChange={(e) => updateFilter("jerseyNumber", e.target.value)}
+              placeholder="N° maillot"
+              min={0}
+              max={99}
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+            />
+            <select
+              value={filters.teamCode}
+              onChange={(e) => updateFilter("teamCode", e.target.value)}
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-filter-team"
+            >
+              <option value="">Toutes équipes</option>
+              {teams.map((t) => (
+                <option key={t.code} value={t.code}>
+                  {t.code} · {t.city}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.bbRace}
+              onChange={(e) => updateFilter("bbRace", e.target.value)}
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-filter-race"
+            >
+              <option value="">Toutes races</option>
+              {races.map((r) => (
+                <option key={r.code} value={r.code}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.bbPosition}
+              onChange={(e) => updateFilter("bbPosition", e.target.value)}
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-filter-position"
+            >
+              <option value="">Tous postes</option>
+              {BB_POSITIONS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.sortBy}
+              onChange={(e) =>
+                updateFilter(
+                  "sortBy",
+                  e.target.value as FilterState["sortBy"],
+                )
+              }
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-sort-by"
+            >
+              <option value="currentValue">Tri : cote</option>
+              <option value="pseudonym">Tri : nom</option>
+              <option value="bbPosition">Tri : poste BB</option>
+              <option value="teamCode">Tri : équipe</option>
+              <option value="jerseyNumber">Tri : n° maillot</option>
+            </select>
+            <select
+              value={filters.sortDir}
+              onChange={(e) =>
+                updateFilter(
+                  "sortDir",
+                  e.target.value as FilterState["sortDir"],
+                )
+              }
+              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              data-testid="mercato-sort-dir"
+            >
+              <option value="desc">↓ décroissant</option>
+              <option value="asc">↑ croissant</option>
+            </select>
+            <div className="flex items-center justify-between gap-2">
+              <label className="flex items-center gap-2 text-xs text-nuffle-anthracite">
+                <input
+                  type="checkbox"
+                  checked={filters.freeOnly}
+                  onChange={(e) =>
+                    updateFilter("freeOnly", e.target.checked)
+                  }
+                  className="accent-nuffle-gold"
+                  data-testid="mercato-filter-free-only"
+                />
+                Libres uniquement
+              </label>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="rounded-md border border-nuffle-bronze/30 px-2 py-1 text-xs text-nuffle-anthracite/70 hover:border-nuffle-gold hover:text-nuffle-bronze"
+                data-testid="mercato-filter-reset"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
           {catalog === null ? (
             <div className="mt-3 text-sm text-nuffle-anthracite/70">
               Chargement…
             </div>
           ) : catalog.length === 0 ? (
             <div className="mt-3 text-sm text-nuffle-anthracite/70">
-              Aucun résultat.
+              Aucun résultat. Essaie d&apos;élargir tes filtres.
             </div>
           ) : (
             <ul

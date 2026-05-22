@@ -40,6 +40,22 @@ const playersListSchema = z.object({
   search: z.string().min(1).max(64).optional(),
   page: z.coerce.number().int().min(1).max(10000).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  // Filtres mercato (V3)
+  bbRace: z.string().min(2).max(40).optional(),
+  city: z.string().min(2).max(80).optional(),
+  jerseyNumber: z.coerce.number().int().min(0).max(99).optional(),
+  excludeFromLeagueId: z.string().min(1).max(40).optional(),
+  // Tri
+  sortBy: z
+    .enum([
+      "pseudonym",
+      "bbPosition",
+      "teamCode",
+      "jerseyNumber",
+      "currentValue",
+    ])
+    .optional(),
+  sortDir: z.enum(["asc", "desc"]).optional(),
 });
 
 const playerDetailSchema = z.object({
@@ -58,6 +74,12 @@ router.get("/", validateQuery(playersListSchema), async (req, res) => {
       search: q.search,
       page: q.page,
       pageSize: q.pageSize,
+      bbRace: q.bbRace,
+      city: q.city,
+      jerseyNumber: q.jerseyNumber,
+      excludeFromLeagueId: q.excludeFromLeagueId,
+      sortBy: q.sortBy,
+      sortDir: q.sortDir,
     });
     // V3 — Enrichi avec currentValue + previousValue (cote dynamique
     // mise a jour apres chaque settle week). Fournit aussi basePrice

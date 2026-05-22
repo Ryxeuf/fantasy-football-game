@@ -341,6 +341,31 @@ export interface ListPlayersOpts {
   readonly seasonId?: string;
   readonly page?: number;
   readonly pageSize?: number;
+  // Filtres mercato (Sprint cycles V3) — tous optionnels, retro-compat
+  // avec l'usage admin existant qui n'en passe aucun.
+  /** Race BB derivee de la NflTeam (KC=Skaven, MIA=WoodElf, ...). */
+  readonly bbRace?: string;
+  /** Ville pseudo derivee de la NflTeam. */
+  readonly city?: string;
+  /** Numero de maillot. */
+  readonly jerseyNumber?: number;
+  /**
+   * Si fourni, exclut les joueurs deja sur le roster d'une entry de
+   * ce championnat (= "joueurs libres uniquement" cote UI mercato).
+   */
+  readonly excludeFromLeagueId?: string;
+  /**
+   * Tri principal. Default : teamCode > bbPosition > pseudonym
+   * (deterministe). Aucune validation cote service — la route impose
+   * la whitelist via Zod.
+   */
+  readonly sortBy?:
+    | "pseudonym"
+    | "bbPosition"
+    | "teamCode"
+    | "jerseyNumber"
+    | "currentValue";
+  readonly sortDir?: "asc" | "desc";
 }
 
 export interface AdminPlayerRow {
@@ -382,11 +407,56 @@ export async function listNflPlayersForAdmin(
     Math.max(1, opts.pageSize ?? DEFAULT_PAGE_SIZE),
   );
 
+  // Filtres derives de NflTeam (race, ville). Si l'un des deux est
+  // fourni, on resout d'abord la liste des teamCodes correspondants
+  // pour rester sur un where simple sur NflPlayer. 32 equipes max
+  // donc le cout est negligeable.
+  let teamCodesFilter: string[] | undefined;
+  if (opts.bbRace || opts.city) {
+    const teams = await prisma.nflTeam.findMany({
+      where: {
+        ...(opts.bbRace ? { bbRace: opts.bbRace } : {}),
+        ...(opts.city ? { city: opts.city } : {}),
+      },
+      select: { code: true },
+    });
+    const codes = teams.map((t: { code: string }) => t.code);
+    if (codes.length === 0) {
+      // Aucune equipe ne matche => aucun resultat possible.
+      return { total: 0, page, pageSize, players: [] };
+    }
+    teamCodesFilter = codes;
+  }
+
+  // Filtre "joueurs libres uniquement" : exclut les playerId deja
+  // sur un NflFantasyRoster d'une entry du championnat cible. Avec
+  // un select scope (entry.leagueId) on evite un IN sur potentiellement
+  // 160 joueurs en faisant un sub-where Prisma plus tard. Ici, plus
+  // simple : on charge les playerIds rosteres (limite par taille de
+  // league * ~16 = max 256 ids) et on les exclut.
+  let rosteredIds: string[] | undefined;
+  if (opts.excludeFromLeagueId) {
+    const rostered = await prisma.nflFantasyRoster.findMany({
+      where: { entry: { leagueId: opts.excludeFromLeagueId } },
+      select: { playerId: true },
+    });
+    rosteredIds = rostered.map((r: { playerId: string }) => r.playerId);
+  }
+
   const where: Prisma.NflPlayerWhereInput = {
     ...(opts.teamCode ? { teamCode: opts.teamCode } : {}),
     ...(opts.bbPosition ? { bbPosition: opts.bbPosition } : {}),
     ...(opts.nflPosition ? { nflPosition: opts.nflPosition } : {}),
     ...(opts.status ? { status: opts.status } : {}),
+    ...(opts.jerseyNumber !== undefined
+      ? { jerseyNumber: opts.jerseyNumber }
+      : {}),
+    ...(teamCodesFilter !== undefined
+      ? { teamCode: { in: teamCodesFilter } }
+      : {}),
+    ...(rosteredIds && rosteredIds.length > 0
+      ? { id: { notIn: rosteredIds } }
+      : {}),
     ...(opts.search
       ? {
           OR: [
@@ -401,15 +471,36 @@ export async function listNflPlayersForAdmin(
       : {}),
   };
 
+  // Tri : whitelist + fallback deterministe.
+  const dir = opts.sortDir === "desc" ? "desc" : "asc";
+  // `currentValue` n'est pas un champ NflPlayer queryable via orderBy
+  // de la meme maniere : il existe bien comme colonne. On valide.
+  const sortFieldMap: Record<string, "asc" | "desc"> = {};
+  if (opts.sortBy === "currentValue") {
+    sortFieldMap.currentValue = dir;
+  } else if (opts.sortBy === "pseudonym") {
+    sortFieldMap.pseudonym = dir;
+  } else if (opts.sortBy === "bbPosition") {
+    sortFieldMap.bbPosition = dir;
+  } else if (opts.sortBy === "teamCode") {
+    sortFieldMap.teamCode = dir;
+  } else if (opts.sortBy === "jerseyNumber") {
+    sortFieldMap.jerseyNumber = dir;
+  }
+  const orderBy: Prisma.NflPlayerOrderByWithRelationInput[] =
+    Object.keys(sortFieldMap).length > 0
+      ? [sortFieldMap as Prisma.NflPlayerOrderByWithRelationInput, { pseudonym: "asc" }]
+      : [
+          { teamCode: "asc" },
+          { bbPosition: "asc" },
+          { pseudonym: "asc" },
+        ];
+
   const [total, players] = await Promise.all([
     prisma.nflPlayer.count({ where }),
     prisma.nflPlayer.findMany({
       where,
-      orderBy: [
-        { teamCode: "asc" },
-        { bbPosition: "asc" },
-        { pseudonym: "asc" },
-      ],
+      orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
       select: {

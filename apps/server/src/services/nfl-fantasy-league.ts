@@ -587,3 +587,157 @@ export async function deleteLeague(opts: {
 
   await prisma.nflFantasyLeague.delete({ where: { id: league.id } });
 }
+
+// ────────────────────────────────────────────────────────────────────
+// Test-mode helper : remplir un championnat avec des coachs de test
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * Pool de noms d'equipes flavor BB attribues aux coachs auto-ajoutes.
+ * 30 entrees suffisent pour les championnats max-size (16) avec rotation
+ * deterministe par leagueId (cf. pickTeamNames).
+ */
+const TEST_TEAM_NAMES: ReadonlyArray<string> = [
+  "Les Rats Saucissons",
+  "Mort aux Gobs",
+  "Krak'Skar Stompers",
+  "Bone Crushers",
+  "Pestilens Brigade",
+  "Skaven Slammers",
+  "Greenfield Maulers",
+  "Nuffle's Reavers",
+  "Crypt Stalkers",
+  "Hatchet Pact",
+  "Underworld Outlaws",
+  "Thunder Trolls",
+  "Sigmar's Hammers",
+  "Chaos Renegades",
+  "Pestilent Marauders",
+  "Blood Bowlers United",
+  "Tomb Raiders",
+  "Skull Splitters",
+  "Wild Bunch",
+  "Bog Trotters",
+  "Iron Skullz",
+  "Gutter Runners",
+  "Plague Bringers",
+  "Pit Fighters",
+  "Snotling Squad",
+  "Frothing Berserkers",
+  "Mire Stalkers",
+  "Fang Mauls",
+  "Spike Slammers",
+  "Cursed Rabble",
+];
+
+/**
+ * Pour un leagueId donne, retourne `count` noms d'equipe distincts
+ * issus du pool, en commencant par un offset deterministe derive de
+ * l'id. Permet de re-run la populate sans collisions inter-tests si
+ * un autre developpeur populate au meme moment.
+ */
+function pickTeamNames(leagueId: string, count: number): string[] {
+  // Hash bidon (somme des charCodes) suffisant pour disperser les
+  // points d'entree dans le pool.
+  let h = 0;
+  for (let i = 0; i < leagueId.length; i++) h = (h + leagueId.charCodeAt(i)) | 0;
+  const start = Math.abs(h) % TEST_TEAM_NAMES.length;
+  const out: string[] = [];
+  for (let i = 0; i < count && i < TEST_TEAM_NAMES.length; i++) {
+    out.push(TEST_TEAM_NAMES[(start + i) % TEST_TEAM_NAMES.length]);
+  }
+  return out;
+}
+
+/**
+ * Remplit un championnat (status="draft") avec autant de coachs de
+ * test que necessaire pour atteindre `league.size`. Pioche dans les
+ * users existants en base, en excluant ceux deja membres + l'owner.
+ *
+ * Gate par le feature flag `nuffle_coach_test` cote route (jamais
+ * expose en prod).
+ *
+ * @throws NflFantasyLeagueError NOT_OWNER si caller != owner
+ * @throws NflFantasyLeagueError INVALID_STATUS si championnat non-draft
+ * @returns nombre d'entries effectivement ajoutees
+ */
+export async function populateLeagueWithTestCoaches(opts: {
+  leagueId: string;
+  userId: string;
+}): Promise<{ added: number; totalEntries: number }> {
+  const league = await findLeagueOrThrow(opts.leagueId);
+  assertOwner(league, opts.userId);
+  assertStatus(league, "draft");
+
+  interface EntrySnippet {
+    userId: string;
+    teamName: string;
+  }
+  const existingEntries: EntrySnippet[] = await prisma.nflFantasyEntry.findMany({
+    where: { leagueId: league.id },
+    select: { userId: true, teamName: true },
+  });
+  const usedUserIds = new Set(existingEntries.map((e) => e.userId));
+  const usedTeamNames = new Set(existingEntries.map((e) => e.teamName));
+  const slots = league.size - existingEntries.length;
+  if (slots <= 0) {
+    return { added: 0, totalEntries: existingEntries.length };
+  }
+
+  // Candidats : tous les users de la base, sauf ceux deja membres.
+  // On ne filtre pas par role pour rester simple — admin + coachs BB
+  // sont tous eligibles.
+  const candidates = await prisma.user.findMany({
+    where: {
+      id: { notIn: Array.from(usedUserIds) },
+      deletedAt: null,
+    },
+    select: { id: true },
+    take: slots,
+  });
+
+  if (candidates.length === 0) {
+    return { added: 0, totalEntries: existingEntries.length };
+  }
+
+  // Genere les teamNames sans collision avec les existants. Si un
+  // nom du pool est deja pris, on incremente un suffixe numerique.
+  const names = pickTeamNames(league.id, candidates.length);
+  const finalNames: string[] = [];
+  for (const base of names) {
+    let candidate = base;
+    let suffix = 2;
+    while (usedTeamNames.has(candidate)) {
+      candidate = `${base} ${suffix}`;
+      suffix++;
+    }
+    usedTeamNames.add(candidate);
+    finalNames.push(candidate);
+  }
+
+  // Insertion en batch. createMany ignore les conflits de unique
+  // mais ne retourne pas les rows ; on utilise une boucle classique
+  // pour rester compatible avec la regle (leagueId, teamName) unique.
+  let added = 0;
+  for (let i = 0; i < candidates.length; i++) {
+    try {
+      await prisma.nflFantasyEntry.create({
+        data: {
+          leagueId: league.id,
+          userId: candidates[i].id,
+          teamName: finalNames[i],
+          budgetRemaining: league.draftBudget,
+        },
+      });
+      added++;
+    } catch (e) {
+      const err = e as { code?: string };
+      // Best-effort : un conflit unique sur (leagueId, userId) ne
+      // doit pas faire echouer toute l'operation (race avec un join
+      // manuel concurrent). On skip et continue.
+      if (err.code !== "P2002") throw e;
+    }
+  }
+
+  return { added, totalEntries: existingEntries.length + added };
+}

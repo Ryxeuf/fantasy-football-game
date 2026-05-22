@@ -27,6 +27,7 @@ import {
   leaveLeague,
   listLeaguesForUser,
   listPublicLeagues,
+  populateLeagueWithTestCoaches,
   updateLeague,
   LEAGUE_SIZE_MAX,
   LEAGUE_SIZE_MIN,
@@ -207,6 +208,34 @@ router.post("/:id/leave", async (req, res) => {
   } catch (err) {
     if (!sendNflError(res, err)) {
       serverLog.error("[nfl-fantasy-leagues] leave failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// Helper test : remplir le championnat avec des coachs de test pour
+// pouvoir simuler un mercato / matchups complets sans avoir a faire
+// rejoindre 9 comptes manuellement. Gate par feature flag.
+router.post("/:id/populate-test-coaches", async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const flagOn = await isEnabled(NUFFLE_COACH_TEST_FLAG, userId(authReq), {
+      roles: authReq.user?.roles,
+    });
+    if (!flagOn) {
+      res
+        .status(403)
+        .json({ error: "Test mode requis", code: "TEST_MODE_REQUIRED" });
+      return;
+    }
+    const out = await populateLeagueWithTestCoaches({
+      leagueId: req.params.id,
+      userId: userId(authReq),
+    });
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] populate failed", err);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }
