@@ -1,3 +1,16 @@
+## [1.140.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.139.0...v1.140.0) (2026-05-22)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** add Nuffle Coach feature with player catalog and draft functionality ([d1c478b](https://github.com/Ryxeuf/fantasy-football-game/commit/d1c478bb3dcacd43ff7a3dd0e1b98aef94f19044))
+* **nfl-fantasy:** update draft mode and enhance league creation page ([80583e1](https://github.com/Ryxeuf/fantasy-football-game/commit/80583e16e9830119a77a76ecc324d24eb4fa63ac))
+
+
+### ♻️ Code Refactoring
+
+* **nfl-fantasy:** update layout and styling for Nuffle Coach pages ([02d81cd](https://github.com/Ryxeuf/fantasy-football-game/commit/02d81cdfb69623c57f7011b4b6d94e8964b83f01))
+
 ## [1.139.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.138.7...v1.139.0) (2026-05-21)
 
 
