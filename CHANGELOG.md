@@ -1,3 +1,12 @@
+## [1.142.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.141.0...v1.142.0) (2026-05-22)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** add public leagues feature and update terminology ([41e3601](https://github.com/Ryxeuf/fantasy-football-game/commit/41e36013f39d9d7ef36214f11e520e6602d3a65c))
+* **nfl-fantasy:** implement dynamic player valuation and selling functionality ([fe43bd4](https://github.com/Ryxeuf/fantasy-football-game/commit/fe43bd4899149e7855d2a955a98485c106a15f46))
+* **nfl-fantasy:** introduce season cycles for league management ([941cf62](https://github.com/Ryxeuf/fantasy-football-game/commit/941cf622bb9b94a4ca5825d0ffe71a7e10548ca1))
+
 ## [1.141.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.140.0...v1.141.0) (2026-05-22)
 
 
