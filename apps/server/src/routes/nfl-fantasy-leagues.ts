@@ -29,6 +29,8 @@ import {
   updateLeague,
   LEAGUE_SIZE_MAX,
   LEAGUE_SIZE_MIN,
+  DRAFT_BUDGET_MAX,
+  DRAFT_BUDGET_MIN,
 } from "../services/nfl-fantasy-league";
 import {
   getLeagueStandings,
@@ -47,6 +49,12 @@ const createLeagueSchema = z.object({
   size: z.number().int().min(LEAGUE_SIZE_MIN).max(LEAGUE_SIZE_MAX).optional(),
   type: z.enum(["public", "private"]).optional(),
   draftMode: z.enum(["snake", "auction", "free"]).optional(),
+  draftBudget: z
+    .number()
+    .int()
+    .min(DRAFT_BUDGET_MIN)
+    .max(DRAFT_BUDGET_MAX)
+    .optional(),
 });
 
 const updateLeagueSchema = z.object({

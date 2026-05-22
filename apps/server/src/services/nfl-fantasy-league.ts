@@ -131,6 +131,23 @@ export interface CreateLeagueOpts {
   readonly size?: number;
   readonly type?: "public" | "private";
   readonly draftMode?: "snake" | "auction" | "free";
+  /** V2 mercato : budget initial par coach. Range [1000, 20000], defaut 5000. */
+  readonly draftBudget?: number;
+}
+
+export const DRAFT_BUDGET_MIN = 1000;
+export const DRAFT_BUDGET_MAX = 20_000;
+export const DRAFT_BUDGET_DEFAULT = 5000;
+
+function validateDraftBudget(raw: number | undefined): number {
+  const v = raw ?? DRAFT_BUDGET_DEFAULT;
+  if (!Number.isInteger(v) || v < DRAFT_BUDGET_MIN || v > DRAFT_BUDGET_MAX) {
+    throw new NflFantasyLeagueError(
+      "INVALID_SIZE",
+      `draftBudget doit etre un entier entre ${DRAFT_BUDGET_MIN} et ${DRAFT_BUDGET_MAX} (recu : ${v})`,
+    );
+  }
+  return v;
 }
 
 export interface JoinLeagueOpts {
@@ -213,7 +230,8 @@ export async function createLeague(
   const teamName = validateTeamName(opts.teamName);
   const size = validateSize(opts.size ?? DEFAULT_LEAGUE_SIZE);
   const type = opts.type ?? "private";
-  const draftMode = opts.draftMode ?? "snake";
+  const draftMode = opts.draftMode ?? "auction";
+  const draftBudget = validateDraftBudget(opts.draftBudget);
 
   const season = await prisma.nflSeason.findUnique({
     where: { id: opts.seasonId },
@@ -236,10 +254,12 @@ export async function createLeague(
       draftMode,
       seasonId: opts.seasonId,
       inviteCode,
+      draftBudget,
       entries: {
         create: {
           userId: opts.ownerId,
           teamName,
+          budgetRemaining: draftBudget,
         },
       },
     },
@@ -340,7 +360,12 @@ export async function joinLeague(opts: JoinLeagueOpts): Promise<NflFantasyEntry>
 
   try {
     return await prisma.nflFantasyEntry.create({
-      data: { leagueId: league.id, userId: opts.userId, teamName },
+      data: {
+        leagueId: league.id,
+        userId: opts.userId,
+        teamName,
+        budgetRemaining: league.draftBudget,
+      },
     });
   } catch (e) {
     const err = e as { code?: string; meta?: { target?: string[] } };

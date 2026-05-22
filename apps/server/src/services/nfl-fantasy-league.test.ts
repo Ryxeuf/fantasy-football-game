@@ -105,7 +105,7 @@ describe("createLeague", () => {
       ownerId: "u1",
       size: 10,
       type: "private",
-      draftMode: "snake",
+      draftMode: "auction",
       seasonId: "2025",
     });
     expect(createArg?.data.inviteCode).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
@@ -128,7 +128,7 @@ describe("createLeague", () => {
     expect(createArg?.data.type).toBe("public");
   });
 
-  it("defaults aux valeurs Q1/Q2 (size=10, snake, private)", async () => {
+  it("defaults aux valeurs V2 (size=10, auction, private, budget=5000)", async () => {
     vi.mocked(prisma.nflSeason.findUnique).mockResolvedValue({ id: "2025" } as never);
     vi.mocked(prisma.nflFantasyLeague.create).mockResolvedValue({} as never);
 
@@ -142,7 +142,8 @@ describe("createLeague", () => {
     const createArg = vi.mocked(prisma.nflFantasyLeague.create).mock.calls[0]?.[0];
     expect(createArg?.data.size).toBe(DEFAULT_LEAGUE_SIZE);
     expect(createArg?.data.type).toBe("private");
-    expect(createArg?.data.draftMode).toBe("snake");
+    expect(createArg?.data.draftMode).toBe("auction");
+    expect(createArg?.data.draftBudget).toBe(5000);
   });
 
   it("throw SEASON_NOT_FOUND si saison absente", async () => {

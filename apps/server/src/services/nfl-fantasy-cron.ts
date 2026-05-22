@@ -355,6 +355,63 @@ export async function settleWeekTick(opts: {
 // ────────────────────────────────────────────────────────────────────
 
 /**
+ * Resout toutes les sessions de mercato dont closesAt est passe et
+ * dont le status est encore "open". Idempotent : marque chaque
+ * session "resolved" + transactionne l'application des outcomes.
+ *
+ * Tourne a chaque tick (toutes les 5 min) : la fenetre temporelle
+ * est implicite (closesAt <= now).
+ */
+export async function mercatoResolveTick(opts: {
+  now?: Date;
+} = {}): Promise<TickResult> {
+  const now = opts.now ?? new Date();
+
+  const due = await prisma.nflFantasyDraftSession.findMany({
+    where: { status: "open", closesAt: { lte: now } },
+    select: { id: true, leagueId: true, sessionNumber: true },
+  });
+
+  if (due.length === 0) {
+    return { ran: false, reason: "no_due_sessions" };
+  }
+
+  type DueSession = (typeof due)[number];
+
+  let resolved = 0;
+  const errors: Array<{ sessionId: string; error: string }> = [];
+
+  // Import dynamique : evite une dependance circulaire entre
+  // nfl-fantasy-cron (importe par index.ts) et nfl-fantasy-draft-session
+  // (importe par les routes mountees par index.ts).
+  const { resolveSession } = await import("./nfl-fantasy-draft-session");
+
+  for (const s of due as DueSession[]) {
+    try {
+      const out = await resolveSession(s.id);
+      resolved += 1;
+      serverLog.info(
+        `[nfl-cron] mercato session ${s.id} (league ${s.leagueId} #${s.sessionNumber}) resolved : ${out.outcomes.length} outcomes`,
+      );
+    } catch (e) {
+      errors.push({ sessionId: s.id, error: (e as Error).message });
+      serverLog.error(
+        `[nfl-cron] mercato session ${s.id} resolve failed : ${(e as Error).message}`,
+      );
+    }
+  }
+
+  return {
+    ran: true,
+    detail: {
+      due: due.length,
+      resolved,
+      errors,
+    },
+  };
+}
+
+/**
  * Tick principal appele toutes les 5 minutes par setInterval dans
  * index.ts. Verifie chaque fenetre et appelle le tick approprie.
  *
@@ -368,6 +425,7 @@ export async function nflFantasyOrchestratorTick(opts: {
   espn: TickResult;
   lock: TickResult;
   settle: TickResult;
+  mercato: TickResult;
 }> {
   const now = opts.now ?? new Date();
   // Sequenced pour eviter pression DB simultanee. Chacun retourne
@@ -377,5 +435,6 @@ export async function nflFantasyOrchestratorTick(opts: {
   const espn = await espnGamedayTick({ now });
   const lock = await lockLineupsTick({ now });
   const settle = await settleWeekTick({ now });
-  return { nflverse, rosters, espn, lock, settle };
+  const mercato = await mercatoResolveTick({ now });
+  return { nflverse, rosters, espn, lock, settle, mercato };
 }

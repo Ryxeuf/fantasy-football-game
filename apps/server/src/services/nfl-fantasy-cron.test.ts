@@ -4,6 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflWeek: { findFirst: vi.fn(), findMany: vi.fn() },
     nflFantasyLeague: { findMany: vi.fn() },
+    nflFantasyDraftSession: { findMany: vi.fn() },
   },
 }));
 
@@ -14,6 +15,7 @@ vi.mock("./nfl-fantasy-scoring", () => ({
   generateMatchups: vi.fn(),
   settleNflFantasyWeek: vi.fn(),
 }));
+vi.mock("./nfl-fantasy-draft-session", () => ({ resolveSession: vi.fn() }));
 
 import { prisma } from "../prisma";
 import { ingestNflverseWeek } from "./nfl-ingest";
@@ -355,9 +357,12 @@ describe("settleWeekTick", () => {
 });
 
 describe("nflFantasyOrchestratorTick", () => {
-  it("orchestre les 4 ticks et retourne leurs resultats", async () => {
+  it("orchestre les 6 ticks et retourne leurs resultats", async () => {
     vi.mocked(prisma.nflWeek.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflFantasyDraftSession.findMany).mockResolvedValue(
+      [] as never,
+    );
 
     const out = await nflFantasyOrchestratorTick({
       now: new Date("2025-11-11T18:00:00Z"), // mardi 18h
@@ -366,5 +371,6 @@ describe("nflFantasyOrchestratorTick", () => {
     expect(out.espn.ran).toBe(false); // mardi != gameday
     expect(out.lock.ran).toBe(false);
     expect(out.settle.ran).toBe(false);
+    expect(out.mercato.ran).toBe(false); // aucune session due
   });
 });

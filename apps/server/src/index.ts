@@ -1218,10 +1218,14 @@ if (!inTestNflFantasyCronEnv && nflFantasyCronTickMs > 0) {
           // Log uniquement si quelque chose s'est passe pour rester
           // silencieux (un tick toutes les 5min, 99% du temps idle).
           const ran =
-            out.nflverse.ran || out.espn.ran || out.lock.ran || out.settle.ran;
+            out.nflverse.ran ||
+            out.espn.ran ||
+            out.lock.ran ||
+            out.settle.ran ||
+            out.mercato.ran;
           if (ran) {
             serverLog.info(
-              `[nfl-fantasy-cron] tick : nflverse=${out.nflverse.ran} espn=${out.espn.ran} lock=${out.lock.ran} settle=${out.settle.ran}`,
+              `[nfl-fantasy-cron] tick : nflverse=${out.nflverse.ran} espn=${out.espn.ran} lock=${out.lock.ran} settle=${out.settle.ran} mercato=${out.mercato.ran}`,
             );
           }
         } catch (e: unknown) {

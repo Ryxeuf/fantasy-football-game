@@ -20,6 +20,7 @@ export default function NewLeaguePage() {
   const [seasonId, setSeasonId] = useState(DEFAULT_SEASON);
   const [size, setSize] = useState(10);
   const [type, setType] = useState<LeagueType>("private");
+  const [draftBudget, setDraftBudget] = useState<number>(5000);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +40,7 @@ export default function NewLeaguePage() {
             size,
             type,
             draftMode: HARDCODED_DRAFT_MODE,
+            draftBudget,
           }),
         },
       );
@@ -141,9 +143,8 @@ export default function NewLeaguePage() {
             🤫 Mercato à enchères secrètes
           </h3>
           <p className="mt-2 text-xs text-nuffle-anthracite/80">
-            Chaque coach démarre avec un budget de <strong>5000 TV</strong>{" "}
-            (Team Value). L&apos;owner ouvre des sessions de mercato de
-            48h pendant lesquelles chacun pose des enchères{" "}
+            L&apos;owner ouvre des sessions de mercato de 48h pendant
+            lesquelles chaque coach pose des enchères{" "}
             <strong>cachées</strong> sur les joueurs qu&apos;il convoite.
           </p>
           <p className="mt-2 text-xs text-nuffle-anthracite/80">
@@ -152,12 +153,46 @@ export default function NewLeaguePage() {
             roster qui gagne. Les enchères perdantes ne sont pas
             facturées : tu peux bluffer sans craindre de te ruiner.
           </p>
-          <p className="mt-2 text-xs text-nuffle-anthracite/70">
-            Inspiré du mercato MPG : asynchrone (pas besoin que tous les
-            coachs soient connectés en même temps), stratégique (bluff,
-            timing, gestion du budget), parfait pour les ligues entre
-            amis.
-          </p>
+
+          <div className="mt-4 border-t border-nuffle-gold/20 pt-4">
+            <label
+              htmlFor="draftBudget"
+              className="text-sm font-medium text-nuffle-anthracite"
+            >
+              Budget initial par coach (Team Value)
+            </label>
+            <div className="mt-2 flex items-center gap-3">
+              <input
+                id="draftBudget"
+                type="range"
+                min={1000}
+                max={20000}
+                step={500}
+                value={draftBudget}
+                onChange={(e) => setDraftBudget(Number(e.target.value))}
+                className="flex-1 accent-nuffle-gold"
+              />
+              <input
+                type="number"
+                min={1000}
+                max={20000}
+                step={100}
+                value={draftBudget}
+                onChange={(e) =>
+                  setDraftBudget(
+                    Math.min(20000, Math.max(1000, Number(e.target.value))),
+                  )
+                }
+                className="w-24 rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1 text-right font-mono text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              />
+              <span className="text-xs text-nuffle-anthracite/70">TV</span>
+            </div>
+            <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
+              Range 1000-20000. Défaut 5000 TV : permet de drafter ~10-15
+              joueurs avec un mix de stars et de rookies. Plus haut =
+              encheres folles entre coachs ; plus bas = chaque TV compte.
+            </p>
+          </div>
         </div>
 
         <fieldset>
