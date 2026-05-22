@@ -36,6 +36,17 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
 export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 
 /**
+ * Nuffle Coach (fantasy NFL skinne BB) — gate l'UI publique du
+ * module : liens de menu, sous-nav, et pages user (catalogue
+ * players, fiche player, standings d'une league, draft, about).
+ *
+ * Les routes API `/api/nfl-fantasy/*` restent ouvertes — ce flag
+ * controle uniquement la visibilite des composants UI tant que la
+ * feature n'est pas annoncee publiquement.
+ */
+export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,

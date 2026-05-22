@@ -13,3 +13,9 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
  * `apps/server/src/services/featureFlags.ts.LEAGUES_V2_UI_FLAG`.
  */
 export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
+/**
+ * Nuffle Coach (fantasy NFL) — gate l'UI publique : menu, sous-nav,
+ * pages user (catalogue players, fiche player, standings, draft, about).
+ * Doit etre synchronise avec `apps/server/src/services/featureFlags.ts.NUFFLE_COACH_FLAG`.
+ */
+export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;

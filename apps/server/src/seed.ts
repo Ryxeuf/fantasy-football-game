@@ -22,6 +22,7 @@ import {
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
   LEAGUES_V2_UI_FLAG,
+  NUFFLE_COACH_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
   MAINTENANCE_MODE_FLAG,
 } from "./services/featureFlags";
@@ -1063,6 +1064,40 @@ async function main() {
     });
     serverLog.log(
       `   ✅ Override '${LEAGUES_V2_UI_FLAG}' ajouté pour user@example.com`,
+    );
+  }
+
+  // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav
+  // + pages user). Les routes API restent ouvertes ; tant que le flag
+  // est OFF, les liens/pages sont caches aux non-admins. Override pour
+  // user@example.com pour faciliter le test.
+  const nuffleCoachFlag = await prisma.featureFlag.upsert({
+    where: { key: NUFFLE_COACH_FLAG },
+    update: {
+      description:
+        "Nuffle Coach (fantasy NFL skinne BB) — UI publique : menu, sous-nav, catalogue players, fiche player, standings, draft, about.",
+    },
+    create: {
+      key: NUFFLE_COACH_FLAG,
+      description:
+        "Nuffle Coach (fantasy NFL skinne BB) — UI publique : menu, sous-nav, catalogue players, fiche player, standings, draft, about.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${NUFFLE_COACH_FLAG}' ${nuffleCoachFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
+  );
+
+  if (testUser) {
+    await prisma.featureFlagUser.upsert({
+      where: {
+        flagId_userId: { flagId: nuffleCoachFlag.id, userId: testUser.id },
+      },
+      create: { flagId: nuffleCoachFlag.id, userId: testUser.id },
+      update: {},
+    });
+    serverLog.log(
+      `   ✅ Override '${NUFFLE_COACH_FLAG}' ajouté pour user@example.com`,
     );
   }
 

@@ -275,19 +275,49 @@ export default function LeagueDetailPage() {
               className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
               data-testid="nfl-fantasy-matchups-cta"
             >
-              📊 Matchups &amp; standings
+              📊 Matchups
+            </Link>
+            <Link
+              href={`/nfl-fantasy/leagues/${league.id}/standings`}
+              className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+              data-testid="nfl-fantasy-standings-cta"
+            >
+              🏆 Classement
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {isMember && isDraft && (
+        <section>
+          <h2 className="text-lg font-semibold text-slate-200">Draft</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/nfl-fantasy/leagues/${league.id}/draft`}
+              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
+              data-testid="nfl-fantasy-draft-cta"
+            >
+              📋 Drafter mes joueurs
             </Link>
           </div>
         </section>
       )}
 
       {!isMember && league.status === "in_progress" && (
-        <Link
-          href={`/nfl-fantasy/leagues/${league.id}/matchups`}
-          className="inline-block text-sm text-orange-400 hover:text-orange-300"
-        >
-          📊 Voir matchups &amp; standings
-        </Link>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link
+            href={`/nfl-fantasy/leagues/${league.id}/matchups`}
+            className="text-orange-400 hover:text-orange-300"
+          >
+            📊 Voir matchups
+          </Link>
+          <Link
+            href={`/nfl-fantasy/leagues/${league.id}/standings`}
+            className="text-orange-400 hover:text-orange-300"
+          >
+            🏆 Voir classement
+          </Link>
+        </div>
       )}
 
       {(isOwner || isMember) && (

@@ -5,13 +5,19 @@ import AuthBar from "../AuthBar";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { ONLINE_PLAY_FLAG } from "../lib/featureFlagKeys";
+import { ONLINE_PLAY_FLAG, NUFFLE_COACH_FLAG } from "../lib/featureFlagKeys";
 
-type DropdownId = "competitions" | "compendium" | "play" | null;
+type DropdownId =
+  | "competitions"
+  | "compendium"
+  | "play"
+  | "nuffle-coach"
+  | null;
 
 export default function Header() {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  const nuffleCoachEnabled = useFeatureFlag(NUFFLE_COACH_FLAG);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<DropdownId>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -152,6 +158,31 @@ export default function Header() {
               </div>
             )}
           </div>
+
+          {/* Nuffle Coach (fantasy NFL) — gate par flag */}
+          {nuffleCoachEnabled && (
+            <div
+              className="relative"
+              ref={(el) => { dropdownRefs.current["nuffle-coach"] = el; }}
+            >
+              <button
+                onClick={() => toggleDropdown("nuffle-coach")}
+                className={dropdownTriggerClass("nuffle-coach")}
+              >
+                🏈 Nuffle Coach
+                {chevron("nuffle-coach")}
+              </button>
+              {openDropdown === "nuffle-coach" && (
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                  {dropdownItem("/nfl-fantasy", "🏟️", "Mes coachs")}
+                  {dropdownItem("/nfl-fantasy/new", "➕", "Créer un coach")}
+                  {dropdownItem("/nfl-fantasy/join", "🤝", "Rejoindre")}
+                  {dropdownItem("/nfl-fantasy/players", "📋", "Catalogue joueurs")}
+                  {dropdownItem("/nfl-fantasy/about", "ℹ️", "À propos")}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Compendium */}
           <div
@@ -297,6 +328,50 @@ export default function Header() {
                 </a>
               )}
             </nav>
+
+            {/* Nuffle Coach (mobile) — gate par flag */}
+            {nuffleCoachEnabled && (
+              <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+                <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  🏈 Nuffle Coach
+                </p>
+                <a
+                  href="/nfl-fantasy"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  🏟️ Mes coachs
+                </a>
+                <a
+                  href="/nfl-fantasy/new"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  ➕ Créer un coach
+                </a>
+                <a
+                  href="/nfl-fantasy/join"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  🤝 Rejoindre
+                </a>
+                <a
+                  href="/nfl-fantasy/players"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  📋 Catalogue joueurs
+                </a>
+                <a
+                  href="/nfl-fantasy/about"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  ℹ️ À propos
+                </a>
+              </nav>
+            )}
 
             {/* Compendium */}
             <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
