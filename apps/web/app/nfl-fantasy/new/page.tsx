@@ -138,20 +138,25 @@ export default function NewLeaguePage() {
 
         <div className="rounded-lg border border-nuffle-gold/30 bg-nuffle-gold/5 p-4">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-nuffle-anthracite">
-            💰 Draft à budget Team Value
+            🤫 Mercato à enchères secrètes
           </h3>
           <p className="mt-2 text-xs text-nuffle-anthracite/80">
-            Comme à Blood Bowl, chaque coach démarre avec un budget TV
-            (Team Value) et drafte librement ses joueurs dans le
-            catalogue. Chaque joueur a un coût TV indexé sur ses
-            performances passées : plus une star est cotée, plus elle
-            grève ton budget.
+            Chaque coach démarre avec un budget de <strong>5000 TV</strong>{" "}
+            (Team Value). L&apos;owner ouvre des sessions de mercato de
+            48h pendant lesquelles chacun pose des enchères{" "}
+            <strong>cachées</strong> sur les joueurs qu&apos;il convoite.
+          </p>
+          <p className="mt-2 text-xs text-nuffle-anthracite/80">
+            À la fermeture, le plus offrant remporte le joueur — en cas
+            d&apos;égalité, c&apos;est le coach avec le plus petit
+            roster qui gagne. Les enchères perdantes ne sont pas
+            facturées : tu peux bluffer sans craindre de te ruiner.
           </p>
           <p className="mt-2 text-xs text-nuffle-anthracite/70">
-            Pas de pioche tour-par-tour, pas d&apos;enchères live : tu
-            drafts à ton rythme tant que la ligue est en mode <em>draft
-            ouverte</em>. L&apos;owner clôt la draft quand tous les
-            coachs sont prêts.
+            Inspiré du mercato MPG : asynchrone (pas besoin que tous les
+            coachs soient connectés en même temps), stratégique (bluff,
+            timing, gestion du budget), parfait pour les ligues entre
+            amis.
           </p>
         </div>
 

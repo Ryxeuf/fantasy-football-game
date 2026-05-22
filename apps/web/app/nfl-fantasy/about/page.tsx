@@ -54,9 +54,9 @@ export default function NuffleCoachAboutPage() {
       >
         {[
           {
-            icon: "📋",
-            title: "Draft à budget TV",
-            body: "Comme à Blood Bowl : un budget Team Value, des joueurs cotés selon leur niveau. À toi de doser stars et lineman pour tenir 22 semaines.",
+            icon: "🤫",
+            title: "Mercato à enchères secrètes",
+            body: "Sessions de 48h, bids cachés, le plus offrant gagne. Bluff, timing et gestion du budget : un mini-jeu stratégique avant chaque saison.",
           },
           {
             icon: "📅",

@@ -21,6 +21,7 @@ import {
   getNflPlayerDetail,
   listNflPlayersForAdmin,
 } from "../services/nfl-fantasy-admin-explorer";
+import { computeBasePrice } from "../services/nfl-fantasy-draft-session";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -57,7 +58,16 @@ router.get("/", validateQuery(playersListSchema), async (req, res) => {
       page: q.page,
       pageSize: q.pageSize,
     });
-    res.json(out);
+    // Enrichi avec basePrice (V2 mercato) si seasonId fourni : permet
+    // a l'UI mercato d'afficher directement le prix de base sans
+    // round-trip supplementaire.
+    const players = q.seasonId
+      ? out.players.map((p) => ({
+          ...p,
+          basePrice: computeBasePrice(p.totalSpp ?? 0),
+        }))
+      : out.players;
+    res.json({ ...out, players });
   } catch (err) {
     if (!sendNflError(res, err)) {
       serverLog.error("[nfl-fantasy-players] list failed", err);

@@ -2491,8 +2491,11 @@ model NflFantasyLeague {
   size      Int      @default(10)
   /// "public" | "private". Default Q1 = "private" (invite-only).
   type      String   @default("private")
-  /// "snake" | "auction" | "free". Default Q1 = "snake".
-  draftMode String   @default("snake")
+  /// "snake" | "auction" | "free". V2 mercato : valeur conservee en DB
+  /// pour future extension snake interactif, mais l'UI publique ne
+  /// propose plus que le mode unique "auction" (mercato a encheres
+  /// secretes asynchrones, MPG-style).
+  draftMode String   @default("auction")
   /// "draft" | "in_progress" | "completed"
   status    String   @default("draft")
   /// FK logique vers NflSeason.id (string, pas de FK relationnelle).
@@ -2500,11 +2503,15 @@ model NflFantasyLeague {
   /// Code court (8 chars upper alphanum) pour les private leagues.
   /// null pour les leagues publiques.
   inviteCode String? @unique
+  /// Budget initial alloue a chaque entry pour le mercato V2. Default
+  /// 5000 TV (~10-15 joueurs, mix stars + rookies selon les prix).
+  draftBudget Int    @default(5000)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  entries  NflFantasyEntry[]
-  matchups NflFantasyMatchup[]
+  entries        NflFantasyEntry[]
+  matchups       NflFantasyMatchup[]
+  draftSessions  NflFantasyDraftSession[]
 
   @@index([ownerId])
   @@index([status, type])
@@ -2524,6 +2531,10 @@ model NflFantasyEntry {
   /// Total Team Value (somme des tvCost sur les NflFantasyRoster).
   /// Mis a jour par le service mercato Phase 2.F.
   totalTV   Int      @default(0)
+  /// Budget restant pour le mercato V2. Initialise a
+  /// `NflFantasyLeague.draftBudget` lors de la creation de l'entry,
+  /// decremente a chaque enchere remportee a la resolution d'une session.
+  budgetRemaining Int @default(5000)
   joinedAt  DateTime @default(now())
 
   league      NflFantasyLeague       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
@@ -2531,6 +2542,7 @@ model NflFantasyEntry {
   lineups     NflFantasyLineup[]
   rerolls     NflFantasyReroll[]
   inducements NflFantasyInducement[]
+  bids        NflFantasyDraftBid[]
 
   @@unique([leagueId, userId])
   @@unique([leagueId, teamName])
@@ -2681,4 +2693,59 @@ model NflFantasyLineupStarter {
 
   @@unique([lineupId, playerId])
   @@index([playerId])
+}
+
+// ─── Mercato V2 (encheres secretes asynchrones, MPG-style) ────────
+
+/// Une session de mercato pour une league : fenetre temporelle pendant
+/// laquelle les coachs posent des encheres secretes sur des joueurs.
+/// A `closesAt`, la session est resolue : pour chaque joueur convoite,
+/// l'enchere la plus haute remporte, tiebreaker = roster size puis
+/// budget restant. Les bids perdants sont rembourses automatiquement
+/// (puisque le budget n'est decremente qu'a la resolution).
+model NflFantasyDraftSession {
+  id        String   @id @default(cuid())
+  leagueId  String
+  /// Numero ordinal de la session (1, 2, 3...) pour affichage UI.
+  sessionNumber Int
+  opensAt   DateTime
+  closesAt  DateTime
+  resolvedAt DateTime?
+  /// "open" | "resolving" | "resolved" | "cancelled".
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  bids   NflFantasyDraftBid[]
+
+  @@unique([leagueId, sessionNumber])
+  @@index([status, closesAt])
+}
+
+/// Une enchere posee par un coach sur un joueur pendant une session.
+/// Unique (sessionId, entryId, playerId) : un coach ne peut avoir qu'un
+/// bid actif par player. Pour modifier, le service upsert. Pour
+/// retirer, le service delete (avant resolution).
+model NflFantasyDraftBid {
+  id         String   @id @default(cuid())
+  sessionId  String
+  entryId    String
+  /// NflPlayer.id, FK logique.
+  playerId   String
+  /// Montant de l'enchere en TV. Doit etre >= prix de base + <= budget
+  /// dispo (budgetRemaining moins somme des autres bids actifs).
+  amount     Int
+  /// "pending" (avant resolution) | "won" | "lost" (apres resolution).
+  /// Permet de tracker historique pour audit / UI replay.
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  session NflFantasyDraftSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  entry   NflFantasyEntry        @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, entryId, playerId])
+  @@index([sessionId, playerId])
+  @@index([entryId])
 }

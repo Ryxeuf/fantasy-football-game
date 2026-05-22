@@ -14,6 +14,7 @@ import { NflFantasyLineupError } from "../services/nfl-fantasy-lineup";
 import { NflFantasyScoringError } from "../services/nfl-fantasy-scoring";
 import { NflFantasyMercatoError } from "../services/nfl-fantasy-mercato";
 import { NflFantasyDraftError } from "../services/nfl-fantasy-draft";
+import { NflFantasyDraftSessionError } from "../services/nfl-fantasy-draft-session";
 import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
 import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
 import { NflFantasyGazetteError } from "../services/nfl-fantasy-gazette";
@@ -41,6 +42,8 @@ export function statusForCode(code: string): number {
     case "INVALID_INVITE":
     case "TEAM_NOT_FOUND":
     case "MATCHUP_NOT_FOUND":
+    case "SESSION_NOT_FOUND":
+    case "BID_NOT_FOUND":
       return 404;
 
     // 403 — acces refuse
@@ -59,9 +62,14 @@ export function statusForCode(code: string): number {
     case "REROLL_ALREADY_USED":
     case "INDUCEMENT_LIMIT_REACHED":
     case "LINEUP_LOCKED":
+    case "SESSION_NOT_OPEN":
+    case "SESSION_ALREADY_RESOLVED":
+    case "ENTRY_NOT_IN_LEAGUE":
       return 409;
 
     // 422 — validation metier
+    case "BID_AMOUNT_BELOW_BASE_PRICE":
+    case "BID_AMOUNT_EXCEEDS_BUDGET":
     case "INVALID_NAME":
     case "INVALID_TEAM_NAME":
     case "INVALID_SIZE":
@@ -112,6 +120,7 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyScoringError ||
     err instanceof NflFantasyMercatoError ||
     err instanceof NflFantasyDraftError ||
+    err instanceof NflFantasyDraftSessionError ||
     err instanceof NflFantasyAdminError ||
     err instanceof NflFantasyReplayError ||
     err instanceof NflFantasyGazetteError

@@ -18,6 +18,8 @@ export interface NflFantasyLeague {
   status: LeagueStatus;
   seasonId: string;
   inviteCode: string | null;
+  /** V2 mercato : budget initial alloue a chaque entry. */
+  draftBudget?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +31,8 @@ export interface NflFantasyEntry {
   teamName: string;
   bbRace: string | null;
   totalTV: number;
+  /** V2 mercato : budget restant apres encheres remportees. */
+  budgetRemaining?: number;
   joinedAt: string;
 }
 
