@@ -23,6 +23,7 @@ import {
   AI_TRAINING_FLAG,
   LEAGUES_V2_UI_FLAG,
   NUFFLE_COACH_FLAG,
+  NUFFLE_COACH_TEST_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
   MAINTENANCE_MODE_FLAG,
 } from "./services/featureFlags";
@@ -1098,6 +1099,40 @@ async function main() {
     });
     serverLog.log(
       `   ✅ Override '${NUFFLE_COACH_FLAG}' ajouté pour user@example.com`,
+    );
+  }
+
+  // Nuffle Coach test mode — bypass des garde-fous snap-to-next-window
+  // pour permettre de creer des championnats sur des cycles deja
+  // demarres / termines (utile pour simuler des saisons avec stats
+  // reelles deja en base, ex: 2025). OFF par defaut.
+  const nuffleCoachTestFlag = await prisma.featureFlag.upsert({
+    where: { key: NUFFLE_COACH_TEST_FLAG },
+    update: {
+      description:
+        "Nuffle Coach (test) — debloque la creation de championnats sur cycles deja demarres / termines + selecteur saison/cycle dans /nfl-fantasy/new. STRICTEMENT OFF en prod.",
+    },
+    create: {
+      key: NUFFLE_COACH_TEST_FLAG,
+      description:
+        "Nuffle Coach (test) — debloque la creation de championnats sur cycles deja demarres / termines + selecteur saison/cycle dans /nfl-fantasy/new. STRICTEMENT OFF en prod.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${NUFFLE_COACH_TEST_FLAG}' ${nuffleCoachTestFlag.enabled ? "ACTIF" : "inactif (override admin/user)"}`,
+  );
+
+  if (testUser) {
+    await prisma.featureFlagUser.upsert({
+      where: {
+        flagId_userId: { flagId: nuffleCoachTestFlag.id, userId: testUser.id },
+      },
+      create: { flagId: nuffleCoachTestFlag.id, userId: testUser.id },
+      update: {},
+    });
+    serverLog.log(
+      `   ✅ Override '${NUFFLE_COACH_TEST_FLAG}' ajouté pour user@example.com`,
     );
   }
 

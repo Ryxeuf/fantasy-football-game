@@ -81,10 +81,12 @@ export interface WeekRow {
 }
 
 /**
- * Retourne le `weekNumber` actif a la date `now`. Si la date est
- * avant la 1ere semaine, retourne `0`. Si apres la derniere,
- * retourne `weeks[last].weekNumber`. Sinon, le weekNumber dont
- * `startDate <= now < endDate`, ou le plus proche.
+ * Retourne le `weekNumber` actif a la date `now`. Trois plages :
+ *   - now < premier startDate  => 0 (saison pas commencee, tout cycle est upcoming)
+ *   - dans une semaine          => son weekNumber
+ *   - now >= dernier endDate    => last.weekNumber + 1 (saison terminee,
+ *     tout cycle doit etre closed — y compris le cycle playoffs qui
+ *     contient la derniere semaine)
  */
 export function findWeekNumberAt(
   weeks: readonly WeekRow[],
@@ -95,7 +97,7 @@ export function findWeekNumberAt(
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   if (now < first.startDate) return 0;
-  if (now >= last.endDate) return last.weekNumber;
+  if (now >= last.endDate) return last.weekNumber + 1;
   for (const w of sorted) {
     if (now >= w.startDate && now < w.endDate) {
       return w.weekNumber;

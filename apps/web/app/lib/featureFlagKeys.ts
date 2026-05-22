@@ -19,3 +19,12 @@ export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
  * Doit etre synchronise avec `apps/server/src/services/featureFlags.ts.NUFFLE_COACH_FLAG`.
  */
 export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;
+
+/**
+ * Nuffle Coach — bac a sable de test. Quand actif, l'UI debloque le
+ * selecteur saison/cycle dans /nfl-fantasy/new et permet de creer des
+ * championnats sur des cycles deja demarres ou termines (utile pour
+ * simuler des saisons avec stats reelles deja en base).
+ * Synchronise avec `apps/server/src/services/featureFlags.ts.NUFFLE_COACH_TEST_FLAG`.
+ */
+export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;

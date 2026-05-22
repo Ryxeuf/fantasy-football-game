@@ -39,6 +39,7 @@ import {
 } from "../services/nfl-fantasy-scoring";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
+import { isEnabled, NUFFLE_COACH_TEST_FLAG } from "../services/featureFlags";
 
 const router = Router();
 router.use(authUser);
@@ -85,7 +86,18 @@ function userId(req: AuthenticatedRequest): string {
 router.post("/", validate(createLeagueSchema), async (req, res) => {
   try {
     const body = req.body as z.infer<typeof createLeagueSchema>;
-    const lg = await createLeague({ ownerId: userId(req), ...body });
+    const authReq = req as AuthenticatedRequest;
+    // Bypass snap-to-next-window pour les comptes test (cycle deja
+    // demarre / closed accepte). Decide cote route, jamais expose dans
+    // le body API : on consulte le flag pour cet utilisateur.
+    const allowAnyCycle = await isEnabled(NUFFLE_COACH_TEST_FLAG, userId(authReq), {
+      roles: authReq.user?.roles,
+    });
+    const lg = await createLeague({
+      ownerId: userId(authReq),
+      ...body,
+      allowAnyCycle,
+    });
     res.status(201).json(lg);
   } catch (err) {
     if (!sendNflError(res, err)) {

@@ -47,6 +47,23 @@ export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;
 
 /**
+ * Nuffle Coach — bac a sable de test. Quand actif pour un user, debloque
+ * les garde-fous "snap-to-next-window" cote creation de championnat :
+ *
+ *   - createLeague accepte n'importe quel cycleId, meme si le cycle est
+ *     `active` ou `closed` (utile pour simuler des championnats finis
+ *     sur la saison 2025 avec stats reelles deja en base).
+ *   - GET /api/nfl-fantasy/cycles retourne TOUTES les saisons + cycles
+ *     y compris closed, pour que l'UI affiche les options de test.
+ *   - UI /nfl-fantasy/new affiche un selecteur saison + cycle + banner
+ *     "Mode test actif".
+ *
+ * STRICTEMENT OFF en prod (jamais globalement ON). Override individuel
+ * via le panneau admin /admin/feature-flags pour les comptes dev.
+ */
+export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,

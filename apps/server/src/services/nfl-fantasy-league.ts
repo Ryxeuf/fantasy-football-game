@@ -28,6 +28,7 @@ import type { NflFantasyEntry, NflFantasyLeague } from "@prisma/client";
 import { prisma } from "../prisma";
 import {
   assertCycleJoinable,
+  getCycleById,
   getNextJoinableCycle,
 } from "./nfl-fantasy-season-cycle";
 
@@ -144,6 +145,13 @@ export interface CreateLeagueOpts {
    * "upcoming" sinon NflFantasyCycleError CYCLE_ALREADY_STARTED.
    */
   readonly cycleId?: string;
+  /**
+   * Bypass test : si true, le service accepte n'importe quel cycleId
+   * (meme `active` ou `closed`) et ne joue plus le snap-to-next.
+   * Reserve aux comptes avec feature flag `nuffle_coach_test` ; gere
+   * cote route, jamais expose dans le body API.
+   */
+  readonly allowAnyCycle?: boolean;
 }
 
 export const DRAFT_BUDGET_MIN = 1000;
@@ -254,12 +262,27 @@ export async function createLeague(
     );
   }
 
-  // Cycle : si fourni, valider qu'il est encore joignable ; sinon
-  // snap-to-next-window. Throws NflFantasyCycleError, propage tel
-  // quel pour mapping HTTP cote route.
-  const cycle = opts.cycleId
-    ? await assertCycleJoinable(opts.cycleId)
-    : await getNextJoinableCycle(opts.seasonId);
+  // Cycle :
+  //   - mode normal : si fourni, valider qu'il est encore joignable ;
+  //     sinon snap-to-next-window. Throws NflFantasyCycleError.
+  //   - mode test (allowAnyCycle, feature flag nuffle_coach_test) :
+  //     bypass total. cycleId obligatoire dans ce mode pour eviter
+  //     l'ambiguite (on ne peut pas snap-to-next sur un cycle deja
+  //     closed). Le cycle doit juste exister.
+  let cycle;
+  if (opts.allowAnyCycle) {
+    if (!opts.cycleId) {
+      throw new NflFantasyLeagueError(
+        "SEASON_NOT_FOUND",
+        "Mode test : cycleId est obligatoire (pas de snap-to-next sur cycles closed)",
+      );
+    }
+    cycle = await getCycleById(opts.cycleId);
+  } else if (opts.cycleId) {
+    cycle = await assertCycleJoinable(opts.cycleId);
+  } else {
+    cycle = await getNextJoinableCycle(opts.seasonId);
+  }
 
   const inviteCode = type === "private" ? generateInviteCode() : null;
 

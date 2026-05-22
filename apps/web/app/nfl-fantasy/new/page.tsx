@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { apiRequest, ApiClientError } from "../../lib/api-client";
+import { useFeatureFlag } from "../../hooks/useFeatureFlag";
+import { NUFFLE_COACH_TEST_FLAG } from "../../lib/featureFlagKeys";
 import type { LeagueType, LeagueWithEntries } from "../types";
 
 // V1 : seul mode supporte cote backend (les autres champs DB sont
@@ -13,7 +15,8 @@ const HARDCODED_DRAFT_MODE = "auction" as const;
 
 // On essaie 2026 (saison NFL a venir) puis 2025 en fallback. Cote
 // snap-to-next-window : la 1ere saison qui a un cycle joignable
-// (status=upcoming) est utilisee comme defaut.
+// (status=upcoming) est utilisee comme defaut. En mode test, les
+// 2 saisons sont chargees pour le selecteur.
 const CANDIDATE_SEASONS = ["2026", "2025"] as const;
 
 interface CycleStatus {
@@ -35,6 +38,7 @@ interface CyclesResponse {
 
 export default function NewLeaguePage() {
   const router = useRouter();
+  const testMode = useFeatureFlag(NUFFLE_COACH_TEST_FLAG);
   const [name, setName] = useState("");
   const [teamName, setTeamName] = useState("");
   const [size, setSize] = useState(10);
@@ -43,49 +47,82 @@ export default function NewLeaguePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cycle resolution : on appelle l'API pour chaque saison candidate
-  // jusqu'a en trouver une qui a un cycle "upcoming". Le championnat
-  // sera adosse a ce cycle (snap-to-next-window).
-  const [resolvedCycle, setResolvedCycle] = useState<CycleStatus | null>(null);
+  // En mode normal : on resout automatiquement le premier cycle
+  // "upcoming" disponible (snap-to-next-window).
+  // En mode test : on charge TOUTES les saisons + tous les cycles
+  // et on expose deux selecteurs pour permettre la creation sur
+  // n'importe quel cycle (y compris closed) — utile pour debug.
+  const [allCycles, setAllCycles] = useState<CycleStatus[]>([]);
   const [resolvingCycle, setResolvingCycle] = useState(true);
+  const [pickedCycleId, setPickedCycleId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    async function resolveCycle() {
+    async function loadCycles() {
+      const collected: CycleStatus[] = [];
       for (const seasonId of CANDIDATE_SEASONS) {
         try {
           const out = await apiRequest<CyclesResponse>(
             `/api/nfl-fantasy/cycles?seasonId=${encodeURIComponent(seasonId)}`,
           );
-          const upcoming = out.cycles
-            .filter((c) => c.status === "upcoming")
-            .sort((a, b) => a.cycleNumber - b.cycleNumber);
-          if (upcoming.length > 0 && !cancelled) {
-            setResolvedCycle(upcoming[0]);
-            setResolvingCycle(false);
-            return;
-          }
+          collected.push(...out.cycles);
         } catch {
           // Ignore, on essaie la saison suivante.
         }
       }
-      if (!cancelled) {
-        setResolvingCycle(false);
+      if (cancelled) return;
+      setAllCycles(collected);
+      setResolvingCycle(false);
+
+      // Defaut en mode normal : premier "upcoming" (saison la plus
+      // proche). En mode test : aussi le premier "upcoming" si dispo,
+      // sinon le tout 1er cycle de la 1ere saison.
+      const sorted = [...collected].sort((a, b) =>
+        a.seasonId === b.seasonId
+          ? a.cycleNumber - b.cycleNumber
+          : a.seasonId.localeCompare(b.seasonId),
+      );
+      const upcoming = sorted.find((c) => c.status === "upcoming");
+      if (upcoming) {
+        setPickedCycleId(upcoming.id);
+      } else if (testMode && sorted.length > 0) {
+        setPickedCycleId(sorted[0].id);
+      } else if (!testMode) {
         setError(
           "Aucune mini-saison n'est ouverte pour creation en ce moment. Reviens quand la prochaine debute.",
         );
       }
     }
-    void resolveCycle();
+    void loadCycles();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [testMode]);
+
+  // Cycle selectionne (derive de pickedCycleId).
+  const pickedCycle = useMemo(
+    () => allCycles.find((c) => c.id === pickedCycleId) ?? null,
+    [allCycles, pickedCycleId],
+  );
+
+  // En mode normal, on ne propose QUE les cycles "upcoming".
+  // En mode test, tous les cycles sont selectionnables (y compris
+  // active / closed) pour debug.
+  const selectableCycles = useMemo(() => {
+    const filtered = testMode
+      ? allCycles
+      : allCycles.filter((c) => c.status === "upcoming");
+    return [...filtered].sort((a, b) =>
+      a.seasonId === b.seasonId
+        ? a.cycleNumber - b.cycleNumber
+        : a.seasonId.localeCompare(b.seasonId),
+    );
+  }, [allCycles, testMode]);
 
   async function onSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
-    if (!resolvedCycle) {
-      setError("Aucun cycle joignable disponible.");
+    if (!pickedCycle) {
+      setError("Aucun cycle selectionne.");
       return;
     }
     setSubmitting(true);
@@ -98,8 +135,8 @@ export default function NewLeaguePage() {
           body: JSON.stringify({
             name: name.trim(),
             teamName: teamName.trim(),
-            seasonId: resolvedCycle.seasonId,
-            cycleId: resolvedCycle.id,
+            seasonId: pickedCycle.seasonId,
+            cycleId: pickedCycle.id,
             size,
             type,
             draftMode: HARDCODED_DRAFT_MODE,
@@ -170,44 +207,83 @@ export default function NewLeaguePage() {
           />
         </div>
 
+        {testMode && (
+          <div className="rounded-lg border-2 border-dashed border-amber-400 bg-amber-50 p-3 text-xs">
+            <p className="font-semibold text-amber-900">
+              🧪 Mode test actif (flag <code>nuffle_coach_test</code>)
+            </p>
+            <p className="mt-1 text-amber-800">
+              Tu peux créer un championnat sur n&apos;importe quelle saison /
+              cycle, y compris closed (2025 pour rejouer des stats réelles).
+              Bypass du snap-to-next-window côté serveur.
+            </p>
+          </div>
+        )}
+
         <div className="rounded-lg border border-nuffle-bronze/30 bg-nuffle-ivory/40 p-4">
-          <p className="text-xs uppercase tracking-wide text-nuffle-bronze">
+          <label
+            htmlFor="cycleId"
+            className="text-xs uppercase tracking-wide text-nuffle-bronze"
+          >
             Mini-saison ciblée
-          </p>
+          </label>
           {resolvingCycle && (
             <p className="mt-2 text-sm text-nuffle-anthracite/70">
-              Recherche du prochain cycle joignable…
+              Chargement des cycles disponibles…
             </p>
           )}
-          {!resolvingCycle && resolvedCycle && (
-            <div className="mt-1">
-              <p className="font-heading text-lg text-nuffle-anthracite">
-                {resolvedCycle.label}{" "}
-                <span className="text-sm font-normal text-nuffle-anthracite/70">
-                  · Saison {resolvedCycle.seasonId}
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-nuffle-anthracite/70">
-                Semaines NFL {resolvedCycle.startWeek}–{resolvedCycle.endWeek}
-                {resolvedCycle.startsAt && (
-                  <>
-                    {" "}
-                    · Démarre le{" "}
-                    {new Date(resolvedCycle.startsAt).toLocaleDateString(
-                      "fr-FR",
-                      { day: "numeric", month: "long", year: "numeric" },
-                    )}
-                  </>
-                )}
-              </p>
-              <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
-                Snap-to-next-window : on ne peut pas créer de championnat sur
-                une mini-saison déjà démarrée. La création tardive bascule
-                automatiquement sur la prochaine.
-              </p>
-            </div>
+          {!resolvingCycle && selectableCycles.length > 0 && (
+            <>
+              <select
+                id="cycleId"
+                value={pickedCycleId ?? ""}
+                onChange={(e) => setPickedCycleId(e.target.value)}
+                className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+              >
+                {selectableCycles.map((c) => {
+                  const statusBadge =
+                    c.status === "upcoming"
+                      ? ""
+                      : c.status === "active"
+                        ? " [en cours]"
+                        : " [closed]";
+                  return (
+                    <option key={c.id} value={c.id}>
+                      Saison {c.seasonId} · {c.label} (W{c.startWeek}-W
+                      {c.endWeek}){statusBadge}
+                    </option>
+                  );
+                })}
+              </select>
+              {pickedCycle && pickedCycle.startsAt && (
+                <p className="mt-2 text-xs text-nuffle-anthracite/70">
+                  Démarre le{" "}
+                  {new Date(pickedCycle.startsAt).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  {pickedCycle.endsAt && (
+                    <>
+                      , fin le{" "}
+                      {new Date(pickedCycle.endsAt).toLocaleDateString(
+                        "fr-FR",
+                        { day: "numeric", month: "long", year: "numeric" },
+                      )}
+                    </>
+                  )}
+                </p>
+              )}
+              {!testMode && (
+                <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
+                  Snap-to-next-window : seules les mini-saisons pas encore
+                  démarrées sont proposées. La création tardive bascule
+                  automatiquement sur la prochaine.
+                </p>
+              )}
+            </>
           )}
-          {!resolvingCycle && !resolvedCycle && (
+          {!resolvingCycle && selectableCycles.length === 0 && (
             <p className="mt-2 text-sm text-nuffle-red">
               Aucune mini-saison joignable pour le moment.
             </p>
@@ -328,7 +404,7 @@ export default function NewLeaguePage() {
           </Link>
           <button
             type="submit"
-            disabled={submitting || resolvingCycle || !resolvedCycle}
+            disabled={submitting || resolvingCycle || !pickedCycle}
             className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20"
           >
             {submitting ? "Création…" : "Créer le championnat"}

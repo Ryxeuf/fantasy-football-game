@@ -57,8 +57,10 @@ describe("findWeekNumberAt", () => {
     expect(findWeekNumberAt(weeks, new Date("2025-09-19T12:00:00Z"))).toBe(3);
   });
 
-  it("retourne la derniere semaine quand la date est apres la saison", () => {
-    expect(findWeekNumberAt(weeks, new Date("2026-06-01T00:00:00Z"))).toBe(22);
+  it("retourne last.weekNumber+1 quand la date est apres la saison (tout closed)", () => {
+    // 23 (= 22 + 1) signifie "saison terminee" => le dernier cycle
+    // (Playoffs W19-W22) doit etre classe closed, pas active.
+    expect(findWeekNumberAt(weeks, new Date("2026-06-01T00:00:00Z"))).toBe(23);
   });
 
   it("retourne 0 si aucune semaine n'existe", () => {
