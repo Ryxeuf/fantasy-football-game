@@ -55,8 +55,8 @@ export default function NuffleCoachAboutPage() {
         {[
           {
             icon: "📋",
-            title: "Draft + mercato",
-            body: "Snake draft, auction ou free agency, selon ton mode de ligue. Mercato hebdo entre les semaines NFL.",
+            title: "Draft à budget TV",
+            body: "Comme à Blood Bowl : un budget Team Value, des joueurs cotés selon leur niveau. À toi de doser stars et lineman pour tenir 22 semaines.",
           },
           {
             icon: "📅",

@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { apiRequest, ApiClientError } from "../../lib/api-client";
-import type { DraftMode, LeagueType, LeagueWithEntries } from "../types";
+import type { LeagueType, LeagueWithEntries } from "../types";
+
+// V1 : seul mode supporte cote backend (les autres champs DB sont
+// conserves pour future extension snake interactif / vraies encheres).
+const HARDCODED_DRAFT_MODE = "auction" as const;
 
 const DEFAULT_SEASON = "2025";
 
@@ -16,7 +20,6 @@ export default function NewLeaguePage() {
   const [seasonId, setSeasonId] = useState(DEFAULT_SEASON);
   const [size, setSize] = useState(10);
   const [type, setType] = useState<LeagueType>("private");
-  const [draftMode, setDraftMode] = useState<DraftMode>("snake");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +38,7 @@ export default function NewLeaguePage() {
             seasonId,
             size,
             type,
-            draftMode,
+            draftMode: HARDCODED_DRAFT_MODE,
           }),
         },
       );
@@ -102,7 +105,7 @@ export default function NewLeaguePage() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="seasonId" className="text-sm font-medium text-nuffle-anthracite">
               Saison
@@ -129,23 +132,27 @@ export default function NewLeaguePage() {
               onChange={(e) => setSize(Number(e.target.value))}
               className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
             />
-            <p className="mt-1 text-[11px] text-nuffle-anthracite/60">2-16 ; défaut 10 (Q2)</p>
+            <p className="mt-1 text-[11px] text-nuffle-anthracite/60">2-16 coachs ; défaut 10</p>
           </div>
-          <div>
-            <label htmlFor="draftMode" className="text-sm font-medium text-nuffle-anthracite">
-              Mode draft
-            </label>
-            <select
-              id="draftMode"
-              value={draftMode}
-              onChange={(e) => setDraftMode(e.target.value as DraftMode)}
-              className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-            >
-              <option value="snake">Snake (recommandé)</option>
-              <option value="auction">Auction</option>
-              <option value="free">Free agent</option>
-            </select>
-          </div>
+        </div>
+
+        <div className="rounded-lg border border-nuffle-gold/30 bg-nuffle-gold/5 p-4">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-nuffle-anthracite">
+            💰 Draft à budget Team Value
+          </h3>
+          <p className="mt-2 text-xs text-nuffle-anthracite/80">
+            Comme à Blood Bowl, chaque coach démarre avec un budget TV
+            (Team Value) et drafte librement ses joueurs dans le
+            catalogue. Chaque joueur a un coût TV indexé sur ses
+            performances passées : plus une star est cotée, plus elle
+            grève ton budget.
+          </p>
+          <p className="mt-2 text-xs text-nuffle-anthracite/70">
+            Pas de pioche tour-par-tour, pas d&apos;enchères live : tu
+            drafts à ton rythme tant que la ligue est en mode <em>draft
+            ouverte</em>. L&apos;owner clôt la draft quand tous les
+            coachs sont prêts.
+          </p>
         </div>
 
         <fieldset>

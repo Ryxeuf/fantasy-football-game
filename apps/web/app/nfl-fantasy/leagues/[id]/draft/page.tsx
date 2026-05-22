@@ -160,10 +160,15 @@ export default function NuffleCoachDraftPage() {
         `/api/nfl-fantasy/entries/${myEntry.id}/roster/${playerId}`,
         { method: "DELETE" },
       );
-      await loadRoster();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Erreur");
+      if (err instanceof ApiClientError && err.status === 404) {
+        // Joueur deja retire (double-click, state stale) — l'effet
+        // escompte est atteint, on re-sync silencieusement.
+      } else {
+        setActionError(err instanceof Error ? err.message : "Erreur");
+      }
     } finally {
+      await loadRoster();
       setBusy(null);
     }
   }
