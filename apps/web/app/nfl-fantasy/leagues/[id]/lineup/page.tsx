@@ -274,7 +274,7 @@ export default function LineupBuilderPage(): JSX.Element {
   if (error?.status === 404 || error?.status === 403) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">League introuvable</h1>
+        <h1 className="text-xl font-semibold">Championnat introuvable</h1>
         <Link
           href="/nfl-fantasy"
           className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
@@ -292,7 +292,7 @@ export default function LineupBuilderPage(): JSX.Element {
   if (!myEntry) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">Tu n&apos;es pas membre de cette league</h1>
+        <h1 className="text-xl font-semibold">Tu n&apos;es pas membre de ce championnat</h1>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
           className="mt-4 inline-block text-sm text-nuffle-gold"

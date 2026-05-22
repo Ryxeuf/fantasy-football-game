@@ -46,13 +46,28 @@ export default function JoinLeaguePage() {
     <div className="mx-auto max-w-md space-y-6">
       <div>
         <Link href="/nfl-fantasy" className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze">
-          ← Mes leagues
+          ← Mes championnats
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Rejoindre une league</h1>
+        <h1 className="mt-2 text-2xl font-semibold">
+          Rejoindre un championnat
+        </h1>
         <p className="mt-1 text-sm text-nuffle-anthracite/70">
-          Demande l&apos;invite code à un membre. Le code est unique par league
-          (8 caractères, alphabet sans I/L/O/0/1).
+          Tu as un invite code d&apos;un championnat privé ? Saisis-le
+          ci-dessous (8 caractères, sans I/L/O/0/1).
         </p>
+        <div className="mt-3 rounded-md border border-nuffle-gold/30 bg-nuffle-gold/5 p-3 text-sm">
+          <p className="text-nuffle-anthracite/80">
+            🌐{" "}
+            <strong>Pas de code ?</strong> Découvre les championnats
+            publics ouverts à tous.
+          </p>
+          <Link
+            href="/nfl-fantasy/public"
+            className="mt-2 inline-block text-sm font-medium text-nuffle-gold hover:text-nuffle-red"
+          >
+            → Parcourir les championnats publics
+          </Link>
+        </div>
       </div>
 
       <form
@@ -92,7 +107,7 @@ export default function JoinLeaguePage() {
             className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite placeholder:text-nuffle-anthracite/60 focus:border-nuffle-gold focus:outline-none"
             placeholder="Les Rats Saucissons"
           />
-          <p className="mt-1 text-[11px] text-nuffle-anthracite/60">Unique par league.</p>
+          <p className="mt-1 text-[11px] text-nuffle-anthracite/60">Unique par championnat.</p>
         </div>
 
         {error && (

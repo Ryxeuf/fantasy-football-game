@@ -114,7 +114,7 @@ export default function LeagueDetailPage() {
 
   async function leave(): Promise<void> {
     if (!league) return;
-    if (!window.confirm("Quitter cette league ?")) return;
+    if (!window.confirm("Quitter ce championnat ?")) return;
     setActionError(null);
     setBusy("leave");
     try {
@@ -132,7 +132,7 @@ export default function LeagueDetailPage() {
     if (!league) return;
     if (
       !window.confirm(
-        `Supprimer la league "${league.name}" ? Action irréversible.`,
+        `Supprimer le championnat "${league.name}" ? Action irréversible.`,
       )
     )
       return;
@@ -166,10 +166,10 @@ export default function LeagueDetailPage() {
   if (error?.status === 404 || error?.status === 403) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">League introuvable</h1>
+        <h1 className="text-xl font-semibold">Championnat introuvable</h1>
         <p className="mt-2 text-sm text-nuffle-anthracite/70">{error.message}</p>
         <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold">
-          ← Retour à mes leagues
+          ← Retour à mes championnats
         </Link>
       </div>
     );
@@ -188,7 +188,7 @@ export default function LeagueDetailPage() {
     <div className="space-y-6">
       <div>
         <Link href="/nfl-fantasy" className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze">
-          ← Mes leagues
+          ← Mes championnats
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
@@ -362,7 +362,7 @@ export default function LeagueDetailPage() {
                 disabled={busy === "leave"}
                 className="rounded-md border border-nuffle-bronze/30 px-3 py-1.5 text-sm hover:border-nuffle-gold disabled:opacity-50"
               >
-                Quitter la league
+                Quitter le championnat
               </button>
             )}
             {!isDraft && (

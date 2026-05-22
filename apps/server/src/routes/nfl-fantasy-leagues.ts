@@ -26,6 +26,7 @@ import {
   joinLeague,
   leaveLeague,
   listLeaguesForUser,
+  listPublicLeagues,
   updateLeague,
   LEAGUE_SIZE_MAX,
   LEAGUE_SIZE_MIN,
@@ -95,6 +96,18 @@ router.get("/", async (req, res) => {
     res.json({ leagues });
   } catch (err) {
     serverLog.error("[nfl-fantasy-leagues] list failed", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// IMPORTANT : ce handler doit etre defini AVANT /:id, sinon Express
+// matche "public" comme un id.
+router.get("/public", async (req, res) => {
+  try {
+    const leagues = await listPublicLeagues({ userId: userId(req) });
+    res.json({ leagues });
+  } catch (err) {
+    serverLog.error("[nfl-fantasy-leagues] list-public failed", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

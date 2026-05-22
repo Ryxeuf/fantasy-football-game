@@ -285,6 +285,57 @@ export async function getLeague(leagueId: string): Promise<LeagueWithEntries> {
 }
 
 /**
+ * Liste les championnats PUBLICS rejoignables (status='draft',
+ * type='public', non-pleins, et ou l'user n'est pas deja membre).
+ *
+ * Trie par date de creation desc (les plus recents en haut). Paginee
+ * cote serveur a 50 par defaut pour eviter de tout dump si on grossit.
+ *
+ * @returns liste enrichie avec entriesCount et isJoinable
+ */
+export async function listPublicLeagues(opts: {
+  userId: string;
+  limit?: number;
+}): Promise<
+  Array<
+    NflFantasyLeague & {
+      entriesCount: number;
+      isJoinable: boolean;
+    }
+  >
+> {
+  const limit = Math.min(100, Math.max(1, opts.limit ?? 50));
+  const rows = await prisma.nflFantasyLeague.findMany({
+    where: {
+      type: "public",
+      status: "draft",
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: {
+      entries: { select: { id: true, userId: true } },
+    },
+  });
+  type Row = (typeof rows)[number];
+  type EntryRow = Row["entries"][number];
+  return rows.map((lg: Row) => {
+    const entriesCount = lg.entries.length;
+    const userInLeague = lg.entries.some(
+      (e: EntryRow) => e.userId === opts.userId,
+    );
+    const isJoinable = entriesCount < lg.size && !userInLeague;
+    // On retourne la league sans le tableau entries verbose, juste
+    // l'aggregat. Cote-API on n'expose pas les userIds (privacy).
+    const { entries: _entries, ...rest } = lg;
+    return {
+      ...rest,
+      entriesCount,
+      isJoinable,
+    };
+  });
+}
+
+/**
  * Liste les leagues ou l'utilisateur a une entry, triees par
  * date de creation desc. Optionnellement filtre par status.
  */

@@ -174,9 +174,10 @@ export default function Header() {
               </button>
               {openDropdown === "nuffle-coach" && (
                 <div className="absolute left-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
-                  {dropdownItem("/nfl-fantasy", "🏟️", "Mes coachs")}
-                  {dropdownItem("/nfl-fantasy/new", "➕", "Créer un coach")}
-                  {dropdownItem("/nfl-fantasy/join", "🤝", "Rejoindre")}
+                  {dropdownItem("/nfl-fantasy", "🏟️", "Mes championnats")}
+                  {dropdownItem("/nfl-fantasy/new", "➕", "Créer un championnat")}
+                  {dropdownItem("/nfl-fantasy/public", "🌐", "Championnats publics")}
+                  {dropdownItem("/nfl-fantasy/join", "🤝", "Rejoindre via code")}
                   {dropdownItem("/nfl-fantasy/players", "📋", "Catalogue joueurs")}
                   {dropdownItem("/nfl-fantasy/about", "ℹ️", "À propos")}
                 </div>
@@ -340,21 +341,28 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
                 >
-                  🏟️ Mes coachs
+                  🏟️ Mes championnats
                 </a>
                 <a
                   href="/nfl-fantasy/new"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
                 >
-                  ➕ Créer un coach
+                  ➕ Créer un championnat
+                </a>
+                <a
+                  href="/nfl-fantasy/public"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  🌐 Championnats publics
                 </a>
                 <a
                   href="/nfl-fantasy/join"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
                 >
-                  🤝 Rejoindre
+                  🤝 Rejoindre via code
                 </a>
                 <a
                   href="/nfl-fantasy/players"

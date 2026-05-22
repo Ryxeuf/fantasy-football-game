@@ -22,10 +22,13 @@ export default function NuffleCoachLayout({ children }: { children: ReactNode })
         </Link>
         <div className="flex flex-wrap items-center gap-3 text-sm text-nuffle-anthracite/80 sm:gap-4">
           <Link href="/nfl-fantasy" className="hover:text-nuffle-gold">
-            Mes coachs
+            Mes championnats
           </Link>
           <Link href="/nfl-fantasy/new" className="hover:text-nuffle-gold">
             Créer
+          </Link>
+          <Link href="/nfl-fantasy/public" className="hover:text-nuffle-gold">
+            Publics
           </Link>
           <Link href="/nfl-fantasy/join" className="hover:text-nuffle-gold">
             Rejoindre

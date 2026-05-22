@@ -74,13 +74,13 @@ export default function LeagueStandingsPage() {
   if (error?.status === 404 || error?.status === 403) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">League introuvable</h1>
+        <h1 className="text-xl font-semibold">Championnat introuvable</h1>
         <p className="mt-2 text-sm text-nuffle-anthracite/70">{error.message}</p>
         <Link
           href="/nfl-fantasy"
           className="mt-4 inline-block text-sm text-nuffle-gold hover:text-nuffle-gold"
         >
-          ← Retour à mes leagues
+          ← Retour à mes championnats
         </Link>
       </div>
     );
@@ -93,7 +93,7 @@ export default function LeagueStandingsPage() {
           href={`/nfl-fantasy/leagues/${leagueId}`}
           className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
         >
-          ← Retour à la league
+          ← Retour à le championnat
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Classement</h1>
         <p className="mt-1 text-sm text-nuffle-anthracite/70">

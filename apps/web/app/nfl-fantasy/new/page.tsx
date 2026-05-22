@@ -59,11 +59,11 @@ export default function NewLeaguePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <Link href="/nfl-fantasy" className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze">
-          ← Mes leagues
+          ← Mes championnats
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Créer une league NFL Fantasy</h1>
+        <h1 className="mt-2 text-2xl font-semibold">Créer un championnat</h1>
         <p className="mt-1 text-sm text-nuffle-anthracite/70">
-          Tu seras owner et membre #1 de la league. Un invite code sera généré
+          Tu seras owner et membre #1 de le championnat. Un invite code sera généré
           si tu choisis &ldquo;privée&rdquo;.
         </p>
       </div>
@@ -75,7 +75,7 @@ export default function NewLeaguePage() {
       >
         <div>
           <label htmlFor="name" className="text-sm font-medium text-nuffle-anthracite">
-            Nom de la league
+            Nom de le championnat
           </label>
           <input
             id="name"
@@ -86,7 +86,7 @@ export default function NewLeaguePage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm text-nuffle-anthracite placeholder:text-nuffle-anthracite/60 focus:border-nuffle-gold focus:outline-none"
-            placeholder="Krak'Skar Stompers League"
+            placeholder="Le championnat des Krak'Skar"
           />
         </div>
 
@@ -239,7 +239,7 @@ export default function NewLeaguePage() {
             disabled={submitting}
             className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20"
           >
-            {submitting ? "Création…" : "Créer la league"}
+            {submitting ? "Création…" : "Créer le championnat"}
           </button>
         </div>
       </form>

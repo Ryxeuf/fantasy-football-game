@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Page matchups + standings d'une league.
+ * Page matchups + standings d'un championnat.
  *
  *   - Section "Standings" : tableau agrege W-L-T-PF-PA derive de tous
  *     les matchups settles (computed cote serveur via getLeagueStandings).
  *   - Section "Matchups de la semaine" : selecteur weekId + liste des
  *     paires home/away avec scores + winner si settle.
  *
- * Pas d'auth restriction stricte : un user qui rejoint la league voit
+ * Pas d'auth restriction stricte : un user qui rejoint le championnat voit
  * tout, un user external 404 (route protegee par authUser + getLeague
  * cote backend).
  */
@@ -140,7 +140,7 @@ export default function MatchupsPage(): JSX.Element {
   if (error?.status === 404 || error?.status === 403) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">League introuvable</h1>
+        <h1 className="text-xl font-semibold">Championnat introuvable</h1>
         <Link href="/nfl-fantasy" className="mt-4 inline-block text-sm text-nuffle-gold">
           ← Retour
         </Link>

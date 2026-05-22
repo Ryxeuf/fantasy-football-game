@@ -68,7 +68,7 @@ export default function NflFantasyDashboardPage() {
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
         <h1 className="text-xl font-semibold">Authentification requise</h1>
         <p className="mt-2 text-sm text-nuffle-anthracite/70">
-          Connecte-toi pour accéder à tes leagues NFL Fantasy.
+          Connecte-toi pour accéder à tes championnats.
         </p>
         <Link
           href="/login"
@@ -84,7 +84,7 @@ export default function NflFantasyDashboardPage() {
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Mes leagues NFL Fantasy</h1>
+          <h1 className="text-2xl font-semibold">Mes championnats</h1>
           <p className="mt-1 text-sm text-nuffle-anthracite/70">
             Drafte, choisis ton lineup chaque semaine, batte tes adversaires en SPP.
           </p>
@@ -95,7 +95,7 @@ export default function NflFantasyDashboardPage() {
             className="rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80"
             data-testid="nfl-fantasy-create-cta"
           >
-            + Créer une league
+            + Créer un championnat
           </Link>
           <Link
             href="/nfl-fantasy/join"
@@ -120,7 +120,7 @@ export default function NflFantasyDashboardPage() {
       {leagues !== null && leagues.length === 0 && (
         <div className="rounded-lg border border-dashed border-nuffle-bronze/20 bg-white p-10 text-center">
           <p className="text-base text-nuffle-anthracite/80">
-            Tu n&apos;es membre d&apos;aucune league pour le moment.
+            Tu n&apos;es membre d&apos;aucun championnat pour le moment.
           </p>
           <p className="mt-1 text-sm text-nuffle-anthracite/60">
             Crée la tienne ou rejoins-en une via un invite code.
