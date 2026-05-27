@@ -6,12 +6,18 @@
  * canoniques "G,A,S,P,M". Vide = pool vide renseigné (ex: position animale).
  */
 
-const CATEGORIES: ReadonlyArray<{ code: string; label: string }> = [
-  { code: "G", label: "Général" },
-  { code: "A", label: "Agilité" },
-  { code: "S", label: "Force" },
-  { code: "P", label: "Passe" },
-  { code: "M", label: "Mutation" },
+// `code` = code canonique stocké (S = Force/Strength). `display` = lettre
+// affichée (Force s'abrège "F" en français).
+const CATEGORIES: ReadonlyArray<{
+  code: string;
+  display: string;
+  label: string;
+}> = [
+  { code: "G", display: "G", label: "Général" },
+  { code: "A", display: "A", label: "Agilité" },
+  { code: "S", display: "F", label: "Force" },
+  { code: "P", display: "P", label: "Passe" },
+  { code: "M", display: "M", label: "Mutation" },
 ];
 
 const ORDER = ["G", "A", "S", "P", "M"];
@@ -51,7 +57,7 @@ export default function SkillAccessSelector({
     <div>
       <label className="block text-sm font-medium mb-1">{label}</label>
       <div className="flex flex-wrap gap-3">
-        {CATEGORIES.map(({ code, label: catLabel }) => (
+        {CATEGORIES.map(({ code, display, label: catLabel }) => (
           <label
             key={code}
             className="inline-flex items-center gap-1.5 text-sm cursor-pointer"
@@ -62,7 +68,7 @@ export default function SkillAccessSelector({
               onChange={() => toggle(code)}
             />
             <span>
-              {catLabel} <span className="text-gray-400">({code})</span>
+              {catLabel} <span className="text-gray-400">({display})</span>
             </span>
           </label>
         ))}

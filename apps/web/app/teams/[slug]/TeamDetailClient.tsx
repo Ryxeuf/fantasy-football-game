@@ -43,15 +43,29 @@ function translatePositionName(displayName: string): string {
   return translations[displayName] || displayName;
 }
 
-const ACCESS_LABELS: Record<string, string> = {
-  G: "Général",
-  A: "Agilité",
-  S: "Force",
-  P: "Passe",
-  M: "Mutation",
+// Affichage par langue : la catégorie Force/Strength s'abrège "F" en français
+// et "S" en anglais (le code canonique stocké est toujours "S").
+const ACCESS_DISPLAY: Record<
+  string,
+  Record<string, { letter: string; label: string }>
+> = {
+  fr: {
+    G: { letter: "G", label: "Général" },
+    A: { letter: "A", label: "Agilité" },
+    S: { letter: "F", label: "Force" },
+    P: { letter: "P", label: "Passe" },
+    M: { letter: "M", label: "Mutation" },
+  },
+  en: {
+    G: { letter: "G", label: "General" },
+    A: { letter: "A", label: "Agility" },
+    S: { letter: "S", label: "Strength" },
+    P: { letter: "P", label: "Passing" },
+    M: { letter: "M", label: "Mutation" },
+  },
 };
 
-/** Parse une CSV d'accès -> codes ordonnés (F->S, dédup). */
+/** Parse une CSV d'accès -> codes canoniques ordonnés (F->S, dédup). */
 function parseAccessCodes(csv: string | null | undefined): string[] {
   if (!csv) return [];
   const set = new Set<string>();
@@ -64,7 +78,8 @@ function parseAccessCodes(csv: string | null | undefined): string[] {
 
 /**
  * Badges d'accès aux compétences (montée de niveau) : primaire (vert) /
- * secondaire (gris). Rien si l'accès n'est pas renseigné (ex: season_2).
+ * secondaire (gris). Lettres + libellés dépendants de la langue (Force = "F"
+ * en FR, "S" en EN). Rien si l'accès n'est pas renseigné (ex: season_2).
  */
 function SkillAccessBadges({
   primary,
@@ -73,29 +88,35 @@ function SkillAccessBadges({
   primary?: string | null;
   secondary?: string | null;
 }) {
+  const { language } = useLanguage();
   if (primary == null && secondary == null) return null;
+  const display = ACCESS_DISPLAY[language] ?? ACCESS_DISPLAY.fr;
   const pri = parseAccessCodes(primary);
   const sec = parseAccessCodes(secondary);
+  const roleLabel =
+    language === "en"
+      ? { access: "Access:", primary: "Primary", secondary: "Secondary" }
+      : { access: "Accès :", primary: "Primaire", secondary: "Secondaire" };
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1 text-[11px]">
-      <span className="text-gray-500">Accès :</span>
+      <span className="text-gray-500">{roleLabel.access}</span>
       {pri.map((c) => (
         <span
           key={`p-${c}`}
-          title={`Primaire — ${ACCESS_LABELS[c]}`}
+          title={`${roleLabel.primary} — ${display[c].label}`}
           className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold"
         >
-          {c}
+          {display[c].letter}
         </span>
       ))}
       {sec.length > 0 ? <span className="text-gray-300">/</span> : null}
       {sec.map((c) => (
         <span
           key={`s-${c}`}
-          title={`Secondaire — ${ACCESS_LABELS[c]}`}
+          title={`${roleLabel.secondary} — ${display[c].label}`}
           className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500"
         >
-          {c}
+          {display[c].letter}
         </span>
       ))}
     </div>
