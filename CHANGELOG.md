@@ -1,3 +1,10 @@
+## [1.145.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.144.0...v1.145.0) (2026-05-27)
+
+
+### ✨ Features
+
+* **blog:** add errata image for May 2026 blog post ([a903fb3](https://github.com/Ryxeuf/fantasy-football-game/commit/a903fb38907b5be015f200124df84869f6e9a741))
+
 ## [1.144.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.143.0...v1.144.0) (2026-05-27)
 
 
