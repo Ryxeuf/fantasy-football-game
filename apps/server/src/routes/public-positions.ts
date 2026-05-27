@@ -27,6 +27,8 @@ interface TransformedPosition {
   pa: number;
   av: number;
   skills: string;
+  primarySkills: string | null;
+  secondarySkills: string | null;
   rosterSlug: string;
   rosterName: string;
 }
@@ -158,6 +160,8 @@ function transformPosition(
     pa: position.pa,
     av: position.av,
     skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
+    primarySkills: position.primarySkills ?? null,
+    secondarySkills: position.secondarySkills ?? null,
     rosterSlug: position.roster.slug,
     rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
   };

@@ -54,6 +54,8 @@ interface RosterDetailPayload {
       pa: number;
       av: number;
       skills: string;
+      primarySkills: string | null;
+      secondarySkills: string | null;
     }>;
   };
   ruleset: string;
@@ -214,6 +216,8 @@ function transformRoster(roster: any, isEnglish: boolean) {
       pa: position.pa,
       av: position.av,
       skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
+      primarySkills: position.primarySkills ?? null,
+      secondarySkills: position.secondarySkills ?? null,
     })),
   };
 }

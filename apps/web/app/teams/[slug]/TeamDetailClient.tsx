@@ -43,6 +43,65 @@ function translatePositionName(displayName: string): string {
   return translations[displayName] || displayName;
 }
 
+const ACCESS_LABELS: Record<string, string> = {
+  G: "Général",
+  A: "Agilité",
+  S: "Force",
+  P: "Passe",
+  M: "Mutation",
+};
+
+/** Parse une CSV d'accès -> codes ordonnés (F->S, dédup). */
+function parseAccessCodes(csv: string | null | undefined): string[] {
+  if (!csv) return [];
+  const set = new Set<string>();
+  for (const ch of csv.toUpperCase()) {
+    if (ch === "F") set.add("S");
+    else if ("GASPM".includes(ch)) set.add(ch);
+  }
+  return ["G", "A", "S", "P", "M"].filter((c) => set.has(c));
+}
+
+/**
+ * Badges d'accès aux compétences (montée de niveau) : primaire (vert) /
+ * secondaire (gris). Rien si l'accès n'est pas renseigné (ex: season_2).
+ */
+function SkillAccessBadges({
+  primary,
+  secondary,
+}: {
+  primary?: string | null;
+  secondary?: string | null;
+}) {
+  if (primary == null && secondary == null) return null;
+  const pri = parseAccessCodes(primary);
+  const sec = parseAccessCodes(secondary);
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1 text-[11px]">
+      <span className="text-gray-500">Accès :</span>
+      {pri.map((c) => (
+        <span
+          key={`p-${c}`}
+          title={`Primaire — ${ACCESS_LABELS[c]}`}
+          className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold"
+        >
+          {c}
+        </span>
+      ))}
+      {sec.length > 0 ? <span className="text-gray-300">/</span> : null}
+      {sec.map((c) => (
+        <span
+          key={`s-${c}`}
+          title={`Secondaire — ${ACCESS_LABELS[c]}`}
+          className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500"
+        >
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export interface TeamDetailClientProps {
   slug: string;
   selectedRuleset: Ruleset;
@@ -328,6 +387,10 @@ export default function TeamDetailClient({
                       useDirectParsing={true}
                       showAsBaseSkillsOnly={true}
                     />
+                    <SkillAccessBadges
+                      primary={position.primarySkills}
+                      secondary={position.secondarySkills}
+                    />
                   </td>
                 </tr>
               ))}
@@ -416,6 +479,10 @@ export default function TeamDetailClient({
                     teamName={slug}
                     useDirectParsing={true}
                     showAsBaseSkillsOnly={true}
+                  />
+                  <SkillAccessBadges
+                    primary={position.primarySkills}
+                    secondary={position.secondarySkills}
                   />
                 </div>
               </div>
