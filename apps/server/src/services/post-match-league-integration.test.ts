@@ -108,6 +108,10 @@ vi.mock("../prisma", () => ({
         },
       ),
     },
+    // Accès primaire/secondaire (C2) : non renseigné dans ce scénario ->
+    // findFirst -> null -> validation skippée (comportement historique).
+    position: { findFirst: vi.fn(async () => null) },
+    skill: { findFirst: vi.fn(async () => null) },
     team: {
       update: vi.fn(
         async (args: {
