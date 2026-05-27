@@ -145,7 +145,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 5,
         pa: 5,
         av: 11,
-        skills: "strong-arm,mighty-blow-1,thick-skull,throw-team-mate,take-root,stand-firm,timmm-ber",
+        // Errata mai 2026 (p.180) : ajout de Solitaire (4+) au Homme-arbre d'Altern Forest.
+        skills: "strong-arm,mighty-blow-1,thick-skull,throw-team-mate,take-root,stand-firm,timmm-ber,loner-4",
       },
       {
         slug: "old_world_alliance_ogre",
@@ -1776,7 +1777,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ma: 6,
         st: 2,
         ag: 3,
-        pa: 3,
+        // Errata mai 2026 (p.181) : Passe 3+ -> 4+ (Trois-Quart Gobelin orc).
+        pa: 4,
         av: 8,
         skills: "dodge,titchy,right-stuff",
       },
@@ -1945,7 +1947,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 4,
         pa: 5,
         av: 10,
-        skills: "bone-head,mighty-blow-1,thick-skull,throw-team-mate,loner-4",
+        // Errata mai 2026 (p.165) : Solitaire (4+) -> (3+). Châtaigne déjà présente.
+        skills: "bone-head,mighty-blow-1,thick-skull,throw-team-mate,loner-3",
       },
       {
         slug: "chaos_renegade_minotaure_renegat",
