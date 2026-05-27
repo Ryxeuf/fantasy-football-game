@@ -34,6 +34,7 @@ import {
   SURCHARGE_PER_ADVANCEMENT,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
+import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
 
 /**
  * Cout SPP du prochain avancement le moins cher (random-primary @ N+1)
@@ -278,7 +279,8 @@ export type ApplyAdvancementOutcome =
         | "player-not-on-team"
         | "player-dead"
         | "max-advancements-reached"
-        | "insufficient-spp";
+        | "insufficient-spp"
+        | "skill-not-in-pool";
       readonly required?: number;
       readonly available?: number;
     };
@@ -314,6 +316,8 @@ export async function applyAdvancementChoice(
       skills: true,
       advancements: true,
       dead: true,
+      position: true,
+      team: { select: { roster: true, ruleset: true } },
     },
   });
   if (!player) {
@@ -339,6 +343,31 @@ export async function applyAdvancementChoice(
       required: cost,
       available: player.spp,
     };
+  }
+
+  // Validation de l'acces primaire/secondaire (souple) : la skill choisie
+  // doit appartenir au pool de la position pour le type d'avancement. On ne
+  // valide que si la position a des donnees d'acces renseignees (season_3) ;
+  // sinon (null, ex: season_2) on skip pour rester retro-compatible.
+  const ruleset = player.team?.ruleset ?? "season_3";
+  const positionAccess = await prisma.position.findFirst({
+    where: {
+      slug: player.position,
+      roster: { slug: player.team?.roster, ruleset: ruleset as never },
+    },
+    select: { primarySkills: true, secondarySkills: true },
+  });
+  if (positionAccess) {
+    const skillCode = await categoryCodeForSkill(input.skillSlug, ruleset);
+    const check = checkSkillAccess({
+      type: input.type,
+      skillCode,
+      primarySkills: positionAccess.primarySkills,
+      secondarySkills: positionAccess.secondarySkills,
+    });
+    if (check === "out-of-pool") {
+      return { skipped: true, reason: "skill-not-in-pool" };
+    }
   }
 
   // Pousse la nouvelle entree d'advancement (immutable - clone).

@@ -25,6 +25,10 @@ vi.mock("../prisma", () => {
       match: { findUnique: vi.fn() },
       teamPlayer,
       team,
+      // Acces primaire/secondaire (C2). Par defaut findFirst -> undefined,
+      // donc la validation est skippee (les tests existants restent verts).
+      position: { findFirst: vi.fn() },
+      skill: { findFirst: vi.fn() },
       leaguePostMatchSequence: {
         findUnique: vi.fn(),
         create: vi.fn(),
@@ -54,6 +58,8 @@ const mocked = {
   seqFind: prisma.leaguePostMatchSequence.findUnique as MockFn,
   seqCreate: prisma.leaguePostMatchSequence.create as MockFn,
   seqUpdate: prisma.leaguePostMatchSequence.update as MockFn,
+  positionFind: prisma.position.findFirst as MockFn,
+  skillFind: prisma.skill.findFirst as MockFn,
 };
 
 beforeEach(() => {
@@ -366,6 +372,124 @@ describe("applyAdvancementChoice", () => {
 
     const teamArgs = mocked.teamUpdate.mock.calls[0][0];
     expect(teamArgs.data.currentValue).toEqual({ increment: 10000 });
+  });
+
+  // --- Validation acces primaire/secondaire (C2) ---
+
+  function mockEligiblePlayer() {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "",
+      advancements: "[]",
+      dead: false,
+      position: "dwarf_blocker",
+      team: { roster: "dwarf", ruleset: "season_3" },
+    });
+    mocked.playerUpdate.mockResolvedValue({});
+    mocked.teamUpdate.mockResolvedValue({});
+    mocked.teamFind.mockResolvedValue({ currentValue: 1000000 });
+  }
+
+  it("rejette une skill hors du pool (categorie non autorisee pour le type)", async () => {
+    mockEligiblePlayer();
+    // Position : primaire G,S ; secondaire A.
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    // Skill choisie = Mutation (code M), demandee en primaire -> hors pool.
+    mocked.skillFind.mockResolvedValue({ category: "Mutation" });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "claws",
+    });
+    expect(out).toEqual({ skipped: true, reason: "skill-not-in-pool" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("accepte une skill dans le pool primaire", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    // Skill = Strength (code S) en primaire -> autorisee.
+    mocked.skillFind.mockResolvedValue({ category: "Strength" });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "mighty-blow",
+    });
+    if (!("applied" in out)) throw new Error("expected applied");
+    expect(out.applied).toBe(true);
+    expect(out.addedSkill).toBe("mighty-blow");
+  });
+
+  it("rejette une skill secondaire prise en primaire mais l'accepte en secondaire", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    mocked.skillFind.mockResolvedValue({ category: "Agility" }); // code A
+
+    const rejected = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "dodge",
+    });
+    expect(rejected).toEqual({ skipped: true, reason: "skill-not-in-pool" });
+
+    const accepted = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "secondary",
+      skillSlug: "dodge",
+    });
+    if (!("applied" in accepted)) throw new Error("expected applied");
+    expect(accepted.applied).toBe(true);
+  });
+
+  it("skip la validation quand l'acces n'est pas renseigne (position null)", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue(null); // pas de donnees d'acces
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "n-importe-quoi",
+    });
+    if (!("applied" in out)) throw new Error("expected applied");
+    expect(out.applied).toBe(true);
+    // skill.findFirst ne doit meme pas etre interroge si pas d'acces.
+    expect(mocked.skillFind).not.toHaveBeenCalled();
+  });
+
+  it("skip la validation quand les deux colonnes d'acces sont null", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: null,
+      secondarySkills: null,
+    });
+    mocked.skillFind.mockResolvedValue({ category: "Mutation" });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "claws",
+    });
+    if (!("applied" in out)) throw new Error("expected applied (no-data)");
+    expect(out.applied).toBe(true);
   });
 });
 
