@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import SkillSelector from "../../SkillSelector";
+import SkillAccessSelector from "../../SkillAccessSelector";
 import { getRulesetLabel } from "../../../ruleset-utils";
 
 type Position = {
@@ -18,6 +19,8 @@ type Position = {
   pa: number;
   av: number;
   keywords?: string | null;
+  primarySkills?: string | null;
+  secondarySkills?: string | null;
   roster: { id: string; slug: string; name: string; ruleset: string };
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
 };
@@ -75,10 +78,19 @@ export default function EditPositionPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillSlugs, setSelectedSkillSlugs] = useState<string[]>([]);
+  const [primaryAccess, setPrimaryAccess] = useState("");
+  const [secondaryAccess, setSecondaryAccess] = useState("");
 
   useEffect(() => {
     loadData();
   }, [positionId]);
+
+  // Préremplir l'accès primaire/secondaire au chargement de la position.
+  useEffect(() => {
+    if (!position?.id) return;
+    setPrimaryAccess(position.primarySkills ?? "");
+    setSecondaryAccess(position.secondarySkills ?? "");
+  }, [position?.id, position?.primarySkills, position?.secondarySkills]);
 
   // Initialiser les compétences sélectionnées quand la position est chargée
   useEffect(() => {
@@ -155,6 +167,8 @@ export default function EditPositionPage() {
         pa: parseInt(formData.get("pa") as string),
         av: parseInt(formData.get("av") as string),
         keywords: formData.get("keywords") as string || null,
+        primarySkills: primaryAccess,
+        secondarySkills: secondaryAccess,
         skillSlugs: selectedSkillSlugs,
       };
       await putJSON(`/admin/data/positions/${position.id}`, data);
@@ -299,6 +313,20 @@ export default function EditPositionPage() {
             <p className="text-xs text-gray-500 mt-1">
               Mots-clés pour cette position (ex: elite, passive, etc.)
             </p>
+          </div>
+          <div className="col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 border rounded bg-gray-50">
+            <SkillAccessSelector
+              label="Accès primaire"
+              value={primaryAccess}
+              onChange={setPrimaryAccess}
+              hint="Catégories accessibles à coût réduit en montée de niveau."
+            />
+            <SkillAccessSelector
+              label="Accès secondaire"
+              value={secondaryAccess}
+              onChange={setSecondaryAccess}
+              hint="Catégories accessibles (coût majoré). Vide = pas d'accès secondaire."
+            />
           </div>
           <div className="col-span-3">
             {skills.length > 0 ? (

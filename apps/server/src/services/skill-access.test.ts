@@ -17,6 +17,7 @@ import {
   parseAccessCsv,
   checkSkillAccess,
   categoryCodeForSkill,
+  toCanonicalAccessCsv,
 } from "./skill-access";
 
 type MockFn = ReturnType<typeof vi.fn>;
@@ -147,6 +148,22 @@ describe("checkSkillAccess", () => {
         secondarySkills: "A",
       }),
     ).toBe("ok");
+  });
+});
+
+describe("toCanonicalAccessCsv", () => {
+  it("ordonne et dédoublonne en CSV canonique (G,A,S,P,M)", () => {
+    expect(toCanonicalAccessCsv("S,G")).toBe("G,S");
+    expect(toCanonicalAccessCsv("a g")).toBe("G,A");
+    expect(toCanonicalAccessCsv("M,P,A,S,G")).toBe("G,A,S,P,M");
+  });
+  it("replie F→S et dédoublonne", () => {
+    expect(toCanonicalAccessCsv("G,F")).toBe("G,S");
+    expect(toCanonicalAccessCsv("SF")).toBe("S");
+  });
+  it("renvoie '' pour une saisie vide ou invalide", () => {
+    expect(toCanonicalAccessCsv("")).toBe("");
+    expect(toCanonicalAccessCsv("XYZ")).toBe("");
   });
 });
 

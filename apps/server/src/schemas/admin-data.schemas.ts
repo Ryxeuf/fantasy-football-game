@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// CSV d'accès compétences (codes catégorie G/A/S/P/M ; F toléré -> S). Vide
+// autorisé (pool vide renseigné), null/absent = accès non géré. Validé souple.
+const skillAccessCsv = z
+  .string()
+  .regex(/^[GASPMFgaspmf,\s]*$/, "Codes catégorie attendus (G/A/S/P/M)")
+  .max(30)
+  .optional()
+  .nullable();
+
 // ── Query schemas ──
 
 export const adminSkillsQuerySchema = z.object({
@@ -93,6 +102,10 @@ export const createPositionSchema = z.object({
   pa: z.number({ message: "pa requis" }).int(),
   av: z.number({ message: "av requis" }).int(),
   keywords: z.string().optional().nullable(),
+  // Accès montée de niveau : CSV de codes catégorie (G/A/S/P/M ; F toléré,
+  // normalisé en S côté lecture). "" = pool vide renseigné, null = non géré.
+  primarySkills: skillAccessCsv,
+  secondarySkills: skillAccessCsv,
   skillSlugs: z.array(z.string()).optional(),
 });
 
@@ -107,6 +120,8 @@ export const updatePositionSchema = z.object({
   pa: z.number().int().optional(),
   av: z.number().int().optional(),
   keywords: z.string().optional().nullable(),
+  primarySkills: skillAccessCsv,
+  secondarySkills: skillAccessCsv,
   skillSlugs: z.array(z.string()).optional(),
 });
 

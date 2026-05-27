@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 import SkillSelector from "../SkillSelector";
+import SkillAccessSelector from "../SkillAccessSelector";
 import {
   RULESET_OPTIONS,
   DEFAULT_RULESET,
@@ -61,6 +62,8 @@ export default function NewPositionPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillSlugs, setSelectedSkillSlugs] = useState<string[]>([]);
+  const [primarySkills, setPrimarySkills] = useState("");
+  const [secondarySkills, setSecondarySkills] = useState("");
   const [rulesetFilter, setRulesetFilter] = useState<Ruleset>(DEFAULT_RULESET);
   const filteredRosters = rosters.filter((r) => !rulesetFilter || r.ruleset === rulesetFilter);
 
@@ -133,6 +136,8 @@ export default function NewPositionPage() {
         pa: parseInt(formData.get("pa") as string),
         av: parseInt(formData.get("av") as string),
         keywords: formData.get("keywords") as string || null,
+        primarySkills,
+        secondarySkills,
         skillSlugs: selectedSkillSlugs,
       };
       await postJSON("/admin/data/positions", data);
@@ -296,6 +301,20 @@ export default function NewPositionPage() {
             <p className="text-xs text-gray-500 mt-1">
               Mots-clés pour cette position (ex: elite, passive, etc.)
             </p>
+          </div>
+          <div className="col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 border rounded bg-gray-50">
+            <SkillAccessSelector
+              label="Accès primaire"
+              value={primarySkills}
+              onChange={setPrimarySkills}
+              hint="Catégories accessibles à coût réduit en montée de niveau."
+            />
+            <SkillAccessSelector
+              label="Accès secondaire"
+              value={secondarySkills}
+              onChange={setSecondarySkills}
+              hint="Catégories accessibles (coût majoré). Laisser vide si la position n'a pas d'accès."
+            />
           </div>
           <div className="col-span-3">
             {skills.length > 0 ? (

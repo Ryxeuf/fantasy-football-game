@@ -107,6 +107,19 @@ export function checkSkillAccess(params: {
   return pool.has(skillCode) ? "ok" : "out-of-pool";
 }
 
+/** Ordre canonique d'affichage/stockage des codes catégorie. */
+const CODE_ORDER: readonly SkillCategoryCode[] = ["G", "A", "S", "P", "M"];
+
+/**
+ * Normalise une saisie d'accès vers une CSV canonique ordonnée (`"G,S"`).
+ * Replie F→S, dédoublonne, ignore les caractères invalides. `""` -> `""`.
+ * Sert à nettoyer les saisies admin avant stockage.
+ */
+export function toCanonicalAccessCsv(csv: string): string {
+  const set = parseAccessCsv(csv);
+  return CODE_ORDER.filter((c) => set.has(c)).join(",");
+}
+
 /**
  * Code catégorie d'une skill par `slug` + `ruleset`, via la table `Skill`
  * (source de vérité, slugs kebab-case). `null` si introuvable ou catégorie

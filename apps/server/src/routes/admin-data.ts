@@ -12,7 +12,25 @@ import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
+import { toCanonicalAccessCsv } from "../services/skill-access";
 import { validate, validateQuery } from "../middleware/validate";
+
+/**
+ * Normalise une saisie d'accès admin pour le stockage Position :
+ *   - `undefined` -> `undefined` (Prisma : champ ignoré, pas d'écrasement)
+ *   - `null`      -> `null` (accès non géré)
+ *   - string      -> CSV canonique ordonnée (F→S, dédup), `""` autorisé.
+ */
+function normalizeAccessInput(
+  v: string | null | undefined,
+): string | null | undefined {
+  if (v === undefined || v === null) return v;
+  // Vide après normalisation -> null (accès non géré) plutot que "" : evite
+  // qu'un edit admin laissant les cases vides force un pool vide (et active la
+  // validation) sur une position jusque-la non gérée (ex: season_2).
+  const csv = toCanonicalAccessCsv(v);
+  return csv === "" ? null : csv;
+}
 import {
   adminSkillsQuerySchema,
   adminRostersQuerySchema,
@@ -759,7 +777,7 @@ router.get("/positions/:id", async (req, res) => {
 
 router.post("/positions", validate(createPositionSchema), async (req, res) => {
   try {
-    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
+    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, skillSlugs } = req.body;
 
     const roster = await prisma.roster.findUnique({
       where: { id: rosterId },
@@ -786,6 +804,8 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
         pa,
         av,
         keywords: keywords || null,
+        primarySkills: normalizeAccessInput(primarySkills),
+        secondarySkills: normalizeAccessInput(secondarySkills),
         skills: {
           create: skillIds.map((skillId) => ({
             skill: {
@@ -827,7 +847,7 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
 
 router.put("/positions/:id", validate(updatePositionSchema), async (req, res) => {
   try {
-    const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
+    const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, skillSlugs } = req.body;
 
     const previous = await prisma.position.findUnique({
       where: { id: req.params.id },
@@ -874,6 +894,8 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
           pa,
           av,
           keywords: keywords || null,
+          primarySkills: normalizeAccessInput(primarySkills),
+          secondarySkills: normalizeAccessInput(secondarySkills),
           skills: {
             create: skillIds.map((skillId) => ({
               skill: {
@@ -981,6 +1003,8 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
         pa: sourcePosition.pa,
         av: sourcePosition.av,
         keywords: sourcePosition.keywords,
+        primarySkills: sourcePosition.primarySkills,
+        secondarySkills: sourcePosition.secondarySkills,
         skills: {
           create: Array.from(targetIdBySlug.values()).map((skillId) => ({
             skill: { connect: { id: skillId } },
