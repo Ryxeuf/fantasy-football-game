@@ -7,6 +7,15 @@ import LatestBlogPosts from "./components/LatestBlogPosts";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 
+// Placeholders flous (16px) générés depuis les illustrations : affichés
+// instantanément pendant le chargement -> fondu progressif au lieu d'un vide.
+const BLUR_ROSTERS =
+  "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADwAQCdASoQABAAAwBSJQBOgMWv3hpvliAA/usmQEkRWvMJoCFpv6NujvLqVZUE46/Ob8WflY4kjDvycWr+x9Z9iLyIn6sVQLluCbwQfCATGyF+9Olf7MzrTK/SbmGj9wJK/55HdRfloYD2GExEwJasIAA=";
+const BLUR_STAR_PLAYERS =
+  "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAABwAgCdASoQABAAAwBSJZgCdAYuvvu78e5AvMAAAP7rhb++TW68TIlRZ8IoNji6exbqz16065yk6oWxiZKdZ7NVnpF480cbNV6cKhBx5PC98JR9Q+se82ptjHOz+TCADcC1B0Pzv04btCAdM/BskU3HE3YGAAAA";
+const BLUR_EXPORT_PDF =
+  "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAAAQAgCdASoQABAAAwBSJYgCdAEPgC+/ZmAAAP7wOyGFDOABt3K1js84WYwgiQ4YcayeIMmjsrFRAIR54IjiCLXEMG2Hm/MpSb5Z2N8zmm3k4pZ8A+Nfj5gVdn13CTYQ1UALdOu4wu8t4/Viq/x8cGyRTccTdlUAAAA=";
+
 export default function LandingPage() {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
@@ -150,8 +159,10 @@ export default function LandingPage() {
                 <Image
                   src="/images/rosters.webp"
                   alt="Rosters Blood Bowl"
-                  width={400}
-                  height={160}
+                  width={320}
+                  height={320}
+                  placeholder="blur"
+                  blurDataURL={BLUR_ROSTERS}
                   className="h-full w-full object-contain group-hover:scale-105 transition-transform"
                 />
               </div>
@@ -170,8 +181,10 @@ export default function LandingPage() {
                 <Image
                   src="/images/star-players.webp"
                   alt="Star Players Blood Bowl"
-                  width={400}
-                  height={160}
+                  width={320}
+                  height={320}
+                  placeholder="blur"
+                  blurDataURL={BLUR_STAR_PLAYERS}
                   className="h-full w-full object-contain group-hover:scale-105 transition-transform"
                 />
               </div>
@@ -229,8 +242,10 @@ export default function LandingPage() {
                 <Image
                   src="/images/export-pdf.webp"
                   alt="Export PDF roster"
-                  width={400}
-                  height={160}
+                  width={320}
+                  height={320}
+                  placeholder="blur"
+                  blurDataURL={BLUR_EXPORT_PDF}
                   className="h-full w-full object-contain"
                 />
               </div>
