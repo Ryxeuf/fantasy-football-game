@@ -53,10 +53,10 @@ async function ensureTeamOwner(
   userId: string,
   teamId: string,
   res: Response,
-): Promise<{ ownerId: string } | null> {
+): Promise<{ ownerId: string; roster: string; ruleset: string } | null> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    select: { ownerId: true },
+    select: { ownerId: true, roster: true, ruleset: true },
   });
   if (!team) {
     sendError(res, "Equipe introuvable", 404);
@@ -110,13 +110,38 @@ export async function handleListPendingAdvancements(
     orderBy: { createdAt: "desc" },
   });
 
-  const teamPlayerIds = new Set(
-    (
-      await prisma.teamPlayer.findMany({
-        where: { teamId },
-        select: { id: true },
-      })
-    ).map((p: { id: string }) => p.id),
+  const teamPlayers = await prisma.teamPlayer.findMany({
+    where: { teamId },
+    select: { id: true, position: true },
+  });
+  const positionByPlayerId = new Map<string, string>(
+    teamPlayers.map((p: { id: string; position: string }) => [
+      p.id,
+      p.position,
+    ]),
+  );
+  const teamPlayerIds = new Set(positionByPlayerId.keys());
+
+  // Accès primaire/secondaire par slug de position (pour le picker filtré
+  // cote UI). Une seule requete pour le roster+ruleset de l'equipe.
+  const positions = await prisma.position.findMany({
+    where: { roster: { slug: team.roster, ruleset: team.ruleset as never } },
+    select: { slug: true, primarySkills: true, secondarySkills: true },
+  });
+  const accessBySlug = new Map<
+    string,
+    { primarySkills: string | null; secondarySkills: string | null }
+  >(
+    positions.map(
+      (p: {
+        slug: string;
+        primarySkills: string | null;
+        secondarySkills: string | null;
+      }) => [
+        p.slug,
+        { primarySkills: p.primarySkills, secondarySkills: p.secondarySkills },
+      ],
+    ),
   );
 
   // Deduplique par teamPlayerId : on garde l'entree la plus recente
@@ -132,6 +157,9 @@ export async function handleListPendingAdvancements(
     advancementsTaken: number;
     nextAdvancementCost: number;
     createdAt: Date;
+    position: string | null;
+    primarySkills: string | null;
+    secondarySkills: string | null;
   }> = [];
   for (const seq of sequences) {
     const choices = parsePendingChoices(seq.pendingChoices);
@@ -139,6 +167,8 @@ export async function handleListPendingAdvancements(
       if (!teamPlayerIds.has(c.teamPlayerId)) continue;
       if (seen.has(c.teamPlayerId)) continue;
       seen.add(c.teamPlayerId);
+      const positionSlug = positionByPlayerId.get(c.teamPlayerId) ?? null;
+      const access = positionSlug ? accessBySlug.get(positionSlug) : undefined;
       items.push({
         sequenceId: seq.id,
         matchId: seq.matchId,
@@ -149,11 +179,14 @@ export async function handleListPendingAdvancements(
         advancementsTaken: c.advancementsTaken,
         nextAdvancementCost: c.nextAdvancementCost,
         createdAt: seq.createdAt,
+        position: positionSlug,
+        primarySkills: access?.primarySkills ?? null,
+        secondarySkills: access?.secondarySkills ?? null,
       });
     }
   }
 
-  sendSuccess(res, { teamId, items });
+  sendSuccess(res, { teamId, ruleset: team.ruleset, items });
 }
 
 /**

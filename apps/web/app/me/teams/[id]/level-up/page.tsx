@@ -36,11 +36,47 @@ interface PendingAdvancementItem {
   advancementsTaken: number;
   nextAdvancementCost: number;
   createdAt: string;
+  // Accès primaire/secondaire de la position (CSV codes G/A/S/P/M).
+  // null = non renseigné -> picker non filtré (saisie libre).
+  position: string | null;
+  primarySkills: string | null;
+  secondarySkills: string | null;
 }
 
 interface PendingResponse {
   teamId: string;
+  ruleset: string;
   items: PendingAdvancementItem[];
+}
+
+interface SkillCatalogItem {
+  slug: string;
+  nameFr: string;
+  category: string;
+}
+
+interface SkillsResponse {
+  skills: SkillCatalogItem[];
+}
+
+/** Nom de catégorie DB -> code canonique (aligné serveur skill-access.ts). */
+const CATEGORY_CODE: Record<string, string> = {
+  General: "G",
+  Agility: "A",
+  Strength: "S",
+  Passing: "P",
+  Mutation: "M",
+};
+
+/** Parse un CSV d'accès en Set de codes (robuste "G,S" / "GS" ; F->S). */
+function parseAccess(csv: string | null): Set<string> {
+  const out = new Set<string>();
+  if (!csv) return out;
+  for (const ch of csv.toUpperCase()) {
+    if (ch === "F") out.add("S");
+    else if ("GASPM".includes(ch)) out.add(ch);
+  }
+  return out;
 }
 
 interface ApplyResponse {
@@ -73,6 +109,7 @@ export default function LevelUpPage() {
   const teamId = typeof params.id === "string" ? params.id : "";
 
   const [items, setItems] = useState<PendingAdvancementItem[]>([]);
+  const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +128,16 @@ export default function LevelUpPage() {
         `/team/${teamId}/pending-advancements`,
       );
       setItems(data.items ?? []);
+      // Catalogue de skills pour le ruleset de l'equipe -> picker filtre.
+      // Echec non bloquant : le formulaire retombe sur la saisie libre.
+      try {
+        const skills = await apiRequest<SkillsResponse>(
+          `/skills?ruleset=${encodeURIComponent(data.ruleset ?? "season_3")}`,
+        );
+        setCatalog(skills.skills ?? []);
+      } catch {
+        setCatalog([]);
+      }
     } catch (e: unknown) {
       setError(
         e instanceof Error ? e.message : t.leagues.formSubmitError,
@@ -152,6 +199,7 @@ export default function LevelUpPage() {
               key={it.teamPlayerId}
               item={it}
               teamId={teamId}
+              catalog={catalog}
               onApplied={loadItems}
             />
           ))}
@@ -164,10 +212,11 @@ export default function LevelUpPage() {
 interface PlayerRowProps {
   item: PendingAdvancementItem;
   teamId: string;
+  catalog: SkillCatalogItem[];
   onApplied: () => void;
 }
 
-function PlayerRow({ item, teamId, onApplied }: PlayerRowProps) {
+function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const { t } = useLanguage();
   const [type, setType] = useState<AdvancementType>("random-primary");
   const [skillSlug, setSkillSlug] = useState("");
@@ -180,6 +229,38 @@ function PlayerRow({ item, teamId, onApplied }: PlayerRowProps) {
     [type, item.advancementsTaken],
   );
   const canAfford = item.spp >= cost;
+
+  // Accès renseigné ? (sinon -> saisie libre, rétro-compat season_2).
+  const hasAccess =
+    item.primarySkills != null || item.secondarySkills != null;
+
+  // Pool de skills éligibles pour le type courant : on filtre le catalogue
+  // par code catégorie du pool primaire/secondaire de la position.
+  const eligibleSkills = useMemo(() => {
+    if (!hasAccess || catalog.length === 0) return [];
+    const isPrimary = type === "primary" || type === "random-primary";
+    const pool = parseAccess(
+      isPrimary ? item.primarySkills : item.secondarySkills,
+    );
+    const seen = new Set<string>();
+    return catalog
+      .filter((s) => {
+        const code = CATEGORY_CODE[s.category];
+        if (!code || !pool.has(code)) return false;
+        if (seen.has(s.slug)) return false; // dédoublonne (multi-ruleset)
+        seen.add(s.slug);
+        return true;
+      })
+      .sort((a, b) => a.nameFr.localeCompare(b.nameFr));
+  }, [hasAccess, catalog, type, item.primarySkills, item.secondarySkills]);
+
+  // Si le type change et que la skill sélectionnée n'est plus éligible, reset.
+  useEffect(() => {
+    if (!hasAccess) return;
+    if (skillSlug && !eligibleSkills.some((s) => s.slug === skillSlug)) {
+      setSkillSlug("");
+    }
+  }, [hasAccess, eligibleSkills, skillSlug]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -294,18 +375,39 @@ function PlayerRow({ item, teamId, onApplied }: PlayerRowProps) {
           </label>
           <label className="block">
             <span className="text-xs font-medium text-gray-700">
-              {t.teams.levelUpSkillLabel ?? "Skill (slug)"}
+              {t.teams.levelUpSkillLabel ?? "Compétence"}
             </span>
-            <input
-              data-testid={`level-up-skill-${item.teamPlayerId}`}
-              type="text"
-              required
-              maxLength={64}
-              value={skillSlug}
-              onChange={(e) => setSkillSlug(e.target.value)}
-              placeholder="block, dodge, sure-hands..."
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-            />
+            {hasAccess ? (
+              <select
+                data-testid={`level-up-skill-${item.teamPlayerId}`}
+                required
+                value={skillSlug}
+                onChange={(e) => setSkillSlug(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white"
+              >
+                <option value="">
+                  {eligibleSkills.length === 0
+                    ? "— aucune compétence pour ce type —"
+                    : "— choisir —"}
+                </option>
+                {eligibleSkills.map((s) => (
+                  <option key={s.slug} value={s.slug}>
+                    {s.nameFr}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                data-testid={`level-up-skill-${item.teamPlayerId}`}
+                type="text"
+                required
+                maxLength={64}
+                value={skillSlug}
+                onChange={(e) => setSkillSlug(e.target.value)}
+                placeholder="block, dodge, sure-hands..."
+                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              />
+            )}
           </label>
           <button
             type="submit"
