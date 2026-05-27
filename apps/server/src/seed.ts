@@ -9,6 +9,7 @@ import {
   type Ruleset,
 } from "../../../packages/game-engine/src/rosters/positions";
 import { STAR_PLAYERS_BY_RULESET } from "../../../packages/game-engine/src/rosters/star-players";
+import { SKILL_ACCESS_SEASON3 } from "../../../packages/game-engine/src/rosters/skill-access-season3";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
 import {
   SEASON_3_NEW_SKILLS,
@@ -332,6 +333,13 @@ async function main() {
             },
           });
 
+          // Accès primaire/secondaire (season_3 uniquement). Absent du map
+          // → null en DB → validation de level-up désactivée pour la position.
+          const access =
+            ruleset === "season_3"
+              ? SKILL_ACCESS_SEASON3[positionDef.slug]
+              : undefined;
+
           const positionData = {
             rosterId: roster.id,
             slug: positionDef.slug,
@@ -344,6 +352,8 @@ async function main() {
             ag: positionDef.ag,
             pa: positionDef.pa,
             av: positionDef.av,
+            primarySkills: access ? access.primary : null,
+            secondarySkills: access ? access.secondary : null,
           };
 
           let position;

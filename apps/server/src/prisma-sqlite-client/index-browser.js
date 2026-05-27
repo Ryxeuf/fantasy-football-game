@@ -388,6 +388,8 @@ exports.Prisma.PositionScalarFieldEnum = {
   pa: 'pa',
   av: 'av',
   keywords: 'keywords',
+  primarySkills: 'primarySkills',
+  secondarySkills: 'secondarySkills',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

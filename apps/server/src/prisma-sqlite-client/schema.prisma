@@ -449,22 +449,24 @@ model Skill {
 // Utilisé par `getLinemanStats` pour peupler les journeymen et par
 // `/api/positions` (qui inclut la relation `skills`).
 model Position {
-  id          String   @id @default(cuid())
-  roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
-  rosterId    String
-  slug        String
-  displayName String
-  cost        Int
-  min         Int
-  max         Int
-  ma          Int
-  st          Int
-  ag          Int
-  pa          Int
-  av          Int
-  keywords    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  roster          Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId        String
+  slug            String
+  displayName     String
+  cost            Int
+  min             Int
+  max             Int
+  ma              Int
+  st              Int
+  ag              Int
+  pa              Int
+  av              Int
+  keywords        String?
+  primarySkills   String?
+  secondarySkills String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   skills PositionSkill[]
 

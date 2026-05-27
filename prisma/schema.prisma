@@ -523,6 +523,12 @@ model Position {
   pa          Int // Passing
   av          Int // Armour Value
   keywords    String? // Mots-clés séparés par des virgules (ex: "elite,passive")
+  // Accès aux compétences en montée de niveau (BB Season 3). CSV de codes
+  // catégorie "G,A,S,P,M". `null` = non renseigné (ex: season_2) → validation
+  // désactivée. `""` = renseigné mais pool vide (ex: positions animales sans
+  // accès primaire). Source : data/saison3/team/*.md (F=Force normalisé en S).
+  primarySkills   String? // Catégories accessibles en primaire (ex: "G,S")
+  secondarySkills String? // Catégories accessibles en secondaire (ex: "A")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

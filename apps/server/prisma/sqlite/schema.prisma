@@ -463,6 +463,8 @@ model Position {
   pa          Int
   av          Int
   keywords    String?
+  primarySkills   String?
+  secondarySkills String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
