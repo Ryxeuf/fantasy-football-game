@@ -1,3 +1,10 @@
+## [1.146.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.1...v1.146.2) (2026-05-27)
+
+
+### 🐛 Bug Fixes
+
+* **rosters:** applique les 4 items errata mai 2026 restants (season_3) ([9f1e85e](https://github.com/Ryxeuf/fantasy-football-game/commit/9f1e85e950c71789be816a7ede9dad485f1955b3))
+
 ## [1.146.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.0...v1.146.1) (2026-05-27)
 
 
