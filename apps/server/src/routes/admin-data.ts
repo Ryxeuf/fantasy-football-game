@@ -7,10 +7,11 @@
  */
 
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
-import { resolveRuleset } from "../utils/ruleset-helpers";
+import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
 import { validate, validateQuery } from "../middleware/validate";
 import {
   adminSkillsQuerySchema,
@@ -49,6 +50,45 @@ async function safeAudit(
   partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
 ): Promise<void> {
   await safeRecordAdminActionFromRequest(prisma, req, partial);
+}
+
+/**
+ * Erreur levee quand un slug de competence n'existe pas pour le ruleset cible.
+ * Mappee en HTTP 400 par les handlers (cf. `instanceof` dans les catch).
+ */
+class SkillResolutionError extends Error {
+  constructor(public readonly missingSlugs: readonly string[]) {
+    super(`Compétences introuvables pour ce ruleset : ${missingSlugs.join(", ")}`);
+    this.name = "SkillResolutionError";
+  }
+}
+
+/**
+ * Resout une liste de slugs de competences en IDs `Skill`.
+ *
+ * `Skill` porte une contrainte `@@unique([slug, ruleset])` : un meme slug
+ * (ex: "bone-head") existe pour plusieurs rulesets. Un `connect: { slug }`
+ * est donc ambigu et rejete par Prisma ("needs at least one of id or
+ * slug_ruleset"). On resout les IDs dans le ruleset du roster et on connecte
+ * par `id`. La resolution se fait AVANT toute operation destructive pour
+ * eviter de vider les relations en cas de slug invalide.
+ */
+async function resolveSkillIdsForRuleset(
+  skillSlugs: readonly string[] | undefined | null,
+  ruleset: Ruleset,
+): Promise<string[]> {
+  if (!skillSlugs || skillSlugs.length === 0) return [];
+  const uniqueSlugs = Array.from(new Set(skillSlugs));
+  const skills = await prisma.skill.findMany({
+    where: { slug: { in: uniqueSlugs }, ruleset },
+    select: { id: true, slug: true },
+  });
+  const idBySlug = new Map(skills.map((s: { id: string; slug: string }) => [s.slug, s.id]));
+  const missing = uniqueSlugs.filter((slug) => !idBySlug.has(slug));
+  if (missing.length > 0) {
+    throw new SkillResolutionError(missing);
+  }
+  return uniqueSlugs.map((slug) => idBySlug.get(slug) as string);
 }
 
 // =============================================================================
@@ -721,6 +761,17 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
   try {
     const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
 
+    const roster = await prisma.roster.findUnique({
+      where: { id: rosterId },
+      select: { ruleset: true },
+    });
+    if (!roster) {
+      return res.status(404).json({ error: "Roster non trouvé" });
+    }
+
+    // Resout les slugs en IDs dans le ruleset du roster (slug seul est ambigu)
+    const skillIds = await resolveSkillIdsForRuleset(skillSlugs, roster.ruleset);
+
     const position = await prisma.position.create({
       data: {
         rosterId,
@@ -736,11 +787,11 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
         av,
         keywords: keywords || null,
         skills: {
-          create: skillSlugs?.map((skillSlug: string) => ({
+          create: skillIds.map((skillId) => ({
             skill: {
-              connect: { slug: skillSlug }
-            }
-          })) || [],
+              connect: { id: skillId },
+            },
+          })),
         },
       },
       include: {
@@ -763,6 +814,9 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
     });
     res.status(201).json({ position });
   } catch (error: any) {
+    if (error instanceof SkillResolutionError) {
+      return res.status(400).json({ error: error.message });
+    }
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Cette position existe déjà pour ce roster" });
     }
@@ -788,47 +842,58 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
         ag: true,
         pa: true,
         av: true,
+        roster: { select: { ruleset: true } },
       },
     });
 
-    // Supprimer les anciennes relations de compétences
-    await prisma.positionSkill.deleteMany({
-      where: { positionId: req.params.id },
-    });
+    if (!previous) {
+      return res.status(404).json({ error: "Position non trouvée" });
+    }
 
-    // Créer les nouvelles relations
-    const position = await prisma.position.update({
-      where: { id: req.params.id },
-      data: {
-        displayName,
-        cost,
-        min,
-        max,
-        ma,
-        st,
-        ag,
-        pa,
-        av,
-        keywords: keywords || null,
-        skills: {
-          create: skillSlugs?.map((skillSlug: string) => ({
-            skill: {
-              connect: { slug: skillSlug }
-            }
-          })) || [],
+    // Resout les slugs en IDs AVANT toute operation destructive : si un slug
+    // est invalide, on echoue ici sans avoir vide les relations existantes.
+    const skillIds = await resolveSkillIdsForRuleset(skillSlugs, previous.roster.ruleset);
+    const { roster: _previousRoster, ...previousScalars } = previous;
+
+    // Suppression + recreation des relations dans une transaction atomique :
+    // une erreur sur l'update rollback le deleteMany (plus de vidage partiel).
+    const position = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.positionSkill.deleteMany({
+        where: { positionId: req.params.id },
+      });
+      return tx.position.update({
+        where: { id: req.params.id },
+        data: {
+          displayName,
+          cost,
+          min,
+          max,
+          ma,
+          st,
+          ag,
+          pa,
+          av,
+          keywords: keywords || null,
+          skills: {
+            create: skillIds.map((skillId) => ({
+              skill: {
+                connect: { id: skillId },
+              },
+            })),
+          },
         },
-      },
-      include: {
-        skills: {
-          include: { skill: true },
+        include: {
+          skills: {
+            include: { skill: true },
+          },
         },
-      },
+      });
     });
     await safeAudit(req, {
       action: "position.update",
       entity: "Position",
       entityId: position.id,
-      oldValue: previous,
+      oldValue: previousScalars,
       newValue: {
         slug: position.slug,
         displayName: position.displayName,
@@ -845,6 +910,9 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
     });
     res.json({ position });
   } catch (error: any) {
+    if (error instanceof SkillResolutionError) {
+      return res.status(400).json({ error: error.message });
+    }
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Position non trouvée" });
     }

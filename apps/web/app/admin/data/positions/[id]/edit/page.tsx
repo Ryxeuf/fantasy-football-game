@@ -113,11 +113,16 @@ export default function EditPositionPage() {
         router.push("/");
         return;
       }
-      const [{ position: posData }, skillsData] = await Promise.all([
-        fetchJSON(`/admin/data/positions/${positionId}`),
-        fetchJSON("/admin/data/skills"),
-      ]);
+      const { position: posData } = await fetchJSON(
+        `/admin/data/positions/${positionId}`,
+      );
       setPosition(posData);
+      // Filtrer les compétences sur le ruleset de la position : un même slug
+      // existe dans plusieurs rulesets, sans ce filtre la liste est dédoublée.
+      const ruleset = posData?.roster?.ruleset;
+      const skillsData = await fetchJSON(
+        `/admin/data/skills${ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : ""}`,
+      );
       const skillsArray = skillsData?.skills || skillsData || [];
       if (Array.isArray(skillsArray)) {
         const validSkills = skillsArray.filter(s => s && s.slug);

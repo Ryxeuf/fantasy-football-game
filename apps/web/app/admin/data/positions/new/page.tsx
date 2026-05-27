@@ -68,6 +68,28 @@ export default function NewPositionPage() {
     loadData();
   }, []);
 
+  // Recharger les compétences quand le ruleset change : un même slug existe
+  // dans plusieurs rulesets, donc on ne liste que celles du ruleset choisi
+  // (sans ce filtre la liste serait dédoublée).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const skillsData = await fetchJSON(
+          `/admin/data/skills?ruleset=${encodeURIComponent(rulesetFilter)}`,
+        );
+        if (cancelled) return;
+        const skillsArray = skillsData?.skills || skillsData || [];
+        setSkills(Array.isArray(skillsArray) ? skillsArray.filter((s) => s && s.slug) : []);
+      } catch (e: any) {
+        if (!cancelled) setError(e.message || "Erreur");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rulesetFilter]);
+
   const loadData = async () => {
     setLoading(true);
     setError(null);
@@ -83,18 +105,8 @@ export default function NewPositionPage() {
         router.push("/");
         return;
       }
-      const [{ rosters: rostData }, skillsData] = await Promise.all([
-        fetchJSON("/admin/data/rosters"),
-        fetchJSON("/admin/data/skills"),
-      ]);
+      const { rosters: rostData } = await fetchJSON("/admin/data/rosters");
       setRosters(rostData);
-      const skillsArray = skillsData?.skills || skillsData || [];
-      if (Array.isArray(skillsArray)) {
-        const validSkills = skillsArray.filter(s => s && s.slug);
-        setSkills(validSkills);
-      } else {
-        setSkills([]);
-      }
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -156,6 +168,7 @@ export default function NewPositionPage() {
               value={rulesetFilter}
               onChange={(e) => {
                 setRulesetFilter(e.target.value as Ruleset);
+                setSelectedSkillSlugs([]);
               }}
               className="w-full border rounded px-3 py-2"
             >
