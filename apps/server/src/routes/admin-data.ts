@@ -948,8 +948,26 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
       return res.status(404).json({ error: "Roster cible non trouvé" });
     }
 
-    // Dupliquer la position
-    const newPosition = await prisma.position.create({
+    // Les skillId source appartiennent au ruleset source ; on ne peut pas les
+    // réutiliser tels quels si le roster cible est d'un autre ruleset (chaque
+    // slug a un id distinct par ruleset). On remappe par slug dans le ruleset
+    // cible ; les skills sans équivalent dans ce ruleset sont ignorés et
+    // signalés dans la réponse.
+    const sourceSlugs: string[] = sourcePosition.skills.map(
+      (ps: { skill: { slug: string } }) => ps.skill.slug,
+    );
+    const targetSkills = await prisma.skill.findMany({
+      where: { slug: { in: sourceSlugs }, ruleset: targetRoster.ruleset },
+      select: { id: true, slug: true },
+    });
+    const targetIdBySlug = new Map(
+      targetSkills.map((s: { id: string; slug: string }) => [s.slug, s.id]),
+    );
+    const skippedSlugs = sourceSlugs.filter((slug) => !targetIdBySlug.has(slug));
+
+    // Dupliquer la position + ses skills (résolus dans le ruleset cible) en une
+    // seule opération atomique.
+    const result = await prisma.position.create({
       data: {
         rosterId: targetRosterId,
         slug: sourcePosition.slug,
@@ -963,21 +981,12 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
         pa: sourcePosition.pa,
         av: sourcePosition.av,
         keywords: sourcePosition.keywords,
-      },
-    });
-
-    // Dupliquer les skills
-    for (const positionSkill of sourcePosition.skills) {
-      await prisma.positionSkill.create({
-        data: {
-          positionId: newPosition.id,
-          skillId: positionSkill.skillId,
+        skills: {
+          create: Array.from(targetIdBySlug.values()).map((skillId) => ({
+            skill: { connect: { id: skillId } },
+          })),
         },
-      });
-    }
-
-    const result = await prisma.position.findUnique({
-      where: { id: newPosition.id },
+      },
       include: {
         roster: true,
         skills: {
@@ -989,16 +998,29 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
     await safeAudit(req, {
       action: "position.duplicate",
       entity: "Position",
-      entityId: newPosition.id,
+      entityId: result.id,
       oldValue: { sourceId: sourcePosition.id, sourceRosterId: sourcePosition.rosterId, slug: sourcePosition.slug },
-      newValue: { rosterId: targetRosterId, slug: newPosition.slug, skillCount: sourcePosition.skills.length },
+      newValue: {
+        rosterId: targetRosterId,
+        slug: result.slug,
+        skillCount: result.skills.length,
+        skippedSkills: skippedSlugs,
+      },
     });
+
+    const message =
+      skippedSlugs.length > 0
+        ? `Position dupliquée vers le roster ${targetRoster.name}. Compétences sans équivalent dans le ruleset cible, ignorées : ${skippedSlugs.join(", ")}`
+        : `Position dupliquée avec succès vers le roster ${targetRoster.name}`;
 
     res.status(201).json({
       position: result,
-      message: `Position dupliquée avec succès vers le roster ${targetRoster.name}`,
+      message,
     });
   } catch (error: any) {
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Une position avec ce slug existe déjà dans le roster cible" });
+    }
     serverLog.error("Erreur lors de la duplication de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
