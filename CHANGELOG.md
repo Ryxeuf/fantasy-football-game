@@ -1,3 +1,20 @@
+## [1.146.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.145.0...v1.146.0) (2026-05-27)
+
+
+### ✨ Features
+
+* **admin:** édition de l'accès primaire/secondaire des positions ([91a46ac](https://github.com/Ryxeuf/fantasy-football-game/commit/91a46ac9bcf482efdc6d296e99f2d47774f0aca3))
+* **level-up:** picker de compétence filtré sur le pool primaire/secondaire ([ed2b531](https://github.com/Ryxeuf/fantasy-football-game/commit/ed2b531cdc6ca7e6eff27b77f6f93100e068b198))
+* **level-up:** valide l'accès primaire/secondaire au montage de niveau ([c4a2450](https://github.com/Ryxeuf/fantasy-football-game/commit/c4a2450846bd4a5b7cb94c677891ffc64d5483bd))
+* **positions:** ajoute l'accès compétences primaire/secondaire au modèle Position ([7711701](https://github.com/Ryxeuf/fantasy-football-game/commit/771170197118649edc282763d5612b8fd6901ee1))
+* **rosters:** affiche l'accès primaire/secondaire + doc ([0d480b0](https://github.com/Ryxeuf/fantasy-football-game/commit/0d480b0d9782bfdbd1c429fad6e022d20307e8cd))
+* **rosters:** peuple l'accès primaire/secondaire season_3 (+ errata mai 2026) ([4aded02](https://github.com/Ryxeuf/fantasy-football-game/commit/4aded0222efda49ae33d1763404c513a92adb497))
+
+
+### 🐛 Bug Fixes
+
+* **rosters:** lettres d'accès dépendantes de la langue (Force = F en FR) ([8379c87](https://github.com/Ryxeuf/fantasy-football-game/commit/8379c873ce7f81bf01d50c0d3dc76d8365e6d6a2))
+
 ## [1.145.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.144.0...v1.145.0) (2026-05-27)
 
 
