@@ -1,42 +1,178 @@
 /**
  * Accès compétences Primaire/Secondaire par position — BB Season 3.
  *
- * Pourquoi
- * --------
- * `PositionDefinition` (positions.ts) ne porte que les compétences de DÉPART.
- * L'accès en montée de niveau (catégories où le joueur peut piocher : primaire
- * vs secondaire) est encodé ici, à part, pour garder positions.ts stable et
- * isoler la donnée + sa normalisation.
+ * ⚠️ FICHIER GÉNÉRÉ par scripts/generate-skill-access-season3.ts — NE PAS
+ * éditer à la main. Source : data/saison3/team/*.md (colonnes Primaire/
+ * Secondaire), normalisée (F→S) et corrigée de l'errata de mai 2026.
+ * Pour régénérer : tsx scripts/generate-skill-access-season3.ts --write
  *
- * Format
- * ------
- *  - Clé   : slug de position (ex: "dwarf_runner"), aligné sur positions.ts.
- *  - primary / secondary : CSV de codes catégorie canoniques `G/A/S/P/M`.
- *    - `""` = pool vide renseigné (ex: positions animales sans accès primaire).
- *  - Une position ABSENTE de ce map → accès non renseigné (champ DB `null`),
- *    la validation de level-up est alors désactivée pour elle.
- *
- * Source
- * ------
- * Généré depuis `data/saison3/team/*.md` (colonnes Primaire/Secondaire) via
- * `scripts/generate-skill-access-season3.ts`. La source mélange la notation
- * française `F` (Force) et anglaise `S` (Strength) pour la même catégorie :
- * le générateur normalise `F → S`. NE PAS éditer à la main hors corrections
- * ciblées (errata) — relancer le générateur.
- *
- * Ruleset : season_3 uniquement (season_2 sans source autoritaire).
+ * Format : slug position -> { primary, secondary } en CSV de codes G/A/S/P/M.
+ * "" = pool vide renseigné (positions animales sans accès primaire).
  */
 
 export interface PositionSkillAccessS3 {
-  /** CSV codes catégorie accessibles en primaire (ex: "G,S"). "" = vide. */
   readonly primary: string;
-  /** CSV codes catégorie accessibles en secondaire (ex: "A"). "" = vide. */
   readonly secondary: string;
 }
 
-/**
- * Rempli par C3 (`scripts/generate-skill-access-season3.ts`).
- * Stub vide pour C1 → toutes les positions season_3 restent `null` en DB
- * tant que les données ne sont pas générées (validation désactivée).
- */
-export const SKILL_ACCESS_SEASON3: Record<string, PositionSkillAccessS3> = {};
+export const SKILL_ACCESS_SEASON3: Record<string, PositionSkillAccessS3> = {
+  "amazon_guerriere_aigle": { primary: "G", secondary: "S,A" },
+  "amazon_guerriere_jaguar": { primary: "G,S", secondary: "A" },
+  "amazon_guerriere_piranha": { primary: "G,A", secondary: "S" },
+  "amazon_guerriere_python": { primary: "G,P", secondary: "S,A" },
+  "black_orc_malabar_gobelin": { primary: "A,S", secondary: "G,P,S" },
+  "black_orc_orque_noir": { primary: "G,S", secondary: "A,S" },
+  "black_orc_troll_entraine": { primary: "S", secondary: "A,G,P" },
+  "chaos_chosen_bloqueur_elu": { primary: "G,M,S", secondary: "A,S" },
+  "chaos_chosen_minotaure": { primary: "M,S", secondary: "A,G" },
+  "chaos_chosen_ogre_du_chaos": { primary: "M,S", secondary: "A,G" },
+  "chaos_chosen_trois_quart_homme_bete": { primary: "G,M", secondary: "A,S,P" },
+  "chaos_chosen_troll_du_chaos": { primary: "M,S", secondary: "A,G,P" },
+  "chaos_dwarf_bloqueur_nain_du_chaos": { primary: "G,S", secondary: "A,S,M" },
+  "chaos_dwarf_centaure_taureau": { primary: "G,S", secondary: "A,S,M" },
+  "chaos_dwarf_forgeflamme": { primary: "G,S", secondary: "A,S,M" },
+  "chaos_dwarf_minotaure": { primary: "S,M", secondary: "A,G" },
+  "chaos_dwarf_surineur_sournois": { primary: "S,G", secondary: "A,S" },
+  "chaos_dwarf_trois_quart_hobgobelin": { primary: "S", secondary: "A,G,S" },
+  "chaos_renegade_elf_noir_renegat": { primary: "A,S,G,M", secondary: "S" },
+  "chaos_renegade_gobelin_renegat": { primary: "A,S,M", secondary: "G,P" },
+  "chaos_renegade_lanceur_humain_renegat": { primary: "S,G,M,P", secondary: "A,S" },
+  "chaos_renegade_minotaure_renegat": { primary: "S", secondary: "A,G,M" },
+  "chaos_renegade_ogre_renegat": { primary: "S", secondary: "A,G,M" },
+  "chaos_renegade_orque_renegat": { primary: "S,G,M", secondary: "A,S" },
+  "chaos_renegade_rat_ogre_renegat": { primary: "S", secondary: "A,G,M" },
+  "chaos_renegade_skaven_renegat": { primary: "S,G,M", secondary: "A,S" },
+  "chaos_renegade_trois_quart_humain_renegat": { primary: "S,G,M", secondary: "A,S" },
+  "chaos_renegade_troll_renegat": { primary: "S", secondary: "A,G,M,P" },
+  "dark_elf_assassin_elfe_noir": { primary: "A,S", secondary: "G,S" },
+  "dark_elf_blitzer_elfe_noir": { primary: "G,A", secondary: "S,P" },
+  "dark_elf_coureur_elfe_noir": { primary: "G,A,P", secondary: "S" },
+  "dark_elf_furie_elfe_noire": { primary: "G,A", secondary: "S" },
+  "dark_elf_trois_quart_elfe_noir": { primary: "A,G", secondary: "S" },
+  "dwarf_blitzer_nain": { primary: "G,S", secondary: "P" },
+  "dwarf_coureur_nain": { primary: "G,P", secondary: "A,S" },
+  "dwarf_roule_mort": { primary: "S", secondary: "G" },
+  "dwarf_trois_quart_nain": { primary: "S,G", secondary: "S" },
+  "dwarf_tueur_de_trolls": { primary: "G,S", secondary: "S" },
+  "elven_union_blitzer_elfe": { primary: "G,A", secondary: "S,P" },
+  "elven_union_lanceur_elfe": { primary: "G,A,P", secondary: "S" },
+  "elven_union_receveur_elfe": { primary: "G,A", secondary: "S" },
+  "elven_union_trois_quart_elfe": { primary: "G,A", secondary: "S" },
+  "gnome_belluaire_gnome": { primary: "A", secondary: "S,G" },
+  "gnome_gnome_illusioniste": { primary: "A,P", secondary: "S,G" },
+  "gnome_homme_arbre": { primary: "S", secondary: "A,G,P" },
+  "gnome_renard_sylvestre": { primary: "", secondary: "A" },
+  "gnome_trois_quart_gnome": { primary: "A", secondary: "S,G" },
+  "goblin_bomba": { primary: "S,P", secondary: "G,S" },
+  "goblin_cingle": { primary: "S", secondary: "A,G,S" },
+  "goblin_echassier_a_ressort": { primary: "A", secondary: "S,G" },
+  "goblin_fanatique": { primary: "S", secondary: "A,G" },
+  "goblin_gobelin": { primary: "A,S", secondary: "G,P,S" },
+  "goblin_ouligan": { primary: "A,S", secondary: "G,S" },
+  "goblin_plongeur_de_la_mort": { primary: "A", secondary: "S,G" },
+  "goblin_troll_entraine": { primary: "S", secondary: "A,G,P" },
+  "halfling_aspirant_halfling": { primary: "A", secondary: "S,G" },
+  "halfling_balaise_halfling": { primary: "A,P", secondary: "S,G" },
+  "halfling_homme_arbre_de_l_altern": { primary: "S", secondary: "A,G,P" },
+  "halfling_receveur_halfling": { primary: "A", secondary: "S,G" },
+  "high_elf_blitzer_haut_elfe": { primary: "G,A", secondary: "S,P" },
+  "high_elf_lanceur_haut_elfe": { primary: "G,A", secondary: "S" },
+  "high_elf_receveur_haut_elfe": { primary: "G,A,P", secondary: "S" },
+  "high_elf_trois_quart_haut_elfe": { primary: "G,A", secondary: "S" },
+  "human_aspirant_halfling": { primary: "A", secondary: "S,G" },
+  "human_blitzer": { primary: "G,S", secondary: "A,S" },
+  "human_lanceur": { primary: "G,P", secondary: "A,S" },
+  "human_ogre": { primary: "S", secondary: "G,A" },
+  "human_receveur": { primary: "G,A", secondary: "S,P" },
+  "human_trois_quart": { primary: "G", secondary: "A,S" },
+  "imperial_nobility_blitzer_noble": { primary: "G,A", secondary: "P,S" },
+  "imperial_nobility_garde_du_corps": { primary: "G,S", secondary: "A" },
+  "imperial_nobility_lanceur_imperial": { primary: "G,P", secondary: "A,S" },
+  "imperial_nobility_ogre": { primary: "S", secondary: "G,A" },
+  "imperial_nobility_valet_imperiale": { primary: "G", secondary: "A,S" },
+  "khorne_khorngor": { primary: "G,S,M", secondary: "A,S,P" },
+  "khorne_marauder_sanglant": { primary: "G,M", secondary: "A,S" },
+  "khorne_rabatteur_sanglant": { primary: "G,S,M", secondary: "A,S" },
+  "khorne_rejeton_sanglant": { primary: "S,M", secondary: "A,G" },
+  "lizardmen_bloqueur_saurus": { primary: "G,S", secondary: "A" },
+  "lizardmen_kroxigor": { primary: "S", secondary: "A,G" },
+  "lizardmen_skink_cameleon": { primary: "A,P", secondary: "S,G" },
+  "lizardmen_trois_quart_skink": { primary: "A", secondary: "S,G,P" },
+  "necromantic_horror_coureur_goule": { primary: "A,G", secondary: "S,P" },
+  "necromantic_horror_golem_de_chair": { primary: "G,S", secondary: "A,S" },
+  "necromantic_horror_loup_garou": { primary: "A,G", secondary: "S,P" },
+  "necromantic_horror_spectre": { primary: "G,S", secondary: "A,S" },
+  "necromantic_horror_trois_quart_zombie": { primary: "S,G", secondary: "A,S" },
+  "norse_berzerker": { primary: "G,S", secondary: "A,P" },
+  "norse_sanglier_a_biere": { primary: "", secondary: "A" },
+  "norse_trois_quart": { primary: "G", secondary: "A,P,S" },
+  "norse_ulfwerener": { primary: "G,S", secondary: "A" },
+  "norse_valkyrie": { primary: "G,A,P", secondary: "S" },
+  "norse_yeti": { primary: "S", secondary: "G,A" },
+  "nurgle_boursouffle": { primary: "G,M,S", secondary: "A,S" },
+  "nurgle_pestigor": { primary: "G,M,S", secondary: "A,S,P" },
+  "nurgle_rejeton_putride": { primary: "S", secondary: "S,G,M" },
+  "nurgle_trois_quart_putrescent": { primary: "S,G,M", secondary: "A,S" },
+  "ogre_bloqueur_ogre": { primary: "S", secondary: "A,S,G,P" },
+  "ogre_botte_nabots_ogre": { primary: "P,S", secondary: "A,S,G" },
+  "ogre_trois_quart_gnoblar": { primary: "A,S", secondary: "G" },
+  "old_world_alliance_aspirant_halfling": { primary: "A", secondary: "G,S" },
+  "old_world_alliance_blitzer_humain": { primary: "G,S", secondary: "A" },
+  "old_world_alliance_blitzer_nain": { primary: "G,S", secondary: "P" },
+  "old_world_alliance_coureur_nain": { primary: "G,P", secondary: "A,S" },
+  "old_world_alliance_homme_arbre": { primary: "S", secondary: "A,G,P" },
+  "old_world_alliance_lanceur_humain": { primary: "G,P", secondary: "A,S" },
+  "old_world_alliance_ogre": { primary: "S", secondary: "G,A" },
+  "old_world_alliance_receveur_humain": { primary: "G,A", secondary: "P,S" },
+  "old_world_alliance_trois_quart_humain": { primary: "G", secondary: "A,S" },
+  "old_world_alliance_trois_quart_nain": { primary: "S,G", secondary: "S" },
+  "old_world_alliance_tueur_de_trolls_nain": { primary: "G,S", secondary: "A" },
+  "orc_blitzer_orque": { primary: "G,S", secondary: "A,S" },
+  "orc_bloqueur_kosto": { primary: "G,S", secondary: "A,S" },
+  "orc_lanceur_orque": { primary: "G,P", secondary: "A,S" },
+  "orc_trois_quart_gobelin": { primary: "A,S", secondary: "G,P,S" },
+  "orc_trois_quart_orque": { primary: "G,S", secondary: "A,S" },
+  "orc_troll": { primary: "S", secondary: "G,A,P" },
+  "skaven_blitzer_skaven": { primary: "G,S", secondary: "A,S,M" },
+  "skaven_coureur_d_egouts": { primary: "A,S,G", secondary: "M,S" },
+  "skaven_lanceur_skaven": { primary: "G,P", secondary: "A,S,M" },
+  "skaven_rat_des_clans_skaven": { primary: "S,G", secondary: "A,M,S" },
+  "skaven_rat_ogre": { primary: "S", secondary: "A,G,M" },
+  "slann_blitzer": { primary: "A,G,S", secondary: "P" },
+  "slann_kroxigor": { primary: "S", secondary: "A,G" },
+  "slann_receveur": { primary: "A,G", secondary: "P,S" },
+  "slann_trois_quart": { primary: "G", secondary: "A,S" },
+  "snotling_chariot_a_pompe": { primary: "S", secondary: "A,G" },
+  "snotling_echassier": { primary: "A,S", secondary: "G" },
+  "snotling_lance_champis": { primary: "A,S,P", secondary: "G" },
+  "snotling_r_bondisseur": { primary: "A,S", secondary: "G" },
+  "snotling_trois_quart_snotling": { primary: "A,S", secondary: "G" },
+  "snotling_troll_entraine": { primary: "S", secondary: "A,G,P" },
+  "tomb_kings_blitzer_des_rois_des_tombes": { primary: "G,S", secondary: "A,S" },
+  "tomb_kings_gardien_des_tombes": { primary: "S", secondary: "A,G" },
+  "tomb_kings_lanceur_des_rois_des_tombes": { primary: "G,P", secondary: "A,S" },
+  "tomb_kings_trois_quart_squelette": { primary: "G", secondary: "A,S" },
+  "undead_blitzer_revenant": { primary: "G,S", secondary: "A,S" },
+  "undead_coureur_goule": { primary: "A,G", secondary: "S,P" },
+  "undead_momie": { primary: "S", secondary: "A,G" },
+  "undead_trois_quart_squelette": { primary: "G", secondary: "A,S" },
+  "undead_trois_quart_zombie": { primary: "S,G", secondary: "A,S" },
+  "underworld_blitzer_skaven": { primary: "G,M,S", secondary: "A,S" },
+  "underworld_coureur_d_egout": { primary: "A,S,G,M", secondary: "S" },
+  "underworld_gobelin_des_bas_fond": { primary: "A,S,M", secondary: "G,P,S" },
+  "underworld_lanceur_skaven": { primary: "G,M,P", secondary: "A,S" },
+  "underworld_rat_ogre": { primary: "M,S", secondary: "G,A" },
+  "underworld_skaven_du_clan_du_rat": { primary: "S,G,M", secondary: "A,S" },
+  "underworld_snotling_des_bas_fond": { primary: "A,S,M", secondary: "G" },
+  "underworld_troll": { primary: "M,S", secondary: "G,A,P" },
+  "vampire_blitzer_vampire": { primary: "G,A,S", secondary: "" },
+  "vampire_coureur_vampire": { primary: "A,G", secondary: "S,P" },
+  "vampire_lanceur_vampire": { primary: "A,G,P", secondary: "S" },
+  "vampire_trois_quart_sbire": { primary: "G", secondary: "A,S" },
+  "vampire_vargheist": { primary: "S", secondary: "A,G" },
+  "wood_elf_danceur_de_guerre": { primary: "G,A", secondary: "S,P" },
+  "wood_elf_homme_arbre_de_la_loren": { primary: "S", secondary: "A,G,P" },
+  "wood_elf_lanceur_elfe_sylvain": { primary: "G,A,P", secondary: "S" },
+  "wood_elf_receveur_elfe_sylvain": { primary: "G,A", secondary: "S,P" },
+  "wood_elf_trois_quart_elfe_sylvain": { primary: "G,A", secondary: "S" },
+};
