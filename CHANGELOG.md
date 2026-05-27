@@ -1,3 +1,10 @@
+## [1.146.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.0...v1.146.1) (2026-05-27)
+
+
+### ⚡ Performance Improvements
+
+* **home:** accélère l'apparition des illustrations des cartes features ([28d84b9](https://github.com/Ryxeuf/fantasy-football-game/commit/28d84b948f4e25a8ae6e055503cf52efae05554e))
+
 ## [1.146.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.145.0...v1.146.0) (2026-05-27)
 
 
