@@ -1,3 +1,11 @@
+## [1.144.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.143.0...v1.144.0) (2026-05-27)
+
+
+### ✨ Features
+
+* **admin-data:** enhance skill resolution for positions ([549c975](https://github.com/Ryxeuf/fantasy-football-game/commit/549c9751531f56ed7b2c955bf9d561e4ffdda540))
+* **admin-data:** improve position duplication with skill mapping ([ad252f3](https://github.com/Ryxeuf/fantasy-football-game/commit/ad252f36b0b42ac7884ff70535fd8da618c2284f))
+
 ## [1.143.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.142.0...v1.143.0) (2026-05-22)
 
 
