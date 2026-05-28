@@ -1,3 +1,13 @@
+## [1.147.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.2...v1.147.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** API achat de skill BB via SPP carriere + pool d'acces ([1bcec36](https://github.com/Ryxeuf/fantasy-football-game/commit/1bcec3661a9a42628a29a2f336297abe1c1aa5cc))
+* **nfl-fantasy:** bonus SPP des skills BB sur le scoring hebdo ([63466ab](https://github.com/Ryxeuf/fantasy-football-game/commit/63466ab6c9f7c6e9e7ce2ac0a76e3767d04b61f2))
+* **nfl-fantasy:** modele NflFantasyPlayerCareer + agregation au settle ([18f3ca1](https://github.com/Ryxeuf/fantasy-football-game/commit/18f3ca1545d2d96d49fa474bd60a2e64c964e17d))
+* **nfl-fantasy:** UI achat de skill BB via SPP carriere ([92c1b0c](https://github.com/Ryxeuf/fantasy-football-game/commit/92c1b0c8411361d213a38192891f44795bcedfb2))
+
 ## [1.146.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.1...v1.146.2) (2026-05-27)
 
 
