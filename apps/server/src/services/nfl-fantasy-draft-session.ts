@@ -360,22 +360,85 @@ export async function cancelBid(opts: CancelBidOpts): Promise<void> {
   await prisma.nflFantasyDraftBid.delete({ where: { id: bid.id } });
 }
 
+export interface BidWithPlayer {
+  readonly id: string;
+  readonly playerId: string;
+  readonly amount: number;
+  readonly status: string;
+  readonly pseudonym: string | null;
+  readonly bbPosition: string | null;
+  readonly teamCode: string | null;
+  readonly currentValue: number | null;
+}
+
 /**
- * Liste les bids d'une entry (cache aux autres coachs). Permet a un
- * coach de voir ses encheres en cours.
+ * Liste les bids d'une entry (cache aux autres coachs). Joint
+ * `NflPlayer` (FK logique, pas de relation Prisma directe) pour
+ * pseudo / position / teamCode / currentValue afin que l'UI puisse
+ * rendre la ligne "Mes encheres" comme le catalogue.
  */
 export async function listBidsForEntry(opts: {
   sessionId: string;
   entryId: string;
-}): Promise<
-  Array<{ id: string; playerId: string; amount: number; status: string }>
-> {
-  const bids = await prisma.nflFantasyDraftBid.findMany({
+}): Promise<BidWithPlayer[]> {
+  type BidRow = { id: string; playerId: string; amount: number; status: string };
+  type PlayerLite = {
+    id: string;
+    pseudonym: string;
+    bbPosition: string;
+    teamCode: string | null;
+    currentValue: number;
+  };
+  const bids: BidRow[] = await prisma.nflFantasyDraftBid.findMany({
     where: { sessionId: opts.sessionId, entryId: opts.entryId },
     select: { id: true, playerId: true, amount: true, status: true },
     orderBy: { amount: "desc" },
   });
-  return bids;
+  if (bids.length === 0) return [];
+  const players: PlayerLite[] = await prisma.nflPlayer.findMany({
+    where: { id: { in: bids.map((b) => b.playerId) } },
+    select: {
+      id: true,
+      pseudonym: true,
+      bbPosition: true,
+      teamCode: true,
+      currentValue: true,
+    },
+  });
+  const byId = new Map<string, PlayerLite>(players.map((p) => [p.id, p]));
+  return bids.map((b) => {
+    const p = byId.get(b.playerId);
+    return {
+      id: b.id,
+      playerId: b.playerId,
+      amount: b.amount,
+      status: b.status,
+      pseudonym: p?.pseudonym ?? null,
+      bbPosition: p?.bbPosition ?? null,
+      teamCode: p?.teamCode ?? null,
+      currentValue: p?.currentValue ?? null,
+    };
+  });
+}
+
+/**
+ * Somme des bids `pending` d'une entry sur une session (= budget
+ * engage modifiable, distinct du budget deja depense sur joueurs
+ * recrutes). N=1 query, cache cote handler.
+ */
+export async function sumPendingBidsForEntry(opts: {
+  sessionId: string;
+  entryId: string;
+}): Promise<number> {
+  const agg = await prisma.nflFantasyDraftBid.aggregate({
+    where: {
+      sessionId: opts.sessionId,
+      entryId: opts.entryId,
+      status: "pending",
+    },
+    _sum: { amount: true },
+  });
+  return agg._sum.amount ?? 0;
 }
 
 export interface ResolveResult {

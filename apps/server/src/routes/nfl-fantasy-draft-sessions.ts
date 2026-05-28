@@ -27,6 +27,7 @@ import {
   listBidsForEntry,
   placeBid,
   resolveSession,
+  sumPendingBidsForEntry,
 } from "../services/nfl-fantasy-draft-session";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
@@ -221,27 +222,46 @@ router.get("/:sessionId/my-bids", async (req, res) => {
       });
       return;
     }
-    const bids = await listBidsForEntry({
-      sessionId: req.params.sessionId,
-      entryId: entry.id,
-    });
 
-    // Enrichi avec basePrice pour l'UI.
-    if (bids.length === 0) {
-      res.json({ bids: [], myEntryId: entry.id });
-      return;
-    }
-    const league = await prisma.nflFantasyLeague.findUnique({
-      where: { id: session.leagueId },
-      select: { seasonId: true },
-    });
-    const basePrices = await computeBasePricesForPlayers({
-      playerIds: bids.map((b) => b.playerId),
-      seasonId: league?.seasonId ?? "2025",
-    });
+    const [bids, league, fullEntry, engaged] = await Promise.all([
+      listBidsForEntry({ sessionId: req.params.sessionId, entryId: entry.id }),
+      prisma.nflFantasyLeague.findUnique({
+        where: { id: session.leagueId },
+        select: { seasonId: true, draftBudget: true },
+      }),
+      prisma.nflFantasyEntry.findUnique({
+        where: { id: entry.id },
+        select: { budgetRemaining: true },
+      }),
+      sumPendingBidsForEntry({
+        sessionId: req.params.sessionId,
+        entryId: entry.id,
+      }),
+    ]);
+
+    const basePrices =
+      bids.length === 0
+        ? new Map<string, number>()
+        : await computeBasePricesForPlayers({
+            playerIds: bids.map((b) => b.playerId),
+            seasonId: league?.seasonId ?? "2025",
+          });
+    const draftBudget = league?.draftBudget ?? 5000;
+    const budgetRemaining = fullEntry?.budgetRemaining ?? draftBudget;
     res.json({
       myEntryId: entry.id,
       bids: bids.map((b) => ({ ...b, basePrice: basePrices.get(b.playerId) ?? 50 })),
+      budget: {
+        draftBudget,
+        // Deja depense sur joueurs deja recrutes (immuable a ce stade).
+        budgetSpent: draftBudget - budgetRemaining,
+        // Restant DB (avant prise en compte des bids pending).
+        budgetRemaining,
+        // Engage sur bids pending de cette session (modifiable si bid annule).
+        budgetEngaged: engaged,
+        // Dispo reel pour engager un nouveau bid (peut etre negatif si overbooking).
+        budgetAvailable: budgetRemaining - engaged,
+      },
     });
   } catch (err) {
     if (!sendNflError(res, err)) {
