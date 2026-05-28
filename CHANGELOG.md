@@ -1,3 +1,13 @@
+## [1.150.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.149.0...v1.150.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** endpoint start-season (draft -> in_progress) ([ccf274a](https://github.com/Ryxeuf/fantasy-football-game/commit/ccf274a86a10637301ae0160353e7ee39ce7e835))
+* **nfl-fantasy:** endpoints test pour force-trigger les ticks cron ([76203be](https://github.com/Ryxeuf/fantasy-football-game/commit/76203befc76c46ad0890f453b3bc85688dc24e75))
+* **nfl-fantasy:** rosterCount par coach sur la page championnat ([54f2213](https://github.com/Ryxeuf/fantasy-football-game/commit/54f2213705b0995ccf2144f751adb6bbcb8d33a2))
+* **nfl-fantasy:** UI panel Mode test pour piloter une saison ([1fbb675](https://github.com/Ryxeuf/fantasy-football-game/commit/1fbb67568e46b1b5586dfac4e7fb24add8b05c27))
+
 ## [1.149.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.148.0...v1.149.0) (2026-05-28)
 
 
