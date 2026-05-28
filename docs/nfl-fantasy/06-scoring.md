@@ -163,6 +163,33 @@ Désigner 1 joueur Captain par lineup hebdo :
 
 Si compétition le permet : ×1.2 sur un 2e joueur.
 
+### Bonus skills BB (V1 — actif)
+
+Implémenté dans `apps/server/src/services/nfl-fantasy-skill-bonus.ts`,
+appliqué dans `settleNflFantasyWeek` **avant** le multiplier captain.
+
+Chaque skill BB du joueur (dérivé via `nfl-bb-derivation`) regarde les
+events SPP générés par `computeSpp()` et ajoute un bonus thématique
+capé. Persisté dans `NflFantasyLineupStarter.sppBreakdown.skillBonuses`
+pour audit Gazette.
+
+| Skill                 | Bonus                                       | Cap |
+| --------------------- | ------------------------------------------- | --- |
+| `pass`                | +1 SPP par TD passing                       | 3   |
+| `catch`               | +1 SPP si au moins 1 TD receiving           | 1   |
+| `sure-hands`          | +1 SPP par MALUS fumble compensé            | 2   |
+| `safe-pair-of-hands`  | +1 SPP par MALUS drop compensé              | 2   |
+| `block`               | +1 SPP par event CAS                        | 3   |
+| `mighty-blow-*`       | +1 SPP par event CAS (toutes variantes)     | 3   |
+| `dodge`               | +1 SPP par INT (DP)                         | 2   |
+| `tackle`              | +1 SPP si au moins 1 forced fumble          | 1   |
+| `frenzy`              | +1 SPP si au moins 2 CAS sur le match       | 1   |
+
+`rawSpp` persisté = `computedSpp + totalBonusSpp`. Le multiplier
+captain s'applique sur ce raw enrichi (la base multipliée inclut donc
+le bonus skill). Skill dupliqué = compté une seule fois ; skill
+inconnu = ignoré silencieusement.
+
 ### Specialist competitions
 
 Pour ajouter de la variété (cf. Sorare Single Game Week) :

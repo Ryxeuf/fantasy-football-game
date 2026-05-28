@@ -15,6 +15,7 @@ vi.mock("../prisma", () => ({
     nflFantasyLineupStarter: { update: vi.fn() },
     nflGame: { findMany: vi.fn() },
     nflGameStat: { findMany: vi.fn() },
+    nflPlayer: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -343,6 +344,7 @@ describe("settleNflFantasyWeek", () => {
       // p4 absent -> rawSpp 0
       { playerId: "p5", computedSpp: 4, sppBreakdown: null },
     ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     const result = await settleNflFantasyWeek({
@@ -413,6 +415,7 @@ describe("settleNflFantasyWeek", () => {
       { playerId: "p1", computedSpp: 10, sppBreakdown: null },
       { playerId: "p2", computedSpp: 10, sppBreakdown: null },
     ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
@@ -447,6 +450,7 @@ describe("settleNflFantasyWeek", () => {
     vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
       { playerId: "p2", computedSpp: 8, sppBreakdown: null },
     ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
@@ -457,6 +461,112 @@ describe("settleNflFantasyWeek", () => {
     const data = byeCall![0].data as { rawSpp: number; finalSpp: number };
     expect(data.rawSpp).toBe(0);
     expect(data.finalSpp).toBe(0);
+  });
+
+  it("applique les bonus skills BB au rawSpp (avant captain multiplier)", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH", playerId: "pQB", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA", playerId: "pX", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      {
+        playerId: "pQB",
+        computedSpp: 10,
+        sppBreakdown: {
+          events: [
+            { type: "TD", count: 2, spp: 6, reason: "2 passing TD" },
+            { type: "CP", count: 4, spp: 4, reason: "4 CP (passing yards 300/75)" },
+          ],
+        },
+      },
+      { playerId: "pX", computedSpp: 5, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "pQB", bbSkills: ["pass", "safe-pair-of-hands"] },
+      { id: "pX", bbSkills: [] },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const starterCalls = vi.mocked(prisma.nflFantasyLineupStarter.update).mock.calls;
+    const qbCall = starterCalls.find((c) => c[0].where.id === "sH");
+    expect(qbCall).toBeDefined();
+    const data = qbCall![0].data as {
+      rawSpp: number;
+      finalSpp: number;
+      sppBreakdown: { skillBonuses?: ReadonlyArray<{ skill: string; spp: number }> };
+    };
+    // computed 10 + bonus pass (+2 pour 2 TD passing) = 12
+    expect(data.rawSpp).toBe(12);
+    expect(data.finalSpp).toBe(12);
+    expect(data.sppBreakdown.skillBonuses).toHaveLength(1);
+    expect(data.sppBreakdown.skillBonuses?.[0]?.skill).toBe("pass");
+    expect(data.sppBreakdown.skillBonuses?.[0]?.spp).toBe(2);
+  });
+
+  it("bonus skills + multiplier captain : bonus inclus dans la base multipliée", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH", playerId: "pQB", isCaptain: true, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA", playerId: "pX", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      {
+        playerId: "pQB",
+        computedSpp: 10,
+        sppBreakdown: {
+          events: [{ type: "TD", count: 2, spp: 6, reason: "2 passing TD" }],
+        },
+      },
+      { playerId: "pX", computedSpp: 0, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "pQB", bbSkills: ["pass"] },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const starterCalls = vi.mocked(prisma.nflFantasyLineupStarter.update).mock.calls;
+    const qbCall = starterCalls.find((c) => c[0].where.id === "sH");
+    const data = qbCall![0].data as { rawSpp: number; finalSpp: number };
+    // raw = 10 + 2 bonus = 12 ; final = 12 * 1.5 = 18
+    expect(data.rawSpp).toBe(12);
+    expect(data.finalSpp).toBe(18);
   });
 });
 

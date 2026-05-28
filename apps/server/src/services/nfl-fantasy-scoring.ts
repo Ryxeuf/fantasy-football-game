@@ -29,6 +29,12 @@ import {
   CAPTAIN_MULTIPLIER,
   VICE_CAPTAIN_MULTIPLIER,
 } from "./nfl-fantasy-lineup";
+import {
+  applySkillBonuses,
+  parseBbSkills,
+  parseSppEvents,
+  type SkillBonusEvent,
+} from "./nfl-fantasy-skill-bonus";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreur typee
@@ -116,6 +122,33 @@ export function applyCaptainMultiplier(opts: {
     return Math.trunc(opts.rawSpp * VICE_CAPTAIN_MULTIPLIER);
   }
   return opts.rawSpp;
+}
+
+/**
+ * Enrichit un sppBreakdown brut (PG natif ou string sqlite) avec les
+ * `skillBonuses` calculés. Si le breakdown est vide / null, retourne
+ * juste `{ skillBonuses }` (ou null si aucun bonus). Garantit que le
+ * shape reste sérialisable JSON.
+ */
+function enrichBreakdown(
+  raw: unknown,
+  bonusEvents: readonly SkillBonusEvent[],
+): unknown {
+  if (bonusEvents.length === 0) return raw ?? null;
+  let base: Record<string, unknown> = {};
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        base = parsed as Record<string, unknown>;
+      }
+    } catch {
+      base = {};
+    }
+  } else if (raw && typeof raw === "object") {
+    base = { ...(raw as Record<string, unknown>) };
+  }
+  return { ...base, skillBonuses: bonusEvents };
 }
 
 /**
@@ -336,6 +369,20 @@ export async function settleNflFantasyWeek(
     stats.map((s) => [s.playerId, s] as const),
   );
 
+  // 4.b Charger les skills BB des starters pour appliquer les bonus
+  type PlayerSkillRow = { id: string; bbSkills: unknown };
+  const players: ReadonlyArray<PlayerSkillRow> =
+    allStarterIds.length === 0
+      ? []
+      : await prisma.nflPlayer.findMany({
+          where: { id: { in: allStarterIds } },
+          select: { id: true, bbSkills: true },
+        });
+  const skillsByPlayer = new Map<string, readonly string[]>();
+  for (const p of players) {
+    skillsByPlayer.set(p.id, parseBbSkills(p.bbSkills));
+  }
+
   let matchupsSettled = 0;
   let startersScored = 0;
 
@@ -356,40 +403,33 @@ export async function settleNflFantasyWeek(
       sppBreakdown: unknown;
     }> = [];
 
-    for (const s of homeStarters) {
+    const scoreStarter = (s: StarterRow): number => {
       const stat = sppByPlayer.get(s.playerId);
-      const rawSpp = stat?.computedSpp ?? 0;
+      const computedSpp = stat?.computedSpp ?? 0;
+      const events = parseSppEvents(stat?.sppBreakdown);
+      const skills = skillsByPlayer.get(s.playerId) ?? [];
+      const { bonusEvents, totalBonusSpp } = applySkillBonuses({
+        events,
+        bbSkills: skills,
+      });
+      const rawSpp = computedSpp + totalBonusSpp;
       const finalSpp = applyCaptainMultiplier({
         rawSpp,
         isCaptain: s.isCaptain,
         isViceCaptain: s.isViceCaptain,
       });
-      homeTotal += finalSpp;
       starterUpdates.push({
         id: s.id,
         rawSpp,
         finalSpp,
-        sppBreakdown: stat?.sppBreakdown ?? null,
+        sppBreakdown: enrichBreakdown(stat?.sppBreakdown, bonusEvents),
       });
       startersScored++;
-    }
-    for (const s of awayStarters) {
-      const stat = sppByPlayer.get(s.playerId);
-      const rawSpp = stat?.computedSpp ?? 0;
-      const finalSpp = applyCaptainMultiplier({
-        rawSpp,
-        isCaptain: s.isCaptain,
-        isViceCaptain: s.isViceCaptain,
-      });
-      awayTotal += finalSpp;
-      starterUpdates.push({
-        id: s.id,
-        rawSpp,
-        finalSpp,
-        sppBreakdown: stat?.sppBreakdown ?? null,
-      });
-      startersScored++;
-    }
+      return finalSpp;
+    };
+
+    for (const s of homeStarters) homeTotal += scoreStarter(s);
+    for (const s of awayStarters) awayTotal += scoreStarter(s);
 
     const winnerId = determineWinner({
       homeEntryId: m.homeEntryId,
