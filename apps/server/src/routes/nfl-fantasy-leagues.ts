@@ -36,6 +36,12 @@ import {
   DRAFT_BUDGET_MIN,
 } from "../services/nfl-fantasy-league";
 import { finalizeLeague } from "../services/nfl-fantasy-draft";
+import { lockLineups } from "../services/nfl-fantasy-lineup";
+import {
+  generateMatchups,
+  settleNflFantasyWeek,
+} from "../services/nfl-fantasy-scoring";
+import { ingestNflverseWeek } from "../services/nfl-ingest";
 import { prisma } from "../prisma";
 import {
   getLeagueStandings,
@@ -321,5 +327,203 @@ router.get("/:id/standings", async (req, res) => {
     }
   }
 });
+
+// ──────────────────────────────────────────────────────────────────
+// Mode test : force-trigger des taches habituellement automatiques
+// (cron). Gate : owner du championnat + feature flag nuffle_coach_test.
+// Permet de derouler une saison complete sur un cycle passe sans
+// attendre les fenetres temporelles des ticks.
+// ──────────────────────────────────────────────────────────────────
+
+async function assertOwnerAndTestMode(
+  req: AuthenticatedRequest,
+  leagueId: string,
+): Promise<{ ownerId: string; seasonId: string; cycleId: string | null }> {
+  const flagOn = await isEnabled(NUFFLE_COACH_TEST_FLAG, userId(req), {
+    roles: req.user?.roles,
+  });
+  if (!flagOn) {
+    throw new NflFantasyLeagueError(
+      "NOT_OWNER",
+      "Mode test requis (feature flag nuffle_coach_test)",
+    );
+  }
+  const league = await prisma.nflFantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { ownerId: true, seasonId: true, cycleId: true },
+  });
+  if (!league) {
+    throw new NflFantasyLeagueError("NOT_FOUND", "League introuvable");
+  }
+  if (league.ownerId !== userId(req)) {
+    throw new NflFantasyLeagueError("NOT_OWNER", "Action reservee a l'owner");
+  }
+  return league;
+}
+
+const weekIdBodySchema = z.object({
+  weekId: z.string().min(1),
+});
+
+/**
+ * GET /:id/test/weeks
+ * Liste les NflWeek du cycle adosse au championnat. Permet a la UI
+ * de Mode test de proposer un picker semaine.
+ */
+router.get("/:id/test/weeks", async (req, res) => {
+  try {
+    const league = await assertOwnerAndTestMode(
+      req as AuthenticatedRequest,
+      req.params.id,
+    );
+    if (!league.cycleId) {
+      res.json({ weeks: [] });
+      return;
+    }
+    const cycle = await prisma.nflFantasySeasonCycle.findUnique({
+      where: { id: league.cycleId },
+      select: { startWeek: true, endWeek: true },
+    });
+    if (!cycle) {
+      res.json({ weeks: [] });
+      return;
+    }
+    const weeks = await prisma.nflWeek.findMany({
+      where: {
+        seasonId: league.seasonId,
+        weekNumber: { gte: cycle.startWeek, lte: cycle.endWeek },
+      },
+      orderBy: { weekNumber: "asc" },
+      select: {
+        id: true,
+        weekNumber: true,
+        startDate: true,
+        endDate: true,
+        isPlayoffs: true,
+      },
+    });
+    res.json({ weeks });
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] test/weeks failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+/**
+ * POST /:id/test/ingest-stats
+ * Force pull nflverse pour la semaine donnee. Idempotent (upsert).
+ */
+router.post(
+  "/:id/test/ingest-stats",
+  validate(weekIdBodySchema),
+  async (req, res) => {
+    try {
+      const league = await assertOwnerAndTestMode(
+        req as AuthenticatedRequest,
+        req.params.id,
+      );
+      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const week = await prisma.nflWeek.findUnique({
+        where: { id: weekId },
+        select: { seasonId: true, weekNumber: true },
+      });
+      if (!week || week.seasonId !== league.seasonId) {
+        res.status(404).json({
+          error: "Semaine introuvable dans la saison du championnat",
+          code: "WEEK_NOT_FOUND",
+        });
+        return;
+      }
+      const result = await ingestNflverseWeek({
+        seasonId: week.seasonId,
+        weekNumber: week.weekNumber,
+      });
+      res.json(result);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-leagues] test/ingest-stats failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+/**
+ * POST /:id/test/lock-lineups
+ * Lock toutes les lineups de la semaine. Idempotent.
+ */
+router.post(
+  "/:id/test/lock-lineups",
+  validate(weekIdBodySchema),
+  async (req, res) => {
+    try {
+      await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
+      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const result = await lockLineups(weekId);
+      res.json(result);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-leagues] test/lock-lineups failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+/**
+ * POST /:id/test/generate-matchups
+ * Genere les matchups (round-robin) pour la semaine. Idempotent.
+ */
+router.post(
+  "/:id/test/generate-matchups",
+  validate(weekIdBodySchema),
+  async (req, res) => {
+    try {
+      await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
+      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const result = await generateMatchups({
+        leagueId: req.params.id,
+        weekId,
+      });
+      res.json(result);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error(
+          "[nfl-fantasy-leagues] test/generate-matchups failed",
+          err,
+        );
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+/**
+ * POST /:id/test/settle-week
+ * Settle la semaine : calcule SPP, applique multipliers, persiste
+ * matchup scores + winners. Idempotent.
+ */
+router.post(
+  "/:id/test/settle-week",
+  validate(weekIdBodySchema),
+  async (req, res) => {
+    try {
+      await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
+      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const result = await settleNflFantasyWeek({
+        leagueId: req.params.id,
+        weekId,
+      });
+      res.json(result);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-leagues] test/settle-week failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 export default router;
