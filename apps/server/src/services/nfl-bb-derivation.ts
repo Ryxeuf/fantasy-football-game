@@ -168,6 +168,21 @@ export function deriveBbAttributes(
   };
 }
 
+/**
+ * Slug Position S3 utilisé pour dériver les attributs BB d'un joueur
+ * NFL Fantasy. `null` si la combinaison (race, bbPosition) n'est pas
+ * mappée. Utile pour brancher l'accès skills primaire/secondaire au
+ * level-up career (cf. nfl-fantasy-skill-unlock).
+ */
+export function getPositionSlugFor(
+  race: BbRace,
+  bbPosition: BbPosition,
+): string | null {
+  const positionMap = RACE_POSITION_TO_SLUG[race];
+  if (!positionMap) return null;
+  return positionMap[bbPosition] ?? null;
+}
+
 /** Pour les tests / debug : nombre total de mappings configurés. */
 export function countDerivationMappings(): number {
   let n = 0;

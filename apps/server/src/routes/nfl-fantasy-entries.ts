@@ -54,6 +54,11 @@ import {
   getCareerForPlayer,
   listCareersForEntry,
 } from "../services/nfl-fantasy-player-career";
+import {
+  getSkillAccessView,
+  SkillUnlockError,
+  unlockSkill,
+} from "../services/nfl-fantasy-skill-unlock";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -375,11 +380,61 @@ router.get("/:entryId/careers/:playerId", async (req, res) => {
       res.status(404).json({ error: "Carriere non trouvee", code: "CAREER_NOT_FOUND" });
       return;
     }
-    res.json({ career });
+    const access = await getSkillAccessView(req.params.playerId);
+    res.json({ career, access });
   } catch (err) {
     serverLog.error("[nfl-fantasy-entries] getCareerForPlayer failed", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+const unlockSkillSchema = z.object({
+  skillSlug: z.string().min(1).max(64),
+  accessType: z.enum(["primary", "secondary"]),
+});
+
+const UNLOCK_ERROR_TO_STATUS: Readonly<
+  Record<SkillUnlockError["code"], number>
+> = {
+  CAREER_NOT_FOUND: 404,
+  PLAYER_NOT_FOUND: 404,
+  POSITION_NOT_MAPPED: 422,
+  POSITION_NOT_FOUND: 422,
+  POSITION_HAS_NO_ACCESS: 422,
+  SKILL_NOT_FOUND: 404,
+  SKILL_ALREADY_OWNED: 409,
+  SKILL_NOT_IN_POOL: 422,
+  NOT_ENOUGH_SPP: 422,
+  SKILL_CAP_REACHED: 422,
+};
+
+router.post(
+  "/:entryId/careers/:playerId/unlock-skill",
+  validate(unlockSkillSchema),
+  async (req, res) => {
+    try {
+      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      if (!entry) return;
+      const body = req.body as z.infer<typeof unlockSkillSchema>;
+      const out = await unlockSkill({
+        entryId: req.params.entryId,
+        playerId: req.params.playerId,
+        skillSlug: body.skillSlug,
+        accessType: body.accessType,
+      });
+      res.json({ career: out });
+    } catch (err) {
+      if (err instanceof SkillUnlockError) {
+        res.status(UNLOCK_ERROR_TO_STATUS[err.code]).json({
+          error: err.message,
+          code: err.code,
+        });
+        return;
+      }
+      serverLog.error("[nfl-fantasy-entries] unlockSkill failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
 
 export default router;
