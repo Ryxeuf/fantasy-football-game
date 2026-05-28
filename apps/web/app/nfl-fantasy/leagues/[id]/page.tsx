@@ -297,7 +297,9 @@ export default function LeagueDetailPage() {
                   )}
                 </p>
               </div>
-              <span className="text-xs text-nuffle-anthracite/60">TV {entry.totalTV}</span>
+              <span className="text-xs text-nuffle-anthracite/60">
+                {entry.rosterCount ?? 0} joueurs · TV {entry.totalTV}
+              </span>
             </li>
           ))}
         </ul>

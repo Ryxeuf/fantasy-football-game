@@ -185,8 +185,13 @@ export interface UpdateLeagueOpts {
   readonly size?: number;
 }
 
+export interface EnrichedEntry extends NflFantasyEntry {
+  /** Nombre de joueurs dans le roster (post-mercato). Enrichi par getLeague. */
+  rosterCount?: number;
+}
+
 export interface LeagueWithEntries extends NflFantasyLeague {
-  entries: NflFantasyEntry[];
+  entries: EnrichedEntry[];
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -311,12 +316,18 @@ export async function createLeague(
 
 /**
  * Fetch une league + ses entries. Throws NOT_FOUND si absente.
+ *
+ * Enrichit chaque entry avec `rosterCount` (taille du roster apres
+ * mercato resolu) pour affichage cote UI.
  */
 export async function getLeague(leagueId: string): Promise<LeagueWithEntries> {
   const league = await prisma.nflFantasyLeague.findUnique({
     where: { id: leagueId },
     include: {
-      entries: { orderBy: { joinedAt: "asc" } },
+      entries: {
+        orderBy: { joinedAt: "asc" },
+        include: { _count: { select: { roster: true } } },
+      },
       cycle: true,
     },
   });
@@ -326,7 +337,14 @@ export async function getLeague(leagueId: string): Promise<LeagueWithEntries> {
       `League ${leagueId} introuvable`,
     );
   }
-  return league;
+  type RawEntry = (typeof league.entries)[number];
+  return {
+    ...league,
+    entries: league.entries.map((e: RawEntry) => {
+      const { _count, ...rest } = e;
+      return { ...rest, rosterCount: _count.roster };
+    }),
+  };
 }
 
 /**

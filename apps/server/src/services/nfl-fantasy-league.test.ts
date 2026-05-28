@@ -248,17 +248,28 @@ describe("createLeague", () => {
 // ────────────────────────────────────────────────────────────────────
 
 describe("getLeague", () => {
-  it("retourne league + entries triees par joinedAt asc", async () => {
+  it("retourne league + entries triees par joinedAt asc + rosterCount", async () => {
     vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
       id: "lg1",
-      entries: [{ userId: "u1" }, { userId: "u2" }],
+      entries: [
+        { userId: "u1", _count: { roster: 5 } },
+        { userId: "u2", _count: { roster: 0 } },
+      ],
     } as never);
 
     const lg = await getLeague("lg1");
     expect(lg.id).toBe("lg1");
+    expect(lg.entries[0].rosterCount).toBe(5);
+    expect(lg.entries[1].rosterCount).toBe(0);
     expect(prisma.nflFantasyLeague.findUnique).toHaveBeenCalledWith({
       where: { id: "lg1" },
-      include: { entries: { orderBy: { joinedAt: "asc" } }, cycle: true },
+      include: {
+        entries: {
+          orderBy: { joinedAt: "asc" },
+          include: { _count: { select: { roster: true } } },
+        },
+        cycle: true,
+      },
     });
   });
 

@@ -45,6 +45,8 @@ export interface NflFantasyEntry {
   totalTV: number;
   /** V2 mercato : budget restant apres encheres remportees. */
   budgetRemaining?: number;
+  /** Nombre de joueurs dans le roster (post-mercato). Enrichi par getLeague. */
+  rosterCount?: number;
   joinedAt: string;
 }
 
