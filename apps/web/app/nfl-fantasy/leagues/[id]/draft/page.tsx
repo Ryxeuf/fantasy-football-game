@@ -788,10 +788,11 @@ export default function NuffleCoachDraftPage() {
 
       {/* Mon roster (joueurs deja draftes) avec bouton Vendre */}
       {myEntry && roster.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold text-nuffle-anthracite">
-            Mon roster · {roster.length} joueurs
-          </h2>
+        <CollapsibleSection
+          title={`Mon roster · ${roster.length} joueur${roster.length > 1 ? "s" : ""}`}
+          countBadge={null}
+          openByDefaultOnDesktop
+        >
           <p className="mt-1 text-xs text-nuffle-anthracite/60">
             Vendre un joueur te rend sa <strong>cote actuelle</strong>{" "}
             (pas le prix d&apos;achat). Si elle a monté, plus-value.
@@ -855,15 +856,16 @@ export default function NuffleCoachDraftPage() {
               );
             })}
           </ul>
-        </section>
+        </CollapsibleSection>
       )}
 
       {/* Mes bids en cours */}
       {myEntry && activeSession && myBids.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold text-nuffle-anthracite">
-            Mes enchères en cours
-          </h2>
+        <CollapsibleSection
+          title="Mes enchères en cours"
+          countBadge={myBids.length}
+          openByDefaultOnDesktop
+        >
           <ul
             className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
             data-testid="mercato-my-bids"
@@ -914,7 +916,7 @@ export default function NuffleCoachDraftPage() {
               );
             })}
           </ul>
-        </section>
+        </CollapsibleSection>
       )}
 
       {/* Catalogue + place bid */}
@@ -931,120 +933,130 @@ export default function NuffleCoachDraftPage() {
             </p>
           </div>
 
-          {/* Barre de filtres */}
+          {/* Barre de filtres — essentiels visibles + Plus de filtres replie */}
           <div
-            className="mt-3 grid gap-2 rounded-lg border border-nuffle-bronze/20 bg-white p-3 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-3 rounded-lg border border-nuffle-bronze/20 bg-white p-3"
             data-testid="mercato-filters"
           >
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => updateFilter("search", e.target.value)}
-              placeholder="Nom du joueur"
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-search"
-            />
-            <input
-              type="number"
-              value={filters.jerseyNumber}
-              onChange={(e) => updateFilter("jerseyNumber", e.target.value)}
-              placeholder="N° maillot"
-              min={0}
-              max={99}
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-            />
-            <select
-              value={filters.teamCode}
-              onChange={(e) => updateFilter("teamCode", e.target.value)}
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-filter-team"
-            >
-              <option value="">Toutes équipes</option>
-              {teams.map((t) => (
-                <option key={t.code} value={t.code}>
-                  {t.code} · {t.city}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filters.bbRace}
-              onChange={(e) => updateFilter("bbRace", e.target.value)}
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-filter-race"
-            >
-              <option value="">Toutes races</option>
-              {races.map((r) => (
-                <option key={r.code} value={r.code}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filters.bbPosition}
-              onChange={(e) => updateFilter("bbPosition", e.target.value)}
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-filter-position"
-            >
-              <option value="">Tous postes</option>
-              {BB_POSITIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filters.sortBy}
-              onChange={(e) =>
-                updateFilter(
-                  "sortBy",
-                  e.target.value as FilterState["sortBy"],
-                )
-              }
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-sort-by"
-            >
-              <option value="currentValue">Tri : cote</option>
-              <option value="pseudonym">Tri : nom</option>
-              <option value="bbPosition">Tri : poste BB</option>
-              <option value="teamCode">Tri : équipe</option>
-              <option value="jerseyNumber">Tri : n° maillot</option>
-            </select>
-            <select
-              value={filters.sortDir}
-              onChange={(e) =>
-                updateFilter(
-                  "sortDir",
-                  e.target.value as FilterState["sortDir"],
-                )
-              }
-              className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-              data-testid="mercato-sort-dir"
-            >
-              <option value="desc">↓ décroissant</option>
-              <option value="asc">↑ croissant</option>
-            </select>
-            <div className="flex items-center justify-between gap-2">
-              <label className="flex items-center gap-2 text-xs text-nuffle-anthracite">
-                <input
-                  type="checkbox"
-                  checked={filters.freeOnly}
-                  onChange={(e) =>
-                    updateFilter("freeOnly", e.target.checked)
-                  }
-                  className="accent-nuffle-gold"
-                  data-testid="mercato-filter-free-only"
-                />
-                Libres uniquement
-              </label>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="rounded-md border border-nuffle-bronze/30 px-2 py-1 text-xs text-nuffle-anthracite/70 hover:border-nuffle-gold hover:text-nuffle-bronze"
-                data-testid="mercato-filter-reset"
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                placeholder="Nom du joueur"
+                className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                data-testid="mercato-search"
+              />
+              <select
+                value={filters.bbRace}
+                onChange={(e) => updateFilter("bbRace", e.target.value)}
+                className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                data-testid="mercato-filter-race"
               >
-                Reset
-              </button>
+                <option value="">Toutes races</option>
+                {races.map((r) => (
+                  <option key={r.code} value={r.code}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filters.bbPosition}
+                onChange={(e) => updateFilter("bbPosition", e.target.value)}
+                className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                data-testid="mercato-filter-position"
+              >
+                <option value="">Tous postes</option>
+                {BB_POSITIONS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center justify-between gap-2">
+                <label className="flex items-center gap-2 text-xs text-nuffle-anthracite">
+                  <input
+                    type="checkbox"
+                    checked={filters.freeOnly}
+                    onChange={(e) =>
+                      updateFilter("freeOnly", e.target.checked)
+                    }
+                    className="accent-nuffle-gold"
+                    data-testid="mercato-filter-free-only"
+                  />
+                  Libres uniquement
+                </label>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="rounded-md border border-nuffle-bronze/30 px-2 py-1 text-xs text-nuffle-anthracite/70 hover:border-nuffle-gold hover:text-nuffle-bronze"
+                  data-testid="mercato-filter-reset"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
+
+            <details className="mt-2" data-testid="mercato-filters-advanced">
+              <summary className="cursor-pointer select-none text-xs font-medium text-nuffle-bronze hover:text-nuffle-anthracite">
+                Plus de filtres (équipe, maillot, tri)
+              </summary>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <select
+                  value={filters.teamCode}
+                  onChange={(e) => updateFilter("teamCode", e.target.value)}
+                  className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                  data-testid="mercato-filter-team"
+                >
+                  <option value="">Toutes équipes</option>
+                  {teams.map((t) => (
+                    <option key={t.code} value={t.code}>
+                      {t.code} · {t.city}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={filters.jerseyNumber}
+                  onChange={(e) => updateFilter("jerseyNumber", e.target.value)}
+                  placeholder="N° maillot"
+                  min={0}
+                  max={99}
+                  className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                />
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) =>
+                    updateFilter(
+                      "sortBy",
+                      e.target.value as FilterState["sortBy"],
+                    )
+                  }
+                  className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                  data-testid="mercato-sort-by"
+                >
+                  <option value="currentValue">Tri : cote</option>
+                  <option value="pseudonym">Tri : nom</option>
+                  <option value="bbPosition">Tri : poste BB</option>
+                  <option value="teamCode">Tri : équipe</option>
+                  <option value="jerseyNumber">Tri : n° maillot</option>
+                </select>
+                <select
+                  value={filters.sortDir}
+                  onChange={(e) =>
+                    updateFilter(
+                      "sortDir",
+                      e.target.value as FilterState["sortDir"],
+                    )
+                  }
+                  className="rounded-md border border-nuffle-bronze/30 bg-white px-2 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+                  data-testid="mercato-sort-dir"
+                >
+                  <option value="desc">↓ décroissant</option>
+                  <option value="asc">↑ croissant</option>
+                </select>
+              </div>
+            </details>
           </div>
 
           {catalog === null ? (
@@ -1177,20 +1189,74 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-lg border p-2 sm:p-4 ${
         highlight
           ? "border-nuffle-gold/40 bg-nuffle-gold/5"
           : "border-nuffle-bronze/20 bg-white"
       }`}
     >
-      <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
+      <p className="text-[10px] uppercase tracking-wide text-nuffle-anthracite/60 sm:text-xs">
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-nuffle-anthracite">
+      <p className="mt-0.5 text-base font-semibold text-nuffle-anthracite sm:mt-1 sm:text-xl">
         {value}
       </p>
-      {sub && <p className="mt-0.5 text-[11px] text-nuffle-anthracite/60">{sub}</p>}
+      {sub && (
+        <p className="mt-0.5 text-[10px] text-nuffle-anthracite/60 sm:text-[11px]">
+          {sub}
+        </p>
+      )}
     </div>
+  );
+}
+
+function CollapsibleSection({
+  title,
+  countBadge,
+  openByDefaultOnDesktop,
+  children,
+}: {
+  title: string;
+  countBadge: number | null;
+  openByDefaultOnDesktop: boolean;
+  children: React.ReactNode;
+}) {
+  // SSR-safe default = false (replie). Apres mount, on bascule a true
+  // sur desktop (>=md = 768px) si `openByDefaultOnDesktop` est set.
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!openByDefaultOnDesktop) return;
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    setOpen(mq.matches);
+  }, [openByDefaultOnDesktop]);
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-left hover:bg-nuffle-cream/40"
+        aria-expanded={open}
+      >
+        <h2 className="text-lg font-semibold text-nuffle-anthracite">
+          {title}
+          {countBadge !== null && (
+            <span className="ml-2 rounded-full bg-nuffle-cream px-2 py-0.5 text-xs font-medium text-nuffle-bronze">
+              {countBadge}
+            </span>
+          )}
+        </h2>
+        <span
+          className={`text-xs text-nuffle-anthracite/60 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+      </button>
+      {open && <div>{children}</div>}
+    </section>
   );
 }
 
