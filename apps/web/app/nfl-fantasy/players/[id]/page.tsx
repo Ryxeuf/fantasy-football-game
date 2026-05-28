@@ -5,6 +5,63 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../lib/api-client";
+import { RaceIcon } from "../../RaceIcon";
+
+// Parsing tolerant : bbStats/bbSkills viennent en JSON natif (PG) ou en
+// string sérialisée (sqlite mirror), selon l'environnement.
+interface BbStats {
+  ma?: number;
+  st?: number;
+  ag?: number;
+  pa?: number | null;
+  av?: number;
+}
+
+function parseBbStats(raw: unknown): BbStats | null {
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    try {
+      return parseBbStats(JSON.parse(raw));
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  return raw as BbStats;
+}
+
+function parseBbSkills(raw: unknown): readonly string[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) {
+    return raw.filter((s): s is string => typeof s === "string");
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      return parseBbSkills(parsed);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/** "mighty-blow-1" -> "Mighty Blow (+1)" (heuristique simple, capitalize). */
+function prettifySkillSlug(slug: string): string {
+  const m = slug.match(/^([a-z][a-z-]*?)-(\d)$/);
+  if (m) {
+    return (
+      m[1]
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ") + ` (+${m[2]})`
+    );
+  }
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 interface CategoryStats {
   readonly passing: {
@@ -87,6 +144,10 @@ interface PlayerDetail {
   readonly categoryStats: CategoryStats;
   readonly seasons: ReadonlyArray<SeasonAggregate>;
   readonly stats: ReadonlyArray<StatRow>;
+  /** Stats Blood Bowl intrinsèques (JSON : { ma, st, ag, pa, av }). */
+  readonly bbStats?: unknown;
+  /** Compétences BB de base du joueur (JSON : string[] de slugs). */
+  readonly bbSkills?: unknown;
 }
 
 function isPasser(pos: string): boolean {
@@ -209,7 +270,13 @@ export default function NuffleCoachPlayerDetailPage() {
           </p>
           {data.team && (
             <p className="mt-2 text-sm text-nuffle-anthracite/70">
-              {data.team.city} · {data.team.raceLabel} ({data.team.bbRace})
+              {data.team.city} ·{" "}
+              <RaceIcon
+                race={data.team.bbRace}
+                label={data.team.raceLabel}
+                className="mr-1"
+              />
+              {data.team.raceLabel} ({data.team.bbRace})
             </p>
           )}
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
@@ -238,6 +305,63 @@ export default function NuffleCoachPlayerDetailPage() {
           </dl>
         </div>
       </header>
+
+      {/* Caractéristiques BB intrinsèques du joueur (MA/ST/AG/PA/AV + skills). */}
+      {(() => {
+        const bb = parseBbStats(data.bbStats);
+        const skills = parseBbSkills(data.bbSkills);
+        if (!bb && skills.length === 0) return null;
+        return (
+          <section data-testid="player-bb-attributes">
+            <h2 className="text-xl font-semibold text-nuffle-anthracite">
+              Caractéristiques Blood Bowl
+            </h2>
+            {bb && (
+              <dl className="mt-3 grid grid-cols-5 gap-3 rounded-lg border border-nuffle-bronze/20 bg-white p-4">
+                {(
+                  [
+                    { key: "ma", label: "MA", value: bb.ma, suffix: "" },
+                    { key: "st", label: "ST", value: bb.st, suffix: "" },
+                    { key: "ag", label: "AG", value: bb.ag, suffix: "+" },
+                    { key: "pa", label: "PA", value: bb.pa, suffix: "+" },
+                    { key: "av", label: "AV", value: bb.av, suffix: "+" },
+                  ] as const
+                ).map((s) => (
+                  <div key={s.key} className="text-center">
+                    <dt className="text-xs uppercase text-nuffle-anthracite/60">
+                      {s.label}
+                    </dt>
+                    <dd className="font-mono text-lg font-bold text-nuffle-anthracite">
+                      {s.value != null ? `${s.value}${s.suffix}` : "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {skills.length > 0 && (
+              <div className="mt-3">
+                <h3 className="text-xs uppercase text-nuffle-anthracite/60">
+                  Compétences
+                </h3>
+                <ul
+                  className="mt-1 flex flex-wrap gap-2"
+                  data-testid="player-bb-skills"
+                >
+                  {skills.map((slug) => (
+                    <li
+                      key={slug}
+                      className="rounded-full bg-nuffle-bronze/15 px-3 py-1 text-xs text-nuffle-anthracite"
+                      title={slug}
+                    >
+                      {prettifySkillSlug(slug)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       <section data-testid="player-category-stats">
         <h2 className="text-xl font-semibold text-nuffle-anthracite">

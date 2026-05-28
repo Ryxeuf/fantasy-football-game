@@ -263,8 +263,9 @@ describe("ingestNflverseRosters", () => {
           jerseyNumber: 87,
           heightInches: 77,
           weightLbs: 250,
-          bbStats: {},
-          bbSkills: [],
+          // bbStats/bbSkills sont dérivés via deriveBbAttributes
+          // (testé dans nfl-bb-derivation.test.ts) ; on n'asserte plus
+          // {} / [] qui était le placeholder pré-dérivation.
         }),
       }),
     );
