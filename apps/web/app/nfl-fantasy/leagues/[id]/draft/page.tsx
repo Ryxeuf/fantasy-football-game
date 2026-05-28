@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import type { LeagueWithEntries } from "../../../types";
+import { RaceIcon } from "../../../RaceIcon";
 
 // ─── Types remontes par l'API ───────────────────────────────────────
 
@@ -350,6 +351,15 @@ export default function NuffleCoachDraftPage() {
     return Array.from(seen.entries())
       .map(([code, label]) => ({ code, label }))
       .sort((a, b) => a.label.localeCompare(b.label));
+  }, [teams]);
+
+  // Lookup teamCode -> race pour afficher l'icone par joueur.
+  const raceByTeamCode = useMemo(() => {
+    const m = new Map<string, { bbRace: string; raceLabel: string }>();
+    for (const t of teams) {
+      m.set(t.code, { bbRace: t.bbRace, raceLabel: t.raceLabel });
+    }
+    return m;
   }, [teams]);
 
   function updateFilter<K extends keyof FilterState>(
@@ -698,6 +708,7 @@ export default function NuffleCoachDraftPage() {
               const initial = r.tvCost;
               const pnl = current - initial;
               const pnlSign = pnl > 0 ? "+" : "";
+              const race = raceByTeamCode.get(r.player.teamCode ?? "");
               return (
                 <li
                   key={r.rosterId}
@@ -708,6 +719,11 @@ export default function NuffleCoachDraftPage() {
                       href={`/nfl-fantasy/players/${r.player.id}?seasonId=${SEASON_ID}`}
                       className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                     >
+                      <RaceIcon
+                        race={race?.bbRace}
+                        label={race?.raceLabel}
+                        className="mr-1"
+                      />
                       {r.player.pseudonym}
                     </Link>
                     <p className="text-xs text-nuffle-anthracite/60">
@@ -932,6 +948,7 @@ export default function NuffleCoachDraftPage() {
                 const current = p.currentValue ?? p.basePrice ?? 50;
                 const previous = p.previousValue ?? current;
                 const trendDelta = current - previous;
+                const race = raceByTeamCode.get(p.teamCode ?? "");
                 return (
                   <li
                     key={p.id}
@@ -942,6 +959,11 @@ export default function NuffleCoachDraftPage() {
                         href={`/nfl-fantasy/players/${p.id}?seasonId=${SEASON_ID}`}
                         className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                       >
+                        <RaceIcon
+                          race={race?.bbRace}
+                          label={race?.raceLabel}
+                          className="mr-1"
+                        />
                         {p.pseudonym}
                       </Link>
                       <p className="text-xs text-nuffle-anthracite/60">
@@ -987,6 +1009,7 @@ export default function NuffleCoachDraftPage() {
       {bidModalPlayer && (
         <BidModal
           player={bidModalPlayer}
+          race={raceByTeamCode.get(bidModalPlayer.teamCode ?? "")}
           amount={bidAmount}
           setAmount={setBidAmount}
           budgetRemaining={budgetRemaining}
@@ -1067,6 +1090,7 @@ function SessionCountdown({
 
 function BidModal({
   player,
+  race,
   amount,
   setAmount,
   budgetRemaining,
@@ -1075,6 +1099,7 @@ function BidModal({
   onSubmit,
 }: {
   player: CatalogPlayer;
+  race: { bbRace: string; raceLabel: string } | undefined;
   amount: number;
   setAmount: (n: number) => void;
   budgetRemaining: number | undefined;
@@ -1088,7 +1113,13 @@ function BidModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-nuffle-anthracite">
-          Enchère sur {player.pseudonym}
+          Enchère sur{" "}
+          <RaceIcon
+            race={race?.bbRace}
+            label={race?.raceLabel}
+            className="mr-1"
+          />
+          {player.pseudonym}
         </h3>
         <p className="mt-1 text-sm text-nuffle-anthracite/70">
           {player.bbPosition} · {player.teamCode ?? "—"}
