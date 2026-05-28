@@ -616,6 +616,15 @@ export default function NuffleCoachDraftPage() {
 
   return (
     <div className="space-y-6" data-testid="nuffle-coach-draft">
+      {myEntry && activeSession && (
+        <MercatoStickyBar
+          budgetAvailable={budgetAvailable}
+          bidsCount={myBids.length}
+          bidsTotalEngaged={budget?.budgetEngaged ?? 0}
+          sessionClosesAt={activeSession.closesAt}
+          sessionStatus={activeSession.status}
+        />
+      )}
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
@@ -1206,6 +1215,82 @@ function StatCard({
           {sub}
         </p>
       )}
+    </div>
+  );
+}
+
+function MercatoStickyBar({
+  budgetAvailable,
+  bidsCount,
+  bidsTotalEngaged,
+  sessionClosesAt,
+  sessionStatus,
+}: {
+  budgetAvailable: number | null;
+  bidsCount: number;
+  bidsTotalEngaged: number;
+  sessionClosesAt: string;
+  sessionStatus: string;
+}) {
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  let countdown: string | null = null;
+  if (sessionStatus === "open") {
+    const diff = new Date(sessionClosesAt).getTime() - now;
+    if (diff <= 0) {
+      countdown = "fermée";
+    } else {
+      const hours = Math.floor(diff / 3_600_000);
+      const minutes = Math.floor((diff % 3_600_000) / 60_000);
+      countdown = `${hours}h${String(minutes).padStart(2, "0")}m`;
+    }
+  }
+  const lowBudget = budgetAvailable !== null && budgetAvailable < 0;
+  return (
+    <div
+      className="sticky top-0 z-30 rounded-md border border-nuffle-bronze/20 bg-nuffle-ivory/95 px-3 py-2 shadow-sm backdrop-blur"
+      data-testid="mercato-sticky-bar"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+        <span className="flex items-baseline gap-1">
+          <span className="text-[10px] uppercase tracking-wide text-nuffle-anthracite/60">
+            Dispo
+          </span>
+          <strong
+            className={`font-mono ${
+              lowBudget ? "text-amber-700" : "text-nuffle-bronze"
+            }`}
+          >
+            {budgetAvailable !== null ? `${budgetAvailable} TV` : "—"}
+          </strong>
+        </span>
+        <span className="flex items-baseline gap-1">
+          <span className="text-[10px] uppercase tracking-wide text-nuffle-anthracite/60">
+            Bids
+          </span>
+          <strong className="font-mono text-nuffle-anthracite">
+            {bidsCount}
+          </strong>
+          {bidsTotalEngaged > 0 && (
+            <span className="text-xs text-nuffle-anthracite/60">
+              ({bidsTotalEngaged} TV)
+            </span>
+          )}
+        </span>
+        {countdown !== null && (
+          <span className="flex items-baseline gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-nuffle-anthracite/60">
+              ⏳
+            </span>
+            <strong className="font-mono text-nuffle-anthracite">
+              {countdown}
+            </strong>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
