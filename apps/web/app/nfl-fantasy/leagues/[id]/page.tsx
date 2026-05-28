@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiRequest, ApiClientError } from "../../../lib/api-client";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { NUFFLE_COACH_TEST_FLAG } from "../../../lib/featureFlagKeys";
+import TestModeControlPanel from "./TestModeControlPanel";
 import type {
   LeagueWithEntries,
   NflFantasyLeague,
@@ -437,6 +438,14 @@ export default function LeagueDetailPage() {
             )}
           </div>
         </section>
+      )}
+
+      {isOwner && testMode && (
+        <TestModeControlPanel
+          leagueId={league.id}
+          status={league.status}
+          onMutated={() => void load()}
+        />
       )}
     </div>
   );
