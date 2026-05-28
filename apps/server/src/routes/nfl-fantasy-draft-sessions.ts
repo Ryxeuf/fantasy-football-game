@@ -29,6 +29,10 @@ import {
   resolveSession,
   sumPendingBidsForEntry,
 } from "../services/nfl-fantasy-draft-session";
+import {
+  BotDraftError,
+  placeBotBidsForSession,
+} from "../services/nfl-fantasy-bot-draft";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -177,6 +181,55 @@ router.get("/:sessionId", async (req, res) => {
     }
   }
 });
+
+const botBidsSchema = z.object({
+  bidsPerEntry: z.number().int().min(1).max(15).optional(),
+  entryIds: z.array(z.string().min(1)).optional(),
+});
+
+router.post(
+  "/:sessionId/bot-bids",
+  validate(botBidsSchema),
+  async (req, res) => {
+    try {
+      const session = await prisma.nflFantasyDraftSession.findUnique({
+        where: { id: req.params.sessionId },
+        select: { leagueId: true, league: { select: { ownerId: true } } },
+      });
+      if (!session) {
+        res
+          .status(404)
+          .json({ error: "Session introuvable", code: "SESSION_NOT_FOUND" });
+        return;
+      }
+      if (session.league.ownerId !== userId(req as AuthenticatedRequest)) {
+        res.status(403).json({
+          error: "Seul le owner peut lancer les bots",
+          code: "NOT_OWNER",
+        });
+        return;
+      }
+      const body = req.body as z.infer<typeof botBidsSchema>;
+      const out = await placeBotBidsForSession({
+        sessionId: req.params.sessionId,
+        bidsPerEntry: body.bidsPerEntry,
+        entryIds: body.entryIds,
+      });
+      res.json(out);
+    } catch (err) {
+      if (err instanceof BotDraftError) {
+        res
+          .status(err.code === "SESSION_NOT_FOUND" ? 404 : 409)
+          .json({ error: err.message, code: err.code });
+        return;
+      }
+      if (!sendNflError(res, err)) {
+        serverLog.error("[draft-sessions] bot-bids failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 router.post("/:sessionId/resolve", async (req, res) => {
   try {

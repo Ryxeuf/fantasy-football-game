@@ -539,6 +539,36 @@ export default function NuffleCoachDraftPage() {
     }
   }
 
+  async function runBots(): Promise<void> {
+    if (!activeSession) return;
+    if (
+      !window.confirm(
+        "Lancer les bots ? Tous les coachs qui n'ont pas encore biddé sur cette session vont recevoir 12 enchères automatiques.",
+      )
+    )
+      return;
+    setBusy("bots");
+    setActionError(null);
+    try {
+      const out = await apiRequest<{
+        entriesProcessed: number;
+        bidsCreated: number;
+        bidsUpdated: number;
+      }>(`/api/nfl-fantasy/draft-sessions/${activeSession.id}/bot-bids`, {
+        method: "POST",
+        body: JSON.stringify({ bidsPerEntry: 12 }),
+      });
+      window.alert(
+        `Bots : ${out.entriesProcessed} coach(s) ont placé ${out.bidsCreated} nouvelle(s) enchère(s) (${out.bidsUpdated} mise(s) à jour).`,
+      );
+      await loadMyBids();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   // ─── Render ─────────────────────────────────────────────────────
 
   if (error?.status === 401) {
@@ -662,13 +692,24 @@ export default function NuffleCoachDraftPage() {
             </button>
           )}
           {isOwner && activeSession && (
-            <button
-              onClick={resolveCurrentSession}
-              disabled={busy === "resolve"}
-              className="rounded-md border border-nuffle-red px-3 py-1.5 text-sm font-medium text-nuffle-red hover:bg-nuffle-red hover:text-nuffle-ivory disabled:opacity-50"
-            >
-              {busy === "resolve" ? "Résolution…" : "🎲 Résoudre maintenant"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={runBots}
+                disabled={busy === "bots"}
+                className="rounded-md border border-nuffle-bronze/40 px-3 py-1.5 text-sm font-medium text-nuffle-bronze hover:border-nuffle-bronze hover:bg-nuffle-bronze/10 disabled:opacity-50"
+                data-testid="mercato-bot-bids-cta"
+                title="Pose des enchères automatiques pour les coachs qui n'ont pas encore biddé sur cette session"
+              >
+                {busy === "bots" ? "Bots…" : "🤖 Lancer les bots"}
+              </button>
+              <button
+                onClick={resolveCurrentSession}
+                disabled={busy === "resolve"}
+                className="rounded-md border border-nuffle-red px-3 py-1.5 text-sm font-medium text-nuffle-red hover:bg-nuffle-red hover:text-nuffle-ivory disabled:opacity-50"
+              >
+                {busy === "resolve" ? "Résolution…" : "🎲 Résoudre maintenant"}
+              </button>
+            </div>
           )}
         </div>
         {sessions === null && (
