@@ -682,10 +682,19 @@ export default function NuffleCoachDraftPage() {
 
       {/* Sessions */}
       <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-nuffle-anthracite">
-            Sessions de mercato
-          </h2>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-lg font-semibold text-nuffle-anthracite">
+              Sessions de mercato
+            </h2>
+            <Link
+              href={`/nfl-fantasy/leagues/${leagueId}/draft/recap`}
+              className="text-xs text-nuffle-gold hover:underline"
+              data-testid="mercato-recap-link"
+            >
+              📜 Récap des résolutions →
+            </Link>
+          </div>
           {isOwner && !activeSession && (
             <button
               onClick={createSession}
