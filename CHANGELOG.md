@@ -1,3 +1,20 @@
+## [1.148.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.147.0...v1.148.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** bot draft automatique pour coachs sans encheres ([a919b8c](https://github.com/Ryxeuf/fantasy-football-game/commit/a919b8cd7740833956b8c8769cfbd29725fc2aad))
+* **nfl-fantasy:** page recap des sessions de draft ([dc2b5a4](https://github.com/Ryxeuf/fantasy-football-game/commit/dc2b5a4054359861d8cd0f513a5dd8e7539e48d9))
+* **nfl-fantasy:** pagination du catalogue Mercato ([578a9b9](https://github.com/Ryxeuf/fantasy-football-game/commit/578a9b98545d37fc5bf7f17fed2456419e5aa994))
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** bots ne biddent jamais pour le caller (owner) ([72e6821](https://github.com/Ryxeuf/fantasy-football-game/commit/72e6821281058f14e0ff27133d44d47257a581ed))
+* **nfl-fantasy:** expose player info + budget engage dans /my-bids ([d05d021](https://github.com/Ryxeuf/fantasy-football-game/commit/d05d0218f41fd084e86071268451144b841d7a69))
+* **nfl-fantasy:** filtre race utilise un vrai label FR, pas le team name ([586c82e](https://github.com/Ryxeuf/fantasy-football-game/commit/586c82eb3a13732d085526aca07117c91350d357))
+* **nfl-fantasy:** UI Mercato — 4 cartes budget + lignes enrichies ([2645e6e](https://github.com/Ryxeuf/fantasy-football-game/commit/2645e6e79577f9a1d4e25760c070006c1f43f605))
+
 ## [1.147.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.146.2...v1.147.0) (2026-05-28)
 
 
