@@ -50,6 +50,10 @@ import {
   NflFantasyMercatoError,
 } from "../services/nfl-fantasy-mercato";
 import { sellPlayer } from "../services/nfl-fantasy-player-value";
+import {
+  getCareerForPlayer,
+  listCareersForEntry,
+} from "../services/nfl-fantasy-player-career";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -342,5 +346,40 @@ router.post(
     }
   },
 );
+
+// ──────────────────────────────────────────────────────────────────
+// Carriere des joueurs (SPP cumules + skills unlocked)
+// ──────────────────────────────────────────────────────────────────
+
+router.get("/:entryId/careers", async (req, res) => {
+  try {
+    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    if (!entry) return;
+    const careers = await listCareersForEntry(req.params.entryId);
+    res.json({ careers });
+  } catch (err) {
+    serverLog.error("[nfl-fantasy-entries] listCareersForEntry failed", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+router.get("/:entryId/careers/:playerId", async (req, res) => {
+  try {
+    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    if (!entry) return;
+    const career = await getCareerForPlayer({
+      entryId: req.params.entryId,
+      playerId: req.params.playerId,
+    });
+    if (!career) {
+      res.status(404).json({ error: "Carriere non trouvee", code: "CAREER_NOT_FOUND" });
+      return;
+    }
+    res.json({ career });
+  } catch (err) {
+    serverLog.error("[nfl-fantasy-entries] getCareerForPlayer failed", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 export default router;

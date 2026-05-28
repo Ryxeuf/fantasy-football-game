@@ -2628,6 +2628,7 @@ model NflFantasyEntry {
   rerolls     NflFantasyReroll[]
   inducements NflFantasyInducement[]
   bids        NflFantasyDraftBid[]
+  careers     NflFantasyPlayerCareer[]
 
   @@unique([leagueId, userId])
   @@unique([leagueId, teamName])
@@ -2647,6 +2648,34 @@ model NflFantasyRoster {
   /// Team Value de ce joueur quand acquis (frozen). Permet de tracker
   /// l'evolution sans recalculer la valeur courante.
   tvCost      Int      @default(0)
+
+  entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, playerId])
+  @@index([playerId])
+}
+
+/// Carriere d'un NflPlayer au sein d'une NflFantasyEntry. Agrege les
+/// SPP gagnes au fil des weeks (incrementes par settleNflFantasyWeek)
+/// et permet de depenser ces SPP pour debloquer des skills BB
+/// supplementaires. La carriere est portee par le couple
+/// (entryId, playerId) — un meme joueur a des progressions
+/// independantes selon la ligue ou il est drafte.
+model NflFantasyPlayerCareer {
+  id             String   @id @default(cuid())
+  entryId        String
+  /// NflPlayer.id (FK logique alignee sur NflFantasyRoster).
+  playerId       String
+  /// SPP cumules sur toute la saison fantasy (jamais decrement).
+  sppCareer      Int      @default(0)
+  /// SPP deja depenses en skill unlocks.
+  sppSpent       Int      @default(0)
+  /// Skills BB unlockes via depense SPP (string[] de slugs).
+  skillsUnlocked Json     @default("[]")
+  /// Reserve future amelioration de stats. {} initialement.
+  statsBonus     Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 

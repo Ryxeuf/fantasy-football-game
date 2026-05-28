@@ -35,6 +35,7 @@ import {
   parseSppEvents,
   type SkillBonusEvent,
 } from "./nfl-fantasy-skill-bonus";
+import { buildAccumulateUpsert } from "./nfl-fantasy-player-career";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreur typee
@@ -402,8 +403,13 @@ export async function settleNflFantasyWeek(
       finalSpp: number;
       sppBreakdown: unknown;
     }> = [];
+    const careerUpdates: Array<{
+      entryId: string;
+      playerId: string;
+      sppDelta: number;
+    }> = [];
 
-    const scoreStarter = (s: StarterRow): number => {
+    const scoreStarter = (s: StarterRow, entryId: string): number => {
       const stat = sppByPlayer.get(s.playerId);
       const computedSpp = stat?.computedSpp ?? 0;
       const events = parseSppEvents(stat?.sppBreakdown);
@@ -424,12 +430,19 @@ export async function settleNflFantasyWeek(
         finalSpp,
         sppBreakdown: enrichBreakdown(stat?.sppBreakdown, bonusEvents),
       });
+      if (rawSpp > 0) {
+        careerUpdates.push({ entryId, playerId: s.playerId, sppDelta: rawSpp });
+      }
       startersScored++;
       return finalSpp;
     };
 
-    for (const s of homeStarters) homeTotal += scoreStarter(s);
-    for (const s of awayStarters) awayTotal += scoreStarter(s);
+    if (home) {
+      for (const s of homeStarters) homeTotal += scoreStarter(s, home.entryId);
+    }
+    if (away) {
+      for (const s of awayStarters) awayTotal += scoreStarter(s, away.entryId);
+    }
 
     const winnerId = determineWinner({
       homeEntryId: m.homeEntryId,
@@ -447,6 +460,13 @@ export async function settleNflFantasyWeek(
             finalSpp: u.finalSpp,
             sppBreakdown: u.sppBreakdown as never,
           },
+        }),
+      ),
+      ...careerUpdates.map((c) =>
+        buildAccumulateUpsert(prisma, {
+          entryId: c.entryId,
+          playerId: c.playerId,
+          sppDelta: c.sppDelta,
         }),
       ),
       ...(home

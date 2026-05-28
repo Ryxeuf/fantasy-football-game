@@ -16,6 +16,7 @@ vi.mock("../prisma", () => ({
     nflGame: { findMany: vi.fn() },
     nflGameStat: { findMany: vi.fn() },
     nflPlayer: { findMany: vi.fn() },
+    nflFantasyPlayerCareer: { upsert: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -520,6 +521,99 @@ describe("settleNflFantasyWeek", () => {
     expect(data.sppBreakdown.skillBonuses).toHaveLength(1);
     expect(data.sppBreakdown.skillBonuses?.[0]?.skill).toBe("pass");
     expect(data.sppBreakdown.skillBonuses?.[0]?.spp).toBe(2);
+  });
+
+  it("incrémente la carrière des joueurs scorés (sans bye)", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH1", playerId: "p1", isCaptain: false, isViceCaptain: false },
+          { id: "sH2", playerId: "pBye", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA1", playerId: "p2", isCaptain: true, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p1", computedSpp: 7, sppBreakdown: null },
+      // pBye absent
+      { playerId: "p2", computedSpp: 4, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const upserts = vi.mocked(prisma.nflFantasyPlayerCareer.upsert).mock.calls;
+    // 2 upserts : p1 (eHome, +7) et p2 (eAway, +4). pBye skip car rawSpp=0.
+    expect(upserts).toHaveLength(2);
+    const byPlayer = new Map(
+      upserts.map((c) => {
+        const arg = c[0] as {
+          create: { entryId: string; playerId: string; sppCareer: number };
+          update: { sppCareer: { increment: number } };
+        };
+        return [arg.create.playerId, arg];
+      }),
+    );
+    expect(byPlayer.get("p1")?.create.entryId).toBe("eHome");
+    expect(byPlayer.get("p1")?.create.sppCareer).toBe(7);
+    expect(byPlayer.get("p1")?.update.sppCareer.increment).toBe(7);
+    expect(byPlayer.get("p2")?.create.entryId).toBe("eAway");
+    expect(byPlayer.get("p2")?.create.sppCareer).toBe(4);
+    expect(byPlayer.get("pBye")).toBeUndefined();
+  });
+
+  it("la carrière utilise rawSpp (pas finalSpp), donc captain n'inflige pas l'XP", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH", playerId: "pCap", isCaptain: true, isViceCaptain: false },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA", playerId: "pX", isCaptain: false, isViceCaptain: false },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "pCap", computedSpp: 10, sppBreakdown: null },
+      { playerId: "pX", computedSpp: 0, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    const upserts = vi.mocked(prisma.nflFantasyPlayerCareer.upsert).mock.calls;
+    const capCall = upserts.find((c) => {
+      const arg = c[0] as { create: { playerId: string } };
+      return arg.create.playerId === "pCap";
+    });
+    const arg = capCall![0] as { create: { sppCareer: number } };
+    expect(arg.create.sppCareer).toBe(10); // rawSpp = 10, pas 15 (finalSpp)
   });
 
   it("bonus skills + multiplier captain : bonus inclus dans la base multipliée", async () => {
