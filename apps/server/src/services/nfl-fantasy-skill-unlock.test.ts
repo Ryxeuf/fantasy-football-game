@@ -5,13 +5,14 @@ vi.mock("../prisma", () => ({
     nflFantasyPlayerCareer: { findUnique: vi.fn(), update: vi.fn() },
     nflPlayer: { findUnique: vi.fn() },
     position: { findFirst: vi.fn() },
-    skill: { findFirst: vi.fn() },
+    skill: { findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
 
 import { prisma } from "../prisma";
 import {
   getSkillAccessView,
+  listAvailableSkillsForCareer,
   SkillUnlockError,
   unlockSkill,
 } from "./nfl-fantasy-skill-unlock";
@@ -327,5 +328,101 @@ describe("getSkillAccessView", () => {
     } as never);
     vi.mocked(prisma.position.findFirst).mockResolvedValue(null);
     expect(await getSkillAccessView("p1")).toBeNull();
+  });
+});
+
+describe("listAvailableSkillsForCareer", () => {
+  it("groupe les skills DB en primary/secondary selon les codes du pool", async () => {
+    vi.mocked(prisma.nflPlayer.findUnique).mockResolvedValue({
+      bbPosition: "Thrower",
+      bbSkills: ["pass"],
+      team: { bbRace: "Skaven" },
+    } as never);
+    vi.mocked(prisma.position.findFirst).mockResolvedValue({
+      primarySkills: "G,P",
+      secondarySkills: "A",
+    } as never);
+    vi.mocked(prisma.nflFantasyPlayerCareer.findUnique).mockResolvedValue({
+      sppCareer: 30,
+      sppSpent: 6,
+      skillsUnlocked: ["block"],
+    } as never);
+    vi.mocked(prisma.skill.findMany).mockResolvedValue([
+      { slug: "block", nameFr: "Bloquer", nameEn: "Block", category: "General" },
+      { slug: "tackle", nameFr: "Plaquage", nameEn: "Tackle", category: "General" },
+      { slug: "accurate", nameFr: "Tireur de precision", nameEn: "Accurate", category: "Passing" },
+      { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge", category: "Agility" },
+      { slug: "pass", nameFr: "Passe", nameEn: "Pass", category: "Passing" },
+    ] as never);
+
+    const out = await listAvailableSkillsForCareer({
+      entryId: "e1",
+      playerId: "p1",
+    });
+    expect(out).not.toBeNull();
+    // Exclut block (unlocked) + pass (starter).
+    expect(out!.primary.map((s) => s.slug)).toEqual(["tackle", "accurate"]);
+    // Secondary = Agility = dodge
+    expect(out!.secondary.map((s) => s.slug)).toEqual(["dodge"]);
+    expect(out!.sppAvailable).toBe(24);
+    expect(out!.remaining).toBe(5); // 6 cap - 1 unlocked
+  });
+
+  it("retourne null si combo non mappee", async () => {
+    vi.mocked(prisma.nflPlayer.findUnique).mockResolvedValue(null);
+    const out = await listAvailableSkillsForCareer({
+      entryId: "e1",
+      playerId: "p1",
+    });
+    expect(out).toBeNull();
+  });
+
+  it("career absente : sppAvailable=0 mais liste quand meme le pool", async () => {
+    vi.mocked(prisma.nflPlayer.findUnique).mockResolvedValue({
+      bbPosition: "Thrower",
+      bbSkills: [],
+      team: { bbRace: "Skaven" },
+    } as never);
+    vi.mocked(prisma.position.findFirst).mockResolvedValue({
+      primarySkills: "G",
+      secondarySkills: "",
+    } as never);
+    vi.mocked(prisma.nflFantasyPlayerCareer.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.skill.findMany).mockResolvedValue([
+      { slug: "block", nameFr: "Bloquer", nameEn: "Block", category: "General" },
+    ] as never);
+
+    const out = await listAvailableSkillsForCareer({
+      entryId: "e1",
+      playerId: "p1",
+    });
+    expect(out?.sppAvailable).toBe(0);
+    expect(out?.primary.map((s) => s.slug)).toEqual(["block"]);
+    expect(out?.remaining).toBe(6);
+  });
+
+  it("pools vides (primary='' secondary='') => listes vides", async () => {
+    vi.mocked(prisma.nflPlayer.findUnique).mockResolvedValue({
+      bbPosition: "Thrower",
+      bbSkills: [],
+      team: { bbRace: "Skaven" },
+    } as never);
+    vi.mocked(prisma.position.findFirst).mockResolvedValue({
+      primarySkills: "",
+      secondarySkills: "",
+    } as never);
+    vi.mocked(prisma.nflFantasyPlayerCareer.findUnique).mockResolvedValue({
+      sppCareer: 0,
+      sppSpent: 0,
+      skillsUnlocked: [],
+    } as never);
+
+    const out = await listAvailableSkillsForCareer({
+      entryId: "e1",
+      playerId: "p1",
+    });
+    expect(out?.primary).toEqual([]);
+    expect(out?.secondary).toEqual([]);
+    expect(prisma.skill.findMany).not.toHaveBeenCalled();
   });
 });

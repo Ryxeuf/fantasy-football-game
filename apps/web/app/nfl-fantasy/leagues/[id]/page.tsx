@@ -328,6 +328,13 @@ export default function LeagueDetailPage() {
             >
               🏆 Classement
             </Link>
+            <Link
+              href={`/nfl-fantasy/leagues/${league.id}/career`}
+              className="rounded-md border border-nuffle-bronze/30 px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:border-nuffle-gold"
+              data-testid="nfl-fantasy-career-cta"
+            >
+              🎯 Carrière des joueurs
+            </Link>
           </div>
         </section>
       )}

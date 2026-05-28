@@ -24,7 +24,10 @@ import type { BbPosition, BbRace } from "@bb/nfl-mapper";
 import {
   categoryCodeForSkill,
   checkSkillAccess,
+  dbCategoryToCode,
+  parseAccessCsv,
   type AdvancementAccessType,
+  type SkillCategoryCode,
 } from "./skill-access";
 import { getPositionSlugFor } from "./nfl-bb-derivation";
 import { parseBbSkills } from "./nfl-fantasy-skill-bonus";
@@ -247,6 +250,107 @@ export interface SkillAccessView {
   readonly costs: typeof SKILL_UNLOCK_COSTS;
   readonly cap: number;
   readonly startingSkills: readonly string[];
+}
+
+// Code -> nom DB (`Skill.category`), reverse map de DB_CATEGORY_TO_CODE.
+const CODE_TO_DB_CATEGORY: Readonly<Record<SkillCategoryCode, string>> = {
+  G: "General",
+  A: "Agility",
+  S: "Strength",
+  P: "Passing",
+  M: "Mutation",
+};
+
+export interface AvailableSkill {
+  readonly slug: string;
+  readonly nameFr: string;
+  readonly nameEn: string;
+  readonly category: string;
+}
+
+export interface AvailableSkillsForCareer {
+  readonly primary: readonly AvailableSkill[];
+  readonly secondary: readonly AvailableSkill[];
+  readonly cap: number;
+  readonly remaining: number;
+  readonly costs: typeof SKILL_UNLOCK_COSTS;
+  readonly sppAvailable: number;
+}
+
+/**
+ * Liste les skills concretement achetables par le joueur, separes en
+ * primary/secondary. Exclut les skills de depart (`NflPlayer.bbSkills`)
+ * et ceux deja unlocked. Le caller (UI) n'a plus qu'a presenter le
+ * pool et appeler `unlockSkill` au clic.
+ *
+ * Retourne `null` si pas mappe (cas a cacher dans la UI).
+ */
+export async function listAvailableSkillsForCareer(opts: {
+  entryId: string;
+  playerId: string;
+}): Promise<AvailableSkillsForCareer | null> {
+  const access = await getSkillAccessView(opts.playerId);
+  if (!access) return null;
+  const career = await prisma.nflFantasyPlayerCareer.findUnique({
+    where: {
+      entryId_playerId: { entryId: opts.entryId, playerId: opts.playerId },
+    },
+    select: { sppCareer: true, sppSpent: true, skillsUnlocked: true },
+  });
+  const unlocked = career ? parseBbSkills(career.skillsUnlocked) : [];
+  const sppAvailable = career ? career.sppCareer - career.sppSpent : 0;
+  const excluded = new Set<string>([...access.startingSkills, ...unlocked]);
+
+  const primaryCodes = parseAccessCsv(access.primarySkills);
+  const secondaryCodes = parseAccessCsv(access.secondarySkills);
+  const allCodes = new Set<SkillCategoryCode>([
+    ...primaryCodes,
+    ...secondaryCodes,
+  ]);
+  if (allCodes.size === 0) {
+    return {
+      primary: [],
+      secondary: [],
+      cap: UNLOCK_CAP,
+      remaining: Math.max(0, UNLOCK_CAP - unlocked.length),
+      costs: SKILL_UNLOCK_COSTS,
+      sppAvailable,
+    };
+  }
+
+  const dbCategories = Array.from(allCodes).map((c) => CODE_TO_DB_CATEGORY[c]);
+  const rows = await prisma.skill.findMany({
+    where: {
+      ruleset: RULESET_S3 as never,
+      category: { in: dbCategories },
+    },
+    select: {
+      slug: true,
+      nameFr: true,
+      nameEn: true,
+      category: true,
+    },
+    orderBy: [{ category: "asc" }, { nameFr: "asc" }],
+  });
+
+  const primary: AvailableSkill[] = [];
+  const secondary: AvailableSkill[] = [];
+  for (const r of rows) {
+    if (excluded.has(r.slug)) continue;
+    const code = dbCategoryToCode(r.category);
+    if (!code) continue;
+    if (primaryCodes.has(code)) primary.push(r);
+    else if (secondaryCodes.has(code)) secondary.push(r);
+  }
+
+  return {
+    primary,
+    secondary,
+    cap: UNLOCK_CAP,
+    remaining: Math.max(0, UNLOCK_CAP - unlocked.length),
+    costs: SKILL_UNLOCK_COSTS,
+    sppAvailable,
+  };
 }
 
 /**

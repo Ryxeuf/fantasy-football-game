@@ -56,6 +56,7 @@ import {
 } from "../services/nfl-fantasy-player-career";
 import {
   getSkillAccessView,
+  listAvailableSkillsForCareer,
   SkillUnlockError,
   unlockSkill,
 } from "../services/nfl-fantasy-skill-unlock";
@@ -384,6 +385,28 @@ router.get("/:entryId/careers/:playerId", async (req, res) => {
     res.json({ career, access });
   } catch (err) {
     serverLog.error("[nfl-fantasy-entries] getCareerForPlayer failed", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+router.get("/:entryId/careers/:playerId/available-skills", async (req, res) => {
+  try {
+    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    if (!entry) return;
+    const out = await listAvailableSkillsForCareer({
+      entryId: req.params.entryId,
+      playerId: req.params.playerId,
+    });
+    if (!out) {
+      res.status(404).json({
+        error: "Pool d'acces indisponible pour ce joueur",
+        code: "POSITION_NOT_MAPPED",
+      });
+      return;
+    }
+    res.json(out);
+  } catch (err) {
+    serverLog.error("[nfl-fantasy-entries] listAvailableSkillsForCareer failed", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

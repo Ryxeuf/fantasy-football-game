@@ -87,19 +87,62 @@ Shape de réponse :
 `sppAvailable = sppCareer - sppSpent` calculé côté service (pas
 stocké).
 
-## Prochaine étape
+## Dépense de SPP — achat de skill
 
-La dépense de SPP pour débloquer un skill est dans le commit suivant
-(étape iii) : UI achat via le pool d'accès Position primaire/secondaire,
-endpoint serveur `POST /careers/:playerId/unlock-skill` qui :
+Service `apps/server/src/services/nfl-fantasy-skill-unlock.ts` :
 
-1. Charge le pool d'accès via `NflPlayer.bbPosition` + race
-   (`NflTeam.bbRace`) et la `Position` du roster BB matchée.
-2. Vérifie que le skill demandé est dans le pool primaire/secondaire.
-3. Décrémente `sppAvailable` selon le coût (3 SPP primaire / 6 SPP
-   secondaire, alignés sur les coûts BB classiques) et push dans
+1. Matche la `Position` Saison 3 du joueur via
+   `getPositionSlugFor(race, bbPosition)` (cf. [nfl-bb-derivation](../05-position-mapping.md)).
+2. Lit `Position.primarySkills` / `secondarySkills` (encodage CSV
+   G/A/S/P/M alimenté par la feature [skill-access](../skill-access-feature.md)).
+3. Vérifie que la catégorie du skill demandé (`Skill.category`) est
+   dans le pool indiqué (`primary` vs `secondary`).
+4. Coûts V1 (chosen BB) : **6 SPP primaire**, **12 SPP secondaire**.
+5. Cap V1 : **6 skills unlocked** maximum (les bbSkills de départ ne
+   comptent pas dans ce cap).
+6. Persiste `sppSpent: { increment: cost }` + push slug dans
    `skillsUnlocked`.
 
-Ce skill alimente immédiatement les bonus de scoring V1
-(`nfl-fantasy-skill-bonus.ts`) : Mahomes débloque `accurate` →
-bonus +1 par TD passing dès la semaine suivante.
+Erreurs typées `SkillUnlockError` → HTTP via map dans
+`routes/nfl-fantasy-entries.ts`. Codes : `CAREER_NOT_FOUND`,
+`PLAYER_NOT_FOUND`, `POSITION_NOT_MAPPED`, `POSITION_NOT_FOUND`,
+`POSITION_HAS_NO_ACCESS`, `SKILL_NOT_FOUND`, `SKILL_ALREADY_OWNED`,
+`SKILL_NOT_IN_POOL`, `NOT_ENOUGH_SPP`, `SKILL_CAP_REACHED`.
+
+## API publique (user-facing)
+
+- `POST /api/nfl-fantasy/entries/:entryId/careers/:playerId/unlock-skill`
+  Body : `{ skillSlug, accessType: "primary"|"secondary" }`.
+- `GET /api/nfl-fantasy/entries/:entryId/careers/:playerId/available-skills`
+  → `{ primary: AvailableSkill[], secondary: AvailableSkill[], cap,
+        remaining, costs, sppAvailable }`. Skills déjà starters /
+  unlocked déjà filtrés côté serveur.
+
+## UI
+
+Deux pages Next.js :
+
+- `/nfl-fantasy/leagues/[id]/career` — liste mes carrières (table :
+  pseudonyme, position, SPP cumulés, SPP disponibles, skills
+  unlocked).
+- `/nfl-fantasy/leagues/[id]/career/[playerId]` — détail du joueur,
+  stats career, badges starter/unlocked, sections "Pool primaire (6
+  SPP)" / "Pool secondaire (12 SPP)" avec un bouton "Débloquer" par
+  skill achetable. Désactivé si SPP insuffisants ou cap atteint.
+
+CTA "🎯 Carrière des joueurs" ajouté au bandeau "Ma semaine" de la
+page league.
+
+## Boucle complète
+
+Après ce commit, la boucle Phase 2 → V2 est fermée :
+
+1. **NFL réel** (ESPN/nflverse ingest) → `NflGameStat.computedSpp`.
+2. **Settle hebdo** → `NflFantasyLineupStarter.rawSpp` enrichi par
+   les bonus skills BB (étape i) + `sppCareer` incrémenté (étape ii).
+3. **Joueur dépense SPP** → unlock skill BB via pool d'accès Position
+   (étape iii).
+4. Le skill débloqué participe immédiatement aux bonus du settle
+   suivant — Mahomes débloque `accurate` → +1 SPP par TD passing dès
+   la semaine d'après. La boucle fantasy → BB → fantasy se renforce
+   chaque semaine.
