@@ -244,7 +244,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Orc Lineman', cost: 50, max: 16, ma: 5, st: 3, ag: 3, pa: 4, av: 10, skills: [] },
-      { nameEn: 'Goblin Lineman', cost: 40, max: 4, ma: 6, st: 2, ag: 3, pa: 3, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Goblin Lineman', cost: 40, max: 4, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
       { nameEn: 'Orc Blitzer', cost: 85, max: 2, ma: 6, st: 3, ag: 3, pa: 4, av: 10, skills: ['block', 'break-tackle'] },
       { nameEn: 'Troll', cost: 115, max: 1, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'loner-4', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
     ],
