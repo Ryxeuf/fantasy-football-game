@@ -202,6 +202,8 @@ export default function NuffleCoachDraftPage() {
   const [budget, setBudget] = useState<BudgetBreakdown | null>(null);
   const [catalog, setCatalog] = useState<CatalogPlayer[] | null>(null);
   const [catalogTotal, setCatalogTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(30);
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [teams, setTeams] = useState<TeamRow[]>([]);
@@ -333,14 +335,20 @@ export default function NuffleCoachDraftPage() {
   }, []);
 
   // Catalogue (debounce search + tous les filtres / tri).
+  // Reset page=1 quand les filtres ou le pageSize changent — eviter
+  // de rester sur une page vide apres reduction du total.
+  useEffect(() => {
+    setPage(1);
+  }, [filters, pageSize]);
+
   useEffect(() => {
     let cancelled = false;
     async function loadCatalog() {
       if (!leagueId) return;
       try {
         const params = new URLSearchParams();
-        params.set("page", "1");
-        params.set("pageSize", "30");
+        params.set("page", String(page));
+        params.set("pageSize", String(pageSize));
         params.set("seasonId", SEASON_ID);
         if (filters.search.trim()) params.set("search", filters.search.trim());
         if (filters.teamCode) params.set("teamCode", filters.teamCode);
@@ -371,7 +379,7 @@ export default function NuffleCoachDraftPage() {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [leagueId, filters]);
+  }, [leagueId, filters, page, pageSize]);
 
   // Liste des races uniques (codes BbRace) extraite des 32 equipes.
   // Le label affiche vient de BB_RACE_LABEL_FR — `t.raceLabel` est en
@@ -1104,6 +1112,16 @@ export default function NuffleCoachDraftPage() {
               })}
             </ul>
           )}
+
+          {catalogTotal > 0 && (
+            <CatalogPagination
+              page={page}
+              pageSize={pageSize}
+              total={catalogTotal}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
         </section>
       )}
 
@@ -1163,6 +1181,85 @@ function StatCard({
         {value}
       </p>
       {sub && <p className="mt-0.5 text-[11px] text-nuffle-anthracite/60">{sub}</p>}
+    </div>
+  );
+}
+
+function CatalogPagination({
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (n: number) => void;
+  onPageSizeChange: (n: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const clampedPage = Math.min(page, totalPages);
+  const start = total === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
+  const end = Math.min(clampedPage * pageSize, total);
+  return (
+    <div
+      className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-nuffle-bronze/20 bg-white px-3 py-2 text-xs text-nuffle-anthracite/80"
+      data-testid="mercato-pagination"
+    >
+      <span>
+        {start}–{end} sur {total}
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={clampedPage <= 1}
+          onClick={() => onPageChange(1)}
+          className="rounded border border-nuffle-bronze/30 px-2 py-1 hover:border-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Première page"
+        >
+          «
+        </button>
+        <button
+          type="button"
+          disabled={clampedPage <= 1}
+          onClick={() => onPageChange(clampedPage - 1)}
+          className="rounded border border-nuffle-bronze/30 px-2 py-1 hover:border-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ‹ Préc
+        </button>
+        <span className="px-1 tabular-nums">
+          Page <strong>{clampedPage}</strong> / {totalPages}
+        </span>
+        <button
+          type="button"
+          disabled={clampedPage >= totalPages}
+          onClick={() => onPageChange(clampedPage + 1)}
+          className="rounded border border-nuffle-bronze/30 px-2 py-1 hover:border-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Suiv ›
+        </button>
+        <button
+          type="button"
+          disabled={clampedPage >= totalPages}
+          onClick={() => onPageChange(totalPages)}
+          className="rounded border border-nuffle-bronze/30 px-2 py-1 hover:border-nuffle-bronze disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Dernière page"
+        >
+          »
+        </button>
+        <select
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          className="rounded border border-nuffle-bronze/30 bg-white px-2 py-1"
+          aria-label="Nombre de joueurs par page"
+        >
+          <option value={20}>20 / page</option>
+          <option value={30}>30 / page</option>
+          <option value={50}>50 / page</option>
+          <option value={100}>100 / page</option>
+        </select>
+      </div>
     </div>
   );
 }
