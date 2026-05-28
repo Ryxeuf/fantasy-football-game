@@ -1,3 +1,11 @@
+## [1.149.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.148.0...v1.149.0) (2026-05-28)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** sticky header avec budget dispo + bids + countdown ([91e5b11](https://github.com/Ryxeuf/fantasy-football-game/commit/91e5b11fdca7ae18a904ba1cbcc69d7dea57abb5))
+* **nfl-fantasy:** UI Mercato responsive — filtres + sections repliables ([9b53ae2](https://github.com/Ryxeuf/fantasy-football-game/commit/9b53ae2dfdfdc02c90987d8ebd6d0d15b137c104))
+
 ## [1.148.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.147.0...v1.148.0) (2026-05-28)
 
 
