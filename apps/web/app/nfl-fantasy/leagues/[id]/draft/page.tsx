@@ -104,6 +104,20 @@ interface MeResponse {
 
 const SEASON_ID = "2025";
 
+// Label FR par BbRace pour le filtre de race. `raceLabel` cote
+// teams.json contient en fait le nom complet de l'equipe NFL
+// ("Cleveland Dwarfs"), donc inutilisable comme label de race.
+const BB_RACE_LABEL_FR: Readonly<Record<string, string>> = {
+  Skaven: "Skavens",
+  WoodElf: "Elfes Sylvains",
+  Orc: "Orques",
+  Human: "Humains",
+  Norse: "Nordiques",
+  Dwarf: "Nains",
+  Khorne: "Khorne",
+  Necromantic: "Necromantique",
+};
+
 interface TeamRow {
   readonly code: string;
   readonly city: string;
@@ -359,14 +373,15 @@ export default function NuffleCoachDraftPage() {
     };
   }, [leagueId, filters]);
 
-  // Liste des races unique extraite des 32 equipes (pour le dropdown).
+  // Liste des races uniques (codes BbRace) extraite des 32 equipes.
+  // Le label affiche vient de BB_RACE_LABEL_FR — `t.raceLabel` est en
+  // realite un nom d'equipe ("Cleveland Dwarfs"), inutilisable comme
+  // label de race.
   const races = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const t of teams) {
-      if (!seen.has(t.bbRace)) seen.set(t.bbRace, t.raceLabel);
-    }
-    return Array.from(seen.entries())
-      .map(([code, label]) => ({ code, label }))
+    const seen = new Set<string>();
+    for (const t of teams) seen.add(t.bbRace);
+    return Array.from(seen)
+      .map((code) => ({ code, label: BB_RACE_LABEL_FR[code] ?? code }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [teams]);
 
