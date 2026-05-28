@@ -33,6 +33,7 @@ import {
 
 import { prisma } from "../prisma";
 import { NflIngestError, normalizeNflverseTeamCode } from "./nfl-ingest";
+import { deriveBbAttributes } from "./nfl-bb-derivation";
 import { serverLog } from "../utils/server-log";
 
 // ────────────────────────────────────────────────────────────────────
@@ -266,10 +267,18 @@ export async function ingestNflverseRosters(
       })) as { id: string; teamCode: string | null; bbPosition: string } | null;
 
       const effectiveTeamCode = parsed.teamCode ?? existing?.teamCode ?? null;
+      const effectiveRace = effectiveTeamCode
+        ? getRace(effectiveTeamCode)
+        : null;
       const bbPosition: BbPosition =
-        effectiveTeamCode && parsed.nflPosition
-          ? getBbPosition(parsed.nflPosition, getRace(effectiveTeamCode))
+        effectiveRace && parsed.nflPosition
+          ? getBbPosition(parsed.nflPosition, effectiveRace)
           : ((existing?.bbPosition as BbPosition | undefined) ?? "Lineman");
+      // Dérive stats + skills BB depuis (race, bbPosition). null si combo
+      // non mappée -> on laisse vide (les fallbacks UI gèrent l'absence).
+      const derivedBb = effectiveRace
+        ? deriveBbAttributes(effectiveRace, bbPosition)
+        : null;
 
       const cityTag = effectiveTeamCode
         ? getTeamMeta(effectiveTeamCode as NflTeamCode).city
@@ -302,10 +311,17 @@ export async function ingestNflverseRosters(
         yearsExp: parsed.yearsExp,
       };
 
+      // Stats + compétences BB : on les écrit uniquement si la dérivation
+      // a réussi. Sinon, en update on ne les touche pas (préserve un
+      // éventuel backfill antérieur) ; en create on initialise à vide.
+      const bbAttrPatch = derivedBb
+        ? { bbStats: derivedBb.stats, bbSkills: [...derivedBb.skills] }
+        : null;
+
       if (existing) {
         await prisma.nflPlayer.update({
           where: { id: parsed.playerId },
-          data,
+          data: bbAttrPatch ? { ...data, ...bbAttrPatch } : data,
         });
         playersUpdated++;
       } else {
@@ -313,8 +329,8 @@ export async function ingestNflverseRosters(
           data: {
             id: parsed.playerId,
             ...data,
-            bbStats: {},
-            bbSkills: [],
+            bbStats: bbAttrPatch?.bbStats ?? {},
+            bbSkills: bbAttrPatch?.bbSkills ?? [],
           },
         });
         playersCreated++;
