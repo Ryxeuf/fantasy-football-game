@@ -334,6 +334,59 @@ describe("placeBotBidsForSession", () => {
     expect(prisma.nflFantasyDraftBid.upsert).not.toHaveBeenCalled();
   });
 
+  it("excludeEntryId : ne touche jamais l'entry du caller, meme sans bids", async () => {
+    mockSessionOpen();
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { id: "eCaller", budgetRemaining: 5000, bids: [], roster: [] },
+      { id: "eBot", budgetRemaining: 5000, bids: [], roster: [] },
+    ] as never);
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "p1", bbPosition: "Thrower", currentValue: 300 },
+    ] as never);
+    vi.mocked(prisma.nflFantasyDraftBid.upsert).mockResolvedValue({
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    } as never);
+
+    const out = await placeBotBidsForSession({
+      sessionId: "s1",
+      excludeEntryId: "eCaller",
+    });
+    expect(out.entriesProcessed).toBe(1);
+    const targets = new Set(
+      vi.mocked(prisma.nflFantasyDraftBid.upsert).mock.calls.map((c) => {
+        const arg = c[0] as { where: { sessionId_entryId_playerId: { entryId: string } } };
+        return arg.where.sessionId_entryId_playerId.entryId;
+      }),
+    );
+    expect(targets.has("eCaller")).toBe(false);
+    expect(targets.has("eBot")).toBe(true);
+  });
+
+  it("excludeEntryId override entryIds : caller hors-cible meme si liste explicite", async () => {
+    mockSessionOpen();
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { id: "eCaller", budgetRemaining: 5000, bids: [], roster: [] },
+      { id: "eBot", budgetRemaining: 5000, bids: [], roster: [] },
+    ] as never);
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "p1", bbPosition: "Thrower", currentValue: 300 },
+    ] as never);
+    vi.mocked(prisma.nflFantasyDraftBid.upsert).mockResolvedValue({
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    } as never);
+
+    const out = await placeBotBidsForSession({
+      sessionId: "s1",
+      entryIds: ["eCaller", "eBot"],
+      excludeEntryId: "eCaller",
+    });
+    expect(out.entriesProcessed).toBe(1);
+  });
+
   it("compte les bids crees vs mis a jour selon createdAt == updatedAt", async () => {
     mockSessionOpen();
     vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([

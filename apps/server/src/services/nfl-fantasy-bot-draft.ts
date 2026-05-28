@@ -245,6 +245,10 @@ export interface PlaceBotBidsOpts {
    *  toutes les entries de la league qui n'ont AUCUN bid sur cette
    *  session (= bots non encore actifs). */
   readonly entryIds?: ReadonlyArray<string>;
+  /** Entry du caller (humain qui lance les bots). Toujours exclue
+   *  meme si elle n'a pas encore bidde — un coach ne se fait pas
+   *  bidder a sa place par accident. */
+  readonly excludeEntryId?: string;
   readonly bidsPerEntry?: number;
 }
 
@@ -317,9 +321,10 @@ export async function placeBotBidsForSession(
       roster: { select: { playerId: true } },
     },
   });
-  const targetEntries = opts.entryIds
-    ? entries
-    : entries.filter((e) => e.bids.length === 0);
+  const callerEntryId = opts.excludeEntryId;
+  const targetEntries = (
+    opts.entryIds ? entries : entries.filter((e) => e.bids.length === 0)
+  ).filter((e) => e.id !== callerEntryId);
   if (targetEntries.length === 0) {
     return {
       sessionId: opts.sessionId,

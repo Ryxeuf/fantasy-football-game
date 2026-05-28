@@ -146,25 +146,86 @@ router.get("/:sessionId", async (req, res) => {
 
     // Si resolue, on expose les outcomes publiquement (qui a gagne quoi).
     if (session.status === "resolved") {
-      const wonBids = await prisma.nflFantasyDraftBid.findMany({
-        where: { sessionId: session.id, status: "won" },
+      type DraftBidRow = {
+        playerId: string;
+        entryId: string;
+        amount: number;
+        status: string;
+        entry: { teamName: string };
+      };
+      const allBids: DraftBidRow[] = await prisma.nflFantasyDraftBid.findMany({
+        where: {
+          sessionId: session.id,
+          status: { in: ["won", "lost"] },
+        },
         select: {
           playerId: true,
           entryId: true,
           amount: true,
+          status: true,
           entry: { select: { teamName: true } },
         },
       });
-      type WonBid = (typeof wonBids)[number];
-      res.json({
-        session,
-        outcomes: wonBids.map((b: WonBid) => ({
-          playerId: b.playerId,
-          winnerEntryId: b.entryId,
-          winnerTeamName: b.entry.teamName,
-          amount: b.amount,
-        })),
+      const playerIds = Array.from(new Set(allBids.map((b) => b.playerId)));
+      type PlayerLite = {
+        id: string;
+        pseudonym: string;
+        bbPosition: string;
+        teamCode: string | null;
+      };
+      const players: PlayerLite[] =
+        playerIds.length === 0
+          ? []
+          : await prisma.nflPlayer.findMany({
+              where: { id: { in: playerIds } },
+              select: {
+                id: true,
+                pseudonym: true,
+                bbPosition: true,
+                teamCode: true,
+              },
+            });
+      const playerById = new Map<string, PlayerLite>(
+        players.map((p) => [p.id, p]),
+      );
+      // Grouper les bids par joueur pour batir un outcome par joueur.
+      const bidsByPlayer = new Map<string, DraftBidRow[]>();
+      for (const b of allBids) {
+        const arr = bidsByPlayer.get(b.playerId) ?? [];
+        arr.push(b);
+        bidsByPlayer.set(b.playerId, arr);
+      }
+      const outcomes = Array.from(bidsByPlayer.entries()).map(
+        ([playerId, bids]) => {
+          const won = bids.find((b) => b.status === "won");
+          const losers = bids
+            .filter((b) => b.status === "lost")
+            .map((b) => ({
+              entryId: b.entryId,
+              teamName: b.entry.teamName,
+              amount: b.amount,
+            }))
+            .sort((a, b) => b.amount - a.amount);
+          const p = playerById.get(playerId);
+          return {
+            playerId,
+            playerPseudonym: p?.pseudonym ?? null,
+            playerBbPosition: p?.bbPosition ?? null,
+            playerTeamCode: p?.teamCode ?? null,
+            winnerEntryId: won?.entryId ?? null,
+            winnerTeamName: won?.entry.teamName ?? null,
+            winnerAmount: won?.amount ?? null,
+            losingBids: losers,
+          };
+        },
+      );
+      // Tri : prioriser les joueurs ayant un gagnant + amount desc.
+      outcomes.sort((a, b) => {
+        const aw = a.winnerAmount ?? -1;
+        const bw = b.winnerAmount ?? -1;
+        return bw - aw;
       });
+      res.json({ session, outcomes });
       return;
     }
 
@@ -202,18 +263,28 @@ router.post(
           .json({ error: "Session introuvable", code: "SESSION_NOT_FOUND" });
         return;
       }
-      if (session.league.ownerId !== userId(req as AuthenticatedRequest)) {
+      const callerId = userId(req as AuthenticatedRequest);
+      if (session.league.ownerId !== callerId) {
         res.status(403).json({
           error: "Seul le owner peut lancer les bots",
           code: "NOT_OWNER",
         });
         return;
       }
+      // Exclure l'entry du caller — un coach ne se fait pas bidder a
+      // sa place automatiquement, meme s'il n'a rien bidde encore.
+      const callerEntry = await prisma.nflFantasyEntry.findUnique({
+        where: {
+          leagueId_userId: { leagueId: session.leagueId, userId: callerId },
+        },
+        select: { id: true },
+      });
       const body = req.body as z.infer<typeof botBidsSchema>;
       const out = await placeBotBidsForSession({
         sessionId: req.params.sessionId,
         bidsPerEntry: body.bidsPerEntry,
         entryIds: body.entryIds,
+        excludeEntryId: callerEntry?.id,
       });
       res.json(out);
     } catch (err) {
