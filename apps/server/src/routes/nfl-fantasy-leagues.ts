@@ -27,6 +27,7 @@ import {
   leaveLeague,
   listLeaguesForUser,
   listPublicLeagues,
+  NflFantasyLeagueError,
   populateLeagueWithTestCoaches,
   updateLeague,
   LEAGUE_SIZE_MAX,
@@ -34,6 +35,8 @@ import {
   DRAFT_BUDGET_MAX,
   DRAFT_BUDGET_MIN,
 } from "../services/nfl-fantasy-league";
+import { finalizeLeague } from "../services/nfl-fantasy-draft";
+import { prisma } from "../prisma";
 import {
   getLeagueStandings,
   listMatchupsForWeek,
@@ -236,6 +239,44 @@ router.post("/:id/populate-test-coaches", async (req, res) => {
   } catch (err) {
     if (!sendNflError(res, err)) {
       serverLog.error("[nfl-fantasy-leagues] populate failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────
+// Lifecycle : demarrer la saison (draft -> in_progress)
+// ──────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/nfl-fantasy/leagues/:id/start-season
+ *
+ * Transitionne le championnat de "draft" vers "in_progress". Owner
+ * uniquement. Une fois la saison demarree :
+ *   - les coachs peuvent configurer leur lineup hebdomadaire
+ *   - les matchups sont generes par les ticks cron settle
+ *   - le mercato ne peut plus etre relance manuellement
+ *
+ * Reutilise `finalizeLeague` (seed des rerolls de demarrage inclus).
+ */
+router.post("/:id/start-season", async (req, res) => {
+  try {
+    const league = await prisma.nflFantasyLeague.findUnique({
+      where: { id: req.params.id },
+      select: { ownerId: true },
+    });
+    if (!league) {
+      res.status(404).json({ error: "League introuvable", code: "NOT_FOUND" });
+      return;
+    }
+    if (league.ownerId !== userId(req)) {
+      throw new NflFantasyLeagueError("NOT_OWNER", "Action reservee a l'owner");
+    }
+    const out = await finalizeLeague({ leagueId: req.params.id });
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] start-season failed", err);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }
