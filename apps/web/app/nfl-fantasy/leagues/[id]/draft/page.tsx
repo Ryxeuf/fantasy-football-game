@@ -40,11 +40,24 @@ interface MyBid {
   readonly amount: number;
   readonly status: string;
   readonly basePrice: number;
+  readonly pseudonym: string | null;
+  readonly bbPosition: string | null;
+  readonly teamCode: string | null;
+  readonly currentValue: number | null;
+}
+
+interface BudgetBreakdown {
+  readonly draftBudget: number;
+  readonly budgetSpent: number;
+  readonly budgetRemaining: number;
+  readonly budgetEngaged: number;
+  readonly budgetAvailable: number;
 }
 
 interface MyBidsResponse {
   readonly myEntryId: string;
   readonly bids: MyBid[];
+  readonly budget: BudgetBreakdown;
 }
 
 interface RosterPlayer {
@@ -172,6 +185,7 @@ export default function NuffleCoachDraftPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<DraftSession[] | null>(null);
   const [myBids, setMyBids] = useState<MyBid[]>([]);
+  const [budget, setBudget] = useState<BudgetBreakdown | null>(null);
   const [catalog, setCatalog] = useState<CatalogPlayer[] | null>(null);
   const [catalogTotal, setCatalogTotal] = useState<number>(0);
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
@@ -240,6 +254,7 @@ export default function NuffleCoachDraftPage() {
   const loadMyBids = useCallback(async () => {
     if (!activeSession) {
       setMyBids([]);
+      setBudget(null);
       return;
     }
     try {
@@ -247,8 +262,10 @@ export default function NuffleCoachDraftPage() {
         `/api/nfl-fantasy/draft-sessions/${activeSession.id}/my-bids`,
       );
       setMyBids(out.bids);
+      setBudget(out.budget);
     } catch {
       setMyBids([]);
+      setBudget(null);
     }
   }, [activeSession]);
 
@@ -542,8 +559,7 @@ export default function NuffleCoachDraftPage() {
   }
 
   const myBidsByPlayer = new Map(myBids.map((b) => [b.playerId, b]));
-  const totalCommitted = myBids.reduce((acc, b) => acc + b.amount, 0);
-  const budgetRemaining = myEntry?.budgetRemaining;
+  const budgetAvailable = budget?.budgetAvailable ?? myEntry?.budgetRemaining ?? null;
 
   return (
     <div className="space-y-6" data-testid="nuffle-coach-draft">
@@ -574,29 +590,38 @@ export default function NuffleCoachDraftPage() {
         </div>
       )}
 
-      {/* Budget + récap mes bids */}
+      {/* Budget : 4 cartes pour distinguer total / depense / engage / dispo */}
       {myEntry && (
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="Budget restant"
-            value={budgetRemaining !== undefined ? `${budgetRemaining} TV` : "—"}
-            highlight
+            label="Budget total"
+            value={budget ? `${budget.draftBudget} TV` : "—"}
+            sub="Budget initial de la league"
           />
           <StatCard
-            label="Bids en cours"
-            value={`${myBids.length}`}
-            sub={`${totalCommitted} TV engagés`}
-          />
-          <StatCard
-            label="Joueurs draftés"
-            value={`${roster.length}`}
+            label="Déjà dépensé"
+            value={budget ? `${budget.budgetSpent} TV` : "—"}
             sub={
               roster.length > 0
-                ? `Valeur totale ${roster.reduce(
-                    (acc, r) => acc + (r.player?.currentValue ?? 0),
-                    0,
-                  )} TV`
-                : "Aucun encore"
+                ? `${roster.length} joueur${roster.length > 1 ? "s" : ""} recruté${roster.length > 1 ? "s" : ""}`
+                : "Aucun recruté"
+            }
+          />
+          <StatCard
+            label="Engagé (modifiable)"
+            value={budget ? `${budget.budgetEngaged} TV` : "—"}
+            sub={`${myBids.length} bid${myBids.length > 1 ? "s" : ""} en cours`}
+          />
+          <StatCard
+            label="Disponible"
+            value={
+              budgetAvailable !== null ? `${budgetAvailable} TV` : "—"
+            }
+            highlight
+            sub={
+              budgetAvailable !== null && budgetAvailable < 0
+                ? "⚠ Overbooking — bids > budget restant"
+                : "Pour de nouvelles enchères"
             }
           />
         </section>
@@ -770,32 +795,51 @@ export default function NuffleCoachDraftPage() {
             className="mt-3 divide-y divide-nuffle-bronze/20 rounded-lg border border-nuffle-bronze/20 bg-white"
             data-testid="mercato-my-bids"
           >
-            {myBids.map((b) => (
-              <li
-                key={b.id}
-                className="flex items-center justify-between p-3 text-sm"
-              >
-                <div>
-                  <Link
-                    href={`/nfl-fantasy/players/${b.playerId}?seasonId=${SEASON_ID}`}
-                    className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
-                  >
-                    {b.playerId}
-                  </Link>
-                  <p className="text-xs text-nuffle-anthracite/60">
-                    Bid : <strong>{b.amount} TV</strong> · base{" "}
-                    {b.basePrice} TV
-                  </p>
-                </div>
-                <button
-                  disabled={busy === b.playerId}
-                  onClick={() => cancelBidAction(b.playerId)}
-                  className="rounded-md border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700 hover:border-red-400 disabled:opacity-50"
+            {myBids.map((b) => {
+              const race = raceByTeamCode.get(b.teamCode ?? "");
+              return (
+                <li
+                  key={b.id}
+                  className="flex items-center justify-between gap-3 p-3 text-sm"
                 >
-                  {busy === b.playerId ? "…" : "Annuler"}
-                </button>
-              </li>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/nfl-fantasy/players/${b.playerId}?seasonId=${SEASON_ID}`}
+                      className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
+                    >
+                      <RaceIcon
+                        race={race?.bbRace}
+                        label={race?.raceLabel}
+                        className="mr-1"
+                      />
+                      {b.pseudonym ?? b.playerId}
+                    </Link>
+                    <p className="text-xs text-nuffle-anthracite/60">
+                      {b.bbPosition ?? "—"}
+                      {race?.raceLabel ? ` · ${race.raceLabel}` : ""} ·{" "}
+                      {b.teamCode ?? "—"} · base {b.basePrice} TV
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono text-sm font-semibold text-nuffle-bronze">
+                      {b.amount} TV
+                    </span>
+                    {b.currentValue !== null && b.currentValue !== b.amount && (
+                      <div className="text-[10px] text-nuffle-anthracite/60">
+                        cote {b.currentValue} TV
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    disabled={busy === b.playerId}
+                    onClick={() => cancelBidAction(b.playerId)}
+                    className="rounded-md border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700 hover:border-red-400 disabled:opacity-50"
+                  >
+                    {busy === b.playerId ? "…" : "Annuler"}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
@@ -1014,7 +1058,9 @@ export default function NuffleCoachDraftPage() {
           race={raceByTeamCode.get(bidModalPlayer.teamCode ?? "")}
           amount={bidAmount}
           setAmount={setBidAmount}
-          budgetRemaining={budgetRemaining}
+          budgetRemaining={budget?.budgetRemaining ?? myEntry?.budgetRemaining}
+          budgetAvailable={budgetAvailable}
+          existingBidAmount={myBidsByPlayer.get(bidModalPlayer.id)?.amount}
           submitting={busy === bidModalPlayer.id}
           onCancel={() => setBidModalPlayer(null)}
           onSubmit={submitBid}
@@ -1096,6 +1142,8 @@ function BidModal({
   amount,
   setAmount,
   budgetRemaining,
+  budgetAvailable,
+  existingBidAmount,
   submitting,
   onCancel,
   onSubmit,
@@ -1105,12 +1153,23 @@ function BidModal({
   amount: number;
   setAmount: (n: number) => void;
   budgetRemaining: number | undefined;
+  budgetAvailable: number | null;
+  existingBidAmount: number | undefined;
   submitting: boolean;
   onCancel: () => void;
   onSubmit: () => void;
 }) {
   const min = player.basePrice ?? 50;
+  // Le serveur valide amount > budgetRemaining (hors prise en compte
+  // des autres bids — overbooking autorise). On aligne le slider sur
+  // cette limite, mais on signale aussi le dispo reel pour eclairer
+  // le choix du coach.
   const max = budgetRemaining ?? 5000;
+  // Dispo reel apres cette enchere, si on remplace bid existant.
+  const projectedAvailable =
+    budgetAvailable !== null
+      ? budgetAvailable + (existingBidAmount ?? 0) - amount
+      : null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
@@ -1127,9 +1186,27 @@ function BidModal({
           {player.bbPosition} · {player.teamCode ?? "—"}
         </p>
         <p className="mt-3 text-xs text-nuffle-anthracite/60">
-          Prix de base : <strong>{min} TV</strong> · Ton budget restant :{" "}
+          Prix de base : <strong>{min} TV</strong> · Plafond serveur :{" "}
           <strong>{max} TV</strong>
         </p>
+        {budgetAvailable !== null && (
+          <p
+            className={`mt-1 text-xs ${
+              projectedAvailable !== null && projectedAvailable < 0
+                ? "text-amber-700"
+                : "text-nuffle-anthracite/60"
+            }`}
+          >
+            Dispo hors enchères : <strong>{budgetAvailable} TV</strong>
+            {projectedAvailable !== null && (
+              <>
+                {" "}· Après cette enchère :{" "}
+                <strong>{projectedAvailable} TV</strong>
+                {projectedAvailable < 0 && " ⚠ overbooking"}
+              </>
+            )}
+          </p>
+        )}
         <div className="mt-4 space-y-2">
           <label
             htmlFor="bid-amount"
