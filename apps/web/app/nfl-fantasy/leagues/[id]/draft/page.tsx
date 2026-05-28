@@ -967,7 +967,9 @@ export default function NuffleCoachDraftPage() {
                         {p.pseudonym}
                       </Link>
                       <p className="text-xs text-nuffle-anthracite/60">
-                        {p.bbPosition} · {p.teamCode ?? "—"} ·{" "}
+                        {p.bbPosition}
+                        {race?.raceLabel ? ` · ${race.raceLabel}` : ""} ·{" "}
+                        {p.teamCode ?? "—"} ·{" "}
                         {p.totalSpp !== undefined
                           ? `${p.totalSpp.toFixed(1)} SPP`
                           : "—"}
