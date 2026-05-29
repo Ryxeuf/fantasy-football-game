@@ -15,6 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
+import { RaceIcon } from "../../../RaceIcon";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
@@ -29,6 +30,11 @@ interface NflPlayerInfo {
   bbPosition: string;
   jerseyNumber: number | null;
   status: string;
+  currentValue?: number;
+  bbRace?: string | null;
+  raceLabel?: string | null;
+  lastSpp?: number | null;
+  lastWeekId?: string | null;
 }
 
 interface RosterRow {
@@ -364,7 +370,7 @@ export default function LineupBuilderPage(): JSX.Element {
 
       {roster.length > 0 && (
         <>
-          <div className="rounded-lg border border-nuffle-bronze/20 bg-white">
+          <div className="overflow-x-auto rounded-lg border border-nuffle-bronze/20 bg-white">
             <table className="w-full text-sm" data-testid="nfl-fantasy-lineup-table">
               <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
                 <tr>
@@ -373,6 +379,8 @@ export default function LineupBuilderPage(): JSX.Element {
                   <th className="px-3 py-2">BB pos</th>
                   <th className="px-3 py-2">NFL pos</th>
                   <th className="px-3 py-2">Équipe</th>
+                  <th className="px-3 py-2 text-right">Cote</th>
+                  <th className="px-3 py-2 text-right">Dernier match</th>
                   <th className="px-3 py-2 text-center">C ×1.5</th>
                   <th className="px-3 py-2 text-center">V ×1.2</th>
                 </tr>
@@ -397,10 +405,45 @@ export default function LineupBuilderPage(): JSX.Element {
                           data-testid={`lineup-select-${playerId}`}
                         />
                       </td>
-                      <td className="px-3 py-2 text-nuffle-anthracite">{displayName(player)}</td>
+                      <td className="px-3 py-2 text-nuffle-anthracite">
+                        <div className="flex items-center gap-2">
+                          <RaceIcon
+                            race={player?.bbRace ?? null}
+                            label={player?.raceLabel ?? null}
+                            className="text-base leading-none"
+                          />
+                          <Link
+                            href={`/nfl-fantasy/players/${playerId}`}
+                            className="font-medium hover:text-nuffle-bronze hover:underline"
+                          >
+                            {displayName(player)}
+                          </Link>
+                        </div>
+                      </td>
                       <td className="px-3 py-2 text-nuffle-anthracite/80">{player?.bbPosition ?? "—"}</td>
                       <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.nflPosition ?? "—"}</td>
                       <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.teamCode ?? "FA"}</td>
+                      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite">
+                        {player?.currentValue != null
+                          ? `${player.currentValue} TV`
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right text-nuffle-anthracite/80">
+                        {player?.lastSpp != null ? (
+                          <span
+                            className="font-mono"
+                            title={
+                              player.lastWeekId
+                                ? `Semaine ${player.lastWeekId}`
+                                : undefined
+                            }
+                          >
+                            {player.lastSpp} SPP
+                          </span>
+                        ) : (
+                          <span className="text-xs text-nuffle-anthracite/40">—</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-center">
                         <input
                           type="radio"

@@ -174,6 +174,14 @@ export interface RosterPlayerView {
     /** V3 — cote actuelle (utile pour preview plus-value a la vente). */
     currentValue: NflPlayer["currentValue"];
     previousValue: NflPlayer["previousValue"];
+    /** Race BB attribuee a l'equipe NFL (Skaven, Orc, Dwarf, ...). */
+    bbRace: string | null;
+    /** Label public ("Kansas City Skaven"). */
+    raceLabel: string | null;
+    /** SPP du dernier match settle (null si pas encore joue). */
+    lastSpp: number | null;
+    /** weekId du dernier match settle (utile pour le label). */
+    lastWeekId: string | null;
   } | null;
 }
 
@@ -200,9 +208,10 @@ export async function getRosterWithPlayers(
     | "currentValue"
     | "previousValue"
   >;
+  const playerIds = roster.map((r) => r.playerId);
   const players: ReadonlyArray<RosterPlayerRow> =
     await prisma.nflPlayer.findMany({
-      where: { id: { in: roster.map((r) => r.playerId) } },
+      where: { id: { in: playerIds } },
       select: {
         id: true,
         pseudonym: true,
@@ -220,13 +229,89 @@ export async function getRosterWithPlayers(
     players.map((p) => [p.id, p] as const),
   );
 
-  return roster.map((r) => ({
-    rosterId: r.id,
-    acquiredVia: r.acquiredVia,
-    acquiredAt: r.acquiredAt,
-    tvCost: r.tvCost,
-    player: byId.get(r.playerId) ?? null,
-  }));
+  // Race + label : lookup NflTeam pour tous les teamCodes du roster.
+  const teamCodes = Array.from(
+    new Set(
+      players
+        .map((p) => p.teamCode)
+        .filter((c): c is string => typeof c === "string" && c.length > 0),
+    ),
+  );
+  type TeamRow = { code: string; bbRace: string; raceLabel: string };
+  const teams: ReadonlyArray<TeamRow> =
+    teamCodes.length > 0
+      ? await prisma.nflTeam.findMany({
+          where: { code: { in: teamCodes } },
+          select: { code: true, bbRace: true, raceLabel: true },
+        })
+      : [];
+  const teamByCode = new Map<string, TeamRow>(
+    teams.map((t) => [t.code, t] as const),
+  );
+
+  // Dernier SPP par joueur : on prend tous les NflGameStat settled
+  // (computedSpp != null) tries par kickoffAt desc puis on garde le
+  // premier hit par playerId. Une seule query, dedup cote JS.
+  type StatRow = {
+    playerId: string;
+    computedSpp: number | null;
+    game: { weekId: string; kickoffAt: Date };
+  };
+  const stats: ReadonlyArray<StatRow> =
+    playerIds.length > 0
+      ? await prisma.nflGameStat.findMany({
+          where: {
+            playerId: { in: playerIds },
+            computedSpp: { not: null },
+          },
+          select: {
+            playerId: true,
+            computedSpp: true,
+            game: { select: { weekId: true, kickoffAt: true } },
+          },
+          orderBy: { game: { kickoffAt: "desc" } },
+        })
+      : [];
+  const lastByPlayer = new Map<
+    string,
+    { spp: number; weekId: string }
+  >();
+  for (const s of stats) {
+    if (lastByPlayer.has(s.playerId)) continue;
+    if (s.computedSpp == null) continue;
+    lastByPlayer.set(s.playerId, {
+      spp: s.computedSpp,
+      weekId: s.game.weekId,
+    });
+  }
+
+  return roster.map((r) => {
+    const player = byId.get(r.playerId);
+    if (!player) {
+      return {
+        rosterId: r.id,
+        acquiredVia: r.acquiredVia,
+        acquiredAt: r.acquiredAt,
+        tvCost: r.tvCost,
+        player: null,
+      };
+    }
+    const team = player.teamCode ? teamByCode.get(player.teamCode) : null;
+    const last = lastByPlayer.get(player.id);
+    return {
+      rosterId: r.id,
+      acquiredVia: r.acquiredVia,
+      acquiredAt: r.acquiredAt,
+      tvCost: r.tvCost,
+      player: {
+        ...player,
+        bbRace: team?.bbRace ?? null,
+        raceLabel: team?.raceLabel ?? null,
+        lastSpp: last?.spp ?? null,
+        lastWeekId: last?.weekId ?? null,
+      },
+    };
+  });
 }
 
 /**
