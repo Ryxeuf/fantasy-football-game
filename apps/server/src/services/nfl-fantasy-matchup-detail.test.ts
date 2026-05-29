@@ -8,6 +8,8 @@ vi.mock("../prisma", () => ({
     nflPlayer: { findMany: vi.fn() },
     nflTeam: { findMany: vi.fn() },
     nflWeek: { findUnique: vi.fn() },
+    nflGame: { findMany: vi.fn() },
+    nflGameStat: { findMany: vi.fn() },
   },
 }));
 
@@ -17,6 +19,7 @@ import {
   computeOutcome,
   getMatchupDetail,
   MatchupDetailError,
+  parseRawStats,
   parseStarterBreakdown,
 } from "./nfl-fantasy-matchup-detail";
 
@@ -117,6 +120,24 @@ describe("computeOutcome", () => {
         awayEntryId: "a",
       }),
     ).toBe("tie");
+  });
+});
+
+describe("parseRawStats", () => {
+  it("retourne {} si null/undefined", () => {
+    expect(parseRawStats(null)).toEqual({});
+    expect(parseRawStats(undefined)).toEqual({});
+  });
+  it("retourne le PG natif object tel quel", () => {
+    const raw = { rushing_yards: "24", carries: "2" };
+    expect(parseRawStats(raw)).toEqual(raw);
+  });
+  it("parse la string sqlite mirror", () => {
+    const raw = JSON.stringify({ passing_tds: "3" });
+    expect(parseRawStats(raw)).toEqual({ passing_tds: "3" });
+  });
+  it("retourne {} sur string corrompue", () => {
+    expect(parseRawStats("not-json")).toEqual({});
   });
 });
 
@@ -284,6 +305,13 @@ describe("getMatchupDetail", () => {
       { id: "p2", pseudonym: "Grim", teamCode: "LAR", nflPosition: "G" },
       { id: "p3", pseudonym: "Krak", teamCode: "MIA", nflPosition: "LB" },
     ] as never);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([
+      { id: "g1" },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p1", rawStats: { passing_yards: "320", passing_tds: "3" } },
+      { playerId: "p2", rawStats: { rushing_yards: "0" } },
+    ] as never);
     vi.mocked(prisma.nflTeam.findMany).mockResolvedValue([
       { code: "LAR", bbRace: "elf", raceLabel: "Elfes" },
       { code: "MIA", bbRace: "orc", raceLabel: "Orques" },
@@ -308,10 +336,15 @@ describe("getMatchupDetail", () => {
     expect(out.home.starters[0].captainBonus).toBe(4); // 12 - 8
     expect(out.home.starters[0].raceLabel).toBe("Elfes");
     expect(out.home.starters[0].events).toHaveLength(1);
+    expect(out.home.starters[0].rawStats).toEqual({
+      passing_yards: "320",
+      passing_tds: "3",
+    });
     expect(out.home.topScorerId).toBe("s1");
 
     expect(out.away.teamName).toBe("Away United");
     expect(out.away.starters[0].captainBonus).toBe(2); // vice 10 → 12
+    expect(out.away.starters[0].rawStats).toBeNull(); // p3 absent du mock stats
     expect(out.away.topScorerId).toBe("s3");
   });
 
@@ -336,6 +369,8 @@ describe("getMatchupDetail", () => {
     ] as never);
     vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflTeam.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
       weekNumber: 11,
@@ -372,6 +407,8 @@ describe("getMatchupDetail", () => {
     ] as never);
     vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflTeam.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.nflWeek.findUnique).mockResolvedValue({
       weekNumber: 10,

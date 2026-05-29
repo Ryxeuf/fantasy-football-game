@@ -77,6 +77,13 @@ export interface MatchupStarterView {
   readonly events: ReadonlyArray<SppEvent>;
   /** Bonus de skill BB (Pass +1 par passing TD, etc.). */
   readonly skillBonuses: ReadonlyArray<SkillBonusEvent>;
+  /**
+   * Stats NFL brutes ingerees pour cette semaine (cf. NflGameStat.rawStats).
+   * Cle = nom du champ nflverse (rushing_yards, passing_tds, ...). Valeurs
+   * preservees telles quelles (souvent string nflverse). Null si le joueur
+   * n'a pas joue (pas de NflGameStat sur les games de la week).
+   */
+  readonly rawStats: Record<string, unknown> | null;
 }
 
 export interface MatchupSideView {
@@ -174,6 +181,28 @@ export function parseStarterBreakdown(raw: unknown): ParsedBreakdown {
   }
 
   return { events, skillBonuses };
+}
+
+/**
+ * Parse `NflGameStat.rawStats` (PG jsonb natif ou string sqlite mirror)
+ * en plain object. Retourne `{}` si non parsable.
+ */
+export function parseRawStats(raw: unknown): Record<string, unknown> {
+  if (!raw) return {};
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+  }
+  return {};
 }
 
 /**
@@ -308,7 +337,32 @@ export async function getMatchupDetail(opts: {
         });
   const playerById = new Map(players.map((p) => [p.id, p] as const));
 
-  // 5. Race + label via NflTeam (1 query par batch de teamCodes)
+  // 5. rawStats NFL pour cette week (NflGameStat.rawStats) — 1 query batch.
+  // On charge tous les games de la week puis tous les stats pour les
+  // starters concernes. Dedup par playerId (un joueur ne dispute qu'un
+  // game NFL par week).
+  const weekGames: ReadonlyArray<{ id: string }> = await prisma.nflGame.findMany({
+    where: { weekId: matchup.weekId },
+    select: { id: true },
+  });
+  const weekGameIds = weekGames.map((g) => g.id);
+  type StatRow = { playerId: string; rawStats: unknown };
+  const rawStatRows: ReadonlyArray<StatRow> =
+    weekGameIds.length === 0 || allStarterIds.length === 0
+      ? []
+      : await prisma.nflGameStat.findMany({
+          where: {
+            gameId: { in: weekGameIds },
+            playerId: { in: allStarterIds },
+          },
+          select: { playerId: true, rawStats: true },
+        });
+  const rawStatsByPlayer = new Map<string, Record<string, unknown>>();
+  for (const r of rawStatRows) {
+    rawStatsByPlayer.set(r.playerId, parseRawStats(r.rawStats));
+  }
+
+  // 6. Race + label via NflTeam (1 query par batch de teamCodes)
   const teamCodes = Array.from(
     new Set(
       players
@@ -366,6 +420,7 @@ export async function getMatchupDetail(opts: {
         captainBonus,
         events,
         skillBonuses,
+        rawStats: rawStatsByPlayer.get(s.playerId) ?? null,
       };
     });
     // Tri : finalSpp desc, tiebreak pseudonym asc
