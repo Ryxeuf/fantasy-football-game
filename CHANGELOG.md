@@ -1,3 +1,16 @@
+## [1.158.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.157.1...v1.158.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** page detail matchup mobile-first ([b0e7abf](https://github.com/Ryxeuf/fantasy-football-game/commit/b0e7abf5b986fb7a6866603a74c33f26668f93ad))
+* **nfl-fantasy:** vue detail matchup avec breakdown SPP par joueur ([cb32e47](https://github.com/Ryxeuf/fantasy-football-game/commit/cb32e4749fc2bb0f472865ac0751cdedeca2c21c))
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** filtre Position par roster.ruleset au lieu de ruleset direct ([a8d61e0](https://github.com/Ryxeuf/fantasy-football-game/commit/a8d61e09439578f12ec8d9dd1e1de697eeeae001))
+
 ## [1.157.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.157.0...v1.157.1) (2026-05-29)
 
 
