@@ -446,11 +446,12 @@ export default function LineupBuilderPage(): JSX.Element {
     // pb-24 : reserve la place pour la fixed bottom bar (mobile +
     // desktop). sm:pb-6 : sur desktop on garde moins de padding car
     // la barre est moins envahissante.
-    // overflow-x-clip : safety net contre les enfants qui depassent
-    // (long pseudonyme non tronque, select trop large, etc.). Sans
-    // ca, le viewport mobile scrolle horizontalement et coupe la
-    // navbar sur la gauche.
-    <div className="space-y-4 overflow-x-clip pb-24 sm:pb-20">
+    // overflow-x-hidden : safety net contre les enfants qui
+    // depassent (overflow-x-clip n'est pas widely supported sur
+    // Android Chrome).
+    // min-w-0 : empeche le container de prendre une largeur
+    // intrinseque > viewport quand un enfant a un long texte.
+    <div className="min-w-0 space-y-4 overflow-x-hidden pb-24 sm:pb-20">
       {/* Header compact */}
       <div>
         <Link
@@ -558,7 +559,7 @@ export default function LineupBuilderPage(): JSX.Element {
                 banc ci-dessous, puis un captain.
               </p>
             ) : (
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {selectedRoster.map((row) => {
                   const pid = row.player!.id;
                   return (
@@ -650,7 +651,7 @@ export default function LineupBuilderPage(): JSX.Element {
                     : "Aucun joueur ne matche ces filtres."}
                 </p>
               ) : (
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {filteredAvailable.map((row) => {
                     const pid = row.player!.id;
                     return (

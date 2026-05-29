@@ -37,12 +37,17 @@ interface PlayerCardProps {
 }
 
 /**
- * Card joueur unitaire utilisee dans les sections Lineup / Disponibles.
- * Mobile-first : tout est empile + tappable sur mobile, plus dense sur
- * desktop (>= sm). Le bord et le fond changent selon l'etat :
- *   - Captain : bordure gold + fond amber clair + 👑 prominent
- *   - Vice    : bordure silver + fond slate clair + 🥈
- *   - Starter : bordure gold fade + fond gold/5
+ * Card joueur unitaire. Layout 3 rangees empilees, optimise pour le
+ * mobile (tout reste visible meme avec un pseudo tres long) :
+ *
+ *   1. Badges (C/V) + race + nom truncate
+ *   2. BB position · NFL pos · team    ·    Cote · Dernier SPP
+ *   3. [Captain] [Vice]                     [× Retirer / + Ajouter]
+ *
+ * Le bord et le fond changent selon l'etat :
+ *   - Captain : bordure gold + fond amber clair
+ *   - Vice    : bordure silver + fond slate clair
+ *   - Starter : bordure gold pale + fond gold/5
  *   - Bench   : bordure neutre + fond blanc
  */
 export function PlayerCard({
@@ -75,71 +80,70 @@ export function PlayerCard({
 
   return (
     <div
-      className={`rounded-lg border p-3 transition-colors ${borderTone}`}
+      className={`min-w-0 overflow-hidden rounded-lg border p-3 transition-colors ${borderTone}`}
       data-testid={`player-card-${player.id}`}
     >
-      {/* Ligne 1 : badge role + race + nom + cote */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          {/* min-w-0 sur ce flex interne aussi : sans ca, les
-              flex items ne shrinkent pas et le Link `truncate`
-              ne tronque pas (le texte deborde de la card). */}
-          <div className="flex min-w-0 items-center gap-2">
-            {isCaptain && (
-              <span
-                className="shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-amber-950"
-                title="Captain ×1.5"
-              >
-                👑 C
-              </span>
-            )}
-            {isVice && (
-              <span
-                className="shrink-0 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-50"
-                title="Vice-captain ×1.2"
-              >
-                🥈 V
-              </span>
-            )}
-            <RaceIcon
-              race={player.bbRace ?? null}
-              label={player.raceLabel ?? null}
-              className="shrink-0 text-base leading-none"
-            />
-            <Link
-              href={`/nfl-fantasy/players/${player.id}`}
-              className="min-w-0 truncate font-semibold text-nuffle-anthracite hover:text-nuffle-bronze hover:underline"
-              title={player.pseudonym}
-            >
-              {player.pseudonym}
-            </Link>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-nuffle-anthracite/60">
-            <span className="font-medium text-nuffle-anthracite/80">
-              {player.bbPosition}
-            </span>
-            <span>·</span>
-            <span>{player.nflPosition}</span>
-            <span>·</span>
-            <span>{player.teamCode ?? "FA"}</span>
-          </div>
+      {/* Rangée 1 : badges role + race + nom (truncate) */}
+      <div className="flex min-w-0 items-center gap-2">
+        {isCaptain && (
+          <span
+            className="shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-amber-950"
+            title="Captain ×1.5"
+          >
+            👑 C
+          </span>
+        )}
+        {isVice && (
+          <span
+            className="shrink-0 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-50"
+            title="Vice-captain ×1.2"
+          >
+            🥈 V
+          </span>
+        )}
+        <RaceIcon
+          race={player.bbRace ?? null}
+          label={player.raceLabel ?? null}
+          className="shrink-0 text-base leading-none"
+        />
+        <Link
+          href={`/nfl-fantasy/players/${player.id}`}
+          className="block min-w-0 flex-1 truncate font-semibold text-nuffle-anthracite hover:text-nuffle-bronze hover:underline"
+          title={player.pseudonym}
+        >
+          {player.pseudonym}
+        </Link>
+      </div>
+
+      {/* Rangée 2 : position + stats sur la meme ligne, flex-wrap si besoin */}
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-nuffle-anthracite/70">
+          <span className="font-medium text-nuffle-anthracite/90">
+            {player.bbPosition}
+          </span>
+          <span aria-hidden>·</span>
+          <span>{player.nflPosition}</span>
+          <span aria-hidden>·</span>
+          <span>{player.teamCode ?? "FA"}</span>
         </div>
-        <div className="shrink-0 text-right">
-          <div className="font-mono text-sm font-semibold text-nuffle-anthracite">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="font-mono font-semibold text-nuffle-anthracite">
             {player.currentValue != null ? `${player.currentValue} TV` : "—"}
-          </div>
+          </span>
           {player.lastSpp != null && (
-            <div
-              className="mt-0.5 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700"
-              title={player.lastWeekId ? `Semaine ${player.lastWeekId}` : undefined}
+            <span
+              className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700"
+              title={
+                player.lastWeekId ? `Semaine ${player.lastWeekId}` : undefined
+              }
             >
               {player.lastSpp} SPP
-            </div>
+            </span>
           )}
         </div>
       </div>
 
-      {/* Ligne 2 : actions (cachees si lineup lockee) */}
+      {/* Rangée 3 : actions (masquees si lineup lockee) */}
       {!locked && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {isStarter ? (
