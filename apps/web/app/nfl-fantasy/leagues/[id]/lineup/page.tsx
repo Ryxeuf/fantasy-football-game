@@ -419,8 +419,7 @@ export default function LineupBuilderPage(): JSX.Element {
                   <th className="px-3 py-2">Équipe</th>
                   <th className="px-3 py-2 text-right">Cote</th>
                   <th className="px-3 py-2 text-right">Dernier match</th>
-                  <th className="px-3 py-2 text-center">C ×1.5</th>
-                  <th className="px-3 py-2 text-center">V ×1.2</th>
+                  <th className="px-3 py-2 text-center">Rôle</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-nuffle-bronze/20">
@@ -435,12 +434,11 @@ export default function LineupBuilderPage(): JSX.Element {
                       className={isSelected ? "bg-nuffle-gold/5" : undefined}
                     >
                       <td className="px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
+                        <StarterToggle
+                          active={isSelected}
                           disabled={locked}
-                          onChange={() => toggleStarter(playerId)}
-                          data-testid={`lineup-select-${playerId}`}
+                          onClick={() => toggleStarter(playerId)}
+                          testId={`lineup-select-${playerId}`}
                         />
                       </td>
                       <td className="px-3 py-2 text-nuffle-anthracite">
@@ -482,23 +480,35 @@ export default function LineupBuilderPage(): JSX.Element {
                           <span className="text-xs text-nuffle-anthracite/40">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-center">
-                        <input
-                          type="radio"
-                          name="captain"
-                          checked={captainId === playerId}
-                          disabled={locked || !isSelected}
-                          onChange={() => setCaptain(playerId)}
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <input
-                          type="radio"
-                          name="vice"
-                          checked={viceCaptainId === playerId}
-                          disabled={locked || !isSelected}
-                          onChange={() => setVice(playerId)}
-                        />
+                      <td className="px-3 py-2">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <RoleChip
+                            label="C"
+                            tooltip="Captain (×1.5)"
+                            active={captainId === playerId}
+                            disabled={locked || !isSelected}
+                            tone="captain"
+                            onClick={() =>
+                              setCaptain(
+                                captainId === playerId ? null : playerId,
+                              )
+                            }
+                            testId={`lineup-captain-${playerId}`}
+                          />
+                          <RoleChip
+                            label="V"
+                            tooltip="Vice-captain (×1.2)"
+                            active={viceCaptainId === playerId}
+                            disabled={locked || !isSelected}
+                            tone="vice"
+                            onClick={() =>
+                              setVice(
+                                viceCaptainId === playerId ? null : playerId,
+                              )
+                            }
+                            testId={`lineup-vice-${playerId}`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -535,6 +545,99 @@ export default function LineupBuilderPage(): JSX.Element {
         </>
       )}
     </div>
+  );
+}
+
+// ────────── Toggles UI (checkbox + radio modernises) ──────────
+
+interface StarterToggleProps {
+  active: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  testId: string;
+}
+
+/**
+ * Toggle starter : remplace la checkbox native par un bouton rond
+ * qui affiche ✓ quand actif (gold) et un cercle vide sinon. Plus
+ * tactile (mobile) et plus visible.
+ */
+function StarterToggle({ active, disabled, onClick, testId }: StarterToggleProps) {
+  const base =
+    "flex h-7 w-7 items-center justify-center rounded-full border-2 text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-nuffle-gold/40";
+  const activeClass = "border-nuffle-gold bg-nuffle-gold text-nuffle-anthracite shadow-sm";
+  const inactiveClass = "border-nuffle-bronze/30 bg-white text-transparent hover:border-nuffle-gold hover:text-nuffle-gold/40";
+  const disabledClass = "cursor-not-allowed opacity-50";
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={active ? "Retirer du lineup" : "Mettre dans le lineup"}
+      onClick={onClick}
+      disabled={disabled}
+      data-testid={testId}
+      className={`${base} ${active ? activeClass : inactiveClass} ${disabled ? disabledClass : ""}`}
+    >
+      ✓
+    </button>
+  );
+}
+
+interface RoleChipProps {
+  label: string;
+  tooltip: string;
+  active: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  tone: "captain" | "vice";
+  testId: string;
+}
+
+/**
+ * Chip toggle Captain / Vice. Remplace les radio natifs par des
+ * pastilles colorees, plus tactiles et plus lisibles. Captain :
+ * gold gradient + couronne 👑 quand actif. Vice : silver gradient
+ * + medaille 🥈. Clic sur le chip actif = deselection (toggle).
+ */
+function RoleChip({
+  label,
+  tooltip,
+  active,
+  disabled,
+  onClick,
+  tone,
+  testId,
+}: RoleChipProps) {
+  const base =
+    "inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-full px-2 text-xs font-bold transition-all focus:outline-none focus:ring-2";
+  const activeCaptain =
+    "bg-gradient-to-br from-amber-300 to-amber-500 text-amber-950 shadow-md ring-amber-200 focus:ring-amber-400";
+  const activeVice =
+    "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-50 shadow-md ring-slate-200 focus:ring-slate-400";
+  const inactive =
+    "bg-nuffle-bronze/10 text-nuffle-anthracite/60 hover:bg-nuffle-bronze/20 focus:ring-nuffle-gold/30";
+  const disabledClass = "cursor-not-allowed opacity-30";
+
+  const cls = active
+    ? tone === "captain"
+      ? activeCaptain
+      : activeVice
+    : inactive;
+  const emoji = active ? (tone === "captain" ? "👑" : "🥈") : null;
+
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      title={tooltip}
+      onClick={onClick}
+      disabled={disabled}
+      data-testid={testId}
+      className={`${base} ${cls} ${disabled ? disabledClass : ""}`}
+    >
+      {emoji ? <span className="mr-0.5">{emoji}</span> : null}
+      {label}
+    </button>
   );
 }
 
