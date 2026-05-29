@@ -1,3 +1,12 @@
+## [1.161.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.160.0...v1.161.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** expanded skill bonus catalog 9 -> 47 skills ([26a751a](https://github.com/Ryxeuf/fantasy-football-game/commit/26a751ac7d099b9b7972102117293e211fec8ee1))
+* **nfl-fantasy:** expose catalogue effets via API publique + enriched AvailableSkill ([d5bb29c](https://github.com/Ryxeuf/fantasy-football-game/commit/d5bb29c3aab1d6ffc267b115c59d922c01835d48))
+* **nfl-fantasy:** UI carriere filtre+detaille skills + page regles 47 skills ([327ab42](https://github.com/Ryxeuf/fantasy-football-game/commit/327ab4251daf3954a86695981e915983cacc00ba))
+
 ## [1.160.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.159.0...v1.160.0) (2026-05-29)
 
 
