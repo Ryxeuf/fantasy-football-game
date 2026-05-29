@@ -1,3 +1,10 @@
+## [1.156.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.155.0...v1.156.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** refonte UI/UX page lineup, mobile-first ([c0ae4da](https://github.com/Ryxeuf/fantasy-football-game/commit/c0ae4dacedc3baa0a2f6ef21a28dd78bacbbf6f6))
+
 ## [1.155.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.154.0...v1.155.0) (2026-05-29)
 
 
