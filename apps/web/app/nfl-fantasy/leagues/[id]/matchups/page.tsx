@@ -294,34 +294,38 @@ export default function MatchupsPage(): JSX.Element {
               const awayIsWinner = settled && m.winnerId === m.awayEntryId;
               const badge = matchupBadge(m, myEntryId);
               return (
-                <li
-                  key={m.id}
-                  className="rounded-lg border border-nuffle-bronze/20 bg-white p-4"
-                  data-testid={`nfl-fantasy-matchup-${m.id}`}
-                >
-                  {badge && (
-                    <p className="mb-2 text-[10px] uppercase tracking-wide text-nuffle-gold">
-                      {badge}
+                <li key={m.id} data-testid={`nfl-fantasy-matchup-${m.id}`}>
+                  <Link
+                    href={`/nfl-fantasy/leagues/${league.id}/matchups/${m.id}`}
+                    className="block rounded-lg border border-nuffle-bronze/20 bg-white p-4 transition-colors hover:border-nuffle-gold/60 hover:bg-nuffle-gold/5"
+                  >
+                    {badge && (
+                      <p className="mb-2 text-[10px] uppercase tracking-wide text-nuffle-gold">
+                        {badge}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <div className={homeIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}>
+                        {homeName}
+                      </div>
+                      <div className="font-mono text-lg text-nuffle-anthracite">
+                        {settled ? m.homeScore : "—"}{" "}
+                        <span className="text-nuffle-anthracite/60">vs</span>{" "}
+                        {settled ? m.awayScore : "—"}
+                      </div>
+                      <div className={`text-right ${awayIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}`}>
+                        {awayName}
+                      </div>
+                    </div>
+                    <p className="mt-2 flex items-center justify-between text-[11px] text-nuffle-anthracite/60">
+                      <span>
+                        {settled
+                          ? `Settled ${new Date(m.settledAt!).toLocaleDateString("fr-FR")}`
+                          : "Non encore réglé"}
+                      </span>
+                      <span className="text-nuffle-gold">Voir le détail →</span>
                     </p>
-                  )}
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <div className={homeIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}>
-                      {homeName}
-                    </div>
-                    <div className="font-mono text-lg text-nuffle-anthracite">
-                      {settled ? m.homeScore : "—"}{" "}
-                      <span className="text-nuffle-anthracite/60">vs</span>{" "}
-                      {settled ? m.awayScore : "—"}
-                    </div>
-                    <div className={`text-right ${awayIsWinner ? "text-emerald-700 font-semibold" : "text-nuffle-anthracite"}`}>
-                      {awayName}
-                    </div>
-                  </div>
-                  <p className="mt-2 text-[11px] text-nuffle-anthracite/60">
-                    {settled
-                      ? `Settled ${new Date(m.settledAt!).toLocaleDateString("fr-FR")}`
-                      : "Non encore réglé"}
-                  </p>
+                  </Link>
                 </li>
               );
             })}
