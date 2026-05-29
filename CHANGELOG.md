@@ -1,3 +1,10 @@
+## [1.152.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.151.0...v1.152.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** selecteur de semaine UX + default smart ([dfd87bc](https://github.com/Ryxeuf/fantasy-football-game/commit/dfd87bca9f210d35cb4a74207b4e04eeb20bb135))
+
 ## [1.151.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.150.0...v1.151.0) (2026-05-29)
 
 
