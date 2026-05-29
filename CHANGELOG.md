@@ -1,3 +1,16 @@
+## [1.160.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.159.0...v1.160.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** carry-over lineup W{n-1} -> W{n} ([1973dd5](https://github.com/Ryxeuf/fantasy-football-game/commit/1973dd55f65c477ab01c6e8b4baaf3d0aeeb1106))
+* **nfl-fantasy:** UI carry-over avec banniere et bouton ([edfc461](https://github.com/Ryxeuf/fantasy-football-game/commit/edfc461152e355c65166f6c74d12ef00547e3c71))
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** merge skillsUnlocked de la carriere dans le scoring ([b21b331](https://github.com/Ryxeuf/fantasy-football-game/commit/b21b331d0c378d5f083c0d3420610641e2ffa9dd))
+
 ## [1.159.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.158.0...v1.159.0) (2026-05-29)
 
 
