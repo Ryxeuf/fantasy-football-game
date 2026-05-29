@@ -370,7 +370,14 @@ export async function settleNflFantasyWeek(
     stats.map((s) => [s.playerId, s] as const),
   );
 
-  // 4.b Charger les skills BB des starters pour appliquer les bonus
+  // 4.b Charger les skills BB des starters pour appliquer les bonus.
+  //   - `NflPlayer.bbSkills` : skills "de depart" du joueur pseudonymise
+  //     (set au seed).
+  //   - `NflFantasyPlayerCareer.skillsUnlocked` : skills debloquees PAR
+  //     le coach EN depensant des SPP dans cette league (carriere
+  //     specifique a la paire entryId+playerId).
+  // Le settle doit fusionner les deux sources, sinon les unlocks
+  // d'un coach n'ont aucun effet sur ses scoring de match.
   type PlayerSkillRow = { id: string; bbSkills: unknown };
   const players: ReadonlyArray<PlayerSkillRow> =
     allStarterIds.length === 0
@@ -379,9 +386,51 @@ export async function settleNflFantasyWeek(
           where: { id: { in: allStarterIds } },
           select: { id: true, bbSkills: true },
         });
-  const skillsByPlayer = new Map<string, readonly string[]>();
+  const baseSkillsByPlayer = new Map<string, readonly string[]>();
   for (const p of players) {
-    skillsByPlayer.set(p.id, parseBbSkills(p.bbSkills));
+    baseSkillsByPlayer.set(p.id, parseBbSkills(p.bbSkills));
+  }
+
+  type CareerRow = {
+    entryId: string;
+    playerId: string;
+    skillsUnlocked: unknown;
+  };
+  const careers: ReadonlyArray<CareerRow> =
+    allStarterIds.length === 0
+      ? []
+      : await prisma.nflFantasyPlayerCareer.findMany({
+          where: {
+            entryId: { in: entryIds },
+            playerId: { in: allStarterIds },
+          },
+          select: { entryId: true, playerId: true, skillsUnlocked: true },
+        });
+  const unlockedByPair = new Map<string, readonly string[]>();
+  for (const c of careers) {
+    unlockedByPair.set(
+      `${c.entryId}:${c.playerId}`,
+      parseBbSkills(c.skillsUnlocked),
+    );
+  }
+
+  /** Fusionne base skills + unlocked skills (dedup, ordre stable). */
+  function resolveSkills(
+    playerId: string,
+    entryId: string,
+  ): readonly string[] {
+    const base = baseSkillsByPlayer.get(playerId) ?? [];
+    const unlocked = unlockedByPair.get(`${entryId}:${playerId}`) ?? [];
+    if (unlocked.length === 0) return base;
+    const seen = new Set<string>(base);
+    const merged: string[] = [...base];
+    for (const s of unlocked) {
+      if (!seen.has(s)) {
+        seen.add(s);
+        merged.push(s);
+      }
+    }
+    return merged;
   }
 
   let matchupsSettled = 0;
@@ -413,7 +462,7 @@ export async function settleNflFantasyWeek(
       const stat = sppByPlayer.get(s.playerId);
       const computedSpp = stat?.computedSpp ?? 0;
       const events = parseSppEvents(stat?.sppBreakdown);
-      const skills = skillsByPlayer.get(s.playerId) ?? [];
+      const skills = resolveSkills(s.playerId, entryId);
       const { bonusEvents, totalBonusSpp } = applySkillBonuses({
         events,
         bbSkills: skills,

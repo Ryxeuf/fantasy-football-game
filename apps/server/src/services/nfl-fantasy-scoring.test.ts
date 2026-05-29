@@ -16,7 +16,7 @@ vi.mock("../prisma", () => ({
     nflGame: { findMany: vi.fn() },
     nflGameStat: { findMany: vi.fn() },
     nflPlayer: { findMany: vi.fn() },
-    nflFantasyPlayerCareer: { upsert: vi.fn() },
+    nflFantasyPlayerCareer: { upsert: vi.fn(), findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -36,6 +36,11 @@ import {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // Default no-op : la plupart des tests settle n'ont pas de carrieres
+  // a fusionner. Les tests qui en ont une override ce mock.
+  vi.mocked(prisma.nflFantasyPlayerCareer.findMany).mockResolvedValue(
+    [] as never,
+  );
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -346,6 +351,9 @@ describe("settleNflFantasyWeek", () => {
       { playerId: "p5", computedSpp: 4, sppBreakdown: null },
     ] as never);
     vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflFantasyPlayerCareer.findMany).mockResolvedValue(
+      [] as never,
+    );
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     const result = await settleNflFantasyWeek({
@@ -370,6 +378,87 @@ describe("settleNflFantasyWeek", () => {
     // away : p4 captain (0*1.5=0) + p5 (4) = 4
     expect(updateData.awayScore).toBe(4);
     expect(updateData.winnerId).toBe("eHome");
+  });
+
+  it("merge bbSkills (seed) + skillsUnlocked (carriere) lors du scoring", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      {
+        id: "m1",
+        homeEntryId: "eHome",
+        awayEntryId: "eAway",
+        settledAt: null,
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([
+      { id: "g1" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          {
+            id: "sH1",
+            playerId: "p1",
+            isCaptain: false,
+            isViceCaptain: false,
+            lineupId: "lHome",
+          },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          {
+            id: "sA1",
+            playerId: "p1", // meme playerId que home, autre entry -> autre career
+            isCaptain: false,
+            isViceCaptain: false,
+            lineupId: "lAway",
+          },
+        ],
+      },
+    ] as never);
+    // 1 passing TD => +3 SPP brut; skill "pass" donne +1 SPP bonus.
+    const passTdEvent = [
+      { type: "TD", count: 1, spp: 3, reason: "1 passing TD" },
+    ];
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      {
+        playerId: "p1",
+        computedSpp: 3,
+        sppBreakdown: { events: passTdEvent, totalSpp: 3, mvpEligible: true },
+      },
+    ] as never);
+    // bbSkills de seed : vide pour p1
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "p1", bbSkills: "[]" },
+    ] as never);
+    // Carriere : eHome a deblocque "pass" sur p1, eAway non.
+    vi.mocked(prisma.nflFantasyPlayerCareer.findMany).mockResolvedValue([
+      { entryId: "eHome", playerId: "p1", skillsUnlocked: ["pass"] },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2025:W10" });
+
+    // Le starter update doit refleter le bonus pour eHome (rawSpp=4)
+    // et pas pour eAway (rawSpp=3).
+    const starterUpdates = vi
+      .mocked(prisma.nflFantasyLineupStarter.update)
+      .mock.calls.map((c) => c[0]);
+    const homeUpdate = starterUpdates.find(
+      (u) => (u as { where: { id: string } }).where.id === "sH1",
+    ) as { data: { rawSpp: number; finalSpp: number } } | undefined;
+    const awayUpdate = starterUpdates.find(
+      (u) => (u as { where: { id: string } }).where.id === "sA1",
+    ) as { data: { rawSpp: number; finalSpp: number } } | undefined;
+    expect(homeUpdate?.data.rawSpp).toBe(4); // 3 (TD) + 1 (pass bonus)
+    expect(homeUpdate?.data.finalSpp).toBe(4); // pas C/V
+    expect(awayUpdate?.data.rawSpp).toBe(3); // 3 (TD) seul, pas de skill
+    expect(awayUpdate?.data.finalSpp).toBe(3);
   });
 
   it("idempotent : skip matchups deja settles", async () => {
