@@ -1,3 +1,10 @@
+## [1.155.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.154.0...v1.155.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** fallback default lineup au moment du lock ([befcc34](https://github.com/Ryxeuf/fantasy-football-game/commit/befcc347d17b1260a9aa3672abc4c0cc54a0eb1f)), closes [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1) [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+
 ## [1.154.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.153.0...v1.154.0) (2026-05-29)
 
 
