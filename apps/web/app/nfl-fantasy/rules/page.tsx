@@ -266,67 +266,46 @@ export default function NflFantasyRulesPage(): JSX.Element {
           s&apos;appliquent <em>après</em> le calcul des événements de base,
           mais <em>avant</em> les multiplicateurs captain/vice.
         </p>
-        <div className="mt-3 overflow-hidden rounded-lg border border-nuffle-bronze/20 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-nuffle-ivory/40 text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
-              <tr>
-                <th className="px-3 py-2">Compétence</th>
-                <th className="px-3 py-2">Bonus</th>
-                <th className="px-3 py-2 text-right">Cap</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-nuffle-bronze/15">
-              <SkillRow
-                skill="Pass"
-                bonus="+1 SPP par passing TD"
-                cap="3"
-              />
-              <SkillRow
-                skill="Catch"
-                bonus="+1 SPP si au moins un receiving TD"
-                cap="1"
-              />
-              <SkillRow
-                skill="Sure Hands"
-                bonus="+1 SPP par fumble lost compensé"
-                cap="2"
-              />
-              <SkillRow
-                skill="Safe Pair of Hands"
-                bonus="+1 SPP par drop compensé"
-                cap="2"
-              />
-              <SkillRow
-                skill="Block"
-                bonus="+1 SPP par casualty (sack)"
-                cap="3"
-              />
-              <SkillRow
-                skill="Dodge"
-                bonus="+1 SPP par interception"
-                cap="2"
-              />
-              <SkillRow
-                skill="Tackle"
-                bonus="+1 SPP si au moins un forced fumble"
-                cap="1"
-              />
-              <SkillRow
-                skill="Frenzy"
-                bonus="+1 SPP si au moins 2 casualties dans le match"
-                cap="1"
-              />
-              <SkillRow
-                skill="Mighty Blow (+1/+2/+3)"
-                bonus="+1 SPP par casualty (toutes variantes)"
-                cap="3"
-              />
-            </tbody>
-          </table>
-        </div>
+        <p className="mt-2 text-xs text-nuffle-anthracite/60">
+          {SKILL_BONUSES.length} compétences sont actuellement prises en compte,
+          regroupées par famille de trigger.
+        </p>
+
+        <SkillFamilyTable
+          title="Passing"
+          emoji="🎯"
+          rows={SKILL_BONUSES.filter((s) => s.family === "passing")}
+        />
+        <SkillFamilyTable
+          title="Rushing"
+          emoji="🏃"
+          rows={SKILL_BONUSES.filter((s) => s.family === "rushing")}
+        />
+        <SkillFamilyTable
+          title="Receiving"
+          emoji="🤲"
+          rows={SKILL_BONUSES.filter((s) => s.family === "receiving")}
+        />
+        <SkillFamilyTable
+          title="Defensive"
+          emoji="🛡️"
+          rows={SKILL_BONUSES.filter((s) => s.family === "defensive")}
+        />
+        <SkillFamilyTable
+          title="Lineman / OL"
+          emoji="🧱"
+          rows={SKILL_BONUSES.filter((s) => s.family === "lineman")}
+        />
+        <SkillFamilyTable
+          title="Général"
+          emoji="🏆"
+          rows={SKILL_BONUSES.filter((s) => s.family === "general")}
+        />
+
         <p className="mt-3 text-xs text-nuffle-anthracite/60">
-          Les autres compétences Blood Bowl (Trait, Scélérates, etc.) ne
-          génèrent pas de bonus de scoring fantasy V1.
+          Les autres compétences Blood Bowl (Trait, Scélérates, Stunty, etc.)
+          ne génèrent pas de bonus de scoring fantasy V1 — la page carrière
+          d&apos;un joueur les masque automatiquement de la liste d&apos;achat.
         </p>
       </Section>
 
@@ -530,27 +509,116 @@ function Badge({
   );
 }
 
-function SkillRow({
-  skill,
-  bonus,
-  cap,
+// ────────────────────────────────────────────────────────────────────
+// Catalogue des bonus de compétences (DOIT MATCHER
+// apps/server/src/services/nfl-fantasy-skill-bonus.ts NFL_FANTASY_SKILL_EFFECTS).
+//
+// MAJ obligatoire dans le meme commit que les regles cote serveur
+// (cf. memoire nuffle-rules-pages-sync). Pour eviter la drift, la
+// page carriere fetch directement le catalogue serveur via
+// /api/nfl-fantasy/public/skill-effects ; cette page de regles
+// expose les memes infos en SSR pour rester SEO-friendly et
+// fonctionner hors fetch.
+// ────────────────────────────────────────────────────────────────────
+
+interface SkillBonusEntry {
+  readonly slug: string;
+  readonly effectFr: string;
+  readonly cap: number;
+  readonly family:
+    | "passing"
+    | "rushing"
+    | "receiving"
+    | "defensive"
+    | "lineman"
+    | "general";
+}
+
+const SKILL_BONUSES: ReadonlyArray<SkillBonusEntry> = [
+  { slug: "pass", effectFr: "+1 SPP par passing TD", cap: 3, family: "passing" },
+  { slug: "accurate", effectFr: "+1 SPP par CP de passing yards (palier de 75)", cap: 2, family: "passing" },
+  { slug: "cannoneer", effectFr: "+1 SPP si passing yards ≥ 300 yd", cap: 1, family: "passing" },
+  { slug: "strong-arm", effectFr: "+1 SPP si passing yards ≥ 225 yd", cap: 1, family: "passing" },
+  { slug: "running-pass", effectFr: "+1 SPP si passing TD ET rushing TD du QB", cap: 1, family: "passing" },
+  { slug: "safe-throw", effectFr: "+1 SPP si passing TD ET aucune INT lancée", cap: 1, family: "passing" },
+  { slug: "nerves-of-steel", effectFr: "+1 SPP si au moins 1 passing TD (résilience)", cap: 1, family: "passing" },
+  { slug: "sprint", effectFr: "+1 SPP si rushing yards ≥ 100 yd", cap: 1, family: "rushing" },
+  { slug: "sure-feet", effectFr: "+1 SPP si rushing yards ≥ 75 ET aucun fumble", cap: 1, family: "rushing" },
+  { slug: "break-tackle", effectFr: "+1 SPP par rushing TD (hors QB)", cap: 2, family: "rushing" },
+  { slug: "juggernaut", effectFr: "+1 SPP si rushing TD ET au moins 1 CAS", cap: 1, family: "rushing" },
+  { slug: "horns", effectFr: "+1 SPP si rushing yards ≥ 50 yd", cap: 1, family: "rushing" },
+  { slug: "catch", effectFr: "+1 SPP si au moins 1 receiving TD", cap: 1, family: "receiving" },
+  { slug: "extra-arms", effectFr: "+1 SPP par CP de réception (cap 2)", cap: 2, family: "receiving" },
+  { slug: "monstrous-mouth", effectFr: "+1 SPP par CP de réception (cap 2)", cap: 2, family: "receiving" },
+  { slug: "big-hand", effectFr: "+1 SPP si au moins 1 réception", cap: 1, family: "receiving" },
+  { slug: "diving-catch", effectFr: "+1 SPP si receiving yards ≥ 100 yd", cap: 1, family: "receiving" },
+  { slug: "very-long-legs", effectFr: "+1 SPP si receiving yards ≥ 150 yd", cap: 1, family: "receiving" },
+  { slug: "safe-pair-of-hands", effectFr: "+1 SPP par drop compensé", cap: 2, family: "receiving" },
+  { slug: "sure-hands", effectFr: "+1 SPP par fumble compensé", cap: 2, family: "receiving" },
+  { slug: "block", effectFr: "+1 SPP par CAS (sacks)", cap: 3, family: "defensive" },
+  { slug: "claws", effectFr: "+1 SPP par CAS (ignorance armure)", cap: 3, family: "defensive" },
+  { slug: "arm-bar", effectFr: "+1 SPP par CAS", cap: 2, family: "defensive" },
+  { slug: "wrestle", effectFr: "+1 SPP si au moins 1 CAS", cap: 1, family: "defensive" },
+  { slug: "pile-driver", effectFr: "+1 SPP par CAS issu d'un sack", cap: 2, family: "defensive" },
+  { slug: "frenzy", effectFr: "+1 SPP si ≥ 2 CAS dans le match", cap: 1, family: "defensive" },
+  { slug: "multiple-block", effectFr: "+1 SPP si CAS issu de QB hits multiples", cap: 1, family: "defensive" },
+  { slug: "mighty-blow-1", effectFr: "+1 SPP par CAS (toutes variantes +1/+2/+3)", cap: 3, family: "defensive" },
+  { slug: "dodge", effectFr: "+1 SPP par INT défensive", cap: 2, family: "defensive" },
+  { slug: "defensive", effectFr: "+1 SPP si au moins 1 INT", cap: 1, family: "defensive" },
+  { slug: "tackle", effectFr: "+1 SPP si au moins 1 forced fumble", cap: 1, family: "defensive" },
+  { slug: "strip-ball", effectFr: "+1 SPP par forced fumble", cap: 2, family: "defensive" },
+  { slug: "prehensile-tail", effectFr: "+1 SPP si au moins 1 forced fumble", cap: 1, family: "defensive" },
+  { slug: "tentacles", effectFr: "+1 SPP si au moins 1 forced fumble", cap: 1, family: "defensive" },
+  { slug: "shadowing", effectFr: "+1 SPP par pass breakup", cap: 2, family: "defensive" },
+  { slug: "side-step", effectFr: "+1 SPP si au moins 1 pass breakup", cap: 1, family: "defensive" },
+  { slug: "diving-tackle", effectFr: "+1 SPP si ≥ 10 tackles dans le match", cap: 1, family: "defensive" },
+  { slug: "fend", effectFr: "+1 SPP si forced fumble ET recovery dans le match", cap: 1, family: "defensive" },
+  { slug: "ball-and-chain", effectFr: "+1 SPP si TD défensif (pick-six / fumble return)", cap: 1, family: "defensive" },
+  { slug: "kick-team-mate", effectFr: "+1 SPP si TD défensif", cap: 1, family: "defensive" },
+  { slug: "block-and-tackle", effectFr: "+1 SPP si CAS ET forced fumble dans le match", cap: 1, family: "defensive" },
+  { slug: "tfl-specialist", effectFr: "+1 SPP si tackles for loss ≥ 2", cap: 1, family: "defensive" },
+  { slug: "guard", effectFr: "+1 SPP si team rushing yards > 150 yd", cap: 1, family: "lineman" },
+  { slug: "stand-firm", effectFr: "+1 SPP si team sacks allowed < 2", cap: 1, family: "lineman" },
+  { slug: "brawler", effectFr: "+1 SPP si team passer rating > 100", cap: 1, family: "lineman" },
+  { slug: "thick-skull", effectFr: "+1 SPP par participation OL (fallback no-team-context)", cap: 1, family: "lineman" },
+  { slug: "leader", effectFr: "+1 SPP si au moins 1 TD (offensif, toutes natures)", cap: 1, family: "general" },
+];
+
+function SkillFamilyTable({
+  title,
+  emoji,
+  rows,
 }: {
-  skill: string;
-  bonus: string;
-  cap: string;
-}): JSX.Element {
+  title: string;
+  emoji: string;
+  rows: ReadonlyArray<SkillBonusEntry>;
+}): JSX.Element | null {
+  if (rows.length === 0) return null;
   return (
-    <tr>
-      <td className="px-3 py-2">
-        <span className="rounded border border-purple-300 bg-purple-100 px-2 py-0.5 text-xs font-mono text-purple-800">
-          ✨ {skill}
-        </span>
-      </td>
-      <td className="px-3 py-2 text-sm text-nuffle-anthracite/80">{bonus}</td>
-      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite">
-        {cap}
-      </td>
-    </tr>
+    <div className="mt-4 overflow-hidden rounded-lg border border-nuffle-bronze/20 bg-white">
+      <div className="border-b border-nuffle-bronze/20 bg-nuffle-ivory/40 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-nuffle-anthracite/70">
+        {emoji} {title} <span className="font-mono text-nuffle-anthracite/50">({rows.length})</span>
+      </div>
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-nuffle-bronze/15">
+          {rows.map((r) => (
+            <tr key={r.slug}>
+              <td className="px-3 py-2 align-top">
+                <span className="rounded border border-purple-300 bg-purple-100 px-2 py-0.5 text-xs font-mono text-purple-800">
+                  ✨ {r.slug}
+                </span>
+              </td>
+              <td className="px-3 py-2 text-sm text-nuffle-anthracite/80">
+                {r.effectFr}
+              </td>
+              <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite">
+                cap {r.cap}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

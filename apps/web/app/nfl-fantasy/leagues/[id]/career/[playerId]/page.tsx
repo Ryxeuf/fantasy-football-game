@@ -58,6 +58,16 @@ interface AvailableSkill {
   nameFr: string;
   nameEn: string;
   category: string;
+  /** Description en FR de l'effet SPP, ou null si pas d'effet. */
+  effectFr: string | null;
+  effectCap: number | null;
+}
+
+interface SkillEffectCatalogEntry {
+  slug: string;
+  effectFr: string;
+  cap: number;
+  family: string;
 }
 
 interface AvailableSkillsResponse {
@@ -83,6 +93,9 @@ export default function PlayerCareerDetailPage() {
   const [available, setAvailable] = useState<AvailableSkillsResponse | null>(
     null,
   );
+  const [effectsBySlug, setEffectsBySlug] = useState<
+    Map<string, SkillEffectCatalogEntry>
+  >(new Map());
   const [error, setError] = useState<{ message: string; status?: number } | null>(
     null,
   );
@@ -103,6 +116,23 @@ export default function PlayerCareerDetailPage() {
     },
     [playerId],
   );
+
+  // Catalogue d'effets (public, fetch unique). Permet de filtrer les
+  // skills sans effet SPP et d'afficher la description par compétence.
+  useEffect(() => {
+    apiRequest<{ effects: SkillEffectCatalogEntry[] }>(
+      "/api/nfl-fantasy/public/skill-effects",
+    )
+      .then((res) => {
+        const map = new Map<string, SkillEffectCatalogEntry>();
+        for (const e of res.effects) map.set(e.slug, e);
+        setEffectsBySlug(map);
+      })
+      .catch(() => {
+        // Silent fallback : si l'API est down, on garde l'ancien comportement
+        // (skills sans effet visible).
+      });
+  }, []);
 
   useEffect(() => {
     if (!leagueId || !playerId) return;
@@ -241,24 +271,11 @@ export default function PlayerCareerDetailPage() {
       )}
 
       {career && (
-        <section className="rounded-lg border border-nuffle-bronze/20 bg-white p-4">
-          <h2 className="text-sm font-semibold text-nuffle-anthracite/70">
-            Compétences actuelles
-          </h2>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {access?.startingSkills.map((s) => (
-              <Badge key={`s-${s}`} label={s} tone="starter" />
-            ))}
-            {career.skillsUnlocked.map((s) => (
-              <Badge key={`u-${s}`} label={s} tone="unlocked" />
-            ))}
-            {access?.startingSkills.length === 0 && career.skillsUnlocked.length === 0 && (
-              <span className="text-xs text-nuffle-anthracite/40">
-                Aucune compétence pour l'instant.
-              </span>
-            )}
-          </div>
-        </section>
+        <OwnedSkillsSection
+          startingSkills={access?.startingSkills ?? []}
+          unlockedSkills={career.skillsUnlocked}
+          effectsBySlug={effectsBySlug}
+        />
       )}
 
       {unlockError && (
@@ -271,7 +288,8 @@ export default function PlayerCareerDetailPage() {
         <UnlockSection
           title="Pool primaire (6 SPP)"
           description={`Pool primaire : ${access?.primarySkills || "—"}`}
-          skills={available.primary}
+          skills={available.primary.filter((s) => s.effectFr != null)}
+          totalSkills={available.primary.length}
           cost={available.costs.primary}
           accessType="primary"
           sppAvailable={available.sppAvailable}
@@ -285,7 +303,8 @@ export default function PlayerCareerDetailPage() {
         <UnlockSection
           title="Pool secondaire (12 SPP)"
           description={`Pool secondaire : ${access?.secondarySkills || "—"}`}
-          skills={available.secondary}
+          skills={available.secondary.filter((s) => s.effectFr != null)}
+          totalSkills={available.secondary.length}
           cost={available.costs.secondary}
           accessType="secondary"
           sppAvailable={available.sppAvailable}
@@ -344,10 +363,124 @@ function Badge({ label, tone }: { label: string; tone: "starter" | "unlocked" })
   return <span className={`rounded px-1.5 py-0.5 text-xs ${cls}`}>{label}</span>;
 }
 
+// ────────────────────────────────────────────────────────────────────
+// Section des competences actuelles avec leurs effets
+// ────────────────────────────────────────────────────────────────────
+
+function OwnedSkillsSection({
+  startingSkills,
+  unlockedSkills,
+  effectsBySlug,
+}: {
+  startingSkills: readonly string[];
+  unlockedSkills: readonly string[];
+  effectsBySlug: Map<string, SkillEffectCatalogEntry>;
+}) {
+  const rowsWithEffect: Array<{
+    slug: string;
+    tone: "starter" | "unlocked";
+    effect: SkillEffectCatalogEntry | null;
+  }> = [];
+  for (const s of startingSkills) {
+    rowsWithEffect.push({
+      slug: s,
+      tone: "starter",
+      effect: lookupEffect(s, effectsBySlug),
+    });
+  }
+  for (const s of unlockedSkills) {
+    rowsWithEffect.push({
+      slug: s,
+      tone: "unlocked",
+      effect: lookupEffect(s, effectsBySlug),
+    });
+  }
+  const withEffect = rowsWithEffect.filter((r) => r.effect !== null);
+  const withoutEffect = rowsWithEffect.filter((r) => r.effect === null);
+
+  if (rowsWithEffect.length === 0) {
+    return (
+      <section className="rounded-lg border border-nuffle-bronze/20 bg-white p-4">
+        <h2 className="text-sm font-semibold text-nuffle-anthracite/70">
+          Compétences actuelles
+        </h2>
+        <p className="mt-2 text-xs text-nuffle-anthracite/40">
+          Aucune compétence pour l&apos;instant.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-lg border border-nuffle-bronze/20 bg-white p-4">
+      <h2 className="text-sm font-semibold text-nuffle-anthracite/70">
+        Compétences actuelles
+      </h2>
+      {withEffect.length > 0 && (
+        <ul className="mt-3 divide-y divide-nuffle-bronze/10">
+          {withEffect.map((r) => (
+            <li
+              key={`${r.tone}-${r.slug}`}
+              className="flex flex-wrap items-center justify-between gap-2 py-2"
+            >
+              <div className="flex items-center gap-2">
+                <Badge label={r.slug} tone={r.tone} />
+                <span className="text-xs text-nuffle-anthracite/50">
+                  {r.tone === "starter" ? "starting" : "débloquée"}
+                </span>
+              </div>
+              <p className="flex-1 text-right text-xs text-nuffle-anthracite/80 sm:text-sm">
+                {r.effect?.effectFr}
+                {r.effect && (
+                  <span className="ml-1 font-mono text-[10px] text-nuffle-anthracite/50">
+                    (cap {r.effect.cap})
+                  </span>
+                )}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {withoutEffect.length > 0 && (
+        <details className="mt-3 text-xs">
+          <summary className="cursor-pointer text-nuffle-anthracite/60 hover:text-nuffle-bronze">
+            {withoutEffect.length} autre{withoutEffect.length > 1 ? "s" : ""}{" "}
+            sans effet SPP
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-1.5 opacity-70">
+            {withoutEffect.map((r) => (
+              <Badge
+                key={`noeff-${r.slug}`}
+                label={r.slug}
+                tone={r.tone}
+              />
+            ))}
+          </div>
+          <p className="mt-1 text-[10px] text-nuffle-anthracite/50">
+            Ces compétences existent en Blood Bowl mais n&apos;ont pas de bonus
+            SPP dans le scoring NFL Fantasy V1.
+          </p>
+        </details>
+      )}
+    </section>
+  );
+}
+
+function lookupEffect(
+  slug: string,
+  effects: Map<string, SkillEffectCatalogEntry>,
+): SkillEffectCatalogEntry | null {
+  const direct = effects.get(slug);
+  if (direct) return direct;
+  if (slug.startsWith("mighty-blow")) return effects.get("mighty-blow-1") ?? null;
+  return null;
+}
+
 function UnlockSection({
   title,
   description,
   skills,
+  totalSkills,
   cost,
   accessType,
   sppAvailable,
@@ -358,6 +491,8 @@ function UnlockSection({
   title: string;
   description: string;
   skills: AvailableSkill[];
+  /** Nombre total dans le pool (avant filtrage par effetFr) — pour message info. */
+  totalSkills: number;
   cost: number;
   accessType: AccessType;
   sppAvailable: number;
@@ -365,16 +500,23 @@ function UnlockSection({
   busySlug: string | null;
   onUnlock: (slug: string, accessType: AccessType) => void;
 }) {
+  const filteredOut = totalSkills - skills.length;
   return (
     <section className="rounded-lg border border-nuffle-bronze/20 bg-white p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">{title}</h2>
         <span className="text-xs text-nuffle-anthracite/60">{description}</span>
       </div>
+      {filteredOut > 0 && (
+        <p className="mt-1 text-[11px] text-nuffle-anthracite/50">
+          {filteredOut} compétence{filteredOut > 1 ? "s" : ""} masquée
+          {filteredOut > 1 ? "s" : ""} (sans effet sur le scoring SPP).
+        </p>
+      )}
       <div className="mt-3">
         {skills.length === 0 ? (
           <p className="text-xs text-nuffle-anthracite/50">
-            Aucune compétence achetable dans ce pool.
+            Aucune compétence avec effet SPP achetable dans ce pool.
           </p>
         ) : (
           <ul className="divide-y divide-nuffle-bronze/10">
@@ -386,19 +528,29 @@ function UnlockSection({
               return (
                 <li
                   key={s.slug}
-                  className="flex items-center justify-between py-2"
+                  className="flex flex-wrap items-center justify-between gap-3 py-2"
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">{s.nameFr}</div>
                     <div className="text-xs text-nuffle-anthracite/60">
                       {s.category} · {s.slug}
                     </div>
+                    {s.effectFr && (
+                      <div className="mt-1 text-xs text-nuffle-anthracite/80">
+                        ✨ {s.effectFr}
+                        {s.effectCap != null && (
+                          <span className="ml-1 font-mono text-[10px] text-nuffle-anthracite/50">
+                            (cap {s.effectCap})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
                     disabled={disabled}
                     onClick={() => onUnlock(s.slug, accessType)}
-                    className="rounded-md bg-nuffle-bronze px-3 py-1.5 text-xs font-medium text-white hover:bg-nuffle-bronze/90 disabled:cursor-not-allowed disabled:bg-nuffle-anthracite/20"
+                    className="shrink-0 rounded-md bg-nuffle-bronze px-3 py-1.5 text-xs font-medium text-white hover:bg-nuffle-bronze/90 disabled:cursor-not-allowed disabled:bg-nuffle-anthracite/20"
                   >
                     {busySlug === s.slug
                       ? "…"
