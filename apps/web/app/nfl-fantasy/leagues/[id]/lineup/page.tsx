@@ -11,12 +11,13 @@
  */
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
-import { RaceIcon } from "../../../RaceIcon";
 import { WeekPicker, type WeekPickerOption } from "../WeekPicker";
+import { OpponentBanner } from "./OpponentBanner";
+import { PlayerCard } from "./PlayerCard";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
@@ -80,13 +81,45 @@ interface LeagueWeeksResponse {
   defaultWeekId: string | null;
 }
 
-function displayName(p: NflPlayerInfo | null): string {
-  if (!p) return "(joueur inconnu)";
-  return p.pseudonym;
+type SortKey =
+  | "value-desc"
+  | "value-asc"
+  | "lastSpp-desc"
+  | "name-asc"
+  | "position";
+
+const SORT_LABELS: Readonly<Record<SortKey, string>> = {
+  "value-desc": "Cote ↓",
+  "value-asc": "Cote ↑",
+  "lastSpp-desc": "Dernier SPP ↓",
+  "name-asc": "Nom A→Z",
+  position: "Position BB",
+};
+
+function sortPlayers(rows: RosterRow[], by: SortKey): RosterRow[] {
+  return [...rows].sort((a, b) => {
+    const pa = a.player;
+    const pb = b.player;
+    if (!pa || !pb) return 0;
+    switch (by) {
+      case "value-desc":
+        return (pb.currentValue ?? 0) - (pa.currentValue ?? 0);
+      case "value-asc":
+        return (pa.currentValue ?? 0) - (pb.currentValue ?? 0);
+      case "lastSpp-desc":
+        return (pb.lastSpp ?? -1) - (pa.lastSpp ?? -1);
+      case "name-asc":
+        return pa.pseudonym.localeCompare(pb.pseudonym);
+      case "position":
+        return (
+          pa.bbPosition.localeCompare(pb.bbPosition) ||
+          (pb.currentValue ?? 0) - (pa.currentValue ?? 0)
+        );
+    }
+  });
 }
 
 export default function LineupBuilderPage(): JSX.Element {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const leagueId = params?.id;
 
@@ -107,6 +140,11 @@ export default function LineupBuilderPage(): JSX.Element {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Filtres/tri pour la section Disponibles. State purement client.
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortKey>("value-desc");
+  const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
   // ────────── Load ──────────
 
@@ -287,13 +325,73 @@ export default function LineupBuilderPage(): JSX.Element {
     }
   }
 
-  // ────────── Render ──────────
+  // ────────── Render derivations ──────────
 
-  const sortedRoster = useMemo(() => {
-    return [...roster].sort((a, b) =>
-      displayName(a.player).localeCompare(displayName(b.player)),
+  // Split roster en starters (selectionnes) et available (banc).
+  // Le tri des starters : captain en 1er, vice en 2e, puis ordre
+  // d'ajout via selected (preservation Set order).
+  const selectedRoster = useMemo(() => {
+    const inSelection = roster.filter(
+      (r) => r.player && selected.has(r.player.id),
     );
+    inSelection.sort((a, b) => {
+      const aId = a.player!.id;
+      const bId = b.player!.id;
+      const aRank =
+        aId === captainId ? 0 : aId === viceCaptainId ? 1 : 2;
+      const bRank =
+        bId === captainId ? 0 : bId === viceCaptainId ? 1 : 2;
+      if (aRank !== bRank) return aRank - bRank;
+      // tiebreak: par cote desc pour visibilite des meilleurs
+      const av = a.player!.currentValue ?? 0;
+      const bv = b.player!.currentValue ?? 0;
+      if (av !== bv) return bv - av;
+      return a.player!.pseudonym.localeCompare(b.player!.pseudonym);
+    });
+    return inSelection;
+  }, [roster, selected, captainId, viceCaptainId]);
+
+  const availableRoster = useMemo(() => {
+    return roster.filter(
+      (r) => r.player && !selected.has(r.player.id),
+    );
+  }, [roster, selected]);
+
+  // Liste des positions BB presentes dans le roster (pour chips filtre).
+  const bbPositions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of roster) {
+      if (r.player?.bbPosition) set.add(r.player.bbPosition);
+    }
+    return Array.from(set).sort();
   }, [roster]);
+
+  // Comptage par BB position sur la SELECTION (utile pour quotas).
+  const positionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of selectedRoster) {
+      const pos = r.player?.bbPosition ?? "?";
+      counts.set(pos, (counts.get(pos) ?? 0) + 1);
+    }
+    return counts;
+  }, [selectedRoster]);
+
+  // Pipe filtre + tri sur la liste Available.
+  const filteredAvailable = useMemo(() => {
+    const norm = search.trim().toLowerCase();
+    let list = availableRoster.filter((r) => {
+      if (!r.player) return false;
+      if (norm && !r.player.pseudonym.toLowerCase().includes(norm)) {
+        return false;
+      }
+      if (positionFilter && r.player.bbPosition !== positionFilter) {
+        return false;
+      }
+      return true;
+    });
+    list = sortPlayers(list, sortBy);
+    return list;
+  }, [availableRoster, search, positionFilter, sortBy]);
 
   if (error?.status === 401) {
     return (
@@ -342,9 +440,12 @@ export default function LineupBuilderPage(): JSX.Element {
   }
 
   const locked = lineup?.lockedAt != null;
+  const canAddMore = selected.size < REQUIRED_STARTERS;
 
   return (
-    <div className="space-y-6">
+    // pb-28 : reserve la place pour la sticky bottom bar mobile
+    <div className="space-y-4 pb-28 sm:pb-6">
+      {/* Header compact */}
       <div>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
@@ -352,39 +453,33 @@ export default function LineupBuilderPage(): JSX.Element {
         >
           ← {league.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Lineup hebdo</h1>
+        <h1 className="mt-2 text-xl font-semibold sm:text-2xl">Lineup hebdo</h1>
         <p className="mt-1 text-sm text-nuffle-anthracite/70">
-          {myEntry.teamName} · roster {roster.length} joueurs · objectif{" "}
-          {REQUIRED_STARTERS} starters + captain (×1.5) + vice (×1.2)
+          {myEntry.teamName} ·{" "}
+          <span className="text-nuffle-anthracite/50">
+            {roster.length} joueurs · 11 starters + ×1.5/×1.2
+          </span>
         </p>
       </div>
 
-      <div className="flex items-end gap-4">
-        <div>
-          <p className="text-sm text-nuffle-anthracite/80">Semaine</p>
-          <div className="mt-1">
-            <WeekPicker
-              weeks={weeks}
-              value={weekId}
-              onChange={setWeekId}
-            />
-          </div>
-        </div>
+      {/* Week + status compact */}
+      <div className="flex flex-wrap items-center gap-3">
+        <WeekPicker weeks={weeks} value={weekId} onChange={setWeekId} />
+        {lineup && lineup.totalSpp !== null && (
+          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+            Total {lineup.totalSpp} SPP
+          </span>
+        )}
         {lineup && (
-          <p className="text-xs text-nuffle-anthracite/70">
-            Lineup actuel : {lineup.starters.length} starters,{" "}
+          <span className="text-xs text-nuffle-anthracite/60">
             {locked
-              ? `lockée ${new Date(lineup.lockedAt!).toLocaleString("fr-FR")}`
-              : "non lockée"}
-            {lineup.totalSpp !== null && (
-              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">
-                {lineup.totalSpp} SPP
-              </span>
-            )}
-          </p>
+              ? `Lockée ${new Date(lineup.lockedAt!).toLocaleString("fr-FR")}`
+              : "Brouillon"}
+          </span>
         )}
       </div>
 
+      {/* Adversaire */}
       <OpponentBanner
         matchup={matchup}
         myEntryId={myEntry.id}
@@ -392,8 +487,11 @@ export default function LineupBuilderPage(): JSX.Element {
       />
 
       {locked && (
-        <div className="rounded-md border border-amber-300 bg-amber-500/10 p-3 text-sm text-amber-700">
-          ⚠ Lineup lockée : tu ne peux plus la modifier pour cette semaine.
+        <div
+          className="rounded-md border border-amber-300 bg-amber-500/10 p-3 text-sm text-amber-800"
+          role="status"
+        >
+          🔒 Lineup lockée — tu ne peux plus la modifier pour cette semaine.
         </div>
       )}
 
@@ -408,301 +506,243 @@ export default function LineupBuilderPage(): JSX.Element {
 
       {roster.length > 0 && (
         <>
-          <div className="overflow-x-auto rounded-lg border border-nuffle-bronze/20 bg-white">
-            <table className="w-full text-sm" data-testid="nfl-fantasy-lineup-table">
-              <thead className="bg-white text-left text-xs uppercase tracking-wide text-nuffle-anthracite/70">
-                <tr>
-                  <th className="px-3 py-2">Starter</th>
-                  <th className="px-3 py-2">Joueur</th>
-                  <th className="px-3 py-2">BB pos</th>
-                  <th className="px-3 py-2">NFL pos</th>
-                  <th className="px-3 py-2">Équipe</th>
-                  <th className="px-3 py-2 text-right">Cote</th>
-                  <th className="px-3 py-2 text-right">Dernier match</th>
-                  <th className="px-3 py-2 text-center">Rôle</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-nuffle-bronze/20">
-                {sortedRoster.map((row) => {
-                  const player = row.player;
-                  const playerId = player?.id ?? "";
-                  if (!playerId) return null;
-                  const isSelected = selected.has(playerId);
-                  return (
-                    <tr
-                      key={row.rosterId}
-                      className={isSelected ? "bg-nuffle-gold/5" : undefined}
+          {/* Section : Ma selection (XXX/11) avec quotas par position */}
+          <section
+            className="rounded-xl border border-nuffle-bronze/20 bg-white p-3 shadow-sm sm:p-4"
+            data-testid="lineup-selected-section"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-base font-semibold text-nuffle-anthracite">
+                Ma sélection{" "}
+                <span
+                  className={`ml-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                    selected.size === REQUIRED_STARTERS
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-nuffle-bronze/15 text-nuffle-anthracite/70"
+                  }`}
+                >
+                  {selected.size}/{REQUIRED_STARTERS}
+                </span>
+              </h2>
+              <div className="text-xs text-nuffle-anthracite/60">
+                {captainId ? "👑 ✓" : "👑 manquant"} ·{" "}
+                {viceCaptainId ? "🥈 ✓" : "🥈 optionnel"}
+              </div>
+            </div>
+
+            {positionCounts.size > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Array.from(positionCounts.entries())
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([pos, n]) => (
+                    <span
+                      key={pos}
+                      className="rounded-full bg-nuffle-ivory/60 px-2 py-0.5 text-[11px] font-medium text-nuffle-anthracite"
+                      title={`${n} ${pos}`}
                     >
-                      <td className="px-3 py-2">
-                        <StarterToggle
-                          active={isSelected}
-                          disabled={locked}
-                          onClick={() => toggleStarter(playerId)}
-                          testId={`lineup-select-${playerId}`}
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-nuffle-anthracite">
-                        <div className="flex items-center gap-2">
-                          <RaceIcon
-                            race={player?.bbRace ?? null}
-                            label={player?.raceLabel ?? null}
-                            className="text-base leading-none"
-                          />
-                          <Link
-                            href={`/nfl-fantasy/players/${playerId}`}
-                            className="font-medium hover:text-nuffle-bronze hover:underline"
-                          >
-                            {displayName(player)}
-                          </Link>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-nuffle-anthracite/80">{player?.bbPosition ?? "—"}</td>
-                      <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.nflPosition ?? "—"}</td>
-                      <td className="px-3 py-2 text-nuffle-anthracite/70">{player?.teamCode ?? "FA"}</td>
-                      <td className="px-3 py-2 text-right font-mono text-nuffle-anthracite">
-                        {player?.currentValue != null
-                          ? `${player.currentValue} TV`
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-nuffle-anthracite/80">
-                        {player?.lastSpp != null ? (
-                          <span
-                            className="font-mono"
-                            title={
-                              player.lastWeekId
-                                ? `Semaine ${player.lastWeekId}`
-                                : undefined
-                            }
-                          >
-                            {player.lastSpp} SPP
-                          </span>
-                        ) : (
-                          <span className="text-xs text-nuffle-anthracite/40">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <RoleChip
-                            label="C"
-                            tooltip="Captain (×1.5)"
-                            active={captainId === playerId}
-                            disabled={locked || !isSelected}
-                            tone="captain"
-                            onClick={() =>
-                              setCaptain(
-                                captainId === playerId ? null : playerId,
-                              )
-                            }
-                            testId={`lineup-captain-${playerId}`}
-                          />
-                          <RoleChip
-                            label="V"
-                            tooltip="Vice-captain (×1.2)"
-                            active={viceCaptainId === playerId}
-                            disabled={locked || !isSelected}
-                            tone="vice"
-                            onClick={() =>
-                              setVice(
-                                viceCaptainId === playerId ? null : playerId,
-                              )
-                            }
-                            testId={`lineup-vice-${playerId}`}
-                          />
-                        </div>
-                      </td>
-                    </tr>
+                      {pos} <strong>{n}</strong>
+                    </span>
+                  ))}
+              </div>
+            )}
+
+            {selectedRoster.length === 0 ? (
+              <p className="mt-3 rounded-md border border-dashed border-nuffle-bronze/20 px-3 py-6 text-center text-sm text-nuffle-anthracite/60">
+                Aucun starter sélectionné. Pick-toi 11 joueurs depuis le
+                banc ci-dessous, puis un captain.
+              </p>
+            ) : (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {selectedRoster.map((row) => {
+                  const pid = row.player!.id;
+                  return (
+                    <PlayerCard
+                      key={row.rosterId}
+                      row={row}
+                      isStarter
+                      isCaptain={captainId === pid}
+                      isVice={viceCaptainId === pid}
+                      locked={locked}
+                      canAddMore={canAddMore}
+                      onToggle={() => toggleStarter(pid)}
+                      onCaptain={() =>
+                        setCaptain(captainId === pid ? null : pid)
+                      }
+                      onVice={() => setVice(viceCaptainId === pid ? null : pid)}
+                    />
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            )}
+          </section>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-xs text-nuffle-anthracite/70">
-              {selected.size}/{REQUIRED_STARTERS} starters ·
-              {captainId ? " captain ✓" : " captain ✗"} ·
-              {viceCaptainId ? " vice ✓" : " vice (optionnel)"}
-            </div>
-            <div className="flex items-center gap-3">
-              {actionError && (
-                <span className="text-xs text-red-700">{actionError}</span>
+          {/* Section : Disponibles + filtres + tri + search */}
+          {!locked && (
+            <section
+              className="rounded-xl border border-nuffle-bronze/20 bg-white p-3 shadow-sm sm:p-4"
+              data-testid="lineup-available-section"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-semibold text-nuffle-anthracite">
+                  Disponibles{" "}
+                  <span className="ml-1 rounded-full bg-nuffle-bronze/15 px-2 py-0.5 text-xs font-bold text-nuffle-anthracite/70">
+                    {filteredAvailable.length}
+                  </span>
+                </h2>
+              </div>
+
+              {/* Filter / sort bar — sticky en mobile pour que les
+                  controles restent accessibles en scrollant */}
+              <div className="sticky top-0 z-10 -mx-3 mt-3 bg-white/95 px-3 py-2 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="🔍 Filtrer par nom…"
+                    className="w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm focus:border-nuffle-gold focus:outline-none sm:max-w-xs"
+                    data-testid="lineup-search"
+                  />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortKey)}
+                    className="rounded-md border border-nuffle-bronze/30 bg-white px-3 py-2 text-sm focus:border-nuffle-gold focus:outline-none"
+                    data-testid="lineup-sort"
+                  >
+                    {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+                      <option key={k} value={k}>
+                        {SORT_LABELS[k]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {bbPositions.length > 1 && (
+                  <div className="mt-2 -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                    <PositionChip
+                      label="Tous"
+                      active={positionFilter === null}
+                      onClick={() => setPositionFilter(null)}
+                    />
+                    {bbPositions.map((p) => (
+                      <PositionChip
+                        key={p}
+                        label={p}
+                        active={positionFilter === p}
+                        onClick={() =>
+                          setPositionFilter(positionFilter === p ? null : p)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {filteredAvailable.length === 0 ? (
+                <p className="mt-3 rounded-md border border-dashed border-nuffle-bronze/20 px-3 py-6 text-center text-sm text-nuffle-anthracite/60">
+                  {availableRoster.length === 0
+                    ? "Tous les joueurs du roster sont dans ton lineup."
+                    : "Aucun joueur ne matche ces filtres."}
+                </p>
+              ) : (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {filteredAvailable.map((row) => {
+                    const pid = row.player!.id;
+                    return (
+                      <PlayerCard
+                        key={row.rosterId}
+                        row={row}
+                        isStarter={false}
+                        isCaptain={false}
+                        isVice={false}
+                        locked={locked}
+                        canAddMore={canAddMore}
+                        onToggle={() => toggleStarter(pid)}
+                        onCaptain={() => {}}
+                        onVice={() => {}}
+                      />
+                    );
+                  })}
+                </div>
               )}
-              <button
-                onClick={onSubmit}
-                disabled={
-                  locked ||
-                  submitting ||
-                  selected.size !== REQUIRED_STARTERS ||
-                  !captainId
-                }
-                className="rounded-md bg-nuffle-gold px-4 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/80 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20"
-                data-testid="lineup-submit"
-              >
-                {submitting ? "Enregistrement…" : "Enregistrer le lineup"}
-              </button>
+            </section>
+          )}
+
+          {/* Sticky bottom action bar — toujours accessible sur mobile */}
+          {!locked && (
+            <div
+              className="fixed inset-x-0 bottom-0 z-30 border-t border-nuffle-bronze/20 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] backdrop-blur sm:px-6"
+              data-testid="lineup-action-bar"
+            >
+              <div className="mx-auto flex max-w-5xl items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-semibold">
+                      {selected.size}/{REQUIRED_STARTERS}
+                    </span>
+                    <span className="text-nuffle-anthracite/60">starters</span>
+                    {captainId && (
+                      <span title="Captain choisi" className="text-amber-600">
+                        👑
+                      </span>
+                    )}
+                    {viceCaptainId && (
+                      <span title="Vice choisi" className="text-slate-500">
+                        🥈
+                      </span>
+                    )}
+                  </div>
+                  {actionError ? (
+                    <p className="mt-0.5 truncate text-xs text-red-700">
+                      {actionError}
+                    </p>
+                  ) : !captainId && selected.size > 0 ? (
+                    <p className="mt-0.5 text-xs text-amber-700">
+                      Choisis un captain pour valider
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  onClick={onSubmit}
+                  disabled={
+                    locked ||
+                    submitting ||
+                    selected.size !== REQUIRED_STARTERS ||
+                    !captainId
+                  }
+                  className="shrink-0 rounded-md bg-nuffle-gold px-4 py-2.5 text-sm font-semibold text-nuffle-anthracite shadow-sm hover:bg-nuffle-gold/90 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20 disabled:text-nuffle-anthracite/40"
+                  data-testid="lineup-submit"
+                >
+                  {submitting ? "…" : "Enregistrer"}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
   );
 }
 
-// ────────── Toggles UI (checkbox + radio modernises) ──────────
-
-interface StarterToggleProps {
-  active: boolean;
-  disabled: boolean;
-  onClick: () => void;
-  testId: string;
-}
-
-/**
- * Toggle starter : remplace la checkbox native par un bouton rond
- * qui affiche ✓ quand actif (gold) et un cercle vide sinon. Plus
- * tactile (mobile) et plus visible.
- */
-function StarterToggle({ active, disabled, onClick, testId }: StarterToggleProps) {
-  const base =
-    "flex h-7 w-7 items-center justify-center rounded-full border-2 text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-nuffle-gold/40";
-  const activeClass = "border-nuffle-gold bg-nuffle-gold text-nuffle-anthracite shadow-sm";
-  const inactiveClass = "border-nuffle-bronze/30 bg-white text-transparent hover:border-nuffle-gold hover:text-nuffle-gold/40";
-  const disabledClass = "cursor-not-allowed opacity-50";
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      aria-label={active ? "Retirer du lineup" : "Mettre dans le lineup"}
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={testId}
-      className={`${base} ${active ? activeClass : inactiveClass} ${disabled ? disabledClass : ""}`}
-    >
-      ✓
-    </button>
-  );
-}
-
-interface RoleChipProps {
+interface PositionChipProps {
   label: string;
-  tooltip: string;
   active: boolean;
-  disabled: boolean;
   onClick: () => void;
-  tone: "captain" | "vice";
-  testId: string;
 }
 
-/**
- * Chip toggle Captain / Vice. Remplace les radio natifs par des
- * pastilles colorees, plus tactiles et plus lisibles. Captain :
- * gold gradient + couronne 👑 quand actif. Vice : silver gradient
- * + medaille 🥈. Clic sur le chip actif = deselection (toggle).
- */
-function RoleChip({
-  label,
-  tooltip,
-  active,
-  disabled,
-  onClick,
-  tone,
-  testId,
-}: RoleChipProps) {
-  const base =
-    "inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-full px-2 text-xs font-bold transition-all focus:outline-none focus:ring-2";
-  const activeCaptain =
-    "bg-gradient-to-br from-amber-300 to-amber-500 text-amber-950 shadow-md ring-amber-200 focus:ring-amber-400";
-  const activeVice =
-    "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-50 shadow-md ring-slate-200 focus:ring-slate-400";
-  const inactive =
-    "bg-nuffle-bronze/10 text-nuffle-anthracite/60 hover:bg-nuffle-bronze/20 focus:ring-nuffle-gold/30";
-  const disabledClass = "cursor-not-allowed opacity-30";
-
-  const cls = active
-    ? tone === "captain"
-      ? activeCaptain
-      : activeVice
-    : inactive;
-  const emoji = active ? (tone === "captain" ? "👑" : "🥈") : null;
-
+function PositionChip({ label, active, onClick }: PositionChipProps) {
   return (
     <button
       type="button"
-      aria-pressed={active}
-      title={tooltip}
       onClick={onClick}
-      disabled={disabled}
-      data-testid={testId}
-      className={`${base} ${cls} ${disabled ? disabledClass : ""}`}
+      aria-pressed={active}
+      className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+        active
+          ? "border-nuffle-gold bg-nuffle-gold text-nuffle-anthracite"
+          : "border-nuffle-bronze/30 bg-white text-nuffle-anthracite/70 hover:border-nuffle-gold/50"
+      }`}
     >
-      {emoji ? <span className="mr-0.5">{emoji}</span> : null}
       {label}
     </button>
   );
 }
 
-interface OpponentBannerProps {
-  matchup: NflFantasyMatchup | null;
-  myEntryId: string;
-  entries: ReadonlyArray<NflFantasyEntry>;
-}
-
-/**
- * Banniere "Tu joues contre X cette semaine". S'affiche entre le
- * picker semaine et la table du lineup. Si pas de matchup encore
- * genere pour cette semaine (cycle sans cycleId, ou settle pas
- * encore passe sur la 1ere semaine), n'affiche rien.
- */
-function OpponentBanner({ matchup, myEntryId, entries }: OpponentBannerProps) {
-  if (!matchup) return null;
-  const opponentId =
-    matchup.homeEntryId === myEntryId
-      ? matchup.awayEntryId
-      : matchup.homeEntryId;
-  const opponent = entries.find((e) => e.id === opponentId);
-  const opponentName = opponent?.teamName ?? "Adversaire inconnu";
-  const isHome = matchup.homeEntryId === myEntryId;
-  const settled = matchup.settledAt != null;
-
-  return (
-    <div
-      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-nuffle-bronze/30 bg-nuffle-ivory/40 px-4 py-3"
-      data-testid="lineup-opponent-banner"
-    >
-      <div>
-        <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
-          Tu joues {isHome ? "à domicile" : "à l'extérieur"} contre
-        </p>
-        <p className="text-base font-semibold text-nuffle-anthracite">
-          🏈 {opponentName}
-        </p>
-      </div>
-      {settled && (
-        <div className="text-right">
-          <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
-            Résultat
-          </p>
-          <p className="font-mono text-sm">
-            {matchup.homeScore} - {matchup.awayScore}
-            {matchup.winnerId === myEntryId && (
-              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                Victoire
-              </span>
-            )}
-            {matchup.winnerId !== null &&
-              matchup.winnerId !== myEntryId && (
-                <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                  Défaite
-                </span>
-              )}
-            {matchup.winnerId === null && (
-              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Égalité
-              </span>
-            )}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
