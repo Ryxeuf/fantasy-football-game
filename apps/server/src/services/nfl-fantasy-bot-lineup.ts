@@ -80,39 +80,50 @@ async function buildAndSetDefaultLineup(
   entryId: string,
   weekId: string,
 ): Promise<DefaultLineupOutcome> {
-  type RosterRow = {
-    playerId: string;
-    player: {
-      pseudonym: string;
-      bbPosition: string;
-      currentValue: number;
-    } | null;
-  };
-  const rosterRows: ReadonlyArray<RosterRow> =
+  // NflFantasyRoster.playerId est une FK *logique* (pas de relation
+  // Prisma vers NflPlayer), donc on fait le merge en JS comme dans
+  // nfl-fantasy-roster.ts.
+  const rosterRows: ReadonlyArray<{ playerId: string }> =
     await prisma.nflFantasyRoster.findMany({
       where: { entryId },
-      select: {
-        playerId: true,
-        player: {
-          select: {
-            pseudonym: true,
-            bbPosition: true,
-            currentValue: true,
-          },
-        },
-      },
+      select: { playerId: true },
     });
 
+  if (rosterRows.length < DEFAULT_STARTERS_COUNT) {
+    return "too-small";
+  }
+
+  type PlayerRow = {
+    id: string;
+    pseudonym: string;
+    bbPosition: string;
+    currentValue: number;
+  };
+  const players: ReadonlyArray<PlayerRow> = await prisma.nflPlayer.findMany({
+    where: { id: { in: rosterRows.map((r) => r.playerId) } },
+    select: {
+      id: true,
+      pseudonym: true,
+      bbPosition: true,
+      currentValue: true,
+    },
+  });
+  const playerById = new Map<string, PlayerRow>(
+    players.map((p) => [p.id, p] as const),
+  );
+
   const picks: RosterPick[] = rosterRows
-    .filter((r): r is RosterRow & { player: NonNullable<RosterRow["player"]> } =>
-      r.player !== null,
-    )
-    .map((r) => ({
-      playerId: r.playerId,
-      bbPosition: r.player.bbPosition,
-      currentValue: r.player.currentValue,
-      pseudonym: r.player.pseudonym,
-    }));
+    .map((r) => {
+      const p = playerById.get(r.playerId);
+      if (!p) return null;
+      return {
+        playerId: r.playerId,
+        bbPosition: p.bbPosition,
+        currentValue: p.currentValue,
+        pseudonym: p.pseudonym,
+      };
+    })
+    .filter((x): x is RosterPick => x !== null);
 
   if (picks.length < DEFAULT_STARTERS_COUNT) {
     return "too-small";

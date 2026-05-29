@@ -4,6 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflFantasyEntry: { findMany: vi.fn() },
     nflFantasyRoster: { findMany: vi.fn() },
+    nflPlayer: { findMany: vi.fn() },
   },
 }));
 
@@ -95,15 +96,20 @@ describe("autoFillTestLineups", () => {
     const buildRoster = (prefix: string) =>
       Array.from({ length: 11 }, (_, i) => ({
         playerId: `${prefix}-p${i}`,
-        player: {
-          pseudonym: `name${i}`,
-          bbPosition: "Lineman",
-          currentValue: 100 + i, // p10 > p9 > ... > p0
-        },
+      }));
+    const buildPlayers = (prefix: string) =>
+      Array.from({ length: 11 }, (_, i) => ({
+        id: `${prefix}-p${i}`,
+        pseudonym: `name${i}`,
+        bbPosition: "Lineman",
+        currentValue: 100 + i, // p10 > p9 > ... > p0
       }));
     vi.mocked(prisma.nflFantasyRoster.findMany)
       .mockResolvedValueOnce(buildRoster("e2") as never)
       .mockResolvedValueOnce(buildRoster("e3") as never);
+    vi.mocked(prisma.nflPlayer.findMany)
+      .mockResolvedValueOnce(buildPlayers("e2") as never)
+      .mockResolvedValueOnce(buildPlayers("e3") as never);
 
     vi.mocked(setLineup).mockResolvedValue({} as never);
 
@@ -136,11 +142,9 @@ describe("autoFillTestLineups", () => {
       { id: "e2" },
     ] as never);
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([
-      {
-        playerId: "p1",
-        player: { pseudonym: "x", bbPosition: "Lineman", currentValue: 100 },
-      },
+      { playerId: "p1" },
     ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
 
     const res = await autoFillTestLineups({
       leagueId: "lg1",
@@ -158,13 +162,14 @@ describe("autoFillTestLineups", () => {
       { id: "e2" },
     ] as never);
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
+      Array.from({ length: 11 }, (_, i) => ({ playerId: `p${i}` })) as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue(
       Array.from({ length: 11 }, (_, i) => ({
-        playerId: `p${i}`,
-        player: {
-          pseudonym: `n${i}`,
-          bbPosition: "Lineman",
-          currentValue: 100,
-        },
+        id: `p${i}`,
+        pseudonym: `n${i}`,
+        bbPosition: "Lineman",
+        currentValue: 100,
       })) as never,
     );
     vi.mocked(setLineup).mockRejectedValue(
@@ -224,15 +229,20 @@ describe("ensureDefaultLineupsForWeek", () => {
     const buildRoster = (prefix: string) =>
       Array.from({ length: 11 }, (_, i) => ({
         playerId: `${prefix}-p${i}`,
-        player: {
-          pseudonym: `n${i}`,
-          bbPosition: "Lineman",
-          currentValue: 100 + i,
-        },
+      }));
+    const buildPlayers = (prefix: string) =>
+      Array.from({ length: 11 }, (_, i) => ({
+        id: `${prefix}-p${i}`,
+        pseudonym: `n${i}`,
+        bbPosition: "Lineman",
+        currentValue: 100 + i,
       }));
     vi.mocked(prisma.nflFantasyRoster.findMany)
       .mockResolvedValueOnce(buildRoster("e1") as never)
       .mockResolvedValueOnce(buildRoster("e2") as never);
+    vi.mocked(prisma.nflPlayer.findMany)
+      .mockResolvedValueOnce(buildPlayers("e1") as never)
+      .mockResolvedValueOnce(buildPlayers("e2") as never);
     vi.mocked(setLineup).mockResolvedValue({} as never);
 
     const res = await ensureDefaultLineupsForWeek("2025:W10");
@@ -248,11 +258,9 @@ describe("ensureDefaultLineupsForWeek", () => {
       { id: "e1" },
     ] as never);
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([
-      {
-        playerId: "p1",
-        player: { pseudonym: "x", bbPosition: "Lineman", currentValue: 100 },
-      },
+      { playerId: "p1" },
     ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
 
     const res = await ensureDefaultLineupsForWeek("2025:W10");
 
