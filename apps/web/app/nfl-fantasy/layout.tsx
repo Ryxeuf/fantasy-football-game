@@ -36,6 +36,9 @@ export default function NuffleCoachLayout({ children }: { children: ReactNode })
           <Link href="/nfl-fantasy/players" className="hover:text-nuffle-gold">
             Joueurs
           </Link>
+          <Link href="/nfl-fantasy/rules" className="hover:text-nuffle-gold">
+            Règles
+          </Link>
           <Link href="/nfl-fantasy/about" className="hover:text-nuffle-gold">
             À propos
           </Link>
