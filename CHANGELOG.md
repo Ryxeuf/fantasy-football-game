@@ -1,3 +1,10 @@
+## [1.153.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.152.0...v1.153.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** lineup chips C/V + starter toggle modernises ([6559a1a](https://github.com/Ryxeuf/fantasy-football-game/commit/6559a1a36a2c8672752bbf577b69a5c633224800))
+
 ## [1.152.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.151.0...v1.152.0) (2026-05-29)
 
 
