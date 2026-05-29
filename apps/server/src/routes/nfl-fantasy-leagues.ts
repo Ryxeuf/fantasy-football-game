@@ -49,6 +49,7 @@ import {
   getLeagueStandings,
   listMatchupsForWeek,
 } from "../services/nfl-fantasy-scoring";
+import { getMatchupDetail } from "../services/nfl-fantasy-matchup-detail";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 import { isEnabled, NUFFLE_COACH_TEST_FLAG } from "../services/featureFlags";
@@ -317,6 +318,37 @@ router.get(
     }
   },
 );
+
+/**
+ * GET /:id/matchups/:matchupId
+ *
+ * Vue read-only complete d'un matchup pour la page "detail match" :
+ * scores, outcome, deux lineups avec starters tries par finalSpp,
+ * events SPP bruts, bonus skill BB, captain/vice bonus. Permet a un
+ * coach de comprendre exactement comment et pourquoi il a gagne ou
+ * perdu.
+ *
+ * Garde : LEAGUE_MISMATCH (403) si le matchupId n'appartient pas a la
+ * league. Les checks d'appartenance a la league sont assures par
+ * getLeague en amont (l'user doit pouvoir voir la league).
+ */
+router.get("/:id/matchups/:matchupId", async (req, res) => {
+  try {
+    // Verifie que l'user a acces a la league (pattern identique aux
+    // autres routes qui resolvent par leagueId).
+    await getLeague(req.params.id);
+    const detail = await getMatchupDetail({
+      leagueId: req.params.id,
+      matchupId: req.params.matchupId,
+    });
+    res.json(detail);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] matchup detail failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
 
 /**
  * GET /:id/weeks

@@ -20,6 +20,7 @@ import { NflFantasyAdminError } from "../services/nfl-fantasy-admin-explorer";
 import { NflFantasyReplayError } from "../services/nfl-fantasy-replay";
 import { NflFantasyGazetteError } from "../services/nfl-fantasy-gazette";
 import { NflFantasyCycleError } from "../services/nfl-fantasy-season-cycle";
+import { MatchupDetailError } from "../services/nfl-fantasy-matchup-detail";
 
 export interface MappedError {
   readonly status: number;
@@ -52,6 +53,7 @@ export function statusForCode(code: string): number {
     // 403 — acces refuse
     case "NOT_OWNER":
     case "REROLL_NOT_OWNED":
+    case "LEAGUE_MISMATCH":
       return 403;
 
     // 409 — etat conflictuel
@@ -130,7 +132,8 @@ export function buildErrorResponse(err: unknown): MappedError | null {
     err instanceof NflFantasyAdminError ||
     err instanceof NflFantasyReplayError ||
     err instanceof NflFantasyGazetteError ||
-    err instanceof NflFantasyCycleError
+    err instanceof NflFantasyCycleError ||
+    err instanceof MatchupDetailError
   ) {
     return {
       status: statusForCode(err.code),
