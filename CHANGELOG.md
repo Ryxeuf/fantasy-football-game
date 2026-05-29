@@ -1,3 +1,11 @@
+## [1.151.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.150.0...v1.151.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** matchups pre-generes au start-season + adversaire sur lineup ([f1093cf](https://github.com/Ryxeuf/fantasy-football-game/commit/f1093cf0337301c44885289ca12e9517e512d257))
+* **nfl-fantasy:** page lineup enrichie (race, cote, dernier SPP, lien fiche) ([6255869](https://github.com/Ryxeuf/fantasy-football-game/commit/6255869ab4bff9305a25234d4f7a454b6bf3fb81))
+
 ## [1.150.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.149.0...v1.150.0) (2026-05-28)
 
 
