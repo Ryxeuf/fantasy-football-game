@@ -227,6 +227,9 @@ describe("finalizeLeague", () => {
     expect(out.status).toBe("in_progress");
     expect(out.entriesSeeded).toBe(3);
     expect(out.rerollsSeededTotal).toBe(24); // 3 * 8
+    // Sans cycleId sur la league mockee, pas de pre-generation de matchups
+    expect(out.matchupsCreated).toBe(0);
+    expect(out.weeksAlreadyPaired).toBe(0);
     expect(seedStartingRerolls).toHaveBeenCalledTimes(3);
     expect(prisma.nflFantasyLeague.update).toHaveBeenCalledWith({
       where: { id: "lg1" },

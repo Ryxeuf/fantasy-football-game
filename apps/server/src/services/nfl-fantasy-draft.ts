@@ -23,6 +23,8 @@ import {
   addPlayerToRoster,
 } from "./nfl-fantasy-roster";
 import { seedStartingRerolls } from "./nfl-fantasy-mercato";
+import { generateMatchups } from "./nfl-fantasy-scoring";
+import { serverLog } from "../utils/server-log";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreur typee
@@ -288,6 +290,10 @@ export interface FinalizeLeagueResult {
   readonly status: "in_progress";
   readonly entriesSeeded: number;
   readonly rerollsSeededTotal: number;
+  /** Nb total de matchups crees sur l'ensemble des semaines du cycle. */
+  readonly matchupsCreated: number;
+  /** Nb de semaines pour lesquelles des matchups existaient deja. */
+  readonly weeksAlreadyPaired: number;
 }
 
 /**
@@ -340,12 +346,75 @@ export async function finalizeLeague(
     data: { status: "in_progress" },
   });
 
+  // Pre-generation des matchups : des le demarrage de la saison on
+  // calcule les pairings round-robin pour TOUTES les semaines du
+  // cycle. Comme ca chaque coach sait des le jour 1 contre qui il
+  // joue chaque semaine -> peut adapter ses lineups en consequence.
+  // Idempotent (generateMatchups skip si deja existants).
+  const matchupsTotals = await preGenerateCycleMatchups(league);
+
   return {
     leagueId: league.id,
     status: "in_progress",
     entriesSeeded: league.entries.length,
     rerollsSeededTotal,
+    matchupsCreated: matchupsTotals.created,
+    weeksAlreadyPaired: matchupsTotals.alreadyPaired,
   };
+}
+
+/**
+ * Genere les matchups pour chaque NflWeek du cycle adosse au
+ * championnat. Idempotent : reutilise generateMatchups (skip si
+ * deja paires). Si le championnat n'a pas de cycleId, no-op.
+ *
+ * Erreurs par semaine logguees mais non bloquantes : on continue
+ * pour ne pas bloquer le start-season si une seule semaine pose
+ * probleme (ex: nb impair d'entries -> ODD_ENTRIES).
+ */
+async function preGenerateCycleMatchups(league: {
+  id: string;
+  seasonId: string;
+  cycleId: string | null;
+}): Promise<{ created: number; alreadyPaired: number }> {
+  if (!league.cycleId) {
+    return { created: 0, alreadyPaired: 0 };
+  }
+  const cycle = await prisma.nflFantasySeasonCycle.findUnique({
+    where: { id: league.cycleId },
+    select: { startWeek: true, endWeek: true },
+  });
+  if (!cycle) {
+    return { created: 0, alreadyPaired: 0 };
+  }
+  const weeks = await prisma.nflWeek.findMany({
+    where: {
+      seasonId: league.seasonId,
+      weekNumber: { gte: cycle.startWeek, lte: cycle.endWeek },
+    },
+    orderBy: { weekNumber: "asc" },
+    select: { id: true },
+  });
+
+  let created = 0;
+  let alreadyPaired = 0;
+  for (const w of weeks) {
+    try {
+      const out = await generateMatchups({
+        leagueId: league.id,
+        weekId: w.id,
+      });
+      created += out.matchupsCreated;
+      if (out.matchupsCreated === 0 && out.matchupsExisting > 0) {
+        alreadyPaired += 1;
+      }
+    } catch (e) {
+      serverLog.error(
+        `[nfl-fantasy-draft] preGenerateCycleMatchups failed for week ${w.id}: ${(e as Error).message}`,
+      );
+    }
+  }
+  return { created, alreadyPaired };
 }
 
 // ────────────────────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import { RaceIcon } from "../../../RaceIcon";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
+  NflFantasyMatchup,
 } from "../../../types";
 
 interface NflPlayerInfo {
@@ -89,6 +90,7 @@ export default function LineupBuilderPage(): JSX.Element {
   const [roster, setRoster] = useState<RosterRow[]>([]);
   const [lineup, setLineup] = useState<LineupResponse["lineup"]>(null);
   const [weekId, setWeekId] = useState<string>(DEFAULT_WEEK_ID);
+  const [matchup, setMatchup] = useState<NflFantasyMatchup | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [captainId, setCaptainId] = useState<string | null>(null);
@@ -132,31 +134,46 @@ export default function LineupBuilderPage(): JSX.Element {
     }
   }, [leagueId]);
 
-  // Charge le lineup courant de la week selectionnee
+  // Charge le lineup + le matchup de la semaine selectionnee. Le
+  // matchup permet d'afficher contre quel coach on joue (les
+  // matchups sont pre-generes des le demarrage de la saison).
   const loadLineup = useCallback(async () => {
-    if (!myEntry) return;
+    if (!myEntry || !leagueId) return;
     try {
-      const res = await apiRequest<LineupResponse>(
-        `/api/nfl-fantasy/entries/${myEntry.id}/lineup?weekId=${encodeURIComponent(weekId)}`,
-      );
-      setLineup(res.lineup);
-      if (res.lineup) {
-        const next = new Set<string>(res.lineup.starters.map((s) => s.playerId));
+      const [lineupRes, matchupsRes] = await Promise.all([
+        apiRequest<LineupResponse>(
+          `/api/nfl-fantasy/entries/${myEntry.id}/lineup?weekId=${encodeURIComponent(weekId)}`,
+        ).catch((err) => {
+          if (err instanceof ApiClientError && err.status === 404) {
+            return { lineup: null } as LineupResponse;
+          }
+          throw err;
+        }),
+        apiRequest<{ matchups: NflFantasyMatchup[] }>(
+          `/api/nfl-fantasy/leagues/${leagueId}/matchups?weekId=${encodeURIComponent(weekId)}`,
+        ).catch(() => ({ matchups: [] }) as { matchups: NflFantasyMatchup[] }),
+      ]);
+      setLineup(lineupRes.lineup);
+      if (lineupRes.lineup) {
+        const next = new Set<string>(
+          lineupRes.lineup.starters.map((s) => s.playerId),
+        );
         setSelected(next);
-        setCaptainId(res.lineup.captainId);
-        setViceCaptainId(res.lineup.viceCaptainId);
+        setCaptainId(lineupRes.lineup.captainId);
+        setViceCaptainId(lineupRes.lineup.viceCaptainId);
       } else {
         setSelected(new Set());
         setCaptainId(null);
         setViceCaptainId(null);
       }
+      const mine = matchupsRes.matchups.find(
+        (m) => m.homeEntryId === myEntry.id || m.awayEntryId === myEntry.id,
+      );
+      setMatchup(mine ?? null);
     } catch (err) {
-      // 404 -> pas de lineup encore, ok
-      if (!(err instanceof ApiClientError) || err.status !== 404) {
-        setActionError(err instanceof Error ? err.message : "Erreur lineup");
-      }
+      setActionError(err instanceof Error ? err.message : "Erreur lineup");
     }
-  }, [myEntry, weekId]);
+  }, [myEntry, leagueId, weekId]);
 
   useEffect(() => {
     void loadCore();
@@ -353,6 +370,12 @@ export default function LineupBuilderPage(): JSX.Element {
         )}
       </div>
 
+      <OpponentBanner
+        matchup={matchup}
+        myEntryId={myEntry.id}
+        entries={league.entries}
+      />
+
       {locked && (
         <div className="rounded-md border border-amber-300 bg-amber-500/10 p-3 text-sm text-amber-700">
           ⚠ Lineup lockée : tu ne peux plus la modifier pour cette semaine.
@@ -495,6 +518,72 @@ export default function LineupBuilderPage(): JSX.Element {
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+interface OpponentBannerProps {
+  matchup: NflFantasyMatchup | null;
+  myEntryId: string;
+  entries: ReadonlyArray<NflFantasyEntry>;
+}
+
+/**
+ * Banniere "Tu joues contre X cette semaine". S'affiche entre le
+ * picker semaine et la table du lineup. Si pas de matchup encore
+ * genere pour cette semaine (cycle sans cycleId, ou settle pas
+ * encore passe sur la 1ere semaine), n'affiche rien.
+ */
+function OpponentBanner({ matchup, myEntryId, entries }: OpponentBannerProps) {
+  if (!matchup) return null;
+  const opponentId =
+    matchup.homeEntryId === myEntryId
+      ? matchup.awayEntryId
+      : matchup.homeEntryId;
+  const opponent = entries.find((e) => e.id === opponentId);
+  const opponentName = opponent?.teamName ?? "Adversaire inconnu";
+  const isHome = matchup.homeEntryId === myEntryId;
+  const settled = matchup.settledAt != null;
+
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-nuffle-bronze/30 bg-nuffle-ivory/40 px-4 py-3"
+      data-testid="lineup-opponent-banner"
+    >
+      <div>
+        <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
+          Tu joues {isHome ? "à domicile" : "à l'extérieur"} contre
+        </p>
+        <p className="text-base font-semibold text-nuffle-anthracite">
+          🏈 {opponentName}
+        </p>
+      </div>
+      {settled && (
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
+            Résultat
+          </p>
+          <p className="font-mono text-sm">
+            {matchup.homeScore} - {matchup.awayScore}
+            {matchup.winnerId === myEntryId && (
+              <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                Victoire
+              </span>
+            )}
+            {matchup.winnerId !== null &&
+              matchup.winnerId !== myEntryId && (
+                <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                  Défaite
+                </span>
+              )}
+            {matchup.winnerId === null && (
+              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                Égalité
+              </span>
+            )}
+          </p>
+        </div>
       )}
     </div>
   );
