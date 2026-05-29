@@ -81,10 +81,13 @@ export function PlayerCard({
       {/* Ligne 1 : badge role + race + nom + cote */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          {/* min-w-0 sur ce flex interne aussi : sans ca, les
+              flex items ne shrinkent pas et le Link `truncate`
+              ne tronque pas (le texte deborde de la card). */}
+          <div className="flex min-w-0 items-center gap-2">
             {isCaptain && (
               <span
-                className="rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-amber-950"
+                className="shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-amber-950"
                 title="Captain ×1.5"
               >
                 👑 C
@@ -92,7 +95,7 @@ export function PlayerCard({
             )}
             {isVice && (
               <span
-                className="rounded-full bg-gradient-to-br from-slate-300 to-slate-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-50"
+                className="shrink-0 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-50"
                 title="Vice-captain ×1.2"
               >
                 🥈 V
@@ -101,11 +104,12 @@ export function PlayerCard({
             <RaceIcon
               race={player.bbRace ?? null}
               label={player.raceLabel ?? null}
-              className="text-base leading-none"
+              className="shrink-0 text-base leading-none"
             />
             <Link
               href={`/nfl-fantasy/players/${player.id}`}
-              className="truncate font-semibold text-nuffle-anthracite hover:text-nuffle-bronze hover:underline"
+              className="min-w-0 truncate font-semibold text-nuffle-anthracite hover:text-nuffle-bronze hover:underline"
+              title={player.pseudonym}
             >
               {player.pseudonym}
             </Link>

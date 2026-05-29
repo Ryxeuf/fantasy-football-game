@@ -443,7 +443,10 @@ export default function LineupBuilderPage(): JSX.Element {
   const canAddMore = selected.size < REQUIRED_STARTERS;
 
   return (
-    <div className="space-y-4">
+    // pb-24 : reserve la place pour la fixed bottom bar (mobile +
+    // desktop). sm:pb-6 : sur desktop on garde moins de padding car
+    // la barre est moins envahissante.
+    <div className="space-y-4 pb-24 sm:pb-20">
       {/* Header compact */}
       <div>
         <Link
@@ -666,16 +669,20 @@ export default function LineupBuilderPage(): JSX.Element {
             </section>
           )}
 
-          {/* Sticky bottom action bar : suit la largeur du conteneur
-              parent (vs fixed inset-x-0 qui debordait sur les pages
-              avec gutter). Reste pousse en bas du viewport tant que
-              l'utilisateur n'a pas scrolle jusqu'au bas de la page. */}
+          {/* Fixed bottom action bar : la barre BG s'etend
+              edge-to-edge du viewport (pattern bottom-nav mobile
+              standard), mais le contenu interieur est pad-aligne
+              sur le contenu de page (p-4 sm:p-6 du layout root).
+              Sticky a ete teste mais ne fonctionne pas dans ce
+              layout (parent flex column avec hauteurs nested).
+              env(safe-area-inset-bottom) pour les iPhones a notch. */}
           {!locked && (
             <div
-              className="sticky bottom-0 z-30 rounded-t-xl border border-nuffle-bronze/20 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] backdrop-blur sm:px-4"
+              className="fixed inset-x-0 bottom-0 z-30 border-t border-nuffle-bronze/20 bg-white/95 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] backdrop-blur"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
               data-testid="lineup-action-bar"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-semibold">
