@@ -1,3 +1,10 @@
+## [1.156.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.1...v1.156.2) (2026-05-29)
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** card text truncate + sticky bar visible ([7a4d41e](https://github.com/Ryxeuf/fantasy-football-game/commit/7a4d41e53b026e8cf7f6722766ed4de8e2351356))
+
 ## [1.156.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.0...v1.156.1) (2026-05-29)
 
 
