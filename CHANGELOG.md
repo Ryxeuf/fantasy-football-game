@@ -1,3 +1,10 @@
+## [1.156.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.2...v1.156.3) (2026-05-29)
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** clip horizontal overflow sur la page lineup ([c292aeb](https://github.com/Ryxeuf/fantasy-football-game/commit/c292aeb7d56164c193c049f6cdfc0aac66d08b97))
+
 ## [1.156.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.1...v1.156.2) (2026-05-29)
 
 
