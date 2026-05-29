@@ -1,3 +1,10 @@
+## [1.157.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.3...v1.157.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** card lineup redessinee 3 rangees pour le mobile ([efa5508](https://github.com/Ryxeuf/fantasy-football-game/commit/efa5508c7bbb67d0dcd5a9835ead05d572173145))
+
 ## [1.156.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.2...v1.156.3) (2026-05-29)
 
 
