@@ -163,8 +163,11 @@ export async function unlockSkill(
       `Pas de Position S3 pour ${race}/${player.bbPosition}`,
     );
   }
+  // Position n'a pas de champ `ruleset` direct -- il est porte par le
+  // Roster parent (cf. @@unique([slug, ruleset]) sur Roster). On filtre
+  // via la relation.
   const position = await prisma.position.findFirst({
-    where: { slug, ruleset: RULESET_S3 as never },
+    where: { slug, roster: { ruleset: RULESET_S3 as never } },
     select: { primarySkills: true, secondarySkills: true },
   });
   if (!position) {
@@ -375,8 +378,11 @@ export async function getSkillAccessView(
   const bbPosition = player.bbPosition as BbPosition;
   const slug = getPositionSlugFor(race, bbPosition);
   if (!slug) return null;
+  // Position n'a pas de champ `ruleset` direct -- il est porte par le
+  // Roster parent (cf. @@unique([slug, ruleset]) sur Roster). On filtre
+  // via la relation.
   const position = await prisma.position.findFirst({
-    where: { slug, ruleset: RULESET_S3 as never },
+    where: { slug, roster: { ruleset: RULESET_S3 as never } },
     select: { primarySkills: true, secondarySkills: true },
   });
   if (!position) return null;
