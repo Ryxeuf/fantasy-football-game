@@ -51,6 +51,7 @@ interface StarterDetail {
   captainBonus: number;
   events: SppEventDto[];
   skillBonuses: SkillBonusDto[];
+  rawStats: Record<string, unknown> | null;
 }
 
 interface SideDetail {
@@ -229,12 +230,20 @@ function MatchupDetailContent({
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href={`/nfl-fantasy/leagues/${leagueId}/matchups`}
-          className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
-        >
-          ← Matchups
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href={`/nfl-fantasy/leagues/${leagueId}/matchups`}
+            className="text-sm text-nuffle-anthracite/70 hover:text-nuffle-bronze"
+          >
+            ← Matchups
+          </Link>
+          <Link
+            href="/nfl-fantasy/rules"
+            className="text-xs text-nuffle-bronze hover:underline"
+          >
+            📖 Règles de calcul des SPP
+          </Link>
+        </div>
         <h1 className="mt-2 text-2xl font-semibold">
           Détail du match — Semaine {detail.weekNumber ?? "?"}
           {detail.isPlayoffs && (
@@ -642,7 +651,7 @@ function StarterRow({
             className="mt-1.5 text-xs text-nuffle-bronze hover:underline"
             data-testid={`expand-${starter.playerId}`}
           >
-            {isExpanded ? "Masquer le détail" : "Voir le détail SPP"}
+            {isExpanded ? "Masquer le détail SPP" : "Voir le détail SPP"}
           </button>
           {isExpanded && (
             <div
@@ -711,6 +720,225 @@ function StarterRow({
           )}
         </>
       )}
+
+      {settled && starter.rawStats && (
+        <RawStatsExpand
+          rawStats={starter.rawStats}
+          nflPosition={starter.nflPosition}
+          starterId={starter.starterId}
+        />
+      )}
     </li>
   );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Raw stats NFL — toggle independant pour cross-check
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * Champs nflverse mis en avant par groupe NFL position. Permet de
+ * trier l'affichage : les stats les plus pertinentes en premier,
+ * puis le reste alphabetique. Les cles sont les noms nflverse bruts.
+ */
+const KEY_STATS_BY_ROLE: Readonly<Record<string, ReadonlyArray<string>>> = {
+  QB: [
+    "completions",
+    "attempts",
+    "passing_yards",
+    "passing_tds",
+    "passing_interceptions",
+    "sacks_suffered",
+    "rushing_yards",
+    "rushing_tds",
+  ],
+  RB: [
+    "carries",
+    "rushing_yards",
+    "rushing_tds",
+    "targets",
+    "receptions",
+    "receiving_yards",
+    "receiving_tds",
+    "rushing_fumbles_lost",
+  ],
+  WR: [
+    "targets",
+    "receptions",
+    "receiving_yards",
+    "receiving_tds",
+    "receiving_fumbles_lost",
+  ],
+  TE: [
+    "targets",
+    "receptions",
+    "receiving_yards",
+    "receiving_tds",
+    "receiving_fumbles_lost",
+  ],
+  FB: ["carries", "rushing_yards", "rushing_tds", "receptions"],
+  DEF: [
+    "def_tackles_solo",
+    "def_tackles_with_assist",
+    "def_sacks",
+    "def_interceptions",
+    "def_pass_defended",
+    "def_fumbles_forced",
+    "def_tackles_for_loss",
+    "def_qb_hits",
+    "def_tds",
+  ],
+};
+
+const DEFENSIVE_NFL = new Set([
+  "DE",
+  "DT",
+  "NT",
+  "LB",
+  "ILB",
+  "OLB",
+  "MLB",
+  "CB",
+  "S",
+  "SS",
+  "FS",
+  "DB",
+  "EDGE",
+]);
+
+function keyStatsFor(nflPosition: string): ReadonlyArray<string> {
+  if (KEY_STATS_BY_ROLE[nflPosition]) return KEY_STATS_BY_ROLE[nflPosition];
+  if (DEFENSIVE_NFL.has(nflPosition)) return KEY_STATS_BY_ROLE.DEF;
+  return [];
+}
+
+function RawStatsExpand({
+  rawStats,
+  nflPosition,
+  starterId,
+}: {
+  rawStats: Record<string, unknown>;
+  nflPosition: string;
+  starterId: string;
+}): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const keys = keyStatsFor(nflPosition);
+  const keyEntries: Array<{ key: string; value: string }> = keys.map((k) => ({
+    key: k,
+    value: formatStatValue(rawStats[k]),
+  }));
+  const otherEntries: Array<{ key: string; value: string }> = Object.entries(
+    rawStats,
+  )
+    .filter(([k, v]) => !keys.includes(k) && isInterestingStat(k, v))
+    .map(([k, v]) => ({ key: k, value: formatStatValue(v) }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="mt-1.5 ml-3 text-xs text-nuffle-bronze hover:underline"
+        data-testid={`raw-${starterId}`}
+      >
+        {open ? "Masquer les stats NFL brutes" : "Voir les stats NFL brutes"}
+      </button>
+      {open && (
+        <div
+          className="mt-2 rounded-md border border-nuffle-bronze/20 bg-white p-2.5"
+          data-testid={`raw-block-${starterId}`}
+        >
+          {keyEntries.length > 0 && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-nuffle-anthracite/70">
+                Stats clés ({nflPosition})
+              </p>
+              <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs sm:grid-cols-3">
+                {keyEntries.map((e) => (
+                  <li key={e.key} className="flex justify-between gap-2">
+                    <span className="truncate text-nuffle-anthracite/70">
+                      {e.key}
+                    </span>
+                    <span className="shrink-0 font-mono text-nuffle-anthracite">
+                      {e.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {otherEntries.length > 0 && (
+            <div className={keyEntries.length > 0 ? "mt-3" : ""}>
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className="text-[11px] font-semibold uppercase tracking-wide text-nuffle-anthracite/70 hover:text-nuffle-bronze"
+              >
+                {showAll ? "▾" : "▸"} Toutes les autres stats nflverse (
+                {otherEntries.length})
+              </button>
+              {showAll && (
+                <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] sm:grid-cols-3">
+                  {otherEntries.map((e) => (
+                    <li key={e.key} className="flex justify-between gap-2">
+                      <span className="truncate text-nuffle-anthracite/60">
+                        {e.key}
+                      </span>
+                      <span className="shrink-0 font-mono text-nuffle-anthracite/80">
+                        {e.value}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          {keyEntries.length === 0 && otherEntries.length === 0 && (
+            <p className="text-xs text-nuffle-anthracite/60">
+              Aucune statistique non-nulle disponible.
+            </p>
+          )}
+          <p className="mt-2 text-[10px] text-nuffle-anthracite/50">
+            Source : nflverse. Voir{" "}
+            <Link
+              href="/nfl-fantasy/rules"
+              className="text-nuffle-bronze hover:underline"
+            >
+              les règles de calcul
+            </Link>{" "}
+            pour comprendre l&apos;impact sur les SPP.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function formatStatValue(v: unknown): string {
+  if (v == null || v === "") return "—";
+  if (typeof v === "number") return v.toString();
+  if (typeof v === "string") return v;
+  if (typeof v === "boolean") return v ? "oui" : "non";
+  return JSON.stringify(v);
+}
+
+/**
+ * Filtre les stats peu utiles : url images, ids techniques, valeurs
+ * nulles ou string vide, ratios proches de zero. Garde tout ce qui a
+ * une valeur non-triviale.
+ */
+function isInterestingStat(key: string, v: unknown): boolean {
+  if (v == null || v === "") return false;
+  if (typeof v === "string") {
+    if (v.startsWith("http")) return false; // headshot_url
+    if (v === "0" || v === "0.0" || v === "0.00") return false;
+    if (key.endsWith("_url") || key === "player_id" || key === "game_id") {
+      return false;
+    }
+  }
+  if (typeof v === "number" && v === 0) return false;
+  return true;
 }
