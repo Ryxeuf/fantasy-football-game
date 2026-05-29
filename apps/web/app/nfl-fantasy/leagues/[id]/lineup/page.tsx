@@ -58,6 +58,14 @@ interface LineupStarter {
   finalSpp: number | null;
 }
 
+interface PreviousLineupSummary {
+  weekId: string;
+  weekNumber: number;
+  startersCount: number;
+  allPlayersOnRoster: boolean;
+  missingPlayers: number;
+}
+
 interface LineupResponse {
   lineup: {
     id: string;
@@ -68,6 +76,7 @@ interface LineupResponse {
     totalSpp: number | null;
     starters: LineupStarter[];
   } | null;
+  previousLineup: PreviousLineupSummary | null;
 }
 
 interface MeResponse {
@@ -127,6 +136,9 @@ export default function LineupBuilderPage(): JSX.Element {
   const [myEntry, setMyEntry] = useState<NflFantasyEntry | null>(null);
   const [roster, setRoster] = useState<RosterRow[]>([]);
   const [lineup, setLineup] = useState<LineupResponse["lineup"]>(null);
+  const [previousLineup, setPreviousLineup] =
+    useState<PreviousLineupSummary | null>(null);
+  const [carryingOver, setCarryingOver] = useState(false);
   const [weekId, setWeekId] = useState<string>("");
   const [weeks, setWeeks] = useState<WeekPickerOption[]>([]);
   const [matchup, setMatchup] = useState<NflFantasyMatchup | null>(null);
@@ -198,7 +210,7 @@ export default function LineupBuilderPage(): JSX.Element {
           `/api/nfl-fantasy/entries/${myEntry.id}/lineup?weekId=${encodeURIComponent(weekId)}`,
         ).catch((err) => {
           if (err instanceof ApiClientError && err.status === 404) {
-            return { lineup: null } as LineupResponse;
+            return { lineup: null, previousLineup: null } as LineupResponse;
           }
           throw err;
         }),
@@ -207,6 +219,7 @@ export default function LineupBuilderPage(): JSX.Element {
         ).catch(() => ({ matchups: [] }) as { matchups: NflFantasyMatchup[] }),
       ]);
       setLineup(lineupRes.lineup);
+      setPreviousLineup(lineupRes.previousLineup ?? null);
       if (lineupRes.lineup) {
         const next = new Set<string>(
           lineupRes.lineup.starters.map((s) => s.playerId),
@@ -284,6 +297,37 @@ export default function LineupBuilderPage(): JSX.Element {
   );
 
   // ────────── Submit ──────────
+
+  async function handleCarryOver(): Promise<void> {
+    if (!myEntry || !weekId) return;
+    setCarryingOver(true);
+    setActionError(null);
+    try {
+      await apiRequest(
+        `/api/nfl-fantasy/entries/${myEntry.id}/lineup/carry-over`,
+        {
+          method: "POST",
+          body: JSON.stringify({ weekId }),
+        },
+      );
+      await loadLineup();
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        // Messages adaptes selon le code
+        const fr: Record<string, string> = {
+          NO_PREVIOUS_LINEUP: "Pas de lineup précédente à reporter.",
+          ROSTER_TOO_DIVERGENT:
+            "Trop de joueurs ont quitté ton roster — compose un nouveau lineup manuellement.",
+          LINEUP_LOCKED: "La lineup de cette semaine est déjà verrouillée.",
+        };
+        setActionError(fr[err.code as string] ?? err.message);
+      } else {
+        setActionError(err instanceof Error ? err.message : "Erreur");
+      }
+    } finally {
+      setCarryingOver(false);
+    }
+  }
 
   async function onSubmit(): Promise<void> {
     if (!myEntry) return;
@@ -500,6 +544,17 @@ export default function LineupBuilderPage(): JSX.Element {
         >
           🔒 Lineup lockée — tu ne peux plus la modifier pour cette semaine.
         </div>
+      )}
+
+      {/* Carry-over banner / button. Apparait si une lineup precedente
+          existe et que la lineup courante n'est pas lockee. */}
+      {!locked && previousLineup && (
+        <CarryOverBanner
+          previousLineup={previousLineup}
+          hasCurrentLineup={lineup != null}
+          busy={carryingOver}
+          onCarryOver={handleCarryOver}
+        />
       )}
 
       {roster.length === 0 && (
@@ -757,6 +812,87 @@ function PositionChip({ label, active, onClick }: PositionChipProps) {
     >
       {label}
     </button>
+  );
+}
+
+interface CarryOverBannerProps {
+  previousLineup: PreviousLineupSummary;
+  hasCurrentLineup: boolean;
+  busy: boolean;
+  onCarryOver: () => void;
+}
+
+/**
+ * Bannierre / bouton "Reporter le dernier lineup utilise" :
+ *  - Mode suggestion (no current lineup) : bandeau d'incitation
+ *  - Mode override (current lineup) : bouton secondary discret en
+ *    haut de la page avec confirm() inline pour ecraser sans surprise
+ */
+function CarryOverBanner({
+  previousLineup,
+  hasCurrentLineup,
+  busy,
+  onCarryOver,
+}: CarryOverBannerProps): JSX.Element {
+  const baseLabel = `Reporter le lineup de la semaine ${previousLineup.weekNumber}`;
+  const subline = previousLineup.allPlayersOnRoster
+    ? `${previousLineup.startersCount} starters · tous encore sur ton roster`
+    : `${previousLineup.startersCount} starters · ${previousLineup.missingPlayers} joueur${previousLineup.missingPlayers > 1 ? "s" : ""} a quitté ton roster`;
+
+  function handleClick(): void {
+    if (busy) return;
+    if (hasCurrentLineup) {
+      const confirmed = window.confirm(
+        `Cela va remplacer ta lineup actuelle par celle de la semaine ${previousLineup.weekNumber}. Continuer ?`,
+      );
+      if (!confirmed) return;
+    }
+    onCarryOver();
+  }
+
+  if (hasCurrentLineup) {
+    // Mode discret : bouton seul dans une barre allegee
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-nuffle-bronze/20 bg-white px-3 py-2 text-xs">
+        <span className="text-nuffle-anthracite/70">
+          Tu as déjà une lineup pour cette semaine.
+        </span>
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={busy}
+          className="rounded-md border border-nuffle-bronze/30 bg-white px-2.5 py-1 font-medium text-nuffle-bronze hover:border-nuffle-gold hover:bg-nuffle-gold/5 disabled:opacity-50"
+          data-testid="carry-over-button"
+        >
+          {busy ? "Report…" : `🔁 ${baseLabel}`}
+        </button>
+      </div>
+    );
+  }
+
+  // Mode suggestion : bandeau d'incitation
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-nuffle-gold/40 bg-nuffle-gold/5 p-3 text-sm"
+      role="status"
+      data-testid="carry-over-banner"
+    >
+      <div className="min-w-0">
+        <p className="font-medium text-nuffle-anthracite">
+          💡 Tu peux reporter ton dernier lineup
+        </p>
+        <p className="mt-0.5 text-xs text-nuffle-anthracite/70">{subline}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={busy}
+        className="shrink-0 rounded-md bg-nuffle-gold px-3 py-1.5 text-xs font-semibold text-nuffle-anthracite shadow-sm hover:bg-nuffle-gold/80 disabled:opacity-60"
+        data-testid="carry-over-button"
+      >
+        {busy ? "Report en cours…" : `🔁 ${baseLabel}`}
+      </button>
+    </div>
   );
 }
 

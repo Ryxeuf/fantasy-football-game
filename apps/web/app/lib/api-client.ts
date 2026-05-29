@@ -31,11 +31,14 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 /** Erreur thrown par `apiRequest` ; expose le statut HTTP quand disponible. */
 export class ApiClientError extends Error {
   public readonly status?: number;
+  /** Code metier server-side (ex: "NO_PREVIOUS_LINEUP") quand l'API envoie un body { error, code }. */
+  public readonly code?: string;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, code?: string) {
     super(message);
     this.name = "ApiClientError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -67,7 +70,13 @@ export function parseApiBody<T>(body: unknown, ok: boolean): T {
       body !== null && typeof body === "object" && "error" in body
         ? String((body as { error: unknown }).error)
         : "Erreur inconnue";
-    throw new ApiClientError(legacyError);
+    // Si le body inclut un { code }, on le propage pour permettre aux
+    // UIs de discriminer (ex: NO_PREVIOUS_LINEUP vs LINEUP_LOCKED).
+    const code =
+      body !== null && typeof body === "object" && "code" in body
+        ? String((body as { code: unknown }).code)
+        : undefined;
+    throw new ApiClientError(legacyError, undefined, code);
   }
 
   return body as T;
@@ -122,7 +131,9 @@ export async function apiRequest<T>(
     return parseApiBody<T>(body, response.ok);
   } catch (e) {
     if (e instanceof ApiClientError) {
-      throw new ApiClientError(e.message, response.status);
+      // Preserver le code metier lors du re-throw (parseApiBody n'a pas
+      // acces au status HTTP, on l'ajoute ici tout en gardant le code).
+      throw new ApiClientError(e.message, response.status, e.code);
     }
     throw e;
   }
