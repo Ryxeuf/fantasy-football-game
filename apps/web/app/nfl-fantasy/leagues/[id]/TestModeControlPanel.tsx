@@ -208,13 +208,30 @@ export default function TestModeControlPanel({
                 </button>
                 <button
                   onClick={() =>
+                    callAction(
+                      "Auto-lineup coachs test",
+                      "/test/auto-lineup",
+                      true,
+                    )
+                  }
+                  disabled={!canRunWeekActions || busy !== null}
+                  className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                  data-testid="test-auto-lineup"
+                  title="Top 11 par cote pour chaque coach sauf toi · captain=#1, vice=#2"
+                >
+                  {busy === "Auto-lineup coachs test"
+                    ? "Auto-lineup…"
+                    : "2. Auto-lineup coachs test 🤖"}
+                </button>
+                <button
+                  onClick={() =>
                     callAction("Lock lineups", "/test/lock-lineups", true)
                   }
                   disabled={!canRunWeekActions || busy !== null}
                   className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                   data-testid="test-lock-lineups"
                 >
-                  {busy === "Lock lineups" ? "Lock…" : "2. Lock lineups"}
+                  {busy === "Lock lineups" ? "Lock…" : "3. Lock lineups"}
                 </button>
                 <button
                   onClick={() =>
@@ -227,10 +244,11 @@ export default function TestModeControlPanel({
                   disabled={!canRunWeekActions || busy !== null}
                   className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                   data-testid="test-generate-matchups"
+                  title="Backup idempotent — les matchups sont deja pre-generes au demarrage de la saison"
                 >
                   {busy === "Generer matchups"
                     ? "Generation…"
-                    : "3. Generer matchups"}
+                    : "4. (Re)Generer matchups"}
                 </button>
                 <button
                   onClick={() =>
@@ -240,7 +258,7 @@ export default function TestModeControlPanel({
                   className="rounded-md border border-amber-400 bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-200 disabled:opacity-50"
                   data-testid="test-settle-week"
                 >
-                  {busy === "Settle week" ? "Settle…" : "4. Settle week"}
+                  {busy === "Settle week" ? "Settle…" : "5. Settle week"}
                 </button>
               </div>
               {!canRunWeekActions && status === "draft" && (

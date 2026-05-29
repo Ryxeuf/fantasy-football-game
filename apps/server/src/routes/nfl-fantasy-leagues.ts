@@ -38,6 +38,7 @@ import {
 } from "../services/nfl-fantasy-league";
 import { finalizeLeague } from "../services/nfl-fantasy-draft";
 import { lockLineups } from "../services/nfl-fantasy-lineup";
+import { autoFillTestLineups } from "../services/nfl-fantasy-bot-lineup";
 import {
   generateMatchups,
   settleNflFantasyWeek,
@@ -514,6 +515,50 @@ router.post(
           "[nfl-fantasy-leagues] test/generate-matchups failed",
           err,
         );
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
+
+/**
+ * POST /:id/test/auto-lineup
+ *
+ * Genere automatiquement les lineups des coachs de test (toutes les
+ * entries sauf celle de l'owner) pour la semaine donnee. Strategie :
+ * top 11 par currentValue desc, captain = #1, vice = #2.
+ *
+ * Permet de simuler une saison sans avoir a configurer la lineup de
+ * chaque coach test manuellement. La lineup de l'owner reste libre
+ * pour lui permettre de tester ses propres choix tactiques.
+ */
+router.post(
+  "/:id/test/auto-lineup",
+  validate(weekIdBodySchema),
+  async (req, res) => {
+    try {
+      await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
+      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      // Exclut l'entry de l'owner courant pour qu'il garde la main
+      // sur sa propre lineup.
+      const ownerEntry = await prisma.nflFantasyEntry.findUnique({
+        where: {
+          leagueId_userId: {
+            leagueId: req.params.id,
+            userId: userId(req),
+          },
+        },
+        select: { id: true },
+      });
+      const result = await autoFillTestLineups({
+        leagueId: req.params.id,
+        weekId,
+        excludeEntryId: ownerEntry?.id ?? null,
+      });
+      res.json(result);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-leagues] test/auto-lineup failed", err);
         res.status(500).json({ error: "Erreur serveur" });
       }
     }
