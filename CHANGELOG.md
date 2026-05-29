@@ -1,3 +1,10 @@
+## [1.157.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.157.0...v1.157.1) (2026-05-29)
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** join nflPlayer manuellement dans buildAndSetDefaultLineup ([3a613dc](https://github.com/Ryxeuf/fantasy-football-game/commit/3a613dc669a3838b6a424a99efda4d8a8c60c33f))
+
 ## [1.157.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.3...v1.157.0) (2026-05-29)
 
 
