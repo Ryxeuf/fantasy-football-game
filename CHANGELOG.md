@@ -1,3 +1,12 @@
+## [1.159.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.158.0...v1.159.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** expose rawStats nflverse dans MatchupDetailView ([53fe30f](https://github.com/Ryxeuf/fantasy-football-game/commit/53fe30f868186f77124991b97fa45253d22f01ca))
+* **nfl-fantasy:** page de regles statique /nfl-fantasy/rules ([59679ff](https://github.com/Ryxeuf/fantasy-football-game/commit/59679ff188e1fc901ac74004faa0a0f45fb1a5b1))
+* **nfl-fantasy:** toggle stats NFL brutes par joueur sur le detail matchup ([7a3b697](https://github.com/Ryxeuf/fantasy-football-game/commit/7a3b6977b0bd859df6dde0380c5fde9c636fd55c))
+
 ## [1.158.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.157.1...v1.158.0) (2026-05-29)
 
 
