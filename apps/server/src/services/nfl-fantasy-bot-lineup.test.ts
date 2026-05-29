@@ -28,6 +28,7 @@ import { prisma } from "../prisma";
 import { setLineup, NflFantasyLineupError } from "./nfl-fantasy-lineup";
 import {
   autoFillTestLineups,
+  ensureDefaultLineupsForWeek,
   pickTopStarters,
 } from "./nfl-fantasy-bot-lineup";
 
@@ -193,5 +194,70 @@ describe("autoFillTestLineups", () => {
       where: { leagueId: "lg1" },
       select: { id: true },
     });
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// ensureDefaultLineupsForWeek (fallback automatique au lock)
+// ────────────────────────────────────────────────────────────────────
+
+describe("ensureDefaultLineupsForWeek", () => {
+  it("filtre les entries des leagues in_progress sans lineup pour la week", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([] as never);
+
+    await ensureDefaultLineupsForWeek("2025:W10");
+
+    expect(prisma.nflFantasyEntry.findMany).toHaveBeenCalledWith({
+      where: {
+        league: { status: "in_progress" },
+        lineups: { none: { weekId: "2025:W10" } },
+      },
+      select: { id: true },
+    });
+  });
+
+  it("genere un default top 11 pour chaque entry candidate", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { id: "e1" },
+      { id: "e2" },
+    ] as never);
+    const buildRoster = (prefix: string) =>
+      Array.from({ length: 11 }, (_, i) => ({
+        playerId: `${prefix}-p${i}`,
+        player: {
+          pseudonym: `n${i}`,
+          bbPosition: "Lineman",
+          currentValue: 100 + i,
+        },
+      }));
+    vi.mocked(prisma.nflFantasyRoster.findMany)
+      .mockResolvedValueOnce(buildRoster("e1") as never)
+      .mockResolvedValueOnce(buildRoster("e2") as never);
+    vi.mocked(setLineup).mockResolvedValue({} as never);
+
+    const res = await ensureDefaultLineupsForWeek("2025:W10");
+
+    expect(res.defaultsCreated).toBe(2);
+    expect(res.entriesScanned).toBe(2);
+    expect(res.defaultsTooSmall).toBe(0);
+    expect(setLineup).toHaveBeenCalledTimes(2);
+  });
+
+  it("compte les rosters trop petits", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findMany).mockResolvedValue([
+      { id: "e1" },
+    ] as never);
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([
+      {
+        playerId: "p1",
+        player: { pseudonym: "x", bbPosition: "Lineman", currentValue: 100 },
+      },
+    ] as never);
+
+    const res = await ensureDefaultLineupsForWeek("2025:W10");
+
+    expect(res.defaultsCreated).toBe(0);
+    expect(res.defaultsTooSmall).toBe(1);
+    expect(setLineup).not.toHaveBeenCalled();
   });
 });

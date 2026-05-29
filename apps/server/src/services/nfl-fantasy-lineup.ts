@@ -280,13 +280,38 @@ export async function setLineup(opts: SetLineupOpts): Promise<LineupWithStarters
  *
  * Appelle typiquement par le cron Sunday 17:00 ET (kickoff games).
  */
-export async function lockLineups(weekId: string): Promise<{ locked: number }> {
+export interface LockLineupsResult {
+  /** Nb de lineups passees a lockedAt par l'updateMany. */
+  readonly locked: number;
+  /** Nb de defaults crees pour les entries qui n'avaient rien (fallback). */
+  readonly defaultsCreated: number;
+  /** Nb d'entries dont le roster < 11 -> impossible de creer un default. */
+  readonly defaultsTooSmall: number;
+}
+
+export async function lockLineups(weekId: string): Promise<LockLineupsResult> {
+  // 1. Fallback : pour chaque entry des leagues in_progress qui n'a
+  //    PAS encore configure de lineup pour cette semaine, generer
+  //    un default (top 11 par cote). Evite qu'un coach distrait se
+  //    retrouve avec 0 SPP sur la semaine. Import dynamique pour
+  //    casser la dependance circulaire (bot-lineup importe ce module).
+  const { ensureDefaultLineupsForWeek } = await import(
+    "./nfl-fantasy-bot-lineup"
+  );
+  const ensured = await ensureDefaultLineupsForWeek(weekId);
+
+  // 2. Lock l'ensemble des lineups non-lockees de la week (les
+  //    defaults qu'on vient de creer ET les choix manuels).
   const now = new Date();
   const result = await prisma.nflFantasyLineup.updateMany({
     where: { weekId, lockedAt: null },
     data: { lockedAt: now },
   });
-  return { locked: result.count };
+  return {
+    locked: result.count,
+    defaultsCreated: ensured.defaultsCreated,
+    defaultsTooSmall: ensured.defaultsTooSmall,
+  };
 }
 
 /**

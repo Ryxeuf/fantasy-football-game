@@ -63,6 +63,82 @@ export function pickTopStarters(
   return sorted.slice(0, count);
 }
 
+/**
+ * Construit + persiste un default lineup pour une (entry, week) :
+ * top 11 par currentValue, captain=#1, vice=#2. Reutilise par
+ * `autoFillTestLineups` (mode test) et `ensureDefaultLineupsForWeek`
+ * (fallback automatique au lock).
+ *
+ * Retourne :
+ *   - "created"        : lineup creee
+ *   - "too-small"      : roster < 11, skip
+ *   - "locked-skipped" : lineup deja locked, on respecte le choix
+ */
+type DefaultLineupOutcome = "created" | "too-small" | "locked-skipped";
+
+async function buildAndSetDefaultLineup(
+  entryId: string,
+  weekId: string,
+): Promise<DefaultLineupOutcome> {
+  type RosterRow = {
+    playerId: string;
+    player: {
+      pseudonym: string;
+      bbPosition: string;
+      currentValue: number;
+    } | null;
+  };
+  const rosterRows: ReadonlyArray<RosterRow> =
+    await prisma.nflFantasyRoster.findMany({
+      where: { entryId },
+      select: {
+        playerId: true,
+        player: {
+          select: {
+            pseudonym: true,
+            bbPosition: true,
+            currentValue: true,
+          },
+        },
+      },
+    });
+
+  const picks: RosterPick[] = rosterRows
+    .filter((r): r is RosterRow & { player: NonNullable<RosterRow["player"]> } =>
+      r.player !== null,
+    )
+    .map((r) => ({
+      playerId: r.playerId,
+      bbPosition: r.player.bbPosition,
+      currentValue: r.player.currentValue,
+      pseudonym: r.player.pseudonym,
+    }));
+
+  if (picks.length < DEFAULT_STARTERS_COUNT) {
+    return "too-small";
+  }
+
+  const top = pickTopStarters(picks, DEFAULT_STARTERS_COUNT);
+  try {
+    await setLineup({
+      entryId,
+      weekId,
+      starters: top.map((s) => ({
+        playerId: s.playerId,
+        bbPosition: s.bbPosition,
+      })),
+      captainId: top[0].playerId,
+      viceCaptainId: top[1]?.playerId ?? null,
+    });
+    return "created";
+  } catch (err) {
+    if (err instanceof NflFantasyLineupError && err.code === "LINEUP_LOCKED") {
+      return "locked-skipped";
+    }
+    throw err;
+  }
+}
+
 export async function autoFillTestLineups(
   opts: AutoFillTestLineupsOpts,
 ): Promise<AutoFillTestLineupsResult> {
@@ -79,71 +155,10 @@ export async function autoFillTestLineups(
   let entriesTooSmall = 0;
 
   for (const e of entries) {
-    type RosterRow = {
-      playerId: string;
-      player: {
-        pseudonym: string;
-        bbPosition: string;
-        currentValue: number;
-      } | null;
-    };
-    const rosterRows: ReadonlyArray<RosterRow> =
-      await prisma.nflFantasyRoster.findMany({
-        where: { entryId: e.id },
-        select: {
-          playerId: true,
-          player: {
-            select: {
-              pseudonym: true,
-              bbPosition: true,
-              currentValue: true,
-            },
-          },
-        },
-      });
-
-    const picks: RosterPick[] = rosterRows
-      .filter((r): r is RosterRow & { player: NonNullable<RosterRow["player"]> } =>
-        r.player !== null,
-      )
-      .map((r) => ({
-        playerId: r.playerId,
-        bbPosition: r.player.bbPosition,
-        currentValue: r.player.currentValue,
-        pseudonym: r.player.pseudonym,
-      }));
-
-    if (picks.length < DEFAULT_STARTERS_COUNT) {
-      entriesTooSmall += 1;
-      continue;
-    }
-
-    const top = pickTopStarters(picks, DEFAULT_STARTERS_COUNT);
-    const captainId = top[0].playerId;
-    const viceCaptainId = top[1]?.playerId ?? null;
-
-    try {
-      await setLineup({
-        entryId: e.id,
-        weekId: opts.weekId,
-        starters: top.map((s) => ({
-          playerId: s.playerId,
-          bbPosition: s.bbPosition,
-        })),
-        captainId,
-        viceCaptainId,
-      });
-      lineupsCreated += 1;
-    } catch (err) {
-      if (
-        err instanceof NflFantasyLineupError &&
-        err.code === "LINEUP_LOCKED"
-      ) {
-        lineupsSkippedLocked += 1;
-        continue;
-      }
-      throw err;
-    }
+    const outcome = await buildAndSetDefaultLineup(e.id, opts.weekId);
+    if (outcome === "created") lineupsCreated += 1;
+    else if (outcome === "too-small") entriesTooSmall += 1;
+    else if (outcome === "locked-skipped") lineupsSkippedLocked += 1;
   }
 
   return {
@@ -151,5 +166,58 @@ export async function autoFillTestLineups(
     lineupsSkippedLocked,
     entriesTooSmall,
     entriesProcessed: entries.length,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Fallback auto au moment du lock : tout coach qui n'a pas configure
+// de lineup recupere un default (top 11 par cote), pour ne pas se
+// retrouver avec 0 SPP sur la semaine.
+// ────────────────────────────────────────────────────────────────────
+
+export interface EnsureDefaultLineupsResult {
+  readonly defaultsCreated: number;
+  readonly defaultsTooSmall: number;
+  readonly entriesScanned: number;
+}
+
+/**
+ * Pour la semaine donnee, scanne les entries des leagues `in_progress`
+ * qui n'ont pas encore de lineup et genere un default (top 11 par
+ * currentValue). Idempotent : les entries deja munies d'une lineup
+ * (lockee ou non) sont preservees -- le choix manuel du coach gagne
+ * toujours.
+ *
+ * Appele par `lockLineups` juste avant l'updateMany du lock, pour
+ * que le settle de la semaine ne donne pas 0 SPP a un coach
+ * distrait.
+ */
+export async function ensureDefaultLineupsForWeek(
+  weekId: string,
+): Promise<EnsureDefaultLineupsResult> {
+  const entries: ReadonlyArray<{ id: string }> =
+    await prisma.nflFantasyEntry.findMany({
+      where: {
+        league: { status: "in_progress" },
+        lineups: { none: { weekId } },
+      },
+      select: { id: true },
+    });
+
+  let defaultsCreated = 0;
+  let defaultsTooSmall = 0;
+
+  for (const e of entries) {
+    const outcome = await buildAndSetDefaultLineup(e.id, weekId);
+    if (outcome === "created") defaultsCreated += 1;
+    else if (outcome === "too-small") defaultsTooSmall += 1;
+    // "locked-skipped" impossible ici (on filtre deja les entries
+    // sans lineup), mais le helper le gere gracieusement.
+  }
+
+  return {
+    defaultsCreated,
+    defaultsTooSmall,
+    entriesScanned: entries.length,
   };
 }

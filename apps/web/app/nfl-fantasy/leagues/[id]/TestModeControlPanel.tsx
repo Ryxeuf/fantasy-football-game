@@ -230,6 +230,7 @@ export default function TestModeControlPanel({
                   disabled={!canRunWeekActions || busy !== null}
                   className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                   data-testid="test-lock-lineups"
+                  title="Genere un default (top 11 par cote) pour les coachs sans lineup, puis lock toutes les lineups"
                 >
                   {busy === "Lock lineups" ? "Lock…" : "3. Lock lineups"}
                 </button>

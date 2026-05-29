@@ -18,6 +18,10 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("./nfl-fantasy-bot-lineup", () => ({
+  ensureDefaultLineupsForWeek: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   CAPTAIN_MULTIPLIER,
@@ -261,23 +265,47 @@ describe("setLineup", () => {
 });
 
 describe("lockLineups", () => {
-  it("lock toutes les non-lockees de la week", async () => {
-    vi.mocked(prisma.nflFantasyLineup.updateMany).mockResolvedValue({ count: 5 } as never);
+  it("genere les defaults manquants puis lock toutes les non-lockees", async () => {
+    const { ensureDefaultLineupsForWeek } = await import(
+      "./nfl-fantasy-bot-lineup"
+    );
+    vi.mocked(ensureDefaultLineupsForWeek).mockResolvedValue({
+      defaultsCreated: 2,
+      defaultsTooSmall: 1,
+      entriesScanned: 3,
+    });
+    vi.mocked(prisma.nflFantasyLineup.updateMany).mockResolvedValue({
+      count: 5,
+    } as never);
 
     const result = await lockLineups("2025:W10");
 
     expect(result.locked).toBe(5);
+    expect(result.defaultsCreated).toBe(2);
+    expect(result.defaultsTooSmall).toBe(1);
+    expect(ensureDefaultLineupsForWeek).toHaveBeenCalledWith("2025:W10");
     expect(prisma.nflFantasyLineup.updateMany).toHaveBeenCalledWith({
       where: { weekId: "2025:W10", lockedAt: null },
       data: { lockedAt: expect.any(Date) },
     });
   });
 
-  it("retourne 0 si rien a lock (idempotent)", async () => {
-    vi.mocked(prisma.nflFantasyLineup.updateMany).mockResolvedValue({ count: 0 } as never);
+  it("retourne 0 si rien a lock ni a defaulter (idempotent)", async () => {
+    const { ensureDefaultLineupsForWeek } = await import(
+      "./nfl-fantasy-bot-lineup"
+    );
+    vi.mocked(ensureDefaultLineupsForWeek).mockResolvedValue({
+      defaultsCreated: 0,
+      defaultsTooSmall: 0,
+      entriesScanned: 0,
+    });
+    vi.mocked(prisma.nflFantasyLineup.updateMany).mockResolvedValue({
+      count: 0,
+    } as never);
 
     const result = await lockLineups("2025:W10");
     expect(result.locked).toBe(0);
+    expect(result.defaultsCreated).toBe(0);
   });
 });
 
