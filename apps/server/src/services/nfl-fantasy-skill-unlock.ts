@@ -30,7 +30,7 @@ import {
   type SkillCategoryCode,
 } from "./skill-access";
 import { getPositionSlugFor } from "./nfl-bb-derivation";
-import { parseBbSkills } from "./nfl-fantasy-skill-bonus";
+import { getSkillEffect, parseBbSkills } from "./nfl-fantasy-skill-bonus";
 
 export type SkillUnlockErrorCode =
   | "CAREER_NOT_FOUND"
@@ -269,6 +269,14 @@ export interface AvailableSkill {
   readonly nameFr: string;
   readonly nameEn: string;
   readonly category: string;
+  /**
+   * Description en FR de l'effet SPP. Null si la skill n'a pas d'effet
+   * mesurable sur le scoring NFL Fantasy. La UI filtre sur ce champ
+   * pour ne proposer que les skills qui changent quelque chose.
+   */
+  readonly effectFr: string | null;
+  /** Cap SPP par match. Null si pas d'effet. */
+  readonly effectCap: number | null;
 }
 
 export interface AvailableSkillsForCareer {
@@ -342,8 +350,14 @@ export async function listAvailableSkillsForCareer(opts: {
     if (excluded.has(r.slug)) continue;
     const code = dbCategoryToCode(r.category);
     if (!code) continue;
-    if (primaryCodes.has(code)) primary.push(r);
-    else if (secondaryCodes.has(code)) secondary.push(r);
+    const effect = getSkillEffect(r.slug);
+    const enriched: AvailableSkill = {
+      ...r,
+      effectFr: effect?.effectFr ?? null,
+      effectCap: effect?.cap ?? null,
+    };
+    if (primaryCodes.has(code)) primary.push(enriched);
+    else if (secondaryCodes.has(code)) secondary.push(enriched);
   }
 
   return {
