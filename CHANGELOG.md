@@ -1,3 +1,10 @@
+## [1.154.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.153.0...v1.154.0) (2026-05-29)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** bouton auto-lineup coachs de test ([e73d165](https://github.com/Ryxeuf/fantasy-football-game/commit/e73d165c3567a5b421a4f3a59a0130ea36d6c8d6)), closes [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1) [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2) [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+
 ## [1.153.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.152.0...v1.153.0) (2026-05-29)
 
 
