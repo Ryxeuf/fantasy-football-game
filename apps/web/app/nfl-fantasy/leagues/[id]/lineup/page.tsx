@@ -443,8 +443,7 @@ export default function LineupBuilderPage(): JSX.Element {
   const canAddMore = selected.size < REQUIRED_STARTERS;
 
   return (
-    // pb-28 : reserve la place pour la sticky bottom bar mobile
-    <div className="space-y-4 pb-28 sm:pb-6">
+    <div className="space-y-4">
       {/* Header compact */}
       <div>
         <Link
@@ -667,13 +666,16 @@ export default function LineupBuilderPage(): JSX.Element {
             </section>
           )}
 
-          {/* Sticky bottom action bar — toujours accessible sur mobile */}
+          {/* Sticky bottom action bar : suit la largeur du conteneur
+              parent (vs fixed inset-x-0 qui debordait sur les pages
+              avec gutter). Reste pousse en bas du viewport tant que
+              l'utilisateur n'a pas scrolle jusqu'au bas de la page. */}
           {!locked && (
             <div
-              className="fixed inset-x-0 bottom-0 z-30 border-t border-nuffle-bronze/20 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] backdrop-blur sm:px-6"
+              className="sticky bottom-0 z-30 rounded-t-xl border border-nuffle-bronze/20 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] backdrop-blur sm:px-4"
               data-testid="lineup-action-bar"
             >
-              <div className="mx-auto flex max-w-5xl items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-semibold">
