@@ -41,6 +41,10 @@ import {
   setLineup,
 } from "../services/nfl-fantasy-lineup";
 import {
+  carryOverLineupFromPreviousWeek,
+  findPreviousLineupSummary,
+} from "../services/nfl-fantasy-lineup-carryover";
+import {
   consumeInducement,
   consumeReroll,
   countAvailableRerolls,
@@ -203,8 +207,15 @@ router.get(
       const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
       if (!entry) return;
       const { weekId } = req.query as unknown as z.infer<typeof lineupQuerySchema>;
-      const lineup = await getLineup({ entryId: req.params.entryId, weekId });
-      res.json({ lineup });
+      // Parallelisable : lineup courante + suggestion carry-over
+      const [lineup, previousLineup] = await Promise.all([
+        getLineup({ entryId: req.params.entryId, weekId }),
+        findPreviousLineupSummary({
+          entryId: req.params.entryId,
+          currentWeekId: weekId,
+        }),
+      ]);
+      res.json({ lineup, previousLineup });
     } catch (err) {
       if (!sendNflError(res, err)) {
         serverLog.error("[nfl-fantasy-entries] getLineup failed", err);
@@ -228,6 +239,51 @@ router.put("/:entryId/lineup", validate(setLineupSchema), async (req, res) => {
     }
   }
 });
+
+const carryOverLineupSchema = z.object({
+  weekId: z.string().min(1),
+});
+
+/**
+ * POST /:entryId/lineup/carry-over
+ *
+ * Importe le lineup de la semaine precedente sur la `weekId` cible :
+ * trouve la derniere lineup persistee par cette entry sur une semaine
+ * anterieure de la meme saison, filtre les joueurs qui ne sont plus
+ * sur le roster (mercato), recalibre captain/vice si necessaire, et
+ * persiste via setLineup (donc respecte LINEUP_LOCKED).
+ *
+ * Erreurs typees mappees :
+ *   - NO_PREVIOUS_LINEUP (409) — pas de lineup anterieure a reporter
+ *   - ROSTER_TOO_DIVERGENT (409) — <11 joueurs encore presents
+ *   - LINEUP_LOCKED (409) — la lineup courante est deja verrouillee
+ *   - WEEK_NOT_FOUND (404)
+ */
+router.post(
+  "/:entryId/lineup/carry-over",
+  validate(carryOverLineupSchema),
+  async (req, res) => {
+    try {
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
+      if (!entry) return;
+      const { weekId } = req.body as z.infer<typeof carryOverLineupSchema>;
+      const lineup = await carryOverLineupFromPreviousWeek({
+        entryId: req.params.entryId,
+        currentWeekId: weekId,
+      });
+      res.json(lineup);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[nfl-fantasy-entries] carryOver failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 // ──────────────────────────────────────────────────────────────────
 // Rerolls

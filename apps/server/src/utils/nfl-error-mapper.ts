@@ -67,6 +67,8 @@ export function statusForCode(code: string): number {
     case "REROLL_ALREADY_USED":
     case "INDUCEMENT_LIMIT_REACHED":
     case "LINEUP_LOCKED":
+    case "NO_PREVIOUS_LINEUP":
+    case "ROSTER_TOO_DIVERGENT":
     case "SESSION_NOT_OPEN":
     case "SESSION_ALREADY_RESOLVED":
     case "ENTRY_NOT_IN_LEAGUE":

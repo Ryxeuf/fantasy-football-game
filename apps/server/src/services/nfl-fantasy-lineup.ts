@@ -37,7 +37,10 @@ export type NflFantasyLineupErrorCode =
   | "CAPTAIN_NOT_IN_STARTERS"
   | "VICE_NOT_IN_STARTERS"
   | "CAPTAIN_EQUALS_VICE"
-  | "INVALID_LINEUP_SIZE";
+  | "INVALID_LINEUP_SIZE"
+  | "NO_PREVIOUS_LINEUP"
+  | "ROSTER_TOO_DIVERGENT"
+  | "WEEK_NOT_FOUND";
 
 export class NflFantasyLineupError extends Error {
   constructor(
