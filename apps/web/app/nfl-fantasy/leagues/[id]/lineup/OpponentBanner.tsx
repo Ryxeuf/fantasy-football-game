@@ -37,11 +37,11 @@ export function OpponentBanner({
       className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-nuffle-bronze/30 bg-nuffle-ivory/40 px-4 py-3"
       data-testid="lineup-opponent-banner"
     >
-      <div>
+      <div className="min-w-0">
         <p className="text-xs uppercase tracking-wide text-nuffle-anthracite/60">
           Tu joues {isHome ? "à domicile" : "à l'extérieur"} contre
         </p>
-        <p className="text-base font-semibold text-nuffle-anthracite">
+        <p className="truncate text-base font-semibold text-nuffle-anthracite">
           🏈 {opponentName}
         </p>
       </div>

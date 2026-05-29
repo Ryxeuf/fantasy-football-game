@@ -40,7 +40,7 @@ export function WeekPicker({ weeks, value, onChange, label = "Semaine" }: WeekPi
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
+        className="max-w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
         data-testid="week-picker"
       >
         {weeks.map((w) => (

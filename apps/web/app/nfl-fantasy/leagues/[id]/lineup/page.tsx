@@ -446,7 +446,11 @@ export default function LineupBuilderPage(): JSX.Element {
     // pb-24 : reserve la place pour la fixed bottom bar (mobile +
     // desktop). sm:pb-6 : sur desktop on garde moins de padding car
     // la barre est moins envahissante.
-    <div className="space-y-4 pb-24 sm:pb-20">
+    // overflow-x-clip : safety net contre les enfants qui depassent
+    // (long pseudonyme non tronque, select trop large, etc.). Sans
+    // ca, le viewport mobile scrolle horizontalement et coupe la
+    // navbar sur la gauche.
+    <div className="space-y-4 overflow-x-clip pb-24 sm:pb-20">
       {/* Header compact */}
       <div>
         <Link
