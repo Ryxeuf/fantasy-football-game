@@ -1,3 +1,10 @@
+## [1.156.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.156.0...v1.156.1) (2026-05-29)
+
+
+### 🐛 Bug Fixes
+
+* **nfl-fantasy:** sticky action bar reste dans le conteneur ([77e9e0e](https://github.com/Ryxeuf/fantasy-football-game/commit/77e9e0ea90ec2e70ba4988addfc58c2632300201))
+
 ## [1.156.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.155.0...v1.156.0) (2026-05-29)
 
 
