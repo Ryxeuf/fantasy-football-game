@@ -18,6 +18,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
+import { WeekPicker } from "../WeekPicker";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
@@ -25,10 +26,23 @@ import type {
   StandingsRow,
 } from "../../../types";
 
-const DEFAULT_WEEK_ID = "2025:W10";
-
 interface MeResponse {
   user?: { id?: string } | null;
+}
+
+interface LeagueWeekRow {
+  id: string;
+  weekNumber: number;
+  startDate: string;
+  endDate: string;
+  isPlayoffs: boolean;
+  matchupCount: number;
+  settledCount: number;
+}
+
+interface LeagueWeeksResponse {
+  weeks: LeagueWeekRow[];
+  defaultWeekId: string | null;
 }
 
 function formatRecord(row: StandingsRow): string {
@@ -59,7 +73,8 @@ export default function MatchupsPage(): JSX.Element {
   const [league, setLeague] = useState<LeagueWithEntries | null>(null);
   const [standings, setStandings] = useState<StandingsRow[]>([]);
   const [matchups, setMatchups] = useState<NflFantasyMatchup[]>([]);
-  const [weekId, setWeekId] = useState(DEFAULT_WEEK_ID);
+  const [weeks, setWeeks] = useState<LeagueWeekRow[]>([]);
+  const [weekId, setWeekId] = useState<string>("");
   const [myEntryId, setMyEntryId] = useState<string | null>(null);
   const [error, setError] = useState<{ message: string; status?: number } | null>(
     null,
@@ -71,7 +86,7 @@ export default function MatchupsPage(): JSX.Element {
   const loadCore = useCallback(async () => {
     if (!leagueId) return;
     try {
-      const [lg, st, me] = await Promise.all([
+      const [lg, st, me, wks] = await Promise.all([
         apiRequest<LeagueWithEntries>(`/api/nfl-fantasy/leagues/${leagueId}`),
         apiRequest<{ standings: StandingsRow[] }>(
           `/api/nfl-fantasy/leagues/${leagueId}/standings`,
@@ -81,9 +96,22 @@ export default function MatchupsPage(): JSX.Element {
         apiRequest<MeResponse>("/auth/me").catch(
           () => ({ user: null }) as MeResponse,
         ),
+        apiRequest<LeagueWeeksResponse>(
+          `/api/nfl-fantasy/leagues/${leagueId}/weeks`,
+        ).catch(
+          () =>
+            ({ weeks: [], defaultWeekId: null }) as LeagueWeeksResponse,
+        ),
       ]);
       setLeague(lg);
       setStandings(st.standings);
+      setWeeks(wks.weeks);
+      // Selectionne la semaine par defaut renvoyee par le serveur
+      // (en cours, sinon derniere settled, sinon 1ere) — uniquement si
+      // l'user n'a pas deja change manuellement la selection.
+      if (!weekId && wks.defaultWeekId) {
+        setWeekId(wks.defaultWeekId);
+      }
       const uid = me.user?.id ?? null;
       const myEntry = uid ? lg.entries.find((e) => e.userId === uid) ?? null : null;
       setMyEntryId(myEntry?.id ?? null);
@@ -95,10 +123,10 @@ export default function MatchupsPage(): JSX.Element {
         setError({ message: err instanceof Error ? err.message : "Erreur" });
       }
     }
-  }, [leagueId]);
+  }, [leagueId, weekId]);
 
   const loadMatchups = useCallback(async () => {
-    if (!leagueId) return;
+    if (!leagueId || !weekId) return;
     setBusyMatchups(true);
     try {
       const res = await apiRequest<{ matchups: NflFantasyMatchup[] }>(
@@ -237,16 +265,11 @@ export default function MatchupsPage(): JSX.Element {
       <section data-testid="nfl-fantasy-matchups">
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-lg font-semibold text-nuffle-anthracite">Matchups</h2>
-          <label className="block text-sm">
-            <span className="sr-only">Semaine</span>
-            <input
-              type="text"
-              value={weekId}
-              onChange={(e) => setWeekId(e.target.value)}
-              pattern="\d{4}:W\d{1,2}"
-              className="w-40 rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 font-mono text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-            />
-          </label>
+          <WeekPicker
+            weeks={weeks}
+            value={weekId}
+            onChange={setWeekId}
+          />
         </div>
 
         {busyMatchups && (
@@ -255,8 +278,9 @@ export default function MatchupsPage(): JSX.Element {
 
         {!busyMatchups && matchups.length === 0 && (
           <p className="mt-2 text-sm text-nuffle-anthracite/60">
-            Aucun matchup pour {weekId} — l&apos;admin doit générer les matchups
-            (route `generate-matchups`) ou attendre le settle hebdo.
+            Aucun matchup généré pour cette semaine. Les matchups sont
+            pré-générés au démarrage de la saison ; si tu vois ce message,
+            le championnat n&apos;a peut-être pas encore été démarré.
           </p>
         )}
 

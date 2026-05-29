@@ -25,6 +25,7 @@ import {
   getLeague,
   joinLeague,
   leaveLeague,
+  listLeagueWeeks,
   listLeaguesForUser,
   listPublicLeagues,
   NflFantasyLeagueError,
@@ -315,6 +316,25 @@ router.get(
     }
   },
 );
+
+/**
+ * GET /:id/weeks
+ *
+ * Liste des NflWeek du cycle adosse au championnat + defaultWeekId
+ * smart (1ere semaine non-settled, sinon derniere settled, sinon
+ * 1ere du cycle). Sert au picker semaine cote UI (matchups + lineup).
+ */
+router.get("/:id/weeks", async (req, res) => {
+  try {
+    const out = await listLeagueWeeks(req.params.id);
+    res.json(out);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] weeks failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
 
 router.get("/:id/standings", async (req, res) => {
   try {

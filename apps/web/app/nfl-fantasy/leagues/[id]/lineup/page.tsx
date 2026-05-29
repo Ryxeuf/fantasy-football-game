@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { RaceIcon } from "../../../RaceIcon";
+import { WeekPicker, type WeekPickerOption } from "../WeekPicker";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
@@ -72,8 +73,12 @@ interface MeResponse {
   user?: { id?: string } | null;
 }
 
-const DEFAULT_WEEK_ID = "2025:W10";
 const REQUIRED_STARTERS = 11;
+
+interface LeagueWeeksResponse {
+  weeks: WeekPickerOption[];
+  defaultWeekId: string | null;
+}
 
 function displayName(p: NflPlayerInfo | null): string {
   if (!p) return "(joueur inconnu)";
@@ -89,7 +94,8 @@ export default function LineupBuilderPage(): JSX.Element {
   const [myEntry, setMyEntry] = useState<NflFantasyEntry | null>(null);
   const [roster, setRoster] = useState<RosterRow[]>([]);
   const [lineup, setLineup] = useState<LineupResponse["lineup"]>(null);
-  const [weekId, setWeekId] = useState<string>(DEFAULT_WEEK_ID);
+  const [weekId, setWeekId] = useState<string>("");
+  const [weeks, setWeeks] = useState<WeekPickerOption[]>([]);
   const [matchup, setMatchup] = useState<NflFantasyMatchup | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -107,11 +113,20 @@ export default function LineupBuilderPage(): JSX.Element {
   const loadCore = useCallback(async () => {
     if (!leagueId) return;
     try {
-      const [lg, me] = await Promise.all([
+      const [lg, me, wks] = await Promise.all([
         apiRequest<LeagueWithEntries>(`/api/nfl-fantasy/leagues/${leagueId}`),
         apiRequest<MeResponse>("/auth/me").catch(() => ({ user: null }) as MeResponse),
+        apiRequest<LeagueWeeksResponse>(
+          `/api/nfl-fantasy/leagues/${leagueId}/weeks`,
+        ).catch(
+          () => ({ weeks: [], defaultWeekId: null }) as LeagueWeeksResponse,
+        ),
       ]);
       setLeague(lg);
+      setWeeks(wks.weeks);
+      if (!weekId && wks.defaultWeekId) {
+        setWeekId(wks.defaultWeekId);
+      }
       const userId = me.user?.id ?? null;
       const entry = userId
         ? lg.entries.find((e) => e.userId === userId) ?? null
@@ -132,13 +147,13 @@ export default function LineupBuilderPage(): JSX.Element {
         setError({ message: err instanceof Error ? err.message : "Erreur" });
       }
     }
-  }, [leagueId]);
+  }, [leagueId, weekId]);
 
   // Charge le lineup + le matchup de la semaine selectionnee. Le
   // matchup permet d'afficher contre quel coach on joue (les
   // matchups sont pre-generes des le demarrage de la saison).
   const loadLineup = useCallback(async () => {
-    if (!myEntry || !leagueId) return;
+    if (!myEntry || !leagueId || !weekId) return;
     try {
       const [lineupRes, matchupsRes] = await Promise.all([
         apiRequest<LineupResponse>(
@@ -345,16 +360,16 @@ export default function LineupBuilderPage(): JSX.Element {
       </div>
 
       <div className="flex items-end gap-4">
-        <label className="block text-sm">
-          <span className="text-nuffle-anthracite/80">Semaine</span>
-          <input
-            type="text"
-            value={weekId}
-            onChange={(e) => setWeekId(e.target.value)}
-            pattern="\d{4}:W\d{1,2}"
-            className="mt-1 w-40 rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 font-mono text-sm text-nuffle-anthracite focus:border-nuffle-gold focus:outline-none"
-          />
-        </label>
+        <div>
+          <p className="text-sm text-nuffle-anthracite/80">Semaine</p>
+          <div className="mt-1">
+            <WeekPicker
+              weeks={weeks}
+              value={weekId}
+              onChange={setWeekId}
+            />
+          </div>
+        </div>
         {lineup && (
           <p className="text-xs text-nuffle-anthracite/70">
             Lineup actuel : {lineup.starters.length} starters,{" "}

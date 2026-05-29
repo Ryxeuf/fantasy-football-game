@@ -347,6 +347,141 @@ export async function getLeague(leagueId: string): Promise<LeagueWithEntries> {
   };
 }
 
+// ────────────────────────────────────────────────────────────────────
+// Helpers UI : semaines du cycle + default smart
+// ────────────────────────────────────────────────────────────────────
+
+export interface LeagueWeekRow {
+  id: string;
+  weekNumber: number;
+  startDate: Date;
+  endDate: Date;
+  isPlayoffs: boolean;
+  /** Nb total de matchups generes pour cette (league, week). */
+  matchupCount: number;
+  /** Nb de matchups settles. */
+  settledCount: number;
+}
+
+export interface ListLeagueWeeksResult {
+  weeks: LeagueWeekRow[];
+  /**
+   * Semaine la plus pertinente a afficher par defaut :
+   *   - 1ere semaine avec matchups generes mais pas tous settles
+   *     (= semaine en cours de jeu)
+   *   - sinon, derniere semaine entierement settled
+   *   - sinon, 1ere semaine du cycle
+   *   - null si pas de semaines (cycle absent)
+   */
+  defaultWeekId: string | null;
+}
+
+/**
+ * Liste les NflWeek du cycle adosse au championnat, enrichies du
+ * compte de matchups settles vs totaux pour cette league. Sert au
+ * picker semaine cote UI (page matchups + page lineup).
+ */
+export async function listLeagueWeeks(
+  leagueId: string,
+): Promise<ListLeagueWeeksResult> {
+  const league = await prisma.nflFantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { seasonId: true, cycleId: true },
+  });
+  if (!league) {
+    throw new NflFantasyLeagueError(
+      "NOT_FOUND",
+      `League ${leagueId} introuvable`,
+    );
+  }
+  if (!league.cycleId) {
+    return { weeks: [], defaultWeekId: null };
+  }
+  const cycle = await prisma.nflFantasySeasonCycle.findUnique({
+    where: { id: league.cycleId },
+    select: { startWeek: true, endWeek: true },
+  });
+  if (!cycle) {
+    return { weeks: [], defaultWeekId: null };
+  }
+
+  type RawWeek = {
+    id: string;
+    weekNumber: number;
+    startDate: Date;
+    endDate: Date;
+    isPlayoffs: boolean;
+  };
+  const rawWeeks: ReadonlyArray<RawWeek> = await prisma.nflWeek.findMany({
+    where: {
+      seasonId: league.seasonId,
+      weekNumber: { gte: cycle.startWeek, lte: cycle.endWeek },
+    },
+    orderBy: { weekNumber: "asc" },
+    select: {
+      id: true,
+      weekNumber: true,
+      startDate: true,
+      endDate: true,
+      isPlayoffs: true,
+    },
+  });
+  if (rawWeeks.length === 0) {
+    return { weeks: [], defaultWeekId: null };
+  }
+
+  type MatchupAgg = {
+    weekId: string;
+    _count: { _all: number };
+  };
+  // Une seule query agregee : groupBy par weekId + count total.
+  const totals: MatchupAgg[] = await prisma.nflFantasyMatchup.groupBy({
+    by: ["weekId"],
+    where: { leagueId, weekId: { in: rawWeeks.map((w) => w.id) } },
+    _count: { _all: true },
+  });
+  const settled: MatchupAgg[] = await prisma.nflFantasyMatchup.groupBy({
+    by: ["weekId"],
+    where: {
+      leagueId,
+      weekId: { in: rawWeeks.map((w) => w.id) },
+      settledAt: { not: null },
+    },
+    _count: { _all: true },
+  });
+  const totalByWeek = new Map(
+    totals.map((t) => [t.weekId, t._count._all] as const),
+  );
+  const settledByWeek = new Map(
+    settled.map((t) => [t.weekId, t._count._all] as const),
+  );
+
+  const weeks: LeagueWeekRow[] = rawWeeks.map((w) => ({
+    id: w.id,
+    weekNumber: w.weekNumber,
+    startDate: w.startDate,
+    endDate: w.endDate,
+    isPlayoffs: w.isPlayoffs,
+    matchupCount: totalByWeek.get(w.id) ?? 0,
+    settledCount: settledByWeek.get(w.id) ?? 0,
+  }));
+
+  // Default smart :
+  //   1. 1ere semaine avec des matchups non-settles (en cours)
+  //   2. derniere semaine entierement settled (historique recent)
+  //   3. 1ere semaine du cycle (fallback)
+  const inProgress = weeks.find(
+    (w) => w.matchupCount > 0 && w.settledCount < w.matchupCount,
+  );
+  const lastFullySettled = [...weeks]
+    .reverse()
+    .find((w) => w.matchupCount > 0 && w.settledCount === w.matchupCount);
+  const defaultWeekId =
+    inProgress?.id ?? lastFullySettled?.id ?? weeks[0]?.id ?? null;
+
+  return { weeks, defaultWeekId };
+}
+
 /**
  * Liste les championnats PUBLICS rejoignables (status='draft',
  * type='public', non-pleins, et ou l'user n'est pas deja membre).
