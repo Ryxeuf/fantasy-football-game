@@ -2613,6 +2613,14 @@ model NflFantasyEntry {
   /// Race BB optionnelle (V2 variant "Pure BB"). null en V1 (Q5 = race
   /// fixe par equipe via NflPlayer.teamCode -> NflTeam.bbRace).
   bbRace    String?
+  /// Style de jeu choisi a la creation (modifiable tant que la semaine
+  /// courante n'est pas lockee). Definit les plafonds de composition de
+  /// lineup par archetype (PLAY_STYLE_CAPS dans @bb/nfl-mapper) :
+  /// "balanced" | "offensive" | "air_raid" | "defensive". Default
+  /// "balanced". Plafonds = max only sur les postes offensifs premium ;
+  /// les fillers (lineman/defense) restent illimites → 11 titulaires
+  /// toujours faisables meme avec des blessures.
+  playStyle String   @default("balanced")
   /// Total Team Value (somme des tvCost sur les NflFantasyRoster).
   /// Mis a jour par le service mercato Phase 2.F.
   totalTV   Int      @default(0)

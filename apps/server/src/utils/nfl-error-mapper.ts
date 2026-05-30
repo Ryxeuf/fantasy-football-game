@@ -85,6 +85,7 @@ export function statusForCode(code: string): number {
     case "INVALID_WEEK_NUMBER":
     case "INVALID_LINEUP_SIZE":
     case "INVALID_STARTERS":
+    case "COMPOSITION_CAP_EXCEEDED":
     case "DUPLICATE_PLAYER":
     case "CAPTAIN_NOT_IN_STARTERS":
     case "VICE_NOT_IN_STARTERS":
