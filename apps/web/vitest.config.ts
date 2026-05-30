@@ -6,8 +6,15 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@bb/game-engine": path.resolve(__dirname, "../../packages/game-engine/src"),
+      "@bb/game-engine": path.resolve(
+        __dirname,
+        "../../packages/game-engine/src",
+      ),
       "@bb/ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@bb/nfl-mapper": path.resolve(
+        __dirname,
+        "../../packages/nfl-mapper/src",
+      ),
     },
   },
   test: {

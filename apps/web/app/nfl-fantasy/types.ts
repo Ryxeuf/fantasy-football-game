@@ -42,6 +42,12 @@ export interface NflFantasyEntry {
   userId: string;
   teamName: string;
   bbRace: string | null;
+  /**
+   * Style de jeu : definit les plafonds de composition de lineup par
+   * archetype (cf. @bb/nfl-mapper PLAY_STYLE_CAPS). Optionnel pour
+   * retro-compat pre-feature (defaut "balanced" cote serveur).
+   */
+  playStyle?: string;
   totalTV: number;
   /** V2 mercato : budget restant apres encheres remportees. */
   budgetRemaining?: number;

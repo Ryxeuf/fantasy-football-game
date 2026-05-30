@@ -14,15 +14,35 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  checkComposition,
+  coercePlayStyle,
+  getArchetypeFromNflPosition,
+  type CompositionArchetype,
+  type PlayStyle,
+} from "@bb/nfl-mapper";
+
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { WeekPicker, type WeekPickerOption } from "../WeekPicker";
 import { OpponentBanner } from "./OpponentBanner";
 import { PlayerCard } from "./PlayerCard";
+import { PlayStyleSelector } from "./PlayStyleSelector";
 import type {
   LeagueWithEntries,
   NflFantasyEntry,
   NflFantasyMatchup,
 } from "../../../types";
+
+/** Libelles FR des archetypes pour les messages de violation. */
+const ARCHETYPE_LABELS: Readonly<Record<CompositionArchetype, string>> = {
+  passer: "QB",
+  rusher: "RB",
+  receiver: "WR/TE",
+  lineman: "linemen",
+  frontSeven: "défense (front 7)",
+  secondary: "défense (secondary)",
+  bigGuy: "DT/NT",
+};
 
 interface NflPlayerInfo {
   id: string;
@@ -147,9 +167,14 @@ export default function LineupBuilderPage(): JSX.Element {
   const [captainId, setCaptainId] = useState<string | null>(null);
   const [viceCaptainId, setViceCaptainId] = useState<string | null>(null);
 
-  const [error, setError] = useState<{ message: string; status?: number } | null>(
-    null,
-  );
+  // Style de jeu : initialise depuis l'entry, modifiable hors lock.
+  const [playStyle, setPlayStyle] = useState<PlayStyle>("balanced");
+  const [savingStyle, setSavingStyle] = useState(false);
+
+  const [error, setError] = useState<{
+    message: string;
+    status?: number;
+  } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -165,7 +190,9 @@ export default function LineupBuilderPage(): JSX.Element {
     try {
       const [lg, me, wks] = await Promise.all([
         apiRequest<LeagueWithEntries>(`/api/nfl-fantasy/leagues/${leagueId}`),
-        apiRequest<MeResponse>("/auth/me").catch(() => ({ user: null }) as MeResponse),
+        apiRequest<MeResponse>("/auth/me").catch(
+          () => ({ user: null }) as MeResponse,
+        ),
         apiRequest<LeagueWeeksResponse>(
           `/api/nfl-fantasy/leagues/${leagueId}/weeks`,
         ).catch(
@@ -179,9 +206,10 @@ export default function LineupBuilderPage(): JSX.Element {
       }
       const userId = me.user?.id ?? null;
       const entry = userId
-        ? lg.entries.find((e) => e.userId === userId) ?? null
+        ? (lg.entries.find((e) => e.userId === userId) ?? null)
         : null;
       setMyEntry(entry);
+      if (entry) setPlayStyle(coercePlayStyle(entry.playStyle));
       setError(null);
 
       if (entry) {
@@ -329,6 +357,34 @@ export default function LineupBuilderPage(): JSX.Element {
     }
   }
 
+  async function onChangePlayStyle(next: PlayStyle): Promise<void> {
+    if (!myEntry || next === playStyle) return;
+    const previous = playStyle;
+    setPlayStyle(next); // optimiste
+    setSavingStyle(true);
+    setActionError(null);
+    try {
+      await apiRequest(`/api/nfl-fantasy/entries/${myEntry.id}/play-style`, {
+        method: "PATCH",
+        body: JSON.stringify({ playStyle: next }),
+      });
+      setMyEntry({ ...myEntry, playStyle: next });
+    } catch (err) {
+      setPlayStyle(previous); // rollback
+      if (err instanceof ApiClientError && err.code === "LINEUP_LOCKED") {
+        setActionError(
+          "Style non modifiable : une semaine verrouillée est en attente de résolution.",
+        );
+      } else {
+        setActionError(
+          err instanceof Error ? err.message : "Erreur changement de style",
+        );
+      }
+    } finally {
+      setSavingStyle(false);
+    }
+  }
+
   async function onSubmit(): Promise<void> {
     if (!myEntry) return;
     if (selected.size !== REQUIRED_STARTERS) {
@@ -337,6 +393,12 @@ export default function LineupBuilderPage(): JSX.Element {
     }
     if (!captainId) {
       setActionError("Choisis un captain.");
+      return;
+    }
+    if (hasCompositionViolation) {
+      setActionError(
+        "Composition hors style de jeu — ajuste tes titulaires ou ton style.",
+      );
       return;
     }
     setSubmitting(true);
@@ -381,10 +443,8 @@ export default function LineupBuilderPage(): JSX.Element {
     inSelection.sort((a, b) => {
       const aId = a.player!.id;
       const bId = b.player!.id;
-      const aRank =
-        aId === captainId ? 0 : aId === viceCaptainId ? 1 : 2;
-      const bRank =
-        bId === captainId ? 0 : bId === viceCaptainId ? 1 : 2;
+      const aRank = aId === captainId ? 0 : aId === viceCaptainId ? 1 : 2;
+      const bRank = bId === captainId ? 0 : bId === viceCaptainId ? 1 : 2;
       if (aRank !== bRank) return aRank - bRank;
       // tiebreak: par cote desc pour visibilite des meilleurs
       const av = a.player!.currentValue ?? 0;
@@ -396,9 +456,7 @@ export default function LineupBuilderPage(): JSX.Element {
   }, [roster, selected, captainId, viceCaptainId]);
 
   const availableRoster = useMemo(() => {
-    return roster.filter(
-      (r) => r.player && !selected.has(r.player.id),
-    );
+    return roster.filter((r) => r.player && !selected.has(r.player.id));
   }, [roster, selected]);
 
   // Liste des positions BB presentes dans le roster (pour chips filtre).
@@ -419,6 +477,18 @@ export default function LineupBuilderPage(): JSX.Element {
     }
     return counts;
   }, [selectedRoster]);
+
+  // Violations de composition vs style de jeu (live, cote client).
+  // Classification via le poste NFL (universel) — meme logique que le
+  // serveur. Les fillers (lineman/defense) ne sont jamais plafonnes.
+  const compositionViolations = useMemo(() => {
+    const archetypes: CompositionArchetype[] = selectedRoster.map((r) =>
+      getArchetypeFromNflPosition(r.player?.nflPosition ?? ""),
+    );
+    return checkComposition(archetypes, playStyle);
+  }, [selectedRoster, playStyle]);
+
+  const hasCompositionViolation = compositionViolations.length > 0;
 
   // Pipe filtre + tri sur la liste Available.
   const filteredAvailable = useMemo(() => {
@@ -472,7 +542,9 @@ export default function LineupBuilderPage(): JSX.Element {
   if (!myEntry) {
     return (
       <div className="rounded-lg border border-nuffle-bronze/20 bg-white p-6">
-        <h1 className="text-xl font-semibold">Tu n&apos;es pas membre de ce championnat</h1>
+        <h1 className="text-xl font-semibold">
+          Tu n&apos;es pas membre de ce championnat
+        </h1>
         <Link
           href={`/nfl-fantasy/leagues/${league.id}`}
           className="mt-4 inline-block text-sm text-nuffle-gold"
@@ -535,6 +607,14 @@ export default function LineupBuilderPage(): JSX.Element {
         matchup={matchup}
         myEntryId={myEntry.id}
         entries={league.entries}
+      />
+
+      {/* Style de jeu : definit les plafonds de composition. */}
+      <PlayStyleSelector
+        value={playStyle}
+        onChange={(s) => void onChangePlayStyle(s)}
+        disabled={locked || savingStyle}
+        saving={savingStyle}
       />
 
       {locked && (
@@ -608,10 +688,27 @@ export default function LineupBuilderPage(): JSX.Element {
               </div>
             )}
 
+            {hasCompositionViolation && (
+              <div
+                className="mt-2 rounded-md border border-red-300 bg-red-500/10 p-2.5 text-xs text-red-800"
+                role="alert"
+                data-testid="composition-violation"
+              >
+                <span className="font-semibold">Composition hors style :</span>{" "}
+                {compositionViolations
+                  .map(
+                    (v) =>
+                      `${ARCHETYPE_LABELS[v.archetype]} ${v.count}/${v.cap} max`,
+                  )
+                  .join(" · ")}
+                . Retire des titulaires ou change de style de jeu.
+              </div>
+            )}
+
             {selectedRoster.length === 0 ? (
               <p className="mt-3 rounded-md border border-dashed border-nuffle-bronze/20 px-3 py-6 text-center text-sm text-nuffle-anthracite/60">
-                Aucun starter sélectionné. Pick-toi 11 joueurs depuis le
-                banc ci-dessous, puis un captain.
+                Aucun starter sélectionné. Pick-toi 11 joueurs depuis le banc
+                ci-dessous, puis un captain.
               </p>
             ) : (
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -764,6 +861,10 @@ export default function LineupBuilderPage(): JSX.Element {
                     <p className="mt-0.5 truncate text-xs text-red-700">
                       {actionError}
                     </p>
+                  ) : hasCompositionViolation ? (
+                    <p className="mt-0.5 truncate text-xs text-red-700">
+                      Composition hors style de jeu
+                    </p>
                   ) : !captainId && selected.size > 0 ? (
                     <p className="mt-0.5 text-xs text-amber-700">
                       Choisis un captain pour valider
@@ -776,7 +877,8 @@ export default function LineupBuilderPage(): JSX.Element {
                     locked ||
                     submitting ||
                     selected.size !== REQUIRED_STARTERS ||
-                    !captainId
+                    !captainId ||
+                    hasCompositionViolation
                   }
                   className="shrink-0 rounded-md bg-nuffle-gold px-4 py-2.5 text-sm font-semibold text-nuffle-anthracite shadow-sm hover:bg-nuffle-gold/90 disabled:cursor-not-allowed disabled:bg-nuffle-bronze/20 disabled:text-nuffle-anthracite/40"
                   data-testid="lineup-submit"
@@ -895,4 +997,3 @@ function CarryOverBanner({
     </div>
   );
 }
-
