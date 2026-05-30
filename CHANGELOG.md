@@ -1,3 +1,10 @@
+## [1.162.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.161.0...v1.162.0) (2026-05-30)
+
+
+### ✨ Features
+
+* **feature-flags:** bouton admin pour synchroniser les flags du code vers la BDD ([3002135](https://github.com/Ryxeuf/fantasy-football-game/commit/300213571e406a33cc06eed81fa1705ea0e02653))
+
 ## [1.161.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.160.0...v1.161.0) (2026-05-29)
 
 
