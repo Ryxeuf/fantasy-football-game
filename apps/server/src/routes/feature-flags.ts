@@ -21,6 +21,7 @@ import {
   listUsersForFlag,
   addUserOverride,
   removeUserOverride,
+  syncFlagsFromCode,
 } from "../services/featureFlags";
 import { sendSuccess, sendError } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
@@ -101,6 +102,20 @@ adminFeatureFlagsRouter.get("/", async (_req, res) => {
     return sendSuccess(res, flags);
   } catch (error: unknown) {
     serverLog.error("[featureFlags] GET / error:", error);
+    return sendError(res, errorMessage(error));
+  }
+});
+
+// Synchronise la BDD avec les flags déclarés dans le code (KNOWN_FLAGS) :
+// crée les flags manquants (enabled: false), laisse les existants intacts.
+// Doit être déclaré avant les routes paramétrées pour éviter toute
+// ambiguïté de matching.
+adminFeatureFlagsRouter.post("/sync", async (_req, res) => {
+  try {
+    const result = await syncFlagsFromCode();
+    return sendSuccess(res, result);
+  } catch (error: unknown) {
+    serverLog.error("[featureFlags] POST /sync error:", error);
     return sendError(res, errorMessage(error));
   }
 });

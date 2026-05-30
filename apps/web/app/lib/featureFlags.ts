@@ -62,6 +62,22 @@ export async function adminDeleteFlag(id: string): Promise<void> {
   });
 }
 
+export interface SyncFlagsResult {
+  created: string[];
+  skipped: string[];
+  total: number;
+}
+
+/**
+ * Crée en base les feature flags déclarés dans le code mais absents de la
+ * BDD. Idempotent : ne modifie pas les flags déjà présents.
+ */
+export async function adminSyncFlags(): Promise<SyncFlagsResult> {
+  return request<SyncFlagsResult>("/admin/feature-flags/sync", {
+    method: "POST",
+  });
+}
+
 export async function adminListFlagUsers(
   id: string,
 ): Promise<FeatureFlagUser[]> {

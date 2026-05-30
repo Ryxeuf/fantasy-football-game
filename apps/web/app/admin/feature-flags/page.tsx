@@ -5,6 +5,7 @@ import {
   adminCreateFlag,
   adminDeleteFlag,
   adminListFlags,
+  adminSyncFlags,
   adminUpdateFlag,
   type FeatureFlag,
 } from "../../lib/featureFlags";
@@ -18,6 +19,8 @@ export default function AdminFeatureFlagsPage() {
   const [newDescription, setNewDescription] = useState<string>("");
   const [newEnabled, setNewEnabled] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [syncing, setSyncing] = useState<boolean>(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,6 +62,37 @@ export default function AdminFeatureFlagsPage() {
     }
   };
 
+  const syncFromCode = async () => {
+    setSyncing(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await adminSyncFlags();
+      if (result.created.length === 0) {
+        setNotice(
+          `Tout est déjà à jour — ${result.total} flag${
+            result.total !== 1 ? "s" : ""
+          } du code déjà en base.`,
+        );
+      } else {
+        setNotice(
+          `${result.created.length} flag${
+            result.created.length !== 1 ? "s" : ""
+          } créé${result.created.length !== 1 ? "s" : ""} : ${result.created.join(
+            ", ",
+          )}.`,
+        );
+      }
+      await load();
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Erreur de synchronisation",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -93,18 +127,35 @@ export default function AdminFeatureFlagsPage() {
             spécifiques.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreateOpen((prev) => !prev)}
-          className="self-start sm:self-auto px-4 py-2 rounded-lg bg-nuffle-gold text-white hover:bg-nuffle-bronze transition"
-        >
-          {createOpen ? "Annuler" : "+ Nouveau flag"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={syncFromCode}
+            disabled={syncing}
+            title="Crée en base les feature flags définis dans le code mais absents de la BDD"
+            className="px-4 py-2 rounded-lg border border-nuffle-bronze text-nuffle-bronze hover:bg-nuffle-bronze hover:text-white transition disabled:opacity-50"
+          >
+            {syncing ? "Synchronisation..." : "⟳ Synchroniser depuis le code"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCreateOpen((prev) => !prev)}
+            className="px-4 py-2 rounded-lg bg-nuffle-gold text-white hover:bg-nuffle-bronze transition"
+          >
+            {createOpen ? "Annuler" : "+ Nouveau flag"}
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">
           {error}
+        </div>
+      )}
+
+      {notice && (
+        <div className="mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200">
+          {notice}
         </div>
       )}
 
@@ -167,62 +218,68 @@ export default function AdminFeatureFlagsPage() {
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-              <tr>
-                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Clé</th>
-                <th className="px-3 sm:px-4 py-3">Description</th>
-                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Global</th>
-                <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Utilisateurs</th>
-                <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {flags.map((flag) => (
-                <tr key={flag.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs">{flag.key}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {flag.description || (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleEnabled(flag)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                        flag.enabled
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {flag.enabled ? "ON" : "OFF"}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={
-                        `/admin/feature-flags/${flag.id}` as never as string
-                      }
-                      className="text-nuffle-bronze hover:underline"
-                    >
-                      {flag.userOverrideCount} override
-                      {flag.userOverrideCount !== 1 ? "s" : ""}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => removeFlag(flag)}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                <tr>
+                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Clé</th>
+                  <th className="px-3 sm:px-4 py-3">Description</th>
+                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    Global
+                  </th>
+                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    Utilisateurs
+                  </th>
+                  <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {flags.map((flag) => (
+                  <tr key={flag.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-mono text-xs">{flag.key}</td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {flag.description || (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleEnabled(flag)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                          flag.enabled
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {flag.enabled ? "ON" : "OFF"}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={
+                          `/admin/feature-flags/${flag.id}` as never as string
+                        }
+                        className="text-nuffle-bronze hover:underline"
+                      >
+                        {flag.userOverrideCount} override
+                        {flag.userOverrideCount !== 1 ? "s" : ""}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => removeFlag(flag)}
+                        className="text-red-600 hover:text-red-800 text-xs"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
