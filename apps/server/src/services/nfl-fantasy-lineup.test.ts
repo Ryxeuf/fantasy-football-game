@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    nflFantasyEntry: { findUnique: vi.fn() },
+    nflFantasyEntry: { findUnique: vi.fn(), update: vi.fn() },
     nflFantasyLineup: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
@@ -14,6 +15,7 @@ vi.mock("../prisma", () => ({
       createMany: vi.fn(),
     },
     nflFantasyRoster: { findMany: vi.fn() },
+    nflPlayer: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -31,6 +33,8 @@ import {
   lockLineups,
   NflFantasyLineupError,
   setLineup,
+  updateEntryPlayStyle,
+  validateComposition,
   validateLineupStructure,
   VICE_CAPTAIN_MULTIPLIER,
 } from "./nfl-fantasy-lineup";
@@ -146,7 +150,9 @@ describe("validateLineupStructure", () => {
 
 describe("setLineup", () => {
   function happyMocks() {
-    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({ id: "e1" } as never);
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
     vi.mocked(prisma.nflFantasyLineup.findUnique)
       .mockResolvedValueOnce(null) // existence check
       .mockResolvedValueOnce({
@@ -161,7 +167,16 @@ describe("setLineup", () => {
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
       fakeStarters().map((s) => ({ playerId: s.playerId })) as never,
     );
-    vi.mocked(prisma.nflFantasyLineup.create).mockResolvedValue({ id: "l1" } as never);
+    // Resolution archetype : 1 QB (passer) + 10 OL (lineman) — conforme balanced.
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue(
+      fakeStarters().map((s, i) => ({
+        id: s.playerId,
+        nflPosition: i === 0 ? "QB" : "OL",
+      })) as never,
+    );
+    vi.mocked(prisma.nflFantasyLineup.create).mockResolvedValue({
+      id: "l1",
+    } as never);
   }
 
   it("cree un nouveau lineup si absent", async () => {
@@ -180,7 +195,9 @@ describe("setLineup", () => {
   });
 
   it("met a jour si lineup existe (non locked)", async () => {
-    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({ id: "e1" } as never);
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
     vi.mocked(prisma.nflFantasyLineup.findUnique)
       .mockResolvedValueOnce({ id: "l-existing", lockedAt: null } as never)
       .mockResolvedValueOnce({
@@ -189,6 +206,12 @@ describe("setLineup", () => {
       } as never);
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
       fakeStarters().map((s) => ({ playerId: s.playerId })) as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue(
+      fakeStarters().map((s, i) => ({
+        id: s.playerId,
+        nflPosition: i === 0 ? "QB" : "OL",
+      })) as never,
     );
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
@@ -204,8 +227,76 @@ describe("setLineup", () => {
     expect(prisma.nflFantasyLineup.create).not.toHaveBeenCalled();
   });
 
+  it("COMPOSITION_CAP_EXCEEDED si trop de receveurs pour le style", async () => {
+    // Entry en style 'balanced' (receiver cap 3). On aligne 5 WR.
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+      playStyle: "balanced",
+    } as never);
+    vi.mocked(prisma.nflFantasyLineup.findUnique).mockResolvedValue(null);
+    const starters = Array.from({ length: 11 }, (_, i) => ({
+      playerId: `p${i + 1}`,
+      bbPosition: "Catcher",
+    }));
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
+      starters.map((s) => ({ playerId: s.playerId })) as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue(
+      starters.map((s, i) => ({
+        id: s.playerId,
+        nflPosition: i < 5 ? "WR" : "OL", // 5 receveurs, 6 linemen
+      })) as never,
+    );
+
+    await expect(
+      setLineup({
+        entryId: "e1",
+        weekId: "2025:W10",
+        starters,
+        captainId: "p1",
+      }),
+    ).rejects.toThrow(/Composition invalide.*receveurs/);
+  });
+
+  it("accepte 6 receveurs en style air_raid", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+      playStyle: "air_raid",
+    } as never);
+    vi.mocked(prisma.nflFantasyLineup.findUnique)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "l1", starters: [] } as never);
+    const starters = Array.from({ length: 11 }, (_, i) => ({
+      playerId: `p${i + 1}`,
+      bbPosition: "Catcher",
+    }));
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
+      starters.map((s) => ({ playerId: s.playerId })) as never,
+    );
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue(
+      starters.map((s, i) => ({
+        id: s.playerId,
+        nflPosition: i < 6 ? "WR" : "OL", // 6 receveurs (cap air_raid), 5 linemen
+      })) as never,
+    );
+    vi.mocked(prisma.nflFantasyLineup.create).mockResolvedValue({
+      id: "l1",
+    } as never);
+
+    await expect(
+      setLineup({
+        entryId: "e1",
+        weekId: "2025:W10",
+        starters,
+        captainId: "p1",
+      }),
+    ).resolves.toBeDefined();
+  });
+
   it("LINEUP_LOCKED si lockedAt set", async () => {
-    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({ id: "e1" } as never);
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
     vi.mocked(prisma.nflFantasyLineup.findUnique).mockResolvedValue({
       id: "l1",
       lockedAt: new Date("2025-11-09T17:00:00Z"),
@@ -235,11 +326,15 @@ describe("setLineup", () => {
   });
 
   it("PLAYER_NOT_ON_ROSTER si un starter pas dans le roster", async () => {
-    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({ id: "e1" } as never);
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
     vi.mocked(prisma.nflFantasyLineup.findUnique).mockResolvedValue(null);
     // Roster ne contient que 10 des 11 starters
     vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
-      fakeStarters().slice(0, 10).map((s) => ({ playerId: s.playerId })) as never,
+      fakeStarters()
+        .slice(0, 10)
+        .map((s) => ({ playerId: s.playerId })) as never,
     );
 
     await expect(
@@ -327,6 +422,75 @@ describe("getLineup / isLineupLocked", () => {
   it("isLineupLocked false si lineup absent", async () => {
     vi.mocked(prisma.nflFantasyLineup.findUnique).mockResolvedValue(null);
     expect(await isLineupLocked({ entryId: "e1", weekId: "w" })).toBe(false);
+  });
+});
+
+describe("validateComposition (pur)", () => {
+  it("ne throw pas si conforme", () => {
+    expect(() =>
+      validateComposition({
+        archetypes: ["passer", "rusher", "rusher", "receiver", "lineman"],
+        playStyle: "balanced",
+      }),
+    ).not.toThrow();
+  });
+
+  it("throw COMPOSITION_CAP_EXCEEDED avec libelle FR si depassement", () => {
+    expect(() =>
+      validateComposition({
+        archetypes: ["receiver", "receiver", "receiver", "receiver"],
+        playStyle: "balanced",
+      }),
+    ).toThrow(/receveurs.*4\/3 max/);
+  });
+});
+
+describe("updateEntryPlayStyle", () => {
+  it("met a jour le style si pas de semaine lockee en attente", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
+    vi.mocked(prisma.nflFantasyLineup.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.nflFantasyEntry.update).mockResolvedValue({
+      id: "e1",
+      playStyle: "offensive",
+    } as never);
+
+    const out = await updateEntryPlayStyle({
+      entryId: "e1",
+      playStyle: "offensive",
+    });
+    expect(out).toEqual({ id: "e1", playStyle: "offensive" });
+    expect(prisma.nflFantasyEntry.update).toHaveBeenCalledWith({
+      where: { id: "e1" },
+      data: { playStyle: "offensive" },
+      select: { id: true, playStyle: true },
+    });
+  });
+
+  it("rejette un style inconnu (INVALID_STARTERS)", async () => {
+    await expect(
+      updateEntryPlayStyle({ entryId: "e1", playStyle: "chaos" }),
+    ).rejects.toThrow(/Style de jeu inconnu/);
+  });
+
+  it("ENTRY_NOT_FOUND si entry absente", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue(null);
+    await expect(
+      updateEntryPlayStyle({ entryId: "missing", playStyle: "defensive" }),
+    ).rejects.toThrow(/introuvable/);
+  });
+
+  it("LINEUP_LOCKED si une semaine verrouillee est en attente de resolution", async () => {
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({
+      id: "e1",
+    } as never);
+    vi.mocked(prisma.nflFantasyLineup.findFirst).mockResolvedValue({
+      id: "l1",
+    } as never);
+    await expect(
+      updateEntryPlayStyle({ entryId: "e1", playStyle: "defensive" }),
+    ).rejects.toThrow(/non modifiable/);
   });
 });
 

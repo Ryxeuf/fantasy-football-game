@@ -23,10 +23,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import {
-  authUser,
-  type AuthenticatedRequest,
-} from "../middleware/authUser";
+import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
@@ -39,7 +36,9 @@ import {
   getLineup,
   NflFantasyLineupError,
   setLineup,
+  updateEntryPlayStyle,
 } from "../services/nfl-fantasy-lineup";
+import { PLAY_STYLES } from "@bb/nfl-mapper";
 import {
   carryOverLineupFromPreviousWeek,
   findPreviousLineupSummary,
@@ -84,11 +83,15 @@ async function loadOwnedEntry(
     select: { userId: true },
   });
   if (!entry) {
-    res.status(404).json({ error: `Entry ${entryId} introuvable`, code: "ENTRY_NOT_FOUND" });
+    res
+      .status(404)
+      .json({ error: `Entry ${entryId} introuvable`, code: "ENTRY_NOT_FOUND" });
     return null;
   }
   if (entry.userId !== req.user!.id) {
-    res.status(403).json({ error: "Acces refuse a cette entry", code: "NOT_OWNER" });
+    res
+      .status(403)
+      .json({ error: "Acces refuse a cette entry", code: "NOT_OWNER" });
     return null;
   }
   return entry;
@@ -106,7 +109,11 @@ const addPlayerSchema = z.object({
 
 router.get("/:entryId/roster", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const roster = await getRosterWithPlayers(req.params.entryId);
     res.json({ roster });
@@ -118,28 +125,35 @@ router.get("/:entryId/roster", async (req, res) => {
   }
 });
 
-router.post(
-  "/:entryId/roster",
-  validate(addPlayerSchema),
-  async (req, res) => {
-    try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
-      if (!entry) return;
-      const body = req.body as z.infer<typeof addPlayerSchema>;
-      const row = await addPlayerToRoster({ entryId: req.params.entryId, ...body });
-      res.status(201).json(row);
-    } catch (err) {
-      if (!sendNflError(res, err) && !(err instanceof NflFantasyRosterError)) {
-        serverLog.error("[nfl-fantasy-entries] addPlayer failed", err);
-        res.status(500).json({ error: "Erreur serveur" });
-      }
+router.post("/:entryId/roster", validate(addPlayerSchema), async (req, res) => {
+  try {
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
+    if (!entry) return;
+    const body = req.body as z.infer<typeof addPlayerSchema>;
+    const row = await addPlayerToRoster({
+      entryId: req.params.entryId,
+      ...body,
+    });
+    res.status(201).json(row);
+  } catch (err) {
+    if (!sendNflError(res, err) && !(err instanceof NflFantasyRosterError)) {
+      serverLog.error("[nfl-fantasy-entries] addPlayer failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
     }
-  },
-);
+  }
+});
 
 router.delete("/:entryId/roster/:playerId", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     await removePlayerFromRoster({
       entryId: req.params.entryId,
@@ -160,7 +174,11 @@ router.delete("/:entryId/roster/:playerId", async (req, res) => {
 // une plus-value au moment de la vente.
 router.post("/:entryId/roster/:playerId/sell", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const out = await sellPlayer({
       entryId: req.params.entryId,
@@ -204,9 +222,15 @@ router.get(
   validateQuery(lineupQuerySchema),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
-      const { weekId } = req.query as unknown as z.infer<typeof lineupQuerySchema>;
+      const { weekId } = req.query as unknown as z.infer<
+        typeof lineupQuerySchema
+      >;
       // Parallelisable : lineup courante + suggestion carry-over
       const [lineup, previousLineup] = await Promise.all([
         getLineup({ entryId: req.params.entryId, weekId }),
@@ -227,7 +251,11 @@ router.get(
 
 router.put("/:entryId/lineup", validate(setLineupSchema), async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const body = req.body as z.infer<typeof setLineupSchema>;
     const lineup = await setLineup({ entryId: req.params.entryId, ...body });
@@ -239,6 +267,46 @@ router.put("/:entryId/lineup", validate(setLineupSchema), async (req, res) => {
     }
   }
 });
+
+const playStyleSchema = z.object({
+  playStyle: z.enum(PLAY_STYLES as readonly [string, ...string[]]),
+});
+
+/**
+ * PATCH /:entryId/play-style
+ *
+ * Change le style de jeu de l'entry (definit les plafonds de composition
+ * de lineup). Modifiable tant qu'aucune semaine verrouillee n'est en
+ * attente de resolution (cf. updateEntryPlayStyle).
+ */
+router.patch(
+  "/:entryId/play-style",
+  validate(playStyleSchema),
+  async (req, res) => {
+    try {
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
+      if (!entry) return;
+      const body = req.body as z.infer<typeof playStyleSchema>;
+      const updated = await updateEntryPlayStyle({
+        entryId: req.params.entryId,
+        playStyle: body.playStyle,
+      });
+      res.json(updated);
+    } catch (err) {
+      if (!sendNflError(res, err) && !(err instanceof NflFantasyLineupError)) {
+        serverLog.error(
+          "[nfl-fantasy-entries] updateEntryPlayStyle failed",
+          err,
+        );
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 const carryOverLineupSchema = z.object({
   weekId: z.string().min(1),
@@ -305,7 +373,11 @@ router.get(
   validateQuery(listRerollsQuery),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
       const q = req.query as unknown as z.infer<typeof listRerollsQuery>;
       const used = q.used === undefined ? undefined : q.used === "true";
@@ -326,7 +398,11 @@ router.post(
   validate(consumeRerollSchema),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
       const body = req.body as z.infer<typeof consumeRerollSchema>;
       const out = await consumeReroll({ entryId: req.params.entryId, ...body });
@@ -364,7 +440,11 @@ router.get(
   validateQuery(listInducementsQuery),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
       const q = req.query as unknown as z.infer<typeof listInducementsQuery>;
       const inducements = await listInducements({
@@ -395,10 +475,17 @@ router.post(
   validate(consumeInducementSchema),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
       const body = req.body as z.infer<typeof consumeInducementSchema>;
-      const out = await consumeInducement({ entryId: req.params.entryId, ...body });
+      const out = await consumeInducement({
+        entryId: req.params.entryId,
+        ...body,
+      });
       res.status(201).json(out);
     } catch (err) {
       if (!sendNflError(res, err) && !(err instanceof NflFantasyMercatoError)) {
@@ -415,7 +502,11 @@ router.post(
 
 router.get("/:entryId/careers", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const careers = await listCareersForEntry(req.params.entryId);
     res.json({ careers });
@@ -427,14 +518,20 @@ router.get("/:entryId/careers", async (req, res) => {
 
 router.get("/:entryId/careers/:playerId", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const career = await getCareerForPlayer({
       entryId: req.params.entryId,
       playerId: req.params.playerId,
     });
     if (!career) {
-      res.status(404).json({ error: "Carriere non trouvee", code: "CAREER_NOT_FOUND" });
+      res
+        .status(404)
+        .json({ error: "Carriere non trouvee", code: "CAREER_NOT_FOUND" });
       return;
     }
     const access = await getSkillAccessView(req.params.playerId);
@@ -447,7 +544,11 @@ router.get("/:entryId/careers/:playerId", async (req, res) => {
 
 router.get("/:entryId/careers/:playerId/available-skills", async (req, res) => {
   try {
-    const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+    const entry = await loadOwnedEntry(
+      req as AuthenticatedRequest,
+      res,
+      req.params.entryId,
+    );
     if (!entry) return;
     const out = await listAvailableSkillsForCareer({
       entryId: req.params.entryId,
@@ -462,7 +563,10 @@ router.get("/:entryId/careers/:playerId/available-skills", async (req, res) => {
     }
     res.json(out);
   } catch (err) {
-    serverLog.error("[nfl-fantasy-entries] listAvailableSkillsForCareer failed", err);
+    serverLog.error(
+      "[nfl-fantasy-entries] listAvailableSkillsForCareer failed",
+      err,
+    );
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -492,7 +596,11 @@ router.post(
   validate(unlockSkillSchema),
   async (req, res) => {
     try {
-      const entry = await loadOwnedEntry(req as AuthenticatedRequest, res, req.params.entryId);
+      const entry = await loadOwnedEntry(
+        req as AuthenticatedRequest,
+        res,
+        req.params.entryId,
+      );
       if (!entry) return;
       const body = req.body as z.infer<typeof unlockSkillSchema>;
       const out = await unlockSkill({

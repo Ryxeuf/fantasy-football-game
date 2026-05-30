@@ -21,6 +21,17 @@
  */
 
 import type { NflFantasyLineup, NflFantasyLineupStarter } from "@prisma/client";
+import {
+  checkComposition,
+  coercePlayStyle,
+  getArchetypeFromBbPosition,
+  getArchetypeFromNflPosition,
+  isPlayStyle,
+  PLAY_STYLES,
+  type BbPosition,
+  type CompositionArchetype,
+  type PlayStyle,
+} from "@bb/nfl-mapper";
 
 import { prisma } from "../prisma";
 
@@ -40,6 +51,7 @@ export type NflFantasyLineupErrorCode =
   | "INVALID_LINEUP_SIZE"
   | "NO_PREVIOUS_LINEUP"
   | "ROSTER_TOO_DIVERGENT"
+  | "COMPOSITION_CAP_EXCEEDED"
   | "WEEK_NOT_FOUND";
 
 export class NflFantasyLineupError extends Error {
@@ -156,6 +168,61 @@ export function validateLineupStructure(opts: {
   }
 }
 
+/** Libelles FR des archetypes pour des messages d'erreur lisibles. */
+const ARCHETYPE_LABELS: Readonly<Record<CompositionArchetype, string>> = {
+  passer: "passeurs (QB)",
+  rusher: "coureurs (RB)",
+  receiver: "receveurs (WR/TE)",
+  lineman: "linemen",
+  frontSeven: "defenseurs (front 7)",
+  secondary: "defenseurs (secondary)",
+  bigGuy: "big guys (DT/NT)",
+};
+
+/**
+ * Resout l'archetype de composition d'un starter.
+ *
+ * Priorite au **poste NFL** (universel, race-agnostique) : un RB reste un
+ * `rusher` que sa race le mappe en Blitzer, Ulfwerener ou Bloodspawn. On
+ * retombe sur le poste BB seulement si le poste NFL est inconnu (vieux
+ * snapshots sans nflPosition en base).
+ */
+function resolveArchetype(
+  nflPosition: string | null | undefined,
+  bbPosition: string,
+): CompositionArchetype {
+  if (nflPosition && nflPosition.trim() !== "") {
+    return getArchetypeFromNflPosition(nflPosition);
+  }
+  return getArchetypeFromBbPosition(bbPosition as BbPosition);
+}
+
+/**
+ * Verifie que la composition du lineup respecte les plafonds du style de
+ * jeu de l'entry. Pur (pas d'I/O) : le caller fournit deja l'archetype
+ * resolu de chaque starter.
+ *
+ * Plafonds = max only sur les postes premium ; les fillers (lineman,
+ * defense) sont illimites → ne bloque jamais la faisabilite des 11.
+ *
+ * @throws NflFantasyLineupError(COMPOSITION_CAP_EXCEEDED) si un cap saute.
+ */
+export function validateComposition(opts: {
+  archetypes: readonly CompositionArchetype[];
+  playStyle: PlayStyle;
+}): void {
+  const violations = checkComposition(opts.archetypes, opts.playStyle);
+  if (violations.length === 0) return;
+
+  const detail = violations
+    .map((v) => `${ARCHETYPE_LABELS[v.archetype]} : ${v.count}/${v.cap} max`)
+    .join(", ");
+  throw new NflFantasyLineupError(
+    "COMPOSITION_CAP_EXCEEDED",
+    `Composition invalide pour le style "${opts.playStyle}" — ${detail}`,
+  );
+}
+
 // ────────────────────────────────────────────────────────────────────
 // API
 // ────────────────────────────────────────────────────────────────────
@@ -184,7 +251,9 @@ export async function getLineup(opts: {
  *
  * @throws NflFantasyLineupError pour toutes les violations
  */
-export async function setLineup(opts: SetLineupOpts): Promise<LineupWithStarters> {
+export async function setLineup(
+  opts: SetLineupOpts,
+): Promise<LineupWithStarters> {
   validateLineupStructure(opts);
 
   const entry = await prisma.nflFantasyEntry.findUnique({
@@ -225,6 +294,23 @@ export async function setLineup(opts: SetLineupOpts): Promise<LineupWithStarters
       );
     }
   }
+
+  // Validation composition : plafonds par archetype selon le style de jeu
+  // de l'entry. On resout l'archetype via le poste NFL d'origine (universel)
+  // en chargeant les NflPlayer correspondants. Fallback poste BB si absent.
+  const players: ReadonlyArray<{ id: string; nflPosition: string | null }> =
+    await prisma.nflPlayer.findMany({
+      where: { id: { in: opts.starters.map((s) => s.playerId) } },
+      select: { id: true, nflPosition: true },
+    });
+  const nflPosById = new Map(players.map((p) => [p.id, p.nflPosition]));
+  const archetypes = opts.starters.map((s) =>
+    resolveArchetype(nflPosById.get(s.playerId), s.bbPosition),
+  );
+  validateComposition({
+    archetypes,
+    playStyle: coercePlayStyle(entry.playStyle),
+  });
 
   // Upsert atomique du lineup + remplacement des starters
   const lineupId = existing?.id;
@@ -315,6 +401,63 @@ export async function lockLineups(weekId: string): Promise<LockLineupsResult> {
     defaultsCreated: ensured.defaultsCreated,
     defaultsTooSmall: ensured.defaultsTooSmall,
   };
+}
+
+/**
+ * Change le style de jeu d'une entry.
+ *
+ * Modifiable tant qu'aucun lineup de l'entry n'est encore locked sur une
+ * week non settlee : on autorise le changement si l'entry n'a pas de
+ * lineup `lockedAt != null && totalSpp == null` (= semaine en cours
+ * verrouillee mais pas encore resolue). Au-dela, le style est fige pour
+ * cette semaine pour eviter de contourner les caps apres le lock.
+ *
+ * Note : ce garde-fou est volontairement souple — les caps eux-memes sont
+ * re-valides a chaque setLineup, donc un changement de style ne peut jamais
+ * produire un lineup deja persiste non conforme.
+ *
+ * @throws NflFantasyLineupError(ENTRY_NOT_FOUND | INVALID_STARTERS | LINEUP_LOCKED)
+ */
+export async function updateEntryPlayStyle(opts: {
+  entryId: string;
+  playStyle: string;
+}): Promise<{ id: string; playStyle: PlayStyle }> {
+  if (!isPlayStyle(opts.playStyle)) {
+    throw new NflFantasyLineupError(
+      "INVALID_STARTERS",
+      `Style de jeu inconnu : "${opts.playStyle}" (attendu : ${PLAY_STYLES.join(", ")})`,
+    );
+  }
+
+  const entry = await prisma.nflFantasyEntry.findUnique({
+    where: { id: opts.entryId },
+    select: { id: true },
+  });
+  if (!entry) {
+    throw new NflFantasyLineupError(
+      "ENTRY_NOT_FOUND",
+      `Entry ${opts.entryId} introuvable`,
+    );
+  }
+
+  // Garde-fou : refuse si une semaine en cours est lockee mais pas settlee.
+  const lockedPending = await prisma.nflFantasyLineup.findFirst({
+    where: { entryId: opts.entryId, lockedAt: { not: null }, totalSpp: null },
+    select: { id: true },
+  });
+  if (lockedPending) {
+    throw new NflFantasyLineupError(
+      "LINEUP_LOCKED",
+      "Style de jeu non modifiable : une semaine verrouillee est en attente de resolution",
+    );
+  }
+
+  const updated = await prisma.nflFantasyEntry.update({
+    where: { id: opts.entryId },
+    data: { playStyle: opts.playStyle },
+    select: { id: true, playStyle: true },
+  });
+  return { id: updated.id, playStyle: coercePlayStyle(updated.playStyle) };
 }
 
 /**
