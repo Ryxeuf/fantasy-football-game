@@ -100,6 +100,64 @@ export type BbPosition =
  */
 export type BbPositionRole = 'lineman' | 'specialist' | 'bigGuy';
 
+/**
+ * Archetype fin pour les caps de composition de lineup (option A : plafonner
+ * les postes premium plutot que forcer un plancher de linemen).
+ *
+ * Contrairement a `BbPositionRole` (3 buckets grossiers), l'archetype
+ * distingue les sous-roles offensifs/defensifs pour permettre des plafonds
+ * fins ("max 1 passer", "max 4 receveurs"). Il est derive du **poste NFL**
+ * (couche universelle : chaque equipe a un QB/RB/WR quelle que soit la race)
+ * et NON du poste BB — ce qui evite le probleme des noms divergents
+ * (Blitzer / Berserker / Wardancer sont tous des specialistes selon la race
+ * mais proviennent de postes NFL identiques).
+ *
+ * - `passer`     : QB
+ * - `rusher`     : RB, FB
+ * - `receiver`   : WR, TE
+ * - `lineman`    : OL/C/G/OT + K/P (filler bas-cout)
+ * - `frontSeven` : DE/EDGE/LB/ILB/OLB/MLB (defense front)
+ * - `secondary`  : CB/DB/S/SAF/FS/SS/NB (defense arriere)
+ * - `bigGuy`     : DT/NT (mappes Big Guy dans toutes les races)
+ */
+export type CompositionArchetype =
+  | 'passer'
+  | 'rusher'
+  | 'receiver'
+  | 'lineman'
+  | 'frontSeven'
+  | 'secondary'
+  | 'bigGuy';
+
+const NFL_POSITION_ARCHETYPE: Readonly<Record<NflPosition, CompositionArchetype>> = {
+  QB: 'passer',
+  RB: 'rusher',
+  FB: 'rusher',
+  WR: 'receiver',
+  TE: 'receiver',
+  OL: 'lineman',
+  C: 'lineman',
+  G: 'lineman',
+  OT: 'lineman',
+  K: 'lineman',
+  P: 'lineman',
+  DT: 'bigGuy',
+  NT: 'bigGuy',
+  DE: 'frontSeven',
+  EDGE: 'frontSeven',
+  LB: 'frontSeven',
+  ILB: 'frontSeven',
+  OLB: 'frontSeven',
+  MLB: 'frontSeven',
+  CB: 'secondary',
+  DB: 'secondary',
+  S: 'secondary',
+  SAF: 'secondary',
+  FS: 'secondary',
+  SS: 'secondary',
+  NB: 'secondary',
+};
+
 const POSITION_ROLE: Readonly<Record<BbPosition, BbPositionRole>> = {
   Lineman: 'lineman', Thrower: 'specialist', Catcher: 'specialist',
   Blitzer: 'specialist', Runner: 'specialist',
@@ -291,6 +349,69 @@ export function getBbPosition(nflPosition: string, race: BbRace): BbPosition {
  */
 export function getBbPositionRole(position: BbPosition): BbPositionRole {
   return POSITION_ROLE[position];
+}
+
+/**
+ * Archetype fin d'un poste NFL (source de verite des caps de composition).
+ * Insensible a la casse / au trim. Poste inconnu -> `lineman` (filler safe :
+ * un poste non reconnu ne doit jamais consommer un slot premium plafonne).
+ */
+export function getArchetypeFromNflPosition(nflPosition: string): CompositionArchetype {
+  const normalized = normalizeNflPosition(nflPosition);
+  const direct = (NFL_POSITION_ARCHETYPE as Record<string, CompositionArchetype | undefined>)[normalized];
+  return direct ?? 'lineman';
+}
+
+/**
+ * Fallback best-effort : archetype derive du poste BB quand le poste NFL
+ * d'origine n'est pas disponible (ex: vieux snapshots de lineup sans
+ * `nflPosition`). Plus grossier que `getArchetypeFromNflPosition` car le
+ * poste BB perd l'info offense/defense : les specialistes ambigus sont
+ * routes vers `frontSeven` par defaut. Preferer le poste NFL quand il existe.
+ */
+export function getArchetypeFromBbPosition(position: BbPosition): CompositionArchetype {
+  switch (position) {
+    case 'Thrower':
+      return 'passer';
+    case 'Catcher':
+    case 'Ghoul':
+      return 'receiver';
+    case 'Runner':
+    case 'GutterRunner':
+    case 'Werewolf':
+      return 'rusher';
+    case 'Lineman':
+    case 'Blocker':
+    case 'Zombie':
+    case 'Bloodseeker':
+    case 'Goblin':
+      return 'lineman';
+    case 'RatOgre':
+    case 'Treeman':
+    case 'Troll':
+    case 'Ogre':
+    case 'Yhetee':
+    case 'Deathroller':
+    case 'Bloodthirster':
+    case 'FleshGolem':
+      return 'bigGuy';
+    case 'Blitzer':
+    case 'StormVermin':
+    case 'BlackOrc':
+    case 'Wardancer':
+    case 'Berserker':
+    case 'Ulfwerener':
+    case 'Wight':
+    case 'Trollslayer':
+    case 'Khorngor':
+    case 'Bloodspawn':
+      return 'frontSeven';
+    default: {
+      const _exhaustive: never = position;
+      void _exhaustive;
+      return 'lineman';
+    }
+  }
 }
 
 /**
