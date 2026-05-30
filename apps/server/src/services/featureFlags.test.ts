@@ -29,8 +29,11 @@ import {
   addUserOverride,
   removeUserOverride,
   invalidateFeatureFlagsCache,
+  syncFlagsFromCode,
+  KNOWN_FLAGS,
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
+  NUFFLE_COACH_FLAG,
 } from "./featureFlags";
 
 const mockPrisma = prisma as any;
@@ -139,9 +142,7 @@ describe("featureFlags service", () => {
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         flag("f-reg", "registration_requires_validation", false),
       ]);
-      expect(
-        await isEnabled("registration_requires_validation"),
-      ).toBe(false);
+      expect(await isEnabled("registration_requires_validation")).toBe(false);
       // Et lookup DB exectue (pas de short-circuit).
       expect(mockPrisma.featureFlag.findMany).toHaveBeenCalled();
     });
@@ -151,9 +152,7 @@ describe("featureFlags service", () => {
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         flag("f-reg", "registration_requires_validation", true),
       ]);
-      expect(
-        await isEnabled("registration_requires_validation"),
-      ).toBe(true);
+      expect(await isEnabled("registration_requires_validation")).toBe(true);
     });
 
     it('accepts "1" as a truthy value for FEATURE_FLAGS_FORCE_ENABLED', async () => {
@@ -278,7 +277,9 @@ describe("featureFlags service", () => {
       ]);
       await isEnabled("old");
 
-      mockPrisma.featureFlag.create.mockResolvedValue(flag("f2", "fresh", true));
+      mockPrisma.featureFlag.create.mockResolvedValue(
+        flag("f2", "fresh", true),
+      );
       await createFlag({ key: "fresh", enabled: true });
 
       mockPrisma.featureFlag.findMany.mockResolvedValueOnce([
@@ -295,9 +296,7 @@ describe("featureFlags service", () => {
       ]);
       expect(await isEnabled("beta")).toBe(false);
 
-      mockPrisma.featureFlag.update.mockResolvedValue(
-        flag("f1", "beta", true),
-      );
+      mockPrisma.featureFlag.update.mockResolvedValue(flag("f1", "beta", true));
       await updateFlag("f1", { enabled: true });
 
       mockPrisma.featureFlag.findMany.mockResolvedValueOnce([
@@ -340,6 +339,102 @@ describe("featureFlags service", () => {
         new Error("not found"),
       );
       await expect(removeUserOverride("f1", "user-1")).resolves.toBeUndefined();
+    });
+  });
+
+  describe("syncFlagsFromCode", () => {
+    it("creates every known flag when the DB is empty", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue([]);
+      mockPrisma.featureFlag.create.mockImplementation(
+        async ({ data }: { data: { key: string } }) =>
+          flag("new", data.key, false),
+      );
+
+      const result = await syncFlagsFromCode();
+
+      expect(result.total).toBe(KNOWN_FLAGS.length);
+      expect(result.created).toEqual(KNOWN_FLAGS.map((f) => f.key).sort());
+      expect(result.skipped).toEqual([]);
+      expect(mockPrisma.featureFlag.create).toHaveBeenCalledTimes(
+        KNOWN_FLAGS.length,
+      );
+      // Les flags sont créés désactivés : jamais d'activation auto en prod.
+      for (const call of mockPrisma.featureFlag.create.mock.calls) {
+        expect(call[0].data.enabled).toBe(false);
+      }
+    });
+
+    it("only creates flags missing from the DB and skips existing ones", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue(
+        KNOWN_FLAGS.filter((f) => f.key !== NUFFLE_COACH_FLAG).map((f, i) =>
+          flag(`f${i}`, f.key, false),
+        ),
+      );
+      mockPrisma.featureFlag.create.mockResolvedValue(
+        flag("new", NUFFLE_COACH_FLAG, false),
+      );
+
+      const result = await syncFlagsFromCode();
+
+      expect(result.created).toEqual([NUFFLE_COACH_FLAG]);
+      expect(result.skipped).toContain(ONLINE_PLAY_FLAG);
+      expect(result.skipped).not.toContain(NUFFLE_COACH_FLAG);
+      expect(mockPrisma.featureFlag.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.featureFlag.create).toHaveBeenCalledWith({
+        data: {
+          key: NUFFLE_COACH_FLAG,
+          description: expect.any(String),
+          enabled: false,
+        },
+      });
+    });
+
+    it("is a no-op (no create) when all flags already exist", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue(
+        KNOWN_FLAGS.map((f, i) => flag(`f${i}`, f.key, false)),
+      );
+
+      const result = await syncFlagsFromCode();
+
+      expect(result.created).toEqual([]);
+      expect(result.skipped).toHaveLength(KNOWN_FLAGS.length);
+      expect(mockPrisma.featureFlag.create).not.toHaveBeenCalled();
+    });
+
+    it("invalidates the cache after creating new flags", async () => {
+      // Amorce le cache avec un état "vide" pour beta.
+      mockPrisma.featureFlag.findMany.mockResolvedValueOnce([]);
+      expect(await isEnabled("beta")).toBe(false);
+
+      // Sync crée un flag manquant → doit invalider le cache.
+      mockPrisma.featureFlag.findMany.mockResolvedValueOnce([]);
+      mockPrisma.featureFlag.create.mockResolvedValue(
+        flag("n", "anything", false),
+      );
+      await syncFlagsFromCode();
+
+      // Le prochain isEnabled doit retaper la DB (cache invalidé).
+      mockPrisma.featureFlag.findMany.mockResolvedValueOnce([
+        flag("f1", "beta", true),
+      ]);
+      expect(await isEnabled("beta")).toBe(true);
+    });
+  });
+
+  describe("KNOWN_FLAGS registry", () => {
+    it("has unique, non-empty keys and descriptions", () => {
+      const keys = KNOWN_FLAGS.map((f) => f.key);
+      expect(new Set(keys).size).toBe(keys.length);
+      for (const spec of KNOWN_FLAGS) {
+        expect(spec.key.length).toBeGreaterThan(0);
+        expect(spec.description.length).toBeGreaterThan(0);
+      }
+    });
+
+    it("includes the canonical flag constants", () => {
+      const keys = KNOWN_FLAGS.map((f) => f.key);
+      expect(keys).toContain(ONLINE_PLAY_FLAG);
+      expect(keys).toContain(NUFFLE_COACH_FLAG);
     });
   });
 

@@ -91,6 +91,61 @@ export const MAINTENANCE_MODE_FLAG = "maintenance_mode" as const;
 export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
   "registration_requires_validation" as const;
 
+/**
+ * Registre des feature flags connus du code. Source de vérité pour garder
+ * la table `FeatureFlag` synchronisée avec le code : le bouton
+ * "Synchroniser depuis le code" du panneau admin (POST
+ * /admin/feature-flags/sync) crée en base tout flag listé ici mais absent
+ * de la table.
+ *
+ * Convention : la synchro ne fait que *créer* les flags manquants (avec
+ * `enabled: false`). Elle ne touche jamais un flag déjà présent — ni son
+ * état global, ni sa description — pour ne pas activer une feature en prod
+ * par accident. L'activation reste un geste admin explicite (toggle ON).
+ *
+ * Quand tu ajoutes une nouvelle constante `XXX_FLAG`, ajoute-la aussi ici.
+ */
+export interface KnownFlagSpec {
+  readonly key: string;
+  readonly description: string;
+}
+
+export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
+  {
+    key: ONLINE_PLAY_FLAG,
+    description: "Jouer en ligne — matchmaking, ligues, leaderboard.",
+  },
+  {
+    key: AI_TRAINING_FLAG,
+    description: "Entraînement contre l'IA (practice + ai-next-move).",
+  },
+  {
+    key: LEAGUES_V2_UI_FLAG,
+    description:
+      "Ligues v2 — nouveaux écrans de gestion de ligue / saison (UI).",
+  },
+  {
+    key: NUFFLE_COACH_FLAG,
+    description:
+      "Nuffle Coach (fantasy NFL skinné BB) — UI publique : menu, sous-nav, pages user.",
+  },
+  {
+    key: NUFFLE_COACH_TEST_FLAG,
+    description:
+      "Nuffle Coach (test) — bypass snap-to-next-window. STRICTEMENT OFF en prod.",
+  },
+  {
+    key: MAINTENANCE_MODE_FLAG,
+    description:
+      "Kill-switch maintenance — 503 sur les routes non-essentielles.",
+  },
+  {
+    key: REGISTRATION_REQUIRES_VALIDATION_FLAG,
+    description:
+      "Kill-switch — exige une validation admin des nouveaux comptes.",
+  },
+];
+
 export interface FeatureFlagDTO {
   id: string;
   key: string;
@@ -268,6 +323,51 @@ export async function createFlag(
   })) as FeatureFlagDTO;
   invalidateFeatureFlagsCache();
   return created;
+}
+
+export interface SyncFlagsResult {
+  /** Clés créées en base par cette synchro. */
+  created: string[];
+  /** Clés déjà présentes (laissées intactes). */
+  skipped: string[];
+  /** Nombre total de flags connus du code. */
+  total: number;
+}
+
+/**
+ * Crée en base tout flag déclaré dans `KNOWN_FLAGS` mais absent de la
+ * table. Idempotent : les flags déjà présents ne sont ni activés ni
+ * modifiés. Permet de garder la BDD à jour vis-à-vis du code sans rejouer
+ * le seed complet.
+ */
+export async function syncFlagsFromCode(): Promise<SyncFlagsResult> {
+  const existing = (await prisma.featureFlag.findMany({
+    select: { key: true },
+  })) as Array<{ key: string }>;
+  const existingKeys = new Set(existing.map((f) => f.key));
+
+  const created: string[] = [];
+  const skipped: string[] = [];
+  for (const spec of KNOWN_FLAGS) {
+    if (existingKeys.has(spec.key)) {
+      skipped.push(spec.key);
+      continue;
+    }
+    await prisma.featureFlag.create({
+      data: { key: spec.key, description: spec.description, enabled: false },
+    });
+    created.push(spec.key);
+  }
+
+  if (created.length > 0) {
+    invalidateFeatureFlagsCache();
+  }
+
+  return {
+    created: created.sort(),
+    skipped: skipped.sort(),
+    total: KNOWN_FLAGS.length,
+  };
 }
 
 export interface UpdateFlagInput {
