@@ -74,6 +74,7 @@ export function statusForCode(code: string): number {
     case "ENTRY_NOT_IN_LEAGUE":
     case "CYCLE_ALREADY_STARTED":
     case "NO_JOINABLE_CYCLE":
+    case "WEEK_ALREADY_SETTLED":
       return 409;
 
     // 422 — validation metier
@@ -97,6 +98,7 @@ export function statusForCode(code: string): number {
     case "NO_ENTRIES":
     case "POOL_TOO_SMALL":
     case "INVALID_PLAYERS_PER_ENTRY":
+    case "INSUFFICIENT_ROSTER":
     case "PLAYER_NO_TEAM":
     case "INVALID_BB_RACE":
     case "INVALID_TEAM_COUNT":

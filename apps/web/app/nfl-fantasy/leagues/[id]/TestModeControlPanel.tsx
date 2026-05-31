@@ -146,7 +146,26 @@ export default function TestModeControlPanel({
               ? "Demarrage…"
               : "Demarrer la saison (draft → in_progress)"}
           </button>
-          {!isDraft && (
+          {status === "in_progress" && (
+            <button
+              onClick={() =>
+                callAction(
+                  "Repasser en draft",
+                  "/test/revert-to-draft",
+                  false,
+                )
+              }
+              disabled={busy !== null}
+              className="mt-2 ml-2 rounded-md border border-amber-500 bg-white px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              data-testid="test-revert-to-draft"
+              title="Repasse le championnat en draft (impossible une fois la premiere journee resolue)"
+            >
+              {busy === "Repasser en draft"
+                ? "Retour draft…"
+                : "Repasser en draft (in_progress → draft)"}
+            </button>
+          )}
+          {!isDraft && status !== "in_progress" && (
             <p className="mt-1 text-xs text-amber-900/60">
               Status actuel : {status}. Bouton dispo uniquement en
               &quot;draft&quot;.

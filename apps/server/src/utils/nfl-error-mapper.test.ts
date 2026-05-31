@@ -42,6 +42,7 @@ describe("statusForCode", () => {
       "REROLL_ALREADY_USED",
       "INDUCEMENT_LIMIT_REACHED",
       "LINEUP_LOCKED",
+      "WEEK_ALREADY_SETTLED",
     ];
     for (const c of conflicts) {
       expect(statusForCode(c)).toBe(409);
@@ -66,6 +67,7 @@ describe("statusForCode", () => {
       "NO_ENTRIES",
       "POOL_TOO_SMALL",
       "INVALID_PLAYERS_PER_ENTRY",
+      "INSUFFICIENT_ROSTER",
     ];
     for (const c of validations) {
       expect(statusForCode(c)).toBe(422);
@@ -154,6 +156,16 @@ describe("buildErrorResponse", () => {
         new NflFantasyDraftError("INVALID_PLAYERS_PER_ENTRY", "x"),
       )?.status,
     ).toBe(422);
+    expect(
+      buildErrorResponse(
+        new NflFantasyDraftError("INSUFFICIENT_ROSTER", "x"),
+      )?.status,
+    ).toBe(422);
+    expect(
+      buildErrorResponse(
+        new NflFantasyDraftError("WEEK_ALREADY_SETTLED", "x"),
+      )?.status,
+    ).toBe(409);
   });
 
   it("retourne null pour une erreur non typee", () => {

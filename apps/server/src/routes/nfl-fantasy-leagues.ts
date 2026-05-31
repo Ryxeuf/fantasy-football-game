@@ -36,7 +36,10 @@ import {
   DRAFT_BUDGET_MAX,
   DRAFT_BUDGET_MIN,
 } from "../services/nfl-fantasy-league";
-import { finalizeLeague } from "../services/nfl-fantasy-draft";
+import {
+  finalizeLeague,
+  revertLeagueToDraft,
+} from "../services/nfl-fantasy-draft";
 import { lockLineups } from "../services/nfl-fantasy-lineup";
 import { autoFillTestLineups } from "../services/nfl-fantasy-bot-lineup";
 import {
@@ -596,6 +599,27 @@ router.post(
     }
   },
 );
+
+/**
+ * POST /:id/test/revert-to-draft
+ *
+ * Repasse le championnat "in_progress" -> "draft" (mode test). Permet a
+ * l'owner de relancer la phase de draft/mercato tant qu'aucune journee
+ * n'est resolue. Garde cote service : status in_progress + aucun matchup
+ * settled (sinon WEEK_ALREADY_SETTLED 409).
+ */
+router.post("/:id/test/revert-to-draft", async (req, res) => {
+  try {
+    await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
+    const result = await revertLeagueToDraft({ leagueId: req.params.id });
+    res.json(result);
+  } catch (err) {
+    if (!sendNflError(res, err)) {
+      serverLog.error("[nfl-fantasy-leagues] test/revert-to-draft failed", err);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+});
 
 /**
  * POST /:id/test/settle-week

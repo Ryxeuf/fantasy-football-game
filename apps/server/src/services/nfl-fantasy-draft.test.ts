@@ -3,8 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     nflFantasyLeague: { findUnique: vi.fn(), update: vi.fn() },
-    nflFantasyRoster: { findMany: vi.fn() },
+    nflFantasyRoster: { findMany: vi.fn(), groupBy: vi.fn() },
+    nflFantasyMatchup: { count: vi.fn(), deleteMany: vi.fn() },
     nflPlayer: { findMany: vi.fn() },
+    $transaction: vi.fn((ops: ReadonlyArray<Promise<unknown>>) =>
+      Promise.all(ops),
+    ),
   },
 }));
 
@@ -43,8 +47,24 @@ import {
   MAX_PLAYERS_PER_ENTRY,
   MIN_PLAYERS_PER_ENTRY,
   NflFantasyDraftError,
+  revertLeagueToDraft,
   seededShuffle,
 } from "./nfl-fantasy-draft";
+
+/**
+ * Helper : mock groupBy roster pour donner `count` joueurs a chaque
+ * entryId fourni. Les entries absentes du record simulent 0 joueur
+ * drafte (absentes du resultat groupBy reel). Permet de satisfaire (ou
+ * non) le garde-fou >=11 de finalizeLeague.
+ */
+function mockRosterCounts(counts: Record<string, number>): void {
+  vi.mocked(prisma.nflFantasyRoster.groupBy).mockResolvedValue(
+    Object.entries(counts).map(([entryId, n]) => ({
+      entryId,
+      _count: { _all: n },
+    })) as never,
+  );
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -52,6 +72,11 @@ beforeEach(() => {
   // vi.mock factories, donc on les redeclare ici pour les mocks "always-on".
   vi.mocked(addPlayerToRoster).mockResolvedValue({} as never);
   vi.mocked(seedStartingRerolls).mockResolvedValue({ rerollsSeeded: 8 });
+  // resetAllMocks efface aussi l'implementation du $transaction declaree
+  // dans la factory vi.mock -> on la redeclare (passe-plat Promise.all).
+  vi.mocked(prisma.$transaction).mockImplementation((ops: unknown) =>
+    Promise.all(ops as ReadonlyArray<Promise<unknown>>),
+  );
 });
 
 // ────────────────────────────────────────────────────────────────────
@@ -220,6 +245,7 @@ describe("finalizeLeague", () => {
       status: "draft",
       entries: [{ id: "e1" }, { id: "e2" }, { id: "e3" }],
     } as never);
+    mockRosterCounts({ e1: 11, e2: 15, e3: 30 });
     vi.mocked(prisma.nflFantasyLeague.update).mockResolvedValue({} as never);
 
     const out = await finalizeLeague({ leagueId: "lg1" });
@@ -266,6 +292,101 @@ describe("finalizeLeague", () => {
     await expect(finalizeLeague({ leagueId: "lg1" })).rejects.toThrow(
       /sans entries/,
     );
+  });
+
+  it("INSUFFICIENT_ROSTER si un coach a moins de 11 joueurs", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      status: "draft",
+      entries: [{ id: "e1" }, { id: "e2" }],
+    } as never);
+    // e1 complet (11), e2 incomplet (10) -> blocage.
+    mockRosterCounts({ e1: 11, e2: 10 });
+
+    await expect(finalizeLeague({ leagueId: "lg1" })).rejects.toMatchObject({
+      code: "INSUFFICIENT_ROSTER",
+    });
+    // Ne doit PAS avoir transitionne le status.
+    expect(prisma.nflFantasyLeague.update).not.toHaveBeenCalled();
+  });
+
+  it("INSUFFICIENT_ROSTER si un coach n'a aucun joueur (absent du groupBy)", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      status: "draft",
+      entries: [{ id: "e1" }, { id: "e2" }],
+    } as never);
+    // e2 absent du resultat groupBy => 0 joueur => blocage.
+    mockRosterCounts({ e1: 12 });
+
+    await expect(finalizeLeague({ leagueId: "lg1" })).rejects.toMatchObject({
+      code: "INSUFFICIENT_ROSTER",
+    });
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// revertLeagueToDraft
+// ────────────────────────────────────────────────────────────────────
+
+describe("revertLeagueToDraft", () => {
+  it("repasse in_progress -> draft et supprime les matchups non-settled", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      status: "in_progress",
+    } as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(0 as never);
+    vi.mocked(prisma.nflFantasyMatchup.deleteMany).mockResolvedValue({
+      count: 6,
+    } as never);
+    vi.mocked(prisma.nflFantasyLeague.update).mockResolvedValue({} as never);
+
+    const out = await revertLeagueToDraft({ leagueId: "lg1" });
+
+    expect(out.status).toBe("draft");
+    expect(out.matchupsDeleted).toBe(6);
+    expect(prisma.nflFantasyMatchup.count).toHaveBeenCalledWith({
+      where: { leagueId: "lg1", settledAt: { not: null } },
+    });
+    expect(prisma.nflFantasyMatchup.deleteMany).toHaveBeenCalledWith({
+      where: { leagueId: "lg1" },
+    });
+    expect(prisma.nflFantasyLeague.update).toHaveBeenCalledWith({
+      where: { id: "lg1" },
+      data: { status: "draft" },
+    });
+  });
+
+  it("LEAGUE_NOT_FOUND si introuvable", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue(null);
+    await expect(
+      revertLeagueToDraft({ leagueId: "missing" }),
+    ).rejects.toMatchObject({ code: "LEAGUE_NOT_FOUND" });
+  });
+
+  it("INVALID_STATUS si pas en in_progress", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      status: "draft",
+    } as never);
+    await expect(
+      revertLeagueToDraft({ leagueId: "lg1" }),
+    ).rejects.toMatchObject({ code: "INVALID_STATUS" });
+  });
+
+  it("WEEK_ALREADY_SETTLED si une journee est resolue", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findUnique).mockResolvedValue({
+      id: "lg1",
+      status: "in_progress",
+    } as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1 as never);
+
+    await expect(
+      revertLeagueToDraft({ leagueId: "lg1" }),
+    ).rejects.toMatchObject({ code: "WEEK_ALREADY_SETTLED" });
+    // Ne doit ni supprimer ni transitionner.
+    expect(prisma.nflFantasyMatchup.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.nflFantasyLeague.update).not.toHaveBeenCalled();
   });
 });
 

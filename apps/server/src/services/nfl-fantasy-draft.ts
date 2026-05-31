@@ -35,7 +35,11 @@ export type NflFantasyDraftErrorCode =
   | "INVALID_STATUS"
   | "NO_ENTRIES"
   | "POOL_TOO_SMALL"
-  | "INVALID_PLAYERS_PER_ENTRY";
+  | "INVALID_PLAYERS_PER_ENTRY"
+  /** Au moins un coach a moins de MIN_PLAYERS_PER_ENTRY joueurs draftes. */
+  | "INSUFFICIENT_ROSTER"
+  /** Retour en draft impossible : une journee est deja resolue. */
+  | "WEEK_ALREADY_SETTLED";
 
 export class NflFantasyDraftError extends Error {
   constructor(
@@ -335,6 +339,30 @@ export async function finalizeLeague(
     );
   }
 
+  // Garde-fou (s'applique aussi en mode test) : tous les coachs doivent
+  // avoir au moins MIN_PLAYERS_PER_ENTRY joueurs draftes. Sinon ils ne
+  // peuvent pas composer de lineup valide (11 titulaires) et la saison
+  // est ingerable. Un seul round-trip via groupBy (cf. CLAUDE.md).
+  const entryIds = league.entries.map((e: { id: string }) => e.id);
+  const rosterCounts = await prisma.nflFantasyRoster.groupBy({
+    by: ["entryId"],
+    where: { entryId: { in: entryIds } },
+    _count: { _all: true },
+  });
+  const countByEntry = new Map<string, number>();
+  for (const c of rosterCounts) {
+    countByEntry.set(c.entryId, c._count?._all ?? 0);
+  }
+  const understaffed = entryIds.filter(
+    (id: string) => (countByEntry.get(id) ?? 0) < MIN_PLAYERS_PER_ENTRY,
+  );
+  if (understaffed.length > 0) {
+    throw new NflFantasyDraftError(
+      "INSUFFICIENT_ROSTER",
+      `${understaffed.length} coach(s) ont moins de ${MIN_PLAYERS_PER_ENTRY} joueurs draftes ; impossible de demarrer la saison (chaque coach doit pouvoir aligner 11 titulaires)`,
+    );
+  }
+
   let rerollsSeededTotal = 0;
   for (const e of league.entries) {
     const out = await seedStartingRerolls({ entryId: e.id });
@@ -360,6 +388,94 @@ export async function finalizeLeague(
     rerollsSeededTotal,
     matchupsCreated: matchupsTotals.created,
     weeksAlreadyPaired: matchupsTotals.alreadyPaired,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// revertLeagueToDraft
+// ────────────────────────────────────────────────────────────────────
+
+export interface RevertLeagueToDraftOpts {
+  readonly leagueId: string;
+}
+
+export interface RevertLeagueToDraftResult {
+  readonly leagueId: string;
+  readonly status: "draft";
+  /** Nb de matchups pre-generes supprimes lors du retour en draft. */
+  readonly matchupsDeleted: number;
+}
+
+/**
+ * Repasse un championnat `in_progress` -> `draft` (action mode test).
+ *
+ * Utile quand l'owner s'apercoit, juste apres avoir demarre, que la
+ * saison est mal configuree (roster incomplet, mauvais cycle, etc.) et
+ * veut relancer la phase de draft/mercato.
+ *
+ * Pre-conditions :
+ *   - League existe et status = "in_progress"
+ *   - AUCUNE journee resolue : aucun NflFantasyMatchup.settledAt non-null.
+ *     Une fois la 1ere journee resolue, des SPP/carrieres ont ete
+ *     attribues -> revenir en draft corromprait ces donnees.
+ *
+ * Side effects :
+ *   - delete des matchups pre-generes (tous non-settled, garanti par la
+ *     garde) pour permettre une regeneration propre au prochain demarrage
+ *   - update NflFantasyLeague.status -> "draft"
+ *   (les 2 dans une transaction atomique)
+ *
+ * Les rerolls de demarrage seedes par finalizeLeague sont conserves :
+ * seedStartingRerolls est idempotent, donc un nouveau demarrage ne les
+ * dupliquera pas.
+ *
+ * @throws NflFantasyDraftError
+ */
+export async function revertLeagueToDraft(
+  opts: RevertLeagueToDraftOpts,
+): Promise<RevertLeagueToDraftResult> {
+  const league = await prisma.nflFantasyLeague.findUnique({
+    where: { id: opts.leagueId },
+    select: { id: true, status: true },
+  });
+  if (!league) {
+    throw new NflFantasyDraftError(
+      "LEAGUE_NOT_FOUND",
+      `League ${opts.leagueId} introuvable`,
+    );
+  }
+  if (league.status !== "in_progress") {
+    throw new NflFantasyDraftError(
+      "INVALID_STATUS",
+      `League en status '${league.status}', retour en draft requiert 'in_progress'`,
+    );
+  }
+
+  const settledCount = await prisma.nflFantasyMatchup.count({
+    where: { leagueId: league.id, settledAt: { not: null } },
+  });
+  if (settledCount > 0) {
+    throw new NflFantasyDraftError(
+      "WEEK_ALREADY_SETTLED",
+      "Au moins une journee est deja resolue ; retour en draft impossible",
+    );
+  }
+
+  // Atomique : suppression des matchups + flip du status dans une seule
+  // transaction pour eviter une fenetre incoherente (matchups supprimes
+  // mais status encore in_progress) si le 2e write echoue.
+  const [deleted] = await prisma.$transaction([
+    prisma.nflFantasyMatchup.deleteMany({ where: { leagueId: league.id } }),
+    prisma.nflFantasyLeague.update({
+      where: { id: league.id },
+      data: { status: "draft" },
+    }),
+  ]);
+
+  return {
+    leagueId: league.id,
+    status: "draft",
+    matchupsDeleted: deleted.count,
   };
 }
 
