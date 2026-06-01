@@ -860,6 +860,7 @@ export async function handleRecordOfflineResult(
       winningsAway: body.winningsAway,
       dedicatedFansDeltaHome: body.dedicatedFansDeltaHome,
       dedicatedFansDeltaAway: body.dedicatedFansDeltaAway,
+      injuries: body.injuries,
     });
     if ("skipped" in result) {
       sendError(res, `Resultat non enregistre (${result.reason})`, 409);

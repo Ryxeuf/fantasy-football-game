@@ -220,4 +220,26 @@ describe("recordOfflineLeagueResult (option b)", () => {
     );
     expect(awayUpdate).toBeFalsy();
   });
+
+  it("applique les blessures durables (validation appartenance)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([{ id: "p1" }]); // p1 valide ; p9 hors equipes
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      injuries: [
+        { teamPlayerId: "p1", type: "niggling" },
+        { teamPlayerId: "p9", type: "dead" }, // ignore (pas dans les equipes)
+      ],
+    });
+    // p1 -> niggling + MNG ; p9 ignore
+    expect(m.tpUpdate).toHaveBeenCalledTimes(1);
+    expect(m.tpUpdate).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { missNextMatch: true, nigglingInjuries: { increment: 1 } },
+    });
+  });
 });

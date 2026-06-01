@@ -213,6 +213,25 @@ export const recordOfflineResultSchema = z.object({
   winningsAway: z.number().int().min(0).max(300000).optional(),
   dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional(),
   dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional(),
+  // Phase 3b — blessures durables par joueur (optionnel).
+  injuries: z
+    .array(
+      z.object({
+        teamPlayerId: z.string().min(1).max(64),
+        type: z.enum([
+          "mng",
+          "niggling",
+          "ma",
+          "st",
+          "ag",
+          "pa",
+          "av",
+          "dead",
+        ]),
+      }),
+    )
+    .max(40)
+    .optional(),
 });
 
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;

@@ -100,6 +100,7 @@ export function EnterResultModal({
   const [showStats, setShowStats] = useState(false);
   const [rosters, setRosters] = useState<PairingRosters | null>(null);
   const [stats, setStats] = useState<Record<string, PlayerStatEntry>>({});
+  const [injuries, setInjuries] = useState<Record<string, string>>({});
 
   const toggleStats = useCallback(async () => {
     const next = !showStats;
@@ -130,6 +131,10 @@ export function EnterResultModal({
     [],
   );
 
+  const updateInjury = useCallback((playerId: string, type: string) => {
+    setInjuries((prev) => ({ ...prev, [playerId]: type }));
+  }, []);
+
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
@@ -139,6 +144,9 @@ export function EnterResultModal({
       const playerStats = Object.entries(stats)
         .filter(([, s]) => hasAnyStat(s))
         .map(([teamPlayerId, s]) => ({ teamPlayerId, ...s }));
+      const injuryList = Object.entries(injuries)
+        .filter(([, type]) => type)
+        .map(([teamPlayerId, type]) => ({ teamPlayerId, type }));
       try {
         await apiRequest(`/leagues/pairings/${pairingId}/result`, {
           method: "POST",
@@ -156,6 +164,7 @@ export function EnterResultModal({
             ...(fansDeltaAway !== 0
               ? { dedicatedFansDeltaAway: fansDeltaAway }
               : {}),
+            ...(injuryList.length > 0 ? { injuries: injuryList } : {}),
           }),
         });
         onRecorded();
@@ -179,6 +188,7 @@ export function EnterResultModal({
       fansDeltaHome,
       fansDeltaAway,
       stats,
+      injuries,
       onRecorded,
       onClose,
       t.leagues.recordResultError,
@@ -287,11 +297,15 @@ export function EnterResultModal({
                   side={rosters.home}
                   stats={stats}
                   onChange={updateStat}
+                  injuries={injuries}
+                  onInjuryChange={updateInjury}
                 />
                 <PlayerStatsTable
                   side={rosters.away}
                   stats={stats}
                   onChange={updateStat}
+                  injuries={injuries}
+                  onInjuryChange={updateInjury}
                 />
               </div>
             ) : null}
@@ -392,9 +406,32 @@ interface PlayerStatsTableProps {
   side: RosterSide;
   stats: Record<string, PlayerStatEntry>;
   onChange: (playerId: string, patch: Partial<PlayerStatEntry>) => void;
+  injuries: Record<string, string>;
+  onInjuryChange: (playerId: string, type: string) => void;
 }
 
-function PlayerStatsTable({ side, stats, onChange }: PlayerStatsTableProps) {
+const INJURY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "", label: "—" },
+  { value: "mng", label: "MNG" },
+  { value: "niggling", label: "Nig." },
+  { value: "ma", label: "-MA" },
+  { value: "st", label: "-ST" },
+  { value: "ag", label: "-AG" },
+  { value: "pa", label: "-PA" },
+  { value: "av", label: "-AV" },
+  { value: "dead", label: "†" },
+];
+
+const STATS_GRID = "grid grid-cols-[1fr_repeat(4,1.8rem)_1.1rem_2.8rem] gap-1";
+
+function PlayerStatsTable({
+  side,
+  stats,
+  onChange,
+  injuries,
+  onInjuryChange,
+}: PlayerStatsTableProps) {
+  const { t } = useLanguage();
   return (
     <div className="min-w-0">
       <div className="text-sm font-semibold text-nuffle-anthracite mb-1 truncate">
@@ -404,13 +441,21 @@ function PlayerStatsTable({ side, stats, onChange }: PlayerStatsTableProps) {
         <div className="text-xs text-gray-400">—</div>
       ) : (
         <div className="space-y-1">
-          <div className="grid grid-cols-[1fr_repeat(4,2rem)_1.5rem] gap-1 text-[10px] uppercase text-gray-400 px-1">
+          <div
+            className={`${STATS_GRID} text-[10px] uppercase text-gray-400 px-1`}
+          >
             <span />
             <span className="text-center">TD</span>
             <span className="text-center">Cas</span>
             <span className="text-center">Pas</span>
             <span className="text-center">Int</span>
             <span className="text-center">MVP</span>
+            <span
+              className="text-center"
+              title={t.leagues.recordResultInjury}
+            >
+              ✚
+            </span>
           </div>
           {side.players.map((p) => {
             const s = stats[p.id] ?? EMPTY_STAT;
@@ -418,7 +463,7 @@ function PlayerStatsTable({ side, stats, onChange }: PlayerStatsTableProps) {
               <div
                 key={p.id}
                 data-testid={`stat-row-${p.id}`}
-                className="grid grid-cols-[1fr_repeat(4,2rem)_1.5rem] gap-1 items-center"
+                className={`${STATS_GRID} items-center`}
               >
                 <span className="text-xs text-gray-700 truncate" title={p.name}>
                   <span className="text-gray-400">#{p.number}</span> {p.name}
@@ -446,6 +491,18 @@ function PlayerStatsTable({ side, stats, onChange }: PlayerStatsTableProps) {
                   onChange={(e) => onChange(p.id, { mvp: e.target.checked })}
                   className="mx-auto"
                 />
+                <select
+                  data-testid={`stat-${p.id}-injury`}
+                  value={injuries[p.id] ?? ""}
+                  onChange={(e) => onInjuryChange(p.id, e.target.value)}
+                  className="w-full rounded border border-gray-300 text-[10px] px-0.5 py-0.5"
+                >
+                  {INJURY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             );
           })}

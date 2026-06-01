@@ -43,6 +43,28 @@ export interface OfflinePlayerStatInput {
   readonly mvp?: boolean;
 }
 
+/**
+ * Resultat de blessure durable BB applique a un joueur :
+ *  - `mng`      : Seriously Hurt -> rate le prochain match.
+ *  - `niggling` : Serious Injury -> +1 niggling (+ MNG).
+ *  - `ma/st/ag/pa/av` : Lasting Injury -> -1 carac correspondante (+ MNG).
+ *  - `dead`     : joueur tue.
+ */
+export type OfflineInjuryType =
+  | "mng"
+  | "niggling"
+  | "ma"
+  | "st"
+  | "ag"
+  | "pa"
+  | "av"
+  | "dead";
+
+export interface OfflineInjuryInput {
+  readonly teamPlayerId: string;
+  readonly type: OfflineInjuryType;
+}
+
 export interface RecordOfflineResultInput {
   readonly pairingId: string;
   /** TD inscrits par l'equipe a domicile. */
@@ -61,6 +83,8 @@ export interface RecordOfflineResultInput {
   /** Variation de dedicated fans (clampe 1-6) optionnelle par equipe. */
   readonly dedicatedFansDeltaHome?: number;
   readonly dedicatedFansDeltaAway?: number;
+  /** Blessures durables par joueur (optionnel). */
+  readonly injuries?: readonly OfflineInjuryInput[];
 }
 
 export type OfflineResultWinner = "home" | "away" | "draw";
@@ -150,6 +174,58 @@ async function applyOfflineEconomy(
     }
   }
   if (ops.length > 0) await prisma.$transaction(ops);
+}
+
+/** Map un type de blessure offline -> update Prisma TeamPlayer. */
+function injuryUpdateData(type: OfflineInjuryType): Record<string, unknown> {
+  switch (type) {
+    case "mng":
+      return { missNextMatch: true };
+    case "niggling":
+      return { missNextMatch: true, nigglingInjuries: { increment: 1 } };
+    case "ma":
+      return { missNextMatch: true, maReduction: { increment: 1 } };
+    case "st":
+      return { missNextMatch: true, stReduction: { increment: 1 } };
+    case "ag":
+      return { missNextMatch: true, agReduction: { increment: 1 } };
+    case "pa":
+      return { missNextMatch: true, paReduction: { increment: 1 } };
+    case "av":
+      return { missNextMatch: true, avReduction: { increment: 1 } };
+    case "dead":
+      return { dead: true };
+  }
+}
+
+/**
+ * Applique les blessures durables saisies a la main. Valide que chaque
+ * joueur appartient bien a l'une des deux equipes du match (securite).
+ * Retourne le nombre de joueurs blesses.
+ */
+async function applyOfflineInjuries(
+  homeTeamId: string,
+  awayTeamId: string,
+  injuries: readonly OfflineInjuryInput[],
+): Promise<number> {
+  const ids = injuries.map((i) => i.teamPlayerId);
+  const valid = await prisma.teamPlayer.findMany({
+    where: { id: { in: ids }, teamId: { in: [homeTeamId, awayTeamId] } },
+    select: { id: true },
+  });
+  const validSet = new Set(valid.map((p: { id: string }) => p.id));
+  const ops: Promise<unknown>[] = [];
+  for (const inj of injuries) {
+    if (!validSet.has(inj.teamPlayerId)) continue;
+    ops.push(
+      prisma.teamPlayer.update({
+        where: { id: inj.teamPlayerId },
+        data: injuryUpdateData(inj.type),
+      }),
+    );
+  }
+  if (ops.length > 0) await prisma.$transaction(ops);
+  return ops.length;
 }
 
 /**
@@ -343,6 +419,11 @@ export async function recordOfflineLeagueResult(
     { teamId: away.teamId, dedicatedFans: away.team.dedicatedFans },
     input,
   );
+
+  // Blessures durables saisies a la main.
+  if (input.injuries && input.injuries.length > 0) {
+    await applyOfflineInjuries(home.teamId, away.teamId, input.injuries);
+  }
 
   const winner: OfflineResultWinner =
     recorded.winner === "A" ? "home" : recorded.winner === "B" ? "away" : "draw";
