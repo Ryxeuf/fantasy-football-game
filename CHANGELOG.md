@@ -1,3 +1,13 @@
+## [1.168.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.167.0...v1.168.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **league:** blessures durables offline (Phase 3b) ([60328c4](https://github.com/Ryxeuf/fantasy-football-game/commit/60328c4d328959d5ef67d3d6374b255d5d6ca75f))
+* **league:** economie offline — winnings + dedicated fans (Phase 3a) ([a4da407](https://github.com/Ryxeuf/fantasy-football-game/commit/a4da4078a88ec51e2aa2f6e4ae62e449001a54bd))
+* **league:** polish offline — exclure de l'historique + purge missNextMatch (Phase 5) ([55f5ba1](https://github.com/Ryxeuf/fantasy-football-game/commit/55f5ba150f27a5cdc37605635c959d6456157efc))
+* **league:** saisie stats par joueur offline (SPP) — UI + endpoint rosters ([ec12da4](https://github.com/Ryxeuf/fantasy-football-game/commit/ec12da42ece2c27f62dd02cdd5fc19efa5366e2a))
+
 ## [1.167.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.166.0...v1.167.0) (2026-06-01)
 
 
