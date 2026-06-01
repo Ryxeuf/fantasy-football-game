@@ -1,11 +1,12 @@
 "use client";
-import { useCallback, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 // Workstream ligue offline — saisie manuelle d'un resultat de match joue
-// hors-ligne. Reservee au createur de la ligue. POST le score + casualties
-// par equipe (+ stats par joueur optionnelles pour le SPP) puis refresh.
+// hors-ligne. Reservee au createur de la ligue. POST (saisie) ou PUT (edition)
+// le score + casualties par equipe (+ stats par joueur / eco / blessures) puis
+// refresh. En mode edition, pre-remplit depuis le resultat deja enregistre.
 
 interface EnterResultModalProps {
   pairingId: string;
@@ -13,6 +14,21 @@ interface EnterResultModalProps {
   awayName: string;
   onClose: () => void;
   onRecorded: () => void;
+  /** "edit" pre-remplit le formulaire et PUT au lieu de POST. */
+  mode?: "create" | "edit";
+}
+
+interface ExistingResultInput {
+  scoreHome: number;
+  scoreAway: number;
+  casualtiesHome: number;
+  casualtiesAway: number;
+  winningsHome?: number;
+  winningsAway?: number;
+  dedicatedFansDeltaHome?: number;
+  dedicatedFansDeltaAway?: number;
+  playerStats?: Array<{ teamPlayerId: string } & PlayerStatEntry>;
+  injuries?: Array<{ teamPlayerId: string; type: string }>;
 }
 
 interface RosterPlayer {
@@ -84,8 +100,10 @@ export function EnterResultModal({
   awayName,
   onClose,
   onRecorded,
+  mode = "create",
 }: EnterResultModalProps) {
   const { t } = useLanguage();
+  const isEdit = mode === "edit";
   const [scoreHome, setScoreHome] = useState(0);
   const [scoreAway, setScoreAway] = useState(0);
   const [casualtiesHome, setCasualtiesHome] = useState(0);
@@ -102,24 +120,75 @@ export function EnterResultModal({
   const [stats, setStats] = useState<Record<string, PlayerStatEntry>>({});
   const [injuries, setInjuries] = useState<Record<string, string>>({});
 
+  const loadRosters = useCallback(async () => {
+    try {
+      const data = await apiRequest<PairingRosters>(
+        `/leagues/pairings/${pairingId}/rosters`,
+      );
+      setRosters(data);
+    } catch {
+      // Echec non bloquant : la saisie score-seul reste possible.
+      setRosters({
+        home: { teamId: "", teamName: homeName, players: [] },
+        away: { teamId: "", teamName: awayName, players: [] },
+      });
+    }
+  }, [pairingId, homeName, awayName]);
+
   const toggleStats = useCallback(async () => {
     const next = !showStats;
     setShowStats(next);
-    if (next && !rosters) {
+    if (next && !rosters) await loadRosters();
+  }, [showStats, rosters, loadRosters]);
+
+  // Mode edition : pre-remplit depuis le resultat deja enregistre. Si des
+  // stats/blessures existent, deplie la section et charge les rosters pour
+  // que le createur voie et conserve l'integralite de la saisie.
+  useEffect(() => {
+    if (!isEdit) return;
+    let cancelled = false;
+    (async () => {
       try {
-        const data = await apiRequest<PairingRosters>(
-          `/leagues/pairings/${pairingId}/rosters`,
+        const { input } = await apiRequest<{ input: ExistingResultInput }>(
+          `/leagues/pairings/${pairingId}/result`,
         );
-        setRosters(data);
+        if (cancelled) return;
+        setScoreHome(input.scoreHome);
+        setScoreAway(input.scoreAway);
+        setCasualtiesHome(input.casualtiesHome);
+        setCasualtiesAway(input.casualtiesAway);
+        setWinningsHome(input.winningsHome ?? 0);
+        setWinningsAway(input.winningsAway ?? 0);
+        setFansDeltaHome(input.dedicatedFansDeltaHome ?? 0);
+        setFansDeltaAway(input.dedicatedFansDeltaAway ?? 0);
+        const statMap: Record<string, PlayerStatEntry> = {};
+        for (const s of input.playerStats ?? []) {
+          statMap[s.teamPlayerId] = {
+            touchdowns: s.touchdowns,
+            casualties: s.casualties,
+            completions: s.completions,
+            interceptions: s.interceptions,
+            mvp: s.mvp,
+          };
+        }
+        const injMap: Record<string, string> = {};
+        for (const inj of input.injuries ?? []) {
+          injMap[inj.teamPlayerId] = inj.type;
+        }
+        setStats(statMap);
+        setInjuries(injMap);
+        if ((input.playerStats?.length ?? 0) > 0 || (input.injuries?.length ?? 0) > 0) {
+          setShowStats(true);
+          await loadRosters();
+        }
       } catch {
-        // Echec non bloquant : la saisie score-seul reste possible.
-        setRosters({
-          home: { teamId: "", teamName: homeName, players: [] },
-          away: { teamId: "", teamName: awayName, players: [] },
-        });
+        // Pre-remplissage best-effort : en cas d'echec, formulaire vide.
       }
-    }
-  }, [showStats, rosters, pairingId, homeName, awayName]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, pairingId, loadRosters]);
 
   const updateStat = useCallback(
     (playerId: string, patch: Partial<PlayerStatEntry>) => {
@@ -149,7 +218,7 @@ export function EnterResultModal({
         .map(([teamPlayerId, type]) => ({ teamPlayerId, type }));
       try {
         await apiRequest(`/leagues/pairings/${pairingId}/result`, {
-          method: "POST",
+          method: isEdit ? "PUT" : "POST",
           body: JSON.stringify({
             scoreHome,
             scoreAway,
@@ -178,6 +247,7 @@ export function EnterResultModal({
     },
     [
       submitting,
+      isEdit,
       pairingId,
       scoreHome,
       scoreAway,
@@ -208,7 +278,7 @@ export function EnterResultModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-nuffle-anthracite">
-          {t.leagues.recordResultTitle}
+          {isEdit ? t.leagues.editResultTitle : t.leagues.recordResultTitle}
         </h2>
         <p className="text-sm text-gray-600">
           {homeName} <span className="text-gray-400">vs</span> {awayName}

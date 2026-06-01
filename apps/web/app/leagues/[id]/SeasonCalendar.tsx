@@ -149,6 +149,14 @@ function PairingRow({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+
+  // Edition possible uniquement pour un resultat OFFLINE deja saisi
+  // (createur), pour corriger une erreur de saisie.
+  const canEditResult =
+    canRecordResult &&
+    pairing.status === "played" &&
+    pairing.match?.mode === "offline";
 
   const isOwnerOfHome =
     currentUserId !== null &&
@@ -233,6 +241,16 @@ function PairingRow({
             {t.leagues.pairingRecordResultButton}
           </button>
         ) : null}
+        {canEditResult ? (
+          <button
+            type="button"
+            data-testid={`pairing-edit-${pairing.id}`}
+            onClick={() => setShowEdit(true)}
+            className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 font-medium hover:bg-white"
+          >
+            {t.leagues.pairingEditResultButton}
+          </button>
+        ) : null}
       </div>
       {showResult ? (
         <EnterResultModal
@@ -240,6 +258,16 @@ function PairingRow({
           homeName={pairing.homeParticipant.team.name}
           awayName={pairing.awayParticipant.team.name}
           onClose={() => setShowResult(false)}
+          onRecorded={() => onResultRecorded?.()}
+        />
+      ) : null}
+      {showEdit ? (
+        <EnterResultModal
+          mode="edit"
+          pairingId={pairing.id}
+          homeName={pairing.homeParticipant.team.name}
+          awayName={pairing.awayParticipant.team.name}
+          onClose={() => setShowEdit(false)}
           onRecorded={() => onResultRecorded?.()}
         />
       ) : null}

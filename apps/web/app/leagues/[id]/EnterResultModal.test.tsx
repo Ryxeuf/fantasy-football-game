@@ -11,7 +11,7 @@ import { EnterResultModal } from "./EnterResultModal";
 
 const mockedApi = apiRequest as unknown as ReturnType<typeof vi.fn>;
 
-function renderModal() {
+function renderModal(mode?: "create" | "edit") {
   const onClose = vi.fn();
   const onRecorded = vi.fn();
   render(
@@ -22,6 +22,7 @@ function renderModal() {
         awayName="Elfes"
         onClose={onClose}
         onRecorded={onRecorded}
+        mode={mode}
       />
     </LanguageProvider>,
   );
@@ -165,5 +166,61 @@ describe("EnterResultModal", () => {
     ) as [string, RequestInit];
     const body = JSON.parse(postCall[1].body as string);
     expect(body.injuries).toEqual([{ teamPlayerId: "p1", type: "niggling" }]);
+  });
+
+  it("mode edition : pre-remplit depuis le resultat existant puis PUT", async () => {
+    mockedApi.mockImplementation((path: unknown) => {
+      if (typeof path === "string" && path.endsWith("/result")) {
+        // Le GET de pre-remplissage (pas de method) renvoie la saisie ; le
+        // PUT (avec method) renvoie un accuse.
+        return Promise.resolve({
+          input: {
+            scoreHome: 2,
+            scoreAway: 1,
+            casualtiesHome: 3,
+            casualtiesAway: 0,
+            winningsHome: 60000,
+            playerStats: [],
+            injuries: [],
+          },
+        });
+      }
+      return Promise.resolve({});
+    });
+    renderModal("edit");
+
+    // Pre-rempli : le champ TD home vaut 2.
+    await waitFor(() =>
+      expect((screen.getByTestId("result-td-home") as HTMLInputElement).value).toBe(
+        "2",
+      ),
+    );
+
+    // Corrige le score home 2 -> 4 puis sauvegarde.
+    fireEvent.change(screen.getByTestId("result-td-home"), {
+      target: { value: "4" },
+    });
+    fireEvent.click(screen.getByTestId("enter-result-submit"));
+
+    await waitFor(() =>
+      expect(
+        mockedApi.mock.calls.some(
+          (c) =>
+            (c[1] as RequestInit | undefined)?.method === "PUT" &&
+            typeof c[0] === "string" &&
+            c[0].endsWith("/result"),
+        ),
+      ).toBe(true),
+    );
+    const putCall = mockedApi.mock.calls.find(
+      (c) => (c[1] as RequestInit | undefined)?.method === "PUT",
+    ) as [string, RequestInit];
+    const body = JSON.parse(putCall[1].body as string);
+    expect(body).toMatchObject({
+      scoreHome: 4,
+      scoreAway: 1,
+      casualtiesHome: 3,
+      winningsHome: 60000,
+    });
   });
 });

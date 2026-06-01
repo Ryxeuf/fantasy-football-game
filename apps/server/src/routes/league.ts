@@ -35,7 +35,11 @@ import {
 } from "../services/league-scheduler";
 import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { recordForfeit } from "../services/league-forfeit";
-import { recordOfflineLeagueResult } from "../services/league-offline-result";
+import {
+  recordOfflineLeagueResult,
+  parseOfflineSnapshot,
+  OFFLINE_MATCH_MODE,
+} from "../services/league-offline-result";
 import { editOfflineLeagueResult } from "../services/league-offline-edit";
 import {
   computeSeasonRecap,
@@ -884,6 +888,53 @@ export async function handleRecordOfflineResult(
 }
 
 /**
+ * Workstream ligue offline (W-B4) — saisie brute d'un resultat offline deja
+ * enregistre, pour pre-remplir la modale d'edition. Createur only. 404 si le
+ * pairing n'a pas de resultat offline comptabilise.
+ */
+export async function handleGetOfflineResult(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: {
+      id: true,
+      round: { select: { seasonId: true } },
+      match: {
+        select: { mode: true, leagueScoredAt: true, offlineResultInput: true },
+      },
+    },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return;
+  }
+  if (!(await ensureLeagueCreator(userId, pairing.round.seasonId, res))) {
+    return;
+  }
+  const match = pairing.match as {
+    mode: string;
+    leagueScoredAt: Date | null;
+    offlineResultInput: unknown;
+  } | null;
+  if (!match || match.mode !== OFFLINE_MATCH_MODE || !match.leagueScoredAt) {
+    sendError(res, "Aucun resultat offline pour ce pairing", 404);
+    return;
+  }
+  const snapshot = parseOfflineSnapshot(match.offlineResultInput);
+  if (!snapshot) {
+    sendError(res, "Snapshot de resultat indisponible", 404);
+    return;
+  }
+  sendSuccess(res, { input: snapshot.input });
+}
+
+/**
  * Workstream ligue offline (W-B3) — EDITION d'un resultat deja saisi, en cas
  * d'erreur de saisie. Reservee au createur. Annule la saisie existante puis
  * re-saisit (cf. editOfflineLeagueResult). Refus (409) si un effet a deja ete
@@ -1146,6 +1197,13 @@ router.get(
   "/pairings/:pairingId/rosters",
   authUser,
   handleGetPairingRosters,
+);
+// W-B4 — saisie brute d'un resultat offline existant (createur only) pour
+// pre-remplir la modale d'edition.
+router.get(
+  "/pairings/:pairingId/result",
+  authUser,
+  handleGetOfflineResult,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // L2.C.1 — recap public de fin de saison : champion + awards.
