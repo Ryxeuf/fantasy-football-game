@@ -64,3 +64,24 @@
   outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }
+
+/* Export journee (W-C) : a l'impression, on isole la feuille de journee
+   (`.matchday-print-area`) et on masque tout le reste de la page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .matchday-print-area,
+  .matchday-print-area * {
+    visibility: visible;
+  }
+  .matchday-print-area {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 1.5rem;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { EnterResultModal } from "./EnterResultModal";
+import { MatchdayExport } from "./MatchdayExport";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -99,9 +100,15 @@ export function SeasonCalendar({
                   </div>
                 ) : null}
               </div>
-              <span className="text-xs uppercase tracking-wide bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                {statusLabel}
-              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs uppercase tracking-wide bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                  {statusLabel}
+                </span>
+                <MatchdayExport
+                  round={round}
+                  statusLabel={(s) => pairingStatusBadge(s, t).label}
+                />
+              </div>
             </div>
 
             {pairings.length === 0 ? (
