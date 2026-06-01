@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { EnterResultModal } from "./EnterResultModal";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -22,6 +23,10 @@ interface SeasonCalendarProps {
   rounds: LeagueRoundDetail[];
   /** userId du coach connecte (null si non authentifie). */
   currentUserId: string | null;
+  /** Vrai si le user peut saisir un resultat offline (createur de ligue). */
+  canRecordResult?: boolean;
+  /** Callback apres saisie d'un resultat (refresh standings/calendrier). */
+  onResultRecorded?: () => void;
 }
 
 function formatDate(iso: string | null, locale: string): string | null {
@@ -39,7 +44,12 @@ function formatDate(iso: string | null, locale: string): string | null {
   }
 }
 
-export function SeasonCalendar({ rounds, currentUserId }: SeasonCalendarProps) {
+export function SeasonCalendar({
+  rounds,
+  currentUserId,
+  canRecordResult,
+  onResultRecorded,
+}: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
   const statusLabels: Record<string, string> = {
@@ -108,6 +118,8 @@ export function SeasonCalendar({ rounds, currentUserId }: SeasonCalendarProps) {
                     key={pairing.id}
                     pairing={pairing}
                     currentUserId={currentUserId}
+                    canRecordResult={canRecordResult}
+                    onResultRecorded={onResultRecorded}
                   />
                 ))}
               </ul>
@@ -122,13 +134,21 @@ export function SeasonCalendar({ rounds, currentUserId }: SeasonCalendarProps) {
 interface PairingRowProps {
   pairing: LeaguePairingDetail;
   currentUserId: string | null;
+  canRecordResult?: boolean;
+  onResultRecorded?: () => void;
 }
 
-function PairingRow({ pairing, currentUserId }: PairingRowProps) {
+function PairingRow({
+  pairing,
+  currentUserId,
+  canRecordResult,
+  onResultRecorded,
+}: PairingRowProps) {
   const { t } = useLanguage();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
 
   const isOwnerOfHome =
     currentUserId !== null &&
@@ -202,7 +222,26 @@ function PairingRow({ pairing, currentUserId }: PairingRowProps) {
               : t.leagues.pairingViewMatchButton}
           </Link>
         ) : null}
+        {canRecordResult && pairing.status === "scheduled" ? (
+          <button
+            type="button"
+            data-testid={`pairing-record-${pairing.id}`}
+            onClick={() => setShowResult(true)}
+            className="text-xs px-2 py-1 rounded border border-nuffle-gold text-nuffle-anthracite font-medium hover:bg-nuffle-gold/10"
+          >
+            {t.leagues.pairingRecordResultButton}
+          </button>
+        ) : null}
       </div>
+      {showResult ? (
+        <EnterResultModal
+          pairingId={pairing.id}
+          homeName={pairing.homeParticipant.team.name}
+          awayName={pairing.awayParticipant.team.name}
+          onClose={() => setShowResult(false)}
+          onRecorded={() => onResultRecorded?.()}
+        />
+      ) : null}
     </li>
   );
 }

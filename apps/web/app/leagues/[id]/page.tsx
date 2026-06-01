@@ -442,6 +442,10 @@ export default function LeagueDetailPage() {
                 <SeasonCalendar
                   rounds={season.rounds}
                   currentUserId={currentUserId}
+                  canRecordResult={v2UiEnabled && isCreator}
+                  onResultRecorded={() => {
+                    if (selectedSeasonId) loadSeason(selectedSeasonId);
+                  }}
                 />
               </div>
 
