@@ -488,7 +488,11 @@ describe("Route: GET /match/my-matches (S25.5h)", () => {
 
     expect(mockPrisma.match.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { players: { some: { id: "user-1" } } },
+        where: {
+          players: { some: { id: "user-1" } },
+          // Les matchs "offline" (saisie manuelle ligue) sont exclus.
+          mode: { not: "offline" },
+        },
         take: 50,
       }),
     );

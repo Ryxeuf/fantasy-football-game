@@ -15,7 +15,7 @@ vi.mock("../prisma", () => {
     leaguePairing: { findUnique: vi.fn() },
     match: { create: vi.fn() },
     teamSelection: { createMany: vi.fn() },
-    teamPlayer: { findMany: vi.fn(), update: vi.fn() },
+    teamPlayer: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     team: { update: vi.fn() },
     $transaction: vi.fn(async (arg: unknown) => {
       if (typeof arg === "function") {
@@ -51,6 +51,7 @@ const m = {
   selCreate: prisma.teamSelection.createMany as MockFn,
   tpFindMany: prisma.teamPlayer.findMany as MockFn,
   tpUpdate: prisma.teamPlayer.update as MockFn,
+  tpUpdateMany: prisma.teamPlayer.updateMany as MockFn,
   teamUpdate: prisma.team.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
 };
@@ -86,6 +87,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.matchCreate.mockResolvedValue({ id: "m-1" });
     m.selCreate.mockResolvedValue({});
     m.tpUpdate.mockResolvedValue({});
+    m.tpUpdateMany.mockResolvedValue({ count: 0 });
     m.teamUpdate.mockResolvedValue({});
     m.tpFindMany.mockResolvedValue([]);
     m.record.mockResolvedValue({
@@ -241,5 +243,53 @@ describe("recordOfflineLeagueResult (option b)", () => {
       where: { id: "p1" },
       data: { missNextMatch: true, nigglingInjuries: { increment: 1 } },
     });
+  });
+
+  it("purge missNextMatch des 2 equipes (suspensions purgees par ce match)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+    });
+
+    // Les joueurs (non morts) des 2 equipes voient leur suspension purgee :
+    // ils viennent de disputer ce match offline. Mirror de match-start.ts.
+    expect(m.tpUpdateMany).toHaveBeenCalledWith({
+      where: {
+        teamId: { in: ["team-home", "team-away"] },
+        missNextMatch: true,
+        dead: false,
+      },
+      data: { missNextMatch: false },
+    });
+  });
+
+  it("purge AVANT d'appliquer les blessures (la suspension du match suivant survit)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([{ id: "p1" }]);
+    const order: string[] = [];
+    m.tpUpdateMany.mockImplementation(async () => {
+      order.push("clear");
+      return { count: 1 };
+    });
+    m.tpUpdate.mockImplementation(async () => {
+      order.push("injury");
+      return {};
+    });
+
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      injuries: [{ teamPlayerId: "p1", type: "niggling" }],
+    });
+
+    // purge (updateMany) puis re-pose la suspension via la blessure (update).
+    expect(order).toEqual(["clear", "injury"]);
   });
 });

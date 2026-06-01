@@ -10,14 +10,18 @@
  *  - pairing -> `played`, completion round/saison/playoffs,
  *  - sequence post-match (pendingChoices de level-up) via le matchId.
  *
- * Phase 2 : on accepte des stats PAR JOUEUR (TD/CAS/MVP/passes/interceptions)
- * appliquees AVANT `recordLeagueMatchResult` (SPP + totaux carriere +
- * matchesPlayed). Comme le SPP est persiste avant, la sequence post-match
- * voit le SPP a jour et propose les bons level-up.
+ * Stats PAR JOUEUR (TD/CAS/MVP/passes/interceptions) appliquees AVANT
+ * `recordLeagueMatchResult` (SPP + totaux carriere + matchesPlayed). Comme le
+ * SPP est persiste avant, la sequence post-match voit le SPP a jour et propose
+ * les bons level-up.
  *
- * Limites : winnings (tresorerie) / blessures durables / fan factor ne sont
- * pas encore appliques en offline (ils sont injectes par move-processor en
- * online) — phases ulterieures.
+ * Economie (winnings -> treasury, dedicated fans clampes 1-6) et blessures
+ * durables (mng/niggling/-carac/dead) sont aussi appliquees a la main.
+ *
+ * `missNextMatch` : les matchs offline ne passent pas par le game-engine qui,
+ * en online, efface ce flag au demarrage du match suivant. On le purge donc
+ * ici (`clearServedSuspensions`) pour les joueurs des 2 equipes avant de
+ * re-poser les suspensions issues des blessures de CE match.
  *
  * Idempotence : un pairing terminal ou un match deja compte est ignore.
  */
@@ -30,9 +34,10 @@ import {
   type PlayerMatchStats,
 } from "./spp-tracking";
 import { serverLog } from "../utils/server-log";
+import { OFFLINE_MATCH_MODE } from "./match-modes";
 
 /** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
-export const OFFLINE_MATCH_MODE = "offline";
+export { OFFLINE_MATCH_MODE };
 
 export interface OfflinePlayerStatInput {
   readonly teamPlayerId: string;
@@ -196,6 +201,33 @@ function injuryUpdateData(type: OfflineInjuryType): Record<string, unknown> {
     case "dead":
       return { dead: true };
   }
+}
+
+/**
+ * Purge le flag `missNextMatch` des joueurs (non morts) des 2 equipes : ils
+ * viennent de disputer ce match offline, donc toute suspension anterieure est
+ * consideree comme purgee.
+ *
+ * Mirror de `match-start.ts` cote online (qui efface `missNextMatch` au demarrage
+ * du match suivant). Les matchs offline ne passant PAS par le game-engine, sans
+ * ce purge un joueur suspendu en offline resterait suspendu a vie.
+ *
+ * IMPORTANT : a appeler AVANT `applyOfflineInjuries`, qui peut re-poser
+ * `missNextMatch` pour les blessures encaissees DANS ce match (suspension du
+ * match suivant).
+ */
+async function clearServedSuspensions(
+  homeTeamId: string,
+  awayTeamId: string,
+): Promise<void> {
+  await prisma.teamPlayer.updateMany({
+    where: {
+      teamId: { in: [homeTeamId, awayTeamId] },
+      missNextMatch: true,
+      dead: false,
+    },
+    data: { missNextMatch: false },
+  });
 }
 
 /**
@@ -419,6 +451,10 @@ export async function recordOfflineLeagueResult(
     { teamId: away.teamId, dedicatedFans: away.team.dedicatedFans },
     input,
   );
+
+  // Purge les suspensions purgees par ce match (joueurs des 2 equipes) AVANT
+  // d'appliquer les nouvelles blessures, qui peuvent re-poser missNextMatch.
+  await clearServedSuspensions(home.teamId, away.teamId);
 
   // Blessures durables saisies a la main.
   if (input.injuries && input.injuries.length > 0) {

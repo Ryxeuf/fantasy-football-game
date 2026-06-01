@@ -23,6 +23,7 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { MATCH_SECRET } from '../config';
 import { serverLog } from '../utils/server-log';
 import { sendError, sendSuccess } from '../utils/api-response';
+import { OFFLINE_MATCH_MODE } from '../services/match-modes';
 
 /**
  * S25.5j / S27.8.19 — `GET /match/details`
@@ -273,6 +274,9 @@ export async function handleListMyMatches(
     const matches = await prisma.match.findMany({
       where: {
         players: { some: { id: userId } },
+        // Exclut les matchs "offline" (saisie manuelle de ligue) : ils n'ont
+        // pas de turns/gameState et donneraient des cartes 0-0 vides.
+        mode: { not: OFFLINE_MATCH_MODE },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,

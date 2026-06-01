@@ -4,6 +4,7 @@ import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { isValidNafName } from "../services/naf-sync";
 import { getSupporterStatus } from "../services/supporter-status";
+import { OFFLINE_MATCH_MODE } from "../services/match-modes";
 
 const router = Router();
 
@@ -62,11 +63,15 @@ router.get("/matches", authUser, async (req: AuthenticatedRequest, res) => {
   const modeFilter = typeof req.query.mode === "string" ? req.query.mode : null;
   const where: {
     players: { some: { id: string } };
-    mode?: string;
+    mode?: string | { not: string };
     status?: string;
   } = { players: { some: { id: req.user!.id } } };
   if (modeFilter === "async" || modeFilter === "realtime") {
     where.mode = modeFilter;
+  } else {
+    // Les matchs "offline" (saisie manuelle de ligue) ne sont pas des matchs
+    // joues : on les exclut de l'historique perso sauf filtre mode explicite.
+    where.mode = { not: OFFLINE_MATCH_MODE };
   }
   if (typeof req.query.status === "string" && req.query.status.length > 0) {
     where.status = req.query.status;
