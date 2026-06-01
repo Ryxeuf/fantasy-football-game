@@ -5,7 +5,11 @@ import AuthBar from "../AuthBar";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { ONLINE_PLAY_FLAG, NUFFLE_COACH_FLAG } from "../lib/featureFlagKeys";
+import {
+  ONLINE_PLAY_FLAG,
+  NUFFLE_COACH_FLAG,
+  LEAGUE_FLAG,
+} from "../lib/featureFlagKeys";
 
 type DropdownId =
   | "competitions"
@@ -17,6 +21,7 @@ type DropdownId =
 export default function Header() {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const nuffleCoachEnabled = useFeatureFlag(NUFFLE_COACH_FLAG);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<DropdownId>(null);
@@ -149,10 +154,10 @@ export default function Header() {
             </button>
             {openDropdown === "competitions" && (
               <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
-                {/* Le hub /leagues est gate par OnlinePlayGate cote layout.
-                    Sans le flag, le lien menerait a un message "indisponible"
-                    decevant — on le cache pour eviter l'effet tunnel. */}
-                {onlinePlayEnabled && dropdownItem("/leagues", "🏅", t.nav.leagues)}
+                {/* Le hub /leagues est gate par LeagueGate (flag `league`)
+                    cote layout. Sans le flag, le lien menerait a un message
+                    "indisponible" — on le cache pour eviter l'effet tunnel. */}
+                {leagueEnabled && dropdownItem("/leagues", "🏅", t.nav.leagues)}
                 {dropdownItem("/cups", "🏆", t.nav.cups)}
                 {onlinePlayEnabled && dropdownItem("/leaderboard", "📊", t.nav.leaderboard)}
               </div>
@@ -302,8 +307,8 @@ export default function Header() {
                 🏆 {t.nav.competitions}
               </p>
               {/* Cf. desktop ci-dessus : on cache /leagues quand le flag
-                  online_play est OFF pour eviter le message "indisponible". */}
-              {onlinePlayEnabled && (
+                  `league` est OFF pour eviter le message "indisponible". */}
+              {leagueEnabled && (
                 <a
                   href="/leagues"
                   onClick={() => setMobileMenuOpen(false)}

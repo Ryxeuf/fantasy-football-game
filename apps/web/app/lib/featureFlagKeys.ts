@@ -7,6 +7,13 @@
 export const ONLINE_PLAY_FLAG = "online_play" as const;
 export const AI_TRAINING_FLAG = "ai_training" as const;
 /**
+ * Brique "Ligue" Blood Bowl — gate l'accès au hub /leagues et aux écrans
+ * de gestion de ligue. Flag dédié, distinct d'`online_play`, pour activer
+ * la ligue indépendamment de la partie en ligne. À garder synchronisé avec
+ * `apps/server/src/services/featureFlags.ts.LEAGUE_FLAG`.
+ */
+export const LEAGUE_FLAG = "league" as const;
+/**
  * Sprint Ligues v2 (PR2) — gate les nouveaux ecrans frontend de
  * gestion de ligue (creation, edition, admin saison, inscription,
  * calendrier interactif). Doit etre synchronise avec

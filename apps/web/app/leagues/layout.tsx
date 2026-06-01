@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { OnlinePlayGate } from "../components/OnlinePlayGate";
+import { LeagueGate } from "../components/LeagueGate";
 
 export default function LeaguesLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <OnlinePlayGate>{children}</OnlinePlayGate>;
+  return <LeagueGate>{children}</LeagueGate>;
 }

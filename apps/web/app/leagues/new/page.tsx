@@ -67,7 +67,7 @@ export default function NewLeaguePage() {
     // Le serveur applique aussi le gate (les routes API verifient
     // l'auth, pas le flag, mais sans flag UI on prefere ne meme pas
     // afficher la page). Redirection cote client pour rester coherent
-    // avec OnlinePlayGate.
+    // avec LeagueGate.
     if (!flagEnabled) {
       router.replace("/leagues");
     }

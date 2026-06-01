@@ -24,6 +24,14 @@ export const ONLINE_PLAY_FLAG = "online_play" as const;
 export const AI_TRAINING_FLAG = "ai_training" as const;
 
 /**
+ * Gate la brique "Ligue" Blood Bowl (gestion de ligue facon regles
+ * officielles : rosters, inscription, saisons, pairings, classements, ELO).
+ * Distinct de `online_play` : la ligue a son propre flag pour pouvoir etre
+ * activee independamment de la partie en ligne.
+ */
+export const LEAGUE_FLAG = "league" as const;
+
+/**
  * Sprint Ligues v2 (PR2) — gate les nouveaux ecrans frontend de gestion
  * de ligue : creation `/leagues/new`, edition draft, creation saison,
  * panneau admin saison (open/start/regenerate/close), bouton "Rejoindre
@@ -113,11 +121,16 @@ export interface KnownFlagSpec {
 export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
   {
     key: ONLINE_PLAY_FLAG,
-    description: "Jouer en ligne — matchmaking, ligues, leaderboard.",
+    description: "Jouer en ligne — matchmaking, leaderboard.",
   },
   {
     key: AI_TRAINING_FLAG,
     description: "Entraînement contre l'IA (practice + ai-next-move).",
+  },
+  {
+    key: LEAGUE_FLAG,
+    description:
+      "Ligue Blood Bowl — gestion de ligue (rosters, saisons, pairings, classements, ELO).",
   },
   {
     key: LEAGUES_V2_UI_FLAG,
