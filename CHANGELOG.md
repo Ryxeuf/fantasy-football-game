@@ -1,3 +1,10 @@
+## [1.166.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.165.0...v1.166.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **league:** saisie manuelle de resultat offline (backend) ([6487b79](https://github.com/Ryxeuf/fantasy-football-game/commit/6487b795c408ce04addb3cac2250fdc19ea5306e))
+
 ## [1.165.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.164.0...v1.165.0) (2026-06-01)
 
 
