@@ -21,6 +21,7 @@ import {
   getLeagueById,
   getSeasonById,
   computeSeasonStandings,
+  isSeasonEloRanked,
   withdrawParticipant,
   listThemedSeasons,
   parseAllowedRosters,
@@ -523,7 +524,16 @@ export async function handleGetStandings(
   const seasonId = req.params.seasonId;
   try {
     const standings = await computeSeasonStandings(seasonId);
-    sendSuccess(res, { seasonId, standings });
+    // L'ELO n'est affiche que s'il est un critere de classement effectif
+    // (present dans tieBreakRules) — masque par defaut, cf. neutralisation ELO.
+    const seasonRow = await prisma.leagueSeason.findUnique({
+      where: { id: seasonId },
+      select: { league: { select: { tieBreakRules: true } } },
+    });
+    const showSeasonElo = isSeasonEloRanked(
+      seasonRow?.league?.tieBreakRules ?? null,
+    );
+    sendSuccess(res, { seasonId, standings, showSeasonElo });
   } catch (e: unknown) {
     domainError(res, e);
   }

@@ -4,9 +4,14 @@ import type { LeagueParticipantDetail } from "./types";
 
 interface SeasonParticipantsProps {
   participants: LeagueParticipantDetail[];
+  /** Affiche l'indicateur ELO. Masque par defaut (ELO neutralise en ligue). */
+  showSeasonElo?: boolean;
 }
 
-export function SeasonParticipants({ participants }: SeasonParticipantsProps) {
+export function SeasonParticipants({
+  participants,
+  showSeasonElo = false,
+}: SeasonParticipantsProps) {
   const { t } = useLanguage();
 
   if (participants.length === 0) {
@@ -44,14 +49,20 @@ export function SeasonParticipants({ participants }: SeasonParticipantsProps) {
                 ? ` • ${p.team.owner.coachName}`
                 : ""}
             </div>
-            <div className="flex items-center justify-between mt-1 text-xs">
-              <span className="text-gray-500">ELO {p.seasonElo}</span>
-              {isWithdrawn ? (
-                <span className="uppercase tracking-wide bg-red-100 text-red-700 px-2 py-0.5 rounded">
-                  {t.leagues.participantStatusWithdrawn}
-                </span>
-              ) : null}
-            </div>
+            {(showSeasonElo || isWithdrawn) && (
+              <div className="flex items-center justify-between mt-1 text-xs">
+                {showSeasonElo ? (
+                  <span className="text-gray-500">ELO {p.seasonElo}</span>
+                ) : (
+                  <span />
+                )}
+                {isWithdrawn ? (
+                  <span className="uppercase tracking-wide bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                    {t.leagues.participantStatusWithdrawn}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </li>
         );
       })}

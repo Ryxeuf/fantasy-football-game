@@ -4,9 +4,11 @@ import type { StandingRow } from "./types";
 
 interface SeasonStandingsProps {
   rows: StandingRow[];
+  /** Affiche la colonne ELO. Masquee par defaut (ELO neutralise en ligue). */
+  showSeasonElo?: boolean;
 }
 
-export function SeasonStandings({ rows }: SeasonStandingsProps) {
+export function SeasonStandings({ rows, showSeasonElo = false }: SeasonStandingsProps) {
   const { t } = useLanguage();
 
   if (rows.length === 0) {
@@ -61,9 +63,11 @@ export function SeasonStandings({ rows }: SeasonStandingsProps) {
             <th className="px-2 py-2 text-center font-semibold">
               {t.leagues.standingsCasAgainst}
             </th>
-            <th className="px-2 py-2 text-center font-semibold">
-              {t.leagues.standingsElo}
-            </th>
+            {showSeasonElo && (
+              <th className="px-2 py-2 text-center font-semibold">
+                {t.leagues.standingsElo}
+              </th>
+            )}
             <th className="px-2 py-2 text-center font-semibold">
               {t.leagues.standingsPoints}
             </th>
@@ -100,7 +104,9 @@ export function SeasonStandings({ rows }: SeasonStandingsProps) {
               <td className="px-2 py-1 text-center">
                 {row.casualtiesAgainst}
               </td>
-              <td className="px-2 py-1 text-center">{row.seasonElo}</td>
+              {showSeasonElo && (
+                <td className="px-2 py-1 text-center">{row.seasonElo}</td>
+              )}
               <td className="px-2 py-1 text-center font-semibold text-nuffle-anthracite">
                 {row.points}
               </td>

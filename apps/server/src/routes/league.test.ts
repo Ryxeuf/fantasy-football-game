@@ -17,6 +17,7 @@ vi.mock("../services/league", () => ({
   getLeagueById: vi.fn(),
   getSeasonById: vi.fn(),
   computeSeasonStandings: vi.fn(),
+  isSeasonEloRanked: vi.fn(() => false),
   withdrawParticipant: vi.fn(),
   listThemedSeasons: vi.fn(),
   parseAllowedRosters: vi.fn((raw: string | null) =>
@@ -28,6 +29,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     team: { findUnique: vi.fn() },
     league: { findUnique: vi.fn() },
+    leagueSeason: { findUnique: vi.fn() },
   },
 }));
 
@@ -549,6 +551,8 @@ describe("Route: GET /leagues/seasons/:seasonId/standings", () => {
           expect.objectContaining({ teamId: "t1" }),
           expect.objectContaining({ teamId: "t2" }),
         ],
+        // ELO masque par defaut (non present dans tieBreakRules).
+        showSeasonElo: false,
       }),
     });
   });

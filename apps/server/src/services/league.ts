@@ -511,13 +511,25 @@ export const TIE_BREAK_SLUGS = [
 
 export type TieBreakSlug = (typeof TIE_BREAK_SLUGS)[number];
 
+// L'ELO n'est plus un critere de classement par defaut : non pertinent pour
+// une ligue fermee (cf. saisie offline). On le remplace par un departage
+// sportif (diff CAS). Une ligue peut le reactiver via `tieBreakRules`.
 const DEFAULT_TIE_BREAK_RULES: readonly TieBreakSlug[] = [
   "points",
   "td_diff",
   "td_for",
-  "season_elo",
+  "cas_diff",
   "name",
 ];
+
+/**
+ * Vrai si l'ELO saisonnier est un critere de classement effectif pour cette
+ * ligue (present dans `tieBreakRules`). Pilote l'affichage de la colonne ELO :
+ * masquee par defaut, "reactivable via reglages" en ajoutant `season_elo`.
+ */
+export function isSeasonEloRanked(raw: string | null): boolean {
+  return parseTieBreakRules(raw).includes("season_elo");
+}
 
 /**
  * Parse le JSON `tieBreakRules`. Si null / corrompu / contient des

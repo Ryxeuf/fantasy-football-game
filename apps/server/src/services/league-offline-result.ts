@@ -436,6 +436,9 @@ export async function recordOfflineLeagueResult(
     scoreB: input.scoreAway,
     casualtiesA: input.casualtiesHome,
     casualtiesB: input.casualtiesAway,
+    // L'offline (saisie manuelle, systeme de confiance) n'alimente pas l'ELO
+    // de ligue — non pertinent pour une ligue fermee (classement = points).
+    skipSeasonElo: true,
   });
 
   if ("skipped" in recorded) {

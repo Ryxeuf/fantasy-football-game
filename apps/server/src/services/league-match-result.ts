@@ -41,6 +41,13 @@ export interface RecordMatchResultInput {
   readonly scoreB: number;
   readonly casualtiesA: number;
   readonly casualtiesB: number;
+  /**
+   * Si true, ne fait PAS evoluer le `seasonElo` des participants. Utilise par
+   * les saisies offline : un resultat saisi a la main (systeme de confiance)
+   * ne doit pas alimenter un rating ELO. Le snapshot retourne alors des deltas
+   * nuls (oldRating === newRating).
+   */
+  readonly skipSeasonElo?: boolean;
 }
 
 export type MatchWinner = "A" | "B" | "draw";
@@ -176,14 +183,17 @@ export async function recordLeagueMatchResult(
   const placementB = isInPlacement(participantB);
   const seasonOutcome: SeasonMatchOutcome =
     winner === "A" ? "win" : winner === "B" ? "loss" : "draw";
-  const { deltaA: seasonDeltaA, deltaB: seasonDeltaB } =
-    calculateSeasonEloChange({
-      ratingA: participantA.seasonElo,
-      ratingB: participantB.seasonElo,
-      outcome: seasonOutcome,
-      inPlacementA: placementA,
-      inPlacementB: placementB,
-    });
+  // skipSeasonElo (saisie offline) : on neutralise le delta -> seasonElo
+  // inchange (l'ecriture `seasonElo: old` plus bas est alors un no-op).
+  const { deltaA: seasonDeltaA, deltaB: seasonDeltaB } = input.skipSeasonElo
+    ? { deltaA: 0, deltaB: 0 }
+    : calculateSeasonEloChange({
+        ratingA: participantA.seasonElo,
+        ratingB: participantB.seasonElo,
+        outcome: seasonOutcome,
+        inPlacementA: placementA,
+        inPlacementB: placementB,
+      });
   const newSeasonEloA = clampSeasonElo(participantA.seasonElo + seasonDeltaA);
   const newSeasonEloB = clampSeasonElo(participantB.seasonElo + seasonDeltaB);
 

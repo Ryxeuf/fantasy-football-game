@@ -204,6 +204,49 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
     );
   });
 
+  it("skipSeasonElo : ne fait pas evoluer le seasonElo (delta 0) mais applique points/td", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      { teamId: "team-A", userId: "user-A" },
+      { teamId: "team-B", userId: "user-B" },
+    ]);
+    mockPrisma.leagueParticipant.findUnique.mockImplementation(
+      async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+        id: `p-${args.where.seasonId_teamId.teamId}`,
+        teamId: args.where.seasonId_teamId.teamId,
+        seasonElo: 1000,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+      }),
+    );
+    mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+    const result = await recordLeagueMatchResult({
+      matchId: "match-1",
+      scoreA: 3,
+      scoreB: 1,
+      casualtiesA: 0,
+      casualtiesB: 0,
+      skipSeasonElo: true,
+    });
+
+    // Snapshot ELO neutralise : pas de delta, rating inchange.
+    expect(result).toMatchObject({
+      recorded: true,
+      seasonElo: { deltaA: 0, deltaB: 0, newRatingA: 1000, newRatingB: 1000 },
+    });
+
+    // Les compteurs sportifs s'appliquent toujours ; seasonElo ecrit = 1000 (no-op).
+    const updates = mockPrisma.leagueParticipant.update.mock.calls.map(
+      (c: { 0: { where: { id: string }; data: Record<string, unknown> } }[]) =>
+        c[0],
+    ) as Array<{ where: { id: string }; data: Record<string, unknown> }>;
+    const aUpdate = updates.find((u) => u.where.id === "p-team-A");
+    expect(aUpdate?.data.points).toEqual({ increment: 3 });
+    expect(aUpdate?.data.seasonElo).toBe(1000);
+  });
+
   it("awards drawPoints to both teams on a draw", async () => {
     mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
     mockPrisma.teamSelection.findMany.mockResolvedValue([

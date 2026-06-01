@@ -156,13 +156,14 @@ describe("recordOfflineLeagueResult (option b)", () => {
     expect(selData[0].teamId).toBe("team-home");
     expect(selData[1].teamId).toBe("team-away");
 
-    // Delegation avec les bons scores (A=home, B=away)
+    // Delegation avec les bons scores (A=home, B=away) + ELO neutralise
     expect(m.record).toHaveBeenCalledWith({
       matchId: "m-1",
       scoreA: 2,
       scoreB: 1,
       casualtiesA: 3,
       casualtiesB: 1,
+      skipSeasonElo: true,
     });
   });
 

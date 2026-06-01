@@ -43,6 +43,7 @@ export default function LeagueDetailPage() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
   const [season, setSeason] = useState<LeagueSeasonDetail | null>(null);
   const [standings, setStandings] = useState<StandingRow[]>([]);
+  const [showSeasonElo, setShowSeasonElo] = useState(false);
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [seasonError, setSeasonError] = useState<string | null>(null);
 
@@ -110,15 +111,19 @@ export default function LeagueDetailPage() {
           apiRequest<{ season: LeagueSeasonDetail }>(
             `/leagues/seasons/${seasonId}`,
           ),
-          apiRequest<{ seasonId: string; standings: StandingRow[] }>(
-            `/leagues/seasons/${seasonId}/standings`,
-          ),
+          apiRequest<{
+            seasonId: string;
+            standings: StandingRow[];
+            showSeasonElo?: boolean;
+          }>(`/leagues/seasons/${seasonId}/standings`),
         ]);
         setSeason(seasonRes.season);
         setStandings(standingsRes.standings);
+        setShowSeasonElo(standingsRes.showSeasonElo === true);
       } catch (e: unknown) {
         setSeason(null);
         setStandings([]);
+        setShowSeasonElo(false);
         setSeasonError(
           e instanceof Error ? e.message : t.leagues.seasonError,
         );
@@ -453,7 +458,7 @@ export default function LeagueDetailPage() {
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.standingsSection}
                 </h3>
-                <SeasonStandings rows={standings} />
+                <SeasonStandings rows={standings} showSeasonElo={showSeasonElo} />
               </div>
 
               {/* L2.C.3 — bracket de playoffs (rendu null si pas
@@ -465,7 +470,10 @@ export default function LeagueDetailPage() {
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.participantsSection}
                 </h3>
-                <SeasonParticipants participants={season.participants} />
+                <SeasonParticipants
+                  participants={season.participants}
+                  showSeasonElo={showSeasonElo}
+                />
               </div>
             </>
           ) : !seasonLoading && !seasonError ? (

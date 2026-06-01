@@ -14,6 +14,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseTieBreakRules,
   makeStandingsComparator,
+  isSeasonEloRanked,
   TIE_BREAK_SLUGS,
 } from "./league";
 import type { StandingRow } from "./league";
@@ -49,7 +50,7 @@ describe("parseTieBreakRules", () => {
       "points",
       "td_diff",
       "td_for",
-      "season_elo",
+      "cas_diff",
       "name",
     ]);
   });
@@ -59,7 +60,7 @@ describe("parseTieBreakRules", () => {
       "points",
       "td_diff",
       "td_for",
-      "season_elo",
+      "cas_diff",
       "name",
     ]);
   });
@@ -69,9 +70,13 @@ describe("parseTieBreakRules", () => {
       "points",
       "td_diff",
       "td_for",
-      "season_elo",
+      "cas_diff",
       "name",
     ]);
+  });
+
+  it("le defaut ne contient plus season_elo (ELO neutralise)", () => {
+    expect(parseTieBreakRules(null)).not.toContain("season_elo");
   });
 
   it("filters unknown slugs and keeps order of valid ones", () => {
@@ -99,7 +104,7 @@ describe("parseTieBreakRules", () => {
       "points",
       "td_diff",
       "td_for",
-      "season_elo",
+      "cas_diff",
       "name",
     ]);
   });
@@ -198,5 +203,21 @@ describe("makeStandingsComparator", () => {
     const b = row({ teamName: "B", points: 5 });
     // No "name" in rules -> equal -> sort stable, preserves input order.
     expect(cmp(a, b)).toBe(0);
+  });
+});
+
+describe("isSeasonEloRanked", () => {
+  it("faux par defaut (ELO masque)", () => {
+    expect(isSeasonEloRanked(null)).toBe(false);
+  });
+
+  it("vrai si season_elo est dans les regles (reactivable via reglages)", () => {
+    expect(
+      isSeasonEloRanked(JSON.stringify(["points", "season_elo", "name"])),
+    ).toBe(true);
+  });
+
+  it("faux si season_elo absent des regles configurees", () => {
+    expect(isSeasonEloRanked(JSON.stringify(["points", "wins"]))).toBe(false);
   });
 });
