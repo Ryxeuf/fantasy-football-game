@@ -27,6 +27,11 @@ services:
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - SERVER_API_BASE=http://nufflearena_server:8201
+      # Freeze Pro League (cf docs/pro-league-freeze-2026-06-01.md).
+      # PRO_LEAGUE_ENABLED : lu par le layout server-component (redirect).
+      # NEXT_PUBLIC_* : masque le lien onboarding (client). Degeler = "true".
+      - PRO_LEAGUE_ENABLED=false
+      - NEXT_PUBLIC_PRO_LEAGUE_ENABLED=false
       # Force polling so chokidar/Next picks up file changes through the
       # bind mount on macOS/Windows hosts where inotify events are lost.
       - CHOKIDAR_USEPOLLING=1
@@ -89,6 +94,9 @@ services:
       # host n'emet pas d'evenements inotify a travers le bind mount.
       - CHOKIDAR_USEPOLLING=1
       - TSX_WATCH_POLL=1
+      # Freeze Pro League : coupe les crons pro-league + 404 sur les routes
+      # /pro-league. Degeler = "true". Voir docs/pro-league-freeze-2026-06-01.md.
+      - PRO_LEAGUE_ENABLED=false
     volumes:
       - .:/app
       - /app/node_modules
