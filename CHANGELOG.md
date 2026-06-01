@@ -1,3 +1,16 @@
+## [1.164.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.163.0...v1.164.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **pro-league:** freeze cote web (redirect layout + lien onboarding) ([b80dd38](https://github.com/Ryxeuf/fantasy-football-game/commit/b80dd384ba62843972c5c419e5a18c27b83cb4ab))
+* **pro-league:** interrupteur de freeze cote serveur (PRO_LEAGUE_ENABLED) ([b6c1a29](https://github.com/Ryxeuf/fantasy-football-game/commit/b6c1a2935c76a2928685bc2ab35d28f8f185298a))
+
+
+### 📝 Documentation
+
+* **pro-league:** note de freeze 2026-06-01 ([f7dbfd5](https://github.com/Ryxeuf/fantasy-football-game/commit/f7dbfd58073054f42f793a71f8f7bef7b58487ef))
+
 ## [1.163.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.162.0...v1.163.0) (2026-06-01)
 
 
