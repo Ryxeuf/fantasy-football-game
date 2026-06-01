@@ -1,3 +1,22 @@
+## [1.163.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.162.0...v1.163.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **nfl-fantasy:** garde-fous transitions championnat (roster min + retour draft) ([#885](https://github.com/Ryxeuf/fantasy-football-game/issues/885)) ([64e5bdd](https://github.com/Ryxeuf/fantasy-football-game/commit/64e5bddc8139c6cc610b9e9408f06234a0c4200c))
+* **nfl-fantasy:** style de jeu (presets de composition) + UI mobile-first du lineup ([#884](https://github.com/Ryxeuf/fantasy-football-game/issues/884)) ([f603c6c](https://github.com/Ryxeuf/fantasy-football-game/commit/f603c6c965e59a7e9bac2871fc625e58a6ada3b5))
+
+
+### 🐛 Bug Fixes
+
+* **web:** align league API paths to /leagues plural ([376bde5](https://github.com/Ryxeuf/fantasy-football-game/commit/376bde524a051999bb1598df6d496b12df23a8ac)), closes [#271](https://github.com/Ryxeuf/fantasy-football-game/issues/271)
+* **web:** point orb fallback API base to nuffle-arena domain ([3d5df1f](https://github.com/Ryxeuf/fantasy-football-game/commit/3d5df1f4c6583ba16ec01fb3c377a254a1ad6018))
+
+
+### 📝 Documentation
+
+* document league API path /league -> /leagues fix ([f7ea4e6](https://github.com/Ryxeuf/fantasy-football-game/commit/f7ea4e6c054c86d554a45095d9593d0de5eb20bc))
+
 ## [1.162.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.161.0...v1.162.0) (2026-05-30)
 
 
