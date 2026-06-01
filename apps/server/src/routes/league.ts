@@ -867,6 +867,72 @@ export async function handleRecordOfflineResult(
   }
 }
 
+/**
+ * Workstream ligue offline (Phase 2b) — rosters des deux equipes d'un
+ * pairing, pour la saisie de stats par joueur (SPP). Reservee au createur
+ * de la ligue : `GET /team/:id` est owner-only, donc inutilisable ici.
+ */
+export async function handleGetPairingRosters(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: {
+      round: { select: { seasonId: true } },
+      homeParticipant: {
+        select: { teamId: true, team: { select: { name: true } } },
+      },
+      awayParticipant: {
+        select: { teamId: true, team: { select: { name: true } } },
+      },
+    },
+  });
+  if (!pairing || !pairing.homeParticipant || !pairing.awayParticipant) {
+    sendError(res, "Pairing introuvable", 404);
+    return;
+  }
+  if (!(await ensureLeagueCreator(userId, pairing.round.seasonId, res))) {
+    return;
+  }
+
+  const playerSelect = {
+    id: true,
+    name: true,
+    number: true,
+    position: true,
+    spp: true,
+  } as const;
+  const [homePlayers, awayPlayers] = await Promise.all([
+    prisma.teamPlayer.findMany({
+      where: { teamId: pairing.homeParticipant.teamId },
+      select: playerSelect,
+      orderBy: { number: "asc" },
+    }),
+    prisma.teamPlayer.findMany({
+      where: { teamId: pairing.awayParticipant.teamId },
+      select: playerSelect,
+      orderBy: { number: "asc" },
+    }),
+  ]);
+
+  sendSuccess(res, {
+    home: {
+      teamId: pairing.homeParticipant.teamId,
+      teamName: pairing.homeParticipant.team.name,
+      players: homePlayers,
+    },
+    away: {
+      teamId: pairing.awayParticipant.teamId,
+      teamName: pairing.awayParticipant.team.name,
+      players: awayPlayers,
+    },
+  });
+}
+
 // L2.B.5 — Coup de mecene (1x par saison ligue par equipe). Le coach
 // proprietaire de l'equipe declenche, on credite +100k po.
 async function handlePlayMecene(
@@ -998,6 +1064,13 @@ router.post(
   authUser,
   validate(recordOfflineResultSchema),
   handleRecordOfflineResult,
+);
+// Rosters des 2 equipes d'un pairing (createur only) pour la saisie de
+// stats par joueur.
+router.get(
+  "/pairings/:pairingId/rosters",
+  authUser,
+  handleGetPairingRosters,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // L2.C.1 — recap public de fin de saison : champion + awards.

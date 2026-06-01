@@ -589,6 +589,9 @@ export const translations = {
       recordResultSave: "Enregistrer",
       recordResultCancel: "Annuler",
       recordResultError: "Échec de l'enregistrement du résultat",
+      recordResultPlayerStatsToggle: "Stats par joueur (SPP)",
+      recordResultPlayerStatsHint:
+        "Optionnel — attribue le SPP et débloque les montées de niveau.",
       pairingDeadlineLabel: "Échéance",
       pairingsEmpty: "Aucune rencontre planifiée dans cette journée.",
     },
@@ -1611,6 +1614,9 @@ export const translations = {
       recordResultSave: "Save",
       recordResultCancel: "Cancel",
       recordResultError: "Failed to save the result",
+      recordResultPlayerStatsToggle: "Player stats (SPP)",
+      recordResultPlayerStatsHint:
+        "Optional — awards SPP and unlocks level-ups.",
       pairingDeadlineLabel: "Deadline",
       pairingsEmpty: "No pairing scheduled for this round.",
     },
