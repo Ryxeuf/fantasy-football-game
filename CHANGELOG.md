@@ -1,3 +1,10 @@
+## [1.165.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.164.0...v1.165.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **league:** gate la brique league derriere un flag dedie `league` ([fa53238](https://github.com/Ryxeuf/fantasy-football-game/commit/fa5323860f140e02f643f831da5e26308eaf878f))
+
 ## [1.164.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.163.0...v1.164.0) (2026-06-01)
 
 
