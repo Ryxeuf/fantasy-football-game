@@ -142,6 +142,74 @@ interface PairingForOffline {
 }
 
 /**
+ * Snapshot persiste sur `Match.offlineResultInput` : la saisie brute
+ * (normalisee — valeurs optionnelles resolues) + les pre-valeurs necessaires
+ * a la REVERSION exacte (dedicatedFans avant clamp). Consomme par
+ * `league-offline-edit` pour annuler puis re-appliquer une saisie.
+ */
+export interface OfflineResultSnapshot {
+  readonly input: {
+    readonly scoreHome: number;
+    readonly scoreAway: number;
+    readonly casualtiesHome: number;
+    readonly casualtiesAway: number;
+    readonly playerStats: readonly OfflinePlayerStatInput[];
+    readonly winningsHome: number;
+    readonly winningsAway: number;
+    readonly dedicatedFansDeltaHome: number;
+    readonly dedicatedFansDeltaAway: number;
+    readonly injuries: readonly OfflineInjuryInput[];
+  };
+  readonly dedicatedFansBefore: {
+    readonly home: number;
+    readonly away: number;
+  };
+}
+
+function buildOfflineSnapshot(
+  input: RecordOfflineResultInput,
+  fansBefore: { home: number; away: number },
+): OfflineResultSnapshot {
+  return {
+    input: {
+      scoreHome: input.scoreHome,
+      scoreAway: input.scoreAway,
+      casualtiesHome: input.casualtiesHome,
+      casualtiesAway: input.casualtiesAway,
+      playerStats: input.playerStats ?? [],
+      winningsHome: input.winningsHome ?? 0,
+      winningsAway: input.winningsAway ?? 0,
+      dedicatedFansDeltaHome: input.dedicatedFansDeltaHome ?? 0,
+      dedicatedFansDeltaAway: input.dedicatedFansDeltaAway ?? 0,
+      injuries: input.injuries ?? [],
+    },
+    dedicatedFansBefore: { home: fansBefore.home, away: fansBefore.away },
+  };
+}
+
+/**
+ * Parse tolerant du snapshot stocke : objet natif (PG JSONB), string JSON
+ * serialisee (sqlite mirror) ou null. Retourne null si illisible.
+ */
+export function parseOfflineSnapshot(
+  raw: unknown,
+): OfflineResultSnapshot | null {
+  if (raw == null) return null;
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof obj !== "object" || obj === null) return null;
+  const o = obj as Record<string, unknown>;
+  if (typeof o.input !== "object" || o.input === null) return null;
+  return obj as OfflineResultSnapshot;
+}
+
+/**
  * Applique l'economie post-match saisie a la main : winnings (treasury) et
  * variation de dedicated fans (clampe 1-6, regle BB). Tout est optionnel.
  */
@@ -380,6 +448,13 @@ export async function recordOfflineLeagueResult(
   const ownerIds = Array.from(
     new Set([home.team.ownerId, away.team.ownerId].filter(Boolean)),
   );
+  // Snapshot de la saisie brute + pre-valeurs (dedicatedFans avant clamp)
+  // persiste sur le Match pour permettre la REVERSION exacte lors d'une
+  // edition de resultat (cf. league-offline-edit).
+  const offlineSnapshot = buildOfflineSnapshot(input, {
+    home: home.team.dedicatedFans,
+    away: away.team.dedicatedFans,
+  });
   const base = Date.now();
   const match = await prisma.$transaction(async (tx: typeof prisma) => {
     const created = await tx.match.create({
@@ -391,6 +466,7 @@ export async function recordOfflineLeagueResult(
         leagueSeasonId: pairing.round.seasonId,
         leagueRoundId: pairing.round.id,
         leaguePairingId: pairing.id,
+        offlineResultInput: offlineSnapshot,
       },
       select: { id: true },
     });

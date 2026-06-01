@@ -335,6 +335,11 @@ model Match {
   // reporte au classement, on ne le comptabilise plus, meme si la route/hook
   // est rejoue.
   leagueScoredAt          DateTime?
+  // Saisie offline brute (RecordOfflineResultInput) + valeurs pre-applique
+  // (ex: dedicatedFans avant clamp) necessaires a la REVERSION exacte lors
+  // d'une edition de resultat. Set uniquement sur les Match `mode:"offline"`,
+  // null pour les matchs joues en ligne.
+  offlineResultInput      Json?
   // L2.B.1 — Sequence post-match Jeu en Ligue. 1 sequence par match
   // de ligue, cree apres recordLeagueMatchResult pour gerer le
   // applique-une-fois des winnings, SPP cumules, lasting injuries,

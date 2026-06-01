@@ -150,6 +150,12 @@ describe("recordOfflineLeagueResult (option b)", () => {
     expect(matchData.leaguePairingId).toBe("pair-1");
     expect(matchData.leagueSeasonId).toBe("season-1");
 
+    // Snapshot de la saisie brute + pre-valeurs persiste pour la reversion.
+    expect(matchData.offlineResultInput).toMatchObject({
+      input: { scoreHome: 2, scoreAway: 1, casualtiesHome: 3, casualtiesAway: 1 },
+      dedicatedFansBefore: { home: 1, away: 6 },
+    });
+
     // 2 TeamSelection (home puis away)
     const selData = m.selCreate.mock.calls[0][0].data;
     expect(selData).toHaveLength(2);

@@ -280,6 +280,8 @@ model Match {
   leaguePairingId         String?                  @unique
   leaguePairing           LeaguePairing?           @relation(fields: [leaguePairingId], references: [id])
   leagueScoredAt          DateTime?
+  // Saisie offline brute + pre-valeurs pour la reversion (edition de resultat).
+  offlineResultInput      Json?
   // L2.B.1 — Sprint Ligues v2 PR4 : sequence post-match Jeu en Ligue.
   leaguePostMatchSequence LeaguePostMatchSequence?
 

@@ -264,7 +264,8 @@ exports.Prisma.MatchScalarFieldEnum = {
   leagueSeasonId: 'leagueSeasonId',
   leagueRoundId: 'leagueRoundId',
   leaguePairingId: 'leaguePairingId',
-  leagueScoredAt: 'leagueScoredAt'
+  leagueScoredAt: 'leagueScoredAt',
+  offlineResultInput: 'offlineResultInput'
 };
 
 exports.Prisma.TurnScalarFieldEnum = {
@@ -1038,12 +1039,12 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.JsonNullValueInput = {
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
