@@ -1,7 +1,7 @@
 // Détermine dynamiquement l'URL de l'API.
 // Ordre de priorité:
 // 1) NEXT_PUBLIC_API_BASE (si fourni)
-// 2) Si on est sur un domaine orb.local: utilise le service server en HTTPS (port 8201)
+// 2) Si on est sur un domaine orb.local: utilise le service server en HTTPS (via Traefik, 443)
 // 3) Si on est en production (nufflearena.fr): utilise les routes API Next.js
 // 4) Fallback local: http://localhost:8201
 const inferApiBase = () => {
@@ -13,8 +13,9 @@ const inferApiBase = () => {
     const isOrb =
       host.endsWith(".orb.local") || hostname.endsWith(".orb.local");
     if (isOrb) {
-      // Domaine du service API exposé dans OrbStack (voir capture: server ... ports 8201/8202)
-      return "https://server.fantasy-football-game.orb.local:8201";
+      // Domaine du service API exposé dans OrbStack (Traefik route le HTTPS
+      // vers le container `server`, sans port explicite).
+      return "https://server.nuffle-arena.orb.local";
     }
   }
   return "http://localhost:8201";
