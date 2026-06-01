@@ -1,3 +1,21 @@
+## [1.169.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.168.0...v1.169.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **league:** edition d'un resultat offline (service + route, W-B3) ([53d679f](https://github.com/Ryxeuf/fantasy-football-game/commit/53d679ff1ce2911d0d30851d4ec8e243e5b9bb30))
+* **league:** export d'une journee (impression + PDF, W-C) ([14ef6a3](https://github.com/Ryxeuf/fantasy-football-game/commit/14ef6a3f35361e7984eb3a53ae37917f576dcb57))
+* **league:** neutraliser l'ELO en ligue (offline + affichage) ([e413d8e](https://github.com/Ryxeuf/fantasy-football-game/commit/e413d8edcb950e488980c3f526f7f68f2ceeb044))
+* **league:** persister la saisie offline brute pour la reversion (W-B1) ([85bd7f5](https://github.com/Ryxeuf/fantasy-football-game/commit/85bd7f57a43bc383d2d774c5024417df1c1fabd8))
+* **league:** service de reversion d'un resultat offline (W-B2) ([7603f1a](https://github.com/Ryxeuf/fantasy-football-game/commit/7603f1ac26af36a28dd23a6a13ee980591b2e588))
+* **league:** UI d'edition d'un resultat offline (W-B4) ([cb7f571](https://github.com/Ryxeuf/fantasy-football-game/commit/cb7f5710431b71628af027089749bcb2815fcccf))
+
+
+### 📝 Documentation
+
+* **league:** edition reversible offline (W-B) ([d42bf92](https://github.com/Ryxeuf/fantasy-football-game/commit/d42bf92783a6610985f1246e8cbefc40890ebdd9))
+* **league:** export journee (W-C) ([90cc52a](https://github.com/Ryxeuf/fantasy-football-game/commit/90cc52ae4a2f7e2a4ebbf7ad5e9be46aba742c7e))
+
 ## [1.168.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.167.0...v1.168.0) (2026-06-01)
 
 
