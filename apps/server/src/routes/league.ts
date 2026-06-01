@@ -855,6 +855,7 @@ export async function handleRecordOfflineResult(
       scoreAway: body.scoreAway,
       casualtiesHome: body.casualtiesHome,
       casualtiesAway: body.casualtiesAway,
+      playerStats: body.playerStats,
     });
     if ("skipped" in result) {
       sendError(res, `Resultat non enregistre (${result.reason})`, 409);

@@ -211,7 +211,8 @@ function PairingRow({
           </button>
         ) : null}
         {(pairing.status === "in_progress" || pairing.status === "played") &&
-        pairing.match ? (
+        pairing.match &&
+        pairing.match.mode !== "offline" ? (
           <Link
             href={`/play/${pairing.match.id}`}
             data-testid={`pairing-view-${pairing.id}`}

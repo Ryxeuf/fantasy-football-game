@@ -3,34 +3,45 @@
  * hors-ligne (tabletop), facon regles officielles BB / sites type
  * mordorbihan.
  *
- * Permet de comptabiliser un resultat (score TD + casualties par equipe)
- * SANS passer par le game-engine, en miroir de `recordForfeit`, mais avec
- * un vrai score saisi a la main. Met a jour les compteurs materialises du
- * LeagueParticipant (W/D/L, points, TD, CAS) ET l'ELO saisonnier (a la
- * difference d'un forfait qui reste neutre cote ELO), bascule le pairing
- * en `played`, puis complete round / saison / playoffs via le meme helper
- * que le forfait.
+ * Option (b) : on materialise un Match "offline" synthetique depuis le
+ * pairing (mode `offline`, status `completed`, sans game-engine) puis on
+ * REUTILISE tout le pipeline existant `recordLeagueMatchResult` :
+ *  - compteurs LeagueParticipant (W/D/L, points, TD, CAS) + ELO saisonnier,
+ *  - pairing -> `played`, completion round/saison/playoffs,
+ *  - sequence post-match (pendingChoices de level-up) via le matchId.
  *
- * Limites (Phase 1) : pas de stats par joueur (SPP / level-up), ni de
- * winnings / blessures / fan factor — ces etapes necessitent la sequence
- * post-match alimentee par des stats joueur et seront ajoutees dans une
- * phase ulterieure. Ici on couvre le coeur : standings + ELO + avancement
- * du calendrier, suffisant pour suivre une saison entiere en offline.
+ * Phase 2 : on accepte des stats PAR JOUEUR (TD/CAS/MVP/passes/interceptions)
+ * appliquees AVANT `recordLeagueMatchResult` (SPP + totaux carriere +
+ * matchesPlayed). Comme le SPP est persiste avant, la sequence post-match
+ * voit le SPP a jour et propose les bons level-up.
  *
- * Idempotence : un pairing deja terminal (`played` / `forfeit_*` /
- * `cancelled`) ou un match deja comptabilise (`leagueScoredAt`) est ignore.
+ * Limites : winnings (tresorerie) / blessures durables / fan factor ne sont
+ * pas encore appliques en offline (ils sont injectes par move-processor en
+ * online) — phases ulterieures.
+ *
+ * Idempotence : un pairing terminal ou un match deja compte est ignore.
  */
 
 import { prisma } from "../prisma";
+import { recordLeagueMatchResult } from "./league-match-result";
 import {
-  calculateSeasonEloChange,
-  clampSeasonElo,
-  isInPlacement,
-  type SeasonMatchOutcome,
-} from "./season-elo";
-import { maybeCompleteRoundAndSeason } from "./league-forfeit";
-import { advancePlayoffsWithWinner } from "./league-playoffs";
+  calculatePlayerSPP,
+  loadLeagueSPPContext,
+  type PlayerMatchStats,
+} from "./spp-tracking";
 import { serverLog } from "../utils/server-log";
+
+/** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
+export const OFFLINE_MATCH_MODE = "offline";
+
+export interface OfflinePlayerStatInput {
+  readonly teamPlayerId: string;
+  readonly touchdowns?: number;
+  readonly casualties?: number;
+  readonly completions?: number;
+  readonly interceptions?: number;
+  readonly mvp?: boolean;
+}
 
 export interface RecordOfflineResultInput {
   readonly pairingId: string;
@@ -42,6 +53,8 @@ export interface RecordOfflineResultInput {
   readonly casualtiesHome: number;
   /** Casualties infligees par l'equipe a l'exterieur. */
   readonly casualtiesAway: number;
+  /** Stats par joueur (optionnel) -> SPP + totaux carriere + level-up. */
+  readonly playerStats?: readonly OfflinePlayerStatInput[];
 }
 
 export type OfflineResultWinner = "home" | "away" | "draw";
@@ -50,7 +63,9 @@ export type RecordOfflineResultOutcome =
   | {
       readonly recorded: true;
       readonly pairingId: string;
+      readonly matchId: string;
       readonly winner: OfflineResultWinner;
+      readonly sppPlayersUpdated: number;
     }
   | {
       readonly skipped: true;
@@ -59,31 +74,84 @@ export type RecordOfflineResultOutcome =
         | "pairing-not-terminal-eligible"
         | "match-already-scored"
         | "participant-missing"
-        | "season-missing";
+        | "record-failed";
     };
 
 const NON_TERMINAL = new Set(["scheduled", "in_progress"]);
 
-interface ParticipantEloState {
+interface PairingForOffline {
   id: string;
-  seasonElo: number;
-  wins: number;
-  draws: number;
-  losses: number;
+  status: string;
+  match: { id: string; leagueScoredAt: Date | null } | null;
+  round: { id: string; seasonId: string };
+  homeParticipant: {
+    id: string;
+    teamId: string;
+    team: { ownerId: string; name: string; roster: string };
+  } | null;
+  awayParticipant: {
+    id: string;
+    teamId: string;
+    team: { ownerId: string; name: string; roster: string };
+  } | null;
 }
 
-async function loadBareme(
-  seasonId: string,
-): Promise<{ winPoints: number; drawPoints: number; lossPoints: number } | null> {
-  const row = await prisma.leagueSeason.findUnique({
-    where: { id: seasonId },
-    select: {
-      league: {
-        select: { winPoints: true, drawPoints: true, lossPoints: true },
-      },
-    },
+/**
+ * Applique le SPP des stats joueur saisies a la main. Retourne le nombre de
+ * joueurs mis a jour. Le modifier "bagarreurs brutaux" est resolu par equipe
+ * via le roster (meme regle que les matchs joues).
+ */
+async function applyOfflinePlayerSPP(
+  homeTeamId: string,
+  awayTeamId: string,
+  homeRoster: string,
+  awayRoster: string,
+  playerStats: readonly OfflinePlayerStatInput[],
+): Promise<number> {
+  const context = await loadLeagueSPPContext(prisma, {
+    isLeagueMatch: true,
+    teamARoster: homeRoster,
+    teamBRoster: awayRoster,
   });
-  return row?.league ?? null;
+  const ids = playerStats.map((s) => s.teamPlayerId);
+  const players = await prisma.teamPlayer.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, teamId: true },
+  });
+  const teamById = new Map<string, string>(
+    players.map((p: { id: string; teamId: string }) => [p.id, p.teamId]),
+  );
+
+  const updates: Promise<unknown>[] = [];
+  for (const s of playerStats) {
+    const teamId = teamById.get(s.teamPlayerId);
+    if (teamId !== homeTeamId && teamId !== awayTeamId) continue;
+    const modifier = teamId === homeTeamId ? context.teamA : context.teamB;
+    const stats: PlayerMatchStats = {
+      touchdowns: s.touchdowns ?? 0,
+      casualties: s.casualties ?? 0,
+      completions: s.completions ?? 0,
+      interceptions: s.interceptions ?? 0,
+      mvp: s.mvp ?? false,
+    };
+    const earned = calculatePlayerSPP(stats, modifier);
+    updates.push(
+      prisma.teamPlayer.update({
+        where: { id: s.teamPlayerId },
+        data: {
+          spp: { increment: earned },
+          totalTouchdowns: { increment: stats.touchdowns },
+          totalCasualties: { increment: stats.casualties },
+          totalCompletions: { increment: stats.completions },
+          totalInterceptions: { increment: stats.interceptions },
+          totalMvpAwards: { increment: stats.mvp ? 1 : 0 },
+          matchesPlayed: { increment: 1 },
+        },
+      }),
+    );
+  }
+  if (updates.length > 0) await prisma.$transaction(updates);
+  return updates.length;
 }
 
 /**
@@ -100,30 +168,19 @@ export async function recordOfflineLeagueResult(
       homeParticipant: {
         select: {
           id: true,
-          seasonElo: true,
-          wins: true,
-          draws: true,
-          losses: true,
+          teamId: true,
+          team: { select: { ownerId: true, name: true, roster: true } },
         },
       },
       awayParticipant: {
         select: {
           id: true,
-          seasonElo: true,
-          wins: true,
-          draws: true,
-          losses: true,
+          teamId: true,
+          team: { select: { ownerId: true, name: true, roster: true } },
         },
       },
     },
-  })) as {
-    id: string;
-    status: string;
-    match: { id: string; leagueScoredAt: Date | null } | null;
-    round: { id: string; seasonId: string };
-    homeParticipant: ParticipantEloState | null;
-    awayParticipant: ParticipantEloState | null;
-  } | null;
+  })) as PairingForOffline | null;
 
   if (!pairing) return { skipped: true, reason: "pairing-missing" };
   if (!NON_TERMINAL.has(pairing.status)) {
@@ -136,97 +193,92 @@ export async function recordOfflineLeagueResult(
     return { skipped: true, reason: "participant-missing" };
   }
 
-  const seasonId = pairing.round.seasonId;
-  const bareme = await loadBareme(seasonId);
-  if (!bareme) return { skipped: true, reason: "season-missing" };
-
   const home = pairing.homeParticipant;
   const away = pairing.awayParticipant;
 
-  const winner: OfflineResultWinner =
-    input.scoreHome > input.scoreAway
-      ? "home"
-      : input.scoreAway > input.scoreHome
-        ? "away"
-        : "draw";
-
-  const pointsHome =
-    winner === "draw"
-      ? bareme.drawPoints
-      : winner === "home"
-        ? bareme.winPoints
-        : bareme.lossPoints;
-  const pointsAway =
-    winner === "draw"
-      ? bareme.drawPoints
-      : winner === "away"
-        ? bareme.winPoints
-        : bareme.lossPoints;
-
-  // ELO saisonnier : un match joue (contrairement au forfait neutre).
-  // Snapshot calcule AVANT l'update des compteurs (placement base sur le
-  // nombre de matchs courant).
-  const seasonOutcome: SeasonMatchOutcome =
-    winner === "home" ? "win" : winner === "away" ? "loss" : "draw";
-  const { deltaA: deltaHome, deltaB: deltaAway } = calculateSeasonEloChange({
-    ratingA: home.seasonElo,
-    ratingB: away.seasonElo,
-    outcome: seasonOutcome,
-    inPlacementA: isInPlacement(home),
-    inPlacementB: isInPlacement(away),
-  });
-  const newEloHome = clampSeasonElo(home.seasonElo + deltaHome);
-  const newEloAway = clampSeasonElo(away.seasonElo + deltaAway);
-
-  await prisma.$transaction([
-    prisma.leagueParticipant.update({
-      where: { id: home.id },
+  // 1. Materialise un Match "offline" synthetique + TeamSelection (ordre
+  //    home puis away — recordLeagueMatchResult lit selections[0]=A=home,
+  //    [1]=B=away). On force `createdAt` pour garantir cet ordre.
+  const ownerIds = Array.from(
+    new Set([home.team.ownerId, away.team.ownerId].filter(Boolean)),
+  );
+  const base = Date.now();
+  const match = await prisma.$transaction(async (tx: typeof prisma) => {
+    const created = await tx.match.create({
       data: {
-        wins: { increment: winner === "home" ? 1 : 0 },
-        draws: { increment: winner === "draw" ? 1 : 0 },
-        losses: { increment: winner === "away" ? 1 : 0 },
-        points: { increment: pointsHome },
-        touchdownsFor: { increment: input.scoreHome },
-        touchdownsAgainst: { increment: input.scoreAway },
-        casualtiesFor: { increment: input.casualtiesHome },
-        casualtiesAgainst: { increment: input.casualtiesAway },
-        seasonElo: newEloHome,
+        status: "completed",
+        mode: OFFLINE_MATCH_MODE,
+        seed: `offline-league-${pairing.id}`,
+        players: { connect: ownerIds.map((id) => ({ id })) },
+        leagueSeasonId: pairing.round.seasonId,
+        leagueRoundId: pairing.round.id,
+        leaguePairingId: pairing.id,
       },
-    }),
-    prisma.leagueParticipant.update({
-      where: { id: away.id },
-      data: {
-        wins: { increment: winner === "away" ? 1 : 0 },
-        draws: { increment: winner === "draw" ? 1 : 0 },
-        losses: { increment: winner === "home" ? 1 : 0 },
-        points: { increment: pointsAway },
-        touchdownsFor: { increment: input.scoreAway },
-        touchdownsAgainst: { increment: input.scoreHome },
-        casualtiesFor: { increment: input.casualtiesAway },
-        casualtiesAgainst: { increment: input.casualtiesHome },
-        seasonElo: newEloAway,
-      },
-    }),
-    prisma.leaguePairing.update({
-      where: { id: pairing.id },
-      data: { status: "played" },
-    }),
-  ]);
-
-  // Completion round / saison / playoffs (meme helper que le forfait).
-  await maybeCompleteRoundAndSeason(pairing.round.id, seasonId);
-
-  // Propagation du winner dans le bracket si pairing playoff. Non-bloquant.
-  if (winner !== "draw") {
-    advancePlayoffsWithWinner(pairing.id, winner).catch((e: unknown) => {
-      const msg = e instanceof Error ? e.message : "unknown";
-      serverLog.error(`[league-offline-result] advance failed: ${msg}`);
+      select: { id: true },
     });
+    await tx.teamSelection.createMany({
+      data: [
+        {
+          matchId: created.id,
+          userId: home.team.ownerId,
+          teamId: home.teamId,
+          team: home.team.name,
+          createdAt: new Date(base),
+        },
+        {
+          matchId: created.id,
+          userId: away.team.ownerId,
+          teamId: away.teamId,
+          team: away.team.name,
+          createdAt: new Date(base + 1000),
+        },
+      ],
+    });
+    return created;
+  });
+
+  // 2. SPP par joueur AVANT recordLeagueMatchResult (la sequence post-match
+  //    lira le SPP a jour pour proposer les level-up).
+  let sppPlayersUpdated = 0;
+  if (input.playerStats && input.playerStats.length > 0) {
+    sppPlayersUpdated = await applyOfflinePlayerSPP(
+      home.teamId,
+      away.teamId,
+      home.team.roster,
+      away.team.roster,
+      input.playerStats,
+    );
   }
 
+  // 3. Reutilise tout le pipeline : standings + ELO + pairing played +
+  //    completion saison + sequence post-match (level-up).
+  const recorded = await recordLeagueMatchResult({
+    matchId: match.id,
+    scoreA: input.scoreHome,
+    scoreB: input.scoreAway,
+    casualtiesA: input.casualtiesHome,
+    casualtiesB: input.casualtiesAway,
+  });
+
+  if ("skipped" in recorded) {
+    serverLog.error(
+      `[league-offline-result] recordLeagueMatchResult skipped (${recorded.reason}) match=${match.id}`,
+    );
+    return { skipped: true, reason: "record-failed" };
+  }
+
+  const winner: OfflineResultWinner =
+    recorded.winner === "A" ? "home" : recorded.winner === "B" ? "away" : "draw";
+
   serverLog.info(
-    `[league-offline-result] pairing=${pairing.id} ${input.scoreHome}-${input.scoreAway} winner=${winner}`,
+    `[league-offline-result] pairing=${pairing.id} match=${match.id} ${input.scoreHome}-${input.scoreAway} winner=${winner} spp=${sppPlayersUpdated}`,
   );
 
-  return { recorded: true, pairingId: pairing.id, winner };
+  return {
+    recorded: true,
+    pairingId: pairing.id,
+    matchId: match.id,
+    winner,
+    sppPlayersUpdated,
+  };
 }

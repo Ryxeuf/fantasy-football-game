@@ -194,6 +194,20 @@ export const recordOfflineResultSchema = z.object({
   scoreAway: z.number().int("scoreAway entier").min(0).max(30),
   casualtiesHome: z.number().int("casualtiesHome entier").min(0).max(30),
   casualtiesAway: z.number().int("casualtiesAway entier").min(0).max(30),
+  // Phase 2 — stats par joueur (optionnel) -> SPP + level-up.
+  playerStats: z
+    .array(
+      z.object({
+        teamPlayerId: z.string().min(1).max(64),
+        touchdowns: z.number().int().min(0).max(20).optional(),
+        casualties: z.number().int().min(0).max(20).optional(),
+        completions: z.number().int().min(0).max(30).optional(),
+        interceptions: z.number().int().min(0).max(20).optional(),
+        mvp: z.boolean().optional(),
+      }),
+    )
+    .max(40)
+    .optional(),
 });
 
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;

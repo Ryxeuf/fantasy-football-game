@@ -686,7 +686,7 @@ export async function getSeasonById(seasonId: string) {
           pairings: {
             orderBy: { createdAt: "asc" },
             include: {
-              match: { select: { id: true, status: true } },
+              match: { select: { id: true, status: true, mode: true } },
               homeParticipant: {
                 select: {
                   id: true,

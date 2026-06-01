@@ -70,7 +70,7 @@ export interface LeaguePairingDetail {
   deadlineAt: string | null;
   homeParticipant: LeaguePairingTeamDetail;
   awayParticipant: LeaguePairingTeamDetail;
-  match: { id: string; status: string } | null;
+  match: { id: string; status: string; mode?: string } | null;
 }
 
 export interface LeagueRoundDetail {
