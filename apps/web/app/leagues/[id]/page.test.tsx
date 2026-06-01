@@ -259,7 +259,9 @@ describe("LeagueDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Open 5 Teams")).toBeTruthy();
     });
-    expect(screen.getByText(/Coach Bob/)).toBeTruthy();
+    // Le coach createur peut apparaitre a plusieurs endroits (entete +
+    // participant) : on verifie juste qu'il est present (deflake).
+    expect(screen.getAllByText(/Coach Bob/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Saison 3/i).length).toBeGreaterThanOrEqual(1);
   });
 
