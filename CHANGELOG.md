@@ -1,3 +1,11 @@
+## [1.167.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.166.0...v1.167.0) (2026-06-01)
+
+
+### ✨ Features
+
+* **league:** resultat offline via Match synthetique + SPP joueur (option b) ([3ef4ddd](https://github.com/Ryxeuf/fantasy-football-game/commit/3ef4dddff38e577191235a9b54d958055fc5eea8))
+* **league:** UI saisie de resultat offline (calendrier + modale) ([6766dd5](https://github.com/Ryxeuf/fantasy-football-game/commit/6766dd5c4a3e7c6da74033ef22651546fc5c2221))
+
 ## [1.166.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.165.0...v1.166.0) (2026-06-01)
 
 
