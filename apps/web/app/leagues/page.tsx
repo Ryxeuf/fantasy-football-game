@@ -48,7 +48,7 @@ function buildListPath(status: StatusFilter): string {
   const params = new URLSearchParams();
   if (status !== "all") params.set("status", status);
   const qs = params.toString();
-  return `/league${qs ? `?${qs}` : ""}`;
+  return `/leagues${qs ? `?${qs}` : ""}`;
 }
 
 export default function LeaguesPage() {

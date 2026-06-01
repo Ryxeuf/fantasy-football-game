@@ -126,7 +126,7 @@ export default function SeasonRecapPage() {
       setLoading(true);
       setError(null);
       const data = await apiRequest<RecapResponse>(
-        `/league/seasons/${seasonId}/awards`,
+        `/leagues/seasons/${seasonId}/awards`,
       );
       setRecap(data);
     } catch (e: unknown) {

@@ -126,7 +126,7 @@ export default function NewLeaguePage() {
       setSubmitting(true);
       setError(null);
       try {
-        const created = await apiRequest<CreatedLeague>("/league", {
+        const created = await apiRequest<CreatedLeague>("/leagues", {
           method: "POST",
           body: JSON.stringify({
             name: form.name.trim(),

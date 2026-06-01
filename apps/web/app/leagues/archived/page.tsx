@@ -54,10 +54,10 @@ export default function ArchivedLeaguesPage() {
         setError(null);
         const [c, a] = await Promise.all([
           apiRequest<ListResponse>(
-            `/league?status=completed&limit=${PAGE_SIZE}`,
+            `/leagues?status=completed&limit=${PAGE_SIZE}`,
           ),
           apiRequest<ListResponse>(
-            `/league?status=archived&limit=${PAGE_SIZE}`,
+            `/leagues?status=archived&limit=${PAGE_SIZE}`,
           ),
         ]);
         if (cancelled) return;

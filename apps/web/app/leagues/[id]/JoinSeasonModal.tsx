@@ -106,7 +106,7 @@ export function JoinSeasonModal({
       setSubmitting(true);
       setError(null);
       try {
-        await apiRequest(`/league/seasons/${seasonId}/join`, {
+        await apiRequest(`/leagues/seasons/${seasonId}/join`, {
           method: "POST",
           body: JSON.stringify({ teamId: selectedTeamId }),
         });

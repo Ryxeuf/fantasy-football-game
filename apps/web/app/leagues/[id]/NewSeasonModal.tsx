@@ -48,7 +48,7 @@ export function NewSeasonModal({
       setError(null);
       try {
         const created = await apiRequest<CreatedSeason>(
-          `/league/${leagueId}/seasons`,
+          `/leagues/${leagueId}/seasons`,
           {
             method: "POST",
             body: JSON.stringify({

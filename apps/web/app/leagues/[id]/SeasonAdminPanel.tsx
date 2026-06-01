@@ -44,7 +44,7 @@ export function SeasonAdminPanel({
       setError(null);
       setSuccess(null);
       try {
-        await apiRequest(`/league/seasons/${seasonId}/${action}`, {
+        await apiRequest(`/leagues/seasons/${seasonId}/${action}`, {
           method: "POST",
           body: JSON.stringify(body ?? {}),
         });

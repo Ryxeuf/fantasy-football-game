@@ -2,8 +2,8 @@
  * S26.6c — Tests de la page calendrier des themes `/leagues/seasons`.
  *
  * Cette page consomme deux endpoints publics ajoutes en S26.6b :
- *  - GET /league/themes              -> catalogue des 3 themes officiels
- *  - GET /league/seasons/themed?...  -> editions existantes par theme
+ *  - GET /leagues/themes              -> catalogue des 3 themes officiels
+ *  - GET /leagues/seasons/themed?...  -> editions existantes par theme
  *
  * On teste : loading, error, ordering par mois, badges couleur,
  * affichage des saisons groupees par theme, et empty state quand un
@@ -85,7 +85,7 @@ const skavenSeasonsPayload = {
 function mockThemedFetch(seasonsByTheme: Record<string, unknown>) {
   mockFetch.mockImplementation((url: string | URL) => {
     const u = String(url);
-    if (u.includes("/league/themes")) {
+    if (u.includes("/leagues/themes")) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(themesPayload),
@@ -180,10 +180,10 @@ describe("LeagueSeasonsPage (S26.6c calendrier themes)", () => {
       expect(screen.getByTestId("themes-calendar")).toBeTruthy(),
     );
     const calls = mockFetch.mock.calls.map((c) => String(c[0]));
-    expect(calls.some((u) => u.includes("/league/themes"))).toBe(true);
+    expect(calls.some((u) => u.includes("/leagues/themes"))).toBe(true);
     expect(
       calls.some((u) =>
-        u.includes("/league/seasons/themed") && u.includes("theme=skaven_cup"),
+        u.includes("/leagues/seasons/themed") && u.includes("theme=skaven_cup"),
       ),
     ).toBe(true);
     expect(

@@ -77,7 +77,7 @@ export default function LeagueDetailPage() {
         setLoading(true);
         setError(null);
         const { league: data } = await apiRequest<{ league: LeagueDetail }>(
-          `/league/${leagueId}`,
+          `/leagues/${leagueId}`,
         );
         if (cancelled) return;
         setLeague(data);
@@ -108,10 +108,10 @@ export default function LeagueDetailPage() {
         setSeasonError(null);
         const [seasonRes, standingsRes] = await Promise.all([
           apiRequest<{ season: LeagueSeasonDetail }>(
-            `/league/seasons/${seasonId}`,
+            `/leagues/seasons/${seasonId}`,
           ),
           apiRequest<{ seasonId: string; standings: StandingRow[] }>(
-            `/league/seasons/${seasonId}/standings`,
+            `/leagues/seasons/${seasonId}/standings`,
           ),
         ]);
         setSeason(seasonRes.season);
@@ -480,7 +480,7 @@ export default function LeagueDetailPage() {
           onCreated={(seasonId) => {
             setSelectedSeasonId(seasonId);
             // Reload the league so the new season appears in the tabs.
-            apiRequest<{ league: LeagueDetail }>(`/league/${leagueId}`)
+            apiRequest<{ league: LeagueDetail }>(`/leagues/${leagueId}`)
               .then(({ league: data }) => setLeague(data))
               .catch(() => {
                 /* tolere : le tab apparaitra au prochain refresh manuel */

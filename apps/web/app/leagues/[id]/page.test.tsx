@@ -202,7 +202,7 @@ function mockApi(sequence: {
           Promise.resolve({ user: userId ? { id: userId } : null }),
       };
     }
-    if (/\/league\/lg-1(?:$|\?)/.test(url)) {
+    if (/\/leagues\/lg-1(?:$|\?)/.test(url)) {
       if (sequence.leagueError) {
         return {
           ok: false,
@@ -215,13 +215,13 @@ function mockApi(sequence: {
         json: () => Promise.resolve({ league: sequence.league }),
       };
     }
-    if (/\/league\/seasons\/[^/]+\/standings/.test(url)) {
+    if (/\/leagues\/seasons\/[^/]+\/standings/.test(url)) {
       return {
         ok: true,
         json: () => Promise.resolve(sequence.standings ?? { standings: [] }),
       };
     }
-    if (/\/league\/seasons\/[^/]+(?:$|\?)/.test(url)) {
+    if (/\/leagues\/seasons\/[^/]+(?:$|\?)/.test(url)) {
       return {
         ok: true,
         json: () => Promise.resolve({ season: sequence.season }),

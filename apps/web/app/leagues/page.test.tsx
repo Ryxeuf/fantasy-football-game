@@ -142,7 +142,7 @@ describe("LeaguesPage", () => {
     });
 
     const [url, options] = mockFetch.mock.calls[0];
-    expect(String(url)).toMatch(/\/league(\?|$)/);
+    expect(String(url)).toMatch(/\/leagues(\?|$)/);
     const headers = (options?.headers ?? {}) as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer test-token");
   });

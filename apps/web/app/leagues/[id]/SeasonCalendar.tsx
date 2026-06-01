@@ -144,7 +144,7 @@ function PairingRow({ pairing, currentUserId }: PairingRowProps) {
     setError(null);
     try {
       const result = await apiRequest<{ matchId: string }>(
-        `/league/pairings/${pairing.id}/match`,
+        `/leagues/pairings/${pairing.id}/match`,
         { method: "POST", body: JSON.stringify({}) },
       );
       router.push(`/play/${result.matchId}`);

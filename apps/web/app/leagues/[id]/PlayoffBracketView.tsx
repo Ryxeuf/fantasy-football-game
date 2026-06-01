@@ -64,7 +64,7 @@ export function PlayoffBracketView({ seasonId }: Props) {
       setLoading(true);
       setError(null);
       const res = await apiRequest<BracketResponse>(
-        `/league/seasons/${seasonId}/playoff-bracket`,
+        `/leagues/seasons/${seasonId}/playoff-bracket`,
       );
       setData(res);
     } catch (e: unknown) {

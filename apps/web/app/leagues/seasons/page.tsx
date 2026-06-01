@@ -69,7 +69,7 @@ export default function LeagueSeasonsPage() {
         setLoading(true);
         setError(null);
         const cat = await apiRequest<{ themes: LeagueTheme[] }>(
-          "/league/themes",
+          "/leagues/themes",
         );
         const list = (cat.themes ?? [])
           .slice()
@@ -84,7 +84,7 @@ export default function LeagueSeasonsPage() {
           list.map(async (th) => {
             try {
               const r = await apiRequest<{ seasons: ThemedSeason[] }>(
-                `/league/seasons/themed?theme=${encodeURIComponent(th.slug)}`,
+                `/leagues/seasons/themed?theme=${encodeURIComponent(th.slug)}`,
               );
               return [th.slug, r.seasons ?? []] as const;
             } catch {
