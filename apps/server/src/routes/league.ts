@@ -34,6 +34,7 @@ import {
 } from "../services/league-scheduler";
 import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { recordForfeit } from "../services/league-forfeit";
+import { recordOfflineLeagueResult } from "../services/league-offline-result";
 import {
   computeSeasonRecap,
   getPersistedSeasonAward,
@@ -55,6 +56,7 @@ import {
   startSeasonSchema,
   createMatchFromPairingSchema,
   forfeitPairingSchema,
+  recordOfflineResultSchema,
   type CreateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
@@ -65,6 +67,7 @@ import {
   type StartSeasonBody,
   type CreateMatchFromPairingBody,
   type ForfeitPairingBody,
+  type RecordOfflineResultBody,
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 
@@ -819,6 +822,50 @@ export async function handleForfeitPairing(
   }
 }
 
+/**
+ * Workstream ligue offline — saisie manuelle d'un resultat de match joue
+ * hors-ligne (tabletop). Reservee au createur de la ligue (meme controle
+ * que le forfait). Le pairing doit etre encore non joue.
+ */
+export async function handleRecordOfflineResult(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const body = req.body as RecordOfflineResultBody;
+
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { id: true, round: { select: { seasonId: true } } },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return;
+  }
+  if (!(await ensureLeagueCreator(userId, pairing.round.seasonId, res))) {
+    return;
+  }
+
+  try {
+    const result = await recordOfflineLeagueResult({
+      pairingId,
+      scoreHome: body.scoreHome,
+      scoreAway: body.scoreAway,
+      casualtiesHome: body.casualtiesHome,
+      casualtiesAway: body.casualtiesAway,
+    });
+    if ("skipped" in result) {
+      sendError(res, `Resultat non enregistre (${result.reason})`, 409);
+      return;
+    }
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 // L2.B.5 — Coup de mecene (1x par saison ligue par equipe). Le coach
 // proprietaire de l'equipe declenche, on credite +100k po.
 async function handlePlayMecene(
@@ -942,6 +989,14 @@ router.post(
   authUser,
   validate(forfeitPairingSchema),
   handleForfeitPairing,
+);
+// Workstream ligue offline — saisie manuelle d'un resultat de match joue
+// hors-ligne (tabletop). Reservee au createur de la ligue.
+router.post(
+  "/pairings/:pairingId/result",
+  authUser,
+  validate(recordOfflineResultSchema),
+  handleRecordOfflineResult,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // L2.C.1 — recap public de fin de saison : champion + awards.

@@ -245,7 +245,12 @@ export async function recordForfeit(
   };
 }
 
-async function maybeCompleteRoundAndSeason(
+/**
+ * Complete un round (puis la saison / les playoffs) quand tous ses
+ * pairings sont dans un etat terminal. Reutilise par le chemin de saisie
+ * offline (`recordOfflineLeagueResult`) en plus du forfait.
+ */
+export async function maybeCompleteRoundAndSeason(
   roundId: string,
   seasonId: string,
 ): Promise<void> {

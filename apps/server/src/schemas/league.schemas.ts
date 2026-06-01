@@ -184,6 +184,18 @@ export const forfeitPairingSchema = z.object({
     .optional(),
 });
 
+/**
+ * Workstream ligue offline — body pour `POST /leagues/pairings/:id/result`.
+ * Saisie manuelle d'un resultat de match joue hors-ligne. Score TD +
+ * casualties par equipe (home/away). Reservee au createur de la ligue.
+ */
+export const recordOfflineResultSchema = z.object({
+  scoreHome: z.number().int("scoreHome entier").min(0).max(30),
+  scoreAway: z.number().int("scoreAway entier").min(0).max(30),
+  casualtiesHome: z.number().int("casualtiesHome entier").min(0).max(30),
+  casualtiesAway: z.number().int("casualtiesAway entier").min(0).max(30),
+});
+
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;
 export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
@@ -198,3 +210,4 @@ export type CreateMatchFromPairingBody = z.infer<
   typeof createMatchFromPairingSchema
 >;
 export type ForfeitPairingBody = z.infer<typeof forfeitPairingSchema>;
+export type RecordOfflineResultBody = z.infer<typeof recordOfflineResultSchema>;
