@@ -16,6 +16,7 @@ vi.mock("../prisma", () => {
     match: { create: vi.fn() },
     teamSelection: { createMany: vi.fn() },
     teamPlayer: { findMany: vi.fn(), update: vi.fn() },
+    team: { update: vi.fn() },
     $transaction: vi.fn(async (arg: unknown) => {
       if (typeof arg === "function") {
         return (arg as (tx: unknown) => Promise<unknown>)(prisma);
@@ -50,6 +51,7 @@ const m = {
   selCreate: prisma.teamSelection.createMany as MockFn,
   tpFindMany: prisma.teamPlayer.findMany as MockFn,
   tpUpdate: prisma.teamPlayer.update as MockFn,
+  teamUpdate: prisma.team.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
 };
 
@@ -62,12 +64,17 @@ function buildPairing(overrides: Record<string, unknown> = {}) {
     homeParticipant: {
       id: "ph",
       teamId: "team-home",
-      team: { ownerId: "u-home", name: "Orcs", roster: "orc" },
+      team: { ownerId: "u-home", name: "Orcs", roster: "orc", dedicatedFans: 1 },
     },
     awayParticipant: {
       id: "pa",
       teamId: "team-away",
-      team: { ownerId: "u-away", name: "Elfes", roster: "wood_elf" },
+      team: {
+        ownerId: "u-away",
+        name: "Elfes",
+        roster: "wood_elf",
+        dedicatedFans: 6,
+      },
     },
     ...overrides,
   };
@@ -79,6 +86,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.matchCreate.mockResolvedValue({ id: "m-1" });
     m.selCreate.mockResolvedValue({});
     m.tpUpdate.mockResolvedValue({});
+    m.teamUpdate.mockResolvedValue({});
     m.tpFindMany.mockResolvedValue([]);
     m.record.mockResolvedValue({
       recorded: true,
@@ -183,5 +191,33 @@ describe("recordOfflineLeagueResult (option b)", () => {
     expect(p1Data.matchesPlayed).toEqual({ increment: 1 });
     // SPP applique avant la delegation
     expect(m.record).toHaveBeenCalled();
+  });
+
+  it("applique winnings (treasury) et dedicated fans clampes 1-6", async () => {
+    m.pairFind.mockResolvedValue(buildPairing()); // home fans=1, away fans=6
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      winningsHome: 50000,
+      dedicatedFansDeltaHome: 2, // 1 -> 3
+      winningsAway: 0,
+      dedicatedFansDeltaAway: 3, // 6 -> clamp 6 (inchange -> pas d'update)
+    });
+
+    const homeUpdate = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-home",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(homeUpdate).toBeTruthy();
+    expect(homeUpdate![0].data.treasury).toEqual({ increment: 50000 });
+    expect(homeUpdate![0].data.dedicatedFans).toBe(3);
+
+    // away : winnings 0 + fans 6+3 clamp 6 (inchange) -> aucun update
+    const awayUpdate = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-away",
+    );
+    expect(awayUpdate).toBeFalsy();
   });
 });

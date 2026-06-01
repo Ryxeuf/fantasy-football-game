@@ -55,6 +55,12 @@ export interface RecordOfflineResultInput {
   readonly casualtiesAway: number;
   /** Stats par joueur (optionnel) -> SPP + totaux carriere + level-up. */
   readonly playerStats?: readonly OfflinePlayerStatInput[];
+  /** Gain de tresorerie (or) optionnel par equipe (incremente treasury). */
+  readonly winningsHome?: number;
+  readonly winningsAway?: number;
+  /** Variation de dedicated fans (clampe 1-6) optionnelle par equipe. */
+  readonly dedicatedFansDeltaHome?: number;
+  readonly dedicatedFansDeltaAway?: number;
 }
 
 export type OfflineResultWinner = "home" | "away" | "draw";
@@ -87,13 +93,63 @@ interface PairingForOffline {
   homeParticipant: {
     id: string;
     teamId: string;
-    team: { ownerId: string; name: string; roster: string };
+    team: {
+      ownerId: string;
+      name: string;
+      roster: string;
+      dedicatedFans: number;
+    };
   } | null;
   awayParticipant: {
     id: string;
     teamId: string;
-    team: { ownerId: string; name: string; roster: string };
+    team: {
+      ownerId: string;
+      name: string;
+      roster: string;
+      dedicatedFans: number;
+    };
   } | null;
+}
+
+/**
+ * Applique l'economie post-match saisie a la main : winnings (treasury) et
+ * variation de dedicated fans (clampe 1-6, regle BB). Tout est optionnel.
+ */
+async function applyOfflineEconomy(
+  home: { teamId: string; dedicatedFans: number },
+  away: { teamId: string; dedicatedFans: number },
+  input: RecordOfflineResultInput,
+): Promise<void> {
+  const sides = [
+    {
+      teamId: home.teamId,
+      fans: home.dedicatedFans,
+      winnings: input.winningsHome,
+      fansDelta: input.dedicatedFansDeltaHome,
+    },
+    {
+      teamId: away.teamId,
+      fans: away.dedicatedFans,
+      winnings: input.winningsAway,
+      fansDelta: input.dedicatedFansDeltaAway,
+    },
+  ];
+  const ops: Promise<unknown>[] = [];
+  for (const s of sides) {
+    const data: Record<string, unknown> = {};
+    if (s.winnings && s.winnings > 0) {
+      data.treasury = { increment: s.winnings };
+    }
+    if (s.fansDelta && s.fansDelta !== 0) {
+      const next = Math.max(1, Math.min(6, s.fans + s.fansDelta));
+      if (next !== s.fans) data.dedicatedFans = next;
+    }
+    if (Object.keys(data).length > 0) {
+      ops.push(prisma.team.update({ where: { id: s.teamId }, data }));
+    }
+  }
+  if (ops.length > 0) await prisma.$transaction(ops);
 }
 
 /**
@@ -169,14 +225,28 @@ export async function recordOfflineLeagueResult(
         select: {
           id: true,
           teamId: true,
-          team: { select: { ownerId: true, name: true, roster: true } },
+          team: {
+          select: {
+            ownerId: true,
+            name: true,
+            roster: true,
+            dedicatedFans: true,
+          },
+        },
         },
       },
       awayParticipant: {
         select: {
           id: true,
           teamId: true,
-          team: { select: { ownerId: true, name: true, roster: true } },
+          team: {
+          select: {
+            ownerId: true,
+            name: true,
+            roster: true,
+            dedicatedFans: true,
+          },
+        },
         },
       },
     },
@@ -266,6 +336,13 @@ export async function recordOfflineLeagueResult(
     );
     return { skipped: true, reason: "record-failed" };
   }
+
+  // Economie post-match (winnings / dedicated fans) saisie a la main.
+  await applyOfflineEconomy(
+    { teamId: home.teamId, dedicatedFans: home.team.dedicatedFans },
+    { teamId: away.teamId, dedicatedFans: away.team.dedicatedFans },
+    input,
+  );
 
   const winner: OfflineResultWinner =
     recorded.winner === "A" ? "home" : recorded.winner === "B" ? "away" : "draw";

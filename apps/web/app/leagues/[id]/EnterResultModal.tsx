@@ -54,6 +54,20 @@ function clampScore(raw: string): number {
   return Math.min(n, 30);
 }
 
+/** Or gagne : entier [0, 300000]. */
+function clampGold(raw: string): number {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(n, 300000);
+}
+
+/** Variation de dedicated fans : entier signe [-6, 6]. */
+function clampFansDelta(raw: string): number {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(-6, Math.min(6, n));
+}
+
 function hasAnyStat(s: PlayerStatEntry): boolean {
   return (
     s.touchdowns > 0 ||
@@ -76,6 +90,10 @@ export function EnterResultModal({
   const [scoreAway, setScoreAway] = useState(0);
   const [casualtiesHome, setCasualtiesHome] = useState(0);
   const [casualtiesAway, setCasualtiesAway] = useState(0);
+  const [winningsHome, setWinningsHome] = useState(0);
+  const [winningsAway, setWinningsAway] = useState(0);
+  const [fansDeltaHome, setFansDeltaHome] = useState(0);
+  const [fansDeltaAway, setFansDeltaAway] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,6 +148,14 @@ export function EnterResultModal({
             casualtiesHome,
             casualtiesAway,
             ...(playerStats.length > 0 ? { playerStats } : {}),
+            ...(winningsHome > 0 ? { winningsHome } : {}),
+            ...(winningsAway > 0 ? { winningsAway } : {}),
+            ...(fansDeltaHome !== 0
+              ? { dedicatedFansDeltaHome: fansDeltaHome }
+              : {}),
+            ...(fansDeltaAway !== 0
+              ? { dedicatedFansDeltaAway: fansDeltaAway }
+              : {}),
           }),
         });
         onRecorded();
@@ -148,6 +174,10 @@ export function EnterResultModal({
       scoreAway,
       casualtiesHome,
       casualtiesAway,
+      winningsHome,
+      winningsAway,
+      fansDeltaHome,
+      fansDeltaAway,
       stats,
       onRecorded,
       onClose,
@@ -204,6 +234,39 @@ export function EnterResultModal({
             setHome={setCasualtiesHome}
             setAway={setCasualtiesAway}
           />
+
+          <div className="border-t border-gray-100 pt-3 space-y-2">
+            <span className="text-sm font-medium text-gray-700">
+              {t.leagues.recordResultEconomy}
+            </span>
+            <ResultRow
+              label={t.leagues.recordResultWinnings}
+              homeLabel={homeName}
+              awayLabel={awayName}
+              testid="winnings"
+              home={winningsHome}
+              away={winningsAway}
+              setHome={setWinningsHome}
+              setAway={setWinningsAway}
+              clamp={clampGold}
+              min={0}
+              max={300000}
+              step={1000}
+            />
+            <ResultRow
+              label={t.leagues.recordResultDedicatedFans}
+              homeLabel={homeName}
+              awayLabel={awayName}
+              testid="fans"
+              home={fansDeltaHome}
+              away={fansDeltaAway}
+              setHome={setFansDeltaHome}
+              setAway={setFansDeltaAway}
+              clamp={clampFansDelta}
+              min={-6}
+              max={6}
+            />
+          </div>
 
           <div className="border-t border-gray-100 pt-3">
             <button
@@ -266,6 +329,10 @@ interface ResultRowProps {
   away: number;
   setHome: (n: number) => void;
   setAway: (n: number) => void;
+  clamp?: (raw: string) => number;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 function ResultRow({
@@ -277,6 +344,10 @@ function ResultRow({
   away,
   setHome,
   setAway,
+  clamp = clampScore,
+  min = 0,
+  max = 30,
+  step,
 }: ResultRowProps) {
   return (
     <div className="space-y-1">
@@ -288,11 +359,12 @@ function ResultRow({
           </span>
           <input
             type="number"
-            min={0}
-            max={30}
+            min={min}
+            max={max}
+            step={step}
             data-testid={`result-${testid}-home`}
             value={home}
-            onChange={(e) => setHome(clampScore(e.target.value))}
+            onChange={(e) => setHome(clamp(e.target.value))}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </label>
@@ -302,11 +374,12 @@ function ResultRow({
           </span>
           <input
             type="number"
-            min={0}
-            max={30}
+            min={min}
+            max={max}
+            step={step}
             data-testid={`result-${testid}-away`}
             value={away}
-            onChange={(e) => setAway(clampScore(e.target.value))}
+            onChange={(e) => setAway(clamp(e.target.value))}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </label>

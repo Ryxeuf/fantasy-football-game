@@ -592,6 +592,9 @@ export const translations = {
       recordResultPlayerStatsToggle: "Stats par joueur (SPP)",
       recordResultPlayerStatsHint:
         "Optionnel — attribue le SPP et débloque les montées de niveau.",
+      recordResultEconomy: "Économie (optionnel)",
+      recordResultWinnings: "Trésorerie gagnée (or)",
+      recordResultDedicatedFans: "Dedicated fans (±)",
       pairingDeadlineLabel: "Échéance",
       pairingsEmpty: "Aucune rencontre planifiée dans cette journée.",
     },
@@ -1617,6 +1620,9 @@ export const translations = {
       recordResultPlayerStatsToggle: "Player stats (SPP)",
       recordResultPlayerStatsHint:
         "Optional — awards SPP and unlocks level-ups.",
+      recordResultEconomy: "Economy (optional)",
+      recordResultWinnings: "Winnings (gold)",
+      recordResultDedicatedFans: "Dedicated fans (±)",
       pairingDeadlineLabel: "Deadline",
       pairingsEmpty: "No pairing scheduled for this round.",
     },

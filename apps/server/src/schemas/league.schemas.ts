@@ -208,6 +208,11 @@ export const recordOfflineResultSchema = z.object({
     )
     .max(40)
     .optional(),
+  // Phase 3 — economie post-match (saisie a la main, optionnel).
+  winningsHome: z.number().int().min(0).max(300000).optional(),
+  winningsAway: z.number().int().min(0).max(300000).optional(),
+  dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional(),
+  dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional(),
 });
 
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;
