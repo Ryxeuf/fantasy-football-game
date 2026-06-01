@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import ProLeagueStructuredData from "./_components/ProLeagueStructuredData";
 import { BadgeToastProvider } from "./_components/BadgeToastProvider";
@@ -30,6 +31,12 @@ export default function ProLeagueLayout({
 }: {
   children: React.ReactNode;
 }): JSX.Element {
+  // Freeze Pro League : interrupteur OFF -> toute la section /pro-league
+  // redirige vers l'accueil. Reversible via l'env. Voir
+  // docs/pro-league-freeze-2026-06-01.md.
+  if (process.env.PRO_LEAGUE_ENABLED === "false") {
+    redirect("/");
+  }
   return (
     <BadgeToastProvider>
       <ProLeagueStructuredData />

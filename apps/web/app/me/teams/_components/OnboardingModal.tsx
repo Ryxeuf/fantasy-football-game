@@ -156,28 +156,30 @@ export default function OnboardingModal({
             </span>
           </Link>
 
-          <Link
-            data-testid="onboarding-cta-pro-league"
-            href="/pro-league"
-            onClick={dismiss}
-            className="flex items-center gap-3 rounded-lg border border-amber-600 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
-          >
-            <span className="text-2xl" aria-hidden="true">
-              🏆
-            </span>
-            <div className="flex-1">
-              <div className="font-semibold text-amber-900">
-                Suis la Pro League
+          {process.env.NEXT_PUBLIC_PRO_LEAGUE_ENABLED !== "false" && (
+            <Link
+              data-testid="onboarding-cta-pro-league"
+              href="/pro-league"
+              onClick={dismiss}
+              className="flex items-center gap-3 rounded-lg border border-amber-600 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
+            >
+              <span className="text-2xl" aria-hidden="true">
+                🏆
+              </span>
+              <div className="flex-1">
+                <div className="font-semibold text-amber-900">
+                  Suis la Pro League
+                </div>
+                <div className="text-xs text-amber-700">
+                  16 équipes IA, matchs live mardi 21h, paris en Crowns +
+                  Gazette quotidienne
+                </div>
               </div>
-              <div className="text-xs text-amber-700">
-                16 équipes IA, matchs live mardi 21h, paris en Crowns +
-                Gazette quotidienne
-              </div>
-            </div>
-            <span className="text-amber-700" aria-hidden="true">
-              →
-            </span>
-          </Link>
+              <span className="text-amber-700" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          )}
         </div>
 
         <button
