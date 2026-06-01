@@ -36,6 +36,7 @@ import {
 import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { recordForfeit } from "../services/league-forfeit";
 import { recordOfflineLeagueResult } from "../services/league-offline-result";
+import { editOfflineLeagueResult } from "../services/league-offline-edit";
 import {
   computeSeasonRecap,
   getPersistedSeasonAward,
@@ -883,6 +884,57 @@ export async function handleRecordOfflineResult(
 }
 
 /**
+ * Workstream ligue offline (W-B3) — EDITION d'un resultat deja saisi, en cas
+ * d'erreur de saisie. Reservee au createur. Annule la saisie existante puis
+ * re-saisit (cf. editOfflineLeagueResult). Refus (409) si un effet a deja ete
+ * consomme (level-up, saison clôturee, playoffs, mort).
+ */
+export async function handleEditOfflineResult(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const body = req.body as RecordOfflineResultBody;
+
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { id: true, round: { select: { seasonId: true } } },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return;
+  }
+  if (!(await ensureLeagueCreator(userId, pairing.round.seasonId, res))) {
+    return;
+  }
+
+  try {
+    const result = await editOfflineLeagueResult({
+      pairingId,
+      scoreHome: body.scoreHome,
+      scoreAway: body.scoreAway,
+      casualtiesHome: body.casualtiesHome,
+      casualtiesAway: body.casualtiesAway,
+      playerStats: body.playerStats,
+      winningsHome: body.winningsHome,
+      winningsAway: body.winningsAway,
+      dedicatedFansDeltaHome: body.dedicatedFansDeltaHome,
+      dedicatedFansDeltaAway: body.dedicatedFansDeltaAway,
+      injuries: body.injuries,
+    });
+    if ("skipped" in result) {
+      sendError(res, `Edition refusee (${result.reason})`, 409);
+      return;
+    }
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * Workstream ligue offline (Phase 2b) — rosters des deux equipes d'un
  * pairing, pour la saisie de stats par joueur (SPP). Reservee au createur
  * de la ligue : `GET /team/:id` est owner-only, donc inutilisable ici.
@@ -1079,6 +1131,14 @@ router.post(
   authUser,
   validate(recordOfflineResultSchema),
   handleRecordOfflineResult,
+);
+// W-B3 — edition d'un resultat offline deja saisi (correction d'erreur de
+// saisie). Createur only. Annule puis re-saisit ; 409 si effet consomme.
+router.put(
+  "/pairings/:pairingId/result",
+  authUser,
+  validate(recordOfflineResultSchema),
+  handleEditOfflineResult,
 );
 // Rosters des 2 equipes d'un pairing (createur only) pour la saisie de
 // stats par joueur.

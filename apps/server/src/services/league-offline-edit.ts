@@ -21,9 +21,12 @@
 import { prisma } from "../prisma";
 import {
   parseOfflineSnapshot,
+  recordOfflineLeagueResult,
   OFFLINE_MATCH_MODE,
   type OfflineInjuryType,
   type OfflineResultSnapshot,
+  type RecordOfflineResultInput,
+  type RecordOfflineResultOutcome,
 } from "./league-offline-result";
 import {
   calculatePlayerSPP,
@@ -425,4 +428,36 @@ export async function reverseOfflineLeagueResult(
   );
 
   return { reversed: true, matchId: match.id, pairingId: pairing.id };
+}
+
+export type EditOfflineOutcome =
+  | RecordOfflineResultOutcome
+  | {
+      readonly skipped: true;
+      readonly reason: ReverseOfflineSkipReason | "no-existing-result";
+    };
+
+/**
+ * Edite un resultat offline deja saisi : annule la saisie existante puis
+ * re-saisit la nouvelle. Reuse integralement `recordOfflineLeagueResult` pour
+ * la re-application (aucune duplication de logique).
+ *
+ * Note : reverse + record sont deux transactions distinctes. Si la
+ * re-saisie echoue apres une reversion reussie, le pairing est simplement
+ * re-ouvert (status `scheduled`) sans resultat — etat recuperable (le
+ * createur peut ressaisir).
+ */
+export async function editOfflineLeagueResult(
+  input: RecordOfflineResultInput,
+): Promise<EditOfflineOutcome> {
+  const existing = (await prisma.match.findFirst({
+    where: { leaguePairingId: input.pairingId, mode: OFFLINE_MATCH_MODE },
+    select: { id: true },
+  })) as { id: string } | null;
+  if (!existing) return { skipped: true, reason: "no-existing-result" };
+
+  const reversed = await reverseOfflineLeagueResult(existing.id);
+  if ("skipped" in reversed) return reversed;
+
+  return recordOfflineLeagueResult(input);
 }

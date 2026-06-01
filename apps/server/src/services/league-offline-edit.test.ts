@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => {
   const prisma: any = {
-    match: { findUnique: vi.fn(), delete: vi.fn() },
+    match: { findUnique: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
     leagueRound: { count: vi.fn(), update: vi.fn() },
     leaguePairing: { findUnique: vi.fn(), update: vi.fn() },
     leagueParticipant: { update: vi.fn() },
@@ -32,12 +32,24 @@ vi.mock("./spp-tracking", () => ({
   calculatePlayerSPP: vi.fn(() => 6),
 }));
 
+// Garde parseOfflineSnapshot / OFFLINE_MATCH_MODE reels, mocke uniquement la
+// re-saisie pour tester l'orchestration d'edition.
+vi.mock("./league-offline-result", async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return { ...actual, recordOfflineLeagueResult: vi.fn() };
+});
+
 import { prisma } from "../prisma";
-import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import { recordOfflineLeagueResult } from "./league-offline-result";
+import {
+  reverseOfflineLeagueResult,
+  editOfflineLeagueResult,
+} from "./league-offline-edit";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const m = {
   matchFind: prisma.match.findUnique as MockFn,
+  matchFindFirst: prisma.match.findFirst as MockFn,
   matchDelete: prisma.match.delete as MockFn,
   roundCount: prisma.leagueRound.count as MockFn,
   roundUpdate: prisma.leagueRound.update as MockFn,
@@ -271,5 +283,87 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
       missNextMatch: false,
       nigglingInjuries: { decrement: 1 },
     });
+  });
+});
+
+describe("editOfflineLeagueResult (W-B3)", () => {
+  const recordMock = recordOfflineLeagueResult as MockFn;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    m.roundCount.mockResolvedValue(0);
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([]);
+    m.partUpdate.mockResolvedValue({});
+    m.teamUpdate.mockResolvedValue({});
+    m.selDelete.mockResolvedValue({ count: 2 });
+    m.matchDelete.mockResolvedValue({});
+    m.pairUpdate.mockResolvedValue({});
+    m.roundUpdate.mockResolvedValue({});
+  });
+
+  it("skip si aucun resultat offline existant pour ce pairing", async () => {
+    m.matchFindFirst.mockResolvedValue(null);
+    const r = await editOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+    });
+    expect(r).toEqual({ skipped: true, reason: "no-existing-result" });
+    expect(recordMock).not.toHaveBeenCalled();
+  });
+
+  it("propage le refus de reversion (ex: level-up consomme) sans re-saisir", async () => {
+    m.matchFindFirst.mockResolvedValue({ id: "m-1" });
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePostMatchSequence: {
+          pendingChoices: JSON.stringify([
+            { teamPlayerId: "p1", advancementsTaken: 0 },
+          ]),
+        },
+      }),
+    );
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", advancements: JSON.stringify([{ skillSlug: "block" }]) },
+    ]);
+
+    const r = await editOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+    });
+    expect(r).toEqual({ skipped: true, reason: "advancement-consumed" });
+    expect(recordMock).not.toHaveBeenCalled();
+  });
+
+  it("annule puis re-saisit quand la reversion reussit", async () => {
+    m.matchFindFirst.mockResolvedValue({ id: "m-1" });
+    m.matchFind.mockResolvedValue(buildMatch());
+    recordMock.mockResolvedValue({
+      recorded: true,
+      pairingId: "pair-1",
+      matchId: "m-2",
+      winner: "home",
+      sppPlayersUpdated: 0,
+    });
+
+    const newInput = {
+      pairingId: "pair-1",
+      scoreHome: 3,
+      scoreAway: 3,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+    };
+    const r = await editOfflineLeagueResult(newInput);
+
+    // reversion effectuee (match supprime) PUIS re-saisie avec le nouvel input.
+    expect(m.matchDelete).toHaveBeenCalledWith({ where: { id: "m-1" } });
+    expect(recordMock).toHaveBeenCalledWith(newInput);
+    expect(r).toMatchObject({ recorded: true, matchId: "m-2" });
   });
 });
