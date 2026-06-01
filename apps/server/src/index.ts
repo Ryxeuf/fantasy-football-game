@@ -280,6 +280,22 @@ app.use("/admin/sim-replays", adminSimReplaysRoutes);
 app.use("/admin", adminWalletRoutes);
 // Utilitaires admin (seed, etc.) — endpoints idempotents avec audit log.
 app.use("/admin/utilities", adminUtilitiesRoutes);
+
+// Freeze Pro League — interrupteur maitre `PRO_LEAGUE_ENABLED` (defaut on).
+// Quand =false : toutes les routes pro-league (user + admin) renvoient 404 et
+// les crons pro-league plus bas sont court-circuites (guard `proLeagueEnabled`).
+// Reversible : retirer la var d'env pour degeler. Voir
+// docs/pro-league-freeze-2026-06-01.md.
+const proLeagueEnabled = process.env.PRO_LEAGUE_ENABLED !== "false";
+if (!proLeagueEnabled) {
+  app.use(
+    ["/pro-league", "/admin/pro-league", "/admin/gazette"],
+    (_req, res) => {
+      res.status(404).json({ error: "pro_league_frozen" });
+    },
+  );
+}
+
 // Lot P.B.3 — season factory Pro League (clone, reset standings, force
 // forfeit, cancel season). Audit log strict sur toutes les actions.
 app.use("/admin/pro-league", adminProSeasonRoutes);
@@ -777,7 +793,7 @@ const simRunnerTickMsEnv = Number(process.env.PRO_LEAGUE_SIM_RUNNER_TICK_MS);
 const simRunnerTickMs = Number.isFinite(simRunnerTickMsEnv)
   ? simRunnerTickMsEnv
   : 10 * 60 * 1000;
-if (!inTestSimRunnerEnv && simRunnerTickMs > 0) {
+if (!inTestSimRunnerEnv && simRunnerTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-league-sim-runner").then(
     ({ simulateUpcomingMatches }) => {
       const tick = async () => {
@@ -809,7 +825,7 @@ const driftWatcherTickMsEnv = Number(
 const driftWatcherTickMs = Number.isFinite(driftWatcherTickMsEnv)
   ? driftWatcherTickMsEnv
   : 60 * 60 * 1000;
-if (!inTestSimRunnerEnv && driftWatcherTickMs > 0) {
+if (!inTestSimRunnerEnv && driftWatcherTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-league-engine-drift-watcher").then(
     ({ startDriftWatcher }) => {
       startDriftWatcher({ intervalMs: driftWatcherTickMs });
@@ -833,7 +849,7 @@ const betSettleTickMsEnv = Number(process.env.PRO_LEAGUE_BET_SETTLE_TICK_MS);
 const betSettleTickMs = Number.isFinite(betSettleTickMsEnv)
   ? betSettleTickMsEnv
   : 5 * 60 * 1000;
-if (!inTestBetSettleEnv && betSettleTickMs > 0) {
+if (!inTestBetSettleEnv && betSettleTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-bet-settlement").then(
     ({ sweepUnsettledMarkets }) => {
       // Audit round 7 : runOnceAtATime evite que 2 sweeps concurrents
@@ -915,7 +931,7 @@ const casualtyTickMsEnv = Number(process.env.PRO_LEAGUE_CASUALTY_TICK_MS);
 const casualtyTickMs = Number.isFinite(casualtyTickMsEnv)
   ? casualtyTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestCasualtyEnv && casualtyTickMs > 0) {
+if (!inTestCasualtyEnv && casualtyTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-casualties").then(
     ({ sweepMatchCasualties }) => {
       const tick = runOnceAtATime("pro-casualty", async () => {
@@ -955,7 +971,7 @@ const sppTickMsEnv = Number(process.env.PRO_LEAGUE_SPP_TICK_MS);
 const sppTickMs = Number.isFinite(sppTickMsEnv)
   ? sppTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestSppEnv && sppTickMs > 0) {
+if (!inTestSppEnv && sppTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-spp").then(({ sweepMatchSpp }) => {
     const tick = runOnceAtATime("pro-spp", async () => {
       try {
@@ -997,7 +1013,7 @@ const levelUpTickMsEnv = Number(process.env.PRO_LEAGUE_LEVELUP_TICK_MS);
 const levelUpTickMs = Number.isFinite(levelUpTickMsEnv)
   ? levelUpTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestLevelUpEnv && levelUpTickMs > 0) {
+if (!inTestLevelUpEnv && levelUpTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-level-up").then(({ sweepLevelUps }) => {
     const tick = runOnceAtATime("pro-levelup", async () => {
       try {
@@ -1039,7 +1055,7 @@ const tvTickMsEnv = Number(process.env.PRO_LEAGUE_TV_TICK_MS);
 const tvTickMs = Number.isFinite(tvTickMsEnv)
   ? tvTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestTvEnv && tvTickMs > 0) {
+if (!inTestTvEnv && tvTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-tv").then(({ sweepRecomputeTvs }) => {
     const tick = runOnceAtATime("pro-tv", async () => {
       try {
@@ -1077,7 +1093,7 @@ const rookieTickMsEnv = Number(process.env.PRO_LEAGUE_ROOKIE_TICK_MS);
 const rookieTickMs = Number.isFinite(rookieTickMsEnv)
   ? rookieTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestRookieEnv && rookieTickMs > 0) {
+if (!inTestRookieEnv && rookieTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-generator").then(
     ({ sweepRookieReplenish }) => {
       const tick = async () => {
@@ -1116,7 +1132,7 @@ const hofTickMsEnv = Number(process.env.PRO_LEAGUE_HOF_TICK_MS);
 const hofTickMs = Number.isFinite(hofTickMsEnv)
   ? hofTickMsEnv
   : 30 * 60 * 1000;
-if (!inTestHofEnv && hofTickMs > 0) {
+if (!inTestHofEnv && hofTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-hall-of-fame").then(
     ({ sweepDeathInductions }) => {
       const tick = async () => {
@@ -1162,6 +1178,7 @@ const gazetteTickMs = Number.isFinite(gazetteTickMsEnv)
 const gazetteHourEnv = Number(process.env.PRO_LEAGUE_GAZETTE_HOUR_UTC);
 const gazetteHourUtc = Number.isFinite(gazetteHourEnv) ? gazetteHourEnv : 8;
 if (
+  proLeagueEnabled &&
   !inTestGazetteEnv &&
   gazetteTickMs > 0 &&
   process.env.ANTHROPIC_API_KEY
