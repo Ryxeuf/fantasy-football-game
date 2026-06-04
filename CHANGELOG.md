@@ -1,3 +1,10 @@
+## [1.170.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.0...v1.170.1) (2026-06-04)
+
+
+### ♻️ Code Refactoring
+
+* update contact information and descriptions across various files ([2ed48bb](https://github.com/Ryxeuf/fantasy-football-game/commit/2ed48bb5b3a23afec24f1d9adedb6e25b3fbadef))
+
 ## [1.170.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.169.1...v1.170.0) (2026-06-04)
 
 
