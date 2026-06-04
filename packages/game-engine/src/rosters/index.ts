@@ -95,6 +95,24 @@ export {
   type RegionalLeagueDefinition,
 } from "./regional-leagues";
 
+// Formats de jeu : Blood Bowl à 11 vs Blood Bowl à Sept (axe orthogonal au ruleset)
+export {
+  FORMATS,
+  DEFAULT_FORMAT,
+  FORMAT_CONSTRAINTS,
+  isGameFormat,
+  getFormatConstraints,
+  isLineman,
+  isBigGuy,
+  countNonLinemen,
+  getSelectablePositions,
+  validateFormatSelection,
+  type GameFormat,
+  type FormatConstraints,
+  type FormatTeamSelection,
+  type FormatValidationResult,
+} from "./formats";
+
 // Types pour compatibilité
 export type AllowedRoster = keyof typeof TEAM_ROSTERS;
 export const ALLOWED_TEAMS: AllowedRoster[] = Object.keys(TEAM_ROSTERS) as AllowedRoster[];

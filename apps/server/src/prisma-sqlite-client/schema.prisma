@@ -14,6 +14,12 @@ enum Ruleset {
   season_3
 }
 
+// Format de jeu : Blood Bowl à 11 ou à Sept (mirror du schéma PG principal).
+enum Format {
+  bb11
+  sevens
+}
+
 model User {
   id                          String                      @id @default(cuid())
   email                       String                      @unique
@@ -322,6 +328,7 @@ model Team {
   name                 String
   roster               String
   ruleset              Ruleset             @default(season_3)
+  format               Format              @default(bb11)
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]

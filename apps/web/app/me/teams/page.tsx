@@ -11,8 +11,11 @@ type Team = {
   name: string;
   roster: string;
   ruleset?: string;
+  format?: string;
   createdAt: string;
 };
+
+type FormatFilter = "all" | "bb11" | "sevens";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -47,8 +50,19 @@ export default function MyTeamsPage() {
   const [rosterNames, setRosterNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>("all");
   /** Lot O.B.3 — `createdAt` du user pour decider d'afficher le modal welcome. */
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+
+  const formatLabel = (format?: string): string =>
+    format === "sevens"
+      ? (t.teams.formatSevens ?? "Blood Bowl à Sept")
+      : (t.teams.formatBB11 ?? "Blood Bowl à 11");
+
+  const visibleTeams =
+    formatFilter === "all"
+      ? teams
+      : teams.filter((team) => (team.format ?? "bb11") === formatFilter);
 
   useEffect(() => {
     (async () => {
@@ -115,13 +129,28 @@ export default function MyTeamsPage() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {loading && <TeamsSkeleton />}
       {!loading && teams.length > 0 && (
-        <p className="text-xs text-gray-500">{t.teams.rulesetInfoList}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-gray-500">{t.teams.rulesetInfoList}</p>
+          <label className="flex items-center gap-2 text-xs text-gray-600">
+            <span>{t.teams.formatLabel ?? "Format"}</span>
+            <select
+              data-testid="teams-format-filter"
+              className="min-h-[36px] border border-gray-300 rounded-lg px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={formatFilter}
+              onChange={(e) => setFormatFilter(e.target.value as FormatFilter)}
+            >
+              <option value="all">{t.common?.all ?? "Tous"}</option>
+              <option value="bb11">{t.teams.formatBB11 ?? "Blood Bowl à 11"}</option>
+              <option value="sevens">{t.teams.formatSevens ?? "Blood Bowl à Sept"}</option>
+            </select>
+          </label>
+        </div>
       )}
 
       {/* Liste des équipes existantes */}
       {!loading && teams.length > 0 && (
         <div className="grid gap-3">
-          {teams.map((team) => (
+          {visibleTeams.map((team) => (
             <a
               key={team.id}
               className="rounded border p-4 bg-white hover:shadow transition-shadow active:scale-[0.98]"
@@ -131,11 +160,23 @@ export default function MyTeamsPage() {
               <div className="text-xs sm:text-sm text-gray-600 mt-1">
                 {t.teams.roster}: {rosterNames[team.roster] || team.roster}
               </div>
-              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 mt-2">
-                {t.teams.rulesetBadge.replace(
-                  "{label}",
-                  team.ruleset === "season_3" ? t.teams.rulesetSeason3 : t.teams.rulesetSeason2,
-                )}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
+                  {t.teams.rulesetBadge.replace(
+                    "{label}",
+                    team.ruleset === "season_3" ? t.teams.rulesetSeason3 : t.teams.rulesetSeason2,
+                  )}
+                </span>
+                <span
+                  data-testid="team-format-badge"
+                  className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
+                    (team.format ?? "bb11") === "sevens"
+                      ? "bg-purple-50 text-purple-700"
+                      : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  {formatLabel(team.format)}
+                </span>
               </div>
             </a>
           ))}

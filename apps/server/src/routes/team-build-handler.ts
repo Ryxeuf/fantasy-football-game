@@ -8,8 +8,9 @@
  *    starPlayers + staff). Validations en cascade :
  *    - roster autorise
  *    - min/max par position
- *    - 11-16 joueurs au total
- *    - paires Star Players valides + cap 16 joueurs
+ *    - contraintes de format (BB11 11-16 / Sevens 7-11, non-Linemen,
+ *      Big Guys, Star Players, plafonds staff) via validateFormatSelection
+ *    - paires Star Players valides + cap joueurs selon format
  *    - budget (joueurs + Star Players + staff) <= teamValue
  *    Cree `team` + `teamPlayer[]` + `teamStarPlayer[]`, recalcule TV.
  *
@@ -32,8 +33,12 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
   type AllowedRoster,
+  type GameFormat,
   getStarPlayerBySlug,
   getRerollCost,
+  getFormatConstraints,
+  validateFormatSelection,
+  isGameFormat,
 } from '@bb/game-engine';
 import {
   validateStarPlayerPairs,
@@ -81,9 +86,10 @@ const ALLOWED_TEAMS = [
  * S27.8.27 — `POST /team/build`
  *
  * Creation atomique d'une equipe complete depuis le builder. Valide
- * en cascade roster, positions (min/max), total joueurs (11-16),
- * Star Players (paires + cap), budget total, puis cree team +
- * players + starPlayers et recalcule TV.
+ * en cascade roster, positions (min/max), contraintes de format
+ * (validateFormatSelection : nombre de joueurs, non-Linemen, Big Guys,
+ * Star Players, staff), Star Players (paires + cap), budget total, puis
+ * cree team + players + starPlayers et recalcule TV.
  */
 export async function handleBuildTeam(
   req: AuthenticatedRequest,
@@ -97,6 +103,7 @@ export async function handleBuildTeam(
       choices,
       starPlayers: starPlayerSlugs,
       ruleset: bodyRuleset,
+      format: bodyFormat,
       rerolls: bodyRerolls,
       cheerleaders: bodyCheerleaders,
       assistants: bodyAssistants,
@@ -109,6 +116,7 @@ export async function handleBuildTeam(
       choices: Array<{ key: string; count: number }>;
       starPlayers?: string[];
       ruleset?: string;
+      format?: string;
       rerolls?: number;
       cheerleaders?: number;
       assistants?: number;
@@ -121,8 +129,10 @@ export async function handleBuildTeam(
       return;
     }
     const ruleset = resolveRuleset(bodyRuleset);
+    const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
+    const constraints = getFormatConstraints(format);
 
-    const finalTeamValue = teamValue || 1000;
+    const finalTeamValue = teamValue || constraints.startingBudget;
 
     const def = await getRosterFromDb(roster as AllowedRoster, 'fr', ruleset);
     if (!def) {
@@ -132,6 +142,7 @@ export async function handleBuildTeam(
 
     let totalPlayers = 0;
     let totalCost = 0;
+    const counts: Record<string, number> = {};
     for (const p of def.positions) {
       const c = Math.max(0, choices.find((x) => x.key === p.slug)?.count ?? 0);
       if (c < p.min || c > p.max) {
@@ -142,12 +153,9 @@ export async function handleBuildTeam(
         );
         return;
       }
+      counts[p.slug] = c;
       totalPlayers += c;
       totalCost += c * p.cost;
-    }
-    if (totalPlayers < 11 || totalPlayers > 16) {
-      sendError(res, 'Il faut entre 11 et 16 joueurs', 400);
-      return;
     }
 
     const rerolls = bodyRerolls ?? 0;
@@ -156,15 +164,36 @@ export async function handleBuildTeam(
     const apothecary = bodyApothecary ?? false;
     const dedicatedFans = bodyDedicatedFans ?? 1;
 
-    const rerollUnitCost = getRerollCost(roster) / 1000;
+    const starPlayersToHire = starPlayerSlugs || [];
+
+    // Contraintes propres au format (BB11 / Sevens) : nombre de joueurs,
+    // non-Linemen, Big Guys, Star Players, plafonds de staff. Source unique
+    // de vérité partagée avec l'UI (@bb/game-engine).
+    const formatCheck = validateFormatSelection({
+      format,
+      positions: def.positions,
+      counts,
+      starPlayerCount: starPlayersToHire.length,
+      rerolls,
+      cheerleaders,
+      assistants,
+      apothecary,
+      dedicatedFans,
+    });
+    if (!formatCheck.valid) {
+      sendError(res, formatCheck.error ?? 'Sélection invalide pour ce format', 400);
+      return;
+    }
+
+    const rerollUnitCost =
+      (getRerollCost(roster) / 1000) * constraints.rerollCostMultiplier;
     const staffCost =
       rerolls * rerollUnitCost +
-      cheerleaders * 10 +
-      assistants * 10 +
-      (apothecary ? 50 : 0) +
-      Math.max(0, dedicatedFans - 1) * 10;
+      cheerleaders * constraints.cheerleaderCost +
+      assistants * constraints.assistantCost +
+      (apothecary ? constraints.apothecaryCost : 0) +
+      Math.max(0, dedicatedFans - 1) * constraints.dedicatedFanCost;
 
-    const starPlayersToHire = starPlayerSlugs || [];
     let starPlayersCost = 0;
 
     if (starPlayersToHire.length > 0) {
@@ -173,15 +202,6 @@ export async function handleBuildTeam(
         sendError(
           res,
           pairValidation.error ?? 'Validation paires echouee',
-          400,
-        );
-        return;
-      }
-
-      if (totalPlayers + starPlayersToHire.length > 16) {
-        sendError(
-          res,
-          `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)`,
           400,
         );
         return;
@@ -253,6 +273,7 @@ export async function handleBuildTeam(
           name,
           roster,
           ruleset,
+          format,
           teamValue: finalTeamValue,
           initialBudget: finalTeamValue,
           treasury: 0,

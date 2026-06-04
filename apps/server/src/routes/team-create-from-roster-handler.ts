@@ -30,7 +30,10 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { updateTeamValues } from '../utils/team-values';
 import {
   type AllowedRoster,
+  type GameFormat,
   getStarPlayerBySlug,
+  getFormatConstraints,
+  isGameFormat,
 } from '@bb/game-engine';
 import {
   validateStarPlayerPairs,
@@ -223,20 +226,23 @@ export async function handleCreateFromRoster(
     teamValue,
     starPlayers: starPlayerSlugs,
     ruleset: bodyRuleset,
+    format: bodyFormat,
   } = req.body as {
     name: string;
     roster: string;
     teamValue?: number;
     starPlayers?: string[];
     ruleset?: string;
+    format?: string;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!ALLOWED_TEAMS.includes(roster as any))
     return res.status(400).json({ error: 'Roster non autorisé' });
 
   const ruleset = resolveRuleset(bodyRuleset);
+  const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
-  const finalTeamValue = teamValue || 1000;
+  const finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
 
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
@@ -342,6 +348,7 @@ export async function handleCreateFromRoster(
         name,
         roster,
         ruleset,
+        format,
         teamValue: finalTeamValue,
         initialBudget: finalTeamValue,
         treasury: 0,

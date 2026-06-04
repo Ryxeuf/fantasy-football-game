@@ -6,6 +6,7 @@ export const createFromRosterSchema = z.object({
   teamValue: z.number().min(100, "La valeur d'équipe doit être entre 100 et 2000k po").max(2000, "La valeur d'équipe doit être entre 100 et 2000k po").optional(),
   starPlayers: z.array(z.string()).optional(),
   ruleset: z.string().optional(),
+  format: z.enum(["bb11", "sevens"]).optional(),
 });
 
 export const buildTeamSchema = z.object({
@@ -20,6 +21,10 @@ export const buildTeamSchema = z.object({
   ),
   starPlayers: z.array(z.string()).optional(),
   ruleset: z.string().optional(),
+  // Format de jeu. Les bornes ci-dessous restent celles du BB11 (superset) ;
+  // les contraintes spécifiques au format (Sevens : ≤6 relances, etc.) sont
+  // appliquées au runtime via validateFormatSelection (@bb/game-engine).
+  format: z.enum(["bb11", "sevens"]).optional(),
   rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),

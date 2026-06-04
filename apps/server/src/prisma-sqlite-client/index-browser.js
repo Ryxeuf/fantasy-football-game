@@ -291,6 +291,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   name: 'name',
   roster: 'roster',
   ruleset: 'ruleset',
+  format: 'format',
   createdAt: 'createdAt',
   treasury: 'treasury',
   rerolls: 'rerolls',
@@ -1066,6 +1067,11 @@ exports.Prisma.QueryMode = {
 exports.Ruleset = exports.$Enums.Ruleset = {
   season_2: 'season_2',
   season_3: 'season_3'
+};
+
+exports.Format = exports.$Enums.Format = {
+  bb11: 'bb11',
+  sevens: 'sevens'
 };
 
 exports.Prisma.ModelName = {

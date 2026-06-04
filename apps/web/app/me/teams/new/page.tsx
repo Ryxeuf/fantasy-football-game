@@ -8,7 +8,19 @@ import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import QuantityStepper from "../components/QuantityStepper";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { DEFAULT_RULESET, RULESETS, type Ruleset, getRerollCost } from "@bb/game-engine";
+import {
+  DEFAULT_RULESET,
+  RULESETS,
+  type Ruleset,
+  getRerollCost,
+  FORMATS,
+  DEFAULT_FORMAT,
+  type GameFormat,
+  getFormatConstraints,
+  isLineman,
+  countNonLinemen,
+  validateFormatSelection,
+} from "@bb/game-engine";
 
 type Position = {
   slug: string;
@@ -42,6 +54,16 @@ export default function NewTeamBuilder() {
     }
     return DEFAULT_RULESET;
   });
+  const [format, setFormat] = useState<GameFormat>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const value = urlParams.get("format") as GameFormat | null;
+      if (value && FORMATS.includes(value)) {
+        return value;
+      }
+    }
+    return DEFAULT_FORMAT;
+  });
   const [rosterId, setRosterId] = useState(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -59,12 +81,13 @@ export default function NewTeamBuilder() {
   });
 
   const [teamValue, setTeamValue] = useState(() => {
+    const defaultBudget = getFormatConstraints(format).startingBudget;
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const value = urlParams.get("teamValue");
-      return value ? parseInt(value) : 1000;
+      return value ? parseInt(value) : defaultBudget;
     }
-    return 1000;
+    return defaultBudget;
   });
 
   const [positions, setPositions] = useState<Position[]>([]);
@@ -81,6 +104,27 @@ export default function NewTeamBuilder() {
   const [assistants, setAssistants] = useState(0);
   const [apothecary, setApothecary] = useState(false);
   const [dedicatedFans, setDedicatedFans] = useState(1);
+
+  // Contraintes du format (BB11 / Sevens) — source unique partagée avec le
+  // serveur (@bb/game-engine). Pilote budget, plafonds, staff et validation.
+  const constraints = useMemo(() => getFormatConstraints(format), [format]);
+
+  // Au changement de format (hors montage initial), réaligne le budget par
+  // défaut et clampe le staff / star players sur les plafonds du nouveau format.
+  const formatMountRef = useRef(true);
+  useEffect(() => {
+    if (formatMountRef.current) {
+      formatMountRef.current = false;
+      return;
+    }
+    setTeamValue(constraints.startingBudget);
+    setRerolls((v) => Math.min(v, constraints.maxRerolls));
+    setCheerleaders((v) => Math.min(v, constraints.maxCheerleaders));
+    setAssistants((v) => Math.min(v, constraints.maxAssistants));
+    setDedicatedFans((v) => Math.min(v, constraints.maxDedicatedFans));
+    if (!constraints.apothecaryAllowed) setApothecary(false);
+    if (!constraints.starPlayersAllowed) setSelectedStarPlayers([]);
+  }, [format, constraints]);
 
   useEffect(() => {
     const lang = language === "en" ? "en" : "fr";
@@ -151,17 +195,48 @@ export default function NewTeamBuilder() {
     [totalPlayers, selectedStarPlayers],
   );
 
-  const rerollUnitCost = useMemo(() => getRerollCost(rosterId) / 1000, [rosterId]);
+  const rerollUnitCost = useMemo(
+    () => (getRerollCost(rosterId) / 1000) * constraints.rerollCostMultiplier,
+    [rosterId, constraints],
+  );
   const staffCost = useMemo(
     () =>
       rerolls * rerollUnitCost +
-      cheerleaders * 10 +
-      assistants * 10 +
-      (apothecary ? 50 : 0) +
-      Math.max(0, dedicatedFans - 1) * 10,
-    [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans],
+      cheerleaders * constraints.cheerleaderCost +
+      assistants * constraints.assistantCost +
+      (apothecary ? constraints.apothecaryCost : 0) +
+      Math.max(0, dedicatedFans - 1) * constraints.dedicatedFanCost,
+    [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans, constraints],
   );
   const remainingBudget = teamValue - total - staffCost;
+
+  // Joueurs non-Linemen sélectionnés (postes spécialisés + Gros Bras) et
+  // plafond éventuel du format (Sevens = 4).
+  const nonLinemenCount = useMemo(
+    () => countNonLinemen(positions, counts),
+    [positions, counts],
+  );
+  const nonLinemenFull =
+    constraints.maxNonLinemen !== null &&
+    nonLinemenCount >= constraints.maxNonLinemen;
+
+  // Validation des contraintes de format (hors budget) — réutilise la logique
+  // serveur pour une cohérence parfaite entre UI et API.
+  const formatValidation = useMemo(
+    () =>
+      validateFormatSelection({
+        format,
+        positions,
+        counts,
+        starPlayerCount: selectedStarPlayers.length,
+        rerolls,
+        cheerleaders,
+        assistants,
+        apothecary,
+        dedicatedFans,
+      }),
+    [format, positions, counts, selectedStarPlayers, rerolls, cheerleaders, assistants, apothecary, dedicatedFans],
+  );
 
   const rulesetLabels: Record<Ruleset, string> = {
     season_2: t.teams.rulesetSeason2 ?? "Saison 2",
@@ -199,6 +274,7 @@ export default function NewTeamBuilder() {
           roster: rosterId,
           teamValue,
           ruleset,
+          format,
           choices: Object.entries(counts).map(([slug, count]) => ({
             key: slug,
             count,
@@ -222,10 +298,7 @@ export default function NewTeamBuilder() {
     }
   }
 
-  const isTeamValid =
-    totalPlayersWithStars >= 11 &&
-    totalPlayersWithStars <= 16 &&
-    remainingBudget >= 0;
+  const isTeamValid = formatValidation.valid && remainingBudget >= 0;
 
   const incLabel = (label: string) =>
     t.teams.increaseLabel.replace("{label}", label);
@@ -251,9 +324,10 @@ export default function NewTeamBuilder() {
               />
               <SummaryMetric
                 label={t.teams.playersShort}
-                value={`${totalPlayersWithStars}/16`}
+                value={`${totalPlayersWithStars}/${constraints.maxPlayers}`}
                 tone={
-                  totalPlayersWithStars < 11 || totalPlayersWithStars > 16
+                  totalPlayersWithStars < constraints.minPlayers ||
+                  totalPlayersWithStars > constraints.maxPlayers
                     ? "danger"
                     : "success"
                 }
@@ -291,25 +365,17 @@ export default function NewTeamBuilder() {
 
           {/* Validity hint line (compact on mobile) */}
           <div className="mt-2 text-xs md:text-sm" aria-live="polite">
-            {totalPlayersWithStars < 11 && (
-              <span className="text-red-600">
-                ⚠️{" "}
-                {t.teams.needMinPlayers.replace(
-                  "{count}",
-                  totalPlayersWithStars.toString(),
-                )}
+            {remainingBudget < 0 && (
+              <span className="text-red-600" data-testid="hint-budget">
+                ⚠️ {t.teams.budgetExceeded.replace("{amount}", String(-remainingBudget))}
               </span>
             )}
-            {totalPlayersWithStars > 16 && (
-              <span className="text-red-600">
-                ⚠️{" "}
-                {t.teams.maxPlayersExceeded.replace(
-                  "{count}",
-                  totalPlayersWithStars.toString(),
-                )}
+            {remainingBudget >= 0 && !formatValidation.valid && (
+              <span className="text-red-600" data-testid="hint-format">
+                ⚠️ {formatValidation.error}
               </span>
             )}
-            {totalPlayersWithStars >= 11 && totalPlayersWithStars <= 16 && (
+            {isTeamValid && (
               <span className="text-emerald-700">
                 ✅{" "}
                 {t.teams.validTeam
@@ -356,7 +422,31 @@ export default function NewTeamBuilder() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label
+                htmlFor="format"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                {t.teams.formatLabel ?? "Format"}
+              </label>
+              <select
+                id="format"
+                data-testid="format-select"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                value={format}
+                onChange={(e) => setFormat(e.target.value as GameFormat)}
+              >
+                {FORMATS.map((value) => (
+                  <option key={value} value={value}>
+                    {value === "sevens"
+                      ? (t.teams.formatSevens ?? "Blood Bowl à Sept")
+                      : (t.teams.formatBB11 ?? "Blood Bowl à 11")}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label
                 htmlFor="ruleset"
@@ -429,6 +519,15 @@ export default function NewTeamBuilder() {
               </div>
             </div>
           </div>
+
+          <p
+            className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
+            data-testid="format-constraints-hint"
+          >
+            {format === "sevens"
+              ? `Blood Bowl à Sept — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs · max ${constraints.maxNonLinemen} non-Linemen · relances ×${constraints.rerollCostMultiplier} · sans Star Players`
+              : `Blood Bowl à 11 — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs`}
+          </p>
         </div>
 
         {/* Position picker: table on desktop, cards on mobile */}
@@ -506,7 +605,7 @@ export default function NewTeamBuilder() {
                         type="button"
                         aria-label={`${t.teams.addPlayer} ${p.displayName}`}
                         onClick={() => change(p.slug, 1)}
-                        disabled={atMax || cannotAfford}
+                        disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p))}
                         className="h-11 w-11 rounded-lg border border-emerald-600 bg-emerald-600 font-semibold text-lg text-white active:bg-emerald-800 hover:bg-emerald-700 disabled:bg-gray-200 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                       >
                         +
@@ -589,7 +688,7 @@ export default function NewTeamBuilder() {
                             aria-label={`${t.teams.addPlayer} ${p.displayName}`}
                             className="h-9 w-9 rounded-lg border border-emerald-600 bg-emerald-600 font-semibold text-white hover:bg-emerald-700 disabled:bg-gray-200 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                             onClick={() => change(p.slug, 1)}
-                            disabled={atMax || cannotAfford}
+                            disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p))}
                           >
                             +
                           </button>
@@ -627,7 +726,7 @@ export default function NewTeamBuilder() {
               <QuantityStepper
                 value={rerolls}
                 min={0}
-                max={8}
+                max={constraints.maxRerolls}
                 onChange={setRerolls}
                 label={t.teams.rerolls}
                 decrementAriaLabel={decLabel(t.teams.rerolls)}
@@ -640,13 +739,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.cheerleaders}
-              unitCost={`10${t.teams.kpo}`}
+              unitCost={`${constraints.cheerleaderCost}${t.teams.kpo}`}
               testId="staff-cheerleaders"
             >
               <QuantityStepper
                 value={cheerleaders}
                 min={0}
-                max={12}
+                max={constraints.maxCheerleaders}
                 onChange={setCheerleaders}
                 label={t.teams.cheerleaders}
                 decrementAriaLabel={decLabel(t.teams.cheerleaders)}
@@ -659,13 +758,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.assistants}
-              unitCost={`10${t.teams.kpo}`}
+              unitCost={`${constraints.assistantCost}${t.teams.kpo}`}
               testId="staff-assistants"
             >
               <QuantityStepper
                 value={assistants}
                 min={0}
-                max={6}
+                max={constraints.maxAssistants}
                 onChange={setAssistants}
                 label={t.teams.assistants}
                 decrementAriaLabel={decLabel(t.teams.assistants)}
@@ -678,13 +777,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.dedicatedFans}
-              unitCost={`10${t.teams.kpo}`}
+              unitCost={`${constraints.dedicatedFanCost}${t.teams.kpo}`}
               testId="staff-dedicated-fans"
             >
               <QuantityStepper
                 value={dedicatedFans}
                 min={1}
-                max={6}
+                max={constraints.maxDedicatedFans}
                 onChange={setDedicatedFans}
                 label={t.teams.dedicatedFans}
                 decrementAriaLabel={decLabel(t.teams.dedicatedFans)}
@@ -697,14 +796,18 @@ export default function NewTeamBuilder() {
 
             <label
               htmlFor="staff-apothecary-input"
-              className="sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+              className={`sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 transition-colors ${
+                constraints.apothecaryAllowed
+                  ? "cursor-pointer hover:bg-gray-100"
+                  : "opacity-50 cursor-not-allowed"
+              }`}
             >
               <div className="min-w-0">
                 <div className="font-medium text-gray-900">
                   {t.teams.apothecary}
                 </div>
                 <div className="text-xs text-gray-600">
-                  50{t.teams.kpo} · {t.teams.apothecaryHelp}
+                  {constraints.apothecaryCost}{t.teams.kpo} · {t.teams.apothecaryHelp}
                 </div>
               </div>
               <input
@@ -714,6 +817,7 @@ export default function NewTeamBuilder() {
                 role="switch"
                 aria-checked={apothecary}
                 aria-label={t.teams.apothecary}
+                disabled={!constraints.apothecaryAllowed}
                 className="sr-only peer"
                 checked={apothecary}
                 onChange={(e) => setApothecary(e.target.checked)}
@@ -734,14 +838,16 @@ export default function NewTeamBuilder() {
           </div>
         </div>
 
-        <StarPlayerSelector
-          roster={rosterId}
-          ruleset={ruleset}
-          selectedStarPlayers={selectedStarPlayers}
-          onSelectionChange={setSelectedStarPlayers}
-          currentPlayerCount={totalPlayers}
-          availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
-        />
+        {constraints.starPlayersAllowed && (
+          <StarPlayerSelector
+            roster={rosterId}
+            ruleset={ruleset}
+            selectedStarPlayers={selectedStarPlayers}
+            onSelectionChange={setSelectedStarPlayers}
+            currentPlayerCount={totalPlayers}
+            availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
+          />
+        )}
       </div>
     </div>
   );

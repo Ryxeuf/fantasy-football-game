@@ -172,14 +172,28 @@ export default function TeamDetailPage() {
           <div className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.roster}: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
           </div>
-          {team?.ruleset && (
-            <div className="text-xs sm:text-sm text-emerald-700 font-semibold mt-1 uppercase tracking-wide">
-              {t.teams.rulesetBadge.replace(
-                "{label}",
-                rulesetLabels[team.ruleset] || team.ruleset,
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {team?.ruleset && (
+              <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
+                {t.teams.rulesetBadge.replace(
+                  "{label}",
+                  rulesetLabels[team.ruleset] || team.ruleset,
+                )}
+              </span>
+            )}
+            <span
+              data-testid="team-format-badge"
+              className={`inline-flex items-center rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
+                (team?.format ?? "bb11") === "sevens"
+                  ? "bg-purple-50 text-purple-700"
+                  : "bg-blue-50 text-blue-700"
+              }`}
+            >
+              {(team?.format ?? "bb11") === "sevens"
+                ? (t.teams.formatSevens ?? "Blood Bowl à Sept")
+                : (t.teams.formatBB11 ?? "Blood Bowl à 11")}
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {canEdit ? (
