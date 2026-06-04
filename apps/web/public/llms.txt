@@ -15,7 +15,6 @@
 - **Technologies** : Next.js 14, React, Prisma, PostgreSQL, Pixi.js, Expo
 - **Monétisation** : aucune publicité, aucun paywall, dons via Ko-fi
 - **Communauté** : Discord https://discord.gg/XEZJTgEHKn
-- **Code source** : https://github.com/Ryxeuf/fantasy-football-game
 
 ## Ce que fait Nuffle Arena
 

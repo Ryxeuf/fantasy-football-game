@@ -46,7 +46,6 @@ export default function HomeStructuredData() {
         foundingDate: "2025",
         sameAs: [
           "https://discord.gg/XEZJTgEHKn",
-          "https://github.com/Ryxeuf/fantasy-football-game",
           "https://ko-fi.com/nufflearena",
           ...EXTERNAL_SAME_AS,
         ],

@@ -42,26 +42,26 @@ const TEMPLATES: Record<OutreachChannel, OutreachTemplate> = {
     title: "[Tool] Nuffle Arena — gestionnaire d'equipes Blood Bowl gratuit ({siteUrl})",
     body:
       "Bonjour r/bloodbowl,\n\n" +
-      "Je partage Nuffle Arena, une plateforme gratuite et open-source\n" +
+      "Je partage Nuffle Arena, une plateforme gratuite\n" +
       "pour gerer vos equipes Blood Bowl Saison 3 :\n\n" +
       "- 30 rosters officiels Saison 2 + Saison 3\n" +
       "- 60+ Star Players avec regles speciales\n" +
       "- 130+ competences en FR/EN\n" +
       "- Export PDF pour vos matchs sur table\n" +
       "- Mode multijoueur en ligne (matchmaking + ELO)\n\n" +
-      "Aucune pub, aucune revente de donnees. Code public sur GitHub.\n" +
+      "Aucune pub, aucune revente de donnees.\n" +
       "Tout retour est le bienvenu.\n",
     callToAction: "Lien : {siteUrl}",
   },
   talkfantasyfootball: {
-    title: "Nuffle Arena — free open-source Blood Bowl team manager ({siteUrl})",
+    title: "Nuffle Arena — free Blood Bowl team manager ({siteUrl})",
     body:
       "Hi all,\n\n" +
-      "Sharing Nuffle Arena, a free, open-source Blood Bowl team manager:\n" +
+      "Sharing Nuffle Arena, a free Blood Bowl team manager:\n" +
       "30 official rosters (Season 2 + 3), 60+ Star Players, 130+ skills,\n" +
       "PDF export for tabletop matches, and an online multiplayer mode.\n\n" +
       "No ads, no data resale. Built by the community for the community.\n" +
-      "Feedback very welcome here or on GitHub.\n",
+      "Feedback very welcome.\n",
     callToAction: "Link: {siteUrl}",
   },
   discord_bloodbowl: {
@@ -80,10 +80,10 @@ const TEMPLATES: Record<OutreachChannel, OutreachTemplate> = {
     body:
       "Bonjour Mordorbihan,\n\n" +
       "Je voulais te presenter Nuffle Arena, une plateforme francophone\n" +
-      "gratuite et open-source dediee a la gestion d equipes Blood Bowl\n" +
+      "gratuite dediee a la gestion d equipes Blood Bowl\n" +
       "(Saison 2 et Saison 3). 30 rosters officiels, 60+ Star Players,\n" +
       "130+ competences traduites, export PDF prepare pour les matchs sur\n" +
-      "table. Aucune pub, code 100 % public sur GitHub.\n\n" +
+      "table. Aucune pub, aucune revente de donnees.\n\n" +
       "Si ca peut interesser ton lectorat, je serais ravi qu'on echange.\n",
     callToAction: "Site : {siteUrl}",
   },

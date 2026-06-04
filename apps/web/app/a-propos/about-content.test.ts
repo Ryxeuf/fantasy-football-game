@@ -107,7 +107,7 @@ describe("buildAboutContent", () => {
     }
   });
 
-  it("expose la mission / pitch citable du projet (free, open-source)", () => {
+  it("expose la mission / pitch citable du projet (gratuit, financé par dons)", () => {
     const content: AboutContent = buildAboutContent(baseInput({ language: "fr" }));
     const allText = [
       content.story.title,
@@ -117,6 +117,6 @@ describe("buildAboutContent", () => {
       .join(" ")
       .toLowerCase();
     expect(allText).toContain("gratuit");
-    expect(allText.includes("open") || allText.includes("source")).toBe(true);
+    expect(allText.includes("ko-fi") || allText.includes("dons")).toBe(true);
   });
 });

@@ -59,14 +59,14 @@ const TEXTS = {
     storyTitle: "Notre histoire",
     teamTitle: "L'équipe",
     teamDescription:
-      "Nuffle Arena est un projet open-source maintenu par des passionnés de Blood Bowl. Le code est public, les contributions sont les bienvenues sur GitHub. La gouvernance est ouverte et les décisions se discutent sur Discord.",
+      "Nuffle Arena est un projet maintenu par des passionnés de Blood Bowl. La communauté est ouverte et les décisions se discutent sur Discord.",
     statRosters: "Rosters officiels",
     statStarPlayers: "Star Players",
     statSkills: "Compétences",
     statTutorials: "Tutoriels interactifs",
     storyParagraphs: (year: number): string[] => [
       `Nuffle Arena est né en ${year} avec une mission claire : offrir aux coachs Blood Bowl un outil gratuit, complet et fidèle aux règles officielles de Games Workshop pour gérer leurs équipes, préparer leurs matchs et apprendre les subtilités du jeu.`,
-      "Le projet est entièrement gratuit, sans publicité et sans revente de données. Le code est open-source et hébergé publiquement sur GitHub. Le financement repose uniquement sur les dons via Ko-fi, et la communauté décide collectivement des prochaines fonctionnalités.",
+      "Le projet est entièrement gratuit, sans publicité et sans revente de données. Le financement repose uniquement sur les dons via Ko-fi, et la communauté décide collectivement des prochaines fonctionnalités.",
       "Notre objectif à long terme : rester la référence francophone pour la gestion d'équipes et le jeu Blood Bowl en ligne, avec une couverture exhaustive des règles Saison 2 et Saison 3, un mode multijoueur abouti et une communauté active.",
     ],
     roadmap: [
@@ -82,14 +82,14 @@ const TEXTS = {
     storyTitle: "Our story",
     teamTitle: "The team",
     teamDescription:
-      "Nuffle Arena is an open-source project maintained by Blood Bowl enthusiasts. The code is public, contributions are welcome on GitHub. Governance is open, decisions are discussed on Discord.",
+      "Nuffle Arena is a project maintained by Blood Bowl enthusiasts. The community is open and decisions are discussed on Discord.",
     statRosters: "Official rosters",
     statStarPlayers: "Star Players",
     statSkills: "Skills",
     statTutorials: "Interactive tutorials",
     storyParagraphs: (year: number): string[] => [
       `Nuffle Arena was born in ${year} with a clear mission: give Blood Bowl coaches a free, comprehensive tool faithful to the official Games Workshop rules — to manage teams, prepare matches and learn the game's subtleties.`,
-      "The project is entirely free, ad-free, and never resells data. The code is open-source and publicly hosted on GitHub. Funding relies solely on Ko-fi donations, and the community collectively decides the next features.",
+      "The project is entirely free, ad-free, and never resells data. Funding relies solely on Ko-fi donations, and the community collectively decides the next features.",
       "Our long-term goal: remain the reference platform for Blood Bowl team management and online play, with exhaustive coverage of Season 2 and Season 3 rules, a polished multiplayer mode and an active community.",
     ],
     roadmap: [

@@ -56,11 +56,17 @@ describe("buildRssFeed", () => {
     const xml = buildRssFeed(baseInput);
     expect(xml).toContain("<item>");
     expect(xml).toContain("<title>Nuffle Arena 1.72.0</title>");
-    expect(xml).toContain("<link>https://github.com/x/y/releases/tag/v1.72.0</link>");
+    // Le lien d'item pointe vers la page du site, jamais vers une URL externe.
+    expect(xml).toContain("<link>https://nufflearena.fr/changelog</link>");
     expect(xml).toContain("<guid");
     expect(xml).toContain(">v1.72.0<");
     // RFC 822 date
     expect(xml).toMatch(/<pubDate>[^<]*\d{4}[^<]*<\/pubDate>/);
+  });
+
+  it("n'expose aucune URL GitHub dans le flux (liens neutralises)", () => {
+    const xml = buildRssFeed(baseInput);
+    expect(xml).not.toContain("github.com");
   });
 
   it("inclut le contenu des sections dans la description avec CDATA", () => {

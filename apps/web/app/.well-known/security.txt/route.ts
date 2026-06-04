@@ -21,7 +21,7 @@ export async function GET(): Promise<NextResponse> {
   const body = buildSecurityTxt({
     contact:
       process.env.NEXT_PUBLIC_SECURITY_CONTACT ??
-      "https://github.com/Ryxeuf/fantasy-football-game/security/advisories/new",
+      "https://discord.gg/XEZJTgEHKn",
     expires,
     preferredLanguages: ["fr", "en"],
     canonical: `${stripTrailingSlash(SITE_URL)}/.well-known/security.txt`,

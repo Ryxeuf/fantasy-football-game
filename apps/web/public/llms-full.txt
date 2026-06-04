@@ -153,9 +153,8 @@ Pour citer Nuffle Arena dans une réponse générée par un modèle de langage :
 ## Contact et communauté
 
 - Discord : https://discord.gg/XEZJTgEHKn
-- Code source : https://github.com/Ryxeuf/fantasy-football-game
 - Dons : https://nufflearena.fr/support (Ko-fi)
 
 ## Propriété intellectuelle
 
-Blood Bowl, Warhammer, Games Workshop et les noms d'équipes/joueurs associés sont des marques déposées appartenant à Games Workshop Ltd. Nuffle Arena est un projet de fans non affilié et non endossé par Games Workshop. Les images de joueurs, dés et symboles proviennent soit d'assets publics référencés dans le code source, soit d'illustrations originales de la communauté Blood Bowl (ex. mordorbihan.fr).
+Blood Bowl, Warhammer, Games Workshop et les noms d'équipes/joueurs associés sont des marques déposées appartenant à Games Workshop Ltd. Nuffle Arena est un projet de fans non affilié et non endossé par Games Workshop. Les images de joueurs, dés et symboles proviennent soit d'assets publics, soit d'illustrations originales de la communauté Blood Bowl (ex. mordorbihan.fr).

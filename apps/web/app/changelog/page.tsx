@@ -70,18 +70,7 @@ export default async function ChangelogPage() {
             >
               <header className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
                 <h2 className="text-xl font-semibold text-nuffle-anthracite">
-                  {entry.compareUrl ? (
-                    <a
-                      href={entry.compareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-nuffle-gold underline-offset-4 hover:underline"
-                    >
-                      v{entry.version}
-                    </a>
-                  ) : (
-                    <>v{entry.version}</>
-                  )}
+                  v{entry.version}
                 </h2>
                 <time className="text-sm text-gray-500" dateTime={entry.date}>
                   {entry.date}

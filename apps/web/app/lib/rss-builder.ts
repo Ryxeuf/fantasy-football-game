@@ -57,12 +57,23 @@ export function buildRssFeed(input: RssFeedInput): string {
   ].join("\n");
 }
 
+/**
+ * Retire les liens markdown (`[texte](url)` et `([texte](url))`) du corps
+ * pour ne pas exposer d'URL externes (ex: dépôt de code) dans le flux public.
+ */
+function stripMarkdownLinks(text: string): string {
+  return text
+    .replace(/\(\[([^\]]+)\]\([^)]+\)\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+}
+
 function renderItem(entry: ChangelogEntry, siteUrl: string): string {
   const title = `Nuffle Arena ${entry.version}`;
-  const releaseLink = entry.compareUrl ?? siteUrl + "/changelog";
+  // Toujours pointer vers la page du site, jamais vers une URL externe.
+  const releaseLink = `${siteUrl}/changelog`;
   const guid = `v${entry.version}`;
   const pubDate = toRfc822(entry.date);
-  const body = formatChangelogEntryAsMarkdown(entry);
+  const body = stripMarkdownLinks(formatChangelogEntryAsMarkdown(entry));
 
   return [
     "    <item>",

@@ -37,8 +37,8 @@ export default function NflFantasyRulesPage(): JSX.Element {
         <p className="mt-2 max-w-3xl text-sm text-nuffle-anthracite/70">
           Cette page documente exactement comment chaque joueur gagne (ou
           perd) des SPP à partir de ses statistiques NFL. Les règles ci-dessous
-          reflètent le code source — toute évolution est répercutée ici dans le
-          même commit.
+          reflètent fidèlement le calcul réellement appliqué par le jeu et sont
+          mises à jour à chaque évolution.
         </p>
       </header>
 

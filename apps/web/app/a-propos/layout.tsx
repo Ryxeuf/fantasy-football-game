@@ -10,7 +10,7 @@ const ALTERNATES = buildHreflangAlternates({ baseUrl: BASE_URL, pathname: "/a-pr
 export const metadata: Metadata = {
   title: "A propos - Histoire, chiffres et roadmap | Nuffle Arena",
   description:
-    "Histoire de Nuffle Arena, chiffres cles (rosters, star players, competences), equipe open-source et roadmap publique du projet Blood Bowl gratuit.",
+    "Histoire de Nuffle Arena, chiffres cles (rosters, star players, competences), equipe et roadmap publique du projet Blood Bowl gratuit.",
   keywords: [
     "Nuffle Arena",
     "A propos",
@@ -18,14 +18,13 @@ export const metadata: Metadata = {
     "Histoire",
     "Roadmap",
     "Blood Bowl gratuit",
-    "Open source",
     "Communaute Blood Bowl",
   ],
   alternates: ALTERNATES,
   openGraph: {
     title: "A propos de Nuffle Arena",
     description:
-      "Histoire, chiffres cles, equipe et roadmap publique de Nuffle Arena, plateforme gratuite et open-source de gestion d'equipes Blood Bowl.",
+      "Histoire, chiffres cles, equipe et roadmap publique de Nuffle Arena, plateforme gratuite de gestion d'equipes Blood Bowl.",
     type: "website",
     url: URL,
     siteName: "Nuffle Arena",
@@ -54,7 +53,7 @@ const aboutPageSchema = {
   url: URL,
   name: "A propos de Nuffle Arena",
   description:
-    "Histoire, chiffres cles, equipe open-source et roadmap publique du projet Nuffle Arena.",
+    "Histoire, chiffres cles, equipe et roadmap publique du projet Nuffle Arena.",
   inLanguage: ["fr-FR", "en"],
   isPartOf: { "@id": `${BASE_URL}#website` },
   mainEntity: { "@id": `${BASE_URL}#organization` },

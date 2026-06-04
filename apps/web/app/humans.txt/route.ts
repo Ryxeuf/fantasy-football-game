@@ -17,7 +17,7 @@ export async function GET(): Promise<NextResponse> {
   const body = buildHumansTxt({
     siteUrl: SITE_URL,
     teamLine: "Nuffle Arena maintainers (Ryxeuf et la communaute)",
-    contactUrl: "https://github.com/Ryxeuf/fantasy-football-game/issues",
+    contactUrl: "https://discord.gg/XEZJTgEHKn",
   });
   return new NextResponse(body, {
     status: 200,

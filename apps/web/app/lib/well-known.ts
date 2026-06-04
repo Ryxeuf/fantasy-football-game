@@ -41,7 +41,7 @@ export function buildHumansTxt(input: HumansTxtInput): string {
     "",
     "/* THANKS */",
     "Thanks: Games Workshop pour Blood Bowl, la communaute francophone et",
-    "Thanks: tous les contributeurs open-source du projet.",
+    "Thanks: tous les contributeurs et soutiens du projet.",
     "",
     "/* SITE */",
     `Last update: ${dateStr}`,
