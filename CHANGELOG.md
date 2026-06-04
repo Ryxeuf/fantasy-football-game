@@ -1,3 +1,10 @@
+## [1.169.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.169.0...v1.169.1) (2026-06-04)
+
+
+### ♻️ Code Refactoring
+
+* update changelog and robots.txt to exclude changelog from indexing ([401a7c1](https://github.com/Ryxeuf/fantasy-football-game/commit/401a7c1ca7858a43cb927ca219867fcfe699c76c))
+
 ## [1.169.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.168.0...v1.169.0) (2026-06-01)
 
 
