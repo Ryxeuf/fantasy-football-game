@@ -6,9 +6,13 @@ const URL = `${BASE_URL}/changelog`;
 const FEED_URL = `${BASE_URL}/feed.xml`;
 
 export const metadata: Metadata = {
-  title: "Changelog public - Nouveautes Nuffle Arena",
+  // Page volontairement non publiee : pas d'indexation moteurs/IA et
+  // retiree de la navigation publique (footer/sitemap). Le contenu reste
+  // accessible par URL directe et via le flux RSS interne.
+  robots: { index: false, follow: false },
+  title: "Changelog - Nuffle Arena",
   description:
-    "Historique public des releases de Nuffle Arena : nouvelles features, regles BB3, multijoueur, corrections. Disponible aussi en RSS.",
+    "Historique des releases de Nuffle Arena : nouvelles features, regles BB3, multijoueur, corrections. Disponible aussi en RSS.",
   keywords: [
     "Nuffle Arena",
     "Changelog",

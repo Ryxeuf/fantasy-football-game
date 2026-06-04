@@ -25,6 +25,8 @@ export default function robots(): MetadataRoute.Robots {
     '/lobby/',
     '/spectate/',
     '/replay/',
+    // Page non publiee : exclue de l'indexation (cf. changelog/layout noindex).
+    '/changelog',
   ];
 
   // Crawlers IA / moteurs génératifs auxquels on accorde explicitement

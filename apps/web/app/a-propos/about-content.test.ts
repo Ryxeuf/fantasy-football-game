@@ -43,9 +43,9 @@ describe("buildAboutContent", () => {
     );
     expect(content.stats.length).toBe(4);
     const labels = content.stats.map((s) => s.label.toLowerCase());
-    expect(labels.some((l) => l.includes("roster") || l.includes("equipe"))).toBe(true);
+    expect(labels.some((l) => l.includes("roster") || l.includes("équipe"))).toBe(true);
     expect(labels.some((l) => l.includes("star"))).toBe(true);
-    expect(labels.some((l) => l.includes("skill") || l.includes("competence"))).toBe(true);
+    expect(labels.some((l) => l.includes("skill") || l.includes("compétence"))).toBe(true);
     expect(labels.some((l) => l.includes("tutoriel") || l.includes("tutorial"))).toBe(true);
   });
 

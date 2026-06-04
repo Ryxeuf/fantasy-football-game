@@ -34,8 +34,18 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/teams" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.footer.teams ?? "Catalogue d'équipes"}
+                </a>
+              </li>
+              <li>
                 <a href="/star-players" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.footer.starPlayers}
+                </a>
+              </li>
+              <li>
+                <a href="/skills" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.footer.skills ?? "Compétences"}
                 </a>
               </li>
               {onlinePlayEnabled && (
@@ -63,11 +73,6 @@ export default function Footer() {
               <li>
                 <a href="/a-propos" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.footer.about ?? "A propos"}
-                </a>
-              </li>
-              <li>
-                <a href="/changelog" className="hover:text-nuffle-gold hover:underline transition-colors">
-                  {t.footer.changelog ?? "Changelog"}
                 </a>
               </li>
               <li>

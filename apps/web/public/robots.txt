@@ -8,6 +8,7 @@
 # ---------------------------------------------------------------------------
 User-agent: *
 Allow: /
+Disallow: /changelog
 
 # Pages privées / authentifiées (non indexables)
 Disallow: /me/
@@ -42,6 +43,7 @@ Allow: /llms-full.txt
 # OpenAI (ChatGPT Search, SearchGPT, ChatGPT browsing)
 User-agent: GPTBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -54,6 +56,7 @@ Disallow: /replay/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -62,6 +65,7 @@ Disallow: /register
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -69,6 +73,7 @@ Disallow: /admin/
 # Anthropic (Claude, ClaudeBot)
 User-agent: ClaudeBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -77,12 +82,14 @@ Disallow: /register
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -90,6 +97,7 @@ Disallow: /admin/
 # Perplexity
 User-agent: PerplexityBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -98,6 +106,7 @@ Disallow: /register
 
 User-agent: Perplexity-User
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -105,6 +114,7 @@ Disallow: /admin/
 # Google (Gemini, AI Overviews)
 User-agent: Google-Extended
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -114,6 +124,7 @@ Disallow: /register
 # Apple Intelligence
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -123,6 +134,7 @@ Disallow: /register
 # Common Crawl (corpus utilisé par de nombreux LLM open-source)
 User-agent: CCBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -132,6 +144,7 @@ Disallow: /register
 # Amazon (Rufus, Titan)
 User-agent: Amazonbot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -139,6 +152,7 @@ Disallow: /admin/
 # DuckDuckGo AI (DuckAssist)
 User-agent: DuckAssistBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -146,12 +160,14 @@ Disallow: /admin/
 # Meta AI
 User-agent: Meta-ExternalAgent
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
 
 User-agent: Meta-ExternalFetcher
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -159,6 +175,7 @@ Disallow: /admin/
 # ByteDance (Doubao)
 User-agent: Bytespider
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
@@ -166,24 +183,28 @@ Disallow: /admin/
 # Mistral / You.com / autres
 User-agent: MistralAI-User
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
 
 User-agent: YouBot
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
 
 User-agent: cohere-ai
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/
 
 User-agent: cohere-training-data-crawler
 Allow: /
+Disallow: /changelog
 Disallow: /me/
 Disallow: /api/
 Disallow: /admin/

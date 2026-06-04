@@ -10,9 +10,9 @@ interface AboutClientProps {
 
 function statusLabel(status: AboutMilestone["status"], lang: "fr" | "en"): string {
   if (lang === "fr") {
-    if (status === "done") return "Realise";
+    if (status === "done") return "Réalisé";
     if (status === "in_progress") return "En cours";
-    return "Planifie";
+    return "Planifié";
   }
   if (status === "done") return "Done";
   if (status === "in_progress") return "In progress";
@@ -33,7 +33,7 @@ export default function AboutClient({ contentFr, contentEn }: AboutClientProps) 
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-12">
       <header>
         <h1 className="text-3xl sm:text-4xl font-bold text-nuffle-anthracite mb-3">
-          {language === "fr" ? "A propos de Nuffle Arena" : "About Nuffle Arena"}
+          {language === "fr" ? "À propos de Nuffle Arena" : "About Nuffle Arena"}
         </h1>
         <p className="text-nuffle-bronze text-base">
           {language === "fr"

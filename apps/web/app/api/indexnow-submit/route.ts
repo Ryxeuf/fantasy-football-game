@@ -21,7 +21,6 @@ const DEFAULT_URLS = [
   `${SITE_URL}/teams`,
   `${SITE_URL}/star-players`,
   `${SITE_URL}/skills`,
-  `${SITE_URL}/changelog`,
   `${SITE_URL}/a-propos`,
   `${SITE_URL}/tutoriel`,
 ];

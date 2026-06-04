@@ -52,11 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     }),
-    sitemapEntryWithAlternates('/changelog', {
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.5,
-    }),
+    // /changelog volontairement exclu du sitemap (page non publiee, noindex).
     sitemapEntryWithAlternates('/legal/mentions-legales', {
       lastModified: now,
       changeFrequency: 'yearly',
