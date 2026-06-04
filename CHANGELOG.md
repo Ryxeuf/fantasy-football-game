@@ -1,3 +1,10 @@
+## [1.170.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.169.1...v1.170.0) (2026-06-04)
+
+
+### ✨ Features
+
+* add game format support for team creation and validation ([6dbf792](https://github.com/Ryxeuf/fantasy-football-game/commit/6dbf792eb804559514d6823995da5c79d8ad430e))
+
 ## [1.169.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.169.0...v1.169.1) (2026-06-04)
 
 
