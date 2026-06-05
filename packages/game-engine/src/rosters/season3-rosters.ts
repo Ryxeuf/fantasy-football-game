@@ -832,6 +832,11 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     descriptionFr: "Quand Blood Bowl atteignit Ulthuan pour la première fois, il y eut beaucoup de nez retroussés et de 'tut' méprisants, car cela semblait n'être rien de plus que deux équipes de voyous incivilisés qui se frappaient sans raison. Il devint rapidement évident que ce n'était pas la seule façon de jouer, cependant, et dans les années qui suivirent, les équipes de Hauts Elfes révolutionnèrent le jeu de passe du sport. Ils ont de nombreux avantages quand il s'agit de gagner (par opposition à massacrer l'adversaire, ce qui n'est pas toujours la même chose !), et leurs excellents joueurs sont l'épitomé du côté le plus gracieux du jeu. Le seul vrai problème avec les équipes de Hauts Elfes est qu'elles peuvent être très pointilleuses sur qui, quand ou où elles jouent, alors nous devons être reconnaissants qu'elles daignent jouer contre des races inférieures !",
     descriptionEn: "When Blood Bowl first reached Ulthuan, there was much turning up of noses and loud disdainful tutting, for it appeared as nothing more than two teams of uncivilised yobs pummelling each other senseless. It quickly became apparent that this was not the sole way of playing, however, and in the years that followed High Elf teams revolutionised the sport's passing game. They have many advantages when it comes to winning (as opposed to slaughtering the opposition, which isn't always the same thing!), and their fine players are the epitome of the more graceful side of the game. The only real problem with High Elf teams is that they can be very picky about who, when or where they play, so we must be thankful they deign to play lesser races at all!",
     positions: [
+      // Ordre aligne sur data/saison3/team/Hauts_elfes.md (source de
+      // verite) : Trois-quart, Lanceur (Guerrier Phoenix), Receveur
+      // (Prince Dragon), Blitzer (Lion Blanc). L'ORDRE compte :
+      // generate-skill-access-season3.ts aligne les lignes de la markdown
+      // aux positions par ordre intra-roster.
       {
         slug: "high_elf_trois_quart_haut_elfe",
         displayName: "Trois-quart Haut Elfe",
@@ -846,22 +851,9 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         skills: "",
       },
       {
-        slug: "high_elf_receveur_haut_elfe",
-        displayName: "Receveur Haut Elfe",
-        cost: 90,
-        min: 0,
-        max: 4,
-        ma: 8,
-        st: 3,
-        ag: 2,
-        pa: 3,
-        av: 8,
-        skills: "catch",
-      },
-      {
         slug: "high_elf_lanceur_haut_elfe",
-        displayName: "Lanceur Haut Elfe",
-        cost: 100,
+        displayName: "Guerrier Phoenix",
+        cost: 90,
         min: 0,
         max: 2,
         ma: 6,
@@ -872,17 +864,30 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         skills: "pass,safe-pass,cloud-burster",
       },
       {
+        slug: "high_elf_receveur_haut_elfe",
+        displayName: "Prince Dragon",
+        cost: 110,
+        min: 0,
+        max: 2,
+        ma: 8,
+        st: 3,
+        ag: 2,
+        pa: 4,
+        av: 9,
+        skills: "surefoot,block,my-ball",
+      },
+      {
         slug: "high_elf_blitzer_haut_elfe",
-        displayName: "Blitzer Haut Elfe",
-        cost: 100,
+        displayName: "Lion Blanc",
+        cost: 110,
         min: 0,
         max: 2,
         ma: 7,
         st: 3,
         ag: 2,
-        pa: 4,
+        pa: 3,
         av: 9,
-        skills: "block",
+        skills: "claws,wrestle",
       }
     ],
   },

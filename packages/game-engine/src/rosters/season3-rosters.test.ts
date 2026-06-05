@@ -151,4 +151,67 @@ describe('Season 3 Rosters', () => {
       }
     });
   });
+
+  // Source de verite : data/saison3/team/Hauts_elfes.md
+  // Roster thematique : Trois-quart, Guerrier Phoenix (Lanceur),
+  // Prince Dragon (Receveur), Lion Blanc (Blitzer).
+  describe('Regle: High Elf roster (S3, themed)', () => {
+    const highElf = SEASON_THREE_ROSTERS.high_elf;
+
+    it('a 4 positions dans l ordre de la markdown', () => {
+      expect(highElf.positions.map((p) => p.slug)).toEqual([
+        'high_elf_trois_quart_haut_elfe',
+        'high_elf_lanceur_haut_elfe',
+        'high_elf_receveur_haut_elfe',
+        'high_elf_blitzer_haut_elfe',
+      ]);
+    });
+
+    it('Trois-quart Haut Elfe (65k, 0-16, 6/3/2+/3+/9+, aucune compétence)', () => {
+      const p = highElf.positions.find(
+        (x) => x.slug === 'high_elf_trois_quart_haut_elfe',
+      )!;
+      expect(p.displayName).toBe('Trois-quart Haut Elfe');
+      expect([p.cost, p.min, p.max]).toEqual([65, 0, 16]);
+      expect([p.ma, p.st, p.ag, p.pa, p.av]).toEqual([6, 3, 2, 3, 9]);
+      expect(p.skills).toBe('');
+    });
+
+    it('Guerrier Phoenix = Lanceur (90k, 0-2, 6/3/2+/2+/9+, Passe/Passe Assurée/Perce-nuages)', () => {
+      const p = highElf.positions.find(
+        (x) => x.slug === 'high_elf_lanceur_haut_elfe',
+      )!;
+      expect(p.displayName).toBe('Guerrier Phoenix');
+      expect([p.cost, p.min, p.max]).toEqual([90, 0, 2]);
+      expect([p.ma, p.st, p.ag, p.pa, p.av]).toEqual([6, 3, 2, 2, 9]);
+      expect(p.skills).toBe('pass,safe-pass,cloud-burster');
+    });
+
+    it('Prince Dragon = Receveur (110k, 0-2, 8/3/2+/4+/9+, Appuis sûrs/Blocage/Ma balle)', () => {
+      const p = highElf.positions.find(
+        (x) => x.slug === 'high_elf_receveur_haut_elfe',
+      )!;
+      expect(p.displayName).toBe('Prince Dragon');
+      expect([p.cost, p.min, p.max]).toEqual([110, 0, 2]);
+      expect([p.ma, p.st, p.ag, p.pa, p.av]).toEqual([8, 3, 2, 4, 9]);
+      expect(p.skills).toBe('surefoot,block,my-ball');
+    });
+
+    it('Lion Blanc = Blitzer (110k, 0-2, 7/3/2+/3+/9+, Griffes/Lutte)', () => {
+      const p = highElf.positions.find(
+        (x) => x.slug === 'high_elf_blitzer_haut_elfe',
+      )!;
+      expect(p.displayName).toBe('Lion Blanc');
+      expect([p.cost, p.min, p.max]).toEqual([110, 0, 2]);
+      expect([p.ma, p.st, p.ag, p.pa, p.av]).toEqual([7, 3, 2, 3, 9]);
+      expect(p.skills).toBe('claws,wrestle');
+    });
+
+    it('ne contient plus les anciens noms génériques', () => {
+      const names = highElf.positions.map((p) => p.displayName);
+      expect(names).not.toContain('Receveur Haut Elfe');
+      expect(names).not.toContain('Lanceur Haut Elfe');
+      expect(names).not.toContain('Blitzer Haut Elfe');
+    });
+  });
 });

@@ -17,6 +17,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "db:seed": "tsx src/seed.ts",
     "db:seed:themed-league": "tsx src/seed-themed-league.ts",
+    "db:sync-rosters": "tsx src/scripts/sync-rosters.ts",
     "list:users": "tsx src/list-users.ts",
     "sim:loadtest:broadcaster": "tsx scripts/loadtest-broadcaster.ts",
     "test": "vitest run",
