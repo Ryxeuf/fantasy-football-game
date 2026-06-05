@@ -191,6 +191,7 @@ interface PrismaWithLeague {
     findMany: (args: unknown) => Promise<unknown>;
     create: (args: unknown) => Promise<unknown>;
     update: (args: unknown) => Promise<unknown>;
+    delete: (args: unknown) => Promise<unknown>;
     count: (args: unknown) => Promise<number>;
   };
   leaguePairing: {
@@ -341,6 +342,193 @@ export async function startPlayoffs(
     roundsCreated,
     pairingsCreated,
   };
+}
+
+/** Lot D — Erreur typee pour les operations d'override du bracket. */
+export class PlayoffOverrideError extends Error {
+  constructor(
+    public readonly code:
+      | "season_not_found"
+      | "playoffs_not_started"
+      | "playoffs_in_progress"
+      | "size_mismatch"
+      | "duplicate_participant"
+      | "participant_not_active",
+    message: string,
+  ) {
+    super(message);
+    this.name = "PlayoffOverrideError";
+  }
+}
+
+/**
+ * Lot D — Remplace les participants du premier round du bracket
+ * (typiquement pour gerer un desistement tardif avant le 1er match
+ * playoff). Refus si un pairing du round 1 a deja un match en cours
+ * ou joue.
+ *
+ * Le commissaire fournit la liste complete des seeds du bracket
+ * (taille = playoffSize). L'ordre est conserve pour generer le
+ * seeding (cross-bracket standard).
+ */
+export async function overridePlayoffParticipants(input: {
+  seasonId: string;
+  participantIds: ReadonlyArray<string>;
+}): Promise<{
+  rebuilt: number;
+  rebuiltSlots: string[];
+}> {
+  const client = prisma as unknown as PrismaWithLeague;
+
+  const season = (await client.leagueSeason.findUnique({
+    where: { id: input.seasonId },
+    select: { id: true, playoffSize: true },
+  })) as { id: string; playoffSize: number } | null;
+  if (!season) {
+    throw new PlayoffOverrideError(
+      "season_not_found",
+      `Saison introuvable: ${input.seasonId}`,
+    );
+  }
+
+  const size = season.playoffSize as PlayoffSize;
+  if (size !== 2 && size !== 4 && size !== 8) {
+    throw new PlayoffOverrideError(
+      "playoffs_not_started",
+      "Cette saison n'a pas de playoffs configures",
+    );
+  }
+  if (input.participantIds.length !== size) {
+    throw new PlayoffOverrideError(
+      "size_mismatch",
+      `Attendu ${size} participants, recu ${input.participantIds.length}`,
+    );
+  }
+
+  // Duplicates check.
+  const uniqueIds = new Set(input.participantIds);
+  if (uniqueIds.size !== input.participantIds.length) {
+    throw new PlayoffOverrideError(
+      "duplicate_participant",
+      "Un participant est present plusieurs fois dans la liste",
+    );
+  }
+
+  // Tous les participants doivent appartenir a la saison ET etre actifs.
+  const participants = (await prisma.leagueParticipant.findMany({
+    where: { id: { in: [...uniqueIds] } },
+    select: { id: true, seasonId: true, status: true },
+  })) as Array<{ id: string; seasonId: string; status: string }>;
+  if (participants.length !== uniqueIds.size) {
+    throw new PlayoffOverrideError(
+      "participant_not_active",
+      "Un ou plusieurs participants introuvables",
+    );
+  }
+  for (const p of participants) {
+    if (p.seasonId !== input.seasonId) {
+      throw new PlayoffOverrideError(
+        "participant_not_active",
+        `Participant ${p.id} hors de la saison`,
+      );
+    }
+    if (p.status !== "active") {
+      throw new PlayoffOverrideError(
+        "participant_not_active",
+        `Participant ${p.id} non actif (${p.status})`,
+      );
+    }
+  }
+
+  // Les rounds playoff existants ne doivent contenir que des pairings
+  // "scheduled" pour qu'on puisse les recreer (round 1 + lazy
+  // futurs). Si un pairing a deja un match associe ou status played,
+  // on refuse.
+  const existingRounds = (await client.leagueRound.findMany({
+    where: { seasonId: input.seasonId, kind: "playoff" },
+    orderBy: { roundNumber: "asc" },
+    include: {
+      pairings: {
+        select: { id: true, status: true, matchId: true },
+      },
+    },
+  })) as Array<{
+    id: string;
+    bracketSlot: string | null;
+    pairings: Array<{ id: string; status: string; matchId: string | null }>;
+  }>;
+  if (existingRounds.length === 0) {
+    throw new PlayoffOverrideError(
+      "playoffs_not_started",
+      "Les playoffs n'ont pas encore demarre — utilisez startPlayoffs",
+    );
+  }
+  for (const r of existingRounds) {
+    for (const pair of r.pairings) {
+      if (
+        pair.status !== "scheduled" ||
+        (pair.matchId !== null && pair.matchId !== undefined)
+      ) {
+        throw new PlayoffOverrideError(
+          "playoffs_in_progress",
+          "Un match playoff est deja en cours ou joue — override impossible",
+        );
+      }
+    }
+  }
+
+  // Wipe + rebuild via $transaction. On supprime tous les rounds
+  // playoff existants, puis on regenere le bracket depuis les seeds
+  // fournis.
+  const lastNonPlayoff = (await client.leagueRound.findFirst({
+    where: { seasonId: input.seasonId, kind: { not: "playoff" } },
+    orderBy: { roundNumber: "desc" },
+    select: { roundNumber: true },
+  })) as { roundNumber: number } | null;
+  const baseRoundNumber = (lastNonPlayoff?.roundNumber ?? 0) + 1;
+
+  const seeds = [...input.participantIds];
+  const pairings = generatePlayoffSeedingFor(size, seeds, baseRoundNumber);
+
+  // Suppression atomique.
+  await prisma.$transaction([
+    ...existingRounds.map((r) =>
+      (prisma as unknown as PrismaWithLeague).leagueRound.delete({
+        where: { id: r.id },
+      }),
+    ),
+  ]);
+
+  let nextRoundNumber = baseRoundNumber;
+  const createdSlots: string[] = [];
+  for (const p of pairings) {
+    const round = (await client.leagueRound.create({
+      data: {
+        seasonId: input.seasonId,
+        roundNumber: nextRoundNumber++,
+        name: playoffRoundLabel(p.slot),
+        kind: "playoff",
+        bracketSlot: p.slot,
+        status: "pending",
+      },
+      select: { id: true },
+    })) as { id: string };
+    await client.leaguePairing.create({
+      data: {
+        roundId: round.id,
+        homeParticipantId: p.homeParticipantId,
+        awayParticipantId: p.awayParticipantId,
+        status: "scheduled",
+      },
+    });
+    createdSlots.push(p.slot);
+  }
+
+  serverLog.info(
+    `[league-playoffs] season=${input.seasonId} bracket overridden size=${size} rounds=${createdSlots.length}`,
+  );
+
+  return { rebuilt: createdSlots.length, rebuiltSlots: createdSlots };
 }
 
 function playoffRoundLabel(slot: string): string {

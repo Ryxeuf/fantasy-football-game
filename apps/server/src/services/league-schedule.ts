@@ -115,3 +115,85 @@ export function generateRoundRobin(
 
   return [...firstLeg, ...secondLeg];
 }
+
+/**
+ * Lot C.2 — Description d'une poule pour la generation multi-poules.
+ */
+export interface PoolInput {
+  readonly poolId: string;
+  readonly participantIds: readonly string[];
+}
+
+export interface GenerateMultiPoolInput {
+  readonly pools: readonly PoolInput[];
+  readonly doubleRoundRobin?: boolean;
+}
+
+/**
+ * Lot C.2 — Genere un calendrier multi-poules avec **journees
+ * partagees** : la journee N agrege les pairings de chaque poule
+ * pour ce meme tour. Repond a l'exigence "planning par journee ET
+ * par poule" — toutes les poules avancent au meme rythme.
+ *
+ * Chaque poule produit son propre round-robin via `generateRoundRobin`.
+ * On fusionne ensuite par index de round : le nombre de journees est
+ * le max sur toutes les poules (les poules plus petites ont juste
+ * moins de matchs sur les dernieres journees).
+ *
+ * Le `bye` au niveau merge est null (concept non pertinent multi-poules ;
+ * chaque poule gere ses propres byes internes en n'ajoutant pas de
+ * pairing pour l'equipe au repos). Pure : meme entree -> meme sortie.
+ */
+export function generateMultiPoolRoundRobin(
+  input: GenerateMultiPoolInput,
+): RoundRobinRound[] {
+  const { pools, doubleRoundRobin = false } = input;
+  if (pools.length === 0) {
+    throw new Error("Au moins une poule requise");
+  }
+
+  // Verifie l'unicite globale des participants (un participant ne peut
+  // pas appartenir a deux poules).
+  const seen = new Set<string>();
+  for (const pool of pools) {
+    for (const pid of pool.participantIds) {
+      if (seen.has(pid)) {
+        throw new Error(
+          `Participant ${pid} present dans plusieurs poules`,
+        );
+      }
+      seen.add(pid);
+    }
+  }
+
+  // Genere le round-robin de chaque poule (>= 2 participants requis ;
+  // une poule a 0/1 participant ne produit aucun pairing).
+  const perPool: RoundRobinRound[][] = pools.map((pool) =>
+    pool.participantIds.length >= 2
+      ? generateRoundRobin({
+          participantIds: pool.participantIds,
+          doubleRoundRobin,
+        })
+      : [],
+  );
+
+  const maxRounds = perPool.reduce(
+    (acc, rounds) => Math.max(acc, rounds.length),
+    0,
+  );
+
+  const merged: RoundRobinRound[] = [];
+  for (let r = 0; r < maxRounds; r += 1) {
+    const pairings: RoundRobinPairing[] = [];
+    for (const poolRounds of perPool) {
+      const round = poolRounds[r];
+      if (round) {
+        pairings.push(...round.pairings);
+      }
+    }
+    merged.push({ roundNumber: r + 1, pairings, bye: null });
+  }
+
+  return merged;
+}
+

@@ -57,6 +57,10 @@ export interface CreateLeagueInput {
    * `TIE_BREAK_SLUGS`. null / undefined = ordre par defaut historique.
    */
   tieBreakRules?: readonly string[] | null;
+  /**
+   * Lot E — Points bonus configurables. Array de regles ou null.
+   */
+  bonusPointsConfig?: readonly unknown[] | null;
 }
 
 export interface CreateSeasonInput {
@@ -152,6 +156,12 @@ export async function createLeague(input: CreateLeagueInput) {
     tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
   }
 
+  // Lot E — config bonus optionnelle a la creation.
+  const bonusPointsConfig =
+    input.bonusPointsConfig && input.bonusPointsConfig.length > 0
+      ? (input.bonusPointsConfig as unknown[])
+      : null;
+
   return prisma.league.create({
     data: {
       creatorId: input.creatorId,
@@ -166,6 +176,7 @@ export async function createLeague(input: CreateLeagueInput) {
       lossPoints: input.lossPoints ?? 0,
       forfeitPoints: input.forfeitPoints ?? -1,
       tieBreakRules,
+      bonusPointsConfig: bonusPointsConfig ?? undefined,
     },
   });
 }
@@ -423,6 +434,17 @@ export interface StandingRow {
   casualtiesAgainst: number;
   seasonElo: number;
   status: LeagueParticipantStatus;
+  /** Lot C — id de poule (null = pas d'affectation explicite). */
+  poolId?: string | null;
+}
+
+/** Lot C — Classement groupe par poule. */
+export interface PoolStandings {
+  poolId: string;
+  poolName: string;
+  poolOrder: number;
+  qualifiesForPlayoffs: number;
+  standings: StandingRow[];
 }
 
 /**
@@ -461,7 +483,7 @@ export async function computeSeasonStandings(
     },
   });
 
-  type ParticipantRow = (typeof participants)[number];
+  type ParticipantRow = (typeof participants)[number] & { poolId?: string | null };
   const rows: StandingRow[] = participants.map((p: ParticipantRow) => ({
     participantId: p.id,
     teamId: p.teamId,
@@ -481,6 +503,7 @@ export async function computeSeasonStandings(
     casualtiesAgainst: p.casualtiesAgainst,
     seasonElo: p.seasonElo,
     status: p.status as LeagueParticipantStatus,
+    poolId: p.poolId ?? null,
   }));
 
   const tieBreakRules = parseTieBreakRules(
@@ -490,6 +513,74 @@ export async function computeSeasonStandings(
   rows.sort(makeStandingsComparator(tieBreakRules));
 
   return rows;
+}
+
+/**
+ * Lot C — Classement groupe par poule. Retourne un tableau de
+ * `PoolStandings` (un par poule, ordonne par `pool.order`). Si la
+ * saison n'a aucune poule, le tableau est vide (le caller doit
+ * retomber sur `computeSeasonStandings`).
+ *
+ * Les participants sans `poolId` (legacy ou non assignes) sont
+ * regroupes dans une pseudo-poule "unassigned" en derniere position
+ * pour les rendre visibles a l'UI commissaire.
+ */
+export async function computeSeasonStandingsByPool(
+  seasonId: string,
+): Promise<PoolStandings[]> {
+  const allRows = await computeSeasonStandings(seasonId);
+  const pools = (await prisma.leaguePool.findMany({
+    where: { seasonId },
+    orderBy: { order: "asc" },
+  })) as Array<{
+    id: string;
+    name: string;
+    order: number;
+    qualifiesForPlayoffs: number;
+  }>;
+
+  if (pools.length === 0) return [];
+
+  const seasonForTieBreak = (await prisma.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { league: { select: { tieBreakRules: true } } },
+  })) as { league?: { tieBreakRules: string | null } | null } | null;
+  const tieBreakRules = parseTieBreakRules(
+    seasonForTieBreak?.league?.tieBreakRules ?? null,
+  );
+  const comparator = makeStandingsComparator(tieBreakRules);
+
+  const groups = new Map<string | null, StandingRow[]>();
+  for (const row of allRows) {
+    const key = row.poolId ?? null;
+    const list = groups.get(key) ?? [];
+    list.push(row);
+    groups.set(key, list);
+  }
+
+  const result: PoolStandings[] = pools.map((p) => {
+    const list = (groups.get(p.id) ?? []).slice().sort(comparator);
+    return {
+      poolId: p.id,
+      poolName: p.name,
+      poolOrder: p.order,
+      qualifiesForPlayoffs: p.qualifiesForPlayoffs,
+      standings: list,
+    };
+  });
+
+  const unassigned = (groups.get(null) ?? []).slice().sort(comparator);
+  if (unassigned.length > 0) {
+    result.push({
+      poolId: "__unassigned__",
+      poolName: "Non affecte",
+      poolOrder: pools.length,
+      qualifiesForPlayoffs: 0,
+      standings: unassigned,
+    });
+  }
+
+  return result;
 }
 
 /**
@@ -689,6 +780,12 @@ export interface UpdateLeagueInput {
   lossPoints?: number;
   forfeitPoints?: number;
   tieBreakRules?: readonly string[] | null;
+  /**
+   * Lot E — Configuration des points bonus. Array de regles ou null
+   * pour desactiver. Modifiable tant que la ligue n'a pas de match
+   * score (cf. `hasLeagueScoredMatch`).
+   */
+  bonusPointsConfig?: readonly unknown[] | null;
 }
 
 /**
@@ -744,6 +841,17 @@ export async function updateLeague(
       tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
     }
     data.tieBreakRules = tieBreakRules;
+  }
+  // Lot E — accepte la nouvelle config bonus. La validation des
+  // regles individuelles est deleguee au service `league-bonus-points`
+  // au runtime (parseBonusConfig retourne `null` si invalide). On
+  // stocke ici une struct JSON arbitraire (les rules malformees
+  // seront ignorees a la lecture).
+  if (input.bonusPointsConfig !== undefined) {
+    data.bonusPointsConfig =
+      input.bonusPointsConfig && input.bonusPointsConfig.length > 0
+        ? (input.bonusPointsConfig as unknown[])
+        : null;
   }
 
   return prisma.league.update({ where: { id: leagueId }, data });
@@ -827,22 +935,67 @@ export async function getSeasonById(seasonId: string) {
 }
 
 /**
- * Withdraw une equipe d'une saison : refuse si la saison est terminee
- * ou si l'equipe n'est pas inscrite.
+ * Lot B — Erreur typee retournee par `withdrawParticipant` pour permettre
+ * a la couche route de mapper proprement vers un status HTTP (404 / 409).
+ */
+export class LeagueWithdrawError extends Error {
+  constructor(
+    public readonly code:
+      | "season_not_found"
+      | "season_started"
+      | "season_completed"
+      | "not_registered",
+    message: string,
+  ) {
+    super(message);
+    this.name = "LeagueWithdrawError";
+  }
+}
+
+/**
+ * Withdraw une equipe d'une saison.
+ *
+ * Lot B — Le retrait n'est autorise que tant que la saison n'a pas
+ * demarre (status `draft` ou `scheduled`). Une fois la saison
+ * `in_progress`, le commissaire doit passer par la procedure de
+ * forfait (`league-forfeit.ts`) qui preserve l'historique des
+ * pairings deja generes.
+ *
+ * Un admin peut forcer le retrait via `force=true` (cas de
+ * desistement tardif). Ce mode est uniquement appele depuis les
+ * routes admin et doit etre audite cote route.
  */
 export async function withdrawParticipant(input: {
   seasonId: string;
   teamId: string;
+  /** Lot B — bypass admin pour retirer une equipe pendant `in_progress`. */
+  force?: boolean;
 }) {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: input.seasonId },
     select: { id: true, status: true },
   });
   if (!season) {
-    throw new Error(`Saison introuvable: ${input.seasonId}`);
+    throw new LeagueWithdrawError(
+      "season_not_found",
+      `Saison introuvable: ${input.seasonId}`,
+    );
   }
   if (season.status === "completed") {
-    throw new Error("Saison terminee : impossible de retirer une equipe");
+    throw new LeagueWithdrawError(
+      "season_completed",
+      "Saison terminee : impossible de retirer une equipe",
+    );
+  }
+  if (
+    !input.force &&
+    season.status !== "draft" &&
+    season.status !== "scheduled"
+  ) {
+    throw new LeagueWithdrawError(
+      "season_started",
+      "Saison demarree : utilisez la procedure de forfait pour retirer une equipe",
+    );
   }
 
   const existing = await prisma.leagueParticipant.findUnique({
@@ -851,7 +1004,10 @@ export async function withdrawParticipant(input: {
     },
   });
   if (!existing) {
-    throw new Error("Cette equipe n'est pas inscrite sur la saison");
+    throw new LeagueWithdrawError(
+      "not_registered",
+      "Cette equipe n'est pas inscrite sur la saison",
+    );
   }
 
   return prisma.leagueParticipant.update({

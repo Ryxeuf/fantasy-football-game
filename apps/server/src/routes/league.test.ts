@@ -25,6 +25,17 @@ vi.mock("../services/league", () => ({
   parseAllowedRosters: vi.fn((raw: string | null) =>
     raw ? (JSON.parse(raw) as string[]) : null,
   ),
+  // Lot B — class d'erreur reelle (DANS la factory pour eviter
+  // "Cannot access before initialization") ; cf CLAUDE.md.
+  LeagueWithdrawError: class LeagueWithdrawError extends Error {
+    constructor(
+      public readonly code: string,
+      message: string,
+    ) {
+      super(message);
+      this.name = "LeagueWithdrawError";
+    }
+  },
 }));
 
 vi.mock("../prisma", () => ({
@@ -684,6 +695,51 @@ describe("Route: POST /leagues/seasons/:seasonId/leave", () => {
       teamId: "team-1",
     });
     expect(res.statusCode).toBe(200);
+  });
+
+  // Lot B — mappe LeagueWithdrawError(season_started) sur HTTP 409.
+  it("returns 409 when season has already started", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+    });
+    // Cast via le mock module pour recuperer la class injectee dans
+    // la factory du vi.mock ci-dessus.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const services = (await import("../services/league")) as any;
+    mockService.withdrawParticipant.mockImplementation(() => {
+      throw new services.LeagueWithdrawError(
+        "season_started",
+        "Saison demarree",
+      );
+    });
+    const req = createReq({
+      params: { seasonId: "season-1" },
+      body: { teamId: "team-1" },
+    });
+    const res = createRes();
+    await handleLeaveSeason(req, res);
+    expect(res.statusCode).toBe(409);
+  });
+
+  // Lot B — mappe LeagueWithdrawError(not_registered) sur HTTP 404.
+  it("returns 404 when team not registered", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const services = (await import("../services/league")) as any;
+    mockService.withdrawParticipant.mockImplementation(() => {
+      throw new services.LeagueWithdrawError("not_registered", "not in season");
+    });
+    const req = createReq({
+      params: { seasonId: "season-1" },
+      body: { teamId: "team-1" },
+    });
+    const res = createRes();
+    await handleLeaveSeason(req, res);
+    expect(res.statusCode).toBe(404);
   });
 });
 

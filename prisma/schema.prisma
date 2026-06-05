@@ -135,6 +135,9 @@ model User {
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
   blogPosts                   BlogPost[]                  @relation("BlogPostAuthor")
+  // Lot A — invitations envoyees / recues sur les ligues.
+  leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
+  leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
 
   @@index([leaderboardStatus])
 }
@@ -404,6 +407,8 @@ model Team {
   localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
   matchQueue           MatchQueue[]
   leagueParticipations LeagueParticipant[]
+  // Lot A — invitations qui ciblent cette equipe specifique.
+  leagueInvitations    LeagueInvitation[]
 
   // Informations d'équipe Blood Bowl
   treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
@@ -876,6 +881,59 @@ model NotificationPreference {
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).
 // Une League est le conteneur persistant. Chaque edition concrete
 // est une LeagueSeason (round-robin, playoffs...).
+/// Lot A — Invitation a rejoindre une ligue.
+///
+/// Le commissaire (createur de la ligue) ou un admin peut inviter
+/// un coach (par userId, email, ou autre) a rejoindre une saison
+/// donnee. L'invitation contient un code unique (sharable URL) +
+/// statut + expiration. Si `inviteeUserId` est null, l'invitation
+/// peut etre acceptee par le 1er user qui se connecte avec ce code
+/// (lien public). Sinon, seul le user cible peut accepter.
+model LeagueInvitation {
+  id              String   @id @default(cuid())
+  league          League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId        String
+  /// Optionnel : saison ciblee si l'invitation pointe sur une saison
+  /// specifique. Si null, le coach choisira la saison a l'acceptation
+  /// (utile pour les ligues avec plusieurs saisons en cours).
+  season          LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  seasonId        String?
+  /// Auteur de l'invitation (commissaire ou admin).
+  inviter         User     @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
+  inviterUserId   String
+  /// Optionnel : coach cible identifie. Si null, lien d'invitation
+  /// publique (1er user qui ouvre le lien et accepte).
+  invitee         User?    @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
+  inviteeUserId   String?
+  /// Optionnel : equipe pre-selectionnee. Le coach pourra confirmer
+  /// ou choisir une autre equipe lors de l'acceptation.
+  inviteeTeam     Team?    @relation(fields: [inviteeTeamId], references: [id])
+  inviteeTeamId   String?
+  /// Optionnel : email cible quand l'invitation depasse les frontieres
+  /// de la plateforme. Permet de prevoir un envoi mail (Lot futur).
+  inviteeEmail    String?
+  /// "pending" | "accepted" | "declined" | "cancelled" | "expired"
+  status          String   @default("pending")
+  /// Token unique pour partager le lien (publique mais inviolable).
+  /// Format : alphanumeric ~24 chars (crypto.randomBytes(16).toString("base64url")).
+  code            String   @unique
+  /// Message libre du commissaire ("Salut, rejoins la Skaven Cup !").
+  message         String?
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  cancelledAt     DateTime?
+  /// Renseigne au moment de l'acceptation (utile si invitee != team owner).
+  acceptedParticipantId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([leagueId, status])
+  @@index([inviteeUserId, status])
+  @@index([code])
+  @@index([expiresAt, status])
+}
+
 model League {
   id                String   @id @default(cuid())
   name              String
@@ -913,10 +971,16 @@ model League {
   /// Sprint R lot R.E.3 — duree par tour en heures pour les matches
   /// async de cette ligue. 1-168h (default 24h).
   turnDeadlineHours Int      @default(24)
+  /// Lot E — Points bonus configurables (JSON array de regles, cf.
+  /// `services/league-bonus-points.ts`). null = pas de bonus applique
+  /// au scoring. Modifiable tant qu'aucun match n'a ete score.
+  bonusPointsConfig Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  seasons LeagueSeason[]
+  seasons     LeagueSeason[]
+  // Lot A — back-relation invitations envoyees pour cette ligue.
+  invitations LeagueInvitation[]
 
   @@index([creatorId])
   @@index([status])
@@ -956,11 +1020,48 @@ model LeagueSeason {
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
   award        LeagueSeasonAward?
+  // Lot A — back-relation invitations ciblant cette saison precise.
+  invitations  LeagueInvitation[]
+  // Lot C — multi-poules optionnelles. Vide = saison single-pool
+  // (comportement legacy preserve : tout le monde dans la meme poule).
+  pools        LeaguePool[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
   @@index([theme, themeYear])
+}
+
+/// Lot C — Poule d'une saison de ligue.
+///
+/// Une saison peut etre divisee en plusieurs poules pour les
+/// championnats avec phase de groupes. Les participants sont
+/// affectes a une poule via `LeagueParticipant.poolId`. Le
+/// calendrier round-robin est genere par poule, mais les rounds
+/// (journees) sont communes pour synchroniser le rythme.
+///
+/// `qualifiesForPlayoffs` permet de specifier combien d'equipes de
+/// chaque poule iront en playoffs (top-N par poule).
+model LeaguePool {
+  id                   String       @id @default(cuid())
+  season               LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId             String
+  name                 String
+  order                Int          @default(0)
+  /// Couleur de presentation UI (hex `#RRGGBB`), optionnelle.
+  color                String?
+  /// Lot C — Combien d'equipes de cette poule sont qualifiees pour
+  /// les playoffs. Default 0 = aucune. Le `startPlayoffs` lit ce
+  /// champ et seed le bracket avec les top-N de chaque poule.
+  qualifiesForPlayoffs Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId, order])
 }
 
 // L.1 — Inscription d'une equipe sur une saison.
@@ -995,10 +1096,15 @@ model LeagueParticipant {
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
   awayPairings LeaguePairing[] @relation("LeaguePairingAway")
 
+  // Lot C — poule d'affectation (optionnelle). null = single-pool.
+  pool   LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
   @@index([seasonElo])
+  @@index([seasonId, poolId])
 }
 
 // L.1 — Journee (round) d'une saison. Utilise par le generateur
@@ -1026,11 +1132,16 @@ model LeagueRound {
 
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
+  // Lot C — round optionnellement rattache a une poule (pour les
+  // saisons multi-poules ou chaque poule a son propre calendrier).
+  pool     LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId   String?
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
   @@index([seasonId, kind])
+  @@index([seasonId, poolId, roundNumber])
 }
 
 // L2.A.1 — Pairing pre-genere du calendrier round-robin.
@@ -1060,6 +1171,14 @@ model LeaguePairing {
   // lance la partie. Ecrit par `POST /league/pairings/:id/match`
   // (L2.A.4) en meme temps que la creation du Match.
   match             Match?
+  // Lot E — Snapshot des points bonus appliques au scoring de ce
+  // pairing (en plus des winPoints/drawPoints standards). 0 si
+  // bonusPointsConfig est null ou aucun bonus n'a matche.
+  bonusPointsHome   Int               @default(0)
+  bonusPointsAway   Int               @default(0)
+  /// Lot E — Breakdown des regles appliquees pour audit / UI :
+  /// [{ ruleId, label, side, points }]. null si aucune regle.
+  bonusBreakdown    Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

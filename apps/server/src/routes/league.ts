@@ -23,10 +23,12 @@ import {
   getLeagueById,
   getSeasonById,
   computeSeasonStandings,
+  computeSeasonStandingsByPool,
   isSeasonEloRanked,
   withdrawParticipant,
   listThemedSeasons,
   parseAllowedRosters,
+  LeagueWithdrawError,
 } from "../services/league";
 import {
   startSeason,
@@ -47,7 +49,69 @@ import {
   computeSeasonRecap,
   getPersistedSeasonAward,
 } from "../services/league-scoring";
-import { startPlayoffs } from "../services/league-playoffs";
+import {
+  startPlayoffs,
+  overridePlayoffParticipants,
+  PlayoffOverrideError,
+} from "../services/league-playoffs";
+import {
+  createManualRound,
+  createManualPairing,
+  deleteManualPairing,
+  updateManualPairing,
+  LeagueManualPairingError,
+} from "../services/league-manual-pairing";
+import {
+  createManualRoundSchema,
+  createManualPairingSchema,
+  updateManualPairingSchema,
+  type CreateManualRoundBody,
+  type CreateManualPairingBody,
+  type UpdateManualPairingBody,
+} from "../schemas/league-manual-pairing.schemas";
+import {
+  createPool,
+  updatePool,
+  deletePool,
+  listPoolsForSeason,
+  assignParticipantsToPools,
+  autoAssignBySnakeDraft,
+  LeaguePoolError,
+} from "../services/league-pool";
+import {
+  computeLeaderboards,
+  computeLeaderboardsByTeam,
+  LEADERBOARD_CATEGORIES,
+} from "../services/league-player-stats";
+import {
+  adjustPlayerSpp,
+  addPlayerSkill,
+  removePlayerSkill,
+  adjustCharacteristic,
+  adjustTreasury,
+  listAuditLog,
+  CommissionerEditError,
+} from "../services/commissioner-team-edit";
+import {
+  adjustSppSchema,
+  addSkillSchema,
+  removeSkillSchema,
+  adjustCharacteristicSchema,
+  adjustTreasurySchema,
+  type AdjustSppBody,
+  type AddSkillBody,
+  type RemoveSkillBody,
+  type AdjustCharacteristicBody,
+  type AdjustTreasuryBody,
+} from "../schemas/commissioner-team-edit.schemas";
+import {
+  createPoolSchema,
+  updatePoolSchema,
+  assignPoolsSchema,
+  type CreatePoolBody,
+  type UpdatePoolBody,
+  type AssignPoolsBody,
+} from "../schemas/league-pool.schemas";
 import {
   playMecene,
   LeaguePatronError,
@@ -118,6 +182,79 @@ function serializeLeague(
 }
 
 function domainError(res: Response, e: unknown): void {
+  // Lot B — map les erreurs typees vers les bons status HTTP.
+  if (e instanceof LeagueWithdrawError) {
+    const status =
+      e.code === "season_not_found" || e.code === "not_registered"
+        ? 404
+        : e.code === "season_started" || e.code === "season_completed"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot C — pool errors.
+  if (e instanceof LeaguePoolError) {
+    const status =
+      e.code === "season_not_found" ||
+      e.code === "pool_not_found" ||
+      e.code === "participant_not_found"
+        ? 404
+        : e.code === "season_started" ||
+            e.code === "pool_name_taken" ||
+            e.code === "pool_not_empty" ||
+            e.code === "participant_not_in_season"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot I — commissioner team edit errors.
+  if (e instanceof CommissionerEditError) {
+    const status =
+      e.code === "team_not_found" ||
+      e.code === "player_not_found"
+        ? 404
+        : e.code === "team_not_in_league" ||
+            e.code === "player_not_in_team" ||
+            e.code === "skill_already_present" ||
+            e.code === "skill_not_present"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot D — playoff override errors.
+  if (e instanceof PlayoffOverrideError) {
+    const status =
+      e.code === "season_not_found" || e.code === "playoffs_not_started"
+        ? 404
+        : e.code === "playoffs_in_progress" ||
+            e.code === "duplicate_participant" ||
+            e.code === "size_mismatch" ||
+            e.code === "participant_not_active"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot F — manual pairing errors.
+  if (e instanceof LeagueManualPairingError) {
+    const status =
+      e.code === "round_not_found" ||
+      e.code === "season_not_found" ||
+      e.code === "pairing_not_found" ||
+      e.code === "participant_not_found"
+        ? 404
+        : e.code === "duplicate_pairing" ||
+            e.code === "pairing_already_played" ||
+            e.code === "round_completed" ||
+            e.code === "participant_not_active"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
   const message = e instanceof Error ? e.message : "Erreur inconnue";
   const isMissing = /introuvable|not found/i.test(message);
   sendError(res, message, isMissing ? 404 : 400);
@@ -144,6 +281,8 @@ export async function handleCreateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
       tieBreakRules: body.tieBreakRules ?? null,
+      // Lot E — config bonus optionnelle, propagee au service.
+      bonusPointsConfig: body.bonusPointsConfig ?? null,
     });
     sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
@@ -194,6 +333,8 @@ export async function handleUpdateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
       tieBreakRules: body.tieBreakRules,
+      // Lot E — propagation de la config bonus en edition.
+      bonusPointsConfig: body.bonusPointsConfig,
     });
     sendSuccess(res, serializeLeague(updated as Record<string, unknown>));
   } catch (e: unknown) {
@@ -599,7 +740,20 @@ export async function handleGetStandings(
     const showSeasonElo = isSeasonEloRanked(
       seasonRow?.league?.tieBreakRules ?? null,
     );
-    sendSuccess(res, { seasonId, standings, showSeasonElo });
+    // Lot C — si query `byPool=true`, retourne aussi le groupement
+    // par poule (vide si la saison n'a pas de poules).
+    const wantsByPool =
+      typeof req.query.byPool === "string" &&
+      (req.query.byPool === "true" || req.query.byPool === "1");
+    const pools = wantsByPool
+      ? await computeSeasonStandingsByPool(seasonId)
+      : undefined;
+    sendSuccess(res, {
+      seasonId,
+      standings,
+      showSeasonElo,
+      ...(pools !== undefined ? { pools } : {}),
+    });
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -732,6 +886,563 @@ async function ensureLeagueCreator(
       domainError(res, e);
     }
     return false;
+  }
+}
+
+/**
+ * Lot F — variante de `ensureLeagueCreator` qui resout le seasonId
+ * a partir d'un roundId. Utilisee par les handlers de creation
+ * manuelle de pairings.
+ */
+async function ensureLeagueCreatorByRound(
+  userId: string,
+  roundId: string,
+  res: Response,
+): Promise<{ seasonId: string } | null> {
+  const round = await prisma.leagueRound.findUnique({
+    where: { id: roundId },
+    select: { id: true, seasonId: true },
+  });
+  if (!round) {
+    sendError(res, "Round introuvable", 404);
+    return null;
+  }
+  if (!(await ensureLeagueCreator(userId, round.seasonId, res))) return null;
+  return { seasonId: round.seasonId };
+}
+
+/**
+ * Lot F — variante de `ensureLeagueCreator` qui resout le seasonId
+ * a partir d'un pairingId.
+ */
+async function ensureLeagueCreatorByPairing(
+  userId: string,
+  pairingId: string,
+  res: Response,
+): Promise<{ seasonId: string; roundId: string } | null> {
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { id: true, roundId: true, round: { select: { seasonId: true } } },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return null;
+  }
+  const seasonId = (pairing.round as { seasonId: string }).seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return null;
+  return { seasonId, roundId: pairing.roundId };
+}
+
+// ===========================================================
+// Lot F — handlers : creation manuelle de rounds et pairings.
+// ===========================================================
+
+/** POST /leagues/seasons/:seasonId/rounds/manual */
+export async function handleCreateManualRound(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as CreateManualRoundBody;
+  try {
+    const round = await createManualRound({
+      seasonId,
+      name: body.name,
+      kind: body.kind,
+      startDate: body.startDate ?? null,
+      endDate: body.endDate ?? null,
+    });
+    sendSuccess(res, round, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/rounds/:roundId/pairings */
+export async function handleCreateManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const roundId = req.params.roundId;
+  const ctx = await ensureLeagueCreatorByRound(userId, roundId, res);
+  if (!ctx) return;
+  const body = req.body as CreateManualPairingBody;
+  try {
+    const pairing = await createManualPairing({
+      roundId,
+      homeParticipantId: body.homeParticipantId,
+      awayParticipantId: body.awayParticipantId,
+      scheduledAt: body.scheduledAt ?? null,
+      deadlineAt: body.deadlineAt ?? null,
+    });
+    sendSuccess(res, pairing, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/pairings/:pairingId */
+export async function handleDeleteManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const ctx = await ensureLeagueCreatorByPairing(userId, pairingId, res);
+  if (!ctx) return;
+  try {
+    const out = await deleteManualPairing({ pairingId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/pairings/:pairingId */
+export async function handleUpdateManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const ctx = await ensureLeagueCreatorByPairing(userId, pairingId, res);
+  if (!ctx) return;
+  const body = req.body as UpdateManualPairingBody;
+  try {
+    const pairing = await updateManualPairing({
+      pairingId,
+      scheduledAt: body.scheduledAt,
+      deadlineAt: body.deadlineAt,
+      targetRoundId: body.targetRoundId,
+    });
+    sendSuccess(res, pairing);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
+// Lot C — handlers : gestion des poules.
+// ===========================================================
+
+/** Resoud le seasonId a partir d'un poolId et applique ensureLeagueCreator. */
+async function ensureLeagueCreatorByPool(
+  userId: string,
+  poolId: string,
+  res: Response,
+): Promise<{ seasonId: string } | null> {
+  const pool = await prisma.leaguePool.findUnique({
+    where: { id: poolId },
+    select: { id: true, seasonId: true },
+  });
+  if (!pool) {
+    sendError(res, "Poule introuvable", 404);
+    return null;
+  }
+  if (!(await ensureLeagueCreator(userId, pool.seasonId, res))) return null;
+  return { seasonId: pool.seasonId };
+}
+
+/** POST /leagues/seasons/:seasonId/pools */
+export async function handleCreatePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as CreatePoolBody;
+  try {
+    const pool = await createPool({
+      seasonId,
+      name: body.name,
+      qualifiesForPlayoffs: body.qualifiesForPlayoffs,
+      color: body.color ?? null,
+      order: body.order,
+    });
+    sendSuccess(res, pool, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** GET /leagues/seasons/:seasonId/pools (public). */
+export async function handleListPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  try {
+    const pools = await listPoolsForSeason(seasonId);
+    sendSuccess(res, { pools });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/pools/:poolId */
+export async function handleUpdatePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const poolId = req.params.poolId;
+  const ctx = await ensureLeagueCreatorByPool(userId, poolId, res);
+  if (!ctx) return;
+  const body = req.body as UpdatePoolBody;
+  try {
+    const updated = await updatePool({
+      poolId,
+      name: body.name,
+      qualifiesForPlayoffs: body.qualifiesForPlayoffs,
+      color: body.color ?? undefined,
+      order: body.order,
+    });
+    sendSuccess(res, updated);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/pools/:poolId */
+export async function handleDeletePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const poolId = req.params.poolId;
+  const ctx = await ensureLeagueCreatorByPool(userId, poolId, res);
+  if (!ctx) return;
+  try {
+    const out = await deletePool({ poolId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/seasons/:seasonId/pools/assign */
+export async function handleAssignPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as AssignPoolsBody;
+  try {
+    const out = await assignParticipantsToPools({
+      seasonId,
+      assignments: body.assignments,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/seasons/:seasonId/pools/auto-assign */
+export async function handleAutoAssignPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  try {
+    const out = await autoAssignBySnakeDraft({ seasonId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
+// Lot D — override des participants du bracket playoffs.
+// ===========================================================
+
+// ===========================================================
+// Lot I — handlers : edition ex-post des equipes par commissaire.
+// ===========================================================
+
+/** Verifie que l'user est commissaire de la ligue cible (par id). */
+async function ensureLeagueCommissioner(
+  userId: string,
+  leagueId: string,
+  res: Response,
+): Promise<boolean> {
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { id: true, creatorId: true },
+  });
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return false;
+  }
+  if (league.creatorId !== userId) {
+    sendError(res, "Seul le commissaire peut effectuer cette action", 403);
+    return false;
+  }
+  return true;
+}
+
+/** POST /leagues/:leagueId/teams/:teamId/players/:playerId/spp */
+export async function handleAdjustPlayerSpp(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustSppBody;
+  try {
+    const out = await adjustPlayerSpp({
+      leagueId,
+      teamId,
+      playerId,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/:leagueId/teams/:teamId/players/:playerId/skills */
+export async function handleAddPlayerSkill(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AddSkillBody;
+  try {
+    const out = await addPlayerSkill({
+      leagueId,
+      teamId,
+      playerId,
+      skill: body.skill,
+      pickKind: body.pickKind,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/:leagueId/teams/:teamId/players/:playerId/skills */
+export async function handleRemovePlayerSkill(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as RemoveSkillBody;
+  try {
+    const out = await removePlayerSkill({
+      leagueId,
+      teamId,
+      playerId,
+      skill: body.skill,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/players/:playerId/characteristic */
+export async function handleAdjustCharacteristic(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustCharacteristicBody;
+  try {
+    const out = await adjustCharacteristic({
+      leagueId,
+      teamId,
+      playerId,
+      characteristic: body.characteristic,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/treasury */
+export async function handleAdjustTreasury(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustTreasuryBody;
+  try {
+    const out = await adjustTreasury({
+      leagueId,
+      teamId,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** GET /leagues/:leagueId/audit-log */
+export async function handleGetAuditLog(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const leagueId = req.params.leagueId;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const limitRaw = req.query.limit;
+  const limit =
+    typeof limitRaw === "string" ? parseInt(limitRaw, 10) : undefined;
+  try {
+    const entries = await listAuditLog({
+      leagueId,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
+    // Filtre cote applicatif sur leagueId puisque le JSON path n'est pas
+    // tres portable cross-DB. La requete service retourne deja les
+    // entries "commissioner-edit:*", on filtre par newValue.leagueId.
+    const filtered = entries.filter(
+      (e) =>
+        ((e as { newValue?: { leagueId?: string } }).newValue?.leagueId ?? "") ===
+        leagueId,
+    );
+    sendSuccess(res, { entries: filtered });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
+// Lot J — handlers : classements top-N joueurs.
+// ===========================================================
+
+/**
+ * GET /leagues/seasons/:seasonId/leaderboards?topN=5[&teamId=...]
+ * Endpoint public — les stats joueurs sont consultables sans login.
+ */
+export async function handleGetLeaderboards(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const topNRaw = req.query.topN;
+  const topN =
+    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  const teamId =
+    typeof req.query.teamId === "string" ? req.query.teamId : undefined;
+  try {
+    const catalogue = await computeLeaderboards({
+      seasonId,
+      topN: Number.isFinite(topN) ? topN : undefined,
+      teamId,
+    });
+    sendSuccess(res, {
+      ...catalogue,
+      categories: LEADERBOARD_CATEGORIES,
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * GET /leagues/seasons/:seasonId/leaderboards/by-team?topN=3
+ * Decline les classements top-N par equipe inscrite.
+ */
+export async function handleGetLeaderboardsByTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const topNRaw = req.query.topN;
+  const topN =
+    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  try {
+    const teams = await computeLeaderboardsByTeam({
+      seasonId,
+      topN: Number.isFinite(topN) ? topN : undefined,
+    });
+    sendSuccess(res, { seasonId, teams });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * PATCH /leagues/seasons/:seasonId/playoff-bracket/participants
+ *
+ * Le commissaire fournit la liste complete des seeds du bracket
+ * (taille = playoffSize). Le service refuse si un match du round 1
+ * a deja ete lance / joue.
+ */
+export async function handleOverridePlayoffParticipants(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as { participantIds: string[] };
+  if (
+    !body ||
+    !Array.isArray(body.participantIds) ||
+    body.participantIds.length === 0
+  ) {
+    sendError(res, "participantIds[] requis", 400);
+    return;
+  }
+  try {
+    const out = await overridePlayoffParticipants({
+      seasonId,
+      participantIds: body.participantIds,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
   }
 }
 
@@ -1209,6 +1920,116 @@ router.post(
   authUser,
   validate(attachMatchSchema),
   handleAttachMatch,
+);
+// Lot F — saisie manuelle de matchs : creation d'un round vide hors
+// du calendrier auto-genere + ajout de pairings.
+router.post(
+  "/seasons/:seasonId/rounds/manual",
+  authUser,
+  validate(createManualRoundSchema),
+  handleCreateManualRound,
+);
+router.post(
+  "/rounds/:roundId/pairings",
+  authUser,
+  validate(createManualPairingSchema),
+  handleCreateManualPairing,
+);
+router.delete(
+  "/pairings/:pairingId",
+  authUser,
+  handleDeleteManualPairing,
+);
+router.patch(
+  "/pairings/:pairingId",
+  authUser,
+  validate(updateManualPairingSchema),
+  handleUpdateManualPairing,
+);
+
+// Lot C — gestion des poules (groups). Mutation reservee au
+// commissaire ; lecture publique pour permettre l'affichage des
+// poules dans le calendrier / standings.
+router.get("/seasons/:seasonId/pools", handleListPools);
+router.post(
+  "/seasons/:seasonId/pools",
+  authUser,
+  validate(createPoolSchema),
+  handleCreatePool,
+);
+router.post(
+  "/seasons/:seasonId/pools/assign",
+  authUser,
+  validate(assignPoolsSchema),
+  handleAssignPools,
+);
+router.post(
+  "/seasons/:seasonId/pools/auto-assign",
+  authUser,
+  handleAutoAssignPools,
+);
+router.patch(
+  "/pools/:poolId",
+  authUser,
+  validate(updatePoolSchema),
+  handleUpdatePool,
+);
+router.delete("/pools/:poolId", authUser, handleDeletePool);
+
+// Lot D — override des participants du bracket (avant le 1er match
+// playoff joue). Permet de gerer un desistement tardif.
+router.patch(
+  "/seasons/:seasonId/playoff-bracket/participants",
+  authUser,
+  handleOverridePlayoffParticipants,
+);
+
+// Lot J — classements top-N joueurs (public). Decline aussi par
+// equipe via /by-team pour le mode "top 3 par equipe".
+router.get(
+  "/seasons/:seasonId/leaderboards",
+  handleGetLeaderboards,
+);
+router.get(
+  "/seasons/:seasonId/leaderboards/by-team",
+  handleGetLeaderboardsByTeam,
+);
+
+// Lot I — edition ex-post des equipes par le commissaire.
+router.post(
+  "/:leagueId/teams/:teamId/players/:playerId/spp",
+  authUser,
+  validate(adjustSppSchema),
+  handleAdjustPlayerSpp,
+);
+router.post(
+  "/:leagueId/teams/:teamId/players/:playerId/skills",
+  authUser,
+  validate(addSkillSchema),
+  handleAddPlayerSkill,
+);
+router.delete(
+  "/:leagueId/teams/:teamId/players/:playerId/skills",
+  authUser,
+  validate(removeSkillSchema),
+  handleRemovePlayerSkill,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/players/:playerId/characteristic",
+  authUser,
+  validate(adjustCharacteristicSchema),
+  handleAdjustCharacteristic,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/treasury",
+  authUser,
+  validate(adjustTreasurySchema),
+  handleAdjustTreasury,
+);
+router.get(
+  "/:leagueId/audit-log",
+  authUser,
+  handleGetAuditLog,
 );
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.

@@ -94,6 +94,50 @@ export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
   "registration_requires_validation" as const;
 
 /**
+ * Lot A — sous-flag de `LEAGUE_FLAG` pour ouvrir specifiquement les
+ * fonctionnalites d'invitation (creation, autocomplete coachs,
+ * acceptation par lien). Permet de garder le hub /leagues ouvert
+ * mais de moduler le rollout des invitations.
+ */
+export const LEAGUE_INVITATIONS_FLAG = "league_invitations" as const;
+
+/**
+ * Lot E — sous-flag pour exposer l'editeur de points bonus dans l'UI
+ * de creation/edition de ligue. Le serveur applique deja les bonus
+ * quand la config est presente ; ce flag gate uniquement l'UI.
+ */
+export const LEAGUE_BONUS_POINTS_FLAG = "league_bonus_points" as const;
+
+/**
+ * Lot F — sous-flag pour exposer la creation manuelle de pairings
+ * (rounds custom + ajout/suppression/deplacement de matchs hors du
+ * round-robin auto-genere) dans l'UI commissaire.
+ */
+export const LEAGUE_MANUAL_PAIRINGS_FLAG =
+  "league_manual_pairings" as const;
+
+/**
+ * Lot C — sous-flag pour le mode multi-poules dans l'UI saison.
+ * L'API est ouverte par defaut ; ce flag gate uniquement l'editeur
+ * de poules cote frontend.
+ */
+export const LEAGUE_POOLS_FLAG = "league_pools" as const;
+
+/**
+ * Lot J — sous-flag pour exposer la page de classements top-N
+ * joueurs (`/leagues/[id]/seasons/[sid]/leaderboards`) dans l'UI.
+ */
+export const LEAGUE_LEADERBOARDS_FLAG = "league_leaderboards" as const;
+
+/**
+ * Lot I — sous-flag pour exposer l'editeur ex-post des equipes par
+ * le commissaire (SPP, competences, caracteristiques, tresorerie).
+ * Toutes les mutations sont auditees via AuditLog.
+ */
+export const LEAGUE_COMMISSIONER_EDIT_FLAG =
+  "league_commissioner_edit" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -145,6 +189,34 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: REGISTRATION_REQUIRES_VALIDATION_FLAG,
     description:
       "Kill-switch — exige une validation admin des nouveaux comptes.",
+  },
+  {
+    key: LEAGUE_INVITATIONS_FLAG,
+    description:
+      "Ligue — invitations de coachs (creation, lien shareable, autocomplete recherche).",
+  },
+  {
+    key: LEAGUE_BONUS_POINTS_FLAG,
+    description:
+      "Ligue — editeur de points bonus configurable (3 TD/3 cas/clean sheet/etc.).",
+  },
+  {
+    key: LEAGUE_MANUAL_PAIRINGS_FLAG,
+    description:
+      "Ligue — saisie manuelle de matchs (rounds custom, ajout/suppression/deplacement).",
+  },
+  {
+    key: LEAGUE_POOLS_FLAG,
+    description: "Ligue — gestion multi-poules (groups + qualif PO).",
+  },
+  {
+    key: LEAGUE_LEADERBOARDS_FLAG,
+    description: "Ligue — classements top-N joueurs par saison.",
+  },
+  {
+    key: LEAGUE_COMMISSIONER_EDIT_FLAG,
+    description:
+      "Ligue — edition ex-post des equipes par le commissaire (SPP, comp, carac, treso).",
   },
 ];
 
