@@ -49,7 +49,11 @@ import {
   computeSeasonRecap,
   getPersistedSeasonAward,
 } from "../services/league-scoring";
-import { startPlayoffs } from "../services/league-playoffs";
+import {
+  startPlayoffs,
+  overridePlayoffParticipants,
+  PlayoffOverrideError,
+} from "../services/league-playoffs";
 import {
   createManualRound,
   createManualPairing,
@@ -174,6 +178,20 @@ function domainError(res: Response, e: unknown): void {
             e.code === "pool_name_taken" ||
             e.code === "pool_not_empty" ||
             e.code === "participant_not_in_season"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot D — playoff override errors.
+  if (e instanceof PlayoffOverrideError) {
+    const status =
+      e.code === "season_not_found" || e.code === "playoffs_not_started"
+        ? 404
+        : e.code === "playoffs_in_progress" ||
+            e.code === "duplicate_participant" ||
+            e.code === "size_mismatch" ||
+            e.code === "participant_not_active"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -1110,6 +1128,45 @@ export async function handleAutoAssignPools(
   }
 }
 
+// ===========================================================
+// Lot D — override des participants du bracket playoffs.
+// ===========================================================
+
+/**
+ * PATCH /leagues/seasons/:seasonId/playoff-bracket/participants
+ *
+ * Le commissaire fournit la liste complete des seeds du bracket
+ * (taille = playoffSize). Le service refuse si un match du round 1
+ * a deja ete lance / joue.
+ */
+export async function handleOverridePlayoffParticipants(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as { participantIds: string[] };
+  if (
+    !body ||
+    !Array.isArray(body.participantIds) ||
+    body.participantIds.length === 0
+  ) {
+    sendError(res, "participantIds[] requis", 400);
+    return;
+  }
+  try {
+    const out = await overridePlayoffParticipants({
+      seasonId,
+      participantIds: body.participantIds,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /**
  * L2.A.3 — Ouvre une saison aux inscriptions (`draft -> scheduled`).
  * Reserve au createur de la ligue. No-op si deja `scheduled`.
@@ -1639,6 +1696,14 @@ router.patch(
   handleUpdatePool,
 );
 router.delete("/pools/:poolId", authUser, handleDeletePool);
+
+// Lot D — override des participants du bracket (avant le 1er match
+// playoff joue). Permet de gerer un desistement tardif.
+router.patch(
+  "/seasons/:seasonId/playoff-bracket/participants",
+  authUser,
+  handleOverridePlayoffParticipants,
+);
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.
 router.post("/seasons/:seasonId/open", authUser, handleOpenSeason);
