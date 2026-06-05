@@ -84,6 +84,27 @@ import {
   LEADERBOARD_CATEGORIES,
 } from "../services/league-player-stats";
 import {
+  adjustPlayerSpp,
+  addPlayerSkill,
+  removePlayerSkill,
+  adjustCharacteristic,
+  adjustTreasury,
+  listAuditLog,
+  CommissionerEditError,
+} from "../services/commissioner-team-edit";
+import {
+  adjustSppSchema,
+  addSkillSchema,
+  removeSkillSchema,
+  adjustCharacteristicSchema,
+  adjustTreasurySchema,
+  type AdjustSppBody,
+  type AddSkillBody,
+  type RemoveSkillBody,
+  type AdjustCharacteristicBody,
+  type AdjustTreasuryBody,
+} from "../schemas/commissioner-team-edit.schemas";
+import {
   createPoolSchema,
   updatePoolSchema,
   assignPoolsSchema,
@@ -183,6 +204,21 @@ function domainError(res: Response, e: unknown): void {
             e.code === "pool_name_taken" ||
             e.code === "pool_not_empty" ||
             e.code === "participant_not_in_season"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot I — commissioner team edit errors.
+  if (e instanceof CommissionerEditError) {
+    const status =
+      e.code === "team_not_found" ||
+      e.code === "player_not_found"
+        ? 404
+        : e.code === "team_not_in_league" ||
+            e.code === "player_not_in_team" ||
+            e.code === "skill_already_present" ||
+            e.code === "skill_not_present"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -1138,6 +1174,188 @@ export async function handleAutoAssignPools(
 // ===========================================================
 
 // ===========================================================
+// Lot I — handlers : edition ex-post des equipes par commissaire.
+// ===========================================================
+
+/** Verifie que l'user est commissaire de la ligue cible (par id). */
+async function ensureLeagueCommissioner(
+  userId: string,
+  leagueId: string,
+  res: Response,
+): Promise<boolean> {
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { id: true, creatorId: true },
+  });
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return false;
+  }
+  if (league.creatorId !== userId) {
+    sendError(res, "Seul le commissaire peut effectuer cette action", 403);
+    return false;
+  }
+  return true;
+}
+
+/** POST /leagues/:leagueId/teams/:teamId/players/:playerId/spp */
+export async function handleAdjustPlayerSpp(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustSppBody;
+  try {
+    const out = await adjustPlayerSpp({
+      leagueId,
+      teamId,
+      playerId,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/:leagueId/teams/:teamId/players/:playerId/skills */
+export async function handleAddPlayerSkill(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AddSkillBody;
+  try {
+    const out = await addPlayerSkill({
+      leagueId,
+      teamId,
+      playerId,
+      skill: body.skill,
+      pickKind: body.pickKind,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/:leagueId/teams/:teamId/players/:playerId/skills */
+export async function handleRemovePlayerSkill(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as RemoveSkillBody;
+  try {
+    const out = await removePlayerSkill({
+      leagueId,
+      teamId,
+      playerId,
+      skill: body.skill,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/players/:playerId/characteristic */
+export async function handleAdjustCharacteristic(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustCharacteristicBody;
+  try {
+    const out = await adjustCharacteristic({
+      leagueId,
+      teamId,
+      playerId,
+      characteristic: body.characteristic,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/treasury */
+export async function handleAdjustTreasury(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body = req.body as AdjustTreasuryBody;
+  try {
+    const out = await adjustTreasury({
+      leagueId,
+      teamId,
+      delta: body.delta,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** GET /leagues/:leagueId/audit-log */
+export async function handleGetAuditLog(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const leagueId = req.params.leagueId;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const limitRaw = req.query.limit;
+  const limit =
+    typeof limitRaw === "string" ? parseInt(limitRaw, 10) : undefined;
+  try {
+    const entries = await listAuditLog({
+      leagueId,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
+    // Filtre cote applicatif sur leagueId puisque le JSON path n'est pas
+    // tres portable cross-DB. La requete service retourne deja les
+    // entries "commissioner-edit:*", on filtre par newValue.leagueId.
+    const filtered = entries.filter(
+      (e) =>
+        ((e as { newValue?: { leagueId?: string } }).newValue?.leagueId ?? "") ===
+        leagueId,
+    );
+    sendSuccess(res, { entries: filtered });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
 // Lot J — handlers : classements top-N joueurs.
 // ===========================================================
 
@@ -1775,6 +1993,43 @@ router.get(
 router.get(
   "/seasons/:seasonId/leaderboards/by-team",
   handleGetLeaderboardsByTeam,
+);
+
+// Lot I — edition ex-post des equipes par le commissaire.
+router.post(
+  "/:leagueId/teams/:teamId/players/:playerId/spp",
+  authUser,
+  validate(adjustSppSchema),
+  handleAdjustPlayerSpp,
+);
+router.post(
+  "/:leagueId/teams/:teamId/players/:playerId/skills",
+  authUser,
+  validate(addSkillSchema),
+  handleAddPlayerSkill,
+);
+router.delete(
+  "/:leagueId/teams/:teamId/players/:playerId/skills",
+  authUser,
+  validate(removeSkillSchema),
+  handleRemovePlayerSkill,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/players/:playerId/characteristic",
+  authUser,
+  validate(adjustCharacteristicSchema),
+  handleAdjustCharacteristic,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/treasury",
+  authUser,
+  validate(adjustTreasurySchema),
+  handleAdjustTreasury,
+);
+router.get(
+  "/:leagueId/audit-log",
+  authUser,
+  handleGetAuditLog,
 );
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.

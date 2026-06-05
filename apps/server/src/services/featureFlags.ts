@@ -130,6 +130,14 @@ export const LEAGUE_POOLS_FLAG = "league_pools" as const;
 export const LEAGUE_LEADERBOARDS_FLAG = "league_leaderboards" as const;
 
 /**
+ * Lot I — sous-flag pour exposer l'editeur ex-post des equipes par
+ * le commissaire (SPP, competences, caracteristiques, tresorerie).
+ * Toutes les mutations sont auditees via AuditLog.
+ */
+export const LEAGUE_COMMISSIONER_EDIT_FLAG =
+  "league_commissioner_edit" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -204,6 +212,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
   {
     key: LEAGUE_LEADERBOARDS_FLAG,
     description: "Ligue — classements top-N joueurs par saison.",
+  },
+  {
+    key: LEAGUE_COMMISSIONER_EDIT_FLAG,
+    description:
+      "Ligue — edition ex-post des equipes par le commissaire (SPP, comp, carac, treso).",
   },
 ];
 
