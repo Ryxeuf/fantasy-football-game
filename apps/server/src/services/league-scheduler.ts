@@ -28,7 +28,11 @@
  */
 
 import { prisma } from "../prisma";
-import { generateRoundRobin, type RoundRobinRound } from "./league-schedule";
+import {
+  generateRoundRobin,
+  generateMultiPoolRoundRobin,
+  type RoundRobinRound,
+} from "./league-schedule";
 import { notifyParticipantsOfFirstRound } from "./league-round-reminder";
 import { persistSeasonAwards } from "./league-scoring";
 import { serverLog } from "../utils/server-log";
@@ -147,6 +151,70 @@ async function hasExistingSchedule(seasonId: string): Promise<boolean> {
   return count > 0;
 }
 
+/**
+ * Lot C.2 — Construit le calendrier (round-robin) en tenant compte
+ * des poules eventuelles de la saison.
+ *
+ * - Si la saison n'a aucune poule : round-robin global classique.
+ * - Si la saison a >= 1 poule : round-robin par poule avec journees
+ *   partagees (`generateMultiPoolRoundRobin`). Les participants
+ *   actifs non affectes a une poule sont regroupes dans une poule
+ *   implicite "sans poule" pour ne pas les exclure du calendrier.
+ *
+ * Retourne aussi `participantCount` pour la validation "au moins 2".
+ */
+async function buildSchedule(
+  seasonId: string,
+  doubleRoundRobin: boolean,
+): Promise<{ generated: RoundRobinRound[]; participantCount: number }> {
+  const pools = (await prisma.leaguePool.findMany({
+    where: { seasonId },
+    orderBy: { order: "asc" },
+    select: { id: true },
+  })) as Array<{ id: string }>;
+
+  // Pas de poule -> comportement historique.
+  if (pools.length === 0) {
+    const participantIds = await listActiveParticipantIds(seasonId);
+    return {
+      generated: generateRoundRobin({ participantIds, doubleRoundRobin }),
+      participantCount: participantIds.length,
+    };
+  }
+
+  // Mode multi-poules : groupe les participants actifs par poolId.
+  const participants = (await prisma.leagueParticipant.findMany({
+    where: { seasonId, status: "active" },
+    orderBy: { joinedAt: "asc" },
+    select: { id: true, poolId: true },
+  })) as Array<{ id: string; poolId: string | null }>;
+
+  const byPool = new Map<string, string[]>();
+  for (const p of pools) byPool.set(p.id, []);
+  const UNASSIGNED = "__unassigned__";
+  byPool.set(UNASSIGNED, []);
+  for (const part of participants) {
+    const key =
+      part.poolId && byPool.has(part.poolId) ? part.poolId : UNASSIGNED;
+    byPool.get(key)!.push(part.id);
+  }
+
+  // Ne conserve que les poules ayant >= 1 participant (les vides sont
+  // ignorees). On garde la poule "unassigned" seulement si elle a des
+  // membres (>= 2 pour produire des matchs).
+  const poolInputs = [...byPool.entries()]
+    .filter(([, ids]) => ids.length > 0)
+    .map(([poolId, participantIds]) => ({ poolId, participantIds }));
+
+  return {
+    generated: generateMultiPoolRoundRobin({
+      pools: poolInputs,
+      doubleRoundRobin,
+    }),
+    participantCount: participants.length,
+  };
+}
+
 async function persistRoundsAndPairings(
   seasonId: string,
   generated: readonly RoundRobinRound[],
@@ -221,17 +289,17 @@ export async function startSeason(
     );
   }
 
-  const participantIds = await listActiveParticipantIds(seasonId);
-  if (participantIds.length < 2) {
+  // Lot C.2 — round-robin global ou par poule selon la config saison.
+  const { generated, participantCount } = await buildSchedule(
+    seasonId,
+    opts.doubleRoundRobin ?? false,
+  );
+  if (participantCount < 2) {
     throw new Error(
-      `Au moins 2 participants actifs requis (${participantIds.length} trouves)`,
+      `Au moins 2 participants actifs requis (${participantCount} trouves)`,
     );
   }
 
-  const generated = generateRoundRobin({
-    participantIds,
-    doubleRoundRobin: opts.doubleRoundRobin ?? false,
-  });
   const baseStart = opts.firstRoundStartDate ?? null;
   const durationDays = opts.roundDurationDays ?? null;
 
@@ -304,17 +372,17 @@ export async function regenerateSchedule(
   // n'a encore ete compte (verifie ci-dessus).
   await prisma.leagueRound.deleteMany({ where: { seasonId } });
 
-  const participantIds = await listActiveParticipantIds(seasonId);
-  if (participantIds.length < 2) {
+  // Lot C.2 — round-robin global ou par poule selon la config saison.
+  const { generated, participantCount } = await buildSchedule(
+    seasonId,
+    opts.doubleRoundRobin ?? false,
+  );
+  if (participantCount < 2) {
     throw new Error(
-      `Au moins 2 participants actifs requis (${participantIds.length} trouves)`,
+      `Au moins 2 participants actifs requis (${participantCount} trouves)`,
     );
   }
 
-  const generated = generateRoundRobin({
-    participantIds,
-    doubleRoundRobin: opts.doubleRoundRobin ?? false,
-  });
   const baseStart = opts.firstRoundStartDate ?? null;
   const durationDays = opts.roundDurationDays ?? null;
 

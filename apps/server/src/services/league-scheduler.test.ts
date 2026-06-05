@@ -25,6 +25,10 @@ vi.mock("../prisma", () => ({
     leagueParticipant: {
       findMany: vi.fn(),
     },
+    // Lot C.2 — buildSchedule interroge les poules de la saison.
+    leaguePool: {
+      findMany: vi.fn(),
+    },
     leagueRound: {
       count: vi.fn(),
       create: vi.fn(),
@@ -62,10 +66,15 @@ const mocked = {
   pairingCreateMany: prisma.leaguePairing.createMany as MockFn,
   pairingUpdateMany: prisma.leaguePairing.updateMany as MockFn,
   matchCount: prisma.match.count as MockFn,
+  poolFind: prisma.leaguePool.findMany as MockFn,
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Lot C.2 — defaut : aucune poule -> chemin round-robin global
+  // (comportement historique). Les tests multi-poules dedies
+  // override ce mock.
+  mocked.poolFind.mockResolvedValue([]);
 });
 
 describe("league-scheduler.startSeason", () => {
@@ -125,6 +134,42 @@ describe("league-scheduler.startSeason", () => {
       where: { id: "s1" },
       data: { status: "in_progress" },
     });
+  });
+
+  // Lot C.2 — quand la saison a des poules, le calendrier est genere
+  // par poule avec journees partagees.
+  it("generates a per-pool schedule when the season has pools", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1", status: "draft" });
+    mocked.roundCount.mockResolvedValue(0);
+    // 2 poules de 4 -> 3 journees partagees, 4 pairings par journee.
+    mocked.poolFind.mockResolvedValue([{ id: "A" }, { id: "B" }]);
+    mocked.participantFind.mockResolvedValue([
+      { id: "a1", poolId: "A" },
+      { id: "a2", poolId: "A" },
+      { id: "a3", poolId: "A" },
+      { id: "a4", poolId: "A" },
+      { id: "b1", poolId: "B" },
+      { id: "b2", poolId: "B" },
+      { id: "b3", poolId: "B" },
+      { id: "b4", poolId: "B" },
+    ]);
+    let ri = 0;
+    mocked.roundCreate.mockImplementation(async () => ({ id: `r${++ri}` }));
+    const pairingBatches: number[] = [];
+    mocked.pairingCreateMany.mockImplementation(
+      async (args: { data: unknown[] }) => {
+        pairingBatches.push(args.data.length);
+        return { count: args.data.length };
+      },
+    );
+    mocked.seasonUpdate.mockResolvedValue({});
+
+    const result = await startSeason("s1");
+    expect(result.roundsCreated).toBe(3);
+    // 6 pairs/pool * 2 pools = 12 pairings total.
+    expect(result.pairingsCreated).toBe(12);
+    // Chaque journee a 4 pairings (2 par poule).
+    expect(pairingBatches).toEqual([4, 4, 4]);
   });
 
   it("doubles the schedule when doubleRoundRobin=true", async () => {

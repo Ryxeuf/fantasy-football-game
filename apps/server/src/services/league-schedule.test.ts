@@ -7,6 +7,7 @@
 import { describe, it, expect } from "vitest";
 import {
   generateRoundRobin,
+  generateMultiPoolRoundRobin,
   type RoundRobinRound,
 } from "./league-schedule";
 
@@ -270,5 +271,115 @@ describe("Rule: League round-robin schedule", () => {
       // 5 teams: 10 unique pairs to play
       expect(totalPairings).toBe(10);
     });
+  });
+});
+
+// ─── Lot C.2 — multi-poules ───────────────────────────────────────────
+
+describe("generateMultiPoolRoundRobin (Lot C.2)", () => {
+  it("throws when no pools", () => {
+    expect(() =>
+      generateMultiPoolRoundRobin({ pools: [] }),
+    ).toThrow(/au moins une poule/i);
+  });
+
+  it("throws when a participant is in two pools", () => {
+    expect(() =>
+      generateMultiPoolRoundRobin({
+        pools: [
+          { poolId: "A", participantIds: ["p1", "p2"] },
+          { poolId: "B", participantIds: ["p2", "p3"] },
+        ],
+      }),
+    ).toThrow(/plusieurs poules/i);
+  });
+
+  it("merges two equal pools into shared matchdays", () => {
+    const rounds = generateMultiPoolRoundRobin({
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2", "a3", "a4"] },
+        { poolId: "B", participantIds: ["b1", "b2", "b3", "b4"] },
+      ],
+    });
+    // 4 teams per pool -> 3 rounds each -> 3 shared matchdays.
+    expect(rounds).toHaveLength(3);
+    // Each matchday: 2 pairings from A + 2 from B = 4 pairings.
+    for (const r of rounds) {
+      expect(r.pairings).toHaveLength(4);
+    }
+    // Total unique pairs: 6 per pool * 2 = 12.
+    const total = rounds.reduce((acc, r) => acc + r.pairings.length, 0);
+    expect(total).toBe(12);
+  });
+
+  it("never crosses pools (a pairing always stays intra-pool)", () => {
+    const rounds = generateMultiPoolRoundRobin({
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2", "a3", "a4"] },
+        { poolId: "B", participantIds: ["b1", "b2", "b3", "b4"] },
+      ],
+    });
+    for (const r of rounds) {
+      for (const p of r.pairings) {
+        const homePool = p.home.startsWith("a") ? "A" : "B";
+        const awayPool = p.away.startsWith("a") ? "A" : "B";
+        expect(homePool).toBe(awayPool);
+      }
+    }
+  });
+
+  it("handles uneven pool sizes (matchday count = max over pools)", () => {
+    const rounds = generateMultiPoolRoundRobin({
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2", "a3", "a4"] }, // 3 rounds
+        { poolId: "B", participantIds: ["b1", "b2"] }, // 1 round
+      ],
+    });
+    expect(rounds).toHaveLength(3);
+    // Matchday 1 has A(2) + B(1) = 3 pairings ; matchday 2,3 only A(2).
+    expect(rounds[0].pairings).toHaveLength(3);
+    expect(rounds[1].pairings).toHaveLength(2);
+    expect(rounds[2].pairings).toHaveLength(2);
+  });
+
+  it("ignores pools with fewer than 2 participants", () => {
+    const rounds = generateMultiPoolRoundRobin({
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2"] },
+        { poolId: "B", participantIds: ["solo"] },
+      ],
+    });
+    expect(rounds).toHaveLength(1);
+    expect(rounds[0].pairings).toHaveLength(1);
+    expect(rounds[0].pairings[0]).toEqual(
+      expect.objectContaining({}),
+    );
+  });
+
+  it("supports doubleRoundRobin per pool", () => {
+    const rounds = generateMultiPoolRoundRobin({
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2", "a3", "a4"] },
+        { poolId: "B", participantIds: ["b1", "b2", "b3", "b4"] },
+      ],
+      doubleRoundRobin: true,
+    });
+    // 4 teams -> 6 rounds (double) per pool -> 6 matchdays.
+    expect(rounds).toHaveLength(6);
+    const total = rounds.reduce((acc, r) => acc + r.pairings.length, 0);
+    // 12 pairs per pool * 2 pools = 24.
+    expect(total).toBe(24);
+  });
+
+  it("is deterministic (same input -> same output)", () => {
+    const input = {
+      pools: [
+        { poolId: "A", participantIds: ["a1", "a2", "a3", "a4"] },
+        { poolId: "B", participantIds: ["b1", "b2", "b3"] },
+      ],
+    };
+    const a = generateMultiPoolRoundRobin(input);
+    const b = generateMultiPoolRoundRobin(input);
+    expect(a).toEqual(b);
   });
 });
