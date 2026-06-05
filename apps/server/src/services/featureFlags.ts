@@ -138,6 +138,13 @@ export const LEAGUE_COMMISSIONER_EDIT_FLAG =
   "league_commissioner_edit" as const;
 
 /**
+ * Lot G — sous-flag pour la feuille de match v2 (saisie collaborative
+ * joueurs + journal d'evenements + validation commissaire). Gate l'UI
+ * dediee ; l'API reste protegee par auth + roles.
+ */
+export const LEAGUE_MATCH_SHEET_FLAG = "league_match_sheet" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -217,6 +224,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: LEAGUE_COMMISSIONER_EDIT_FLAG,
     description:
       "Ligue — edition ex-post des equipes par le commissaire (SPP, comp, carac, treso).",
+  },
+  {
+    key: LEAGUE_MATCH_SHEET_FLAG,
+    description:
+      "Ligue — feuille de match v2 (saisie joueurs + evenements + validation commissaire).",
   },
 ];
 

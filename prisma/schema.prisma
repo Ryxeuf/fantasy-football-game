@@ -1179,6 +1179,8 @@ model LeaguePairing {
   /// Lot E — Breakdown des regles appliquees pour audit / UI :
   /// [{ ruleId, label, side, points }]. null si aucune regle.
   bonusBreakdown    Json?
+  // Lot G — feuille de match v2 (1-1, optionnelle).
+  matchSheet        LeagueMatchSheet?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -1187,6 +1189,103 @@ model LeaguePairing {
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Lot G — Feuille de match collaborative (saisie joueurs + validation
+/// commissaire). 1-1 avec un LeaguePairing.
+///
+/// Workflow `status` :
+///   draft            -> en cours de saisie (avant soumission)
+///   submitted_home   -> coach domicile a valide sa saisie
+///   submitted_away   -> coach visiteur a valide sa saisie
+///   both_submitted   -> les 2 ont valide (alerte commissaire)
+///   validated        -> commissaire a valide (effets appliques)
+///   invalidated      -> annulee apres validation (fenetre de correction)
+///
+/// Les scores et la liste des blesses sont DERIVES des events
+/// (`LeagueMatchEvent`) par le summarizer pur ; ils sont aussi
+/// snapshotes ici a la validation pour audit + lecture rapide.
+model LeagueMatchSheet {
+  id                String        @id @default(cuid())
+  pairing           LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId         String        @unique
+  status            String        @default("draft")
+
+  submittedByHomeAt DateTime?
+  submittedByAwayAt DateTime?
+  validatedAt       DateTime?
+  validatedById     String?
+  invalidatedAt     DateTime?
+  invalidationReason String?
+
+  // ── Avant-match ──
+  weather           String?
+  popularityHome    Int?
+  popularityAway    Int?
+  /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
+  inducementsHome   Json?
+  inducementsAway   Json?
+  /// Prieres de Nuffle : [{ playerId, effect, sppBonus }].
+  prayersHome       Json?
+  prayersAway       Json?
+
+  // ── Score derive des events (snapshot a la validation) ──
+  scoreHome         Int           @default(0)
+  scoreAway         Int           @default(0)
+
+  // ── Apres-match (snapshot, editable commissaire) ──
+  /// Gain de tresorerie calcule (auto). Override possible via *Manual.
+  winningsHome      Int           @default(0)
+  winningsAway      Int           @default(0)
+  winningsHomeManual Int?
+  winningsAwayManual Int?
+  dedicatedFansDeltaHome Int?
+  dedicatedFansDeltaAway Int?
+  /// Erreurs couteuses : [{ playerId?, cost, reason }].
+  costlyErrorsHome  Json?
+  costlyErrorsAway  Json?
+  /// Joueurs du match (MVP) : [playerId].
+  motmPlayerIds     Json          @default("[]")
+  /// Achats post-match : [{ kind: 'player'|'reroll'|'staff', name, cost }].
+  purchasesHome     Json?
+  purchasesAway     Json?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  events            LeagueMatchEvent[]
+
+  @@index([status])
+}
+
+/// Lot G — Evenement unitaire d'une feuille de match. Normalise pour
+/// permettre l'agregation (stats joueurs, blesses, score) et l'edition
+/// fine (ajout/suppression d'un event).
+model LeagueMatchEvent {
+  id           String           @id @default(cuid())
+  matchSheet   LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
+  matchSheetId String
+  /// 'kickoff' | 'touchdown' | 'casualty' | 'pass_complete' |
+  /// 'interception' | 'aggression' | 'expulsion' | 'crowd_surge' |
+  /// 'stalling' | 'other_elim'
+  kind         String
+  /// 'home' | 'away' — equipe a l'origine de l'event.
+  team         String?
+  /// Acteur (auteur de l'action), rosterId TeamPlayer.
+  actorPlayerId  String?
+  /// Cible (subit l'action), rosterId TeamPlayer.
+  targetPlayerId String?
+  /// Pour other_elim/casualty : 'block' | 'failed_dodge' | 'failed_leap'
+  /// | 'failed_gfi' | 'secret_weapon' | 'crowd' | ...
+  causeDetail  String?
+  /// Severite de blessure : 'badly_hurt' | 'mng' | 'niggling' |
+  /// 'stat_loss' | 'dead' | null.
+  injurySeverity String?
+  /// Donnees additionnelles libres (turn number, dice, etc.).
+  meta         Json?
+  occurredAt   DateTime         @default(now())
+
+  @@index([matchSheetId, kind])
 }
 
 /// Catalogue des Règles Spéciales d'équipe (Bagarreurs Brutaux, Chantage et

@@ -113,6 +113,23 @@ import {
   type AssignPoolsBody,
 } from "../schemas/league-pool.schemas";
 import {
+  createMatchSheet,
+  addEvent as addMatchSheetEvent,
+  removeEvent as removeMatchSheetEvent,
+  updatePreMatch,
+  submitByCoach,
+  unsubmitByCoach,
+  validateByCommissioner,
+  getMatchSheet,
+  MatchSheetError,
+} from "../services/league-match-sheet";
+import {
+  addEventSchema,
+  preMatchSchema,
+  type AddEventBody,
+  type PreMatchBody,
+} from "../schemas/league-match-sheet.schemas";
+import {
   playMecene,
   LeaguePatronError,
 } from "../services/league-patron";
@@ -190,6 +207,23 @@ function domainError(res: Response, e: unknown): void {
         : e.code === "season_started" || e.code === "season_completed"
           ? 409
           : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot G — match sheet errors.
+  if (e instanceof MatchSheetError) {
+    const status =
+      e.code === "pairing_not_found" ||
+      e.code === "sheet_not_found" ||
+      e.code === "event_not_found"
+        ? 404
+        : e.code === "forbidden" || e.code === "not_a_participant"
+          ? 403
+          : e.code === "already_validated" ||
+              e.code === "not_validated" ||
+              e.code === "invalid_status"
+            ? 409
+            : 400;
     sendError(res, e.message, status);
     return;
   }
@@ -1356,6 +1390,159 @@ export async function handleGetAuditLog(
 }
 
 // ===========================================================
+// Lot G — handlers : feuille de match v2.
+// ===========================================================
+
+/** GET /leagues/pairings/:pairingId/sheet */
+export async function handleGetMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const out = await getMatchSheet({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet (init lazy) */
+export async function handleCreateMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const sheet = await createMatchSheet({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, sheet, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/pairings/:pairingId/sheet/pre-match */
+export async function handleUpdatePreMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body = req.body as PreMatchBody;
+  try {
+    const sheet = await updatePreMatch({
+      pairingId: req.params.pairingId,
+      userId,
+      payload: body,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet/events */
+export async function handleAddMatchSheetEvent(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body = req.body as AddEventBody;
+  try {
+    const ev = await addMatchSheetEvent({
+      pairingId: req.params.pairingId,
+      userId,
+      event: body,
+    });
+    sendSuccess(res, ev, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/pairings/:pairingId/sheet/events/:eventId */
+export async function handleRemoveMatchSheetEvent(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const out = await removeMatchSheetEvent({
+      pairingId: req.params.pairingId,
+      userId,
+      eventId: req.params.eventId,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet/submit */
+export async function handleSubmitMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const sheet = await submitByCoach({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet/unsubmit */
+export async function handleUnsubmitMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const sheet = await unsubmitByCoach({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet/validate */
+export async function handleValidateMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const out = await validateByCommissioner({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
 // Lot J — handlers : classements top-N joueurs.
 // ===========================================================
 
@@ -1982,6 +2169,50 @@ router.patch(
   "/seasons/:seasonId/playoff-bracket/participants",
   authUser,
   handleOverridePlayoffParticipants,
+);
+
+// Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
+router.get(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  handleGetMatchSheet,
+);
+router.post(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  handleCreateMatchSheet,
+);
+router.patch(
+  "/pairings/:pairingId/sheet/pre-match",
+  authUser,
+  validate(preMatchSchema),
+  handleUpdatePreMatch,
+);
+router.post(
+  "/pairings/:pairingId/sheet/events",
+  authUser,
+  validate(addEventSchema),
+  handleAddMatchSheetEvent,
+);
+router.delete(
+  "/pairings/:pairingId/sheet/events/:eventId",
+  authUser,
+  handleRemoveMatchSheetEvent,
+);
+router.post(
+  "/pairings/:pairingId/sheet/submit",
+  authUser,
+  handleSubmitMatchSheet,
+);
+router.post(
+  "/pairings/:pairingId/sheet/unsubmit",
+  authUser,
+  handleUnsubmitMatchSheet,
+);
+router.post(
+  "/pairings/:pairingId/sheet/validate",
+  authUser,
+  handleValidateMatchSheet,
 );
 
 // Lot J — classements top-N joueurs (public). Decline aussi par

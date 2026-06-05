@@ -835,6 +835,8 @@ model LeaguePairing {
   bonusPointsAway   Int               @default(0)
   /// Lot E — Breakdown JSON serialise (sqlite mirror).
   bonusBreakdown    String?
+  /// Lot G — feuille de match v2 (1-1, mirror PG).
+  matchSheet        LeagueMatchSheet?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -843,6 +845,64 @@ model LeaguePairing {
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Lot G — Feuille de match v2 (mirror PG). Les champs Json PG sont
+/// des String serialisees en sqlite.
+model LeagueMatchSheet {
+  id                String        @id @default(cuid())
+  pairing           LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId         String        @unique
+  status            String        @default("draft")
+  submittedByHomeAt DateTime?
+  submittedByAwayAt DateTime?
+  validatedAt       DateTime?
+  validatedById     String?
+  invalidatedAt     DateTime?
+  invalidationReason String?
+  weather           String?
+  popularityHome    Int?
+  popularityAway    Int?
+  inducementsHome   String?
+  inducementsAway   String?
+  prayersHome       String?
+  prayersAway       String?
+  scoreHome         Int           @default(0)
+  scoreAway         Int           @default(0)
+  winningsHome      Int           @default(0)
+  winningsAway      Int           @default(0)
+  winningsHomeManual Int?
+  winningsAwayManual Int?
+  dedicatedFansDeltaHome Int?
+  dedicatedFansDeltaAway Int?
+  costlyErrorsHome  String?
+  costlyErrorsAway  String?
+  motmPlayerIds     String        @default("[]")
+  purchasesHome     String?
+  purchasesAway     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  events            LeagueMatchEvent[]
+
+  @@index([status])
+}
+
+/// Lot G — Evenement unitaire de feuille de match (mirror PG).
+model LeagueMatchEvent {
+  id           String           @id @default(cuid())
+  matchSheet   LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
+  matchSheetId String
+  kind         String
+  team         String?
+  actorPlayerId  String?
+  targetPlayerId String?
+  causeDetail  String?
+  injurySeverity String?
+  meta         String?
+  occurredAt   DateTime         @default(now())
+
+  @@index([matchSheetId, kind])
 }
 
 /// Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).
