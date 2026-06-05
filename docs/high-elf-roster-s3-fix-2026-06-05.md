@@ -89,6 +89,27 @@ docker compose exec server pnpm db:sync-rosters --ruleset=season_3 --roster=high
 Le cache de l'API `/api/rosters` est de 5 min : recharger après ~5 min (ou
 redémarrer le conteneur serveur) pour voir le roster à jour côté builder.
 
+## ⚠️ Shadows `.js` (CRITIQUE pour que le fix prenne effet)
+
+`packages/game-engine/src/` contient un arbre `.js` compilé (~116 fichiers)
+qui **shadow** les `.ts` : Vite/Node/tsx résolvent `.js` avant `.ts` quand
+les deux existent (cf. `scripts/check-no-js-shadow.sh`, piège du 2026-05-19).
+Les shadows `season3-rosters.js` et `skill-access-season3.js` contenaient
+encore l'ancien roster → **le sync prod (tsx) aurait lu les `.js` périmés** et
+réécrit les mauvaises données.
+
+Actions :
+- Stopgap appliqué : `season3-rosters.js` et `skill-access-season3.js` ont
+  été mis à jour à la main pour matcher les `.ts` (runtime correct
+  immédiatement, quel que soit l'ordre de résolution).
+- **À faire (remédiation propre)** : supprimer TOUS les shadows avant
+  build/déploiement :
+  ```bash
+  bash scripts/check-no-js-shadow.sh --clean   # ou : make check-shadow
+  ```
+  Les `.ts` redeviennent l'unique source. Cette commande échoue en lint
+  (`make lint`) tant que des shadows existent.
+
 ## Suivi (hors scope immédiat)
 
 - La règle régionale « Ligue des Royaumes Elfiques » (slug
