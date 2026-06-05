@@ -117,6 +117,19 @@ export const LEAGUE_MANUAL_PAIRINGS_FLAG =
   "league_manual_pairings" as const;
 
 /**
+ * Lot C — sous-flag pour le mode multi-poules dans l'UI saison.
+ * L'API est ouverte par defaut ; ce flag gate uniquement l'editeur
+ * de poules cote frontend.
+ */
+export const LEAGUE_POOLS_FLAG = "league_pools" as const;
+
+/**
+ * Lot J — sous-flag pour exposer la page de classements top-N
+ * joueurs (`/leagues/[id]/seasons/[sid]/leaderboards`) dans l'UI.
+ */
+export const LEAGUE_LEADERBOARDS_FLAG = "league_leaderboards" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -183,6 +196,14 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: LEAGUE_MANUAL_PAIRINGS_FLAG,
     description:
       "Ligue — saisie manuelle de matchs (rounds custom, ajout/suppression/deplacement).",
+  },
+  {
+    key: LEAGUE_POOLS_FLAG,
+    description: "Ligue — gestion multi-poules (groups + qualif PO).",
+  },
+  {
+    key: LEAGUE_LEADERBOARDS_FLAG,
+    description: "Ligue — classements top-N joueurs par saison.",
   },
 ];
 

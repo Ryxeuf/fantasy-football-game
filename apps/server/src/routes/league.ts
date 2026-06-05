@@ -79,6 +79,11 @@ import {
   LeaguePoolError,
 } from "../services/league-pool";
 import {
+  computeLeaderboards,
+  computeLeaderboardsByTeam,
+  LEADERBOARD_CATEGORIES,
+} from "../services/league-player-stats";
+import {
   createPoolSchema,
   updatePoolSchema,
   assignPoolsSchema,
@@ -1132,6 +1137,62 @@ export async function handleAutoAssignPools(
 // Lot D — override des participants du bracket playoffs.
 // ===========================================================
 
+// ===========================================================
+// Lot J — handlers : classements top-N joueurs.
+// ===========================================================
+
+/**
+ * GET /leagues/seasons/:seasonId/leaderboards?topN=5[&teamId=...]
+ * Endpoint public — les stats joueurs sont consultables sans login.
+ */
+export async function handleGetLeaderboards(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const topNRaw = req.query.topN;
+  const topN =
+    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  const teamId =
+    typeof req.query.teamId === "string" ? req.query.teamId : undefined;
+  try {
+    const catalogue = await computeLeaderboards({
+      seasonId,
+      topN: Number.isFinite(topN) ? topN : undefined,
+      teamId,
+    });
+    sendSuccess(res, {
+      ...catalogue,
+      categories: LEADERBOARD_CATEGORIES,
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * GET /leagues/seasons/:seasonId/leaderboards/by-team?topN=3
+ * Decline les classements top-N par equipe inscrite.
+ */
+export async function handleGetLeaderboardsByTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const topNRaw = req.query.topN;
+  const topN =
+    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  try {
+    const teams = await computeLeaderboardsByTeam({
+      seasonId,
+      topN: Number.isFinite(topN) ? topN : undefined,
+    });
+    sendSuccess(res, { seasonId, teams });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /**
  * PATCH /leagues/seasons/:seasonId/playoff-bracket/participants
  *
@@ -1703,6 +1764,17 @@ router.patch(
   "/seasons/:seasonId/playoff-bracket/participants",
   authUser,
   handleOverridePlayoffParticipants,
+);
+
+// Lot J — classements top-N joueurs (public). Decline aussi par
+// equipe via /by-team pour le mode "top 3 par equipe".
+router.get(
+  "/seasons/:seasonId/leaderboards",
+  handleGetLeaderboards,
+);
+router.get(
+  "/seasons/:seasonId/leaderboards/by-team",
+  handleGetLeaderboardsByTeam,
 );
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.
