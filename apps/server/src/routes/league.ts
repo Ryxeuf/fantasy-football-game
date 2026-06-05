@@ -23,6 +23,7 @@ import {
   getLeagueById,
   getSeasonById,
   computeSeasonStandings,
+  computeSeasonStandingsByPool,
   isSeasonEloRanked,
   withdrawParticipant,
   listThemedSeasons,
@@ -64,6 +65,23 @@ import {
   type CreateManualPairingBody,
   type UpdateManualPairingBody,
 } from "../schemas/league-manual-pairing.schemas";
+import {
+  createPool,
+  updatePool,
+  deletePool,
+  listPoolsForSeason,
+  assignParticipantsToPools,
+  autoAssignBySnakeDraft,
+  LeaguePoolError,
+} from "../services/league-pool";
+import {
+  createPoolSchema,
+  updatePoolSchema,
+  assignPoolsSchema,
+  type CreatePoolBody,
+  type UpdatePoolBody,
+  type AssignPoolsBody,
+} from "../schemas/league-pool.schemas";
 import {
   playMecene,
   LeaguePatronError,
@@ -140,6 +158,22 @@ function domainError(res: Response, e: unknown): void {
       e.code === "season_not_found" || e.code === "not_registered"
         ? 404
         : e.code === "season_started" || e.code === "season_completed"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot C — pool errors.
+  if (e instanceof LeaguePoolError) {
+    const status =
+      e.code === "season_not_found" ||
+      e.code === "pool_not_found" ||
+      e.code === "participant_not_found"
+        ? 404
+        : e.code === "season_started" ||
+            e.code === "pool_name_taken" ||
+            e.code === "pool_not_empty" ||
+            e.code === "participant_not_in_season"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -647,7 +681,20 @@ export async function handleGetStandings(
     const showSeasonElo = isSeasonEloRanked(
       seasonRow?.league?.tieBreakRules ?? null,
     );
-    sendSuccess(res, { seasonId, standings, showSeasonElo });
+    // Lot C — si query `byPool=true`, retourne aussi le groupement
+    // par poule (vide si la saison n'a pas de poules).
+    const wantsByPool =
+      typeof req.query.byPool === "string" &&
+      (req.query.byPool === "true" || req.query.byPool === "1");
+    const pools = wantsByPool
+      ? await computeSeasonStandingsByPool(seasonId)
+      : undefined;
+    sendSuccess(res, {
+      seasonId,
+      standings,
+      showSeasonElo,
+      ...(pools !== undefined ? { pools } : {}),
+    });
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -917,6 +964,147 @@ export async function handleUpdateManualPairing(
       targetRoundId: body.targetRoundId,
     });
     sendSuccess(res, pairing);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+// ===========================================================
+// Lot C — handlers : gestion des poules.
+// ===========================================================
+
+/** Resoud le seasonId a partir d'un poolId et applique ensureLeagueCreator. */
+async function ensureLeagueCreatorByPool(
+  userId: string,
+  poolId: string,
+  res: Response,
+): Promise<{ seasonId: string } | null> {
+  const pool = await prisma.leaguePool.findUnique({
+    where: { id: poolId },
+    select: { id: true, seasonId: true },
+  });
+  if (!pool) {
+    sendError(res, "Poule introuvable", 404);
+    return null;
+  }
+  if (!(await ensureLeagueCreator(userId, pool.seasonId, res))) return null;
+  return { seasonId: pool.seasonId };
+}
+
+/** POST /leagues/seasons/:seasonId/pools */
+export async function handleCreatePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as CreatePoolBody;
+  try {
+    const pool = await createPool({
+      seasonId,
+      name: body.name,
+      qualifiesForPlayoffs: body.qualifiesForPlayoffs,
+      color: body.color ?? null,
+      order: body.order,
+    });
+    sendSuccess(res, pool, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** GET /leagues/seasons/:seasonId/pools (public). */
+export async function handleListPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  try {
+    const pools = await listPoolsForSeason(seasonId);
+    sendSuccess(res, { pools });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/pools/:poolId */
+export async function handleUpdatePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const poolId = req.params.poolId;
+  const ctx = await ensureLeagueCreatorByPool(userId, poolId, res);
+  if (!ctx) return;
+  const body = req.body as UpdatePoolBody;
+  try {
+    const updated = await updatePool({
+      poolId,
+      name: body.name,
+      qualifiesForPlayoffs: body.qualifiesForPlayoffs,
+      color: body.color ?? undefined,
+      order: body.order,
+    });
+    sendSuccess(res, updated);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/pools/:poolId */
+export async function handleDeletePool(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const poolId = req.params.poolId;
+  const ctx = await ensureLeagueCreatorByPool(userId, poolId, res);
+  if (!ctx) return;
+  try {
+    const out = await deletePool({ poolId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/seasons/:seasonId/pools/assign */
+export async function handleAssignPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as AssignPoolsBody;
+  try {
+    const out = await assignParticipantsToPools({
+      seasonId,
+      assignments: body.assignments,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/seasons/:seasonId/pools/auto-assign */
+export async function handleAutoAssignPools(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  try {
+    const out = await autoAssignBySnakeDraft({ seasonId });
+    sendSuccess(res, out);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -1422,6 +1610,35 @@ router.patch(
   validate(updateManualPairingSchema),
   handleUpdateManualPairing,
 );
+
+// Lot C — gestion des poules (groups). Mutation reservee au
+// commissaire ; lecture publique pour permettre l'affichage des
+// poules dans le calendrier / standings.
+router.get("/seasons/:seasonId/pools", handleListPools);
+router.post(
+  "/seasons/:seasonId/pools",
+  authUser,
+  validate(createPoolSchema),
+  handleCreatePool,
+);
+router.post(
+  "/seasons/:seasonId/pools/assign",
+  authUser,
+  validate(assignPoolsSchema),
+  handleAssignPools,
+);
+router.post(
+  "/seasons/:seasonId/pools/auto-assign",
+  authUser,
+  handleAutoAssignPools,
+);
+router.patch(
+  "/pools/:poolId",
+  authUser,
+  validate(updatePoolSchema),
+  handleUpdatePool,
+);
+router.delete("/pools/:poolId", authUser, handleDeletePool);
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.
 router.post("/seasons/:seasonId/open", authUser, handleOpenSeason);

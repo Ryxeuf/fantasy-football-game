@@ -720,11 +720,32 @@ model LeagueSeason {
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
   award        LeagueSeasonAward?
+  // Lot C — poules optionnelles.
+  pools        LeaguePool[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
   @@index([theme, themeYear])
+}
+
+/// Lot C — Poule (mirror PG).
+model LeaguePool {
+  id                   String       @id @default(cuid())
+  season               LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId             String
+  name                 String
+  order                Int          @default(0)
+  color                String?
+  qualifiesForPlayoffs Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId, order])
 }
 
 model LeagueParticipant {
@@ -753,10 +774,15 @@ model LeagueParticipant {
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
   awayPairings LeaguePairing[] @relation("LeaguePairingAway")
 
+  // Lot C — affectation poule optionnelle (mirror PG).
+  pool   LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
   @@index([seasonElo])
+  @@index([seasonId, poolId])
 }
 
 model LeagueRound {
@@ -776,11 +802,15 @@ model LeagueRound {
 
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
+  // Lot C — round optionnellement rattache a une poule (mirror PG).
+  pool     LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId   String?
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
   @@index([seasonId, kind])
+  @@index([seasonId, poolId, roundNumber])
 }
 
 // Sprint Ligues v2 (PR1) — pairing pre-genere du calendrier round-robin.

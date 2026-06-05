@@ -1022,11 +1022,46 @@ model LeagueSeason {
   award        LeagueSeasonAward?
   // Lot A — back-relation invitations ciblant cette saison precise.
   invitations  LeagueInvitation[]
+  // Lot C — multi-poules optionnelles. Vide = saison single-pool
+  // (comportement legacy preserve : tout le monde dans la meme poule).
+  pools        LeaguePool[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
   @@index([theme, themeYear])
+}
+
+/// Lot C — Poule d'une saison de ligue.
+///
+/// Une saison peut etre divisee en plusieurs poules pour les
+/// championnats avec phase de groupes. Les participants sont
+/// affectes a une poule via `LeagueParticipant.poolId`. Le
+/// calendrier round-robin est genere par poule, mais les rounds
+/// (journees) sont communes pour synchroniser le rythme.
+///
+/// `qualifiesForPlayoffs` permet de specifier combien d'equipes de
+/// chaque poule iront en playoffs (top-N par poule).
+model LeaguePool {
+  id                   String       @id @default(cuid())
+  season               LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId             String
+  name                 String
+  order                Int          @default(0)
+  /// Couleur de presentation UI (hex `#RRGGBB`), optionnelle.
+  color                String?
+  /// Lot C — Combien d'equipes de cette poule sont qualifiees pour
+  /// les playoffs. Default 0 = aucune. Le `startPlayoffs` lit ce
+  /// champ et seed le bracket avec les top-N de chaque poule.
+  qualifiesForPlayoffs Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId, order])
 }
 
 // L.1 — Inscription d'une equipe sur une saison.
@@ -1061,10 +1096,15 @@ model LeagueParticipant {
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
   awayPairings LeaguePairing[] @relation("LeaguePairingAway")
 
+  // Lot C — poule d'affectation (optionnelle). null = single-pool.
+  pool   LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
   @@index([seasonElo])
+  @@index([seasonId, poolId])
 }
 
 // L.1 — Journee (round) d'une saison. Utilise par le generateur
@@ -1092,11 +1132,16 @@ model LeagueRound {
 
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
+  // Lot C — round optionnellement rattache a une poule (pour les
+  // saisons multi-poules ou chaque poule a son propre calendrier).
+  pool     LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId   String?
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
   @@index([seasonId, kind])
+  @@index([seasonId, poolId, roundNumber])
 }
 
 // L2.A.1 — Pairing pre-genere du calendrier round-robin.

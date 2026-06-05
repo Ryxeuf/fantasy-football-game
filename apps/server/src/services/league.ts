@@ -434,6 +434,17 @@ export interface StandingRow {
   casualtiesAgainst: number;
   seasonElo: number;
   status: LeagueParticipantStatus;
+  /** Lot C — id de poule (null = pas d'affectation explicite). */
+  poolId?: string | null;
+}
+
+/** Lot C — Classement groupe par poule. */
+export interface PoolStandings {
+  poolId: string;
+  poolName: string;
+  poolOrder: number;
+  qualifiesForPlayoffs: number;
+  standings: StandingRow[];
 }
 
 /**
@@ -472,7 +483,7 @@ export async function computeSeasonStandings(
     },
   });
 
-  type ParticipantRow = (typeof participants)[number];
+  type ParticipantRow = (typeof participants)[number] & { poolId?: string | null };
   const rows: StandingRow[] = participants.map((p: ParticipantRow) => ({
     participantId: p.id,
     teamId: p.teamId,
@@ -492,6 +503,7 @@ export async function computeSeasonStandings(
     casualtiesAgainst: p.casualtiesAgainst,
     seasonElo: p.seasonElo,
     status: p.status as LeagueParticipantStatus,
+    poolId: p.poolId ?? null,
   }));
 
   const tieBreakRules = parseTieBreakRules(
@@ -501,6 +513,74 @@ export async function computeSeasonStandings(
   rows.sort(makeStandingsComparator(tieBreakRules));
 
   return rows;
+}
+
+/**
+ * Lot C — Classement groupe par poule. Retourne un tableau de
+ * `PoolStandings` (un par poule, ordonne par `pool.order`). Si la
+ * saison n'a aucune poule, le tableau est vide (le caller doit
+ * retomber sur `computeSeasonStandings`).
+ *
+ * Les participants sans `poolId` (legacy ou non assignes) sont
+ * regroupes dans une pseudo-poule "unassigned" en derniere position
+ * pour les rendre visibles a l'UI commissaire.
+ */
+export async function computeSeasonStandingsByPool(
+  seasonId: string,
+): Promise<PoolStandings[]> {
+  const allRows = await computeSeasonStandings(seasonId);
+  const pools = (await prisma.leaguePool.findMany({
+    where: { seasonId },
+    orderBy: { order: "asc" },
+  })) as Array<{
+    id: string;
+    name: string;
+    order: number;
+    qualifiesForPlayoffs: number;
+  }>;
+
+  if (pools.length === 0) return [];
+
+  const seasonForTieBreak = (await prisma.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { league: { select: { tieBreakRules: true } } },
+  })) as { league?: { tieBreakRules: string | null } | null } | null;
+  const tieBreakRules = parseTieBreakRules(
+    seasonForTieBreak?.league?.tieBreakRules ?? null,
+  );
+  const comparator = makeStandingsComparator(tieBreakRules);
+
+  const groups = new Map<string | null, StandingRow[]>();
+  for (const row of allRows) {
+    const key = row.poolId ?? null;
+    const list = groups.get(key) ?? [];
+    list.push(row);
+    groups.set(key, list);
+  }
+
+  const result: PoolStandings[] = pools.map((p) => {
+    const list = (groups.get(p.id) ?? []).slice().sort(comparator);
+    return {
+      poolId: p.id,
+      poolName: p.name,
+      poolOrder: p.order,
+      qualifiesForPlayoffs: p.qualifiesForPlayoffs,
+      standings: list,
+    };
+  });
+
+  const unassigned = (groups.get(null) ?? []).slice().sort(comparator);
+  if (unassigned.length > 0) {
+    result.push({
+      poolId: "__unassigned__",
+      poolName: "Non affecte",
+      poolOrder: pools.length,
+      qualifiesForPlayoffs: 0,
+      standings: unassigned,
+    });
+  }
+
+  return result;
 }
 
 /**
