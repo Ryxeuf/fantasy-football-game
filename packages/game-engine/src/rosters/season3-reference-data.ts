@@ -150,11 +150,16 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 4,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'High Elf Lineman', cost: 65, max: 16, ma: 6, st: 3, ag: 2, pa: 3, av: 9, skills: [] },
-      { nameEn: 'High Elf Catcher', cost: 90, max: 4, ma: 8, st: 3, ag: 2, pa: 3, av: 8, skills: ['catch'] },
-      // Note: Le Lanceur (cost=100, max=2) et le Blitzer (cost=100, max=2) ont le meme cout et max
-      // On valide le Lanceur ici (premier match) car il apparait avant dans le roster
-      { nameEn: 'High Elf Thrower', cost: 100, max: 2, ma: 6, st: 3, ag: 2, pa: 2, av: 9, skills: ['cloud-burster', 'pass', 'safe-pass'] },
+      // Roster thematique S3 (source de verite : data/saison3/team/Hauts_elfes.md).
+      // Cf. docs/high-elf-roster-s3-fix-2026-06-05.md. Les noms d'affichage
+      // sont thematiques (Guerrier Phoenix = Lanceur, Prince Dragon = Receveur,
+      // Lion Blanc = Blitzer) mais le test matche par (cost, max).
+      { nameEn: 'Trois-quart Haut Elfe', cost: 65, max: 16, ma: 6, st: 3, ag: 2, pa: 3, av: 9, skills: [] },
+      { nameEn: 'Guerrier Phoenix (Lanceur)', cost: 90, max: 2, ma: 6, st: 3, ag: 2, pa: 2, av: 9, skills: ['cloud-burster', 'pass', 'safe-pass'] },
+      // Note: le Receveur (Prince Dragon) et le Blitzer (Lion Blanc) partagent
+      // cost=110/max=2. On valide le Receveur ici car il apparait avant dans le
+      // roster (matchingPositions[0]).
+      { nameEn: 'Prince Dragon (Receveur)', cost: 110, max: 2, ma: 8, st: 3, ag: 2, pa: 4, av: 9, skills: ['block', 'my-ball', 'surefoot'] },
     ],
   },
 
