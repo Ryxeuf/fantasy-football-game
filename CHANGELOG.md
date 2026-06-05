@@ -1,3 +1,10 @@
+## [1.171.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.2...v1.171.0) (2026-06-05)
+
+
+### ✨ Features
+
+* add sync rosters script and update High Elf roster for Season 3 ([1c5324d](https://github.com/Ryxeuf/fantasy-football-game/commit/1c5324dc29857f4d8c4ad0153c6c715a6d081d2d))
+
 ## [1.170.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.1...v1.170.2) (2026-06-05)
 
 
