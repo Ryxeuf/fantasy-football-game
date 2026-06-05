@@ -551,7 +551,14 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
 
       expect(mockPrisma.leaguePairing.update).toHaveBeenCalledWith({
         where: { id: "pair-1" },
-        data: { status: "played" },
+        // Lot E — pairing.update inclut maintenant les snapshots
+        // bonusPointsHome/Away (0 quand bonusPointsConfig est null).
+        data: {
+          status: "played",
+          bonusPointsHome: 0,
+          bonusPointsAway: 0,
+          bonusBreakdown: null,
+        },
       });
     });
 

@@ -971,6 +971,10 @@ model League {
   /// Sprint R lot R.E.3 — duree par tour en heures pour les matches
   /// async de cette ligue. 1-168h (default 24h).
   turnDeadlineHours Int      @default(24)
+  /// Lot E — Points bonus configurables (JSON array de regles, cf.
+  /// `services/league-bonus-points.ts`). null = pas de bonus applique
+  /// au scoring. Modifiable tant qu'aucun match n'a ete score.
+  bonusPointsConfig Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1122,6 +1126,14 @@ model LeaguePairing {
   // lance la partie. Ecrit par `POST /league/pairings/:id/match`
   // (L2.A.4) en meme temps que la creation du Match.
   match             Match?
+  // Lot E — Snapshot des points bonus appliques au scoring de ce
+  // pairing (en plus des winPoints/drawPoints standards). 0 si
+  // bonusPointsConfig est null ou aucun bonus n'a matche.
+  bonusPointsHome   Int               @default(0)
+  bonusPointsAway   Int               @default(0)
+  /// Lot E — Breakdown des regles appliquees pour audit / UI :
+  /// [{ ruleId, label, side, points }]. null si aucune regle.
+  bonusBreakdown    Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

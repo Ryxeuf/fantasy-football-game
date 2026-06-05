@@ -57,6 +57,10 @@ export interface CreateLeagueInput {
    * `TIE_BREAK_SLUGS`. null / undefined = ordre par defaut historique.
    */
   tieBreakRules?: readonly string[] | null;
+  /**
+   * Lot E — Points bonus configurables. Array de regles ou null.
+   */
+  bonusPointsConfig?: readonly unknown[] | null;
 }
 
 export interface CreateSeasonInput {
@@ -152,6 +156,12 @@ export async function createLeague(input: CreateLeagueInput) {
     tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
   }
 
+  // Lot E — config bonus optionnelle a la creation.
+  const bonusPointsConfig =
+    input.bonusPointsConfig && input.bonusPointsConfig.length > 0
+      ? (input.bonusPointsConfig as unknown[])
+      : null;
+
   return prisma.league.create({
     data: {
       creatorId: input.creatorId,
@@ -166,6 +176,7 @@ export async function createLeague(input: CreateLeagueInput) {
       lossPoints: input.lossPoints ?? 0,
       forfeitPoints: input.forfeitPoints ?? -1,
       tieBreakRules,
+      bonusPointsConfig: bonusPointsConfig ?? undefined,
     },
   });
 }
@@ -689,6 +700,12 @@ export interface UpdateLeagueInput {
   lossPoints?: number;
   forfeitPoints?: number;
   tieBreakRules?: readonly string[] | null;
+  /**
+   * Lot E — Configuration des points bonus. Array de regles ou null
+   * pour desactiver. Modifiable tant que la ligue n'a pas de match
+   * score (cf. `hasLeagueScoredMatch`).
+   */
+  bonusPointsConfig?: readonly unknown[] | null;
 }
 
 /**
@@ -744,6 +761,17 @@ export async function updateLeague(
       tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
     }
     data.tieBreakRules = tieBreakRules;
+  }
+  // Lot E — accepte la nouvelle config bonus. La validation des
+  // regles individuelles est deleguee au service `league-bonus-points`
+  // au runtime (parseBonusConfig retourne `null` si invalide). On
+  // stocke ici une struct JSON arbitraire (les rules malformees
+  // seront ignorees a la lecture).
+  if (input.bonusPointsConfig !== undefined) {
+    data.bonusPointsConfig =
+      input.bonusPointsConfig && input.bonusPointsConfig.length > 0
+        ? (input.bonusPointsConfig as unknown[])
+        : null;
   }
 
   return prisma.league.update({ where: { id: leagueId }, data });

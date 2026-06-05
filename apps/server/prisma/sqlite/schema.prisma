@@ -687,6 +687,8 @@ model League {
   /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
   matchMode         String   @default("realtime")
   turnDeadlineHours Int      @default(24)
+  /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
+  bonusPointsConfig String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -798,6 +800,11 @@ model LeaguePairing {
   scheduledAt       DateTime?
   deadlineAt        DateTime?
   match             Match?
+  /// Lot E — Snapshot des points bonus appliques (mirror PG).
+  bonusPointsHome   Int               @default(0)
+  bonusPointsAway   Int               @default(0)
+  /// Lot E — Breakdown JSON serialise (sqlite mirror).
+  bonusBreakdown    String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

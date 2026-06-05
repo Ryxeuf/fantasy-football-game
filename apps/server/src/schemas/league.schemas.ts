@@ -66,6 +66,34 @@ export const createLeagueSchema = z.object({
   // L2.C.5 — ordre de departage personnalise. null/undefined =
   // ordre par defaut historique. Filtre les doublons cote service.
   tieBreakRules: z.array(tieBreakSlug).max(9).optional().nullable(),
+  // Lot E — points bonus configurables. JSON array de regles.
+  // Validation defensive : chaque element doit avoir les champs
+  // requis (le service les re-valide via parseBonusConfig au runtime).
+  bonusPointsConfig: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(64),
+        label: z.string().min(1).max(120),
+        condition: z.object({
+          type: z.enum([
+            "tds_scored_gte",
+            "tds_conceded_lte",
+            "cas_inflicted_gte",
+            "killings_gte",
+            "completions_gte",
+            "margin_gte",
+            "clean_sheet",
+            "shut_out_win",
+          ]),
+          value: z.number().int().min(-100).max(100).optional(),
+        }),
+        points: z.number().int().min(-10).max(10),
+        appliesTo: z.enum(["home", "away", "both", "winner", "loser"]),
+      }),
+    )
+    .max(20, "Au plus 20 regles de bonus")
+    .optional()
+    .nullable(),
 });
 
 /**

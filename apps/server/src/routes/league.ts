@@ -188,6 +188,8 @@ export async function handleCreateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
       tieBreakRules: body.tieBreakRules ?? null,
+      // Lot E — config bonus optionnelle, propagee au service.
+      bonusPointsConfig: body.bonusPointsConfig ?? null,
     });
     sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
@@ -238,6 +240,8 @@ export async function handleUpdateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
       tieBreakRules: body.tieBreakRules,
+      // Lot E — propagation de la config bonus en edition.
+      bonusPointsConfig: body.bonusPointsConfig,
     });
     sendSuccess(res, serializeLeague(updated as Record<string, unknown>));
   } catch (e: unknown) {

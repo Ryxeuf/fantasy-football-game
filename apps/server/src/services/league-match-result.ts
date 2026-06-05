@@ -33,6 +33,11 @@ import {
   startPlayoffs,
   advancePlayoffsWithWinner,
 } from "./league-playoffs";
+import {
+  evaluateBonusRules,
+  parseBonusConfig,
+  type MatchBonusContext,
+} from "./league-bonus-points";
 import { serverLog } from "../utils/server-log";
 
 export interface RecordMatchResultInput {
@@ -118,6 +123,9 @@ export async function recordLeagueMatchResult(
               winPoints: true,
               drawPoints: true,
               lossPoints: true,
+              // Lot E — config bonus utilisee plus bas pour
+              // calculer un delta supplementaire de points.
+              bonusPointsConfig: true,
             },
           },
         },
@@ -172,8 +180,25 @@ export async function recordLeagueMatchResult(
 
   const bareme = match.leagueSeason.league;
   const winner = computeWinner(input.scoreA, input.scoreB);
-  const pointsA = pointsFor(winner, "A", bareme);
-  const pointsB = pointsFor(winner, "B", bareme);
+  const basePointsA = pointsFor(winner, "A", bareme);
+  const basePointsB = pointsFor(winner, "B", bareme);
+
+  // Lot E — applique les regles de bonus configurees au niveau de
+  // la ligue. Le cote "A" = home pour le scoring du pairing
+  // (convention historique du modele).
+  const bonusRules = parseBonusConfig(
+    (bareme as { bonusPointsConfig?: unknown }).bonusPointsConfig,
+  );
+  const bonusCtx: MatchBonusContext = {
+    tdsHome: input.scoreA,
+    tdsAway: input.scoreB,
+    casualtiesInflictedHome: input.casualtiesA,
+    casualtiesInflictedAway: input.casualtiesB,
+    winner: winner === "A" ? "home" : winner === "B" ? "away" : "draw",
+  };
+  const bonus = evaluateBonusRules(bonusRules, bonusCtx);
+  const pointsA = basePointsA + bonus.homeBonus;
+  const pointsB = basePointsB + bonus.awayBonus;
 
   // L.8 — ELO saisonnier : calcul des deltas en utilisant le K-factor de
   // placement (48) tant que le participant n'a pas joue 5 matchs, sinon 32.
@@ -244,7 +269,16 @@ export async function recordLeagueMatchResult(
           markMatch,
           prisma.leaguePairing.update({
             where: { id: match.leaguePairingId },
-            data: { status: "played" },
+            data: {
+              status: "played",
+              // Lot E — snapshot des bonus appliques (audit / UI).
+              bonusPointsHome: bonus.homeBonus,
+              bonusPointsAway: bonus.awayBonus,
+              bonusBreakdown:
+                bonus.applied.length > 0
+                  ? (bonus.applied as unknown as Record<string, unknown>[])
+                  : null,
+            },
           }),
         ]
       : [updateA, updateB, markMatch];

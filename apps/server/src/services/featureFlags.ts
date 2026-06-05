@@ -102,6 +102,21 @@ export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
 export const LEAGUE_INVITATIONS_FLAG = "league_invitations" as const;
 
 /**
+ * Lot E — sous-flag pour exposer l'editeur de points bonus dans l'UI
+ * de creation/edition de ligue. Le serveur applique deja les bonus
+ * quand la config est presente ; ce flag gate uniquement l'UI.
+ */
+export const LEAGUE_BONUS_POINTS_FLAG = "league_bonus_points" as const;
+
+/**
+ * Lot F — sous-flag pour exposer la creation manuelle de pairings
+ * (rounds custom + ajout/suppression/deplacement de matchs hors du
+ * round-robin auto-genere) dans l'UI commissaire.
+ */
+export const LEAGUE_MANUAL_PAIRINGS_FLAG =
+  "league_manual_pairings" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -158,6 +173,16 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: LEAGUE_INVITATIONS_FLAG,
     description:
       "Ligue — invitations de coachs (creation, lien shareable, autocomplete recherche).",
+  },
+  {
+    key: LEAGUE_BONUS_POINTS_FLAG,
+    description:
+      "Ligue — editeur de points bonus configurable (3 TD/3 cas/clean sheet/etc.).",
+  },
+  {
+    key: LEAGUE_MANUAL_PAIRINGS_FLAG,
+    description:
+      "Ligue — saisie manuelle de matchs (rounds custom, ajout/suppression/deplacement).",
   },
 ];
 
