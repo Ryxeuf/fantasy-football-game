@@ -135,6 +135,9 @@ model User {
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
   blogPosts                   BlogPost[]                  @relation("BlogPostAuthor")
+  // Lot A — invitations envoyees / recues sur les ligues.
+  leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
+  leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
 
   @@index([leaderboardStatus])
 }
@@ -404,6 +407,8 @@ model Team {
   localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
   matchQueue           MatchQueue[]
   leagueParticipations LeagueParticipant[]
+  // Lot A — invitations qui ciblent cette equipe specifique.
+  leagueInvitations    LeagueInvitation[]
 
   // Informations d'équipe Blood Bowl
   treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
@@ -876,6 +881,59 @@ model NotificationPreference {
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).
 // Une League est le conteneur persistant. Chaque edition concrete
 // est une LeagueSeason (round-robin, playoffs...).
+/// Lot A — Invitation a rejoindre une ligue.
+///
+/// Le commissaire (createur de la ligue) ou un admin peut inviter
+/// un coach (par userId, email, ou autre) a rejoindre une saison
+/// donnee. L'invitation contient un code unique (sharable URL) +
+/// statut + expiration. Si `inviteeUserId` est null, l'invitation
+/// peut etre acceptee par le 1er user qui se connecte avec ce code
+/// (lien public). Sinon, seul le user cible peut accepter.
+model LeagueInvitation {
+  id              String   @id @default(cuid())
+  league          League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId        String
+  /// Optionnel : saison ciblee si l'invitation pointe sur une saison
+  /// specifique. Si null, le coach choisira la saison a l'acceptation
+  /// (utile pour les ligues avec plusieurs saisons en cours).
+  season          LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  seasonId        String?
+  /// Auteur de l'invitation (commissaire ou admin).
+  inviter         User     @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
+  inviterUserId   String
+  /// Optionnel : coach cible identifie. Si null, lien d'invitation
+  /// publique (1er user qui ouvre le lien et accepte).
+  invitee         User?    @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
+  inviteeUserId   String?
+  /// Optionnel : equipe pre-selectionnee. Le coach pourra confirmer
+  /// ou choisir une autre equipe lors de l'acceptation.
+  inviteeTeam     Team?    @relation(fields: [inviteeTeamId], references: [id])
+  inviteeTeamId   String?
+  /// Optionnel : email cible quand l'invitation depasse les frontieres
+  /// de la plateforme. Permet de prevoir un envoi mail (Lot futur).
+  inviteeEmail    String?
+  /// "pending" | "accepted" | "declined" | "cancelled" | "expired"
+  status          String   @default("pending")
+  /// Token unique pour partager le lien (publique mais inviolable).
+  /// Format : alphanumeric ~24 chars (crypto.randomBytes(16).toString("base64url")).
+  code            String   @unique
+  /// Message libre du commissaire ("Salut, rejoins la Skaven Cup !").
+  message         String?
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  cancelledAt     DateTime?
+  /// Renseigne au moment de l'acceptation (utile si invitee != team owner).
+  acceptedParticipantId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([leagueId, status])
+  @@index([inviteeUserId, status])
+  @@index([code])
+  @@index([expiresAt, status])
+}
+
 model League {
   id                String   @id @default(cuid())
   name              String
@@ -916,7 +974,9 @@ model League {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  seasons LeagueSeason[]
+  seasons     LeagueSeason[]
+  // Lot A — back-relation invitations envoyees pour cette ligue.
+  invitations LeagueInvitation[]
 
   @@index([creatorId])
   @@index([status])
@@ -956,6 +1016,8 @@ model LeagueSeason {
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
   award        LeagueSeasonAward?
+  // Lot A — back-relation invitations ciblant cette saison precise.
+  invitations  LeagueInvitation[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])

@@ -94,6 +94,14 @@ export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
   "registration_requires_validation" as const;
 
 /**
+ * Lot A — sous-flag de `LEAGUE_FLAG` pour ouvrir specifiquement les
+ * fonctionnalites d'invitation (creation, autocomplete coachs,
+ * acceptation par lien). Permet de garder le hub /leagues ouvert
+ * mais de moduler le rollout des invitations.
+ */
+export const LEAGUE_INVITATIONS_FLAG = "league_invitations" as const;
+
+/**
  * Registre des feature flags connus du code. Source de vérité pour garder
  * la table `FeatureFlag` synchronisée avec le code : le bouton
  * "Synchroniser depuis le code" du panneau admin (POST
@@ -145,6 +153,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: REGISTRATION_REQUIRES_VALIDATION_FLAG,
     description:
       "Kill-switch — exige une validation admin des nouveaux comptes.",
+  },
+  {
+    key: LEAGUE_INVITATIONS_FLAG,
+    description:
+      "Ligue — invitations de coachs (creation, lien shareable, autocomplete recherche).",
   },
 ];
 
