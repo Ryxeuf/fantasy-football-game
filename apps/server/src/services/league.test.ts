@@ -57,6 +57,8 @@ import {
   createRound,
   listLeagues,
   listThemedSeasons,
+  withdrawParticipant,
+  LeagueWithdrawError,
 } from "./league";
 
 const mockPrisma = prisma as any;
@@ -877,6 +879,131 @@ describe("Rule: League service", () => {
         updateLeague(leagueId, { maxParticipants: 1 }),
       ).rejects.toThrow(/maxParticipants/i);
       expect(mockPrisma.league.update).not.toHaveBeenCalled();
+    });
+  });
+
+  // Lot B — refus du retrait apres demarrage de la saison.
+  describe("withdrawParticipant (Lot B)", () => {
+    const seasonId = "season-1";
+    const teamId = "team-1";
+    const participantId = "part-1";
+
+    it("refuse si saison introuvable (404 mappee)", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue(null);
+      await expect(
+        withdrawParticipant({ seasonId, teamId }),
+      ).rejects.toMatchObject({
+        name: "LeagueWithdrawError",
+        code: "season_not_found",
+      });
+    });
+
+    it("refuse si saison completed", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "completed",
+      });
+      await expect(
+        withdrawParticipant({ seasonId, teamId }),
+      ).rejects.toMatchObject({ code: "season_completed" });
+    });
+
+    it("refuse si saison in_progress (sans force)", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "in_progress",
+      });
+      await expect(
+        withdrawParticipant({ seasonId, teamId }),
+      ).rejects.toMatchObject({ code: "season_started" });
+      expect(mockPrisma.leagueParticipant.update).not.toHaveBeenCalled();
+    });
+
+    it("autorise le retrait sur saison draft", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue({
+        id: participantId,
+        seasonId,
+        teamId,
+        status: "active",
+      });
+      mockPrisma.leagueParticipant.update.mockResolvedValue({
+        id: participantId,
+        status: "withdrawn",
+      });
+      const out = await withdrawParticipant({ seasonId, teamId });
+      expect(mockPrisma.leagueParticipant.update).toHaveBeenCalledWith({
+        where: { id: participantId },
+        data: { status: "withdrawn" },
+      });
+      expect(out).toMatchObject({ status: "withdrawn" });
+    });
+
+    it("autorise le retrait sur saison scheduled", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "scheduled",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue({
+        id: participantId,
+        status: "active",
+      });
+      mockPrisma.leagueParticipant.update.mockResolvedValue({
+        id: participantId,
+        status: "withdrawn",
+      });
+      await expect(
+        withdrawParticipant({ seasonId, teamId }),
+      ).resolves.toBeDefined();
+    });
+
+    it("autorise le retrait pendant in_progress avec force=true (admin)", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "in_progress",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue({
+        id: participantId,
+        status: "active",
+      });
+      mockPrisma.leagueParticipant.update.mockResolvedValue({
+        id: participantId,
+        status: "withdrawn",
+      });
+      await expect(
+        withdrawParticipant({ seasonId, teamId, force: true }),
+      ).resolves.toBeDefined();
+    });
+
+    it("refuse meme avec force=true si saison completed", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "completed",
+      });
+      await expect(
+        withdrawParticipant({ seasonId, teamId, force: true }),
+      ).rejects.toMatchObject({ code: "season_completed" });
+    });
+
+    it("refuse si l'equipe n'est pas inscrite", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      await expect(
+        withdrawParticipant({ seasonId, teamId }),
+      ).rejects.toMatchObject({ code: "not_registered" });
+    });
+
+    it("LeagueWithdrawError est bien une Error", () => {
+      const err = new LeagueWithdrawError("season_started", "msg");
+      expect(err).toBeInstanceOf(Error);
+      expect(err.name).toBe("LeagueWithdrawError");
+      expect(err.code).toBe("season_started");
     });
   });
 });

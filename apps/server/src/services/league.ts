@@ -827,22 +827,67 @@ export async function getSeasonById(seasonId: string) {
 }
 
 /**
- * Withdraw une equipe d'une saison : refuse si la saison est terminee
- * ou si l'equipe n'est pas inscrite.
+ * Lot B — Erreur typee retournee par `withdrawParticipant` pour permettre
+ * a la couche route de mapper proprement vers un status HTTP (404 / 409).
+ */
+export class LeagueWithdrawError extends Error {
+  constructor(
+    public readonly code:
+      | "season_not_found"
+      | "season_started"
+      | "season_completed"
+      | "not_registered",
+    message: string,
+  ) {
+    super(message);
+    this.name = "LeagueWithdrawError";
+  }
+}
+
+/**
+ * Withdraw une equipe d'une saison.
+ *
+ * Lot B — Le retrait n'est autorise que tant que la saison n'a pas
+ * demarre (status `draft` ou `scheduled`). Une fois la saison
+ * `in_progress`, le commissaire doit passer par la procedure de
+ * forfait (`league-forfeit.ts`) qui preserve l'historique des
+ * pairings deja generes.
+ *
+ * Un admin peut forcer le retrait via `force=true` (cas de
+ * desistement tardif). Ce mode est uniquement appele depuis les
+ * routes admin et doit etre audite cote route.
  */
 export async function withdrawParticipant(input: {
   seasonId: string;
   teamId: string;
+  /** Lot B — bypass admin pour retirer une equipe pendant `in_progress`. */
+  force?: boolean;
 }) {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: input.seasonId },
     select: { id: true, status: true },
   });
   if (!season) {
-    throw new Error(`Saison introuvable: ${input.seasonId}`);
+    throw new LeagueWithdrawError(
+      "season_not_found",
+      `Saison introuvable: ${input.seasonId}`,
+    );
   }
   if (season.status === "completed") {
-    throw new Error("Saison terminee : impossible de retirer une equipe");
+    throw new LeagueWithdrawError(
+      "season_completed",
+      "Saison terminee : impossible de retirer une equipe",
+    );
+  }
+  if (
+    !input.force &&
+    season.status !== "draft" &&
+    season.status !== "scheduled"
+  ) {
+    throw new LeagueWithdrawError(
+      "season_started",
+      "Saison demarree : utilisez la procedure de forfait pour retirer une equipe",
+    );
   }
 
   const existing = await prisma.leagueParticipant.findUnique({
@@ -851,7 +896,10 @@ export async function withdrawParticipant(input: {
     },
   });
   if (!existing) {
-    throw new Error("Cette equipe n'est pas inscrite sur la saison");
+    throw new LeagueWithdrawError(
+      "not_registered",
+      "Cette equipe n'est pas inscrite sur la saison",
+    );
   }
 
   return prisma.leagueParticipant.update({

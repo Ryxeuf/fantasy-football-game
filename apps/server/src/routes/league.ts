@@ -27,6 +27,7 @@ import {
   withdrawParticipant,
   listThemedSeasons,
   parseAllowedRosters,
+  LeagueWithdrawError,
 } from "../services/league";
 import {
   startSeason,
@@ -118,6 +119,17 @@ function serializeLeague(
 }
 
 function domainError(res: Response, e: unknown): void {
+  // Lot B — map les erreurs typees vers les bons status HTTP.
+  if (e instanceof LeagueWithdrawError) {
+    const status =
+      e.code === "season_not_found" || e.code === "not_registered"
+        ? 404
+        : e.code === "season_started" || e.code === "season_completed"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
   const message = e instanceof Error ? e.message : "Erreur inconnue";
   const isMissing = /introuvable|not found/i.test(message);
   sendError(res, message, isMissing ? 404 : 400);

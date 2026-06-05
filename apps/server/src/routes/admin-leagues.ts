@@ -35,6 +35,10 @@ import {
   type AdminLeagueStatusBody,
   type AdminLeagueTransferBody,
 } from "../schemas/admin-leagues.schemas";
+import {
+  withdrawParticipant,
+  LeagueWithdrawError,
+} from "../services/league";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
 
@@ -309,6 +313,47 @@ export async function handlePatchLeagueMatchMode(
   sendSuccess(res, updated);
 }
 
+/**
+ * Lot B — POST /admin/leagues/seasons/:seasonId/participants/:teamId/force-withdraw
+ *
+ * Permet a un admin de retirer une equipe d'une saison meme apres
+ * son demarrage (cas de desistement tardif que le commissaire ne
+ * peut plus gerer via le flow standard). Cette action est auditee
+ * via `serverLog` (cf. CLAUDE.md — toute action commissaire
+ * destructive doit etre traceable).
+ */
+export async function handleAdminForceWithdraw(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const { seasonId, teamId } = req.params;
+  try {
+    const updated = await withdrawParticipant({
+      seasonId,
+      teamId,
+      force: true,
+    });
+    serverLog.info(
+      `[admin-leagues] force-withdraw: season=${seasonId} team=${teamId} by admin=${req.user?.id}`,
+    );
+    sendSuccess(res, updated);
+  } catch (e: unknown) {
+    if (e instanceof LeagueWithdrawError) {
+      const status =
+        e.code === "season_not_found" || e.code === "not_registered"
+          ? 404
+          : e.code === "season_completed"
+            ? 409
+            : 400;
+      sendError(res, e.message, status);
+      return;
+    }
+    const msg = e instanceof Error ? e.message : "Erreur serveur";
+    serverLog.error("[admin-leagues] force-withdraw failed:", msg);
+    sendError(res, msg, 500);
+  }
+}
+
 router.get(
   "/",
   validateQuery(adminLeaguesQuerySchema),
@@ -333,6 +378,13 @@ router.patch(
   "/:id/match-mode",
   validate(adminLeagueMatchModeSchema),
   handlePatchLeagueMatchMode,
+);
+
+// Lot B — retrait force d'une equipe par admin (bypass de la regle
+// "saison non demarree"). Tracable via serverLog.
+router.post(
+  "/seasons/:seasonId/participants/:teamId/force-withdraw",
+  handleAdminForceWithdraw,
 );
 
 export default router;
