@@ -2,7 +2,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../auth-client";
 
-type Category = "matches" | "scoring" | "casualties" | "social" | "rosters";
+type Category =
+  | "matches"
+  | "scoring"
+  | "casualties"
+  | "social"
+  | "rosters"
+  | "leagues";
 
 interface AchievementView {
   slug: string;
@@ -44,6 +50,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   casualties: "Sorties",
   social: "Social",
   rosters: "Équipes prioritaires",
+  leagues: "Ligues",
 };
 
 async function fetchAchievements(): Promise<AchievementsResponse> {
@@ -101,6 +108,7 @@ export default function AchievementsPage() {
       casualties: [],
       social: [],
       rosters: [],
+      leagues: [],
     };
     for (const ach of data.achievements) {
       if (filter === "unlocked" && !ach.unlocked) continue;

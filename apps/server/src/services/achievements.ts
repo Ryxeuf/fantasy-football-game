@@ -22,7 +22,8 @@ export type AchievementCategory =
   | "scoring"
   | "casualties"
   | "social"
-  | "rosters";
+  | "rosters"
+  | "leagues";
 
 export interface UserAchievementStats {
   matchesPlayed: number;
@@ -34,6 +35,11 @@ export interface UserAchievementStats {
   friendsCount: number;
   rostersPlayed: Set<string>;
   winsByRoster: Map<string, number>;
+  /**
+   * L2.D — Nombre de ligues creees par l'utilisateur qui ont au moins une
+   * saison terminee (status "completed"). Sert au succes "commissaire".
+   */
+  leaguesCommissioned: number;
 }
 
 export interface AchievementDefinition {
@@ -193,6 +199,19 @@ function buildCatalog(): AchievementDefinition[] {
     category: "social",
     icon: "👥",
     predicate: (s) => s.friendsCount >= 5,
+  });
+
+  // L2.D — Succes de commissaire : terminer une ligue dont on est le
+  // createur (au moins une saison passee en "completed").
+  catalog.push({
+    slug: "commissioner",
+    nameFr: "Commissaire",
+    nameEn: "Commissioner",
+    descriptionFr: "Terminer une ligue dont vous etes le createur",
+    descriptionEn: "Complete a league you created",
+    category: "leagues",
+    icon: "🏆",
+    predicate: (s) => s.leaguesCommissioned >= 1,
   });
 
   for (const [roster, nameFr, nameEn] of PRIORITY_ROSTERS) {
@@ -371,6 +390,14 @@ export async function computeUserStats(
     },
   })) as number;
 
+  // L2.D — ligues creees par l'utilisateur avec >= 1 saison terminee.
+  const leaguesCommissioned = (await (prisma as any).league.count({
+    where: {
+      creatorId: userId,
+      seasons: { some: { status: "completed" } },
+    },
+  })) as number;
+
   return {
     matchesPlayed: selections.filter((s) => s.match?.status === "ended").length,
     wins,
@@ -381,6 +408,7 @@ export async function computeUserStats(
     friendsCount,
     rostersPlayed,
     winsByRoster,
+    leaguesCommissioned,
   };
 }
 
@@ -437,6 +465,7 @@ export async function getUserAchievements(
       touchdowns: stats.touchdowns,
       casualties: stats.casualties,
       friendsCount: stats.friendsCount,
+      leaguesCommissioned: stats.leaguesCommissioned,
       rostersPlayed: Array.from(stats.rostersPlayed),
       winsByRoster: Object.fromEntries(stats.winsByRoster),
     },

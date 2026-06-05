@@ -670,6 +670,85 @@ export async function listThemedSeasons(input: ListThemedSeasonsInput) {
   return { items, total, limit, offset };
 }
 
+/**
+ * L2.D — Edition d'une ligue par son commissaire (createur).
+ * Tous les champs sont optionnels : seuls ceux fournis sont modifies.
+ * Les checks d'autorisation (createur) et de verrouillage (match deja
+ * joue) sont faits par la couche route ; ce service applique uniquement
+ * les validations metier de base + la persistance.
+ */
+export interface UpdateLeagueInput {
+  name?: string;
+  description?: string | null;
+  ruleset?: "season_2" | "season_3";
+  isPublic?: boolean;
+  maxParticipants?: number;
+  allowedRosters?: string[] | null;
+  winPoints?: number;
+  drawPoints?: number;
+  lossPoints?: number;
+  forfeitPoints?: number;
+  tieBreakRules?: readonly string[] | null;
+}
+
+/**
+ * Vrai si au moins un match d'une saison de cette ligue a ete joue et
+ * comptabilise (`Match.leagueScoredAt` non-null). C'est le verrou qui
+ * fige les parametres de la ligue : une fois le premier resultat saisi,
+ * le commissaire ne peut plus changer points/participants/etc.
+ */
+export async function hasLeagueScoredMatch(leagueId: string): Promise<boolean> {
+  const count = await prisma.match.count({
+    where: {
+      leagueScoredAt: { not: null },
+      leagueSeason: { is: { leagueId } },
+    },
+  });
+  return count > 0;
+}
+
+export async function updateLeague(
+  leagueId: string,
+  input: UpdateLeagueInput,
+) {
+  if (input.name !== undefined) {
+    ensureNonEmptyName(input.name);
+  }
+  if (input.maxParticipants !== undefined) {
+    ensureValidMaxParticipants(input.maxParticipants);
+  }
+
+  const data: Record<string, unknown> = {};
+  if (input.name !== undefined) data.name = input.name.trim();
+  if (input.description !== undefined) data.description = input.description;
+  if (input.ruleset !== undefined) data.ruleset = input.ruleset;
+  if (input.isPublic !== undefined) data.isPublic = input.isPublic;
+  if (input.maxParticipants !== undefined)
+    data.maxParticipants = input.maxParticipants;
+  if (input.allowedRosters !== undefined) {
+    data.allowedRosters =
+      input.allowedRosters && input.allowedRosters.length > 0
+        ? JSON.stringify(input.allowedRosters)
+        : null;
+  }
+  if (input.winPoints !== undefined) data.winPoints = input.winPoints;
+  if (input.drawPoints !== undefined) data.drawPoints = input.drawPoints;
+  if (input.lossPoints !== undefined) data.lossPoints = input.lossPoints;
+  if (input.forfeitPoints !== undefined)
+    data.forfeitPoints = input.forfeitPoints;
+  if (input.tieBreakRules !== undefined) {
+    let tieBreakRules: string | null = null;
+    if (input.tieBreakRules && input.tieBreakRules.length > 0) {
+      const allowed = TIE_BREAK_SLUGS as readonly string[];
+      const filtered = input.tieBreakRules.filter((s) => allowed.includes(s));
+      tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
+    }
+    data.tieBreakRules = tieBreakRules;
+  }
+
+  return prisma.league.update({ where: { id: leagueId }, data });
+}
+
 export async function getLeagueById(leagueId: string) {
   return prisma.league.findUnique({
     where: { id: leagueId },

@@ -11,7 +11,7 @@
  *     livre en PR2.
  *
  * Pas de gate par feature flag : l'endpoint est public, la page est
- * accessible meme avant le lancement de `leagues_v2_ui` (les recap
+ * accessible meme avant le lancement du flag `league` (les recap
  * n'ont pas d'action utilisateur).
  */
 

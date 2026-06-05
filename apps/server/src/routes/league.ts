@@ -14,6 +14,8 @@ import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
   createLeague,
+  updateLeague,
+  hasLeagueScoredMatch,
   createSeason,
   addParticipant,
   createRound,
@@ -53,6 +55,7 @@ import {
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
+  updateLeagueSchema,
   createSeasonSchema,
   joinSeasonSchema,
   createRoundSchema,
@@ -64,6 +67,7 @@ import {
   forfeitPairingSchema,
   recordOfflineResultSchema,
   type CreateLeagueBody,
+  type UpdateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
   type CreateRoundBody,
@@ -147,6 +151,56 @@ export async function handleCreateLeague(
   }
 }
 
+export async function handleUpdateLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const leagueId = req.params.id;
+  const league = await getLeagueById(leagueId);
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return;
+  }
+  if ((league as { creatorId: string }).creatorId !== userId) {
+    sendError(
+      res,
+      "Seul le commissaire (createur) peut modifier cette ligue",
+      403,
+    );
+    return;
+  }
+  // Verrou : une fois un match joue/saisi, les parametres sont figes.
+  if (await hasLeagueScoredMatch(leagueId)) {
+    sendError(
+      res,
+      "Ligue verrouillee : un match a deja ete joue, les parametres ne peuvent plus etre modifies",
+      409,
+    );
+    return;
+  }
+  const body = req.body as UpdateLeagueBody;
+  try {
+    const updated = await updateLeague(leagueId, {
+      name: body.name,
+      description: body.description,
+      ruleset: body.ruleset,
+      isPublic: body.isPublic,
+      maxParticipants: body.maxParticipants,
+      allowedRosters: body.allowedRosters,
+      winPoints: body.winPoints,
+      drawPoints: body.drawPoints,
+      lossPoints: body.lossPoints,
+      forfeitPoints: body.forfeitPoints,
+      tieBreakRules: body.tieBreakRules,
+    });
+    sendSuccess(res, serializeLeague(updated as Record<string, unknown>));
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 export async function handleListLeagues(
   req: AuthenticatedRequest,
   res: Response,
@@ -185,8 +239,15 @@ export async function handleGetLeague(
     sendError(res, "Ligue introuvable", 404);
     return;
   }
+  // L2.D — `hasScoredMatch` : verrou d'edition expose au frontend pour
+  // afficher/masquer le bouton "Modifier" (la verite reste serveur dans
+  // handleUpdateLeague).
+  const hasScoredMatch = await hasLeagueScoredMatch(leagueId);
   sendSuccess(res, {
-    league: serializeLeague(league as unknown as Record<string, unknown>),
+    league: {
+      ...serializeLeague(league as unknown as Record<string, unknown>),
+      hasScoredMatch,
+    },
   });
 }
 
@@ -1101,6 +1162,12 @@ async function handlePlayMecene(
 const router = Router();
 
 router.post("/", authUser, validate(createLeagueSchema), handleCreateLeague);
+router.patch(
+  "/:id",
+  authUser,
+  validate(updateLeagueSchema),
+  handleUpdateLeague,
+);
 router.get("/", authUser, validateQuery(listLeaguesQuerySchema), handleListLeagues);
 // S26.6b — catalogue public des themes (pas d'auth : contenu de jeu
 // statique, utilise par l'UI calendrier et le sitemap SEO).

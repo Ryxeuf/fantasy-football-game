@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 
-// Sprint Ligues v2 PR2 — `LeaguesPage` consomme desormais
-// `useFeatureFlag(LEAGUES_V2_UI_FLAG)` pour decider d'afficher le CTA
-// "Creer une ligue". On stub le hook ici plutot que de wrapper avec un
+// `LeaguesPage` consomme `useFeatureFlag(LEAGUE_FLAG)` (flag unique de
+// la brique ligue) pour decider d'afficher le CTA "Creer une ligue".
+// On stub le hook ici plutot que de wrapper avec un
 // vrai `FeatureFlagProvider` : ca evite que la fetch mock globale
 // reponde aussi au call `/api/feature-flags/me` (qui sinon recevrait
 // un body `{ leagues: [...] }` et casserait le `new Set(...)` du
@@ -207,8 +207,8 @@ describe("LeaguesPage", () => {
     expect(screen.getAllByText(/8/).length).toBeGreaterThanOrEqual(1);
   });
 
-  // Sprint Ligues v2 PR2 — bouton "Creer une ligue" gate par flag.
-  it("hides the create-league CTA when leagues_v2_ui flag is off", async () => {
+  // Bouton "Creer une ligue" gate par le flag unique `league`.
+  it("hides the create-league CTA when league flag is off", async () => {
     const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
     (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
       false,
@@ -227,7 +227,7 @@ describe("LeaguesPage", () => {
     expect(screen.queryByTestId("leagues-create-cta")).toBeNull();
   });
 
-  it("shows the create-league CTA when leagues_v2_ui flag is on", async () => {
+  it("shows the create-league CTA when league flag is on", async () => {
     const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
     (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
       true,

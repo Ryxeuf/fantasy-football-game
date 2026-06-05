@@ -11,7 +11,7 @@ Décidé : **couper tout maintenant** (les éventuels paris Crowns ouverts reste
 via un **interrupteur maître unique**.
 
 > ⚠️ Distinct de la **league de base** (gestion de ligue BB PvP, flag
-> `leagues_v2_ui`) et de l'**online play** (game-engine). Voir
+> unique `league`) et de l'**online play** (game-engine). Voir
 > `docs/league-api-path-fix-2026-06-01.md` pour le découpage des briques.
 
 ## Interrupteur

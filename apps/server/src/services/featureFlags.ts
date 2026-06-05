@@ -24,24 +24,18 @@ export const ONLINE_PLAY_FLAG = "online_play" as const;
 export const AI_TRAINING_FLAG = "ai_training" as const;
 
 /**
- * Gate la brique "Ligue" Blood Bowl (gestion de ligue facon regles
+ * Flag unique de la brique "Ligue" Blood Bowl (gestion de ligue facon regles
  * officielles : rosters, inscription, saisons, pairings, classements, ELO).
+ * Gate a la fois l'acces au hub /leagues ET tous les ecrans de gestion
+ * (creation `/leagues/new`, edition draft, creation saison, panneau admin
+ * saison, calendrier interactif, level-up de roster, section admin "Ligues").
  * Distinct de `online_play` : la ligue a son propre flag pour pouvoir etre
  * activee independamment de la partie en ligne.
+ *
+ * Note historique : l'ancien flag `leagues_v2_ui` (qui gatait separement les
+ * ecrans v2) a ete fusionne ici — il n'existe plus qu'un seul flag.
  */
 export const LEAGUE_FLAG = "league" as const;
-
-/**
- * Sprint Ligues v2 (PR2) — gate les nouveaux ecrans frontend de gestion
- * de ligue : creation `/leagues/new`, edition draft, creation saison,
- * panneau admin saison (open/start/regenerate/close), bouton "Rejoindre
- * cette saison", calendrier interactif avec pairings et bouton
- * "Lancer le match". Le backend reste ouvert (les routes API existaient
- * deja avant l'introduction du flag) ; ce flag controle uniquement la
- * visibilite des nouveaux composants UI tant que la feature n'est pas
- * pretement annoncee aux utilisateurs.
- */
-export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
 
 /**
  * Nuffle Coach (fantasy NFL skinne BB) — gate l'UI publique du
@@ -130,12 +124,7 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
   {
     key: LEAGUE_FLAG,
     description:
-      "Ligue Blood Bowl — gestion de ligue (rosters, saisons, pairings, classements, ELO).",
-  },
-  {
-    key: LEAGUES_V2_UI_FLAG,
-    description:
-      "Ligues v2 — nouveaux écrans de gestion de ligue / saison (UI).",
+      "Ligue Blood Bowl — flag unique : hub /leagues + gestion (création, saisons, pairings, classements, level-up, admin).",
   },
   {
     key: NUFFLE_COACH_FLAG,

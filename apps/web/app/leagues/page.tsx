@@ -4,7 +4,7 @@ import Link from "next/link";
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { LEAGUES_V2_UI_FLAG } from "../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../lib/featureFlagKeys";
 
 type LeagueStatus =
   | "draft"
@@ -53,7 +53,7 @@ function buildListPath(status: StatusFilter): string {
 
 export default function LeaguesPage() {
   const { t } = useLanguage();
-  const v2UiEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
+  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +148,7 @@ export default function LeaguesPage() {
           >
             📦 {t.leagues.archivedLink}
           </Link>
-          {v2UiEnabled ? (
+          {leagueEnabled ? (
             <Link
               href="/leagues/new"
               data-testid="leagues-create-cta"

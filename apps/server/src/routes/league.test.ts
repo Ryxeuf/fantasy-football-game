@@ -10,6 +10,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../services/league", () => ({
   createLeague: vi.fn(),
+  updateLeague: vi.fn(),
+  hasLeagueScoredMatch: vi.fn(),
   createSeason: vi.fn(),
   addParticipant: vi.fn(),
   createRound: vi.fn(),
@@ -36,6 +38,8 @@ vi.mock("../prisma", () => ({
 import type { Request, Response } from "express";
 import {
   createLeague,
+  updateLeague,
+  hasLeagueScoredMatch,
   createSeason,
   addParticipant,
   createRound,
@@ -49,6 +53,7 @@ import {
 import { prisma } from "../prisma";
 import {
   handleCreateLeague,
+  handleUpdateLeague,
   handleListLeagues,
   handleGetLeague,
   handleGetSeason,
@@ -64,6 +69,8 @@ import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockService = {
   createLeague: createLeague as ReturnType<typeof vi.fn>,
+  updateLeague: updateLeague as ReturnType<typeof vi.fn>,
+  hasLeagueScoredMatch: hasLeagueScoredMatch as ReturnType<typeof vi.fn>,
   createSeason: createSeason as ReturnType<typeof vi.fn>,
   addParticipant: addParticipant as ReturnType<typeof vi.fn>,
   createRound: createRound as ReturnType<typeof vi.fn>,
@@ -158,6 +165,77 @@ describe("Route: POST /leagues (create)", () => {
     await handleCreateLeague(req, res);
     expect(res.statusCode).toBe(400);
     expect(res.payload).toMatchObject({ error: expect.stringMatching(/nom/i) });
+  });
+});
+
+describe("Route: PATCH /leagues/:id (update by commissaire)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 404 when the league does not exist", async () => {
+    mockService.getLeagueById.mockResolvedValue(null);
+    const req = createReq({ params: { id: "nope" }, body: { winPoints: 4 } });
+    const res = createRes();
+    await handleUpdateLeague(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(mockService.updateLeague).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when the user is not the creator", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      creatorId: "someone-else",
+    });
+    const req = createReq({
+      params: { id: "league-1" },
+      body: { winPoints: 4 },
+    });
+    const res = createRes();
+    await handleUpdateLeague(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(mockService.updateLeague).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when a match has already been scored (locked)", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      creatorId: "user-1",
+    });
+    mockService.hasLeagueScoredMatch.mockResolvedValue(true);
+    const req = createReq({
+      params: { id: "league-1" },
+      body: { winPoints: 4 },
+    });
+    const res = createRes();
+    await handleUpdateLeague(req, res);
+    expect(res.statusCode).toBe(409);
+    expect(mockService.updateLeague).not.toHaveBeenCalled();
+  });
+
+  it("updates the league when creator and not locked", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      creatorId: "user-1",
+    });
+    mockService.hasLeagueScoredMatch.mockResolvedValue(false);
+    mockService.updateLeague.mockResolvedValue({
+      id: "league-1",
+      winPoints: 4,
+      allowedRosters: null,
+    });
+    const req = createReq({
+      params: { id: "league-1" },
+      body: { winPoints: 4 },
+    });
+    const res = createRes();
+    await handleUpdateLeague(req, res);
+    expect(mockService.updateLeague).toHaveBeenCalledWith(
+      "league-1",
+      expect.objectContaining({ winPoints: 4 }),
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: expect.objectContaining({ id: "league-1", winPoints: 4 }),
+    });
   });
 });
 

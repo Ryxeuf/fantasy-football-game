@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { syncAuthCookie } from "../lib/auth-cookie";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { LEAGUES_V2_UI_FLAG } from "../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../lib/featureFlagKeys";
 import EngineVersionsBadge from "./_components/EngineVersionsBadge";
 
 interface NavEntry {
@@ -125,7 +125,7 @@ function findActiveSectionId(
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const leaguesEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
+  const leaguesEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const sections = useMemo(() => buildSections(leaguesEnabled), [leaguesEnabled]);

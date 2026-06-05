@@ -3,9 +3,9 @@ import { useCallback, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-// Sprint Ligues v2 PR2 — modale de creation de saison.
+// Modale de creation de saison.
 // Affichee uniquement quand l'utilisateur est creator de la ligue ET
-// que le flag `leagues_v2_ui` est actif (gating cote parent).
+// que le flag `league` est actif (gating cote parent).
 //
 // La saison est creee via `POST /league/:id/seasons`. Au succes, on
 // notifie le parent via `onCreated(seasonId)` pour qu'il rafraichisse

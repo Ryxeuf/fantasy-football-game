@@ -68,6 +68,18 @@ export const createLeagueSchema = z.object({
   tieBreakRules: z.array(tieBreakSlug).max(9).optional().nullable(),
 });
 
+/**
+ * Edition d'une ligue (commissaire uniquement, tant qu'aucun match n'a ete
+ * joue/saisi). Tous les champs sont optionnels : on ne modifie que ceux
+ * fournis. `.partial()` conserve les bornes internes (min(1) sur `name`,
+ * min/max sur les points) quand le champ est present. `name` reste donc
+ * non-vide si envoye. On refuse un body vide (au moins un champ requis).
+ */
+export const updateLeagueSchema = createLeagueSchema.partial().refine(
+  (data) => Object.keys(data).length > 0,
+  { message: "Au moins un champ a modifier est requis" },
+);
+
 export const createSeasonSchema = z
   .object({
     name: z
@@ -235,6 +247,7 @@ export const recordOfflineResultSchema = z.object({
 });
 
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;
+export type UpdateLeagueBody = z.infer<typeof updateLeagueSchema>;
 export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
 export type CreateRoundBody = z.infer<typeof createRoundSchema>;

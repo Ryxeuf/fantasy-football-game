@@ -41,12 +41,17 @@ vi.mock("../prisma", () => ({
     team: {
       findUnique: vi.fn(),
     },
+    match: {
+      count: vi.fn(),
+    },
   },
 }));
 
 import { prisma } from "../prisma";
 import {
   createLeague,
+  updateLeague,
+  hasLeagueScoredMatch,
   createSeason,
   addParticipant,
   createRound,
@@ -804,6 +809,74 @@ describe("Rule: League service", () => {
       await expect(
         listThemedSeasons({ theme: "skaven_cup", themeYear: 0 }),
       ).rejects.toThrow(/themeYear/i);
+    });
+  });
+
+  describe("hasLeagueScoredMatch", () => {
+    it("est vrai des qu'un match de la ligue a un leagueScoredAt", async () => {
+      mockPrisma.match.count.mockResolvedValue(1);
+      const result = await hasLeagueScoredMatch(leagueId);
+      expect(result).toBe(true);
+      expect(mockPrisma.match.count).toHaveBeenCalledWith({
+        where: {
+          leagueScoredAt: { not: null },
+          leagueSeason: { is: { leagueId } },
+        },
+      });
+    });
+
+    it("est faux quand aucun match n'est comptabilise", async () => {
+      mockPrisma.match.count.mockResolvedValue(0);
+      expect(await hasLeagueScoredMatch(leagueId)).toBe(false);
+    });
+  });
+
+  describe("updateLeague", () => {
+    it("ne met a jour que les champs fournis (PATCH partiel)", async () => {
+      mockPrisma.league.update.mockResolvedValue({ id: leagueId });
+      await updateLeague(leagueId, { winPoints: 4, maxParticipants: 8 });
+      expect(mockPrisma.league.update).toHaveBeenCalledWith({
+        where: { id: leagueId },
+        data: { winPoints: 4, maxParticipants: 8 },
+      });
+    });
+
+    it("stringifie allowedRosters et trim le nom", async () => {
+      mockPrisma.league.update.mockResolvedValue({ id: leagueId });
+      await updateLeague(leagueId, {
+        name: "  Ma Ligue  ",
+        allowedRosters: ["skaven", "dwarf"],
+      });
+      expect(mockPrisma.league.update).toHaveBeenCalledWith({
+        where: { id: leagueId },
+        data: {
+          name: "Ma Ligue",
+          allowedRosters: JSON.stringify(["skaven", "dwarf"]),
+        },
+      });
+    });
+
+    it("stocke allowedRosters=null quand la liste est vide", async () => {
+      mockPrisma.league.update.mockResolvedValue({ id: leagueId });
+      await updateLeague(leagueId, { allowedRosters: [] });
+      expect(mockPrisma.league.update).toHaveBeenCalledWith({
+        where: { id: leagueId },
+        data: { allowedRosters: null },
+      });
+    });
+
+    it("rejette un nom vide quand il est fourni", async () => {
+      await expect(updateLeague(leagueId, { name: "   " })).rejects.toThrow(
+        /nom de la ligue/i,
+      );
+      expect(mockPrisma.league.update).not.toHaveBeenCalled();
+    });
+
+    it("rejette maxParticipants < 2", async () => {
+      await expect(
+        updateLeague(leagueId, { maxParticipants: 1 }),
+      ).rejects.toThrow(/maxParticipants/i);
+      expect(mockPrisma.league.update).not.toHaveBeenCalled();
     });
   });
 });

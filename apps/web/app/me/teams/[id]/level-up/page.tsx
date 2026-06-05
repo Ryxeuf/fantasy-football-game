@@ -8,7 +8,7 @@
  * + skill. Au submit, applique via POST .../advancement et refresh
  * la liste.
  *
- * Gate par feature flag `leagues_v2_ui` : redirige vers /me/teams/:id
+ * Gate par le feature flag unique `league` : redirige vers /me/teams/:id
  * si le flag est off (cosmetique, le serveur reste accessible).
  */
 
@@ -18,7 +18,7 @@ import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "../../../../lib/api-client";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../../../hooks/useFeatureFlag";
-import { LEAGUES_V2_UI_FLAG } from "../../../../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../../../../lib/featureFlagKeys";
 
 type AdvancementType =
   | "primary"
@@ -105,7 +105,7 @@ export default function LevelUpPage() {
   const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
-  const flagEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
+  const flagEnabled = useFeatureFlag(LEAGUE_FLAG);
   const teamId = typeof params.id === "string" ? params.id : "";
 
   const [items, setItems] = useState<PendingAdvancementItem[]>([]);

@@ -4,7 +4,7 @@
  *
  * Affiche un encart clickable vers `/me/teams/:id/level-up` quand
  * `GET /team/:teamId/pending-advancements` retourne au moins une
- * entree. Gate par `useFeatureFlag(LEAGUES_V2_UI_FLAG)` cote parent.
+ * entree. Gate par `useFeatureFlag(LEAGUE_FLAG)` cote parent.
  *
  * Erreur reseau silencieuse : la banner est non-critique, mieux vaut
  * la masquer que d'afficher un toast d'erreur a chaque chargement.

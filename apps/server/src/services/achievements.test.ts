@@ -12,6 +12,9 @@ vi.mock("../prisma", () => ({
     friendship: {
       count: vi.fn(),
     },
+    league: {
+      count: vi.fn(),
+    },
   },
 }));
 
@@ -38,6 +41,7 @@ const baseStats = (
   friendsCount: 0,
   rostersPlayed: new Set<string>(),
   winsByRoster: new Map<string, number>(),
+  leaguesCommissioned: 0,
   ...overrides,
 });
 
@@ -108,6 +112,20 @@ describe("Rule: evaluateAchievements", () => {
     expect(result).toContain("roster-skaven");
     expect(result).toContain("roster-dwarf");
     expect(result).not.toContain("roster-lizardmen");
+  });
+
+  it("unlocks the commissioner achievement when a created league is completed", () => {
+    const def = ACHIEVEMENTS_CATALOG.find((a) => a.slug === "commissioner");
+    expect(def).toBeDefined();
+    expect(def!.category).toBe("leagues");
+    expect(def!.predicate(baseStats({ leaguesCommissioned: 1 }))).toBe(true);
+    expect(def!.predicate(baseStats({ leaguesCommissioned: 0 }))).toBe(false);
+
+    const result = evaluateAchievements(
+      baseStats({ leaguesCommissioned: 2 }),
+      new Set<string>(),
+    );
+    expect(result).toContain("commissioner");
   });
 
   it("unlocks social friends achievement when friends >= 1", () => {

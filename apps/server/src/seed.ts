@@ -22,7 +22,7 @@ import { UNKNOWN_USER_ID } from "./utils/user-constants";
 import {
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
-  LEAGUES_V2_UI_FLAG,
+  LEAGUE_FLAG,
   NUFFLE_COACH_FLAG,
   NUFFLE_COACH_TEST_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
@@ -1045,36 +1045,38 @@ async function main() {
     );
   }
 
-  // Sprint Ligues v2 (PR2) — flag UI gestion des ligues. Desactive
+  // Brique "Ligue" Blood Bowl — flag unique qui gate TOUTE la
+  // fonctionnalite (hub /leagues + creation, edition, admin saison,
+  // inscription, calendrier interactif, level-up de roster). Desactive
   // globalement par defaut ; admins l'ont via bypass de role et
   // user@example.com via override pour faciliter les demos.
-  const leaguesV2UiFlag = await prisma.featureFlag.upsert({
-    where: { key: LEAGUES_V2_UI_FLAG },
+  const leagueFlag = await prisma.featureFlag.upsert({
+    where: { key: LEAGUE_FLAG },
     update: {
       description:
-        "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
+        "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
     },
     create: {
-      key: LEAGUES_V2_UI_FLAG,
+      key: LEAGUE_FLAG,
       description:
-        "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
+        "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
       enabled: false,
     },
   });
   serverLog.log(
-    `   ✅ Flag '${LEAGUES_V2_UI_FLAG}' ${leaguesV2UiFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
+    `   ✅ Flag '${LEAGUE_FLAG}' ${leagueFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
   );
 
   if (testUser) {
     await prisma.featureFlagUser.upsert({
       where: {
-        flagId_userId: { flagId: leaguesV2UiFlag.id, userId: testUser.id },
+        flagId_userId: { flagId: leagueFlag.id, userId: testUser.id },
       },
-      create: { flagId: leaguesV2UiFlag.id, userId: testUser.id },
+      create: { flagId: leagueFlag.id, userId: testUser.id },
       update: {},
     });
     serverLog.log(
-      `   ✅ Override '${LEAGUES_V2_UI_FLAG}' ajouté pour user@example.com`,
+      `   ✅ Override '${LEAGUE_FLAG}' ajouté pour user@example.com`,
     );
   }
 

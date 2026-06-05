@@ -528,4 +528,85 @@ describe("LeagueDetailPage", () => {
       expect(screen.queryByTestId("manage-my-team")).toBeNull();
     });
   });
+
+  // L2.D — badge Commissaire + edition des parametres de ligue
+  describe("L2.D — commissaire badge & league edit CTA", () => {
+    it("always shows the Commissioner badge in the header", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+        true,
+      );
+      mockApi({
+        league: mockLeague,
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: "u-other",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("league-commissioner-badge")).toBeTruthy();
+      });
+    });
+
+    it("shows the edit CTA for the creator when no match has been scored", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+        true,
+      );
+      mockApi({
+        league: { ...mockLeague, hasScoredMatch: false },
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: mockLeague.creatorId,
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("edit-league-cta")).toBeTruthy();
+      });
+    });
+
+    it("hides the edit CTA once a match has been scored (locked)", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+        true,
+      );
+      mockApi({
+        league: { ...mockLeague, hasScoredMatch: true },
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: mockLeague.creatorId,
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("league-standings")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("edit-league-cta")).toBeNull();
+    });
+
+    it("hides the edit CTA for non-creator users", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+        true,
+      );
+      mockApi({
+        league: { ...mockLeague, hasScoredMatch: false },
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: "u-other",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("league-standings")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("edit-league-cta")).toBeNull();
+    });
+  });
 });

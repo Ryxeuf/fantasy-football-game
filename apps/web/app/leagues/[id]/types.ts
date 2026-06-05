@@ -42,6 +42,12 @@ export interface LeagueDetail {
   createdAt: string;
   updatedAt: string;
   seasons: LeagueSeasonSummary[];
+  /**
+   * L2.D — verrou d'edition : true des qu'un match d'une saison a ete
+   * joue/saisi. Quand true, le commissaire ne peut plus modifier les
+   * parametres de la ligue (le bouton "Modifier" est masque).
+   */
+  hasScoredMatch?: boolean;
 }
 
 export type LeaguePairingStatus =

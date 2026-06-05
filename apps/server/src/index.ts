@@ -72,7 +72,7 @@ import { maintenanceMode } from "./middleware/maintenance";
 import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
-  LEAGUES_V2_UI_FLAG,
+  LEAGUE_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -701,9 +701,9 @@ if (process.env.TEST_SQLITE === "1") {
           description: "Active les matchs d'entrainement contre l'IA",
         },
         {
-          key: LEAGUES_V2_UI_FLAG,
+          key: LEAGUE_FLAG,
           description:
-            "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
+            "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
         },
       ];
       for (const flag of flagSeeds) {

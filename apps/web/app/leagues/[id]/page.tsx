@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { LEAGUES_V2_UI_FLAG } from "../../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { SeasonStandings } from "./SeasonStandings";
 import { PlayoffBracketView } from "./PlayoffBracketView";
@@ -34,7 +34,7 @@ export default function LeagueDetailPage() {
   const { t } = useLanguage();
   const params = useParams();
   const leagueId = typeof params.id === "string" ? params.id : "";
-  const v2UiEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
+  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -194,11 +194,11 @@ export default function LeagueDetailPage() {
   }, [season]);
 
   const canJoinSeason = useMemo(() => {
-    if (!v2UiEnabled || !season || !currentUserId) return false;
+    if (!leagueEnabled || !season || !currentUserId) return false;
     if (isCreator) return false;
     // Inscriptions ouvertes uniquement avant le demarrage de la saison.
     return season.status === "draft" || season.status === "scheduled";
-  }, [v2UiEnabled, season, currentUserId, isCreator]);
+  }, [leagueEnabled, season, currentUserId, isCreator]);
 
   // L2.B.5 — participant actif du coach courant (si inscrit). Sert au
   // bouton "Coup de mecene" et au lien "Gerer mon equipe".
@@ -267,17 +267,40 @@ export default function LeagueDetailPage() {
               ? t.leagues.visibilityPublic
               : t.leagues.visibilityPrivate}
           </span>
+          {/* L2.D — edition reservee au commissaire, tant que la ligue
+              n'est pas verrouillee (aucun match joue). */}
+          {leagueEnabled && isCreator && !league.hasScoredMatch ? (
+            <Link
+              href={`/leagues/${leagueId}/edit`}
+              data-testid="edit-league-cta"
+              className="ml-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
+            >
+              ✏️ {t.leagues.editButton}
+            </Link>
+          ) : null}
         </div>
         {league.description ? (
           <p className="text-sm text-gray-700 mt-2">{league.description}</p>
         ) : null}
-        <p className="text-xs text-gray-500 mt-2">
-          {t.leagues.creator} : {league.creator.coachName ?? league.creator.email}
-          {" • "}
-          {t.leagues.maxParticipants} : {league.maxParticipants}
-          {league.allowedRosters && league.allowedRosters.length > 0
-            ? ` • ${t.leagues.allowedRosters} : ${league.allowedRosters.join(", ")}`
-            : ""}
+        <p className="text-xs text-gray-500 mt-2 inline-flex flex-wrap items-center gap-1.5">
+          <span>
+            {t.leagues.creator} :{" "}
+            {league.creator.coachName ?? league.creator.email}
+          </span>
+          {/* L2.D — badge Commissaire associe au createur de la ligue. */}
+          <span
+            data-testid="league-commissioner-badge"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-nuffle-gold/15 border border-nuffle-gold/40 text-nuffle-bronze"
+          >
+            👑 {t.leagues.commissionerBadge}
+          </span>
+          <span>
+            {" • "}
+            {t.leagues.maxParticipants} : {league.maxParticipants}
+            {league.allowedRosters && league.allowedRosters.length > 0
+              ? ` • ${t.leagues.allowedRosters} : ${league.allowedRosters.join(", ")}`
+              : ""}
+          </span>
         </p>
       </div>
 
@@ -310,7 +333,7 @@ export default function LeagueDetailPage() {
           <h2 className="text-lg font-semibold text-nuffle-anthracite">
             {t.leagues.seasonsSection}
           </h2>
-          {v2UiEnabled && isCreator ? (
+          {leagueEnabled && isCreator ? (
             <button
               type="button"
               data-testid="open-new-season-modal"
@@ -374,7 +397,7 @@ export default function LeagueDetailPage() {
 
           {season ? (
             <>
-              {v2UiEnabled && isCreator ? (
+              {leagueEnabled && isCreator ? (
                 <SeasonAdminPanel
                   seasonId={season.id}
                   status={season.status}
@@ -387,7 +410,7 @@ export default function LeagueDetailPage() {
               ) : null}
 
               {/* L2.C.2c — lien vers le recap quand la saison est terminee.
-                  Le recap reste accessible meme si v2UiEnabled est off
+                  Le recap reste accessible meme si leagueEnabled est off
                   (l'endpoint awards est public). */}
               {season.status === "completed" ? (
                 <Link
@@ -447,7 +470,7 @@ export default function LeagueDetailPage() {
                 <SeasonCalendar
                   rounds={season.rounds}
                   currentUserId={currentUserId}
-                  canRecordResult={v2UiEnabled && isCreator}
+                  canRecordResult={leagueEnabled && isCreator}
                   onResultRecorded={() => {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
@@ -484,7 +507,7 @@ export default function LeagueDetailPage() {
         </section>
       ) : null}
 
-      {v2UiEnabled && isCreator ? (
+      {leagueEnabled && isCreator ? (
         <NewSeasonModal
           leagueId={league.id}
           open={newSeasonOpen}

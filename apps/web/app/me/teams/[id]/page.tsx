@@ -9,7 +9,7 @@ import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/e
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
-import { LEAGUES_V2_UI_FLAG } from "../../../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
 import { MatchReportBanner } from "./MatchReportBanner";
 
@@ -27,7 +27,7 @@ async function fetchJSON(path: string) {
 
 export default function TeamDetailPage() {
   const { t, language } = useLanguage();
-  const v2UiEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
+  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
   const [rosterName, setRosterName] = useState<string>("");
@@ -164,7 +164,7 @@ export default function TeamDetailPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {v2UiEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
+      {leagueEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
