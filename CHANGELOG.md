@@ -1,3 +1,10 @@
+## [1.170.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.1...v1.170.2) (2026-06-05)
+
+
+### ♻️ Code Refactoring
+
+* rename feature flag and update league management functionality ([97982bb](https://github.com/Ryxeuf/fantasy-football-game/commit/97982bbe02f7341b963eff21061eb9fc7563d5c6))
+
 ## [1.170.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.0...v1.170.1) (2026-06-04)
 
 
