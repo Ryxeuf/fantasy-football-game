@@ -1,3 +1,10 @@
+## [1.171.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.171.0...v1.171.1) (2026-06-05)
+
+
+### 🐛 Bug Fixes
+
+* update High Elf roster shadows to prevent data sync issues ([1a6a1f9](https://github.com/Ryxeuf/fantasy-football-game/commit/1a6a1f96fdd39006bad2200ac9129c57404226eb))
+
 ## [1.171.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.170.2...v1.171.0) (2026-06-05)
 
 
