@@ -50,6 +50,21 @@ import {
 } from "../services/league-scoring";
 import { startPlayoffs } from "../services/league-playoffs";
 import {
+  createManualRound,
+  createManualPairing,
+  deleteManualPairing,
+  updateManualPairing,
+  LeagueManualPairingError,
+} from "../services/league-manual-pairing";
+import {
+  createManualRoundSchema,
+  createManualPairingSchema,
+  updateManualPairingSchema,
+  type CreateManualRoundBody,
+  type CreateManualPairingBody,
+  type UpdateManualPairingBody,
+} from "../schemas/league-manual-pairing.schemas";
+import {
   playMecene,
   LeaguePatronError,
 } from "../services/league-patron";
@@ -125,6 +140,23 @@ function domainError(res: Response, e: unknown): void {
       e.code === "season_not_found" || e.code === "not_registered"
         ? 404
         : e.code === "season_started" || e.code === "season_completed"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Lot F — manual pairing errors.
+  if (e instanceof LeagueManualPairingError) {
+    const status =
+      e.code === "round_not_found" ||
+      e.code === "season_not_found" ||
+      e.code === "pairing_not_found" ||
+      e.code === "participant_not_found"
+        ? 404
+        : e.code === "duplicate_pairing" ||
+            e.code === "pairing_already_played" ||
+            e.code === "round_completed" ||
+            e.code === "participant_not_active"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -748,6 +780,145 @@ async function ensureLeagueCreator(
 }
 
 /**
+ * Lot F — variante de `ensureLeagueCreator` qui resout le seasonId
+ * a partir d'un roundId. Utilisee par les handlers de creation
+ * manuelle de pairings.
+ */
+async function ensureLeagueCreatorByRound(
+  userId: string,
+  roundId: string,
+  res: Response,
+): Promise<{ seasonId: string } | null> {
+  const round = await prisma.leagueRound.findUnique({
+    where: { id: roundId },
+    select: { id: true, seasonId: true },
+  });
+  if (!round) {
+    sendError(res, "Round introuvable", 404);
+    return null;
+  }
+  if (!(await ensureLeagueCreator(userId, round.seasonId, res))) return null;
+  return { seasonId: round.seasonId };
+}
+
+/**
+ * Lot F — variante de `ensureLeagueCreator` qui resout le seasonId
+ * a partir d'un pairingId.
+ */
+async function ensureLeagueCreatorByPairing(
+  userId: string,
+  pairingId: string,
+  res: Response,
+): Promise<{ seasonId: string; roundId: string } | null> {
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { id: true, roundId: true, round: { select: { seasonId: true } } },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return null;
+  }
+  const seasonId = (pairing.round as { seasonId: string }).seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return null;
+  return { seasonId, roundId: pairing.roundId };
+}
+
+// ===========================================================
+// Lot F — handlers : creation manuelle de rounds et pairings.
+// ===========================================================
+
+/** POST /leagues/seasons/:seasonId/rounds/manual */
+export async function handleCreateManualRound(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as CreateManualRoundBody;
+  try {
+    const round = await createManualRound({
+      seasonId,
+      name: body.name,
+      kind: body.kind,
+      startDate: body.startDate ?? null,
+      endDate: body.endDate ?? null,
+    });
+    sendSuccess(res, round, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/rounds/:roundId/pairings */
+export async function handleCreateManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const roundId = req.params.roundId;
+  const ctx = await ensureLeagueCreatorByRound(userId, roundId, res);
+  if (!ctx) return;
+  const body = req.body as CreateManualPairingBody;
+  try {
+    const pairing = await createManualPairing({
+      roundId,
+      homeParticipantId: body.homeParticipantId,
+      awayParticipantId: body.awayParticipantId,
+      scheduledAt: body.scheduledAt ?? null,
+      deadlineAt: body.deadlineAt ?? null,
+    });
+    sendSuccess(res, pairing, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/pairings/:pairingId */
+export async function handleDeleteManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const ctx = await ensureLeagueCreatorByPairing(userId, pairingId, res);
+  if (!ctx) return;
+  try {
+    const out = await deleteManualPairing({ pairingId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/pairings/:pairingId */
+export async function handleUpdateManualPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const ctx = await ensureLeagueCreatorByPairing(userId, pairingId, res);
+  if (!ctx) return;
+  const body = req.body as UpdateManualPairingBody;
+  try {
+    const pairing = await updateManualPairing({
+      pairingId,
+      scheduledAt: body.scheduledAt,
+      deadlineAt: body.deadlineAt,
+      targetRoundId: body.targetRoundId,
+    });
+    sendSuccess(res, pairing);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * L2.A.3 — Ouvre une saison aux inscriptions (`draft -> scheduled`).
  * Reserve au createur de la ligue. No-op si deja `scheduled`.
  */
@@ -1221,6 +1392,31 @@ router.post(
   authUser,
   validate(attachMatchSchema),
   handleAttachMatch,
+);
+// Lot F — saisie manuelle de matchs : creation d'un round vide hors
+// du calendrier auto-genere + ajout de pairings.
+router.post(
+  "/seasons/:seasonId/rounds/manual",
+  authUser,
+  validate(createManualRoundSchema),
+  handleCreateManualRound,
+);
+router.post(
+  "/rounds/:roundId/pairings",
+  authUser,
+  validate(createManualPairingSchema),
+  handleCreateManualPairing,
+);
+router.delete(
+  "/pairings/:pairingId",
+  authUser,
+  handleDeleteManualPairing,
+);
+router.patch(
+  "/pairings/:pairingId",
+  authUser,
+  validate(updateManualPairingSchema),
+  handleUpdateManualPairing,
 );
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.
