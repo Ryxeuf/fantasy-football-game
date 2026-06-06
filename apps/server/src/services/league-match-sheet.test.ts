@@ -22,6 +22,11 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Lot G.2 — mock du pipeline offline branche a la validation.
+vi.mock("./league-offline-result", () => ({
+  recordOfflineLeagueResult: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   createMatchSheet,
@@ -31,11 +36,15 @@ import {
   unsubmitByCoach,
   validateByCommissioner,
   getMatchSheet,
+  buildOfflineInputFromSummary,
   MatchSheetError,
 } from "./league-match-sheet";
+import { recordOfflineLeagueResult } from "./league-offline-result";
+import type { MatchSummary } from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
+const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
 
 const HOME = "home-owner";
 const AWAY = "away-owner";
@@ -265,16 +274,24 @@ describe("Lot G — league-match-sheet", () => {
       ).rejects.toMatchObject({ code: "forbidden" });
     });
 
-    it("freezes derived score from events", async () => {
+    it("freezes derived score from events and applies offline effects", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
         status: "both_submitted",
+        motmPlayerIds: [],
       });
       mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
         { kind: "touchdown", team: "home", actorPlayerId: "h1" },
         { kind: "touchdown", team: "home", actorPlayerId: "h1" },
         { kind: "touchdown", team: "away", actorPlayerId: "a1" },
       ]);
+      mockRecordOffline.mockResolvedValue({
+        recorded: true,
+        pairingId: "pair-1",
+        matchId: "m1",
+        winner: "home",
+        sppPlayersUpdated: 2,
+      });
       mockPrisma.leagueMatchSheet.update.mockImplementation(
         async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
       );
@@ -284,6 +301,14 @@ describe("Lot G — league-match-sheet", () => {
       });
       expect(out.summary.scoreHome).toBe(2);
       expect(out.summary.scoreAway).toBe(1);
+      expect(out.effects).toEqual({ applied: true });
+      // Le pipeline offline a bien ete appele avec le score derive.
+      const offlineArgs = mockRecordOffline.mock.calls[0][0];
+      expect(offlineArgs).toMatchObject({
+        pairingId: "pair-1",
+        scoreHome: 2,
+        scoreAway: 1,
+      });
       const updateArgs = mockPrisma.leagueMatchSheet.update.mock.calls[0][0];
       expect(updateArgs.data).toMatchObject({
         status: "validated",
@@ -291,6 +316,45 @@ describe("Lot G — league-match-sheet", () => {
         scoreAway: 1,
         validatedById: COMMISH,
       });
+    });
+
+    it("marks validated even when offline pipeline skips (already scored)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockResolvedValue({
+        skipped: true,
+        reason: "match-already-scored",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      const out = await validateByCommissioner({
+        pairingId: "pair-1",
+        userId: COMMISH,
+      });
+      expect(out.effects).toEqual({
+        applied: false,
+        reason: "match-already-scored",
+      });
+      expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+    });
+
+    it("does not validate if offline pipeline throws", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockRejectedValue(new Error("boom"));
+      await expect(
+        validateByCommissioner({ pairingId: "pair-1", userId: COMMISH }),
+      ).rejects.toThrow(/boom/);
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
     });
 
     it("rejects double validation", async () => {
@@ -332,6 +396,152 @@ describe("Lot G — league-match-sheet", () => {
       const e = new MatchSheetError("forbidden", "x");
       expect(e.code).toBe("forbidden");
       expect(e).toBeInstanceOf(Error);
+    });
+  });
+
+  // Lot G.2 — mapping pur summary -> input offline.
+  describe("buildOfflineInputFromSummary (Lot G.2)", () => {
+    const baseSummary: MatchSummary = {
+      scoreHome: 2,
+      scoreAway: 1,
+      casualtiesHome: 1,
+      casualtiesAway: 0,
+      injuries: [],
+      playerStats: [
+        {
+          playerId: "h1",
+          side: "home",
+          touchdowns: 2,
+          casualtiesInflicted: 1,
+          completions: 0,
+          interceptions: 0,
+          aggressions: 0,
+        },
+      ],
+    };
+
+    it("maps player stats and flags MVP from motmPlayerIds", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        { motmPlayerIds: ["h1"] },
+        [],
+      );
+      expect(out.scoreHome).toBe(2);
+      expect(out.casualtiesHome).toBe(1);
+      expect(out.playerStats).toEqual([
+        {
+          teamPlayerId: "h1",
+          touchdowns: 2,
+          casualties: 1,
+          completions: 0,
+          interceptions: 0,
+          mvp: true,
+        },
+      ]);
+    });
+
+    it("adds MVP-only players who had no stat line", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        { motmPlayerIds: ["h1", "bench9"] },
+        [],
+      );
+      const bench = out.playerStats.find((p) => p.teamPlayerId === "bench9");
+      expect(bench).toEqual({ teamPlayerId: "bench9", mvp: true });
+    });
+
+    it("maps mng/niggling/dead injuries; skips badly_hurt", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          { playerId: "a1", severity: "dead", side: "away", cause: "block" },
+          { playerId: "a2", severity: "mng", side: "away", cause: "block" },
+          { playerId: "a3", severity: "niggling", side: "away", cause: "block" },
+          { playerId: "a4", severity: "badly_hurt", side: "away", cause: "block" },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        { motmPlayerIds: [] },
+        [],
+      );
+      expect(out.injuries).toEqual([
+        { teamPlayerId: "a1", type: "dead" },
+        { teamPlayerId: "a2", type: "mng" },
+        { teamPlayerId: "a3", type: "niggling" },
+      ]);
+    });
+
+    it("maps stat_loss using event meta.stat", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          { playerId: "a5", severity: "stat_loss", side: "away", cause: "block" },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        { motmPlayerIds: [] },
+        [
+          {
+            kind: "casualty",
+            team: "home",
+            targetPlayerId: "a5",
+            injurySeverity: "stat_loss",
+            meta: { stat: "st" },
+          },
+        ],
+      );
+      expect(out.injuries).toEqual([{ teamPlayerId: "a5", type: "st" }]);
+    });
+
+    it("skips stat_loss when no specific stat is provided", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          { playerId: "a6", severity: "stat_loss", side: "away", cause: "block" },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        { motmPlayerIds: [] },
+        [],
+      );
+      expect(out.injuries).toEqual([]);
+    });
+
+    it("passes manual winnings and fans deltas through", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        {
+          motmPlayerIds: [],
+          winningsHomeManual: 60000,
+          winningsAwayManual: 30000,
+          dedicatedFansDeltaHome: 1,
+          dedicatedFansDeltaAway: -1,
+        },
+        [],
+      );
+      expect(out.winningsHome).toBe(60000);
+      expect(out.winningsAway).toBe(30000);
+      expect(out.dedicatedFansDeltaHome).toBe(1);
+      expect(out.dedicatedFansDeltaAway).toBe(-1);
+    });
+
+    it("parses motmPlayerIds from a serialized JSON string (sqlite)", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        { motmPlayerIds: JSON.stringify(["h1"]) },
+        [],
+      );
+      expect(out.playerStats[0].mvp).toBe(true);
     });
   });
 });

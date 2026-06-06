@@ -24,7 +24,15 @@ import {
   isMatchEventKind,
   type MatchEventInput,
   type MatchSummary,
+  type InjurySeverity,
 } from "./league-match-summary";
+import {
+  recordOfflineLeagueResult,
+  type OfflinePlayerStatInput,
+  type OfflineInjuryInput,
+  type OfflineInjuryType,
+} from "./league-offline-result";
+import { serverLog } from "../utils/server-log";
 
 export type MatchSheetStatus =
   | "draft"
@@ -356,10 +364,145 @@ export async function unsubmitByCoach(input: {
 }
 
 /**
- * Le commissaire valide la feuille. Fige le score derive des events.
- * G.1 : transition de status + snapshot score. G.2 branchera
- * l'application des effets (classement, SPP, blessures) via le
- * pipeline `recordOfflineLeagueResult`.
+ * Lot G.2 — Mappe la severite du summarizer vers le type de blessure
+ * du pipeline offline. `badly_hurt` n'a pas d'effet durable (BB) ⇒
+ * non mappe. `stat_loss` necessite la carac visee : on la lit dans
+ * `meta.stat` (ma/st/ag/pa/av), sinon la blessure est ignoree.
+ */
+function mapInjurySeverity(
+  severity: InjurySeverity,
+  metaStat: string | null,
+): OfflineInjuryType | null {
+  switch (severity) {
+    case "mng":
+      return "mng";
+    case "niggling":
+      return "niggling";
+    case "dead":
+      return "dead";
+    case "stat_loss": {
+      const stat = (metaStat ?? "").toLowerCase();
+      if (
+        stat === "ma" ||
+        stat === "st" ||
+        stat === "ag" ||
+        stat === "pa" ||
+        stat === "av"
+      ) {
+        return stat as OfflineInjuryType;
+      }
+      return null;
+    }
+    case "badly_hurt":
+    default:
+      return null;
+  }
+}
+
+/**
+ * Lot G.2 — Construit l'input du pipeline offline a partir du summary
+ * derive + des champs de la feuille (winnings override, fans, MVP).
+ * Pur (testable). Les statLines portent deja le `side` ; le pipeline
+ * offline resout l'equipe via le teamPlayerId.
+ */
+export function buildOfflineInputFromSummary(
+  pairingId: string,
+  summary: MatchSummary,
+  sheet: {
+    motmPlayerIds?: unknown;
+    winningsHomeManual?: number | null;
+    winningsAwayManual?: number | null;
+    dedicatedFansDeltaHome?: number | null;
+    dedicatedFansDeltaAway?: number | null;
+  },
+  eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
+) {
+  const motm = parseStringArray(sheet.motmPlayerIds);
+  const motmSet = new Set(motm);
+
+  const playerStats: OfflinePlayerStatInput[] = summary.playerStats.map(
+    (p) => ({
+      teamPlayerId: p.playerId,
+      touchdowns: p.touchdowns,
+      casualties: p.casualtiesInflicted,
+      completions: p.completions,
+      interceptions: p.interceptions,
+      mvp: motmSet.has(p.playerId),
+    }),
+  );
+
+  // Les MVP sans stat-line (joueur primé sans event) doivent quand meme
+  // recevoir le flag mvp -> on les ajoute.
+  for (const id of motm) {
+    if (!playerStats.some((p) => p.teamPlayerId === id)) {
+      playerStats.push({ teamPlayerId: id, mvp: true });
+    }
+  }
+
+  // Map stat de blessure via meta de l'event source (best-effort : on
+  // associe par targetPlayerId+severity au 1er event matchant).
+  const injuries: OfflineInjuryInput[] = [];
+  for (const inj of summary.injuries) {
+    const src = eventsForMeta.find(
+      (e) =>
+        e.targetPlayerId === inj.playerId &&
+        (e.injurySeverity as string | null) === inj.severity,
+    );
+    const metaStat =
+      src && src.meta && typeof src.meta === "object"
+        ? ((src.meta as Record<string, unknown>).stat as string | undefined) ??
+          null
+        : null;
+    const type = mapInjurySeverity(inj.severity, metaStat);
+    if (type) {
+      injuries.push({ teamPlayerId: inj.playerId, type });
+    }
+  }
+
+  return {
+    pairingId,
+    scoreHome: summary.scoreHome,
+    scoreAway: summary.scoreAway,
+    casualtiesHome: summary.casualtiesHome,
+    casualtiesAway: summary.casualtiesAway,
+    playerStats,
+    winningsHome: sheet.winningsHomeManual ?? undefined,
+    winningsAway: sheet.winningsAwayManual ?? undefined,
+    dedicatedFansDeltaHome: sheet.dedicatedFansDeltaHome ?? undefined,
+    dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
+    injuries,
+  };
+}
+
+function parseStringArray(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((s): s is string => typeof s === "string");
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((s): s is string => typeof s === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Le commissaire valide la feuille.
+ *
+ * Lot G.2 — Applique les effets via `recordOfflineLeagueResult`
+ * (classement W/D/L + points + bonus Lot E, SPP + level-up, blessures
+ * durables, tresorerie, fans devoues, pairing -> played). Le pipeline
+ * est idempotent : si le match a deja ete compte (skip), on marque
+ * quand meme la feuille validee.
+ *
+ * Si l'application des effets echoue (throw), la feuille reste en
+ * `both_submitted` et l'erreur est propagee — pas de validation
+ * partielle.
  */
 export async function validateByCommissioner(input: {
   pairingId: string;
@@ -367,6 +510,7 @@ export async function validateByCommissioner(input: {
 }): Promise<{
   sheet: unknown;
   summary: MatchSummary;
+  effects: { applied: boolean; reason?: string };
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   if (!isCommissioner(ctx, input.userId)) {
@@ -383,8 +527,36 @@ export async function validateByCommissioner(input: {
   const events = (await prisma.leagueMatchEvent.findMany({
     where: { matchSheetId: sheet.id },
     orderBy: { occurredAt: "asc" },
-  })) as MatchEventInput[];
+  })) as Array<MatchEventInput & { meta?: unknown }>;
   const summary = summarizeMatchSheet(events);
+
+  // Applique les effets (peut throw -> on ne valide pas).
+  const offlineInput = buildOfflineInputFromSummary(
+    input.pairingId,
+    summary,
+    sheet as {
+      motmPlayerIds?: unknown;
+      winningsHomeManual?: number | null;
+      winningsAwayManual?: number | null;
+      dedicatedFansDeltaHome?: number | null;
+      dedicatedFansDeltaAway?: number | null;
+    },
+    events,
+  );
+  const outcome = await recordOfflineLeagueResult(offlineInput);
+
+  let effects: { applied: boolean; reason?: string };
+  if ("recorded" in outcome && outcome.recorded) {
+    effects = { applied: true };
+  } else if ("skipped" in outcome) {
+    // already-scored / not-terminal-eligible : effets deja en place.
+    effects = { applied: false, reason: outcome.reason };
+    serverLog.info(
+      `[league-match-sheet] validate: offline skipped (${outcome.reason}) pairing=${input.pairingId}`,
+    );
+  } else {
+    effects = { applied: false };
+  }
 
   const updated = await prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -396,7 +568,7 @@ export async function validateByCommissioner(input: {
       scoreAway: summary.scoreAway,
     },
   });
-  return { sheet: updated, summary };
+  return { sheet: updated, summary, effects };
 }
 
 /**
