@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    leaguePairing: { findUnique: vi.fn() },
+    leaguePairing: { findUnique: vi.fn(), count: vi.fn() },
     leagueMatchSheet: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -20,12 +20,18 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       delete: vi.fn(),
     },
+    match: { findFirst: vi.fn() },
   },
 }));
 
 // Lot G.2 — mock du pipeline offline branche a la validation.
 vi.mock("./league-offline-result", () => ({
   recordOfflineLeagueResult: vi.fn(),
+}));
+
+// Polish — mock de la reversion (invalidation).
+vi.mock("./league-offline-edit", () => ({
+  reverseOfflineLeagueResult: vi.fn(),
 }));
 
 // Lot H — mock du push commissaire (fire-and-forget).
@@ -38,21 +44,27 @@ import {
   createMatchSheet,
   addEvent,
   removeEvent,
+  updatePreMatch,
+  updatePostMatch,
   submitByCoach,
   unsubmitByCoach,
   validateByCommissioner,
+  invalidateMatchSheet,
+  canInvalidateMatchSheet,
   getMatchSheet,
   buildOfflineInputFromSummary,
   listPendingValidationsForCommissioner,
   MatchSheetError,
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
+import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import type { MatchSummary } from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
 const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
+const mockReverse = reverseOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockPush = sendLeagueMatchValidationPush as ReturnType<typeof vi.fn>;
 
 const HOME = "home-owner";
@@ -487,6 +499,218 @@ describe("Lot G — league-match-sheet", () => {
     });
   });
 
+  // Polish — pre-match auto-calcule les winnings depuis la popularite.
+  describe("updatePreMatch (auto winnings)", () => {
+    it("computes winningsHome/Away from popularity", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { popularityHome: 4, popularityAway: 2 },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.winningsHome).toBe(40_000);
+      expect(data.winningsAway).toBe(20_000);
+    });
+  });
+
+  // Polish — apres-match.
+  describe("updatePostMatch", () => {
+    it("rejects a non-participant", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      await expect(
+        updatePostMatch({
+          pairingId: "pair-1",
+          userId: "stranger",
+          payload: { winningsHomeManual: 50000 },
+        }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("rejects editing a validated sheet", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      await expect(
+        updatePostMatch({
+          pairingId: "pair-1",
+          userId: COMMISH,
+          payload: { winningsHomeManual: 50000 },
+        }),
+      ).rejects.toMatchObject({ code: "already_validated" });
+    });
+
+    it("updates winnings override, fans, MVP", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      const out = await updatePostMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          winningsHomeManual: 60000,
+          dedicatedFansDeltaHome: 1,
+          motmPlayerIds: ["h1", "h2"],
+        },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data).toMatchObject({
+        winningsHomeManual: 60000,
+        dedicatedFansDeltaHome: 1,
+        motmPlayerIds: ["h1", "h2"],
+      });
+      expect(out).toBeDefined();
+    });
+  });
+
+  // Polish — fenetre d'invalidation.
+  describe("canInvalidateMatchSheet", () => {
+    function mockCurrentPairing() {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        homeParticipantId: "ph",
+        awayParticipantId: "pa",
+        round: { seasonId: "s1", roundNumber: 3 },
+      });
+    }
+
+    it("ok when neither team played a later match", async () => {
+      mockCurrentPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0);
+      const out = await canInvalidateMatchSheet({ pairingId: "pair-1" });
+      expect(out).toEqual({ ok: true });
+    });
+
+    it("ok when only one team played a later match", async () => {
+      mockCurrentPairing();
+      // home played 1 later, away played 0
+      mockPrisma.leaguePairing.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(0);
+      const out = await canInvalidateMatchSheet({ pairingId: "pair-1" });
+      expect(out).toEqual({ ok: true });
+    });
+
+    it("closed when BOTH teams played a later match", async () => {
+      mockCurrentPairing();
+      mockPrisma.leaguePairing.count
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(2);
+      const out = await canInvalidateMatchSheet({ pairingId: "pair-1" });
+      expect(out).toEqual({ ok: false, reason: "both_teams_played_later" });
+    });
+  });
+
+  describe("invalidateMatchSheet", () => {
+    it("rejects a coach", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      await expect(
+        invalidateMatchSheet({ pairingId: "pair-1", userId: HOME }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("rejects when sheet is not validated", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+      });
+      await expect(
+        invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
+      ).rejects.toMatchObject({ code: "not_validated" });
+    });
+
+    // Forme fusionnee : satisfait loadPairingContext (league/owners)
+    // ET canInvalidateMatchSheet (participants/round).
+    function mockMergedPairing() {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        homeParticipantId: "ph",
+        awayParticipantId: "pa",
+        round: {
+          seasonId: "s1",
+          roundNumber: 3,
+          season: { league: { id: "L1", creatorId: COMMISH } },
+        },
+        homeParticipant: { team: { ownerId: HOME } },
+        awayParticipant: { team: { ownerId: AWAY } },
+      });
+    }
+
+    it("rejects when the invalidation window is closed", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(1); // both teams later
+      await expect(
+        invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
+      ).rejects.toMatchObject({ code: "invalidation_window_closed" });
+    });
+
+    it("reverses the offline match and sets status invalidated", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0); // window open
+      mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
+      mockReverse.mockResolvedValue({
+        reversed: true,
+        matchId: "m1",
+        pairingId: "pair-1",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      const out = await invalidateMatchSheet({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        reason: "erreur de saisie",
+      });
+      expect(mockReverse).toHaveBeenCalledWith("m1");
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data).toMatchObject({
+        status: "invalidated",
+        invalidationReason: "erreur de saisie",
+      });
+      expect(out).toBeDefined();
+    });
+
+    it("aborts when reversion is impossible (e.g. a death)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0);
+      mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
+      mockReverse.mockResolvedValue({ skipped: true, reason: "injury-dead" });
+      await expect(
+        invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
+      ).rejects.toMatchObject({ code: "invalidation_failed" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe("MatchSheetError", () => {
     it("preserves code", () => {
       const e = new MatchSheetError("forbidden", "x");
@@ -628,6 +852,36 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.winningsAway).toBe(30000);
       expect(out.dedicatedFansDeltaHome).toBe(1);
       expect(out.dedicatedFansDeltaAway).toBe(-1);
+    });
+
+    it("falls back to auto-computed winnings when no manual override", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        {
+          motmPlayerIds: [],
+          // pas d'override -> on prend la valeur auto-calculee.
+          winningsHome: 50000,
+          winningsAway: 20000,
+        },
+        [],
+      );
+      expect(out.winningsHome).toBe(50000);
+      expect(out.winningsAway).toBe(20000);
+    });
+
+    it("manual override beats the computed value", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        {
+          motmPlayerIds: [],
+          winningsHome: 50000,
+          winningsHomeManual: 99000,
+        },
+        [],
+      );
+      expect(out.winningsHome).toBe(99000);
     });
 
     it("parses motmPlayerIds from a serialized JSON string (sqlite)", () => {

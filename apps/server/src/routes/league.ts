@@ -117,9 +117,12 @@ import {
   addEvent as addMatchSheetEvent,
   removeEvent as removeMatchSheetEvent,
   updatePreMatch,
+  updatePostMatch,
   submitByCoach,
   unsubmitByCoach,
   validateByCommissioner,
+  invalidateMatchSheet,
+  canInvalidateMatchSheet,
   getMatchSheet,
   listPendingValidationsForCommissioner,
   MatchSheetError,
@@ -127,8 +130,12 @@ import {
 import {
   addEventSchema,
   preMatchSchema,
+  postMatchSchema,
+  invalidateSheetSchema,
   type AddEventBody,
   type PreMatchBody,
+  type PostMatchBody,
+  type InvalidateSheetBody,
 } from "../schemas/league-match-sheet.schemas";
 import {
   playMecene,
@@ -222,7 +229,9 @@ function domainError(res: Response, e: unknown): void {
           ? 403
           : e.code === "already_validated" ||
               e.code === "not_validated" ||
-              e.code === "invalid_status"
+              e.code === "invalid_status" ||
+              e.code === "invalidation_window_closed" ||
+              e.code === "invalidation_failed"
             ? 409
             : 400;
     sendError(res, e.message, status);
@@ -1450,6 +1459,63 @@ export async function handleUpdatePreMatch(
   }
 }
 
+/** PATCH /leagues/pairings/:pairingId/sheet/post-match */
+export async function handleUpdatePostMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body = req.body as PostMatchBody;
+  try {
+    const sheet = await updatePostMatch({
+      pairingId: req.params.pairingId,
+      userId,
+      payload: body,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** POST /leagues/pairings/:pairingId/sheet/invalidate (commissaire). */
+export async function handleInvalidateMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body = req.body as InvalidateSheetBody;
+  try {
+    const out = await invalidateMatchSheet({
+      pairingId: req.params.pairingId,
+      userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** GET /leagues/pairings/:pairingId/sheet/can-invalidate */
+export async function handleCanInvalidate(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const out = await canInvalidateMatchSheet({
+      pairingId: req.params.pairingId,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** POST /leagues/pairings/:pairingId/sheet/events */
 export async function handleAddMatchSheetEvent(
   req: AuthenticatedRequest,
@@ -2209,6 +2275,14 @@ router.patch(
   validate(preMatchSchema),
   handleUpdatePreMatch,
 );
+// Polish — apres-match (override tresorerie, fans, erreurs couteuses,
+// achats, MVP).
+router.patch(
+  "/pairings/:pairingId/sheet/post-match",
+  authUser,
+  validate(postMatchSchema),
+  handleUpdatePostMatch,
+);
 router.post(
   "/pairings/:pairingId/sheet/events",
   authUser,
@@ -2234,6 +2308,19 @@ router.post(
   "/pairings/:pairingId/sheet/validate",
   authUser,
   handleValidateMatchSheet,
+);
+// Polish — invalidation post-validation (fenetre de correction) +
+// check d'eligibilite pour piloter l'UI.
+router.get(
+  "/pairings/:pairingId/sheet/can-invalidate",
+  authUser,
+  handleCanInvalidate,
+);
+router.post(
+  "/pairings/:pairingId/sheet/invalidate",
+  authUser,
+  validate(invalidateSheetSchema),
+  handleInvalidateMatchSheet,
 );
 // Lot H — liste des matchs a valider pour le commissaire (cloche).
 router.get(
