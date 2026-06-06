@@ -508,3 +508,14 @@ vi.mock("./pro-roster-spp", () => ({
   complete (mini-leagues prediction + Survivor). Q.C (clips MP4)
   differe. 8 nouveaux modeles Prisma. Voir
   [`docs/roadmap/sessions/2026-05-12-sprint-Q.md`](./docs/roadmap/sessions/2026-05-12-sprint-Q.md).
+- **2026-06-06** : Gestion des Ligues (audit "Liste de course Nuffle
+  Arena"), 3 PRs (#886-#888). Lots A/B/C/D/E/F (invitations, withdraw
+  guard, multi-poules + scheduler, override PO, points bonus, saisie
+  manuelle), G/H (feuille de match v2 : events + summarizer pur +
+  validation branchee offline + alerte commissaire), I/J (edition
+  ex-post commissaire + classements joueurs), polish (auto-tresorerie,
+  panneaux pre/post-match, fenetre d'invalidation). 5 migrations, 8
+  feature flags `league*`. Voir
+  [`docs/roadmap/sessions/2026-06-06-league-management.md`](./docs/roadmap/sessions/2026-06-06-league-management.md)
+  + guide rollout
+  [`docs/roadmap/league-feature-flags-rollout.md`](./docs/roadmap/league-feature-flags-rollout.md).
