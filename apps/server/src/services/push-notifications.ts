@@ -458,3 +458,49 @@ export function sendLeagueRoundReminderPush(
       // Push failure is non-blocking — match the existing pattern.
     });
 }
+
+/**
+ * Lot H — Alerte le commissaire qu'un match est pret a valider (les 2
+ * coachs ont soumis leur feuille). Non-bloquant. Deep-link vers la
+ * page "Matchs a valider" de la ligue.
+ */
+export interface LeagueMatchValidationInput {
+  readonly commissionerUserId: string;
+  readonly leagueId: string;
+  readonly pairingId: string;
+  readonly homeTeamName: string;
+  readonly awayTeamName: string;
+}
+
+export function sendLeagueMatchValidationPush(
+  input: LeagueMatchValidationInput,
+): void {
+  shouldSendNotification(
+    input.commissionerUserId,
+    NotificationType.LeagueMatchValidation,
+  )
+    .then(async (allowed) => {
+      if (!allowed) return;
+      const url = `/leagues/${input.leagueId}/pending-validations`;
+      const payload: PushPayload = {
+        title: "Nuffle Arena",
+        body: `Match a valider : ${input.homeTeamName} vs ${input.awayTeamName}`,
+        icon: "/images/favicon-optimized.png",
+        url,
+        tag: `league-validate-${input.pairingId}`,
+        data: {
+          kind: "leagueMatchValidation",
+          leagueId: input.leagueId,
+          pairingId: input.pairingId,
+          url,
+        },
+      };
+      await Promise.all([
+        sendPushToUser(input.commissionerUserId, payload),
+        sendExpoPushToUser(input.commissionerUserId, payload),
+      ]);
+    })
+    .catch(() => {
+      // Push failure is non-blocking.
+    });
+}

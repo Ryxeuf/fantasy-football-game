@@ -14,6 +14,13 @@ export enum NotificationType {
    * (`startSeason`) pour informer chaque coach de ses pairings.
    */
   LeagueRoundReminder = "leagueRoundReminder",
+  /**
+   * Lot H — "Un match est pret a valider". Envoye au commissaire quand
+   * les 2 coachs ont soumis leur feuille (`both_submitted`). Reutilise
+   * la preference league-umbrella `leagueRoundReminderNotification`
+   * (pas de colonne dediee pour eviter une migration).
+   */
+  LeagueMatchValidation = "leagueMatchValidation",
 }
 
 export interface NotificationPreferences {
@@ -108,6 +115,9 @@ export async function shouldSendNotification(
     case NotificationType.FriendMatchStarted:
       return prefs.friendMatchStartedNotification;
     case NotificationType.LeagueRoundReminder:
+      return prefs.leagueRoundReminderNotification;
+    // Lot H — reutilise l'umbrella league pour l'alerte commissaire.
+    case NotificationType.LeagueMatchValidation:
       return prefs.leagueRoundReminderNotification;
     default:
       return true;
