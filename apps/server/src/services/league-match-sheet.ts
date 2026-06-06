@@ -22,6 +22,7 @@ import { prisma } from "../prisma";
 import {
   summarizeMatchSheet,
   isMatchEventKind,
+  computeWinnings,
   type MatchEventInput,
   type MatchSummary,
   type InjurySeverity,
@@ -32,6 +33,7 @@ import {
   type OfflineInjuryInput,
   type OfflineInjuryType,
 } from "./league-offline-result";
+import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { serverLog } from "../utils/server-log";
 
@@ -54,7 +56,9 @@ export class MatchSheetError extends Error {
       | "not_validated"
       | "invalid_status"
       | "invalid_event"
-      | "event_not_found",
+      | "event_not_found"
+      | "invalidation_window_closed"
+      | "invalidation_failed",
     message: string,
   ) {
     super(message);
@@ -267,12 +271,85 @@ export async function updatePreMatch(input: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   if (p.weather !== undefined) data.weather = p.weather;
-  if (p.popularityHome !== undefined) data.popularityHome = p.popularityHome;
-  if (p.popularityAway !== undefined) data.popularityAway = p.popularityAway;
+  if (p.popularityHome !== undefined) {
+    data.popularityHome = p.popularityHome;
+    // Polish — auto-calcul du gain de tresorerie depuis le facteur de
+    // popularite (override manuel possible cote post-match).
+    data.winningsHome = computeWinnings(p.popularityHome);
+  }
+  if (p.popularityAway !== undefined) {
+    data.popularityAway = p.popularityAway;
+    data.winningsAway = computeWinnings(p.popularityAway);
+  }
   if (p.inducementsHome !== undefined) data.inducementsHome = p.inducementsHome ?? undefined;
   if (p.inducementsAway !== undefined) data.inducementsAway = p.inducementsAway ?? undefined;
   if (p.prayersHome !== undefined) data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined) data.prayersAway = p.prayersAway ?? undefined;
+
+  return prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data,
+  });
+}
+
+export interface PostMatchPayload {
+  /** Override manuel du gain de tresorerie (prioritaire sur l'auto). */
+  winningsHomeManual?: number | null;
+  winningsAwayManual?: number | null;
+  /** Variation de fans devoues (-1/0/+1 typiquement, clampe a la validation). */
+  dedicatedFansDeltaHome?: number | null;
+  dedicatedFansDeltaAway?: number | null;
+  /** Erreurs couteuses : [{ playerId?, cost, reason }]. */
+  costlyErrorsHome?: unknown;
+  costlyErrorsAway?: unknown;
+  /** Achats post-match : [{ kind, name, cost }]. */
+  purchasesHome?: unknown;
+  purchasesAway?: unknown;
+  /** Joueurs du match (MVP) : [playerId]. */
+  motmPlayerIds?: readonly string[];
+}
+
+/**
+ * Polish — Met a jour les infos d'apres-match (override tresorerie,
+ * fans, erreurs couteuses, achats, MVP). Coachs + commissaire, avant
+ * validation.
+ */
+export async function updatePostMatch(input: {
+  pairingId: string;
+  userId: string;
+  payload: PostMatchPayload;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  if (
+    !coachSide(ctx, input.userId) &&
+    !isCommissioner(ctx, input.userId)
+  ) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const sheet = await loadSheetOrThrow(input.pairingId);
+  ensureEditable(sheet.status);
+
+  const p = input.payload;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {};
+  if (p.winningsHomeManual !== undefined)
+    data.winningsHomeManual = p.winningsHomeManual;
+  if (p.winningsAwayManual !== undefined)
+    data.winningsAwayManual = p.winningsAwayManual;
+  if (p.dedicatedFansDeltaHome !== undefined)
+    data.dedicatedFansDeltaHome = p.dedicatedFansDeltaHome;
+  if (p.dedicatedFansDeltaAway !== undefined)
+    data.dedicatedFansDeltaAway = p.dedicatedFansDeltaAway;
+  if (p.costlyErrorsHome !== undefined)
+    data.costlyErrorsHome = p.costlyErrorsHome ?? undefined;
+  if (p.costlyErrorsAway !== undefined)
+    data.costlyErrorsAway = p.costlyErrorsAway ?? undefined;
+  if (p.purchasesHome !== undefined)
+    data.purchasesHome = p.purchasesHome ?? undefined;
+  if (p.purchasesAway !== undefined)
+    data.purchasesAway = p.purchasesAway ?? undefined;
+  if (p.motmPlayerIds !== undefined)
+    data.motmPlayerIds = [...p.motmPlayerIds];
 
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -448,6 +525,10 @@ export function buildOfflineInputFromSummary(
   summary: MatchSummary,
   sheet: {
     motmPlayerIds?: unknown;
+    /** Polish — gain auto calcule (depuis popularite). */
+    winningsHome?: number | null;
+    winningsAway?: number | null;
+    /** Override manuel commissaire (prioritaire). */
     winningsHomeManual?: number | null;
     winningsAwayManual?: number | null;
     dedicatedFansDeltaHome?: number | null;
@@ -504,8 +585,9 @@ export function buildOfflineInputFromSummary(
     casualtiesHome: summary.casualtiesHome,
     casualtiesAway: summary.casualtiesAway,
     playerStats,
-    winningsHome: sheet.winningsHomeManual ?? undefined,
-    winningsAway: sheet.winningsAwayManual ?? undefined,
+    // Polish — override manuel prioritaire, sinon gain auto-calcule.
+    winningsHome: sheet.winningsHomeManual ?? sheet.winningsHome ?? undefined,
+    winningsAway: sheet.winningsAwayManual ?? sheet.winningsAway ?? undefined,
     dedicatedFansDeltaHome: sheet.dedicatedFansDeltaHome ?? undefined,
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     injuries,
@@ -574,6 +656,8 @@ export async function validateByCommissioner(input: {
     summary,
     sheet as {
       motmPlayerIds?: unknown;
+      winningsHome?: number | null;
+      winningsAway?: number | null;
       winningsHomeManual?: number | null;
       winningsAwayManual?: number | null;
       dedicatedFansDeltaHome?: number | null;
@@ -607,6 +691,131 @@ export async function validateByCommissioner(input: {
     },
   });
   return { sheet: updated, summary, effects };
+}
+
+/**
+ * Polish — Determine si la feuille validee peut encore etre invalidee.
+ *
+ * Regle : invalidation autorisee TANT QUE les 2 equipes n'ont pas
+ * chacune rejoue un autre match (pairing `played`/`forfeit_*` a un
+ * round ULTERIEUR). Des que les DEUX equipes ont enchaine, la fenetre
+ * se ferme (le classement aval depend de ce resultat).
+ *
+ * Retourne `{ ok: true }` ou `{ ok: false, reason }`.
+ */
+export async function canInvalidateMatchSheet(input: {
+  pairingId: string;
+}): Promise<{ ok: boolean; reason?: string }> {
+  const pairing = (await prisma.leaguePairing.findUnique({
+    where: { id: input.pairingId },
+    select: {
+      id: true,
+      homeParticipantId: true,
+      awayParticipantId: true,
+      round: { select: { seasonId: true, roundNumber: true } },
+    },
+  })) as {
+    id: string;
+    homeParticipantId: string;
+    awayParticipantId: string;
+    round: { seasonId: string; roundNumber: number };
+  } | null;
+  if (!pairing) return { ok: false, reason: "pairing_not_found" };
+
+  const TERMINAL_PLAYED = ["played", "forfeit_home", "forfeit_away"];
+  const laterPlayedFor = async (participantId: string): Promise<number> =>
+    prisma.leaguePairing.count({
+      where: {
+        id: { not: pairing.id },
+        status: { in: TERMINAL_PLAYED },
+        round: {
+          seasonId: pairing.round.seasonId,
+          roundNumber: { gt: pairing.round.roundNumber },
+        },
+        OR: [
+          { homeParticipantId: participantId },
+          { awayParticipantId: participantId },
+        ],
+      },
+    });
+
+  const [homeLater, awayLater] = await Promise.all([
+    laterPlayedFor(pairing.homeParticipantId),
+    laterPlayedFor(pairing.awayParticipantId),
+  ]);
+
+  // Fenetre fermee uniquement si LES DEUX equipes ont rejoue.
+  if (homeLater > 0 && awayLater > 0) {
+    return { ok: false, reason: "both_teams_played_later" };
+  }
+  return { ok: true };
+}
+
+/**
+ * Polish — Invalide une feuille validee (commissaire). Reverse les
+ * effets via `reverseOfflineLeagueResult` (classement/SPP/treso/fans)
+ * puis repasse la feuille en `invalidated` pour permettre une
+ * correction. Respecte la fenetre `canInvalidateMatchSheet`.
+ */
+export async function invalidateMatchSheet(input: {
+  pairingId: string;
+  userId: string;
+  reason?: string;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  if (!isCommissioner(ctx, input.userId)) {
+    throw new MatchSheetError(
+      "forbidden",
+      "Seul le commissaire peut invalider la feuille",
+    );
+  }
+  const sheet = await loadSheetOrThrow(input.pairingId);
+  if (sheet.status !== "validated") {
+    throw new MatchSheetError(
+      "not_validated",
+      "Seule une feuille validee peut etre invalidee",
+    );
+  }
+
+  const window = await canInvalidateMatchSheet({ pairingId: input.pairingId });
+  if (!window.ok) {
+    throw new MatchSheetError(
+      "invalidation_window_closed",
+      "Fenetre de correction fermee : les 2 equipes ont deja rejoue",
+    );
+  }
+
+  // Retrouve le Match offline synthetique du pairing pour le reverser.
+  const match = (await prisma.match.findFirst({
+    where: { leaguePairingId: input.pairingId, leagueScoredAt: { not: null } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  })) as { id: string } | null;
+
+  if (match) {
+    const reversed = await reverseOfflineLeagueResult(match.id);
+    if ("skipped" in reversed) {
+      // Reversion impossible (mort, saison cloturee, playoffs...) :
+      // on refuse l'invalidation pour ne pas laisser un etat incoherent.
+      throw new MatchSheetError(
+        "invalidation_failed",
+        `Reversion impossible: ${reversed.reason}`,
+      );
+    }
+  }
+
+  const updated = await prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data: {
+      status: "invalidated",
+      invalidatedAt: new Date(),
+      invalidationReason: input.reason ?? null,
+    },
+  });
+  serverLog.info(
+    `[league-match-sheet] invalidated pairing=${input.pairingId} by=${input.userId}`,
+  );
+  return { sheet: updated };
 }
 
 /**

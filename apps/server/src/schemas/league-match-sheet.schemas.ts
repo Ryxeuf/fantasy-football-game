@@ -44,3 +44,65 @@ export const preMatchSchema = z
     "Au moins un champ d'avant-match requis",
   );
 export type PreMatchBody = z.infer<typeof preMatchSchema>;
+
+// Polish — apres-match : override tresorerie, fans, erreurs couteuses,
+// achats, MVP.
+const MAX_GOLD = 10_000_000;
+export const postMatchSchema = z
+  .object({
+    winningsHomeManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
+    winningsAwayManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
+    dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional().nullable(),
+    dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional().nullable(),
+    costlyErrorsHome: z
+      .array(
+        z.object({
+          playerId: z.string().min(1).optional(),
+          cost: z.number().int().min(0).max(MAX_GOLD),
+          reason: z.string().max(120).optional(),
+        }),
+      )
+      .optional()
+      .nullable(),
+    costlyErrorsAway: z
+      .array(
+        z.object({
+          playerId: z.string().min(1).optional(),
+          cost: z.number().int().min(0).max(MAX_GOLD),
+          reason: z.string().max(120).optional(),
+        }),
+      )
+      .optional()
+      .nullable(),
+    purchasesHome: z
+      .array(
+        z.object({
+          kind: z.enum(["player", "reroll", "staff", "other"]),
+          name: z.string().max(120),
+          cost: z.number().int().min(0).max(MAX_GOLD),
+        }),
+      )
+      .optional()
+      .nullable(),
+    purchasesAway: z
+      .array(
+        z.object({
+          kind: z.enum(["player", "reroll", "staff", "other"]),
+          name: z.string().max(120),
+          cost: z.number().int().min(0).max(MAX_GOLD),
+        }),
+      )
+      .optional()
+      .nullable(),
+    motmPlayerIds: z.array(z.string().min(1)).max(20).optional(),
+  })
+  .refine(
+    (v) => Object.keys(v).length > 0,
+    "Au moins un champ d'apres-match requis",
+  );
+export type PostMatchBody = z.infer<typeof postMatchSchema>;
+
+export const invalidateSheetSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+export type InvalidateSheetBody = z.infer<typeof invalidateSheetSchema>;

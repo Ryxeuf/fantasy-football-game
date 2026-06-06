@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
+import {
+  PreMatchPanel,
+  PostMatchPanel,
+  InvalidateControl,
+  type PreMatchValues,
+  type PostMatchValues,
+} from "./_components/MatchSheetPanels";
+
+const WINNINGS_PER_POPULARITY = 10_000;
 
 // Lot G.3 (minimal) — Feuille de match v2 : saisie d'evenements,
 // soumission par coach, validation par commissaire. Le score et les
@@ -50,9 +59,30 @@ interface SheetResponse {
     id: string;
     status: string;
     events?: MatchEvent[];
+    weather?: string | null;
+    popularityHome?: number | null;
+    popularityAway?: number | null;
+    winningsHomeManual?: number | null;
+    winningsAwayManual?: number | null;
+    dedicatedFansDeltaHome?: number | null;
+    dedicatedFansDeltaAway?: number | null;
+    motmPlayerIds?: string[] | string | null;
   };
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
+}
+
+function parseMotm(raw: string[] | string | null | undefined): string[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 
 const EVENT_KINDS: EventKind[] = [
@@ -172,6 +202,64 @@ export default function MatchSheetPage() {
       }),
     );
 
+  // Polish — sauvegarde pre/post-match + invalidation.
+  const savePreMatch = (v: PreMatchValues) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          weather: v.weather || null,
+          popularityHome: v.popularityHome,
+          popularityAway: v.popularityAway,
+        }),
+      }),
+    );
+
+  const savePostMatch = (v: PostMatchValues) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/post-match`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          winningsHomeManual: v.winningsHomeManual,
+          winningsAwayManual: v.winningsAwayManual,
+          dedicatedFansDeltaHome: v.dedicatedFansDeltaHome,
+          dedicatedFansDeltaAway: v.dedicatedFansDeltaAway,
+          motmPlayerIds: v.motmPlayerIds,
+        }),
+      }),
+    );
+
+  const invalidate = (reason: string) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/invalidate`, {
+        method: "POST",
+        body: JSON.stringify({ reason: reason || undefined }),
+      }),
+    );
+
+  // Eligibilite a l'invalidation (chargee quand la feuille est validee).
+  const [canInval, setCanInval] = useState<{ ok: boolean; reason?: string }>({
+    ok: false,
+  });
+  useEffect(() => {
+    if (data?.sheet.status !== "validated" || data?.viewerRole !== "commissioner") {
+      return;
+    }
+    let cancelled = false;
+    void apiRequest<{ ok: boolean; reason?: string }>(
+      `/leagues/pairings/${pairingId}/sheet/can-invalidate`,
+    )
+      .then((r) => {
+        if (!cancelled) setCanInval(r);
+      })
+      .catch(() => {
+        if (!cancelled) setCanInval({ ok: false });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.sheet.status, data?.viewerRole, pairingId]);
+
   const events = useMemo(() => data?.sheet.events ?? [], [data]);
   const role = data?.viewerRole ?? "none";
   const status = data?.sheet.status ?? "";
@@ -237,6 +325,25 @@ export default function MatchSheetPage() {
           · Blesses : {data.summary.injuries.length}
         </p>
       </section>
+
+      {/* Avant-match */}
+      {(isCoach || isCommissioner) && (
+        <PreMatchPanel
+          initial={{
+            weather: data.sheet.weather ?? "",
+            popularityHome: data.sheet.popularityHome ?? null,
+            popularityAway: data.sheet.popularityAway ?? null,
+          }}
+          computedWinningsHome={
+            (data.sheet.popularityHome ?? 0) * WINNINGS_PER_POPULARITY
+          }
+          computedWinningsAway={
+            (data.sheet.popularityAway ?? 0) * WINNINGS_PER_POPULARITY
+          }
+          disabled={!editable}
+          onSave={savePreMatch}
+        />
+      )}
 
       {/* Journal d'evenements */}
       <section className="mb-4">
@@ -347,6 +454,21 @@ export default function MatchSheetPage() {
         </section>
       )}
 
+      {/* Apres-match */}
+      {(isCoach || isCommissioner) && (
+        <PostMatchPanel
+          initial={{
+            winningsHomeManual: data.sheet.winningsHomeManual ?? null,
+            winningsAwayManual: data.sheet.winningsAwayManual ?? null,
+            dedicatedFansDeltaHome: data.sheet.dedicatedFansDeltaHome ?? 0,
+            dedicatedFansDeltaAway: data.sheet.dedicatedFansDeltaAway ?? 0,
+            motmPlayerIds: parseMotm(data.sheet.motmPlayerIds),
+          }}
+          disabled={!editable}
+          onSave={savePostMatch}
+        />
+      )}
+
       {/* Actions de workflow */}
       <section className="flex flex-wrap gap-2">
         {isCoach && status !== "validated" && (
@@ -387,6 +509,18 @@ export default function MatchSheetPage() {
           </p>
         )}
       </section>
+
+      {/* Invalidation post-validation (commissaire, fenetre de correction) */}
+      {isCommissioner && status === "validated" && (
+        <section className="mt-4 rounded border border-red-200 bg-red-50 p-3">
+          <h2 className="mb-2 text-sm font-semibold">Corriger ce match</h2>
+          <InvalidateControl
+            canInvalidate={canInval.ok}
+            reasonClosed={canInval.reason}
+            onInvalidate={invalidate}
+          />
+        </section>
+      )}
     </main>
   );
 }

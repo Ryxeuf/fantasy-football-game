@@ -245,3 +245,23 @@ export function isMatchEventKind(v: unknown): v is MatchEventKind {
     (MATCH_EVENT_KINDS as readonly string[]).includes(v)
   );
 }
+
+/**
+ * Polish — Gold gagne par point de "facteur de popularite" (BB : le
+ * resultat du jet de gains / affluence saisi en avant-match). 1 point
+ * = 10 000 po. Heuristique configurable ici ; le commissaire peut
+ * toujours overrider la valeur calculee sur la feuille.
+ */
+export const WINNINGS_PER_POPULARITY = 10_000;
+
+/**
+ * Calcule le gain de tresorerie auto a partir du facteur de
+ * popularite (clampe >= 0). Pur. `null`/undefined -> 0.
+ */
+export function computeWinnings(popularity: number | null | undefined): number {
+  if (typeof popularity !== "number" || !Number.isFinite(popularity)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(popularity)) * WINNINGS_PER_POPULARITY;
+}
+
