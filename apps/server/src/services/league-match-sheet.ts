@@ -32,6 +32,7 @@ import {
   type OfflineInjuryInput,
   type OfflineInjuryType,
 } from "./league-offline-result";
+import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { serverLog } from "../utils/server-log";
 
 export type MatchSheetStatus =
@@ -316,7 +317,7 @@ export async function submitByCoach(input: {
   }
 
   const next = nextStatusOnSubmit(sheet.status, side);
-  return prisma.leagueMatchSheet.update({
+  const updated = await prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data: {
       status: next,
@@ -324,6 +325,43 @@ export async function submitByCoach(input: {
         ? { submittedByHomeAt: new Date() }
         : { submittedByAwayAt: new Date() }),
     },
+  });
+
+  // Lot H — quand les 2 coachs ont soumis, alerte le commissaire
+  // (fire-and-forget, non-bloquant). On a deja `ctx` (creator + teams).
+  if (next === "both_submitted") {
+    notifyCommissionerSheetReady(ctx).catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league-match-sheet] notify commissioner failed: ${msg}`);
+    });
+  }
+
+  return updated;
+}
+
+/**
+ * Lot H — Resout les noms d'equipe et declenche le push commissaire.
+ * Isole pour rester testable / non-bloquant.
+ */
+async function notifyCommissionerSheetReady(
+  ctx: PairingContext,
+): Promise<void> {
+  const pairing = (await prisma.leaguePairing.findUnique({
+    where: { id: ctx.pairingId },
+    select: {
+      homeParticipant: { select: { team: { select: { name: true } } } },
+      awayParticipant: { select: { team: { select: { name: true } } } },
+    },
+  })) as {
+    homeParticipant: { team: { name: string } } | null;
+    awayParticipant: { team: { name: string } } | null;
+  } | null;
+  sendLeagueMatchValidationPush({
+    commissionerUserId: ctx.creatorId,
+    leagueId: ctx.leagueId,
+    pairingId: ctx.pairingId,
+    homeTeamName: pairing?.homeParticipant?.team.name ?? "?",
+    awayTeamName: pairing?.awayParticipant?.team.name ?? "?",
   });
 }
 
@@ -569,6 +607,100 @@ export async function validateByCommissioner(input: {
     },
   });
   return { sheet: updated, summary, effects };
+}
+
+/**
+ * Lot H — Liste des feuilles de match en attente de validation pour
+ * un commissaire (status `both_submitted`). Source de la cloche de
+ * notification + page "Matchs a valider".
+ *
+ * Filtre les pairings dont la ligue a `creatorId === userId`. Une
+ * seule requete Prisma (nested filter), ordonnee par anciennete.
+ */
+export async function listPendingValidationsForCommissioner(
+  userId: string,
+): Promise<
+  Array<{
+    pairingId: string;
+    matchSheetId: string;
+    leagueId: string;
+    leagueName: string;
+    seasonId: string;
+    seasonName: string;
+    roundNumber: number;
+    homeTeamName: string;
+    awayTeamName: string;
+    bothSubmittedAt: Date | null;
+  }>
+> {
+  const sheets = (await prisma.leagueMatchSheet.findMany({
+    where: {
+      status: "both_submitted",
+      pairing: {
+        round: { season: { league: { creatorId: userId } } },
+      },
+    },
+    orderBy: { updatedAt: "asc" },
+    select: {
+      id: true,
+      pairingId: true,
+      submittedByHomeAt: true,
+      submittedByAwayAt: true,
+      pairing: {
+        select: {
+          round: {
+            select: {
+              roundNumber: true,
+              season: {
+                select: {
+                  id: true,
+                  name: true,
+                  league: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
+          homeParticipant: { select: { team: { select: { name: true } } } },
+          awayParticipant: { select: { team: { select: { name: true } } } },
+        },
+      },
+    },
+  })) as Array<{
+    id: string;
+    pairingId: string;
+    submittedByHomeAt: Date | null;
+    submittedByAwayAt: Date | null;
+    pairing: {
+      round: {
+        roundNumber: number;
+        season: {
+          id: string;
+          name: string;
+          league: { id: string; name: string };
+        };
+      };
+      homeParticipant: { team: { name: string } } | null;
+      awayParticipant: { team: { name: string } } | null;
+    };
+  }>;
+
+  return sheets.map((s) => {
+    const home = s.submittedByHomeAt?.getTime() ?? 0;
+    const away = s.submittedByAwayAt?.getTime() ?? 0;
+    const bothMs = Math.max(home, away);
+    return {
+      pairingId: s.pairingId,
+      matchSheetId: s.id,
+      leagueId: s.pairing.round.season.league.id,
+      leagueName: s.pairing.round.season.league.name,
+      seasonId: s.pairing.round.season.id,
+      seasonName: s.pairing.round.season.name,
+      roundNumber: s.pairing.round.roundNumber,
+      homeTeamName: s.pairing.homeParticipant?.team.name ?? "?",
+      awayTeamName: s.pairing.awayParticipant?.team.name ?? "?",
+      bothSubmittedAt: bothMs > 0 ? new Date(bothMs) : null,
+    };
+  });
 }
 
 /**

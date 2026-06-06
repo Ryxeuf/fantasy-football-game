@@ -121,6 +121,7 @@ import {
   unsubmitByCoach,
   validateByCommissioner,
   getMatchSheet,
+  listPendingValidationsForCommissioner,
   MatchSheetError,
 } from "../services/league-match-sheet";
 import {
@@ -1542,6 +1543,26 @@ export async function handleValidateMatchSheet(
   }
 }
 
+/**
+ * Lot H — GET /leagues/me/pending-validations
+ *
+ * Liste tous les matchs (toutes ligues du commissaire) en attente de
+ * validation (`both_submitted`). Source de la cloche de notification.
+ */
+export async function handleListPendingValidations(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const items = await listPendingValidationsForCommissioner(userId);
+    sendSuccess(res, { pending: items, count: items.length });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 // ===========================================================
 // Lot J — handlers : classements top-N joueurs.
 // ===========================================================
@@ -2213,6 +2234,12 @@ router.post(
   "/pairings/:pairingId/sheet/validate",
   authUser,
   handleValidateMatchSheet,
+);
+// Lot H — liste des matchs a valider pour le commissaire (cloche).
+router.get(
+  "/me/pending-validations",
+  authUser,
+  handleListPendingValidations,
 );
 
 // Lot J — classements top-N joueurs (public). Decline aussi par

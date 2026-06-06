@@ -10,6 +10,7 @@ vi.mock("../prisma", () => ({
     leaguePairing: { findUnique: vi.fn() },
     leagueMatchSheet: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
@@ -27,6 +28,11 @@ vi.mock("./league-offline-result", () => ({
   recordOfflineLeagueResult: vi.fn(),
 }));
 
+// Lot H — mock du push commissaire (fire-and-forget).
+vi.mock("./push-notifications", () => ({
+  sendLeagueMatchValidationPush: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   createMatchSheet,
@@ -37,14 +43,17 @@ import {
   validateByCommissioner,
   getMatchSheet,
   buildOfflineInputFromSummary,
+  listPendingValidationsForCommissioner,
   MatchSheetError,
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
+import { sendLeagueMatchValidationPush } from "./push-notifications";
 import type { MatchSummary } from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
 const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
+const mockPush = sendLeagueMatchValidationPush as ReturnType<typeof vi.fn>;
 
 const HOME = "home-owner";
 const AWAY = "away-owner";
@@ -218,7 +227,7 @@ describe("Lot G — league-match-sheet", () => {
       expect((out as { status: string }).status).toBe("submitted_home");
     });
 
-    it("away submit when home already submitted -> both_submitted", async () => {
+    it("away submit when home already submitted -> both_submitted + notifies commissioner", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
         status: "submitted_home",
@@ -228,8 +237,43 @@ describe("Lot G — league-match-sheet", () => {
       mockPrisma.leagueMatchSheet.update.mockImplementation(
         async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
       );
+      // notifyCommissionerSheetReady re-reads the pairing for team names.
+      mockPrisma.leaguePairing.findUnique.mockResolvedValueOnce({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { team: { ownerId: HOME } },
+        awayParticipant: { team: { ownerId: AWAY } },
+      });
+      mockPrisma.leaguePairing.findUnique.mockResolvedValueOnce({
+        homeParticipant: { team: { name: "Reikland" } },
+        awayParticipant: { team: { name: "Gouged Eye" } },
+      });
       const out = await submitByCoach({ pairingId: "pair-1", userId: AWAY });
       expect((out as { status: string }).status).toBe("both_submitted");
+      // fire-and-forget : laisse la microtask s'executer.
+      await Promise.resolve();
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.objectContaining({
+          commissionerUserId: COMMISH,
+          leagueId: "L1",
+          pairingId: "pair-1",
+        }),
+      );
+    });
+
+    it("does not notify when only one coach submitted", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        submittedByHomeAt: null,
+        submittedByAwayAt: null,
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      await submitByCoach({ pairingId: "pair-1", userId: HOME });
+      await Promise.resolve();
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 
@@ -388,6 +432,58 @@ describe("Lot G — league-match-sheet", () => {
       });
       const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
       expect(out.viewerRole).toBe("commissioner");
+    });
+  });
+
+  // Lot H — liste des matchs a valider pour le commissaire.
+  describe("listPendingValidationsForCommissioner", () => {
+    it("maps both_submitted sheets to a flat pending list", async () => {
+      const homeAt = new Date("2026-06-01T10:00:00Z");
+      const awayAt = new Date("2026-06-01T11:00:00Z");
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        {
+          id: "ms1",
+          pairingId: "pair-1",
+          submittedByHomeAt: homeAt,
+          submittedByAwayAt: awayAt,
+          pairing: {
+            round: {
+              roundNumber: 3,
+              season: {
+                id: "s1",
+                name: "Saison 1",
+                league: { id: "L1", name: "Ma Ligue" },
+              },
+            },
+            homeParticipant: { team: { name: "Reikland" } },
+            awayParticipant: { team: { name: "Gouged Eye" } },
+          },
+        },
+      ]);
+      const out = await listPendingValidationsForCommissioner(COMMISH);
+      expect(out).toHaveLength(1);
+      expect(out[0]).toMatchObject({
+        pairingId: "pair-1",
+        matchSheetId: "ms1",
+        leagueId: "L1",
+        leagueName: "Ma Ligue",
+        seasonId: "s1",
+        roundNumber: 3,
+        homeTeamName: "Reikland",
+        awayTeamName: "Gouged Eye",
+      });
+      // bothSubmittedAt = max(home, away)
+      expect(out[0].bothSubmittedAt?.toISOString()).toBe(awayAt.toISOString());
+      // Filtre Prisma : creatorId du commissaire + status both_submitted.
+      const where = mockPrisma.leagueMatchSheet.findMany.mock.calls[0][0].where;
+      expect(where.status).toBe("both_submitted");
+      expect(where.pairing.round.season.league.creatorId).toBe(COMMISH);
+    });
+
+    it("returns empty list when nothing pending", async () => {
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+      const out = await listPendingValidationsForCommissioner(COMMISH);
+      expect(out).toEqual([]);
     });
   });
 
