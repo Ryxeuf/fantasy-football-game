@@ -57,6 +57,7 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leagueInvitationRoutes from "./routes/league-invitation";
+import leagueTestDataRoutes from "./routes/league-test-data";
 import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
 import {
@@ -260,6 +261,8 @@ app.use("/leagues", leagueRoutes);
 // Lot A — endpoints d'invitation (cree/liste/accepte/decline) et
 // autocomplete coachs. Monte sous /leagues pour partager le prefixe.
 app.use("/leagues", leagueInvitationRoutes);
+// Dev only (404 en prod) — generation d'equipes de test pour une saison.
+app.use("/leagues", leagueTestDataRoutes);
 // S26 DoD — telemetrie tutoriel (mesure du KPI 80% completion).
 app.use("/tutorial", tutorialRouter);
 app.use("/admin/tutorial", adminTutorialRouter);

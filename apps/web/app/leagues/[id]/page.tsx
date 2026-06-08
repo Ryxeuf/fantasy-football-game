@@ -5,8 +5,13 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
+import {
+  LEAGUE_FLAG,
+  LEAGUE_INVITATIONS_FLAG,
+} from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
+import { InviteCoachModal } from "./InviteCoachModal";
+import { TestParticipantButton } from "./TestParticipantButton";
 import { SeasonStandings } from "./SeasonStandings";
 import { PlayoffBracketView } from "./PlayoffBracketView";
 import { SeasonParticipants } from "./SeasonParticipants";
@@ -35,6 +40,7 @@ export default function LeagueDetailPage() {
   const params = useParams();
   const leagueId = typeof params.id === "string" ? params.id : "";
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
+  const invitationsEnabled = useFeatureFlag(LEAGUE_INVITATIONS_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +56,7 @@ export default function LeagueDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [newSeasonOpen, setNewSeasonOpen] = useState(false);
   const [joinSeasonOpen, setJoinSeasonOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   // Charge l'identite courante une seule fois pour permettre au
   // calendrier de decider quels boutons "Lancer le match" afficher et
@@ -334,14 +341,36 @@ export default function LeagueDetailPage() {
             {t.leagues.seasonsSection}
           </h2>
           {leagueEnabled && isCreator ? (
-            <button
-              type="button"
-              data-testid="open-new-season-modal"
-              onClick={() => setNewSeasonOpen(true)}
-              className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
-            >
-              + {t.leagues.newSeasonButton}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Lot A — invitation d'un coach (commissaire), gatee par le
+                  flag `league_invitations`. */}
+              {invitationsEnabled ? (
+                <button
+                  type="button"
+                  data-testid="open-invite-coach"
+                  onClick={() => setInviteOpen(true)}
+                  className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
+                >
+                  ✉️ {t.leagues.inviteCoachButton}
+                </button>
+              ) : null}
+              {/* Dev only : ajoute une equipe de test inscrite a la saison
+                  selectionnee (la route serveur est 404 hors dev). */}
+              {season ? (
+                <TestParticipantButton
+                  seasonId={season.id}
+                  onAdded={() => loadSeason(season.id)}
+                />
+              ) : null}
+              <button
+                type="button"
+                data-testid="open-new-season-modal"
+                onClick={() => setNewSeasonOpen(true)}
+                className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
+              >
+                + {t.leagues.newSeasonButton}
+              </button>
+            </div>
           ) : null}
         </div>
         {league.seasons.length === 0 ? (
@@ -535,6 +564,16 @@ export default function LeagueDetailPage() {
           ruleset={league.ruleset}
           allowedRosters={league.allowedRosters}
           alreadyRegisteredTeamIds={registeredTeamIds}
+        />
+      ) : null}
+
+      {leagueEnabled && isCreator && invitationsEnabled ? (
+        <InviteCoachModal
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          onInvited={() => setInviteOpen(false)}
+          leagueId={league.id}
+          seasonId={season?.id}
         />
       ) : null}
     </div>

@@ -121,6 +121,7 @@ services:
     command: >
       sh -c "
         pnpm -w prisma generate &&
+        pnpm -w prisma db push --skip-generate &&
         pnpm run dev
       "
 
