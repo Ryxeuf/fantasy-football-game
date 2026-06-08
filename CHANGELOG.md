@@ -1,3 +1,18 @@
+## [1.172.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.171.1...v1.172.0) (2026-06-08)
+
+
+### ✨ Features
+
+* **league:** add test participant functionality and fix database sync ([518086e](https://github.com/Ryxeuf/fantasy-football-game/commit/518086eb23e42d7fd362fa8c1ee73027392aec64))
+* **league:** block team withdraw after season start (Lot B) ([#886](https://github.com/Ryxeuf/fantasy-football-game/issues/886)) ([bebfb26](https://github.com/Ryxeuf/fantasy-football-game/commit/bebfb26187f16ccc0d0681e585317682ac176242))
+* **league:** match sheet v2 — model, validation effects, commissioner alerts (Lots G + H) ([#887](https://github.com/Ryxeuf/fantasy-football-game/issues/887)) ([4e38e9d](https://github.com/Ryxeuf/fantasy-football-game/commit/4e38e9d740c919d22f0397176703119738d28326)), closes [#886](https://github.com/Ryxeuf/fantasy-football-game/issues/886)
+* **league:** match-sheet polish — pre/post-match panels, auto treasury, invalidation window ([#888](https://github.com/Ryxeuf/fantasy-football-game/issues/888)) ([892505d](https://github.com/Ryxeuf/fantasy-football-game/commit/892505d0eaca769cc41192a5460bae58d9269426))
+
+
+### 📝 Documentation
+
+* **league:** session recap + feature-flag rollout guide ([#889](https://github.com/Ryxeuf/fantasy-football-game/issues/889)) ([c62a5fc](https://github.com/Ryxeuf/fantasy-football-game/commit/c62a5fc607c09ff3dbcd242776de0698b0976db2)), closes [#886](https://github.com/Ryxeuf/fantasy-football-game/issues/886) [-#888](https://github.com/Ryxeuf/-/issues/888)
+
 ## [1.171.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.171.0...v1.171.1) (2026-06-05)
 
 
