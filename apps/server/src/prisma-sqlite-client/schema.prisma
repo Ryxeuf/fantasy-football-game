@@ -687,6 +687,8 @@ model League {
   /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
   matchMode         String   @default("realtime")
   turnDeadlineHours Int      @default(24)
+  /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
+  bonusPointsConfig String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -718,11 +720,32 @@ model LeagueSeason {
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
   award        LeagueSeasonAward?
+  // Lot C — poules optionnelles.
+  pools        LeaguePool[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
   @@index([theme, themeYear])
+}
+
+/// Lot C — Poule (mirror PG).
+model LeaguePool {
+  id                   String       @id @default(cuid())
+  season               LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId             String
+  name                 String
+  order                Int          @default(0)
+  color                String?
+  qualifiesForPlayoffs Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId, order])
 }
 
 model LeagueParticipant {
@@ -751,10 +774,15 @@ model LeagueParticipant {
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
   awayPairings LeaguePairing[] @relation("LeaguePairingAway")
 
+  // Lot C — affectation poule optionnelle (mirror PG).
+  pool   LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
   @@index([seasonElo])
+  @@index([seasonId, poolId])
 }
 
 model LeagueRound {
@@ -774,11 +802,15 @@ model LeagueRound {
 
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
+  // Lot C — round optionnellement rattache a une poule (mirror PG).
+  pool     LeaguePool?     @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId   String?
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
   @@index([seasonId, kind])
+  @@index([seasonId, poolId, roundNumber])
 }
 
 // Sprint Ligues v2 (PR1) — pairing pre-genere du calendrier round-robin.
@@ -798,6 +830,13 @@ model LeaguePairing {
   scheduledAt       DateTime?
   deadlineAt        DateTime?
   match             Match?
+  /// Lot E — Snapshot des points bonus appliques (mirror PG).
+  bonusPointsHome   Int               @default(0)
+  bonusPointsAway   Int               @default(0)
+  /// Lot E — Breakdown JSON serialise (sqlite mirror).
+  bonusBreakdown    String?
+  /// Lot G — feuille de match v2 (1-1, mirror PG).
+  matchSheet        LeagueMatchSheet?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -806,6 +845,64 @@ model LeaguePairing {
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Lot G — Feuille de match v2 (mirror PG). Les champs Json PG sont
+/// des String serialisees en sqlite.
+model LeagueMatchSheet {
+  id                     String        @id @default(cuid())
+  pairing                LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId              String        @unique
+  status                 String        @default("draft")
+  submittedByHomeAt      DateTime?
+  submittedByAwayAt      DateTime?
+  validatedAt            DateTime?
+  validatedById          String?
+  invalidatedAt          DateTime?
+  invalidationReason     String?
+  weather                String?
+  popularityHome         Int?
+  popularityAway         Int?
+  inducementsHome        String?
+  inducementsAway        String?
+  prayersHome            String?
+  prayersAway            String?
+  scoreHome              Int           @default(0)
+  scoreAway              Int           @default(0)
+  winningsHome           Int           @default(0)
+  winningsAway           Int           @default(0)
+  winningsHomeManual     Int?
+  winningsAwayManual     Int?
+  dedicatedFansDeltaHome Int?
+  dedicatedFansDeltaAway Int?
+  costlyErrorsHome       String?
+  costlyErrorsAway       String?
+  motmPlayerIds          String        @default("[]")
+  purchasesHome          String?
+  purchasesAway          String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  events LeagueMatchEvent[]
+
+  @@index([status])
+}
+
+/// Lot G — Evenement unitaire de feuille de match (mirror PG).
+model LeagueMatchEvent {
+  id             String           @id @default(cuid())
+  matchSheet     LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
+  matchSheetId   String
+  kind           String
+  team           String?
+  actorPlayerId  String?
+  targetPlayerId String?
+  causeDetail    String?
+  injurySeverity String?
+  meta           String?
+  occurredAt     DateTime         @default(now())
+
+  @@index([matchSheetId, kind])
 }
 
 /// Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).

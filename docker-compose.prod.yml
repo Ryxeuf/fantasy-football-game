@@ -17,6 +17,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-bb_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB:-bb_db}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
