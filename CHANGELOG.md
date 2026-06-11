@@ -1,3 +1,10 @@
+## [1.173.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.172.0...v1.173.0) (2026-06-11)
+
+
+### ✨ Features
+
+* **league:** add LeaguePool and LeagueMatch models with bonus points configuration ([eb5edeb](https://github.com/Ryxeuf/fantasy-football-game/commit/eb5edeb3505b620836e3cd5df4d3a33eed528caa))
+
 ## [1.172.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.171.1...v1.172.0) (2026-06-08)
 
 
