@@ -53,6 +53,9 @@ export const translations = {
     home: {
       betaBanner: "Version BÊTA ouverte à tous.",
       title: "L'arène où le hasard devient divin.",
+      heroBadge: "Saison 3 · Règles officielles 2025",
+      heroQuote: "« Nuffle donne, Nuffle reprend. Surtout sur un double crâne. »",
+      statsFreeValue: "0 PO",
       description: "Plateforme digitale gratuite pour créer, gérer et faire vivre vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et suivez vos matchs sur table.",
       subtitle: "Conforme aux règles officielles Blood Bowl 2025 : 30 rosters complets, 60+ Star Players, 130+ compétences, gestion du budget et de la trésorerie, export PDF pour vos parties.",
       manageTeams: "Gérer mes équipes",
@@ -1105,6 +1108,9 @@ export const translations = {
     home: {
       betaBanner: "BETA version open to everyone.",
       title: "The arena where chance becomes divine.",
+      heroBadge: "Season 3 · Official 2025 rules",
+      heroQuote: "“Nuffle giveth, Nuffle taketh away. Especially on a double skull.”",
+      statsFreeValue: "0 GP",
       description: "Free digital platform to create, manage, and live out your Blood Bowl teams. Build your rosters, recruit legendary Star Players, and track your tabletop matches.",
       subtitle: "Compliant with the official Blood Bowl 2025 rules: 30 full rosters, 60+ Star Players, 130+ skills, budget and treasury management, PDF export for your games.",
       manageTeams: "Manage my teams",
