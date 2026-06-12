@@ -14,7 +14,7 @@ type LocalMatch = {
   creator: {
     id: string;
     coachName: string;
-    email: string;
+    email?: string;
   };
   teamA: {
     id: string;
@@ -24,7 +24,7 @@ type LocalMatch = {
       id: string;
       coachName: string;
     };
-  };
+  } | null;
   teamB: {
     id: string;
     name: string;
@@ -33,7 +33,7 @@ type LocalMatch = {
       id: string;
       coachName: string;
     };
-  };
+  } | null;
   cup: {
     id: string;
     name: string;
@@ -209,10 +209,10 @@ export default function AdminLocalMatchesPage() {
       const searchLower = search.toLowerCase();
       return (
         (match.name?.toLowerCase().includes(searchLower) || false) ||
-        match.teamA.name.toLowerCase().includes(searchLower) ||
-        match.teamB.name.toLowerCase().includes(searchLower) ||
+        (match.teamA?.name.toLowerCase().includes(searchLower) || false) ||
+        (match.teamB?.name.toLowerCase().includes(searchLower) || false) ||
         match.creator.coachName.toLowerCase().includes(searchLower) ||
-        match.creator.email.toLowerCase().includes(searchLower)
+        (match.creator.email?.toLowerCase().includes(searchLower) || false)
       );
     }
     return true;
@@ -357,18 +357,15 @@ export default function AdminLocalMatchesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        <div>{match.teamA.name}</div>
+                        <div>{match.teamA?.name ?? "—"}</div>
                         <div className="text-xs text-gray-500">
-                          vs {match.teamB.name}
+                          vs {match.teamB?.name ?? "En attente"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {match.creator.coachName}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {match.creator.email}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
