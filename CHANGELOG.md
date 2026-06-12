@@ -1,3 +1,10 @@
+## [1.173.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.173.0...v1.173.1) (2026-06-12)
+
+
+### 🐛 Bug Fixes
+
+* **local-matches:** make email and team fields optional ([f6d08ce](https://github.com/Ryxeuf/fantasy-football-game/commit/f6d08ceddba6695661afe1686a72431eb1e8a56b))
+
 ## [1.173.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.172.0...v1.173.0) (2026-06-11)
 
 
