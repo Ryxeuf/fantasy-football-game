@@ -117,6 +117,34 @@ export function buildTeamOgContent(input: TeamOgInput): OgContent {
   };
 }
 
+export interface RosterShareOgInput {
+  teamName: string;
+  raceName: string;
+  /** Valeur d'équipe en pièces d'or. */
+  teamValue: number;
+  playerCount: number;
+  starPlayerNames: string[];
+  ruleset: "season_2" | "season_3" | string;
+}
+
+export function buildRosterShareOgContent(input: RosterShareOgInput): OgContent {
+  const players = clampNonNegative(input.playerCount);
+  const stars = input.starPlayerNames.filter(Boolean).slice(0, 2);
+  return {
+    title: input.teamName,
+    subtitle: stars.length
+      ? `Avec ${stars.join(", ")}`
+      : "Équipe Blood Bowl",
+    badges: [
+      input.raceName,
+      `VE ${formatBudget(input.teamValue)}${NBSP}po`,
+      `${players}${NBSP}joueurs`,
+      formatRuleset(input.ruleset),
+    ],
+    accent: "team",
+  };
+}
+
 export function buildStarPlayerOgContent(input: StarPlayerOgInput): OgContent {
   const badges: string[] = [
     `MA ${input.ma}`,

@@ -12,6 +12,7 @@ import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
 import { MatchReportBanner } from "./MatchReportBanner";
+import TeamShareToggle from "./TeamShareToggle";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -166,6 +167,13 @@ export default function TeamDetailPage() {
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       {leagueEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
+      {id && team ? (
+        <TeamShareToggle
+          teamId={id}
+          initialIsPublic={Boolean(team.isPublic)}
+          initialShareToken={team.shareToken ?? null}
+        />
+      ) : null}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold">{team?.name || t.teams.team}</h1>
