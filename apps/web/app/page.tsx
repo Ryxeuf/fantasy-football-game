@@ -6,6 +6,7 @@ import HomeStructuredData from "./components/HomeStructuredData";
 import LatestBlogPosts from "./components/LatestBlogPosts";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
+import { apiRequest } from "./lib/api-client";
 import {
   NuffleMedallion,
   BlockDie,
@@ -101,16 +102,48 @@ function FeatureCard({ href, icon, title, description, badge, cta }: FeatureCard
   );
 }
 
+interface PublicStats {
+  rosters: number;
+  starPlayers: number;
+  skills: number;
+  teamsCreated: number;
+  coaches: number;
+  matchesTracked: number;
+}
+
+// Seuil avant d'afficher la preuve sociale d'activité : evite un
+// "Déjà 3 équipes" peu flatteur en debut de beta. S'active tout seul.
+const MIN_ACTIVITY_TEAMS = 25;
+
 export default function LandingPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
 
+  // Stats live (compteurs reels) via /api/public/stats — endpoint leger
+  // (6 COUNT), fetch cote client avec repli sur les valeurs catalogue.
+  const [liveStats, setLiveStats] = useState<PublicStats | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest<PublicStats>("/api/public/stats")
+      .then((s) => { if (!cancelled) setLiveStats(s); })
+      .catch(() => { /* repli silencieux sur les valeurs catalogue */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const stats = [
-    { label: t.home.statsRosters, value: "30" },
-    { label: t.home.statsStarPlayers, value: "60+" },
-    { label: t.home.statsSkills, value: "130+" },
+    { label: t.home.statsRosters, value: liveStats?.rosters ?? "30" },
+    { label: t.home.statsStarPlayers, value: liveStats?.starPlayers ?? "60+" },
+    { label: t.home.statsSkills, value: liveStats?.skills ?? "130+" },
     { label: t.home.statsFree, value: t.home.statsFreeValue },
   ];
+
+  const numLocale = language === "en" ? "en-US" : "fr-FR";
+  const showActivity = Boolean(liveStats && liveStats.teamsCreated >= MIN_ACTIVITY_TEAMS);
+  const activityLine = liveStats
+    ? t.home.activityLine
+        .replace("{teams}", liveStats.teamsCreated.toLocaleString(numLocale))
+        .replace("{matches}", liveStats.matchesTracked.toLocaleString(numLocale))
+    : "";
 
   const explore = t.home.exploreCta;
   const features: ReadonlyArray<FeatureCardProps> = [
@@ -199,6 +232,11 @@ export default function LandingPage() {
                   </div>
                 ))}
               </dl>
+              {showActivity && (
+                <p className="mt-4 max-w-lg text-xs sm:text-sm text-nuffle-bronze/80 font-body">
+                  <span className="text-nuffle-gold" aria-hidden="true">●</span> {activityLine}
+                </p>
+              )}
             </div>
 
             {/* Medaillon + lanceur de dés interactif */}
