@@ -125,6 +125,20 @@ export default function TeamsListClient({
         <p className="text-sm sm:text-base text-gray-600">
           {t.teams.allTeamsDescription}
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href="/teams/comparer"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          >
+            ⚔️ {language === "en" ? "Compare teams" : "Comparer les équipes"}
+          </Link>
+          <Link
+            href="/teams/tier-list"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-blue-200 px-4 py-2 text-sm font-semibold text-blue-800 hover:border-blue-400 transition-colors"
+          >
+            🏆 {language === "en" ? "Tier list" : "Tier list"}
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-lg border border-gray-200">
