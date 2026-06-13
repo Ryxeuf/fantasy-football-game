@@ -301,7 +301,9 @@ exports.Prisma.TeamScalarFieldEnum = {
   dedicatedFans: 'dedicatedFans',
   teamValue: 'teamValue',
   currentValue: 'currentValue',
-  initialBudget: 'initialBudget'
+  initialBudget: 'initialBudget',
+  isPublic: 'isPublic',
+  shareToken: 'shareToken'
 };
 
 exports.Prisma.TeamPlayerScalarFieldEnum = {

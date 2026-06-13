@@ -351,6 +351,10 @@ model Team {
   teamValue     Int @default(0) // VE - Valeur d'Équipe (calculée)
   currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
   initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
+
+  // Partage public opt-in (miroir SQLite de schema.prisma).
+  isPublic   Boolean @default(false)
+  shareToken String? @unique
 }
 
 model TeamPlayer {

@@ -1,8 +1,14 @@
 import { fetchServerJson, getServerApiBase } from "../lib/serverApi";
+import StructuredData from "../components/StructuredData";
+import { buildTeamsListSchema } from "./teams-list-structured-data";
 import TeamsListClient, {
   type RosterSummary,
   type Season,
 } from "./TeamsListClient";
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
+).replace(/\/$/, "");
 
 // ISR: regenerate at most once per hour. Rosters are essentially static
 // reference data; stale-while-revalidate is handled by Next.js.
@@ -36,9 +42,17 @@ export default async function TeamsListPage({
   const initialRosters = await fetchRosters(season);
 
   return (
-    <TeamsListClient
-      initialRosters={initialRosters}
-      initialSeason={season}
-    />
+    <>
+      <StructuredData
+        data={buildTeamsListSchema({
+          items: initialRosters.map((r) => ({ slug: r.slug, name: r.name })),
+          baseUrl: SITE_URL,
+        })}
+      />
+      <TeamsListClient
+        initialRosters={initialRosters}
+        initialSeason={season}
+      />
+    </>
   );
 }

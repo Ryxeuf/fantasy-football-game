@@ -209,10 +209,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
   );
 
+  // Pages dynamiques - Compétences (une page par skill, SEO longue traîne)
+  let skillPages: MetadataRoute.Sitemap = [];
+  try {
+    const skillsResponse = await fetch(`${API_BASE}/api/skills?ruleset=season_3`, {
+      next: { revalidate: 3600 },
+    });
+    if (skillsResponse.ok) {
+      const skillsData = await skillsResponse.json();
+      const seen = new Set<string>();
+      skillPages = (skillsData.skills || [])
+        .map((s: { slug?: string }) => s.slug)
+        .filter((slug: unknown): slug is string => typeof slug === 'string' && slug.length > 0)
+        .filter((slug: string) => {
+          if (seen.has(slug)) return false;
+          seen.add(slug);
+          return true;
+        })
+        .map((slug: string) =>
+          sitemapEntryWithAlternates(`/skills/${slug}`, {
+            lastModified: now,
+            changeFrequency: 'monthly' as const,
+            priority: 0.6,
+          }),
+        );
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des compétences pour le sitemap:', error);
+  }
+
   return [
     ...staticPages,
     ...teamPages,
     ...starPlayerPages,
+    ...skillPages,
     ...coachPages,
     ...proLeagueTeamPages,
   ];

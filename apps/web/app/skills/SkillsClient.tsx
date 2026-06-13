@@ -262,9 +262,14 @@ export default function SkillsClient({
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="flex-1">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                          {language === "fr"
-                            ? `${skill.nameFr} (${skill.nameEn})`
-                            : `${skill.nameEn} (${skill.nameFr})`}
+                          <a
+                            href={`/skills/${skill.slug}`}
+                            className="hover:text-nuffle-gold hover:underline transition-colors"
+                          >
+                            {language === "fr"
+                              ? `${skill.nameFr} (${skill.nameEn})`
+                              : `${skill.nameEn} (${skill.nameFr})`}
+                          </a>
                         </h3>
                         <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                           {language === "fr"
