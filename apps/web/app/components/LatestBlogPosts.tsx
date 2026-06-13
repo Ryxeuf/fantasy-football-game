@@ -57,7 +57,7 @@ export default function LatestBlogPosts() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-3">
         <div>
           <p className="font-subtitle text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-nuffle-gold/90">
-            La Gazette
+            {t.home.blogKicker}
           </p>
           <h2 className="mt-2 text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite">
             {t.home.latestNewsTitle}

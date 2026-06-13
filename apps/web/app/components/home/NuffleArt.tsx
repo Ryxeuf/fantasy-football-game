@@ -274,6 +274,30 @@ export function EmblemTabletop({ className }: EmblemProps) {
   );
 }
 
+export function EmblemCup({ className }: EmblemProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path {...stroke} d="M7 4.5h10v3a5 5 0 0 1-10 0z" />
+      <path {...stroke} d="M7 5.6H4.7a2.2 2.2 0 0 0 2.3 3.9M17 5.6h2.3a2.2 2.2 0 0 1-2.3 3.9" />
+      <path {...stroke} d="M12 12.5v3M10.4 15.5h3.2M9 19.5h6l-.6-4H9.6z" />
+    </svg>
+  );
+}
+
+export function EmblemLeague({ className }: EmblemProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        {...stroke}
+        d="M12 3l1 2 2.2.3-1.6 1.5.4 2.2L12 8l-2 1 .4-2.2L8.8 5.3 11 5z"
+      />
+      <rect {...stroke} x="9.6" y="11" width="4.8" height="9" rx="0.9" />
+      <rect {...stroke} x="3.6" y="14" width="4.8" height="6" rx="0.9" />
+      <rect {...stroke} x="15.6" y="12.5" width="4.8" height="7.5" rx="0.9" />
+    </svg>
+  );
+}
+
 export function EmblemPdf({ className }: EmblemProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">

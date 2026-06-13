@@ -14,6 +14,8 @@ import {
   EmblemSkills,
   EmblemTutorial,
   EmblemTabletop,
+  EmblemCup,
+  EmblemLeague,
   EmblemPdf,
   type BlockDieFace,
 } from "./components/home/NuffleArt";
@@ -47,24 +49,34 @@ interface FeatureCardProps {
   icon: ReactNode;
   title: string;
   description: string;
+  badge?: string;
+  cta?: string;
 }
 
-function FeatureCard({ href, icon, title, description }: FeatureCardProps) {
+function FeatureCard({ href, icon, title, description, badge, cta }: FeatureCardProps) {
   const inner = (
     <>
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <span className={`${COIN_BADGE} h-14 w-14 flex-shrink-0`}>
           <span className="h-8 w-8 flex items-center justify-center [&>svg]:h-8 [&>svg]:w-8">{icon}</span>
         </span>
-        <h3 className="font-heading font-bold text-lg leading-tight text-nuffle-anthracite">{title}</h3>
+        <div className="min-w-0">
+          <h3 className="font-heading font-bold text-lg leading-tight text-nuffle-anthracite">{title}</h3>
+          {badge && (
+            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/15 px-2.5 py-0.5 text-[11px] font-subtitle font-bold uppercase tracking-wide text-nuffle-bronze">
+              <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
+              {badge}
+            </span>
+          )}
+        </div>
       </div>
       <span className="mt-4 block h-px w-full bg-nuffle-bronze/15" aria-hidden="true" />
       <p className="mt-4 text-nuffle-anthracite/75 font-body text-sm sm:text-[15px] leading-relaxed">
         {description}
       </p>
-      {href && (
+      {href && cta && (
         <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze group-hover:text-nuffle-gold transition-colors">
-          Explorer
+          {cta}
           <span className="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
         </span>
       )}
@@ -94,12 +106,22 @@ export default function LandingPage() {
     { label: t.home.statsFree, value: t.home.statsFreeValue },
   ];
 
+  const explore = t.home.exploreCta;
   const features: ReadonlyArray<FeatureCardProps> = [
-    { href: "/teams", icon: <EmblemRosters />, title: t.home.rosters.title, description: t.home.rosters.description },
-    { href: "/star-players", icon: <EmblemStar />, title: t.home.starPlayers.title, description: t.home.starPlayers.description },
-    { href: "/skills", icon: <EmblemSkills />, title: t.home.skillsReference.title, description: t.home.skillsReference.description },
-    { href: "/tutoriel", icon: <EmblemTutorial />, title: t.home.tutorial.title, description: t.home.tutorial.description },
-    { href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description },
+    { href: "/teams", icon: <EmblemRosters />, title: t.home.rosters.title, description: t.home.rosters.description, cta: explore },
+    { href: "/star-players", icon: <EmblemStar />, title: t.home.starPlayers.title, description: t.home.starPlayers.description, cta: explore },
+    { href: "/skills", icon: <EmblemSkills />, title: t.home.skillsReference.title, description: t.home.skillsReference.description, cta: explore },
+    { href: "/tutoriel", icon: <EmblemTutorial />, title: t.home.tutorial.title, description: t.home.tutorial.description, cta: explore },
+    { href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description, cta: explore },
+    { href: "/cups", icon: <EmblemCup />, title: t.home.cups.title, description: t.home.cups.description, cta: explore },
+    {
+      href: "/feedback",
+      icon: <EmblemLeague />,
+      title: t.home.leagues.title,
+      description: t.home.leagues.description,
+      badge: t.home.leagues.badge,
+      cta: t.home.requestAccessCta,
+    },
     { icon: <EmblemPdf />, title: t.home.exportPdf.title, description: t.home.exportPdf.description },
   ];
 
@@ -118,16 +140,6 @@ export default function LandingPage() {
       {/* Canvas unique : un seul fond parchemin chaud sur toute la page,
           full-bleed (on sort du padding du layout) pour eviter les seams. */}
       <div className="-mx-4 sm:-mx-6 -mb-4 sm:-mb-6 bg-gradient-to-b from-[#F3EAD6] via-[#EFE4CD] to-[#E7DABF] text-nuffle-anthracite">
-        {/* Bandeau bêta — fin ticker sombre, materiau « jeton » */}
-        <div className="w-full bg-[#1B1610] text-nuffle-gold border-b border-nuffle-gold/30">
-          <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 px-4 py-2 text-center">
-            <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold animate-pulse" aria-hidden="true" />
-            <p className="font-subtitle font-semibold text-xs sm:text-sm uppercase tracking-[0.2em]">
-              {t.home.betaBanner}
-            </p>
-          </div>
-        </div>
-
         {/* Hero */}
         <section className="relative overflow-hidden">
           {/* texture : hachures de terrain tres discretes, communes a la page */}
@@ -209,7 +221,7 @@ export default function LandingPage() {
 
         {/* Features */}
         <section className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
-          <SectionTitle kicker="Compendium" title={t.home.discoverTitle} subtitle={t.home.discoverSubtitle} />
+          <SectionTitle kicker={t.home.featuresKicker} title={t.home.discoverTitle} subtitle={t.home.discoverSubtitle} />
           <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
               <FeatureCard key={f.title} {...f} />
@@ -274,7 +286,7 @@ export default function LandingPage() {
 
         {/* FAQ */}
         <section className="max-w-4xl mx-auto px-4 sm:px-6 py-14 md:py-20">
-          <SectionTitle kicker="Avant le coup d'envoi" title={t.home.faqTitle} />
+          <SectionTitle kicker={t.home.faqKicker} title={t.home.faqTitle} />
           <div className="mt-8 space-y-3">
             {[
               { q: t.home.faqQ1, a: t.home.faqA1 },
