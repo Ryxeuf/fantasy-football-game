@@ -450,6 +450,16 @@ exports.Prisma.PushSubscriptionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.EmailDigestPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  enabled: 'enabled',
+  lastSentAt: 'lastSentAt',
+  unsubscribedAt: 'unsubscribedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.LocalMatchScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1174,6 +1184,7 @@ exports.Prisma.ModelName = {
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',
   PushSubscription: 'PushSubscription',
+  EmailDigestPreference: 'EmailDigestPreference',
   LocalMatch: 'LocalMatch',
   LocalMatchAction: 'LocalMatchAction',
   League: 'League',

@@ -580,6 +580,18 @@ model PushSubscription {
   @@index([userId])
 }
 
+// Réengagement Phase B — consentement digest e-mail (mirror du schéma
+// PG). Modèle autonome côté SQLite ; tests unitaires mockent prisma.
+model EmailDigestPreference {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  enabled        Boolean   @default(false)
+  lastSentAt     DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
 // Modèle pour les parties offline (Match Local)
 model LocalMatch {
   id          String    @id @default(cuid())

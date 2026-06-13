@@ -53,6 +53,8 @@ import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
+import emailDigestRoutes from "./routes/email-digest";
+import adminDigestRoutes from "./routes/admin-digest";
 import friendsRoutes from "./routes/friends";
 import careerStatsRoutes from "./routes/career-stats";
 import achievementsRoutes from "./routes/achievements";
@@ -257,6 +259,8 @@ app.use(
   leaderboardRoutes,
 );
 app.use("/push", pushRoutes);
+app.use("/email", emailDigestRoutes);
+app.use("/admin/digest", adminDigestRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
 app.use("/achievements", achievementsRoutes);
@@ -918,6 +922,38 @@ if (!inTestAsyncSweepEnv && asyncSweepTickMs > 0) {
     setInterval(() => {
       void tick();
     }, asyncSweepTickMs).unref();
+  });
+}
+
+// =============================================================================
+// Réengagement Phase B — Weekly e-mail digest cron.
+// =============================================================================
+// Tick journalier qui appelle `runWeeklyDigest`. Le job est idempotent
+// par utilisateur via la fenêtre `lastSentAt` (6 jours) : un tick
+// quotidien produit donc une cadence ~hebdomadaire par destinataire sans
+// timer hebdo précis, et un re-run le même jour ne ré-envoie pas.
+//
+// Tick par defaut : 24h. Configurable via WEEKLY_DIGEST_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local). Désactivé en test.
+const inTestDigestEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const digestTickMsEnv = Number(process.env.WEEKLY_DIGEST_TICK_MS);
+const digestTickMs = Number.isFinite(digestTickMsEnv)
+  ? digestTickMsEnv
+  : 24 * 60 * 60 * 1000;
+if (!inTestDigestEnv && digestTickMs > 0) {
+  void import("./services/weekly-digest-job").then(({ runWeeklyDigest }) => {
+    const tick = runOnceAtATime("weekly-digest", async () => {
+      try {
+        await runWeeklyDigest();
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[weekly-digest] tick failed: ${msg}`);
+      }
+    });
+    setInterval(() => {
+      void tick();
+    }, digestTickMs).unref();
   });
 }
 

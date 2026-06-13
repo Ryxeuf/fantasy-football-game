@@ -113,6 +113,7 @@ model User {
   matchQueue                  MatchQueue?
   notificationPreference      NotificationPreference?
   pushSubscriptions           PushSubscription[]
+  emailDigestPreference       EmailDigestPreference?
   featureFlagOverrides        FeatureFlagUser[]
   friendshipsSent             Friendship[]                @relation("FriendshipRequester")
   friendshipsReceived         Friendship[]                @relation("FriendshipReceiver")
@@ -904,6 +905,24 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+/// Réengagement — Phase B : consentement (opt-in) au digest e-mail
+/// hebdomadaire + état d'idempotence.
+///
+/// RGPD : `enabled` est false par défaut (opt-in explicite requis). La
+/// désinscription en un clic (token signé, sans login) pose
+/// `enabled=false` + `unsubscribedAt`. `lastSentAt` sert de garde
+/// d'idempotence : le job hebdo ne ré-envoie pas dans la fenêtre.
+model EmailDigestPreference {
+  id             String    @id @default(cuid())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String    @unique
+  enabled        Boolean   @default(false)
+  lastSentAt     DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).
