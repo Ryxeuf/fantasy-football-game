@@ -12,6 +12,7 @@ import {
   addStarPlayerToTeamSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
+import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
 
 const router = Router();
 
@@ -110,6 +111,14 @@ router.put(
 );
 router.post("/:id/recalculate", authUser, handleRecalculateTeamImpl);
 router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeamImpl);
+
+// #3 — Partage public opt-in du roster (boucle d'acquisition).
+router.patch(
+  "/:id/share",
+  authUser,
+  validate(shareTeamSchema),
+  handleSetTeamShare,
+);
 
 // S27.8.24 — Handlers Player CRUD (add / delete / update-skills /
 // list-available-positions) extraits dans

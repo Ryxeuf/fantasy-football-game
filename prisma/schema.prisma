@@ -423,6 +423,12 @@ model Team {
   currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
   initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
 
+  // Partage public opt-in (boucle d'acquisition). Le coach active le
+  // partage -> `shareToken` généré ; lien public en lecture seule via
+  // /api/public/teams/:token. Désactivé par défaut (vie privée).
+  isPublic   Boolean @default(false)
+  shareToken String? @unique
+
   @@index([ownerId])
 }
 
