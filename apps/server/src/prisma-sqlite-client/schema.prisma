@@ -566,6 +566,32 @@ model MatchQueue {
   @@index([teamValue])
 }
 
+// Réengagement — abonnement Web Push (mirror du schéma PG). Modèle
+// autonome côté SQLite (pas de relation User stricte, comme les autres
+// modèles périphériques du mirror) : les tests unitaires mockent prisma.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Réengagement Phase B — consentement digest e-mail (mirror du schéma
+// PG). Modèle autonome côté SQLite ; tests unitaires mockent prisma.
+model EmailDigestPreference {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  enabled        Boolean   @default(false)
+  lastSentAt     DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
 // Modèle pour les parties offline (Match Local)
 model LocalMatch {
   id          String    @id @default(cuid())

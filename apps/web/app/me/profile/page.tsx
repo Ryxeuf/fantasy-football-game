@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
 import NotificationPreferences from "../../components/NotificationPreferences";
+import EmailDigestPreference from "../../components/EmailDigestPreference";
 import PrivateProfileToggle from "./PrivateProfileToggle";
 
 type UserProfile = {
@@ -635,6 +636,9 @@ export default function ProfilePage() {
 
       {/* Preferences de notifications */}
       <NotificationPreferences />
+
+      {/* Reengagement Phase B — opt-in digest e-mail hebdomadaire */}
+      <EmailDigestPreference />
 
       {/* Actions rapides */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

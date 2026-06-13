@@ -18,6 +18,18 @@ vi.mock("./notification-preferences", () => ({
   NotificationType: { Turn: "turn", MatchFound: "matchFound" },
 }));
 
+// The web-push store is Prisma-backed; these tests only exercise the Expo
+// (in-memory) path, so the web subscription store stays empty.
+vi.mock("../prisma", () => ({
+  prisma: {
+    pushSubscription: {
+      upsert: vi.fn().mockResolvedValue(undefined),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+  },
+}));
+
 import {
   addExpoSubscription,
   removeExpoSubscription,
@@ -26,7 +38,6 @@ import {
   sendExpoPushToUser,
   sendTurnPush,
   sendMatchFoundPush,
-  clearSubscriptions,
 } from "./push-notifications";
 
 describe("Expo push notifications", () => {
@@ -34,7 +45,6 @@ describe("Expo push notifications", () => {
   const expoToken = "ExponentPushToken[abc123xyz]";
 
   beforeEach(() => {
-    clearSubscriptions();
     clearExpoSubscriptions();
     vi.clearAllMocks();
   });

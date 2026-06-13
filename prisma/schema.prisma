@@ -112,6 +112,8 @@ model User {
   eloRating                   Int                         @default(1000) // ELO rating for ranked matchmaking
   matchQueue                  MatchQueue?
   notificationPreference      NotificationPreference?
+  pushSubscriptions           PushSubscription[]
+  emailDigestPreference       EmailDigestPreference?
   featureFlagOverrides        FeatureFlagUser[]
   friendshipsSent             Friendship[]                @relation("FriendshipRequester")
   friendshipsReceived         Friendship[]                @relation("FriendshipReceiver")
@@ -882,6 +884,45 @@ model NotificationPreference {
   matchFoundNotification          Boolean @default(true) // "Un adversaire a ete trouve !"
   friendMatchStartedNotification  Boolean @default(true) // S26.5 — "{ami} demarre un match contre {adversaire}"
   leagueRoundReminderNotification Boolean @default(true) // L2.A.12 — "Vous avez ete apparie a {coach} pour la J{n}"
+}
+
+/// Réengagement — abonnement Web Push (PWA) persisté.
+///
+/// Avant, les subscriptions web-push vivaient en mémoire (Map) : perdues
+/// au restart serveur et non partagées entre instances, ce qui défait
+/// l'objectif de réengagement (notifier un coach absent quand son match
+/// async devient prêt). On les persiste désormais. `endpoint` est
+/// globalement unique : un endpoint push appartient à un seul
+/// navigateur/appareil. Au ré-abonnement depuis le même device, on
+/// upsert (les clés p256dh/auth peuvent avoir tourné).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Réengagement — Phase B : consentement (opt-in) au digest e-mail
+/// hebdomadaire + état d'idempotence.
+///
+/// RGPD : `enabled` est false par défaut (opt-in explicite requis). La
+/// désinscription en un clic (token signé, sans login) pose
+/// `enabled=false` + `unsubscribedAt`. `lastSentAt` sert de garde
+/// d'idempotence : le job hebdo ne ré-envoie pas dans la fenêtre.
+model EmailDigestPreference {
+  id             String    @id @default(cuid())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String    @unique
+  enabled        Boolean   @default(false)
+  lastSentAt     DateTime?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).

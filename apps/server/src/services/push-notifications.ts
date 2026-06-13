@@ -1,4 +1,6 @@
 import webpush from "web-push";
+import { prisma } from "../prisma";
+import { serverLog } from "../utils/server-log";
 import {
   shouldSendNotification,
   NotificationType,
@@ -28,6 +30,19 @@ function getKeys(): { publicKey: string; privateKey: string } {
 // Initialise VAPID on module load
 const keys = getKeys();
 webpush.setVapidDetails(VAPID_SUBJECT, keys.publicKey, keys.privateKey);
+
+// Sécurité / ops : ne jamais hardcoder les clés VAPID. Si elles sont
+// absentes de l'environnement on dégrade proprement (clés dev éphémères
+// générées ci-dessus) mais on log un avertissement explicite au
+// démarrage : en prod, des clés éphémères = abonnements invalidés à
+// chaque restart (la subscription navigateur référence l'ancienne clé).
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  serverLog.warn(
+    "[push] VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY absents — clés de dev " +
+      "éphémères générées. En production, configurer ces variables d'env " +
+      "(sinon les abonnements push ne survivent pas à un redémarrage).",
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Subscription types
@@ -71,45 +86,61 @@ export function isValidExpoPushToken(token: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// In-memory subscription store
+// Persistent subscription store (Prisma)
+//
+// Réengagement : les subscriptions web-push sont persistées en base
+// (modèle `PushSubscription`) plutôt qu'en mémoire, pour survivre aux
+// redémarrages serveur et fonctionner en multi-instance. `endpoint` est
+// la clé d'unicité (un endpoint = un navigateur/appareil).
 // ---------------------------------------------------------------------------
 
-const subscriptions = new Map<string, PushSubscriptionData[]>();
-
-export function addSubscription(
+export async function addSubscription(
   userId: string,
   sub: PushSubscriptionData,
-): void {
-  const userSubs = subscriptions.get(userId) ?? [];
-  // Replace if same endpoint (re-subscribe from same device)
-  const filtered = userSubs.filter((s) => s.endpoint !== sub.endpoint);
-  filtered.push(sub);
-  subscriptions.set(userId, filtered);
+): Promise<void> {
+  // Upsert par endpoint : ré-abonnement depuis le même device (clés
+  // tournées) OU device repris par un autre user (re-affecte le userId).
+  await prisma.pushSubscription.upsert({
+    where: { endpoint: sub.endpoint },
+    create: {
+      userId,
+      endpoint: sub.endpoint,
+      p256dh: sub.keys.p256dh,
+      auth: sub.keys.auth,
+    },
+    update: {
+      userId,
+      p256dh: sub.keys.p256dh,
+      auth: sub.keys.auth,
+    },
+  });
 }
 
-export function removeSubscription(
+export async function removeSubscription(
   userId: string,
   endpoint: string,
-): boolean {
-  const userSubs = subscriptions.get(userId);
-  if (!userSubs) return false;
-  const before = userSubs.length;
-  const filtered = userSubs.filter((s) => s.endpoint !== endpoint);
-  if (filtered.length === before) return false;
-  if (filtered.length === 0) {
-    subscriptions.delete(userId);
-  } else {
-    subscriptions.set(userId, filtered);
-  }
-  return true;
+): Promise<boolean> {
+  const res = await prisma.pushSubscription.deleteMany({
+    where: { userId, endpoint },
+  });
+  return res.count > 0;
 }
 
-export function getSubscriptions(userId: string): PushSubscriptionData[] {
-  return subscriptions.get(userId) ?? [];
-}
-
-export function clearSubscriptions(): void {
-  subscriptions.clear();
+export async function getSubscriptions(
+  userId: string,
+): Promise<PushSubscriptionData[]> {
+  const rows: ReadonlyArray<{
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+  }> = await prisma.pushSubscription.findMany({
+    where: { userId },
+    select: { endpoint: true, p256dh: true, auth: true },
+  });
+  return rows.map((r) => ({
+    endpoint: r.endpoint,
+    keys: { p256dh: r.p256dh, auth: r.auth },
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +197,7 @@ export async function sendPushToUser(
   userId: string,
   payload: PushPayload,
 ): Promise<{ sent: number; failed: number }> {
-  const userSubs = getSubscriptions(userId);
+  const userSubs = await getSubscriptions(userId);
   if (userSubs.length === 0) {
     return { sent: 0, failed: 0 };
   }
@@ -197,7 +228,7 @@ export async function sendPushToUser(
 
   // Clean up expired subscriptions
   for (const endpoint of expiredEndpoints) {
-    removeSubscription(userId, endpoint);
+    await removeSubscription(userId, endpoint);
   }
 
   return { sent, failed };
