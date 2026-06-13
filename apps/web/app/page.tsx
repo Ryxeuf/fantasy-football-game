@@ -1,313 +1,282 @@
 "use client";
-import Image from "next/image";
+import type { ReactNode } from "react";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
 import HomeStructuredData from "./components/HomeStructuredData";
 import LatestBlogPosts from "./components/LatestBlogPosts";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
+import {
+  NuffleMedallion,
+  BlockDie,
+  EmblemRosters,
+  EmblemStar,
+  EmblemSkills,
+  EmblemTutorial,
+  EmblemTabletop,
+  EmblemCup,
+  EmblemLeague,
+  EmblemPdf,
+  type BlockDieFace,
+} from "./components/home/NuffleArt";
 
-// Placeholders flous (16px) générés depuis les illustrations : affichés
-// instantanément pendant le chargement -> fondu progressif au lieu d'un vide.
-const BLUR_ROSTERS =
-  "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADwAQCdASoQABAAAwBSJQBOgMWv3hpvliAA/usmQEkRWvMJoCFpv6NujvLqVZUE46/Ob8WflY4kjDvycWr+x9Z9iLyIn6sVQLluCbwQfCATGyF+9Olf7MzrTK/SbmGj9wJK/55HdRfloYD2GExEwJasIAA=";
-const BLUR_STAR_PLAYERS =
-  "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAABwAgCdASoQABAAAwBSJZgCdAYuvvu78e5AvMAAAP7rhb++TW68TIlRZ8IoNji6exbqz16065yk6oWxiZKdZ7NVnpF480cbNV6cKhBx5PC98JR9Q+se82ptjHOz+TCADcC1B0Pzv04btCAdM/BskU3HE3YGAAAA";
-const BLUR_EXPORT_PDF =
-  "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAAAQAgCdASoQABAAAwBSJYgCdAEPgC+/ZmAAAP7wOyGFDOABt3K1js84WYwgiQ4YcayeIMmjsrFRAIR54IjiCLXEMG2Hm/MpSb5Z2N8zmm3k4pZ8A+Nfj5gVdn13CTYQ1UALdOu4wu8t4/Viq/x8cGyRTccTdlUAAAA=";
+/* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
+   partout (badges d'icones, poster final) pour eviter le patchwork. */
+const COIN_BADGE =
+  "relative flex items-center justify-center rounded-full bg-[#1B1610] text-nuffle-gold ring-1 ring-nuffle-gold/40 shadow-[inset_0_1px_0_rgba(232,201,106,0.25),0_6px_16px_rgba(27,22,16,0.35)]";
+
+function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: string; subtitle?: string }) {
+  return (
+    <div className="text-center max-w-2xl mx-auto">
+      {kicker && (
+        <p className="font-subtitle text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-nuffle-gold/90">
+          {kicker}
+        </p>
+      )}
+      <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-nuffle-anthracite">
+        {title}
+      </h2>
+      <span className="mt-3 inline-block h-px w-20 bg-gradient-to-r from-transparent via-nuffle-gold to-transparent" aria-hidden="true" />
+      {subtitle && (
+        <p className="mt-3 text-base sm:text-lg text-nuffle-bronze/90 font-body">{subtitle}</p>
+      )}
+    </div>
+  );
+}
+
+interface FeatureCardProps {
+  href?: string;
+  icon: ReactNode;
+  title: string;
+  description: string;
+  badge?: string;
+  cta?: string;
+}
+
+function FeatureCard({ href, icon, title, description, badge, cta }: FeatureCardProps) {
+  const inner = (
+    <>
+      <div className="flex items-start gap-4">
+        <span className={`${COIN_BADGE} h-14 w-14 flex-shrink-0`}>
+          <span className="h-8 w-8 flex items-center justify-center [&>svg]:h-8 [&>svg]:w-8">{icon}</span>
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-heading font-bold text-lg leading-tight text-nuffle-anthracite">{title}</h3>
+          {badge && (
+            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/15 px-2.5 py-0.5 text-[11px] font-subtitle font-bold uppercase tracking-wide text-nuffle-bronze">
+              <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
+              {badge}
+            </span>
+          )}
+        </div>
+      </div>
+      <span className="mt-4 block h-px w-full bg-nuffle-bronze/15" aria-hidden="true" />
+      <p className="mt-4 text-nuffle-anthracite/75 font-body text-sm sm:text-[15px] leading-relaxed">
+        {description}
+      </p>
+      {href && cta && (
+        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze group-hover:text-nuffle-gold transition-colors">
+          {cta}
+          <span className="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+        </span>
+      )}
+    </>
+  );
+
+  const cardClass =
+    "group h-full rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 p-6 shadow-[0_2px_10px_rgba(107,78,46,0.06)] hover:border-nuffle-gold/60 hover:shadow-[0_10px_30px_rgba(107,78,46,0.14)] hover:-translate-y-1 transition-all";
+
+  return href ? (
+    <a href={href} className={cardClass}>
+      {inner}
+    </a>
+  ) : (
+    <div className={cardClass}>{inner}</div>
+  );
+}
 
 export default function LandingPage() {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
 
-  const quickLinks = [
-    { href: "/teams", label: t.home.quickAccessTeams, icon: "⚽" },
-    { href: "/star-players", label: t.home.quickAccessStarPlayers, icon: "⭐" },
-    { href: "/skills", label: t.home.quickAccessSkills, icon: "📚" },
-    { href: "/tutoriel", label: t.home.quickAccessTutorial, icon: "🎓" },
+  const stats = [
+    { label: t.home.statsRosters, value: "30" },
+    { label: t.home.statsStarPlayers, value: "60+" },
+    { label: t.home.statsSkills, value: "130+" },
+    { label: t.home.statsFree, value: t.home.statsFreeValue },
   ];
+
+  const explore = t.home.exploreCta;
+  const features: ReadonlyArray<FeatureCardProps> = [
+    { href: "/teams", icon: <EmblemRosters />, title: t.home.rosters.title, description: t.home.rosters.description, cta: explore },
+    { href: "/star-players", icon: <EmblemStar />, title: t.home.starPlayers.title, description: t.home.starPlayers.description, cta: explore },
+    { href: "/skills", icon: <EmblemSkills />, title: t.home.skillsReference.title, description: t.home.skillsReference.description, cta: explore },
+    { href: "/tutoriel", icon: <EmblemTutorial />, title: t.home.tutorial.title, description: t.home.tutorial.description, cta: explore },
+    { href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description, cta: explore },
+    { href: "/cups", icon: <EmblemCup />, title: t.home.cups.title, description: t.home.cups.description, cta: explore },
+    {
+      href: "/feedback",
+      icon: <EmblemLeague />,
+      title: t.home.leagues.title,
+      description: t.home.leagues.description,
+      badge: t.home.leagues.badge,
+      cta: t.home.requestAccessCta,
+    },
+    { icon: <EmblemPdf />, title: t.home.exportPdf.title, description: t.home.exportPdf.description },
+  ];
+
+  const quickLinks = [
+    { href: "/teams", label: t.home.quickAccessTeams },
+    { href: "/star-players", label: t.home.quickAccessStarPlayers },
+    { href: "/skills", label: t.home.quickAccessSkills },
+    { href: "/tutoriel", label: t.home.quickAccessTutorial },
+  ];
+
+  const heroDice: ReadonlyArray<BlockDieFace> = ["push", "pow", "stumble"];
 
   return (
     <>
       <HomeStructuredData />
-      <div className="min-h-screen">
-        {/* Beta Launch Banner */}
-        <section className="w-full bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-600 text-white py-3 px-6 shadow-lg">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-center">
-            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <p className="font-semibold text-sm md:text-base">
-              {t.home.betaBanner}
-            </p>
-          </div>
-        </section>
-
+      {/* Canvas unique : un seul fond parchemin chaud sur toute la page,
+          full-bleed (on sort du padding du layout) pour eviter les seams. */}
+      <div className="-mx-4 sm:-mx-6 -mb-4 sm:-mb-6 bg-gradient-to-b from-[#F3EAD6] via-[#EFE4CD] to-[#E7DABF] text-nuffle-anthracite">
         {/* Hero */}
-        <section className="relative isolate overflow-hidden bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze to-nuffle-anthracite">
-          <div className="w-full px-4 sm:px-6 py-12 sm:py-16 md:py-20 flex flex-col-reverse md:flex-row items-center gap-6 md:gap-10">
-            <div className="text-nuffle-ivory max-w-xl w-full">
-              <div className="mb-4 md:mb-6">
-                <Logo variant="default" showText={true} textColor="text-nuffle-ivory" />
+        <section className="relative overflow-hidden">
+          {/* texture : hachures de terrain tres discretes, communes a la page */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[repeating-linear-gradient(115deg,transparent,transparent_46px,#6B4E2E_46px,#6B4E2E_47px)]"
+            aria-hidden="true"
+          />
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 grid md:grid-cols-[1.1fr_0.9fr] items-center gap-10 md:gap-12">
+            <div>
+              <div className="mb-6">
+                <Logo variant="default" showText={true} />
               </div>
-              <h1 className="sr-only">Nuffle Arena — {t.home.title}</h1>
-              <p className="mt-4 md:mt-6 text-lg sm:text-xl text-nuffle-ivory/90 leading-relaxed font-subtitle">
+              <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/10 px-4 py-1.5 text-xs sm:text-sm font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-bronze">
+                <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
+                {t.home.heroBadge}
+              </span>
+              <h1 className="mt-5 font-heading font-bold text-4xl sm:text-5xl md:text-[3.4rem] leading-[1.05] text-nuffle-anthracite">
                 {t.home.title}
-              </p>
-              <p className="mt-3 md:mt-4 text-base sm:text-lg text-nuffle-ivory/80 leading-relaxed font-body">
+              </h1>
+              <p className="mt-5 text-base sm:text-lg text-nuffle-anthracite/80 leading-relaxed font-body max-w-xl">
                 {t.home.description}
               </p>
-              <p className="mt-2 md:mt-3 text-sm sm:text-base text-nuffle-ivory/70 leading-relaxed font-body">
+              <p className="mt-3 text-sm sm:text-base text-nuffle-bronze/90 leading-relaxed font-body max-w-xl">
                 {t.home.subtitle}
               </p>
-              <div className="mt-6 md:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+
+              <div className="mt-7 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                 <a
                   href="/me/teams"
-                  className="px-6 py-3 rounded-lg bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-center"
+                  className="px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_6px_20px_rgba(203,161,53,0.35)] hover:shadow-[0_8px_28px_rgba(203,161,53,0.5)] transition-all hover:-translate-y-0.5 text-center"
                 >
                   {t.home.manageTeams}
                 </a>
                 <a
                   href="/teams"
-                  className="px-6 py-3 rounded-lg border-2 border-nuffle-gold/50 text-nuffle-ivory hover:bg-nuffle-gold/20 font-subtitle font-semibold transition-all text-center"
+                  className="px-7 py-3.5 rounded-xl border-2 border-nuffle-bronze/40 text-nuffle-bronze hover:border-nuffle-gold hover:text-nuffle-anthracite hover:bg-nuffle-gold/10 font-subtitle font-bold uppercase tracking-wide transition-all text-center"
                 >
                   {t.home.discoverTeams}
                 </a>
               </div>
+
+              {/* Stats integrees au hero (pas de bande separee) */}
+              <dl className="mt-9 grid grid-cols-4 gap-2 sm:gap-4 max-w-lg border-t border-nuffle-bronze/20 pt-5">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="text-center sm:text-left">
+                    <dd className="font-score text-3xl sm:text-4xl text-nuffle-bronze leading-none tracking-wide">
+                      {stat.value}
+                    </dd>
+                    <dt className="mt-1 text-[10px] sm:text-xs text-nuffle-anthracite/55 font-subtitle uppercase tracking-wider leading-tight">
+                      {stat.label}
+                    </dt>
+                  </div>
+                ))}
+              </dl>
             </div>
-            <div className="relative w-full md:w-auto">
-              <div className="rounded-xl border-2 border-nuffle-gold/30 bg-nuffle-bronze/20 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
-                <Image
-                  src="/images/bb_dice_sides.webp"
-                  alt="Dés de blocage Blood Bowl"
-                  width={540}
-                  height={360}
-                  className="w-full max-w-[540px] mx-auto rounded-md"
-                  priority
-                />
-              </div>
-              <div className="hidden md:block absolute -bottom-6 -left-6 rotate-[-8deg] rounded-lg border-2 border-nuffle-gold/30 bg-nuffle-bronze/30 p-3 shadow-xl backdrop-blur-sm">
-                <Image
-                  src="/images/blocking_dice/pow.png"
-                  alt="Dé de blocage POW"
-                  width={80}
-                  height={80}
-                  className="w-20"
-                />
-              </div>
-              <div className="hidden md:block absolute -top-6 -right-8 rotate-[12deg] rounded-lg border-2 border-nuffle-gold/30 bg-nuffle-bronze/30 p-3 shadow-xl backdrop-blur-sm">
-                <Image
-                  src="/images/blocking_dice/push_back.png"
-                  alt="Dé de blocage PUSH"
-                  width={80}
-                  height={80}
-                  className="w-20"
-                />
+
+            {/* Medaillon + des de blocage */}
+            <div className="relative mx-auto w-full max-w-[380px]">
+              <NuffleMedallion className="w-full drop-shadow-[0_18px_40px_rgba(27,22,16,0.25)]" />
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2.5">
+                {heroDice.map((face, i) => (
+                  <BlockDie
+                    key={face}
+                    face={face}
+                    className={`w-12 sm:w-14 drop-shadow-lg ${i === 1 ? "-translate-y-2 w-14 sm:w-16" : ""}`}
+                  />
+                ))}
               </div>
             </div>
           </div>
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,rgba(203,161,53,0.15),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(107,78,46,0.15),transparent_40%)]" />
-        </section>
 
-        {/* Stats band */}
-        <section className="w-full px-4 sm:px-6 py-8 md:py-10 bg-nuffle-ivory border-b-2 border-nuffle-bronze/20">
-          <h2 className="sr-only">{t.home.statsTitle}</h2>
-          <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto text-center">
-            <div className="rounded-xl bg-white shadow-md border border-nuffle-bronze/20 p-4 sm:p-6">
-              <dt className="text-xs sm:text-sm text-nuffle-anthracite/70 font-body uppercase tracking-wide">
-                {t.home.statsRosters}
-              </dt>
-              <dd className="mt-1 text-3xl sm:text-4xl font-heading font-bold text-nuffle-gold">30</dd>
-            </div>
-            <div className="rounded-xl bg-white shadow-md border border-nuffle-bronze/20 p-4 sm:p-6">
-              <dt className="text-xs sm:text-sm text-nuffle-anthracite/70 font-body uppercase tracking-wide">
-                {t.home.statsStarPlayers}
-              </dt>
-              <dd className="mt-1 text-3xl sm:text-4xl font-heading font-bold text-nuffle-gold">60+</dd>
-            </div>
-            <div className="rounded-xl bg-white shadow-md border border-nuffle-bronze/20 p-4 sm:p-6">
-              <dt className="text-xs sm:text-sm text-nuffle-anthracite/70 font-body uppercase tracking-wide">
-                {t.home.statsSkills}
-              </dt>
-              <dd className="mt-1 text-3xl sm:text-4xl font-heading font-bold text-nuffle-gold">130+</dd>
-            </div>
-            <div className="rounded-xl bg-white shadow-md border border-nuffle-bronze/20 p-4 sm:p-6">
-              <dt className="text-xs sm:text-sm text-nuffle-anthracite/70 font-body uppercase tracking-wide">
-                {t.home.statsFree}
-              </dt>
-              <dd className="mt-1 text-3xl sm:text-4xl font-heading font-bold text-emerald-600">€0</dd>
-            </div>
-          </dl>
+          {/* citation Nuffle — liseré */}
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pb-10">
+            <blockquote className="border-l-4 border-nuffle-red/70 pl-4 text-sm sm:text-base italic text-nuffle-bronze/80 font-body">
+              {t.home.heroQuote}
+            </blockquote>
+          </div>
         </section>
 
         {/* Features */}
-        <section className="w-full px-4 sm:px-6 py-12 md:py-16">
-          <div className="max-w-6xl mx-auto mb-8 md:mb-10 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-nuffle-anthracite">
-              {t.home.discoverTitle}
-            </h2>
-            <p className="mt-2 text-base sm:text-lg text-nuffle-anthracite/70 font-body">
-              {t.home.discoverSubtitle}
-            </p>
+        <section className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
+          <SectionTitle kicker={t.home.featuresKicker} title={t.home.discoverTitle} subtitle={t.home.discoverSubtitle} />
+          <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f) => (
+              <FeatureCard key={f.title} {...f} />
+            ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <a
-              href="/teams"
-              className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all group"
-            >
-              <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-                <Image
-                  src="/images/rosters.webp"
-                  alt="Rosters Blood Bowl"
-                  width={320}
-                  height={320}
-                  placeholder="blur"
-                  blurDataURL={BLUR_ROSTERS}
-                  className="h-full w-full object-contain group-hover:scale-105 transition-transform"
-                />
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.rosters.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.rosters.description}
-                </p>
-              </div>
-            </a>
-            <a
-              href="/star-players"
-              className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all group"
-            >
-              <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-                <Image
-                  src="/images/star-players.webp"
-                  alt="Star Players Blood Bowl"
-                  width={320}
-                  height={320}
-                  placeholder="blur"
-                  blurDataURL={BLUR_STAR_PLAYERS}
-                  className="h-full w-full object-contain group-hover:scale-105 transition-transform"
-                />
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.starPlayers.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.starPlayers.description}
-                </p>
-              </div>
-            </a>
-            <a
-              href="/skills"
-              className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all group"
-            >
-              <div className="h-40 flex items-center justify-center bg-gradient-to-br from-nuffle-ivory to-nuffle-bronze/20">
-                <span className="text-6xl" aria-hidden="true">📚</span>
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.skillsReference.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.skillsReference.description}
-                </p>
-              </div>
-            </a>
-            <a
-              href="/tutoriel"
-              className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all group"
-            >
-              <div className="h-40 flex items-center justify-center bg-gradient-to-br from-nuffle-ivory to-emerald-100">
-                <span className="text-6xl" aria-hidden="true">🎓</span>
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.tutorial.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.tutorial.description}
-                </p>
-              </div>
-            </a>
-            <a
-              href="/local-matches"
-              className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all group"
-            >
-              <div className="h-40 flex items-center justify-center bg-gradient-to-br from-nuffle-ivory to-nuffle-gold/20">
-                <span className="text-6xl" aria-hidden="true">🎲</span>
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.localMatches.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.localMatches.description}
-                </p>
-              </div>
-            </a>
-            <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 hover:shadow-xl transition-all">
-              <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-                <Image
-                  src="/images/export-pdf.webp"
-                  alt="Export PDF roster"
-                  width={320}
-                  height={320}
-                  placeholder="blur"
-                  blurDataURL={BLUR_EXPORT_PDF}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="p-5 bg-white">
-                <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.exportPdf.title}</h3>
-                <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                  {t.home.exportPdf.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Quick access */}
-        <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
-          <div className="rounded-2xl bg-nuffle-ivory border-2 border-nuffle-bronze/30 p-5 sm:p-6 shadow-md">
-            <h2 className="text-lg sm:text-xl font-heading font-bold text-nuffle-anthracite mb-4">
-              {t.home.quickAccess}
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {quickLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-2 px-4 py-3 bg-white rounded-lg border border-nuffle-bronze/30 hover:border-nuffle-gold/60 hover:bg-nuffle-gold/5 transition-all font-subtitle font-semibold text-nuffle-anthracite text-sm sm:text-base"
-                >
-                  <span aria-hidden="true">{link.icon}</span>
-                  <span>{link.label}</span>
-                </a>
-              ))}
-            </div>
+          {/* Acces rapide — pills discrets, meme famille */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+            <span className="text-xs font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-bronze/70">
+              {t.home.quickAccess} :
+            </span>
+            {quickLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-full border border-nuffle-bronze/30 bg-[#FBF7EC] px-4 py-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze hover:border-nuffle-gold hover:text-nuffle-anthracite hover:bg-nuffle-gold/10 transition-all"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </section>
 
         {/* Latest blog posts */}
         <LatestBlogPosts />
 
-        {/* Play Online (feature-flagged) */}
+        {/* Play Online (feature-flagged) — poster sombre */}
         {onlinePlayEnabled && (
-          <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
-            <div className="rounded-2xl bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze/90 to-nuffle-anthracite text-nuffle-ivory p-6 sm:p-8 md:p-12 shadow-xl border-2 border-nuffle-bronze/50">
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+          <section className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+            <div className="relative overflow-hidden rounded-3xl bg-[#1B1610] text-nuffle-ivory p-7 sm:p-10 ring-1 ring-nuffle-gold/40">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[repeating-linear-gradient(115deg,transparent,transparent_40px,#E8C96A_40px,#E8C96A_41px)]"
+                aria-hidden="true"
+              />
+              <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10">
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold">
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold text-nuffle-gold">
                     {t.play?.playOnline || "Jouer en ligne"}
                   </h2>
-                  <p className="text-nuffle-ivory/80 mt-2 font-body text-sm sm:text-base">
+                  <p className="text-nuffle-ivory/75 mt-2 font-body text-sm sm:text-base max-w-xl">
                     {t.play?.playOnlineDesc || "Affrontez d'autres coachs en ligne ! Créez une partie ou rejoignez un match existant."}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                   <a
                     href="/play"
-                    className="px-6 py-3 bg-nuffle-gold text-nuffle-anthracite font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-center whitespace-nowrap"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-lg hover:-translate-y-0.5 transition-all text-center whitespace-nowrap"
                   >
-                    🎮 {t.play?.playOnlineButton || "Accéder au lobby"}
+                    {t.play?.playOnlineButton || "Accéder au lobby"}
                   </a>
                   <a
                     href="/me/matches"
-                    className="px-6 py-3 border-2 border-nuffle-gold/50 text-nuffle-ivory hover:bg-nuffle-gold/20 font-subtitle font-semibold rounded-lg transition-all text-center whitespace-nowrap"
+                    className="px-6 py-3 rounded-xl border-2 border-nuffle-gold/40 text-nuffle-ivory hover:bg-nuffle-gold/15 font-subtitle font-bold uppercase tracking-wide transition-all text-center whitespace-nowrap"
                   >
-                    📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+                    {t.play?.myOnlineMatches || "Mes matchs en ligne"}
                   </a>
                 </div>
               </div>
@@ -316,93 +285,86 @@ export default function LandingPage() {
         )}
 
         {/* FAQ */}
-        <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite text-center mb-6 md:mb-8">
-              {t.home.faqTitle}
-            </h2>
-            <div className="space-y-3">
-              <details className="group rounded-xl bg-white border-2 border-nuffle-bronze/30 p-4 sm:p-5 shadow-sm hover:border-nuffle-gold/50 transition-colors">
-                <summary className="cursor-pointer font-subtitle font-semibold text-nuffle-anthracite flex items-center justify-between gap-2">
-                  <span>{t.home.faqQ1}</span>
-                  <span className="text-nuffle-gold group-open:rotate-180 transition-transform" aria-hidden="true">▾</span>
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-14 md:py-20">
+          <SectionTitle kicker={t.home.faqKicker} title={t.home.faqTitle} />
+          <div className="mt-8 space-y-3">
+            {[
+              { q: t.home.faqQ1, a: t.home.faqA1 },
+              { q: t.home.faqQ2, a: t.home.faqA2 },
+              { q: t.home.faqQ3, a: t.home.faqA3 },
+              { q: t.home.faqQ4, a: t.home.faqA4 },
+            ].map((item) => (
+              <details
+                key={item.q}
+                className="group rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 px-5 py-4 shadow-[0_2px_10px_rgba(107,78,46,0.05)] hover:border-nuffle-gold/50 transition-colors"
+              >
+                <summary className="cursor-pointer list-none font-subtitle font-semibold text-nuffle-anthracite flex items-center justify-between gap-3">
+                  <span>{item.q}</span>
+                  <span className="flex-shrink-0 text-nuffle-gold group-open:rotate-180 transition-transform" aria-hidden="true">▾</span>
                 </summary>
-                <p className="mt-3 text-nuffle-anthracite/80 font-body text-sm sm:text-base">{t.home.faqA1}</p>
+                <p className="mt-3 text-nuffle-anthracite/75 font-body text-sm sm:text-base border-t border-nuffle-bronze/15 pt-3">
+                  {item.a}
+                </p>
               </details>
-              <details className="group rounded-xl bg-white border-2 border-nuffle-bronze/30 p-4 sm:p-5 shadow-sm hover:border-nuffle-gold/50 transition-colors">
-                <summary className="cursor-pointer font-subtitle font-semibold text-nuffle-anthracite flex items-center justify-between gap-2">
-                  <span>{t.home.faqQ2}</span>
-                  <span className="text-nuffle-gold group-open:rotate-180 transition-transform" aria-hidden="true">▾</span>
-                </summary>
-                <p className="mt-3 text-nuffle-anthracite/80 font-body text-sm sm:text-base">{t.home.faqA2}</p>
-              </details>
-              <details className="group rounded-xl bg-white border-2 border-nuffle-bronze/30 p-4 sm:p-5 shadow-sm hover:border-nuffle-gold/50 transition-colors">
-                <summary className="cursor-pointer font-subtitle font-semibold text-nuffle-anthracite flex items-center justify-between gap-2">
-                  <span>{t.home.faqQ3}</span>
-                  <span className="text-nuffle-gold group-open:rotate-180 transition-transform" aria-hidden="true">▾</span>
-                </summary>
-                <p className="mt-3 text-nuffle-anthracite/80 font-body text-sm sm:text-base">{t.home.faqA3}</p>
-              </details>
-              <details className="group rounded-xl bg-white border-2 border-nuffle-bronze/30 p-4 sm:p-5 shadow-sm hover:border-nuffle-gold/50 transition-colors">
-                <summary className="cursor-pointer font-subtitle font-semibold text-nuffle-anthracite flex items-center justify-between gap-2">
-                  <span>{t.home.faqQ4}</span>
-                  <span className="text-nuffle-gold group-open:rotate-180 transition-transform" aria-hidden="true">▾</span>
-                </summary>
-                <p className="mt-3 text-nuffle-anthracite/80 font-body text-sm sm:text-base">{t.home.faqA4}</p>
-              </details>
-            </div>
+            ))}
           </div>
         </section>
 
         {/* Support CTA */}
-        <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
-          <div className="rounded-2xl bg-white border-2 border-nuffle-bronze/30 p-6 sm:p-8 md:p-10 shadow-lg hover:border-nuffle-gold/50 transition-all">
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="flex-shrink-0">
-                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-red-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
+          <div className="rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 p-6 sm:p-8 shadow-[0_2px_10px_rgba(107,78,46,0.06)]">
+            <div className="flex flex-col md:flex-row items-center gap-5 md:gap-8">
+              <span className={`${COIN_BADGE} h-16 w-16 flex-shrink-0`}>
+                <svg className="h-8 w-8 text-nuffle-red" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
-              </div>
+              </span>
               <div className="flex-1 text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl font-heading font-bold text-nuffle-anthracite">
                   {t.support?.homeCta || "Vous aimez Nuffle Arena ?"}
                 </h2>
-                <p className="text-nuffle-anthracite/80 mt-2 font-body text-sm sm:text-base">
+                <p className="text-nuffle-anthracite/75 mt-2 font-body text-sm sm:text-base">
                   {t.support?.homeCtaDescription || "Ce projet est 100 % gratuit et maintenu par des passionnés. Un petit coup de pouce nous aide à garder les serveurs en ligne !"}
                 </p>
               </div>
-              <div className="flex-shrink-0">
-                <a
-                  href="/support"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 whitespace-nowrap"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" />
-                  </svg>
-                  {t.support?.homeCtaButton || "Nous soutenir"}
-                </a>
-              </div>
+              <a
+                href="/support"
+                className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-lg hover:-translate-y-0.5 transition-all whitespace-nowrap"
+              >
+                {t.support?.homeCtaButton || "Nous soutenir"}
+              </a>
             </div>
           </div>
         </section>
 
-        {/* Callout */}
-        <section className="w-full px-4 sm:px-6 pb-12 md:pb-16">
-          <div className="rounded-2xl bg-gradient-to-r from-nuffle-gold via-nuffle-bronze to-nuffle-gold text-nuffle-anthracite p-6 sm:p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-xl border-2 border-nuffle-bronze/50">
-            <div className="text-center md:text-left">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold">
+        {/* Poster final — meme materiau jeton que le hero, en grand */}
+        <section className="px-4 sm:px-6 pb-16 md:pb-24">
+          <div className="relative max-w-6xl mx-auto overflow-hidden rounded-[28px] bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/50 px-6 py-12 sm:px-12 sm:py-16">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.07] bg-[repeating-linear-gradient(115deg,transparent,transparent_40px,#E8C96A_40px,#E8C96A_41px)]"
+              aria-hidden="true"
+            />
+            <div className="pointer-events-none absolute -right-10 -top-12 w-56 opacity-20 hidden sm:block" aria-hidden="true">
+              <NuffleMedallion className="w-full" />
+            </div>
+            <div className="relative max-w-2xl">
+              <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/40 px-4 py-1.5 text-xs font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-gold/90">
+                <BlockDie face="pow" className="w-4" />
+                {t.home.heroBadge}
+              </span>
+              <h2 className="mt-5 text-3xl sm:text-4xl md:text-5xl font-heading font-bold bg-gradient-to-br from-[#F3Dd92] via-nuffle-gold to-[#a8852b] bg-clip-text text-transparent leading-tight">
                 {t.home.createFirstTeam}
               </h2>
-              <p className="text-nuffle-anthracite/90 mt-2 font-body text-sm sm:text-base">
+              <p className="mt-4 text-nuffle-ivory/75 font-body text-sm sm:text-base">
                 {t.home.createFirstTeamDesc}
               </p>
+              <a
+                href="/me/teams"
+                className="mt-7 inline-flex px-8 py-4 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_8px_28px_rgba(203,161,53,0.4)] hover:-translate-y-0.5 transition-all"
+              >
+                {t.home.manageTeams}
+              </a>
             </div>
-            <a
-              href="/me/teams"
-              className="w-full md:w-auto px-6 py-3 bg-nuffle-anthracite text-nuffle-ivory font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-center"
-            >
-              {t.home.manageTeams}
-            </a>
           </div>
         </section>
       </div>
