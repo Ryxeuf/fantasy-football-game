@@ -15,7 +15,6 @@ import {
   EmblemTutorial,
   EmblemTabletop,
   EmblemPdf,
-  type BlockDieFace,
 } from "./components/home/NuffleArt";
 import {
   FactionCrest,
@@ -25,6 +24,7 @@ import {
   Flourish,
   StadiumBackdrop,
 } from "./components/home/NuffleScenes";
+import BlockDiceRoller from "./components/home/BlockDiceRoller";
 
 /* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
    partout (badges d'icones, poster final) pour eviter le patchwork. */
@@ -129,8 +129,6 @@ export default function LandingPage() {
     { href: "/tutoriel", label: t.home.quickAccessTutorial },
   ];
 
-  const heroDice: ReadonlyArray<BlockDieFace> = ["push", "pow", "stumble"];
-
   // Citation de Nuffle tiree au hasard a chaque chargement. On part de
   // l'index 0 (stable SSR + premier rendu client) puis on randomise au
   // mount pour eviter tout mismatch d'hydratation.
@@ -203,18 +201,12 @@ export default function LandingPage() {
               </dl>
             </div>
 
-            {/* Medaillon + des de blocage */}
+            {/* Medaillon + lanceur de dés interactif */}
             <div className="relative mx-auto w-full max-w-[380px]">
               <StadiumBackdrop className="pointer-events-none absolute -inset-x-10 -top-10 -bottom-4 h-[120%] w-[120%] opacity-60" />
               <NuffleMedallion className="relative w-full drop-shadow-[0_18px_40px_rgba(27,22,16,0.25)]" />
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2.5">
-                {heroDice.map((face, i) => (
-                  <BlockDie
-                    key={face}
-                    face={face}
-                    className={`w-12 sm:w-14 drop-shadow-lg ${i === 1 ? "-translate-y-2 w-14 sm:w-16" : ""}`}
-                  />
-                ))}
+              <div className="relative -mt-4">
+                <BlockDiceRoller />
               </div>
             </div>
           </div>
