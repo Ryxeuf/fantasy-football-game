@@ -216,7 +216,7 @@ export default function TeamDetailClient({
               )}
             </span>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <ShareBar
               url={`${SITE_URL}/teams/${slug}`}
               title={
@@ -227,6 +227,12 @@ export default function TeamDetailClient({
               copyLabel={language === "en" ? "Copy link" : "Copier le lien"}
               copiedLabel={language === "en" ? "Link copied!" : "Lien copié !"}
             />
+            <Link
+              href={`/teams/comparer?teams=${slug}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-700 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              ⚔️ {language === "en" ? "Compare this team" : "Comparer cette équipe"}
+            </Link>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
