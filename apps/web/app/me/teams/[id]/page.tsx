@@ -13,6 +13,7 @@ import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
 import { MatchReportBanner } from "./MatchReportBanner";
 import TeamShareToggle from "./TeamShareToggle";
+import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -165,6 +166,13 @@ export default function TeamDetailPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {id ? (
+        <FirstTeamWelcomeBanner
+          teamId={id}
+          teamName={team?.name}
+          onExportPdf={handleExportRoster}
+        />
+      ) : null}
       {leagueEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
       {id && team ? (

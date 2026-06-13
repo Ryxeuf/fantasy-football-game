@@ -7,7 +7,10 @@ import { setAuthTokens } from "../lib/auth-storage";
 
 // Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
 // et ne pouvant être interprétés comme des URLs externes).
-function sanitizeRedirect(raw: string | null, fallback: string = "/me"): string {
+// Par défaut, un nouveau coach atterrit sur /me/teams : c'est là que se
+// déclenche l'assistant d'onboarding "Crée ton équipe en 60 secondes" pour
+// les comptes sans équipe.
+function sanitizeRedirect(raw: string | null, fallback: string = "/me/teams"): string {
   if (!raw) return fallback;
   if (!raw.startsWith("/")) return fallback;
   if (raw.startsWith("//")) return fallback;
@@ -26,7 +29,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [redirectTo, setRedirectTo] = useState<string>("/me");
+  const [redirectTo, setRedirectTo] = useState<string>("/me/teams");
   const [loginHref, setLoginHref] = useState<string>("/login");
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function RegisterPage() {
     const redirectParam = sanitizeRedirect(params.get("redirect"));
     setRedirectTo(redirectParam);
     setLoginHref(
-      redirectParam === "/me"
+      redirectParam === "/me/teams"
         ? "/login"
         : `/login?redirect=${encodeURIComponent(redirectParam)}`,
     );
