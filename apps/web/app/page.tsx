@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
 import HomeStructuredData from "./components/HomeStructuredData";
@@ -131,6 +131,16 @@ export default function LandingPage() {
 
   const heroDice: ReadonlyArray<BlockDieFace> = ["push", "pow", "stumble"];
 
+  // Citation de Nuffle tiree au hasard a chaque chargement. On part de
+  // l'index 0 (stable SSR + premier rendu client) puis on randomise au
+  // mount pour eviter tout mismatch d'hydratation.
+  const heroQuotes = t.home.heroQuotes;
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  useEffect(() => {
+    setQuoteIndex(Math.floor(Math.random() * heroQuotes.length));
+  }, [heroQuotes.length]);
+  const heroQuote = heroQuotes[quoteIndex] ?? heroQuotes[0];
+
   return (
     <>
       <HomeStructuredData />
@@ -212,7 +222,7 @@ export default function LandingPage() {
           {/* citation Nuffle — liseré */}
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pb-10">
             <blockquote className="border-l-4 border-nuffle-red/70 pl-4 text-sm sm:text-base italic text-nuffle-bronze/80 font-body">
-              {t.home.heroQuote}
+              {heroQuote}
             </blockquote>
           </div>
         </section>
