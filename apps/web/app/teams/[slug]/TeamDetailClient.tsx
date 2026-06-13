@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SkillTooltip from "../../me/teams/components/SkillTooltip";
 import { useLanguage } from "../../contexts/LanguageContext";
+import ShareBar from "../../components/ShareBar";
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
+).replace(/\/$/, "");
 
 const API_BASE_PUBLIC =
   process.env.NEXT_PUBLIC_API_BASE ||
@@ -210,6 +215,18 @@ export default function TeamDetailClient({
                 team.budget.toString(),
               )}
             </span>
+          </div>
+          <div className="mt-3">
+            <ShareBar
+              url={`${SITE_URL}/teams/${slug}`}
+              title={
+                language === "en"
+                  ? `${team.name} — Blood Bowl roster on Nuffle Arena`
+                  : `${team.name} — roster Blood Bowl sur Nuffle Arena`
+              }
+              copyLabel={language === "en" ? "Copy link" : "Copier le lien"}
+              copiedLabel={language === "en" ? "Link copied!" : "Lien copié !"}
+            />
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
