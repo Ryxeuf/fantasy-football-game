@@ -1,88 +1,66 @@
 /**
- * Tests pour `OnboardingModal` (Sprint O — Lot O.B.3).
+ * Tests pour `OnboardingModal` — porte d'entrée de l'assistant d'onboarding.
+ *
+ * Le composant ne fait que la décision d'affichage + la persistance du skip ;
+ * l'UI réelle (wizard 3 étapes) est mockée ici pour isoler la logique de gate.
  *
  * Conditions d'affichage :
- *   - `userCreatedAt` recent (< 24h).
  *   - `teamsCount === 0`.
- *   - Flag localStorage `onboarding_dismissed_v1` absent.
- *
- * Conditions de masquage :
- *   - `userCreatedAt` null / undefined / invalide.
- *   - Compte > 24h.
- *   - `teamsCount > 0`.
- *   - Flag dismiss deja set.
- *
- * Au click sur un CTA ou skip ou X, le flag est set.
+ *   - Flag localStorage `onboarding_first_team_dismissed_v1` absent.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
+// Stub du wizard : expose un testid + un bouton qui appelle onDismiss.
+vi.mock("./onboarding/FirstTeamWizard", () => ({
+  default: ({ onDismiss }: { onDismiss: () => void }) => (
+    <div data-testid="onboarding-wizard">
+      <button data-testid="stub-dismiss" onClick={onDismiss}>
+        dismiss
+      </button>
+    </div>
+  ),
+}));
+
 import OnboardingModal from "./OnboardingModal";
+import { ONBOARDING_DISMISS_KEY } from "./onboarding/onboarding-logic";
 
 beforeEach(() => {
   window.localStorage.clear();
 });
 
-const RECENT = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
-const OLD = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(); // 48h ago
-
-describe("OnboardingModal — Lot O.B.3", () => {
-  it("s'affiche pour un nouveau coach (createdAt < 24h, 0 equipes)", () => {
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={0} />);
-    expect(screen.getByTestId("onboarding-modal")).toBeTruthy();
-    expect(screen.getByTestId("onboarding-cta-team")).toBeTruthy();
-    expect(screen.getByTestId("onboarding-cta-tutorial")).toBeTruthy();
-    expect(screen.getByTestId("onboarding-cta-pro-league")).toBeTruthy();
+describe("OnboardingModal — gate", () => {
+  it("affiche l'assistant pour un coach sans équipe", () => {
+    render(<OnboardingModal teamsCount={0} />);
+    expect(screen.getByTestId("onboarding-wizard")).toBeTruthy();
   });
 
-  it("ne s'affiche pas si l'user a deja au moins une equipe", () => {
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={1} />);
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
+  it("ne s'affiche pas si le coach a déjà une équipe", () => {
+    render(<OnboardingModal teamsCount={2} />);
+    expect(screen.queryByTestId("onboarding-wizard")).toBeNull();
   });
 
-  it("ne s'affiche pas si le compte a plus de 24h", () => {
-    render(<OnboardingModal userCreatedAt={OLD} teamsCount={0} />);
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
+  it("ne s'affiche pas si le flag de skip est déjà présent", () => {
+    window.localStorage.setItem(ONBOARDING_DISMISS_KEY, "1");
+    render(<OnboardingModal teamsCount={0} />);
+    expect(screen.queryByTestId("onboarding-wizard")).toBeNull();
   });
 
-  it("ne s'affiche pas si userCreatedAt est null ou invalide", () => {
-    const { rerender } = render(
-      <OnboardingModal userCreatedAt={null} teamsCount={0} />,
+  it("le skip ferme l'assistant et persiste le flag", () => {
+    render(<OnboardingModal teamsCount={0} />);
+    fireEvent.click(screen.getByTestId("stub-dismiss"));
+    expect(screen.queryByTestId("onboarding-wizard")).toBeNull();
+    expect(window.localStorage.getItem(ONBOARDING_DISMISS_KEY)).toBe("1");
+  });
+
+  it("reste compatible avec la prop héritée userCreatedAt", () => {
+    render(
+      <OnboardingModal
+        userCreatedAt={new Date().toISOString()}
+        teamsCount={0}
+      />,
     );
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-
-    rerender(
-      <OnboardingModal userCreatedAt="not-a-date" teamsCount={0} />,
-    );
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-  });
-
-  it("ne s'affiche pas si le flag dismiss est deja set", () => {
-    window.localStorage.setItem("onboarding_dismissed_v1", "1");
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={0} />);
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-  });
-
-  it("le bouton 'Plus tard' ferme le modal et set le flag dismiss", () => {
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={0} />);
-    fireEvent.click(screen.getByTestId("onboarding-skip"));
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-    expect(window.localStorage.getItem("onboarding_dismissed_v1")).toBe("1");
-  });
-
-  it("le bouton X (fermer) ferme et set le flag dismiss", () => {
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={0} />);
-    fireEvent.click(screen.getByTestId("onboarding-close"));
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-    expect(window.localStorage.getItem("onboarding_dismissed_v1")).toBe("1");
-  });
-
-  it("click sur un CTA ferme aussi le modal (et permet navigation)", () => {
-    render(<OnboardingModal userCreatedAt={RECENT} teamsCount={0} />);
-    fireEvent.click(screen.getByTestId("onboarding-cta-team"));
-    // Le modal disparait du DOM apres dismiss.
-    expect(screen.queryByTestId("onboarding-modal")).toBeNull();
-    expect(window.localStorage.getItem("onboarding_dismissed_v1")).toBe("1");
+    expect(screen.getByTestId("onboarding-wizard")).toBeTruthy();
   });
 });

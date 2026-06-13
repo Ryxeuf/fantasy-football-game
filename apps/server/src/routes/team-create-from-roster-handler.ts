@@ -31,6 +31,7 @@ import { updateTeamValues } from '../utils/team-values';
 import {
   type AllowedRoster,
   type GameFormat,
+  type Ruleset,
   getStarPlayerBySlug,
   getFormatConstraints,
   isGameFormat,
@@ -41,6 +42,8 @@ import {
   calculateStarPlayersCost,
 } from '../utils/star-player-validation';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { getRosterFromDb } from '../utils/roster-helpers';
+import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 
 const ALLOWED_TEAMS = [
   'skaven',
@@ -75,12 +78,21 @@ const ALLOWED_TEAMS = [
   'norse',
 ] as const;
 
+/** Template brut hardcodé (sans `displayName`, ajouté à la résolution). */
+type RawTemplate = Omit<LineupEntry, 'displayName'>;
+
 /**
- * Templates de roster pour `/create-from-roster`. Supporte 3
- * rosters : skaven, wood_elf, lizardmen (fallback). Utilise pour
- * les seeds et la creation rapide depuis l'UI debutant.
+ * Templates figés pour `/create-from-roster` — 3 rosters historiques
+ * (skaven, wood_elf, lizardmen) dont la composition de départ a été
+ * réglée à la main. Pour tout autre roster on renvoie `null` : la
+ * composition est alors dérivée des positions réelles de la DB via
+ * `buildDefaultLineup` (cf. `resolveLineup`).
+ *
+ * Avant ce changement, les rosters non listés retombaient sur le
+ * template lizardmen, produisant des joueurs aux slugs de position
+ * incohérents avec le roster choisi (VE faussée).
  */
-function rosterTemplates(roster: AllowedRoster) {
+function rosterTemplates(roster: AllowedRoster): RawTemplate[] | null {
   if (roster === 'skaven') {
     return [
       {
@@ -173,40 +185,64 @@ function rosterTemplates(roster: AllowedRoster) {
     ];
   }
 
-  // lizardmen (fallback)
-  return [
-    {
-      position: 'lizardmen_saurus',
-      count: 6,
-      ma: 6,
-      st: 4,
-      ag: 4,
-      pa: 6,
-      av: 10,
-      skills: '',
-    },
-    {
-      position: 'lizardmen_skink_runner',
-      count: 4,
-      ma: 8,
-      st: 2,
-      ag: 3,
-      pa: 4,
-      av: 8,
-      skills: 'dodge,stunty',
-    },
-    {
-      position: 'lizardmen_chameleon_skink',
-      count: 1,
-      ma: 7,
-      st: 2,
-      ag: 3,
-      pa: 3,
-      av: 8,
-      skills: 'dodge,on-the-ball,shadowing,stunty',
-    },
-    // Kroxigor optionnel (non inclus par defaut)
-  ];
+  if (roster === 'lizardmen') {
+    return [
+      {
+        position: 'lizardmen_saurus',
+        count: 6,
+        ma: 6,
+        st: 4,
+        ag: 4,
+        pa: 6,
+        av: 10,
+        skills: '',
+      },
+      {
+        position: 'lizardmen_skink_runner',
+        count: 4,
+        ma: 8,
+        st: 2,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        skills: 'dodge,stunty',
+      },
+      {
+        position: 'lizardmen_chameleon_skink',
+        count: 1,
+        ma: 7,
+        st: 2,
+        ag: 3,
+        pa: 3,
+        av: 8,
+        skills: 'dodge,on-the-ball,shadowing,stunty',
+      },
+      // Kroxigor optionnel (non inclus par defaut)
+    ];
+  }
+
+  // Aucun template figé : la composition sera dérivée de la DB.
+  return null;
+}
+
+/**
+ * Résout la composition de départ d'un roster : template figé s'il
+ * existe, sinon composition dérivée des positions réelles de la DB.
+ * `displayName` est rempli (slug pour les templates figés).
+ */
+async function resolveLineup(
+  roster: AllowedRoster,
+  ruleset: Ruleset,
+): Promise<LineupEntry[]> {
+  const hardcoded = rosterTemplates(roster);
+  if (hardcoded) {
+    return hardcoded.map((t) => ({ ...t, displayName: t.position }));
+  }
+  const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
+  if (dbRoster && dbRoster.positions.length > 0) {
+    return buildDefaultLineup(dbRoster.positions);
+  }
+  return [];
 }
 
 /**
@@ -239,10 +275,14 @@ export async function handleCreateFromRoster(
   if (!ALLOWED_TEAMS.includes(roster as any))
     return res.status(400).json({ error: 'Roster non autorisé' });
 
-  const ruleset = resolveRuleset(bodyRuleset);
+  const ruleset = resolveRuleset(bodyRuleset) as Ruleset;
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
   const finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
+
+  // Composition de départ : template figé (skaven / wood_elf / lizardmen)
+  // ou dérivée des positions réelles de la DB pour les autres rosters.
+  const lineup = await resolveLineup(roster as AllowedRoster, ruleset);
 
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
@@ -253,10 +293,9 @@ export async function handleCreateFromRoster(
       return res.status(400).json({ error: pairValidation.error });
     }
 
-    // Calculer le nombre de joueurs du template
-    const templates = rosterTemplates(roster as AllowedRoster);
+    // Calculer le nombre de joueurs de la composition
     let playerCount = 0;
-    for (const t of templates) {
+    for (const t of lineup) {
       playerCount += t.count;
       if (playerCount >= 16) {
         playerCount = 16;
@@ -297,14 +336,13 @@ export async function handleCreateFromRoster(
   }
 
   // Creer les joueurs (sans teamId, injecte dans la transaction)
-  const templates = rosterTemplates(roster as AllowedRoster);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRows: any[] = [];
   let number = 1;
-  for (const t of templates) {
+  for (const t of lineup) {
     for (let i = 0; i < t.count; i += 1) {
       playerRows.push({
-        name: `${t.position} ${i + 1}`,
+        name: `${t.displayName || t.position} ${i + 1}`,
         position: t.position,
         number: number++,
         ma: t.ma,

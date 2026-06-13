@@ -23,6 +23,16 @@ export const UMAMI_EVENTS = {
   PDF_EXPORT: "pdf-export",
   /** Clic sur un CTA Ko-fi / soutien. */
   SUPPORT_CTA: "support-cta",
+  /** Assistant d'onboarding affiché à un coach sans équipe. */
+  ONBOARDING_START: "onboarding-start",
+  /** Passage à une étape de l'assistant (data: { step }). */
+  ONBOARDING_STEP: "onboarding-step",
+  /** Sélection d'une race dans l'assistant (data: { roster, recommended }). */
+  ONBOARDING_RACE: "onboarding-race",
+  /** Équipe créée via l'assistant (data: { roster }). */
+  ONBOARDING_COMPLETE: "onboarding-complete",
+  /** Assistant skippé via "Plus tard" (data: { step }). */
+  ONBOARDING_SKIP: "onboarding-skip",
 } as const;
 
 export type UmamiEventName = (typeof UMAMI_EVENTS)[keyof typeof UMAMI_EVENTS];
