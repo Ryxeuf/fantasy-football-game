@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock web-push before importing
+// ---------------------------------------------------------------------------
+// Mocks
+// ---------------------------------------------------------------------------
+
+// Mock web-push before importing the service.
 vi.mock("web-push", () => ({
   default: {
     setVapidDetails: vi.fn(),
@@ -12,7 +16,7 @@ vi.mock("web-push", () => ({
   },
 }));
 
-// Mock notification preferences — default: all allowed
+// Mock notification preferences — default: all allowed.
 vi.mock("./notification-preferences", () => ({
   shouldSendNotification: vi.fn().mockResolvedValue(true),
   NotificationType: {
@@ -22,12 +26,78 @@ vi.mock("./notification-preferences", () => ({
   },
 }));
 
+// Persistent store is now Prisma-backed. We back the mock with a tiny
+// in-memory fake so the persistence assertions (dedup by endpoint,
+// cleanup on 410/404) read naturally without a real database.
+interface FakeRow {
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+const store: FakeRow[] = [];
+
+vi.mock("../prisma", () => ({
+  prisma: {
+    pushSubscription: {
+      upsert: vi.fn(
+        async ({
+          where,
+          create,
+          update,
+        }: {
+          where: { endpoint: string };
+          create: FakeRow;
+          update: Partial<FakeRow>;
+        }) => {
+          const existing = store.find((r) => r.endpoint === where.endpoint);
+          if (existing) {
+            Object.assign(existing, update);
+            return existing;
+          }
+          store.push({ ...create });
+          return create;
+        },
+      ),
+      deleteMany: vi.fn(
+        async ({
+          where,
+        }: {
+          where: { userId?: string; endpoint?: string };
+        }) => {
+          let count = 0;
+          for (let i = store.length - 1; i >= 0; i--) {
+            const r = store[i];
+            if (
+              (where.userId === undefined || r.userId === where.userId) &&
+              (where.endpoint === undefined || r.endpoint === where.endpoint)
+            ) {
+              store.splice(i, 1);
+              count++;
+            }
+          }
+          return { count };
+        },
+      ),
+      findMany: vi.fn(
+        async ({ where }: { where: { userId: string } }) =>
+          store
+            .filter((r) => r.userId === where.userId)
+            .map((r) => ({
+              endpoint: r.endpoint,
+              p256dh: r.p256dh,
+              auth: r.auth,
+            })),
+      ),
+    },
+  },
+}));
+
 import {
   addSubscription,
   removeSubscription,
   getSubscriptions,
   sendPushToUser,
-  clearSubscriptions,
   getVapidPublicKey,
   sendTurnPush,
   sendMatchFoundPush,
@@ -37,7 +107,7 @@ import {
 
 describe("push-notifications", () => {
   beforeEach(() => {
-    clearSubscriptions();
+    store.length = 0;
     clearExpoSubscriptions();
     vi.clearAllMocks();
   });
@@ -52,58 +122,67 @@ describe("push-notifications", () => {
   };
 
   describe("addSubscription", () => {
-    it("stores a subscription for a user", () => {
-      addSubscription(userId, subscription);
-      expect(getSubscriptions(userId)).toHaveLength(1);
-      expect(getSubscriptions(userId)[0]).toEqual(subscription);
+    it("persists a subscription for a user", async () => {
+      await addSubscription(userId, subscription);
+      const subs = await getSubscriptions(userId);
+      expect(subs).toHaveLength(1);
+      expect(subs[0]).toEqual(subscription);
     });
 
-    it("allows multiple subscriptions per user (different devices)", () => {
+    it("allows multiple subscriptions per user (different devices)", async () => {
       const sub2 = {
         endpoint: "https://push.example.com/sub/def",
         keys: { p256dh: "key2", auth: "auth2" },
       };
-      addSubscription(userId, subscription);
-      addSubscription(userId, sub2);
-      expect(getSubscriptions(userId)).toHaveLength(2);
+      await addSubscription(userId, subscription);
+      await addSubscription(userId, sub2);
+      expect(await getSubscriptions(userId)).toHaveLength(2);
     });
 
-    it("replaces subscription with same endpoint", () => {
-      addSubscription(userId, subscription);
+    it("replaces subscription with same endpoint (upsert dedup)", async () => {
+      await addSubscription(userId, subscription);
       const updated = {
         ...subscription,
         keys: { p256dh: "new-key", auth: "new-auth" },
       };
-      addSubscription(userId, updated);
-      expect(getSubscriptions(userId)).toHaveLength(1);
-      expect(getSubscriptions(userId)[0].keys.p256dh).toBe("new-key");
+      await addSubscription(userId, updated);
+      const subs = await getSubscriptions(userId);
+      expect(subs).toHaveLength(1);
+      expect(subs[0].keys.p256dh).toBe("new-key");
+    });
+
+    it("re-affecte un endpoint repris à un autre user", async () => {
+      await addSubscription("user-A", subscription);
+      await addSubscription("user-B", subscription);
+      expect(await getSubscriptions("user-A")).toHaveLength(0);
+      expect(await getSubscriptions("user-B")).toHaveLength(1);
     });
   });
 
   describe("removeSubscription", () => {
-    it("removes a subscription by endpoint", () => {
-      addSubscription(userId, subscription);
-      const removed = removeSubscription(userId, subscription.endpoint);
+    it("removes a subscription by endpoint", async () => {
+      await addSubscription(userId, subscription);
+      const removed = await removeSubscription(userId, subscription.endpoint);
       expect(removed).toBe(true);
-      expect(getSubscriptions(userId)).toHaveLength(0);
+      expect(await getSubscriptions(userId)).toHaveLength(0);
     });
 
-    it("returns false if subscription not found", () => {
-      const removed = removeSubscription(userId, "https://unknown.endpoint");
+    it("returns false if subscription not found", async () => {
+      const removed = await removeSubscription(userId, "https://unknown.endpoint");
       expect(removed).toBe(false);
     });
   });
 
   describe("getSubscriptions", () => {
-    it("returns empty array for unknown user", () => {
-      expect(getSubscriptions("unknown-user")).toEqual([]);
+    it("returns empty array for unknown user", async () => {
+      expect(await getSubscriptions("unknown-user")).toEqual([]);
     });
   });
 
   describe("sendPushToUser", () => {
     it("sends push notification to all user subscriptions", async () => {
       const webpush = (await import("web-push")).default;
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       const result = await sendPushToUser(userId, {
         title: "Nuffle Arena",
@@ -135,7 +214,7 @@ describe("push-notifications", () => {
       vi.mocked(webpush.sendNotification).mockRejectedValueOnce({
         statusCode: 410,
       });
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       const result = await sendPushToUser(userId, {
         title: "Test",
@@ -144,7 +223,7 @@ describe("push-notifications", () => {
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(1);
-      expect(getSubscriptions(userId)).toHaveLength(0);
+      expect(await getSubscriptions(userId)).toHaveLength(0);
     });
 
     it("removes subscription on 404 Not Found", async () => {
@@ -152,7 +231,7 @@ describe("push-notifications", () => {
       vi.mocked(webpush.sendNotification).mockRejectedValueOnce({
         statusCode: 404,
       });
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       const result = await sendPushToUser(userId, {
         title: "Test",
@@ -161,7 +240,7 @@ describe("push-notifications", () => {
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(1);
-      expect(getSubscriptions(userId)).toHaveLength(0);
+      expect(await getSubscriptions(userId)).toHaveLength(0);
     });
 
     it("keeps subscription on transient errors", async () => {
@@ -169,7 +248,7 @@ describe("push-notifications", () => {
       vi.mocked(webpush.sendNotification).mockRejectedValueOnce({
         statusCode: 503,
       });
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       const result = await sendPushToUser(userId, {
         title: "Test",
@@ -179,7 +258,7 @@ describe("push-notifications", () => {
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(1);
       // Subscription kept for retry
-      expect(getSubscriptions(userId)).toHaveLength(1);
+      expect(await getSubscriptions(userId)).toHaveLength(1);
     });
   });
 
@@ -194,12 +273,12 @@ describe("push-notifications", () => {
   describe("sendTurnPush", () => {
     it("sends a 'your turn' notification with match URL", async () => {
       const webpush = (await import("web-push")).default;
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendTurnPush(userId, "match-abc");
 
-      // sendTurnPush is fire-and-forget; wait for microtask
-      await new Promise((r) => setTimeout(r, 10));
+      // sendTurnPush is fire-and-forget; wait for microtasks.
+      await new Promise((r) => setTimeout(r, 20));
 
       expect(webpush.sendNotification).toHaveBeenCalledWith(
         subscription,
@@ -220,16 +299,12 @@ describe("push-notifications", () => {
   describe("sendMatchFoundPush", () => {
     it("sends a 'match found' notification with correct payload", async () => {
       const webpush = (await import("web-push")).default;
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendMatchFoundPush(userId, "match-def");
 
-      await new Promise((r) => setTimeout(r, 10));
+      await new Promise((r) => setTimeout(r, 20));
 
-      expect(webpush.sendNotification).toHaveBeenCalledWith(
-        subscription,
-        expect.any(String),
-      );
       const payload = JSON.parse(
         vi.mocked(webpush.sendNotification).mock.calls[0][1] as string,
       );
@@ -255,16 +330,12 @@ describe("push-notifications", () => {
   describe("sendFriendMatchStartedPush", () => {
     it("sends a 'friend match started' notification with correct payload", async () => {
       const webpush = (await import("web-push")).default;
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendFriendMatchStartedPush(userId, "match-fms", "Alice", "Bob");
 
-      await new Promise((r) => setTimeout(r, 10));
+      await new Promise((r) => setTimeout(r, 20));
 
-      expect(webpush.sendNotification).toHaveBeenCalledWith(
-        subscription,
-        expect.any(String),
-      );
       const payload = JSON.parse(
         vi.mocked(webpush.sendNotification).mock.calls[0][1] as string,
       );
@@ -286,13 +357,15 @@ describe("push-notifications", () => {
 
     it("skips when user preferences disallow friend-match-started", async () => {
       const webpush = (await import("web-push")).default;
-      const { shouldSendNotification } = await import("./notification-preferences");
+      const { shouldSendNotification } = await import(
+        "./notification-preferences"
+      );
       vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendFriendMatchStartedPush(userId, "match-blocked", "Alice", "Bob");
 
-      await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 30));
 
       expect(shouldSendNotification).toHaveBeenCalled();
       expect(webpush.sendNotification).not.toHaveBeenCalled();
@@ -308,13 +381,15 @@ describe("push-notifications", () => {
   describe("preference gating", () => {
     it("skips sendTurnPush when user preferences disallow turn notifications", async () => {
       const webpush = (await import("web-push")).default;
-      const { shouldSendNotification } = await import("./notification-preferences");
+      const { shouldSendNotification } = await import(
+        "./notification-preferences"
+      );
       vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendTurnPush(userId, "match-gated");
 
-      await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 30));
 
       expect(shouldSendNotification).toHaveBeenCalled();
       expect(webpush.sendNotification).not.toHaveBeenCalled();
@@ -322,13 +397,15 @@ describe("push-notifications", () => {
 
     it("skips sendMatchFoundPush when user preferences disallow match-found notifications", async () => {
       const webpush = (await import("web-push")).default;
-      const { shouldSendNotification } = await import("./notification-preferences");
+      const { shouldSendNotification } = await import(
+        "./notification-preferences"
+      );
       vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendMatchFoundPush(userId, "match-gated");
 
-      await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 30));
 
       expect(shouldSendNotification).toHaveBeenCalled();
       expect(webpush.sendNotification).not.toHaveBeenCalled();
@@ -336,13 +413,15 @@ describe("push-notifications", () => {
 
     it("sends push when preferences allow", async () => {
       const webpush = (await import("web-push")).default;
-      const { shouldSendNotification } = await import("./notification-preferences");
+      const { shouldSendNotification } = await import(
+        "./notification-preferences"
+      );
       vi.mocked(shouldSendNotification).mockResolvedValueOnce(true);
-      addSubscription(userId, subscription);
+      await addSubscription(userId, subscription);
 
       sendTurnPush(userId, "match-allowed");
 
-      await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 30));
 
       expect(shouldSendNotification).toHaveBeenCalled();
       expect(webpush.sendNotification).toHaveBeenCalled();

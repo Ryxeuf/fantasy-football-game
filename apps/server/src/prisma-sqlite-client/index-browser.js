@@ -441,6 +441,15 @@ exports.Prisma.MatchQueueScalarFieldEnum = {
   joinedAt: 'joinedAt'
 };
 
+exports.Prisma.PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.LocalMatchScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1164,6 +1173,7 @@ exports.Prisma.ModelName = {
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',
+  PushSubscription: 'PushSubscription',
   LocalMatch: 'LocalMatch',
   LocalMatchAction: 'LocalMatchAction',
   League: 'League',

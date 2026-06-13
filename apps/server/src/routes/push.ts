@@ -41,13 +41,17 @@ router.post(
   "/subscribe",
   authUser,
   validate(pushSubscribeSchema),
-  (req: AuthenticatedRequest, res) => {
+  async (req: AuthenticatedRequest, res) => {
     const { endpoint, keys } = req.body as {
       endpoint: string;
       keys: { p256dh: string; auth: string };
     };
-    addSubscription(req.user!.id, { endpoint, keys });
-    return res.json({ ok: true });
+    try {
+      await addSubscription(req.user!.id, { endpoint, keys });
+      return res.json({ ok: true });
+    } catch {
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
   },
 );
 
@@ -60,13 +64,17 @@ router.post(
   "/unsubscribe",
   authUser,
   validate(pushUnsubscribeSchema),
-  (req: AuthenticatedRequest, res) => {
+  async (req: AuthenticatedRequest, res) => {
     const { endpoint } = req.body as { endpoint: string };
-    const removed = removeSubscription(req.user!.id, endpoint);
-    if (!removed) {
-      return res.status(404).json({ error: "Abonnement non trouve" });
+    try {
+      const removed = await removeSubscription(req.user!.id, endpoint);
+      if (!removed) {
+        return res.status(404).json({ error: "Abonnement non trouve" });
+      }
+      return res.json({ ok: true });
+    } catch {
+      return res.status(500).json({ error: "Erreur serveur" });
     }
-    return res.json({ ok: true });
   },
 );
 
