@@ -22,6 +22,17 @@ const API_BASE_PUBLIC =
 const MAX_SELECTION = 3;
 const MIN_SELECTION = 2;
 
+/** Définition d'une ligne de comparaison, partagée table desktop ↔ grille mobile. */
+interface ComparisonMetric {
+  readonly key: string;
+  readonly label: string;
+  /** Alignement horizontal du contenu (défaut : center). */
+  readonly align?: "left" | "center";
+  /** Alignement vertical en table desktop (défaut : middle). */
+  readonly valign?: "top";
+  readonly render: (roster: RosterSummary) => React.ReactNode;
+}
+
 interface RosterComparatorClientProps {
   initialRosters: RosterSummary[];
   initialSeason: Season;
@@ -72,7 +83,9 @@ export default function RosterComparatorClient({
   const [rosters, setRosters] = useState<RosterSummary[]>(initialRosters);
   const [selected, setSelected] = useState<string[]>(() => {
     const known = new Set(initialRosters.map((r) => r.slug));
-    return (initialSelected ?? []).filter((s) => known.has(s)).slice(0, MAX_SELECTION);
+    return (initialSelected ?? [])
+      .filter((s) => known.has(s))
+      .slice(0, MAX_SELECTION);
   });
   const [query, setQuery] = useState("");
 
@@ -116,7 +129,10 @@ export default function RosterComparatorClient({
   );
 
   const selectedRosters = useMemo(
-    () => selected.map((s) => bySlug.get(s)).filter((r): r is RosterSummary => Boolean(r)),
+    () =>
+      selected
+        .map((s) => bySlug.get(s))
+        .filter((r): r is RosterSummary => Boolean(r)),
     [selected, bySlug],
   );
 
@@ -147,6 +163,113 @@ export default function RosterComparatorClient({
       ? canonicalMatchup(selectedRosters[0].slug, selectedRosters[1].slug)
       : null;
 
+  // Définition unique des lignes de comparaison, réutilisée par la table
+  // (desktop) et la grille empilée (mobile). Chaque `render` renvoie le
+  // contenu *déjà stylé* afin que les deux layouts restent cohérents.
+  const metrics: ComparisonMetric[] = [
+    {
+      key: "tier",
+      label: tr.tier,
+      render: (r) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${tierBadgeClass(r.tier)}`}
+        >
+          {tr.tier} {r.tier}
+        </span>
+      ),
+    },
+    {
+      key: "budget",
+      label: tr.budget,
+      render: (r) => (
+        <span className="font-score text-lg text-nuffle-anthracite">
+          {r.budget}k
+        </span>
+      ),
+    },
+    {
+      key: "positions",
+      label: tr.positions,
+      render: (r) => (
+        <span className="font-semibold text-nuffle-anthracite">
+          {r.positionCount}
+        </span>
+      ),
+    },
+    {
+      key: "difficulty",
+      label: tr.difficulty,
+      render: (r) => {
+        const meta = getRosterMeta(r.slug);
+        return (
+          <span className="flex flex-col items-center gap-1.5">
+            <DifficultyScale rank={DIFFICULTY_RANK[meta.difficulty]} />
+            <span className="text-xs font-subtitle text-nuffle-bronze">
+              {DIFFICULTY_LABELS[lang][meta.difficulty]}
+            </span>
+          </span>
+        );
+      },
+    },
+    {
+      key: "playStyle",
+      label: tr.playStyle,
+      render: (r) => {
+        const meta = getRosterMeta(r.slug);
+        return (
+          <span className="inline-flex items-center rounded-full border border-nuffle-bronze/30 bg-white/60 px-3 py-0.5 text-xs font-subtitle font-semibold text-nuffle-bronze">
+            {PLAYSTYLE_LABELS[lang][meta.playStyle]}
+          </span>
+        );
+      },
+    },
+    {
+      key: "naf",
+      label: tr.nafApproved,
+      render: (r) =>
+        r.naf ? (
+          <span className="text-nuffle-gold font-bold">NAF</span>
+        ) : (
+          <span className="text-nuffle-bronze/70">{tr.official}</span>
+        ),
+    },
+    {
+      key: "starPlayers",
+      label: tr.starPlayers,
+      valign: "top",
+      render: (r) => {
+        const meta = getRosterMeta(r.slug);
+        return meta.starPlayers.length > 0 ? (
+          <ul className="space-y-0.5 text-xs text-nuffle-anthracite/80">
+            {meta.starPlayers.map((sp) => (
+              <li key={sp}>{sp}</li>
+            ))}
+          </ul>
+        ) : (
+          <span className="text-nuffle-bronze/50">{tr.noStars}</span>
+        );
+      },
+    },
+    {
+      key: "summary",
+      label: tr.summary,
+      valign: "top",
+      align: "left",
+      render: (r) => {
+        const meta = getRosterMeta(r.slug);
+        return (
+          <span className="block text-xs text-nuffle-anthracite/80 leading-relaxed">
+            {lang === "en" ? meta.shortEn : meta.shortFr}
+          </span>
+        );
+      },
+    },
+  ];
+
+  // 2 ou 3 colonnes selon la sélection (classes Tailwind statiques).
+  const mobileGridCols =
+    selectedRosters.length >= 3 ? "grid-cols-3" : "grid-cols-2";
+
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 space-y-6 font-body">
       <nav
@@ -161,12 +284,18 @@ export default function RosterComparatorClient({
           </li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link href="/teams" className="hover:text-nuffle-gold transition-colors">
+            <Link
+              href="/teams"
+              className="hover:text-nuffle-gold transition-colors"
+            >
               {lang === "en" ? "Teams" : "Équipes"}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
-          <li className="text-nuffle-anthracite font-semibold" aria-current="page">
+          <li
+            className="text-nuffle-anthracite font-semibold"
+            aria-current="page"
+          >
             {lang === "en" ? "Compare" : "Comparer"}
           </li>
         </ol>
@@ -200,7 +329,9 @@ export default function RosterComparatorClient({
             <h2 className="font-heading font-bold text-xl text-nuffle-anthracite">
               {tr.pick}
             </h2>
-            <p className="text-sm text-nuffle-bronze/80 mt-0.5">{tr.pickHint}</p>
+            <p className="text-sm text-nuffle-bronze/80 mt-0.5">
+              {tr.pickHint}
+            </p>
           </div>
           {selected.length > 0 && (
             <button
@@ -265,7 +396,10 @@ export default function RosterComparatorClient({
                   </span>
                 </span>
                 {isSelected && (
-                  <span className="text-nuffle-gold font-bold" aria-hidden="true">
+                  <span
+                    className="text-nuffle-gold font-bold"
+                    aria-hidden="true"
+                  >
                     ✓
                   </span>
                 )}
@@ -275,7 +409,9 @@ export default function RosterComparatorClient({
         </div>
 
         {filtered.length === 0 && (
-          <p className="mt-4 text-center text-nuffle-bronze/70">{tr.emptyState}</p>
+          <p className="mt-4 text-center text-nuffle-bronze/70">
+            {tr.emptyState}
+          </p>
         )}
       </section>
 
@@ -303,7 +439,11 @@ export default function RosterComparatorClient({
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-2xl border border-nuffle-bronze/20 bg-[#FBF7EC] shadow-[0_2px_10px_rgba(107,78,46,0.06)]">
+          {/* Desktop : table classique côte à côte (≥ sm) */}
+          <div
+            className="hidden sm:block overflow-x-auto rounded-2xl border border-nuffle-bronze/20 bg-[#FBF7EC] shadow-[0_2px_10px_rgba(107,78,46,0.06)]"
+            data-testid="comparator-table"
+          >
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr>
@@ -316,7 +456,11 @@ export default function RosterComparatorClient({
                       className="bg-[#1B1610] px-4 py-3 text-center align-bottom min-w-[160px]"
                     >
                       <span className="flex flex-col items-center gap-2">
-                        <TeamLogo slug={roster.slug} size={44} title={roster.name} />
+                        <TeamLogo
+                          slug={roster.slug}
+                          size={44}
+                          title={roster.name}
+                        />
                         <span className="font-heading font-bold text-nuffle-ivory leading-tight">
                           {roster.name}
                         </span>
@@ -326,104 +470,20 @@ export default function RosterComparatorClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-nuffle-bronze/15">
-                <ComparisonRow label={tr.tier}>
-                  {selectedRosters.map((r) => (
-                    <td key={r.slug} className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${tierBadgeClass(r.tier)}`}
+                {metrics.map((metric) => (
+                  <ComparisonRow key={metric.key} label={metric.label}>
+                    {selectedRosters.map((r) => (
+                      <td
+                        key={r.slug}
+                        className={`px-4 py-3 ${
+                          metric.align === "left" ? "text-left" : "text-center"
+                        } ${metric.valign === "top" ? "align-top" : ""}`}
                       >
-                        {tr.tier} {r.tier}
-                      </span>
-                    </td>
-                  ))}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.budget}>
-                  {selectedRosters.map((r) => (
-                    <td key={r.slug} className="px-4 py-3 text-center font-score text-lg text-nuffle-anthracite">
-                      {r.budget}k
-                    </td>
-                  ))}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.positions}>
-                  {selectedRosters.map((r) => (
-                    <td key={r.slug} className="px-4 py-3 text-center font-semibold text-nuffle-anthracite">
-                      {r.positionCount}
-                    </td>
-                  ))}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.difficulty}>
-                  {selectedRosters.map((r) => {
-                    const meta = getRosterMeta(r.slug);
-                    return (
-                      <td key={r.slug} className="px-4 py-3">
-                        <span className="flex flex-col items-center gap-1.5">
-                          <DifficultyScale rank={DIFFICULTY_RANK[meta.difficulty]} />
-                          <span className="text-xs font-subtitle text-nuffle-bronze">
-                            {DIFFICULTY_LABELS[lang][meta.difficulty]}
-                          </span>
-                        </span>
+                        {metric.render(r)}
                       </td>
-                    );
-                  })}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.playStyle}>
-                  {selectedRosters.map((r) => {
-                    const meta = getRosterMeta(r.slug);
-                    return (
-                      <td key={r.slug} className="px-4 py-3 text-center">
-                        <span className="inline-flex items-center rounded-full border border-nuffle-bronze/30 bg-white/60 px-3 py-0.5 text-xs font-subtitle font-semibold text-nuffle-bronze">
-                          {PLAYSTYLE_LABELS[lang][meta.playStyle]}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.nafApproved}>
-                  {selectedRosters.map((r) => (
-                    <td key={r.slug} className="px-4 py-3 text-center">
-                      {r.naf ? (
-                        <span className="text-nuffle-gold font-bold">NAF</span>
-                      ) : (
-                        <span className="text-nuffle-bronze/70">{tr.official}</span>
-                      )}
-                    </td>
-                  ))}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.starPlayers}>
-                  {selectedRosters.map((r) => {
-                    const meta = getRosterMeta(r.slug);
-                    return (
-                      <td key={r.slug} className="px-4 py-3 text-center align-top">
-                        {meta.starPlayers.length > 0 ? (
-                          <ul className="space-y-0.5 text-xs text-nuffle-anthracite/80">
-                            {meta.starPlayers.map((sp) => (
-                              <li key={sp}>{sp}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-nuffle-bronze/50">{tr.noStars}</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </ComparisonRow>
-
-                <ComparisonRow label={tr.summary}>
-                  {selectedRosters.map((r) => {
-                    const meta = getRosterMeta(r.slug);
-                    return (
-                      <td key={r.slug} className="px-4 py-3 align-top text-left text-xs text-nuffle-anthracite/80 leading-relaxed">
-                        {lang === "en" ? meta.shortEn : meta.shortFr}
-                      </td>
-                    );
-                  })}
-                </ComparisonRow>
+                    ))}
+                  </ComparisonRow>
+                ))}
 
                 <tr>
                   <th
@@ -445,6 +505,69 @@ export default function RosterComparatorClient({
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile : grille empilée pleine largeur (< sm). Toutes les équipes
+              restent visibles côte à côte ; une carte par métrique évite le
+              scroll horizontal qui rendait la table illisible sur téléphone. */}
+          <div className="sm:hidden space-y-3" data-testid="comparator-cards">
+            <div
+              className={`sticky top-0 z-20 grid ${mobileGridCols} gap-2 rounded-2xl bg-[#1B1610] p-3 shadow-[0_2px_10px_rgba(0,0,0,0.15)]`}
+            >
+              {selectedRosters.map((roster) => (
+                <div
+                  key={roster.slug}
+                  className="flex flex-col items-center gap-1.5 text-center"
+                >
+                  <TeamLogo slug={roster.slug} size={36} title={roster.name} />
+                  <span className="font-heading font-bold text-xs leading-tight text-nuffle-ivory">
+                    {roster.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {metrics.map((metric) => (
+              <div
+                key={metric.key}
+                className="rounded-2xl border border-nuffle-bronze/20 bg-[#FBF7EC] p-3 shadow-[0_2px_10px_rgba(107,78,46,0.06)]"
+              >
+                <div className="mb-2 font-subtitle text-[11px] uppercase tracking-wide text-nuffle-bronze/70">
+                  {metric.label}
+                </div>
+                <div className={`grid ${mobileGridCols} gap-2`}>
+                  {selectedRosters.map((r) => (
+                    <div
+                      key={r.slug}
+                      className={`flex min-w-0 flex-col ${
+                        metric.align === "left"
+                          ? "items-start text-left"
+                          : "items-center text-center"
+                      }`}
+                    >
+                      {metric.render(r)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="rounded-2xl border border-nuffle-bronze/20 bg-[#FBF7EC] p-3 shadow-[0_2px_10px_rgba(107,78,46,0.06)]">
+              <div className="mb-2 font-subtitle text-[11px] uppercase tracking-wide text-nuffle-bronze/70">
+                {tr.viewDetail}
+              </div>
+              <div className={`grid ${mobileGridCols} gap-2`}>
+                {selectedRosters.map((r) => (
+                  <Link
+                    key={r.slug}
+                    href={`/teams/${r.slug}?ruleset=${initialSeason}`}
+                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-nuffle-gold/15 px-2 py-1.5 text-center text-xs font-subtitle font-bold text-nuffle-bronze hover:bg-nuffle-gold/30 transition-colors"
+                  >
+                    {tr.viewDetail} →
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
