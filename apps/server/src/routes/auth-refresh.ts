@@ -62,6 +62,17 @@ export function handleRefreshToken(store: RefreshTokenStore) {
       return;
     }
 
+    // Un refresh reussi prolonge une session active : on rafraichit
+    // `lastLoginAt` pour que la colonne admin "Derniere connexion" — et le
+    // calcul DAU/MAU dans `services/admin-analytics.ts` — refletent
+    // l'activite reelle. Sans ca, seuls les /login explicites par
+    // identifiants comptent, alors que la majorite des sessions actives ne
+    // passent que par /register (auto-login) puis des rotations de refresh.
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const roles = normalizeRoles(
       ((user as unknown as { roles?: string[] | string }).roles) ??
         (user as unknown as { role?: string }).role,

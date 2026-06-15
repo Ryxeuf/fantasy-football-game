@@ -110,6 +110,14 @@ router.post("/register", validate(registerSchema), async (req, res) => {
         dateOfBirth:
           dateOfBirth && dateOfBirth !== "" ? new Date(dateOfBirth) : null,
         valid: !requiresValidation,
+        // Quand `requiresValidation` est OFF (defaut), /register auto-login
+        // l'utilisateur en lui livrant directement un token (cf. plus bas).
+        // On enregistre donc `lastLoginAt` des l'inscription, sinon la
+        // colonne admin "Derniere connexion" affiche "Jamais" pour des
+        // comptes pourtant actifs (inscrits → equipes creees) qui ne se sont
+        // jamais re-authentifies via /login. Si le flag est ON, aucun token
+        // n'est livre → on laisse `null` jusqu'au premier vrai /login.
+        lastLoginAt: requiresValidation ? null : new Date(),
       },
     });
 

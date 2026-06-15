@@ -36,6 +36,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -53,7 +54,10 @@ import { handleRefreshToken } from "./auth-refresh";
 const mockRotate = rotateRefreshToken as unknown as ReturnType<typeof vi.fn>;
 const mockSignAccess = signAccessToken as unknown as ReturnType<typeof vi.fn>;
 const mockPrisma = prisma as unknown as {
-  user: { findUnique: ReturnType<typeof vi.fn> };
+  user: {
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
 };
 
 function makeRes() {
@@ -123,6 +127,13 @@ describe("Rule: POST /auth/refresh handler (S24.3d)", () => {
       refreshToken: "new-refresh-token",
       expiresIn: 15 * 60,
     });
+    // Un refresh reussi prolonge une session active → on met a jour
+    // lastLoginAt pour que "Derniere connexion" / DAU-MAU refletent
+    // l'activite reelle, pas uniquement les /login explicites.
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { lastLoginAt: expect.any(Date) },
+    });
   });
 
   it("401 when rotateRefreshToken signals reuse", async () => {
@@ -164,6 +175,8 @@ describe("Rule: POST /auth/refresh handler (S24.3d)", () => {
     await handleRefreshToken(stubStore)(req, res);
 
     expect(res.statusCode).toBe(404);
+    // Pas de user → pas de touch lastLoginAt.
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
   it("403 when the user account is invalidated", async () => {
@@ -185,6 +198,8 @@ describe("Rule: POST /auth/refresh handler (S24.3d)", () => {
     await handleRefreshToken(stubStore)(req, res);
 
     expect(res.statusCode).toBe(403);
+    // Compte invalide → pas de touch lastLoginAt.
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
   it("falls back to legacy `role` field when `roles` is undefined", async () => {
