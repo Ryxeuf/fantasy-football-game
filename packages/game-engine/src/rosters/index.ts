@@ -18,6 +18,9 @@ export {
   type Ruleset,
 } from './positions';
 
+// Noms anglais des positions (surfaces bilingues : pages position, hreflang)
+export { POSITION_NAMES_EN, getPositionNameEn } from './position-names-en';
+
 // Export des Star Players
 export * from './star-players';
 export { 

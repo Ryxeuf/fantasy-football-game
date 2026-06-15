@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 
 import { sitemapEntryWithAlternates } from './seo/hreflang';
+import { stripRosterPrefix } from './teams/position-slug';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nufflearena.fr';
@@ -21,6 +22,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
+    }),
+    sitemapEntryWithAlternates('/teams/positions', {
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }),
+    sitemapEntryWithAlternates('/teams/positions/comparer', {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
     }),
     sitemapEntryWithAlternates('/star-players', {
       lastModified: now,
@@ -238,11 +249,66 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Erreur lors de la récupération des compétences pour le sitemap:', error);
   }
 
+  // Pages dynamiques - Positions de roster (une page par position, season_3,
+  // SEO longue traine). Les positions ne sont pas dans la liste `/api/rosters`
+  // (qui n'expose que `_count`) : on recupere le detail de chaque roster
+  // season_3 en parallele, puis on emet une URL `/teams/<slug>/<position>`.
+  let positionPages: MetadataRoute.Sitemap = [];
+  try {
+    const rostersResponse = await fetch(`${API_BASE}/api/rosters?lang=fr&ruleset=season_3`, {
+      next: { revalidate: 3600 },
+    });
+    if (rostersResponse.ok) {
+      const rostersData = await rostersResponse.json();
+      const slugs: string[] = (rostersData.rosters || [])
+        .map((r: { slug?: string }) => r.slug)
+        .filter((s: unknown): s is string => typeof s === 'string' && s.length > 0);
+      const details = await Promise.all(
+        slugs.map(async (slug) => {
+          try {
+            const res = await fetch(
+              `${API_BASE}/api/rosters/${encodeURIComponent(slug)}?lang=fr&ruleset=season_3`,
+              { next: { revalidate: 3600 } },
+            );
+            if (!res.ok) return null;
+            return (await res.json()) as {
+              roster?: { slug?: string; positions?: Array<{ slug?: string }> };
+            };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      const seen = new Set<string>();
+      for (const detail of details) {
+        const roster = detail?.roster;
+        if (!roster?.slug || !Array.isArray(roster.positions)) continue;
+        for (const pos of roster.positions) {
+          if (typeof pos.slug !== 'string' || pos.slug.length === 0) continue;
+          const segment = stripRosterPrefix(pos.slug, roster.slug);
+          const path = `/teams/${roster.slug}/${segment}`;
+          if (seen.has(path)) continue;
+          seen.add(path);
+          positionPages.push(
+            sitemapEntryWithAlternates(path, {
+              lastModified: now,
+              changeFrequency: 'monthly' as const,
+              priority: 0.6,
+            }),
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des positions pour le sitemap:', error);
+  }
+
   return [
     ...staticPages,
     ...teamPages,
     ...starPlayerPages,
     ...skillPages,
+    ...positionPages,
     ...coachPages,
     ...proLeagueTeamPages,
   ];

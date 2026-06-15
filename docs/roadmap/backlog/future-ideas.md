@@ -1,6 +1,6 @@
 # Backlog — Idees futures (Pro League & engagement async)
 
-> Derniere mise a jour : 2026-05-05
+> Derniere mise a jour : 2026-06-15
 > Statut : **idees consignees**, non scopees.
 > Ces items ont ete brainstormes lors de la conception du SPRINT Pro League
 > ([sprints/SPRINT-pro-league.md](../sprints/SPRINT-pro-league.md)) puis
@@ -348,6 +348,117 @@ avant extensions Ligues v2).
   (deplacements) prouvee comme cas d'usage frequent en beta.
 
 **Effort** : L (~1-2 sem).
+
+---
+
+## Annexe B — Pages par position & etudes joueurs (SEO / contenu)
+
+> Ajoute le 2026-06-15. Theme **acquisition / SEO / contenu**, dans la
+> continuite de la vague #890-#897 (refonte home, SEO competences,
+> comparateur de rosters, tier-list). **Hors gate Pro League** ci-dessus :
+> ces items ne dependent PAS des KPI MVP Pro League et sont attaquables des
+> maintenant. Origine : commande `/ideas` du 2026-06-15 (demande : "une page
+> par position de chaque roster, comme la page par competence ; on pourra
+> ensuite lancer des etudes et afficher des stats joueurs").
+
+Etat des lieux (ancrage repo) :
+- Page modele existante : `apps/web/app/skills/` (index `page.tsx` + detail
+  `[slug]/page.tsx` + `opengraph-image.tsx` + structured data +
+  `generateMetadata` + hreflang EN/FR + ISR). C'est le template a calquer.
+- La page roster `apps/web/app/teams/[slug]/` liste deja les positions
+  (donnees servies inline par `GET /api/rosters/:slug`,
+  `apps/server/src/routes/public-rosters.ts` -> `transformRoster`). L'index
+  par roster existe donc deja ; il manque la page **detail** par position.
+- Modele Prisma : `Roster` 1-N `Position` (slug unique par roster, ma/st/ag/
+  pa/av, cost, min/max, primary/secondarySkills, join `PositionSkill`).
+
+### B.1 Page detail par position [MVP demande]
+
+**Concept** : route `/teams/[slug]/[position]` calquee sur `/skills/[slug]`
+(stats MA/ST/AG/PA/AV + cout + min/max + acces competences + positions liees
++ breadcrumb + related). Rend chaque position de `/teams/[slug]` cliquable.
+**Ancrage** : dupliquer le scaffolding `app/skills/[slug]/`. MVP : reutilise
+`GET /api/rosters/:slug` (positions deja inline) -> pas besoin de B.4 pour
+demarrer.
+**Impact / Effort** : Eleve / Moyen.
+**Inconnues** : choix de route (`/teams/[slug]/[position]` nested vs
+`/positions/[slug]` global) ; collision de slug entre rulesets season_2/3 ;
+depend de B.5 pour le hreflang EN.
+
+### B.2 Indexation SEO des positions
+
+**Concept** : ajouter les URLs position au sitemap + JSON-LD d'index
+(`ItemList` / `DefinedTerm`) + OG image dynamique par position.
+**Ancrage** : `apps/web/app/sitemap.ts` (~lignes 111-230) enumere deja teams
++ skills dynamiquement -> extension mecanique en bouclant sur les positions
+de chaque roster. OG + structured data se calquent sur `/skills`.
+**Impact / Effort** : Eleve / Faible.
+**Inconnues** : volume d'URLs (rosters x positions = plusieurs centaines) ->
+cap/priorites ; alternates EN conditionnes a B.5.
+
+### B.3 Etudes / stats d'usage reelles par position [pari]
+
+**Concept** : pick-rate, win-rate, SPP moyen, casualties infligees/subies,
+taux MVP agreges **par position**. C'est la 2e moitie de la demande ("lancer
+des etudes"), explicitement "par la suite".
+**Ancrage** : greenfield total (aucune agregation par position dans
+`apps/server/src/services` hors NFL). A brancher sur replays Pro League
+(decompress + `attributeSpp` read-only + casualties) groupe par
+`position.slug`, ou sur les stats NFL Fantasy. Exposer via snapshot lazy (cf.
+pattern `proPlayerCareerSnapshot`, staleness window) pour eviter le compute
+live couteux.
+**Impact / Effort** : Eleve / Eleve.
+**Inconnues** : cout du scan replays ; source de verite (sim Pro League vs
+NFL reel) ; biais d'echantillon faible par position.
+
+### B.4 Endpoint serveur /api/positions (+ /:slug)
+
+**Concept** : vraie route serveur liste + detail position cross-roster avec
+filtres (attribut, skill). Typer au passage `transformRoster(roster: any)`.
+**Ancrage** : le proxy web `apps/web/app/api/positions/route.ts` appelle deja
+`${SERVER_API_BASE}/api/positions` **qui n'existe pas** cote serveur
+(`public-rosters.ts` n'expose que `/rosters` et `/rosters/:slug`) -> proxy
+mort a brancher.
+**Impact / Effort** : Moyen (enabler) / Faible.
+
+### B.5 i18n des positions (displayNameEn)
+
+**Concept** : ajouter `displayNameEn` au modele `Position` (migration +
+backfill + seed) pour la parite SEO bilingue.
+**Ancrage** : `Position` n'a que `displayName` (FR), alors que `Roster.nameEn`
+et `Skill.nameEn` existent et que `/skills` + `/teams` emettent du hreflang
+EN/FR. Prerequis cache de B.1/B.2 en version bilingue.
+**Impact / Effort** : Moyen / Moyen.
+
+### B.6 Quick study "data-only"
+
+**Concept** : classements derives des seules stats statiques (meilleurs
+porteurs de balle, blitzers ST4+, positions les moins cheres...) sans
+pipeline match. Stepping-stone vers B.3.
+**Ancrage** : pur, calculable depuis les attributs `Position`, testable sans
+Prisma.
+**Impact / Effort** : Moyen / Faible.
+
+### B.7 Comparateur de positions cross-roster
+
+**Concept** : comparer des positions entre rosters (Gutter Runner vs Catcher),
+calque sur `/teams/comparer`.
+**Ancrage** : `apps/web/app/teams/comparer/` (URL partageable, table desktop +
+grille mobile) a generaliser aux positions.
+**Impact / Effort** : Moyen / Moyen.
+
+**Sequencage propose** : B.1 + B.2 en premier lot livrable (cadrer B.5 en
+amont si parite bilingue voulue des le depart), puis B.4 pour fiabiliser
+l'acces donnees, puis B.6 comme amorce d'etudes, enfin B.3 (pari) et B.7.
+
+**Statut** : **B.1 a B.7 tous implementes** le 2026-06-15 (change OpenSpec
+`add-position-pages`, branche `claude/vibrant-tesla-bylm53`). B.4 a trouve
+l'endpoint `/api/positions` deja existant -> durci (typage + Zod + tests).
+B.5 livre via map game-engine curee (pas de colonne DB). B.3 sans win-rate
+(donnee non disponible, ne necessiterait sinon une denormalisation
+`positionSlug`). B.6 = page `/teams/positions` (6 classements data-only).
+B.7 = `/teams/positions/comparer` (comparateur cross-roster, URL partageable).
+Annexe B soldee.
 
 ---
 

@@ -1,11 +1,17 @@
 "use client";
-import { getRerollCost, RULESETS, type Ruleset } from "@bb/game-engine";
+import {
+  getRerollCost,
+  RULESETS,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "@bb/game-engine";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SkillTooltip from "../../me/teams/components/SkillTooltip";
 import { useLanguage } from "../../contexts/LanguageContext";
 import ShareBar from "../../components/ShareBar";
+import { stripRosterPrefix } from "../position-slug";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -184,6 +190,14 @@ export default function TeamDetailClient({
   const positions = [...(team?.positions ?? [])].sort((a: any, b: any) =>
     a.displayName.localeCompare(b.displayName),
   );
+
+  // Lien vers la page detail d'une position. On porte le ruleset reellement
+  // affiche (actualRuleset) pour que la destination montre les memes donnees ;
+  // omis quand c'est l'edition par defaut (URL propre, canonical season_3).
+  const positionRulesetQuery =
+    actualRuleset === DEFAULT_RULESET ? "" : `?ruleset=${actualRuleset}`;
+  const positionHref = (positionSlug: string) =>
+    `/teams/${slug}/${stripRosterPrefix(positionSlug, slug)}${positionRulesetQuery}`;
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -379,9 +393,13 @@ export default function TeamDetailClient({
                   }`}
                 >
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-900">
+                    <Link
+                      href={positionHref(position.slug)}
+                      data-testid="position-link"
+                      className="font-semibold text-gray-900 hover:text-emerald-700 hover:underline transition-colors"
+                    >
                       {translatePositionName(position.displayName)}
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
@@ -451,7 +469,13 @@ export default function TeamDetailClient({
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                    {translatePositionName(position.displayName)}
+                    <Link
+                      href={positionHref(position.slug)}
+                      data-testid="position-link"
+                      className="hover:text-emerald-700 hover:underline transition-colors"
+                    >
+                      {translatePositionName(position.displayName)}
+                    </Link>
                   </h3>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs sm:text-sm font-semibold">
