@@ -1,3 +1,34 @@
+## [1.174.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.173.1...v1.174.0) (2026-06-15)
+
+
+### ✨ Features
+
+* **home:** accueil personnalisé coach connecté + marketing déconnecté ([#892](https://github.com/Ryxeuf/fantasy-football-game/issues/892)) ([645edc2](https://github.com/Ryxeuf/fantasy-football-game/commit/645edc2552f97270033ada167cabbb6ac2ae4760))
+* **home:** refonte de la home page dans l'esprit Blood Bowl ([#890](https://github.com/Ryxeuf/fantasy-football-game/issues/890)) ([20336db](https://github.com/Ryxeuf/fantasy-football-game/commit/20336dbf06acdc57cec2f26eb64ab018a8244c1e)), closes [#FBF7](https://github.com/Ryxeuf/fantasy-football-game/issues/FBF7)
+* **notifications:** ré-engagement — Web Push persistant + digest e-mail hebdo ([#894](https://github.com/Ryxeuf/fantasy-football-game/issues/894)) ([f0bff1a](https://github.com/Ryxeuf/fantasy-football-game/commit/f0bff1a94729ccb80ba0cb16a2bd6c27a0febaf7))
+* **onboarding:** assistant guidé "Crée ton équipe en 60 secondes" ([#895](https://github.com/Ryxeuf/fantasy-football-game/issues/895)) ([b97a630](https://github.com/Ryxeuf/fantasy-football-game/commit/b97a6300547e9588e5939d217b13d6c6359b6255))
+* refonte home Nuffle + SEO compétences + accueil interactif + stats live + partage roster ([#891](https://github.com/Ryxeuf/fantasy-football-game/issues/891)) ([fc943af](https://github.com/Ryxeuf/fantasy-football-game/commit/fc943af7a145b4c23ae5ba4d348ab3a7ed232e15)), closes [#FBF7](https://github.com/Ryxeuf/fantasy-football-game/issues/FBF7) [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1) [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2) [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2) [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3) [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3) [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3) [#4](https://github.com/Ryxeuf/fantasy-football-game/issues/4) [#4](https://github.com/Ryxeuf/fantasy-football-game/issues/4)
+* **seo:** comparateur de rosters + pages de comparaison SSR + tier-list ([#893](https://github.com/Ryxeuf/fantasy-football-game/issues/893)) ([cd98d5b](https://github.com/Ryxeuf/fantasy-football-game/commit/cd98d5bd10c781497a70b8c6588e54dfc86db8a1))
+* **server:** durcir la validation des entrées API (harden-request-validation) ([#898](https://github.com/Ryxeuf/fantasy-football-game/issues/898)) ([46fd04f](https://github.com/Ryxeuf/fantasy-football-game/commit/46fd04fbb973745fd45bee2ff6d79f4436fcc0b7))
+
+
+### 🐛 Bug Fixes
+
+* **auth:** renseigne lastLoginAt à l'inscription et au refresh ([e5436f0](https://github.com/Ryxeuf/fantasy-football-game/commit/e5436f082c2627fdff5122fe8e2401633a43da6b))
+* **comparer:** rendu mobile lisible du comparateur d'équipes ([#896](https://github.com/Ryxeuf/fantasy-football-game/issues/896)) ([27570fe](https://github.com/Ryxeuf/fantasy-football-game/commit/27570fe8879f53915276fbf38800032fa6151831))
+* **web:** restaure la session après un build au lieu d'un menu connecté fantôme ([#904](https://github.com/Ryxeuf/fantasy-football-game/issues/904)) ([9178947](https://github.com/Ryxeuf/fantasy-football-game/commit/9178947b213c055bb442ea9e49775a113811c553))
+
+
+### 📝 Documentation
+
+* **openspec:** archive harden-request-validation change ([#902](https://github.com/Ryxeuf/fantasy-football-game/issues/902)) ([7396530](https://github.com/Ryxeuf/fantasy-football-game/commit/73965300dec095780a18e21764f0e82ac5348e2a)), closes [#898](https://github.com/Ryxeuf/fantasy-football-game/issues/898)
+* **openspec:** archive me-dashboard-clean-url change ([#900](https://github.com/Ryxeuf/fantasy-football-game/issues/900)) ([#901](https://github.com/Ryxeuf/fantasy-football-game/issues/901)) ([820c5ed](https://github.com/Ryxeuf/fantasy-football-game/commit/820c5ed867235c1afc60233e393092bc8a1b9394))
+
+
+### ♻️ Code Refactoring
+
+* Split home page into marketing + dashboard routes ([#900](https://github.com/Ryxeuf/fantasy-football-game/issues/900)) ([7555ab0](https://github.com/Ryxeuf/fantasy-football-game/commit/7555ab038b3dfab3878b2fad48c81f3005185509))
+
 ## [1.173.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.173.0...v1.173.1) (2026-06-12)
 
 
