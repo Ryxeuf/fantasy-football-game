@@ -42,3 +42,40 @@ export function clearAuthTokens(): void {
   window.localStorage.removeItem(ACCESS_KEY);
   window.localStorage.removeItem(REFRESH_KEY);
 }
+
+/**
+ * Décode le payload d'un JWT sans vérifier la signature (lecture cliente du
+ * claim `exp` uniquement). Retourne null si le token est malformé. La
+ * vérification cryptographique reste cote serveur — ici on veut juste savoir
+ * si l'access token est périmé pour décider d'un refresh proactif.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json =
+      typeof atob === "function"
+        ? atob(base64)
+        : Buffer.from(base64, "base64").toString("binary");
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Vrai si l'access token est absent ou expiré (ou expire dans moins de
+ * `skewSeconds`). Un token présent mais illisible est considéré NON expiré :
+ * on laisse alors le chemin réactif (401 → refresh) gérer le cas plutôt que de
+ * déclencher un refresh inutile à chaque montage.
+ */
+export function isAccessTokenExpired(skewSeconds = 30): boolean {
+  const token = getAuthToken();
+  if (!token) return true;
+  const payload = decodeJwtPayload(token);
+  const exp =
+    payload && typeof payload.exp === "number" ? (payload.exp as number) : null;
+  if (exp === null) return false;
+  return Date.now() / 1000 >= exp - skewSeconds;
+}

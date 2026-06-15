@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 
 type LocalMatch = {
   id: string;
@@ -39,18 +39,6 @@ type LocalMatch = {
   scoreTeamB: number | null;
 };
 
-async function fetchJSON(path: string) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
-  if (!res.ok)
-    throw new Error(
-      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
-    );
-  return res.json();
-}
-
 export default function LocalMatchesPage() {
   const router = useRouter();
   const [localMatches, setLocalMatches] = useState<LocalMatch[]>([]);
@@ -75,9 +63,11 @@ export default function LocalMatchesPage() {
         params.set("scope", "mine_and_public");
       }
       const query = params.toString();
-      const { localMatches: data } = await fetchJSON(
-        `/local-match${query ? `?${query}` : ""}`,
-      );
+      // `apiRequest` gère le refresh silencieux sur 401 (access token expiré
+      // après un build) + retry, donc plus de "Token invalide" fantôme ici.
+      const { localMatches: data } = await apiRequest<{
+        localMatches: LocalMatch[];
+      }>(`/local-match${query ? `?${query}` : ""}`);
       setLocalMatches(data);
     } catch (e: any) {
       console.error("Erreur lors du chargement des parties offline:", e);

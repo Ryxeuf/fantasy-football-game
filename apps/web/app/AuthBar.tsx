@@ -7,8 +7,10 @@ import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 import { syncAuthCookie, clearAuthCookie } from "./lib/auth-cookie";
 import {
   clearAuthTokens,
+  getAuthToken,
   getRefreshToken,
 } from "./lib/auth-storage";
+import { refreshAccessToken } from "./lib/auth-refresh";
 
 type UserData = {
   email: string;
@@ -31,36 +33,108 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    setHasToken(!!token);
-    if (token) {
-      // Synchronise le cookie httpOnly pour le middleware (S24.1).
-      // On ne peut pas detecter sa presence depuis JS, donc on tente
-      // toujours la synchro : la route est idempotente.
-      void syncAuthCookie(token);
+    let cancelled = false;
 
-      fetch(`${API_BASE}/auth/me`, {
+    function fetchMe(token: string): Promise<Response> {
+      return fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((data) => {
-          const user = data?.user;
-          const roles: string[] | undefined = Array.isArray(user?.roles)
-            ? user.roles
-            : user?.role
-              ? [user.role]
-              : undefined;
-          setIsAdmin(!!roles && roles.includes("admin"));
-          setUserData(data?.user);
-        })
-        .catch(() => {
-          setIsAdmin(false);
-          setUserData(null);
-        });
-    } else {
+      });
+    }
+
+    function applyUser(user: UserData | undefined): void {
+      const roles: string[] | undefined = Array.isArray(user?.roles)
+        ? user?.roles
+        : user?.role
+          ? [user.role]
+          : undefined;
+      setIsAdmin(!!roles && roles.includes("admin"));
+      setUserData(user ?? null);
+    }
+
+    // Bascule l'UI en "déconnecté" et purge tout token périmé. Appelé quand la
+    // session est RÉELLEMENT perdue (refresh impossible), pas sur une simple
+    // erreur réseau transitoire.
+    async function forceLoggedOut(): Promise<void> {
+      clearAuthTokens();
+      await clearAuthCookie();
+      if (cancelled) return;
+      setHasToken(false);
       setIsAdmin(false);
       setUserData(null);
     }
+
+    async function loadSession(): Promise<void> {
+      const token = getAuthToken();
+      if (!token) {
+        setHasToken(false);
+        setIsAdmin(false);
+        setUserData(null);
+        return;
+      }
+
+      // Token présent → affichage optimiste de l'état connecté pendant la
+      // validation. Synchronise le cookie httpOnly pour le middleware (S24.1) ;
+      // la route est idempotente.
+      setHasToken(true);
+      void syncAuthCookie(token);
+
+      let res: Response;
+      try {
+        res = await fetchMe(token);
+      } catch {
+        // Erreur réseau (serveur down pendant un deploy, hors-ligne...) :
+        // transitoire. On NE détruit PAS la session, un reload réessaiera.
+        if (!cancelled) {
+          setIsAdmin(false);
+          setUserData(null);
+        }
+        return;
+      }
+
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (!cancelled) applyUser(data?.user);
+        return;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        // Access token expiré/invalide (cas classique après un build) → on
+        // tente un refresh silencieux via le refresh token (7 j), puis on
+        // rejoue /auth/me. Le refresh est single-flight : pas de course avec
+        // AuthRefreshLoop.
+        const newToken = await refreshAccessToken();
+        if (cancelled) return;
+        if (newToken) {
+          try {
+            const retry = await fetchMe(newToken);
+            if (cancelled) return;
+            if (retry.ok) {
+              const data = await retry.json().catch(() => null);
+              applyUser(data?.user);
+              return;
+            }
+          } catch {
+            // tombe dans le force-logout ci-dessous
+          }
+        }
+        // Refresh impossible ou retry échoué → session réellement perdue. On
+        // purge l'état "connecté fantôme" (menu utilisateur sans accès) et on
+        // bascule en "déconnecté".
+        await forceLoggedOut();
+        return;
+      }
+
+      // Autre statut (5xx, maintenance...) : transitoire, on garde la session.
+      if (!cancelled) {
+        setIsAdmin(false);
+        setUserData(null);
+      }
+    }
+
+    void loadSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Fermer le menu si on clique en dehors

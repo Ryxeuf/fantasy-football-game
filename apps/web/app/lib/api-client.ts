@@ -14,6 +14,8 @@
  */
 
 import { API_BASE } from "../auth-client";
+import { getRefreshToken } from "./auth-storage";
+import { refreshAccessToken } from "./auth-refresh";
 
 export interface ApiSuccess<T> {
   success: true;
@@ -101,20 +103,40 @@ export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    // Bypass complet du HTTP cache navigateur : un GET fait juste apres
-    // un POST mutateur (join, populate, etc.) doit voir l'etat
-    // a-jour. Le serveur n'envoie pas systematiquement de Cache-Control:
-    // no-store, donc certains navigateurs cachent agressivement. Override
-    // explicite cote client.
-    cache: "no-store",
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...(init.headers ?? {}),
-    },
-  });
+  const doFetch = (): Promise<Response> =>
+    fetch(`${API_BASE}${path}`, {
+      // Bypass complet du HTTP cache navigateur : un GET fait juste apres
+      // un POST mutateur (join, populate, etc.) doit voir l'etat
+      // a-jour. Le serveur n'envoie pas systematiquement de Cache-Control:
+      // no-store, donc certains navigateurs cachent agressivement. Override
+      // explicite cote client. `authHeaders()` est relu a chaque appel pour
+      // que le retry post-refresh envoie le nouveau token.
+      cache: "no-store",
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+        ...(init.headers ?? {}),
+      },
+    });
+
+  let response = await doFetch();
+
+  // Récupération silencieuse sur 401 : l'access token (15 min) a sans doute
+  // expiré (typiquement après un build/redeploy ou un retour tardif sur le
+  // site). On tente un refresh single-flight via le refresh token (7 j) puis
+  // on rejoue UNE fois. Sans refresh token, ou pour les endpoints /auth/*
+  // (login/refresh eux-mêmes), on ne tente rien.
+  if (
+    response.status === 401 &&
+    !path.startsWith("/auth/") &&
+    getRefreshToken()
+  ) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      response = await doFetch();
+    }
+  }
 
   let body: unknown = null;
   try {

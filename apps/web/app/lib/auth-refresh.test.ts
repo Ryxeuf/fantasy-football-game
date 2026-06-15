@@ -107,4 +107,56 @@ describe("Rule: refreshAccessToken (S24.3)", () => {
     const result = await refreshAccessToken();
     expect(result).toBeNull();
   });
+
+  it("single-flight: concurrent callers share one /auth/refresh request", async () => {
+    // Régression : deux refresh concurrents avec le même refresh token
+    // déclenchent la détection de réuse côté serveur (révocation de TOUTES les
+    // sessions). Le single-flight doit garantir un seul appel réseau.
+    setAuthTokens({ token: "old-access", refreshToken: "old-refresh" });
+
+    let resolveRefresh: (r: Response) => void = () => {};
+    fetchMock.mockImplementation((url: string) => {
+      if (url.endsWith("/auth/refresh")) {
+        return new Promise<Response>((resolve) => {
+          resolveRefresh = resolve;
+        });
+      }
+      return Promise.resolve(mockResponse(200));
+    });
+
+    // Trois appels concurrents avant la résolution.
+    const p1 = refreshAccessToken();
+    const p2 = refreshAccessToken();
+    const p3 = refreshAccessToken();
+
+    resolveRefresh(
+      mockResponse(200, { token: "new-access", refreshToken: "new-refresh" }),
+    );
+
+    const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
+    expect(r1).toBe("new-access");
+    expect(r2).toBe("new-access");
+    expect(r3).toBe("new-access");
+
+    const refreshCalls = fetchMock.mock.calls.filter((c) =>
+      String(c[0]).endsWith("/auth/refresh"),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
+  it("allows a fresh request once the previous one settled", async () => {
+    setAuthTokens({ token: "old-access", refreshToken: "old-refresh" });
+    fetchMock.mockResolvedValue(
+      mockResponse(200, { token: "a", refreshToken: "b" }),
+    );
+
+    await refreshAccessToken();
+    await refreshAccessToken();
+
+    const refreshCalls = fetchMock.mock.calls.filter((c) =>
+      String(c[0]).endsWith("/auth/refresh"),
+    );
+    // Single-flight ne bloque pas les appels séquentiels : 2 appels => 2 requêtes.
+    expect(refreshCalls).toHaveLength(2);
+  });
 });
