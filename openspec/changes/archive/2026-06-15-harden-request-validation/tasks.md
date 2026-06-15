@@ -66,5 +66,6 @@
       **1029 tests passent**, typecheck exit 0. (3 echecs pre-existants dans
       `kofi.test.ts` sur l'agregation de devises — sans rapport avec ce
       change : ils echouent aussi sur HEAD avant migration.)
-- [ ] 5.2 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
-      apres merge de la PR.
+- [x] 5.2 `/opsx:sync` fait (delta-spec → `openspec/specs/request-validation/`,
+      PR #898 mergee) ; `/opsx:archive` fait (ce change deplace dans
+      `openspec/changes/archive/2026-06-15-harden-request-validation/`).
