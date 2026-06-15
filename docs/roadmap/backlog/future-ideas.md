@@ -451,7 +451,12 @@ grille mobile) a generaliser aux positions.
 amont si parite bilingue voulue des le depart), puis B.4 pour fiabiliser
 l'acces donnees, puis B.6 comme amorce d'etudes, enfin B.3 (pari) et B.7.
 
-**Statut** : B.1 + B.2 en exploration OpenSpec (`/opsx:explore`) le 2026-06-15.
+**Statut** : B.1 + B.2 + B.4 + B.5 + B.3 implementes le 2026-06-15 (change
+OpenSpec `add-position-pages`, branche `claude/vibrant-tesla-bylm53`). B.4 a
+trouve l'endpoint `/api/positions` deja existant -> durci (typage + Zod +
+tests). B.5 livre via map game-engine curee (pas de colonne DB). B.3 sans
+win-rate (donnee non disponible). Restent **B.6** (quick study data-only) et
+**B.7** (comparateur de positions) — non faits.
 
 ---
 

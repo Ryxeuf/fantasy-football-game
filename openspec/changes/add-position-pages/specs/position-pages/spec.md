@@ -90,3 +90,52 @@ parametre de ruleset.
 #### Scenario: Positions season_2 exclues
 - WHEN un roster n'existe qu'en season_2 (ou pour ses positions specifiques season_2)
 - THEN ces URLs de position NE DOIVENT PAS apparaitre dans le sitemap
+
+### Requirement: Nom anglais des positions
+Les positions DOIVENT pouvoir exposer un nom anglais officiel
+(`displayNameEn`) en plus du `displayName` source. Ce nom provient d'une
+table curee cote `@bb/game-engine` (pas de colonne base de donnees). Les API
+publiques de positions et de rosters DOIVENT inclure `displayNameEn`, `null`
+quand il n'est pas renseigne (repli sur le nom francais cote client). La
+table NE DOIT reference que des slugs de positions season_3 existants.
+
+#### Scenario: Nom anglais expose pour une position connue
+- WHEN une position dont le slug est present dans la table EN est serialisee par l'API
+- THEN la reponse DOIT contenir `displayNameEn` egal au nom anglais officiel
+
+#### Scenario: Repli francais pour une position non mappee
+- WHEN le slug d'une position n'est pas dans la table EN
+- THEN `displayNameEn` DOIT valoir `null`
+- AND l'affichage client DOIT retomber sur le nom francais
+
+### Requirement: API positions typee et validee
+Les routes `GET /api/positions` et `GET /api/positions/:slug` DOIVENT typer
+explicitement la forme des positions chargees (pas de `any` applicatif) et
+valider leurs entrees via Zod (`validateQuery` pour la query,
+`validateParams` pour le slug). Les schemas DOIVENT etre permissifs (champs
+optionnels) pour ne jamais renvoyer `400` sur un parametre superflu d'un GET
+public.
+
+#### Scenario: Query superflue toleree
+- WHEN un client appelle `/api/positions` avec un parametre de query inconnu
+- THEN la requete DOIT reussir (pas de `400`) et le parametre inconnu DOIT etre ignore
+
+#### Scenario: Detail introuvable
+- WHEN `/api/positions/:slug` ne trouve pas la position (apres repli sur l'edition par defaut)
+- THEN le serveur DOIT repondre `404` avec `{ error }`
+
+### Requirement: Statistiques d'usage par position
+Le serveur DOIT exposer, par roster et ruleset, des statistiques d'usage
+agregees depuis les equipes reelles des coachs : nombre de joueurs crees a
+chaque poste et moyennes carriere (SPP, touchdowns, casualties, MVP). Ces
+stats DOIVENT etre calculees en une seule agregation (`groupBy`), sans N+1
+ni table de snapshot. Les metriques non fiables (ex : win-rate, faute de
+lien evenement de match <-> slug de position) NE DOIVENT PAS etre exposees.
+
+#### Scenario: Agregation par poste
+- WHEN des `TeamPlayer` existent pour un roster donne
+- THEN l'API DOIT retourner, par `displayName` de position, le nombre de joueurs et les moyennes carriere par joueur
+
+#### Scenario: Aucune donnee d'usage
+- WHEN aucun joueur n'existe pour une position
+- THEN la section d'usage de la page position NE DOIT PAS etre affichee (pas de division par zero)

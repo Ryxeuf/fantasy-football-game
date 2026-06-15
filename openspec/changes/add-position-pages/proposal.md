@@ -56,17 +56,34 @@ purement front qui reutilise un fetch deja en cache ISR (1h).
 - **Aucune migration Prisma, aucun nouvel endpoint serveur, aucun
   changement de contrat d'API.** Reutilise `GET /api/rosters/:slug`.
 
+## Lots de suite (realises dans la meme PR)
+
+Les lots B.4/B.5/B.3 — initialement non-goals — ont ete enchaines dans la
+meme PR sur demande. Detail des taches dans `tasks.md`, exigences dans
+`specs/`.
+
+- **Lot 2 — B.4 Durcissement `/api/positions`.** L'endpoint existait deja
+  (`routes/public-positions.ts`) mais sans typage/validation/tests. Typage
+  `PositionRow`/`TransformedPosition` (fin du `any`), `validateQuery` +
+  `validateParams` Zod, erreurs typees, tests unitaires.
+- **Lot 3 — B.5 Noms anglais (`displayNameEn`).** Pas de colonne Prisma :
+  map curee pure `@bb/game-engine` `position-names-en` (slug -> nom anglais
+  officiel, ~88% season_3, repli FR) exposee via `getPositionNameEn` et
+  branchee dans `public-positions` + `public-rosters` (`displayNameEn`) ;
+  sous-titre EN sur la page position. Evite migration + mirror sqlite.
+- **Lot 4 — B.3 Stats d'usage par position.** Service `position-usage-stats`
+  (un `groupBy TeamPlayer` -> count + moyennes carriere), endpoint
+  `GET /api/rosters/:slug/positions-stats` (memoize), section "Chez les
+  coachs" sur la page. **Pas de win-rate** (aucun lien fiable evenement de
+  match <-> slug de position) : on n'expose que des metriques fiables.
+
 ## Non-Goals
 
-- **B.5 — Normalisation bilingue** (`Position.displayNameEn`, nettoyage du
-  marqueur `*` "big guy", incoherence des noms Season 2 EN / Season 3 FR) :
-  fast-follow, cadre en design. NON bloquant — le hreflang single-URL est
-  deja en place (`fr-FR`/`en`/`x-default` pointent la meme URL).
-- **B.4 — Endpoint serveur `/api/positions` dedie** (le proxy web
-  `app/api/positions/route.ts` pointe un endpoint inexistant) :
-  optimisation / filtres differable.
-- **B.3 — Etudes/stats d'usage reelles par position** : objectif aval ; la
-  page de cette brique est la **surface d'affichage** future, pas le
-  pipeline de stats.
-- **OG image dynamique par position** : optionnel ; MVP = logo statique
-  comme `/skills/[slug]`.
+- **Colonne Prisma `displayNameEn` + CRUD admin des noms EN** : la map
+  game-engine suffit (positions definies en code, synchronisees) ; une
+  colonne editable reste un futur possible.
+- **Win-rate / stats par-match par position** : necessiterait de
+  denormaliser un `positionSlug` sur `TeamPlayer` + les evenements de match
+  (migration + backfill). Hors scope ; cf. `design.md`.
+- **B.4.bis ItemList JSON-LD sur la page roster** et **OG image dynamique
+  par position** : optionnels, non faits.

@@ -64,3 +64,40 @@
       Non lancé dans cet environnement (infra E2E non provisionnée).
 - [ ] 5.4 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
       après merge de la PR.
+
+## Lot 2 — B.4 Durcissement `/api/positions` — FAIT
+- [x] 2b.1 Typage : `PositionRow` / `TransformedPosition` (fin du `any` dans
+      `routes/public-positions.ts` ; le client prisma est `any` repo-wide).
+- [x] 2b.2 `public-positions.schemas.ts` : `validateQuery` (lang/ruleset/
+      rosterSlug) + `validateParams` (slug), schemas `.passthrough()`
+      (jamais de 400 sur GET public). Erreurs `error: unknown` typees.
+- [x] 2b.3 `public-positions.test.ts` : liste, lang=en, filtre rosterSlug,
+      detail, 404+repli, displayNameEn connu/null (7 tests).
+
+## Lot 3 — B.5 Noms anglais des positions — FAIT
+- [x] 3b.1 Module pur `@bb/game-engine` `position-names-en` : map curee
+      slug -> nom anglais officiel (GW/BB2020) + `getPositionNameEn`. ~88%
+      des positions season_3 (repli FR). Exporte depuis l'index.
+- [x] 3b.2 Test garde : toute cle est un slug season_3 valide + couverture
+      > 60% + lookups (3 tests).
+- [x] 3b.3 API : `public-positions` + `public-rosters` exposent
+      `displayNameEn` (`getPositionNameEn(slug) ?? null`).
+- [x] 3b.4 Page position : sous-titre anglais quand present. Choix : pas de
+      colonne Prisma (positions code-definies + synchronisees ; evite
+      migration + mirror sqlite). `*` big guy deja nettoye cote front (B.1).
+
+## Lot 4 — B.3 Stats d'usage par position — FAIT
+- [x] 4b.1 Service `position-usage-stats` : un `groupBy TeamPlayer` (roster +
+      ruleset) -> count + sommes -> moyennes carriere par joueur. Pas de
+      N+1, pas de scan replays, pas de snapshot/migration.
+- [x] 4b.2 Endpoint `GET /api/rosters/:slug/positions-stats` (memoize 5 min).
+- [x] 4b.3 Page : fetch optionnel (`safeServerJson`, ne bloque pas le rendu),
+      lookup displayName brut puis nettoye, section "Chez les coachs"
+      masquee si 0 donnee. **Pas de win-rate** (donnee non disponible).
+- [x] 4b.4 Test service (3 cas dont division par zero).
+
+## Cloture globale (Lots 1-4)
+- [x] Suites vertes : **server 267 fichiers / 3900 tests**, **web 156 / 1346**,
+      game-engine map (3). `tsc` exit 0 (server/web/game-engine). Prettier
+      clean (hors churn pre-existant volontairement non touche : `index.ts`
+      game-engine non-conforme sur main).
