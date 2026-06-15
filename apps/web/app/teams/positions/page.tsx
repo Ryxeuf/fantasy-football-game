@@ -12,8 +12,10 @@ import { stripRosterPrefix, cleanDisplayName } from "../position-slug";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const TOP_N = 8;
 
-// ISR — données de référence (stats de positions), régénération horaire.
-export const revalidate = 3600;
+// Rendu dynamique (au request) : la page lit l'API positions au rendu. En
+// statique elle serait pre-rendue au build sans backend (ECONNREFUSED) ; le
+// backend a deja son propre cache (memoize 5 min).
+export const dynamic = "force-dynamic";
 
 async function fetchListedPositions(): Promise<ListedPosition[]> {
   const base = getServerApiBase();

@@ -6,7 +6,8 @@ import PositionComparatorClient from "./PositionComparatorClient";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const MAX_SELECTION = 4;
 
-export const revalidate = 3600;
+// Rendu dynamique (au request) : evite le prerender au build sans backend.
+export const dynamic = "force-dynamic";
 
 interface ComparerPageProps {
   searchParams: { ids?: string };
