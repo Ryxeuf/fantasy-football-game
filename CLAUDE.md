@@ -464,6 +464,40 @@ Quand le risque de conflit est gros : sequencer.
   events merge / CI / review en webhook.
 - **Ne pas poller** avec `sleep` — attendre les webhooks.
 
+## Spec-driven & journal de decisions (OpenSpec)
+
+OpenSpec est en place (`openspec/`, skills `openspec-*`, commandes
+`/opsx:*` + `/ideas`). Il sert de **journal de decisions versionne** :
+chaque change capture le *quoi/pourquoi* et le *comment* **avant** le
+code. C'est notre substitut d'ADR — pas de dossier `docs/decisions/`
+separe, la decision vit dans le change.
+
+### Chaine de travail
+
+```
+/ideas              → backlog d'idees priorisees (ancre dans le repo)
+/opsx:explore "X"   → reflexion, clarification des exigences
+/opsx:propose "X"   → genere proposal.md + design.md + specs/ + tasks.md
+/opsx:apply         → implementation des taches
+/opsx:sync          → delta-specs → specs/ principales
+/opsx:archive       → change termine → openspec/changes/archive/
+```
+
+### Regles
+
+- **Tout change non-trivial passe par un proposal OpenSpec.** Le
+  `proposal.md` documente la decision (quoi + pourquoi), le `design.md`
+  les alternatives et tradeoffs. C'est ca, le "pourquoi" versionne.
+- **Les artefacts OpenSpec sont commits avec la PR** qui les realise.
+  Branche et commit suivent les memes conventions que la section
+  "Workflow git" ci-dessus.
+- **Idees** : capturees via `/ideas` puis, si retenues sans suite
+  immediate, ajoutees a `docs/roadmap/backlog/future-ideas.md`.
+- **Apres merge** : `/opsx:archive` deplace le change dans
+  `openspec/changes/archive/` (historique permanent versionne). Le
+  recit de session reste dans `docs/roadmap/sessions/` comme avant.
+- Les fixes triviaux (typo, bump deps) n'ont pas besoin d'un change.
+
 ## Tests
 
 ### Coverage cible
