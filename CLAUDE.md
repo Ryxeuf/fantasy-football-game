@@ -35,8 +35,9 @@ Outils : pnpm workspaces, Turbo pour les tasks, Vitest pour les tests
   (`const body: z.infer<typeof schema> = req.body`, ou un
   `export type XInput = z.infer<...>` pose a cote du schema) pour que
   tout drift schema/handler echoue a `tsc`. Garde CI :
-  `routes/no-raw-body-cast.test.ts` interdit `req.body as` (ratchet a
-  denylist decroissante — les fichiers non encore migres y sont listes).
+  `routes/no-raw-body-cast.test.ts` interdit tout `req.body as` dans
+  `routes/` (migration complete, denylist vide — tout nouveau cast brut
+  fait echouer le test).
 - **Erreurs typees** : prefere `class XxxError extends Error` avec un
   `code` enum string plutot que des chaines. Le handler match sur
   `instanceof` pour mapper le status HTTP.

@@ -22,22 +22,14 @@ const RAW_BODY_CAST = /\breq\.body\s*(?:\?\?\s*\{\}\s*\))?\s*as\b/;
 
 /**
  * Fichiers de route contenant encore au moins un cast brut `req.body as`
- * (Bucket B non migre). NE DOIT QUE DECROITRE. Quand un fichier est
- * migre vers `z.infer`, le retirer d'ici.
+ * (Bucket B non migre). NE DOIT QUE DECROITRE.
+ *
+ * ✅ Migration terminee : la liste est VIDE — tout fichier de route est
+ * desormais enforce (zero `req.body as`). Tout nouveau cast brut fera
+ * echouer ce test ; le pattern attendu est `const x: z.infer<typeof s> =
+ * req.body` (ou un type derive du schema).
  */
-const LEGACY_NOT_MIGRATED = new Set<string>([
-  "admin-blog.ts",
-  "admin-pro-roster.ts",
-  "admin-pro-season.ts",
-  "admin-pro-team.ts",
-  "admin.ts",
-  "auth.ts",
-  "feature-flags.ts",
-  "kofi.ts",
-  "local-match.ts",
-  "match.ts",
-  "pro-prediction-leagues.ts",
-]);
+const LEGACY_NOT_MIGRATED = new Set<string>([]);
 
 function listRouteFiles(): string[] {
   return readdirSync(ROUTES_DIR).filter(

@@ -691,10 +691,10 @@ router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema),
       return res.status(400).json({ error: "La partie n'est pas en phase d'inducements" });
     }
 
-    const { selectionA, selectionB } = req.body as {
+    const { selectionA, selectionB }: {
       selectionA?: InducementSelection;
       selectionB?: InducementSelection;
-    };
+    } = req.body;
 
     // Default to empty selections
     const finalSelectionA: InducementSelection = selectionA ?? { items: [] };

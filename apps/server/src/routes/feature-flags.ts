@@ -125,11 +125,11 @@ adminFeatureFlagsRouter.post(
   validate(createFeatureFlagSchema),
   async (req, res) => {
     try {
-      const { key, description, enabled } = req.body as {
+      const { key, description, enabled }: {
         key: string;
         description?: string | null;
         enabled?: boolean;
-      };
+      } = req.body;
       const existing = await prisma.featureFlag.findUnique({ where: { key } });
       if (existing) {
         return sendError(res, "Une flag avec cette clé existe déjà", 409);
@@ -198,7 +198,7 @@ adminFeatureFlagsRouter.post(
       if (!flag) {
         return sendError(res, "Feature flag introuvable", 404);
       }
-      const { userId } = req.body as { userId: string };
+      const { userId }: { userId: string } = req.body;
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
         return sendError(res, "Utilisateur introuvable", 404);

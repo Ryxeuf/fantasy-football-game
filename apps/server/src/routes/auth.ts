@@ -274,7 +274,7 @@ router.post("/login", validate(loginSchema), async (req, res) => {
  * remain valid until expiry, but their <=15min TTL bounds the exposure.
  */
 export async function handleLogout(req: Request, res: Response): Promise<Response> {
-  const refreshToken = (req.body as { refreshToken?: string })?.refreshToken;
+  const { refreshToken }: { refreshToken?: string } = req.body ?? {};
   if (typeof refreshToken !== "string" || refreshToken.length === 0) {
     return res.status(204).send();
   }
@@ -332,7 +332,7 @@ router.post(
   validate(forgotPasswordSchema),
   async (req: Request, res: Response) => {
     try {
-      const { email } = req.body as { email: string };
+      const { email }: { email: string } = req.body;
       // Audit round 10 (HIGH) : avant, on lisait `req.get("Origin")`
       // brut. Un attaquant pouvait POST avec `Origin: https://evil.com`
       // pour fabriquer un lien malveillant integre dans l'email de
@@ -371,10 +371,10 @@ router.post(
   validate(resetPasswordSchema),
   async (req: Request, res: Response) => {
     try {
-      const { token, newPassword } = req.body as {
+      const { token, newPassword }: {
         token: string;
         newPassword: string;
-      };
+      } = req.body;
       const result = await consumeResetToken({ token, newPassword });
       res.json({ success: true, email: result.email });
     } catch (e: unknown) {

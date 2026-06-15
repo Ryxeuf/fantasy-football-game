@@ -97,14 +97,14 @@ router.post("/posts", validate(createBlogPostSchema), async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   const authorId = authReq.user?.id ?? null;
   try {
-    const body = req.body as {
+    const body: {
       slug: string;
       title: string;
       excerpt?: string | null;
       contentHtml: string;
       coverImageUrl?: string | null;
       status: "draft" | "published";
-    };
+    } = req.body;
     const sanitized = sanitizeBlogHtml(body.contentHtml);
     const publishedAt = body.status === "published" ? new Date() : null;
 
@@ -140,14 +140,14 @@ router.post("/posts", validate(createBlogPostSchema), async (req, res) => {
 router.patch("/posts/:id", validate(updateBlogPostSchema), async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   try {
-    const body = req.body as {
+    const body: {
       slug?: string;
       title?: string;
       excerpt?: string | null;
       contentHtml?: string;
       coverImageUrl?: string | null;
       status?: "draft" | "published";
-    };
+    } = req.body;
 
     const previous = await prisma.blogPost.findUnique({
       where: { id: req.params.id },

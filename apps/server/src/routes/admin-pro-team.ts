@@ -137,7 +137,7 @@ router.patch(
         return res.status(404).json({ error: "Team introuvable" });
       }
 
-      const body = req.body as {
+      const body: {
         city?: string;
         name?: string;
         nflFlavor?: string | null;
@@ -145,7 +145,7 @@ router.patch(
         secondaryColor?: string | null;
         motto?: string | null;
         headline?: string | null;
-      };
+      } = req.body;
 
       const data: Record<string, unknown> = {};
       if (body.city !== undefined) data.city = body.city;

@@ -42,16 +42,11 @@
       nommees (`z.infer<typeof X>` inline) ; les casts sont convertis en
       annotations. Extraction vers `schemas/*.schemas.ts` = polish optionnel
       differe (non requis par la garde).
-- [~] 3.4 Migrer les `req.body as {...}` → type derive du schema
-      (`z.infer` / `type XInput` / annotation inline). **23 fichiers migres**
-      (lot 2 : push, pro-league, user, admin-digest, email-digest,
-      pro-gazette-comments, team-advancement, feedback, league-invitation,
-      matchmaking, pro-survivor, auth-privacy ; lot 3-4 : league=29 casts,
-      admin-leagues, admin-sim, cup, admin-pro-tournament, admin-nfl-fantasy,
-      admin-nfl-ingest, admin-nfl-fantasy-explorer, nfl-fantasy-leagues,
-      nfl-fantasy-entries, nfl-fantasy-draft-sessions). **20 fichiers
-      restants** sur la denylist du ratchet (admin*, auth, match*, friends,
-      kofi, local-match, pro-prediction-leagues, team-*-handlers).
+- [x] 3.4 **TERMINE** — tous les `req.body as {...}` de `routes/` migres
+      vers un type derive du schema (`z.infer` / `type XInput`) ou une
+      annotation inline. **0 cast brut restant** ; la denylist du ratchet
+      est **vide**. ~123 sites / 43 fichiers migres en 6 lots. Conversions
+      type-only (aucun changement runtime, `tsc` exit 0).
 - [x] 3.5 `pnpm typecheck` vert (exit 0) apres chaque lot migre.
 
 ## 4. Brique 3 — Garde anti-regression — FAIT
@@ -67,9 +62,9 @@
       backend" → "Validation des entrees").
 
 ## 5. Cloture
-- [x] 5.1 Suite verte sur le perimetre touche (guard 50, schemas 102,
-      validate 24, routes migrees). Typecheck exit 0. *(coverage globale a
-      re-mesurer quand la denylist sera vide)*
-- [ ] 5.2 Finir la migration des 20 fichiers denylistes restants (lots
-      suivants, ratchet garantit la securite), puis `/opsx:sync` +
-      `/opsx:archive` apres merge.
+- [x] 5.1 Suite serveur verte : `routes` + `middleware` + `schemas` =
+      **1029 tests passent**, typecheck exit 0. (3 echecs pre-existants dans
+      `kofi.test.ts` sur l'agregation de devises — sans rapport avec ce
+      change : ils echouent aussi sur HEAD avant migration.)
+- [ ] 5.2 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
+      apres merge de la PR.

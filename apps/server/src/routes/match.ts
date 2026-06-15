@@ -61,14 +61,13 @@ export async function handlePracticeMatch(
   res: Response,
 ): Promise<void> {
   try {
-    const { userTeamId, difficulty, aiRosterSlug, userSide, seed } =
-      req.body as {
-        userTeamId: string;
-        difficulty: AIDifficulty;
-        aiRosterSlug?: string;
-        userSide?: "A" | "B";
-        seed?: string;
-      };
+    const { userTeamId, difficulty, aiRosterSlug, userSide, seed }: {
+      userTeamId: string;
+      difficulty: AIDifficulty;
+      aiRosterSlug?: string;
+      userSide?: "A" | "B";
+      seed?: string;
+    } = req.body;
 
     const result = await createOnlinePracticeMatch(prisma as any, {
       creatorId: req.user!.id,
@@ -145,7 +144,7 @@ export async function handleSubmitMove(
 ): Promise<void> {
   try {
     const matchId = req.params.id;
-    const { move } = req.body as { move: Move };
+    const { move }: { move: Move } = req.body;
 
     const result = await processMove(matchId, req.user!.id, move);
 
