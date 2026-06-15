@@ -63,6 +63,20 @@ interface PositionBundle {
   skillNameBySlug: Map<string, string>;
 }
 
+interface PositionUsage {
+  count: number;
+  matchesPlayed: number;
+  avgSpp: number;
+  avgTouchdowns: number;
+  avgCasualties: number;
+  avgMvp: number;
+}
+
+interface RosterStatsResponse {
+  byPosition?: Record<string, PositionUsage>;
+  totalPlayers?: number;
+}
+
 const ACCESS_FR: Record<string, { letter: string; label: string }> = {
   G: { letter: "G", label: "Général" },
   A: { letter: "A", label: "Agilité" },
@@ -103,6 +117,27 @@ async function fetchSkillNames(
     if (s.slug && s.nameFr) map.set(s.slug, s.nameFr);
   }
   return map;
+}
+
+/**
+ * Stats d'usage de la position (nombre de joueurs créés + moyennes carrière).
+ * Optionnelles : un échec ne bloque pas le rendu (safeServerJson renvoie
+ * null). Recherche par displayName brut puis nettoyé (`*` big guy).
+ */
+async function fetchPositionUsage(
+  base: string,
+  rosterSlug: string,
+  ruleset: Ruleset,
+  position: ApiPosition,
+): Promise<{ usage: PositionUsage | null; totalPlayers: number }> {
+  const data = await safeServerJson<RosterStatsResponse>(
+    `${base}/api/rosters/${encodeURIComponent(rosterSlug)}/positions-stats?ruleset=${ruleset}`,
+    { next: { revalidate: 300 } },
+  );
+  const byPosition = data?.byPosition ?? {};
+  const cleaned = cleanDisplayName(position.displayName).name;
+  const usage = byPosition[position.displayName] ?? byPosition[cleaned] ?? null;
+  return { usage, totalPlayers: data?.totalPlayers ?? 0 };
 }
 
 async function loadBundle(
@@ -193,6 +228,13 @@ export default async function PositionDetailPage({
   const { name, isBigGuy } = cleanDisplayName(position.displayName);
   const segment = stripRosterPrefix(position.slug, roster.slug);
   const rulesetQuery = ruleset === DEFAULT_RULESET ? "" : `?ruleset=${ruleset}`;
+
+  const { usage, totalPlayers } = await fetchPositionUsage(
+    getServerApiBase(),
+    roster.slug,
+    bundle.ruleset,
+    position,
+  );
 
   const baseSkills = parseSkillCsv(position.skills);
   const primaryAccess = parseAccessCodes(position.primarySkills);
@@ -319,6 +361,46 @@ export default async function PositionDetailPage({
             </div>
           </div>
         </header>
+
+        {/* Stats d'usage joueurs (données réelles des coachs) */}
+        {usage && usage.count > 0 && (
+          <section className="mt-8" data-testid="position-usage">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Chez les coachs
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {usage.count} joueur{usage.count > 1 ? "s" : ""} créé
+              {usage.count > 1 ? "s" : ""} à ce poste
+              {totalPlayers > 0 &&
+                ` — ${Math.round((usage.count / totalPlayers) * 100)}% des joueurs du roster`}
+              .
+            </p>
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "SPP moyen", value: usage.avgSpp },
+                { label: "TD moyens", value: usage.avgTouchdowns },
+                { label: "Sorties moy.", value: usage.avgCasualties },
+                { label: "MVP moyens", value: usage.avgMvp },
+              ].map((m) => (
+                <div
+                  key={m.label}
+                  className="rounded-lg bg-white border border-gray-200 p-3 text-center shadow-sm"
+                >
+                  <div className="text-xs text-gray-500">{m.label}</div>
+                  <div className="text-lg font-bold font-mono text-gray-900">
+                    {m.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-gray-400">
+              Moyennes carrière par joueur, sur {usage.matchesPlayed} match
+              {usage.matchesPlayed > 1 ? "s" : ""} joué
+              {usage.matchesPlayed > 1 ? "s" : ""}, toutes équipes de coachs
+              confondues.
+            </p>
+          </section>
+        )}
 
         {/* Competences de depart -> liens vers /skills */}
         <section className="mt-8">

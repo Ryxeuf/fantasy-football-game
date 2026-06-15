@@ -13,6 +13,7 @@ import {
 } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
+import { getRosterPositionStats } from "../services/position-usage-stats";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ const router = Router();
 const ROSTER_CACHE_TTL_MS = 5 * 60 * 1000;
 const ROSTER_LIST_NS = "public-rosters-list";
 const ROSTER_DETAIL_NS = "public-rosters-detail";
+const POSITION_STATS_NS = "public-position-stats";
 
 interface RosterListPayload {
   rosters: Array<{
@@ -193,6 +195,37 @@ router.get("/rosters/:slug", async (req, res) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur";
     serverLog.error("Erreur lors de la récupération du roster:", error);
+    res.setHeader("Cache-Control", "no-store");
+    res.status(500).json({ error: message });
+  }
+});
+
+/**
+ * GET /api/rosters/:slug/positions-stats
+ * Statistiques d'usage par position du roster (nombre de joueurs créés +
+ * moyennes carrière), agrégées depuis les équipes réelles des coachs.
+ * Query param: ?ruleset=season_2|season_3 (par défaut: édition courante).
+ */
+router.get("/rosters/:slug/positions-stats", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
+    const payload = await memoizeAsync(
+      POSITION_STATS_NS,
+      `${slug}::${ruleset}`,
+      ROSTER_CACHE_TTL_MS,
+      async () => {
+        const stats = await getRosterPositionStats(slug, ruleset);
+        return { rosterSlug: slug, ruleset, ...stats };
+      },
+    );
+    res.json(payload);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erreur serveur";
+    serverLog.error(
+      "Erreur lors de la récupération des stats de positions:",
+      error,
+    );
     res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: message });
   }
