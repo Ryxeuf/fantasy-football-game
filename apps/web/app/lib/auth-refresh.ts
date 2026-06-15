@@ -23,7 +23,28 @@ export interface RefreshResponse {
   refreshToken: string;
 }
 
-export async function refreshAccessToken(): Promise<string | null> {
+/**
+ * Refresh en cours partagé (single-flight). Les appelants concurrents
+ * (AuthBar, AuthRefreshLoop, apiRequest) réutilisent la même requête tant
+ * qu'elle n'est pas résolue.
+ *
+ * C'est une protection critique : le serveur fait tourner le refresh token
+ * avec détection de réuse qui révoque TOUTES les sessions de l'utilisateur si
+ * le même refresh token est présenté deux fois. Deux refresh concurrents (ex:
+ * AuthBar + AuthRefreshLoop au montage) déconnecteraient donc l'utilisateur.
+ * Le single-flight garantit une seule rotation à la fois.
+ */
+let inFlightRefresh: Promise<string | null> | null = null;
+
+export function refreshAccessToken(): Promise<string | null> {
+  if (inFlightRefresh) return inFlightRefresh;
+  inFlightRefresh = performRefresh().finally(() => {
+    inFlightRefresh = null;
+  });
+  return inFlightRefresh;
+}
+
+async function performRefresh(): Promise<string | null> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
 

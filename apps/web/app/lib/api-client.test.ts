@@ -90,6 +90,7 @@ describe("ApiClientError", () => {
 describe("apiRequest helper", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    window.localStorage.clear();
   });
 
   it("unwrap automatiquement une reponse ApiResponse<T>", async () => {
@@ -131,5 +132,70 @@ describe("apiRequest helper", () => {
     );
     const { apiRequest } = await import("./api-client");
     await expect(apiRequest("/missing")).rejects.toThrow("Not found");
+  });
+
+  it("ne tente PAS de refresh sur 401 quand aucun refresh token n'est stocké", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: "Token invalide" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { apiRequest } = await import("./api-client");
+
+    await expect(apiRequest("/local-match")).rejects.toThrow("Token invalide");
+    // Sans refresh token : pas de retry, un seul appel réseau.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sur 401 avec refresh token : refresh silencieux puis retry réussi", async () => {
+    window.localStorage.setItem("auth_token", "expired-access");
+    window.localStorage.setItem("auth_refresh_token", "valid-refresh");
+
+    const fetchMock = vi.fn((url: string) => {
+      const u = String(url);
+      if (u.endsWith("/auth/refresh")) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            token: "fresh-access",
+            refreshToken: "rotated-refresh",
+          }),
+        });
+      }
+      if (u.includes("/api/sync-auth-cookie")) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+      }
+      // /local-match : 401 tant que le token est l'ancien (expiré), 200 une
+      // fois que le refresh a écrit le nouveau token en localStorage.
+      if (window.localStorage.getItem("auth_token") === "fresh-access") {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ localMatches: [{ id: "m1" }] }),
+        });
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Token invalide" }),
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { apiRequest } = await import("./api-client");
+    const result = await apiRequest<{ localMatches: { id: string }[] }>(
+      "/local-match",
+    );
+
+    expect(result.localMatches).toEqual([{ id: "m1" }]);
+    // Le token rafraîchi a bien été persisté.
+    expect(window.localStorage.getItem("auth_token")).toBe("fresh-access");
+    // Exactement un appel /auth/refresh.
+    const refreshCalls = fetchMock.mock.calls.filter((c) =>
+      String(c[0]).endsWith("/auth/refresh"),
+    );
+    expect(refreshCalls).toHaveLength(1);
   });
 });

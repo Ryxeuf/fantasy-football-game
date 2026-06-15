@@ -3,8 +3,19 @@ import {
   clearAuthTokens,
   getAuthToken,
   getRefreshToken,
+  isAccessTokenExpired,
   setAuthTokens,
 } from "./auth-storage";
+
+/** Construit un JWT minimal (header.payload.sig) avec le payload donné. */
+function makeJwt(payload: Record<string, unknown>): string {
+  const b64 = (obj: unknown) =>
+    btoa(JSON.stringify(obj))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  return `${b64({ alg: "HS256", typ: "JWT" })}.${b64(payload)}.sig`;
+}
 
 describe("Rule: auth-storage helpers (S24.3)", () => {
   beforeEach(() => {
@@ -40,5 +51,43 @@ describe("Rule: auth-storage helpers (S24.3)", () => {
     setAuthTokens({ token: "abc", refreshToken: "def" });
     expect(window.localStorage.getItem("auth_token")).toBe("abc");
     expect(window.localStorage.getItem("auth_refresh_token")).toBe("def");
+  });
+});
+
+describe("Rule: isAccessTokenExpired (proactive refresh trigger)", () => {
+  const now = () => Math.floor(Date.now() / 1000);
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("treats a missing access token as expired", () => {
+    expect(isAccessTokenExpired()).toBe(true);
+  });
+
+  it("returns false for a token whose exp is comfortably in the future", () => {
+    setAuthTokens({ token: makeJwt({ exp: now() + 600 }) });
+    expect(isAccessTokenExpired()).toBe(false);
+  });
+
+  it("returns true for a token whose exp is already in the past", () => {
+    setAuthTokens({ token: makeJwt({ exp: now() - 10 }) });
+    expect(isAccessTokenExpired()).toBe(true);
+  });
+
+  it("returns true within the skew window (token about to expire)", () => {
+    // exp dans 10s, skew par défaut 30s → considéré expiré.
+    setAuthTokens({ token: makeJwt({ exp: now() + 10 }) });
+    expect(isAccessTokenExpired()).toBe(true);
+  });
+
+  it("treats an unreadable token as NOT expired (reactive path will handle it)", () => {
+    setAuthTokens({ token: "not-a-jwt" });
+    expect(isAccessTokenExpired()).toBe(false);
+  });
+
+  it("treats a token without exp claim as NOT expired", () => {
+    setAuthTokens({ token: makeJwt({ sub: "user-1" }) });
+    expect(isAccessTokenExpired()).toBe(false);
   });
 });
