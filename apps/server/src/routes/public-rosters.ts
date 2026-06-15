@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { getPositionNameEn } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import {
   resolveRuleset,
@@ -207,6 +208,7 @@ function transformRoster(roster: any, isEnglish: boolean) {
     positions: roster.positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
+      displayNameEn: getPositionNameEn(position.slug) ?? null,
       cost: position.cost,
       min: position.min,
       max: position.max,

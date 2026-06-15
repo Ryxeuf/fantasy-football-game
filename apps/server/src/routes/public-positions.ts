@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { getPositionNameEn } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
@@ -54,6 +55,8 @@ interface PositionRow {
 interface TransformedPosition {
   slug: string;
   displayName: string;
+  /** Nom anglais officiel (null si non renseigné → repli FR côté client). */
+  displayNameEn: string | null;
   cost: number;
   min: number;
   max: number;
@@ -188,6 +191,7 @@ function transformPosition(
   return {
     slug: position.slug,
     displayName: position.displayName,
+    displayNameEn: getPositionNameEn(position.slug) ?? null,
     cost: position.cost,
     min: position.min,
     max: position.max,

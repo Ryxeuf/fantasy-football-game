@@ -32,6 +32,7 @@ interface PositionPageProps {
 interface ApiPosition {
   slug: string;
   displayName: string;
+  displayNameEn?: string | null;
   cost: number;
   min: number;
   max: number;
@@ -281,6 +282,11 @@ export default async function PositionDetailPage({
           <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
             {name}
           </h1>
+          {position.displayNameEn && position.displayNameEn !== name && (
+            <p className="mt-1 font-medium text-gray-500">
+              {position.displayNameEn}
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
               {position.cost}k po

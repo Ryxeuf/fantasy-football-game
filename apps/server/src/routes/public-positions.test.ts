@@ -149,6 +149,26 @@ describe("GET /api/positions", () => {
       roster: { slug: "skaven", ruleset: "season_3" },
     });
   });
+
+  it("expose displayNameEn (nom anglais officiel) pour un slug connu", async () => {
+    mockedPrisma.position.findMany.mockResolvedValue([
+      makePositionRow({
+        slug: "skaven_coureur_d_egouts",
+        displayName: "Coureur d'Égouts",
+      }),
+    ]);
+    const { body } = await get("/api/positions?ruleset=season_3");
+    expect(body.positions?.[0].displayName).toBe("Coureur d'Égouts");
+    expect(body.positions?.[0].displayNameEn).toBe("Gutter Runner");
+  });
+
+  it("displayNameEn = null pour un slug non mappé", async () => {
+    mockedPrisma.position.findMany.mockResolvedValue([
+      makePositionRow({ slug: "skaven_slug_inexistant" }),
+    ]);
+    const { body } = await get("/api/positions?ruleset=season_3");
+    expect(body.positions?.[0].displayNameEn).toBeNull();
+  });
 });
 
 describe("GET /api/positions/:slug", () => {
