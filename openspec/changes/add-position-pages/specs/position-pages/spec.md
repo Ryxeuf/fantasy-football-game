@@ -139,3 +139,37 @@ lien evenement de match <-> slug de position) NE DOIVENT PAS etre exposees.
 #### Scenario: Aucune donnee d'usage
 - WHEN aucun joueur n'existe pour une position
 - THEN la section d'usage de la page position NE DOIT PAS etre affichee (pas de division par zero)
+
+### Requirement: Classements de positions (etudes data-only)
+Le site DOIT exposer une page d'etudes listant des classements de positions
+derives de leurs seules caracteristiques statiques (mouvement, force, armure,
+agilite, passe, cout), sans dependre de donnees de match. Le tri DOIT
+respecter la semantique BB2020 (MA/ST/AV : valeur haute = meilleure ; AG/PA :
+valeur basse = meilleure ; cout : valeur basse = moins chere) et departager
+de facon stable. Chaque entree de classement DOIT lier vers la page de detail
+de la position.
+
+#### Scenario: Tri selon la semantique de la stat
+- WHEN un classement "les plus rapides" est calcule
+- THEN les positions DOIVENT etre ordonnees par mouvement decroissant
+- AND un classement "les plus agiles" DOIT ordonner par agilite croissante
+
+#### Scenario: Positions ineligibles exclues
+- WHEN un classement cible une stat ou certaines positions sont non pertinentes (ex : passe `0`)
+- THEN ces positions NE DOIVENT PAS apparaitre dans ce classement
+
+### Requirement: Comparateur de positions cross-roster
+Le site DOIT permettre de comparer cote a cote de 2 a 4 positions de
+n'importe quel roster. La selection DOIT etre partageable via un parametre
+d'URL (`?ids=`), bornee a 4, et la comparaison DOIT surligner la meilleure
+valeur par caracteristique. Sous le minimum de 2 positions, la comparaison ne
+DOIT pas etre affichee.
+
+#### Scenario: Selection partageable
+- WHEN un utilisateur selectionne des positions
+- THEN l'URL DOIT refleter la selection via `?ids=<slugs>`
+- AND l'ouverture de cette URL DOIT pre-selectionner les memes positions (slugs inconnus ignores)
+
+#### Scenario: Surlignage de la meilleure valeur
+- WHEN au moins 2 positions sont comparees
+- THEN pour chaque caracteristique numerique, la meilleure valeur DOIT etre mise en evidence

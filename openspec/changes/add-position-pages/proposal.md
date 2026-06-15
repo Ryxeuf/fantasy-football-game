@@ -76,6 +76,15 @@ meme PR sur demande. Detail des taches dans `tasks.md`, exigences dans
   `GET /api/rosters/:slug/positions-stats` (memoize), section "Chez les
   coachs" sur la page. **Pas de win-rate** (aucun lien fiable evenement de
   match <-> slug de position) : on n'expose que des metriques fiables.
+- **Lot 5 — B.6 Etudes (classements data-only).** Page `/teams/positions` :
+  6 classements derives des seules stats statiques (plus rapides / forts /
+  blindes / agiles / passeurs / moins cheres), top 8 chacun. Module pur
+  `position-rankings` (teste). Source : `GET /api/positions`.
+- **Lot 6 — B.7 Comparateur de positions.** `/teams/positions/comparer` :
+  comparateur cross-roster 2-4 positions (calque `/teams/comparer`) avec
+  recherche, surlignage de la meilleure valeur par stat, URL partageable
+  `?ids=`, table desktop + cartes mobile. Routes statiques cohabitant avec
+  `/teams/[slug]` (meme pattern que `/teams/comparer`).
 
 ## Non-Goals
 

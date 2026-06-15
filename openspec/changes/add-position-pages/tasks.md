@@ -96,8 +96,27 @@
       masquee si 0 donnee. **Pas de win-rate** (donnee non disponible).
 - [x] 4b.4 Test service (3 cas dont division par zero).
 
-## Cloture globale (Lots 1-4)
-- [x] Suites vertes : **server 267 fichiers / 3900 tests**, **web 156 / 1346**,
+## Lot 5 — B.6 Etudes (classements data-only) — FAIT
+- [x] 5b.1 Module pur `position-rankings` : `LEADERBOARDS` (6) +
+      `rankPositions` (tri + eligible + departage stable). Semantique BB2020
+      (MA/ST/AV haut=mieux ; AG/PA bas=mieux ; cout bas=moins cher).
+- [x] 5b.2 Page `/teams/positions` : fetch `/api/positions`, rend les 6
+      classements (top 8), liens vers les pages position, breadcrumb,
+      metadata + structured data `CollectionPage`. Sitemap.
+- [x] 5b.3 Tests rankings (7 : tri desc/asc, eligible, departage, no-mutation).
+
+## Lot 6 — B.7 Comparateur de positions — FAIT
+- [x] 6b.1 Helpers purs `parsePositionIds` + `bestStatValue` (surlignage).
+- [x] 6b.2 `/teams/positions/comparer` (server) + `PositionComparatorClient`
+      (recherche, picker cappe, 2-4 selection, table desktop + cartes mobile,
+      meilleure valeur surlignee, URL `?ids=` partageable via replaceState).
+- [x] 6b.3 Tests client (4 : indice <2, pre-selection, pick, slug inconnu) +
+      sitemap (entrees statiques `/teams/positions[/comparer]`).
+- [x] 6b.4 Lien "Etudes des positions" depuis la page detail position.
+
+## Cloture globale (Lots 1-6)
+- [x] Suites vertes : **server 267 fichiers / 3900 tests**, **web 158 / 1357**,
       game-engine map (3). `tsc` exit 0 (server/web/game-engine). Prettier
-      clean (hors churn pre-existant volontairement non touche : `index.ts`
-      game-engine non-conforme sur main).
+      clean sur tous les fichiers modifies (hors churn pre-existant
+      volontairement non touche : `sitemap.ts` + `index.ts` game-engine,
+      non-conformes sur main, sans gate CI prettier).
