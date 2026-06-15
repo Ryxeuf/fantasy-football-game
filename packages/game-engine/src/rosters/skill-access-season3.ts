@@ -23,6 +23,12 @@ export const SKILL_ACCESS_SEASON3: Record<string, PositionSkillAccessS3> = {
   "black_orc_malabar_gobelin": { primary: "A,S", secondary: "G,P,S" },
   "black_orc_orque_noir": { primary: "G,S", secondary: "A,S" },
   "black_orc_troll_entraine": { primary: "S", secondary: "A,G,P" },
+  // Bretonniens : ajout manuel (pas de markdown source dans data/saison3/team).
+  // Accès calqués sur l'équipe Humaine (Trois-quart/Lanceur/Receveur/Blitzer).
+  "bretonnian_ecuyer": { primary: "G", secondary: "A,S" },
+  "bretonnian_lanceur_chevalier": { primary: "G,P", secondary: "A,S" },
+  "bretonnian_receveur_chevalier": { primary: "G,A", secondary: "S,P" },
+  "bretonnian_chevalier_du_graal": { primary: "G,S", secondary: "A,S" },
   "chaos_chosen_bloqueur_elu": { primary: "G,M,S", secondary: "A,S" },
   "chaos_chosen_minotaure": { primary: "M,S", secondary: "A,G" },
   "chaos_chosen_ogre_du_chaos": { primary: "M,S", secondary: "A,G" },

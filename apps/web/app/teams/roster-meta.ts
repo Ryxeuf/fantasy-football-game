@@ -89,6 +89,15 @@ export const ROSTER_META: Record<string, RosterMeta> = {
     shortEn:
       "A mix of Humans, Dwarves and Halflings: a versatile team blending speed, blocking and fragility.",
   },
+  bretonnian: {
+    difficulty: "intermediate",
+    playStyle: "balanced",
+    starPlayers: ["Griff Oberwald", "Morg'n'Thorg"],
+    shortFr:
+      "Chevaliers du Vieux Monde : des chevaliers Intrépides aux Nerfs d'acier épaulés par des écuyers. Blocage solide et passes audacieuses, statut NAF (Classique du Vieux Monde).",
+    shortEn:
+      "Knights of the Old World: Dauntless knights with Nerves of Steel backed by squires. Solid blocking and daring passes — a NAF team (Old World Classic).",
+  },
   amazon: {
     difficulty: "beginner",
     playStyle: "balanced",

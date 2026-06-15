@@ -140,7 +140,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
       { nameEn: 'Dwarf Blocker Lineman', cost: 70, max: 16, ma: 4, st: 3, ag: 4, pa: 5, av: 10, skills: ['block', 'defensive', 'thick-skull'] },
       { nameEn: 'Troll Slayer', cost: 95, max: 2, ma: 5, st: 3, ag: 4, pa: 5, av: 9, skills: ['block', 'dauntless', 'frenzy', 'hate', 'thick-skull'] },
       { nameEn: 'Dwarf Blitzer', cost: 100, max: 2, ma: 5, st: 3, ag: 4, pa: 4, av: 10, skills: ['block', 'diving-tackle', 'tackle', 'thick-skull'] },
-      { nameEn: 'Deathroller', cost: 170, max: 1, ma: 5, st: 7, ag: 5, pa: 6, av: 11, skills: ['break-tackle', 'dirty-player-1', 'juggernaut', 'loner-4', 'mighty-blow-1', 'no-hands', 'secret-weapon', 'stand-firm', 'tackle'] },
+      { nameEn: 'Deathroller', cost: 170, max: 1, ma: 5, st: 7, ag: 5, pa: 6, av: 11, skills: ['break-tackle', 'dirty-player-1', 'juggernaut', 'loner-4', 'mighty-blow-1', 'no-hands', 'secret-weapon', 'stand-firm'] },
     ],
   },
 
@@ -199,6 +199,19 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
       { nameEn: 'Zombie Lineman', cost: 40, max: 16, ma: 4, st: 3, ag: 4, pa: 6, av: 9, skills: ['fork', 'instable', 'regeneration'] },
       { nameEn: 'Ghoul Runner', cost: 75, max: 2, ma: 7, st: 3, ag: 3, pa: 3, av: 8, skills: ['dodge', 'regeneration'] },
       { nameEn: 'Werewolf', cost: 120, max: 2, ma: 8, st: 3, ag: 3, pa: 3, av: 9, skills: ['claws', 'frenzy', 'regeneration'] },
+    ],
+  },
+
+  bretonnian: {
+    nameEn: 'Bretonnian',
+    tier: 'II',
+    positionCount: 4,
+    budget: 1000,
+    keyPositions: [
+      { nameEn: 'Bretonnian Squire', cost: 50, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: ['wrestle'] },
+      { nameEn: 'Bretonnian Knight Thrower', cost: 80, max: 2, ma: 6, st: 3, ag: 3, pa: 3, av: 9, skills: ['dauntless', 'nerves-of-steel', 'pass'] },
+      { nameEn: 'Bretonnian Knight Catcher', cost: 85, max: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['catch', 'dauntless', 'nerves-of-steel'] },
+      { nameEn: 'Grail Knight', cost: 95, max: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 10, skills: ['block', 'dauntless', 'surefoot'] },
     ],
   },
 
@@ -402,7 +415,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     keyPositions: [
       { nameEn: 'Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
       { nameEn: 'Trained Troll', cost: 115, max: 2, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
-      { nameEn: 'Fanatic', cost: 70, max: 1, ma: 3, st: 7, ag: 3, pa: 6, av: 8, skills: ['ball-and-chain', 'no-hands', 'secret-weapon', 'titchy'] },
+      { nameEn: 'Fanatic', cost: 70, max: 1, ma: 3, st: 7, ag: 3, pa: 0, av: 8, skills: ['ball-and-chain', 'no-hands', 'secret-weapon', 'titchy'] },
     ],
   },
 
@@ -460,12 +473,12 @@ export const STRUCTURAL_RULES = {
     ma: { min: 1, max: 9 },
     st: { min: 1, max: 7 },
     ag: { min: 1, max: 6 },
-    pa: { min: 1, max: 6 },
+    pa: { min: 0, max: 6 }, // 0 = pas de passe (No Hands / joueur animal) — rendu "-"
     av: { min: 5, max: 11 },
     cost: { min: 10, max: 200 },
   },
   /** Chaque equipe doit avoir au moins un type de position avec max >= 11 (lineman) */
   mustHaveLinemanType: true,
-  /** Nombre total d'equipes attendu en S3 */
-  expectedTeamCount: 30,
+  /** Nombre total d'equipes attendu en S3 (30 historiques + Bretonniens) */
+  expectedTeamCount: 31,
 };
