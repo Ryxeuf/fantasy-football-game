@@ -37,11 +37,6 @@ const LEGACY_NOT_MIGRATED = new Set<string>([
   "local-match.ts",
   "match.ts",
   "pro-prediction-leagues.ts",
-  "team-build-handler.ts",
-  "team-create-from-roster-handler.ts",
-  "team-mutation-handlers.ts",
-  "team-player-skills-handler.ts",
-  "team-purchase-handler.ts",
 ]);
 
 function listRouteFiles(): string[] {

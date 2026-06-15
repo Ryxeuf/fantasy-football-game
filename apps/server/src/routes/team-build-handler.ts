@@ -109,7 +109,7 @@ export async function handleBuildTeam(
       assistants: bodyAssistants,
       apothecary: bodyApothecary,
       dedicatedFans: bodyDedicatedFans,
-    } = req.body as {
+    }: {
       name: string;
       roster: string;
       teamValue?: number;
@@ -122,7 +122,7 @@ export async function handleBuildTeam(
       assistants?: number;
       apothecary?: boolean;
       dedicatedFans?: number;
-    };
+    } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!ALLOWED_TEAMS.includes(roster as any)) {
       sendError(res, 'Roster non autorise', 400);
