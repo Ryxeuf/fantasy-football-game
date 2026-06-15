@@ -32,3 +32,10 @@ export const placeBetSchema = z.object({
 export const dedicateHallOfFameSchema = z.object({
   message: z.string(),
 });
+
+export type SubmitMvpVoteInput = z.infer<typeof submitMvpVoteSchema>;
+export type SubmitFanPredictionInput = z.infer<
+  typeof submitFanPredictionSchema
+>;
+export type PlaceBetInput = z.infer<typeof placeBetSchema>;
+export type DedicateHallOfFameInput = z.infer<typeof dedicateHallOfFameSchema>;

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
-import { joinQueueSchema } from "../schemas/matchmaking.schemas";
+import {
+  joinQueueSchema,
+  type JoinQueueInput,
+} from "../schemas/matchmaking.schemas";
 import {
   joinQueue,
   leaveQueue,
@@ -22,7 +25,7 @@ router.post(
   validate(joinQueueSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
-      const { teamId } = req.body as { teamId: string };
+      const { teamId }: JoinQueueInput = req.body;
       const result = await joinQueue({
         userId: req.user!.id,
         teamId,

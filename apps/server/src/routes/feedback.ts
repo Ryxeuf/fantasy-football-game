@@ -28,7 +28,7 @@ function truncate(value: string | undefined, max: number): string | undefined {
 }
 
 export async function handleCreateFeedback(req: Request, res: Response) {
-  const data = req.body as CreateFeedbackInput;
+  const data: CreateFeedbackInput = req.body;
 
   const captchaResult = await verifyTurnstileToken(
     data.captchaToken,
@@ -138,7 +138,7 @@ export async function handleGetFeedback(req: Request, res: Response) {
 
 export async function handleUpdateFeedbackStatus(req: Request, res: Response) {
   const { id } = req.params;
-  const { status } = req.body as UpdateFeedbackStatusInput;
+  const { status }: UpdateFeedbackStatusInput = req.body;
 
   try {
     const feedback = await prisma.feedback.update({

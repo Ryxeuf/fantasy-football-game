@@ -13,7 +13,10 @@ import { Router } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
 import { apiRateLimiter } from "../middleware/rateLimiter";
-import { emailDigestPreferenceSchema } from "../schemas/email-digest.schemas";
+import {
+  emailDigestPreferenceSchema,
+  type EmailDigestPreferenceInput,
+} from "../schemas/email-digest.schemas";
 import {
   getEmailDigestPreference,
   setEmailDigestPreference,
@@ -41,7 +44,7 @@ router.put(
   validate(emailDigestPreferenceSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
-      const { enabled } = req.body as { enabled: boolean };
+      const { enabled }: EmailDigestPreferenceInput = req.body;
       const pref = await setEmailDigestPreference(req.user!.id, enabled);
       return res.json(pref);
     } catch {

@@ -36,6 +36,10 @@ import {
   submitFanPredictionSchema,
   placeBetSchema,
   dedicateHallOfFameSchema,
+  type SubmitMvpVoteInput,
+  type SubmitFanPredictionInput,
+  type PlaceBetInput,
+  type DedicateHallOfFameInput,
 } from "../schemas/pro-league.schemas";
 import {
   BetValidationError,
@@ -661,7 +665,7 @@ export async function handleSubmitMvpVote(
     res.status(400).json({ error: "missing-match-id" });
     return;
   }
-  const body = (req.body ?? {}) as { votedRosterId?: unknown };
+  const body: SubmitMvpVoteInput = req.body;
   if (typeof body.votedRosterId !== "string" || !body.votedRosterId) {
     res.status(400).json({ error: "missing-votedRosterId" });
     return;
@@ -761,7 +765,7 @@ export async function handleSubmitFanPrediction(
     res.status(400).json({ error: "missing-match-id" });
     return;
   }
-  const body = (req.body ?? {}) as { body?: unknown };
+  const body: SubmitFanPredictionInput = req.body;
   if (typeof body.body !== "string") {
     res.status(400).json({ error: "missing-body" });
     return;
@@ -982,13 +986,7 @@ export async function handlePlaceBet(
     res.status(401).json({ error: "unauthenticated" });
     return;
   }
-  const body = req.body as Partial<{
-    marketId: string;
-    selection: string;
-    stake: number;
-    oddsAtPlace: number;
-    clientToken: string;
-  }>;
+  const body: PlaceBetInput = req.body;
   if (
     !body ||
     typeof body.marketId !== "string" ||
@@ -1236,7 +1234,8 @@ export async function handleDedicateHallOfFame(
     res.status(400).json({ error: "missing-id" });
     return;
   }
-  const message = (req.body as { message?: unknown })?.message;
+  const body: DedicateHallOfFameInput = req.body;
+  const message = body.message;
   if (typeof message !== "string") {
     res.status(400).json({ error: "INVALID_MESSAGE", code: "INVALID_MESSAGE" });
     return;

@@ -28,6 +28,15 @@ Outils : pnpm workspaces, Turbo pour les tasks, Vitest pour les tests
   les fonctions exportees marquees "pur".
 - **Routes** : `src/routes/*.ts` avec handler + Zod schema + middleware
   (`authUser`, `adminOnly`, `validate`).
+- **Validation des entrees** : toute route mutante qui lit `req.body`
+  DOIT passer par `validate(schema)` (idem `validateQuery` /
+  `validateParams`, cf. `middleware/validate.ts`). Le handler NE recaste
+  PAS `req.body as { ... }` : il type via le schema
+  (`const body: z.infer<typeof schema> = req.body`, ou un
+  `export type XInput = z.infer<...>` pose a cote du schema) pour que
+  tout drift schema/handler echoue a `tsc`. Garde CI :
+  `routes/no-raw-body-cast.test.ts` interdit `req.body as` (ratchet a
+  denylist decroissante — les fichiers non encore migres y sont listes).
 - **Erreurs typees** : prefere `class XxxError extends Error` avec un
   `code` enum string plutot que des chaines. Le handler match sur
   `instanceof` pour mapper le status HTTP.

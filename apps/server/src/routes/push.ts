@@ -7,6 +7,10 @@ import {
   pushPreferencesSchema,
   expoPushSubscribeSchema,
   expoPushUnsubscribeSchema,
+  type PushSubscribeInput,
+  type PushUnsubscribeInput,
+  type ExpoPushSubscribeInput,
+  type ExpoPushUnsubscribeInput,
 } from "../schemas/push.schemas";
 import {
   addSubscription,
@@ -14,7 +18,6 @@ import {
   getVapidPublicKey,
   addExpoSubscription,
   removeExpoSubscription,
-  type ExpoPlatform,
 } from "../services/push-notifications";
 import {
   getNotificationPreferences,
@@ -42,10 +45,7 @@ router.post(
   authUser,
   validate(pushSubscribeSchema),
   async (req: AuthenticatedRequest, res) => {
-    const { endpoint, keys } = req.body as {
-      endpoint: string;
-      keys: { p256dh: string; auth: string };
-    };
+    const { endpoint, keys }: PushSubscribeInput = req.body;
     try {
       await addSubscription(req.user!.id, { endpoint, keys });
       return res.json({ ok: true });
@@ -65,7 +65,7 @@ router.post(
   authUser,
   validate(pushUnsubscribeSchema),
   async (req: AuthenticatedRequest, res) => {
-    const { endpoint } = req.body as { endpoint: string };
+    const { endpoint }: PushUnsubscribeInput = req.body;
     try {
       const removed = await removeSubscription(req.user!.id, endpoint);
       if (!removed) {
@@ -124,10 +124,7 @@ router.post(
   authUser,
   validate(expoPushSubscribeSchema),
   (req: AuthenticatedRequest, res) => {
-    const { token, platform } = req.body as {
-      token: string;
-      platform: ExpoPlatform;
-    };
+    const { token, platform }: ExpoPushSubscribeInput = req.body;
     const ok = addExpoSubscription(req.user!.id, { token, platform });
     if (!ok) {
       return res.status(400).json({ error: "Token Expo invalide" });
@@ -146,7 +143,7 @@ router.post(
   authUser,
   validate(expoPushUnsubscribeSchema),
   (req: AuthenticatedRequest, res) => {
-    const { token } = req.body as { token: string };
+    const { token }: ExpoPushUnsubscribeInput = req.body;
     const removed = removeExpoSubscription(req.user!.id, token);
     if (!removed) {
       return res.status(404).json({ error: "Abonnement non trouve" });

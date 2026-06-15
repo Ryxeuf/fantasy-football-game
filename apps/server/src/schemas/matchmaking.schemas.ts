@@ -5,3 +5,5 @@ export const joinQueueSchema = z.object({
 });
 
 export const leaveQueueSchema = z.object({});
+
+export type JoinQueueInput = z.infer<typeof joinQueueSchema>;

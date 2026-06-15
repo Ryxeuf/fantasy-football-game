@@ -39,23 +39,31 @@
       mvp-vote / predictions / dedicate ; pro-gazette comment / flag /
       delete).
 - [ ] 3.3 Extraire en const nommees exportees les `z.object()` inline du
-      cluster `nfl-fantasy` (et autres routes a schema inline). *(tranche 2)*
-- [ ] 3.4 Migrer les `req.body as {...}` → type derive du schema
-      (`z.infer`), fichier par fichier (~123 sites / ~25 fichiers). *(tranche 2)*
-- [x] 3.5 `pnpm typecheck` vert sur le perimetre touche (exit 0).
-      *(re-verifier apres 3.4)*
+      cluster `nfl-fantasy` (schemas inline). *(reste sur denylist)*
+- [~] 3.4 Migrer les `req.body as {...}` → type derive du schema
+      (`z.infer` / `type XInput`). **12 fichiers migres** (push, pro-league,
+      user, admin-digest, email-digest, pro-gazette-comments,
+      team-advancement, feedback, league-invitation, matchmaking,
+      pro-survivor, auth-privacy). **31 fichiers restants** sur la denylist
+      du ratchet (dont league.ts=29 casts, cluster nfl-fantasy, admin-*).
+- [x] 3.5 `pnpm typecheck` vert (exit 0) apres chaque lot migre.
 
-## 4. Brique 3 — Garde anti-regression *(tranche 2 — depend de 3.4)*
-- [ ] 4.1 Test de scan `routes/no-raw-body-cast.test.ts` : echoue si un
-      fichier `routes/*.ts` contient `req.body as`.
-- [ ] 4.2 (option) Assertion renforcee : toute route mutante lisant un body
-      a `validate(` dans sa chaine.
-- [ ] 4.3 Documenter la convention dans `CLAUDE.md` (type derive du schema
-      obligatoire, pas de cast brut `req.body as`).
+## 4. Brique 3 — Garde anti-regression — FAIT
+- [x] 4.1 `routes/no-raw-body-cast.test.ts` : ratchet a denylist
+      decroissante. Tout fichier de route hors denylist DOIT etre clean
+      (zero `req.body as`) ; un fichier denyliste DOIT encore contenir un
+      cast (sinon le retirer). Empeche toute nouvelle regression meme avant
+      la fin de la migration.
+- [x] 4.2 Le ratchet remplace l'assertion "toute route a validate" par un
+      invariant plus simple et robuste (le cast brut est interdit hors
+      denylist ; les vrais trous de validation ont ete fermes en Brique 1).
+- [x] 4.3 Convention documentee dans `CLAUDE.md` (section "Conventions
+      backend" → "Validation des entrees").
 
 ## 5. Cloture
-- [x] 5.1 Suite verte sur le perimetre touche : `zod-schemas.test.ts` (102),
-      `validate.test.ts` (24), routes pro-league/gazette (60). *(coverage
-      globale a re-mesurer apres tranche 2)*
-- [ ] 5.2 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
+- [x] 5.1 Suite verte sur le perimetre touche (guard 50, schemas 102,
+      validate 24, routes migrees). Typecheck exit 0. *(coverage globale a
+      re-mesurer quand la denylist sera vide)*
+- [ ] 5.2 Finir la migration des 31 fichiers denylistes (lots suivants,
+      ratchet garantit la securite), puis `/opsx:sync` + `/opsx:archive`
       apres merge.

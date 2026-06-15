@@ -11,3 +11,5 @@ import { z } from "zod";
 export const updateNafSchema = z.object({
   nafName: z.string().nullable().optional(),
 });
+
+export type UpdateNafInput = z.infer<typeof updateNafSchema>;

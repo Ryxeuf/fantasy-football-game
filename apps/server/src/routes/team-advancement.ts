@@ -207,7 +207,7 @@ export async function handleApplyAdvancement(
   const playerId = req.params.playerId;
   const team = await ensureTeamOwner(userId, teamId, res);
   if (!team) return;
-  const body = req.body as ApplyAdvancementBody;
+  const body: ApplyAdvancementBody = req.body;
 
   // Pour les types `random-*`, on aurait normalement un tirage 2D6
   // dans la table d'avancements pour determiner la skill. Pour

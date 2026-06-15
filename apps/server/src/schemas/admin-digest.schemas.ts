@@ -7,3 +7,5 @@ import { z } from "zod";
 export const runDigestSchema = z.object({
   force: z.boolean().optional(),
 });
+
+export type RunDigestInput = z.infer<typeof runDigestSchema>;

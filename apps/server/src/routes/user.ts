@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
-import { updateNafSchema } from "../schemas/user.schemas";
+import { updateNafSchema, type UpdateNafInput } from "../schemas/user.schemas";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { isValidNafName } from "../services/naf-sync";
 import { getSupporterStatus } from "../services/supporter-status";
@@ -27,7 +27,7 @@ router.patch(
   authUser,
   validate(updateNafSchema),
   async (req: AuthenticatedRequest, res) => {
-    const body = req.body as { nafName?: string | null };
+    const body: UpdateNafInput = req.body;
     let next: string | null = null;
     if (body.nafName === null || body.nafName === undefined) {
       next = null;

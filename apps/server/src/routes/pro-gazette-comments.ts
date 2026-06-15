@@ -19,7 +19,10 @@ import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
 import { validate, validateParams } from "../middleware/validate";
 import { idParamSchema } from "../schemas/common.schemas";
-import { createCommentSchema } from "../schemas/pro-gazette-comments.schemas";
+import {
+  createCommentSchema,
+  type CreateCommentInput,
+} from "../schemas/pro-gazette-comments.schemas";
 import { serverLog } from "../utils/server-log";
 import {
   CommentsError,
@@ -93,7 +96,7 @@ userRouter.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const body = (req.body ?? {}) as { body?: unknown };
+      const body: CreateCommentInput = req.body;
       if (typeof body.body !== "string") {
         return res.status(400).json({ error: "missing-body" });
       }
@@ -153,10 +156,10 @@ userRouter.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const body = (req.body ?? {}) as { reason?: unknown };
+      const reasonRaw: unknown = req.body?.reason;
       const reasonText =
-        typeof body.reason === "string" && body.reason.trim().length > 0
-          ? body.reason.trim().slice(0, 200)
+        typeof reasonRaw === "string" && reasonRaw.trim().length > 0
+          ? reasonRaw.trim().slice(0, 200)
           : "user-report";
       const comment = await flagComment({
         commentId: req.params.id,
