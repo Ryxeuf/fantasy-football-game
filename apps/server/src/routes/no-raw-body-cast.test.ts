@@ -30,14 +30,11 @@ const LEGACY_NOT_MIGRATED = new Set<string>([
   "admin-pro-roster.ts",
   "admin-pro-season.ts",
   "admin-pro-team.ts",
-  "admin-wallet.ts",
   "admin.ts",
   "auth.ts",
   "feature-flags.ts",
-  "friends.ts",
   "kofi.ts",
   "local-match.ts",
-  "match-lifecycle-handlers.ts",
   "match.ts",
   "pro-prediction-leagues.ts",
   "team-build-handler.ts",
@@ -45,7 +42,6 @@ const LEGACY_NOT_MIGRATED = new Set<string>([
   "team-mutation-handlers.ts",
   "team-player-skills-handler.ts",
   "team-purchase-handler.ts",
-  "team-share-handlers.ts",
 ]);
 
 function listRouteFiles(): string[] {

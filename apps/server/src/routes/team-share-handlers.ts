@@ -21,7 +21,7 @@ export async function handleSetTeamShare(
   res: Response,
 ): Promise<void> {
   const teamId = req.params.id;
-  const { enabled } = req.body as { enabled: boolean };
+  const { enabled }: { enabled: boolean } = req.body;
   try {
     const result = await setTeamShare({
       teamId,

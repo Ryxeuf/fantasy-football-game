@@ -79,7 +79,7 @@ router.post(
   validate(sendFriendRequestSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
-      const body = req.body as { receiverId?: string; username?: string };
+      const body: { receiverId?: string; username?: string } = req.body;
       const receiverId = await resolveReceiverIdFromBody(body);
       const friendship = await sendFriendRequest(req.user!.id, receiverId);
       return res.status(201).json({ success: true, data: friendship });
@@ -103,7 +103,7 @@ router.post(
   validate(respondFriendRequestSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
-      const { action } = req.body as { action: "accept" | "decline" };
+      const { action }: { action: "accept" | "decline" } = req.body;
       const friendship = await respondToFriendRequest(
         req.params.id,
         req.user!.id,

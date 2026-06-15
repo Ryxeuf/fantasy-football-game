@@ -132,7 +132,7 @@ export async function handleAcceptMatch(
   res: Response,
 ): Promise<void> {
   try {
-    const { matchId } = req.body as { matchId: string };
+    const { matchId }: { matchId: string } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await acceptAndMaybeStartMatch(prisma as any, {
       matchId,
