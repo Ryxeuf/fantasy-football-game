@@ -25,7 +25,7 @@ function renderHome() {
   );
 }
 
-describe("HomePage (accueil double-face)", () => {
+describe("HomePage (accueil marketing + bandeau coach)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
@@ -50,29 +50,30 @@ describe("HomePage (accueil double-face)", () => {
     expect(calledPaths.some((p) => p.startsWith("/auth/me"))).toBe(false);
   });
 
-  it("bascule vers le dashboard pour un coach connecte", async () => {
+  it("affiche un bandeau vers le tableau de bord /me pour un coach connecte", async () => {
     window.localStorage.setItem("auth_token", "fake-token");
     mockedApiRequest.mockImplementation((path: string) => {
       if (path.startsWith("/auth/me"))
         return Promise.resolve({ user: { id: "u1", coachName: "Nuffle", _count: { teams: 0 } } });
-      if (path.startsWith("/team/mine")) return Promise.resolve({ teams: [] });
-      if (path.startsWith("/api/rosters")) return Promise.resolve({ rosters: [] });
+      if (path.startsWith("/api/public/stats"))
+        return Promise.reject(new Error("no stats in test"));
       return Promise.resolve({});
     });
 
     renderHome();
 
-    await waitFor(() =>
-      expect(screen.getByTestId("coach-dashboard")).toBeTruthy(),
-    );
-    expect(screen.getByTestId("dashboard-greeting").textContent).toContain("Nuffle");
-    // Le marketing n'est plus monte.
+    // Bandeau personnalise pointant vers la page perso (/me).
+    const link = await screen.findByTestId("home-dashboard-link");
+    expect(link.getAttribute("href")).toBe("/me");
+    expect(link.textContent).toContain("Nuffle");
+    // La home publique reste montee ; aucun dashboard inline a la racine.
+    expect(screen.queryByTestId("coach-dashboard")).toBeNull();
     expect(
-      screen.queryByText("L'arène où le hasard devient divin."),
-    ).toBeNull();
+      screen.getByText("L'arène où le hasard devient divin."),
+    ).toBeTruthy();
   });
 
-  it("reste sur le marketing si /auth/me echoue (token expire)", async () => {
+  it("reste sur le marketing sans bandeau si /auth/me echoue (token expire)", async () => {
     window.localStorage.setItem("auth_token", "stale-token");
     mockedApiRequest.mockImplementation((path: string) => {
       if (path.startsWith("/auth/me")) return Promise.reject(new Error("401"));
@@ -89,5 +90,7 @@ describe("HomePage (accueil double-face)", () => {
       ).toBeTruthy(),
     );
     expect(screen.queryByTestId("coach-dashboard")).toBeNull();
+    // Token invalide => pas de bandeau coach.
+    expect(screen.queryByTestId("home-dashboard-link")).toBeNull();
   });
 });

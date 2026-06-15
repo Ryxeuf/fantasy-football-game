@@ -4,6 +4,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
+import { coachDisplayName, type CoachUser } from "./coach";
 import {
   EmblemRosters,
   EmblemStar,
@@ -11,24 +12,12 @@ import {
   EmblemTutorial,
 } from "./NuffleArt";
 
+export type { CoachUser };
+
 /* Meme materiau « jeton sombre grave » que la home marketing — accent
    unique reutilise (avatar, badges d'icones) pour rester coherent. */
 const COIN_BADGE =
   "relative flex items-center justify-center rounded-full bg-[#1B1610] text-nuffle-gold ring-1 ring-nuffle-gold/40 shadow-[inset_0_1px_0_rgba(232,201,106,0.25),0_6px_16px_rgba(27,22,16,0.35)]";
-
-/** Sous-ensemble du user expose par `/auth/me` dont le dashboard a besoin. */
-export interface CoachUser {
-  readonly id: string;
-  readonly email?: string;
-  readonly name?: string | null;
-  readonly coachName?: string | null;
-  readonly firstName?: string | null;
-  readonly _count?: {
-    readonly teams?: number;
-    readonly matches?: number;
-    readonly createdLocalMatches?: number;
-  } | null;
-}
 
 interface CoachTeam {
   readonly id: string;
@@ -41,17 +30,6 @@ interface CoachTeam {
 
 interface CoachDashboardProps {
   readonly user: CoachUser;
-}
-
-/** Nom d'affichage du coach : coachName > name > firstName > email (local part). */
-function coachDisplayName(user: CoachUser): string | null {
-  const candidate =
-    user.coachName?.trim() ||
-    user.name?.trim() ||
-    user.firstName?.trim() ||
-    user.email?.split("@")[0]?.trim() ||
-    "";
-  return candidate.length > 0 ? candidate : null;
 }
 
 /** Initiales pour l'avatar « jeton » (1 a 2 lettres, majuscules). */
@@ -194,6 +172,16 @@ export default function CoachDashboard({ user }: CoachDashboardProps) {
           aria-hidden="true"
         />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+          {/* Retour vers l'accueil public (home marketing, vue deconnectee) */}
+          <a
+            href="/"
+            data-testid="dashboard-home-link"
+            className="inline-flex items-center gap-1.5 mb-6 text-sm font-subtitle font-semibold text-nuffle-bronze/80 hover:text-nuffle-gold transition-colors"
+          >
+            <span aria-hidden="true">←</span>
+            {d.backToHome}
+          </a>
+
           {/* En-tete : salutation + avatar jeton */}
           <header className="flex items-center gap-4 sm:gap-5">
             <span
