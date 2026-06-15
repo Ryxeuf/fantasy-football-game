@@ -42,6 +42,7 @@ export const ROSTER_COLORS: Record<string, TeamColors> = {
   human: { primary: 0x1e3a8a, secondary: 0xfbbf24 }, // Reikland blue & gold
   imperial_nobility: { primary: 0x7f1d1d, secondary: 0xf3e8c5 }, // deep red & cream
   old_world_alliance: { primary: 0x4b5563, secondary: 0xfbbf24 },
+  bretonnian: { primary: 0x1d4ed8, secondary: 0xfde047 }, // royal blue & gold (fleur-de-lis)
 
   // --- Dwarves ---
   dwarf: { primary: 0x1e40af, secondary: 0xfcd34d }, // royal blue & gold
