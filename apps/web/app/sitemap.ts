@@ -23,6 +23,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     }),
+    sitemapEntryWithAlternates('/teams/positions', {
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }),
+    sitemapEntryWithAlternates('/teams/positions/comparer', {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    }),
     sitemapEntryWithAlternates('/star-players', {
       lastModified: now,
       changeFrequency: 'weekly',

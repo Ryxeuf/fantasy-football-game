@@ -515,6 +515,12 @@ export default async function PositionDetailPage({
             <span aria-hidden="true">←</span> Roster {roster.name}
           </Link>
           <Link
+            href="/teams/positions"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-sm transition-all"
+          >
+            📊 Études des positions
+          </Link>
+          <Link
             href={`/me/teams/new?roster=${roster.slug}&ruleset=${ruleset}`}
             className="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-medium text-sm transition-colors"
           >

@@ -62,6 +62,12 @@ describe("sitemap — positions de roster", () => {
     const entries = await sitemap();
     const urls = entries.map((e) => e.url);
 
+    // Pages d'etudes/comparateur de positions (entrees statiques).
+    expect(urls.some((u) => u.endsWith("/teams/positions"))).toBe(true);
+    expect(urls.some((u) => u.endsWith("/teams/positions/comparer"))).toBe(
+      true,
+    );
+
     expect(urls.some((u) => u.endsWith("/teams/skaven/lineman"))).toBe(true);
     expect(urls.some((u) => u.endsWith("/teams/skaven/gutter_runner"))).toBe(
       true,
