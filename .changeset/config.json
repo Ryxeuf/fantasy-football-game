@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/@changesets/config/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "REPLACE_ME_ORG/REPLACE_ME_REPO" }
+    { "repo": "Ryxeuf/fantasy-football-game" }
   ],
   "commit": false,
   "fixed": [],
