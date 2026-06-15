@@ -9,3 +9,5 @@ export const submitSurvivorPickSchema = z.object({
   roundId: z.string().min(1),
   teamId: z.string().min(1),
 });
+
+export type SubmitSurvivorPickInput = z.infer<typeof submitSurvivorPickSchema>;

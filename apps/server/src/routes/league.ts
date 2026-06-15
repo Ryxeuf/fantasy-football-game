@@ -310,7 +310,7 @@ export async function handleCreateLeague(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as CreateLeagueBody;
+  const body: CreateLeagueBody = req.body;
   try {
     const league = await createLeague({
       creatorId: userId,
@@ -363,7 +363,7 @@ export async function handleUpdateLeague(
     );
     return;
   }
-  const body = req.body as UpdateLeagueBody;
+  const body: UpdateLeagueBody = req.body;
   try {
     const updated = await updateLeague(leagueId, {
       name: body.name,
@@ -484,7 +484,7 @@ export async function handleCreateSeason(
     );
     return;
   }
-  const body = req.body as CreateSeasonBody;
+  const body: CreateSeasonBody = req.body;
   try {
     const season = await createSeason({
       leagueId,
@@ -512,7 +512,7 @@ export async function handleJoinSeason(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const seasonId = req.params.seasonId;
-  const body = req.body as JoinSeasonBody;
+  const body: JoinSeasonBody = req.body;
 
   const season = await getSeasonById(seasonId);
   if (!season) {
@@ -551,7 +551,7 @@ export async function handleLeaveSeason(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const seasonId = req.params.seasonId;
-  const body = req.body as JoinSeasonBody;
+  const body: JoinSeasonBody = req.body;
 
   const team = await prisma.team.findUnique({ where: { id: body.teamId } });
   if (!team) {
@@ -582,7 +582,7 @@ export async function handleCreateRound(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const seasonId = req.params.seasonId;
-  const body = req.body as CreateRoundBody;
+  const body: CreateRoundBody = req.body;
 
   const season = await getSeasonById(seasonId);
   if (!season) {
@@ -620,7 +620,7 @@ export async function handleAttachMatch(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const { seasonId, roundId } = req.params;
-  const body = req.body as AttachMatchBody;
+  const body: AttachMatchBody = req.body;
 
   const season = await getSeasonById(seasonId);
   if (!season) {
@@ -990,7 +990,7 @@ export async function handleCreateManualRound(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as CreateManualRoundBody;
+  const body: CreateManualRoundBody = req.body;
   try {
     const round = await createManualRound({
       seasonId,
@@ -1015,7 +1015,7 @@ export async function handleCreateManualPairing(
   const roundId = req.params.roundId;
   const ctx = await ensureLeagueCreatorByRound(userId, roundId, res);
   if (!ctx) return;
-  const body = req.body as CreateManualPairingBody;
+  const body: CreateManualPairingBody = req.body;
   try {
     const pairing = await createManualPairing({
       roundId,
@@ -1058,7 +1058,7 @@ export async function handleUpdateManualPairing(
   const pairingId = req.params.pairingId;
   const ctx = await ensureLeagueCreatorByPairing(userId, pairingId, res);
   if (!ctx) return;
-  const body = req.body as UpdateManualPairingBody;
+  const body: UpdateManualPairingBody = req.body;
   try {
     const pairing = await updateManualPairing({
       pairingId,
@@ -1103,7 +1103,7 @@ export async function handleCreatePool(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as CreatePoolBody;
+  const body: CreatePoolBody = req.body;
   try {
     const pool = await createPool({
       seasonId,
@@ -1142,7 +1142,7 @@ export async function handleUpdatePool(
   const poolId = req.params.poolId;
   const ctx = await ensureLeagueCreatorByPool(userId, poolId, res);
   if (!ctx) return;
-  const body = req.body as UpdatePoolBody;
+  const body: UpdatePoolBody = req.body;
   try {
     const updated = await updatePool({
       poolId,
@@ -1184,7 +1184,7 @@ export async function handleAssignPools(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as AssignPoolsBody;
+  const body: AssignPoolsBody = req.body;
   try {
     const out = await assignParticipantsToPools({
       seasonId,
@@ -1251,7 +1251,7 @@ export async function handleAdjustPlayerSpp(
   if (!userId) return;
   const { leagueId, teamId, playerId } = req.params;
   if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
-  const body = req.body as AdjustSppBody;
+  const body: AdjustSppBody = req.body;
   try {
     const out = await adjustPlayerSpp({
       leagueId,
@@ -1276,7 +1276,7 @@ export async function handleAddPlayerSkill(
   if (!userId) return;
   const { leagueId, teamId, playerId } = req.params;
   if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
-  const body = req.body as AddSkillBody;
+  const body: AddSkillBody = req.body;
   try {
     const out = await addPlayerSkill({
       leagueId,
@@ -1302,7 +1302,7 @@ export async function handleRemovePlayerSkill(
   if (!userId) return;
   const { leagueId, teamId, playerId } = req.params;
   if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
-  const body = req.body as RemoveSkillBody;
+  const body: RemoveSkillBody = req.body;
   try {
     const out = await removePlayerSkill({
       leagueId,
@@ -1327,7 +1327,7 @@ export async function handleAdjustCharacteristic(
   if (!userId) return;
   const { leagueId, teamId, playerId } = req.params;
   if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
-  const body = req.body as AdjustCharacteristicBody;
+  const body: AdjustCharacteristicBody = req.body;
   try {
     const out = await adjustCharacteristic({
       leagueId,
@@ -1353,7 +1353,7 @@ export async function handleAdjustTreasury(
   if (!userId) return;
   const { leagueId, teamId } = req.params;
   if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
-  const body = req.body as AdjustTreasuryBody;
+  const body: AdjustTreasuryBody = req.body;
   try {
     const out = await adjustTreasury({
       leagueId,
@@ -1446,7 +1446,7 @@ export async function handleUpdatePreMatch(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as PreMatchBody;
+  const body: PreMatchBody = req.body;
   try {
     const sheet = await updatePreMatch({
       pairingId: req.params.pairingId,
@@ -1466,7 +1466,7 @@ export async function handleUpdatePostMatch(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as PostMatchBody;
+  const body: PostMatchBody = req.body;
   try {
     const sheet = await updatePostMatch({
       pairingId: req.params.pairingId,
@@ -1486,7 +1486,7 @@ export async function handleInvalidateMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as InvalidateSheetBody;
+  const body: InvalidateSheetBody = req.body;
   try {
     const out = await invalidateMatchSheet({
       pairingId: req.params.pairingId,
@@ -1523,7 +1523,7 @@ export async function handleAddMatchSheetEvent(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as AddEventBody;
+  const body: AddEventBody = req.body;
   try {
     const ev = await addMatchSheetEvent({
       pairingId: req.params.pairingId,
@@ -1700,7 +1700,7 @@ export async function handleOverridePlayoffParticipants(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as { participantIds: string[] };
+  const body: { participantIds: string[] } = req.body;
   if (
     !body ||
     !Array.isArray(body.participantIds) ||
@@ -1752,7 +1752,7 @@ export async function handleStartSeason(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as StartSeasonBody;
+  const body: StartSeasonBody = req.body;
   try {
     const result = await startSeason(seasonId, {
       doubleRoundRobin: body.doubleRoundRobin,
@@ -1777,7 +1777,7 @@ export async function handleRegenerateSchedule(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
-  const body = req.body as StartSeasonBody;
+  const body: StartSeasonBody = req.body;
   try {
     const result = await regenerateSchedule(seasonId, {
       doubleRoundRobin: body.doubleRoundRobin,
@@ -1823,7 +1823,7 @@ export async function handleCreateMatchFromPairing(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const pairingId = req.params.pairingId;
-  const body = req.body as CreateMatchFromPairingBody;
+  const body: CreateMatchFromPairingBody = req.body;
   try {
     const result = await createMatchFromPairing({
       pairingId,
@@ -1854,7 +1854,7 @@ export async function handleForfeitPairing(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const pairingId = req.params.pairingId;
-  const body = req.body as ForfeitPairingBody;
+  const body: ForfeitPairingBody = req.body;
 
   // On a besoin du seasonId du pairing pour verifier que l'appelant
   // est bien le creator de la ligue. On le lit ici plutot que dans
@@ -1895,7 +1895,7 @@ export async function handleRecordOfflineResult(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const pairingId = req.params.pairingId;
-  const body = req.body as RecordOfflineResultBody;
+  const body: RecordOfflineResultBody = req.body;
 
   const pairing = await prisma.leaguePairing.findUnique({
     where: { id: pairingId },
@@ -1993,7 +1993,7 @@ export async function handleEditOfflineResult(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const pairingId = req.params.pairingId;
-  const body = req.body as RecordOfflineResultBody;
+  const body: RecordOfflineResultBody = req.body;
 
   const pairing = await prisma.leaguePairing.findUnique({
     where: { id: pairingId },

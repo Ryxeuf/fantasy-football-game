@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { validate } from "../middleware/validate";
+import { updateNafSchema, type UpdateNafInput } from "../schemas/user.schemas";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { isValidNafName } from "../services/naf-sync";
 import { getSupporterStatus } from "../services/supporter-status";
@@ -9,14 +11,10 @@ import { OFFLINE_MATCH_MODE } from "../services/match-modes";
 const router = Router();
 
 // Sprint R lot R.B.3 — statut supporter (ad-free + early access).
-router.get(
-  "/supporter",
-  authUser,
-  async (req: AuthenticatedRequest, res) => {
-    const status = await getSupporterStatus(req.user!.id);
-    res.json(status);
-  },
-);
+router.get("/supporter", authUser, async (req: AuthenticatedRequest, res) => {
+  const status = await getSupporterStatus(req.user!.id);
+  res.json(status);
+});
 
 // Sprint R lot R.D.3 — opt-in NAF (Naffinity Federation).
 //
@@ -27,8 +25,9 @@ router.get(
 router.patch(
   "/naf",
   authUser,
+  validate(updateNafSchema),
   async (req: AuthenticatedRequest, res) => {
-    const body = req.body as { nafName?: string | null };
+    const body: UpdateNafInput = req.body;
     let next: string | null = null;
     if (body.nafName === null || body.nafName === undefined) {
       next = null;
@@ -57,7 +56,9 @@ router.patch(
 );
 
 router.get("/matches", authUser, async (req: AuthenticatedRequest, res) => {
-  const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
+  const { limit, offset } = parsePagination(
+    req.query as Record<string, unknown>,
+  );
   // Sprint R.E.2 — filtre optionnel `?mode=async` pour la page
   // /me/matches/async qui liste les matches en attente d'un coup.
   const modeFilter = typeof req.query.mode === "string" ? req.query.mode : null;

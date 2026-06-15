@@ -2,7 +2,10 @@ import { Router, type Response } from "express";
 import { prisma } from "../prisma";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
-import { updatePrivacySchema } from "../schemas/auth.schemas";
+import {
+  updatePrivacySchema,
+  type UpdatePrivacyInput,
+} from "../schemas/auth.schemas";
 import { exportUserData } from "../services/gdpr-export";
 import { serverLog } from "../utils/server-log";
 
@@ -17,7 +20,7 @@ export async function handleUpdatePrivacy(
   res: Response,
 ): Promise<void> {
   try {
-    const { privateProfile } = req.body as { privateProfile: boolean };
+    const { privateProfile }: UpdatePrivacyInput = req.body;
     const updated = (await (prisma as unknown as {
       user: {
         update: (args: unknown) => Promise<{

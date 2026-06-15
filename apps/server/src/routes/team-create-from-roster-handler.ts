@@ -263,14 +263,14 @@ export async function handleCreateFromRoster(
     starPlayers: starPlayerSlugs,
     ruleset: bodyRuleset,
     format: bodyFormat,
-  } = req.body as {
+  }: {
     name: string;
     roster: string;
     teamValue?: number;
     starPlayers?: string[];
     ruleset?: string;
     format?: string;
-  };
+  } = req.body;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!ALLOWED_TEAMS.includes(roster as any))
     return res.status(400).json({ error: 'Roster non autorisé' });

@@ -133,7 +133,7 @@ router.post("/:entryId/roster", validate(addPlayerSchema), async (req, res) => {
       req.params.entryId,
     );
     if (!entry) return;
-    const body = req.body as z.infer<typeof addPlayerSchema>;
+    const body: z.infer<typeof addPlayerSchema> = req.body;
     const row = await addPlayerToRoster({
       entryId: req.params.entryId,
       ...body,
@@ -257,7 +257,7 @@ router.put("/:entryId/lineup", validate(setLineupSchema), async (req, res) => {
       req.params.entryId,
     );
     if (!entry) return;
-    const body = req.body as z.infer<typeof setLineupSchema>;
+    const body: z.infer<typeof setLineupSchema> = req.body;
     const lineup = await setLineup({ entryId: req.params.entryId, ...body });
     res.json(lineup);
   } catch (err) {
@@ -290,7 +290,7 @@ router.patch(
         req.params.entryId,
       );
       if (!entry) return;
-      const body = req.body as z.infer<typeof playStyleSchema>;
+      const body: z.infer<typeof playStyleSchema> = req.body;
       const updated = await updateEntryPlayStyle({
         entryId: req.params.entryId,
         playStyle: body.playStyle,
@@ -338,7 +338,7 @@ router.post(
         req.params.entryId,
       );
       if (!entry) return;
-      const { weekId } = req.body as z.infer<typeof carryOverLineupSchema>;
+      const { weekId }: z.infer<typeof carryOverLineupSchema> = req.body;
       const lineup = await carryOverLineupFromPreviousWeek({
         entryId: req.params.entryId,
         currentWeekId: weekId,
@@ -404,7 +404,7 @@ router.post(
         req.params.entryId,
       );
       if (!entry) return;
-      const body = req.body as z.infer<typeof consumeRerollSchema>;
+      const body: z.infer<typeof consumeRerollSchema> = req.body;
       const out = await consumeReroll({ entryId: req.params.entryId, ...body });
       res.json(out);
     } catch (err) {
@@ -481,7 +481,7 @@ router.post(
         req.params.entryId,
       );
       if (!entry) return;
-      const body = req.body as z.infer<typeof consumeInducementSchema>;
+      const body: z.infer<typeof consumeInducementSchema> = req.body;
       const out = await consumeInducement({
         entryId: req.params.entryId,
         ...body,
@@ -602,7 +602,7 @@ router.post(
         req.params.entryId,
       );
       if (!entry) return;
-      const body = req.body as z.infer<typeof unlockSkillSchema>;
+      const body: z.infer<typeof unlockSkillSchema> = req.body;
       const out = await unlockSkill({
         entryId: req.params.entryId,
         playerId: req.params.playerId,

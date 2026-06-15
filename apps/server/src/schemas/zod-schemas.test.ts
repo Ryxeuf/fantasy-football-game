@@ -54,6 +54,26 @@ import {
   buildTeamSchema,
 } from "./team.schemas";
 
+// Common schemas (harden-request-validation)
+import { idParamSchema } from "./common.schemas";
+
+// User schemas
+import { updateNafSchema } from "./user.schemas";
+
+// Admin digest schemas
+import { runDigestSchema } from "./admin-digest.schemas";
+
+// Pro-gazette comment schemas
+import { createCommentSchema } from "./pro-gazette-comments.schemas";
+
+// Pro-league schemas
+import {
+  submitMvpVoteSchema,
+  submitFanPredictionSchema,
+  placeBetSchema,
+  dedicateHallOfFameSchema,
+} from "./pro-league.schemas";
+
 // ---------------------------------------------------------------------------
 // Admin schemas
 // ---------------------------------------------------------------------------
@@ -85,7 +105,9 @@ describe("Admin schemas", () => {
     });
 
     it("accepts valid roles array", () => {
-      const result = updateUserRoleSchema.parse({ roles: ["admin", "moderator"] });
+      const result = updateUserRoleSchema.parse({
+        roles: ["admin", "moderator"],
+      });
       expect(result.roles).toEqual(["admin", "moderator"]);
     });
 
@@ -94,13 +116,17 @@ describe("Admin schemas", () => {
     });
 
     it("rejects invalid role value", () => {
-      expect(() => updateUserRoleSchema.parse({ role: "superadmin" })).toThrow();
+      expect(() =>
+        updateUserRoleSchema.parse({ role: "superadmin" }),
+      ).toThrow();
     });
   });
 
   describe("updateUserPatreonSchema", () => {
     it("accepts boolean true", () => {
-      expect(updateUserPatreonSchema.parse({ patreon: true })).toEqual({ patreon: true });
+      expect(updateUserPatreonSchema.parse({ patreon: true })).toEqual({
+        patreon: true,
+      });
     });
 
     it("rejects non-boolean", () => {
@@ -110,17 +136,23 @@ describe("Admin schemas", () => {
 
   describe("updateUserValidSchema", () => {
     it("accepts boolean false", () => {
-      expect(updateUserValidSchema.parse({ valid: false })).toEqual({ valid: false });
+      expect(updateUserValidSchema.parse({ valid: false })).toEqual({
+        valid: false,
+      });
     });
   });
 
   describe("updateMatchStatusSchema", () => {
     it("accepts valid status", () => {
-      expect(updateMatchStatusSchema.parse({ status: "active" })).toEqual({ status: "active" });
+      expect(updateMatchStatusSchema.parse({ status: "active" })).toEqual({
+        status: "active",
+      });
     });
 
     it("rejects invalid status", () => {
-      expect(() => updateMatchStatusSchema.parse({ status: "unknown" })).toThrow();
+      expect(() =>
+        updateMatchStatusSchema.parse({ status: "unknown" }),
+      ).toThrow();
     });
   });
 });
@@ -143,17 +175,28 @@ describe("Admin data schemas", () => {
     });
 
     it("rejects missing slug", () => {
-      expect(() => createSkillSchema.parse({ nameFr: "X", nameEn: "X", description: "X", category: "X" })).toThrow();
+      expect(() =>
+        createSkillSchema.parse({
+          nameFr: "X",
+          nameEn: "X",
+          description: "X",
+          category: "X",
+        }),
+      ).toThrow();
     });
   });
 
   describe("duplicateToRulesetSchema", () => {
     it("accepts valid targetRuleset", () => {
-      expect(duplicateToRulesetSchema.parse({ targetRuleset: "season_3" })).toEqual({ targetRuleset: "season_3" });
+      expect(
+        duplicateToRulesetSchema.parse({ targetRuleset: "season_3" }),
+      ).toEqual({ targetRuleset: "season_3" });
     });
 
     it("rejects empty targetRuleset", () => {
-      expect(() => duplicateToRulesetSchema.parse({ targetRuleset: "" })).toThrow();
+      expect(() =>
+        duplicateToRulesetSchema.parse({ targetRuleset: "" }),
+      ).toThrow();
     });
   });
 
@@ -244,7 +287,9 @@ describe("Cup schemas", () => {
 
   describe("registerCupSchema", () => {
     it("accepts valid teamId", () => {
-      expect(registerCupSchema.parse({ teamId: "abc" })).toEqual({ teamId: "abc" });
+      expect(registerCupSchema.parse({ teamId: "abc" })).toEqual({
+        teamId: "abc",
+      });
     });
 
     it("rejects empty teamId", () => {
@@ -267,7 +312,9 @@ describe("Cup schemas", () => {
     });
 
     it("rejects invalid status", () => {
-      expect(() => updateCupStatusSchema.parse({ status: "deleted" })).toThrow();
+      expect(() =>
+        updateCupStatusSchema.parse({ status: "deleted" }),
+      ).toThrow();
     });
   });
 });
@@ -316,7 +363,10 @@ describe("Local match schemas", () => {
 
   describe("completeLocalMatchSchema", () => {
     it("accepts valid scores", () => {
-      const result = completeLocalMatchSchema.parse({ scoreTeamA: 3, scoreTeamB: 0 });
+      const result = completeLocalMatchSchema.parse({
+        scoreTeamA: 3,
+        scoreTeamB: 0,
+      });
       expect(result.scoreTeamA).toBe(3);
     });
 
@@ -327,8 +377,16 @@ describe("Local match schemas", () => {
 
   describe("updateLocalMatchStatusSchema", () => {
     it("accepts valid statuses", () => {
-      for (const status of ["pending", "waiting_for_player", "in_progress", "completed", "cancelled"]) {
-        expect(updateLocalMatchStatusSchema.parse({ status })).toEqual({ status });
+      for (const status of [
+        "pending",
+        "waiting_for_player",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ]) {
+        expect(updateLocalMatchStatusSchema.parse({ status })).toEqual({
+          status,
+        });
       }
     });
   });
@@ -385,7 +443,10 @@ describe("Match schemas", () => {
     });
 
     it("accepts terrain skin and timer", () => {
-      const result = createMatchSchema.parse({ terrainSkin: "snow", turnTimerEnabled: true });
+      const result = createMatchSchema.parse({
+        terrainSkin: "snow",
+        turnTimerEnabled: true,
+      });
       expect(result.terrainSkin).toBe("snow");
       expect(result.turnTimerEnabled).toBe(true);
     });
@@ -424,7 +485,9 @@ describe("Match schemas", () => {
 
   describe("placeKickoffBallSchema", () => {
     it("accepts valid position", () => {
-      const result = placeKickoffBallSchema.parse({ position: { x: 13, y: 7 } });
+      const result = placeKickoffBallSchema.parse({
+        position: { x: 13, y: 7 },
+      });
       expect(result.position).toEqual({ x: 13, y: 7 });
     });
 
@@ -441,20 +504,34 @@ describe("Match schemas", () => {
 describe("Team schemas", () => {
   describe("addPlayerSchema", () => {
     it("accepts valid player data", () => {
-      const result = addPlayerSchema.parse({ position: "lineman", name: "Bob", number: 7 });
+      const result = addPlayerSchema.parse({
+        position: "lineman",
+        name: "Bob",
+        number: 7,
+      });
       expect(result.position).toBe("lineman");
     });
 
     it("rejects number < 1", () => {
-      expect(() => addPlayerSchema.parse({ position: "lineman", name: "Bob", number: 0 })).toThrow();
+      expect(() =>
+        addPlayerSchema.parse({ position: "lineman", name: "Bob", number: 0 }),
+      ).toThrow();
     });
 
     it("rejects number > 99", () => {
-      expect(() => addPlayerSchema.parse({ position: "lineman", name: "Bob", number: 100 })).toThrow();
+      expect(() =>
+        addPlayerSchema.parse({
+          position: "lineman",
+          name: "Bob",
+          number: 100,
+        }),
+      ).toThrow();
     });
 
     it("rejects empty name", () => {
-      expect(() => addPlayerSchema.parse({ position: "lineman", name: "", number: 1 })).toThrow();
+      expect(() =>
+        addPlayerSchema.parse({ position: "lineman", name: "", number: 1 }),
+      ).toThrow();
     });
   });
 
@@ -476,19 +553,25 @@ describe("Team schemas", () => {
     });
 
     it("rejects invalid advancement type", () => {
-      expect(() => updatePlayerSkillsSchema.parse({ advancementType: "super" })).toThrow();
+      expect(() =>
+        updatePlayerSkillsSchema.parse({ advancementType: "super" }),
+      ).toThrow();
     });
   });
 
   describe("addStarPlayerToTeamSchema", () => {
     it("accepts valid slug", () => {
-      expect(addStarPlayerToTeamSchema.parse({ starPlayerSlug: "morg-n-thorg" })).toEqual({
+      expect(
+        addStarPlayerToTeamSchema.parse({ starPlayerSlug: "morg-n-thorg" }),
+      ).toEqual({
         starPlayerSlug: "morg-n-thorg",
       });
     });
 
     it("rejects empty slug", () => {
-      expect(() => addStarPlayerToTeamSchema.parse({ starPlayerSlug: "" })).toThrow();
+      expect(() =>
+        addStarPlayerToTeamSchema.parse({ starPlayerSlug: "" }),
+      ).toThrow();
     });
   });
 
@@ -536,40 +619,60 @@ describe("Team schemas", () => {
     });
 
     it("rejects rerolls > 8", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: 9 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, rerolls: 9 }),
+      ).toThrow();
     });
 
     it("rejects negative rerolls", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: -1 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, rerolls: -1 }),
+      ).toThrow();
     });
 
     it("rejects non-integer rerolls", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: 1.5 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, rerolls: 1.5 }),
+      ).toThrow();
     });
 
     it("rejects cheerleaders > 12", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, cheerleaders: 13 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, cheerleaders: 13 }),
+      ).toThrow();
     });
 
     it("rejects assistants > 6", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, assistants: 7 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, assistants: 7 }),
+      ).toThrow();
     });
 
     it("rejects dedicatedFans < 1", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, dedicatedFans: 0 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, dedicatedFans: 0 }),
+      ).toThrow();
     });
 
     it("rejects dedicatedFans > 6", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, dedicatedFans: 7 })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, dedicatedFans: 7 }),
+      ).toThrow();
     });
 
     it("rejects non-boolean apothecary", () => {
-      expect(() => buildTeamSchema.parse({ ...baseBody, apothecary: "yes" })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ ...baseBody, apothecary: "yes" }),
+      ).toThrow();
     });
 
     it("still requires name, roster, and choices", () => {
-      expect(() => buildTeamSchema.parse({ name: "X", roster: "human" })).toThrow();
-      expect(() => buildTeamSchema.parse({ name: "", roster: "human", choices: [] })).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ name: "X", roster: "human" }),
+      ).toThrow();
+      expect(() =>
+        buildTeamSchema.parse({ name: "", roster: "human", choices: [] }),
+      ).toThrow();
     });
   });
 });
@@ -631,6 +734,150 @@ describe("Auth schemas", () => {
       expect(() =>
         registerSchema.parse({ ...validBody, coachName: "x".repeat(51) }),
       ).toThrow();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// harden-request-validation — nouveaux schemas (Brique 1 + params)
+// ---------------------------------------------------------------------------
+
+describe("Common schemas — idParamSchema", () => {
+  it("accepts a non-empty id", () => {
+    expect(idParamSchema.parse({ id: "abc" })).toMatchObject({ id: "abc" });
+  });
+
+  it("rejects an empty id", () => {
+    expect(() => idParamSchema.parse({ id: "" })).toThrow();
+  });
+
+  it("rejects a missing id", () => {
+    expect(() => idParamSchema.parse({})).toThrow();
+  });
+
+  it("preserves extra params (passthrough)", () => {
+    expect(idParamSchema.parse({ id: "a", sub: "b" })).toEqual({
+      id: "a",
+      sub: "b",
+    });
+  });
+});
+
+describe("User schemas — updateNafSchema", () => {
+  it("accepts a string nafName", () => {
+    expect(updateNafSchema.parse({ nafName: "Coach" })).toEqual({
+      nafName: "Coach",
+    });
+  });
+
+  it("accepts null nafName (opt-out)", () => {
+    expect(updateNafSchema.parse({ nafName: null })).toEqual({ nafName: null });
+  });
+
+  it("accepts an absent nafName", () => {
+    expect(updateNafSchema.parse({})).toEqual({});
+  });
+
+  it("rejects a non-string, non-null nafName", () => {
+    expect(() => updateNafSchema.parse({ nafName: 42 })).toThrow();
+  });
+});
+
+describe("Admin digest schemas — runDigestSchema", () => {
+  it("accepts an empty body (force optional)", () => {
+    expect(runDigestSchema.parse({})).toEqual({});
+  });
+
+  it("accepts force=true", () => {
+    expect(runDigestSchema.parse({ force: true })).toEqual({ force: true });
+  });
+
+  it("rejects a non-boolean force", () => {
+    expect(() => runDigestSchema.parse({ force: "yes" })).toThrow();
+  });
+});
+
+describe("Pro-gazette comment schemas — createCommentSchema", () => {
+  it("accepts a string body", () => {
+    expect(createCommentSchema.parse({ body: "hello" })).toEqual({
+      body: "hello",
+    });
+  });
+
+  it("rejects a missing body", () => {
+    expect(() => createCommentSchema.parse({})).toThrow();
+  });
+
+  it("rejects a non-string body", () => {
+    expect(() => createCommentSchema.parse({ body: 123 })).toThrow();
+  });
+});
+
+describe("Pro-league schemas", () => {
+  describe("submitMvpVoteSchema", () => {
+    it("accepts a non-empty votedRosterId", () => {
+      expect(submitMvpVoteSchema.parse({ votedRosterId: "r1" })).toEqual({
+        votedRosterId: "r1",
+      });
+    });
+
+    it("rejects an empty votedRosterId", () => {
+      expect(() => submitMvpVoteSchema.parse({ votedRosterId: "" })).toThrow();
+    });
+
+    it("rejects a missing votedRosterId", () => {
+      expect(() => submitMvpVoteSchema.parse({})).toThrow();
+    });
+  });
+
+  describe("submitFanPredictionSchema", () => {
+    it("accepts a string body (content rules enforced by the service)", () => {
+      expect(submitFanPredictionSchema.parse({ body: "2-1 home" })).toEqual({
+        body: "2-1 home",
+      });
+    });
+
+    it("rejects a non-string body", () => {
+      expect(() => submitFanPredictionSchema.parse({ body: 5 })).toThrow();
+    });
+  });
+
+  describe("placeBetSchema", () => {
+    const valid = {
+      marketId: "m1",
+      selection: "home",
+      stake: 100,
+      oddsAtPlace: 1.5,
+      clientToken: "tok",
+    };
+
+    it("accepts a complete valid bet", () => {
+      expect(placeBetSchema.parse(valid)).toMatchObject(valid);
+    });
+
+    it("rejects a missing stake", () => {
+      const { stake: _stake, ...rest } = valid;
+      expect(() => placeBetSchema.parse(rest)).toThrow();
+    });
+
+    it("rejects a non-numeric stake", () => {
+      expect(() => placeBetSchema.parse({ ...valid, stake: "100" })).toThrow();
+    });
+
+    it("rejects an empty marketId", () => {
+      expect(() => placeBetSchema.parse({ ...valid, marketId: "" })).toThrow();
+    });
+  });
+
+  describe("dedicateHallOfFameSchema", () => {
+    it("accepts a string message", () => {
+      expect(dedicateHallOfFameSchema.parse({ message: "RIP" })).toEqual({
+        message: "RIP",
+      });
+    });
+
+    it("rejects a non-string message", () => {
+      expect(() => dedicateHallOfFameSchema.parse({ message: null })).toThrow();
     });
   });
 });

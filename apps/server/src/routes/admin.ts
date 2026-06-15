@@ -386,10 +386,10 @@ router.patch(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { status, reason } = req.body as {
+      const { status, reason }: {
         status: "visible" | "hidden_admin";
         reason?: string;
-      };
+      } = req.body;
       const adminId = (req as AuthenticatedRequest).user?.id ?? null;
 
       const previous = await prisma.user.findUnique({
@@ -465,7 +465,7 @@ router.patch(
 router.post("/users/:id/ban", validate(adminUserBanSchema), async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, durationDays } = req.body as { reason: string; durationDays?: number };
+    const { reason, durationDays }: { reason: string; durationDays?: number } = req.body;
 
     if ((req as AuthenticatedRequest).user?.id === id) {
       return res.status(400).json({ error: "Vous ne pouvez pas vous bannir vous-meme" });
@@ -1023,10 +1023,10 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { winnerSide, reason } = req.body as {
+      const { winnerSide, reason }: {
         winnerSide: "A" | "B";
         reason: string;
-      };
+      } = req.body;
 
       const previous = await prisma.match.findUnique({
         where: { id },
@@ -1109,7 +1109,7 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { reason } = req.body as { reason: string };
+      const { reason }: { reason: string } = req.body;
 
       const previous = await prisma.match.findUnique({
         where: { id },

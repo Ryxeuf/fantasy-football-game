@@ -40,14 +40,13 @@ export async function handlePutTeamInfo(
   res: Response,
 ): Promise<void> {
   const teamId = req.params.id;
-  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans } =
-    req.body as {
-      rerolls?: number;
-      cheerleaders?: number;
-      assistants?: number;
-      apothecary?: boolean;
-      dedicatedFans?: number;
-    };
+  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans }: {
+    rerolls?: number;
+    cheerleaders?: number;
+    assistants?: number;
+    apothecary?: boolean;
+    dedicatedFans?: number;
+  } = req.body;
 
   try {
     const team = await prisma.team.findFirst({
@@ -165,10 +164,10 @@ export async function handleUpdateTeam(
   res: Response,
 ): Promise<void> {
   const teamId = req.params.id;
-  const { players, name } = req.body as {
+  const { players, name }: {
     players: Array<{ id: string; name: string; number: number }>;
     name?: string;
-  };
+  } = req.body;
 
   try {
     const team = await prisma.team.findFirst({

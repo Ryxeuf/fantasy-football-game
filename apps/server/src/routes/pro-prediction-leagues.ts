@@ -67,10 +67,10 @@ router.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const { name, isPrivate } = req.body as {
+      const { name, isPrivate }: {
         name: string;
         isPrivate?: boolean;
-      };
+      } = req.body;
       const result = await createLeague({ name, ownerId: userId, isPrivate });
       res.status(201).json(result);
     } catch (e) {
@@ -151,7 +151,7 @@ router.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const { joinCode } = req.body as { joinCode: string };
+      const { joinCode }: { joinCode: string } = req.body;
       const result = await joinLeagueByCode(joinCode, userId);
       res.json(result);
     } catch (e) {
@@ -268,10 +268,10 @@ router.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const { matchId, selection } = req.body as {
+      const { matchId, selection }: {
         matchId: string;
         selection: string;
-      };
+      } = req.body;
       const result = await submitPick({
         leagueId: req.params.id,
         userId,

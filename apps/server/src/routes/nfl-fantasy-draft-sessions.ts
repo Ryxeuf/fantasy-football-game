@@ -107,7 +107,7 @@ router.post(
           .json({ error: "Seul le owner peut creer une session", code: "NOT_OWNER" });
         return;
       }
-      const body = req.body as z.infer<typeof createSessionSchema>;
+      const body: z.infer<typeof createSessionSchema> = req.body;
       const session = await createDraftSession({
         leagueId: req.params.leagueId,
         opensAt: new Date(body.opensAt),
@@ -279,7 +279,7 @@ router.post(
         },
         select: { id: true },
       });
-      const body = req.body as z.infer<typeof botBidsSchema>;
+      const body: z.infer<typeof botBidsSchema> = req.body;
       const out = await placeBotBidsForSession({
         sessionId: req.params.sessionId,
         bidsPerEntry: body.bidsPerEntry,
@@ -413,7 +413,7 @@ router.put("/:sessionId/bids", validate(placeBidSchema), async (req, res) => {
       });
       return;
     }
-    const body = req.body as z.infer<typeof placeBidSchema>;
+    const body: z.infer<typeof placeBidSchema> = req.body;
     const bid = await placeBid({
       sessionId: req.params.sessionId,
       entryId: entry.id,

@@ -57,12 +57,12 @@ export async function handlePurchase(
   res: Response,
 ): Promise<void> {
   const teamId = req.params.id;
-  const { type, position, name, number } = req.body as {
+  const { type, position, name, number }: {
     type: PurchaseType;
     position?: string;
     name?: string;
     number?: number;
-  };
+  } = req.body;
 
   try {
     const team = await prisma.team.findFirst({

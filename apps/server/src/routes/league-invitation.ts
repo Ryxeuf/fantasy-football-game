@@ -124,7 +124,7 @@ export async function handleCreateInvitation(
   const leagueId = req.params.leagueId;
   const league = await requireCommissioner(req, res, leagueId);
   if (!league) return;
-  const body = req.body as CreateInvitationBody;
+  const body: CreateInvitationBody = req.body;
   try {
     const inv = await createInvitation({
       leagueId,
@@ -212,7 +212,7 @@ export async function handleAcceptInvitation(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
-  const body = req.body as AcceptInvitationBody;
+  const body: AcceptInvitationBody = req.body;
   try {
     const out = await acceptInvitation({
       code: req.params.code,

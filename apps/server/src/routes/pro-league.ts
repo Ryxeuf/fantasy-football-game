@@ -29,6 +29,18 @@ import type { MatchEvent } from "@bb/sim-engine";
 
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { validate, validateParams } from "../middleware/validate";
+import { idParamSchema } from "../schemas/common.schemas";
+import {
+  submitMvpVoteSchema,
+  submitFanPredictionSchema,
+  placeBetSchema,
+  dedicateHallOfFameSchema,
+  type SubmitMvpVoteInput,
+  type SubmitFanPredictionInput,
+  type PlaceBetInput,
+  type DedicateHallOfFameInput,
+} from "../schemas/pro-league.schemas";
 import {
   BetValidationError,
   MarketNotFoundError,
@@ -357,9 +369,7 @@ export async function handleGetCurrentSeasonStandings(
       return;
     }
     const msg = err instanceof Error ? err.message : "unknown";
-    serverLog.error(
-      `[pro-league/seasons/current/standings] failed: ${msg}`,
-    );
+    serverLog.error(`[pro-league/seasons/current/standings] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -655,7 +665,7 @@ export async function handleSubmitMvpVote(
     res.status(400).json({ error: "missing-match-id" });
     return;
   }
-  const body = (req.body ?? {}) as { votedRosterId?: unknown };
+  const body: SubmitMvpVoteInput = req.body;
   if (typeof body.votedRosterId !== "string" || !body.votedRosterId) {
     res.status(400).json({ error: "missing-votedRosterId" });
     return;
@@ -734,9 +744,7 @@ export async function handleListFanPredictions(
     res.json({ predictions: list });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "unknown";
-    serverLog.error(
-      `[pro-league/matches/${id}/predictions] failed: ${msg}`,
-    );
+    serverLog.error(`[pro-league/matches/${id}/predictions] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -757,7 +765,7 @@ export async function handleSubmitFanPrediction(
     res.status(400).json({ error: "missing-match-id" });
     return;
   }
-  const body = (req.body ?? {}) as { body?: unknown };
+  const body: SubmitFanPredictionInput = req.body;
   if (typeof body.body !== "string") {
     res.status(400).json({ error: "missing-body" });
     return;
@@ -771,9 +779,7 @@ export async function handleSubmitFanPrediction(
     res.status(result.isUpdate ? 200 : 201).json(result);
   } catch (err: unknown) {
     if (err instanceof FanPredictionError) {
-      res
-        .status(fanPredictionStatus(err.code))
-        .json({ error: err.message });
+      res.status(fanPredictionStatus(err.code)).json({ error: err.message });
       return;
     }
     const msg = err instanceof Error ? err.message : "unknown";
@@ -801,9 +807,7 @@ export async function handleDeleteFanPrediction(
     res.status(204).end();
   } catch (err: unknown) {
     if (err instanceof FanPredictionError) {
-      res
-        .status(fanPredictionStatus(err.code))
-        .json({ error: err.message });
+      res.status(fanPredictionStatus(err.code)).json({ error: err.message });
       return;
     }
     const msg = err instanceof Error ? err.message : "unknown";
@@ -982,13 +986,7 @@ export async function handlePlaceBet(
     res.status(401).json({ error: "unauthenticated" });
     return;
   }
-  const body = req.body as Partial<{
-    marketId: string;
-    selection: string;
-    stake: number;
-    oddsAtPlace: number;
-    clientToken: string;
-  }>;
+  const body: PlaceBetInput = req.body;
   if (
     !body ||
     typeof body.marketId !== "string" ||
@@ -1071,10 +1069,7 @@ export async function handleListMyBets(
  * pour afficher le nom + emoji du badge debloque, sans dependre de
  * l'auth state du user.
  */
-export function handleGetBadgeCatalogue(
-  _req: Request,
-  res: Response,
-): void {
+export function handleGetBadgeCatalogue(_req: Request, res: Response): void {
   res.json({
     badges: BADGE_CATALOGUE.map((b) => ({
       code: b.code,
@@ -1239,7 +1234,8 @@ export async function handleDedicateHallOfFame(
     res.status(400).json({ error: "missing-id" });
     return;
   }
-  const message = (req.body as { message?: unknown })?.message;
+  const body: DedicateHallOfFameInput = req.body;
+  const message = body.message;
   if (typeof message !== "string") {
     res.status(400).json({ error: "INVALID_MESSAGE", code: "INVALID_MESSAGE" });
     return;
@@ -1261,9 +1257,7 @@ export async function handleDedicateHallOfFame(
       return;
     }
     const msg = err instanceof Error ? err.message : "unknown";
-    serverLog.error(
-      `[pro-league/hall-of-fame/${id}/dedicate] failed: ${msg}`,
-    );
+    serverLog.error(`[pro-league/hall-of-fame/${id}/dedicate] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1326,9 +1320,7 @@ export async function handleEnterTournament(
       return;
     }
     const msg = err instanceof Error ? err.message : "unknown";
-    serverLog.error(
-      `[pro-league/tournaments/${id}/enter] failed: ${msg}`,
-    );
+    serverLog.error(`[pro-league/tournaments/${id}/enter] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -1479,10 +1471,22 @@ router.get("/players/:id/career", handleGetPlayerCareer);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/mvp-candidates", handleGetMvpCandidates);
 router.get("/matches/:id/mvp-tally", handleGetMvpTally);
-router.post("/matches/:id/mvp-vote", authUser, handleSubmitMvpVote);
+router.post(
+  "/matches/:id/mvp-vote",
+  authUser,
+  validateParams(idParamSchema),
+  validate(submitMvpVoteSchema),
+  handleSubmitMvpVote,
+);
 router.get("/mvp/weekly", handleGetWeeklyMvp);
 router.get("/matches/:id/predictions", handleListFanPredictions);
-router.post("/matches/:id/predictions", authUser, handleSubmitFanPrediction);
+router.post(
+  "/matches/:id/predictions",
+  authUser,
+  validateParams(idParamSchema),
+  validate(submitFanPredictionSchema),
+  handleSubmitFanPrediction,
+);
 router.delete(
   "/matches/:id/predictions/me",
   authUser,
@@ -1498,23 +1502,18 @@ router.get("/gazette/latest", handleGetLatestEdition);
 router.get("/gazette/dates", handleListEditionDates);
 router.get("/gazette/:date", handleGetEditionByDate);
 router.get("/hall-of-fame", handleListHallOfFame);
-router.get(
-  "/hall-of-fame/:id/dedications",
-  handleListHallOfFameDedications,
-);
+router.get("/hall-of-fame/:id/dedications", handleListHallOfFameDedications);
 router.post(
   "/hall-of-fame/:id/dedicate",
   authUser,
+  validateParams(idParamSchema),
+  validate(dedicateHallOfFameSchema),
   handleDedicateHallOfFame,
 );
 
 // Lot P.B.2 — Tournois Pro League (sink Crowns).
 router.get("/tournaments", handleListTournaments);
-router.post(
-  "/tournaments/:id/enter",
-  authUser,
-  handleEnterTournament,
-);
+router.post("/tournaments/:id/enter", authUser, handleEnterTournament);
 
 // Audit round 10 (MEDIUM/sec) : avant, /_internal/broadcaster-stats
 // etait publiquement reachable malgre son nom `_internal`. Le handler
@@ -1522,7 +1521,12 @@ router.post(
 // convention `_internal` signale "internal-only" — futur ajout de
 // champs sensibles risquerait d'etre expose en prod. Fix : authUser
 // + adminOnly comme pour le namespace /admin/.
-router.get("/_internal/broadcaster-stats", authUser, adminOnly, handleBroadcasterStats);
+router.get(
+  "/_internal/broadcaster-stats",
+  authUser,
+  adminOnly,
+  handleBroadcasterStats,
+);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
 router.post("/teams/:slug/follow", authUser, handleFollowTeam);
@@ -1532,7 +1536,7 @@ router.get("/me/follows", authUser, handleListMyFollows);
 router.get("/me/feed", authUser, handleGetMyFeed);
 
 // Sprint 1.D.4 — endpoints paris.
-router.post("/bets", authUser, handlePlaceBet);
+router.post("/bets", authUser, validate(placeBetSchema), handlePlaceBet);
 router.get("/me/bets", authUser, handleListMyBets);
 
 // Sprint 1.D.9 — badges/titres.
@@ -1542,11 +1546,7 @@ router.post("/me/badges/evaluate", authUser, handleEvaluateMyBadges);
 
 // Sprint 1.D.6 — wallet & bonuses.
 router.get("/me/wallet", authUser, handleGetMyWallet);
-router.post(
-  "/me/wallet/first-time-bonus",
-  authUser,
-  handleGrantFirstTimeBonus,
-);
+router.post("/me/wallet/first-time-bonus", authUser, handleGrantFirstTimeBonus);
 router.post("/me/wallet/daily-bonus", authUser, handleClaimDailyBonus);
 router.get("/me/wallet/daily-bonus", authUser, handleGetDailyBonusStatus);
 

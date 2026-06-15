@@ -214,12 +214,12 @@ router.post(
   validate(adminCreateSeasonSchema),
   async (req, res) => {
     try {
-      const { autoSchedule = false, ...createInput } = req.body as {
+      const { autoSchedule = false, ...createInput }: {
         year: number;
         driverKind?: "hybrid" | "full";
         engineVer?: string;
         autoSchedule?: boolean;
-      };
+      } = req.body;
       const created = await createSeason(createInput);
 
       let scheduled: { roundsCreated: number; matchesCreated: number } | null =

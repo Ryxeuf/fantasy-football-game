@@ -151,7 +151,7 @@ export async function handleForceLeagueStatus(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  const body = req.body as AdminLeagueStatusBody;
+  const body: AdminLeagueStatusBody = req.body;
 
   const league = await prisma.league.findUnique({
     where: { id },
@@ -231,7 +231,7 @@ export async function handleTransferLeagueCreator(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  const body = req.body as AdminLeagueTransferBody;
+  const body: AdminLeagueTransferBody = req.body;
 
   const [league, target] = await Promise.all([
     prisma.league.findUnique({
@@ -283,7 +283,7 @@ export async function handlePatchLeagueMatchMode(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  const body = req.body as AdminLeagueMatchModeBody;
+  const body: AdminLeagueMatchModeBody = req.body;
   const league = await prisma.league.findUnique({
     where: { id },
     select: { id: true, status: true, matchMode: true, turnDeadlineHours: true },

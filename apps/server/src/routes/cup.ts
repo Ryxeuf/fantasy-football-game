@@ -279,7 +279,7 @@ router.post(
         .status(403)
         .json({ success: false, error: "Action reservee aux administrateurs" });
     }
-    const body = req.body as SetMatchOfTheWeekBody;
+    const body: SetMatchOfTheWeekBody = req.body;
     try {
       const match = await setMatchOfTheWeek({
         matchId: req.params.matchId,
@@ -501,7 +501,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
 // POST /cup - Créer une nouvelle coupe
 router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedRequest, res) => {
-  const body = req.body as {
+  const body: {
     name: string;
     isPublic?: boolean;
     ruleset?: string;
@@ -525,7 +525,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     passPoints?: number;
     monthlyYear?: number;
     monthlyMonth?: number;
-  };
+  } = req.body;
 
   // S27.1i — La creation d'une cup mensuelle (avec slot canonique) est
   // reservee aux admins. Les coachs reguliers peuvent creer des cups

@@ -50,11 +50,11 @@ export async function handleUpdatePlayerSkills(
     skillSlug: clientSkillSlug,
     advancementType,
     skillCategory,
-  } = req.body as {
+  }: {
     skillSlug?: string;
     advancementType: AdvancementType;
     skillCategory?: string;
-  };
+  } = req.body;
 
   try {
     const isRandom =

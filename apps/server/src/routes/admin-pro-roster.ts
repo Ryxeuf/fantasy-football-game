@@ -183,7 +183,7 @@ router.post(
   validate(adminRosterReplenishSchema),
   async (req, res) => {
     try {
-      const targetSize = (req.body as { targetSize?: number }).targetSize;
+      const { targetSize }: { targetSize?: number } = req.body;
       const result = await replenishTeamRoster(req.params.id, targetSize);
 
       await safeRecordAdminActionFromRequest(
@@ -223,7 +223,7 @@ router.post(
   validate(adminRosterRegenerateSchema),
   async (req, res) => {
     try {
-      const { count } = req.body as { count: number };
+      const { count }: { count: number } = req.body;
       const result = await regenerateRoster({
         teamId: req.params.id,
         count,

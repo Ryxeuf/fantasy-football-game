@@ -38,3 +38,22 @@ export const validateQuery =
     (req as any).query = result.data;
     next();
   };
+
+/**
+ * Express middleware that validates req.params against a Zod schema.
+ * Returns 400 with { error: "..." } on validation failure.
+ *
+ * Note : les schemas de params devraient etre `.passthrough()` (cf.
+ * `idParamSchema`) pour ne pas effacer les autres params d'une route
+ * multi-segments (ex : `/a/:id/b/:sub`).
+ */
+export const validateParams =
+  (schema: ZodType) => (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.params);
+    if (!result.success) {
+      return res.status(400).json({ error: formatZodErrors(result.error) });
+    }
+    // Replace params with parsed data
+    (req as any).params = result.data;
+    next();
+  };

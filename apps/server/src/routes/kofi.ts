@@ -84,7 +84,7 @@ export function mergeCurrencyTotals(
 }
 
 function extractPayload(req: Request): KofiWebhookPayload | null {
-  const body = (req.body ?? {}) as Record<string, unknown>;
+  const body: Record<string, unknown> = req.body ?? {};
   const rawData = body.data ?? body;
 
   let candidate: unknown;

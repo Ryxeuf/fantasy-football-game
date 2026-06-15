@@ -40,3 +40,10 @@ export const expoPushUnsubscribeSchema = z.object({
       "token Expo invalide",
     ),
 });
+
+export type PushSubscribeInput = z.infer<typeof pushSubscribeSchema>;
+export type PushUnsubscribeInput = z.infer<typeof pushUnsubscribeSchema>;
+export type ExpoPushSubscribeInput = z.infer<typeof expoPushSubscribeSchema>;
+export type ExpoPushUnsubscribeInput = z.infer<
+  typeof expoPushUnsubscribeSchema
+>;

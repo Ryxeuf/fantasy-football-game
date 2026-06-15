@@ -63,7 +63,7 @@ const finalizeSchema = z.object({
 
 router.post("/lock-lineups", validate(lockSchema), async (req, res) => {
   try {
-    const { weekId } = req.body as z.infer<typeof lockSchema>;
+    const { weekId }: z.infer<typeof lockSchema> = req.body;
     const out = await lockLineups(weekId);
     res.json({ weekId, ...out });
   } catch (err) {
@@ -79,7 +79,7 @@ router.post(
   validate(matchupsSchema),
   async (req, res) => {
     try {
-      const body = req.body as z.infer<typeof matchupsSchema>;
+      const body: z.infer<typeof matchupsSchema> = req.body;
       const out = await generateMatchups(body);
       res.json(out);
     } catch (err) {
@@ -93,7 +93,7 @@ router.post(
 
 router.post("/settle-week", validate(settleSchema), async (req, res) => {
   try {
-    const body = req.body as z.infer<typeof settleSchema>;
+    const body: z.infer<typeof settleSchema> = req.body;
     const out = await settleNflFantasyWeek(body);
     res.json(out);
   } catch (err) {
@@ -109,7 +109,7 @@ router.post(
   validate(seedRerollsSchema),
   async (req, res) => {
     try {
-      const body = req.body as z.infer<typeof seedRerollsSchema>;
+      const body: z.infer<typeof seedRerollsSchema> = req.body;
       const out = await seedStartingRerolls(body);
       res.json(out);
     } catch (err) {
@@ -123,7 +123,7 @@ router.post(
 
 router.post("/auto-fill-rosters", validate(autoFillSchema), async (req, res) => {
   try {
-    const body = req.body as z.infer<typeof autoFillSchema>;
+    const body: z.infer<typeof autoFillSchema> = req.body;
     const out = await autoFillRosters(body);
     res.json(out);
   } catch (err) {
@@ -136,7 +136,7 @@ router.post("/auto-fill-rosters", validate(autoFillSchema), async (req, res) => 
 
 router.post("/finalize-league", validate(finalizeSchema), async (req, res) => {
   try {
-    const body = req.body as z.infer<typeof finalizeSchema>;
+    const body: z.infer<typeof finalizeSchema> = req.body;
     const out = await finalizeLeague(body);
     res.json(out);
   } catch (err) {

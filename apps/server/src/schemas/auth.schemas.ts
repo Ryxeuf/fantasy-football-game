@@ -57,6 +57,8 @@ export const updatePrivacySchema = z.object({
   privateProfile: z.boolean(),
 });
 
+export type UpdatePrivacyInput = z.infer<typeof updatePrivacySchema>;
+
 /**
  * Lot P.C.1 — password reset self-service.
  *

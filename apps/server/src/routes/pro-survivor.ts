@@ -12,7 +12,10 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
-import { submitSurvivorPickSchema } from "../schemas/pro-survivor.schemas";
+import {
+  submitSurvivorPickSchema,
+  type SubmitSurvivorPickInput,
+} from "../schemas/pro-survivor.schemas";
 import { serverLog } from "../utils/server-log";
 import {
   SurvivorError,
@@ -142,11 +145,7 @@ router.post(
       if (!userId) {
         return res.status(401).json({ error: "Non authentifie" });
       }
-      const { seasonId, roundId, teamId } = req.body as {
-        seasonId: string;
-        roundId: string;
-        teamId: string;
-      };
+      const { seasonId, roundId, teamId }: SubmitSurvivorPickInput = req.body;
       const result = await submitSurvivorPick({
         seasonId,
         userId,

@@ -61,7 +61,7 @@ router.post(
   adminOnly,
   validate(createTournamentSchema),
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const body = req.body as z.infer<typeof createTournamentSchema>;
+    const body: z.infer<typeof createTournamentSchema> = req.body;
     try {
       const created = await createTournament({
         slug: body.slug,
@@ -152,7 +152,7 @@ router.patch(
       res.status(400).json({ error: "missing-id" });
       return;
     }
-    const body = req.body as z.infer<typeof patchTournamentSchema>;
+    const body: z.infer<typeof patchTournamentSchema> = req.body;
     try {
       const previous = await prisma.proTournament.findUnique({
         where: { id },

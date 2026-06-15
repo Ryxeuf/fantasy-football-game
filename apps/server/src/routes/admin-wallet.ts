@@ -145,7 +145,7 @@ router.patch(
   async (req, res) => {
     try {
       const { userId } = req.params;
-      const { delta, reason } = req.body as { delta: number; reason: string };
+      const { delta, reason }: { delta: number; reason: string } = req.body;
 
       if ((req as AuthenticatedRequest).user?.id === userId) {
         return res.status(400).json({
@@ -233,7 +233,7 @@ router.post(
   async (req, res) => {
     try {
       const { betId } = req.params;
-      const { reason } = req.body as { reason: string };
+      const { reason }: { reason: string } = req.body;
 
       const bet = await prisma.proBet.findUnique({
         where: { id: betId },
