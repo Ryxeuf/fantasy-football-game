@@ -1,7 +1,7 @@
 /**
  * Ligues régionales Blood Bowl Saison 3.
  *
- * Source : retranscription OCR officielle (extraction_blood_bowl.md).
+ * Source : retranscription OCR officielle (docs/reference/extraction_blood_bowl.md).
  * Les Ligues sont indispensables pour le recrutement de certains Star Players
  * et l'achat de certains Coups de Pouce. Elles complètent les `regionalRules`
  * déjà présentes sur chaque roster (cf. `TEAM_REGIONAL_RULES` dans
