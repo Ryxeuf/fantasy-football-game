@@ -193,6 +193,10 @@ describe("POST /auth/register — Lot O.B.1 feature flag", () => {
     // Le user a ete cree avec valid: true.
     const createCall = mockedPrisma.user.create.mock.calls[0]![0];
     expect(createCall.data.valid).toBe(true);
+    // Auto-login : /register livre un token directement, donc on
+    // enregistre lastLoginAt des l'inscription (sinon la colonne
+    // "Derniere connexion" affiche "Jamais" malgre une session active).
+    expect(createCall.data.lastLoginAt).toBeInstanceOf(Date);
   });
 
   it("flag ON : compte cree avec valid=false + message, pas de token", async () => {
@@ -223,6 +227,9 @@ describe("POST /auth/register — Lot O.B.1 feature flag", () => {
     // Le user a bien ete cree avec valid: false.
     const createCall = mockedPrisma.user.create.mock.calls[0]![0];
     expect(createCall.data.valid).toBe(false);
+    // Flag ON : aucun token livre → lastLoginAt reste null tant que
+    // l'utilisateur ne s'est pas authentifie via /login.
+    expect(createCall.data.lastLoginAt).toBeNull();
   });
 
   it("email deja utilise : 409 (independant du flag)", async () => {
