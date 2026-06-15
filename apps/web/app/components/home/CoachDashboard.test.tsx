@@ -59,6 +59,13 @@ describe("CoachDashboard", () => {
     );
   });
 
+  it("affiche un lien retour vers l'accueil public", async () => {
+    wireApi([]);
+    renderDashboard({ id: "u1", coachName: "Coach" });
+    const back = await screen.findByTestId("dashboard-home-link");
+    expect(back.getAttribute("href")).toBe("/");
+  });
+
   it("rend une carte cliquable par equipe avec nom, race et valeur", async () => {
     wireApi(
       [

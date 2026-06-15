@@ -115,7 +115,16 @@ interface PublicStats {
 // "Déjà 3 équipes" peu flatteur en debut de beta. S'active tout seul.
 const MIN_ACTIVITY_TEAMS = 25;
 
-export default function MarketingHome() {
+interface MarketingHomeProps {
+  /**
+   * Nom d'affichage du coach connecté, ou `null` pour un visiteur déconnecté.
+   * Quand présent, la home affiche un bandeau personnalisé pointant vers le
+   * tableau de bord `/me`. Optionnel : la home reste rendable seule (SSR/SEO).
+   */
+  readonly coachName?: string | null;
+}
+
+export default function MarketingHome({ coachName = null }: MarketingHomeProps) {
   const { t, language } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
 
@@ -187,6 +196,23 @@ export default function MarketingHome() {
           />
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 grid md:grid-cols-[1.1fr_0.9fr] items-center gap-10 md:gap-12">
             <div>
+              {/* Bandeau coach connecté : raccourci vers le tableau de bord
+                  personnalisé (/me). Absent pour les visiteurs déconnectés. */}
+              {coachName && (
+                <a
+                  href="/me"
+                  data-testid="home-dashboard-link"
+                  className="group mb-5 inline-flex items-center gap-2 rounded-xl bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/40 px-4 py-2.5 shadow-[0_6px_16px_rgba(27,22,16,0.35)] hover:-translate-y-0.5 transition-all"
+                >
+                  <span className="text-sm font-body text-nuffle-ivory/80">
+                    {t.home.dashboardBannerGreeting.replace("{name}", coachName)}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-subtitle font-bold uppercase tracking-wide text-nuffle-gold">
+                    {t.home.dashboardBannerCta}
+                    <span className="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+                  </span>
+                </a>
+              )}
               <div className="mb-6">
                 <Logo variant="default" showText={true} />
               </div>

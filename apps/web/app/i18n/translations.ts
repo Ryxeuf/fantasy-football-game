@@ -124,6 +124,8 @@ export const translations = {
       description: "Plateforme digitale gratuite pour créer, gérer et faire vivre vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et suivez vos matchs sur table.",
       subtitle: "Conforme aux règles officielles Blood Bowl 2025 : 30 rosters complets, 60+ Star Players, 130+ compétences, gestion du budget et de la trésorerie, export PDF pour vos parties.",
       manageTeams: "Gérer mes équipes",
+      dashboardBannerGreeting: "Bon retour, {name} !",
+      dashboardBannerCta: "Mon tableau de bord",
       login: "Connexion",
       register: "Inscription",
       discoverTeams: "Explorer les équipes",
@@ -211,6 +213,7 @@ export const translations = {
       faqA4: "Les 30 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques et plus.",
       dashboard: {
         kicker: "Votre vestiaire",
+        backToHome: "Retour à l'accueil",
         greeting: "Bienvenue, {name}",
         greetingFallback: "Bienvenue, coach",
         subtitle: "Reprenez là où vous vous êtes arrêté.",
@@ -1301,6 +1304,8 @@ export const translations = {
       description: "Free digital platform to create, manage, and live out your Blood Bowl teams. Build your rosters, recruit legendary Star Players, and track your tabletop matches.",
       subtitle: "Compliant with the official Blood Bowl 2025 rules: 30 full rosters, 60+ Star Players, 130+ skills, budget and treasury management, PDF export for your games.",
       manageTeams: "Manage my teams",
+      dashboardBannerGreeting: "Welcome back, {name}!",
+      dashboardBannerCta: "My dashboard",
       login: "Login",
       register: "Register",
       discoverTeams: "Explore the teams",
@@ -1388,6 +1393,7 @@ export const translations = {
       faqA4: "All 30 official Season 3 rosters: Skaven, Elves (Union, Wood, Dark, Pro Elves), Orcs, Black Orcs, Dwarves, Lizardmen, Gnomes, Halflings, Imperial Nobility, Chaos, Tomb Kings, Nurgle, Undead, Vampires, Amazons, Norse and more.",
       dashboard: {
         kicker: "Your locker room",
+        backToHome: "Back to home",
         greeting: "Welcome back, {name}",
         greetingFallback: "Welcome back, coach",
         subtitle: "Pick up right where you left off.",
