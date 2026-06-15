@@ -72,8 +72,9 @@ export const SEASON_3_RENAMED_SKILLS: Record<string, { nameEn: string; nameFr?: 
 
 /**
  * Descriptions canoniques Saison 3 issues de la retranscription OCR officielle
- * (voir `extraction_blood_bowl.md`, `extraction_competences_blood_bowl.md` et
- * `extraction_competences_traits_blood_bowl.md`).
+ * (voir `docs/reference/extraction_blood_bowl.md`,
+ * `docs/reference/extraction_competences_blood_bowl.md` et
+ * `docs/reference/extraction_competences_traits_blood_bowl.md`).
  *
  * Ce mapping s'applique UNIQUEMENT au seed `season_3` : on conserve les
  * descriptions historiques pour `season_2` (qui peut diverger sur certaines
@@ -306,7 +307,7 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
 
   // ─────────────────────────────────────────────────────────────────────────
   // Compétences / Mutations dont la description a CHANGÉ en Saison 3
-  // Source : extraction_competences_blood_bowl.md (OCR officiel S3)
+  // Source : docs/reference/extraction_competences_blood_bowl.md (OCR officiel S3)
   // ─────────────────────────────────────────────────────────────────────────
 
   // Catégorie Agilité

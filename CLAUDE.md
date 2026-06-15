@@ -14,12 +14,22 @@ apps/
 packages/
   sim-engine/   # Sim Pro League (TS, pur)
   game-engine/  # Match engine BB en ligne (TS, pur)
+  nfl-mapper/   # @bb/nfl-mapper — mapping NFL→BB (race/poste/SPP, pseudonymize, pur)
   shared-types/ # Types partages
+  ui/           # @bb/ui — composants UI partages
+  config/       # Config partagee (tsconfig, lint…)
 prisma/         # Schema + migrations
 ```
 
 Outils : pnpm workspaces, Turbo pour les tasks, Vitest pour les tests
 (server + web), Playwright pour E2E.
+
+> **Module NFL Fantasy** (axe additionnel, pas un remplacement de BB) :
+> mode MPG-like sur stats NFL reelles skinnees Blood Bowl. Services
+> `apps/server/src/services/nfl-fantasy-*.ts` + `nfl-ingest*.ts`, package
+> pur `@bb/nfl-mapper`, ~14 modeles Prisma `Nfl*`, pages
+> `apps/web/app/nfl-fantasy/*` + `app/admin/nfl-fantasy/*`. Doc dediee :
+> [`docs/nfl-fantasy/README.md`](./docs/nfl-fantasy/README.md).
 
 ## Conventions code
 
@@ -552,6 +562,15 @@ vi.mock("./pro-roster-spp", () => ({
   complete (mini-leagues prediction + Survivor). Q.C (clips MP4)
   differe. 8 nouveaux modeles Prisma. Voir
   [`docs/roadmap/sessions/2026-05-12-sprint-Q.md`](./docs/roadmap/sessions/2026-05-12-sprint-Q.md).
+- **2026-05 (post-Q)** : **NFL Fantasy** — nouvel axe MPG-like sur stats
+  NFL reelles skinnees BB (axe additionnel, pas un remplacement). Package
+  pur `@bb/nfl-mapper` (team→race, poste→BB, stats→SPP, pseudonymize),
+  ingestion nflverse + ESPN, league CRUD + roster/lineup + scoring +
+  mercato, orchestrateur cron 5min, admin data explorer, frontend
+  `/nfl-fantasy/*` + console `/admin/nfl-fantasy/*`, Gazette LLM par
+  matchup (Haiku), backfill saisons 2023+2024, bootstrap prod. ~14
+  modeles Prisma `Nfl*`. Doc vivante :
+  [`docs/nfl-fantasy/README.md`](./docs/nfl-fantasy/README.md).
 - **2026-06-06** : Gestion des Ligues (audit "Liste de course Nuffle
   Arena"), 3 PRs (#886-#888). Lots A/B/C/D/E/F (invitations, withdraw
   guard, multi-poules + scheduler, override PO, points bonus, saisie
@@ -563,3 +582,13 @@ vi.mock("./pro-roster-spp", () => ({
   [`docs/roadmap/sessions/2026-06-06-league-management.md`](./docs/roadmap/sessions/2026-06-06-league-management.md)
   + guide rollout
   [`docs/roadmap/league-feature-flags-rollout.md`](./docs/roadmap/league-feature-flags-rollout.md).
+- **2026-06-08** : Ligues — modeles `LeaguePool` + `LeagueMatch` avec
+  config de points bonus + fonctionnalite "participant de test" (v1.172-
+  1.173).
+- **2026-06-13→15** : Vague acquisition/retention web (#890-#897).
+  Refonte home Nuffle dans l'esprit BB + accueil personnalise (coach
+  connecte vs marketing deconnecte) + SEO competences + stats live +
+  partage roster ; comparateur de rosters + pages de comparaison SSR +
+  tier-list (#893) ; notifications de re-engagement (Web Push persistant
+  + digest e-mail hebdo, #894) ; assistant onboarding "Cree ton equipe
+  en 60 secondes" (#895) ; OpenSpec workflow skills + commands (#897).

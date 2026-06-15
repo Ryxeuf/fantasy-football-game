@@ -1,8 +1,8 @@
 /**
  * Règles spéciales d'équipes Blood Bowl Saison 3.
  *
- * Source : retranscription OCR officielle (extraction_blood_bowl.md,
- * extraction_competences_blood_bowl.md). Ce fichier expose le catalogue
+ * Source : retranscription OCR officielle (docs/reference/extraction_blood_bowl.md,
+ * docs/reference/extraction_competences_blood_bowl.md). Ce fichier expose le catalogue
  * canonique des règles spéciales d'équipe, indépendamment de l'attribution
  * roster-par-roster (qui reste configurée via `Roster.specialRules` dans la
  * base et `TeamRoster.specialRules` côté game-engine).

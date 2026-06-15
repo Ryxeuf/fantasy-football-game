@@ -1,7 +1,7 @@
 # Roadmap v2 — Sprints 24-27
 
-> Derniere mise a jour : 2026-05-10
-> Contexte : v1.74.0 livree (beta publique). Roadmap v1 archivee dans
+> Derniere mise a jour : 2026-06-15
+> Contexte : v1.173.x livree (beta publique). Roadmap v1 archivee dans
 > [`archive/v1.73/`](./archive/v1.73/README.md). Cette nouvelle roadmap
 > couvre les 4 sprints initiaux S24-27 + sprints post-audit O-R derives
 > du gap analysis 2026-05-10.
@@ -18,7 +18,7 @@
 | **Pro League** | Championnat virtuel 16 equipes IA vs IA, matchs auto mardi 21h, paris Crowns, Gazette LLM, Hall of Fame | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | TERMINE Phase 0 + 1 (session polish 2026-05-10 livre 12 lots #728-#742) |
 | **Sprint O** | **Bug fixes engine + deblocage acquisition** (regles BB Perfect Defence/Illegal Procedure/regen order, skills registry, registration auto-approve, onboarding, OG image, share) | [sprints/SPRINT-O-bug-fixes-acquisition.md](./sprints/SPRINT-O-bug-fixes-acquisition.md) | **TERMINE 87%** — 7 lots livres 2026-05-11 (PRs #744-#751). Lot O.A.2-4 (skill registry) differe session engine focus. |
 | **Sprint P** | **Ops readiness + scaling 10k MAU** (mode maintenance, season factory, admin wallet, password reset, soft-delete + GDPR, sinks Crowns, dashboard analytics) | [sprints/SPRINT-P-ops-readiness.md](./sprints/SPRINT-P-ops-readiness.md) | PLANIFIE (3 sem) |
-| **Sprint Q** | **Differenciation fan / engagement narratif Pro League** (career pages, MVP vote, clips highlights MP4, mini-leagues privees, Survivor Pick'em, commentaires Gazette) | [sprints/SPRINT-Q-fan-differentiation.md](./sprints/SPRINT-Q-fan-differentiation.md) | PLANIFIE (6-8 sem) |
+| **Sprint Q** | **Differenciation fan / engagement narratif Pro League** (career pages, MVP vote, clips highlights MP4, mini-leagues privees, Survivor Pick'em, commentaires Gazette) | [sprints/SPRINT-Q-fan-differentiation.md](./sprints/SPRINT-Q-fan-differentiation.md) | **TERMINE** — 12 PRs (#772-#784) 2026-05-12. Q.A/Q.B/Q.D livres ; Q.C (clips MP4) differe. |
 | **Sprint R** | **International + monetisation + mobile release** (i18n EN/DE/PL/ES, Patreon + Season Pass, App Store + Play Store, Discord, ambassadeurs, NAF, PvP async tours-par-jour) | [sprints/SPRINT-R-international-monetization-mobile.md](./sprints/SPRINT-R-international-monetization-mobile.md) | PLANIFIE (3-6 mois) |
 
 > **Win condition 12 mois (Sprint R termine) :** 10 000 MAU + top 3
@@ -26,11 +26,27 @@
 > [session log 2026-05-10](./sessions/2026-05-10-pro-league-ui-polish.md)
 > pour le contexte et l'audit complet 7 agents qui derive O-R.
 
+## Livre depuis (hors plan initial S24-R)
+
+- **NFL Fantasy** (2026-05, post-Q) — axe MPG-like sur stats NFL reelles
+  skinnees BB. Package `@bb/nfl-mapper`, ingestion nflverse + ESPN,
+  league/roster/lineup/scoring/mercato, crons, admin explorer, frontend,
+  Gazette LLM, backfill saisons passees. ~14 modeles `Nfl*`. Doc :
+  [`../nfl-fantasy/README.md`](../nfl-fantasy/README.md).
+- **Gestion des Ligues** (2026-06-06, #886-#889) — invitations, withdraw
+  guard, multi-poules + scheduler, feuille de match v2, edition ex-post.
+  Voir [`sessions/2026-06-06-league-management.md`](./sessions/2026-06-06-league-management.md).
+- **Acquisition/retention web** (2026-06-13→15, #890-#897) — refonte home
+  Nuffle + accueil personnalise, comparateur de rosters SSR + tier-list,
+  notifications de re-engagement (Web Push + digest e-mail), onboarding
+  "60 secondes", OpenSpec workflow.
+
 ## Suivi qualite actif
 
-- [Hardcodes skill registry residuels (B0.1)](./follow-up-b01.md) —
-  Stunty AV, Sure Feet/Sprint GFI, Horns, Sneaky Git, Pile Driver.
-  Adresses en **Sprint O lot O.A.2-4**.
+- ✅ **B0.1 (skill registry residuels) clos** le 2026-05-11 via Sprint O
+  lot O.A.2-4 (17 tests `registry-wiring.test.ts`). Seul reste differe :
+  Pile Driver (foul gratuit post-knockdown, action speciale). Detail :
+  [`follow-up-b01.md`](./follow-up-b01.md).
 
 ## Items ecartes / backlog
 

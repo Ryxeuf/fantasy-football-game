@@ -102,15 +102,22 @@ export async function listNflSeasonsForAdmin(): Promise<AdminSeasonRow[]> {
   const weeksMap = new Map(weeks.map((w) => [w.seasonId, w._count._all]));
   const gamesMap = new Map(games.map((g) => [g.seasonId, g._count._all]));
 
-  // Players ayant joue au moins 1 game cette saison.
-  // Pour eviter N requetes, on agrege via raw stats puis dedup.
+  // Players ayant joue au moins 1 game cette saison (compte distinct
+  // cote DB). NflGameStat n'a pas de seasonId scalaire (la saison passe
+  // par game.seasonId), donc un groupBy unique n'est pas possible ici ;
+  // on parallelise les counts au lieu d'enchainer N round-trips
+  // sequentiels (le nombre de saisons est borne et faible).
+  const playerCounts = await Promise.all(
+    ids.map((id: string) =>
+      prisma.nflPlayer.count({
+        where: { gameStats: { some: { game: { seasonId: id } } } },
+      }),
+    ),
+  );
   const playerCountsBySeason = new Map<string, number>();
-  for (const id of ids) {
-    const c = await prisma.nflPlayer.count({
-      where: { gameStats: { some: { game: { seasonId: id } } } },
-    });
-    playerCountsBySeason.set(id, c);
-  }
+  ids.forEach((id: string, i: number) =>
+    playerCountsBySeason.set(id, playerCounts[i]),
+  );
 
   return seasons.map((s: NflSeason) => ({
     id: s.id,

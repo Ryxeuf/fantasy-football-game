@@ -1,7 +1,7 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
-> Derniere mise a jour : 2026-05-10
-> Version actuelle : v1.74.0 (beta ouverte au public).
+> Derniere mise a jour : 2026-06-15
+> Version actuelle : v1.173.x (beta ouverte au public).
 >
 > La roadmap v1 (Sprints 0-23, Phases A-Q, 201 taches livrees) est
 > archivee dans [`docs/roadmap/archive/v1.73/`](./docs/roadmap/archive/v1.73/README.md).
@@ -26,6 +26,23 @@ prete a accueillir les phases R+).
   O.A.2-4 (skill registry wiring) differe a session focused engine.
   Detail :
   [`docs/roadmap/sessions/2026-05-11-sprint-O.md`](./docs/roadmap/sessions/2026-05-11-sprint-O.md).
+- **2026-05-12** — Sprint Q termine (12 PRs #772-#784). Q.A/Q.B/Q.D
+  livres (career pages, rivalries, vote MVP, commentaires, fan
+  predictions, mini-leagues, Survivor). Q.C (clips MP4) differe. Detail :
+  [`docs/roadmap/sessions/2026-05-12-sprint-Q.md`](./docs/roadmap/sessions/2026-05-12-sprint-Q.md).
+- **2026-05 (post-Q)** — **NFL Fantasy** : nouvel axe MPG-like sur stats
+  NFL reelles skinnees BB. Package `@bb/nfl-mapper`, ingestion nflverse +
+  ESPN, league/roster/lineup/scoring/mercato, crons, admin explorer,
+  frontend `/nfl-fantasy/*`, Gazette LLM, backfill 2023+2024. ~14 modeles
+  `Nfl*`. Doc vivante : [`docs/nfl-fantasy/README.md`](./docs/nfl-fantasy/README.md).
+- **2026-06-06** — Gestion des Ligues (#886-#889) : invitations, withdraw
+  guard, multi-poules + scheduler, feuille de match v2, edition ex-post,
+  classements joueurs. Detail :
+  [`docs/roadmap/sessions/2026-06-06-league-management.md`](./docs/roadmap/sessions/2026-06-06-league-management.md).
+- **2026-06-13→15** — Vague acquisition/retention web (#890-#897) :
+  refonte home Nuffle + accueil personnalise, comparateur de rosters SSR
+  + tier-list, notifications de re-engagement (Web Push + digest e-mail),
+  onboarding "Cree ton equipe en 60 secondes", OpenSpec workflow.
 
 ## Priorite immediate
 
@@ -44,10 +61,10 @@ prete a accueillir les phases R+).
   Crowns), moderation matchs humains.
 
 - [**SPRINT Q — Differenciation fan / engagement narratif**](./docs/roadmap/sprints/SPRINT-Q-fan-differentiation.md)
-  — **PLANIFIE** (post-Sprint P, 6-8 semaines) — career page joueur
-  durable + rivalries, player-of-the-week vote, clips highlights auto
-  MP4 vertical (TikTok/Shorts), prediction mini-leagues privees,
-  Survivor Pick'em, Gazette commentaires + fan predictions.
+  — **TERMINE** (12 PRs #772-#784, 2026-05-12). Career pages + rivalries,
+  player-of-the-week vote, prediction mini-leagues privees, Survivor
+  Pick'em, Gazette commentaires + fan predictions livres. Reste differe :
+  clips highlights MP4 vertical (Q.C, TikTok/Shorts).
 
 - [**SPRINT R — International + monetisation + mobile release**](./docs/roadmap/sprints/SPRINT-R-international-monetization-mobile.md)
   — **PLANIFIE** (post-Sprint Q, 3-6 mois) — i18n EN/DE/PL/ES
@@ -69,9 +86,11 @@ prete a accueillir les phases R+).
 
 ## Suivi qualite actif
 
-- [Hardcodes skill registry residuels (B0.1)](./docs/roadmap/follow-up-b01.md) —
-  blocking.ts (Stunty AV), movement.ts (Sure Feet, Sprint), foul.ts
-  (Sneaky Git mixte). Estimation 3-4h.
+- ✅ **B0.1 (hardcodes skill registry residuels) clos** le 2026-05-11 via
+  Sprint O lot O.A.2-4 (verrouille par `registry-wiring.test.ts`, 17
+  tests). Seul item differe : **Pile Driver** (foul gratuit post-knockdown,
+  action speciale a traiter en lot dedie). Detail :
+  [`docs/roadmap/follow-up-b01.md`](./docs/roadmap/follow-up-b01.md).
 
 ## Backlog
 
