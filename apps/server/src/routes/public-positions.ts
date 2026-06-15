@@ -8,12 +8,48 @@ import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
+import { validateQuery, validateParams } from "../middleware/validate";
+import {
+  positionsListQuerySchema,
+  positionDetailQuerySchema,
+  positionSlugParamSchema,
+  type PositionsListQuery,
+  type PositionDetailQuery,
+  type PositionSlugParam,
+} from "../schemas/public-positions.schemas";
 
 const router = Router();
 
 const POSITIONS_CACHE_TTL_MS = 5 * 60 * 1000;
 const POSITIONS_LIST_NS = "public-positions-list";
 const POSITIONS_DETAIL_NS = "public-positions-detail";
+
+const POSITION_INCLUDE = {
+  roster: { select: { slug: true, name: true, nameEn: true } },
+  skills: { include: { skill: true } },
+} as const;
+
+/**
+ * Forme typee d'une position telle que chargee avec ses relations. Le client
+ * `prisma` est typed `any` dans ce repo (cf. `../prisma`) : on type donc
+ * explicitement la ligne pour eliminer les `any` du handler.
+ */
+interface PositionRow {
+  slug: string;
+  displayName: string;
+  cost: number;
+  min: number;
+  max: number;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  primarySkills: string | null;
+  secondarySkills: string | null;
+  roster: { slug: string; name: string; nameEn: string };
+  skills: ReadonlyArray<{ skill: { slug: string } }>;
+}
 
 interface TransformedPosition {
   slug: string;
@@ -39,22 +75,18 @@ async function loadPositionList(
   rosterSlug?: string,
 ): Promise<{ positions: TransformedPosition[]; ruleset: string }> {
   const isEnglish = lang === "en";
-  const where: any = { roster: { ruleset } };
-  if (rosterSlug) {
-    where.roster = { slug: rosterSlug, ruleset };
-  }
-  const positions = await prisma.position.findMany({
+  const where = rosterSlug
+    ? { roster: { slug: rosterSlug, ruleset } }
+    : { roster: { ruleset } };
+  const positions = (await prisma.position.findMany({
     where,
-    include: {
-      roster: { select: { slug: true, name: true, nameEn: true } },
-      skills: { include: { skill: true } },
-    },
+    include: POSITION_INCLUDE,
     orderBy: [{ roster: { name: "asc" } }, { displayName: "asc" }],
-  });
-  const transformed = positions.map((position: any) =>
-    transformPosition(position, isEnglish),
-  );
-  return { positions: transformed, ruleset };
+  })) as PositionRow[];
+  return {
+    positions: positions.map((p) => transformPosition(p, isEnglish)),
+    ruleset,
+  };
 }
 
 async function loadPositionDetail(
@@ -63,24 +95,18 @@ async function loadPositionDetail(
   ruleset: string,
 ): Promise<{ position: TransformedPosition; ruleset: string } | null> {
   const isEnglish = lang === "en";
-  const position = await prisma.position.findFirst({
+  const position = (await prisma.position.findFirst({
     where: { slug, roster: { ruleset } },
-    include: {
-      roster: { select: { slug: true, name: true, nameEn: true } },
-      skills: { include: { skill: true } },
-    },
-  });
+    include: POSITION_INCLUDE,
+  })) as PositionRow | null;
   if (position) {
     return { position: transformPosition(position, isEnglish), ruleset };
   }
   if (ruleset !== DEFAULT_RULESET) {
-    const fallback = await prisma.position.findFirst({
+    const fallback = (await prisma.position.findFirst({
       where: { slug, roster: { ruleset: DEFAULT_RULESET } },
-      include: {
-        roster: { select: { slug: true, name: true, nameEn: true } },
-        skills: { include: { skill: true } },
-      },
-    });
+      include: POSITION_INCLUDE,
+    })) as PositionRow | null;
     if (fallback) {
       return {
         position: transformPosition(fallback, isEnglish),
@@ -93,59 +119,70 @@ async function loadPositionDetail(
 
 /**
  * GET /api/positions
- * Obtenir la liste des positions (optionnellement filtrées par roster)
- * Query param: ?lang=en ou ?lang=fr (par défaut: fr)
+ * Liste des positions (optionnellement filtrées par roster).
+ * Query : ?lang=en|fr (def. fr), ?ruleset=season_2|season_3, ?rosterSlug=skaven
  */
-router.get("/positions", async (req, res) => {
-  try {
-    const lang = (req.query.lang as string) || "fr";
-    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    const rosterSlug =
-      typeof req.query.rosterSlug === "string" ? req.query.rosterSlug : "";
-    const payload = await memoizeAsync(
-      POSITIONS_LIST_NS,
-      `${lang}::${ruleset}::${rosterSlug}`,
-      POSITIONS_CACHE_TTL_MS,
-      () => loadPositionList(lang, ruleset, rosterSlug || undefined),
-    );
-    res.json(payload);
-  } catch (error: any) {
-    serverLog.error("Erreur lors de la récupération des positions:", error);
-    res.setHeader("Cache-Control", "no-store");
-    res.status(500).json({ error: error.message || "Erreur serveur" });
-  }
-});
+router.get(
+  "/positions",
+  validateQuery(positionsListQuerySchema),
+  async (req, res) => {
+    try {
+      const query = req.query as unknown as PositionsListQuery;
+      const lang = query.lang ?? "fr";
+      const ruleset = resolveRuleset(query.ruleset);
+      const rosterSlug = query.rosterSlug ?? "";
+      const payload = await memoizeAsync(
+        POSITIONS_LIST_NS,
+        `${lang}::${ruleset}::${rosterSlug}`,
+        POSITIONS_CACHE_TTL_MS,
+        () => loadPositionList(lang, ruleset, rosterSlug || undefined),
+      );
+      res.json(payload);
+    } catch (error: unknown) {
+      serverLog.error("Erreur lors de la récupération des positions:", error);
+      res.setHeader("Cache-Control", "no-store");
+      const message = error instanceof Error ? error.message : "Erreur serveur";
+      res.status(500).json({ error: message });
+    }
+  },
+);
 
 /**
  * GET /api/positions/:slug
- * Obtenir une position par son slug
- * Query param: ?lang=en ou ?lang=fr (par défaut: fr)
+ * Une position par son slug (avec repli sur l'édition par défaut).
  */
-router.get("/positions/:slug", async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const lang = (req.query.lang as string) || "fr";
-    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    const payload = await memoizeAsync(
-      POSITIONS_DETAIL_NS,
-      `${slug}::${lang}::${ruleset}`,
-      POSITIONS_CACHE_TTL_MS,
-      () => loadPositionDetail(slug, lang, ruleset),
-    );
-    if (!payload) {
+router.get(
+  "/positions/:slug",
+  validateParams(positionSlugParamSchema),
+  validateQuery(positionDetailQuerySchema),
+  async (req, res) => {
+    try {
+      const { slug } = req.params as unknown as PositionSlugParam;
+      const query = req.query as unknown as PositionDetailQuery;
+      const lang = query.lang ?? "fr";
+      const ruleset = resolveRuleset(query.ruleset);
+      const payload = await memoizeAsync(
+        POSITIONS_DETAIL_NS,
+        `${slug}::${lang}::${ruleset}`,
+        POSITIONS_CACHE_TTL_MS,
+        () => loadPositionDetail(slug, lang, ruleset),
+      );
+      if (!payload) {
+        res.setHeader("Cache-Control", "no-store");
+        return res.status(404).json({ error: "Position non trouvée" });
+      }
+      res.json(payload);
+    } catch (error: unknown) {
+      serverLog.error("Erreur lors de la récupération de la position:", error);
       res.setHeader("Cache-Control", "no-store");
-      return res.status(404).json({ error: "Position non trouvée" });
+      const message = error instanceof Error ? error.message : "Erreur serveur";
+      res.status(500).json({ error: message });
     }
-    res.json(payload);
-  } catch (error: any) {
-    serverLog.error("Erreur lors de la récupération de la position:", error);
-    res.setHeader("Cache-Control", "no-store");
-    res.status(500).json({ error: error.message || "Erreur serveur" });
-  }
-});
+  },
+);
 
 function transformPosition(
-  position: any,
+  position: PositionRow,
   isEnglish: boolean,
 ): TransformedPosition {
   return {
@@ -159,7 +196,7 @@ function transformPosition(
     ag: position.ag,
     pa: position.pa,
     av: position.av,
-    skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
+    skills: position.skills.map((ps) => ps.skill.slug).join(","),
     primarySkills: position.primarySkills ?? null,
     secondarySkills: position.secondarySkills ?? null,
     rosterSlug: position.roster.slug,
