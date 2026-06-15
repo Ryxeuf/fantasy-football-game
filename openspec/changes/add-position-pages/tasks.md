@@ -1,64 +1,66 @@
 # Tasks — Pages par position de roster
 
-> Lot 1 = B.1 (page detail) + B.2 (indexation SEO). Front-only, reutilise
-> `GET /api/rosters/:slug`. Aucune migration Prisma, aucun endpoint serveur.
-> B.5 / B.4 / B.3 = suites explicites (cf. `design.md`), hors de ce change.
+> **Lot 1 livré** (B.1 page détail + B.2 indexation + liens roster + garde
+> d'invariant). Front-only, réutilise `GET /api/rosters/:slug`. Aucune
+> migration Prisma, aucun endpoint serveur. Suite web verte (155 fichiers /
+> 1342 tests), `tsc` exit 0, prettier clean.
+> Suites explicites hors lot (cf. `design.md`) : B.5 / B.4 / B.3.
 
-## 1. Prerequis — utilitaires purs & invariant (TDD)
-- [ ] 1.1 Test d'invariant : pour chaque roster season_3, **tous** les slugs
-      de positions commencent par `${roster.slug}_` (source
-      `@bb/game-engine` rosters). Verrouille la reconstruction d'URL (D2/D5).
-- [ ] 1.2 Util pur `resolvePosition(roster, segment)` : reconstruit
-      `${roster.slug}_${segment}`, cherche dans `roster.positions`, fallback
-      "match par suffixe", retourne `null` si introuvable. Tests : cas
-      nominal, fallback, introuvable.
-- [ ] 1.3 Util pur `cleanDisplayName(name)` : strip ` *` final + flag
-      `isBigGuy`. Tests : "Homme-arbre *" -> { name:"Homme-arbre", bigGuy:true },
-      nom normal inchange.
-- [ ] 1.4 `pnpm typecheck` + tests verts pour le module util.
+## 1. Prerequis — utilitaires purs & invariant (TDD) — FAIT
+- [x] 1.1 `position-slug.invariant.test.ts` : pour chaque roster season_3,
+      tous les slugs de positions commencent par `${roster.slug}_`. Source
+      `@bb/game-engine` (`TEAM_ROSTERS_BY_RULESET.season_3`, aliasé en vitest
+      web). **31 cas verts** — l'invariant tient sur les 30 rosters.
+- [x] 1.2 `position-slug.ts` → `resolvePosition(roster, segment)` :
+      reconstruit `${roster.slug}_${segment}`, replis slug-complet puis
+      suffixe, `null` sinon. Tests nominal/replis/introuvable.
+- [x] 1.3 `position-slug.ts` → `cleanDisplayName(name)` : strip ` *` final +
+      flag `isBigGuy`. Tests "Homme-arbre *"/"Ogre *"/nom normal.
+- [x] 1.4 Utils annexes `parseSkillCsv` / `parseAccessCodes` (F→S) /
+      `prettifySlug` + tests. `tsc` exit 0, tests verts.
 
-## 2. Brique 1 — Page detail position `/teams/[slug]/[position]`
-- [ ] 2.1 `app/teams/[slug]/[position]/page.tsx` : fetch
-      `GET /api/rosters/:slug?ruleset=` (defaut season_3, calque
-      `/teams/[slug]/page.tsx`), `resolvePosition`, `notFound()` si null.
-      ISR `revalidate = 3600`.
-- [ ] 2.2 Rendu detail calque sur `/skills/[slug]` : header (nom nettoye +
-      badge big guy + cout + min/max), bloc stats MA/ST/AG/PA/AV, fil
-      d'Ariane (`Accueil / <Roster> / <Position>`), bouton retour roster.
-- [ ] 2.3 Maillage interne (D4) : skills de base -> liens `/skills/[slug]` ;
-      acces competences (G/A/S/P/M) -> liens `/skills?category=` ; positions
-      liees (meme roster) -> `/teams/[slug]/<autre>`.
-- [ ] 2.4 `generateMetadata` (titre `"<Position> — <Roster> | Blood Bowl"`,
-      description, `keywords`, canonical `/teams/[slug]/[position]`, hreflang
-      `fr-FR`/`en`/`x-default` -> meme URL, openGraph logo statique, twitter).
-      Introuvable -> `robots: { index:false }`.
-- [ ] 2.5 `position-detail-structured-data.ts` + composant `StructuredData`
-      (calque `buildSkillDetailSchema` / `TeamStructuredData`) + test du
-      builder.
-- [ ] 2.6 Test de page : rendu depuis un roster fixture (stats, liens skills,
-      positions liees) + `notFound()` sur segment inconnu.
+## 2. Brique 1 — Page detail position `/teams/[slug]/[position]` — FAIT
+- [x] 2.1 `app/teams/[slug]/[position]/page.tsx` : fetch `GET /api/rosters/:slug`
+      (défaut season_3), `resolvePosition`, `notFound()` si null, ISR 3600.
+- [x] 2.2 Rendu détail (header nom nettoyé + badge Big Guy + coût + min/max,
+      grille stats MA/ST/AG/PA/AV réutilisant les boîtes colorées du roster,
+      fil d'Ariane, retour roster).
+- [x] 2.3 Maillage interne : skills de base → liens `/skills/[slug]` (via map
+      slug→nomFR, repli `prettifySlug`) ; accès G/A/S/P/M → `/skills?category=` ;
+      positions liées (même roster) → `/teams/[slug]/<autre>`.
+- [x] 2.4 `generateMetadata` : titre, description stats, `keywords`, canonical
+      `/teams/[slug]/[position]`, hreflang fr-FR/en/x-default → même URL,
+      openGraph logo, twitter. Introuvable → `robots.index=false`.
+- [x] 2.5 `position-detail-structured-data.ts` (`DefinedTerm` +
+      `BreadcrumbList` 4 niveaux, calque skills) + test du builder.
+- [x] 2.6 `page.test.ts` : `generateMetadata` connu/inconnu + `PositionDetailPage`
+      rend (connu) / `notFound()` (segment inconnu). serverApi mocké via
+      `vi.hoisted`.
 
-## 3. Brique 3 — Liens depuis la page roster
-- [ ] 3.1 `TeamDetailClient.tsx` : rendre chaque position cliquable vers
-      `/teams/[slug]/<segment strippe>` (carrie le `?ruleset=` courant).
-- [ ] 3.2 Verifier l'accessibilite du lien (focus, libelle) ; pas de
-      regression du rendu desktop/mobile existant.
+## 3. Brique 3 — Liens depuis la page roster — FAIT
+- [x] 3.1 `TeamDetailClient.tsx` : nom de position cliquable (table desktop +
+      cartes mobile) vers `/teams/[slug]/<segment strippé>`, ruleset porté si
+      non-défaut (`positionHref`).
+- [x] 3.2 Lien accessible (texte = nom, `data-testid="position-link"`) ; suite
+      web verte → pas de régression du rendu existant.
 
-## 4. Brique 2 — Indexation SEO
-- [ ] 4.1 `app/sitemap.ts` : bloc `positionPages` — boucle sur les rosters
-      season_3, pour chacun fetch/utilise ses positions et emet
-      `sitemapEntryWithAlternates('/teams/<slug>/<segment>', { priority:0.6,
-      changeFrequency:'monthly' })`. Dedup par `Set`. Ajout au tableau
-      retourne.
-- [ ] 4.2 JSON-LD d'index par roster (option : `ItemList` des positions sur
-      la page `/teams/[slug]`) — leger, calque `SkillsStructuredData`.
-- [ ] 4.3 Test sitemap : URLs position season_3 presentes, season_2 absentes,
-      pas de doublon.
+## 4. Brique 2 — Indexation SEO — FAIT (4.2 optionnel différé)
+- [x] 4.1 `app/sitemap.ts` : bloc `positionPages` — rosters season_3 + détails
+      en parallèle, `stripRosterPrefix`, dedup `Set`, priorité 0.6, ajouté au
+      tableau retourné.
+- [ ] 4.2 *(optionnel)* JSON-LD `ItemList` des positions sur `/teams/[slug]`.
+      **Non fait** : l'indexation est déjà couverte par le sitemap (4.1) + la
+      structured data par-position (2.5). À reprendre si besoin SEO supplémentaire.
+- [x] 4.3 `sitemap.test.ts` : URLs position season_3 présentes, dedup, fetch
+      `ruleset=season_3` (jamais season_2). `fetch` mocké.
 
 ## 5. Tests & cloture
-- [ ] 5.1 Suite web verte (`vitest`) + `pnpm typecheck` exit 0.
-- [ ] 5.2 Verifier l'absence de collision de route avec `/teams/comparer` et
-      `/teams/tier-list` (smoke).
-- [ ] 5.3 (Optionnel) E2E Playwright : `/teams/skaven` -> position -> skill.
-- [ ] 5.4 `/opsx:sync` (delta-spec -> specs principales) puis `/opsx:archive`
-      apres merge de la PR.
+- [x] 5.1 Suite web verte (`vitest run`) : **155 fichiers / 1342 tests**,
+      `tsc -p tsconfig.json --noEmit` exit 0, prettier `--check` clean.
+- [x] 5.2 Pas de collision de route : `/teams/comparer` & `/teams/tier-list`
+      sont des frères **statiques** de `[slug]` (résolus avant le dynamique) ;
+      `[slug]/[position]` est un enfant — la suite complète passe.
+- [ ] 5.3 *(optionnel)* E2E Playwright `/teams/skaven` → position → skill.
+      Non lancé dans cet environnement (infra E2E non provisionnée).
+- [ ] 5.4 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
+      après merge de la PR.
