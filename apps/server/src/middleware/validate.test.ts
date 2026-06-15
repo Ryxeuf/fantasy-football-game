@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
-import { validate, validateQuery } from "./validate";
+import { validate, validateQuery, validateParams } from "./validate";
+import { idParamSchema } from "../schemas/common.schemas";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -227,7 +228,11 @@ describe("validateQuery middleware", () => {
 
   describe("when query params match the schema", () => {
     it("calls next()", () => {
-      const req = createMockReqWithQuery({ page: "2", limit: "25", search: "test" });
+      const req = createMockReqWithQuery({
+        page: "2",
+        limit: "25",
+        search: "test",
+      });
       const res = createMockRes();
       const next = vi.fn();
 
@@ -293,5 +298,66 @@ describe("validateQuery middleware", () => {
       expect(jsonArg).toHaveProperty("error");
       expect(typeof jsonArg.error).toBe("string");
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateParams middleware
+// ---------------------------------------------------------------------------
+
+function createMockReqWithParams(params: unknown) {
+  return { params } as any;
+}
+
+describe("validateParams middleware", () => {
+  describe("with idParamSchema", () => {
+    it("calls next() and keeps a valid id", () => {
+      const req = createMockReqWithParams({ id: "abc123" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateParams(idParamSchema)(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(res.status).not.toHaveBeenCalled();
+      expect(req.params).toEqual({ id: "abc123" });
+    });
+
+    it("returns 400 when id is an empty string", () => {
+      const req = createMockReqWithParams({ id: "" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateParams(idParamSchema)(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).not.toHaveBeenCalled();
+      const jsonArg = res.json.mock.calls[0][0];
+      expect(jsonArg.error).toContain("id");
+    });
+
+    it("preserves other params via passthrough (multi-segment routes)", () => {
+      const req = createMockReqWithParams({ id: "abc", sub: "xyz" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateParams(idParamSchema)(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      // `.passthrough()` must not strip the other route param.
+      expect(req.params).toEqual({ id: "abc", sub: "xyz" });
+    });
+  });
+
+  it("returns 400 when a required param is missing", () => {
+    const schema = z.object({ id: z.string().min(1) });
+    const req = createMockReqWithParams({});
+    const res = createMockRes();
+    const next = vi.fn();
+
+    validateParams(schema)(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(next).not.toHaveBeenCalled();
   });
 });

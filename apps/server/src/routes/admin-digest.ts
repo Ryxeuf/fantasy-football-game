@@ -12,6 +12,8 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { validate } from "../middleware/validate";
+import { runDigestSchema } from "../schemas/admin-digest.schemas";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import { runWeeklyDigest } from "../services/weekly-digest-job";
@@ -20,7 +22,7 @@ const router = Router();
 
 router.use(authUser, adminOnly);
 
-router.post("/run", async (req, res) => {
+router.post("/run", validate(runDigestSchema), async (req, res) => {
   const start = Date.now();
   const force = (req.body as { force?: boolean })?.force === true;
   try {

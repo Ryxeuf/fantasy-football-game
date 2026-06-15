@@ -17,6 +17,9 @@
 import { Router } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { validate, validateParams } from "../middleware/validate";
+import { idParamSchema } from "../schemas/common.schemas";
+import { createCommentSchema } from "../schemas/pro-gazette-comments.schemas";
 import { serverLog } from "../utils/server-log";
 import {
   CommentsError,
@@ -78,81 +81,97 @@ userRouter.get("/articles/:id/comments", async (req, res) => {
 });
 
 /** POST /pro-league/gazette/articles/:id/comments (auth). */
-userRouter.post("/articles/:id/comments", authUser, async (req, res) => {
-  try {
-    const auth = req as AuthenticatedRequest;
-    const userId = auth.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "Non authentifie" });
+userRouter.post(
+  "/articles/:id/comments",
+  authUser,
+  validateParams(idParamSchema),
+  validate(createCommentSchema),
+  async (req, res) => {
+    try {
+      const auth = req as AuthenticatedRequest;
+      const userId = auth.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifie" });
+      }
+      const body = (req.body ?? {}) as { body?: unknown };
+      if (typeof body.body !== "string") {
+        return res.status(400).json({ error: "missing-body" });
+      }
+      const comment = await createComment({
+        articleId: req.params.id,
+        userId,
+        body: body.body,
+      });
+      res.status(201).json({ comment });
+    } catch (e) {
+      if (e instanceof CommentsError) {
+        return res.status(errorStatus(e.code)).json({ error: e.message });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur creation" });
     }
-    const body = (req.body ?? {}) as { body?: unknown };
-    if (typeof body.body !== "string") {
-      return res.status(400).json({ error: "missing-body" });
-    }
-    const comment = await createComment({
-      articleId: req.params.id,
-      userId,
-      body: body.body,
-    });
-    res.status(201).json({ comment });
-  } catch (e) {
-    if (e instanceof CommentsError) {
-      return res.status(errorStatus(e.code)).json({ error: e.message });
-    }
-    serverLog.error(e);
-    res.status(500).json({ error: "Erreur creation" });
-  }
-});
+  },
+);
 
 /** DELETE /pro-league/gazette/comments/:id (auth, owner ou admin). */
-userRouter.delete("/comments/:id", authUser, async (req, res) => {
-  try {
-    const auth = req as AuthenticatedRequest;
-    const userId = auth.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "Non authentifie" });
+userRouter.delete(
+  "/comments/:id",
+  authUser,
+  validateParams(idParamSchema),
+  async (req, res) => {
+    try {
+      const auth = req as AuthenticatedRequest;
+      const userId = auth.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifie" });
+      }
+      const comment = await softDeleteComment({
+        commentId: req.params.id,
+        byUserId: userId,
+        isAdmin: isAdminUser(auth),
+      });
+      res.json({ comment });
+    } catch (e) {
+      if (e instanceof CommentsError) {
+        return res.status(errorStatus(e.code)).json({ error: e.message });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur suppression" });
     }
-    const comment = await softDeleteComment({
-      commentId: req.params.id,
-      byUserId: userId,
-      isAdmin: isAdminUser(auth),
-    });
-    res.json({ comment });
-  } catch (e) {
-    if (e instanceof CommentsError) {
-      return res.status(errorStatus(e.code)).json({ error: e.message });
-    }
-    serverLog.error(e);
-    res.status(500).json({ error: "Erreur suppression" });
-  }
-});
+  },
+);
 
 /** POST /pro-league/gazette/comments/:id/flag (auth, user report). */
-userRouter.post("/comments/:id/flag", authUser, async (req, res) => {
-  try {
-    const auth = req as AuthenticatedRequest;
-    const userId = auth.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "Non authentifie" });
+userRouter.post(
+  "/comments/:id/flag",
+  authUser,
+  validateParams(idParamSchema),
+  async (req, res) => {
+    try {
+      const auth = req as AuthenticatedRequest;
+      const userId = auth.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifie" });
+      }
+      const body = (req.body ?? {}) as { reason?: unknown };
+      const reasonText =
+        typeof body.reason === "string" && body.reason.trim().length > 0
+          ? body.reason.trim().slice(0, 200)
+          : "user-report";
+      const comment = await flagComment({
+        commentId: req.params.id,
+        reason: `user:${reasonText}`,
+      });
+      res.json({ comment });
+    } catch (e) {
+      if (e instanceof CommentsError) {
+        return res.status(errorStatus(e.code)).json({ error: e.message });
+      }
+      serverLog.error(e);
+      res.status(500).json({ error: "Erreur flag" });
     }
-    const body = (req.body ?? {}) as { reason?: unknown };
-    const reasonText =
-      typeof body.reason === "string" && body.reason.trim().length > 0
-        ? body.reason.trim().slice(0, 200)
-        : "user-report";
-    const comment = await flagComment({
-      commentId: req.params.id,
-      reason: `user:${reasonText}`,
-    });
-    res.json({ comment });
-  } catch (e) {
-    if (e instanceof CommentsError) {
-      return res.status(errorStatus(e.code)).json({ error: e.message });
-    }
-    serverLog.error(e);
-    res.status(500).json({ error: "Erreur flag" });
-  }
-});
+  },
+);
 
 // ─────────────────────────────────────────────────────────────────────────
 // Admin router (mounted under /admin/gazette)
