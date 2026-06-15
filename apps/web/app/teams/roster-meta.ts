@@ -75,7 +75,7 @@ export const PLAYSTYLE_LABELS: Record<Lang, Record<PlayStyle, string>> = {
 };
 
 /**
- * Carte curée des 30 rosters officiels Saison 3. Les slugs correspondent aux
+ * Carte curée des 31 rosters officiels Saison 3. Les slugs correspondent aux
  * clés de `SEASON_THREE_ROSTERS` (game-engine) et aux slugs renvoyés par
  * `/api/rosters`.
  */
@@ -88,6 +88,15 @@ export const ROSTER_META: Record<string, RosterMeta> = {
       "Mélange d'Humains, Nains et Halflings : une équipe polyvalente qui combine vitesse, blocage et fragilité.",
     shortEn:
       "A mix of Humans, Dwarves and Halflings: a versatile team blending speed, blocking and fragility.",
+  },
+  bretonnian: {
+    difficulty: "intermediate",
+    playStyle: "balanced",
+    starPlayers: ["Griff Oberwald", "Morg'n'Thorg"],
+    shortFr:
+      "Chevaliers nobles et écuyers : une équipe rapide et courageuse, taillée pour le jeu de passe et les charges héroïques, mais peu robuste défensivement.",
+    shortEn:
+      "Noble knights and their squires: a fast, brave team built for the passing game and heroic charges, but short on defensive resilience.",
   },
   amazon: {
     difficulty: "beginner",

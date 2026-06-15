@@ -1213,6 +1213,7 @@ export const TEAM_REGIONAL_RULES: Record<string, string[]> = {
   orc: ["badlands_brawl"],
   nurgle: ["favoured_of"],
   old_world_alliance: ["old_world_classic"],
+  bretonnian: ["old_world_classic"],
   elven_union: ["elven_kingdoms_league"],
   human: ["old_world_classic"],
   black_orc: ["badlands_brawl"],

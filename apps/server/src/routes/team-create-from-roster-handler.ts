@@ -76,6 +76,7 @@ const ALLOWED_TEAMS = [
   'tomb_kings',
   'gnome',
   'norse',
+  'bretonnian',
 ] as const;
 
 /** Template brut hardcodé (sans `displayName`, ajouté à la résolution). */

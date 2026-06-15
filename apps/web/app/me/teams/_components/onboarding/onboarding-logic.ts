@@ -55,6 +55,7 @@ export const ROSTER_DIFFICULTY: Readonly<Record<string, RosterDifficulty>> = {
   tomb_kings: "medium",
   underworld: "medium",
   slann: "medium",
+  bretonnian: "medium",
   // Finesse / fragiles / stunty : à réserver aux coachs aguerris.
   wood_elf: "hard",
   high_elf: "hard",

@@ -80,6 +80,7 @@ const ALLOWED_TEAMS = [
   'tomb_kings',
   'gnome',
   'norse',
+  'bretonnian',
 ] as const;
 
 /**

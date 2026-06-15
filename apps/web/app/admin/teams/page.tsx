@@ -245,6 +245,7 @@ export default function AdminTeamsPage() {
             <option value="chaos_renegade">Renégats du Chaos</option>
             <option value="imperial_nobility">Noblesse Impériale</option>
             <option value="old_world_alliance">Alliance du Vieux Monde</option>
+            <option value="bretonnian">Bretonniens</option>
             <option value="elven_union">Union Elfique</option>
             <option value="black_orc">Orques Noirs</option>
             <option value="chaos_dwarf">Nains du Chaos</option>

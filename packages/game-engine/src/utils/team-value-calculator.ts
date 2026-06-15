@@ -59,8 +59,9 @@ export function getRerollCost(roster: string): number {
     oldworldalliance: 50000, // 50k po selon les règles officielles
     nurgle: 60000,         // 60k po selon les règles officielles
     chaosrenegades: 60000, // 60k po selon les règles officielles
+    bretonnian: 60000,     // 60k po (Bretonniens — Classique du Vieux Monde)
   };
-  
+
   return rerollCosts[roster] || 50000; // Coût par défaut si équipe non trouvée
 }
 
@@ -99,6 +100,7 @@ export function getAllRerollCosts(): Record<string, number> {
     oldworldalliance: 50000, // 50k po selon les règles officielles
     nurgle: 60000,         // 60k po selon les règles officielles
     chaosrenegades: 60000, // 60k po selon les règles officielles
+    bretonnian: 60000,     // 60k po (Bretonniens — Classique du Vieux Monde)
   };
 }
 

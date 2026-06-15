@@ -415,7 +415,7 @@ export default function TeamDetailClient({
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="font-mono text-sm font-semibold text-gray-900">
-                      {position.pa}
+                      {position.pa === 0 ? "—" : position.pa}
                     </span>
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -498,7 +498,7 @@ export default function TeamDetailClient({
                       PA
                     </div>
                     <div className="text-base sm:text-lg font-bold text-purple-900 font-mono">
-                      {position.pa}
+                      {position.pa === 0 ? "—" : position.pa}
                     </div>
                   </div>
                   <div className="bg-orange-50 rounded-lg p-2 text-center">

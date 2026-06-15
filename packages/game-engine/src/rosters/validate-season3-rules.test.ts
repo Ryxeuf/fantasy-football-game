@@ -104,7 +104,11 @@ describe('S3 Rules Validation: Plages de stats', () => {
             expect(pos.ag).toBeLessThanOrEqual(statRanges.ag.max);
           });
 
-          it(`PA (${pos.pa}) dans la plage [${statRanges.pa.min}-${statRanges.pa.max}]`, () => {
+          it(`PA (${pos.pa}) dans la plage [${statRanges.pa.min}-${statRanges.pa.max}] ou 0 (sans passe)`, () => {
+            // pa === 0 = sentinel "aucune caractéristique de passe" (affiché "-").
+            // Cf. season3-reference-data.ts ("0 = no PA") et mechanics/passing.ts
+            // qui force un échec quasi systématique pour pa <= 0.
+            if (pos.pa === 0) return;
             expect(pos.pa).toBeGreaterThanOrEqual(statRanges.pa.min);
             expect(pos.pa).toBeLessThanOrEqual(statRanges.pa.max);
           });

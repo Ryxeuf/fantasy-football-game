@@ -8,9 +8,10 @@ import {
   PLAYSTYLE_LABELS,
 } from "./roster-meta";
 
-// Les 30 rosters officiels Saison 3 (clés de SEASON_THREE_ROSTERS).
+// Les 31 rosters officiels Saison 3 (clés de SEASON_THREE_ROSTERS).
 const EXPECTED_SLUGS = [
   "old_world_alliance",
+  "bretonnian",
   "amazon",
   "underworld",
   "dark_elf",
@@ -43,7 +44,7 @@ const EXPECTED_SLUGS = [
 ];
 
 describe("ROSTER_META", () => {
-  it("couvre les 30 rosters officiels", () => {
+  it("couvre les 31 rosters officiels", () => {
     expect(Object.keys(ROSTER_META).sort()).toEqual([...EXPECTED_SLUGS].sort());
   });
 

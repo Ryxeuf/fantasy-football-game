@@ -48,6 +48,7 @@ export const ROSTER_LOGOS: Record<string, TeamLogo> = {
   human: { shape: 'shield', glyph: 'H' },
   imperial_nobility: { shape: 'shield', glyph: 'IN' },
   old_world_alliance: { shape: 'shield', glyph: 'OW' },
+  bretonnian: { shape: 'shield', glyph: 'BR' },
 
   // Dwarves
   dwarf: { shape: 'hexagon', glyph: 'D' },
