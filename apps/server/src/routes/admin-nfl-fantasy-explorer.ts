@@ -494,7 +494,7 @@ router.post(
   validate(gazetteBodySchema),
   async (req, res) => {
     try {
-      const body = req.body as z.infer<typeof gazetteBodySchema>;
+      const body: z.infer<typeof gazetteBodySchema> = req.body;
       const out = await generateMatchupGazette(req.params.id, {
         force: body.force,
       });
@@ -565,7 +565,7 @@ router.post(
   validate(replayBodySchema),
   async (req, res) => {
     try {
-      const body = req.body as z.infer<typeof replayBodySchema>;
+      const body: z.infer<typeof replayBodySchema> = req.body;
       const out = await replaySeason({
         seasonId: req.params.id,
         teamCount: body.teamCount,

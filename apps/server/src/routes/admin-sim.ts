@@ -68,7 +68,7 @@ export function handleListTeams(_req: Request, res: Response): void {
 
 /** Handler for `POST /admin/sim/run` — runs a bench pairing. */
 export function handleRunSim(req: Request, res: Response): void {
-  const { teamA, teamB, runs, seed } = req.body as RunSimBody;
+  const { teamA, teamB, runs, seed }: RunSimBody = req.body;
 
   const home = PRO_LEAGUE_TEAM_BY_ID[teamA];
   const away = PRO_LEAGUE_TEAM_BY_ID[teamB];
@@ -222,7 +222,7 @@ export async function handleCreateTestMatch(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { homeTeamId, awayTeamId, driverKind } = req.body as TestMatchBody;
+  const { homeTeamId, awayTeamId, driverKind }: TestMatchBody = req.body;
   try {
     const result = await createTestMatch({
       homeTeamId,
@@ -262,7 +262,7 @@ export async function handleResimulateTestMatch(
   res: Response,
 ): Promise<void> {
   const { id } = req.params as { id: string };
-  const { driverKind } = (req.body ?? {}) as ResimulateTestMatchBody;
+  const { driverKind }: ResimulateTestMatchBody = req.body ?? {};
   try {
     const result = await resimulateTestMatch({ matchId: id, driverKind });
     res.status(200).json(result);
@@ -357,8 +357,8 @@ export async function handleRunComparison(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { homeTeamId, awayTeamId, matches, seedOffset } =
-    req.body as ComparisonBody;
+  const { homeTeamId, awayTeamId, matches, seedOffset }: ComparisonBody =
+    req.body;
   try {
     const result = await runEngineComparison(
       { homeTeamId, awayTeamId, matches, seedOffset, source: "admin" },
@@ -403,7 +403,7 @@ export async function handleCompareVersions(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const body = req.body as CompareVersionsBody;
+  const body: CompareVersionsBody = req.body;
   try {
     const result = runVersionComparison(body);
     res.status(200).json(result);
@@ -436,7 +436,7 @@ export async function handleDiffReplays(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const body = req.body as DiffReplaysBody;
+  const body: DiffReplaysBody = req.body;
   try {
     const result = await runReplayDiff(body);
     res.status(200).json(result);
@@ -481,7 +481,7 @@ export async function handleRunLoadtest(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const body = req.body as LoadtestBody;
+  const body: LoadtestBody = req.body;
   try {
     const result = await runBroadcasterLoadTest(body);
     res.status(200).json(result);

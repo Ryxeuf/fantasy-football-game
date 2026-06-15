@@ -68,7 +68,7 @@ router.post("/seed-teams", async (_req, res) => {
 
 router.post("/seed-season", validate(seedSeasonSchema), async (req, res) => {
   try {
-    const { seasonId } = req.body as z.infer<typeof seedSeasonSchema>;
+    const { seasonId }: z.infer<typeof seedSeasonSchema> = req.body;
     await seedNflSeason(seasonId);
     res.json({ seasonId, status: "seeded" });
   } catch (err) {
@@ -81,7 +81,7 @@ router.post("/seed-season", validate(seedSeasonSchema), async (req, res) => {
 
 router.post("/week", validate(ingestWeekSchema), async (req, res) => {
   try {
-    const opts = req.body as z.infer<typeof ingestWeekSchema>;
+    const opts: z.infer<typeof ingestWeekSchema> = req.body;
     const result = await ingestNflverseWeek(opts);
     res.json(result);
   } catch (err) {
@@ -94,7 +94,7 @@ router.post("/week", validate(ingestWeekSchema), async (req, res) => {
 
 router.post("/gameday", validate(gamedaySchema), async (req, res) => {
   try {
-    const { dateYmd } = req.body as z.infer<typeof gamedaySchema>;
+    const { dateYmd }: z.infer<typeof gamedaySchema> = req.body;
     const result = await ingestEspnGameday({ dateYmd });
     res.json(result);
   } catch (err) {
@@ -107,7 +107,7 @@ router.post("/gameday", validate(gamedaySchema), async (req, res) => {
 
 router.post("/rosters", validate(rostersSchema), async (req, res) => {
   try {
-    const opts = req.body as z.infer<typeof rostersSchema>;
+    const opts: z.infer<typeof rostersSchema> = req.body;
     const result = await ingestEspnRosters({
       seasonId: opts.seasonId,
       teamCodes: opts.teamCodes as never,

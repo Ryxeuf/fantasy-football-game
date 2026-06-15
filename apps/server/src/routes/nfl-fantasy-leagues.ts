@@ -101,7 +101,7 @@ function userId(req: AuthenticatedRequest): string {
 
 router.post("/", validate(createLeagueSchema), async (req, res) => {
   try {
-    const body = req.body as z.infer<typeof createLeagueSchema>;
+    const body: z.infer<typeof createLeagueSchema> = req.body;
     const authReq = req as AuthenticatedRequest;
     // Bypass snap-to-next-window pour les comptes test (cycle deja
     // demarre / closed accepte). Decide cote route, jamais expose dans
@@ -159,7 +159,7 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/:id", validate(updateLeagueSchema), async (req, res) => {
   try {
-    const body = req.body as z.infer<typeof updateLeagueSchema>;
+    const body: z.infer<typeof updateLeagueSchema> = req.body;
     const lg = await updateLeague({
       leagueId: req.params.id,
       userId: userId(req),
@@ -188,7 +188,7 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/:id/join", validate(joinByIdSchema), async (req, res) => {
   try {
-    const { teamName } = req.body as z.infer<typeof joinByIdSchema>;
+    const { teamName }: z.infer<typeof joinByIdSchema> = req.body;
     const entry = await joinLeague({
       userId: userId(req),
       teamName,
@@ -205,7 +205,7 @@ router.post("/:id/join", validate(joinByIdSchema), async (req, res) => {
 
 router.post("/join-by-code", validate(joinByCodeSchema), async (req, res) => {
   try {
-    const { inviteCode, teamName } = req.body as z.infer<typeof joinByCodeSchema>;
+    const { inviteCode, teamName }: z.infer<typeof joinByCodeSchema> = req.body;
     const entry = await joinLeague({ userId: userId(req), teamName, inviteCode });
     res.status(201).json(entry);
   } catch (err) {
@@ -480,7 +480,7 @@ router.post(
         req as AuthenticatedRequest,
         req.params.id,
       );
-      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const { weekId }: z.infer<typeof weekIdBodySchema> = req.body;
       const week = await prisma.nflWeek.findUnique({
         where: { id: weekId },
         select: { seasonId: true, weekNumber: true },
@@ -516,7 +516,7 @@ router.post(
   async (req, res) => {
     try {
       await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
-      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const { weekId }: z.infer<typeof weekIdBodySchema> = req.body;
       const result = await lockLineups(weekId);
       res.json(result);
     } catch (err) {
@@ -538,7 +538,7 @@ router.post(
   async (req, res) => {
     try {
       await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
-      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const { weekId }: z.infer<typeof weekIdBodySchema> = req.body;
       const result = await generateMatchups({
         leagueId: req.params.id,
         weekId,
@@ -573,7 +573,7 @@ router.post(
   async (req, res) => {
     try {
       await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
-      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const { weekId }: z.infer<typeof weekIdBodySchema> = req.body;
       // Exclut l'entry de l'owner courant pour qu'il garde la main
       // sur sa propre lineup.
       const ownerEntry = await prisma.nflFantasyEntry.findUnique({
@@ -632,7 +632,7 @@ router.post(
   async (req, res) => {
     try {
       await assertOwnerAndTestMode(req as AuthenticatedRequest, req.params.id);
-      const { weekId } = req.body as z.infer<typeof weekIdBodySchema>;
+      const { weekId }: z.infer<typeof weekIdBodySchema> = req.body;
       const result = await settleNflFantasyWeek({
         leagueId: req.params.id,
         weekId,

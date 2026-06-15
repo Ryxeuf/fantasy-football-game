@@ -38,14 +38,20 @@
       branche sur les routes `:id` mutantes prioritaires (pro-league
       mvp-vote / predictions / dedicate ; pro-gazette comment / flag /
       delete).
-- [ ] 3.3 Extraire en const nommees exportees les `z.object()` inline du
-      cluster `nfl-fantasy` (schemas inline). *(reste sur denylist)*
+- [x] 3.3 Cluster `nfl-fantasy` migre : les schemas etaient deja des const
+      nommees (`z.infer<typeof X>` inline) ; les casts sont convertis en
+      annotations. Extraction vers `schemas/*.schemas.ts` = polish optionnel
+      differe (non requis par la garde).
 - [~] 3.4 Migrer les `req.body as {...}` → type derive du schema
-      (`z.infer` / `type XInput`). **12 fichiers migres** (push, pro-league,
-      user, admin-digest, email-digest, pro-gazette-comments,
-      team-advancement, feedback, league-invitation, matchmaking,
-      pro-survivor, auth-privacy). **31 fichiers restants** sur la denylist
-      du ratchet (dont league.ts=29 casts, cluster nfl-fantasy, admin-*).
+      (`z.infer` / `type XInput` / annotation inline). **23 fichiers migres**
+      (lot 2 : push, pro-league, user, admin-digest, email-digest,
+      pro-gazette-comments, team-advancement, feedback, league-invitation,
+      matchmaking, pro-survivor, auth-privacy ; lot 3-4 : league=29 casts,
+      admin-leagues, admin-sim, cup, admin-pro-tournament, admin-nfl-fantasy,
+      admin-nfl-ingest, admin-nfl-fantasy-explorer, nfl-fantasy-leagues,
+      nfl-fantasy-entries, nfl-fantasy-draft-sessions). **20 fichiers
+      restants** sur la denylist du ratchet (admin*, auth, match*, friends,
+      kofi, local-match, pro-prediction-leagues, team-*-handlers).
 - [x] 3.5 `pnpm typecheck` vert (exit 0) apres chaque lot migre.
 
 ## 4. Brique 3 — Garde anti-regression — FAIT
@@ -64,6 +70,6 @@
 - [x] 5.1 Suite verte sur le perimetre touche (guard 50, schemas 102,
       validate 24, routes migrees). Typecheck exit 0. *(coverage globale a
       re-mesurer quand la denylist sera vide)*
-- [ ] 5.2 Finir la migration des 31 fichiers denylistes (lots suivants,
-      ratchet garantit la securite), puis `/opsx:sync` + `/opsx:archive`
-      apres merge.
+- [ ] 5.2 Finir la migration des 20 fichiers denylistes restants (lots
+      suivants, ratchet garantit la securite), puis `/opsx:sync` +
+      `/opsx:archive` apres merge.
