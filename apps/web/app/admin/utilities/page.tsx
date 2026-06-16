@@ -27,6 +27,13 @@ interface UtilityDef {
   readonly riskLevel: "low" | "medium" | "high";
   /** Confirmation supplementaire avant execution si elevee. */
   readonly confirmMessage?: string;
+  /**
+   * Flux en deux temps : le bouton principal lance un DRY-RUN (POST
+   * `{ write: false }`) qui renvoie le diff, puis un bouton "Appliquer"
+   * apparait pour confirmer l'ecriture (POST `{ write: true }`). Utile pour
+   * les utilitaires destructifs (purge de positions orphelines, ...).
+   */
+  readonly supportsDryRun?: boolean;
 }
 
 const UTILITIES: ReadonlyArray<UtilityDef> = [
@@ -50,17 +57,44 @@ const UTILITIES: ReadonlyArray<UtilityDef> = [
     endpoint: "/admin/utilities/reimport-season3-access",
     riskLevel: "low",
   },
+  {
+    key: "sync-rosters",
+    icon: "🔄",
+    title: "Synchroniser les rosters",
+    description:
+      "Applique les données de roster du code (noms, stats, coût, accès, compétences) à la base : purge les positions orphelines, met à jour les positions existantes, recrée les liens de compétences. " +
+      "À relancer après un déploiement qui modifie un roster (ex: renommage Blitzer Haut Elfe → Lion Blanc). Aperçu (dry-run) d'abord, puis application confirmée.",
+    buttonLabel: "Prévisualiser (dry-run)",
+    endpoint: "/admin/utilities/sync-rosters",
+    riskLevel: "medium",
+    supportsDryRun: true,
+  },
 ];
+
+interface PrunedPosition {
+  roster: string;
+  ruleset: string;
+  slug: string;
+  displayName: string;
+}
 
 interface UtilityResult {
   ok?: boolean;
   message?: string;
   error?: string;
   durationMs?: number;
+  /** Présent sur sync-rosters : false = dry-run, true = écriture appliquée. */
+  write?: boolean;
+  upserted?: number;
+  pruned?: number;
+  prunedPositions?: PrunedPosition[];
   [key: string]: unknown;
 }
 
-async function postJSON(path: string): Promise<UtilityResult> {
+async function postJSON(
+  path: string,
+  body: Record<string, unknown> = {},
+): Promise<UtilityResult> {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -68,7 +102,7 @@ async function postJSON(path: string): Promise<UtilityResult> {
       Authorization: token ? `Bearer ${token}` : "",
       "Content-Type": "application/json",
     },
-    body: "{}",
+    body: JSON.stringify(body),
   });
   const json: UtilityResult = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -103,12 +137,11 @@ export default function AdminUtilitiesPage() {
   const [results, setResults] = useState<Record<string, UtilityResult>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const run = async (util: UtilityDef) => {
-    if (util.confirmMessage && !confirm(util.confirmMessage)) return;
+  const exec = async (util: UtilityDef, body: Record<string, unknown>) => {
     setLoading(util.key);
     setErrors((prev) => ({ ...prev, [util.key]: "" }));
     try {
-      const res = await postJSON(util.endpoint);
+      const res = await postJSON(util.endpoint, body);
       setResults((prev) => ({ ...prev, [util.key]: res }));
     } catch (e: any) {
       setErrors((prev) => ({
@@ -118,6 +151,28 @@ export default function AdminUtilitiesPage() {
     } finally {
       setLoading(null);
     }
+  };
+
+  // Bouton principal : dry-run pour les utilitaires en deux temps, sinon
+  // execution directe (body vide).
+  const run = async (util: UtilityDef) => {
+    if (util.confirmMessage && !confirm(util.confirmMessage)) return;
+    await exec(util, util.supportsDryRun ? { write: false } : {});
+  };
+
+  // Second temps : applique reellement apres un dry-run reussi.
+  const apply = async (util: UtilityDef) => {
+    const preview = results[util.key];
+    const pruned = preview?.pruned ?? 0;
+    const upserted = preview?.upserted ?? 0;
+    if (
+      !confirm(
+        `Appliquer la synchronisation ?\n\n${upserted} position(s) seront mises à jour, ${pruned} purgée(s) définitivement.`,
+      )
+    ) {
+      return;
+    }
+    await exec(util, { write: true });
   };
 
   return (
@@ -170,10 +225,46 @@ export default function AdminUtilitiesPage() {
                   data-testid={`utility-success-${util.key}`}
                   className="mt-3 p-3 bg-white border border-emerald-200 rounded-lg text-sm text-emerald-800"
                 >
-                  ✅{" "}
+                  {result.write === false ? "🔍" : "✅"}{" "}
                   {result.message ??
                     `Termine en ${result.durationMs ?? 0}ms`}
                 </div>
+              )}
+
+              {/* Diff dry-run : liste des positions qui seraient purgees. */}
+              {result?.ok &&
+                util.supportsDryRun &&
+                (result.prunedPositions?.length ?? 0) > 0 && (
+                  <div
+                    data-testid={`utility-prune-list-${util.key}`}
+                    className="mt-2 p-3 bg-white border border-orange-200 rounded-lg text-xs text-orange-900"
+                  >
+                    <p className="font-semibold mb-1">
+                      🗑️ {result.prunedPositions!.length} position(s) à purger :
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {result.prunedPositions!.map((p) => (
+                        <li key={`${p.ruleset}/${p.roster}/${p.slug}`}>
+                          {p.displayName}{" "}
+                          <span className="text-gray-500">
+                            ({p.roster}/{p.ruleset})
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              {/* Bouton de confirmation apres un dry-run reussi. */}
+              {result?.ok && util.supportsDryRun && result.write === false && (
+                <button
+                  onClick={() => apply(util)}
+                  disabled={isRunning}
+                  data-testid={`utility-apply-${util.key}`}
+                  className="mt-3 px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50 bg-orange-600 hover:bg-orange-700"
+                >
+                  {isRunning ? "Application…" : "✍️ Appliquer les changements"}
+                </button>
               )}
 
               {error && (
