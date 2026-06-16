@@ -1,3 +1,23 @@
+## [1.178.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.177.1...v1.178.0) (2026-06-16)
+
+
+### ✨ Features
+
+* **api:** expose keywords sur /api/rosters & /api/positions ([f22ed4f](https://github.com/Ryxeuf/fantasy-football-game/commit/f22ed4f5772794b31aeafb6443fdf40e10772a7b))
+* **api:** expose keywordsEn (mots-cles traduits) sur rosters & positions ([21b8b7e](https://github.com/Ryxeuf/fantasy-football-game/commit/21b8b7e9c7bf7f93bc818e4390075ca983ea09bf))
+* **rosters:** genere les mots-cles des positions season_3 ([f4d63b0](https://github.com/Ryxeuf/fantasy-football-game/commit/f4d63b06f62534a976caff45c953cbae9960ddc9))
+* **rosters:** le sync ecrit la colonne keywords (season_3) ([d4d0a96](https://github.com/Ryxeuf/fantasy-football-game/commit/d4d0a96adf1caf097daac3b974dae28e3ac2783f))
+* **rosters:** traduction EN des mots-cles de position ([90b4bfd](https://github.com/Ryxeuf/fantasy-football-game/commit/90b4bfdea78a4c68c53e3d17cbd1bea041400127))
+* **web:** affiche les mots-cles de position (pages equipe & position) ([e649dc1](https://github.com/Ryxeuf/fantasy-football-game/commit/e649dc12f8c2a356977ecc55bf8edac63aa9d9a9))
+* **web:** filtre des positions par mot-cle (/teams/positions) ([133e77b](https://github.com/Ryxeuf/fantasy-football-game/commit/133e77b4842d05c69c73f084013efab3d455dbba))
+* **web:** mots-cles de position bilingues (KeywordTags) ([ff3d5a3](https://github.com/Ryxeuf/fantasy-football-game/commit/ff3d5a37f0199271dcda31ec65987d9759cb0dca))
+
+
+### 📝 Documentation
+
+* **rosters:** documente la feature mots-cles des positions ([45ae8ce](https://github.com/Ryxeuf/fantasy-football-game/commit/45ae8ce4cccc4f1f5928127f83d0c53f90e87cd0))
+* **rosters:** traduction EN + filtre par mot-cle ([f69f1a5](https://github.com/Ryxeuf/fantasy-football-game/commit/f69f1a5effa114bbf77f196bfcb00d46de6fa781))
+
 ## [1.177.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.177.0...v1.177.1) (2026-06-16)
 
 
