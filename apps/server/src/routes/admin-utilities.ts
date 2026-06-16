@@ -12,13 +12,16 @@
  */
 
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { validate } from "../middleware/validate";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import { seedProLeague } from "../seeders/pro-league";
 import { reimportSeason3SkillAccess } from "../seeders/season3-skill-access";
+import { syncRosters } from "../seeders/sync-rosters";
 
 const router = Router();
 
@@ -117,6 +120,80 @@ router.post("/reimport-season3-access", async (req, res) => {
   } catch (e) {
     const durationMs = Date.now() - start;
     serverLog.error("[admin.utilities.reimport-season3-access] failed:", e);
+    const message = e instanceof Error ? e.message : "Erreur inconnue";
+    res.status(500).json({ ok: false, error: message, durationMs });
+  }
+});
+
+/**
+ * POST /admin/utilities/sync-rosters
+ *
+ * Synchronise les positions des rosters depuis le code (source de vérité
+ * `packages/game-engine/src/rosters/*`) vers la base : purge des positions
+ * orphelines, upsert noms/stats/coût/accès, relink des compétences de base.
+ *
+ * `write` défaut `false` = DRY-RUN : aucune écriture, renvoie le diff (ce qui
+ * serait créé / mis à jour / purgé) pour prévisualiser avant d'appliquer.
+ * `write: true` applique réellement. Filtres optionnels `ruleset` / `roster`.
+ *
+ * Complète `reimport-season3-access` (qui ne réécrit QUE les accès de
+ * compétences) : ce sync applique aussi les renommages et les stats. À
+ * relancer après tout déploiement modifiant les données de roster.
+ */
+const syncRostersSchema = z.object({
+  write: z.boolean().optional().default(false),
+  ruleset: z.string().trim().min(1).optional(),
+  roster: z.string().trim().min(1).optional(),
+});
+type SyncRostersBody = z.infer<typeof syncRostersSchema>;
+
+router.post("/sync-rosters", validate(syncRostersSchema), async (req, res) => {
+  const start = Date.now();
+  const body: SyncRostersBody = req.body;
+  try {
+    const result = await syncRosters(body);
+    const durationMs = Date.now() - start;
+
+    // Audit uniquement les écritures réelles (le dry-run n'a aucun effet de bord).
+    if (result.write) {
+      await safeRecordAdminActionFromRequest(prisma, req, {
+        action: "utility.sync-rosters.run",
+        entity: "Position",
+        newValue: {
+          durationMs,
+          ruleset: body.ruleset ?? null,
+          roster: body.roster ?? null,
+          upserted: result.upserted,
+          pruned: result.pruned,
+          skillLinks: result.skillLinks,
+        },
+      });
+    }
+
+    const verb = result.write ? "Appliqué" : "Dry-run";
+    const warnPart = result.missingRosters.length
+      ? ` ${result.missingRosters.length} roster(s) absent(s) en base.`
+      : "";
+    res.json({
+      ok: true,
+      durationMs,
+      write: result.write,
+      upserted: result.upserted,
+      pruned: result.pruned,
+      skillLinks: result.skillLinks,
+      prunedPositions: result.prunedPositions,
+      upsertedPositions: result.upsertedPositions,
+      missingSkills: result.missingSkills,
+      missingRosters: result.missingRosters,
+      message:
+        `${verb} en ${durationMs}ms : ${result.upserted} positions upsert, ` +
+        `${result.pruned} purgées, ${result.skillLinks} liens de compétence.` +
+        warnPart +
+        (result.write ? "" : " (Relancer avec write=true pour appliquer.)"),
+    });
+  } catch (e) {
+    const durationMs = Date.now() - start;
+    serverLog.error("[admin.utilities.sync-rosters] failed:", e);
     const message = e instanceof Error ? e.message : "Erreur inconnue";
     res.status(500).json({ ok: false, error: message, durationMs });
   }
