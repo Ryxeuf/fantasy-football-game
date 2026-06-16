@@ -1,3 +1,15 @@
+## [1.177.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.177.0...v1.177.1) (2026-06-16)
+
+
+### 🐛 Bug Fixes
+
+* **admin:** invalide le cache memoire des rosters apres ecriture ([fa1e92d](https://github.com/Ryxeuf/fantasy-football-game/commit/fa1e92dcfa589252bb99a486ef4ece73d2c4fcc7))
+
+
+### 📝 Documentation
+
+* **rosters:** documente les 2 caches (memoire 5min + HTTP 1h) du sync ([9b9cc01](https://github.com/Ryxeuf/fantasy-football-game/commit/9b9cc01a71a00403866b20e553899a2fba8cae67))
+
 ## [1.177.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.176.0...v1.177.0) (2026-06-16)
 
 
