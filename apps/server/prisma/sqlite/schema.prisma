@@ -367,7 +367,7 @@ model TeamPlayer {
   ma       Int
   st       Int
   ag       Int
-  pa       Int
+  pa       Int? // Passing (null pour - : certaines positions n'ont pas de passe)
   av       Int
   skills   String
 
@@ -473,7 +473,7 @@ model Position {
   ma          Int
   st          Int
   ag          Int
-  pa          Int
+  pa          Int? // Passing (null pour - : certaines positions n'ont pas de passe)
   av          Int
   keywords    String?
   primarySkills   String?
