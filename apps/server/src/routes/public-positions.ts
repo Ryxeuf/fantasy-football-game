@@ -46,6 +46,7 @@ interface PositionRow {
   ag: number;
   pa: number | null;
   av: number;
+  keywords: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
   roster: { slug: string; name: string; nameEn: string };
@@ -66,6 +67,8 @@ interface TransformedPosition {
   pa: number | null;
   av: number;
   skills: string;
+  /** Mots-clés officiels (lignée + type, ex: "Elfe, Trois-quart"). */
+  keywords: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
   rosterSlug: string;
@@ -201,6 +204,7 @@ function transformPosition(
     pa: position.pa,
     av: position.av,
     skills: position.skills.map((ps) => ps.skill.slug).join(","),
+    keywords: position.keywords ?? null,
     primarySkills: position.primarySkills ?? null,
     secondarySkills: position.secondarySkills ?? null,
     rosterSlug: position.roster.slug,

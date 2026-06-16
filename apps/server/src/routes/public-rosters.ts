@@ -57,6 +57,7 @@ interface RosterDetailPayload {
       pa: number | null;
       av: number;
       skills: string;
+      keywords: string | null;
       primarySkills: string | null;
       secondarySkills: string | null;
     }>;
@@ -251,6 +252,7 @@ function transformRoster(roster: any, isEnglish: boolean) {
       pa: position.pa,
       av: position.av,
       skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
+      keywords: position.keywords ?? null,
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
     })),
