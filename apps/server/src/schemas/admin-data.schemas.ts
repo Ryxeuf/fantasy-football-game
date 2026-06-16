@@ -99,7 +99,8 @@ export const createPositionSchema = z.object({
   ma: z.number({ message: "ma requis" }).int(),
   st: z.number({ message: "st requis" }).int(),
   ag: z.number({ message: "ag requis" }).int(),
-  pa: z.number({ message: "pa requis" }).int(),
+  // PA optionnel : null = pas de passe (affiché "-"). Cf. StarPlayer.
+  pa: z.number().int().optional().nullable(),
   av: z.number({ message: "av requis" }).int(),
   keywords: z.string().optional().nullable(),
   // Accès montée de niveau : CSV de codes catégorie (G/A/S/P/M ; F toléré,
@@ -117,7 +118,8 @@ export const updatePositionSchema = z.object({
   ma: z.number().int().optional(),
   st: z.number().int().optional(),
   ag: z.number().int().optional(),
-  pa: z.number().int().optional(),
+  // PA optionnel : null = pas de passe (affiché "-"). Cf. StarPlayer.
+  pa: z.number().int().optional().nullable(),
   av: z.number().int().optional(),
   keywords: z.string().optional().nullable(),
   primarySkills: skillAccessCsv,

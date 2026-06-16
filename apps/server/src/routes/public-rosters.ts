@@ -54,7 +54,7 @@ interface RosterDetailPayload {
       ma: number;
       st: number;
       ag: number;
-      pa: number;
+      pa: number | null;
       av: number;
       skills: string;
       primarySkills: string | null;

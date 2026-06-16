@@ -32,7 +32,7 @@ export interface DefaultLineupPosition {
   readonly ma: number;
   readonly st: number;
   readonly ag: number;
-  readonly pa: number;
+  readonly pa: number | null; // null = pas de passe ("-")
   readonly av: number;
   readonly skills: string;
 }
@@ -45,7 +45,7 @@ export interface LineupEntry {
   readonly ma: number;
   readonly st: number;
   readonly ag: number;
-  readonly pa: number;
+  readonly pa: number | null; // null = pas de passe ("-")
   readonly av: number;
   readonly skills: string;
 }

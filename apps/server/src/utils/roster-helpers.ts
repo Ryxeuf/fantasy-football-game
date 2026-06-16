@@ -25,7 +25,7 @@ export interface RosterPosition {
   ma: number;
   st: number;
   ag: number;
-  pa: number;
+  pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
 }

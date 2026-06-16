@@ -112,7 +112,8 @@ async function syncRosters(args: Args): Promise<void> {
           ma: def.ma,
           st: def.st,
           ag: def.ag,
-          pa: def.pa,
+          // Frontière game-engine (sentinel 0 = pas de passe) → DB (null = "-").
+          pa: def.pa === 0 ? null : def.pa,
           av: def.av,
           primarySkills: access ? access.primary : null,
           secondarySkills: access ? access.secondary : null,

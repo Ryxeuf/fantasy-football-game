@@ -18,6 +18,7 @@ import {
   duplicateToRulesetSchema,
   createRosterSchema,
   createPositionSchema,
+  updatePositionSchema,
   duplicatePositionSchema,
   createStarPlayerDataSchema,
 } from "./admin-data.schemas";
@@ -231,6 +232,36 @@ describe("Admin data schemas", () => {
         av: 9,
       };
       expect(createPositionSchema.parse(data)).toMatchObject(data);
+    });
+
+    // Non-régression : certaines positions n'ont pas de PA (ex. Cinglé
+    // Gobelin, no-hands) → "-". Le schéma doit accepter PA absent/null.
+    const baseWithoutPa = {
+      rosterId: "abc",
+      slug: "cingle",
+      displayName: "Cinglé",
+      cost: 40000,
+      min: 0,
+      max: 1,
+      ma: 6,
+      st: 2,
+      ag: 3,
+      av: 8,
+    };
+
+    it("accepts a position with no PA (omitted)", () => {
+      const parsed = createPositionSchema.parse(baseWithoutPa);
+      expect(parsed.pa ?? null).toBeNull();
+    });
+
+    it("accepts a position with PA explicitly null", () => {
+      const parsed = createPositionSchema.parse({ ...baseWithoutPa, pa: null });
+      expect(parsed.pa).toBeNull();
+    });
+
+    it("updatePositionSchema accepts PA null", () => {
+      const parsed = updatePositionSchema.parse({ pa: null });
+      expect(parsed.pa).toBeNull();
     });
   });
 

@@ -171,7 +171,9 @@ export async function handleBuildTeam(
     // de vérité partagée avec l'UI (@bb/game-engine).
     const formatCheck = validateFormatSelection({
       format,
-      positions: def.positions,
+      // Le moteur (pur) attend pa: number avec sentinel 0 = "pas de passe".
+      // La DB stocke null pour "-" ; on recoalesce à la frontière.
+      positions: def.positions.map((p) => ({ ...p, pa: p.pa ?? 0 })),
       counts,
       starPlayerCount: starPlayersToHire.length,
       rerolls,

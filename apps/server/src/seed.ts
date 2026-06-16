@@ -350,7 +350,8 @@ async function main() {
             ma: positionDef.ma,
             st: positionDef.st,
             ag: positionDef.ag,
-            pa: positionDef.pa,
+            // Frontière game-engine (sentinel 0 = pas de passe) → DB (null = "-").
+            pa: positionDef.pa === 0 ? null : positionDef.pa,
             av: positionDef.av,
             primarySkills: access ? access.primary : null,
             secondarySkills: access ? access.secondary : null,

@@ -105,7 +105,7 @@ export async function spawnAITeam(
         ma: position.ma,
         st: position.st,
         ag: position.ag,
-        pa: position.pa,
+        pa: position.pa ?? 0, // moteur : 0 = pas de passe (DB null → "-")
         av: position.av,
         skills: position.skills ?? "",
       });
@@ -128,7 +128,7 @@ export async function spawnAITeam(
         ma: position.ma,
         st: position.st,
         ag: position.ag,
-        pa: position.pa,
+        pa: position.pa ?? 0, // moteur : 0 = pas de passe (DB null → "-")
         av: position.av,
         skills: position.skills ?? "",
       });

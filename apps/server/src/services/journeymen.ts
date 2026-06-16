@@ -36,7 +36,7 @@ export async function getLinemanStats(
     ma: lineman.ma,
     st: lineman.st,
     ag: lineman.ag,
-    pa: lineman.pa,
+    pa: lineman.pa ?? 0, // moteur : 0 = pas de passe (DB null → "-")
     av: lineman.av,
   };
 }
