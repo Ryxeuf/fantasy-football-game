@@ -138,6 +138,39 @@ function SkillAccessBadges({
   );
 }
 
+/**
+ * Mots-clés officiels d'une position (lignée + type, ex: "Elfe, Trois-quart").
+ * Source : colonne `keywords` de l'API, CSV. Affichés en petites étiquettes.
+ */
+function KeywordTags({
+  keywords,
+  className = "",
+}: {
+  keywords?: string | null;
+  className?: string;
+}) {
+  const tags = (keywords ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (tags.length === 0) return null;
+  return (
+    <div
+      data-testid="position-keywords"
+      className={`mt-1 flex flex-wrap gap-1 ${className}`}
+    >
+      {tags.map((kw) => (
+        <span
+          key={kw}
+          className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[11px] font-medium"
+        >
+          {kw}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export interface TeamDetailClientProps {
   slug: string;
   selectedRuleset: Ruleset;
@@ -404,6 +437,7 @@ export default function TeamDetailClient({
                     >
                       {translatePositionName(position.displayName)}
                     </Link>
+                    <KeywordTags keywords={position.keywords} />
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
@@ -481,6 +515,7 @@ export default function TeamDetailClient({
                       {translatePositionName(position.displayName)}
                     </Link>
                   </h3>
+                  <KeywordTags keywords={position.keywords} className="mb-1" />
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs sm:text-sm font-semibold">
                       {position.cost}k {t.teams.po}

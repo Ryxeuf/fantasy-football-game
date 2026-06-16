@@ -42,6 +42,7 @@ interface ApiPosition {
   pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
+  keywords?: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
 }
@@ -239,6 +240,11 @@ export default async function PositionDetailPage({
   const baseSkills = parseSkillCsv(position.skills);
   const primaryAccess = parseAccessCodes(position.primarySkills);
   const secondaryAccess = parseAccessCodes(position.secondarySkills);
+  // Mots-clés officiels (lignée + type), CSV de l'API.
+  const keywordTags = (position.keywords ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
   const related = [...roster.positions]
     .filter((p) => p.slug !== position.slug)
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -328,6 +334,21 @@ export default async function PositionDetailPage({
             <p className="mt-1 font-medium text-gray-500">
               {position.displayNameEn}
             </p>
+          )}
+          {keywordTags.length > 0 && (
+            <div
+              data-testid="position-keywords"
+              className="mt-3 flex flex-wrap gap-1.5"
+            >
+              {keywordTags.map((kw) => (
+                <span
+                  key={kw}
+                  className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs font-medium"
+                >
+                  {kw}
+                </span>
+              ))}
+            </div>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
