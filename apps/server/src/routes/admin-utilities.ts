@@ -18,6 +18,7 @@ import { adminOnly } from "../middleware/adminOnly";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import { seedProLeague } from "../seeders/pro-league";
+import { reimportSeason3SkillAccess } from "../seeders/season3-skill-access";
 
 const router = Router();
 
@@ -68,6 +69,56 @@ router.post("/seed/pro-league", async (req, res) => {
       error: message,
       durationMs,
     });
+  }
+});
+
+/**
+ * POST /admin/utilities/reimport-season3-access
+ *
+ * Réimporte les accès Primaire/Secondaire de compétences (dont la nouvelle
+ * catégorie Sournoiserie / Scélérates) sur toutes les positions season_3
+ * existantes, depuis la source canonique SKILL_ACCESS_SEASON3. Idempotent :
+ * écrit uniquement `primary/secondarySkills`, sans wiper équipes ni skills.
+ * À relancer après régénération de la source (générateur) ou un dump/restore.
+ */
+router.post("/reimport-season3-access", async (req, res) => {
+  const start = Date.now();
+  try {
+    const result = await reimportSeason3SkillAccess();
+    const durationMs = Date.now() - start;
+
+    await safeRecordAdminActionFromRequest(prisma, req, {
+      action: "utility.reimport-season3-access.run",
+      entity: "Position",
+      newValue: {
+        durationMs,
+        rosters: result.rosters,
+        positionsTotal: result.positionsTotal,
+        updated: result.updated,
+        missing: result.missing.length,
+      },
+    });
+
+    const missingPart = result.missing.length
+      ? `, ${result.missing.length} sans données.`
+      : ".";
+    res.json({
+      ok: true,
+      durationMs,
+      rosters: result.rosters,
+      positionsTotal: result.positionsTotal,
+      updated: result.updated,
+      missing: result.missing,
+      message:
+        `Accès S3 réimportés en ${durationMs}ms : ${result.updated}/` +
+        `${result.positionsTotal} positions mises à jour` +
+        missingPart,
+    });
+  } catch (e) {
+    const durationMs = Date.now() - start;
+    serverLog.error("[admin.utilities.reimport-season3-access] failed:", e);
+    const message = e instanceof Error ? e.message : "Erreur inconnue";
+    res.status(500).json({ ok: false, error: message, durationMs });
   }
 });
 

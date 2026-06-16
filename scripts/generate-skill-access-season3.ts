@@ -1,11 +1,18 @@
 /**
  * Générateur de `packages/game-engine/src/rosters/skill-access-season3.ts`.
  *
- * Lit les tables « Positionnels » de `data/saison3/team/*.md` (colonnes
- * Primaire / Secondaire), normalise la notation (F→S, dédoublonnage), aligne
- * chaque ligne au slug de position correspondant dans season3-rosters.ts
- * (matching roster par nom + alignement par ordre intra-roster), applique les
- * corrections de l'errata de mai 2026, et émet le map TS.
+ * Lit le fichier unique `data/positionnels-bloodbowl-2025.md` (une section
+ * `## <Équipe>` par roster, chacune contenant une table de positionnels avec
+ * les colonnes Primaire / Secondaire), normalise la notation officielle FR
+ * (BB2025) vers les codes canoniques, aligne chaque ligne au slug de position
+ * correspondant dans season3-rosters.ts (matching roster par nom + alignement
+ * par ordre intra-roster), applique les corrections de l'errata de mai 2026,
+ * et émet le map TS.
+ *
+ * Notation source (officielle FR) → codes canoniques :
+ *   G→G, A→A, F→S (Force/Strength), P→P, M→M, S→K (Sournoiserie/Scélérates).
+ * ⚠️ Dans la source, `S` = Sournoiserie et `F` = Force. En interne, `S` = Force
+ *    et `K` = Sournoiserie — d'où la conversion `F→S` ET `S→K` ci-dessous.
  *
  * Usage :
  *   tsx scripts/generate-skill-access-season3.ts          # rapport (dry-run)
@@ -19,7 +26,7 @@ import { TEAM_ROSTERS_BY_RULESET } from "../packages/game-engine/src/rosters/pos
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const MD_DIR = path.join(ROOT, "data/saison3/team");
+const MD_FILE = path.join(ROOT, "data/positionnels-bloodbowl-2025.md");
 const OUT_FILE = path.join(
   ROOT,
   "packages/game-engine/src/rosters/skill-access-season3.ts",
@@ -27,7 +34,10 @@ const OUT_FILE = path.join(
 
 const WRITE = process.argv.includes("--write");
 
-/** Normalise un nom pour matcher fichier/titre ↔ roster.name. */
+/** Ordre canonique des codes catégorie. */
+const CODE_ORDER = ["G", "A", "S", "P", "M", "K"];
+
+/** Normalise un nom pour matcher titre de section ↔ roster.name. */
 function norm(s: string): string {
   return s
     .normalize("NFD")
@@ -36,20 +46,21 @@ function norm(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
-/** Normalise une cellule d'accès -> CSV de codes canoniques (F→S, dédup). */
+/**
+ * Normalise une cellule d'accès (notation source FR) -> CSV de codes canoniques.
+ * `F`→`S` (Force), `S`→`K` (Sournoiserie), `G/A/P/M` identité. Dédoublonne et
+ * réordonne selon CODE_ORDER.
+ */
 function normalizeAccessCell(cell: string): string {
   const seen = new Set<string>();
-  const out: string[] = [];
   for (const ch of cell.toUpperCase()) {
     let code: string | null = null;
-    if (ch === "F") code = "S";
-    else if ("GASPM".includes(ch)) code = ch;
-    if (code && !seen.has(code)) {
-      seen.add(code);
-      out.push(code);
-    }
+    if (ch === "F") code = "S"; // Force → Strength
+    else if (ch === "S") code = "K"; // Sournoiserie → Scélérates
+    else if ("GAPM".includes(ch)) code = ch;
+    if (code) seen.add(code);
   }
-  return out.join(",");
+  return CODE_ORDER.filter((c) => seen.has(c)).join(",");
 }
 
 interface MdRow {
@@ -58,32 +69,43 @@ interface MdRow {
   secondary: string;
 }
 
-/** Parse les lignes positionnelles d'un .md. Retourne titre + lignes. */
-function parseMd(content: string): { title: string; rows: MdRow[] } {
-  const lines = content.split("\n");
-  const title = (lines.find((l) => l.startsWith("# ")) ?? "").replace(/^#\s*/, "").trim();
-  const rows: MdRow[] = [];
-  let inPositionnels = false;
-  for (const line of lines) {
+/**
+ * Parse le fichier unique en sections `## <Équipe>` -> lignes positionnelles.
+ * Chaque table a la structure :
+ *   | Qte | Position | M | F | AG | CP | AR | Compétences | Primaire | Secondaire | Coût |
+ * cells (après split sur `|`) : [_, Qte, Position, M, F, AG, CP, AR,
+ *   Compétences, Primaire, Secondaire, Coût, _] → Primaire=cells[9],
+ *   Secondaire=cells[10].
+ */
+function parseSections(content: string): Map<string, MdRow[]> {
+  const sections = new Map<string, MdRow[]>();
+  let current: MdRow[] | null = null;
+  for (const line of content.split("\n")) {
+    // Titre de section d'équipe : `## ...` (pas le H1 `# ...`).
     if (line.startsWith("## ")) {
-      inPositionnels = norm(line).includes("positionnels");
+      const title = line.replace(/^##\s*/, "").trim();
+      current = [];
+      sections.set(title, current);
       continue;
     }
-    if (!inPositionnels) continue;
+    if (line.startsWith("# ")) {
+      current = null; // H1 doc : hors section équipe
+      continue;
+    }
+    if (!current) continue;
     if (!line.trim().startsWith("|")) continue;
     const cells = line.split("|").map((c) => c.trim());
-    // cells[0]='' (avant 1er |). Structure: [_, Qte, Position, M, F, AG, CP, AR, Compétences, Primaire, Secondaire, Coût, _]
     if (cells.length < 12) continue;
     const position = cells[2];
-    if (position === "Position" || position.startsWith("-")) continue; // header / séparateur
-    if (!position.includes("(")) continue; // ligne positionnelle = "Nom *(Race, Type)*"
-    rows.push({
+    if (position === "Position" || position.startsWith("-")) continue; // header/sep
+    if (!position.includes("(")) continue; // ligne positionnelle = "Nom (Race, Type)"
+    current.push({
       displayName: position,
       primary: normalizeAccessCell(cells[9]),
       secondary: normalizeAccessCell(cells[10]),
     });
   }
-  return { title, rows };
+  return sections;
 }
 
 // --- Corrections errata mai 2026 (Designer's Commentary) ---
@@ -133,8 +155,7 @@ function applyErrata(
   op.primaryRemove?.forEach((c) => pri.delete(c));
   op.secondaryAdd?.forEach((c) => sec.add(c));
   op.secondaryRemove?.forEach((c) => sec.delete(c));
-  const order = (s: Set<string>) =>
-    ["G", "A", "S", "P", "M"].filter((c) => s.has(c)).join(",");
+  const order = (s: Set<string>) => CODE_ORDER.filter((c) => s.has(c)).join(",");
   return { primary: order(pri), secondary: order(sec) };
 }
 
@@ -145,32 +166,26 @@ for (const [key, def] of Object.entries(season3)) {
   rosterByNorm.set(norm(def.name), { key, name: def.name });
 }
 
-const files = fs.readdirSync(MD_DIR).filter((f) => f.endsWith(".md"));
+const content = fs.readFileSync(MD_FILE, "utf8");
+const sections = parseSections(content);
 const accessMap: Record<string, { primary: string; secondary: string }> = {};
 const report: string[] = [];
-const unmatchedFiles: string[] = [];
+const unmatchedSections: string[] = [];
 const mismatched: string[] = [];
 
-for (const file of files) {
-  const content = fs.readFileSync(path.join(MD_DIR, file), "utf8");
-  const { title, rows } = parseMd(content);
-  // Match roster : par titre, sinon par nom de fichier, + trim 's' final.
-  const candidates = [norm(title), norm(file.replace(/\.md$/, ""))];
-  let matched = candidates.map((c) => rosterByNorm.get(c)).find(Boolean);
+for (const [title, rows] of sections) {
+  // Match roster : par titre normalisé, sinon trim 's' final.
+  let matched =
+    rosterByNorm.get(norm(title)) ?? rosterByNorm.get(norm(title).replace(/s$/, ""));
   if (!matched) {
-    matched = candidates
-      .map((c) => rosterByNorm.get(c.replace(/s$/, "")))
-      .find(Boolean);
-  }
-  if (!matched) {
-    unmatchedFiles.push(`${file} (titre="${title}")`);
+    unmatchedSections.push(`"${title}"`);
     continue;
   }
   const rosterDef = season3[matched.key];
   const positions = rosterDef.positions;
   if (positions.length !== rows.length) {
     mismatched.push(
-      `${file} -> ${matched.key}: ${rows.length} lignes .md vs ${positions.length} positions`,
+      `${matched.key}: ${rows.length} lignes .md vs ${positions.length} positions`,
     );
   }
   const n = Math.min(positions.length, rows.length);
@@ -180,31 +195,37 @@ for (const file of files) {
     accessMap[pos.slug] = applyErrata(pos.slug, base);
   }
   report.push(
-    `${matched.key.padEnd(22)} ${String(n).padStart(2)} pos  (${file})`,
+    `${matched.key.padEnd(22)} ${String(n).padStart(2)} pos  ("${title}")`,
   );
 }
 
 // --- Sortie ---
 console.log("=== Rosters mappés ===");
 report.sort().forEach((r) => console.log("  " + r));
-console.log(`\nPositions mappées: ${Object.keys(accessMap).length}`);
-if (unmatchedFiles.length) {
-  console.log("\n=== Fichiers .md NON matchés (ignorés) ===");
-  unmatchedFiles.forEach((f) => console.log("  " + f));
+console.log(`\nSections .md: ${sections.size}`);
+console.log(`Positions mappées: ${Object.keys(accessMap).length}`);
+if (unmatchedSections.length) {
+  console.log("\n=== Sections .md NON matchées (ignorées) ===");
+  unmatchedSections.forEach((f) => console.log("  " + f));
 }
 if (mismatched.length) {
   console.log("\n=== ⚠️  Désalignements de comptage (à vérifier) ===");
   mismatched.forEach((m) => console.log("  " + m));
 }
 
-// Aperçu errata-relevant
-console.log("\n=== Aperçu (slugs errata) ===");
-for (const slug of Object.keys(accessMap)) {
-  if (/runner|ogre/i.test(slug)) {
-    const a = accessMap[slug];
-    console.log(`  ${slug.padEnd(34)} P=[${a.primary}] S=[${a.secondary}]`);
+// Aperçu : positions avec accès Sournoiserie (K)
+console.log("\n=== Aperçu (positions avec Sournoiserie K) ===");
+let kCount = 0;
+for (const slug of Object.keys(accessMap).sort()) {
+  const a = accessMap[slug];
+  if (a.primary.includes("K") || a.secondary.includes("K")) {
+    kCount++;
+    if (kCount <= 12) {
+      console.log(`  ${slug.padEnd(38)} P=[${a.primary}] S=[${a.secondary}]`);
+    }
   }
 }
+console.log(`  ... total positions avec K: ${kCount}`);
 
 if (WRITE) {
   const entries = Object.keys(accessMap)
@@ -218,11 +239,13 @@ if (WRITE) {
  * Accès compétences Primaire/Secondaire par position — BB Season 3.
  *
  * ⚠️ FICHIER GÉNÉRÉ par scripts/generate-skill-access-season3.ts — NE PAS
- * éditer à la main. Source : data/saison3/team/*.md (colonnes Primaire/
- * Secondaire), normalisée (F→S) et corrigée de l'errata de mai 2026.
+ * éditer à la main. Source : data/positionnels-bloodbowl-2025.md (colonnes
+ * Primaire/Secondaire), notation officielle FR convertie en codes canoniques
+ * (F→S Force, S→K Sournoiserie) et corrigée de l'errata de mai 2026.
  * Pour régénérer : tsx scripts/generate-skill-access-season3.ts --write
  *
- * Format : slug position -> { primary, secondary } en CSV de codes G/A/S/P/M.
+ * Format : slug position -> { primary, secondary } en CSV de codes
+ * G/A/S/P/M/K (S=Force, K=Sournoiserie).
  * "" = pool vide renseigné (positions animales sans accès primaire).
  */
 

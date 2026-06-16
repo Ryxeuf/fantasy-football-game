@@ -262,6 +262,7 @@ const CODE_TO_DB_CATEGORY: Readonly<Record<SkillCategoryCode, string>> = {
   S: "Strength",
   P: "Passing",
   M: "Mutation",
+  K: "Scélérates",
 };
 
 export interface AvailableSkill {

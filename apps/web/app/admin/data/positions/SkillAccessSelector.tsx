@@ -6,8 +6,10 @@
  * canoniques "G,A,S,P,M". Vide = pool vide renseigné (ex: position animale).
  */
 
-// `code` = code canonique stocké (S = Force/Strength). `display` = lettre
-// affichée (Force s'abrège "F" en français).
+// `code` = code canonique stocké. `display` = lettre affichée. Force s'abrège
+// "F" en FR alors que son code stocké est "S" ; Sournoiserie s'abrège "S" mais
+// son code stocké est "K" (la notation officielle FR utilise S=Sournoiserie,
+// F=Force ; en interne S=Force et K=Sournoiserie).
 const CATEGORIES: ReadonlyArray<{
   code: string;
   display: string;
@@ -18,15 +20,16 @@ const CATEGORIES: ReadonlyArray<{
   { code: "S", display: "F", label: "Force" },
   { code: "P", display: "P", label: "Passe" },
   { code: "M", display: "M", label: "Mutation" },
+  { code: "K", display: "S", label: "Sournoiserie" },
 ];
 
-const ORDER = ["G", "A", "S", "P", "M"];
+const ORDER = ["G", "A", "S", "P", "M", "K"];
 
 function parse(csv: string): Set<string> {
   const out = new Set<string>();
   for (const ch of (csv || "").toUpperCase()) {
-    if (ch === "F") out.add("S");
-    else if ("GASPM".includes(ch)) out.add(ch);
+    if (ch === "F") out.add("S"); // alias Force
+    else if ("GASPMK".includes(ch)) out.add(ch);
   }
   return out;
 }

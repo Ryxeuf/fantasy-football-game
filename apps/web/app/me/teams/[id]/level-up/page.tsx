@@ -59,22 +59,24 @@ interface SkillsResponse {
   skills: SkillCatalogItem[];
 }
 
-/** Nom de catégorie DB -> code canonique (aligné serveur skill-access.ts). */
+/** Nom de catégorie DB -> code canonique (aligné serveur skill-access.ts).
+ *  « Scélérates » = Sournoiserie (code K). */
 const CATEGORY_CODE: Record<string, string> = {
   General: "G",
   Agility: "A",
   Strength: "S",
   Passing: "P",
   Mutation: "M",
+  "Scélérates": "K",
 };
 
-/** Parse un CSV d'accès en Set de codes (robuste "G,S" / "GS" ; F->S). */
+/** Parse un CSV d'accès en Set de codes (robuste "G,S" / "GS" ; F->S alias). */
 function parseAccess(csv: string | null): Set<string> {
   const out = new Set<string>();
   if (!csv) return out;
   for (const ch of csv.toUpperCase()) {
     if (ch === "F") out.add("S");
-    else if ("GASPM".includes(ch)) out.add(ch);
+    else if ("GASPMK".includes(ch)) out.add(ch);
   }
   return out;
 }

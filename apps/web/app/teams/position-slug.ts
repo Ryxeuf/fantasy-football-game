@@ -76,8 +76,8 @@ export function parseSkillCsv(
 
 /**
  * Parse une CSV d'acces aux competences en codes canoniques ordonnes
- * G/A/S/P/M. La categorie Force est notee "F" dans certaines sources FR :
- * on la normalise en "S". Dedup + ordre stable.
+ * G/A/S/P/M/K. La categorie Force est notee "F" dans certaines sources FR :
+ * on la normalise en "S". "K" = Sournoiserie. Dedup + ordre stable.
  */
 export function parseAccessCodes(
   csv: string | null | undefined,
@@ -86,9 +86,9 @@ export function parseAccessCodes(
   const set = new Set<string>();
   for (const ch of csv.toUpperCase()) {
     if (ch === "F") set.add("S");
-    else if ("GASPM".includes(ch)) set.add(ch);
+    else if ("GASPMK".includes(ch)) set.add(ch);
   }
-  return ["G", "A", "S", "P", "M"].filter((c) => set.has(c));
+  return ["G", "A", "S", "P", "M", "K"].filter((c) => set.has(c));
 }
 
 /** Rend un slug lisible en repli quand aucun nom de competence n'est connu. */

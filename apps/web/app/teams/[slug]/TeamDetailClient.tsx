@@ -54,8 +54,10 @@ function translatePositionName(displayName: string): string {
   return translations[displayName] || displayName;
 }
 
-// Affichage par langue : la catégorie Force/Strength s'abrège "F" en français
-// et "S" en anglais (le code canonique stocké est toujours "S").
+// Affichage par langue. Le code canonique stocké diffère parfois de la lettre
+// affichée : Force (code "S") s'abrège "F" en FR / "S" en EN ; Sournoiserie
+// (code "K") s'abrège "S" en FR (notation officielle) / "K" (Skulduggery) en EN
+// pour éviter la collision avec Strength.
 const ACCESS_DISPLAY: Record<
   string,
   Record<string, { letter: string; label: string }>
@@ -66,6 +68,7 @@ const ACCESS_DISPLAY: Record<
     S: { letter: "F", label: "Force" },
     P: { letter: "P", label: "Passe" },
     M: { letter: "M", label: "Mutation" },
+    K: { letter: "S", label: "Sournoiserie" },
   },
   en: {
     G: { letter: "G", label: "General" },
@@ -73,18 +76,19 @@ const ACCESS_DISPLAY: Record<
     S: { letter: "S", label: "Strength" },
     P: { letter: "P", label: "Passing" },
     M: { letter: "M", label: "Mutation" },
+    K: { letter: "K", label: "Skulduggery" },
   },
 };
 
-/** Parse une CSV d'accès -> codes canoniques ordonnés (F->S, dédup). */
+/** Parse une CSV d'accès -> codes canoniques ordonnés (F->S alias, dédup). */
 function parseAccessCodes(csv: string | null | undefined): string[] {
   if (!csv) return [];
   const set = new Set<string>();
   for (const ch of csv.toUpperCase()) {
     if (ch === "F") set.add("S");
-    else if ("GASPM".includes(ch)) set.add(ch);
+    else if ("GASPMK".includes(ch)) set.add(ch);
   }
-  return ["G", "A", "S", "P", "M"].filter((c) => set.has(c));
+  return ["G", "A", "S", "P", "M", "K"].filter((c) => set.has(c));
 }
 
 /**

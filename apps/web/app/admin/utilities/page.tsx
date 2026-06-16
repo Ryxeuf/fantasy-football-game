@@ -40,6 +40,16 @@ const UTILITIES: ReadonlyArray<UtilityDef> = [
     endpoint: "/admin/utilities/seed/pro-league",
     riskLevel: "low",
   },
+  {
+    key: "reimport-season3-access",
+    icon: "📒",
+    title: "Réimporter les accès Saison 3",
+    description:
+      "Réécrit les accès Primaire/Secondaire de compétences (Général, Agilité, Force, Passe, Mutation, Sournoiserie) sur toutes les positions Saison 3, depuis la source officielle BB2025. " +
+      "Idempotent (écrit uniquement les accès, ne touche ni aux équipes ni aux compétences). À relancer après mise à jour des données de positionnels.",
+    endpoint: "/admin/utilities/reimport-season3-access",
+    riskLevel: "low",
+  },
 ];
 
 interface UtilityResult {

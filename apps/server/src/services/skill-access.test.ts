@@ -34,11 +34,11 @@ describe("dbCategoryToCode", () => {
     expect(dbCategoryToCode("Strength")).toBe("S");
     expect(dbCategoryToCode("Passing")).toBe("P");
     expect(dbCategoryToCode("Mutation")).toBe("M");
+    expect(dbCategoryToCode("Scélérates")).toBe("K"); // Sournoiserie
   });
 
   it("renvoie null pour les catégories non pickables ou nulles", () => {
     expect(dbCategoryToCode("Trait")).toBeNull();
-    expect(dbCategoryToCode("Scélérates")).toBeNull();
     expect(dbCategoryToCode("Extraordinary")).toBeNull();
     expect(dbCategoryToCode(null)).toBeNull();
     expect(dbCategoryToCode(undefined)).toBeNull();
@@ -51,11 +51,12 @@ describe("normalizeAccessLetter", () => {
     expect(normalizeAccessLetter("f")).toBe("S");
   });
 
-  it("garde les autres codes canoniques", () => {
-    for (const c of ["G", "A", "S", "P", "M"]) {
+  it("garde les autres codes canoniques (dont K = Sournoiserie)", () => {
+    for (const c of ["G", "A", "S", "P", "M", "K"]) {
       expect(normalizeAccessLetter(c)).toBe(c);
     }
     expect(normalizeAccessLetter(" a ")).toBe("A");
+    expect(normalizeAccessLetter("k")).toBe("K");
   });
 
   it("renvoie null pour une lettre inconnue", () => {
@@ -112,6 +113,25 @@ describe("checkSkillAccess", () => {
     ).toBe("out-of-pool");
   });
 
+  it("ok pour une skill Sournoiserie (K) si K est dans le pool", () => {
+    expect(
+      checkSkillAccess({
+        type: "primary",
+        skillCode: "K",
+        primarySkills: "A,S,K",
+        secondarySkills: "G",
+      }),
+    ).toBe("ok");
+    expect(
+      checkSkillAccess({
+        type: "primary",
+        skillCode: "K",
+        primarySkills: "G,S",
+        secondarySkills: "A",
+      }),
+    ).toBe("out-of-pool");
+  });
+
   it("out-of-pool quand la skill n'est pas catégorisable (skillCode null)", () => {
     expect(
       checkSkillAccess({ type: "primary", skillCode: null, ...access }),
@@ -152,10 +172,11 @@ describe("checkSkillAccess", () => {
 });
 
 describe("toCanonicalAccessCsv", () => {
-  it("ordonne et dédoublonne en CSV canonique (G,A,S,P,M)", () => {
+  it("ordonne et dédoublonne en CSV canonique (G,A,S,P,M,K)", () => {
     expect(toCanonicalAccessCsv("S,G")).toBe("G,S");
     expect(toCanonicalAccessCsv("a g")).toBe("G,A");
     expect(toCanonicalAccessCsv("M,P,A,S,G")).toBe("G,A,S,P,M");
+    expect(toCanonicalAccessCsv("K,G,A")).toBe("G,A,K"); // Sournoiserie en fin
   });
   it("replie F→S et dédoublonne", () => {
     expect(toCanonicalAccessCsv("G,F")).toBe("G,S");

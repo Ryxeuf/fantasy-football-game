@@ -5,12 +5,18 @@
  * Contexte
  * --------
  * `Position.primarySkills` / `secondarySkills` (BB Season 3) encodent, par CSV
- * de codes catégorie `G/A/S/P/M`, les catégories où un joueur peut piocher en
+ * de codes catégorie `G/A/S/P/M/K`, les catégories où un joueur peut piocher en
  * montée de niveau (primaire vs secondaire). Ce module :
  *   - mappe une catégorie DB (`Skill.category`) vers son code canonique,
  *   - normalise la notation source (la source FR utilise `F` pour Force, EN `S`
  *     pour Strength : on fusionne `F → S`),
  *   - décide si une skill choisie est autorisée pour un type d'avancement.
+ *
+ * Codes canoniques : `G` Général, `A` Agilité, `S` Force (Strength), `P` Passe,
+ * `M` Mutation, `K` Sournoiserie (catégorie DB « Scélérates »). Attention : le
+ * code `S` = Force/Strength (la notation officielle FR abrège Force « F » et
+ * Sournoiserie « S » — la conversion source→canonique se fait à l'import, pas
+ * ici ; cf. scripts/generate-skill-access-season3.ts).
  *
  * Les fonctions pures (sans I/O) sont testables en unitaire ; seul
  * `categoryCodeForSkill` touche la DB (intégration).
@@ -18,7 +24,7 @@
 
 import { prisma } from "../prisma";
 
-export type SkillCategoryCode = "G" | "A" | "S" | "P" | "M";
+export type SkillCategoryCode = "G" | "A" | "S" | "P" | "M" | "K";
 
 export type AdvancementAccessType =
   | "primary"
@@ -30,13 +36,15 @@ export type AdvancementAccessType =
 export type AccessCheck = "ok" | "out-of-pool" | "no-data";
 
 /** Nom de catégorie DB (`Skill.category`) → code canonique. Les catégories
- *  non pickables (Trait, Scélérates, Extraordinary) renvoient `null`. */
+ *  non pickables (Trait, Extraordinary) renvoient `null`. « Scélérates » =
+ *  Sournoiserie, désormais piochable (code `K`) en Season 3. */
 const DB_CATEGORY_TO_CODE: Readonly<Record<string, SkillCategoryCode>> = {
   General: "G",
   Agility: "A",
   Strength: "S",
   Passing: "P",
   Mutation: "M",
+  "Scélérates": "K",
 };
 
 export function dbCategoryToCode(
@@ -47,16 +55,25 @@ export function dbCategoryToCode(
 }
 
 /**
- * Normalise une lettre d'accès (source FR/EN) vers le code canonique.
- * La source `data/saison3` mélange `F` (Force, FR) et `S` (Strength, EN) pour
- * la même catégorie → `F` est replié sur `S`. Lettre inconnue → `null`.
+ * Normalise une lettre d'accès **canonique** vers le code canonique.
+ * Tolère l'alias `F` (Force) → `S` (les saisies admin historiques abrègent
+ * Force « F », le code stocké étant « S »). `K` = Sournoiserie. Lettre
+ * inconnue → `null`. NB : la conversion de la notation source officielle
+ * (où `S` = Sournoiserie, `F` = Force) se fait à l'import, pas ici.
  */
 export function normalizeAccessLetter(
   letter: string,
 ): SkillCategoryCode | null {
   const u = letter.trim().toUpperCase();
-  if (u === "F") return "S"; // Force = Strength
-  if (u === "G" || u === "A" || u === "S" || u === "P" || u === "M") {
+  if (u === "F") return "S"; // alias Force = Strength
+  if (
+    u === "G" ||
+    u === "A" ||
+    u === "S" ||
+    u === "P" ||
+    u === "M" ||
+    u === "K"
+  ) {
     return u;
   }
   return null;
@@ -108,7 +125,14 @@ export function checkSkillAccess(params: {
 }
 
 /** Ordre canonique d'affichage/stockage des codes catégorie. */
-const CODE_ORDER: readonly SkillCategoryCode[] = ["G", "A", "S", "P", "M"];
+const CODE_ORDER: readonly SkillCategoryCode[] = [
+  "G",
+  "A",
+  "S",
+  "P",
+  "M",
+  "K",
+];
 
 /**
  * Normalise une saisie d'accès vers une CSV canonique ordonnée (`"G,S"`).

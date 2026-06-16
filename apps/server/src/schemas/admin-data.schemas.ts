@@ -1,10 +1,11 @@
 import { z } from "zod";
 
-// CSV d'accès compétences (codes catégorie G/A/S/P/M ; F toléré -> S). Vide
-// autorisé (pool vide renseigné), null/absent = accès non géré. Validé souple.
+// CSV d'accès compétences (codes catégorie G/A/S/P/M/K ; F toléré -> S, K =
+// Sournoiserie). Vide autorisé (pool vide renseigné), null/absent = accès non
+// géré. Validé souple.
 const skillAccessCsv = z
   .string()
-  .regex(/^[GASPMFgaspmf,\s]*$/, "Codes catégorie attendus (G/A/S/P/M)")
+  .regex(/^[GASPMKFgaspmkf,\s]*$/, "Codes catégorie attendus (G/A/S/P/M/K)")
   .max(30)
   .optional()
   .nullable();
