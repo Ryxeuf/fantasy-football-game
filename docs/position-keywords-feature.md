@@ -61,7 +61,25 @@ attention aux **deux caches** (mémoire serveur 5 min + HTTP/Next 1 h) — cf.
 Le bouton admin invalide le cache mémoire ; côté navigateur / ISR Next
 (`revalidate=3600`), patienter ou hard refresh.
 
+## Traduction EN (2026-06-16)
+
+`packages/game-engine/src/rosters/keyword-translations.ts` : dictionnaire
+FR→EN des tokens (lignée + type), lookup normalisé (casse/accents/tirets) pour
+absorber les variantes de la source. `translateKeywordsCsv(csv, lang)` traduit
+un CSV (repli FR si token inconnu). L'API renvoie désormais **`keywordsEn`** en
+plus de `keywords` (toujours traduit, comme `displayNameEn`) ; le front choisit
+selon `useLanguage`.
+
+## Filtre par mot-clé (2026-06-16)
+
+Page `/teams/positions` : composant client `PositionKeywordBrowser` qui liste
+les mots-clés distincts (dédupliqués insensible casse/variantes) en étiquettes
+toggables. Sélection = **ET logique** (ex: `Elfe` + `Blitzer` → blitzers elfes).
+Bilingue. Helpers purs testés dans `position-keyword-filter.ts`
+(`collectKeywordOptions`, `filterPositionsByKeywords`). `keywords`/`keywordsEn`
+ajoutés à `ListedPosition`.
+
 ## Suivi possible
 
-- Traduction EN des mots-clés (aujourd'hui affichés tels quels en FR).
-- Filtre / recherche de positions par mot-clé (lignée, type) sur `/teams`.
+- Recherche texte libre en plus des chips.
+- Grouper les chips par catégorie (lignée vs type de joueur).
