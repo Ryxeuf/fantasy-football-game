@@ -144,12 +144,16 @@ function SkillAccessBadges({
  */
 function KeywordTags({
   keywords,
+  keywordsEn,
   className = "",
 }: {
   keywords?: string | null;
+  keywordsEn?: string | null;
   className?: string;
 }) {
-  const tags = (keywords ?? "")
+  const { language } = useLanguage();
+  const source = language === "en" ? keywordsEn ?? keywords : keywords;
+  const tags = (source ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
@@ -437,7 +441,7 @@ export default function TeamDetailClient({
                     >
                       {translatePositionName(position.displayName)}
                     </Link>
-                    <KeywordTags keywords={position.keywords} />
+                    <KeywordTags keywords={position.keywords} keywordsEn={position.keywordsEn} />
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
@@ -515,7 +519,7 @@ export default function TeamDetailClient({
                       {translatePositionName(position.displayName)}
                     </Link>
                   </h3>
-                  <KeywordTags keywords={position.keywords} className="mb-1" />
+                  <KeywordTags keywords={position.keywords} keywordsEn={position.keywordsEn} className="mb-1" />
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs sm:text-sm font-semibold">
                       {position.cost}k {t.teams.po}
