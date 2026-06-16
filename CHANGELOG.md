@@ -1,3 +1,10 @@
+## [1.178.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.178.0...v1.178.1) (2026-06-16)
+
+
+### 🐛 Bug Fixes
+
+* **web:** n'affiche plus 'Introuvable' quand l'equipe est chargee ([5edf454](https://github.com/Ryxeuf/fantasy-football-game/commit/5edf454c3850ba4b578470098bdedfbcaa805f18))
+
 ## [1.178.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.177.1...v1.178.0) (2026-06-16)
 
 
