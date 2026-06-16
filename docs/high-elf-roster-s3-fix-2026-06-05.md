@@ -112,6 +112,27 @@ l'ancien roster (cas typique : « l'équipe ne semble pas à jour »).
 Code : service `apps/server/src/seeders/sync-rosters.ts` (source unique de la
 logique, utilisée par le bouton **et** le CLI `scripts/sync-rosters.ts`).
 
+### ⚠️ Deux caches masquent le changement (2026-06-16)
+
+La base est mise à jour immédiatement par le sync, mais **deux caches** font
+croire que « rien ne change » :
+
+1. **Cache mémoire serveur** (`memoizeAsync`, TTL **5 min**) sur
+   `/api/rosters` & `/api/positions`. Le bouton appelle désormais
+   `invalidateAllMemo()` après écriture → fraîcheur immédiate. **Mais le CLI
+   tourne dans un autre process** : il ne peut pas vider ce cache du serveur en
+   cours d'exécution → après un `db:sync-rosters --write` en CLI, **redémarrer
+   le conteneur serveur** (`docker compose restart server`) ou attendre 5 min.
+2. **Cache HTTP navigateur / Next.js / CDN** (`Cache-Control: max-age=3600` =
+   **1 h**, posé par `publicCache`). Même API à jour, le client peut servir une
+   copie jusqu'à 1 h → **hard refresh** (Cmd+Shift+R) pour voir tout de suite,
+   sinon patienter.
+
+Diagnostic rapide : comparer la base (`psql`/Prisma) à l'API (`wget` interne au
+conteneur serveur, qui ignore le cache HTTP mais subit le cache mémoire). Si la
+base est bonne et l'API non → cache mémoire (restart/invalidation). Si l'API est
+bonne et le navigateur non → cache HTTP (hard refresh).
+
 ## ⚠️ Shadows `.js` (CRITIQUE pour que le fix prenne effet)
 
 `packages/game-engine/src/` contient un arbre `.js` compilé (~116 fichiers)
