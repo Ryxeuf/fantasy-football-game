@@ -4,7 +4,7 @@
  */
 
 import { Router } from "express";
-import { getPositionNameEn } from "@bb/game-engine";
+import { getPositionNameEn, translateKeywordsCsv } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
@@ -69,6 +69,8 @@ interface TransformedPosition {
   skills: string;
   /** Mots-clés officiels (lignée + type, ex: "Elfe, Trois-quart"). */
   keywords: string | null;
+  /** Mots-clés traduits EN ("Elf, Lineman"). */
+  keywordsEn: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
   rosterSlug: string;
@@ -205,6 +207,7 @@ function transformPosition(
     av: position.av,
     skills: position.skills.map((ps) => ps.skill.slug).join(","),
     keywords: position.keywords ?? null,
+    keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
     primarySkills: position.primarySkills ?? null,
     secondarySkills: position.secondarySkills ?? null,
     rosterSlug: position.roster.slug,

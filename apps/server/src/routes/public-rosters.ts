@@ -4,7 +4,7 @@
  */
 
 import { Router } from "express";
-import { getPositionNameEn } from "@bb/game-engine";
+import { getPositionNameEn, translateKeywordsCsv } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import {
   resolveRuleset,
@@ -58,6 +58,7 @@ interface RosterDetailPayload {
       av: number;
       skills: string;
       keywords: string | null;
+      keywordsEn: string | null;
       primarySkills: string | null;
       secondarySkills: string | null;
     }>;
@@ -253,6 +254,7 @@ function transformRoster(roster: any, isEnglish: boolean) {
       av: position.av,
       skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
       keywords: position.keywords ?? null,
+      keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
     })),
