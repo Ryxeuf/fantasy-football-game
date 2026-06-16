@@ -75,6 +75,16 @@ vi.mock(
   }),
 );
 
+vi.mock(
+  "../../../../packages/game-engine/src/rosters/keywords-season3",
+  () => ({
+    KEYWORDS_SEASON3: {
+      high_elf_blitzer_haut_elfe: "Elfe, Blitzer",
+      high_elf_trois_quart_haut_elfe: "Elfe, Trois-quart",
+    },
+  }),
+);
+
 import { prisma } from "../prisma";
 import { syncRosters } from "./sync-rosters";
 
@@ -144,12 +154,13 @@ describe("syncRosters", () => {
 
     // Purge de l'orphelin par id.
     expect(posDelete).toHaveBeenCalledWith({ where: { id: "old1" } });
-    // Update du Lion Blanc (nom + accès écrits).
+    // Update du Lion Blanc (nom + accès + mots-clés écrits).
     expect(posUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "p-existing" },
         data: expect.objectContaining({
           displayName: "Lion Blanc",
+          keywords: "Elfe, Blitzer",
           primarySkills: "G,A",
           secondarySkills: "S,P",
         }),

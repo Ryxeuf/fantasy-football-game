@@ -35,6 +35,7 @@ import {
   type Ruleset,
 } from "../../../../packages/game-engine/src/rosters/positions";
 import { SKILL_ACCESS_SEASON3 } from "../../../../packages/game-engine/src/rosters/skill-access-season3";
+import { KEYWORDS_SEASON3 } from "../../../../packages/game-engine/src/rosters/keywords-season3";
 
 export interface SyncRostersOptions {
   /** Applique réellement les écritures. `false` (défaut) = dry-run. */
@@ -150,6 +151,9 @@ export async function syncRosters(
       for (const def of rosterDef.positions) {
         const access =
           ruleset === "season_3" ? SKILL_ACCESS_SEASON3[def.slug] : undefined;
+        // Mots-clés officiels (lignée + type), uniquement renseignés pour S3.
+        const keywords =
+          ruleset === "season_3" ? KEYWORDS_SEASON3[def.slug] ?? null : null;
         const data = {
           rosterId: roster.id,
           slug: def.slug,
@@ -163,6 +167,7 @@ export async function syncRosters(
           // Frontière game-engine (sentinel 0 = pas de passe) → DB (null = "-").
           pa: def.pa === 0 ? null : def.pa,
           av: def.av,
+          keywords,
           primarySkills: access ? access.primary : null,
           secondarySkills: access ? access.secondary : null,
         };
