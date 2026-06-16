@@ -1,3 +1,21 @@
+## [1.177.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.176.0...v1.177.0) (2026-06-16)
+
+
+### ✨ Features
+
+* **admin:** bouton "Synchroniser les rosters" (apercu + application) ([4e701e8](https://github.com/Ryxeuf/fantasy-football-game/commit/4e701e8001cc04b698127ed0da36dc1f27bd52a3))
+* **admin:** endpoint POST /admin/utilities/sync-rosters ([b7418ad](https://github.com/Ryxeuf/fantasy-football-game/commit/b7418adede844f25994fd69d34010beb3fe95d65))
+
+
+### 📝 Documentation
+
+* **rosters:** documente le bouton admin sync-rosters ([3080ec2](https://github.com/Ryxeuf/fantasy-football-game/commit/3080ec2ec301d252735e62401167f11bd780e972))
+
+
+### ♻️ Code Refactoring
+
+* **rosters:** extrait syncRosters en service reutilisable ([648657e](https://github.com/Ryxeuf/fantasy-football-game/commit/648657eb113905ba7ab98642e289078f0634709c))
+
 ## [1.176.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.175.0...v1.176.0) (2026-06-16)
 
 
