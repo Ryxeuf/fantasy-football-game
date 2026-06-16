@@ -8,6 +8,7 @@ import {
   type ListedPosition,
 } from "../position-rankings";
 import { stripRosterPrefix, cleanDisplayName } from "../position-slug";
+import PositionKeywordBrowser from "./PositionKeywordBrowser";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const TOP_N = 8;
@@ -149,6 +150,10 @@ export default async function PositionsStudiesPage() {
             Données de positions indisponibles pour le moment.
           </p>
         ) : (
+          <>
+          <div className="mb-6">
+            <PositionKeywordBrowser positions={positions} />
+          </div>
           <div
             className="grid grid-cols-1 md:grid-cols-2 gap-5"
             data-testid="positions-leaderboards"
@@ -198,6 +203,7 @@ export default async function PositionsStudiesPage() {
               );
             })}
           </div>
+          </>
         )}
       </div>
     </>

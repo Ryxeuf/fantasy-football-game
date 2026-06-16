@@ -28,6 +28,10 @@ export interface ListedPosition {
   readonly pa: number;
   readonly av: number;
   readonly skills: string;
+  /** Mots-clés FR (lignée + type, ex: "Elfe, Trois-quart"). */
+  readonly keywords?: string | null;
+  /** Mots-clés traduits EN ("Elf, Lineman"). */
+  readonly keywordsEn?: string | null;
 }
 
 export type StatKey = "ma" | "st" | "ag" | "pa" | "av" | "cost";
