@@ -89,6 +89,29 @@ docker compose exec server pnpm db:sync-rosters --ruleset=season_3 --roster=high
 Le cache de l'API `/api/rosters` est de 5 min : recharger après ~5 min (ou
 redémarrer le conteneur serveur) pour voir le roster à jour côté builder.
 
+### Bouton admin (sans SSH) — ajouté 2026-06-16
+
+La même logique est exposée dans **Admin → Utilitaires → « Synchroniser les
+rosters »** (`POST /admin/utilities/sync-rosters`, `adminOnly`). C'est le bon
+outil quand le code à jour est déjà déployé mais que la base prod garde
+l'ancien roster (cas typique : « l'équipe ne semble pas à jour »).
+
+- Le bouton lance d'abord un **dry-run** (`{ write: false }`) qui renvoie le
+  diff (positions upsert / purgées) et **liste les positions qui seraient
+  supprimées**. Aucun effet de bord.
+- Un second bouton **« Appliquer les changements »** (avec confirmation)
+  rejoue avec `{ write: true }` et trace un audit log
+  (`utility.sync-rosters.run`).
+- Body optionnel `ruleset` / `roster` pour cibler (l'UI synchronise tout).
+
+> Complète le bouton « Réimporter les accès Saison 3 » qui, lui, ne réécrit
+> **que** `primary/secondarySkills` — il ne renomme rien et ne corrige pas les
+> stats/compétences. Pour un renommage (Blitzer Haut Elfe → Lion Blanc), il
+> faut ce sync complet.
+
+Code : service `apps/server/src/seeders/sync-rosters.ts` (source unique de la
+logique, utilisée par le bouton **et** le CLI `scripts/sync-rosters.ts`).
+
 ## ⚠️ Shadows `.js` (CRITIQUE pour que le fix prenne effet)
 
 `packages/game-engine/src/` contient un arbre `.js` compilé (~116 fichiers)
