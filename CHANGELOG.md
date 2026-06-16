@@ -1,3 +1,19 @@
+## [1.175.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.174.0...v1.175.0) (2026-06-16)
+
+
+### ✨ Features
+
+* **db:** rend PA (passe) nullable sur Position et TeamPlayer ([ed780b8](https://github.com/Ryxeuf/fantasy-football-game/commit/ed780b8fb8f9fc1c6b868c034b3dd2e72bdfed11))
+* **positions:** pages par position, études, comparateur, stats & noms EN (Annexe B) ([#906](https://github.com/Ryxeuf/fantasy-football-game/issues/906)) ([da6b887](https://github.com/Ryxeuf/fantasy-football-game/commit/da6b887594af7a27b1fbe178a997774884e75db9))
+* **rosters:** ajoute les Bretonniens et corrige des ecarts de donnees S3 ([#905](https://github.com/Ryxeuf/fantasy-football-game/issues/905)) ([5d6bb7d](https://github.com/Ryxeuf/fantasy-football-game/commit/5d6bb7da34f9b5dcd8a81d5746db942ddcdd7691))
+* **server:** supporte PA absent (null) — API, seed et frontieres moteur ([6e78c5f](https://github.com/Ryxeuf/fantasy-football-game/commit/6e78c5f39404397d5422b39c96662c730643ec5b))
+* **web:** affiche "-" pour les positions sans PA + saisie admin optionnelle ([410b502](https://github.com/Ryxeuf/fantasy-football-game/commit/410b50271a501651ead6066eafe3f915d34c5bf5))
+
+
+### 📝 Documentation
+
+* **openspec:** propose PA nullable sur Position et TeamPlayer ([bec5808](https://github.com/Ryxeuf/fantasy-football-game/commit/bec5808838d16512532a9d0c0ae114cbd0318f8f))
+
 ## [1.174.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.173.1...v1.174.0) (2026-06-15)
 
 
