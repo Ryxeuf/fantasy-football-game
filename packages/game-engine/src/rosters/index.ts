@@ -21,6 +21,13 @@ export {
 // Noms anglais des positions (surfaces bilingues : pages position, hreflang)
 export { POSITION_NAMES_EN, getPositionNameEn } from './position-names-en';
 
+// Mots-clés des positions (season_3) + traduction EN
+export { KEYWORDS_SEASON3 } from './keywords-season3';
+export {
+  translateKeywordsCsv,
+  translateKeywordToken,
+} from './keyword-translations';
+
 // Export des Star Players
 export * from './star-players';
 export { 
