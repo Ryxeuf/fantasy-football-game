@@ -39,7 +39,7 @@ interface ApiPosition {
   ma: number;
   st: number;
   ag: number;
-  pa: number;
+  pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
   primarySkills: string | null;
@@ -178,7 +178,7 @@ export async function generateMetadata({
   const segment = stripRosterPrefix(position.slug, roster.slug);
   const url = `${BASE_URL}/teams/${roster.slug}/${segment}`;
   const title = `${name} — ${roster.name} | Position Blood Bowl`;
-  const description = `${name} du roster ${roster.name} (Blood Bowl) : MA ${position.ma}, ST ${position.st}, AG ${position.ag}+, PA ${position.pa}+, AV ${position.av}+, cout ${position.cost}k po. Competences de depart, acces et positions liees.`;
+  const description = `${name} du roster ${roster.name} (Blood Bowl) : MA ${position.ma}, ST ${position.st}, AG ${position.ag}+, PA ${position.pa != null ? `${position.pa}+` : "-"}, AV ${position.av}+, cout ${position.cost}k po. Competences de depart, acces et positions liees.`;
   return {
     title,
     description,
@@ -354,7 +354,7 @@ export default async function PositionDetailPage({
                     {box.label}
                   </div>
                   <div className="text-base sm:text-lg font-bold font-mono">
-                    {position[box.key]}
+                    {position[box.key] ?? "-"}
                   </div>
                 </div>
               ))}

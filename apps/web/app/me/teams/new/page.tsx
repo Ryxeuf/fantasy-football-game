@@ -31,7 +31,7 @@ type Position = {
   ma: number;
   st: number;
   ag: number;
-  pa: number;
+  pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
 };
@@ -210,11 +210,18 @@ export default function NewTeamBuilder() {
   );
   const remainingBudget = teamValue - total - staffCost;
 
+  // Le moteur (pur) attend pa: number avec sentinel 0 = "pas de passe".
+  // La DB sert null pour "-" ; on recoalesce à la frontière moteur.
+  const enginePositions = useMemo(
+    () => positions.map((p) => ({ ...p, pa: p.pa ?? 0 })),
+    [positions],
+  );
+
   // Joueurs non-Linemen sélectionnés (postes spécialisés + Gros Bras) et
   // plafond éventuel du format (Sevens = 4).
   const nonLinemenCount = useMemo(
-    () => countNonLinemen(positions, counts),
-    [positions, counts],
+    () => countNonLinemen(enginePositions, counts),
+    [enginePositions, counts],
   );
   const nonLinemenFull =
     constraints.maxNonLinemen !== null &&
@@ -226,7 +233,7 @@ export default function NewTeamBuilder() {
     () =>
       validateFormatSelection({
         format,
-        positions,
+        positions: enginePositions,
         counts,
         starPlayerCount: selectedStarPlayers.length,
         rerolls,
@@ -235,7 +242,7 @@ export default function NewTeamBuilder() {
         apothecary,
         dedicatedFans,
       }),
-    [format, positions, counts, selectedStarPlayers, rerolls, cheerleaders, assistants, apothecary, dedicatedFans],
+    [format, enginePositions, counts, selectedStarPlayers, rerolls, cheerleaders, assistants, apothecary, dedicatedFans],
   );
 
   const rulesetLabels: Record<Ruleset, string> = {

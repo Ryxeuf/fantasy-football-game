@@ -44,6 +44,21 @@ describe("buildPositionDetailSchema", () => {
   it("encode les stats dans la description (citabilite)", () => {
     expect(String(graph[0].description)).toContain("MA 9");
     expect(String(graph[0].description)).toContain("85k po");
+    expect(String(graph[0].description)).toContain("PA 4+");
+  });
+
+  // Non-régression : une position sans passe (PA null, ex. Cinglé Gobelin)
+  // doit afficher "PA -" et jamais "PA null+" / "PA 0+".
+  it("affiche PA - quand la position n'a pas de passe", () => {
+    const noPa = buildPositionDetailSchema({
+      position: { ...POSITION, pa: null },
+      baseUrl: BASE,
+    });
+    const noPaGraph = noPa["@graph"] as Array<Record<string, unknown>>;
+    const description = String(noPaGraph[0].description);
+    expect(description).toContain("PA -");
+    expect(description).not.toContain("null");
+    expect(description).not.toContain("PA 0");
   });
 
   it("construit un fil d'Ariane a 4 niveaux", () => {

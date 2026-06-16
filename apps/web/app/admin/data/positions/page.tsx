@@ -304,7 +304,7 @@ export default function AdminPositionsPage() {
           }
         } else {
           // Partial search in full stats string
-          const statsStr = `${position.ma}/${position.st}/${position.ag}/${position.pa}/${position.av}`;
+          const statsStr = `${position.ma}/${position.st}/${position.ag}/${position.pa ?? "-"}/${position.av}`;
           if (!statsStr.includes(statsSearch)) {
             return false;
           }
@@ -531,7 +531,7 @@ export default function AdminPositionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm text-gray-700">
-                        {position.ma}/{position.st}/{position.ag}/{position.pa}/{position.av}
+                        {position.ma}/{position.st}/{position.ag}/{position.pa ?? "-"}/{position.av}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-xs text-gray-600 max-w-xs">

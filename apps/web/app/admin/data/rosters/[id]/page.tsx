@@ -559,7 +559,7 @@ export default function AdminRosterDetailPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm text-gray-700">
-                      {position.ma}/{position.st}/{position.ag}/{position.pa}/{position.av}
+                      {position.ma}/{position.st}/{position.ag}/{position.pa ?? "-"}/{position.av}
                     </span>
                   </td>
                   <td className="px-6 py-4">

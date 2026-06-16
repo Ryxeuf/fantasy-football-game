@@ -133,7 +133,7 @@ export default function NewPositionPage() {
         ma: parseInt(formData.get("ma") as string),
         st: parseInt(formData.get("st") as string),
         ag: parseInt(formData.get("ag") as string),
-        pa: parseInt(formData.get("pa") as string),
+        pa: formData.get("pa") ? parseInt(formData.get("pa") as string) : null,
         av: parseInt(formData.get("av") as string),
         keywords: formData.get("keywords") as string || null,
         primarySkills,
@@ -273,11 +273,11 @@ export default function NewPositionPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">PA *</label>
+            <label className="block text-sm font-medium mb-1">PA</label>
             <input
               type="number"
               name="pa"
-              required
+              placeholder="Laissez vide pour -"
               className="w-full border rounded px-3 py-2"
             />
           </div>

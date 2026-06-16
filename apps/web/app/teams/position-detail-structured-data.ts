@@ -26,7 +26,7 @@ export interface PositionDetailInput {
   ma: number;
   st: number;
   ag: number;
-  pa: number;
+  pa: number | null; // null = pas de passe ("-")
   av: number;
 }
 
@@ -36,7 +36,7 @@ export interface BuildPositionDetailSchemaInput {
 }
 
 function statsSentence(p: PositionDetailInput): string {
-  return `Position ${p.name} du roster ${p.rosterName} : MA ${p.ma}, ST ${p.st}, AG ${p.ag}+, PA ${p.pa}+, AV ${p.av}+. Cout ${p.cost}k po.`;
+  return `Position ${p.name} du roster ${p.rosterName} : MA ${p.ma}, ST ${p.st}, AG ${p.ag}+, PA ${p.pa != null ? `${p.pa}+` : "-"}, AV ${p.av}+. Cout ${p.cost}k po.`;
 }
 
 export function buildPositionDetailSchema(

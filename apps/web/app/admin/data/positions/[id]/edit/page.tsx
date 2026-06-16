@@ -16,7 +16,7 @@ type Position = {
   ma: number;
   st: number;
   ag: number;
-  pa: number;
+  pa: number | null;
   av: number;
   keywords?: string | null;
   primarySkills?: string | null;
@@ -164,7 +164,7 @@ export default function EditPositionPage() {
         ma: parseInt(formData.get("ma") as string),
         st: parseInt(formData.get("st") as string),
         ag: parseInt(formData.get("ag") as string),
-        pa: parseInt(formData.get("pa") as string),
+        pa: formData.get("pa") ? parseInt(formData.get("pa") as string) : null,
         av: parseInt(formData.get("av") as string),
         keywords: formData.get("keywords") as string || null,
         primarySkills: primaryAccess,
@@ -282,12 +282,12 @@ export default function EditPositionPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">PA *</label>
+            <label className="block text-sm font-medium mb-1">PA</label>
             <input
               type="number"
               name="pa"
-              defaultValue={position.pa}
-              required
+              defaultValue={position.pa ?? ""}
+              placeholder="Laissez vide pour -"
               className="w-full border rounded px-3 py-2"
             />
           </div>

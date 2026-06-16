@@ -473,7 +473,7 @@ export default function TeamDetailPage() {
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ma}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.st}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ag}</td>
-                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.pa}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.pa ?? "-"}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.av}</td>
                       <td className="p-3 sm:p-4">
                         <SkillTooltip 
@@ -521,7 +521,7 @@ export default function TeamDetailPage() {
                       </div>
                       <div className="text-center">
                         <div className="text-gray-500">PA</div>
-                        <div className="font-mono font-semibold">{p.pa}</div>
+                        <div className="font-mono font-semibold">{p.pa ?? "-"}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-gray-500">AV</div>

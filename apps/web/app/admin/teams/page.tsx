@@ -560,7 +560,7 @@ export default function AdminTeamsPage() {
                             <td className="p-2">{player.ma}</td>
                             <td className="p-2">{player.st}</td>
                             <td className="p-2">{player.ag}</td>
-                            <td className="p-2">{player.pa}</td>
+                            <td className="p-2">{player.pa ?? "-"}</td>
                             <td className="p-2">{player.av}</td>
                             <td className="p-2 text-xs text-gray-600">
                               {player.skills || "—"}
