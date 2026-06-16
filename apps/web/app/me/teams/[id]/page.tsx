@@ -8,6 +8,7 @@ import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
+import { shouldShowTeamLoadError } from "./team-detail-error";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
@@ -46,11 +47,17 @@ export default function TeamDetailPage() {
       : "";
 
   useEffect(() => {
+    // Garde d'annulation : la page se charge parfois 2x (ex: redirection
+    // `?welcome=1` post-création + 404 transitoire en read-after-write). Sans
+    // cleanup, une exécution périmée qui échoue posait un "Introuvable"
+    // persistant alors qu'une autre avait déjà chargé l'équipe.
+    let cancelled = false;
     (async () => {
       setError(null);
       setLoading(true);
       try {
         const me = await fetchJSON("/auth/me");
+        if (cancelled) return;
         if (!me?.user) {
           window.location.href = "/login";
           return;
@@ -62,30 +69,36 @@ export default function TeamDetailPage() {
           currentMatch: unknown;
           localMatchStats: unknown;
         }>(`/team/${id}`);
+        if (cancelled) return;
         setData(d);
-        
+        setError(null);
+
         // Charger le nom du roster depuis l'API selon la langue
         if (d?.team?.roster) {
           const lang = language === "en" ? "en" : "fr";
           try {
             const rulesetQuery = d.team.ruleset ? `&ruleset=${encodeURIComponent(d.team.ruleset)}` : "";
             const rosterResponse = await fetch(`${API_BASE}/api/rosters/${d.team.roster}?lang=${lang}${rulesetQuery}`);
+            if (cancelled) return;
             if (rosterResponse.ok) {
               const rosterData = await rosterResponse.json();
-              setRosterName(rosterData.roster?.name || d.team.roster);
+              if (!cancelled) setRosterName(rosterData.roster?.name || d.team.roster);
             } else {
               setRosterName(d.team.roster);
             }
           } catch {
-            setRosterName(d.team.roster);
+            if (!cancelled) setRosterName(d.team.roster);
           }
         }
       } catch (e: any) {
-        setError(e.message || t.teams.error);
+        if (!cancelled) setError(e.message || t.teams.error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [id, t, language]);
 
   const handleRecalculate = async () => {
@@ -290,7 +303,7 @@ export default function TeamDetailPage() {
         </div>
       </div>
 
-      {error && (
+      {shouldShowTeamLoadError(error, Boolean(team)) && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
