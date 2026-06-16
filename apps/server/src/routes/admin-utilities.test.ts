@@ -40,6 +40,12 @@ vi.mock("../seeders/sync-rosters", () => ({
   syncRosters: (opts: unknown) => syncRosters(opts),
 }));
 
+const invalidateAllMemo = vi.fn();
+
+vi.mock("../utils/memoize-async", () => ({
+  invalidateAllMemo: () => invalidateAllMemo(),
+}));
+
 import express from "express";
 import http from "http";
 import utilitiesRouter from "./admin-utilities";
@@ -235,8 +241,10 @@ describe("POST /admin/utilities/sync-rosters", () => {
     expect(syncRosters).toHaveBeenCalledWith(
       expect.objectContaining({ write: false }),
     );
-    // CRITIQUE : pas d'audit log pour un dry-run (aucun effet de bord).
+    // CRITIQUE : pas d'audit log NI d'invalidation cache pour un dry-run
+    // (aucun effet de bord).
     expect(mockedAudit).not.toHaveBeenCalled();
+    expect(invalidateAllMemo).not.toHaveBeenCalled();
   });
 
   it("write=true : applique et trace un audit log", async () => {
@@ -255,6 +263,8 @@ describe("POST /admin/utilities/sync-rosters", () => {
     expect(syncRosters).toHaveBeenCalledWith(
       expect.objectContaining({ write: true }),
     );
+    // Invalide le cache mémoire des rosters/positions pour visibilité immédiate.
+    expect(invalidateAllMemo).toHaveBeenCalledTimes(1);
     expect(mockedAudit).toHaveBeenCalledWith(
       prisma,
       expect.anything(),

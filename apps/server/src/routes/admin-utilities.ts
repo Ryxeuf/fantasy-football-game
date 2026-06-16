@@ -19,6 +19,7 @@ import { adminOnly } from "../middleware/adminOnly";
 import { validate } from "../middleware/validate";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
+import { invalidateAllMemo } from "../utils/memoize-async";
 import { seedProLeague } from "../seeders/pro-league";
 import { reimportSeason3SkillAccess } from "../seeders/season3-skill-access";
 import { syncRosters } from "../seeders/sync-rosters";
@@ -44,6 +45,10 @@ router.post("/seed/pro-league", async (req, res) => {
   try {
     await seedProLeague();
     const durationMs = Date.now() - start;
+
+    // Reference data fraîchement seedée : drop le cache mémoire pour la rendre
+    // visible au prochain appel sans attendre le TTL.
+    invalidateAllMemo();
 
     const [leagueCount, teamCount] = await Promise.all([
       prisma.proLeague.count(),
@@ -89,6 +94,10 @@ router.post("/reimport-season3-access", async (req, res) => {
   try {
     const result = await reimportSeason3SkillAccess();
     const durationMs = Date.now() - start;
+
+    // Les accès écrits doivent être visibles immédiatement côté /api/positions
+    // & /api/rosters (cache mémoire 5 min sinon).
+    invalidateAllMemo();
 
     await safeRecordAdminActionFromRequest(prisma, req, {
       action: "utility.reimport-season3-access.run",
@@ -154,8 +163,12 @@ router.post("/sync-rosters", validate(syncRostersSchema), async (req, res) => {
     const result = await syncRosters(body);
     const durationMs = Date.now() - start;
 
-    // Audit uniquement les écritures réelles (le dry-run n'a aucun effet de bord).
+    // Audit + invalidation uniquement sur écriture réelle (le dry-run n'a
+    // aucun effet de bord). Sans ça, le cache mémoire `memoizeAsync` des
+    // endpoints /api/rosters & /api/positions (TTL 5 min) continuerait à
+    // servir l'ancien roster malgré la base à jour.
     if (result.write) {
+      invalidateAllMemo();
       await safeRecordAdminActionFromRequest(prisma, req, {
         action: "utility.sync-rosters.run",
         entity: "Position",
