@@ -1,3 +1,10 @@
+## [1.180.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.179.0...v1.180.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **blog:** page admin de génération d'article via IA (iframe n8n) ([ef8dea6](https://github.com/Ryxeuf/fantasy-football-game/commit/ef8dea6866c1109c14ae449855ad33faf42663bb))
+
 ## [1.179.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.178.1...v1.179.0) (2026-06-17)
 
 
