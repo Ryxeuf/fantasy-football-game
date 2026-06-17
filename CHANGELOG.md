@@ -1,3 +1,11 @@
+## [1.179.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.178.1...v1.179.0) (2026-06-17)
+
+
+### ✨ Features
+
+* **blog:** aperçu admin d'un brouillon avec rendu final ([99b31c4](https://github.com/Ryxeuf/fantasy-football-game/commit/99b31c4aec0985bdb48404c702fdfc9b99ab4428))
+* **blog:** endpoint d'upload d'images authentifié (admin + n8n) ([2edb13f](https://github.com/Ryxeuf/fantasy-football-game/commit/2edb13f73f5ea8156ddaec85f2d85b0874efc186))
+
 ## [1.178.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.178.0...v1.178.1) (2026-06-16)
 
 
