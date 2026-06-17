@@ -100,13 +100,22 @@ export default function AdminBlogPage() {
             Articles rédigés en WYSIWYG. Brouillons invisibles côté public.
           </p>
         </div>
-        <Link
-          href={"/admin/blog/new" as never}
-          className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 shadow-md transition-all flex items-center gap-2"
-        >
-          <span>+</span>
-          <span>Nouvel article</span>
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href={"/admin/blog/generate" as never}
+            className="px-5 py-2.5 bg-nuffle-anthracite text-white rounded-lg font-medium hover:bg-nuffle-anthracite/90 shadow-md transition-all flex items-center gap-2"
+          >
+            <span>🤖</span>
+            <span>Générer via IA</span>
+          </Link>
+          <Link
+            href={"/admin/blog/new" as never}
+            className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 shadow-md transition-all flex items-center gap-2"
+          >
+            <span>+</span>
+            <span>Nouvel article</span>
+          </Link>
+        </div>
       </div>
 
       {error && (

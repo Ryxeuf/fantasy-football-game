@@ -178,6 +178,11 @@ de la sanitization serveur côté écriture (jamais du client).
   Modifier / Aperçu / Voir publié / Supprimer.
 - `app/admin/blog/new/page.tsx` — création, redirige vers l'edit après
   succès.
+- `app/admin/blog/generate/page.tsx` — **génération via IA** : encapsule le
+  formulaire n8n (`https://n8n.ryxeuf.fr/form/nuffle-blog-gen-v2`) dans une
+  iframe, avec repli « ouvrir dans un nouvel onglet » si l'embed est bloqué
+  (CSP `frame-src` Traefik ou `X-Frame-Options` n8n). Lien « 🤖 Générer via
+  IA » dans l'en-tête de la liste.
 - `app/admin/blog/[id]/edit/page.tsx` — édition, affiche le statut +
   publishedAt actuel.
 - `app/admin/blog/BlogPostForm.tsx` — formulaire partagé (titre,
