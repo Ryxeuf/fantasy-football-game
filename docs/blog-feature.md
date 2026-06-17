@@ -51,10 +51,63 @@ brouillon puis republie).
 - `PATCH /posts/:id` — update partielle, sanitize si contentHtml fourni,
   set publishedAt à la première publication uniquement
 - `DELETE /posts/:id` — suppression définitive
+- `POST /upload?filename=<slug>` — **upload d'image** (voir ci-dessous)
 
 Chaque mutation déclenche `safeRecordAdminActionFromRequest` (audit log)
 + `invalidatePublicBlogCache()` (drop cache memoizeAsync namespace
 `public-blog`).
+
+### Upload d'images (`POST /api/admin/blog/upload`)
+
+Endpoint authentifié (`authUser + adminOnly`, comme tout `/api/admin/blog/*`)
+qui stocke une image et renvoie son URL publique. Pensé pour l'éditeur admin
+**et** pour une automatisation externe (workflow n8n).
+
+- **Corps** : le **binaire brut** de l'image (pas de multipart). Le serveur
+  parse via `express.raw` (`apps/server/src/routes/admin-blog.ts`).
+- **Query** : `?filename=<base>` optionnel (slug de l'article) — sert de base
+  de nom ; le serveur **régénère** un nom unique `\<base\>-\<rand\>.\<ext\>`.
+- **Validation** : type déterminé par **magic bytes** (PNG/JPEG/GIF/WEBP),
+  jamais par le `Content-Type` client ; taille max **8 Mo** ; nom de fichier
+  régénéré côté serveur (pas de path traversal). Helpers + tests :
+  `apps/server/src/utils/blog-upload.ts`.
+- **Réponse 201** : `{ url, filename, mime, bytes }`. `url` est insérable tel
+  quel dans `coverImageUrl` ou dans le contenu (img). Erreurs : 400 (corps
+  vide / invalide), 413 (trop gros), 415 (format non supporté).
+
+**Stockage & service** — point d'architecture important :
+
+- Dossier de destination : `BLOG_UPLOAD_DIR` (env). Défaut dev :
+  `apps/web/public/images/blog` (servi par Next). Le dossier **n'est pas
+  versionné** (`.gitignore` + `.gitkeep`).
+- Le **serveur Express sert lui-même** le dossier via
+  `express.static("/images/blog", …)`. En prod, les conteneurs `web` et
+  `server` sont **séparés** (images GHCR distinctes, pas de volume partagé) :
+  Next ne voit donc pas les fichiers uploadés. C'est pourquoi le serveur les
+  sert, sur un **volume persistant**.
+- Prod (`docker-compose.prod.yml`) : volume `blog_uploads` monté sur
+  `/data/blog-images`, `BLOG_UPLOAD_DIR=/data/blog-images`,
+  `BLOG_ASSET_PUBLIC_BASE=https://api.nufflearena.fr` (URLs renvoyées
+  **absolues** sur l'hôte API). En dev, base vide ⇒ URL relative
+  `/images/blog/x` servie par Next.
+- Les quelques visuels historiques déjà commités dans `apps/web/public/images/blog`
+  restent servis par le build Next (URLs relatives) ; seuls les nouveaux
+  uploads passent par le serveur.
+
+**Usage n8n** (remplace l'upload ImgBB du workflow `n8n-blog-generator`) :
+le workflow se logge déjà via `POST /api/auth/login` (compte admin) → JWT, puis
+poste l'article sur `/api/admin/blog/posts`. Le même JWT autorise l'upload :
+
+```bash
+curl -X POST "https://api.nufflearena.fr/api/admin/blog/upload?filename=mon-slug" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: image/png" \
+  --data-binary @image.png
+# => { "url": "https://api.nufflearena.fr/images/blog/mon-slug-ab12cd34ef56.png", ... }
+```
+
+Côté éditeur admin, le bouton **⬆️🖼️** (`BlogEditor.tsx`) ouvre un sélecteur de
+fichier et insère l'image uploadée ; le bouton **🖼️** garde l'insertion par URL.
 
 ### Routes publiques (`/api/blog/*`, cache 5 min)
 

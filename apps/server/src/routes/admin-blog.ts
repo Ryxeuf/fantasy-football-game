@@ -6,7 +6,10 @@
  * - Audit : safeRecordAdminActionFromRequest pour create/update/delete.
  */
 
-import { Router } from "express";
+import { Router, raw } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
@@ -24,10 +27,37 @@ import {
   type RecordAdminActionInput,
 } from "../services/audit-log";
 import { invalidatePublicBlogCache } from "./public-blog";
+import {
+  BLOG_UPLOAD_DIR,
+  MAX_UPLOAD_BYTES,
+  detectImageType,
+  generateImageFilename,
+  buildPublicUrl,
+} from "../utils/blog-upload";
 
 const router = Router();
 
 router.use(authUser, adminOnly);
+
+/**
+ * Parse le corps brut (n'importe quel Content-Type) en Buffer, plafonné à
+ * MAX_UPLOAD_BYTES. Renvoie une erreur JSON propre si le payload dépasse la
+ * limite, au lieu de laisser fuiter la stack du handler d'erreur Express.
+ */
+const rawImageParser = raw({ type: () => true, limit: MAX_UPLOAD_BYTES });
+function parseRawImage(req: Request, res: Response, next: NextFunction): void {
+  rawImageParser(req, res, (err: unknown) => {
+    if (err) {
+      if ((err as { type?: string }).type === "entity.too.large") {
+        res.status(413).json({ error: "Image trop volumineuse (max 8 Mo)" });
+        return;
+      }
+      res.status(400).json({ error: "Corps de requête invalide" });
+      return;
+    }
+    next();
+  });
+}
 
 async function safeAudit(
   req: AuthenticatedRequest,
@@ -222,6 +252,54 @@ router.delete("/posts/:id", async (req, res) => {
     }
     serverLog.error("[admin-blog] delete failed", error);
     res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+/**
+ * Upload d'une image du blog. Réservé aux admins (router.use ci-dessus).
+ *
+ * Corps : binaire brut de l'image (pas de multipart) — le client envoie le
+ * fichier directement comme body. Optionnel : `?filename=` pour suggérer une
+ * base de nom (slug d'article). Le type réel est détecté par magic bytes et
+ * le nom de fichier est régénéré côté serveur (anti path traversal).
+ *
+ * Appelable depuis l'admin (éditeur) comme depuis une automatisation (n8n) :
+ * `POST https://api.nufflearena.fr/api/admin/blog/upload?filename=mon-slug`
+ * avec `Authorization: Bearer <jwt>` et le binaire en corps.
+ *
+ * Réponse 201 : { url, filename, mime, bytes }.
+ */
+router.post("/upload", parseRawImage, async (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const buf: unknown = req.body;
+    if (!Buffer.isBuffer(buf) || buf.length === 0) {
+      return res.status(400).json({ error: "Aucune donnée binaire reçue" });
+    }
+    const detected = detectImageType(buf);
+    if (!detected) {
+      return res.status(415).json({
+        error: "Format non supporté (PNG, JPEG, GIF ou WEBP attendu)",
+      });
+    }
+    const hint =
+      typeof req.query.filename === "string" ? req.query.filename : undefined;
+    const filename = generateImageFilename(hint, detected.ext);
+
+    await mkdir(BLOG_UPLOAD_DIR, { recursive: true });
+    await writeFile(path.join(BLOG_UPLOAD_DIR, filename), buf);
+
+    const url = buildPublicUrl(filename);
+    await safeAudit(authReq, {
+      action: "blog-image.upload",
+      entity: "BlogImage",
+      entityId: filename,
+      newValue: { filename, bytes: buf.length, mime: detected.mime },
+    });
+    res.status(201).json({ url, filename, mime: detected.mime, bytes: buf.length });
+  } catch (error: unknown) {
+    serverLog.error("[admin-blog] upload failed", error);
+    res.status(500).json({ error: "Erreur serveur lors de l'upload" });
   }
 });
 

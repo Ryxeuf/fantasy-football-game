@@ -86,6 +86,37 @@ export async function updateAdminBlogPost(
   return data.post;
 }
 
+export interface UploadedImage {
+  url: string;
+  filename: string;
+  mime: string;
+  bytes: number;
+}
+
+/**
+ * Upload une image vers `public/images/blog` via l'API admin. Le fichier est
+ * envoyé en binaire brut (pas de multipart) ; `filename` sert de base de nom
+ * (le serveur régénère un nom unique et sûr). Retourne l'URL publique à
+ * insérer dans l'article.
+ */
+export async function uploadBlogImage(
+  file: File,
+  filenameHint?: string,
+): Promise<UploadedImage> {
+  const qs = filenameHint
+    ? `?filename=${encodeURIComponent(filenameHint)}`
+    : "";
+  const res = await fetch(`${API_BASE}/api/admin/blog/upload${qs}`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    body: file,
+  });
+  return unwrap<UploadedImage>(res);
+}
+
 export async function deleteAdminBlogPost(id: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/admin/blog/posts/${id}`, {
     method: "DELETE",

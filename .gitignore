@@ -114,3 +114,11 @@ backups/
 # Cree quand pnpm install s'execute sans store-dir explicite, surtout
 # depuis le container nufflearena_server via le bind mount `.:/app`.
 .pnpm-store/
+
+# Images de blog uploadées au runtime (cf. apps/server/src/routes/admin-blog.ts
+# `POST /upload`). Le dossier n'est pas versionné : les nouveaux uploads sont
+# ignorés. Quelques visuels historiques déjà commités y restent suivis, et le
+# .gitkeep garantit l'existence du dossier (dossier d'upload par défaut en dev
+# + chemin servi par le build web).
+/apps/web/public/images/blog/*
+!/apps/web/public/images/blog/.gitkeep

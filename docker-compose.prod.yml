@@ -80,6 +80,12 @@ services:
       - MATCH_SECRET=${MATCH_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - KOFI_VERIFICATION_TOKEN=${KOFI_VERIFICATION_TOKEN}
+      # Upload images blog (cf. routes/admin-blog.ts POST /upload). Le serveur
+      # stocke ET sert lui-meme les images (conteneurs web/server separes, Next
+      # ne voit pas ces fichiers) : dossier persiste sur le volume blog_uploads,
+      # URLs renvoyees absolues sur l'hote API.
+      - BLOG_UPLOAD_DIR=/data/blog-images
+      - BLOG_ASSET_PUBLIC_BASE=https://api.nufflearena.fr
       # Log every HTTP request to stdout so Loki can index them. Slow calls
       # still emit at warn level; without this flag Loki has no stream to
       # surface because the server is otherwise silent in steady state.
@@ -105,6 +111,10 @@ services:
       - "traefik.http.routers.nufflearena-kofi.service=nufflearena-api"
       - "traefik.http.routers.nufflearena-kofi.priority=100"
       - "traefik.docker.network=traefik-network"
+    volumes:
+      # Persiste les images de blog uploadees entre les redeploys (l'image
+      # server est immutable et rebuildee a chaque deploy).
+      - blog_uploads:/data/blog-images
     depends_on:
       db:
         condition: service_healthy
@@ -122,6 +132,7 @@ services:
 
 volumes:
   db_data:
+  blog_uploads:
 
 networks:
   traefik-network:

@@ -4,6 +4,7 @@ import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import { timingSafeEqual } from "node:crypto";
+import { BLOG_PUBLIC_PATH, BLOG_UPLOAD_DIR } from "./utils/blog-upload";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -149,6 +150,21 @@ app.use(requestContext());
 // request (useful locally; stays off in prod to avoid log spam).
 app.use(requestTiming(500));
 app.use(bodyParser.json());
+
+// Images du blog uploadées (cf. routes/admin-blog.ts `POST /upload`). Servies
+// par le serveur Express lui-même : en prod les conteneurs web/server sont
+// séparés, Next ne voit pas ces fichiers. Monté avant le rate limiter et le
+// mode maintenance pour que l'affichage des images ne soit jamais bloqué.
+// Noms de fichiers uniques => cache long immutable.
+app.use(
+  BLOG_PUBLIC_PATH,
+  express.static(BLOG_UPLOAD_DIR, {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
+  }),
+);
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
 app.use(apiRateLimiter);

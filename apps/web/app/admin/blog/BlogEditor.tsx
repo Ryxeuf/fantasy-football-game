@@ -1,10 +1,12 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { uploadBlogImage } from "./api";
 
 interface BlogEditorProps {
   value: string;
@@ -47,6 +49,9 @@ export default function BlogEditor({
   onChange,
   placeholder,
 }: BlogEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -98,6 +103,27 @@ export default function BlogEditor({
     const url = window.prompt("URL de l'image (https://… ou /images/…) :", "https://");
     if (!url) return;
     editor.chain().focus().setImage({ src: url }).run();
+  };
+
+  const handleFileSelected = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    // Reset l'input pour autoriser le ré-upload du même fichier.
+    e.target.value = "";
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const { url } = await uploadBlogImage(file, file.name);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : "Échec de l'upload de l'image",
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -188,7 +214,23 @@ export default function BlogEditor({
           isActive={false}
           onClick={promptForImage}
           label="🖼️"
-          title="Image"
+          title="Image par URL"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          title="Uploader une image"
+          disabled={!editor.isEditable || uploading}
+          className={`${TOOLBAR_BTN} bg-white disabled:opacity-50`}
+        >
+          {uploading ? "⏳" : "⬆️🖼️"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp"
+          className="hidden"
+          onChange={handleFileSelected}
         />
         <ToolbarButton
           editor={editor}
@@ -213,6 +255,11 @@ export default function BlogEditor({
           title="Rétablir"
         />
       </div>
+      {uploadError && (
+        <div className="px-4 py-2 text-sm text-red-700 bg-red-50 border-b border-red-200">
+          ⚠️ {uploadError}
+        </div>
+      )}
       <EditorContent editor={editor} />
     </div>
   );
