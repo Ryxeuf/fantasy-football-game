@@ -96,14 +96,33 @@ est en DB — défense en profondeur).
   `generateMetadata` dynamique avec OG + Twitter + JSON-LD
   `BlogPosting` (schema.org). 404 via `notFound()` si introuvable.
 - `app/blog/error.tsx` — boundary erreur SSR (pattern aligné sur `/skills`).
+- `app/blog/BlogArticle.tsx` — composant présentationnel pur (couverture
+  + en-tête + contenu) partagé entre la page publique et l'aperçu admin,
+  pour un **rendu final identique**.
 
 Le rendu HTML utilise `dangerouslySetInnerHTML` — la confiance vient
 de la sanitization serveur côté écriture (jamais du client).
 
+### Aperçu admin d'un brouillon (`/blog/preview/[id]`)
+
+- `app/blog/preview/[id]/page.tsx` — client component qui rend **n'importe
+  quel article (y compris un brouillon non publié)** dans le chrome public
+  réel du site (layout racine Header/Footer) via le composant partagé
+  `BlogArticle` → c'est strictement le « rendu final ».
+- La donnée provient de l'API **admin** (`getAdminBlogPost`, middleware
+  `authUser + adminOnly`, Bearer token localStorage). Un non-admin reçoit
+  une erreur 401/403 et voit un message — jamais le contenu. Aucune route
+  serveur ajoutée : `GET /api/admin/blog/posts/:id` exposait déjà le
+  contenu brut des brouillons.
+- Une bannière affiche le statut (« Brouillon — non publié » / « Publié »),
+  un retour vers `/admin/blog`, et un lien vers la page publique si publié.
+- Liens « 👁 Aperçu » ajoutés dans la liste admin (tous statuts) et sur la
+  page d'édition (ouverture nouvel onglet).
+
 ### Pages admin (`/admin/blog`, client components)
 
 - `app/admin/blog/page.tsx` — liste, filtres status + recherche, actions
-  Modifier / Voir publié / Supprimer.
+  Modifier / Aperçu / Voir publié / Supprimer.
 - `app/admin/blog/new/page.tsx` — création, redirige vers l'edit après
   succès.
 - `app/admin/blog/[id]/edit/page.tsx` — édition, affiche le statut +

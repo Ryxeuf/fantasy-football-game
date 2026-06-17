@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
 import { safeJsonLd } from "../../lib/safe-json-ld";
+import BlogArticle from "../BlogArticle";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
@@ -35,15 +36,6 @@ async function fetchPost(slug: string): Promise<BlogPostDetail | null> {
     { next: { revalidate: 300 } },
   );
   return data?.post ?? null;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 export async function generateMetadata({
@@ -113,43 +105,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </Link>
       </nav>
 
-      {post.coverImageUrl && (
-        <div className="w-full mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.coverImageUrl}
-            alt={post.title}
-            className="w-full h-auto rounded-xl"
-          />
-        </div>
-      )}
-
-      <article className="w-full max-w-3xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-heading font-bold text-nuffle-anthracite mb-4">
-            {post.title}
-          </h1>
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-            {post.authorName && <span>{post.authorName}</span>}
-            {post.authorName && post.publishedAt && <span>·</span>}
-            {post.publishedAt && (
-              <time dateTime={post.publishedAt}>
-                {formatDate(post.publishedAt)}
-              </time>
-            )}
-          </div>
-          {post.excerpt && (
-            <p className="text-lg text-gray-700 leading-relaxed border-l-4 border-nuffle-gold pl-4">
-              {post.excerpt}
-            </p>
-          )}
-        </header>
-
-        <div
-          className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:text-nuffle-anthracite prose-a:text-nuffle-bronze hover:prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-        />
-      </article>
+      <BlogArticle post={post} />
     </div>
   );
 }

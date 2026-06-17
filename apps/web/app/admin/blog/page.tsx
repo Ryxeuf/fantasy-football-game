@@ -218,6 +218,14 @@ export default function AdminBlogPage() {
                         >
                           ✏️ Modifier
                         </Link>
+                        <Link
+                          href={`/blog/preview/${post.id}` as never}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors text-sm font-medium"
+                        >
+                          👁 Aperçu
+                        </Link>
                         {post.status === "published" && (
                           <Link
                             href={`/blog/${post.slug}` as never}

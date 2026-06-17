@@ -78,6 +78,14 @@ export default function EditBlogPostPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/blog/preview/${post.id}` as never}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
+          >
+            👁 Aperçu
+          </Link>
           {post.status === "published" && (
             <Link
               href={`/blog/${post.slug}` as never}
