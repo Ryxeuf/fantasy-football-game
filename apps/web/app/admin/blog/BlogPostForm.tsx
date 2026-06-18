@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import BlogEditor from "./BlogEditor";
+import CoverImageField from "./CoverImageField";
 import type { BlogPostInput } from "./api";
 
 interface BlogPostFormProps {
@@ -63,7 +64,9 @@ export default function BlogPostForm({
       return;
     }
     if (!SLUG_REGEX.test(slug)) {
-      setError("Le slug doit être en kebab-case (lettres minuscules, chiffres et tirets)");
+      setError(
+        "Le slug doit être en kebab-case (lettres minuscules, chiffres et tirets)",
+      );
       return;
     }
     if (contentHtml.replace(/<[^>]*>/g, "").trim().length < 1) {
@@ -81,7 +84,9 @@ export default function BlogPostForm({
         status,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
+      setError(
+        e instanceof Error ? e.message : "Erreur lors de l'enregistrement",
+      );
     } finally {
       setSaving(false);
     }
@@ -153,16 +158,9 @@ export default function BlogPostForm({
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
-            URL de l'image de couverture
+            Image de couverture
           </label>
-          <input
-            type="text"
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            maxLength={500}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none font-mono text-sm"
-            placeholder="/images/blog/mon-article.jpg ou https://…"
-          />
+          <CoverImageField value={coverImageUrl} onChange={setCoverImageUrl} />
         </div>
       </div>
 
@@ -176,8 +174,9 @@ export default function BlogPostForm({
           placeholder="Rédigez votre article ici…"
         />
         <p className="text-xs text-gray-500 mt-2">
-          HTML sanitizé côté serveur (allowlist : titres, listes, gras, italique,
-          liens, images, code). Les balises non autorisées sont supprimées.
+          HTML sanitizé côté serveur (allowlist : titres, listes, gras,
+          italique, liens, images, code). Les balises non autorisées sont
+          supprimées.
         </p>
       </div>
 

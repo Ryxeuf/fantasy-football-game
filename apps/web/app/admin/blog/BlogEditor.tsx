@@ -7,6 +7,7 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { uploadBlogImage } from "./api";
+import MediaLibraryModal from "./MediaLibraryModal";
 
 interface BlogEditorProps {
   value: string;
@@ -16,7 +17,8 @@ interface BlogEditorProps {
 
 const TOOLBAR_BTN =
   "px-2 py-1 rounded text-sm font-medium border border-gray-300 hover:bg-gray-100 transition-colors";
-const TOOLBAR_BTN_ACTIVE = "bg-nuffle-gold/20 border-nuffle-gold text-nuffle-bronze";
+const TOOLBAR_BTN_ACTIVE =
+  "bg-nuffle-gold/20 border-nuffle-gold text-nuffle-bronze";
 
 function ToolbarButton({
   editor,
@@ -52,6 +54,7 @@ export default function BlogEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -60,7 +63,10 @@ export default function BlogEditor({
       Link.configure({
         openOnClick: false,
         autolink: true,
-        HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
+        HTMLAttributes: {
+          rel: "noopener noreferrer nofollow",
+          target: "_blank",
+        },
       }),
       Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({
@@ -90,7 +96,10 @@ export default function BlogEditor({
 
   const promptForLink = () => {
     const previousUrl = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("URL du lien (vide pour retirer) :", previousUrl ?? "https://");
+    const url = window.prompt(
+      "URL du lien (vide pour retirer) :",
+      previousUrl ?? "https://",
+    );
     if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -100,14 +109,15 @@ export default function BlogEditor({
   };
 
   const promptForImage = () => {
-    const url = window.prompt("URL de l'image (https://… ou /images/…) :", "https://");
+    const url = window.prompt(
+      "URL de l'image (https://… ou /images/…) :",
+      "https://",
+    );
     if (!url) return;
     editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const handleFileSelected = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     // Reset l'input pour autoriser le ré-upload du même fichier.
     e.target.value = "";
@@ -132,14 +142,18 @@ export default function BlogEditor({
         <ToolbarButton
           editor={editor}
           isActive={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
           label="H2"
           title="Titre niveau 2"
         />
         <ToolbarButton
           editor={editor}
           isActive={editor.isActive("heading", { level: 3 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          }
           label="H3"
           title="Titre niveau 3"
         />
@@ -232,6 +246,15 @@ export default function BlogEditor({
           className="hidden"
           onChange={handleFileSelected}
         />
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          title="Choisir depuis la médiathèque"
+          disabled={!editor.isEditable}
+          className={`${TOOLBAR_BTN} bg-white disabled:opacity-50`}
+        >
+          📚
+        </button>
         <ToolbarButton
           editor={editor}
           isActive={false}
@@ -261,6 +284,17 @@ export default function BlogEditor({
         </div>
       )}
       <EditorContent editor={editor} />
+      <MediaLibraryModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(img) =>
+          editor
+            .chain()
+            .focus()
+            .setImage({ src: img.url, alt: img.alt ?? undefined })
+            .run()
+        }
+      />
     </div>
   );
 }
