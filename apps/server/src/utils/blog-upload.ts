@@ -23,13 +23,31 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 Mo
 
 /**
- * Dossier de destination des images. Résolu une seule fois au démarrage.
- * - `BLOG_UPLOAD_DIR` absolu en prod (volume monté, cf. compose prod).
+ * Dossier de destination des images.
+ * - `BLOG_UPLOAD_DIR` (env) absolu en prod (volume monté, cf. compose prod).
  * - Défaut : `<repo>/apps/web/public/images/blog` (utils → ../../../web/...).
  */
-export const BLOG_UPLOAD_DIR = process.env.BLOG_UPLOAD_DIR
-  ? path.resolve(process.env.BLOG_UPLOAD_DIR)
-  : path.resolve(__dirname, "../../../web/public/images/blog");
+const DEFAULT_BLOG_UPLOAD_DIR = path.resolve(
+  __dirname,
+  "../../../web/public/images/blog",
+);
+
+/**
+ * Résout le dossier d'upload **à l'appel** (pas figé à l'import), pour
+ * permettre l'override en test via `process.env.BLOG_UPLOAD_DIR`. Miroir de
+ * `getReplaysDir()` (`routes/admin-sim-replays.ts`).
+ */
+export function getBlogUploadDir(): string {
+  return process.env.BLOG_UPLOAD_DIR
+    ? path.resolve(process.env.BLOG_UPLOAD_DIR)
+    : DEFAULT_BLOG_UPLOAD_DIR;
+}
+
+/**
+ * @deprecated Préférer `getBlogUploadDir()` (testable). Conservé pour compat :
+ * résolu une seule fois à l'import du module.
+ */
+export const BLOG_UPLOAD_DIR = getBlogUploadDir();
 
 /**
  * Préfixe public des URLs renvoyées. Vide => URL relative `/images/blog/x`
