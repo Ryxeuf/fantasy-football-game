@@ -31,7 +31,11 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
     { href: "/admin/local-matches", label: "Matchs locaux", icon: "🎯" },
   ];
   if (leaguesEnabled) {
-    competitionItems.push({ href: "/admin/leagues", label: "Ligues", icon: "🏅" });
+    competitionItems.push({
+      href: "/admin/leagues",
+      label: "Ligues",
+      icon: "🏅",
+    });
   }
   competitionItems.push(
     { href: "/admin/cups", label: "Coupes", icon: "🏆" },
@@ -56,6 +60,7 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
         { href: "/admin/users", label: "Utilisateurs", icon: "👥" },
         { href: "/admin/feedback", label: "Feedback", icon: "💬" },
         { href: "/admin/blog", label: "Blog", icon: "📝" },
+        { href: "/admin/blog/images", label: "Médiathèque", icon: "🖼️" },
       ],
     },
     {
@@ -128,7 +133,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const leaguesEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const sections = useMemo(() => buildSections(leaguesEnabled), [leaguesEnabled]);
+  const sections = useMemo(
+    () => buildSections(leaguesEnabled),
+    [leaguesEnabled],
+  );
   const activeSectionId = useMemo(
     () => findActiveSectionId(sections, pathname),
     [sections, pathname],
@@ -221,7 +229,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const renderSection = (section: NavSection) => {
     const isOpen = openSections.has(section.id);
-    const hasActive = section.items.some((entry) => matchesPath(entry, pathname));
+    const hasActive = section.items.some((entry) =>
+      matchesPath(entry, pathname),
+    );
     return (
       <div key={section.id} className="mb-1">
         <button

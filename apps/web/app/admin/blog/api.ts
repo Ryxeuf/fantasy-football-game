@@ -28,14 +28,17 @@ export interface BlogPostInput {
 }
 
 function authHeaders(): Record<string, string> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function unwrap<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error || `Erreur ${res.status}`);
+    throw new Error(
+      (data as { error?: string }).error || `Erreur ${res.status}`,
+    );
   }
   return res.json() as Promise<T>;
 }
@@ -63,7 +66,9 @@ export async function getAdminBlogPost(id: string): Promise<BlogPostDetail> {
   return data.post;
 }
 
-export async function createAdminBlogPost(input: BlogPostInput): Promise<BlogPostDetail> {
+export async function createAdminBlogPost(
+  input: BlogPostInput,
+): Promise<BlogPostDetail> {
   const res = await fetch(`${API_BASE}/api/admin/blog/posts`, {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
@@ -122,5 +127,101 @@ export async function deleteAdminBlogPost(id: string): Promise<void> {
     method: "DELETE",
     headers: authHeaders(),
   });
+  await unwrap<{ ok: true }>(res);
+}
+
+// --- Médiathèque (images du blog) ---
+
+export interface BlogImage {
+  filename: string;
+  url: string;
+  bytes: number;
+  width: number | null;
+  height: number | null;
+  alt: string | null;
+  /** ISO date (mtime du fichier). */
+  uploadedAt: string;
+  ext: string;
+}
+
+export interface BlogImageListResult {
+  images: BlogImage[];
+  total: number;
+}
+
+export interface ListBlogImagesParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort?: "date" | "name" | "size";
+}
+
+export interface ReferencingPost {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+/** Levée quand un DELETE est refusé (409) car l'image est encore utilisée. */
+export class BlogImageInUseError extends Error {
+  readonly referencedBy: ReferencingPost[];
+  constructor(referencedBy: ReferencingPost[]) {
+    super("Image utilisée par un ou plusieurs articles");
+    this.name = "BlogImageInUseError";
+    this.referencedBy = referencedBy;
+  }
+}
+
+export async function listBlogImages(
+  params: ListBlogImagesParams = {},
+): Promise<BlogImageListResult> {
+  const qs = new URLSearchParams();
+  if (params.search) qs.set("search", params.search);
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.sort) qs.set("sort", params.sort);
+  const res = await fetch(
+    `${API_BASE}/api/admin/blog/images${qs.toString() ? `?${qs}` : ""}`,
+    { headers: authHeaders() },
+  );
+  return unwrap<BlogImageListResult>(res);
+}
+
+export async function updateBlogImageAlt(
+  filename: string,
+  alt: string | null,
+): Promise<BlogImage> {
+  const res = await fetch(
+    `${API_BASE}/api/admin/blog/images/${encodeURIComponent(filename)}`,
+    {
+      method: "PATCH",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ alt }),
+    },
+  );
+  const data = await unwrap<{ image: BlogImage }>(res);
+  return data.image;
+}
+
+/**
+ * Supprime une image. Sans `force`, le serveur renvoie 409 si l'image est
+ * référencée par un article → on lève `BlogImageInUseError` (avec la liste des
+ * articles) pour que l'UI propose de forcer.
+ */
+export async function deleteBlogImage(
+  filename: string,
+  opts: { force?: boolean } = {},
+): Promise<void> {
+  const qs = opts.force ? "?force=true" : "";
+  const res = await fetch(
+    `${API_BASE}/api/admin/blog/images/${encodeURIComponent(filename)}${qs}`,
+    { method: "DELETE", headers: authHeaders() },
+  );
+  if (res.status === 409) {
+    const data = (await res.json().catch(() => ({}))) as {
+      referencedBy?: ReferencingPost[];
+    };
+    throw new BlogImageInUseError(data.referencedBy ?? []);
+  }
   await unwrap<{ ok: true }>(res);
 }

@@ -15,7 +15,9 @@ async function fetchMe(): Promise<{ roles: string[] }> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) return { roles: [] };
-  const data = (await res.json()) as { user?: { roles?: string[]; role?: string } };
+  const data = (await res.json()) as {
+    user?: { roles?: string[]; role?: string };
+  };
   const roles = Array.isArray(data.user?.roles)
     ? data.user!.roles!
     : data.user?.role
@@ -74,7 +76,9 @@ export default function AdminBlogPage() {
       await deleteAdminBlogPost(id);
       setPosts((current) => current.filter((p) => p.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de la suppression");
+      setError(
+        e instanceof Error ? e.message : "Erreur lors de la suppression",
+      );
     }
   };
 
@@ -102,6 +106,13 @@ export default function AdminBlogPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link
+            href={"/admin/blog/images" as never}
+            className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 shadow-sm transition-all flex items-center gap-2"
+          >
+            <span>🖼️</span>
+            <span>Médiathèque</span>
+          </Link>
+          <Link
             href={"/admin/blog/generate" as never}
             className="px-5 py-2.5 bg-nuffle-anthracite text-white rounded-lg font-medium hover:bg-nuffle-anthracite/90 shadow-md transition-all flex items-center gap-2"
           >
@@ -126,10 +137,15 @@ export default function AdminBlogPage() {
       )}
 
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-        <form onSubmit={handleSearch} className="flex gap-3 flex-wrap items-center">
+        <form
+          onSubmit={handleSearch}
+          className="flex gap-3 flex-wrap items-center"
+        >
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as "" | "draft" | "published")}
+            onChange={(e) =>
+              setStatus(e.target.value as "" | "draft" | "published")
+            }
             className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none bg-white"
           >
             {STATUS_OPTIONS.map((opt) => (
@@ -182,7 +198,10 @@ export default function AdminBlogPage() {
             <tbody className="divide-y divide-gray-200">
               {posts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     Aucun article pour le moment.
                   </td>
                 </tr>
