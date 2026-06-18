@@ -1,3 +1,18 @@
+## [1.181.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.180.0...v1.181.0) (2026-06-18)
+
+
+### ✨ Features
+
+* **blog:** champ couverture enrichi + picker dans l'éditeur ([a6d9e41](https://github.com/Ryxeuf/fantasy-football-game/commit/a6d9e410e21deb511389561c3262a59827d9974b))
+* **blog:** médiathèque admin (galerie, picker, page, navigation) ([6553839](https://github.com/Ryxeuf/fantasy-football-game/commit/6553839dbe1cde962ad7b66368f7c03372960a02))
+* **blog:** routes admin images (liste, alt, suppression protégée) ([6b912b1](https://github.com/Ryxeuf/fantasy-football-game/commit/6b912b178fe861302b7abbaa111e1f94a7acb31f))
+* **blog:** store disque + parseur dimensions pour la médiathèque ([bab84f5](https://github.com/Ryxeuf/fantasy-football-game/commit/bab84f5185a4f790315e62d18954a0af27cced8f))
+
+
+### 📝 Documentation
+
+* **blog:** médiathèque dans blog-feature.md + change OpenSpec ([5580d65](https://github.com/Ryxeuf/fantasy-football-game/commit/5580d651b6c5b8f8816cd8817d3bee082f1c2252))
+
 ## [1.180.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.179.0...v1.180.0) (2026-06-17)
 
 
