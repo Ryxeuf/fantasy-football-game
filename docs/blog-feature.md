@@ -204,6 +204,73 @@ section dédiée en mobile). Clé i18n `nav.blog` (FR + EN).
 Item `📝 Blog` ajouté dans le bloc Administration (au-dessus de
 Feedback).
 
+## Médiathèque & gestion des images
+
+Interface admin complète de gestion des images du blog. **Le disque est la
+source de vérité** (dossier `BLOG_UPLOAD_DIR`) — aucun modèle Prisma : on calque
+le pattern de `routes/admin-sim-replays.ts` (getter d'env + `readdir` filtré).
+
+### Endpoints (`/api/admin/blog/images`, auth + adminOnly)
+
+- `GET /images?search=&page=&limit=&sort=date|name|size` — liste paginée
+  `{ images, total }`. Chaque image : `{ filename, url, bytes, width, height,
+  alt, uploadedAt, ext }`. Tri par défaut `date` (mtime) décroissant ;
+  `limit` ≤ 50 ; backfill des dimensions **borné à la page** retournée.
+- `PATCH /images/:filename` — édite le texte alternatif (`{ alt }`, `null` =
+  effacer). Audit `blog-image.update` (avec `oldValue`).
+- `DELETE /images/:filename` — suppression. **Bloquée (409)** si l'image est
+  encore référencée par un article (couverture **ou** contenu) ; `?force=true`
+  outrepasse. Audit `blog-image.delete`.
+- (`POST /upload` inchangé — capture désormais les dimensions au passage.)
+
+### Métadonnées sans Prisma — sidecar JSON par image
+
+Le texte alternatif et les dimensions sont persistés dans un **sidecar caché par
+fichier** : `.<image>.json` (`{ alt, width, height }`), à côté de l'image.
+Choix d'un sidecar **par fichier** (vs un fichier-map global) : pas d'écrasement
+entre deux éditions concurrentes, la suppression d'une image retire son
+compagnon (zéro orphelin), écriture **atomique** (tmp + `rename` dans le même
+dossier → pas d'EXDEV). Le listing part **toujours** de `readdir` des images
+réelles, jamais du sidecar (un sidecar orphelin est ignoré). Les **dimensions**
+sont calculées à l'upload (buffer en main) puis backfillées paresseusement +
+persistées pour les images historiques, via un parseur **maison sans
+dépendance** (`utils/blog-image-dimensions.ts`, PNG/GIF/JPEG/WEBP par offsets
+d'en-tête).
+
+### Sécurité
+
+- Nom de fichier validé en amont (Zod `blogImageFilenameParamSchema`) **et** dans
+  le store (`resolveBlogImagePath`) : regex stricte (pas de dotfile, extension
+  image only), rejet de `/` `\` `..`, et confinement
+  `path.resolve(dir,name).startsWith(path.resolve(dir)+path.sep)` (anti
+  path-traversal, miroir de `admin-sim-replays.ts`).
+- `fs.unlink` + `fs.lstat` : ne suivent pas les symlinks.
+- `express.static` monté avec `dotfiles: "ignore"` (`index.ts`) : les sidecars
+  cachés ne sont jamais servis publiquement.
+- Reference-check du DELETE : match par **sous-chaîne du nom de fichier** (haute
+  entropie `<base>-<6hex>`), indépendant du préfixe d'URL (relatif en dev, absolu
+  en prod via `BLOG_ASSET_PUBLIC_BASE`).
+
+### Frontend
+
+- `app/admin/blog/MediaLibrary.tsx` — galerie réutilisable `mode="manage" |
+  "picker"` : upload (bouton + glisser-déposer multi-fichiers), recherche, tri,
+  pagination « charger plus » ; par image : aperçu, dimensions, poids, date,
+  **alt éditable inline** (auto-save au blur), **copier l'URL**, **supprimer**
+  (`confirm()` natif ; le 409 déclenche une re-confirmation « supprimer quand
+  même » qui renvoie `force`).
+- `app/admin/blog/MediaLibraryModal.tsx` — overlay `role="dialog"` qui wrappe la
+  galerie en mode picker (fermeture overlay / ✕ / Échap).
+- `app/admin/blog/images/page.tsx` — page admin (médiathèque en mode manage),
+  liée dans la sidebar (`🖼️ Médiathèque`) et l'en-tête de `/admin/blog`.
+- `app/admin/blog/CoverImageField.tsx` — remplace le champ URL nu de la
+  couverture : aperçu + upload + « choisir depuis la médiathèque » + retirer +
+  repli coller-URL + glisser-déposer.
+- `BlogEditor.tsx` — bouton toolbar `📚` ouvrant le picker pour insérer une
+  image existante (avec son `alt`).
+- Client typé : `listBlogImages`, `updateBlogImageAlt`, `deleteBlogImage`
+  (+ `BlogImageInUseError` pour le 409) dans `app/admin/blog/api.ts`.
+
 ## Tests
 
 `apps/server/src/routes/admin-blog.test.ts` (11 tests) — couvre :
@@ -216,6 +283,13 @@ Feedback).
 - delete : audit + invalidation cache, 404 sur introuvable
 
 Lancer : `cd apps/server && pnpm exec vitest run src/routes/admin-blog.test.ts`
+
+**Médiathèque** — serveur :
+`utils/blog-image-dimensions.test.ts` (parseur 4 formats + cas null),
+`utils/blog-image-store.test.ts` (listing/tri/pagination/recherche, anti-traversal,
+round-trip alt, backfill dims, delete image+sidecar, orphelin ignoré, anti-clobber),
+`routes/admin-blog-images.test.ts` (GET/PATCH/DELETE, 400/404/409 + `force`, audit).
+Web : `app/admin/blog/MediaLibrary.test.tsx` + `CoverImageField.test.tsx`.
 
 ## Migration
 
@@ -271,8 +345,6 @@ container `nufflearena_server` (cf. memory `feedback_nuffle_db_reset_via_contain
 - Commentaires
 - Auteur multiple, brouillon collaboratif
 - Pagination publique en UI (l'API supporte déjà `page`/`limit`)
-- Upload d'image directement depuis l'éditeur (actuellement : URL
-  manuelle uniquement)
 - Sitemap dédié `/sitemap-blog.xml`
 - RSS feed
 - Newsletter / notifications publication
