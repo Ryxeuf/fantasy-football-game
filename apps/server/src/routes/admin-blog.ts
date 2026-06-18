@@ -14,11 +14,20 @@ import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import type { AuthenticatedRequest } from "../middleware/authUser";
-import { validate, validateQuery } from "../middleware/validate";
+import {
+  validate,
+  validateQuery,
+  validateParams,
+} from "../middleware/validate";
 import {
   createBlogPostSchema,
   updateBlogPostSchema,
   adminBlogListQuerySchema,
+  blogImageFilenameParamSchema,
+  patchBlogImageSchema,
+  adminBlogImageListQuerySchema,
+  type PatchBlogImageInput,
+  type AdminBlogImageListQuery,
 } from "../schemas/blog.schemas";
 import { sanitizeBlogHtml } from "../utils/sanitize-blog-html";
 import { serverLog } from "../utils/server-log";
@@ -28,12 +37,20 @@ import {
 } from "../services/audit-log";
 import { invalidatePublicBlogCache } from "./public-blog";
 import {
-  BLOG_UPLOAD_DIR,
+  getBlogUploadDir,
   MAX_UPLOAD_BYTES,
   detectImageType,
   generateImageFilename,
   buildPublicUrl,
 } from "../utils/blog-upload";
+import {
+  listBlogImages,
+  getBlogImage,
+  setBlogImageAlt,
+  recordUploadedImage,
+  deleteBlogImage,
+  BlogImageStoreError,
+} from "../utils/blog-image-store";
 
 const router = Router();
 
@@ -286,8 +303,17 @@ router.post("/upload", parseRawImage, async (req, res) => {
       typeof req.query.filename === "string" ? req.query.filename : undefined;
     const filename = generateImageFilename(hint, detected.ext);
 
-    await mkdir(BLOG_UPLOAD_DIR, { recursive: true });
-    await writeFile(path.join(BLOG_UPLOAD_DIR, filename), buf);
+    const uploadDir = getBlogUploadDir();
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(path.join(uploadDir, filename), buf);
+
+    // Capture les dimensions (buffer en main) dans le sidecar pour la
+    // médiathèque. Best-effort : ne doit jamais faire échouer l'upload.
+    try {
+      await recordUploadedImage(uploadDir, filename, buf);
+    } catch (metaErr: unknown) {
+      serverLog.error("[admin-blog] recordUploadedImage failed", metaErr);
+    }
 
     const url = buildPublicUrl(filename);
     await safeAudit(authReq, {
@@ -296,11 +322,120 @@ router.post("/upload", parseRawImage, async (req, res) => {
       entityId: filename,
       newValue: { filename, bytes: buf.length, mime: detected.mime },
     });
-    res.status(201).json({ url, filename, mime: detected.mime, bytes: buf.length });
+    res
+      .status(201)
+      .json({ url, filename, mime: detected.mime, bytes: buf.length });
   } catch (error: unknown) {
     serverLog.error("[admin-blog] upload failed", error);
     res.status(500).json({ error: "Erreur serveur lors de l'upload" });
   }
 });
+
+/**
+ * Médiathèque — liste paginée des images uploadées (disque = source de vérité).
+ * `GET /api/admin/blog/images?search=&page=&limit=&sort=date|name|size`.
+ * Réponse : `{ images, total }`.
+ */
+router.get(
+  "/images",
+  validateQuery(adminBlogImageListQuerySchema),
+  async (req, res) => {
+    try {
+      const query = req.query as unknown as AdminBlogImageListQuery;
+      const result = await listBlogImages(getBlogUploadDir(), query);
+      res.json(result);
+    } catch (error: unknown) {
+      serverLog.error("[admin-blog] image list failed", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+/**
+ * Édition du texte alternatif d'une image (SEO/accessibilité).
+ * `PATCH /api/admin/blog/images/:filename` body `{ alt }` (null = effacer).
+ */
+router.patch(
+  "/images/:filename",
+  validateParams(blogImageFilenameParamSchema),
+  validate(patchBlogImageSchema),
+  async (req, res) => {
+    const authReq = req as AuthenticatedRequest;
+    const filename = req.params.filename;
+    const body: PatchBlogImageInput = req.body;
+    try {
+      const dir = getBlogUploadDir();
+      const before = await getBlogImage(dir, filename);
+      const image = await setBlogImageAlt(dir, filename, body.alt ?? null);
+      await safeAudit(authReq, {
+        action: "blog-image.update",
+        entity: "BlogImage",
+        entityId: filename,
+        oldValue: { alt: before.alt },
+        newValue: { alt: image.alt },
+      });
+      res.json({ image });
+    } catch (error: unknown) {
+      if (error instanceof BlogImageStoreError) {
+        return res
+          .status(error.code === "not-found" ? 404 : 400)
+          .json({ error: error.message });
+      }
+      serverLog.error("[admin-blog] image update failed", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+/**
+ * Suppression définitive d'une image. Bloquée (409) si l'image est encore
+ * référencée par un article (couverture OU contenu) — on matche sur le nom de
+ * fichier (haute entropie), indépendamment du préfixe d'URL (relatif en dev,
+ * absolu en prod). `?force=true` outrepasse l'avertissement.
+ */
+router.delete(
+  "/images/:filename",
+  validateParams(blogImageFilenameParamSchema),
+  async (req, res) => {
+    const authReq = req as AuthenticatedRequest;
+    const filename = req.params.filename;
+    const force = req.query.force === "true";
+    try {
+      if (!force) {
+        const referencedBy = await prisma.blogPost.findMany({
+          where: {
+            OR: [
+              { coverImageUrl: { contains: filename } },
+              { contentHtml: { contains: filename } },
+            ],
+          },
+          select: { id: true, slug: true, title: true },
+        });
+        if (referencedBy.length > 0) {
+          return res.status(409).json({
+            error: "Image utilisée par un ou plusieurs articles",
+            referencedBy,
+          });
+        }
+      }
+      await deleteBlogImage(getBlogUploadDir(), filename);
+      await safeAudit(authReq, {
+        action: "blog-image.delete",
+        entity: "BlogImage",
+        entityId: filename,
+        oldValue: { filename, forced: force },
+      });
+      res.json({ ok: true });
+    } catch (error: unknown) {
+      if (error instanceof BlogImageStoreError) {
+        return res
+          .status(error.code === "not-found" ? 404 : 400)
+          .json({ error: error.message });
+      }
+      serverLog.error("[admin-blog] image delete failed", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
 
 export default router;

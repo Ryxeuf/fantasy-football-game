@@ -36,6 +36,18 @@ vi.mock("node:fs/promises", () => ({
   writeFile: vi.fn(async () => undefined),
 }));
 
+// Le store écrit un sidecar de métadonnées via `node:fs` (différent de
+// `node:fs/promises` mocké ci-dessus) : on le mocke pour garder ce test sans
+// aucun accès disque réel et isolé de la médiathèque.
+vi.mock("../utils/blog-image-store", () => ({
+  recordUploadedImage: vi.fn(async () => undefined),
+  listBlogImages: vi.fn(),
+  getBlogImage: vi.fn(),
+  setBlogImageAlt: vi.fn(),
+  deleteBlogImage: vi.fn(),
+  BlogImageStoreError: class BlogImageStoreError extends Error {},
+}));
+
 import express from "express";
 import http from "http";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -110,12 +122,18 @@ beforeEach(() => {
 
 describe("POST /api/admin/blog/upload", () => {
   it("accepte un PNG, écrit le fichier et renvoie une URL /images/blog/*.png", async () => {
-    const res = await upload(PNG_BYTES, "image/png", "?filename=Mon%20Article!");
+    const res = await upload(
+      PNG_BYTES,
+      "image/png",
+      "?filename=Mon%20Article!",
+    );
     expect(res.status).toBe(201);
     expect(res.body.mime).toBe("image/png");
     expect(res.body.bytes).toBe(PNG_BYTES.length);
     expect(res.body.filename).toMatch(/^mon-article-[0-9a-f]{12}\.png$/);
-    expect(res.body.url).toMatch(/^\/images\/blog\/mon-article-[0-9a-f]{12}\.png$/);
+    expect(res.body.url).toMatch(
+      /^\/images\/blog\/mon-article-[0-9a-f]{12}\.png$/,
+    );
     expect(mockedMkdir).toHaveBeenCalledTimes(1);
     expect(mockedWriteFile).toHaveBeenCalledTimes(1);
     // Le buffer écrit est bien celui reçu.

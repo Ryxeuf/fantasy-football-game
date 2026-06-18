@@ -4,7 +4,7 @@ import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import { timingSafeEqual } from "node:crypto";
-import { BLOG_PUBLIC_PATH, BLOG_UPLOAD_DIR } from "./utils/blog-upload";
+import { BLOG_PUBLIC_PATH, getBlogUploadDir } from "./utils/blog-upload";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -65,10 +65,7 @@ import leagueInvitationRoutes from "./routes/league-invitation";
 import leagueTestDataRoutes from "./routes/league-test-data";
 import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
-import {
-  feedbackPublicRouter,
-  feedbackAdminRouter,
-} from "./routes/feedback";
+import { feedbackPublicRouter, feedbackAdminRouter } from "./routes/feedback";
 import proLeagueRoutes from "./routes/pro-league";
 import {
   userFeatureFlagsRouter,
@@ -158,11 +155,14 @@ app.use(bodyParser.json());
 // Noms de fichiers uniques => cache long immutable.
 app.use(
   BLOG_PUBLIC_PATH,
-  express.static(BLOG_UPLOAD_DIR, {
+  express.static(getBlogUploadDir(), {
     maxAge: "365d",
     immutable: true,
     fallthrough: true,
     index: false,
+    // Ne jamais servir les sidecars de métadonnées (`.<image>.json`, cachés)
+    // ni aucun dotfile : seuls les binaires d'images sont exposés publiquement.
+    dotfiles: "ignore",
   }),
 );
 
@@ -192,9 +192,7 @@ app.get("/health/ready", probeReadiness);
 // strict peut filtrer status='up').
 app.get("/health/pro-league", async (_req, res) => {
   try {
-    const { getProLeagueHealth } = await import(
-      "./services/pro-league-health"
-    );
+    const { getProLeagueHealth } = await import("./services/pro-league-health");
     const out = await getProLeagueHealth();
     const code = out.status === "down" ? 503 : 200;
     res.status(code).json(out);
@@ -220,9 +218,7 @@ app.get("/metrics", async (req, res, next) => {
     const expectedToken = process.env.METRICS_BEARER_TOKEN;
     if (expectedToken) {
       const auth = req.header("authorization") || "";
-      const provided = auth.startsWith("Bearer ")
-        ? auth.slice(7).trim()
-        : "";
+      const provided = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
       const expectedBuf = Buffer.from(expectedToken, "utf8");
       const providedBuf = Buffer.from(provided, "utf8");
       const ok =
@@ -268,7 +264,11 @@ app.use("/api", publicCache(), publicTeamsRoutes);
 app.use("/api/admin/blog", adminBlogRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
-app.use("/matchmaking", requireFeatureFlag(ONLINE_PLAY_FLAG), matchmakingRoutes);
+app.use(
+  "/matchmaking",
+  requireFeatureFlag(ONLINE_PLAY_FLAG),
+  matchmakingRoutes,
+);
 app.use(
   "/leaderboard",
   requireFeatureFlag(ONLINE_PLAY_FLAG),
@@ -386,8 +386,9 @@ if (process.env.TEST_SQLITE === "1") {
     };
     try {
       await safe("turn", () => prisma.turn.deleteMany({}));
-      await safe("matchQueue", () =>
-        (prisma as any).matchQueue?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "matchQueue",
+        () => (prisma as any).matchQueue?.deleteMany?.({}) ?? Promise.resolve(),
       );
       await safe("teamSelection", () => prisma.teamSelection.deleteMany({}));
       await safe("_MatchToUser", () =>
@@ -396,39 +397,54 @@ if (process.env.TEST_SQLITE === "1") {
       await safe("match", () => prisma.match.deleteMany({}));
       // League hierarchy: participants/rounds cascade from seasons; seasons
       // and leagues must be removed before users (creatorId is RESTRICT).
-      await safe("leagueRound", () =>
-        (prisma as any).leagueRound?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "leagueRound",
+        () =>
+          (prisma as any).leagueRound?.deleteMany?.({}) ?? Promise.resolve(),
       );
-      await safe("leagueParticipant", () =>
-        (prisma as any).leagueParticipant?.deleteMany?.({}) ??
-        Promise.resolve(),
+      await safe(
+        "leagueParticipant",
+        () =>
+          (prisma as any).leagueParticipant?.deleteMany?.({}) ??
+          Promise.resolve(),
       );
-      await safe("leagueSeason", () =>
-        (prisma as any).leagueSeason?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "leagueSeason",
+        () =>
+          (prisma as any).leagueSeason?.deleteMany?.({}) ?? Promise.resolve(),
       );
-      await safe("league", () =>
-        (prisma as any).league?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "league",
+        () => (prisma as any).league?.deleteMany?.({}) ?? Promise.resolve(),
       );
       // Cup hierarchy (creator is RESTRICT vs User).
-      await safe("cupParticipant", () =>
-        (prisma as any).cupParticipant?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "cupParticipant",
+        () =>
+          (prisma as any).cupParticipant?.deleteMany?.({}) ?? Promise.resolve(),
       );
-      await safe("cup", () =>
-        (prisma as any).cup?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "cup",
+        () => (prisma as any).cup?.deleteMany?.({}) ?? Promise.resolve(),
       );
       // UserAchievement + Friendship cascade on User, but deleting explicitly
       // avoids surprises if cascade rules change.
-      await safe("userAchievement", () =>
-        (prisma as any).userAchievement?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "userAchievement",
+        () =>
+          (prisma as any).userAchievement?.deleteMany?.({}) ??
+          Promise.resolve(),
       );
-      await safe("friendship", () =>
-        (prisma as any).friendship?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "friendship",
+        () => (prisma as any).friendship?.deleteMany?.({}) ?? Promise.resolve(),
       );
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
       // Feedback public : pas de FK vers User, on peut wiper a tout moment.
-      await safe("feedback", () =>
-        (prisma as any).feedback?.deleteMany?.({}) ?? Promise.resolve(),
+      await safe(
+        "feedback",
+        () => (prisma as any).feedback?.deleteMany?.({}) ?? Promise.resolve(),
       );
       await safe("user", () => prisma.user.deleteMany({}));
       // Reference data caches (memoizeAsync) survive the DB wipe and would
@@ -468,9 +484,7 @@ if (process.env.TEST_SQLITE === "1") {
         rankedMatches?: number;
       };
       if (!email || !password) {
-        return res
-          .status(400)
-          .json({ error: "email et password requis" });
+        return res.status(400).json({ error: "email et password requis" });
       }
 
       const bcrypt = await import("bcryptjs");
@@ -530,9 +544,7 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({ id: user.id, email: user.email, name: user.name });
     } catch (e: any) {
       serverLog.error(e);
-      return res
-        .status(500)
-        .json({ error: e?.message || "seed-user failed" });
+      return res.status(500).json({ error: e?.message || "seed-user failed" });
     }
   });
 
@@ -590,9 +602,7 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({ id: team.id, name: team.name, roster: team.roster });
     } catch (e: any) {
       serverLog.error(e);
-      return res
-        .status(500)
-        .json({ error: e?.message || "seed-team failed" });
+      return res.status(500).json({ error: e?.message || "seed-team failed" });
     }
   });
 
@@ -610,9 +620,24 @@ if (process.env.TEST_SQLITE === "1") {
         nameEn: string;
         category: string;
       }> = [
-        { slug: "block", nameFr: "Blocage", nameEn: "Block", category: "General" },
-        { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge", category: "Agility" },
-        { slug: "tackle", nameFr: "Plaquage", nameEn: "Tackle", category: "General" },
+        {
+          slug: "block",
+          nameFr: "Blocage",
+          nameEn: "Block",
+          category: "General",
+        },
+        {
+          slug: "dodge",
+          nameFr: "Esquive",
+          nameEn: "Dodge",
+          category: "Agility",
+        },
+        {
+          slug: "tackle",
+          nameFr: "Plaquage",
+          nameEn: "Tackle",
+          category: "General",
+        },
       ];
       const rulesets = ["season_2", "season_3"] as const;
       for (const ruleset of rulesets) {
@@ -725,7 +750,8 @@ if (process.env.TEST_SQLITE === "1") {
       const flagSeeds: Array<{ key: string; description: string }> = [
         {
           key: ONLINE_PLAY_FLAG,
-          description: "Active toute la zone multijoueur (lobby, leaderboard, etc.)",
+          description:
+            "Active toute la zone multijoueur (lobby, leaderboard, etc.)",
         },
         {
           key: AI_TRAINING_FLAG,
@@ -781,9 +807,7 @@ httpServer.listen(API_PORT, () => {
 const inTestForfeitEnv =
   process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
 const tickMsEnv = Number(process.env.LEAGUE_FORFEIT_TICK_MS);
-const tickMs = Number.isFinite(tickMsEnv)
-  ? tickMsEnv
-  : 60 * 60 * 1000;
+const tickMs = Number.isFinite(tickMsEnv) ? tickMsEnv : 60 * 60 * 1000;
 if (!inTestForfeitEnv && tickMs > 0) {
   // Import dynamique pour eviter de pulluler les workers de tests
   // qui mockent `prisma` mais ne mockent pas la boucle.
@@ -830,7 +854,11 @@ if (!inTestSimRunnerEnv && simRunnerTickMs > 0 && proLeagueEnabled) {
       const tick = async () => {
         try {
           const out = await simulateUpcomingMatches();
-          if (out.simulated > 0 || out.failed > 0 || out.versionMismatched > 0) {
+          if (
+            out.simulated > 0 ||
+            out.failed > 0 ||
+            out.versionMismatched > 0
+          ) {
             serverLog.info(
               `[pro-league-sim] tick: simulated=${out.simulated} skipped=${out.skipped} failed=${out.failed} versionMismatched=${out.versionMismatched} (inspected=${out.inspected})`,
             );
@@ -863,7 +891,6 @@ if (!inTestSimRunnerEnv && driftWatcherTickMs > 0 && proLeagueEnabled) {
     },
   );
 }
-
 
 // =============================================================================
 // Pro League bet-settlement cron (sprint 1.D.5).
@@ -1017,7 +1044,6 @@ if (!inTestCasualtyEnv && casualtyTickMs > 0 && proLeagueEnabled) {
   );
 }
 
-
 // =============================================================================
 // Pro League SPP / progression cron (Lot 3.C.2).
 // =============================================================================
@@ -1031,9 +1057,7 @@ if (!inTestCasualtyEnv && casualtyTickMs > 0 && proLeagueEnabled) {
 const inTestSppEnv =
   process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
 const sppTickMsEnv = Number(process.env.PRO_LEAGUE_SPP_TICK_MS);
-const sppTickMs = Number.isFinite(sppTickMsEnv)
-  ? sppTickMsEnv
-  : 30 * 60 * 1000;
+const sppTickMs = Number.isFinite(sppTickMsEnv) ? sppTickMsEnv : 30 * 60 * 1000;
 if (!inTestSppEnv && sppTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-spp").then(({ sweepMatchSpp }) => {
     const tick = runOnceAtATime("pro-spp", async () => {
@@ -1054,7 +1078,6 @@ if (!inTestSppEnv && sppTickMs > 0 && proLeagueEnabled) {
     }, sppTickMs).unref();
   });
 }
-
 
 // =============================================================================
 // Pro League level-up cron (Lot 3.C.4).
@@ -1097,7 +1120,6 @@ if (!inTestLevelUpEnv && levelUpTickMs > 0 && proLeagueEnabled) {
   });
 }
 
-
 // =============================================================================
 // Pro League TV recompute cron (Lot 4.D.3).
 // =============================================================================
@@ -1115,9 +1137,7 @@ if (!inTestLevelUpEnv && levelUpTickMs > 0 && proLeagueEnabled) {
 const inTestTvEnv =
   process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
 const tvTickMsEnv = Number(process.env.PRO_LEAGUE_TV_TICK_MS);
-const tvTickMs = Number.isFinite(tvTickMsEnv)
-  ? tvTickMsEnv
-  : 30 * 60 * 1000;
+const tvTickMs = Number.isFinite(tvTickMsEnv) ? tvTickMsEnv : 30 * 60 * 1000;
 if (!inTestTvEnv && tvTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-roster-tv").then(({ sweepRecomputeTvs }) => {
     const tick = runOnceAtATime("pro-tv", async () => {
@@ -1138,7 +1158,6 @@ if (!inTestTvEnv && tvTickMs > 0 && proLeagueEnabled) {
     }, tvTickMs).unref();
   });
 }
-
 
 // =============================================================================
 // Pro League rookie replenish cron (sprint 1.E.6).
@@ -1179,7 +1198,6 @@ if (!inTestRookieEnv && rookieTickMs > 0 && proLeagueEnabled) {
   );
 }
 
-
 // =============================================================================
 // Pro League Hall of Fame death-induction cron (sprint 1.E.5).
 // =============================================================================
@@ -1192,9 +1210,7 @@ if (!inTestRookieEnv && rookieTickMs > 0 && proLeagueEnabled) {
 const inTestHofEnv =
   process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
 const hofTickMsEnv = Number(process.env.PRO_LEAGUE_HOF_TICK_MS);
-const hofTickMs = Number.isFinite(hofTickMsEnv)
-  ? hofTickMsEnv
-  : 30 * 60 * 1000;
+const hofTickMs = Number.isFinite(hofTickMsEnv) ? hofTickMsEnv : 30 * 60 * 1000;
 if (!inTestHofEnv && hofTickMs > 0 && proLeagueEnabled) {
   void import("./services/pro-hall-of-fame").then(
     ({ sweepDeathInductions }) => {
@@ -1217,7 +1233,6 @@ if (!inTestHofEnv && hofTickMs > 0 && proLeagueEnabled) {
     },
   );
 }
-
 
 // =============================================================================
 // Pro League Nuffle Gazette LLM cron (sprint 1.E.1).

@@ -41,7 +41,12 @@ export const updateBlogPostSchema = z.object({
     .optional()
     .nullable()
     .refine(
-      (v) => v === undefined || v === null || v === "" || v.startsWith("/") || /^https?:\/\//i.test(v),
+      (v) =>
+        v === undefined ||
+        v === null ||
+        v === "" ||
+        v.startsWith("/") ||
+        /^https?:\/\//i.test(v),
       "coverImageUrl doit être un path /images/... ou une URL http(s)",
     ),
   status: blogStatusEnum.optional(),
@@ -57,5 +62,41 @@ export const publicBlogListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
+// --- Médiathèque (images du blog) ---
+
+/**
+ * Param `:filename` des routes image. La garde de sécurité finale (confinement
+ * anti path-traversal) reste dans `resolveBlogImagePath` (blog-image-store.ts) ;
+ * ce schema donne un 400 propre et cohérent en amont.
+ */
+export const blogImageFilenameParamSchema = z.object({
+  filename: z
+    .string()
+    .min(1)
+    .max(160)
+    .regex(
+      /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(png|jpe?g|gif|webp)$/i,
+      "Nom de fichier image invalide",
+    )
+    .refine((v) => !v.includes(".."), "Nom de fichier invalide"),
+});
+
+/** Body du PATCH d'une image : édition du texte alternatif (null = effacer). */
+export const patchBlogImageSchema = z.object({
+  alt: z.string().trim().max(300).nullable().optional(),
+});
+
+/** Query de listing : recherche + pagination + tri. */
+export const adminBlogImageListQuerySchema = z.object({
+  search: z.string().max(200).optional(),
+  page: z.coerce.number().int().min(1).max(10_000).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(50),
+  sort: z.enum(["date", "name", "size"]).default("date"),
+});
+
 export type CreateBlogPostInput = z.infer<typeof createBlogPostSchema>;
 export type UpdateBlogPostInput = z.infer<typeof updateBlogPostSchema>;
+export type PatchBlogImageInput = z.infer<typeof patchBlogImageSchema>;
+export type AdminBlogImageListQuery = z.infer<
+  typeof adminBlogImageListQuerySchema
+>;
