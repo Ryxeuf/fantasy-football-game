@@ -21,10 +21,13 @@ test.describe("E2E UI — homepage publique", () => {
     // Le H1 est en sr-only mais doit etre present dans le DOM.
     await expect(page.getByRole("heading", { level: 1 })).toBeAttached();
 
-    // Les chiffres "30 / 60+ / 130+ / €0" sont des marqueurs stables du
-    // bandeau stats — au moins un doit etre rendu.
-    await expect(page.getByText(/130\+/).first()).toBeVisible();
-    await expect(page.getByText(/€0/).first()).toBeVisible();
+    // Le bandeau stats du hero expose 4 compteurs (rosters, star players,
+    // competences, gratuite). Les valeurs sont live (API /public/stats) et
+    // localisees, donc on cible le conteneur stable via data-testid plutot
+    // que des chiffres volatils, et on verifie qu'il rend bien ses 4 entrees.
+    const stats = page.getByTestId("home-stats");
+    await expect(stats).toBeVisible();
+    await expect(stats.locator("dd")).toHaveCount(4);
   });
 
   test("le CTA Hero 'Gerer mes equipes' pointe vers /me/teams", async ({

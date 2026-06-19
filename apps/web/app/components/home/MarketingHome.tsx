@@ -246,7 +246,10 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
               </div>
 
               {/* Stats integrees au hero (pas de bande separee) */}
-              <dl className="mt-9 grid grid-cols-4 gap-2 sm:gap-4 max-w-lg border-t border-nuffle-bronze/20 pt-5">
+              <dl
+                data-testid="home-stats"
+                className="mt-9 grid grid-cols-4 gap-2 sm:gap-4 max-w-lg border-t border-nuffle-bronze/20 pt-5"
+              >
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center sm:text-left">
                     <dd className="font-score text-3xl sm:text-4xl text-nuffle-bronze leading-none tracking-wide">

@@ -111,15 +111,12 @@ test.describe("E2E UI — Pro League fan flow", () => {
       timeout: 15_000,
     });
 
-    const hasList = await page
-      .getByTestId("hof-list")
-      .isVisible()
-      .catch(() => false);
-    const hasEmpty = await page
-      .getByTestId("empty-hof")
-      .isVisible()
-      .catch(() => false);
-    expect(hasList || hasEmpty).toBe(true);
+    // La liste ou l'empty state est rendu apres un fetch async : on attend
+    // l'un des deux (pattern auto-retry) plutot qu'un isVisible() instantane
+    // qui flake quand les donnees ne sont pas encore arrivees.
+    const list = page.getByTestId("hof-list");
+    const empty = page.getByTestId("empty-hof");
+    await expect(list.or(empty)).toBeVisible({ timeout: 10_000 });
   });
 
   test("la page /pro-league/about rend pitch + FAQ + disclaimer", async ({
