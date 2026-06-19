@@ -1,9 +1,16 @@
 # 01 — Cadre légal & Pseudonymisation
 
-> **⚠️ Disclaimer** : ce document est une synthèse d'orientation issue
-> d'une session d'exploration. Il **ne remplace pas** un avis juridique
-> formel. Avant lancement commercial, validation par un juriste IP/RGPD
-> (FR + US) est obligatoire.
+> **✅ Validation juridique : OK (2026-06-19).** L'approche
+> pseudonymisée décrite dans ce document a été validée pour le lancement :
+> stats réelles en usage libre (faits non protégés, précédent CBC v. MLB
+> AM), aucun nom/logo/couleur/photo NFL, joueurs pseudonymisés. Ce
+> document reste la référence des conventions à respecter — toute
+> évolution (ex. affichage `realNameDisplay`, licence NFLPA) devra
+> repasser par une revue dédiée.
+>
+> *Historique : ce document était à l'origine une synthèse d'orientation
+> issue d'une session d'exploration, en attente de validation par un
+> juriste IP/RGPD (FR + US). Cette validation est désormais acquise.*
 
 ## TL;DR
 

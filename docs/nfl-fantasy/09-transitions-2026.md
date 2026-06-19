@@ -5,8 +5,173 @@
 > probables, trades de printemps/été.
 >
 > **⚠️ Cutoff connaissances** : janvier 2026. Free agency 2026 (mars 2026)
-> et draft 2026 (avril 2026) **non couverts** — à compléter manuellement
-> au fil des annonces officielles.
+> et draft 2026 (avril 2026) **non couverts par les tables ci-dessous** —
+> à compléter manuellement au fil des annonces officielles. Les rosters
+> réels sont en revanche ingérés automatiquement depuis nflverse (cf.
+> § "Calendrier officiel de publication des rosters 2026-27" ci-dessous).
+
+## Calendrier officiel de publication des rosters 2026-27
+
+> Recherche web du 2026-06-19. Sources en bas de section.
+
+Le module **n'a pas besoin de saisir les rosters à la main** : ils sont
+ingérés depuis nflverse (`ingestNflverseRosters`, cf.
+[`28-rosters-scores-bio.md`](./28-rosters-scores-bio.md)). Ce qui compte,
+c'est *quand* la donnée est fiable.
+
+| Jalon 2026-27 | Date | Conséquence pour l'ingestion |
+|---|---|---|
+| Free agency (ouverture) | mi-mars 2026 | Mouvements UFA actés — rosters nflverse "offseason" bougent |
+| Draft NFL 2026 | avril 2026 | Rookies ajoutés ; nflverse publie les picks |
+| Training camps | fin juillet 2026 | Rosters gonflés à **90 joueurs** (non représentatifs) |
+| **Cutdown 53** | **dim. 30 août 2026, 17h CT** | Rosters **définitifs à 53** — nouveau créneau (avancé vs le mardi historique) |
+| Waivers | lun. 31 août 2026, 12h CT | Derniers ajustements post-cutdown |
+| Kickoff saison régulière | **mer. 9 sept. 2026** (SEA–NE) | Premières stats réelles → premier settle hebdo |
+
+**Disponibilité nflverse** : le repo `nflverse/nflverse-data` publie les
+rosters via la release `weekly_rosters` (NFL Shield v2 API, historique
+depuis 2002), rafraîchie en continu. Le fichier `roster_2026.csv` est
+donc disponible dès le printemps 2026 (rosters offseason post-draft),
+puis converge vers la vérité au fil des camps. Accès via URL release
+directe (pattern actuel) ou `nflreadr` / `nfl-data-py`.
+
+### Procédure d'ingestion 2026-27 recommandée
+
+1. **Dès maintenant (offseason post-draft)** : seed + rosters seuls,
+   sans stats ni scores (aucun match joué). Cible Makefile dédiée :
+   `make nfl-bootstrap-2026-rosters` (local) /
+   `make nfl-bootstrap-prod-2026-rosters` (prod). Permet aux coachs de
+   drafter sur un catalogue à jour des mouvements FA + rookies.
+2. **Après le cutdown du 30 août 2026** : re-run idempotent de la même
+   cible pour figer les rosters définitifs à 53.
+3. **À partir du kickoff (9 sept. 2026)** : le cron
+   `nflFantasyOrchestratorTick` prend le relais (ingestion gameday +
+   settle hebdo) sans intervention manuelle.
+
+> ⚠️ **Tant que `roster_2026` n'est pas ingéré**, le catalogue draftable
+> reste celui de 2025. Lancer l'étape 1 avant d'ouvrir des ligues
+> 2026-27.
+
+**Sources** :
+[NFL change le créneau du cutdown 53 (Yahoo Sports)](https://sports.yahoo.com/articles/nfl-announces-earlier-53-man-231554226.html) ·
+[Bleacher Report — nouveau cutdown 2026](https://bleacherreport.com/articles/25431904-nfl-reportedly-changes-roster-cutdown-deadline-ahead-2026-season-new-date-revealed) ·
+[Pro Football Network — deadline cutdown](https://www.profootballnetwork.com/53-man-roster-cut-deadline-nfl/) ·
+[nflverse/nflverse-data releases](https://github.com/nflverse/nflverse-data/releases) ·
+[nflverse/nflverse-rosters](https://github.com/nflverse/nflverse-rosters)
+
+## Mouvements 2026-27 actés (données réelles nflverse `roster_2026`)
+
+> **Source** : snapshot `roster_2026.csv` nflverse récupéré le 2026-06-19
+> (rosters **offseason** post-draft). Détection par diff `gsis_id` entre
+> `roster_2025` et `roster_2026` (changement d'équipe, statut ACT en 2026).
+> Ces données sont **ingérées automatiquement** à l'ingest — les tables
+> ci-dessous servent de référence humaine et de note de re-mapping race.
+> Elles se figent au cutdown du 30/08/2026 (re-run du bootstrap conseillé).
+> Les tables "à monitorer" / "rookies 2025" plus bas sont désormais
+> **historiques** (spéculatives, cutoff jan 2026) — superseded par cette section.
+
+### QB — changements d'équipe 2025 → 2026 (tous, ACT)
+
+| Joueur | Mouvement | Race BB d'arrivée | Exp |
+|---|---|---|---|
+| Tua Tagovailoa | MIA → ATL | Atlanta Humans | 6 |
+| Kyler Murray | ARI → MIN | Minnesota Norse | 7 |
+| Kirk Cousins | ATL → LV | Las Vegas Khorne | 14 |
+| Justin Fields | NYJ → KC | Kansas City Skaven | 5 |
+| Geno Smith | LV → NYJ | New York Khorne | 13 |
+| Sam Howell | PHI → DAL | Dallas Humans | 4 |
+| Kenny Pickett | LV → CAR | Carolina Necromantic | 4 |
+| Gardner Minshew | KC → ARI | Arizona Skaven | 7 |
+| Mitchell Trubisky | BUF → TEN | Tennessee Necromantic | 9 |
+| Teddy Bridgewater | TB → DET | Detroit Norse | 12 |
+| Malik Willis | GB → MIA | Miami Skaven | 4 |
+| Hendon Hooker | NYJ → TEN | Tennessee Necromantic | 3 |
+| Kyle McCord | PHI → GB | Green Bay Humans | 1 |
+| Jake Browning | CIN → TB | Tampa Bay Khorne | 7 |
+| Bailey Zappe | CLE → NYJ | New York Khorne | 4 |
+| Zach Wilson | MIA → NO | New Orleans Necromantic | 5 |
+| Will Grier | DAL → CAR | Carolina Necromantic | 7 |
+| Skylar Thompson | PIT → BAL | Baltimore Orcs | 4 |
+| Kyle Allen | DET → BUF | Buffalo Norse | 8 |
+| Trevor Siemian | TEN → ATL | Atlanta Humans | 11 |
+| Tyrod Taylor | NYJ → GB | Green Bay Humans | 15 |
+| Brandon Allen | TEN → NYG | New York Dwarfs | 10 |
+| Easton Stick | ATL → IND | Indianapolis Dwarfs | 7 |
+| Andy Dalton | CAR → PHI | Philadelphia Orcs | 15 |
+| Josh Johnson | WAS → CIN | Cincinnati Wood Elf | 18 |
+
+### Skill players — mouvements notables 2025 → 2026
+
+> Sélection des noms à fort impact fantasy. La liste complète des
+> changements d'équipe RB/WR/TE (≈115) est dérivable du même diff CSV.
+
+| Pos | Joueur | Mouvement | Race BB d'arrivée |
+|---|---|---|---|
+| WR | A.J. Brown | PHI → NE | New England Dwarfs |
+| WR | Mike Evans | TB → SF | San Francisco Orcs |
+| WR | DJ Moore | CHI → BUF | Buffalo Norse |
+| WR | Jaylen Waddle | MIA → DEN | Denver Necromantic |
+| WR | Christian Kirk | HOU → SF | San Francisco Orcs |
+| WR | Michael Pittman | IND → PIT | Pittsburgh Orcs |
+| WR | Marquise Brown | KC → PHI | Philadelphia Orcs |
+| WR | Jahan Dotson | PHI → ATL | Atlanta Humans |
+| WR | Darnell Mooney | ATL → NYG | New York Dwarfs |
+| WR | JuJu Smith-Schuster | KC → NYG | New York Dwarfs |
+| WR | Wan'Dale Robinson | NYG → TEN | Tennessee Necromantic |
+| WR | Jauan Jennings | SF → MIN | Minnesota Norse |
+| WR | Elijah Moore | DEN → PHI | Philadelphia Orcs |
+| WR | Marquez Valdes-Scantling | PIT → DAL | Dallas Humans |
+| WR | Nick Westbrook-Ikhine | MIA → IND | Indianapolis Dwarfs |
+| RB | Kenneth Walker III | SEA → KC | Kansas City Skaven |
+| RB | Isiah Pacheco | KC → DET | Detroit Norse |
+| RB | David Montgomery | DET → HOU | Houston Skaven |
+| RB | Travis Etienne | JAX → NO | New Orleans Necromantic |
+| RB | Rachaad White | TB → WAS | Washington Wood Elf |
+| RB | Rico Dowdle | CAR → PIT | Pittsburgh Orcs |
+| RB | Kenneth Gainwell | PIT → TB | Tampa Bay Khorne |
+| TE | David Njoku | CLE → LAC | Los Angeles Khorne |
+| TE | Isaiah Likely | BAL → NYG | New York Dwarfs |
+| TE | Noah Fant | CIN → NO | New Orleans Necromantic |
+| TE | Tyler Conklin | LAC → DET | Detroit Norse |
+
+### Draft NFL 2026 — Round 1 (réel, `roster_2026`)
+
+> 30 picks résolus dans le snapshot (les #1 et #13 n'ont pas encore de
+> `gsis_id` rattaché — à compléter au re-run post-camps). Le poste BB est
+> dérivé automatiquement (race d'équipe × poste NFL) à l'ingest.
+
+| # | Joueur | Équipe | Pos NFL | Race BB |
+|---|---|---|---|---|
+| 2 | David Bailey | NYJ | LB | New York Khorne |
+| 3 | Jeremiyah Love | ARI | RB | Arizona Skaven |
+| 4 | Carnell Tate | TEN | WR | Tennessee Necromantic |
+| 5 | Arvell Reese | NYG | LB | New York Dwarfs |
+| 6 | Mansoor Delane | KC | DB | Kansas City Skaven |
+| 7 | Sonny Styles | WAS | LB | Washington Wood Elf |
+| 8 | Jordyn Tyson | NO | WR | New Orleans Necromantic |
+| 9 | Spencer Fano | CLE | OL | Cleveland Dwarfs |
+| 10 | Francis Mauigoa | NYG | OL | New York Dwarfs |
+| 11 | Caleb Downs | DAL | DB | Dallas Humans |
+| 12 | Kadyn Proctor | MIA | OL | Miami Skaven |
+| 14 | Olaivavega Ioane | BAL | OL | Baltimore Orcs |
+| 15 | Rueben Bain | TB | LB | Tampa Bay Khorne |
+| 16 | Kenyon Sadiq | NYJ | TE | New York Khorne |
+| 17 | Blake Miller | DET | OL | Detroit Norse |
+| 18 | Caleb Banks | MIN | DL | Minnesota Norse |
+| 19 | Monroe Freeling | CAR | OL | Carolina Necromantic |
+| 20 | Makai Lemon | PHI | WR | Philadelphia Orcs |
+| 21 | Max Iheanachor | PIT | OL | Pittsburgh Orcs |
+| 22 | Akheem Mesidor | LAC | LB | Los Angeles Khorne |
+| 23 | Malachi Lawrence | DAL | DL | Dallas Humans |
+| 24 | K.C. Concepcion | CLE | WR | Cleveland Dwarfs |
+| 25 | Dillon Thieneman | CHI | DB | Chicago Norse |
+| 26 | Keylan Rutledge | HOU | OL | Houston Skaven |
+| 27 | Chris Johnson | MIA | DB | Miami Skaven |
+| 28 | Caleb Lomu | NE | OL | New England Dwarfs |
+| 29 | Peter Woods | KC | DL | Kansas City Skaven |
+| 30 | Omar Cooper | NYJ | WR | New York Khorne |
+| 31 | Keldric Faulk | TEN | DL | Tennessee Necromantic |
+| 32 | Jadarian Price | SEA | RB | Seattle Humans |
 
 ## Free agents 2026 (à monitorer)
 

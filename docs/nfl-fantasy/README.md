@@ -50,20 +50,21 @@
 | 28 | [rosters-scores-bio.md](./28-rosters-scores-bio.md) | Rosters nflverse (bio + jersey), backfill scores ESPN par week, page joueur ESPN-style (Phase 5.A+B+C) |
 | 29 | [unique-pseudonyms-public-preview.md](./29-unique-pseudonyms-public-preview.md) | Pseudonyms BB-flavored uniques (surname hash playerId) + apercu profil public dans admin (Phase 5.D) |
 | 30 | [prod-bootstrap.md](./30-prod-bootstrap.md) | Script `bootstrap-nfl-prod.ts` + targets Makefile pour populate la DB en prod (Phase 5.E) |
+| 31 | [player-career.md](./31-player-career.md) | Carrière joueur V2 : SPP cumulés → achat de skills BB via pool d'accès Position (Phase V2) |
 
 ## Statut des sections
 
 | Section | Statut | Confiance | Action |
 |---|---|---|---|
 | Vision & scope | Draft v1 | Haute | Validation produit |
-| Légal | Draft v1 | Moyenne | À faire valider par juriste (FR/EU) |
+| Légal | **Validé ✅ (2026-06-19)** | Haute | Approche pseudonymisée validée pour le lancement. Cf. [`01-legal.md`](./01-legal.md). |
 | API stratégie | Draft v1.4 | Haute | POC nflverse + ESPN ✅ — Tank01 V1.5 à intégrer |
 | Race mapping (teams) | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` team-to-race (32 teams, 24 tests) |
 | Position mapping | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` position-to-bb (8 races × 26 NflPos, 55 tests) |
 | Scoring (stats → SPP) | Implementé v1 ✅ | Moyenne | `@bb/nfl-mapper` stats-to-spp + captain multiplier (43 tests). À calibrer sur saison entière |
 | Mechanics (BB) | Draft v1 | Haute | Validation prototype |
 | Rosters 2025 | Draft v1 | Moyenne | Coupure jan 2026 — à updater |
-| Transitions 2026 | Draft v1 | Faible | FA/Draft post mars-avril 2026 |
+| Transitions 2026 | Draft v1.2 | Haute | Mouvements 2026-27 **réels** extraits de nflverse `roster_2026` (25 QB, ~26 skill notables, draft round 1) + calendrier officiel (cutdown 30/08, kickoff 09/09). Cf. [`09-transitions-2026.md`](./09-transitions-2026.md). |
 | Architecture | Implementé v1 ✅ | Haute | Schéma Prisma 14 modèles NflXxx (Phase 1 + 2.C-2.F), migrations appliquées Voie B sur DB réelle. |
 | Pseudonymisation | Implementé v1 ✅ | Haute | `@bb/nfl-mapper` pseudonymize (Q8, 31 tests) |
 | Ingestion (nflverse + ESPN) | Implementé v1 ✅ | Haute | `nfl-ingest.ts` + `nfl-ingest-espn.ts` Phase 2.A/2.B. 74 tests + E2E W10 2025 validé (14 games, 962 stats). Doc [`11-ingestion-pipeline.md`](./11-ingestion-pipeline.md). |
@@ -77,6 +78,12 @@
 | Backfill saisons passées | Implementé v1 ✅ | Haute | `backfillNflSeason` Phase 3.E + fix schedules.csv fallback pour 2024 (nflverse a drop `game_id`). 6 tests + 2023+2024 ingerees sur Postgres (285+285=570 games · 37580 stats). Doc [`22-backfill-past-seasons.md`](./22-backfill-past-seasons.md). |
 | Admin audit + weeks + leagues | Implementé v1 ✅ | Haute | Phase 3.D : audit log NflIngestRun + calendrier 22 weeks + leagues globales admin. 12 tests + 5 pages. Doc [`23-admin-audit-weeks-leagues.md`](./23-admin-audit-weeks-leagues.md). |
 | Bulk actions + replay saison | Implementé v1 ✅ | Haute | Phase 3.F (recomputeSeasonSpp + reDeriveAllPlayersBb) + 3.G (replaySeason). 16 tests + E2E 8 teams × 18 weeks de 2024 settled en 4s. Doc [`24-bulk-actions-replay.md`](./24-bulk-actions-replay.md). |
+| Carrière joueur + skills BB (V2) | Implementé v2 ✅ | Haute | Boucle fermée NFL→SPP→carrière→achat skill BB→bonus scoring. `nfl-fantasy-player-career` (9 tests) + `nfl-fantasy-skill-unlock` (22 tests) + `nfl-fantasy-skill-bonus` (53 tests). Doc [`31-player-career.md`](./31-player-career.md). |
+| Cote dynamique joueur (V3) | Implementé v3 ✅ | Moyenne | `nfl-fantasy-player-value` (11 tests) : cote MPG-like 60% SPP saison / 40% forme 4 weeks, clamp [50, 3000], maj post-settle. |
+| Draft live enchères + bots (V2) | Implementé v2 ✅ | Haute | `nfl-fantasy-draft-session` (12+5 tests) : enchères secrètes asynchrones MPG-style, résolution par bid max + tiebreak. Bots de test : `nfl-fantasy-bot-draft` (21 tests) + `nfl-fantasy-bot-lineup` (11 tests). Pages `/draft` + `/draft/recap`. |
+| Cycles de saison "Nuffle Coach" (V2) | Implementé v2 ✅ | Haute | `nfl-fantasy-season-cycle` (18 tests) : saison découpée en 4 cycles (W1-6 / W7-12 / W13-18 / W19-22 playoffs), snap-to-next-window. |
+| Lineup carry-over (V2) | Implementé v2 ✅ | Haute | `nfl-fantasy-lineup-carryover` (12 tests) : reporter le lineup de la semaine n-1, recalibre captain/vice + filtre joueurs partis. |
+| Matchup detail (V2) | Implementé v2 ✅ | Haute | `nfl-fantasy-matchup-detail` (23 tests) : vue read-only "comment j'ai gagné/perdu" (events, bonus skills, captainBonus, decisivePlayers). |
 
 ## Convention de mise à jour
 
@@ -90,6 +97,10 @@ Cette doc évolue en suivant les patterns du projet :
 
 | Date | Version | Notes |
 |---|---|---|
+| 2026-06-19 | v6.3 | **Transitions 2026-27 réelles.** Extraction depuis le snapshot nflverse `roster_2026.csv` (diff `gsis_id` vs `roster_2025`) : 25 changements d'équipe QB, ~26 mouvements skill notables (A.J. Brown PHI→NE, Mike Evans TB→SF, Tua MIA→ATL, Kyler ARI→MIN, Kenneth Walker SEA→KC…), draft NFL 2026 round 1 (30 picks résolus). Annotés avec la race BB d'arrivée. Les anciennes tables spéculatives (cutoff jan 2026) deviennent historiques. Vérifié que `roster_2026.csv` est publié et peuplé (813 KB). Cf. [`09-transitions-2026.md`](./09-transitions-2026.md) § Mouvements actés. |
+| 2026-06-19 | v6.2 | **Saison 2026-27 — préparation rosters.** Recherche officielle du calendrier NFL 2026 : cutdown 53 le **dim. 30/08/2026 17h CT** (créneau avancé), waivers 31/08, **kickoff mer. 09/09/2026** (SEA–NE). Rosters nflverse (`weekly_rosters`, NFL Shield v2 API) dispo dès le printemps. **Code** : bootstrap documenté pour le cas "saison en cours" (rosters seuls) + 2 cibles Makefile `nfl-bootstrap-2026-rosters` (local) / `nfl-bootstrap-prod-2026-rosters` (prod) = `--season 2026 --skip-stats --skip-scores`. **Doc** : [`09-transitions-2026.md`](./09-transitions-2026.md) § calendrier officiel + procédure d'ingestion en 3 étapes. |
+| 2026-06-19 | v6.1 | **Validation juridique OK.** L'approche pseudonymisée (stats réelles en usage libre, zéro nom/logo/couleur/photo NFL, joueurs pseudonymisés) est validée pour le lancement. [`01-legal.md`](./01-legal.md) + ligne "Légal" de la table de statut mises à jour. |
+| 2026-06-19 | v6.0 | **Consignation de la vague V2/V3 livrée** (committée mais absente du changelog). (1) **Carrière + skills BB** — boucle fermée NFL→SPP semaine→`sppCareer`→achat skill BB via pool d'accès Position→bonus scoring : `nfl-fantasy-player-career` (9 tests), `nfl-fantasy-skill-unlock` (22 tests), `nfl-fantasy-skill-bonus` (53 tests). Doc [`31-player-career.md`](./31-player-career.md) (ajoutée à l'index). (2) **Draft live MPG-style** — `nfl-fantasy-draft-session` (enchères secrètes asynchrones + résolution bid max/tiebreak, 12+5 tests) + bots de test `nfl-fantasy-bot-draft` (21) / `nfl-fantasy-bot-lineup` (11) ; pages `/draft` + `/draft/recap`. (3) **Cote dynamique joueur V3** — `nfl-fantasy-player-value` (60% SPP saison / 40% forme 4 weeks, clamp [50,3000], 11 tests). (4) **Cycles de saison "Nuffle Coach"** — `nfl-fantasy-season-cycle` (4 cycles W1-6/7-12/13-18/19-22, snap-to-next-window, 18 tests). (5) **Lineup carry-over** — `nfl-fantasy-lineup-carryover` (report lineup n-1, 12 tests). (6) **Matchup detail** — `nfl-fantasy-matchup-detail` ("comment j'ai gagné/perdu", decisivePlayers, 23 tests). Pages web associées : `career[/playerId]`, `standings`, `players[/id]`, `public`, `rules`, `about`. Lignes de statut V2/V3 ajoutées à la table ci-dessus. |
 | 2026-05-19 | v1 | Création initiale (session exploratoire) |
 | 2026-05-19 | v1.1 | Tranchage Q1/Q3/Q4/Q5 : snake draft, captain ×1.5 + vice ×1.2, prayers par TV, race fixe par équipe |
 | 2026-05-19 | v1.2 | Tranchage Q2/Q6/Q7/Q8 : 10 users/league, silos séparés Pro League, freemium V1, pseudo full + flag DB `realNameDisplay` |
