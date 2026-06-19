@@ -136,12 +136,15 @@ directe (pattern actuel) ou `nflreadr` / `nfl-data-py`.
 
 ### Draft NFL 2026 — Round 1 (réel, `roster_2026`)
 
-> 30 picks résolus dans le snapshot (les #1 et #13 n'ont pas encore de
-> `gsis_id` rattaché — à compléter au re-run post-camps). Le poste BB est
-> dérivé automatiquement (race d'équipe × poste NFL) à l'ingest.
+> 32 picks complets. Les #1 et #13 (non rattachés à un `gsis_id` dans le
+> snapshot offseason) sont renseignés depuis des sources web (cf. liens en
+> fin de section) — ils seront réconciliés automatiquement au prochain
+> ingest nflverse. Le poste BB est dérivé automatiquement (race d'équipe ×
+> poste NFL) à l'ingest.
 
 | # | Joueur | Équipe | Pos NFL | Race BB |
 |---|---|---|---|---|
+| 1 | Fernando Mendoza | LV | QB | Las Vegas Khorne |
 | 2 | David Bailey | NYJ | LB | New York Khorne |
 | 3 | Jeremiyah Love | ARI | RB | Arizona Skaven |
 | 4 | Carnell Tate | TEN | WR | Tennessee Necromantic |
@@ -153,6 +156,7 @@ directe (pattern actuel) ou `nflreadr` / `nfl-data-py`.
 | 10 | Francis Mauigoa | NYG | OL | New York Dwarfs |
 | 11 | Caleb Downs | DAL | DB | Dallas Humans |
 | 12 | Kadyn Proctor | MIA | OL | Miami Skaven |
+| 13 | Ty Simpson | LAR | QB | Los Angeles Wood Elf |
 | 14 | Olaivavega Ioane | BAL | OL | Baltimore Orcs |
 | 15 | Rueben Bain | TB | LB | Tampa Bay Khorne |
 | 16 | Kenyon Sadiq | NYJ | TE | New York Khorne |
@@ -172,6 +176,14 @@ directe (pattern actuel) ou `nflreadr` / `nfl-data-py`.
 | 30 | Omar Cooper | NYJ | WR | New York Khorne |
 | 31 | Keldric Faulk | TEN | DL | Tennessee Necromantic |
 | 32 | Jadarian Price | SEA | RB | Seattle Humans |
+
+**Sources picks #1 / #13** (hors snapshot nflverse) :
+[Raiders.com — Mendoza #1](https://www.raiders.com/news/fernando-mendoza-no-1-overall-pick-raiders-quarterback-2026-nfl-draft-indiana-football) ·
+[Yahoo Sports — Rams prennent Ty Simpson au #13](https://sports.yahoo.com/nfl/live/2026-nfl-draft-first-round-results-grades-as-fernando-mendoza-goes-no-1-jeremiyah-love-heads-to-cardinals-rams-take-ty-simpson-at-no-13-140000468.html) ·
+[Wikipedia — 2026 NFL draft](https://en.wikipedia.org/wiki/2026_NFL_draft)
+
+> Note : le #13 a été acquis par les Rams (LAR, Wood Elf) via un trade
+> avec Atlanta — le rookie est donc rattaché à LAR, pas à ATL.
 
 ## Free agents 2026 (à monitorer)
 
