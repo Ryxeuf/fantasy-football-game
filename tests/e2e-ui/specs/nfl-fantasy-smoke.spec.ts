@@ -43,15 +43,16 @@ test.describe("E2E UI — NFL Fantasy smoke", () => {
     await page.goto("/nfl-fantasy/new");
 
     await expect(
-      page.getByRole("heading", { name: /Créer une league NFL Fantasy/i }),
+      page.getByRole("heading", { name: /Créer un championnat/i }),
     ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("nfl-fantasy-new-form")).toBeVisible();
 
-    // Les inputs critiques (nom league + nom equipe) sont presents.
+    // Les inputs critiques toujours rendus (nom championnat + nom equipe +
+    // taille). Le selecteur de mini-saison est conditionnel aux cycles
+    // seedes en DB, donc on ne l'assert pas dans ce smoke test sans seed.
     await expect(page.locator("input#name")).toBeVisible();
     await expect(page.locator("input#teamName")).toBeVisible();
-    await expect(page.locator("select#seasonId")).toBeVisible();
-    await expect(page.locator("select#draftMode")).toBeVisible();
+    await expect(page.locator("input#size")).toBeVisible();
   });
 
   test("la page /nfl-fantasy/join rend le formulaire d'invite", async ({
@@ -60,7 +61,7 @@ test.describe("E2E UI — NFL Fantasy smoke", () => {
     await page.goto("/nfl-fantasy/join");
 
     await expect(
-      page.getByRole("heading", { name: /Rejoindre une league/i }),
+      page.getByRole("heading", { name: /Rejoindre un championnat/i }),
     ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("nfl-fantasy-join-form")).toBeVisible();
   });
@@ -68,13 +69,13 @@ test.describe("E2E UI — NFL Fantasy smoke", () => {
   test("le retour depuis /new ramene a /nfl-fantasy", async ({ page }) => {
     await page.goto("/nfl-fantasy/new");
     await expect(
-      page.getByRole("heading", { name: /Créer une league NFL Fantasy/i }),
+      page.getByRole("heading", { name: /Créer un championnat/i }),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Le layout NFL Fantasy expose un lien nav "Mes leagues" en plus du
-    // bouton retour "← Mes leagues" sur la page /new — on cible le lien
+    // Le layout NFL Fantasy expose un lien nav "Mes championnats" en plus du
+    // bouton retour "← Mes championnats" sur la page /new — on cible le lien
     // de retour explicitement.
-    await page.getByRole("link", { name: "← Mes leagues" }).click();
+    await page.getByRole("link", { name: "← Mes championnats" }).click();
     await page.waitForURL("**/nfl-fantasy");
     expect(new URL(page.url()).pathname).toBe("/nfl-fantasy");
   });

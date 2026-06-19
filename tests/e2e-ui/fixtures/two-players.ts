@@ -41,8 +41,10 @@ export const test = base.extend<TwoPlayersFixtures>({
     const login = new LoginPage(page);
     await login.goto();
     await login.login(coaches.alice.email, coaches.alice.password);
-    // Le front redirige après login — on attend que /play soit accessible.
-    await page.waitForURL(/\/(play|team)/, { timeout: 15_000 });
+    // Le front redirige après login vers le hub coach `/me` (défaut), ou
+    // vers /play|/team selon le paramètre `redirect`. On attend l'une de ces
+    // routes pour confirmer que la connexion a bien abouti.
+    await page.waitForURL(/\/(me|play|team)/, { timeout: 15_000 });
 
     await use({
       context: ctx,
@@ -62,7 +64,7 @@ export const test = base.extend<TwoPlayersFixtures>({
     const login = new LoginPage(page);
     await login.goto();
     await login.login("bob@playwright.test", "password-b");
-    await page.waitForURL(/\/(play|team)/, { timeout: 15_000 });
+    await page.waitForURL(/\/(me|play|team)/, { timeout: 15_000 });
 
     await use({
       context: ctx,
