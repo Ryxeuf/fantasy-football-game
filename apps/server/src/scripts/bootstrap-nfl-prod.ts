@@ -31,6 +31,16 @@
  *   --skip-scores      Skip backfillScoresFromSchedules.
  *
  * Duree estimee : ~5-7 min par saison sur connexion correcte.
+ *
+ * Saison en cours (ex: 2026 avant le kickoff du 09/09/2026) :
+ *   Aucun match n'a encore ete joue, donc stats + scores n'existent
+ *   pas. Lancer rosters-seuls :
+ *     pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts \
+ *       --season 2026 --skip-stats --skip-scores
+ *   nflverse publie les rosters offseason des le printemps puis les
+ *   met a jour en continu ; les rosters definitifs a 53 sont figes
+ *   apres le cutdown du 30/08/2026 (re-run idempotent a ce moment).
+ *   Cf. docs/nfl-fantasy/09-transitions-2026.md pour le calendrier.
  */
 
 import { prisma } from "../prisma";

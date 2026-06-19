@@ -344,6 +344,11 @@ nfl-bootstrap-2025: ## Populate uniquement la saison 2025 (rapide ~5min, idéal 
 	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts --season 2025
 	@echo "✅ Bootstrap saison 2025 terminé"
 
+nfl-bootstrap-2026-rosters: ## Seed la saison 2026 + rosters seuls (skip stats/scores : aucun match joué avant le 09/09/2026). LOCAL DEV.
+	@echo "🏈 Bootstrap rosters NFL 2026 (seed + rosters, sans stats/scores)..."
+	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts --season 2026 --skip-stats --skip-scores
+	@echo "✅ Rosters 2026 ingérés (re-run après le cutdown 30/08/2026 pour les rosters définitifs à 53)"
+
 # ─── Variantes PROD (via docker exec dans le container nufflearena_server) ──
 # Sur la VM, les `node_modules/` du repo Git pulled ne contiennent pas les
 # deps recentes (ex: csv-parse Phase 5.A) — seul le container Docker
@@ -369,6 +374,11 @@ nfl-bootstrap-prod-rosters: ## (PROD) Re-ingest uniquement les rosters (bio + je
 	@echo "🏈 Re-ingest rosters NFL via $(NFL_BOOTSTRAP_CONTAINER)..."
 	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --skip-stats --skip-scores"
 	@echo "✅ Rosters re-ingerés"
+
+nfl-bootstrap-prod-2026-rosters: ## (PROD) Seed saison 2026 + rosters seuls (skip stats/scores). A relancer apres le cutdown 53 du 30/08/2026.
+	@echo "🏈 Bootstrap rosters NFL 2026 via $(NFL_BOOTSTRAP_CONTAINER)..."
+	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --season 2026 --skip-stats --skip-scores"
+	@echo "✅ Rosters 2026 ingérés"
 
 db-migrate-status: ## Vérifie le statut des migrations Prisma
 	@echo "📊 Statut des migrations Prisma..."

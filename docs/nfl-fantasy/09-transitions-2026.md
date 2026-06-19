@@ -5,8 +5,59 @@
 > probables, trades de printemps/été.
 >
 > **⚠️ Cutoff connaissances** : janvier 2026. Free agency 2026 (mars 2026)
-> et draft 2026 (avril 2026) **non couverts** — à compléter manuellement
-> au fil des annonces officielles.
+> et draft 2026 (avril 2026) **non couverts par les tables ci-dessous** —
+> à compléter manuellement au fil des annonces officielles. Les rosters
+> réels sont en revanche ingérés automatiquement depuis nflverse (cf.
+> § "Calendrier officiel de publication des rosters 2026-27" ci-dessous).
+
+## Calendrier officiel de publication des rosters 2026-27
+
+> Recherche web du 2026-06-19. Sources en bas de section.
+
+Le module **n'a pas besoin de saisir les rosters à la main** : ils sont
+ingérés depuis nflverse (`ingestNflverseRosters`, cf.
+[`28-rosters-scores-bio.md`](./28-rosters-scores-bio.md)). Ce qui compte,
+c'est *quand* la donnée est fiable.
+
+| Jalon 2026-27 | Date | Conséquence pour l'ingestion |
+|---|---|---|
+| Free agency (ouverture) | mi-mars 2026 | Mouvements UFA actés — rosters nflverse "offseason" bougent |
+| Draft NFL 2026 | avril 2026 | Rookies ajoutés ; nflverse publie les picks |
+| Training camps | fin juillet 2026 | Rosters gonflés à **90 joueurs** (non représentatifs) |
+| **Cutdown 53** | **dim. 30 août 2026, 17h CT** | Rosters **définitifs à 53** — nouveau créneau (avancé vs le mardi historique) |
+| Waivers | lun. 31 août 2026, 12h CT | Derniers ajustements post-cutdown |
+| Kickoff saison régulière | **mer. 9 sept. 2026** (SEA–NE) | Premières stats réelles → premier settle hebdo |
+
+**Disponibilité nflverse** : le repo `nflverse/nflverse-data` publie les
+rosters via la release `weekly_rosters` (NFL Shield v2 API, historique
+depuis 2002), rafraîchie en continu. Le fichier `roster_2026.csv` est
+donc disponible dès le printemps 2026 (rosters offseason post-draft),
+puis converge vers la vérité au fil des camps. Accès via URL release
+directe (pattern actuel) ou `nflreadr` / `nfl-data-py`.
+
+### Procédure d'ingestion 2026-27 recommandée
+
+1. **Dès maintenant (offseason post-draft)** : seed + rosters seuls,
+   sans stats ni scores (aucun match joué). Cible Makefile dédiée :
+   `make nfl-bootstrap-2026-rosters` (local) /
+   `make nfl-bootstrap-prod-2026-rosters` (prod). Permet aux coachs de
+   drafter sur un catalogue à jour des mouvements FA + rookies.
+2. **Après le cutdown du 30 août 2026** : re-run idempotent de la même
+   cible pour figer les rosters définitifs à 53.
+3. **À partir du kickoff (9 sept. 2026)** : le cron
+   `nflFantasyOrchestratorTick` prend le relais (ingestion gameday +
+   settle hebdo) sans intervention manuelle.
+
+> ⚠️ **Tant que `roster_2026` n'est pas ingéré**, le catalogue draftable
+> reste celui de 2025. Lancer l'étape 1 avant d'ouvrir des ligues
+> 2026-27.
+
+**Sources** :
+[NFL change le créneau du cutdown 53 (Yahoo Sports)](https://sports.yahoo.com/articles/nfl-announces-earlier-53-man-231554226.html) ·
+[Bleacher Report — nouveau cutdown 2026](https://bleacherreport.com/articles/25431904-nfl-reportedly-changes-roster-cutdown-deadline-ahead-2026-season-new-date-revealed) ·
+[Pro Football Network — deadline cutdown](https://www.profootballnetwork.com/53-man-roster-cut-deadline-nfl/) ·
+[nflverse/nflverse-data releases](https://github.com/nflverse/nflverse-data/releases) ·
+[nflverse/nflverse-rosters](https://github.com/nflverse/nflverse-rosters)
 
 ## Free agents 2026 (à monitorer)
 
