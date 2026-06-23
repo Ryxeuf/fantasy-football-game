@@ -1,3 +1,16 @@
+## [1.182.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.181.0...v1.182.0) (2026-06-23)
+
+
+### ✨ Features
+
+* **allowed-teams:** refactor team validation and add tests ([0286f81](https://github.com/Ryxeuf/fantasy-football-game/commit/0286f81fd423a1fe264fbba0bfa6574e58c543db))
+
+
+### 📝 Documentation
+
+* **nfl-fantasy:** Add 2026-27 roster transitions & official calendar ([#908](https://github.com/Ryxeuf/fantasy-football-game/issues/908)) ([fc8809f](https://github.com/Ryxeuf/fantasy-football-game/commit/fc8809f448b7d1c364b512b48b6ac567c2b2f004))
+* **nfl-fantasy:** complète le draft 2026 round 1 ([#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1) Mendoza, [#13](https://github.com/Ryxeuf/fantasy-football-game/issues/13) Ty Simpson) ([#909](https://github.com/Ryxeuf/fantasy-football-game/issues/909)) ([4a344cb](https://github.com/Ryxeuf/fantasy-football-game/commit/4a344cb22feb0b192a6175a00503095b6ffd6636))
+
 ## [1.181.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.180.0...v1.181.0) (2026-06-18)
 
 
