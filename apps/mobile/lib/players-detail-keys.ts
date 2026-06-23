@@ -28,5 +28,5 @@ export const ADVANCEMENT_TRANSLATION_KEYS: Record<
   primary: "players.detail.advancements.types.primary",
   secondary: "players.detail.advancements.types.secondary",
   "random-primary": "players.detail.advancements.types.randomPrimary",
-  "random-secondary": "players.detail.advancements.types.randomSecondary",
+  characteristic: "players.detail.advancements.types.characteristic",
 };

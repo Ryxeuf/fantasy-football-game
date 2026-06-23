@@ -356,6 +356,7 @@ export const FR_TRANSLATIONS = {
           secondary: "Secondaire",
           randomPrimary: "Primaire aleatoire",
           randomSecondary: "Secondaire aleatoire",
+          characteristic: "Caracteristique",
         },
       },
       injuries: {

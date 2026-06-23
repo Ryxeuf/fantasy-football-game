@@ -11,20 +11,26 @@
 
 import { z } from "zod";
 
+// BB2025 (Saison 3) : la « secondaire au hasard » a ete retiree de la
+// table des choix. L'amelioration de caracteristique devient un type
+// d'avancement achetable a part entiere.
 const advancementType = z.enum([
   "primary",
   "secondary",
   "random-primary",
-  "random-secondary",
+  "characteristic",
 ]);
+
+const characteristicStat = z.enum(["ma", "st", "ag", "pa", "av"]);
 
 export const applyAdvancementSchema = z
   .object({
     type: advancementType,
     /**
      * Slug de la skill choisie. Obligatoire pour `primary` /
-     * `secondary` (choix du coach), facultatif pour `random-*`
-     * (le serveur tire au sort).
+     * `secondary` (choix du coach), facultatif pour `random-primary`
+     * (le serveur/le client tire au sort). Inutilise pour
+     * `characteristic`.
      */
     skillSlug: z
       .string()
@@ -32,6 +38,17 @@ export const applyAdvancementSchema = z
       .max(64, "skillSlug trop long")
       .regex(/^[a-z0-9_-]+$/i, "slug invalide")
       .optional(),
+    /**
+     * Caracteristique a ameliorer. Obligatoire (et uniquement utilise)
+     * pour type=characteristic.
+     */
+    stat: characteristicStat.optional(),
+    /**
+     * Resultat du jet D8 (BB2025) qui restreint les caracteristiques
+     * ameliorables. Obligatoire pour type=characteristic ; le serveur
+     * verifie que `stat` fait partie des options de ce jet.
+     */
+    d8: z.number().int().min(1).max(8).optional(),
   })
   .refine(
     (v) => {
@@ -44,6 +61,30 @@ export const applyAdvancementSchema = z
       message:
         "skillSlug est obligatoire pour type=primary ou secondary (choix du coach)",
       path: ["skillSlug"],
+    },
+  )
+  .refine(
+    (v) => {
+      if (v.type === "characteristic") {
+        return v.stat !== undefined;
+      }
+      return true;
+    },
+    {
+      message: "stat est obligatoire pour type=characteristic",
+      path: ["stat"],
+    },
+  )
+  .refine(
+    (v) => {
+      if (v.type === "characteristic") {
+        return v.d8 !== undefined;
+      }
+      return true;
+    },
+    {
+      message: "d8 est obligatoire pour type=characteristic (jet BB2025)",
+      path: ["d8"],
     },
   );
 

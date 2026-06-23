@@ -209,12 +209,20 @@ export async function handleApplyAdvancement(
   if (!team) return;
   const body: ApplyAdvancementBody = req.body;
 
-  // Pour les types `random-*`, on aurait normalement un tirage 2D6
-  // dans la table d'avancements pour determiner la skill. Pour
-  // simplifier (et rester compatible avec une UI cliente qui veut
-  // afficher la skill avant confirmation), on impose au caller de
-  // fournir `skillSlug` egalement pour les types random.
-  if (!body.skillSlug) {
+  if (body.type === "characteristic") {
+    // Amelioration de caracteristique (BB2025) : pas de skill, on cible
+    // une stat issue d'un jet D8 (validees par le schema Zod).
+    if (!body.stat) {
+      sendError(res, "stat est obligatoire pour une amelioration de caracteristique", 400);
+      return;
+    }
+    if (typeof body.d8 !== "number") {
+      sendError(res, "d8 est obligatoire pour une amelioration de caracteristique", 400);
+      return;
+    }
+  } else if (!body.skillSlug) {
+    // Pour `random-primary`, le tirage doit etre realise cote client
+    // puis confirme ici en fournissant `skillSlug`.
     sendError(
       res,
       "skillSlug est obligatoire (le tirage random doit etre realise cote client puis confirme ici)",
@@ -228,6 +236,8 @@ export async function handleApplyAdvancement(
     playerId,
     type: body.type,
     skillSlug: body.skillSlug,
+    stat: body.stat,
+    d8: body.d8,
   });
 
   if ("skipped" in result && result.skipped) {

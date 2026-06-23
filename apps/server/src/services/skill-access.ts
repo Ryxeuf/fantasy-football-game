@@ -26,11 +26,13 @@ import { prisma } from "../prisma";
 
 export type SkillCategoryCode = "G" | "A" | "S" | "P" | "M" | "K";
 
+// BB2025 : la « secondaire au hasard » a ete retiree. L'amelioration de
+// caracteristique ne passe pas par ce controle d'acces (pas de pool de
+// competences) et n'est donc pas listee ici.
 export type AdvancementAccessType =
   | "primary"
   | "secondary"
-  | "random-primary"
-  | "random-secondary";
+  | "random-primary";
 
 /** Résultat de la vérification d'accès. `no-data` = accès non renseigné. */
 export type AccessCheck = "ok" | "out-of-pool" | "no-data";

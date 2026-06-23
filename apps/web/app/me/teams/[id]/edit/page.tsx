@@ -13,8 +13,12 @@ import {
   SKILLS_DEFINITIONS,
   getNextAdvancementPspCost,
   SURCHARGE_PER_ADVANCEMENT,
+  CHARACTERISTIC_VALUE_INCREASE,
   getPositionCategoryAccess,
-  type AdvancementType
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
+  type AdvancementType,
+  type CharacteristicKind
 } from "@bb/game-engine";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 
@@ -87,6 +91,12 @@ export default function TeamEditPage() {
   const [selectedCategory, setSelectedCategory] = useState<"General"|"Agility"|"Strength"|"Passing"|"Mutation"|"Trait"|"">("");
   const [selectedAdvType, setSelectedAdvType] = useState<AdvancementType>('primary');
   const [isRandom, setIsRandom] = useState(false);
+  // S3 — mode amelioration de caracteristique (3e mode, a cote de Primaire/Secondaire).
+  const [charMode, setCharMode] = useState(false);
+  const [selectedStat, setSelectedStat] = useState<CharacteristicKind | "">("");
+  // BB2025 — jet D8 obligatoire pour une amelioration de caracteristique.
+  // Restreint les stats selectionnables (cf. characteristicOptionsForRoll).
+  const [d8Roll, setD8Roll] = useState<number | null>(null);
 
   // Gestion du modal d'ajout de joueur - empêcher le scroll de la page et gérer la touche Échap
   useEffect(() => {
@@ -118,6 +128,9 @@ export default function TeamEditPage() {
         if (e.key === 'Escape') {
           setAddingSkillFor(null);
           setSelectedSkillSlug("");
+          setCharMode(false);
+          setSelectedStat("");
+          setD8Roll(null);
         }
       };
       document.addEventListener('keydown', handleEscape);
@@ -975,6 +988,9 @@ export default function TeamEditPage() {
             if (e.target === e.currentTarget) {
               setAddingSkillFor(null);
               setSelectedSkillSlug("");
+              setCharMode(false);
+              setSelectedStat("");
+              setD8Roll(null);
             }
           }}
         >
@@ -984,13 +1000,19 @@ export default function TeamEditPage() {
               let advCount = 0;
               try { advCount = JSON.parse(player.advancements || '[]')?.length || 0; } catch {}
               
-              // Déterminer le type d'avancement réel (avec random ou non)
-              const actualAdvType: AdvancementType = isRandom 
-                ? (selectedAdvType === 'primary' ? 'random-primary' : 'random-secondary')
-                : (selectedAdvType === 'primary' ? 'primary' : 'secondary');
-              
+              // Déterminer le type d'avancement réel.
+              // S3 : pas de secondaire aléatoire. "Au hasard" ne joue que sur Primaire.
+              const actualAdvType: AdvancementType = charMode
+                ? 'characteristic'
+                : selectedAdvType === 'primary'
+                  ? (isRandom ? 'random-primary' : 'primary')
+                  : 'secondary';
+
               const psp = getNextAdvancementPspCost(advCount, actualAdvType);
-              const surchargeK = (SURCHARGE_PER_ADVANCEMENT[actualAdvType] / 1000);
+              // Surcoût VE : par stat pour une caractéristique, sinon table par type.
+              const surchargeK = charMode
+                ? (selectedStat ? CHARACTERISTIC_VALUE_INCREASE[selectedStat] / 1000 : 0)
+                : SURCHARGE_PER_ADVANCEMENT[actualAdvType as keyof typeof SURCHARGE_PER_ADVANCEMENT] / 1000;
               const access = getPositionCategoryAccess(player.position);
               // Déterminer le type d'accès (primary ou secondary) en fonction du type d'avancement
               const categoryAccessType = (actualAdvType === 'random-primary' || actualAdvType === 'primary') ? 'primary' : 'secondary';
@@ -1006,6 +1028,15 @@ export default function TeamEditPage() {
                 'Trait': { code: 'T', name: 'Traits', color: 'text-indigo-700', bgColor: 'bg-indigo-100 hover:bg-indigo-200' },
               };
 
+              // S3 — les 5 caractéristiques améliorables (code + libellé).
+              const statOptions: ReadonlyArray<{ code: CharacteristicKind; label: string; name: string }> = [
+                { code: 'ma', label: 'MA', name: 'Mouvement' },
+                { code: 'st', label: 'ST', name: 'Force' },
+                { code: 'ag', label: 'AG', name: 'Agilité' },
+                { code: 'pa', label: 'PA', name: 'Passe' },
+                { code: 'av', label: 'AV', name: 'Armure' },
+              ];
+
               // Compétences disponibles filtrées
               const availableSkills = SKILLS_DEFINITIONS
                 .filter(s => allowedCategories.includes(s.category as any))
@@ -1014,12 +1045,31 @@ export default function TeamEditPage() {
               const selectedSkill = selectedSkillSlug ? SKILLS_DEFINITIONS.find(s => s.slug === selectedSkillSlug) : null;
               const currentSkills = (player.skills || '').split(',').filter(Boolean);
 
+              // BB2025 — amelioration de caracteristique : stats courantes du
+              // joueur (PA 0/falsy = « — » non passable -> null pour le helper)
+              // + historique pour compter les ameliorations deja prises par stat.
+              const currentStats = {
+                ma: player.ma as number,
+                st: player.st as number,
+                ag: player.ag as number,
+                pa: (player.pa ?? 0) ? (player.pa as number) : null,
+                av: player.av as number,
+              };
+              let parsedAdvancements: Array<{ type?: string; stat?: string }> = [];
+              try { parsedAdvancements = JSON.parse(player.advancements || '[]'); } catch {}
+              const priorCountForStat = (s: CharacteristicKind): number =>
+                parsedAdvancements.filter((a) => a?.type === 'characteristic' && a?.stat === s).length;
+              // Stats autorisees par le jet D8 courant (vide tant qu'aucun jet).
+              const d8AllowedStats: readonly CharacteristicKind[] = d8Roll != null
+                ? characteristicOptionsForRoll(d8Roll)
+                : [];
+
               return (
                 <>
                   {/* En-tête avec gradient */}
                   <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 text-white relative">
                     <button
-                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); }}
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); setCharMode(false); setSelectedStat(""); setD8Roll(null); }}
                       className="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-2xl font-light"
                       aria-label="Fermer"
                     >
@@ -1048,7 +1098,7 @@ export default function TeamEditPage() {
                     </div>
                     
                     {/* Badge de compétence sélectionnée */}
-                    {selectedSkill && (
+                    {!charMode && selectedSkill && (
                       <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/30">
                         <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                         <span className="font-semibold">{selectedSkill.nameFr}</span>
@@ -1056,6 +1106,17 @@ export default function TeamEditPage() {
                         <span className="text-sm text-blue-100">
                           {selectedAdvType === 'primary' ? 'Primaire' : 'Secondaire'} • {psp} SPP
                         </span>
+                      </div>
+                    )}
+                    {/* Badge de caractéristique sélectionnée */}
+                    {charMode && selectedStat && (
+                      <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/30">
+                        <div className="w-3 h-3 bg-amber-400 rounded-full"></div>
+                        <span className="font-semibold">
+                          +1 {statOptions.find(s => s.code === selectedStat)?.label ?? selectedStat.toUpperCase()}
+                        </span>
+                        <span className="text-blue-200 text-sm">•</span>
+                        <span className="text-sm text-blue-100">Caractéristique • {psp} SPP</span>
                       </div>
                     )}
                   </div>
@@ -1066,26 +1127,29 @@ export default function TeamEditPage() {
                     <div className="mb-6">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Type d'avancement</span>
-                        {/* Toggle Random */}
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <span className="text-sm text-gray-600">Au hasard</span>
-                          <div 
-                            onClick={() => { setIsRandom(!isRandom); setSelectedSkillSlug(""); }}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${
-                              isRandom ? 'bg-purple-600' : 'bg-gray-300'
-                            }`}
-                          >
-                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                              isRandom ? 'transform translate-x-6' : ''
-                            }`}></div>
-                          </div>
-                        </label>
+                        {/* Toggle Random — uniquement pertinent pour Primaire (S3 : pas de secondaire aléatoire) */}
+                        {!charMode && selectedAdvType === 'primary' && (
+                          <label className="flex items-center gap-2 cursor-pointer" data-testid="edit-random-toggle">
+                            <span className="text-sm text-gray-600">Au hasard</span>
+                            <div
+                              onClick={() => { setIsRandom(!isRandom); setSelectedSkillSlug(""); }}
+                              className={`relative w-12 h-6 rounded-full transition-colors ${
+                                isRandom ? 'bg-purple-600' : 'bg-gray-300'
+                              }`}
+                            >
+                              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                isRandom ? 'transform translate-x-6' : ''
+                              }`}></div>
+                            </div>
+                          </label>
+                        )}
                       </div>
                       <div className="flex gap-3">
                         <button
-                          onClick={() => { setSelectedAdvType('primary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          data-testid="edit-advtype-primary"
+                          onClick={() => { setCharMode(false); setSelectedStat(""); setD8Roll(null); setSelectedAdvType('primary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
                           className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                            selectedAdvType === 'primary'
+                            !charMode && selectedAdvType === 'primary'
                               ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
@@ -1096,27 +1160,104 @@ export default function TeamEditPage() {
                           </span>
                         </button>
                         <button
-                          onClick={() => { setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          data-testid="edit-advtype-secondary"
+                          onClick={() => { setCharMode(false); setSelectedStat(""); setD8Roll(null); setIsRandom(false); setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
                           className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                            selectedAdvType === 'secondary'
+                            !charMode && selectedAdvType === 'secondary'
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          {isRandom ? 'Aléatoire Secondaire' : 'Secondaire'}
+                          Secondaire
                           <span className="block text-xs font-normal mt-1 opacity-90">
-                            {isRandom ? `${getNextAdvancementPspCost(advCount, 'random-secondary')} SPP` : `${getNextAdvancementPspCost(advCount, 'secondary')} SPP`}
+                            {`${getNextAdvancementPspCost(advCount, 'secondary')} SPP`}
+                          </span>
+                        </button>
+                        <button
+                          data-testid="edit-advtype-characteristic"
+                          onClick={() => { setCharMode(true); setIsRandom(false); setSelectedSkillSlug(""); setSelectedCategory(""); setSelectedStat(""); setD8Roll(null); }}
+                          className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                            charMode
+                              ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30 scale-105'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Caractéristique
+                          <span className="block text-xs font-normal mt-1 opacity-90">
+                            {`${getNextAdvancementPspCost(advCount, 'characteristic')} SPP`}
                           </span>
                         </button>
                       </div>
-                      {isRandom && (
+                      {!charMode && isRandom && (
                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-                          <span className="font-semibold">ℹ️</span> Les compétences choisies au hasard coûtent moins en SPP et augmentent moins la valeur d'équipe (VE) : +10k pour Primaire aléatoire, +20k pour Secondaire aléatoire (au lieu de +20k/+40k pour les choix spécifiques).
+                          <span className="font-semibold">ℹ️</span> Le hasard ne s'applique qu'aux compétences principales : une principale au hasard coûte moins en SPP et augmente moins la valeur d'équipe (VE) — +10k au lieu de +20k pour une principale choisie (+40k pour une secondaire choisie).
                         </div>
                       )}
                     </div>
 
+                    {/* Sélecteur de caractéristique (mode Caractéristique) — jet D8 BB2025 */}
+                    {charMode && (
+                      <div className="mb-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Amélioration de caractéristique</span>
+                        </div>
+                        <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-dashed border-amber-300">
+                          <div className="text-4xl mb-4">🎲</div>
+                          <p className="text-gray-700 mb-4 text-center max-w-md">
+                            Lancez le D8 pour déterminer quelles caractéristiques peuvent être améliorées (règle Blood Bowl 2025), puis choisissez-en une.
+                          </p>
+                          <button
+                            data-testid="edit-d8-roll"
+                            onClick={() => {
+                              const roll = Math.floor(Math.random() * 8) + 1;
+                              setD8Roll(roll);
+                              setSelectedStat("");
+                            }}
+                            className="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/30"
+                          >
+                            🎲 {d8Roll != null ? 'Relancer le D8' : 'Lancer le D8'}
+                          </button>
+
+                          {d8Roll != null && (
+                            <div className="mt-6 w-full max-w-lg">
+                              <div className="text-center font-bold text-lg text-amber-800 mb-4">
+                                Jet D8 : {d8Roll} → {d8AllowedStats.map(s => statOptions.find(o => o.code === s)?.label ?? s.toUpperCase()).join(' ou ')}
+                              </div>
+                              <div className="flex flex-wrap gap-2 justify-center">
+                                {d8AllowedStats.map((code) => {
+                                  const s = statOptions.find(o => o.code === code)!;
+                                  const allowed = canImproveCharacteristic(currentStats, code, priorCountForStat(code));
+                                  return (
+                                    <button
+                                      key={code}
+                                      data-testid={`edit-stat-${code}`}
+                                      onClick={() => { if (allowed) setSelectedStat(code); }}
+                                      disabled={!allowed}
+                                      title={allowed ? s.name : `${s.name} — déjà au maximum ou amélioré 2 fois`}
+                                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                                        !allowed
+                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                                          : selectedStat === code
+                                            ? 'bg-amber-100 text-amber-800 shadow-md scale-105'
+                                            : 'bg-white text-gray-700 hover:bg-amber-50 border border-amber-200'
+                                      }`}
+                                    >
+                                      <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-xs font-bold">
+                                        {s.label}
+                                      </span>
+                                      +1 {s.name} ({CHARACTERISTIC_VALUE_INCREASE[code] / 1000}k VE)
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Filtres de catégories */}
+                    {!charMode && (
                     <div className="mb-6">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Catégorie</span>
@@ -1154,6 +1295,7 @@ export default function TeamEditPage() {
                         })}
                       </div>
                     </div>
+                    )}
 
                     {/* Informations de coût et SPP */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
@@ -1183,7 +1325,7 @@ export default function TeamEditPage() {
                     </div>
 
                     {/* Grille de compétences ou bouton aléatoire */}
-                    {selectedCategory && (
+                    {!charMode && selectedCategory && (
                       <div className="mb-4">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">
                           {categoryConfig[selectedCategory]?.name || selectedCategory} - {psp} SPP
@@ -1261,10 +1403,22 @@ export default function TeamEditPage() {
                       </div>
                     )}
 
-                    {!selectedCategory && (
+                    {!charMode && !selectedCategory && (
                       <div className="text-center py-12 text-gray-400">
                         <div className="text-4xl mb-4">🎯</div>
                         <p className="text-lg">Sélectionnez une catégorie pour voir les compétences disponibles</p>
+                      </div>
+                    )}
+
+                    {charMode && d8Roll == null && (
+                      <div className="text-center py-12 text-gray-400">
+                        <div className="text-4xl mb-4">📈</div>
+                        <p className="text-lg">Lancez le D8 pour révéler les caractéristiques améliorables (+1)</p>
+                      </div>
+                    )}
+                    {charMode && d8Roll != null && !selectedStat && (
+                      <div className="text-center py-8 text-gray-400">
+                        <p className="text-lg">Choisissez une caractéristique parmi celles autorisées par le jet</p>
                       </div>
                     )}
                   </div>
@@ -1272,26 +1426,38 @@ export default function TeamEditPage() {
                   {/* Footer avec actions */}
                   <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 flex justify-end gap-3">
                     <button
-                      onClick={() => { 
-                        setAddingSkillFor(null); 
-                        setSelectedSkillSlug(""); 
+                      onClick={() => {
+                        setAddingSkillFor(null);
+                        setSelectedSkillSlug("");
                         setIsRandom(false);
+                        setCharMode(false);
+                        setSelectedStat("");
+                        setD8Roll(null);
                       }}
                       className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-medium"
                     >
                       Annuler
                     </button>
                     <button
-                      disabled={isRandom
-                        ? (!selectedCategory || (player.spp ?? 0) < psp)
-                        : (!selectedSkillSlug || !selectedCategory || (player.spp ?? 0) < psp)
+                      data-testid="edit-skill-confirm"
+                      disabled={charMode
+                        ? (d8Roll == null || !selectedStat || (player.spp ?? 0) < psp)
+                        : isRandom
+                          ? (!selectedCategory || (player.spp ?? 0) < psp)
+                          : (!selectedSkillSlug || !selectedCategory || (player.spp ?? 0) < psp)
                       }
                       onClick={async () => {
                         try {
-                          const body: Record<string, string> = {
+                          const body: Record<string, string | number> = {
                             advancementType: actualAdvType,
                           };
-                          if (isRandom) {
+                          if (charMode) {
+                            // Amélioration de caractéristique BB2025 : jet D8 obligatoire
+                            // + stat choisie parmi celles autorisées par le jet.
+                            if (!selectedStat || d8Roll == null) return;
+                            body.stat = selectedStat;
+                            body.d8 = d8Roll;
+                          } else if (isRandom) {
                             // Server picks the random skill
                             body.skillCategory = selectedCategory;
                           } else {
@@ -1318,7 +1484,7 @@ export default function TeamEditPage() {
                             } : p));
                           }
                           // Show random result to user
-                          if (isRandom && result.advancement?.skillSlug) {
+                          if (!charMode && isRandom && result.advancement?.skillSlug) {
                             const rolledSkill = SKILLS_DEFINITIONS.find(s => s.slug === result.advancement.skillSlug);
                             if (rolledSkill) {
                               alert(`Compétence aléatoire obtenue : ${rolledSkill.nameFr}`);
@@ -1327,6 +1493,9 @@ export default function TeamEditPage() {
                           setAddingSkillFor(null);
                           setSelectedSkillSlug("");
                           setIsRandom(false);
+                          setCharMode(false);
+                          setSelectedStat("");
+                          setD8Roll(null);
                         } catch (e: any) {
                           alert(e?.message || "Erreur lors de l'ajout de la compétence");
                         }
@@ -1335,6 +1504,7 @@ export default function TeamEditPage() {
                     >
                       {(player.spp ?? 0) < psp
                         ? `SPP insuffisants (${player.spp ?? 0}/${psp})`
+                        : charMode ? 'Améliorer la caractéristique'
                         : isRandom ? 'Lancer les dés (serveur)' : 'Ajouter la compétence'}
                     </button>
                   </div>

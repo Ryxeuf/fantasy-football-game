@@ -54,12 +54,15 @@ describe("parsePlayerAdvancements", () => {
   it("parses a valid JSON array of advancements", () => {
     const raw = JSON.stringify([
       { skillSlug: "block", type: "primary", isRandom: false, at: 1 },
-      { skillSlug: "dodge", type: "random-secondary", isRandom: true, at: 2 },
+      // Une amelioration de caracteristique n'a pas de skillSlug : elle
+      // doit quand meme survivre au parsing.
+      { type: "characteristic", stat: "ma", isRandom: false, at: 2 },
     ]);
     const parsed = parsePlayerAdvancements(raw);
     expect(parsed).toHaveLength(2);
     expect(parsed[0].skillSlug).toBe("block");
-    expect(parsed[1].type).toBe("random-secondary");
+    expect(parsed[1].type).toBe("characteristic");
+    expect(parsed[1].stat).toBe("ma");
   });
 
   it("returns an empty array on invalid JSON", () => {
@@ -125,11 +128,11 @@ describe("getNextAdvancementOptions", () => {
     const primary = options.find((o) => o.type === "primary");
     const secondary = options.find((o) => o.type === "secondary");
     const randomPrimary = options.find((o) => o.type === "random-primary");
-    const randomSecondary = options.find((o) => o.type === "random-secondary");
+    const characteristic = options.find((o) => o.type === "characteristic");
     expect(primary?.sppCost).toBe(6);
-    expect(secondary?.sppCost).toBe(12);
+    expect(secondary?.sppCost).toBe(10);
     expect(randomPrimary?.sppCost).toBe(3);
-    expect(randomSecondary?.sppCost).toBe(6);
+    expect(characteristic?.sppCost).toBe(14);
   });
 
   it("increases the cost for later advancements", () => {

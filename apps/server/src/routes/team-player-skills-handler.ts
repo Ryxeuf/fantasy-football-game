@@ -5,12 +5,13 @@
  *
  * Endpoint couvert :
  *  - `PUT /team/:id/players/:playerId/skills` —
- *    `handleUpdatePlayerSkills` : ajoute une competence a un joueur
- *    (avancement). 4 types : `primary`/`secondary` (choisis avec
- *    `skillSlug`) et `random-primary`/`random-secondary` (tirage
- *    avec `skillCategory`). Valide lock match, max 6 avancements,
- *    joueur vivant, category access, SPP suffisants. Decrement SPP,
- *    append advancement, recalcule TV.
+ *    `handleUpdatePlayerSkills` : ajoute un avancement a un joueur.
+ *    Types BB2025 : `primary`/`secondary` (competences choisies avec
+ *    `skillSlug`), `random-primary` (tirage avec `skillCategory`) et
+ *    `characteristic` (amelioration de caracteristique via `stat`).
+ *    Valide lock match, max 6 avancements, joueur vivant, category
+ *    access (competences), SPP suffisants. Decrement SPP, append
+ *    advancement, recalcule TV.
  *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
  * `updateTeamValues`, `getNextAdvancementPspCost`/
@@ -27,9 +28,13 @@ import { updateTeamValues } from '../utils/team-values';
 import {
   getNextAdvancementPspCost,
   getPositionCategoryAccess,
+  applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
   SKILLS_BY_SLUG,
   SKILLS_DEFINITIONS,
   type AdvancementType,
+  type CharacteristicKind,
   type PlayerAdvancement,
 } from '@bb/game-engine';
 import { serverLog } from '../utils/server-log';
@@ -50,18 +55,23 @@ export async function handleUpdatePlayerSkills(
     skillSlug: clientSkillSlug,
     advancementType,
     skillCategory,
+    stat,
+    d8,
   }: {
     skillSlug?: string;
     advancementType: AdvancementType;
     skillCategory?: string;
+    stat?: CharacteristicKind;
+    d8?: number;
   } = req.body;
 
   try {
-    const isRandom =
-      advancementType === 'random-primary' ||
-      advancementType === 'random-secondary';
+    // BB2025 : la « secondaire au hasard » n'existe plus ; seul
+    // `random-primary` reste un tirage aleatoire.
+    const isCharacteristic = advancementType === 'characteristic';
+    const isRandom = advancementType === 'random-primary';
 
-    if (!isRandom && !clientSkillSlug) {
+    if (!isCharacteristic && !isRandom && !clientSkillSlug) {
       sendError(res, 'skillSlug est requis pour un avancement choisi', 400);
       return;
     }
@@ -69,6 +79,22 @@ export async function handleUpdatePlayerSkills(
       sendError(
         res,
         'skillCategory est requis pour un avancement aleatoire',
+        400,
+      );
+      return;
+    }
+    if (isCharacteristic && !stat) {
+      sendError(
+        res,
+        'stat est requis pour une amelioration de caracteristique',
+        400,
+      );
+      return;
+    }
+    if (isCharacteristic && (typeof d8 !== 'number' || d8 < 1 || d8 > 8)) {
+      sendError(
+        res,
+        'd8 (1-8) est requis pour une amelioration de caracteristique',
         400,
       );
       return;
@@ -127,6 +153,89 @@ export async function handleUpdatePlayerSkills(
 
     if (advancements.length >= 6) {
       sendError(res, 'Ce joueur a atteint le maximum de 6 avancements', 400);
+      return;
+    }
+
+    // Branche caracteristique (BB2025) : on ameliore une stat, pas une
+    // competence. Pas de pool/category a valider.
+    if (isCharacteristic) {
+      const charStat = stat as CharacteristicKind;
+      const roll = d8 as number;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const p = player as any;
+      const stats = { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av };
+
+      // Le jet D8 (BB2025) restreint les caracteristiques ameliorables.
+      if (!characteristicOptionsForRoll(roll).includes(charStat)) {
+        sendError(
+          res,
+          `La caracteristique '${charStat}' n'est pas ameliorable avec un jet D8 de ${roll}`,
+          400,
+        );
+        return;
+      }
+      // Plafonds BB2025 (p.37) : max 2 ameliorations par carac + bornes
+      // min/max (PA "—" exclue).
+      const priorCount = advancements.filter(
+        (a) => a.type === 'characteristic' && a.stat === charStat,
+      ).length;
+      if (!canImproveCharacteristic(stats, charStat, priorCount)) {
+        sendError(
+          res,
+          `La caracteristique '${charStat}' ne peut plus etre amelioree (limite BB2025 atteinte)`,
+          400,
+        );
+        return;
+      }
+
+      const sppCost = getNextAdvancementPspCost(
+        advancements.length,
+        'characteristic',
+      );
+      const playerSpp = p.spp || 0;
+      if (playerSpp < sppCost) {
+        sendError(
+          res,
+          `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour une amelioration de caracteristique`,
+          400,
+        );
+        return;
+      }
+      const improved = applyCharacteristicImprovement(stats, charStat);
+      const newAdvancement: PlayerAdvancement = {
+        type: 'characteristic',
+        stat: charStat,
+        d8: roll,
+        isRandom: false,
+        at: Date.now(),
+      };
+      const newAdvancements = [...advancements, newAdvancement];
+
+      await prisma.teamPlayer.update({
+        where: { id: playerId },
+        data: {
+          ma: improved.ma,
+          st: improved.st,
+          ag: improved.ag,
+          pa: improved.pa,
+          av: improved.av,
+          advancements: JSON.stringify(newAdvancements),
+          spp: { decrement: sppCost },
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateTeamValues(prisma as any, teamId);
+
+      const updatedPlayer = await prisma.teamPlayer.findUnique({
+        where: { id: playerId },
+      });
+
+      sendSuccess(res, {
+        player: updatedPlayer,
+        sppSpent: sppCost,
+        advancement: newAdvancement,
+      });
       return;
     }
 

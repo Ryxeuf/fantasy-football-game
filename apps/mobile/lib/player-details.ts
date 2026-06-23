@@ -10,11 +10,12 @@ export type { AdvancementType, PlayerAdvancement };
 // Inlined locally because mobile's vitest/metro resolve @bb/game-engine as
 // the built package (types only) — runtime values are duplicated to keep the
 // mobile helper dependency-free.
+// Table BB2025 (Saison 3) — alignee sur packages/game-engine.
 const SPP_COST_TABLE: Record<AdvancementType, readonly number[]> = {
   primary: [0, 6, 8, 12, 16, 20, 30],
-  secondary: [0, 12, 14, 18, 22, 26, 40],
+  secondary: [0, 10, 12, 16, 20, 24, 34],
   "random-primary": [0, 3, 4, 6, 8, 10, 15],
-  "random-secondary": [0, 6, 8, 12, 16, 20, 30],
+  characteristic: [0, 14, 16, 20, 24, 28, 38],
 };
 
 export function getNextAdvancementPspCost(
@@ -61,10 +62,11 @@ export function parsePlayerAdvancements(raw: string): PlayerAdvancement[] {
   }
   if (!Array.isArray(parsed)) return [];
   return parsed.filter(
+    // skillSlug est optionnel (absent pour une amelioration de
+    // caracteristique) : on ne filtre que sur la presence du type.
     (entry): entry is PlayerAdvancement =>
       typeof entry === "object" &&
       entry !== null &&
-      typeof (entry as PlayerAdvancement).skillSlug === "string" &&
       typeof (entry as PlayerAdvancement).type === "string",
   );
 }
@@ -105,7 +107,7 @@ const ORDERED_TYPES: AdvancementType[] = [
   "primary",
   "secondary",
   "random-primary",
-  "random-secondary",
+  "characteristic",
 ];
 
 export function getNextAdvancementOptions(

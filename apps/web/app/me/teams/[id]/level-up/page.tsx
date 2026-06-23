@@ -4,9 +4,9 @@
  *
  * Liste les joueurs de l'equipe avec un avancement en attente (servis
  * par GET /team/:teamId/pending-advancements) et propose pour chacun
- * un choix de type (primary/secondary/random-primary/random-secondary)
- * + skill. Au submit, applique via POST .../advancement et refresh
- * la liste.
+ * un choix de type (primary/secondary/random-primary/characteristic)
+ * + skill (ou stat pour une amelioration de caracteristique). Au submit,
+ * applique via POST .../advancement et refresh la liste.
  *
  * Gate par le feature flag unique `league` : redirige vers /me/teams/:id
  * si le flag est off (cosmetique, le serveur reste accessible).
@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { characteristicOptionsForRoll, type CharacteristicKind } from "@bb/game-engine";
 import { apiRequest } from "../../../../lib/api-client";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../../../hooks/useFeatureFlag";
@@ -24,7 +25,19 @@ type AdvancementType =
   | "primary"
   | "secondary"
   | "random-primary"
-  | "random-secondary";
+  | "characteristic";
+
+/** Les 5 caractéristiques améliorables, affichées dans le picker. */
+const CHARACTERISTIC_OPTIONS: ReadonlyArray<{
+  code: CharacteristicKind;
+  label: string;
+}> = [
+  { code: "ma", label: "MA (Mouvement)" },
+  { code: "st", label: "ST (Force)" },
+  { code: "ag", label: "AG (Agilite)" },
+  { code: "pa", label: "PA (Passe)" },
+  { code: "av", label: "AV (Armure)" },
+];
 
 interface PendingAdvancementItem {
   sequenceId: string;
@@ -86,6 +99,8 @@ interface ApplyResponse {
   newSpp?: number;
   newAdvancementCount?: number;
   addedSkill?: string;
+  // S3 — amelioration de caracteristique : la stat ajoutee (ex: "st").
+  addedStat?: string;
   currentValue?: number;
   sequenceClosed?: boolean;
   // skipped path: server returns 4xx + sendError, never reaches here.
@@ -93,9 +108,9 @@ interface ApplyResponse {
 
 const ADVANCEMENT_COSTS: Record<AdvancementType, number[]> = {
   primary: [6, 8, 12, 16, 20, 30],
-  secondary: [12, 14, 18, 22, 26, 40],
+  secondary: [10, 12, 16, 20, 24, 34],
   "random-primary": [3, 4, 6, 8, 10, 15],
-  "random-secondary": [6, 8, 12, 16, 20, 30],
+  characteristic: [14, 16, 20, 24, 28, 38],
 };
 
 function costFor(type: AdvancementType, advancementsTaken: number): number {
@@ -222,9 +237,14 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const { t } = useLanguage();
   const [type, setType] = useState<AdvancementType>("random-primary");
   const [skillSlug, setSkillSlug] = useState("");
+  const [stat, setStat] = useState<CharacteristicKind | "">("");
+  // BB2025 — jet D8 obligatoire pour une amelioration de caracteristique.
+  const [d8Roll, setD8Roll] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<ApplyResponse | null>(null);
+
+  const isCharacteristic = type === "characteristic";
 
   const cost = useMemo(
     () => costFor(type, item.advancementsTaken),
@@ -264,12 +284,29 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
     }
   }, [hasAccess, eligibleSkills, skillSlug]);
 
+  // Reset de la stat et du jet D8 quand on quitte le mode caractéristique.
+  useEffect(() => {
+    if (!isCharacteristic) {
+      if (stat !== "") setStat("");
+      if (d8Roll !== null) setD8Roll(null);
+    }
+  }, [isCharacteristic, stat, d8Roll]);
+
+  // Stats autorisées par le jet D8 courant (vide tant qu'aucun jet).
+  const d8AllowedStats: readonly CharacteristicKind[] =
+    d8Roll != null ? characteristicOptionsForRoll(d8Roll) : [];
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (submitting) return;
       const trimmed = skillSlug.trim();
-      if (trimmed.length === 0) return;
+      // Validation specifique : jet D8 + stat pour une caracteristique, skill sinon.
+      if (isCharacteristic) {
+        if (stat === "" || d8Roll == null) return;
+      } else if (trimmed.length === 0) {
+        return;
+      }
       if (!canAfford) {
         setError(t.teams.levelUpInsufficientSpp ?? "PSP insuffisants");
         return;
@@ -277,14 +314,19 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       setSubmitting(true);
       setError(null);
       try {
+        const body = isCharacteristic
+          ? { type, stat, d8: d8Roll }
+          : { type, skillSlug: trimmed };
         const res = await apiRequest<ApplyResponse>(
           `/team/${teamId}/players/${item.teamPlayerId}/advancement`,
           {
             method: "POST",
-            body: JSON.stringify({ type, skillSlug: trimmed }),
+            body: JSON.stringify(body),
           },
         );
         setApplied(res);
+        setStat("");
+        setD8Roll(null);
         onApplied();
       } catch (e: unknown) {
         setError(
@@ -299,6 +341,9 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
     [
       submitting,
       skillSlug,
+      isCharacteristic,
+      stat,
+      d8Roll,
       canAfford,
       teamId,
       item.teamPlayerId,
@@ -331,7 +376,7 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
             data-testid={`level-up-applied-${item.teamPlayerId}`}
             className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1"
           >
-            ✓ +{applied.addedSkill}
+            ✓ +{applied.addedStat ? applied.addedStat.toUpperCase() : applied.addedSkill}
             {" • "}
             {t.teams.levelUpRemainingSpp ?? "PSP restants"}: {applied.newSpp}
           </div>
@@ -360,26 +405,75 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white"
             >
               <option value="random-primary">
-                Random Primary ({ADVANCEMENT_COSTS["random-primary"][item.advancementsTaken]} PSP)
+                Random Primary ({costFor("random-primary", item.advancementsTaken)} PSP)
               </option>
               <option value="primary">
-                Primary ({ADVANCEMENT_COSTS["primary"][item.advancementsTaken]} PSP)
-              </option>
-              <option value="random-secondary">
-                Random Secondary (
-                {ADVANCEMENT_COSTS["random-secondary"][item.advancementsTaken]}
-                {" "}PSP)
+                Primary ({costFor("primary", item.advancementsTaken)} PSP)
               </option>
               <option value="secondary">
-                Secondary ({ADVANCEMENT_COSTS["secondary"][item.advancementsTaken]} PSP)
+                Secondary ({costFor("secondary", item.advancementsTaken)} PSP)
+              </option>
+              <option value="characteristic">
+                Caractéristique ({costFor("characteristic", item.advancementsTaken)} PSP)
               </option>
             </select>
           </label>
           <label className="block">
             <span className="text-xs font-medium text-gray-700">
-              {t.teams.levelUpSkillLabel ?? "Compétence"}
+              {isCharacteristic
+                ? "Caractéristique"
+                : (t.teams.levelUpSkillLabel ?? "Compétence")}
             </span>
-            {hasAccess ? (
+            {isCharacteristic ? (
+              <div className="mt-1 space-y-1.5">
+                <button
+                  type="button"
+                  data-testid={`level-up-d8-${item.teamPlayerId}`}
+                  onClick={() => {
+                    setD8Roll(Math.floor(Math.random() * 8) + 1);
+                    setStat("");
+                  }}
+                  className="block w-full rounded-md bg-amber-600 text-white px-2 py-1.5 text-sm font-medium hover:bg-amber-700"
+                >
+                  🎲 {d8Roll != null ? "Relancer le D8" : "Lancer le D8"}
+                </button>
+                {d8Roll != null ? (
+                  <>
+                    <div className="text-xs text-amber-800">
+                      Jet D8 : {d8Roll} →{" "}
+                      {d8AllowedStats
+                        .map(
+                          (s) =>
+                            CHARACTERISTIC_OPTIONS.find((o) => o.code === s)
+                              ?.label ?? s.toUpperCase(),
+                        )
+                        .join(" ou ")}
+                    </div>
+                    <select
+                      data-testid={`level-up-stat-${item.teamPlayerId}`}
+                      required
+                      value={stat}
+                      onChange={(e) =>
+                        setStat(e.target.value as CharacteristicKind | "")
+                      }
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white"
+                    >
+                      <option value="">— choisir —</option>
+                      {d8AllowedStats.map((code) => (
+                        <option key={code} value={code}>
+                          {CHARACTERISTIC_OPTIONS.find((o) => o.code === code)
+                            ?.label ?? code.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-500">
+                    Lancez le D8 pour révéler les caractéristiques améliorables.
+                  </div>
+                )}
+              </div>
+            ) : hasAccess ? (
               <select
                 data-testid={`level-up-skill-${item.teamPlayerId}`}
                 required
@@ -414,7 +508,13 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
           <button
             type="submit"
             data-testid={`level-up-apply-${item.teamPlayerId}`}
-            disabled={!canAfford || submitting || skillSlug.trim().length === 0}
+            disabled={
+              !canAfford ||
+              submitting ||
+              (isCharacteristic
+                ? d8Roll == null || stat === ""
+                : skillSlug.trim().length === 0)
+            }
             className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
           >
             {submitting

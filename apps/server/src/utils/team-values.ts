@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { DEFAULT_RULESET, type Ruleset, calculateAdvancementsSurcharge, type AdvancementType } from '@bb/game-engine';
+import { DEFAULT_RULESET, type Ruleset, calculateAdvancementsSurcharge } from '@bb/game-engine';
 import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 
 /**
@@ -24,8 +24,11 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
       let advSurcharge = 0;
       try {
         const advancements = JSON.parse((player as any).advancements || '[]');
-        const advTypes = advancements.map((a: any) => a.type as AdvancementType);
-        advSurcharge = calculateAdvancementsSurcharge(advTypes);
+        // BB2025 : la caracteristique a un surcout par stat -> on passe
+        // les objets complets ({ type, stat? }) plutot que les seuls types.
+        advSurcharge = calculateAdvancementsSurcharge(
+          advancements.map((a: any) => ({ type: a.type, stat: a.stat })),
+        );
       } catch { /* ignore parse errors */ }
       return {
         cost: baseCost + advSurcharge,

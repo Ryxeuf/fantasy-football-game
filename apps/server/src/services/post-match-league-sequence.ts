@@ -30,8 +30,12 @@ import { prisma } from "../prisma";
 import {
   getNextAdvancementPspCost,
   type AdvancementType,
+  type CharacteristicKind,
   type PlayerAdvancement,
-  SURCHARGE_PER_ADVANCEMENT,
+  surchargeForAdvancement,
+  applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
 import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
@@ -270,6 +274,8 @@ export type ApplyAdvancementOutcome =
       readonly newSpp: number;
       readonly newAdvancementCount: number;
       readonly addedSkill: string;
+      /** Caracteristique amelioree (uniquement pour type='characteristic'). */
+      readonly addedStat?: CharacteristicKind;
       readonly currentValue: number;
     }
   | {
@@ -280,7 +286,12 @@ export type ApplyAdvancementOutcome =
         | "player-dead"
         | "max-advancements-reached"
         | "insufficient-spp"
-        | "skill-not-in-pool";
+        | "skill-not-in-pool"
+        | "missing-skill"
+        | "missing-stat"
+        | "missing-d8"
+        | "stat-roll-mismatch"
+        | "stat-not-improvable";
       readonly required?: number;
       readonly available?: number;
     };
@@ -290,11 +301,21 @@ export interface ApplyAdvancementInput {
   readonly playerId: string;
   readonly type: AdvancementType;
   /**
-   * Slug de la competence ajoutee. Pour les types `random-*`, le caller
-   * tire au sort cote handler avant d'appeler ce service ; ici on se
-   * contente d'enregistrer la skill et le type.
+   * Slug de la competence ajoutee. Pour `random-primary`, le caller tire
+   * au sort cote handler avant d'appeler ce service. Absent pour les
+   * ameliorations de caracteristique (type='characteristic').
    */
-  readonly skillSlug: string;
+  readonly skillSlug?: string;
+  /**
+   * Caracteristique a ameliorer. Obligatoire (et uniquement utilise)
+   * pour type='characteristic'.
+   */
+  readonly stat?: CharacteristicKind;
+  /**
+   * Resultat du jet D8 (BB2025) qui restreint les caracteristiques
+   * ameliorables. Obligatoire pour type='characteristic'.
+   */
+  readonly d8?: number;
 }
 
 /**
@@ -317,6 +338,11 @@ export async function applyAdvancementChoice(
       advancements: true,
       dead: true,
       position: true,
+      ma: true,
+      st: true,
+      ag: true,
+      pa: true,
+      av: true,
       team: { select: { roster: true, ruleset: true } },
     },
   });
@@ -345,6 +371,87 @@ export async function applyAdvancementChoice(
     };
   }
 
+  // Branche caracteristique (BB2025) : pas de skill, on ameliore une stat.
+  if (input.type === "characteristic") {
+    const stat = input.stat;
+    if (!stat) {
+      return { skipped: true, reason: "missing-stat" };
+    }
+    const roll = input.d8;
+    if (typeof roll !== "number" || roll < 1 || roll > 8) {
+      return { skipped: true, reason: "missing-d8" };
+    }
+    const stats = {
+      ma: player.ma,
+      st: player.st,
+      ag: player.ag,
+      pa: player.pa,
+      av: player.av,
+    };
+    // Le jet D8 (BB2025) restreint les caracteristiques ameliorables.
+    if (!characteristicOptionsForRoll(roll).includes(stat)) {
+      return { skipped: true, reason: "stat-roll-mismatch" };
+    }
+    // Plafonds BB2025 (p.37) : max 2 ameliorations par carac + bornes
+    // min/max (PA "—" exclue).
+    const priorCount = taken.filter(
+      (a) => a.type === "characteristic" && a.stat === stat,
+    ).length;
+    if (!canImproveCharacteristic(stats, stat, priorCount)) {
+      return { skipped: true, reason: "stat-not-improvable" };
+    }
+    const improved = applyCharacteristicImprovement(stats, stat);
+    const newAdvancement: PlayerAdvancement = {
+      type: "characteristic",
+      stat,
+      d8: roll,
+      isRandom: false,
+      at: Date.now(),
+    };
+    const updatedAdvancements = [...taken, newAdvancement];
+    const surcharge = surchargeForAdvancement({ type: "characteristic", stat });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const team = await prisma.$transaction(async (tx: any) => {
+      await tx.teamPlayer.update({
+        where: { id: input.playerId },
+        data: {
+          spp: { decrement: cost },
+          advancements: JSON.stringify(updatedAdvancements),
+          ma: improved.ma,
+          st: improved.st,
+          ag: improved.ag,
+          pa: improved.pa,
+          av: improved.av,
+        },
+      });
+      await tx.team.update({
+        where: { id: input.teamId },
+        data: { currentValue: { increment: surcharge } },
+      });
+      return tx.team.findUnique({
+        where: { id: input.teamId },
+        select: { currentValue: true },
+      });
+    });
+
+    return {
+      applied: true,
+      playerId: input.playerId,
+      newSpp: player.spp - cost,
+      newAdvancementCount: updatedAdvancements.length,
+      addedSkill: "",
+      addedStat: stat,
+      currentValue: team?.currentValue ?? 0,
+    };
+  }
+
+  // Branche competence : skillSlug obligatoire.
+  if (!input.skillSlug) {
+    return { skipped: true, reason: "missing-skill" };
+  }
+  const skillSlug = input.skillSlug;
+
   // Validation de l'acces primaire/secondaire (souple) : la skill choisie
   // doit appartenir au pool de la position pour le type d'avancement. On ne
   // valide que si la position a des donnees d'acces renseignees (season_3) ;
@@ -358,7 +465,7 @@ export async function applyAdvancementChoice(
     select: { primarySkills: true, secondarySkills: true },
   });
   if (positionAccess) {
-    const skillCode = await categoryCodeForSkill(input.skillSlug, ruleset);
+    const skillCode = await categoryCodeForSkill(skillSlug, ruleset);
     const check = checkSkillAccess({
       type: input.type,
       skillCode,
@@ -372,10 +479,9 @@ export async function applyAdvancementChoice(
 
   // Pousse la nouvelle entree d'advancement (immutable - clone).
   const newAdvancement: PlayerAdvancement = {
-    skillSlug: input.skillSlug,
+    skillSlug,
     type: input.type,
-    isRandom:
-      input.type === "random-primary" || input.type === "random-secondary",
+    isRandom: input.type === "random-primary",
     at: Date.now(),
   };
   const updatedAdvancements = [...taken, newAdvancement];
@@ -384,10 +490,10 @@ export async function applyAdvancementChoice(
   // presente, on l'ajoute quand meme — c'est au caller (handler) de
   // verifier la duplication et de tirer au sort proprement pour les
   // random.
-  const updatedSkills = appendSkillCsv(player.skills, input.skillSlug);
+  const updatedSkills = appendSkillCsv(player.skills, skillSlug);
 
   // Calcul du surcout en po pour la TV courante.
-  const surcharge = SURCHARGE_PER_ADVANCEMENT[input.type];
+  const surcharge = surchargeForAdvancement({ type: input.type });
 
   // BUG fix audit round 5 (CRITICAL) : avant, les 2 updates (player.spp
   // + advancements + skills) et (team.currentValue increment by surcharge)
@@ -424,7 +530,7 @@ export async function applyAdvancementChoice(
     playerId: input.playerId,
     newSpp: player.spp - cost,
     newAdvancementCount: updatedAdvancements.length,
-    addedSkill: input.skillSlug,
+    addedSkill: skillSlug,
     currentValue: team?.currentValue ?? 0,
   };
 }

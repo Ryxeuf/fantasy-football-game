@@ -379,15 +379,26 @@ export {
 } from './skills/star-player-rules';
 
 // Export des utilitaires d'avancements
-export { 
-  getNextAdvancementPspCost, 
-  calculateAdvancementsSurcharge, 
+export {
+  getNextAdvancementPspCost,
+  calculateAdvancementsSurcharge,
   calculatePlayerCurrentValue,
+  surchargeForAdvancement,
   SURCHARGE_PER_ADVANCEMENT,
+  CHARACTERISTIC_VALUE_INCREASE,
   isRandomAdvancement,
   getCategoryAccessType,
+  applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
+  isAtCharacteristicLimit,
+  CHARACTERISTIC_IMPROVE_LIMIT,
+  MAX_CHARACTERISTIC_IMPROVEMENTS,
   type AdvancementType,
-  type PlayerAdvancement
+  type CharacteristicKind,
+  type PlayerAdvancement,
+  type PlayerStats,
+  type AdvancementSurchargeInput
 } from './utils/advancements';
 
 // Accès de catégories par position
