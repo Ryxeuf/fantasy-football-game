@@ -290,6 +290,7 @@ export const EN_TRANSLATIONS = {
           secondary: "Secondary",
           randomPrimary: "Random primary",
           randomSecondary: "Random secondary",
+          characteristic: "Characteristic",
         },
       },
       injuries: {

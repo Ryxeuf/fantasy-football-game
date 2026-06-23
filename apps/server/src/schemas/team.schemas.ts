@@ -72,12 +72,19 @@ export const addPlayerSchema = z.object({
   number: z.number().int().min(1, "Le numero doit etre entre 1 et 99").max(99, "Le numero doit etre entre 1 et 99"),
 });
 
-const validAdvancementTypes = ["primary", "secondary", "random-primary", "random-secondary"] as const;
+// BB2025 (Saison 3) : la « secondaire au hasard » disparait, la
+// caracteristique devient un type d'avancement achetable.
+const validAdvancementTypes = ["primary", "secondary", "random-primary", "characteristic"] as const;
+const validCharacteristicStats = ["ma", "st", "ag", "pa", "av"] as const;
 
 export const updatePlayerSkillsSchema = z.object({
   skillSlug: z.string().optional(),
   advancementType: z.enum(validAdvancementTypes, { message: "advancementType est requis" }),
   skillCategory: z.string().optional(),
+  // Obligatoire uniquement pour advancementType="characteristic" (le
+  // handler le verifie ; on l'autorise ici pour ne pas le faire stripper
+  // par le middleware validate()).
+  stat: z.enum(validCharacteristicStats).optional(),
 });
 
 export const addStarPlayerToTeamSchema = z.object({

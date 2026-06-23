@@ -95,13 +95,6 @@ describe("checkSkillAccess", () => {
     expect(
       checkSkillAccess({ type: "secondary", skillCode: "A", ...access }),
     ).toBe("ok");
-    expect(
-      checkSkillAccess({
-        type: "random-secondary",
-        skillCode: "A",
-        ...access,
-      }),
-    ).toBe("ok");
   });
 
   it("out-of-pool quand la catégorie n'est pas dans le pool du type", () => {
