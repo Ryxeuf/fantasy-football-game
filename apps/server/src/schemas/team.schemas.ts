@@ -81,10 +81,12 @@ export const updatePlayerSkillsSchema = z.object({
   skillSlug: z.string().optional(),
   advancementType: z.enum(validAdvancementTypes, { message: "advancementType est requis" }),
   skillCategory: z.string().optional(),
-  // Obligatoire uniquement pour advancementType="characteristic" (le
-  // handler le verifie ; on l'autorise ici pour ne pas le faire stripper
-  // par le middleware validate()).
+  // Obligatoires uniquement pour advancementType="characteristic" (le
+  // handler les verifie ; on les autorise ici pour ne pas les faire
+  // stripper par le middleware validate()). `d8` = jet BB2025 qui
+  // restreint les caracteristiques ameliorables.
   stat: z.enum(validCharacteristicStats).optional(),
+  d8: z.number().int().min(1).max(8).optional(),
 });
 
 export const addStarPlayerToTeamSchema = z.object({

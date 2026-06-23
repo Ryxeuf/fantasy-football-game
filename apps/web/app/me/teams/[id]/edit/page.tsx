@@ -15,6 +15,8 @@ import {
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
   getPositionCategoryAccess,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
   type AdvancementType,
   type CharacteristicKind
 } from "@bb/game-engine";
@@ -92,6 +94,9 @@ export default function TeamEditPage() {
   // S3 — mode amelioration de caracteristique (3e mode, a cote de Primaire/Secondaire).
   const [charMode, setCharMode] = useState(false);
   const [selectedStat, setSelectedStat] = useState<CharacteristicKind | "">("");
+  // BB2025 — jet D8 obligatoire pour une amelioration de caracteristique.
+  // Restreint les stats selectionnables (cf. characteristicOptionsForRoll).
+  const [d8Roll, setD8Roll] = useState<number | null>(null);
 
   // Gestion du modal d'ajout de joueur - empêcher le scroll de la page et gérer la touche Échap
   useEffect(() => {
@@ -125,6 +130,7 @@ export default function TeamEditPage() {
           setSelectedSkillSlug("");
           setCharMode(false);
           setSelectedStat("");
+          setD8Roll(null);
         }
       };
       document.addEventListener('keydown', handleEscape);
@@ -984,6 +990,7 @@ export default function TeamEditPage() {
               setSelectedSkillSlug("");
               setCharMode(false);
               setSelectedStat("");
+              setD8Roll(null);
             }
           }}
         >
@@ -1038,12 +1045,31 @@ export default function TeamEditPage() {
               const selectedSkill = selectedSkillSlug ? SKILLS_DEFINITIONS.find(s => s.slug === selectedSkillSlug) : null;
               const currentSkills = (player.skills || '').split(',').filter(Boolean);
 
+              // BB2025 — amelioration de caracteristique : stats courantes du
+              // joueur (PA 0/falsy = « — » non passable -> null pour le helper)
+              // + historique pour compter les ameliorations deja prises par stat.
+              const currentStats = {
+                ma: player.ma as number,
+                st: player.st as number,
+                ag: player.ag as number,
+                pa: (player.pa ?? 0) ? (player.pa as number) : null,
+                av: player.av as number,
+              };
+              let parsedAdvancements: Array<{ type?: string; stat?: string }> = [];
+              try { parsedAdvancements = JSON.parse(player.advancements || '[]'); } catch {}
+              const priorCountForStat = (s: CharacteristicKind): number =>
+                parsedAdvancements.filter((a) => a?.type === 'characteristic' && a?.stat === s).length;
+              // Stats autorisees par le jet D8 courant (vide tant qu'aucun jet).
+              const d8AllowedStats: readonly CharacteristicKind[] = d8Roll != null
+                ? characteristicOptionsForRoll(d8Roll)
+                : [];
+
               return (
                 <>
                   {/* En-tête avec gradient */}
                   <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 text-white relative">
                     <button
-                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); setCharMode(false); setSelectedStat(""); }}
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); setCharMode(false); setSelectedStat(""); setD8Roll(null); }}
                       className="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-2xl font-light"
                       aria-label="Fermer"
                     >
@@ -1121,7 +1147,7 @@ export default function TeamEditPage() {
                       <div className="flex gap-3">
                         <button
                           data-testid="edit-advtype-primary"
-                          onClick={() => { setCharMode(false); setSelectedStat(""); setSelectedAdvType('primary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          onClick={() => { setCharMode(false); setSelectedStat(""); setD8Roll(null); setSelectedAdvType('primary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
                           className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                             !charMode && selectedAdvType === 'primary'
                               ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
@@ -1135,7 +1161,7 @@ export default function TeamEditPage() {
                         </button>
                         <button
                           data-testid="edit-advtype-secondary"
-                          onClick={() => { setCharMode(false); setSelectedStat(""); setIsRandom(false); setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          onClick={() => { setCharMode(false); setSelectedStat(""); setD8Roll(null); setIsRandom(false); setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
                           className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                             !charMode && selectedAdvType === 'secondary'
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
@@ -1149,7 +1175,7 @@ export default function TeamEditPage() {
                         </button>
                         <button
                           data-testid="edit-advtype-characteristic"
-                          onClick={() => { setCharMode(true); setIsRandom(false); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          onClick={() => { setCharMode(true); setIsRandom(false); setSelectedSkillSlug(""); setSelectedCategory(""); setSelectedStat(""); setD8Roll(null); }}
                           className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                             charMode
                               ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30 scale-105'
@@ -1169,31 +1195,63 @@ export default function TeamEditPage() {
                       )}
                     </div>
 
-                    {/* Sélecteur de caractéristique (mode Caractéristique) */}
+                    {/* Sélecteur de caractéristique (mode Caractéristique) — jet D8 BB2025 */}
                     {charMode && (
                       <div className="mb-6">
                         <div className="flex items-center gap-3 mb-3">
-                          <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Caractéristique à améliorer</span>
+                          <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Amélioration de caractéristique</span>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {statOptions.map((s) => (
-                            <button
-                              key={s.code}
-                              data-testid={`edit-stat-${s.code}`}
-                              onClick={() => setSelectedStat(s.code)}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
-                                selectedStat === s.code
-                                  ? 'bg-amber-100 text-amber-800 shadow-md scale-105'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                              title={s.name}
-                            >
-                              <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-xs font-bold">
-                                {s.label}
-                              </span>
-                              +1 {s.name} ({CHARACTERISTIC_VALUE_INCREASE[s.code] / 1000}k VE)
-                            </button>
-                          ))}
+                        <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-dashed border-amber-300">
+                          <div className="text-4xl mb-4">🎲</div>
+                          <p className="text-gray-700 mb-4 text-center max-w-md">
+                            Lancez le D8 pour déterminer quelles caractéristiques peuvent être améliorées (règle Blood Bowl 2025), puis choisissez-en une.
+                          </p>
+                          <button
+                            data-testid="edit-d8-roll"
+                            onClick={() => {
+                              const roll = Math.floor(Math.random() * 8) + 1;
+                              setD8Roll(roll);
+                              setSelectedStat("");
+                            }}
+                            className="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/30"
+                          >
+                            🎲 {d8Roll != null ? 'Relancer le D8' : 'Lancer le D8'}
+                          </button>
+
+                          {d8Roll != null && (
+                            <div className="mt-6 w-full max-w-lg">
+                              <div className="text-center font-bold text-lg text-amber-800 mb-4">
+                                Jet D8 : {d8Roll} → {d8AllowedStats.map(s => statOptions.find(o => o.code === s)?.label ?? s.toUpperCase()).join(' ou ')}
+                              </div>
+                              <div className="flex flex-wrap gap-2 justify-center">
+                                {d8AllowedStats.map((code) => {
+                                  const s = statOptions.find(o => o.code === code)!;
+                                  const allowed = canImproveCharacteristic(currentStats, code, priorCountForStat(code));
+                                  return (
+                                    <button
+                                      key={code}
+                                      data-testid={`edit-stat-${code}`}
+                                      onClick={() => { if (allowed) setSelectedStat(code); }}
+                                      disabled={!allowed}
+                                      title={allowed ? s.name : `${s.name} — déjà au maximum ou amélioré 2 fois`}
+                                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                                        !allowed
+                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                                          : selectedStat === code
+                                            ? 'bg-amber-100 text-amber-800 shadow-md scale-105'
+                                            : 'bg-white text-gray-700 hover:bg-amber-50 border border-amber-200'
+                                      }`}
+                                    >
+                                      <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-xs font-bold">
+                                        {s.label}
+                                      </span>
+                                      +1 {s.name} ({CHARACTERISTIC_VALUE_INCREASE[code] / 1000}k VE)
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1352,10 +1410,15 @@ export default function TeamEditPage() {
                       </div>
                     )}
 
-                    {charMode && !selectedStat && (
+                    {charMode && d8Roll == null && (
                       <div className="text-center py-12 text-gray-400">
                         <div className="text-4xl mb-4">📈</div>
-                        <p className="text-lg">Sélectionnez une caractéristique à améliorer (+1)</p>
+                        <p className="text-lg">Lancez le D8 pour révéler les caractéristiques améliorables (+1)</p>
+                      </div>
+                    )}
+                    {charMode && d8Roll != null && !selectedStat && (
+                      <div className="text-center py-8 text-gray-400">
+                        <p className="text-lg">Choisissez une caractéristique parmi celles autorisées par le jet</p>
                       </div>
                     )}
                   </div>
@@ -1369,6 +1432,7 @@ export default function TeamEditPage() {
                         setIsRandom(false);
                         setCharMode(false);
                         setSelectedStat("");
+                        setD8Roll(null);
                       }}
                       className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-medium"
                     >
@@ -1377,20 +1441,22 @@ export default function TeamEditPage() {
                     <button
                       data-testid="edit-skill-confirm"
                       disabled={charMode
-                        ? (!selectedStat || (player.spp ?? 0) < psp)
+                        ? (d8Roll == null || !selectedStat || (player.spp ?? 0) < psp)
                         : isRandom
                           ? (!selectedCategory || (player.spp ?? 0) < psp)
                           : (!selectedSkillSlug || !selectedCategory || (player.spp ?? 0) < psp)
                       }
                       onClick={async () => {
                         try {
-                          const body: Record<string, string> = {
+                          const body: Record<string, string | number> = {
                             advancementType: actualAdvType,
                           };
                           if (charMode) {
-                            // Amélioration de caractéristique : pas de skill, juste la stat.
-                            if (!selectedStat) return;
+                            // Amélioration de caractéristique BB2025 : jet D8 obligatoire
+                            // + stat choisie parmi celles autorisées par le jet.
+                            if (!selectedStat || d8Roll == null) return;
                             body.stat = selectedStat;
+                            body.d8 = d8Roll;
                           } else if (isRandom) {
                             // Server picks the random skill
                             body.skillCategory = selectedCategory;
@@ -1429,6 +1495,7 @@ export default function TeamEditPage() {
                           setIsRandom(false);
                           setCharMode(false);
                           setSelectedStat("");
+                          setD8Roll(null);
                         } catch (e: any) {
                           alert(e?.message || "Erreur lors de l'ajout de la compétence");
                         }

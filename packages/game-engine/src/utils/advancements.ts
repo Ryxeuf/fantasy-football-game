@@ -123,8 +123,98 @@ export interface PlayerAdvancement {
   type: AdvancementType;
   /** Caractéristique améliorée (uniquement pour type='characteristic'). */
   stat?: CharacteristicKind;
+  /** Résultat du D8 tiré (uniquement pour type='characteristic'). Traçabilité. */
+  d8?: number;
   isRandom: boolean;            // true si c'était un tirage aléatoire
   at: number;                   // timestamp ms
+}
+
+/**
+ * Nombre maximum d'améliorations d'une même caractéristique sur la
+ * carrière d'un joueur (règle BB2025, p.37 : « on ne peut jamais
+ * améliorer plus de deux fois une Caractéristique »).
+ */
+export const MAX_CHARACTERISTIC_IMPROVEMENTS = 2;
+
+/**
+ * Valeur « la meilleure atteignable » par amélioration (BB2025 p.37).
+ * MA/ST/AV s'améliorent vers le haut (cap = maximum). AG/PA sont des
+ * cibles « X+ » où plus bas = meilleur ⇒ s'améliorent vers le bas
+ * (cap = 1, la meilleure cible). Au-delà, l'amélioration est interdite.
+ *
+ *   M (MA)  : 1..9   ST (F) : 1..5   AR (AV) : 3+..11+
+ *   AG      : 6+..1+ CP (PA): 6+..1+
+ */
+export const CHARACTERISTIC_IMPROVE_LIMIT: Record<CharacteristicKind, number> = {
+  ma: 9,  // maximum
+  st: 5,  // maximum (Force)
+  av: 11, // meilleure armure (cible la plus haute)
+  ag: 1,  // meilleure cible (la plus basse)
+  pa: 1,  // meilleure cible (la plus basse)
+};
+
+/**
+ * Tableau D8 d'amélioration de caractéristique (BB2025). Pour un jet
+ * donné, retourne les caractéristiques améliorables au choix du coach.
+ * La Force (ST) n'est accessible que sur un 8 (« au choix »).
+ */
+export function characteristicOptionsForRoll(
+  d8: number,
+): readonly CharacteristicKind[] {
+  switch (d8) {
+    case 1:
+      return ['av'];
+    case 2:
+      return ['av', 'pa'];
+    case 3:
+    case 4:
+      return ['av', 'ma', 'pa'];
+    case 5:
+      return ['ma', 'pa'];
+    case 6:
+      return ['ag', 'pa'];
+    case 7:
+      return ['ag', 'ma'];
+    case 8:
+      return ['ma', 'st', 'ag', 'pa', 'av'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * `true` si la caractéristique `stat` est déjà à sa limite d'amélioration
+ * (ou non améliorable, ex: PA « — »). On compare la valeur courante au cap
+ * directionnel `CHARACTERISTIC_IMPROVE_LIMIT`.
+ */
+export function isAtCharacteristicLimit(
+  stat: CharacteristicKind,
+  value: number | null,
+): boolean {
+  const limit = CHARACTERISTIC_IMPROVE_LIMIT[stat];
+  if (stat === 'ag' || stat === 'pa') {
+    // Cibles « X+ » : on s'améliore vers le bas. PA « — » (null) non améliorable.
+    if (value === null) return true;
+    return value <= limit;
+  }
+  // MA/ST/AV : on s'améliore vers le haut.
+  if (value === null) return true;
+  return value >= limit;
+}
+
+/**
+ * `true` si une amélioration de `stat` est autorisée pour ce joueur :
+ *  - elle n'a pas déjà été améliorée 2 fois (`alreadyImprovedCount`),
+ *  - et sa valeur courante n'est pas déjà à la limite.
+ */
+export function canImproveCharacteristic(
+  stats: PlayerStats,
+  stat: CharacteristicKind,
+  alreadyImprovedCount: number,
+): boolean {
+  if (alreadyImprovedCount >= MAX_CHARACTERISTIC_IMPROVEMENTS) return false;
+  const value = stat === 'pa' ? stats.pa : stats[stat];
+  return !isAtCharacteristicLimit(stat, value);
 }
 
 /**
@@ -161,11 +251,12 @@ export interface PlayerStats {
  *
  * MA/ST/AV sont des valeurs où « plus haut = meilleur » → +1.
  * AG/PA sont des cibles « X+ » où « plus bas = meilleur » →
- * l'amélioration diminue la cible (-1), avec un plancher à 1.
+ * l'amélioration diminue la cible (-1).
  *
- * PA peut valoir `null` (« — », pas de passe) : améliorer PA dans ce
- * cas est invalide ; le caller doit le refuser en amont. Par sécurité,
- * on laisse PA inchangé si elle est null.
+ * Les valeurs sont bornées par `CHARACTERISTIC_IMPROVE_LIMIT` (BB2025
+ * p.37) : MA≤9, ST≤5, AV≤11, AG≥1, PA≥1. PA peut valoir `null` (« — »,
+ * pas de passe) : améliorer PA dans ce cas est invalide ; le caller doit
+ * le refuser en amont. Par sécurité, on laisse PA inchangé si elle est null.
  */
 export function applyCharacteristicImprovement(
   stats: PlayerStats,
@@ -173,16 +264,16 @@ export function applyCharacteristicImprovement(
 ): PlayerStats {
   switch (stat) {
     case 'ma':
-      return { ...stats, ma: stats.ma + 1 };
+      return { ...stats, ma: Math.min(CHARACTERISTIC_IMPROVE_LIMIT.ma, stats.ma + 1) };
     case 'st':
-      return { ...stats, st: stats.st + 1 };
+      return { ...stats, st: Math.min(CHARACTERISTIC_IMPROVE_LIMIT.st, stats.st + 1) };
     case 'av':
-      return { ...stats, av: stats.av + 1 };
+      return { ...stats, av: Math.min(CHARACTERISTIC_IMPROVE_LIMIT.av, stats.av + 1) };
     case 'ag':
-      return { ...stats, ag: Math.max(1, stats.ag - 1) };
+      return { ...stats, ag: Math.max(CHARACTERISTIC_IMPROVE_LIMIT.ag, stats.ag - 1) };
     case 'pa':
       return stats.pa === null
         ? stats
-        : { ...stats, pa: Math.max(1, stats.pa - 1) };
+        : { ...stats, pa: Math.max(CHARACTERISTIC_IMPROVE_LIMIT.pa, stats.pa - 1) };
   }
 }

@@ -211,9 +211,13 @@ export async function handleApplyAdvancement(
 
   if (body.type === "characteristic") {
     // Amelioration de caracteristique (BB2025) : pas de skill, on cible
-    // une stat (validee par le schema Zod).
+    // une stat issue d'un jet D8 (validees par le schema Zod).
     if (!body.stat) {
       sendError(res, "stat est obligatoire pour une amelioration de caracteristique", 400);
+      return;
+    }
+    if (typeof body.d8 !== "number") {
+      sendError(res, "d8 est obligatoire pour une amelioration de caracteristique", 400);
       return;
     }
   } else if (!body.skillSlug) {
@@ -233,6 +237,7 @@ export async function handleApplyAdvancement(
     type: body.type,
     skillSlug: body.skillSlug,
     stat: body.stat,
+    d8: body.d8,
   });
 
   if ("skipped" in result && result.skipped) {

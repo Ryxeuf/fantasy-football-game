@@ -7,6 +7,10 @@ import {
   CHARACTERISTIC_VALUE_INCREASE,
   isRandomAdvancement,
   applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
+  isAtCharacteristicLimit,
+  MAX_CHARACTERISTIC_IMPROVEMENTS,
   type PlayerStats,
 } from './advancements';
 
@@ -108,6 +112,60 @@ describe('advancements utils (BB2025 / Saison 3)', () => {
     it('ne mute pas l’objet source (immutable)', () => {
       applyCharacteristicImprovement(base, 'ma');
       expect(base.ma).toBe(6);
+    });
+
+    it('borne les améliorations aux limites BB2025 (p.37)', () => {
+      expect(applyCharacteristicImprovement({ ma: 9, st: 3, ag: 3, pa: 4, av: 9 }, 'ma').ma).toBe(9);
+      expect(applyCharacteristicImprovement({ ma: 6, st: 5, ag: 3, pa: 4, av: 9 }, 'st').st).toBe(5);
+      expect(applyCharacteristicImprovement({ ma: 6, st: 3, ag: 3, pa: 4, av: 11 }, 'av').av).toBe(11);
+      expect(applyCharacteristicImprovement({ ma: 6, st: 3, ag: 1, pa: 4, av: 9 }, 'ag').ag).toBe(1);
+    });
+  });
+
+  describe('D8 characteristic table (BB2025)', () => {
+    it('mappe chaque jet D8 vers les bonnes options', () => {
+      expect(characteristicOptionsForRoll(1)).toEqual(['av']);
+      expect(characteristicOptionsForRoll(2)).toEqual(['av', 'pa']);
+      expect(characteristicOptionsForRoll(3)).toEqual(['av', 'ma', 'pa']);
+      expect(characteristicOptionsForRoll(4)).toEqual(['av', 'ma', 'pa']);
+      expect(characteristicOptionsForRoll(5)).toEqual(['ma', 'pa']);
+      expect(characteristicOptionsForRoll(6)).toEqual(['ag', 'pa']);
+      expect(characteristicOptionsForRoll(7)).toEqual(['ag', 'ma']);
+      expect(characteristicOptionsForRoll(8)).toEqual(['ma', 'st', 'ag', 'pa', 'av']);
+    });
+
+    it("la Force (ST) n'est accessible que sur un 8", () => {
+      for (let d = 1; d <= 7; d += 1) {
+        expect(characteristicOptionsForRoll(d)).not.toContain('st');
+      }
+      expect(characteristicOptionsForRoll(8)).toContain('st');
+    });
+
+    it('jet hors plage → aucune option', () => {
+      expect(characteristicOptionsForRoll(0)).toEqual([]);
+      expect(characteristicOptionsForRoll(9)).toEqual([]);
+    });
+  });
+
+  describe('Characteristic caps (BB2025 p.37)', () => {
+    const fresh: PlayerStats = { ma: 6, st: 3, ag: 3, pa: 4, av: 9 };
+
+    it('refuse au-delà de 2 améliorations de la même caractéristique', () => {
+      expect(canImproveCharacteristic(fresh, 'ma', 0)).toBe(true);
+      expect(canImproveCharacteristic(fresh, 'ma', 1)).toBe(true);
+      expect(canImproveCharacteristic(fresh, 'ma', MAX_CHARACTERISTIC_IMPROVEMENTS)).toBe(false);
+    });
+
+    it('refuse une caractéristique déjà à sa limite', () => {
+      expect(canImproveCharacteristic({ ...fresh, st: 5 }, 'st', 0)).toBe(false); // ST max 5
+      expect(canImproveCharacteristic({ ...fresh, ma: 9 }, 'ma', 0)).toBe(false); // MA max 9
+      expect(canImproveCharacteristic({ ...fresh, av: 11 }, 'av', 0)).toBe(false); // AV max 11+
+      expect(canImproveCharacteristic({ ...fresh, ag: 1 }, 'ag', 0)).toBe(false); // AG meilleure cible 1+
+    });
+
+    it('refuse PA quand le joueur n’a pas de passe (— / null)', () => {
+      expect(isAtCharacteristicLimit('pa', null)).toBe(true);
+      expect(canImproveCharacteristic({ ...fresh, pa: null }, 'pa', 0)).toBe(false);
     });
   });
 });

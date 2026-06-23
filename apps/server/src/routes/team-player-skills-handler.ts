@@ -29,6 +29,8 @@ import {
   getNextAdvancementPspCost,
   getPositionCategoryAccess,
   applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
   SKILLS_BY_SLUG,
   SKILLS_DEFINITIONS,
   type AdvancementType,
@@ -54,11 +56,13 @@ export async function handleUpdatePlayerSkills(
     advancementType,
     skillCategory,
     stat,
+    d8,
   }: {
     skillSlug?: string;
     advancementType: AdvancementType;
     skillCategory?: string;
     stat?: CharacteristicKind;
+    d8?: number;
   } = req.body;
 
   try {
@@ -83,6 +87,14 @@ export async function handleUpdatePlayerSkills(
       sendError(
         res,
         'stat est requis pour une amelioration de caracteristique',
+        400,
+      );
+      return;
+    }
+    if (isCharacteristic && (typeof d8 !== 'number' || d8 < 1 || d8 > 8)) {
+      sendError(
+        res,
+        'd8 (1-8) est requis pour une amelioration de caracteristique',
         400,
       );
       return;
@@ -148,13 +160,34 @@ export async function handleUpdatePlayerSkills(
     // competence. Pas de pool/category a valider.
     if (isCharacteristic) {
       const charStat = stat as CharacteristicKind;
+      const roll = d8 as number;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const p = player as any;
-      // PA "—" (null) n'est pas ameliorable via une amelioration de carac.
-      if (charStat === 'pa' && p.pa === null) {
-        sendError(res, "La passe (PA) de ce joueur n'est pas ameliorable", 400);
+      const stats = { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av };
+
+      // Le jet D8 (BB2025) restreint les caracteristiques ameliorables.
+      if (!characteristicOptionsForRoll(roll).includes(charStat)) {
+        sendError(
+          res,
+          `La caracteristique '${charStat}' n'est pas ameliorable avec un jet D8 de ${roll}`,
+          400,
+        );
         return;
       }
+      // Plafonds BB2025 (p.37) : max 2 ameliorations par carac + bornes
+      // min/max (PA "—" exclue).
+      const priorCount = advancements.filter(
+        (a) => a.type === 'characteristic' && a.stat === charStat,
+      ).length;
+      if (!canImproveCharacteristic(stats, charStat, priorCount)) {
+        sendError(
+          res,
+          `La caracteristique '${charStat}' ne peut plus etre amelioree (limite BB2025 atteinte)`,
+          400,
+        );
+        return;
+      }
+
       const sppCost = getNextAdvancementPspCost(
         advancements.length,
         'characteristic',
@@ -168,13 +201,11 @@ export async function handleUpdatePlayerSkills(
         );
         return;
       }
-      const improved = applyCharacteristicImprovement(
-        { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
-        charStat,
-      );
+      const improved = applyCharacteristicImprovement(stats, charStat);
       const newAdvancement: PlayerAdvancement = {
         type: 'characteristic',
         stat: charStat,
+        d8: roll,
         isRandom: false,
         at: Date.now(),
       };

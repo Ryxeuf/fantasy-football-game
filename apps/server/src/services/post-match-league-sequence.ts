@@ -34,6 +34,8 @@ import {
   type PlayerAdvancement,
   surchargeForAdvancement,
   applyCharacteristicImprovement,
+  characteristicOptionsForRoll,
+  canImproveCharacteristic,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
 import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
@@ -287,6 +289,8 @@ export type ApplyAdvancementOutcome =
         | "skill-not-in-pool"
         | "missing-skill"
         | "missing-stat"
+        | "missing-d8"
+        | "stat-roll-mismatch"
         | "stat-not-improvable";
       readonly required?: number;
       readonly available?: number;
@@ -307,6 +311,11 @@ export interface ApplyAdvancementInput {
    * pour type='characteristic'.
    */
   readonly stat?: CharacteristicKind;
+  /**
+   * Resultat du jet D8 (BB2025) qui restreint les caracteristiques
+   * ameliorables. Obligatoire pour type='characteristic'.
+   */
+  readonly d8?: number;
 }
 
 /**
@@ -368,23 +377,34 @@ export async function applyAdvancementChoice(
     if (!stat) {
       return { skipped: true, reason: "missing-stat" };
     }
-    // PA "—" (null) n'est pas ameliorable via une amelioration de carac.
-    if (stat === "pa" && player.pa === null) {
+    const roll = input.d8;
+    if (typeof roll !== "number" || roll < 1 || roll > 8) {
+      return { skipped: true, reason: "missing-d8" };
+    }
+    const stats = {
+      ma: player.ma,
+      st: player.st,
+      ag: player.ag,
+      pa: player.pa,
+      av: player.av,
+    };
+    // Le jet D8 (BB2025) restreint les caracteristiques ameliorables.
+    if (!characteristicOptionsForRoll(roll).includes(stat)) {
+      return { skipped: true, reason: "stat-roll-mismatch" };
+    }
+    // Plafonds BB2025 (p.37) : max 2 ameliorations par carac + bornes
+    // min/max (PA "—" exclue).
+    const priorCount = taken.filter(
+      (a) => a.type === "characteristic" && a.stat === stat,
+    ).length;
+    if (!canImproveCharacteristic(stats, stat, priorCount)) {
       return { skipped: true, reason: "stat-not-improvable" };
     }
-    const improved = applyCharacteristicImprovement(
-      {
-        ma: player.ma,
-        st: player.st,
-        ag: player.ag,
-        pa: player.pa,
-        av: player.av,
-      },
-      stat,
-    );
+    const improved = applyCharacteristicImprovement(stats, stat);
     const newAdvancement: PlayerAdvancement = {
       type: "characteristic",
       stat,
+      d8: roll,
       isRandom: false,
       at: Date.now(),
     };

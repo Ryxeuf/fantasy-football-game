@@ -566,3 +566,93 @@ describe("markSequenceCompletedIfDone", () => {
     expect(mocked.seqUpdate).not.toHaveBeenCalled();
   });
 });
+
+describe("applyAdvancementChoice — characteristic (BB2025)", () => {
+  function buildCharPlayer(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "",
+      advancements: "[]",
+      dead: false,
+      position: "skaven_lineman",
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      team: { roster: "skaven", ruleset: "season_3" },
+      ...overrides,
+    };
+  }
+
+  it("applies a characteristic improvement allowed by the D8 roll", async () => {
+    mocked.playerFind.mockResolvedValue(buildCharPlayer({ spp: 14 }));
+    mocked.playerUpdate.mockResolvedValue({});
+    mocked.teamUpdate.mockResolvedValue({});
+    mocked.teamFind.mockResolvedValue({ currentValue: 1060000 });
+
+    // D8=3 -> [av, ma, pa]; on choisit MA.
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "characteristic",
+      stat: "ma",
+      d8: 3,
+    });
+    if (!("applied" in out)) throw new Error("expected applied");
+    expect(out.applied).toBe(true);
+    expect(out.newSpp).toBe(0); // 14 - 14
+    expect(out.addedStat).toBe("ma");
+    expect(out.addedSkill).toBe("");
+
+    const data = mocked.playerUpdate.mock.calls[0][0].data;
+    expect(data.spp).toEqual({ decrement: 14 });
+    expect(data.ma).toBe(7); // 6 -> 7
+    expect(data.skills).toBeUndefined(); // pas de skill ajoutee
+    const adv = JSON.parse(data.advancements);
+    expect(adv[0]).toMatchObject({ type: "characteristic", stat: "ma", d8: 3 });
+    // Surcout VE +1 MA = +20k.
+    expect(mocked.teamUpdate.mock.calls[0][0].data.currentValue).toEqual({
+      increment: 20000,
+    });
+  });
+
+  it("rejects a stat not allowed by the D8 roll (ST only on a 8)", async () => {
+    mocked.playerFind.mockResolvedValue(buildCharPlayer());
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "characteristic",
+      stat: "st", // Force
+      d8: 3, // 3 -> [av, ma, pa], pas de ST
+    });
+    expect(out).toEqual({ skipped: true, reason: "stat-roll-mismatch" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the characteristic is already at its cap", async () => {
+    mocked.playerFind.mockResolvedValue(buildCharPlayer({ st: 5 })); // ST max 5
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "characteristic",
+      stat: "st",
+      d8: 8, // 8 autorise ST, mais deja au max
+    });
+    expect(out).toEqual({ skipped: true, reason: "stat-not-improvable" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects when d8 is missing", async () => {
+    mocked.playerFind.mockResolvedValue(buildCharPlayer());
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "characteristic",
+      stat: "ma",
+    });
+    expect(out).toEqual({ skipped: true, reason: "missing-d8" });
+  });
+});

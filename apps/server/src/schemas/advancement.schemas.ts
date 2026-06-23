@@ -43,6 +43,12 @@ export const applyAdvancementSchema = z
      * pour type=characteristic.
      */
     stat: characteristicStat.optional(),
+    /**
+     * Resultat du jet D8 (BB2025) qui restreint les caracteristiques
+     * ameliorables. Obligatoire pour type=characteristic ; le serveur
+     * verifie que `stat` fait partie des options de ce jet.
+     */
+    d8: z.number().int().min(1).max(8).optional(),
   })
   .refine(
     (v) => {
@@ -67,6 +73,18 @@ export const applyAdvancementSchema = z
     {
       message: "stat est obligatoire pour type=characteristic",
       path: ["stat"],
+    },
+  )
+  .refine(
+    (v) => {
+      if (v.type === "characteristic") {
+        return v.d8 !== undefined;
+      }
+      return true;
+    },
+    {
+      message: "d8 est obligatoire pour type=characteristic (jet BB2025)",
+      path: ["d8"],
     },
   );
 

@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import type { CharacteristicKind } from "@bb/game-engine";
+import { characteristicOptionsForRoll, type CharacteristicKind } from "@bb/game-engine";
 import { apiRequest } from "../../../../lib/api-client";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../../../hooks/useFeatureFlag";
@@ -238,6 +238,8 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const [type, setType] = useState<AdvancementType>("random-primary");
   const [skillSlug, setSkillSlug] = useState("");
   const [stat, setStat] = useState<CharacteristicKind | "">("");
+  // BB2025 — jet D8 obligatoire pour une amelioration de caracteristique.
+  const [d8Roll, setD8Roll] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<ApplyResponse | null>(null);
@@ -282,19 +284,26 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
     }
   }, [hasAccess, eligibleSkills, skillSlug]);
 
-  // Reset de la stat quand on quitte le mode caractéristique.
+  // Reset de la stat et du jet D8 quand on quitte le mode caractéristique.
   useEffect(() => {
-    if (!isCharacteristic && stat !== "") setStat("");
-  }, [isCharacteristic, stat]);
+    if (!isCharacteristic) {
+      if (stat !== "") setStat("");
+      if (d8Roll !== null) setD8Roll(null);
+    }
+  }, [isCharacteristic, stat, d8Roll]);
+
+  // Stats autorisées par le jet D8 courant (vide tant qu'aucun jet).
+  const d8AllowedStats: readonly CharacteristicKind[] =
+    d8Roll != null ? characteristicOptionsForRoll(d8Roll) : [];
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (submitting) return;
       const trimmed = skillSlug.trim();
-      // Validation specifique : stat pour une caracteristique, skill sinon.
+      // Validation specifique : jet D8 + stat pour une caracteristique, skill sinon.
       if (isCharacteristic) {
-        if (stat === "") return;
+        if (stat === "" || d8Roll == null) return;
       } else if (trimmed.length === 0) {
         return;
       }
@@ -306,7 +315,7 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       setError(null);
       try {
         const body = isCharacteristic
-          ? { type, stat }
+          ? { type, stat, d8: d8Roll }
           : { type, skillSlug: trimmed };
         const res = await apiRequest<ApplyResponse>(
           `/team/${teamId}/players/${item.teamPlayerId}/advancement`,
@@ -316,6 +325,8 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
           },
         );
         setApplied(res);
+        setStat("");
+        setD8Roll(null);
         onApplied();
       } catch (e: unknown) {
         setError(
@@ -332,6 +343,7 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       skillSlug,
       isCharacteristic,
       stat,
+      d8Roll,
       canAfford,
       teamId,
       item.teamPlayerId,
@@ -413,22 +425,54 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
                 : (t.teams.levelUpSkillLabel ?? "Compétence")}
             </span>
             {isCharacteristic ? (
-              <select
-                data-testid={`level-up-stat-${item.teamPlayerId}`}
-                required
-                value={stat}
-                onChange={(e) =>
-                  setStat(e.target.value as CharacteristicKind | "")
-                }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white"
-              >
-                <option value="">— choisir —</option>
-                {CHARACTERISTIC_OPTIONS.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1 space-y-1.5">
+                <button
+                  type="button"
+                  data-testid={`level-up-d8-${item.teamPlayerId}`}
+                  onClick={() => {
+                    setD8Roll(Math.floor(Math.random() * 8) + 1);
+                    setStat("");
+                  }}
+                  className="block w-full rounded-md bg-amber-600 text-white px-2 py-1.5 text-sm font-medium hover:bg-amber-700"
+                >
+                  🎲 {d8Roll != null ? "Relancer le D8" : "Lancer le D8"}
+                </button>
+                {d8Roll != null ? (
+                  <>
+                    <div className="text-xs text-amber-800">
+                      Jet D8 : {d8Roll} →{" "}
+                      {d8AllowedStats
+                        .map(
+                          (s) =>
+                            CHARACTERISTIC_OPTIONS.find((o) => o.code === s)
+                              ?.label ?? s.toUpperCase(),
+                        )
+                        .join(" ou ")}
+                    </div>
+                    <select
+                      data-testid={`level-up-stat-${item.teamPlayerId}`}
+                      required
+                      value={stat}
+                      onChange={(e) =>
+                        setStat(e.target.value as CharacteristicKind | "")
+                      }
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white"
+                    >
+                      <option value="">— choisir —</option>
+                      {d8AllowedStats.map((code) => (
+                        <option key={code} value={code}>
+                          {CHARACTERISTIC_OPTIONS.find((o) => o.code === code)
+                            ?.label ?? code.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-500">
+                    Lancez le D8 pour révéler les caractéristiques améliorables.
+                  </div>
+                )}
+              </div>
             ) : hasAccess ? (
               <select
                 data-testid={`level-up-skill-${item.teamPlayerId}`}
@@ -468,7 +512,7 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
               !canAfford ||
               submitting ||
               (isCharacteristic
-                ? stat === ""
+                ? d8Roll == null || stat === ""
                 : skillSlug.trim().length === 0)
             }
             className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
