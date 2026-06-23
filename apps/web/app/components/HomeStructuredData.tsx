@@ -78,7 +78,7 @@ export default function HomeStructuredData() {
         name: "Nuffle Arena",
         alternateName: "Nuffle Arena - Gestionnaire d'équipes Blood Bowl",
         description:
-          "Formez vos équipes Blood Bowl. Défiez le destin. L'arène où le hasard devient divin. Créez et gérez vos équipes, explorez les 30 rosters officiels et 60+ Star Players, et exportez vos rosters en PDF pour vos matchs sur table.",
+          "Formez vos équipes Blood Bowl. Défiez le destin. L'arène où le hasard devient divin. Créez et gérez vos équipes, explorez les 31 rosters officiels et 60+ Star Players, et exportez vos rosters en PDF pour vos matchs sur table.",
         url: BASE_URL,
         applicationCategory: "GameApplication",
         applicationSubCategory: "Fantasy Football",
@@ -94,7 +94,7 @@ export default function HomeStructuredData() {
           availability: "https://schema.org/InStock",
         },
         featureList: [
-          "30 rosters officiels Saison 3",
+          "31 rosters officiels Saison 3",
           "60+ Star Players avec règles spéciales",
           "130+ compétences, mutations et traits",
           "Recrutement et gestion de budget",
@@ -147,7 +147,7 @@ export default function HomeStructuredData() {
             name: "Quelles équipes Blood Bowl sont disponibles ?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Les 30 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves, Hauts Elfes), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques, Ogres, Gobelins, Snotlings, Alliance du Vieux Monde et plus.",
+              text: "Les 31 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves, Hauts Elfes), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques, Ogres, Gobelins, Snotlings, Alliance du Vieux Monde et plus.",
             },
           },
           {

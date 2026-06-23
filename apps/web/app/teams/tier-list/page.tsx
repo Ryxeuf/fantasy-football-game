@@ -161,7 +161,7 @@ export default async function TierListPage() {
             Tier list des équipes Blood Bowl
           </h1>
           <p className="mt-2 text-nuffle-bronze/90 max-w-3xl">
-            Les 30 rosters officiels de la Saison 3, classés du Tier I (le plus
+            Les 31 rosters officiels de la Saison 3, classés du Tier I (le plus
             compétitif) au Tier IV. Chaque équipe est accompagnée de sa
             difficulté de prise en main et de son style de jeu. Hésitant entre
             deux équipes ?{" "}

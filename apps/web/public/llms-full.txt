@@ -26,9 +26,9 @@ Nuffle Arena offre aux coachs Blood Bowl un compagnon numérique complet :
 
 ## Chiffres de référence
 
-- **Rosters officiels Saison 3** : 30
-- **Star Players référencés** : 67 (plus de 60 annoncés publiquement)
-- **Compétences, mutations et traits** : 137 (plus de 130 annoncés)
+- **Rosters officiels Saison 3** : 31
+- **Star Players référencés** : 66 (plus de 60 annoncés publiquement)
+- **Compétences, mutations et traits** : 135 (plus de 130 annoncés)
 - **Règles régionales** : 8 (Badlands Brawl, Elven Kingdoms League, Halfling Thimble Cup, Lustrian Superleague, Old World Classic, Sylvanian Spotlight, Underworld Challenge, World's Edge Superleague)
 - **Rulesets supportés** : Saison 2 (BB 2020), Saison 3 (BB 2025)
 - **Tarif** : 0 € (gratuit, sans abonnement)
@@ -41,6 +41,7 @@ Chaque équipe suit les règles officielles Games Workshop (Blood Bowl 2025 / Sa
 |-------------|-------------|------|-------------------|
 | Alliance du Vieux Monde | Old World Alliance | I | Old World Classic |
 | Amazones | Amazons | I | Lustrian Superleague |
+| Bretonniens | Bretonnians | II | Old World Classic |
 | Chaos Chosen | Chaos Chosen | I | Favoured Of |
 | Chaos Renegade | Chaos Renegade | II | Favoured Of |
 | Chaos Dwarf | Chaos Dwarf | I | Badlands Brawl, World's Edge Superleague, Favoured Of |
@@ -77,7 +78,7 @@ Griff Oberwald, Morg 'n' Thorg, Hakflem Skuttlespike, Akhorne The Squirrel, Anqi
 
 ## Fonctionnalités publiques (sans compte)
 
-- Parcourir les 30 rosters et leurs positions, stats, budgets et descriptions (fr/en).
+- Parcourir les 31 rosters et leurs positions, stats, budgets et descriptions (fr/en).
 - Parcourir les 60+ Star Players avec leurs stats, compétences, règles spéciales (fr/en).
 - Parcourir la bibliothèque de 130+ compétences avec descriptions par catégorie (General, Agility, Passing, Strength, Mutations, Traits).
 - Suivre les tutoriels interactifs (mouvement, blocage, passe, esquive, tacle, GFI, etc.).

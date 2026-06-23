@@ -75,7 +75,7 @@ export const PLAYSTYLE_LABELS: Record<Lang, Record<PlayStyle, string>> = {
 };
 
 /**
- * Carte curée des 30 rosters officiels Saison 3. Les slugs correspondent aux
+ * Carte curée des 31 rosters officiels Saison 3. Les slugs correspondent aux
  * clés de `SEASON_THREE_ROSTERS` (game-engine) et aux slugs renvoyés par
  * `/api/rosters`.
  */

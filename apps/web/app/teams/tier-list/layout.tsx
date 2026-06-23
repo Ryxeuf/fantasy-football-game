@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
-const title = "Tier List Blood Bowl — Classement des 30 équipes (Saison 3)";
+const title = "Tier List Blood Bowl — Classement des 31 équipes (Saison 3)";
 const description =
-  "La tier list des 30 rosters Blood Bowl Saison 3, classés du Tier I au Tier IV : compétitivité, difficulté de prise en main et meilleur roster pour débuter.";
+  "La tier list des 31 rosters Blood Bowl Saison 3, classés du Tier I au Tier IV : compétitivité, difficulté de prise en main et meilleur roster pour débuter.";
 
 export const metadata: Metadata = {
   title,

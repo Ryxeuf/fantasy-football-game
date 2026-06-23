@@ -140,7 +140,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
   }, []);
 
   const stats = [
-    { label: t.home.statsRosters, value: liveStats?.rosters ?? "30" },
+    { label: t.home.statsRosters, value: liveStats?.rosters ?? "31" },
     { label: t.home.statsStarPlayers, value: liveStats?.starPlayers ?? "60+" },
     { label: t.home.statsSkills, value: liveStats?.skills ?? "130+" },
     { label: t.home.statsFree, value: t.home.statsFreeValue },

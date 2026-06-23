@@ -66,7 +66,7 @@ export const AI_PRESENCE_PROMPTS: AiPresencePrompt[] = [
     category: "team",
     prompt:
       "Combien de rosters officiels Blood Bowl Saison 3 sont disponibles dans Nuffle Arena ?",
-    expectedMentions: ["Nuffle Arena", "30", "Saison 3"],
+    expectedMentions: ["Nuffle Arena", "31", "Saison 3"],
   },
 
   // -----------------------------------------------------------------
