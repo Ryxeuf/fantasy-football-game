@@ -116,7 +116,7 @@
     ],
     "statsFreeValue": "0 PO",
     "description": "Plateforme digitale gratuite pour créer, gérer et faire vivre vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et suivez vos matchs sur table.",
-    "subtitle": "Conforme aux règles officielles Blood Bowl 2025 : 30 rosters complets, 60+ Star Players, 130+ compétences, gestion du budget et de la trésorerie, export PDF pour vos parties.",
+    "subtitle": "Conforme aux règles officielles Blood Bowl 2025 : 31 rosters complets, 60+ Star Players, 130+ compétences, gestion du budget et de la trésorerie, export PDF pour vos parties.",
     "manageTeams": "Gérer mes équipes",
     "dashboardBannerGreeting": "Bon retour, {name} !",
     "dashboardBannerCta": "Mon tableau de bord",
@@ -124,9 +124,9 @@
     "register": "Inscription",
     "discoverTeams": "Explorer les équipes",
     "createFirstTeam": "Créez votre première équipe",
-    "createFirstTeamDesc": "Choisissez parmi 30 rosters officiels, recrutez vos joueurs et vos Star Players, puis exportez votre équipe en PDF prête pour la table.",
+    "createFirstTeamDesc": "Choisissez parmi 31 rosters officiels, recrutez vos joueurs et vos Star Players, puis exportez votre équipe en PDF prête pour la table.",
     "rosters": {
-      "title": "30 rosters officiels",
+      "title": "31 rosters officiels",
       "description": "Toutes les équipes Saison 3 : Skaven, Elfes, Orques, Nains, Hommes-Lézards, Gnomes, Noblesse Impériale et bien plus. Chaque roster respecte les règles et budgets officiels."
     },
     "starPlayers": {
@@ -181,7 +181,7 @@
       "subtitle": "Du tournoi d'un soir à la saison complète — menez votre équipe au sommet."
     },
     "factions": {
-      "title": "30 équipes, une seule arène",
+      "title": "31 équipes, une seule arène",
       "subtitle": "Des Skavens véloces aux Nains tenaces — choisissez votre camp."
     },
     "exploreCta": "Explorer",
@@ -215,7 +215,7 @@
     "faqQ3": "Puis-je utiliser Nuffle Arena pour mes matchs sur table ?",
     "faqA3": "Oui. Créez votre équipe, exportez-la en PDF et suivez vos matchs sur table avec notre outil de suivi (scores, blessures, progression des joueurs, trésorerie).",
     "faqQ4": "Quelles équipes sont disponibles ?",
-    "faqA4": "Les 30 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques et plus.",
+    "faqA4": "Les 31 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques et plus.",
     "dashboard": {
       "kicker": "Votre vestiaire",
       "backToHome": "Retour à l'accueil",
@@ -238,7 +238,7 @@
       "actionLocalMatches": "Saisir un match",
       "actionLocalMatchesDesc": "Enregistrez le résultat d'un match joué sur table.",
       "actionExplore": "Explorer les équipes",
-      "actionExploreDesc": "Parcourez les 30 rosters et les Star Players.",
+      "actionExploreDesc": "Parcourez les 31 rosters et les Star Players.",
       "actionTutorial": "Tutoriels",
       "actionTutorialDesc": "Apprenez ou révisez les règles pas à pas."
     }

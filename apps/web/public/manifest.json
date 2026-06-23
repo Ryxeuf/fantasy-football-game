@@ -1,7 +1,7 @@
 {
   "name": "Nuffle Arena — Gestionnaire d'équipes Blood Bowl",
   "short_name": "Nuffle Arena",
-  "description": "Gestionnaire Blood Bowl gratuit : 30 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
+  "description": "Gestionnaire Blood Bowl gratuit : 31 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -36,7 +36,7 @@
       "name": "Rosters",
       "short_name": "Rosters",
       "url": "/teams",
-      "description": "Explorez les 30 rosters officiels"
+      "description": "Explorez les 31 rosters officiels"
     },
     {
       "name": "Star Players",

@@ -1,6 +1,6 @@
 /**
  * JSON-LD pour la page `/teams/tier-list` : `CollectionPage` + `ItemList`
- * (les 30 rosters ordonnés par tier) + `BreadcrumbList`. Helper pur.
+ * (les 31 rosters ordonnés par tier) + `BreadcrumbList`. Helper pur.
  *
  * L'`ItemList` ordonne les rosters du Tier I au Tier IV (puis alphabétique),
  * ce qui reflète la hiérarchie éditoriale de la page et nourrit les rich

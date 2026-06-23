@@ -208,7 +208,7 @@ export default async function PublicRosterPage({ params }: { params: { token: st
               À toi de jouer, coach.
             </h2>
             <p className="mt-2 text-nuffle-ivory/75 font-body text-sm sm:text-base">
-              Crée ta propre équipe Blood Bowl gratuitement sur Nuffle Arena : 30 rosters, 60+ Star Players, export PDF.
+              Crée ta propre équipe Blood Bowl gratuitement sur Nuffle Arena : 31 rosters, 60+ Star Players, export PDF.
             </p>
             <a
               href="/me/teams"

@@ -44,7 +44,7 @@ const TEMPLATES: Record<OutreachChannel, OutreachTemplate> = {
       "Bonjour r/bloodbowl,\n\n" +
       "Je partage Nuffle Arena, une plateforme gratuite\n" +
       "pour gerer vos equipes Blood Bowl Saison 3 :\n\n" +
-      "- 30 rosters officiels Saison 2 + Saison 3\n" +
+      "- 31 rosters officiels Saison 3 (compatibles Saison 2)\n" +
       "- 60+ Star Players avec regles speciales\n" +
       "- 130+ competences en FR/EN\n" +
       "- Export PDF pour vos matchs sur table\n" +
@@ -58,7 +58,7 @@ const TEMPLATES: Record<OutreachChannel, OutreachTemplate> = {
     body:
       "Hi all,\n\n" +
       "Sharing Nuffle Arena, a free Blood Bowl team manager:\n" +
-      "30 official rosters (Season 2 + 3), 60+ Star Players, 130+ skills,\n" +
+      "31 official rosters (Season 3, Season 2 compatible), 60+ Star Players, 130+ skills,\n" +
       "PDF export for tabletop matches, and an online multiplayer mode.\n\n" +
       "No ads, no data resale. Built by the community for the community.\n" +
       "Feedback very welcome.\n",
@@ -81,7 +81,7 @@ const TEMPLATES: Record<OutreachChannel, OutreachTemplate> = {
       "Bonjour Mordorbihan,\n\n" +
       "Je voulais te presenter Nuffle Arena, une plateforme francophone\n" +
       "gratuite dediee a la gestion d equipes Blood Bowl\n" +
-      "(Saison 2 et Saison 3). 30 rosters officiels, 60+ Star Players,\n" +
+      "(Saison 2 et Saison 3). 31 rosters officiels, 60+ Star Players,\n" +
       "130+ competences traduites, export PDF prepare pour les matchs sur\n" +
       "table. Aucune pub, aucune revente de donnees.\n\n" +
       "Si ca peut interesser ton lectorat, je serais ravi qu'on echange.\n",

@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     template: "%s | Nuffle Arena",
   },
   description:
-    "Nuffle Arena : gestionnaire d'équipes Blood Bowl 100% gratuit. 30 rosters officiels Saison 3, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
+    "Nuffle Arena : gestionnaire d'équipes Blood Bowl 100% gratuit. 31 rosters officiels Saison 3, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
   applicationName: "Nuffle Arena",
   category: "games",
   keywords: [
@@ -110,7 +110,7 @@ export const metadata: Metadata = {
     siteName: "Nuffle Arena",
     title: "Nuffle Arena — Gestionnaire d'équipes Blood Bowl (Saison 3, 2025)",
     description:
-      "30 rosters officiels, 60+ Star Players, 130+ compétences. Créez, exportez et suivez vos équipes Blood Bowl — 100% gratuit.",
+      "31 rosters officiels, 60+ Star Players, 130+ compétences. Créez, exportez et suivez vos équipes Blood Bowl — 100% gratuit.",
     images: [
       {
         url: `${baseUrl}/images/logo.png`,
@@ -124,7 +124,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Nuffle Arena — Gestionnaire d'équipes Blood Bowl",
     description:
-      "Gestionnaire Blood Bowl gratuit : 30 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
+      "Gestionnaire Blood Bowl gratuit : 31 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
     images: [`${baseUrl}/images/logo.png`],
     creator: "@nufflearena",
   },

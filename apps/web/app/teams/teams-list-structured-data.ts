@@ -2,7 +2,7 @@
  * JSON-LD pour la page liste `/teams` : `CollectionPage` + `ItemList` +
  * `BreadcrumbList`. Helper pur (testable sans React).
  *
- * - `ItemList` ordonne les 30 rosters officiels (rich results liste +
+ * - `ItemList` ordonne les 31 rosters officiels (rich results liste +
  *   citabilité LLM : "Nuffle Arena référence les équipes X, Y, Z").
  * - `CollectionPage` rattache la liste à l'Organization.
  */
