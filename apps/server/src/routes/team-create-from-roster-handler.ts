@@ -6,15 +6,15 @@
  *
  * Endpoint couvert :
  *  - `POST /team/create-from-roster` — `handleCreateFromRoster` :
- *    creation simplifiee d'une equipe depuis un template predefini
- *    (skaven / wood_elf / lizardmen). Plus simple que `/build` :
- *    pas de choix par position, juste un template fige par roster.
+ *    creation simplifiee d'une equipe depuis le roster choisi. Plus
+ *    simple que `/build` : pas de choix par position, la composition
+ *    de depart est derivee des positions reelles du roster pour le
+ *    ruleset cible (Saison 3 par defaut) via `buildDefaultLineup`.
  *    Validations Star Players + budget. Cree l'equipe et les
  *    joueurs en batch, recalcule TV.
  *
- * Le helper `rosterTemplates` (~128l, 3 rosters supportes) et la
- * constante `ALLOWED_TEAMS` (~30 entrees) sont co-extraits avec le
- * handler car ils ne sont plus utilises ailleurs dans `team.ts`
+ * La constante `ALLOWED_TEAMS` (~30 entrees) est co-extraite avec le
+ * handler car elle n'est plus utilisee ailleurs dans `team.ts`
  * apres les extractions S27.8.22-S27.8.32.
  *
  * Helpers leaf uniquement : `prisma`, `AllowedRoster` from
@@ -34,6 +34,7 @@ import {
   type Ruleset,
   getStarPlayerBySlug,
   getFormatConstraints,
+  getTeamPositions,
   isGameFormat,
 } from '@bb/game-engine';
 import {
@@ -78,169 +79,33 @@ const ALLOWED_TEAMS = [
   'norse',
 ] as const;
 
-/** Template brut hardcodé (sans `displayName`, ajouté à la résolution). */
-type RawTemplate = Omit<LineupEntry, 'displayName'>;
-
 /**
- * Templates figés pour `/create-from-roster` — 3 rosters historiques
- * (skaven, wood_elf, lizardmen) dont la composition de départ a été
- * réglée à la main. Pour tout autre roster on renvoie `null` : la
- * composition est alors dérivée des positions réelles de la DB via
- * `buildDefaultLineup` (cf. `resolveLineup`).
+ * Resout la composition de depart d'un roster a partir des positions
+ * reelles du ruleset cible (Saison 3 par defaut). On lit d'abord la DB
+ * (editable cote admin) puis on retombe sur les donnees statiques
+ * compilees du game-engine si la DB n'est pas (encore) seedee. La
+ * composition est derivee via `buildDefaultLineup` : slugs, couts,
+ * stats et noms d'affichage restent toujours coherents avec le roster
+ * choisi et le ruleset.
  *
- * Avant ce changement, les rosters non listés retombaient sur le
- * template lizardmen, produisant des joueurs aux slugs de position
- * incohérents avec le roster choisi (VE faussée).
- */
-function rosterTemplates(roster: AllowedRoster): RawTemplate[] | null {
-  if (roster === 'skaven') {
-    return [
-      {
-        position: 'skaven_blitzer',
-        count: 2,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 4,
-        av: 9,
-        skills: 'block',
-      },
-      {
-        position: 'skaven_thrower',
-        count: 1,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 2,
-        av: 8,
-        skills: 'pass,sure-hands',
-      },
-      {
-        position: 'skaven_gutter_runner',
-        count: 2,
-        ma: 9,
-        st: 2,
-        ag: 2,
-        pa: 4,
-        av: 8,
-        skills: 'dodge',
-      },
-      {
-        position: 'skaven_lineman',
-        count: 6,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 4,
-        av: 8,
-        skills: '',
-      },
-      // Big Guy optionnel (non inclus par defaut)
-    ];
-  }
-
-  if (roster === 'wood_elf') {
-    return [
-      {
-        position: 'wood_elf_wardancer',
-        count: 2,
-        ma: 8,
-        st: 3,
-        ag: 2,
-        pa: 4,
-        av: 8,
-        skills: 'block,dodge,leap',
-      },
-      {
-        position: 'wood_elf_catcher',
-        count: 2,
-        ma: 8,
-        st: 2,
-        ag: 2,
-        pa: 4,
-        av: 8,
-        skills: 'catch,dodge',
-      },
-      {
-        position: 'wood_elf_thrower',
-        count: 1,
-        ma: 7,
-        st: 3,
-        ag: 2,
-        pa: 2,
-        av: 8,
-        skills: 'pass,sure-hands',
-      },
-      {
-        position: 'wood_elf_lineman',
-        count: 6,
-        ma: 7,
-        st: 3,
-        ag: 2,
-        pa: 4,
-        av: 8,
-        skills: '',
-      },
-      // Treeman optionnel (non inclus par defaut)
-    ];
-  }
-
-  if (roster === 'lizardmen') {
-    return [
-      {
-        position: 'lizardmen_saurus',
-        count: 6,
-        ma: 6,
-        st: 4,
-        ag: 4,
-        pa: 6,
-        av: 10,
-        skills: '',
-      },
-      {
-        position: 'lizardmen_skink_runner',
-        count: 4,
-        ma: 8,
-        st: 2,
-        ag: 3,
-        pa: 4,
-        av: 8,
-        skills: 'dodge,stunty',
-      },
-      {
-        position: 'lizardmen_chameleon_skink',
-        count: 1,
-        ma: 7,
-        st: 2,
-        ag: 3,
-        pa: 3,
-        av: 8,
-        skills: 'dodge,on-the-ball,shadowing,stunty',
-      },
-      // Kroxigor optionnel (non inclus par defaut)
-    ];
-  }
-
-  // Aucun template figé : la composition sera dérivée de la DB.
-  return null;
-}
-
-/**
- * Résout la composition de départ d'un roster : template figé s'il
- * existe, sinon composition dérivée des positions réelles de la DB.
- * `displayName` est rempli (slug pour les templates figés).
+ * Avant ce changement, 3 rosters (skaven / wood_elf / lizardmen)
+ * utilisaient des templates figes aux slugs Saison 2 (ex.
+ * `lizardmen_saurus`) absents des rosters Saison 3
+ * (`lizardmen_bloqueur_saurus`). Consequence cote equipe creee : cout
+ * par defaut errone (50k pour tous), nom = slug brut, stats Saison 2
+ * et VE faussee.
  */
 async function resolveLineup(
   roster: AllowedRoster,
   ruleset: Ruleset,
 ): Promise<LineupEntry[]> {
-  const hardcoded = rosterTemplates(roster);
-  if (hardcoded) {
-    return hardcoded.map((t) => ({ ...t, displayName: t.position }));
-  }
   const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
   if (dbRoster && dbRoster.positions.length > 0) {
     return buildDefaultLineup(dbRoster.positions);
+  }
+  const staticPositions = getTeamPositions(roster, ruleset);
+  if (staticPositions.length > 0) {
+    return buildDefaultLineup(staticPositions);
   }
   return [];
 }
@@ -248,9 +113,10 @@ async function resolveLineup(
 /**
  * S27.8.33 — `POST /team/create-from-roster`
  *
- * Creation simplifiee d'une equipe depuis un template predefini.
- * Plus simple que `/build` : pas de choix par position, juste un
- * template fige par roster. Validations Star Players + budget.
+ * Creation simplifiee d'une equipe depuis le roster choisi. Plus
+ * simple que `/build` : pas de choix par position, la composition est
+ * derivee des positions reelles du roster. Validations Star Players +
+ * budget.
  */
 export async function handleCreateFromRoster(
   req: AuthenticatedRequest,
@@ -280,8 +146,8 @@ export async function handleCreateFromRoster(
 
   const finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
 
-  // Composition de départ : template figé (skaven / wood_elf / lizardmen)
-  // ou dérivée des positions réelles de la DB pour les autres rosters.
+  // Composition de départ dérivée des positions réelles du roster pour le
+  // ruleset ciblé (DB en priorité, fallback données statiques game-engine).
   const lineup = await resolveLineup(roster as AllowedRoster, ruleset);
 
   // Valider les Star Players si fournis
