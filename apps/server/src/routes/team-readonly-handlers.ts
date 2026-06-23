@@ -32,39 +32,7 @@ import { resolveRuleset, isValidRuleset } from '../utils/ruleset-helpers';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { parsePagination, buildApiMeta } from '../utils/pagination';
 import { generateTeamName } from '../services/team-name-generator';
-
-const ALLOWED_TEAMS = [
-  'skaven',
-  'lizardmen',
-  'wood_elf',
-  'dark_elf',
-  'dwarf',
-  'goblin',
-  'undead',
-  'chaos_renegade',
-  'ogre',
-  'halfling',
-  'underworld',
-  'chaos_chosen',
-  'imperial_nobility',
-  'necromantic_horror',
-  'orc',
-  'nurgle',
-  'old_world_alliance',
-  'elven_union',
-  'human',
-  'black_orc',
-  'snotling',
-  'chaos_dwarf',
-  'slann',
-  'amazon',
-  'high_elf',
-  'khorne',
-  'vampire',
-  'tomb_kings',
-  'gnome',
-  'norse',
-] as const;
+import { isAllowedTeamRoster } from '../constants/allowed-teams';
 
 /**
  * S27.8.22 — `GET /team/name-generator`
@@ -181,7 +149,7 @@ export async function handleGetRoster(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  if (!(ALLOWED_TEAMS as readonly string[]).includes(id)) {
+  if (!isAllowedTeamRoster(id)) {
     sendError(res, 'Roster inconnu', 404);
     return;
   }

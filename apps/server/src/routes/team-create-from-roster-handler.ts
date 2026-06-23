@@ -45,39 +45,7 @@ import {
 import { resolveRuleset } from '../utils/ruleset-helpers';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
-
-const ALLOWED_TEAMS = [
-  'skaven',
-  'lizardmen',
-  'wood_elf',
-  'dark_elf',
-  'dwarf',
-  'goblin',
-  'undead',
-  'chaos_renegade',
-  'ogre',
-  'halfling',
-  'underworld',
-  'chaos_chosen',
-  'imperial_nobility',
-  'necromantic_horror',
-  'orc',
-  'nurgle',
-  'old_world_alliance',
-  'elven_union',
-  'human',
-  'black_orc',
-  'snotling',
-  'chaos_dwarf',
-  'slann',
-  'amazon',
-  'high_elf',
-  'khorne',
-  'vampire',
-  'tomb_kings',
-  'gnome',
-  'norse',
-] as const;
+import { isAllowedTeamRoster } from '../constants/allowed-teams';
 
 /**
  * Resout la composition de depart d'un roster a partir des positions
@@ -138,7 +106,7 @@ export async function handleCreateFromRoster(
     format?: string;
   } = req.body;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!ALLOWED_TEAMS.includes(roster as any))
+  if (!isAllowedTeamRoster(roster))
     return res.status(400).json({ error: 'Roster non autorisé' });
 
   const ruleset = resolveRuleset(bodyRuleset) as Ruleset;

@@ -40,6 +40,23 @@ const { respond } = vi.hoisted(() => {
         primarySkills: "A",
         secondarySkills: "G",
       },
+      {
+        // Reproduit le bug : code d'acces "K" (Sournoiserie) absent de ACCESS_FR
+        // faisait crasher le rendu (ACCESS_FR["K"] === undefined -> .letter).
+        slug: "skaven_assassin",
+        displayName: "Assassin",
+        cost: 70,
+        min: 0,
+        max: 2,
+        ma: 7,
+        st: 3,
+        ag: 3,
+        pa: 5,
+        av: 8,
+        skills: "",
+        primarySkills: "A,K",
+        secondarySkills: "G,S",
+      },
     ],
   };
   const respond = (url: string) => {
@@ -97,6 +114,14 @@ describe("PositionDetailPage", () => {
   it("rend un element pour une position connue", async () => {
     const element = await PositionDetailPage({
       params: { slug: "skaven", position: "gutter_runner" },
+      searchParams: {},
+    });
+    expect(element).toBeTruthy();
+  });
+
+  it("rend une position avec le code d'acces K (Sournoiserie) sans crasher", async () => {
+    const element = await PositionDetailPage({
+      params: { slug: "skaven", position: "assassin" },
       searchParams: {},
     });
     expect(element).toBeTruthy();

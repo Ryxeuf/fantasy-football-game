@@ -48,39 +48,7 @@ import {
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
 import { serverLog } from '../utils/server-log';
-
-const ALLOWED_TEAMS = [
-  'skaven',
-  'lizardmen',
-  'wood_elf',
-  'dark_elf',
-  'dwarf',
-  'goblin',
-  'undead',
-  'chaos_renegade',
-  'ogre',
-  'halfling',
-  'underworld',
-  'chaos_chosen',
-  'imperial_nobility',
-  'necromantic_horror',
-  'orc',
-  'nurgle',
-  'old_world_alliance',
-  'elven_union',
-  'human',
-  'black_orc',
-  'snotling',
-  'chaos_dwarf',
-  'slann',
-  'amazon',
-  'high_elf',
-  'khorne',
-  'vampire',
-  'tomb_kings',
-  'gnome',
-  'norse',
-] as const;
+import { isAllowedTeamRoster } from '../constants/allowed-teams';
 
 /**
  * S27.8.27 — `POST /team/build`
@@ -124,7 +92,7 @@ export async function handleBuildTeam(
       dedicatedFans?: number;
     } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!ALLOWED_TEAMS.includes(roster as any)) {
+    if (!isAllowedTeamRoster(roster)) {
       sendError(res, 'Roster non autorise', 400);
       return;
     }

@@ -15,16 +15,20 @@ describe('Team Value Calculator', () => {
       expect(getRerollCost('human')).toBe(50000);
     });
 
-    it('should return correct cost for Dark Elf', () => {
-      expect(getRerollCost('darkelf')).toBe(50000);
+    it('should return correct cost for Dark Elf (canonical slug)', () => {
+      expect(getRerollCost('dark_elf')).toBe(50000);
     });
 
-    it('should return correct cost for Wood Elf', () => {
-      expect(getRerollCost('woodelf')).toBe(50000);
+    it('should return correct cost for Wood Elf (canonical slug)', () => {
+      expect(getRerollCost('wood_elf')).toBe(50000);
     });
 
-    it('should return correct cost for Chaos', () => {
-      expect(getRerollCost('chaos')).toBe(60000);
+    it('should return correct cost for Chaos Chosen (canonical slug)', () => {
+      expect(getRerollCost('chaos_chosen')).toBe(60000);
+    });
+
+    it('should return correct cost for Black Orc (canonical slug)', () => {
+      expect(getRerollCost('black_orc')).toBe(60000);
     });
 
     it('should return correct cost for Goblin', () => {
@@ -41,14 +45,15 @@ describe('Team Value Calculator', () => {
   });
 
   describe('getAllRerollCosts', () => {
-    it('should return all reroll costs', () => {
+    it('should return all reroll costs with canonical slugs', () => {
       const costs = getAllRerollCosts();
       expect(costs.skaven).toBe(50000);
       expect(costs.lizardmen).toBe(70000);
       expect(costs.human).toBe(50000);
-      expect(costs.darkelf).toBe(50000);
-      expect(costs.woodelf).toBe(50000);
-      expect(costs.chaos).toBe(60000);
+      expect(costs.dark_elf).toBe(50000);
+      expect(costs.wood_elf).toBe(50000);
+      expect(costs.chaos_chosen).toBe(60000);
+      expect(costs.black_orc).toBe(60000);
       expect(costs.goblin).toBe(60000);
       expect(costs.halfling).toBe(60000);
     });

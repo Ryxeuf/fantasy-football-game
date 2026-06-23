@@ -3,6 +3,9 @@
  */
 
 import { DEFAULT_RULESET, type Ruleset, getPositionBySlug } from '../rosters/positions';
+import { getRerollCost } from '../rosters/reroll-costs';
+
+export { getRerollCost, getAllRerollCosts, REROLL_COSTS, DEFAULT_REROLL_COST } from '../rosters/reroll-costs';
 
 export interface TeamValueData {
   players: Array<{
@@ -22,86 +25,6 @@ export interface CalculatedValues {
   teamValue: number; // VE - Valeur d'Équipe
   currentValue: number; // VEA - Valeur d'Équipe Actuelle
   treasury: number; // Trésorerie (calculée après chaque match)
-}
-
-/**
- * Obtient le coût d'une relance selon l'équipe
- */
-export function getRerollCost(roster: string): number {
-  const rerollCosts: Record<string, number> = {
-    // Coûts des relances selon les règles officielles Blood Bowl
-    skaven: 50000,        // 50k po selon les règles officielles
-    lizardmen: 70000,      // 70k po selon les règles officielles
-    amazon: 60000,         // 60k po selon les règles officielles
-    underworld: 70000,     // 70k po selon les règles officielles
-    darkelf: 50000,        // 50k po selon les règles officielles
-    woodelf: 50000,        // 50k po selon les règles officielles
-    chaos: 60000,          // 60k po selon les règles officielles
-    gnome: 50000,          // 50k po selon les règles officielles
-    goblin: 60000,         // 60k po selon les règles officielles
-    halfling: 60000,       // 60k po selon les règles officielles
-    highelf: 50000,        // 50k po selon les règles officielles
-    necromantic: 70000,    // 70k po selon les règles officielles
-    human: 50000,          // 50k po selon les règles officielles
-    khorne: 60000,         // 60k po selon les règles officielles
-    undead: 70000,         // 70k po selon les règles officielles
-    dwarf: 50000,          // 50k po selon les règles officielles
-    chaosdwarf: 70000,     // 70k po selon les règles officielles
-    imperial: 70000,       // 70k po selon les règles officielles
-    norse: 60000,          // 60k po selon les règles officielles
-    ogre: 60000,           // 60k po selon les règles officielles
-    orc: 60000,            // 60k po selon les règles officielles
-    blackorc: 60000,       // 60k po selon les règles officielles
-    snotling: 60000,       // 60k po selon les règles officielles
-    tombkings: 70000,      // 70k po selon les règles officielles
-    vampire: 70000,        // 70k po selon les règles officielles
-    elvenunion: 50000,     // 50k po selon les règles officielles
-    oldworldalliance: 50000, // 50k po selon les règles officielles
-    nurgle: 60000,         // 60k po selon les règles officielles
-    chaosrenegades: 60000, // 60k po selon les règles officielles
-    bretonnian: 60000,     // 60k po — équipe NAF "Classique du Vieux Monde"
-  };
-  
-  return rerollCosts[roster] || 50000; // Coût par défaut si équipe non trouvée
-}
-
-/**
- * Obtient tous les coûts des relances par équipe
- */
-export function getAllRerollCosts(): Record<string, number> {
-  return {
-    // Coûts des relances selon les règles officielles Blood Bowl
-    skaven: 50000,        // 50k po selon les règles officielles
-    lizardmen: 70000,      // 70k po selon les règles officielles
-    amazon: 60000,         // 60k po selon les règles officielles
-    underworld: 70000,     // 70k po selon les règles officielles
-    darkelf: 50000,        // 50k po selon les règles officielles
-    woodelf: 50000,        // 50k po selon les règles officielles
-    chaos: 60000,          // 60k po selon les règles officielles
-    gnome: 50000,          // 50k po selon les règles officielles
-    goblin: 60000,         // 60k po selon les règles officielles
-    halfling: 60000,       // 60k po selon les règles officielles
-    highelf: 50000,        // 50k po selon les règles officielles
-    necromantic: 70000,    // 70k po selon les règles officielles
-    human: 50000,          // 50k po selon les règles officielles
-    khorne: 60000,         // 60k po selon les règles officielles
-    undead: 70000,         // 70k po selon les règles officielles
-    dwarf: 50000,          // 50k po selon les règles officielles
-    chaosdwarf: 70000,     // 70k po selon les règles officielles
-    imperial: 70000,       // 70k po selon les règles officielles
-    norse: 60000,          // 60k po selon les règles officielles
-    ogre: 60000,           // 60k po selon les règles officielles
-    orc: 60000,            // 60k po selon les règles officielles
-    blackorc: 60000,       // 60k po selon les règles officielles
-    snotling: 60000,       // 60k po selon les règles officielles
-    tombkings: 70000,      // 70k po selon les règles officielles
-    vampire: 70000,        // 70k po selon les règles officielles
-    elvenunion: 50000,     // 50k po selon les règles officielles
-    oldworldalliance: 50000, // 50k po selon les règles officielles
-    nurgle: 60000,         // 60k po selon les règles officielles
-    chaosrenegades: 60000, // 60k po selon les règles officielles
-    bretonnian: 60000,     // 60k po — équipe NAF "Classique du Vieux Monde"
-  };
 }
 
 /**

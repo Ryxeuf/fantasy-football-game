@@ -84,6 +84,7 @@ const ACCESS_FR: Record<string, { letter: string; label: string }> = {
   S: { letter: "F", label: "Force" },
   P: { letter: "P", label: "Passe" },
   M: { letter: "M", label: "Mutation" },
+  K: { letter: "K", label: "Sournoiserie" },
 };
 
 const STAT_BOXES: ReadonlyArray<{
