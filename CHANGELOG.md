@@ -1,3 +1,16 @@
+## [1.183.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.182.0...v1.183.0) (2026-06-23)
+
+
+### ✨ Features
+
+* **advancements:** aligne les coûts SPP sur Blood Bowl 2025 (Saison 3) ([94ababf](https://github.com/Ryxeuf/fantasy-football-game/commit/94ababfab0e64abd216aafce10bc25207f207600))
+* **advancements:** applique les règles officielles BB2025 (jet D8 + plafonds caractéristique) ([df96fa8](https://github.com/Ryxeuf/fantasy-football-game/commit/df96fa8f1afbb441f00da2d0b21bfa48ae0cd8d1))
+
+
+### 🐛 Bug Fixes
+
+* **web:** réinitialise le mode caractéristique à la fermeture du modal (bouton ×) ([7b99931](https://github.com/Ryxeuf/fantasy-football-game/commit/7b999312400026e2bb63ae63eb96b6e1f3774d0b))
+
 ## [1.182.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.181.0...v1.182.0) (2026-06-23)
 
 
