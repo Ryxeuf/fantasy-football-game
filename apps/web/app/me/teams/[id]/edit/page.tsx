@@ -1043,7 +1043,7 @@ export default function TeamEditPage() {
                   {/* En-tête avec gradient */}
                   <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 text-white relative">
                     <button
-                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); }}
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); setCharMode(false); setSelectedStat(""); }}
                       className="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-2xl font-light"
                       aria-label="Fermer"
                     >
