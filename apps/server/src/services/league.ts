@@ -436,6 +436,12 @@ export interface StandingRow {
   status: LeagueParticipantStatus;
   /** Lot C — id de poule (null = pas d'affectation explicite). */
   poolId?: string | null;
+  /**
+   * E2 — Sous-total de points bonus de la saison (déjà inclus dans
+   * `points`). Agrégé depuis les snapshots `LeaguePairing.bonusPointsHome`
+   * / `bonusPointsAway`. Optionnel pour rétro-compat API pré-E2.
+   */
+  bonusPoints?: number;
 }
 
 /** Lot C — Classement groupe par poule. */
@@ -484,7 +490,7 @@ export async function computeSeasonStandings(
   });
 
   type ParticipantRow = (typeof participants)[number] & { poolId?: string | null };
-  const rows: StandingRow[] = participants.map((p: ParticipantRow) => ({
+  const baseRows: StandingRow[] = participants.map((p: ParticipantRow) => ({
     participantId: p.id,
     teamId: p.teamId,
     teamName: p.team.name,
@@ -504,7 +510,17 @@ export async function computeSeasonStandings(
     seasonElo: p.seasonElo,
     status: p.status as LeagueParticipantStatus,
     poolId: p.poolId ?? null,
+    bonusPoints: 0,
   }));
+
+  // E2 — agrège les points bonus snapshotés par pairing (cumul home +
+  // away) pour exposer le sous-total dans le classement. Ces points sont
+  // déjà inclus dans `points` ; la colonne sert la transparence. groupBy
+  // plutôt que N+1 (cf. CLAUDE.md).
+  const bonusByParticipantId = await aggregateBonusByParticipant(
+    baseRows.map((r) => r.participantId),
+  );
+  const rows = attachBonusPoints(baseRows, bonusByParticipantId);
 
   const tieBreakRules = parseTieBreakRules(
     (season as { league?: { tieBreakRules?: string | null } | null }).league
@@ -513,6 +529,56 @@ export async function computeSeasonStandings(
   rows.sort(makeStandingsComparator(tieBreakRules));
 
   return rows;
+}
+
+/**
+ * E2 — Agrège les points bonus snapshotés sur `LeaguePairing`
+ * (`bonusPointsHome` côté domicile, `bonusPointsAway` côté visiteur) par
+ * participant, en deux `groupBy` (pas de N+1). Retourne une map
+ * participantId → cumul. Les participants sans pairing sont absents
+ * (traités comme 0 par `attachBonusPoints`).
+ */
+async function aggregateBonusByParticipant(
+  participantIds: readonly string[],
+): Promise<Map<string, number>> {
+  if (participantIds.length === 0) return new Map();
+  const ids = [...participantIds];
+  const [homeAgg, awayAgg] = await Promise.all([
+    prisma.leaguePairing.groupBy({
+      by: ["homeParticipantId"],
+      where: { homeParticipantId: { in: ids } },
+      _sum: { bonusPointsHome: true },
+    }),
+    prisma.leaguePairing.groupBy({
+      by: ["awayParticipantId"],
+      where: { awayParticipantId: { in: ids } },
+      _sum: { bonusPointsAway: true },
+    }),
+  ]);
+  const map = new Map<string, number>();
+  for (const agg of homeAgg) {
+    const prev = map.get(agg.homeParticipantId) ?? 0;
+    map.set(agg.homeParticipantId, prev + (agg._sum.bonusPointsHome ?? 0));
+  }
+  for (const agg of awayAgg) {
+    const prev = map.get(agg.awayParticipantId) ?? 0;
+    map.set(agg.awayParticipantId, prev + (agg._sum.bonusPointsAway ?? 0));
+  }
+  return map;
+}
+
+/**
+ * E2 — pur : associe à chaque ligne son cumul de points bonus (0 si
+ * absent de la map). Immutable (retourne de nouvelles lignes).
+ */
+export function attachBonusPoints(
+  rows: readonly StandingRow[],
+  bonusByParticipantId: ReadonlyMap<string, number>,
+): StandingRow[] {
+  return rows.map((row) => ({
+    ...row,
+    bonusPoints: bonusByParticipantId.get(row.participantId) ?? 0,
+  }));
 }
 
 /**

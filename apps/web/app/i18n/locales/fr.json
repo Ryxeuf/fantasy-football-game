@@ -635,6 +635,8 @@
     "standingsCasFor": "Sorties+",
     "standingsCasAgainst": "Sorties-",
     "standingsElo": "ELO",
+    "standingsBonus": "Bonus",
+    "standingsBonusHint": "Points bonus cumulés, déjà inclus dans le total.",
     "standingsPoints": "Pts",
     "participantsSection": "Équipes inscrites",
     "participantsEmpty": "Aucune équipe inscrite sur cette saison.",
