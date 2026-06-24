@@ -21,7 +21,7 @@ vi.mock("../prisma", () => ({
   },
 }));
 
-import { notifyInvitedCoach } from "./league-invitation-notify";
+import { notifyInvitedCoach, buildJoinUrl } from "./league-invitation-notify";
 import { sendPushToUser } from "./push-notifications";
 import { sendEmail } from "./mailer";
 import { prisma } from "../prisma";
@@ -161,6 +161,78 @@ describe("A2 — league-invitation-notify service", () => {
 
       expect(mockSendPush).not.toHaveBeenCalled();
       expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("join link in the email (baseUrl)", () => {
+    it("buildJoinUrl assembles the public acceptance URL and trims trailing slashes", () => {
+      expect(buildJoinUrl("https://web.test", "abc123")).toBe(
+        "https://web.test/leagues/invitations/abc123",
+      );
+      expect(buildJoinUrl("https://web.test/", "abc123")).toBe(
+        "https://web.test/leagues/invitations/abc123",
+      );
+    });
+
+    it("buildJoinUrl returns null when baseUrl or code is missing", () => {
+      expect(buildJoinUrl(null, "abc")).toBeNull();
+      expect(buildJoinUrl("https://web.test", null)).toBeNull();
+      expect(buildJoinUrl(undefined, undefined)).toBeNull();
+    });
+
+    it("includes the clickable join link in the email when baseUrl is provided (userId target)", async () => {
+      mockSendPush.mockResolvedValue({ sent: 1, failed: 0 });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        email: "coach@example.com",
+        coachName: "Griff",
+      });
+      mockSendEmail.mockResolvedValue({ delivered: true });
+
+      await notifyInvitedCoach({
+        invitation: { inviteeUserId: "user-1", code: "abc123" },
+        leagueName: "Skaven Cup",
+        baseUrl: "https://web.test",
+      });
+
+      const [emailMsg] = mockSendEmail.mock.calls[0];
+      expect(emailMsg.text).toContain(
+        "https://web.test/leagues/invitations/abc123",
+      );
+      // Le code reste mentionné en repli pour la saisie manuelle.
+      expect(emailMsg.text).toContain("abc123");
+    });
+
+    it("includes the link for an email-only target too", async () => {
+      mockSendEmail.mockResolvedValue({ delivered: true });
+
+      await notifyInvitedCoach({
+        invitation: { inviteeEmail: "outside@example.com", code: "xyz789" },
+        leagueName: "Orc League",
+        baseUrl: "https://web.test",
+      });
+
+      const [emailMsg] = mockSendEmail.mock.calls[0];
+      expect(emailMsg.text).toContain(
+        "https://web.test/leagues/invitations/xyz789",
+      );
+    });
+
+    it("falls back to code-only (no link) when baseUrl is absent", async () => {
+      mockSendPush.mockResolvedValue({ sent: 0, failed: 0 });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        email: "coach@example.com",
+        coachName: "Griff",
+      });
+      mockSendEmail.mockResolvedValue({ delivered: true });
+
+      await notifyInvitedCoach({
+        invitation: { inviteeUserId: "user-1", code: "abc123" },
+        leagueName: "Skaven Cup",
+      });
+
+      const [emailMsg] = mockSendEmail.mock.calls[0];
+      expect(emailMsg.text).not.toContain("/leagues/invitations/");
+      expect(emailMsg.text).toContain("Code d'invitation : abc123");
     });
   });
 

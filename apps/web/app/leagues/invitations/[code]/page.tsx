@@ -39,6 +39,17 @@ interface InvitationPayload {
   inviter: { id: string; coachName: string } | null;
   inviteeTeam: { id: string; name: string; roster: string } | null;
   inviteeUserId: string | null;
+  /**
+   * Saisons ouvertes aux inscriptions (renvoyées uniquement pour les
+   * invitations league-wide, sans `seasonId`). Vide sinon. 0 = aucune saison
+   * à rejoindre, 1 = auto-résolue côté serveur, N = l'invité doit choisir.
+   */
+  availableSeasons: {
+    id: string;
+    name: string;
+    seasonNumber: number;
+    status: string;
+  }[];
 }
 
 interface MyTeam {
@@ -56,10 +67,13 @@ export default function InvitationAcceptPage() {
   const [invitation, setInvitation] = useState<InvitationPayload | null>(null);
   const [teams, setTeams] = useState<MyTeam[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [selectedSeasonId, setSelectedSeasonId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<"accepted" | "declined" | null>(null);
+  // null = indéterminé (SSR / avant montage), true/false ensuite.
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!code) return;
@@ -94,6 +108,7 @@ export default function InvitationAcceptPage() {
   // Charge "mes equipes" si on est connecte (token present).
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    setIsAuthed(Boolean(token));
     if (!token) return;
     let cancelled = false;
     void (async () => {
@@ -112,6 +127,18 @@ export default function InvitationAcceptPage() {
   const isExpired = useMemo(() => {
     if (!invitation) return false;
     return new Date(invitation.expiresAt).getTime() < Date.now();
+  }, [invitation]);
+
+  // Résolution de la saison côté UI pour une invitation league-wide.
+  const seasonState = useMemo<
+    "targeted" | "auto" | "choose" | "none"
+  >(() => {
+    if (!invitation) return "targeted";
+    if (invitation.seasonId) return "targeted"; // saison déjà ciblée
+    const n = invitation.availableSeasons?.length ?? 0;
+    if (n === 0) return "none"; // rien à rejoindre
+    if (n === 1) return "auto"; // auto-résolue serveur
+    return "choose"; // l'invité choisit
   }, [invitation]);
 
   const allowedRosters = useMemo<string[] | null>(() => {
@@ -134,12 +161,22 @@ export default function InvitationAcceptPage() {
       setError("Selectionnez une equipe.");
       return;
     }
+    if (seasonState === "choose" && !selectedSeasonId) {
+      setError("Selectionnez une saison.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await apiRequest(`/leagues/invitations/${code}/accept`, {
         method: "POST",
-        body: JSON.stringify({ teamId: selectedTeamId }),
+        body: JSON.stringify({
+          teamId: selectedTeamId,
+          // Saison explicite seulement si l'invité a dû choisir (cas N).
+          ...(seasonState === "choose" && selectedSeasonId
+            ? { seasonId: selectedSeasonId }
+            : {}),
+        }),
       });
       setDone("accepted");
       if (invitation?.league.id) {
@@ -157,7 +194,7 @@ export default function InvitationAcceptPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [code, selectedTeamId, invitation, router]);
+  }, [code, selectedTeamId, selectedSeasonId, seasonState, invitation, router]);
 
   const handleDecline = useCallback(async () => {
     setSubmitting(true);
@@ -251,8 +288,70 @@ export default function InvitationAcceptPage() {
         </p>
       )}
 
-      {invitation.status === "pending" && !isExpired && (
+      {invitation.status === "pending" && !isExpired && isAuthed === false && (
+        <div className="mt-4" data-testid="invitation-login-cta">
+          <p className="mb-3 text-sm text-slate-700">
+            Connecte-toi pour rejoindre la ligue. Tu reviendras
+            automatiquement sur cette invitation apres connexion.
+          </p>
+          <a
+            href={`/login?redirect=${encodeURIComponent(
+              `/leagues/invitations/${code}`,
+            )}`}
+            className="inline-block rounded bg-blue-600 px-4 py-2 text-white"
+            data-testid="invitation-login-link"
+          >
+            Se connecter pour rejoindre
+          </a>
+        </div>
+      )}
+
+      {invitation.status === "pending" &&
+        !isExpired &&
+        isAuthed !== false &&
+        seasonState === "none" && (
+          <p
+            className="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-800"
+            data-testid="invitation-no-season"
+          >
+            La ligue n&apos;a pas encore de saison ouverte aux inscriptions.
+            Demande au commissaire d&apos;en créer une, puis reviens sur cette
+            invitation pour la rejoindre.
+          </p>
+        )}
+
+      {invitation.status === "pending" &&
+        !isExpired &&
+        isAuthed !== false &&
+        seasonState !== "none" && (
         <>
+          {seasonState === "choose" && (
+            <>
+              <label className="mb-2 mt-4 block text-sm font-medium">
+                Choisir la saison a rejoindre
+              </label>
+              <select
+                className="mb-3 w-full rounded border px-3 py-2"
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+                data-testid="invitation-season-select"
+              >
+                <option value="">-- Selectionner une saison --</option>
+                {invitation.availableSeasons.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} (#{s.seasonNumber})
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+          {seasonState === "auto" && invitation.availableSeasons[0] && (
+            <p className="mb-1 mt-4 text-sm text-slate-600">
+              Saison :{" "}
+              <strong>{invitation.availableSeasons[0].name}</strong>
+            </p>
+          )}
+
           <label className="mb-2 mt-4 block text-sm font-medium">
             Choisir une equipe a inscrire
           </label>
@@ -287,7 +386,11 @@ export default function InvitationAcceptPage() {
             <button
               type="button"
               className="rounded bg-green-600 px-4 py-2 text-white disabled:opacity-50"
-              disabled={!selectedTeamId || submitting}
+              disabled={
+                !selectedTeamId ||
+                (seasonState === "choose" && !selectedSeasonId) ||
+                submitting
+              }
               onClick={handleAccept}
               data-testid="invitation-accept"
             >

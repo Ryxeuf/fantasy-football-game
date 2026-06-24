@@ -43,6 +43,7 @@ import {
 } from "../schemas/league-invitation.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
+import { resolveWebOrigin } from "../config";
 
 const router = Router();
 
@@ -98,12 +99,14 @@ function mapInvitationError(res: Response, e: unknown): void {
       e.code === "team_not_found"
         ? 404
         : e.code === "season_closed" ||
+            e.code === "no_open_season" ||
             e.code === "invitation_already_consumed" ||
             e.code === "invitation_expired" ||
             e.code === "team_already_registered" ||
             e.code === "league_full"
           ? 409
-          : e.code === "forbidden" ||
+          : // season_choice_required → fallback 400 (l'invité doit préciser seasonId)
+            e.code === "forbidden" ||
               e.code === "invitation_not_for_user" ||
               e.code === "team_not_owned_by_user"
             ? 403
@@ -135,6 +138,9 @@ export async function handleCreateInvitation(
       inviteeTeamId: body.inviteeTeamId ?? null,
       message: body.message ?? null,
       expiresInDays: body.expiresInDays,
+      // Origine web pour le lien de rejoindre dans l'e-mail. Le commissaire
+      // partage la même origine que le coach invité (même app web).
+      baseUrl: resolveWebOrigin(req.get("Origin")),
     });
     serverLog.info(
       `[league-invitation] created: league=${leagueId} code=${inv.code} by=${req.user?.id}`,
@@ -311,20 +317,20 @@ export async function handleSearchCoaches(
 }
 
 // ---- Bindings ----
+//
+// ORDRE CRITIQUE : les routes littérales doivent être déclarées AVANT la
+// route paramétrique `/:leagueId/invitations`, sinon Express fait du
+// shadowing. En particulier `/me/invitations` matche `/:leagueId/invitations`
+// (leagueId="me") si la paramétrique passe en premier → 404 "Ligue
+// introuvable". Toutes les routes à préfixe fixe d'abord, la paramétrique en
+// dernier.
 
-router.post(
-  "/:leagueId/invitations",
-  authUser,
-  validate(createInvitationSchema),
-  handleCreateInvitation,
-);
-router.get("/:leagueId/invitations", authUser, handleListInvitations);
+router.get("/me/invitations", authUser, handleListMyInvitations);
 router.delete(
   "/invitations/:invitationId",
   authUser,
   handleCancelInvitation,
 );
-router.get("/me/invitations", authUser, handleListMyInvitations);
 router.get("/invitations/:code", handleGetInvitationByCode); // public
 router.post(
   "/invitations/:code/accept",
@@ -339,6 +345,15 @@ router.get(
   validateQuery(searchCoachesQuerySchema),
   handleSearchCoaches,
 );
+
+// Routes paramétriques en dernier (préfixe `:leagueId`).
+router.post(
+  "/:leagueId/invitations",
+  authUser,
+  validate(createInvitationSchema),
+  handleCreateInvitation,
+);
+router.get("/:leagueId/invitations", authUser, handleListInvitations);
 
 export default router;
 export { router as leagueInvitationRouter };

@@ -41,7 +41,7 @@ vi.mock("../prisma", () => ({
   },
 }));
 
-import {
+import leagueInvitationRouter, {
   handleCreateInvitation,
   handleAcceptInvitation,
   handleDeclineInvitation,
@@ -99,6 +99,9 @@ function createReq(overrides: any = {}): any {
     params: {},
     query: {},
     user: { id: "user-1", roles: ["user"] },
+    // Express expose `req.get(header)` ; le handler s'en sert pour dériver
+    // l'origine web (lien d'invitation). Mock par défaut : pas de header.
+    get: (_name: string) => undefined,
     ...overrides,
   };
 }
@@ -205,6 +208,26 @@ describe("Lot A — routes league-invitation", () => {
       await handleCreateInvitation(req, res);
       expect(res.statusCode).toBe(409);
     });
+
+    it("maps no_open_season to 409 (league-wide invite without open season)", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({
+        id: "league-1",
+        creatorId: "user-1",
+      });
+      const { LeagueInvitationError } = await import(
+        "../services/league-invitation"
+      );
+      mockSvc.createInvitation.mockRejectedValue(
+        new LeagueInvitationError("no_open_season", "pas de saison"),
+      );
+      const req = createReq({
+        params: { leagueId: "league-1" },
+        body: { inviteeUserId: "coach-2" },
+      });
+      const res = createRes();
+      await handleCreateInvitation(req, res);
+      expect(res.statusCode).toBe(409);
+    });
   });
 
   describe("handleAcceptInvitation", () => {
@@ -265,6 +288,32 @@ describe("Lot A — routes league-invitation", () => {
       const res = createRes();
       await handleAcceptInvitation(req, res);
       expect(res.statusCode).toBe(403);
+    });
+
+    it("maps no_open_season to 409 (league-wide accept, no open season)", async () => {
+      const { LeagueInvitationError } = await import(
+        "../services/league-invitation"
+      );
+      mockSvc.acceptInvitation.mockRejectedValue(
+        new LeagueInvitationError("no_open_season", "pas de saison"),
+      );
+      const req = createReq({ params: { code: "abc" }, body: { teamId: "t" } });
+      const res = createRes();
+      await handleAcceptInvitation(req, res);
+      expect(res.statusCode).toBe(409);
+    });
+
+    it("maps season_choice_required to 400 (several open seasons)", async () => {
+      const { LeagueInvitationError } = await import(
+        "../services/league-invitation"
+      );
+      mockSvc.acceptInvitation.mockRejectedValue(
+        new LeagueInvitationError("season_choice_required", "choisis"),
+      );
+      const req = createReq({ params: { code: "abc" }, body: { teamId: "t" } });
+      const res = createRes();
+      await handleAcceptInvitation(req, res);
+      expect(res.statusCode).toBe(400);
     });
   });
 
@@ -407,6 +456,37 @@ describe("Lot A — routes league-invitation", () => {
         (c: { id: string }) => c.id === "u3",
       );
       expect(carl.alreadyInSeason).toBe(true);
+    });
+  });
+
+  // Non-régression : `/me/invitations` était capturé par la route
+  // paramétrique `/:leagueId/invitations` (leagueId="me") → 404 "Ligue
+  // introuvable". La route littérale DOIT être enregistrée avant la
+  // paramétrique. On vérifie l'ordre dans la stack Express.
+  describe("route ordering (anti-shadowing)", () => {
+    function getRoutes() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (leagueInvitationRouter as any).stack
+        .filter((l: { route?: unknown }) => l.route)
+        .map((l: { route: { path: string; methods: Record<string, boolean> } }) => ({
+          path: l.route.path,
+          methods: l.route.methods,
+        }));
+    }
+
+    it("registers GET /me/invitations before GET /:leagueId/invitations", () => {
+      const routes = getRoutes();
+      const idxMe = routes.findIndex(
+        (r: { path: string; methods: Record<string, boolean> }) =>
+          r.path === "/me/invitations" && r.methods.get,
+      );
+      const idxParam = routes.findIndex(
+        (r: { path: string; methods: Record<string, boolean> }) =>
+          r.path === "/:leagueId/invitations" && r.methods.get,
+      );
+      expect(idxMe).toBeGreaterThanOrEqual(0);
+      expect(idxParam).toBeGreaterThanOrEqual(0);
+      expect(idxMe).toBeLessThan(idxParam);
     });
   });
 });

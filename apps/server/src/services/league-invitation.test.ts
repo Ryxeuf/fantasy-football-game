@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     league: { findUnique: vi.fn() },
-    leagueSeason: { findUnique: vi.fn() },
+    leagueSeason: { findUnique: vi.fn(), findMany: vi.fn() },
     leagueInvitation: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -52,6 +52,12 @@ const mockNotifyInvitedCoach = notifyInvitedCoach as ReturnType<typeof vi.fn>;
 describe("Lot A — league-invitation service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Défaut : la ligue a UNE saison ouverte aux inscriptions. Permet aux
+    // tests d'invitation league-wide (sans seasonId) de passer le garde-fou
+    // "no_open_season" et l'auto-résolution. Surchargé dans les tests dédiés.
+    mockPrisma.leagueSeason.findMany.mockResolvedValue([
+      { id: "s-default", name: "Saison 1", seasonNumber: 1, status: "draft" },
+    ]);
   });
 
   describe("generateInvitationCode", () => {
@@ -112,6 +118,19 @@ describe("Lot A — league-invitation service", () => {
       await expect(
         createInvitation({ ...baseInput, seasonId: "season-1" }),
       ).rejects.toMatchObject({ code: "season_closed" });
+    });
+
+    it("blocks a league-wide invitation when the league has no open season", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({
+        id: "league-1",
+        status: "draft",
+        name: "Skaven Cup",
+      });
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([]); // aucune ouverte
+      await expect(
+        createInvitation({ ...baseInput, inviteeUserId: "user-2" }),
+      ).rejects.toMatchObject({ code: "no_open_season" });
+      expect(mockPrisma.leagueInvitation.create).not.toHaveBeenCalled();
     });
 
     it("creates an invitation with default 14d expiry", async () => {
@@ -309,17 +328,90 @@ describe("Lot A — league-invitation service", () => {
       ).rejects.toMatchObject({ code: "invitation_not_for_user" });
     });
 
-    it("rejects when no seasonId", async () => {
+    // Auto-résolution de la saison pour une invitation league-wide (sans
+    // seasonId) : dépend du nombre de saisons ouvertes de la ligue.
+    it("league-wide: rejects with no_open_season when league has 0 open season", async () => {
       mockPrisma.leagueInvitation.findUnique.mockResolvedValue({
         id: "i1",
+        leagueId: "league-1",
         status: "pending",
         inviteeUserId: null,
         seasonId: null,
         expiresAt: futureDate,
       });
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([]); // aucune ouverte
       await expect(
         acceptInvitation({ code: "x", userId: "u1", teamId: "t1" }),
+      ).rejects.toMatchObject({ code: "no_open_season" });
+      expect(mockAddParticipant).not.toHaveBeenCalled();
+    });
+
+    it("league-wide: auto-resolves the single open season", async () => {
+      mockPrisma.leagueInvitation.findUnique.mockResolvedValue({
+        id: "i1",
+        leagueId: "league-1",
+        status: "pending",
+        inviteeUserId: null,
+        seasonId: null,
+        expiresAt: futureDate,
+      });
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([
+        { id: "only-season", name: "S1", seasonNumber: 1, status: "draft" },
+      ]);
+      mockPrisma.team.findUnique.mockResolvedValue({ id: "t1", ownerId: "u1" });
+      mockAddParticipant.mockResolvedValue({ id: "part-auto" });
+      mockPrisma.leagueInvitation.update.mockResolvedValue({
+        id: "i1",
+        status: "accepted",
+      });
+      await acceptInvitation({ code: "x", userId: "u1", teamId: "t1" });
+      expect(mockAddParticipant).toHaveBeenCalledWith({
+        seasonId: "only-season",
+        teamId: "t1",
+      });
+    });
+
+    it("league-wide: requires a choice when several seasons are open", async () => {
+      mockPrisma.leagueInvitation.findUnique.mockResolvedValue({
+        id: "i1",
+        leagueId: "league-1",
+        status: "pending",
+        inviteeUserId: null,
+        seasonId: null,
+        expiresAt: futureDate,
+      });
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([
+        { id: "s1", name: "S1", seasonNumber: 1, status: "draft" },
+        { id: "s2", name: "S2", seasonNumber: 2, status: "draft" },
+      ]);
+      await expect(
+        acceptInvitation({ code: "x", userId: "u1", teamId: "t1" }),
+      ).rejects.toMatchObject({ code: "season_choice_required" });
+      expect(mockAddParticipant).not.toHaveBeenCalled();
+    });
+
+    it("rejects an input.seasonId that does not belong to the invitation league", async () => {
+      mockPrisma.leagueInvitation.findUnique.mockResolvedValue({
+        id: "i1",
+        leagueId: "league-1",
+        status: "pending",
+        inviteeUserId: null,
+        seasonId: null,
+        expiresAt: futureDate,
+      });
+      // La saison choisie appartient à une AUTRE ligue → refus.
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        leagueId: "league-2",
+      });
+      await expect(
+        acceptInvitation({
+          code: "x",
+          userId: "u1",
+          teamId: "t1",
+          seasonId: "foreign-season",
+        }),
       ).rejects.toMatchObject({ code: "season_not_found" });
+      expect(mockAddParticipant).not.toHaveBeenCalled();
     });
 
     it("rejects if team not owned by user", async () => {
@@ -373,10 +465,15 @@ describe("Lot A — league-invitation service", () => {
     it("falls back to input.seasonId when invitation has no seasonId", async () => {
       mockPrisma.leagueInvitation.findUnique.mockResolvedValue({
         id: "i1",
+        leagueId: "league-1",
         status: "pending",
         inviteeUserId: null,
         seasonId: null,
         expiresAt: futureDate,
+      });
+      // La saison explicite appartient bien à la ligue de l'invitation.
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        leagueId: "league-1",
       });
       mockPrisma.team.findUnique.mockResolvedValue({
         id: "t1",

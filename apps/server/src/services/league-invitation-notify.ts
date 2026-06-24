@@ -36,6 +36,12 @@ export interface InvitationNotifyTarget {
 export interface NotifyInvitedCoachParams {
   readonly invitation: InvitationNotifyTarget;
   readonly leagueName: string;
+  /**
+   * Origine web absolue (ex. `https://web.nuffle-arena.orb.local`) servant à
+   * construire le lien de rejoindre `${baseUrl}/leagues/invitations/${code}`.
+   * Optionnel : sans lui, l'e-mail retombe sur le code brut.
+   */
+  readonly baseUrl?: string | null;
 }
 
 const NOTIFY_TITLE = "Invitation à une ligue";
@@ -45,11 +51,38 @@ function buildBody(leagueName: string): string {
 }
 
 /**
- * Construit le corps texte de l'e-mail. Ajoute le code d'invitation s'il
- * est présent pour que le destinataire puisse rejoindre via le lien.
+ * Construit le lien public d'acceptation à partir de l'origine web et du code.
+ * Retourne `null` si l'un des deux manque.
  */
-function buildEmailText(leagueName: string, code?: string | null): string {
+export function buildJoinUrl(
+  baseUrl?: string | null,
+  code?: string | null,
+): string | null {
+  if (!baseUrl || !code) return null;
+  return `${baseUrl.replace(/\/+$/, "")}/leagues/invitations/${code}`;
+}
+
+/**
+ * Construit le corps texte de l'e-mail. Privilégie un LIEN cliquable de
+ * rejoindre (point d'entrée principal) ; le code reste mentionné en repli
+ * pour la saisie manuelle. Sans `baseUrl`, on retombe sur le code seul.
+ */
+function buildEmailText(
+  leagueName: string,
+  code?: string | null,
+  baseUrl?: string | null,
+): string {
   const base = buildBody(leagueName);
+  const url = buildJoinUrl(baseUrl, code);
+  if (url) {
+    return (
+      `${base}.\n\n` +
+      `Pour rejoindre la ligue, clique sur ce lien :\n${url}\n\n` +
+      `Si tu n'es pas encore connecté, tu pourras te connecter puis ` +
+      `rejoindre directement.\n\n` +
+      `(Code d'invitation à saisir manuellement : ${code})`
+    );
+  }
   if (code) {
     return `${base}.\n\nCode d'invitation : ${code}`;
   }
@@ -60,6 +93,7 @@ async function notifyByUserId(
   userId: string,
   leagueName: string,
   code?: string | null,
+  baseUrl?: string | null,
 ): Promise<void> {
   const payload: PushPayload = {
     title: NOTIFY_TITLE,
@@ -90,7 +124,7 @@ async function notifyByUserId(
       await sendEmail({
         to: user.email,
         subject: NOTIFY_TITLE,
-        text: buildEmailText(leagueName, code),
+        text: buildEmailText(leagueName, code, baseUrl),
       });
     }
   } catch (e: unknown) {
@@ -105,12 +139,13 @@ async function notifyByEmail(
   email: string,
   leagueName: string,
   code?: string | null,
+  baseUrl?: string | null,
 ): Promise<void> {
   try {
     await sendEmail({
       to: email,
       subject: NOTIFY_TITLE,
-      text: buildEmailText(leagueName, code),
+      text: buildEmailText(leagueName, code, baseUrl),
     });
   } catch (e: unknown) {
     serverLog.error(
@@ -130,18 +165,24 @@ async function notifyByEmail(
 export async function notifyInvitedCoach(
   params: NotifyInvitedCoachParams,
 ): Promise<void> {
-  const { invitation, leagueName } = params;
+  const { invitation, leagueName, baseUrl } = params;
   try {
     if (invitation.inviteeUserId) {
       await notifyByUserId(
         invitation.inviteeUserId,
         leagueName,
         invitation.code,
+        baseUrl,
       );
       return;
     }
     if (invitation.inviteeEmail) {
-      await notifyByEmail(invitation.inviteeEmail, leagueName, invitation.code);
+      await notifyByEmail(
+        invitation.inviteeEmail,
+        leagueName,
+        invitation.code,
+        baseUrl,
+      );
       return;
     }
     // Invitation par code public : pas de cible à notifier.

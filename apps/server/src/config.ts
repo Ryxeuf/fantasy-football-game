@@ -57,6 +57,23 @@ function parseCorsOrigins(): string[] {
 export const CORS_ORIGINS: string[] = parseCorsOrigins();
 
 /**
+ * Résout l'origine web absolue à utiliser pour construire des liens dans les
+ * e-mails (acceptation d'invitation, reset password…). On valide le header
+ * `Origin` de la requête contre `CORS_ORIGINS` (anti-spoofing) ; à défaut on
+ * retombe sur `FRONTEND_PUBLIC_URL` puis sur le défaut prod. Même logique que
+ * `routes/auth.ts` (forgot-password), centralisée ici pour réutilisation.
+ */
+export function resolveWebOrigin(rawOriginHeader: string | undefined): string {
+  const rawOrigin = (rawOriginHeader || "").toString().slice(0, 256);
+  const allowedOrigin = CORS_ORIGINS.includes(rawOrigin) ? rawOrigin : null;
+  return (
+    allowedOrigin ||
+    process.env.FRONTEND_PUBLIC_URL ||
+    "https://nufflearena.fr"
+  );
+}
+
+/**
  * Verification token that Ko-fi includes in every webhook payload.
  * Set it in your Ko-fi webhook settings and export it as env here.
  * In dev/test a fixed fallback is used so local tests run without env setup.

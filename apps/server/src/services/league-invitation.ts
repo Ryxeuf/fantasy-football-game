@@ -36,12 +36,34 @@ export type LeagueInvitationStatus =
   | "cancelled"
   | "expired";
 
+/**
+ * Statuts de saison acceptant de nouvelles inscriptions. Source de vérité
+ * partagée (alignée sur `addParticipant` dans `league.ts`). On ne rejoint
+ * pas une ligue directement : on s'inscrit dans une de ses saisons ouvertes.
+ */
+export const SEASON_OPEN_STATUSES = ["draft", "scheduled"] as const;
+
+/**
+ * Liste les saisons d'une ligue acceptant les inscriptions (draft/scheduled),
+ * triées par numéro croissant. Sert à résoudre la saison cible d'une
+ * invitation league-wide (sans `seasonId`).
+ */
+export async function listOpenSeasonsForLeague(leagueId: string) {
+  return prisma.leagueSeason.findMany({
+    where: { leagueId, status: { in: [...SEASON_OPEN_STATUSES] } },
+    select: { id: true, name: true, seasonNumber: true, status: true },
+    orderBy: { seasonNumber: "asc" },
+  });
+}
+
 export class LeagueInvitationError extends Error {
   constructor(
     public readonly code:
       | "league_not_found"
       | "season_not_found"
       | "season_closed"
+      | "no_open_season"
+      | "season_choice_required"
       | "invitation_not_found"
       | "invitation_already_consumed"
       | "invitation_expired"
@@ -67,6 +89,12 @@ export interface CreateInvitationInput {
   inviteeTeamId?: string | null;
   message?: string | null;
   expiresInDays?: number;
+  /**
+   * Origine web absolue pour construire le lien de rejoindre dans l'e-mail
+   * (`${baseUrl}/leagues/invitations/${code}`). Dérivée de la requête côté
+   * route. Optionnelle : sans elle, l'e-mail retombe sur le code brut.
+   */
+  baseUrl?: string | null;
 }
 
 const DEFAULT_EXPIRES_DAYS = 14;
@@ -128,6 +156,19 @@ export async function createInvitation(input: CreateInvitationInput) {
         "Saison terminee : impossible d'inviter de nouveaux participants",
       );
     }
+  } else {
+    // Invitation league-wide (sans saison ciblée) : on ne rejoint une ligue
+    // qu'à travers une de ses saisons. Bloquer l'envoi si aucune saison n'est
+    // ouverte aux inscriptions — sinon l'invité recevrait un lien menant à
+    // une impasse. Le commissaire doit d'abord créer une saison.
+    const openSeasons = await listOpenSeasonsForLeague(input.leagueId);
+    if (openSeasons.length === 0) {
+      throw new LeagueInvitationError(
+        "no_open_season",
+        "La ligue n'a pas de saison ouverte aux inscriptions. " +
+          "Crée d'abord une saison avant d'inviter des coachs.",
+      );
+    }
   }
 
   // Idempotence : si une invitation pending existe deja pour ce
@@ -172,7 +213,11 @@ export async function createInvitation(input: CreateInvitationInput) {
   // d'une invitation pending existante, plus haut) ne passe PAS ici, donc
   // on ne renotifie pas une invitation déjà émise.
   try {
-    await notifyInvitedCoach({ invitation: created, leagueName: league.name });
+    await notifyInvitedCoach({
+      invitation: created,
+      leagueName: league.name,
+      baseUrl: input.baseUrl,
+    });
   } catch {
     // Toute exception inattendue est absorbée : la création reste valide.
   }
@@ -238,12 +283,44 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
     );
   }
 
-  const seasonId = input.seasonId ?? invitation.seasonId;
-  if (!seasonId) {
-    throw new LeagueInvitationError(
-      "season_not_found",
-      "Aucune saison ciblee ; precisez `seasonId`",
-    );
+  // Résolution de la saison cible. Trois cas, dans l'ordre :
+  //   1. `input.seasonId` (choix de l'invité) → validé : DOIT appartenir à la
+  //      ligue de l'invitation (sinon détournement vers une autre ligue).
+  //   2. `invitation.seasonId` (saison déjà ciblée à la création, déjà
+  //      validée) → utilisé tel quel.
+  //   3. Aucun (invitation league-wide) → auto-résolution parmi les saisons
+  //      ouvertes : 0 → no_open_season, 1 → auto, N → season_choice_required.
+  let seasonId: string;
+  if (input.seasonId) {
+    const season = await prisma.leagueSeason.findUnique({
+      where: { id: input.seasonId },
+      select: { leagueId: true },
+    });
+    if (!season || season.leagueId !== invitation.leagueId) {
+      throw new LeagueInvitationError(
+        "season_not_found",
+        "Saison introuvable ou n'appartenant pas a cette ligue",
+      );
+    }
+    seasonId = input.seasonId;
+  } else if (invitation.seasonId) {
+    seasonId = invitation.seasonId;
+  } else {
+    const openSeasons = await listOpenSeasonsForLeague(invitation.leagueId);
+    if (openSeasons.length === 0) {
+      throw new LeagueInvitationError(
+        "no_open_season",
+        "La ligue n'a pas encore de saison ouverte aux inscriptions. " +
+          "Demande au commissaire d'en créer une.",
+      );
+    }
+    if (openSeasons.length > 1) {
+      throw new LeagueInvitationError(
+        "season_choice_required",
+        "Plusieurs saisons sont ouvertes : précisez laquelle rejoindre.",
+      );
+    }
+    seasonId = openSeasons[0].id;
   }
 
   // Verifie l'ownership de l'equipe.
@@ -421,7 +498,7 @@ export async function listPendingInvitationsForUser(userId: string) {
  * acceptation : ligue, saison, inviter.
  */
 export async function getInvitationByCode(code: string) {
-  return prisma.leagueInvitation.findUnique({
+  const invitation = await prisma.leagueInvitation.findUnique({
     where: { code },
     include: {
       league: {
@@ -447,6 +524,16 @@ export async function getInvitationByCode(code: string) {
       inviteeTeam: { select: { id: true, name: true, roster: true } },
     },
   });
+  if (!invitation) return null;
+
+  // Pour une invitation league-wide (sans saison), la page d'acceptation a
+  // besoin des saisons ouvertes pour : afficher un message si 0, choisir si
+  // plusieurs, ou laisser l'auto-résolution opérer si exactement 1.
+  const availableSeasons = invitation.seasonId
+    ? []
+    : await listOpenSeasonsForLeague(invitation.leagueId);
+
+  return { ...invitation, availableSeasons };
 }
 
 /**
