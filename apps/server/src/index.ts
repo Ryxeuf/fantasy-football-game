@@ -797,6 +797,23 @@ httpServer.listen(API_PORT, () => {
   serverLog.log(`Express API server listening on http://localhost:${API_PORT}`);
 });
 
+// Branche le transport e-mail SMTP (nodemailer) au boot si `SMTP_HOST` est
+// configuré ; sinon le mailer dégrade proprement (e-mails loggés only).
+// Désactivé en test pour ne pas ouvrir de connexions SMTP dans les suites.
+if (process.env.NODE_ENV !== "test" && process.env.TEST_SQLITE !== "1") {
+  void import("./services/mail-init")
+    .then(({ initMailTransportFromEnv }) => {
+      initMailTransportFromEnv();
+    })
+    // Robustesse : l'e-mail est un effet secondaire optionnel. Un échec
+    // d'init (module/dep manquant, env invalide) ne doit JAMAIS crasher le
+    // serveur — sans ce catch, la rejection remonte en uncaughtException et
+    // tue le process.
+    .catch((e: unknown) => {
+      serverLog.error("[mail] init transport échouée (e-mails désactivés)", e);
+    });
+}
+
 // L2.A.11 — Cron interne pour les forfaits de pairing de ligue.
 // Toutes les `LEAGUE_FORFEIT_TICK_MS` ms, on declenche un sweep des
 // pairings dont la deadline est depassee. En env de test (TEST_SQLITE

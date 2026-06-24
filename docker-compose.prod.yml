@@ -93,6 +93,16 @@ services:
       # Freeze Pro League : coupe les crons pro-league + 404 routes /pro-league.
       # Degeler = "true". Voir docs/pro-league-freeze-2026-06-01.md.
       - PRO_LEAGUE_ENABLED=false
+      # E-mail transactionnel (invitations de ligue, digest, etc.). Renseigner
+      # ces variables dans le `.env` de prod pour activer l'envoi réel. Si
+      # SMTP_HOST est vide, le mailer dégrade proprement (e-mails loggés only).
+      # Voir docs/email.md.
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_SECURE=${SMTP_SECURE:-}
+      - MAIL_FROM=${MAIL_FROM:-Nuffle Arena <no-reply@nufflearena.fr>}
     networks:
       - traefik-network
     labels:

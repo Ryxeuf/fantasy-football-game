@@ -13,6 +13,26 @@ services:
       - db_data:/var/lib/postgresql/data
     networks:
       - traefik-network
+  # Serveur SMTP local de dev : capture tous les e-mails sortants (aucun
+  # n'est réellement délivré) et les expose dans une UI web.
+  #   - SMTP : mailpit:1025 (cible de SMTP_HOST côté server, réseau interne)
+  #   - UI   : https://mailpit.nuffle-arena.orb.local (domaine OrbStack)
+  # On NE publie PAS de ports hôte : ça évite tout conflit (p.ex. un autre
+  # projet déjà sur 8025/1025) et OrbStack route le domaine vers le port HTTP.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    container_name: nufflearena_mailpit
+    expose:
+      - "1025"
+      - "8025"
+    environment:
+      - MP_MAX_MESSAGES=500
+      # Accepte n'importe quel login/MDP et le SMTP en clair (dev only).
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
+    networks:
+      - traefik-network
   web:
     build:
       context: .
@@ -97,6 +117,12 @@ services:
       # Freeze Pro League : coupe les crons pro-league + 404 sur les routes
       # /pro-league. Degeler = "true". Voir docs/pro-league-freeze-2026-06-01.md.
       - PRO_LEAGUE_ENABLED=false
+      # E-mail : en dev on pointe sur Mailpit (cf. service `mailpit`). Aucun
+      # mail n'est réellement envoyé — tout est capturé dans l'UI Mailpit
+      # (https://mailpit.nuffle-arena.orb.local).
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - MAIL_FROM=Nuffle Arena (dev) <no-reply@nuffle-arena.local>
     volumes:
       - .:/app
       - /app/node_modules
