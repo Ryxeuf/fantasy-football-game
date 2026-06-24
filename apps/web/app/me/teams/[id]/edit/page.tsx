@@ -1190,7 +1190,7 @@ export default function TeamEditPage() {
                       </div>
                       {!charMode && isRandom && (
                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-                          <span className="font-semibold">ℹ️</span> Le hasard ne s'applique qu'aux compétences principales : une principale au hasard coûte moins en SPP et augmente moins la valeur d'équipe (VE) — +10k au lieu de +20k pour une principale choisie (+40k pour une secondaire choisie).
+                          <span className="font-semibold">ℹ️</span> Le hasard ne s'applique qu'aux compétences principales : une principale au hasard coûte moins en SPP qu'une principale choisie, mais augmente la valeur d'équipe (VE) de la même façon (+20k ; +40k pour une secondaire choisie).
                         </div>
                       )}
                     </div>
