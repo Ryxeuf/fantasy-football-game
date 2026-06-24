@@ -1,10 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import SkillTooltip from "../components/SkillTooltip";
+import SkillAccessBadges from "../components/SkillAccessBadges";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
+import { formatPlusStat } from "../../../lib/format-stats";
+import { buildSkillAccessByPosition } from "./roster-skill-access";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
@@ -34,6 +37,9 @@ export default function TeamDetailPage() {
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
   const [rosterName, setRosterName] = useState<string>("");
+  // Détail roster (positions + accès compétences + règles spéciales + ligues),
+  // chargé depuis l'API publique pour enrichir la fiche d'équipe.
+  const [rosterDetail, setRosterDetail] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
@@ -82,12 +88,19 @@ export default function TeamDetailPage() {
             if (cancelled) return;
             if (rosterResponse.ok) {
               const rosterData = await rosterResponse.json();
-              if (!cancelled) setRosterName(rosterData.roster?.name || d.team.roster);
+              if (!cancelled) {
+                setRosterName(rosterData.roster?.name || d.team.roster);
+                setRosterDetail(rosterData.roster ?? null);
+              }
             } else {
               setRosterName(d.team.roster);
+              setRosterDetail(null);
             }
           } catch {
-            if (!cancelled) setRosterName(d.team.roster);
+            if (!cancelled) {
+              setRosterName(d.team.roster);
+              setRosterDetail(null);
+            }
           }
         }
       } catch (e: any) {
@@ -164,6 +177,25 @@ export default function TeamDetailPage() {
   const match = data?.currentMatch;
   const localMatchStats = data?.localMatchStats;
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
+
+  // A11 — accès compétences (primaire/secondaire) indexés par position, plus
+  // règles spéciales d'équipe et ligues régionales, dérivés du détail roster.
+  const skillAccessByPosition = useMemo(
+    () => buildSkillAccessByPosition(rosterDetail?.positions),
+    [rosterDetail],
+  );
+  const specialRules: Array<{
+    slug: string;
+    name: string;
+    description: string;
+  }> = Array.isArray(rosterDetail?.specialRules)
+    ? rosterDetail.specialRules
+    : [];
+  const regionalLeagues: Array<{ slug: string; name: string }> = Array.isArray(
+    rosterDetail?.regionalLeagues,
+  )
+    ? rosterDetail.regionalLeagues
+    : [];
 
   if (loading) {
     return (
@@ -485,14 +517,18 @@ export default function TeamDetailPage() {
                       </td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ma}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.st}</td>
-                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ag}</td>
-                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.pa ?? "-"}</td>
-                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.av}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{formatPlusStat(p.ag)}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{formatPlusStat(p.pa)}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{formatPlusStat(p.av)}</td>
                       <td className="p-3 sm:p-4">
-                        <SkillTooltip 
-                          skillsString={p.skills} 
+                        <SkillTooltip
+                          skillsString={p.skills}
                           teamName={team.roster}
                           position={p.position}
+                        />
+                        <SkillAccessBadges
+                          primary={skillAccessByPosition.get(p.position)?.primary ?? null}
+                          secondary={skillAccessByPosition.get(p.position)?.secondary ?? null}
                         />
                       </td>
                     </tr>
@@ -530,23 +566,27 @@ export default function TeamDetailPage() {
                       </div>
                       <div className="text-center">
                         <div className="text-gray-500">AG</div>
-                        <div className="font-mono font-semibold">{p.ag}</div>
+                        <div className="font-mono font-semibold">{formatPlusStat(p.ag)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-gray-500">PA</div>
-                        <div className="font-mono font-semibold">{p.pa ?? "-"}</div>
+                        <div className="font-mono font-semibold">{formatPlusStat(p.pa)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-gray-500">AV</div>
-                        <div className="font-mono font-semibold">{p.av}</div>
+                        <div className="font-mono font-semibold">{formatPlusStat(p.av)}</div>
                       </div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-500 mb-1">{t.teams.tableSkills}</div>
-                      <SkillTooltip 
-                        skillsString={p.skills} 
+                      <SkillTooltip
+                        skillsString={p.skills}
                         teamName={team.roster}
                         position={p.position}
+                      />
+                      <SkillAccessBadges
+                        primary={skillAccessByPosition.get(p.position)?.primary ?? null}
+                        secondary={skillAccessByPosition.get(p.position)?.secondary ?? null}
                       />
                     </div>
                   </div>
@@ -554,6 +594,70 @@ export default function TeamDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* A11 — Ligues régionales ("type de ligue") du roster */}
+          {regionalLeagues.length > 0 && (
+            <div
+              data-testid="roster-leagues"
+              className="bg-white rounded-lg border overflow-hidden"
+            >
+              <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">
+                  {t.teams.leagues}
+                </h2>
+              </div>
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {regionalLeagues.map((league) => (
+                    <span
+                      key={league.slug}
+                      data-testid={`roster-league-${league.slug}`}
+                      className="px-3 sm:px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-xs sm:text-sm border border-indigo-100"
+                    >
+                      {league.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* A11 — Règles spéciales d'équipe (certaines modifient les PSP) */}
+          {specialRules.length > 0 && (
+            <div
+              data-testid="roster-special-rules"
+              className="bg-white rounded-lg border overflow-hidden"
+            >
+              <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">
+                  {t.teams.specialRules}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                  {t.teams.specialRulesSppNote ??
+                    "Certaines règles spéciales modifient les PSP gagnés en match."}
+                </p>
+              </div>
+              <div className="p-4 sm:p-6 space-y-2">
+                {specialRules.map((rule) => (
+                  <details
+                    key={rule.slug}
+                    data-testid={`special-rule-${rule.slug}`}
+                    className="group rounded-lg border border-gray-200 bg-gray-50/60 open:bg-white"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 sm:px-4 py-2.5 font-medium text-sm sm:text-base text-gray-900">
+                      <span>{rule.name}</span>
+                      <span className="text-gray-400 transition-transform group-open:rotate-180">
+                        ▾
+                      </span>
+                    </summary>
+                    <p className="px-3 sm:px-4 pb-3 pt-1 text-xs sm:text-sm text-gray-600 leading-relaxed">
+                      {rule.description}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
 
           {match && (
             <div className="bg-white rounded-lg border p-4 sm:p-6">

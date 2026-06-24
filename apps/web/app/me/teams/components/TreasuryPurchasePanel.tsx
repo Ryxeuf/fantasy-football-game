@@ -3,6 +3,7 @@ import { useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import { getRerollCost, getDisplayName, canRosterHaveApothecary } from "@bb/game-engine";
+import { formatPlusStat } from "../../../lib/format-stats";
 
 interface AvailablePosition {
   key: string;
@@ -263,7 +264,7 @@ export default function TreasuryPurchasePanel({
                     <div className="text-sm">
                       <span className="font-medium">{pos.name}</span>
                       <span className="text-gray-500 ml-2">
-                        MA:{pos.stats.ma} ST:{pos.stats.st} AG:{pos.stats.ag} PA:{pos.stats.pa || "-"} AV:{pos.stats.av}
+                        MA:{pos.stats.ma} ST:{pos.stats.st} AG:{formatPlusStat(pos.stats.ag)} PA:{formatPlusStat(pos.stats.pa)} AV:{formatPlusStat(pos.stats.av)}
                       </span>
                     </div>
                     <span className="font-mono font-semibold text-emerald-700">

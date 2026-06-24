@@ -88,16 +88,19 @@ export default function PlayerDetails({
       {/* Stats grid - compact 3-column */}
       <div className="grid grid-cols-3 gap-2 mb-4">
         {[
-          { label: "MA", value: player.ma, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "ST", value: player.st, color: "text-red-600", bg: "bg-red-50" },
-          { label: "AG", value: player.ag, color: "text-green-600", bg: "bg-green-50" },
-          { label: "PA", value: player.pa, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "AV", value: player.av, color: "text-yellow-600", bg: "bg-yellow-50" },
-          { label: "PM", value: `${player.pm}/${player.ma}`, color: "text-teal-600", bg: "bg-teal-50" },
-        ].map(({ label, value, color, bg }) => (
+          { label: "MA", value: player.ma, color: "text-blue-600", bg: "bg-blue-50", plus: false },
+          { label: "ST", value: player.st, color: "text-red-600", bg: "bg-red-50", plus: false },
+          { label: "AG", value: player.ag, color: "text-green-600", bg: "bg-green-50", plus: true },
+          { label: "PA", value: player.pa, color: "text-purple-600", bg: "bg-purple-50", plus: true },
+          { label: "AV", value: player.av, color: "text-yellow-600", bg: "bg-yellow-50", plus: true },
+          { label: "PM", value: `${player.pm}/${player.ma}`, color: "text-teal-600", bg: "bg-teal-50", plus: false },
+        ].map(({ label, value, color, bg, plus }) => (
           <div key={label} className={`${bg} rounded-lg p-2 text-center`}>
             <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">{label}</div>
-            <div className={`text-lg font-bold ${color}`}>{value}</div>
+            {/* AG/PA/AV suffixés d'un "+" (notation BB des jets de dé). */}
+            <div className={`text-lg font-bold ${color}`}>
+              {plus && value != null ? `${value}+` : value}
+            </div>
           </div>
         ))}
       </div>

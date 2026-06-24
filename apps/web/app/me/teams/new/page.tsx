@@ -8,6 +8,7 @@ import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import QuantityStepper from "../components/QuantityStepper";
+import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   DEFAULT_RULESET,
@@ -979,11 +980,12 @@ function SummaryMetric({
 }
 
 function Stat({ label, value }: { label: string; value: number | null }) {
+  // AG/PA/AV suffixées d'un "+" (notation BB) via le formateur partagé.
   return (
     <span className="text-gray-700">
       <span className="text-gray-500">{label}</span>
       <span className="ml-1 font-medium tabular-nums">
-        {value === null ? "—" : value}
+        {formatStatByLabel(label, value)}
       </span>
     </span>
   );
