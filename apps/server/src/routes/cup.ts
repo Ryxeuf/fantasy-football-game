@@ -37,7 +37,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     
     // Récupérer les équipes de l'utilisateur pour vérifier sa participation
     const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id },
+      where: { ownerId: req.user!.id, deletedAt: null },
       select: { id: true },
     });
     const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
@@ -156,7 +156,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
   try {
     // Récupérer les équipes de l'utilisateur pour vérifier sa participation
     const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id },
+      where: { ownerId: req.user!.id, deletedAt: null },
       select: { id: true },
     });
     const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
@@ -426,7 +426,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
     // Récupérer les équipes de l'utilisateur pour vérifier s'il a une équipe inscrite
     const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id },
+      where: { ownerId: req.user!.id, deletedAt: null },
       select: { id: true },
     });
     const userTeamIds = new Set(userTeams.map((t: typeof userTeams[number]) => t.id));

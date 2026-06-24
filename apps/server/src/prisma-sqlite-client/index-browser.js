@@ -303,7 +303,8 @@ exports.Prisma.TeamScalarFieldEnum = {
   currentValue: 'currentValue',
   initialBudget: 'initialBudget',
   isPublic: 'isPublic',
-  shareToken: 'shareToken'
+  shareToken: 'shareToken',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.TeamPlayerScalarFieldEnum = {

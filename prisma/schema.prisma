@@ -431,7 +431,13 @@ model Team {
   isPublic   Boolean @default(false)
   shareToken String? @unique
 
-  @@index([ownerId])
+  // Soft delete : un coach peut supprimer une équipe depuis sa liste. On ne
+  // hard-delete pas car la Team reste référencée par l'historique des
+  // compétitions (LeagueParticipant, CupParticipant) qu'on veut préserver.
+  // `deletedAt = null` => active ; sinon masquée des listes du coach.
+  deletedAt DateTime?
+
+  @@index([ownerId, deletedAt])
 }
 
 model TeamPlayer {

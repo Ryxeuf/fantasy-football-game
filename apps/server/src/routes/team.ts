@@ -96,11 +96,13 @@ export {
   handlePutTeamInfo,
   handleRecalculateTeam,
   handleUpdateTeam,
+  handleDeleteTeam,
 } from './team-mutation-handlers';
 import {
   handlePutTeamInfo as handlePutTeamInfoImpl,
   handleRecalculateTeam as handleRecalculateTeamImpl,
   handleUpdateTeam as handleUpdateTeamImpl,
+  handleDeleteTeam as handleDeleteTeamImpl,
 } from './team-mutation-handlers';
 
 router.put(
@@ -111,6 +113,7 @@ router.put(
 );
 router.post("/:id/recalculate", authUser, handleRecalculateTeamImpl);
 router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeamImpl);
+router.delete("/:id", authUser, handleDeleteTeamImpl);
 
 // #3 — Partage public opt-in du roster (boucle d'acquisition).
 router.patch(

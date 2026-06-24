@@ -355,6 +355,11 @@ model Team {
   // Partage public opt-in (miroir SQLite de schema.prisma).
   isPublic   Boolean @default(false)
   shareToken String? @unique
+
+  // Soft delete (miroir SQLite de schema.prisma).
+  deletedAt DateTime?
+
+  @@index([ownerId, deletedAt])
 }
 
 model TeamPlayer {

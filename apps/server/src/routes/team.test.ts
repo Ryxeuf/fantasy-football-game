@@ -379,7 +379,7 @@ describe("Route: GET /team/mine (S25.5p)", () => {
 
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { ownerId: "user-1" },
+        where: { ownerId: "user-1", deletedAt: null },
         orderBy: { createdAt: "desc" },
       }),
     );
@@ -444,11 +444,11 @@ describe("Route: GET /team/mine (S25.5p)", () => {
 
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { ownerId: "user-1", ruleset: "season_2" },
+        where: { ownerId: "user-1", deletedAt: null, ruleset: "season_2" },
       }),
     );
     expect(count).toHaveBeenCalledWith({
-      where: { ownerId: "user-1", ruleset: "season_2" },
+      where: { ownerId: "user-1", deletedAt: null, ruleset: "season_2" },
     });
   });
 

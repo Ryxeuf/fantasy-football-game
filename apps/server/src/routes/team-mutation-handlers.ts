@@ -28,6 +28,7 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import { serverLog } from '../utils/server-log';
+import { deleteTeam, TeamDeleteError } from '../services/team-delete';
 
 /**
  * S27.8.25 — `PUT /team/:id/info`
@@ -298,6 +299,31 @@ export async function handleUpdateTeam(
     sendSuccess(res, { team: updatedTeam });
   } catch (e: unknown) {
     serverLog.error("Erreur lors de la modification de l'equipe:", e);
+    sendError(res, 'Erreur serveur', 500);
+  }
+}
+
+/**
+ * `DELETE /team/:id` — suppression (soft delete) d'une équipe par son coach.
+ *
+ * Refuse (409) si l'équipe est engagée dans une compétition non terminée
+ * (ligue/coupe), avec un message nommant la compétition. 404 si l'équipe
+ * n'existe pas / n'appartient pas au coach / est déjà supprimée. La logique
+ * métier vit dans `services/team-delete.ts`.
+ */
+export async function handleDeleteTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    await deleteTeam({ teamId: req.params.id, userId: req.user!.id });
+    sendSuccess(res, { deleted: true });
+  } catch (e: unknown) {
+    if (e instanceof TeamDeleteError) {
+      sendError(res, e.message, e.code === 'not_found' ? 404 : 409);
+      return;
+    }
+    serverLog.error("Erreur lors de la suppression de l'equipe:", e);
     sendError(res, 'Erreur serveur', 500);
   }
 }

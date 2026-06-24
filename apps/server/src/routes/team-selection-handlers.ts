@@ -126,7 +126,7 @@ export async function handleGetTeamDetail(
 ): Promise<void> {
   try {
     const team = await prisma.team.findFirst({
-      where: { id: req.params.id, ownerId: req.user!.id },
+      where: { id: req.params.id, ownerId: req.user!.id, deletedAt: null },
       include: {
         players: true,
         starPlayers: true,

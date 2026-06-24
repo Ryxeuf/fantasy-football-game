@@ -75,6 +75,7 @@ export async function handleListAvailableTeams(
   const teams = await prisma.team.findMany({
     where: {
       ownerId: req.user!.id,
+      deletedAt: null,
       ...(filterRuleset && { ruleset: filterRuleset }),
       selections: {
         none: {
@@ -114,6 +115,7 @@ export async function handleListMyTeams(
   );
   const where = {
     ownerId: req.user!.id,
+    deletedAt: null,
     ...(filterRuleset && { ruleset: filterRuleset }),
   };
   const [teams, total] = await Promise.all([
