@@ -115,6 +115,13 @@ export interface ListLeaguesFilter {
   creatorId?: string;
   status?: LeagueStatus;
   publicOnly?: boolean;
+  /**
+   * A1 — id de l'utilisateur connecté. Quand fourni (et qu'aucun
+   * `creatorId` explicite n'est demandé), il voit SES ligues — même
+   * privées — en plus des ligues publiques. Corrige le cas « j'ai passé
+   * ma ligue en Privée et je ne la vois plus ».
+   */
+  viewerId?: string;
   // S25.6 — pagination. Si non fournis, on retombe sur des defauts
   // raisonnables (50 / 0) pour eviter qu'un client legacy charge tout.
   limit?: number;
@@ -373,11 +380,18 @@ export async function createRound(input: CreateRoundInput) {
 
 export async function listLeagues(filter: ListLeaguesFilter) {
   const where: Record<string, unknown> = {};
-  if (filter.publicOnly !== false) {
-    where.isPublic = true;
-  }
   if (filter.creatorId) {
     where.creatorId = filter.creatorId;
+  }
+  if (filter.publicOnly !== false) {
+    // A1 — un utilisateur connecté voit toujours SES ligues (même
+    // privées) en plus des publiques. On n'applique ce OR que sur la
+    // liste générale (pas quand un `creatorId` explicite est demandé).
+    if (filter.viewerId && !filter.creatorId) {
+      where.OR = [{ isPublic: true }, { creatorId: filter.viewerId }];
+    } else {
+      where.isPublic = true;
+    }
   }
   if (filter.status) {
     where.status = filter.status;

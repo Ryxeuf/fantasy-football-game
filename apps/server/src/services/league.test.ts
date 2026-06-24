@@ -708,6 +708,43 @@ describe("Rule: League service", () => {
       );
     });
 
+    it("A1 — viewer connecté : publiques OU ses propres ligues (même privées)", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: "viewer-1" });
+
+      const where = mockPrisma.league.findMany.mock.calls[0][0].where;
+      expect(where.OR).toEqual([
+        { isPublic: true },
+        { creatorId: "viewer-1" },
+      ]);
+      expect(where.isPublic).toBeUndefined();
+    });
+
+    it("A1 — un creatorId explicite n'active pas le OR viewer", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ creatorId, viewerId: "viewer-1" });
+
+      const where = mockPrisma.league.findMany.mock.calls[0][0].where;
+      expect(where.creatorId).toBe(creatorId);
+      expect(where.isPublic).toBe(true);
+      expect(where.OR).toBeUndefined();
+    });
+
+    it("A1 — publicOnly=false : aucune restriction de visibilité", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: "viewer-1", publicOnly: false });
+
+      const where = mockPrisma.league.findMany.mock.calls[0][0].where;
+      expect(where.OR).toBeUndefined();
+      expect(where.isPublic).toBeUndefined();
+    });
+
     // S25.6 — pagination
     it("respects limit and offset, capped at 100", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
