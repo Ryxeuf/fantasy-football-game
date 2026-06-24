@@ -1,3 +1,15 @@
+## [1.186.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.185.0...v1.186.0) (2026-06-24)
+
+
+### ✨ Features
+
+* **mail:** branche l'envoi d'e-mail réel (nodemailer SMTP) + Mailpit en dev ([edc3cdd](https://github.com/Ryxeuf/fantasy-football-game/commit/edc3cdd2fa633f47c72465a30019d5820a14d328))
+
+
+### 🐛 Bug Fixes
+
+* **rosters:** apothicaire conditionnel sur la page roster + caches frais en dev ([ac7b5ab](https://github.com/Ryxeuf/fantasy-football-game/commit/ac7b5abe7fa80361683467c94e21bc7ee0f809f7))
+
 ## [1.185.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.184.0...v1.185.0) (2026-06-24)
 
 
