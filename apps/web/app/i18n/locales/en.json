@@ -724,6 +724,7 @@
     "pairingStatusScheduled": "Scheduled",
     "pairingStatusInProgress": "In progress",
     "pairingStatusPlayed": "Played",
+    "pairingBonusLabel": "Bonus:",
     "pairingStatusForfeit": "Forfeit",
     "pairingStatusCancelled": "Cancelled",
     "pairingLaunchButton": "Launch match",

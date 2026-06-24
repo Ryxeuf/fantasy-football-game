@@ -729,6 +729,7 @@
     "pairingStatusScheduled": "À jouer",
     "pairingStatusInProgress": "En cours",
     "pairingStatusPlayed": "Joué",
+    "pairingBonusLabel": "Bonus :",
     "pairingStatusForfeit": "Forfait",
     "pairingStatusCancelled": "Annulé",
     "pairingLaunchButton": "Lancer le match",

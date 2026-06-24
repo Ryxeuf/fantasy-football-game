@@ -195,3 +195,50 @@ export function serializeBonusRules(
     return { id: r.id, label, condition: { type: r.condition.type, value }, points, appliesTo: r.appliesTo };
   });
 }
+
+// E3 — Lecture du breakdown des bonus appliqués par match (snapshot
+// `LeaguePairing.bonusBreakdown` : [{ ruleId, label, side, points }]).
+
+export interface BonusBreakdownEntry {
+  readonly ruleId: string;
+  readonly label: string;
+  readonly side: "home" | "away";
+  readonly points: number;
+}
+
+/**
+ * Parse le snapshot `bonusBreakdown` renvoyé par l'API en entrées
+ * canoniques. Tolérant PG (array natif) + sqlite (string JSON) + null.
+ * Les entrées malformées sont ignorées.
+ */
+export function parseBonusBreakdown(raw: unknown): BonusBreakdownEntry[] {
+  let arr: unknown[];
+  if (Array.isArray(raw)) {
+    arr = raw;
+  } else if (typeof raw === "string") {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      arr = parsed;
+    } catch {
+      return [];
+    }
+  } else {
+    return [];
+  }
+
+  const out: BonusBreakdownEntry[] = [];
+  for (const item of arr) {
+    if (typeof item !== "object" || item === null) continue;
+    const e = item as Record<string, unknown>;
+    if (e.side !== "home" && e.side !== "away") continue;
+    if (typeof e.points !== "number" || !Number.isFinite(e.points)) continue;
+    out.push({
+      ruleId: typeof e.ruleId === "string" ? e.ruleId : "",
+      label: typeof e.label === "string" ? e.label : "",
+      side: e.side,
+      points: e.points,
+    });
+  }
+  return out;
+}

@@ -5,6 +5,7 @@ import {
   BOOLEAN_CONDITIONS,
   parseBonusRulesFromApi,
   serializeBonusRules,
+  parseBonusBreakdown,
   presetToRule,
   emptyBonusRule,
   nextBonusRuleId,
@@ -160,5 +161,46 @@ describe("E1 — serializeBonusRules", () => {
     expect(round).toHaveLength(2);
     expect(round[0].condition).toEqual({ type: "tds_scored_gte", value: 3 });
     expect(round[1].condition).toEqual({ type: "clean_sheet" });
+  });
+});
+
+describe("E3 — parseBonusBreakdown (PG array + sqlite string + null)", () => {
+  const valid = [
+    { ruleId: "r1", label: "3 TD marques", side: "home", points: 1 },
+    { ruleId: "r2", label: "Aucun TD encaisse", side: "away", points: 1 },
+  ];
+
+  it("parse un array natif (Postgres)", () => {
+    const out = parseBonusBreakdown(valid);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({ ruleId: "r1", label: "3 TD marques", side: "home", points: 1 });
+    expect(out[1].side).toBe("away");
+  });
+
+  it("parse une string JSON (mirror sqlite)", () => {
+    const out = parseBonusBreakdown(JSON.stringify(valid));
+    expect(out).toHaveLength(2);
+    expect(out[0].side).toBe("home");
+  });
+
+  it("retourne [] pour null / undefined / garbage / JSON invalide", () => {
+    expect(parseBonusBreakdown(null)).toEqual([]);
+    expect(parseBonusBreakdown(undefined)).toEqual([]);
+    expect(parseBonusBreakdown(42)).toEqual([]);
+    expect(parseBonusBreakdown("not-json")).toEqual([]);
+    expect(parseBonusBreakdown('{"a":1}')).toEqual([]);
+  });
+
+  it("ignore les entrees malformees (side invalide, points non numerique)", () => {
+    const mixed = [
+      valid[0],
+      { ruleId: "x", label: "bad side", side: "middle", points: 1 },
+      { ruleId: "y", label: "bad points", side: "home", points: "1" },
+      null,
+      "garbage",
+    ];
+    const out = parseBonusBreakdown(mixed);
+    expect(out).toHaveLength(1);
+    expect(out[0].ruleId).toBe("r1");
   });
 });
