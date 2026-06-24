@@ -11,6 +11,7 @@ import {
 } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { InviteCoachModal } from "./InviteCoachModal";
+import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
 import { SeasonStandings } from "./SeasonStandings";
 import { PlayoffBracketView } from "./PlayoffBracketView";
@@ -57,6 +58,7 @@ export default function LeagueDetailPage() {
   const [newSeasonOpen, setNewSeasonOpen] = useState(false);
   const [joinSeasonOpen, setJoinSeasonOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [invitationsRefreshKey, setInvitationsRefreshKey] = useState(0);
 
   // Charge l'identite courante une seule fois pour permettre au
   // calendrier de decider quels boutons "Lancer le match" afficher et
@@ -373,6 +375,12 @@ export default function LeagueDetailPage() {
             </div>
           ) : null}
         </div>
+        {leagueEnabled && isCreator && invitationsEnabled ? (
+          <SentInvitationsPanel
+            leagueId={league.id}
+            refreshKey={invitationsRefreshKey}
+          />
+        ) : null}
         {league.seasons.length === 0 ? (
           <div
             data-testid="league-seasons-empty"
@@ -571,7 +579,7 @@ export default function LeagueDetailPage() {
         <InviteCoachModal
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}
-          onInvited={() => setInviteOpen(false)}
+          onInvited={() => setInvitationsRefreshKey((k) => k + 1)}
           leagueId={league.id}
           seasonId={season?.id}
         />
