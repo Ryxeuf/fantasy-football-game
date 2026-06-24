@@ -5,6 +5,8 @@ import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../lib/featureFlagKeys";
+import { PendingLeagueInvitations } from "./_components/PendingLeagueInvitations";
+import { JoinByCodeField } from "./_components/JoinByCodeField";
 
 type LeagueStatus =
   | "draft"
@@ -159,6 +161,12 @@ export default function LeaguesPage() {
           ) : null}
         </div>
       </div>
+
+      {/* Invitations reçues en attente (accepter / refuser) + saisie de code.
+          Le composant ne rend rien si l'utilisateur n'a aucune invitation. */}
+      <PendingLeagueInvitations />
+
+      <JoinByCodeField />
 
       <div className="flex flex-wrap items-center gap-3">
         <label

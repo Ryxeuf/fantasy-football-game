@@ -13,6 +13,12 @@ vi.mock("../hooks/useFeatureFlag", () => ({
   useFeatureFlag: vi.fn(() => false),
 }));
 
+// La page monte `JoinByCodeField` (saisie de code) qui consomme
+// `useRouter()` de next/navigation. On le stub pour le rendu en test.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
+
 import LeaguesPage from "./page";
 
 const mockFetch = vi.fn();
