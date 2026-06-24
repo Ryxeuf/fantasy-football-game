@@ -33,8 +33,8 @@ export interface ReferencePosition {
   st: number;
   /** AG en notation target number (2+ = 2, 3+ = 3, etc.) */
   ag: number;
-  /** PA en notation target number (2+ = 2, 6+ = 6, 0 = no PA) */
-  pa: number;
+  /** PA en notation target number (2+ = 2, 6+ = 6) ; null = pas de passe (rendu "-") */
+  pa: number | null;
   /** AV en notation target number (6+ = 6, etc.) */
   av: number;
   /** Skills de depart (slugs tries alphabetiquement) */
@@ -140,7 +140,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
       { nameEn: 'Dwarf Blocker Lineman', cost: 70, max: 16, ma: 4, st: 3, ag: 4, pa: 5, av: 10, skills: ['block', 'defensive', 'thick-skull'] },
       { nameEn: 'Troll Slayer', cost: 95, max: 2, ma: 5, st: 3, ag: 4, pa: 5, av: 9, skills: ['block', 'dauntless', 'frenzy', 'hate', 'thick-skull'] },
       { nameEn: 'Dwarf Blitzer', cost: 100, max: 2, ma: 5, st: 3, ag: 4, pa: 4, av: 10, skills: ['block', 'diving-tackle', 'tackle', 'thick-skull'] },
-      { nameEn: 'Deathroller', cost: 170, max: 1, ma: 5, st: 7, ag: 5, pa: 6, av: 11, skills: ['break-tackle', 'dirty-player-1', 'juggernaut', 'loner-4', 'mighty-blow-1', 'no-hands', 'secret-weapon', 'stand-firm'] },
+      { nameEn: 'Deathroller', cost: 170, max: 1, ma: 5, st: 7, ag: 5, pa: null, av: 11, skills: ['break-tackle', 'dirty-player-1', 'juggernaut', 'loner-4', 'mighty-blow-1', 'no-hands', 'secret-weapon', 'stand-firm'] },
     ],
   },
 
@@ -473,7 +473,7 @@ export const STRUCTURAL_RULES = {
     ma: { min: 1, max: 9 },
     st: { min: 1, max: 7 },
     ag: { min: 1, max: 6 },
-    pa: { min: 0, max: 6 }, // 0 = pas de passe (No Hands / joueur animal) — rendu "-"
+    pa: { min: 0, max: 6 }, // borne les PA numeriques ; l'absence de passe est representee par null (rendu "-")
     av: { min: 5, max: 11 },
     cost: { min: 10, max: 200 },
   },

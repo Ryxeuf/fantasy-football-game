@@ -1417,7 +1417,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ma: 5,
         st: 7,
         ag: 5,
-        pa: 6,
+        pa: null, // Big Guy "no-hands" : aucune capacite de Passe → affiche "-"
         av: 11,
         skills: "secret-weapon,mighty-blow-1,break-tackle,dirty-player-1,juggernaut,no-hands,loner-4,stand-firm",
       }
