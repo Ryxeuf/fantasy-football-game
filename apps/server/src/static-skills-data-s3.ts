@@ -31,6 +31,7 @@ export const SEASON_3_CATEGORY_CHANGES: Record<string, string> = {
   "dirty-player-2": "Scélérates",   // Joueur Déloyal (+2) -> Scélérates
   "pile-driver": "Scélérates",      // Marteau-Pilon -> Scélérates
   "fumblerooskie": "Scélérates",    // Fumblerooskie -> Scélérates
+  "hit-and-run": "Agility",         // A4/A15 — Frappe-et-court : Trait -> Compétence d'Agilité en S3
 };
 
 /**
@@ -68,6 +69,15 @@ export const SEASON_3_RENAMED_SKILLS: Record<string, { nameEn: string; nameFr?: 
   "big-hand": { nameEn: "Big Hand", nameFr: "Main Démesurée" }, // Grande Main -> Main Démesurée
   "foul-appearance": { nameEn: "Foul Appearance", nameFr: "Répulsion" }, // Apparence Répugnante -> Répulsion
   "no-hands": { nameEn: "No Ball", nameFr: "Sans Ballon" }, // Pas de Mains -> Sans Ballon
+  // Renommages FR manquants : le legacy static-skills-data.ts conservait les
+  // anciens noms S2, qui gagnaient sur le canon au seed. Le canon
+  // (game-engine/skills/index.ts) porte déjà le bon nom ; on l'applique au
+  // seed S3 via ce mapping (S2 garde volontairement les anciens noms).
+  "pogo-stick": { nameEn: "Pogo Stick", nameFr: "Monté sur Ressort" }, // ex « Échasse à ressort » (A24)
+  "pick-me-up": { nameEn: "Pick-me-up", nameFr: "Petit Remontant" },    // ex « Choppe-moi » (A25)
+  "drunkard": { nameEn: "Drunkard", nameFr: "Ivrogne*" },              // ex « Poivrot » (A26)
+  "breathe-fire": { nameEn: "Breathe Fire", nameFr: "Souffle Ardent" }, // ex « Cracheur de feu » (A14)
+  "hit-and-run": { nameEn: "Hit and Run", nameFr: "Frappe-et-court" },  // ex « Frappe et Cours » (A4/A15)
 };
 
 /**
@@ -133,6 +143,15 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
       "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
     descriptionEn:
       "Each time this player performs a Block action against a player with the same Keyword as the one in parentheses, this player may re-roll an Attacker Down result.",
+  },
+  // A21 — Prendre Racine : le jet n'a lieu que si le joueur est Debout (texte S3
+  // officiel, cf. extraction_competences_blood_bowl.md). L'ancien texte ne
+  // précisait pas la condition « Debout ».
+  "take-root": {
+    description:
+      "Chaque fois qu'on active ce joueur, après avoir annoncé son action, s'il est Debout il doit jeter un D6. Sur 2+, il peut effectuer l'action annoncée normalement. Sur un 1, il ne peut effectuer aucune action et son activation se termine immédiatement.",
+    descriptionEn:
+      "Each time this player is activated, immediately after declaring their action, if they are Standing they must roll a D6. On 2+, they may perform the declared action as normal. On a 1, they cannot perform any action and their activation ends immediately.",
   },
   insignifiant: {
     description:
