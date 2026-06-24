@@ -22,7 +22,7 @@ describe("reroll-costs", () => {
       ["black_orc", 60_000],
       ["dark_elf", 50_000],
       ["chaos_chosen", 60_000],
-      ["imperial_nobility", 70_000],
+      ["imperial_nobility", 60_000],
       ["slann", 70_000],
     ] as const)("returns %i for %s", (slug, cost) => {
       expect(getRerollCost(slug)).toBe(cost);
@@ -38,7 +38,7 @@ describe("reroll-costs", () => {
       ["blackorc", 60_000],
       ["darkelf", 50_000],
       ["chaos", 60_000],
-      ["chaosrenegades", 60_000],
+      ["chaosrenegades", 70_000],
     ] as const)("résout %s vers le slug canonique", (legacy, cost) => {
       expect(getRerollCost(legacy)).toBe(cost);
       expect(resolveRosterSlugForReroll(legacy)).not.toBe(legacy);

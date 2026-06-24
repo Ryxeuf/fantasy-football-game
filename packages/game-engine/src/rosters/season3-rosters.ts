@@ -35,7 +35,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         displayName: "Aspirant Halfling",
         cost: 30,
         min: 0,
-        max: 3,
+        max: 5,
         ma: 5,
         st: 2,
         ag: 3,
@@ -259,7 +259,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,insignifiant,stunty,titchy,right-stuff",
+        skills: "dodge,sidestep,insignifiant,titchy,right-stuff",
       },
       {
         slug: "underworld_skaven_du_clan_du_rat",
@@ -691,7 +691,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 0,
         av: 8,
-        skills: "secret-weapon,dodge,titchy,no-hands,chainsaw",
+        skills: "secret-weapon,titchy,no-hands,chainsaw",
       },
       {
         slug: "goblin_bomba",
@@ -1233,7 +1233,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
       {
         slug: "undead_blitzer_revenant",
         displayName: "Blitzer Revenant",
-        cost: 90,
+        cost: 95,
         min: 0,
         max: 2,
         ma: 6,
@@ -1510,7 +1510,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     positions: [
       {
         slug: "norse_trois_quart",
-        displayName: "Trois-Quart",
+        displayName: "Pillard Nordique",
         cost: 50,
         min: 0,
         max: 16,
@@ -1523,7 +1523,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
       },
       {
         slug: "norse_sanglier_a_biere",
-        displayName: "Sanglier à bière",
+        displayName: "Sanglier de Secours",
         cost: 20,
         min: 0,
         max: 2,
@@ -1532,11 +1532,11 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 6,
         av: 6,
-        skills: "dodge,stunty,titchy,pick-me-up,no-hands",
+        skills: "dodge,titchy,pick-me-up,no-hands",
       },
       {
         slug: "norse_berzerker",
-        displayName: "Berzerker",
+        displayName: "Berserker Nordique",
         cost: 90,
         min: 0,
         max: 2,
@@ -1671,7 +1671,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,stunty,titchy,right-stuff",
+        skills: "dodge,sidestep,titchy,right-stuff",
       },
       {
         slug: "ogre_bloqueur_ogre",
@@ -2205,7 +2205,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,insignifiant,stunty,titchy,right-stuff",
+        skills: "dodge,sidestep,insignifiant,titchy,right-stuff",
       },
       {
         slug: "snotling_echassier",
@@ -2244,7 +2244,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "secret-weapon,bombardier,dodge,sidestep,stunty,titchy,right-stuff",
+        skills: "secret-weapon,bombardier,dodge,sidestep,titchy,right-stuff",
       },
       {
         slug: "snotling_chariot_a_pompe",

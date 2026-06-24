@@ -172,7 +172,7 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "sans-les-mains": "no-hands",
   "sournois": "sneaky-git",
   "poignard": "stab",
-  "contagieux": "nurgles-rot",
+  "contagieux": "contagieux",
   "grande-gueule": "monstrous-mouth",
   "morsure-rapide": "bloodlust",
   "prise-sûre": "sure-hands",
@@ -189,7 +189,7 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "garde": "guard",
   "prise": "sure-hands",
   "châtaigne": "mighty-blow-1",
-  "contagion": "nurgles-rot",
+  "contagion": "contagieux",
   // Compétences en français (noms complets)
   "frénésie": "frenzy",
   "cornes": "horns",
