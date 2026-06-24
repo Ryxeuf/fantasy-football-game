@@ -7,6 +7,7 @@ import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
+import { formatPlusStat } from "../../../../lib/format-stats";
 import {
   getPlayerCost,
   getDisplayName,
@@ -655,9 +656,9 @@ export default function TeamEditPage() {
                     </td>
                     <td className="px-4 py-3 text-center font-mono text-sm">{player.ma}</td>
                     <td className="px-4 py-3 text-center font-mono text-sm">{player.st}</td>
-                    <td className="px-4 py-3 text-center font-mono text-sm">{player.ag}</td>
-                    <td className="px-4 py-3 text-center font-mono text-sm">{player.pa || '—'}</td>
-                    <td className="px-4 py-3 text-center font-mono text-sm">{player.av}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{formatPlusStat(player.ag)}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{formatPlusStat(player.pa)}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{formatPlusStat(player.av)}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-mono text-xs font-semibold ${
                         (player.spp ?? 0) > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-500'
@@ -776,15 +777,15 @@ export default function TeamEditPage() {
                     </div>
                     <div className="bg-green-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-green-600 font-medium mb-0.5">AG</div>
-                      <div className="text-base font-bold text-green-900 font-mono">{player.ag}</div>
+                      <div className="text-base font-bold text-green-900 font-mono">{formatPlusStat(player.ag)}</div>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-purple-600 font-medium mb-0.5">PA</div>
-                      <div className="text-base font-bold text-purple-900 font-mono">{player.pa || '—'}</div>
+                      <div className="text-base font-bold text-purple-900 font-mono">{formatPlusStat(player.pa)}</div>
                     </div>
                     <div className="bg-orange-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-orange-600 font-medium mb-0.5">AV</div>
-                      <div className="text-base font-bold text-orange-900 font-mono">{player.av}</div>
+                      <div className="text-base font-bold text-orange-900 font-mono">{formatPlusStat(player.av)}</div>
                     </div>
                     <div className="bg-yellow-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-yellow-600 font-medium mb-0.5">SPP</div>
@@ -925,15 +926,15 @@ export default function TeamEditPage() {
                         </div>
                         <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-green-100">
                           <div className="text-xs text-green-600 font-medium mb-1">AG</div>
-                          <div className="text-lg sm:text-xl font-bold text-green-900 font-mono">{position.stats.ag}</div>
+                          <div className="text-lg sm:text-xl font-bold text-green-900 font-mono">{formatPlusStat(position.stats.ag)}</div>
                         </div>
                         <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-purple-100">
                           <div className="text-xs text-purple-600 font-medium mb-1">PA</div>
-                          <div className="text-lg sm:text-xl font-bold text-purple-900 font-mono">{position.stats.pa || '—'}</div>
+                          <div className="text-lg sm:text-xl font-bold text-purple-900 font-mono">{formatPlusStat(position.stats.pa)}</div>
                         </div>
                         <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-orange-100">
                           <div className="text-xs text-orange-600 font-medium mb-1">AV</div>
-                          <div className="text-lg sm:text-xl font-bold text-orange-900 font-mono">{position.stats.av}</div>
+                          <div className="text-lg sm:text-xl font-bold text-orange-900 font-mono">{formatPlusStat(position.stats.av)}</div>
                         </div>
                       </div>
                       {position.stats.skills && (

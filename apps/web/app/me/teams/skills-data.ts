@@ -254,7 +254,9 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "chaîne-et-boulet": "ball-and-chain",
   "chaîne & boulet": "ball-and-chain",
   // Variantes supplémentaires
-  "bombardier": "secret-weapon",
+  // NB : "bombardier" est désormais une vraie compétence (Trait) dans le
+  // game-engine — ne PAS l'aliaser vers "secret-weapon", sinon le Bombardier
+  // du Bomba gobelin s'affiche en double "Arme Secrète" (cf. non-régression).
   "libration-contrôlée": "break-tackle",
   "regard-hypnotique": "hypnotic-gaze",
   "regarde-dans-mes-yeux": "hypnotic-gaze",

@@ -14,6 +14,7 @@ import SkillAccessBadges from "../../me/teams/components/SkillAccessBadges";
 import { useLanguage } from "../../contexts/LanguageContext";
 import ShareBar from "../../components/ShareBar";
 import { stripRosterPrefix } from "../position-slug";
+import { formatPlusStat } from "../../lib/format-stats";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -38,16 +39,6 @@ interface RosterSpecialRule {
 interface RosterRegionalLeague {
   readonly slug: string;
   readonly name: string;
-}
-
-/**
- * Affiche une caractéristique suffixée d'un "+" (notation BB pour les jets de
- * dé : AG/PA/AV). `pa` peut être absent (null) → "-" sans "+". MA et ST
- * s'affichent sans "+" (cf. StarPlayerSelector).
- */
-function formatPlusStat(value: number | null | undefined): string {
-  if (value == null) return "-";
-  return `${value}+`;
 }
 
 function translatePositionName(displayName: string): string {

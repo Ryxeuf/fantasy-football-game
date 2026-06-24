@@ -18,6 +18,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { formatStatByLabel } from "../../../../../lib/format-stats";
 
 import { apiRequest } from "../../../../../lib/api-client";
 
@@ -116,7 +117,7 @@ function StatCell({
     <div className="flex flex-col items-center rounded border border-slate-800 bg-slate-900 p-3">
       <span className="text-xs uppercase text-slate-500">{label}</span>
       <span className="font-mono text-2xl text-slate-100">
-        {value ?? "—"}
+        {formatStatByLabel(label, value)}
         {bonus > 0 && (
           <span
             className="ml-1 align-top text-xs text-amber-300"
