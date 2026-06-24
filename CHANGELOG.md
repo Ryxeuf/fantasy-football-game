@@ -1,3 +1,27 @@
+## [1.184.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.183.0...v1.184.0) (2026-06-24)
+
+
+### ✨ Features
+
+* **apothecary:** A30 — interdit l'apothicaire pour les équipes mort-vivantes ([#915](https://github.com/Ryxeuf/fantasy-football-game/issues/915)) ([ba2bc0e](https://github.com/Ryxeuf/fantasy-football-game/commit/ba2bc0e7468680f8b89804a7fddd2bd329700807))
+* **league:** affiche les points bonus cumulés dans le classement (E2) ([#919](https://github.com/Ryxeuf/fantasy-football-game/issues/919)) ([6e84e9b](https://github.com/Ryxeuf/fantasy-football-game/commit/6e84e9b0f0e978060d4c58c0c47ac4660fe67548))
+* **league:** détaille les points bonus par match dans le calendrier (E3) ([#920](https://github.com/Ryxeuf/fantasy-football-game/issues/920)) ([6d86a9b](https://github.com/Ryxeuf/fantasy-football-game/commit/6d86a9b0c36d51fdecc56b14f1833624b2d6a335))
+* **league:** éditeur de points bonus configurables (E1) ([#918](https://github.com/Ryxeuf/fantasy-football-game/issues/918)) ([1b1603c](https://github.com/Ryxeuf/fantasy-football-game/commit/1b1603cc39cf398afff2d337e94e03ccdb6fdf24))
+* **league:** notifie le coach invité (A2) ([#917](https://github.com/Ryxeuf/fantasy-football-game/issues/917)) ([6d41ec8](https://github.com/Ryxeuf/fantasy-football-game/commit/6d41ec84d788010ff4b1fb3247dd1a669fb7f034))
+* **roster-sheet:** A11 règles spéciales + type de ligue, A10 stats « + », E5 catégories builder (Phase 3) ([#914](https://github.com/Ryxeuf/fantasy-football-game/issues/914)) ([ebc78b0](https://github.com/Ryxeuf/fantasy-football-game/commit/ebc78b079c543b0325c99a4af1f311673a727457))
+
+
+### 🐛 Bug Fixes
+
+* **advancement:** principale au hasard = VE comme une choisie (A6) ([#924](https://github.com/Ryxeuf/fantasy-football-game/issues/924)) ([4284df9](https://github.com/Ryxeuf/fantasy-football-game/commit/4284df94776eb629306115845b25ca237f340314))
+* **builder:** A9 dédup star players + A36 plafond combiné de Big Guy ([#916](https://github.com/Ryxeuf/fantasy-football-game/issues/916)) ([c5fee3d](https://github.com/Ryxeuf/fantasy-football-game/commit/c5fee3deb59d8fdd051a443303edbea7c3074406))
+* **league:** l'utilisateur voit ses ligues privées dans la liste (A1) ([#923](https://github.com/Ryxeuf/fantasy-football-game/issues/923)) ([d8641d8](https://github.com/Ryxeuf/fantasy-football-game/commit/d8641d8415304f858578078cf54600fb311fff49))
+* **rosters,skills:** corrections données BB Saison 3 — Phase 1 (retours validation) ([#913](https://github.com/Ryxeuf/fantasy-football-game/issues/913)) ([389b8fe](https://github.com/Ryxeuf/fantasy-football-game/commit/389b8fe47617ba999e2cd6b768c67de28df679e6))
+* **rosters:** le Tueur de Trolls a « Haine (Troll) » et non « Haine (X) » (A20) ([faa416a](https://github.com/Ryxeuf/fantasy-football-game/commit/faa416acc64e2fc2982317041a3b9b1ee8999e50))
+* **rosters:** Roule-Mort PA « - » (PA nullable au catalogue, A19) ([#925](https://github.com/Ryxeuf/fantasy-football-game/issues/925)) ([18fc10e](https://github.com/Ryxeuf/fantasy-football-game/commit/18fc10e7e734c9f9db3cdb20791843240bb7de02))
+* **skills:** enregistre hate-troll dans le skill-registry (A20, CI) ([48cc69b](https://github.com/Ryxeuf/fantasy-football-game/commit/48cc69b61d3970d9cbb472a934c1eec407e0d543)), closes [#922](https://github.com/Ryxeuf/fantasy-football-game/issues/922)
+* **skills:** noms/catégories/textes de traits S3 (A4/A14/A15/A21/A24/A25/A26) ([#921](https://github.com/Ryxeuf/fantasy-football-game/issues/921)) ([0235fb6](https://github.com/Ryxeuf/fantasy-football-game/commit/0235fb67fced6722810aea20fd2bda3b4b179a82))
+
 ## [1.183.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.182.0...v1.183.0) (2026-06-23)
 
 
