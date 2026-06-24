@@ -52,6 +52,17 @@ describe('advancements utils (BB2025 / Saison 3)', () => {
     ).toBe(20000 + 40000 + 20000);
   });
 
+  it('A6 — une principale au hasard augmente la VE comme une choisie (+20k)', () => {
+    expect(surchargeForAdvancement({ type: 'random-primary' })).toBe(20000);
+    // même surcoût VE qu'une principale choisie...
+    expect(surchargeForAdvancement({ type: 'random-primary' })).toBe(
+      surchargeForAdvancement({ type: 'primary' }),
+    );
+    // ...mais coût SPP toujours moindre (3 vs 6), inchangé.
+    expect(getNextAdvancementPspCost(0, 'random-primary')).toBe(3);
+    expect(getNextAdvancementPspCost(0, 'primary')).toBe(6);
+  });
+
   it('computes per-stat surcharge for characteristic advancements', () => {
     expect(surchargeForAdvancement({ type: 'characteristic', stat: 'av' })).toBe(10000);
     expect(surchargeForAdvancement({ type: 'characteristic', stat: 'ma' })).toBe(20000);

@@ -37,7 +37,10 @@ const SPP_COST_TABLE = {
 export const SURCHARGE_PER_ADVANCEMENT = {
   primary: 20000,          // +20k po - compétence principale choisie
   secondary: 40000,        // +40k po - compétence secondaire choisie
-  'random-primary': 10000, // +10k po - compétence principale au hasard
+  // A6 — en S3 le hasard se joue en « 2 jets, on choisit » : une principale
+  // au hasard augmente donc la VE COMME une choisie (+20k). Seul son coût SPP
+  // reste moindre (3 vs 6).
+  'random-primary': 20000, // +20k po - compétence principale au hasard (S3)
 } as const;
 
 /**

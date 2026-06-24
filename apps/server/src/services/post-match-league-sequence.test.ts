@@ -350,7 +350,7 @@ describe("applyAdvancementChoice", () => {
     expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
   });
 
-  it("uses surcharge=10000 for random-primary type", async () => {
+  it("uses surcharge=20000 for random-primary type (A6 — comme une choisie)", async () => {
     mocked.playerFind.mockResolvedValue({
       id: "p1",
       teamId: "t1",
@@ -371,7 +371,7 @@ describe("applyAdvancementChoice", () => {
     });
 
     const teamArgs = mocked.teamUpdate.mock.calls[0][0];
-    expect(teamArgs.data.currentValue).toEqual({ increment: 10000 });
+    expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
   });
 
   // --- Validation acces primaire/secondaire (C2) ---
