@@ -27,6 +27,10 @@ vi.mock("./league", () => ({
   addParticipant: vi.fn(),
 }));
 
+vi.mock("./league-invitation-notify", () => ({
+  notifyInvitedCoach: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   createInvitation,
@@ -38,10 +42,12 @@ import {
   LeagueInvitationError,
 } from "./league-invitation";
 import { addParticipant } from "./league";
+import { notifyInvitedCoach } from "./league-invitation-notify";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
 const mockAddParticipant = addParticipant as ReturnType<typeof vi.fn>;
+const mockNotifyInvitedCoach = notifyInvitedCoach as ReturnType<typeof vi.fn>;
 
 describe("Lot A — league-invitation service", () => {
   beforeEach(() => {
@@ -112,6 +118,7 @@ describe("Lot A — league-invitation service", () => {
       mockPrisma.league.findUnique.mockResolvedValue({
         id: "league-1",
         status: "open",
+        name: "Skaven Cup",
       });
       mockPrisma.leagueInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.leagueInvitation.create.mockImplementation(
@@ -137,10 +144,33 @@ describe("Lot A — league-invitation service", () => {
       expect(expiresAt).toBeLessThanOrEqual(after + fourteenDays + 1000);
     });
 
+    it("notifies the invited coach for a new invitation (A2)", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({
+        id: "league-1",
+        status: "open",
+        name: "Skaven Cup",
+      });
+      mockPrisma.leagueInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.leagueInvitation.create.mockImplementation(
+        async (args: { data: Record<string, unknown> }) => ({
+          id: "inv-1",
+          ...args.data,
+        }),
+      );
+
+      await createInvitation({ ...baseInput, inviteeUserId: "user-2" });
+
+      expect(mockNotifyInvitedCoach).toHaveBeenCalledTimes(1);
+      const [arg] = mockNotifyInvitedCoach.mock.calls[0];
+      expect(arg.leagueName).toBe("Skaven Cup");
+      expect(arg.invitation).toMatchObject({ inviteeUserId: "user-2" });
+    });
+
     it("returns existing pending invitation (idempotence)", async () => {
       mockPrisma.league.findUnique.mockResolvedValue({
         id: "league-1",
         status: "open",
+        name: "Skaven Cup",
       });
       const futureExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
       mockPrisma.leagueInvitation.findFirst.mockResolvedValue({
@@ -154,12 +184,37 @@ describe("Lot A — league-invitation service", () => {
       });
       expect(inv).toMatchObject({ id: "existing-inv" });
       expect(mockPrisma.leagueInvitation.create).not.toHaveBeenCalled();
+      // Déduplication : ne renotifie PAS une invitation déjà émise.
+      expect(mockNotifyInvitedCoach).not.toHaveBeenCalled();
+    });
+
+    it("still resolves when notifyInvitedCoach throws", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({
+        id: "league-1",
+        status: "open",
+        name: "Skaven Cup",
+      });
+      mockPrisma.leagueInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.leagueInvitation.create.mockImplementation(
+        async (args: { data: Record<string, unknown> }) => ({
+          id: "inv-1",
+          ...args.data,
+        }),
+      );
+      mockNotifyInvitedCoach.mockRejectedValue(new Error("notify boom"));
+
+      const inv = await createInvitation({
+        ...baseInput,
+        inviteeUserId: "user-2",
+      });
+      expect(inv).toMatchObject({ id: "inv-1" });
     });
 
     it("creates new invitation if previous expired", async () => {
       mockPrisma.league.findUnique.mockResolvedValue({
         id: "league-1",
         status: "open",
+        name: "Skaven Cup",
       });
       const pastExpiry = new Date(Date.now() - 1000);
       mockPrisma.leagueInvitation.findFirst.mockResolvedValue({
@@ -184,6 +239,7 @@ describe("Lot A — league-invitation service", () => {
       mockPrisma.league.findUnique.mockResolvedValue({
         id: "league-1",
         status: "open",
+        name: "Skaven Cup",
       });
       mockPrisma.leagueInvitation.findFirst.mockResolvedValue(null);
       mockPrisma.leagueInvitation.create.mockImplementation(
