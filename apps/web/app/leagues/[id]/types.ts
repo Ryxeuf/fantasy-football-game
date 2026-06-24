@@ -83,6 +83,15 @@ export interface LeaguePairingDetail {
   homeParticipant: LeaguePairingTeamDetail;
   awayParticipant: LeaguePairingTeamDetail;
   match: { id: string; status: string; mode?: string } | null;
+  /**
+   * E3 — Snapshot des points bonus appliqués à ce pairing (Lot E,
+   * renseigné à la validation du résultat). `bonusBreakdown` est le
+   * détail brut [{ ruleId, label, side, points }] (array PG ou string
+   * sqlite). Optionnels pour rétro-compat.
+   */
+  bonusPointsHome?: number;
+  bonusPointsAway?: number;
+  bonusBreakdown?: unknown;
 }
 
 export interface LeagueRoundDetail {

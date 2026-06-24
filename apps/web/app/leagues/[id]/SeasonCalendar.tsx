@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { EnterResultModal } from "./EnterResultModal";
 import { MatchdayExport } from "./MatchdayExport";
+import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -207,6 +208,15 @@ function PairingRow({
         {error ? (
           <div className="text-xs text-red-600 mt-0.5">{error}</div>
         ) : null}
+        <PairingBonusBreakdown
+          pairingId={pairing.id}
+          status={pairing.status}
+          homeName={pairing.homeParticipant.team.name}
+          awayName={pairing.awayParticipant.team.name}
+          bonusPointsHome={pairing.bonusPointsHome}
+          bonusPointsAway={pairing.bonusPointsAway}
+          bonusBreakdown={pairing.bonusBreakdown}
+        />
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <span
