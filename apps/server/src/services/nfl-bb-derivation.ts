@@ -162,7 +162,11 @@ export function deriveBbAttributes(
   const def = getPositionBySlug().get(slug);
   if (!def) return null;
   return {
-    stats: { ma: def.ma, st: def.st, ag: def.ag, pa: def.pa, av: def.av },
+    // `def.pa` est `number | null` au catalogue game-engine (null = pas de
+    // passe, ex. Roule-Mort depuis A19). La dérivation NFL→BB expose un stat
+    // numérique : on applique le sentinel runtime BB `0 = pas de passe`, comme
+    // aux autres frontières catalogue→moteur (journeymen, team-build-handler).
+    stats: { ma: def.ma, st: def.st, ag: def.ag, pa: def.pa ?? 0, av: def.av },
     skills: parseSkillsCsv(def.skills),
     sourceSlug: slug,
   };
