@@ -6,6 +6,7 @@ import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
+import SkillAccessBadges from "../components/SkillAccessBadges";
 import QuantityStepper from "../components/QuantityStepper";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -34,6 +35,10 @@ type Position = {
   pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
+  // Accès aux compétences (montée de niveau, BB S3). CSV "G,A,S,P,M" ou null
+  // (ex: season_2). Optionnels pour rétro-compat avec un serveur pré-E5.
+  primarySkills?: string | null;
+  secondarySkills?: string | null;
 };
 
 type Roster = {
@@ -584,6 +589,10 @@ export default function NewTeamBuilder() {
                           />
                         </div>
                       )}
+                      <SkillAccessBadges
+                        primary={p.primarySkills}
+                        secondary={p.secondarySkills}
+                      />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
@@ -674,6 +683,10 @@ export default function NewTeamBuilder() {
                           skillsString={p.skills}
                           position={p.slug}
                           className="text-xs"
+                        />
+                        <SkillAccessBadges
+                          primary={p.primarySkills}
+                          secondary={p.secondarySkills}
                         />
                       </td>
                       <td className="p-3 font-semibold tabular-nums">{count}</td>

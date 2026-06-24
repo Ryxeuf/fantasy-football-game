@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SkillTooltip from "../../me/teams/components/SkillTooltip";
+import SkillAccessBadges from "../../me/teams/components/SkillAccessBadges";
 import { useLanguage } from "../../contexts/LanguageContext";
 import ShareBar from "../../components/ShareBar";
 import { stripRosterPrefix } from "../position-slug";
@@ -22,27 +23,31 @@ const API_BASE_PUBLIC =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8201";
 
-// Règles spéciales par équipe
-const TEAM_SPECIAL_RULES: Record<
-  string,
-  Array<{ name: string; description: string }>
-> = {
-  snotling: [
-    {
-      name: "Charge & Concussion",
-      description:
-        "Règle spéciale des Snotlings concernant les charges et les commotions.",
-    },
-    {
-      name: "Dédicace des Fans",
-      description: "Règle spéciale liée aux fans dévoués.",
-    },
-    {
-      name: "L'Union fait la Force",
-      description: "Règle spéciale sur l'unité de l'équipe.",
-    },
-  ],
-};
+/**
+ * Règle spéciale d'équipe résolue par l'API (A11). `name`/`description` sont
+ * déjà localisés côté serveur selon la langue demandée.
+ */
+interface RosterSpecialRule {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+}
+
+/** Ligue régionale ("type de ligue") résolue par l'API (A11). */
+interface RosterRegionalLeague {
+  readonly slug: string;
+  readonly name: string;
+}
+
+/**
+ * Affiche une caractéristique suffixée d'un "+" (notation BB pour les jets de
+ * dé : AG/PA/AV). `pa` peut être absent (null) → "-" sans "+". MA et ST
+ * s'affichent sans "+" (cf. StarPlayerSelector).
+ */
+function formatPlusStat(value: number | null | undefined): string {
+  if (value == null) return "-";
+  return `${value}+`;
+}
 
 function translatePositionName(displayName: string): string {
   const translations: Record<string, string> = {
@@ -52,90 +57,6 @@ function translatePositionName(displayName: string): string {
     Kroxigor: "Kroxigor",
   };
   return translations[displayName] || displayName;
-}
-
-// Affichage par langue. Le code canonique stocké diffère parfois de la lettre
-// affichée : Force (code "S") s'abrège "F" en FR / "S" en EN ; Sournoiserie
-// (code "K") s'abrège "S" en FR (notation officielle) / "K" (Skulduggery) en EN
-// pour éviter la collision avec Strength.
-const ACCESS_DISPLAY: Record<
-  string,
-  Record<string, { letter: string; label: string }>
-> = {
-  fr: {
-    G: { letter: "G", label: "Général" },
-    A: { letter: "A", label: "Agilité" },
-    S: { letter: "F", label: "Force" },
-    P: { letter: "P", label: "Passe" },
-    M: { letter: "M", label: "Mutation" },
-    K: { letter: "S", label: "Sournoiserie" },
-  },
-  en: {
-    G: { letter: "G", label: "General" },
-    A: { letter: "A", label: "Agility" },
-    S: { letter: "S", label: "Strength" },
-    P: { letter: "P", label: "Passing" },
-    M: { letter: "M", label: "Mutation" },
-    K: { letter: "K", label: "Skulduggery" },
-  },
-};
-
-/** Parse une CSV d'accès -> codes canoniques ordonnés (F->S alias, dédup). */
-function parseAccessCodes(csv: string | null | undefined): string[] {
-  if (!csv) return [];
-  const set = new Set<string>();
-  for (const ch of csv.toUpperCase()) {
-    if (ch === "F") set.add("S");
-    else if ("GASPMK".includes(ch)) set.add(ch);
-  }
-  return ["G", "A", "S", "P", "M", "K"].filter((c) => set.has(c));
-}
-
-/**
- * Badges d'accès aux compétences (montée de niveau) : primaire (vert) /
- * secondaire (gris). Lettres + libellés dépendants de la langue (Force = "F"
- * en FR, "S" en EN). Rien si l'accès n'est pas renseigné (ex: season_2).
- */
-function SkillAccessBadges({
-  primary,
-  secondary,
-}: {
-  primary?: string | null;
-  secondary?: string | null;
-}) {
-  const { language } = useLanguage();
-  if (primary == null && secondary == null) return null;
-  const display = ACCESS_DISPLAY[language] ?? ACCESS_DISPLAY.fr;
-  const pri = parseAccessCodes(primary);
-  const sec = parseAccessCodes(secondary);
-  const roleLabel =
-    language === "en"
-      ? { access: "Access:", primary: "Primary", secondary: "Secondary" }
-      : { access: "Accès :", primary: "Primaire", secondary: "Secondaire" };
-  return (
-    <div className="mt-2 flex flex-wrap items-center gap-1 text-[11px]">
-      <span className="text-gray-500">{roleLabel.access}</span>
-      {pri.map((c) => (
-        <span
-          key={`p-${c}`}
-          title={`${roleLabel.primary} — ${display[c].label}`}
-          className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold"
-        >
-          {display[c].letter}
-        </span>
-      ))}
-      {sec.length > 0 ? <span className="text-gray-300">/</span> : null}
-      {sec.map((c) => (
-        <span
-          key={`s-${c}`}
-          title={`${roleLabel.secondary} — ${display[c].label}`}
-          className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500"
-        >
-          {display[c].letter}
-        </span>
-      ))}
-    </div>
-  );
 }
 
 /**
@@ -231,6 +152,17 @@ export default function TeamDetailClient({
   const positions = [...(team?.positions ?? [])].sort((a: any, b: any) =>
     a.displayName.localeCompare(b.displayName),
   );
+
+  // A11 — règles spéciales + ligues régionales résolues par l'API. Optionnels
+  // pour rétro-compat (un frontend déployé avant le serveur reçoit `undefined`).
+  const specialRules: RosterSpecialRule[] = Array.isArray(team?.specialRules)
+    ? team.specialRules
+    : [];
+  const regionalLeagues: RosterRegionalLeague[] = Array.isArray(
+    team?.regionalLeagues,
+  )
+    ? team.regionalLeagues
+    : [];
 
   // Lien vers la page detail d'une position. On porte le ruleset reellement
   // affiche (actualRuleset) pour que la destination montre les memes donnees ;
@@ -470,17 +402,17 @@ export default function TeamDetailClient({
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="font-mono text-sm font-semibold text-gray-900">
-                      {position.ag}
+                      {formatPlusStat(position.ag)}
                     </span>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="font-mono text-sm font-semibold text-gray-900">
-                      {position.pa ?? "-"}
+                      {formatPlusStat(position.pa)}
                     </span>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="font-mono text-sm font-semibold text-gray-900">
-                      {position.av}
+                      {formatPlusStat(position.av)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -557,7 +489,7 @@ export default function TeamDetailClient({
                       AG
                     </div>
                     <div className="text-base sm:text-lg font-bold text-green-900 font-mono">
-                      {position.ag}
+                      {formatPlusStat(position.ag)}
                     </div>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-2 text-center">
@@ -565,7 +497,7 @@ export default function TeamDetailClient({
                       PA
                     </div>
                     <div className="text-base sm:text-lg font-bold text-purple-900 font-mono">
-                      {position.pa ?? "-"}
+                      {formatPlusStat(position.pa)}
                     </div>
                   </div>
                   <div className="bg-orange-50 rounded-lg p-2 text-center">
@@ -573,7 +505,7 @@ export default function TeamDetailClient({
                       AV
                     </div>
                     <div className="text-base sm:text-lg font-bold text-orange-900 font-mono">
-                      {position.av}
+                      {formatPlusStat(position.av)}
                     </div>
                   </div>
                 </div>
@@ -602,25 +534,60 @@ export default function TeamDetailClient({
         </div>
       </div>
 
-      {TEAM_SPECIAL_RULES[slug] && TEAM_SPECIAL_RULES[slug].length > 0 && (
-        <div className="bg-white rounded-lg border overflow-hidden">
+      {regionalLeagues.length > 0 && (
+        <div
+          data-testid="roster-leagues"
+          className="bg-white rounded-lg border overflow-hidden"
+        >
+          <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+            <h2 className="text-base sm:text-lg font-semibold">
+              {t.teams.leagues}
+            </h2>
+          </div>
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {regionalLeagues.map((league) => (
+                <span
+                  key={league.slug}
+                  data-testid={`roster-league-${league.slug}`}
+                  className="px-3 sm:px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-xs sm:text-sm border border-indigo-100"
+                >
+                  {league.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {specialRules.length > 0 && (
+        <div
+          data-testid="roster-special-rules"
+          className="bg-white rounded-lg border overflow-hidden"
+        >
           <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
             <h2 className="text-base sm:text-lg font-semibold">
               {t.teams.specialRules}
             </h2>
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {TEAM_SPECIAL_RULES[slug].map((rule, index) => (
-                <button
-                  key={index}
-                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs sm:text-sm"
-                  title={rule.description}
-                >
-                  {rule.name}
-                </button>
-              ))}
-            </div>
+          <div className="p-4 sm:p-6 space-y-2">
+            {specialRules.map((rule) => (
+              <details
+                key={rule.slug}
+                data-testid={`special-rule-${rule.slug}`}
+                className="group rounded-lg border border-gray-200 bg-gray-50/60 open:bg-white"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 sm:px-4 py-2.5 font-medium text-sm sm:text-base text-gray-900">
+                  <span>{rule.name}</span>
+                  <span className="text-gray-400 transition-transform group-open:rotate-180">
+                    ▾
+                  </span>
+                </summary>
+                <p className="px-3 sm:px-4 pb-3 pt-1 text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  {rule.description}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       )}

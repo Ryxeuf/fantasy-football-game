@@ -28,6 +28,10 @@ export interface RosterPosition {
   pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
+  // Accès aux compétences en montée de niveau (BB Season 3). CSV "G,A,S,P,M".
+  // `null` = non renseigné (ex: season_2). Exposé pour l'affichage builder (E5).
+  primarySkills: string | null;
+  secondarySkills: string | null;
 }
 
 export interface RosterPayload {
@@ -124,6 +128,8 @@ export async function getRosterFromDb(
       skills: position.skills
         .map((ps: any) => ps.skill.slug)
         .join(","),
+      primarySkills: position.primarySkills ?? null,
+      secondarySkills: position.secondarySkills ?? null,
     })),
   };
 
@@ -185,6 +191,8 @@ export async function getAllRostersFromDb(
         skills: position.skills
           .map((ps: any) => ps.skill.slug)
           .join(","),
+        primarySkills: position.primarySkills ?? null,
+        secondarySkills: position.secondarySkills ?? null,
       })),
     };
   }
