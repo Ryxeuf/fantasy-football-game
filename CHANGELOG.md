@@ -1,3 +1,15 @@
+## [1.185.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.184.0...v1.185.0) (2026-06-24)
+
+
+### ✨ Features
+
+* **league:** include viewer's private leagues in list by default ([2ae7784](https://github.com/Ryxeuf/fantasy-football-game/commit/2ae7784cc828e9314aaebf094bb4320da8b306eb))
+
+
+### 🐛 Bug Fixes
+
+* **nfl:** PA null → sentinel 0 dans deriveBbAttributes (CI build-check) ([#926](https://github.com/Ryxeuf/fantasy-football-game/issues/926)) ([1916510](https://github.com/Ryxeuf/fantasy-football-game/commit/19165106803a5e0b96b906e16c1e175f2a6a8171)), closes [#925](https://github.com/Ryxeuf/fantasy-football-game/issues/925)
+
 ## [1.184.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.183.0...v1.184.0) (2026-06-24)
 
 
