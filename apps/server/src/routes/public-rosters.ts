@@ -4,7 +4,14 @@
  */
 
 import { Router } from "express";
-import { getPositionNameEn, translateKeywordsCsv } from "@bb/game-engine";
+import {
+  getPositionNameEn,
+  translateKeywordsCsv,
+  getTeamSpecialRuleBySlug,
+  getRegionalLeagueBySlug,
+  getRegionalRulesForTeam,
+  type Ruleset,
+} from "@bb/game-engine";
 import { prisma } from "../prisma";
 import {
   resolveRuleset,
@@ -38,6 +45,22 @@ interface RosterListPayload {
   availableRulesets: readonly string[];
 }
 
+/**
+ * Règle spéciale d'équipe résolue (A11). `name`/`description` sont déjà
+ * localisés selon la langue demandée côté serveur.
+ */
+interface RosterSpecialRuleView {
+  slug: string;
+  name: string;
+  description: string;
+}
+
+/** Ligue régionale ("type de ligue") résolue (A11). `name` déjà localisé. */
+interface RosterRegionalLeagueView {
+  slug: string;
+  name: string;
+}
+
 interface RosterDetailPayload {
   roster: {
     slug: string;
@@ -62,8 +85,95 @@ interface RosterDetailPayload {
       primarySkills: string | null;
       secondarySkills: string | null;
     }>;
+    /** A11 — règles spéciales d'équipe résolues (vide si aucune). */
+    specialRules: RosterSpecialRuleView[];
+    /** A11 — ligues régionales / "type de ligue" résolues (vide si aucune). */
+    regionalLeagues: RosterRegionalLeagueView[];
   };
   ruleset: string;
+}
+
+/**
+ * Parse tolérant d'un champ "liste de slugs" stocké en base : tableau natif
+ * (PG), chaîne JSON sérialisée (sqlite mirror), CSV libre, ou null/undefined.
+ * Sert pour `Roster.specialRules` (souvent null ou texte libre tel que "NONE")
+ * et `Roster.regionalRules` (JSON array de slugs de ligues régionales).
+ */
+export function parseSlugList(raw: unknown): string[] {
+  const fromArray = (arr: unknown[]): string[] =>
+    arr.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      .map((s) => s.trim());
+  if (Array.isArray(raw)) return fromArray(raw);
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed.length === 0) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return fromArray(parsed);
+      if (typeof parsed === "string" && parsed.trim().length > 0) {
+        return [parsed.trim()];
+      }
+    } catch {
+      // Pas du JSON : on retombe sur un split CSV.
+    }
+    return trimmed
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return [];
+}
+
+/**
+ * Résout les règles spéciales d'équipe (A11). Les slugs non mappés (ex: la
+ * sentinelle "NONE") sont silencieusement ignorés. `name`/`description` sont
+ * localisés selon `isEnglish`.
+ */
+export function resolveSpecialRules(
+  raw: unknown,
+  isEnglish: boolean,
+): RosterSpecialRuleView[] {
+  const out: RosterSpecialRuleView[] = [];
+  for (const slug of parseSlugList(raw)) {
+    const def = getTeamSpecialRuleBySlug(slug);
+    if (!def) continue;
+    out.push({
+      slug: def.slug,
+      name: isEnglish ? def.nameEn : def.nameFr,
+      description:
+        isEnglish && def.descriptionEn ? def.descriptionEn : def.description,
+    });
+  }
+  return out;
+}
+
+/**
+ * Résout les ligues régionales ("type de ligue") d'une équipe (A11). On part
+ * de `Roster.regionalRules` (slugs en base) avec un fallback sur la table
+ * canonique `getRegionalRulesForTeam(slug, ruleset)` quand la colonne est
+ * vide — utile en Saison 3 où les rosters ne renseignent pas ce champ inline.
+ * Les slugs non mappés sont ignorés proprement.
+ */
+export function resolveRegionalLeagues(
+  raw: unknown,
+  rosterSlug: string,
+  ruleset: Ruleset,
+  isEnglish: boolean,
+): RosterRegionalLeagueView[] {
+  let slugs = parseSlugList(raw);
+  if (slugs.length === 0) {
+    slugs = getRegionalRulesForTeam(rosterSlug, ruleset);
+  }
+  const out: RosterRegionalLeagueView[] = [];
+  const seen = new Set<string>();
+  for (const slug of slugs) {
+    if (seen.has(slug)) continue;
+    const def = getRegionalLeagueBySlug(slug);
+    if (!def) continue;
+    seen.add(slug);
+    out.push({ slug: def.slug, name: isEnglish ? def.nameEn : def.nameFr });
+  }
+  return out;
 }
 
 async function loadRosterList(
@@ -125,7 +235,10 @@ async function loadRosterDetail(
   });
 
   if (roster) {
-    return { roster: transformRoster(roster, isEnglish), ruleset };
+    return {
+      roster: transformRoster(roster, isEnglish, ruleset as Ruleset),
+      ruleset,
+    };
   }
   if (ruleset !== DEFAULT_RULESET) {
     const fallback = await prisma.roster.findFirst({
@@ -141,7 +254,11 @@ async function loadRosterDetail(
     });
     if (fallback) {
       return {
-        roster: transformRoster(fallback, isEnglish),
+        roster: transformRoster(
+          fallback,
+          isEnglish,
+          DEFAULT_RULESET as Ruleset,
+        ),
         ruleset: DEFAULT_RULESET,
       };
     }
@@ -233,7 +350,7 @@ router.get("/rosters/:slug/positions-stats", async (req, res) => {
   }
 });
 
-function transformRoster(roster: any, isEnglish: boolean) {
+function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
   return {
     slug: roster.slug,
     name: isEnglish ? roster.nameEn : roster.name,
@@ -258,6 +375,13 @@ function transformRoster(roster: any, isEnglish: boolean) {
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
     })),
+    specialRules: resolveSpecialRules(roster.specialRules, isEnglish),
+    regionalLeagues: resolveRegionalLeagues(
+      roster.regionalRules,
+      roster.slug,
+      ruleset,
+      isEnglish,
+    ),
   };
 }
 
