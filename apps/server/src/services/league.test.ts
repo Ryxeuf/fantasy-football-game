@@ -695,6 +695,56 @@ describe("Rule: League service", () => {
       });
     });
 
+    // Regression : passer une ligue en prive ne doit pas la faire
+    // disparaitre de la liste pour son createur/participant. Quand un
+    // viewer est fourni sans publicOnly explicite, on remonte les ligues
+    // publiques + celles ou il est createur ou participant.
+    it("includes the viewer's own private leagues by default", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: creatorId });
+
+      expect(mockPrisma.league.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { isPublic: true },
+              { creatorId },
+              {
+                seasons: {
+                  some: {
+                    participants: {
+                      some: { team: { ownerId: creatorId } },
+                    },
+                  },
+                },
+              },
+              {
+                invitations: {
+                  some: { inviteeUserId: creatorId, status: "pending" },
+                },
+              },
+            ],
+          }),
+        }),
+      );
+      // Pas de filtre isPublic strict quand un viewer est fourni.
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.isPublic).toBeUndefined();
+    });
+
+    it("still restricts to public leagues when publicOnly is true", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: creatorId, publicOnly: true });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.isPublic).toBe(true);
+      expect(call.where.OR).toBeUndefined();
+    });
+
     it("can filter by creator", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
       mockPrisma.league.count.mockResolvedValue(0);
@@ -708,7 +758,24 @@ describe("Rule: League service", () => {
       );
     });
 
-    it("A1 — viewer connecté : publiques OU ses propres ligues (même privées)", async () => {
+    // Regression : un coach convie a une ligue privee doit la voir dans
+    // sa liste tant que l'invitation est en attente (avant meme d'avoir
+    // rejoint, donc sans LeagueParticipant).
+    it("includes leagues where the viewer has a pending invitation", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: "viewer-1" });
+
+      const where = mockPrisma.league.findMany.mock.calls[0][0].where;
+      expect(where.OR).toContainEqual({
+        invitations: {
+          some: { inviteeUserId: "viewer-1", status: "pending" },
+        },
+      });
+    });
+
+    it("A1 — viewer connecté : publiques OU ses propres ligues (créées ou rejointes)", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
       mockPrisma.league.count.mockResolvedValue(0);
 
@@ -718,6 +785,20 @@ describe("Rule: League service", () => {
       expect(where.OR).toEqual([
         { isPublic: true },
         { creatorId: "viewer-1" },
+        {
+          seasons: {
+            some: {
+              participants: {
+                some: { team: { ownerId: "viewer-1" } },
+              },
+            },
+          },
+        },
+        {
+          invitations: {
+            some: { inviteeUserId: "viewer-1", status: "pending" },
+          },
+        },
       ]);
       expect(where.isPublic).toBeUndefined();
     });

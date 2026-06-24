@@ -396,7 +396,8 @@ export async function handleListLeagues(
       creatorId: query.creatorId,
       status: query.status,
       publicOnly: query.publicOnly,
-      // A1 — l'utilisateur connecté voit aussi ses propres ligues privées.
+      // L'utilisateur courant voit ses propres ligues privées (créées ou
+      // rejointes) en plus des ligues publiques.
       viewerId: req.user?.id,
       limit: query.limit,
       offset: query.offset,

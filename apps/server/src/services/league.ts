@@ -116,10 +116,11 @@ export interface ListLeaguesFilter {
   status?: LeagueStatus;
   publicOnly?: boolean;
   /**
-   * A1 — id de l'utilisateur connecté. Quand fourni (et qu'aucun
-   * `creatorId` explicite n'est demandé), il voit SES ligues — même
-   * privées — en plus des ligues publiques. Corrige le cas « j'ai passé
-   * ma ligue en Privée et je ne la vois plus ».
+   * Id de l'utilisateur connecté. Quand fourni (et qu'aucun `creatorId`
+   * explicite n'est demandé), il voit SES ligues — même privées, qu'il
+   * en soit créateur ou participant — en plus des ligues publiques.
+   * Corrige le cas « j'ai passé ma ligue en Privée et je ne la vois
+   * plus ».
    */
   viewerId?: string;
   // S25.6 — pagination. Si non fournis, on retombe sur des defauts
@@ -383,12 +384,38 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   if (filter.creatorId) {
     where.creatorId = filter.creatorId;
   }
-  if (filter.publicOnly !== false) {
-    // A1 — un utilisateur connecté voit toujours SES ligues (même
-    // privées) en plus des publiques. On n'applique ce OR que sur la
-    // liste générale (pas quand un `creatorId` explicite est demandé).
+  // Visibilite :
+  //  - publicOnly === true  -> uniquement les ligues publiques
+  //  - publicOnly === false -> toutes les ligues (usage admin)
+  //  - non precise (defaut, page /leagues) -> ligues publiques + ligues
+  //    privees dont le viewer est createur, participant, OU invite
+  //    (invitation en attente). Sans ca, une ligue passee en prive
+  //    disparait meme pour son createur, et un coach ne verrait pas la
+  //    ligue privee a laquelle il est convie. On n'applique ce OR que
+  //    sur la liste generale (pas quand un `creatorId` explicite est
+  //    demande).
+  if (filter.publicOnly === true) {
+    where.isPublic = true;
+  } else if (filter.publicOnly !== false) {
     if (filter.viewerId && !filter.creatorId) {
-      where.OR = [{ isPublic: true }, { creatorId: filter.viewerId }];
+      where.OR = [
+        { isPublic: true },
+        { creatorId: filter.viewerId },
+        {
+          seasons: {
+            some: {
+              participants: {
+                some: { team: { ownerId: filter.viewerId } },
+              },
+            },
+          },
+        },
+        {
+          invitations: {
+            some: { inviteeUserId: filter.viewerId, status: "pending" },
+          },
+        },
+      ];
     } else {
       where.isPublic = true;
     }
