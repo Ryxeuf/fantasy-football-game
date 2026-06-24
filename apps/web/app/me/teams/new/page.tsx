@@ -21,6 +21,7 @@ import {
   isLineman,
   countNonLinemen,
   validateFormatSelection,
+  canRosterHaveApothecary,
 } from "@bb/game-engine";
 
 type Position = {
@@ -113,6 +114,22 @@ export default function NewTeamBuilder() {
   // Contraintes du format (BB11 / Sevens) — source unique partagée avec le
   // serveur (@bb/game-engine). Pilote budget, plafonds, staff et validation.
   const constraints = useMemo(() => getFormatConstraints(format), [format]);
+
+  // Apothicaire disponible seulement si le format ET le roster l'autorisent.
+  // Les équipes mort-vivantes (régénération) ne peuvent pas en recruter —
+  // source unique partagée avec le serveur (@bb/game-engine).
+  const rosterAllowsApothecary = useMemo(
+    () => canRosterHaveApothecary(rosterId),
+    [rosterId],
+  );
+  const apothecaryAvailable =
+    constraints.apothecaryAllowed && rosterAllowsApothecary;
+
+  // Réaligne le toggle quand le roster sélectionné interdit l'apothicaire
+  // (ex. passage à un roster mort-vivant après l'avoir coché).
+  useEffect(() => {
+    if (!rosterAllowsApothecary) setApothecary(false);
+  }, [rosterAllowsApothecary]);
 
   // Au changement de format (hors montage initial), réaligne le budget par
   // défaut et clampe le staff / star players sur les plafonds du nouveau format.
@@ -817,7 +834,7 @@ export default function NewTeamBuilder() {
             <label
               htmlFor="staff-apothecary-input"
               className={`sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 transition-colors ${
-                constraints.apothecaryAllowed
+                apothecaryAvailable
                   ? "cursor-pointer hover:bg-gray-100"
                   : "opacity-50 cursor-not-allowed"
               }`}
@@ -829,6 +846,14 @@ export default function NewTeamBuilder() {
                 <div className="text-xs text-gray-600">
                   {constraints.apothecaryCost}{t.teams.kpo} · {t.teams.apothecaryHelp}
                 </div>
+                {!rosterAllowsApothecary && (
+                  <div
+                    data-testid="apothecary-forbidden-roster"
+                    className="text-xs text-red-600 mt-1"
+                  >
+                    Indisponible pour les équipes mort-vivantes
+                  </div>
+                )}
               </div>
               <input
                 id="staff-apothecary-input"
@@ -837,7 +862,7 @@ export default function NewTeamBuilder() {
                 role="switch"
                 aria-checked={apothecary}
                 aria-label={t.teams.apothecary}
-                disabled={!constraints.apothecaryAllowed}
+                disabled={!apothecaryAvailable}
                 className="sr-only peer"
                 checked={apothecary}
                 onChange={(e) => setApothecary(e.target.checked)}

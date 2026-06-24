@@ -33,6 +33,7 @@ import {
   DEFAULT_RULESET,
   type Ruleset,
   getRerollCost,
+  canRosterHaveApothecary,
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { serverLog } from '../utils/server-log';
@@ -299,6 +300,16 @@ export async function handlePurchase(
       }
 
       case 'apothecary': {
+        // Règle officielle BB : les équipes mort-vivantes (régénération)
+        // ne peuvent pas recruter d'apothicaire. Refus avant tout débit.
+        if (!canRosterHaveApothecary(team.roster)) {
+          sendError(
+            res,
+            'Les équipes mort-vivantes ne peuvent pas recruter d\'apothicaire',
+            422,
+          );
+          return;
+        }
         cost = 50000;
         const updateResult = await prisma.team.updateMany({
           where: {

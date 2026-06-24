@@ -123,6 +123,12 @@ export {
   type FormatValidationResult,
 } from "./formats";
 
+// Accès à l'apothicaire par roster (interdit pour les morts-vivants)
+export {
+  APOTHECARY_FORBIDDEN_ROSTERS,
+  canRosterHaveApothecary,
+} from "./apothecary-access";
+
 // Types pour compatibilité
 export type AllowedRoster = keyof typeof TEAM_ROSTERS;
 export const ALLOWED_TEAMS: AllowedRoster[] = Object.keys(TEAM_ROSTERS) as AllowedRoster[];

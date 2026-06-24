@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
-import { getRerollCost, getDisplayName } from "@bb/game-engine";
+import { getRerollCost, getDisplayName, canRosterHaveApothecary } from "@bb/game-engine";
 
 interface AvailablePosition {
   key: string;
@@ -66,6 +66,10 @@ export default function TreasuryPurchasePanel({
   const treasury = team.treasury;
   const rerollCostDouble = getRerollCost(team.roster) * 2;
   const alivePlayers = team.players.filter(p => !p.dead);
+  // Règle officielle BB : les équipes mort-vivantes ne peuvent pas recruter
+  // d'apothicaire (régénération à la place). Source unique partagée avec le
+  // serveur (@bb/game-engine).
+  const apothecaryAllowed = canRosterHaveApothecary(team.roster);
 
   const getNextAvailableNumber = (): number => {
     const usedNumbers = new Set(alivePlayers.map(p => p.number));
@@ -107,6 +111,7 @@ export default function TreasuryPurchasePanel({
     current: number | boolean;
     max: number;
     disabled: boolean;
+    unavailableReason?: string;
   }> = [
     {
       type: "reroll",
@@ -138,7 +143,10 @@ export default function TreasuryPurchasePanel({
       cost: 50000,
       current: team.apothecary,
       max: 1,
-      disabled: team.apothecary || treasury < 50000,
+      disabled: !apothecaryAllowed || team.apothecary || treasury < 50000,
+      unavailableReason: apothecaryAllowed
+        ? undefined
+        : "Indisponible pour les équipes mort-vivantes",
     },
     {
       type: "dedicated_fan",
@@ -286,6 +294,7 @@ export default function TreasuryPurchasePanel({
             {staffItems.map((item) => (
               <div
                 key={item.type}
+                data-testid={`staff-item-${item.type}`}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
               >
                 <div className="flex-1">
@@ -300,8 +309,17 @@ export default function TreasuryPurchasePanel({
                       <span className="text-amber-600 ml-1">(cout double apres creation)</span>
                     )}
                   </div>
+                  {item.unavailableReason && (
+                    <div
+                      data-testid={`staff-unavailable-${item.type}`}
+                      className="text-xs text-red-600 mt-1"
+                    >
+                      {item.unavailableReason}
+                    </div>
+                  )}
                 </div>
                 <button
+                  data-testid={`staff-buy-${item.type}`}
                   onClick={() => handlePurchase(item.type)}
                   disabled={loading || item.disabled}
                   className="px-4 py-2 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"

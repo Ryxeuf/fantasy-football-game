@@ -39,6 +39,7 @@ import {
   getFormatConstraints,
   validateFormatSelection,
   isGameFormat,
+  canRosterHaveApothecary,
 } from '@bb/game-engine';
 import {
   validateStarPlayerPairs,
@@ -96,6 +97,19 @@ export async function handleBuildTeam(
       sendError(res, 'Roster non autorise', 400);
       return;
     }
+
+    // Règle officielle BB : les équipes mort-vivantes (régénération) ne
+    // peuvent pas recruter d'apothicaire. Refus explicite à la création
+    // si le builder l'a quand même demandé pour un roster interdit.
+    if ((bodyApothecary ?? false) && !canRosterHaveApothecary(roster)) {
+      sendError(
+        res,
+        'Les équipes mort-vivantes ne peuvent pas recruter d\'apothicaire',
+        422,
+      );
+      return;
+    }
+
     const ruleset = resolveRuleset(bodyRuleset);
     const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
     const constraints = getFormatConstraints(format);

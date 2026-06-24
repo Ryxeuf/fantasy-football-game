@@ -70,3 +70,31 @@ describe('handleBuildTeam — defensive gates', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('handleBuildTeam — apothecary roster gating (retour A30)', () => {
+  it.each(['undead', 'necromantic_horror', 'tomb_kings', 'nurgle'])(
+    'refuse l\'apothicaire (422) à la création pour le roster mort-vivant %s',
+    async (roster) => {
+      const req = createReq({
+        body: { name: 'Test', roster, choices: [], apothecary: true },
+      });
+      const res = createRes();
+      await handleBuildTeam(req, res);
+      expect(res.statusCode).toBe(422);
+      expect((res as { payload?: { error?: string } }).payload?.error).toMatch(
+        /mort-vivantes/i,
+      );
+    },
+  );
+
+  it('n\'interfère pas quand apothecary=false pour un roster mort-vivant', async () => {
+    const req = createReq({
+      body: { name: 'Test', roster: 'undead', choices: [], apothecary: false },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+    // Le guard apothicaire ne doit pas se déclencher : on dépasse 422
+    // (la suite échouera plus loin faute de mock DB, mais jamais en 422).
+    expect(res.statusCode).not.toBe(422);
+  });
+});
