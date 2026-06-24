@@ -918,6 +918,16 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     season3Only: true
   },
   {
+    // A20 — variante paramétrée pour le Tueur de Trolls (Haine du Mot-clé Troll).
+    slug: "hate-troll",
+    nameFr: "Haine (Troll)",
+    nameEn: "Hate (Troll)",
+    description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-clé Troll, ce joueur peut relancer un résultat Attaquant Plaqué.",
+    descriptionEn: "Whenever this player performs a Block action against a player with the Troll keyword, this player may re-roll an Attacker Down result.",
+    category: "Trait",
+    season3Only: true
+  },
+  {
     slug: "insignifiant",
     nameFr: "Insignifiant*",
     nameEn: "Insignificant",
