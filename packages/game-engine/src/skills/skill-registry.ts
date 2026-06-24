@@ -1396,6 +1396,18 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'hate'),
 });
 
+// ─── HAINE (TROLL) (A20) ─────────────────────────────────────────────────────
+// Variante parametree de Haine (X) pour le Tueur de Trolls : meme effet, le
+// Mot-Cle cible etant fixe a "Troll". Entree de decouverte UI + couverture de
+// l'audit `season3Only`. Pas de getModifiers (comme `hate`) : la relance ciblee
+// est portee par l'implementation, on evite le double-comptage.
+registerSkill({
+  slug: 'hate-troll',
+  triggers: ['on-block-attacker'],
+  description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-Cle Troll, il peut relancer un resultat Attaquant Plaque.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hate-troll'),
+});
+
 // ─── INSIGNIFIANT (O.1 batch 3q) ────────────────────────────────────────────
 // Insignifiant (Insignificant) est un trait Season 3 (Snotling Lineman entre
 // autres) : lors de la construction de la liste d'equipe, on ne peut pas
