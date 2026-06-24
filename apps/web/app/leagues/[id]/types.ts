@@ -39,6 +39,12 @@ export interface LeagueDetail {
   drawPoints: number;
   lossPoints: number;
   forfeitPoints: number;
+  /**
+   * E1 — Regles de points bonus (JSON brut renvoye par l'API : array
+   * natif PG ou string serialisee sqlite). Parse cote client via
+   * `parseBonusRulesFromApi`. Optionnel pour retro-compat pre-E1.
+   */
+  bonusPointsConfig?: unknown;
   createdAt: string;
   updatedAt: string;
   seasons: LeagueSeasonSummary[];
