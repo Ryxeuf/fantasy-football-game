@@ -10,6 +10,9 @@ interface SeasonStandingsProps {
 
 export function SeasonStandings({ rows, showSeasonElo = false }: SeasonStandingsProps) {
   const { t } = useLanguage();
+  // E2 — n'affiche la colonne Bonus que si au moins une équipe a un
+  // sous-total bonus non nul (table propre pour les ligues sans bonus).
+  const hasBonus = rows.some((r) => (r.bonusPoints ?? 0) !== 0);
 
   if (rows.length === 0) {
     return (
@@ -68,6 +71,15 @@ export function SeasonStandings({ rows, showSeasonElo = false }: SeasonStandings
                 {t.leagues.standingsElo}
               </th>
             )}
+            {hasBonus && (
+              <th
+                data-testid="standings-bonus-header"
+                title={t.leagues.standingsBonusHint}
+                className="px-2 py-2 text-center font-semibold"
+              >
+                {t.leagues.standingsBonus}
+              </th>
+            )}
             <th className="px-2 py-2 text-center font-semibold">
               {t.leagues.standingsPoints}
             </th>
@@ -106,6 +118,14 @@ export function SeasonStandings({ rows, showSeasonElo = false }: SeasonStandings
               </td>
               {showSeasonElo && (
                 <td className="px-2 py-1 text-center">{row.seasonElo}</td>
+              )}
+              {hasBonus && (
+                <td
+                  data-testid={`standings-row-${row.participantId}-bonus`}
+                  className="px-2 py-1 text-center text-gray-600"
+                >
+                  {row.bonusPoints ?? 0}
+                </td>
               )}
               <td className="px-2 py-1 text-center font-semibold text-nuffle-anthracite">
                 {row.points}

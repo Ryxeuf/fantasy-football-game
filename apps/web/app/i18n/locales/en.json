@@ -630,6 +630,8 @@
     "standingsCasFor": "Cas+",
     "standingsCasAgainst": "Cas-",
     "standingsElo": "ELO",
+    "standingsBonus": "Bonus",
+    "standingsBonusHint": "Cumulative bonus points, already included in the total.",
     "standingsPoints": "Pts",
     "participantsSection": "Registered teams",
     "participantsEmpty": "No team registered in this season.",

@@ -148,4 +148,9 @@ export interface StandingRow {
   casualtiesAgainst: number;
   seasonElo: number;
   status: string;
+  /**
+   * E2 — Sous-total de points bonus de la saison (déjà inclus dans
+   * `points`). Optionnel pour rétro-compat API pré-E2.
+   */
+  bonusPoints?: number;
 }
