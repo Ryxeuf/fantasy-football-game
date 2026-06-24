@@ -7,6 +7,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { LeagueForm, type LeagueFormValues } from "../_components/LeagueForm";
+import { serializeBonusRules } from "../_components/bonus-rules";
 
 // Formulaire de creation de ligue. Gate par le feature flag unique
 // `league` : tant qu'il n'est pas active, on redirige vers la liste
@@ -46,6 +47,7 @@ export default function NewLeaguePage() {
             drawPoints: values.drawPoints,
             lossPoints: values.lossPoints,
             forfeitPoints: values.forfeitPoints,
+            bonusPointsConfig: serializeBonusRules(values.bonusPointsConfig),
           }),
         });
         router.push(`/leagues/${created.id}`);

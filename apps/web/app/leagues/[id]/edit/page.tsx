@@ -8,6 +8,10 @@ import {
   LeagueForm,
   type LeagueFormValues,
 } from "../../_components/LeagueForm";
+import {
+  serializeBonusRules,
+  parseBonusRulesFromApi,
+} from "../../_components/bonus-rules";
 import type { LeagueDetail } from "../types";
 
 // L2.D — Edition d'une ligue par son commissaire (createur). Reutilise
@@ -92,6 +96,7 @@ export default function EditLeaguePage() {
             drawPoints: values.drawPoints,
             lossPoints: values.lossPoints,
             forfeitPoints: values.forfeitPoints,
+            bonusPointsConfig: serializeBonusRules(values.bonusPointsConfig),
           }),
         });
         router.push(`/leagues/${leagueId}`);
@@ -166,6 +171,7 @@ export default function EditLeaguePage() {
           drawPoints: league.drawPoints,
           lossPoints: league.lossPoints,
           forfeitPoints: league.forfeitPoints,
+          bonusPointsConfig: parseBonusRulesFromApi(league.bonusPointsConfig),
         }}
         onSubmit={handleSubmit}
       />

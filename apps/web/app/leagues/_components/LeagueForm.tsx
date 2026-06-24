@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { BonusRulesEditor } from "./BonusRulesEditor";
+import type { BonusRuleValue } from "./bonus-rules";
 
 // L2.D — Formulaire de ligue partage entre la creation (`/leagues/new`,
 // POST /leagues) et l'edition (`/leagues/:id/edit`, PATCH /leagues/:id).
@@ -21,6 +23,9 @@ export interface LeagueFormValues {
   drawPoints: number;
   lossPoints: number;
   forfeitPoints: number;
+  // E1 — Regles de points bonus configurables (optionnel). Vide = aucun
+  // bonus. Serialise vers `bonusPointsConfig` par les pages parentes.
+  bonusPointsConfig: BonusRuleValue[];
 }
 
 export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
@@ -34,6 +39,7 @@ export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
   drawPoints: 1,
   lossPoints: 0,
   forfeitPoints: -1,
+  bonusPointsConfig: [],
 };
 
 interface RosterListItem {
@@ -301,6 +307,11 @@ export function LeagueForm({
             />
           </div>
         </fieldset>
+
+        <BonusRulesEditor
+          rules={form.bonusPointsConfig}
+          onChange={(next) => updateField("bonusPointsConfig", next)}
+        />
 
         <div className="flex items-center gap-3 pt-2">
           <button
