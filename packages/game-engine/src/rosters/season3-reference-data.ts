@@ -138,7 +138,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Dwarf Blocker Lineman', cost: 70, max: 16, ma: 4, st: 3, ag: 4, pa: 5, av: 10, skills: ['block', 'defensive', 'thick-skull'] },
-      { nameEn: 'Troll Slayer', cost: 95, max: 2, ma: 5, st: 3, ag: 4, pa: 5, av: 9, skills: ['block', 'dauntless', 'frenzy', 'hate', 'thick-skull'] },
+      { nameEn: 'Troll Slayer', cost: 95, max: 2, ma: 5, st: 3, ag: 4, pa: 5, av: 9, skills: ['block', 'dauntless', 'frenzy', 'hate-troll', 'thick-skull'] },
       { nameEn: 'Dwarf Blitzer', cost: 100, max: 2, ma: 5, st: 3, ag: 4, pa: 4, av: 10, skills: ['block', 'diving-tackle', 'tackle', 'thick-skull'] },
       { nameEn: 'Deathroller', cost: 170, max: 1, ma: 5, st: 7, ag: 5, pa: 6, av: 11, skills: ['break-tackle', 'dirty-player-1', 'juggernaut', 'loner-4', 'mighty-blow-1', 'no-hands', 'secret-weapon', 'stand-firm'] },
     ],

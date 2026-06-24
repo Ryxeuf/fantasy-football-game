@@ -294,7 +294,7 @@ describe('S3 Rules Validation: Coherence des skills', () => {
     'provocation', 'really-stupid', 'regeneration', 'right-stuff',
     'secret-weapon', 'stab', 'stunty', 'surefoot',
     'take-root', 'throw-team-mate', 'timmm-ber', 'titchy',
-    'trickster', 'wild-animal', 'drunkard', 'hate',
+    'trickster', 'wild-animal', 'drunkard', 'hate', 'hate-troll',
     'kick-team-mate', 'clearance', 'fumblerooskie',
   ];
 

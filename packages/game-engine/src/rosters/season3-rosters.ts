@@ -119,7 +119,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 4,
         pa: 5,
         av: 9,
-        skills: "block,thick-skull,frenzy,hate,dauntless",
+        skills: "block,thick-skull,frenzy,hate-troll,dauntless",
       },
       {
         slug: "old_world_alliance_blitzer_nain",
@@ -1393,7 +1393,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 4,
         pa: 5,
         av: 9,
-        skills: "block,thick-skull,frenzy,hate,dauntless",
+        skills: "block,thick-skull,frenzy,hate-troll,dauntless",
       },
       {
         slug: "dwarf_blitzer_nain",
