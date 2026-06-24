@@ -546,7 +546,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "take-root",
     nameFr: "Prendre Racine*",
     nameEn: "Take Root",
-    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
+    description: "Chaque fois qu'on active ce joueur, après avoir annoncé son action, s'il est Debout il doit jeter un D6. Sur 2+, il peut effectuer l'action annoncée normalement. Sur un 1, il ne peut effectuer aucune action et son activation se termine immédiatement.",
+    descriptionEn: "Each time this player is activated, immediately after declaring their action, if they are Standing they must roll a D6. On 2+, they may perform the declared action as normal. On a 1, they cannot perform any action and their activation ends immediately.",
     category: "Trait",
     isModified: true
   },
