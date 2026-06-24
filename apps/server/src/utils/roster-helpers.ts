@@ -9,7 +9,14 @@ import { prisma } from "../prisma";
 // this helper is called many times per team creation/display cycle. A short
 // TTL means admin-driven roster edits propagate within minutes without
 // requiring explicit invalidation.
-const ROSTER_TTL_MS = 5 * 60 * 1000;
+//
+// Hors production (dev/test), on désactive le cache (TTL 0 = toujours frais)
+// pour que les éditions DB directes se voient immédiatement et que le builder
+// (/team/rosters) reste cohérent avec la page roster publique (/api/rosters),
+// qui possède son propre cache. Le single-flight protège quand même des
+// stampedes. En prod, on garde 5 min pour soulager Prisma.
+const ROSTER_TTL_MS =
+  process.env.NODE_ENV === "production" ? 5 * 60 * 1000 : 0;
 
 interface CacheEntry<T> {
   value: T;

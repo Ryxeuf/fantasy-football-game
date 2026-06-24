@@ -1,6 +1,7 @@
 "use client";
 import {
   getRerollCost,
+  canRosterHaveApothecary,
   RULESETS,
   DEFAULT_RULESET,
   type Ruleset,
@@ -634,17 +635,22 @@ export default function TeamDetailClient({
               </div>
               <div className="text-sm text-gray-600">{t.teams.perReroll}</div>
             </div>
-            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="font-semibold text-lg mb-2">
-                {t.teams.apothecary}
+            {/* Apothicaire : masqué pour les rosters qui n'y ont pas droit
+                (mort-vivants — régénération à la place). Même source de
+                vérité que le builder : `canRosterHaveApothecary`. */}
+            {canRosterHaveApothecary(slug) && (
+              <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="font-semibold text-lg mb-2">
+                  {t.teams.apothecary}
+                </div>
+                <div className="text-2xl font-bold text-emerald-600 mb-1">
+                  50k {t.teams.po}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.teams.oneApothecary}
+                </div>
               </div>
-              <div className="text-2xl font-bold text-emerald-600 mb-1">
-                50k {t.teams.po}
-              </div>
-              <div className="text-sm text-gray-600">
-                {t.teams.oneApothecary}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

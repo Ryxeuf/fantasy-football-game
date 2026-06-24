@@ -26,7 +26,11 @@ const router = Router();
 
 // 5 min matches the existing roster-helpers cache in utils/roster-helpers.ts
 // so admin-driven reseeds propagate quickly without explicit invalidation.
-const ROSTER_CACHE_TTL_MS = 5 * 60 * 1000;
+// Hors production, TTL 0 (toujours frais) : aligné avec roster-helpers pour
+// que les éditions DB directes se voient tout de suite et que builder/page
+// roster restent cohérents en dev. Single-flight conservé contre les stampedes.
+const ROSTER_CACHE_TTL_MS =
+  process.env.NODE_ENV === "production" ? 5 * 60 * 1000 : 0;
 const ROSTER_LIST_NS = "public-rosters-list";
 const ROSTER_DETAIL_NS = "public-rosters-detail";
 const POSITION_STATS_NS = "public-position-stats";
