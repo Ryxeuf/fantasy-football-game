@@ -214,22 +214,32 @@ router.get("/available/:roster", async (req, res) => {
       orderBy: { displayName: "asc" },
     });
 
-    // Transformer les données
-    const transformedStarPlayers = starPlayers.map((sp: any) => ({
-      slug: sp.slug,
-      displayName: sp.displayName,
-      cost: sp.cost,
-      ma: sp.ma,
-      st: sp.st,
-      ag: sp.ag,
-      pa: sp.pa,
-      av: sp.av,
-      specialRule: sp.specialRule,
-      imageUrl: sp.imageUrl,
-      isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
-    }));
+    // Transformer les données. A9 — dédup par slug : la requête Prisma
+    // ci-dessus combine plusieurs critères en `OR` (hirableBy "all" + slug
+    // roster + règles régionales). Un star éligible par PLUSIEURS critères
+    // peut être remonté plusieurs fois → on garde la première occurrence.
+    const seenSlugs = new Set<string>();
+    const transformedStarPlayers = starPlayers
+      .filter((sp: any) => {
+        if (seenSlugs.has(sp.slug)) return false;
+        seenSlugs.add(sp.slug);
+        return true;
+      })
+      .map((sp: any) => ({
+        slug: sp.slug,
+        displayName: sp.displayName,
+        cost: sp.cost,
+        ma: sp.ma,
+        st: sp.st,
+        ag: sp.ag,
+        pa: sp.pa,
+        av: sp.av,
+        specialRule: sp.specialRule,
+        imageUrl: sp.imageUrl,
+        isMegaStar: sp.isMegaStar,
+        skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+        hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
+      }));
 
     res.json({
       success: true,

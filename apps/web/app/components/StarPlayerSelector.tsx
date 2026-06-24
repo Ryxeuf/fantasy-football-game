@@ -67,7 +67,16 @@ export default function StarPlayerSelector({
         return r.json();
       })
       .then((data) => {
-        setAvailableStarPlayers(data.starPlayers || []);
+        // A9 — défensif : dédup par slug au cas où l'API renverrait des
+        // doublons (un star éligible par plusieurs critères hirableBy).
+        const list: StarPlayer[] = data.starPlayers || [];
+        const seen = new Set<string>();
+        const deduped = list.filter((sp) => {
+          if (seen.has(sp.slug)) return false;
+          seen.add(sp.slug);
+          return true;
+        });
+        setAvailableStarPlayers(deduped);
         setLoading(false);
       })
       .catch((e) => {

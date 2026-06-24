@@ -19,6 +19,8 @@ import {
   type GameFormat,
   getFormatConstraints,
   isLineman,
+  isBigGuy,
+  bigGuyLimitForRoster,
   countNonLinemen,
   validateFormatSelection,
   canRosterHaveApothecary,
@@ -248,6 +250,22 @@ export default function NewTeamBuilder() {
   const nonLinemenFull =
     constraints.maxNonLinemen !== null &&
     nonLinemenCount >= constraints.maxNonLinemen;
+
+  // A36 — Plafond COMBINÉ de Gros Bras (tous types confondus) pour le roster
+  // courant. `null` = pas de plafond combiné (s'appuie sur les max par poste).
+  const bigGuyLimit = useMemo(
+    () => bigGuyLimitForRoster(rosterId),
+    [rosterId],
+  );
+  const bigGuyCount = useMemo(
+    () =>
+      positions.reduce(
+        (sum, p) => (isBigGuy(p) ? sum + (counts[p.slug] || 0) : sum),
+        0,
+      ),
+    [positions, counts],
+  );
+  const bigGuyFull = bigGuyLimit !== null && bigGuyCount >= bigGuyLimit;
 
   // Validation des contraintes de format (hors budget) — réutilise la logique
   // serveur pour une cohérence parfaite entre UI et API.
@@ -561,9 +579,35 @@ export default function NewTeamBuilder() {
 
         {/* Position picker: table on desktop, cards on mobile */}
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900 px-1">
-            {t.teams.availablePositions}
-          </h2>
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {t.teams.availablePositions}
+            </h2>
+            {/* A36 — compteur de Gros Bras (uniquement si l'équipe a un
+                plafond combiné). */}
+            {bigGuyLimit !== null && (
+              <span
+                data-testid="big-guy-counter"
+                className={`shrink-0 text-sm font-semibold tabular-nums rounded-full px-3 py-1 border ${
+                  bigGuyFull
+                    ? "bg-amber-50 border-amber-300 text-amber-700"
+                    : "bg-gray-50 border-gray-200 text-gray-700"
+                }`}
+              >
+                Gros Bras : {bigGuyCount}/{bigGuyLimit}
+              </span>
+            )}
+          </div>
+
+          {bigGuyLimit !== null && bigGuyFull && (
+            <p
+              data-testid="big-guy-limit-reached"
+              className="px-1 text-xs text-amber-700"
+              role="status"
+            >
+              ⚠️ Cette équipe ne peut aligner que {bigGuyLimit} Gros Bras maximum.
+            </p>
+          )}
 
           {/* Mobile cards */}
           <ul className="md:hidden space-y-2" role="list">
@@ -638,7 +682,7 @@ export default function NewTeamBuilder() {
                         type="button"
                         aria-label={`${t.teams.addPlayer} ${p.displayName}`}
                         onClick={() => change(p.slug, 1)}
-                        disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p))}
+                        disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p)) || (bigGuyFull && isBigGuy(p))}
                         className="h-11 w-11 rounded-lg border border-emerald-600 bg-emerald-600 font-semibold text-lg text-white active:bg-emerald-800 hover:bg-emerald-700 disabled:bg-gray-200 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                       >
                         +
@@ -725,7 +769,7 @@ export default function NewTeamBuilder() {
                             aria-label={`${t.teams.addPlayer} ${p.displayName}`}
                             className="h-9 w-9 rounded-lg border border-emerald-600 bg-emerald-600 font-semibold text-white hover:bg-emerald-700 disabled:bg-gray-200 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                             onClick={() => change(p.slug, 1)}
-                            disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p))}
+                            disabled={atMax || cannotAfford || (nonLinemenFull && !isLineman(p)) || (bigGuyFull && isBigGuy(p))}
                           >
                             +
                           </button>

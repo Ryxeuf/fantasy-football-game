@@ -1181,15 +1181,26 @@ export function getAvailableStarPlayers(
     teamRegionalRules.length > 0
       ? teamRegionalRules
       : getRegionalRulesForTeam(teamRoster, ruleset);
-  return Object.values(starPlayersMap).filter(starPlayer => {
-    // Si le Star Player est disponible pour tous
-    if (starPlayer.hirableBy.includes("all")) {
-      return true;
-    }
 
-    // Vérifier si l'équipe a une des règles régionales requises
-    return starPlayer.hirableBy.some(rule => rules.includes(rule));
-  });
+  // Dédup par slug : un Star Player éligible par PLUSIEURS critères
+  // (ex. "all" + une règle régionale, ou plusieurs règles régionales qui
+  // matchent l'équipe) ne doit apparaître qu'une seule fois. Source de
+  // vérité : la route serveur (Prisma `OR` sur hirableBy) reflète cette
+  // logique et peut sinon remonter des doublons.
+  const seen = new Set<string>();
+  const available: StarPlayerDefinition[] = [];
+  for (const starPlayer of Object.values(starPlayersMap)) {
+    const isHirable =
+      // Si le Star Player est disponible pour tous
+      starPlayer.hirableBy.includes("all") ||
+      // ou si l'équipe a une des règles régionales requises
+      starPlayer.hirableBy.some((rule) => rules.includes(rule));
+    if (!isHirable) continue;
+    if (seen.has(starPlayer.slug)) continue;
+    seen.add(starPlayer.slug);
+    available.push(starPlayer);
+  }
+  return available;
 }
 
 /**
