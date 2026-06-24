@@ -238,7 +238,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "foul-appearance",
     nameFr: "Répulsion*",
     nameEn: "Foul Appearance",
-    description: "Quand un joueur adverse déclare une action de Blocage ciblant ce joueur, son entraîneur doit d'abord jeter un D6. Sur un résultat de 1, le joueur ne peut pas effectuer l'action déclarée et l'action est gaspillée.",
+    description: "Chaque fois qu'un joueur adverse tente d'effectuer une action de blocage contre ce joueur, ou une action spéciale qui le cible directement, il doit lancer un D6 avant tout autre dé. Sur un résultat de 2+, l'action de blocage se poursuit normalement. Sur un résultat de 1, l'action de blocage est immédiatement annulée et l'activation du joueur adverse prend fin immédiatement.",
     category: "Mutation",
     isModified: true
   },
@@ -554,7 +554,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "titchy",
     nameFr: "Minus*",
     nameEn: "Titchy",
-    description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive. Plus de bonus pour intercepter leur passe; malus de -1 pour tenter d'intercepter et le bonus d'esquive s'applique toujours (même si bombardier...).",
+    description: "Lorsque ce joueur tente d'esquiver, il ne subit aucun modificateur négatif à son test d'agilité pour avoir été marqué par des joueurs adverses. De plus, ce joueur applique un modificateur de -1 au test d'agilité lorsqu'il tente d'intercepter le ballon. Un joueur doté de ce trait est plus sujet aux blessures. Ainsi, si un jet de blessure est effectué pour lui, lancez le dé sur la table des blessures de Minus à la place.",
     category: "Trait",
     isModified: true
   },
@@ -736,7 +736,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "drunkard",
-    nameFr: "Poivrot*",
+    nameFr: "Ivrogne*",
     nameEn: "Drunkard",
     description: "Ce joueur subit une pénalité de -1 au jet de dé lorsqu'il tente de Foncer.",
     category: "Trait"
