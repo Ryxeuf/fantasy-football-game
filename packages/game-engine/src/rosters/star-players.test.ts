@@ -200,18 +200,57 @@ describe('Star Players', () => {
 
     it('devrait inclure les star players "all" pour toutes les équipes', () => {
       const teams = ['skaven', 'dwarf', 'wood_elf', 'orc'];
-      
+
       teams.forEach(team => {
         const regionalRules = TEAM_REGIONAL_RULES[team];
         const availablePlayers = getAvailableStarPlayers(team, regionalRules);
-        
+
         // Helmut Wulf (disponible pour tous) devrait être dans chaque liste
         const helmut = availablePlayers.find(sp => sp.slug === 'helmut_wulf');
         expect(helmut).toBeDefined();
-        
+
         // Morg 'n' Thorg (disponible pour tous) devrait être dans chaque liste
         const morg = availablePlayers.find(sp => sp.slug === 'morg_n_thorg');
         expect(morg).toBeDefined();
+      });
+    });
+
+    describe('A9 — déduplication par slug (pas de doublons)', () => {
+      it('ne devrait jamais retourner deux fois le même slug pour une équipe à plusieurs règles régionales', () => {
+        // Goblin a deux règles régionales (badlands_brawl + underworld_challenge)
+        // et plusieurs star players sont éligibles par les DEUX règles
+        // (ex. Nobbla, Fungus). On vérifie qu'aucun slug n'apparaît deux fois.
+        const teams = ['goblin', 'dwarf', 'ogre', 'chaos_dwarf', 'norse', 'skaven'];
+        teams.forEach((team) => {
+          const available = getAvailableStarPlayers(team, TEAM_REGIONAL_RULES[team]);
+          const slugs = available.map((sp) => sp.slug);
+          const uniqueSlugs = new Set(slugs);
+          expect(slugs.length).toBe(uniqueSlugs.size);
+        });
+      });
+
+      it('Goblin : un star éligible par deux règles (Nobbla) apparaît exactement une fois', () => {
+        const available = getAvailableStarPlayers('goblin', TEAM_REGIONAL_RULES['goblin']);
+        // Nobbla est hirableBy: ["underworld_challenge", "badlands_brawl"] —
+        // les deux règles régionales du Goblin matchent.
+        const nobblaOccurrences = available.filter((sp) => sp.slug === 'nobbla_blackwart');
+        expect(nobblaOccurrences.length).toBe(1);
+      });
+
+      it('dédup même si la liste de règles passée contient des doublons ou recoupe "all"', () => {
+        // Règles passées explicitement avec un doublon volontaire : la sortie
+        // ne doit toujours pas dédoubler les slugs.
+        const available = getAvailableStarPlayers('goblin', [
+          'badlands_brawl',
+          'underworld_challenge',
+          'badlands_brawl',
+        ]);
+        const slugs = available.map((sp) => sp.slug);
+        expect(slugs.length).toBe(new Set(slugs).size);
+
+        // Un star "all" (Helmut) éligible inconditionnellement reste unique.
+        const helmut = available.filter((sp) => sp.slug === 'helmut_wulf');
+        expect(helmut.length).toBe(1);
       });
     });
   });

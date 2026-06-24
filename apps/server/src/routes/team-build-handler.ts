@@ -40,6 +40,8 @@ import {
   validateFormatSelection,
   isGameFormat,
   canRosterHaveApothecary,
+  isBigGuy,
+  bigGuyLimitForRoster,
 } from '@bb/game-engine';
 import {
   validateStarPlayerPairs,
@@ -167,6 +169,27 @@ export async function handleBuildTeam(
     if (!formatCheck.valid) {
       sendError(res, formatCheck.error ?? 'Sélection invalide pour ce format', 400);
       return;
+    }
+
+    // A36 — Plafond COMBINÉ de Gros Bras (tous types confondus). Distinct des
+    // `max` par poste : certaines équipes (Alliance, Bas-Fond, Élus du Chaos,
+    // Renégats du Chaos) limitent le nombre TOTAL de Gros Bras alignés. La
+    // composition est lue via `counts` (slug poste → quantité) + `def.positions`
+    // (pour détecter les postes Gros Bras via `isBigGuy`).
+    const bigGuyLimit = bigGuyLimitForRoster(roster);
+    if (bigGuyLimit !== null) {
+      const totalBigGuys = def.positions.reduce(
+        (sum, p) => (isBigGuy(p) ? sum + Math.max(0, counts[p.slug] ?? 0) : sum),
+        0,
+      );
+      if (totalBigGuys > bigGuyLimit) {
+        sendError(
+          res,
+          `Cette équipe ne peut aligner que ${bigGuyLimit} Gros Bras maximum`,
+          422,
+        );
+        return;
+      }
     }
 
     const rerollUnitCost =

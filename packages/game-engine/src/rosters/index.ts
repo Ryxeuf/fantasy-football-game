@@ -129,6 +129,9 @@ export {
   canRosterHaveApothecary,
 } from "./apothecary-access";
 
+// A36 — Plafond combiné de Gros Bras (Big Guy) par équipe
+export { bigGuyLimitForRoster } from "./big-guy-limits";
+
 // Types pour compatibilité
 export type AllowedRoster = keyof typeof TEAM_ROSTERS;
 export const ALLOWED_TEAMS: AllowedRoster[] = Object.keys(TEAM_ROSTERS) as AllowedRoster[];
