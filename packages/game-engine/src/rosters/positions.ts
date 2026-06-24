@@ -12,7 +12,7 @@ export interface PositionDefinition {
   ma: number;          // Movement Allowance
   st: number;          // Strength
   ag: number;          // Agility
-  pa: number;          // Passing
+  pa: number | null;   // Passing (null pour - : certaines positions n'ont pas de passe)
   av: number;          // Armour Value
   skills: string;      // Compétences de base (séparées par virgules)
 }

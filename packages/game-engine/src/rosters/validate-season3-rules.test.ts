@@ -104,9 +104,13 @@ describe('S3 Rules Validation: Plages de stats', () => {
             expect(pos.ag).toBeLessThanOrEqual(statRanges.ag.max);
           });
 
-          it(`PA (${pos.pa}) dans la plage [${statRanges.pa.min}-${statRanges.pa.max}]`, () => {
-            expect(pos.pa).toBeGreaterThanOrEqual(statRanges.pa.min);
-            expect(pos.pa).toBeLessThanOrEqual(statRanges.pa.max);
+          it(`PA (${pos.pa ?? '-'}) dans la plage [${statRanges.pa.min}-${statRanges.pa.max}] ou null`, () => {
+            // PA peut etre null (« - » : pas de capacite de Passe, ex. Roule-Mort
+            // no-hands). Dans ce cas, aucune contrainte de plage ne s'applique.
+            if (pos.pa !== null) {
+              expect(pos.pa).toBeGreaterThanOrEqual(statRanges.pa.min);
+              expect(pos.pa).toBeLessThanOrEqual(statRanges.pa.max);
+            }
           });
 
           it(`AV (${pos.av}) dans la plage [${statRanges.av.min}-${statRanges.av.max}]`, () => {
@@ -347,6 +351,68 @@ describe('S3 Rules Validation: Regles de jeu', () => {
           costFor11,
           `${teamKey}: 11x ${lineman.displayName} coute ${costFor11}k > 1000k`
         ).toBeLessThanOrEqual(1000);
+      }
+    }
+  });
+});
+
+// ─── 7. PA nullable : « pas de passe » = null (rendu "-") (A19) ──────────
+//
+// Certaines positions (Big Guys no-hands, ex. Roule-Mort / Deathroller) n'ont
+// AUCUNE caracteristique de Passe. La fiche doit afficher "-", pas "6". On
+// represente cette absence par `pa === null` (jamais 0, jamais NaN), aligne sur
+// le pattern StarPlayer deja en place.
+
+describe('S3 PA nullable: absence de passe representee par null (A19)', () => {
+  /** Convention d'affichage partagee : null → "-", sinon "N+". */
+  function formatPa(pa: number | null): string {
+    return pa != null ? `${pa}+` : '-';
+  }
+
+  it('le Roule-Mort (dwarf_roule_mort) a pa = null dans le roster S3', () => {
+    const dwarf = SEASON_THREE_ROSTERS['dwarf'];
+    const rouleMort = dwarf.positions.find(
+      (p) => p.slug === 'dwarf_roule_mort'
+    );
+    expect(rouleMort, 'Roule-Mort introuvable dans le roster Nain S3').toBeDefined();
+    expect(rouleMort!.pa).toBeNull();
+    // Coherence : un poste no-hands ne doit jamais exposer une PA numerique.
+    expect(rouleMort!.skills.split(',')).toContain('no-hands');
+  });
+
+  it('la reference S3 du Deathroller a pa = null (cross-check coherent)', () => {
+    const deathroller = SEASON_3_REFERENCE['dwarf'].keyPositions.find(
+      (p) => p.nameEn === 'Deathroller'
+    );
+    expect(deathroller, 'Deathroller absent de la reference S3').toBeDefined();
+    expect(deathroller!.pa).toBeNull();
+  });
+
+  it('formate une PA null en "-" (jamais "null+" ni "NaN+")', () => {
+    expect(formatPa(null)).toBe('-');
+    expect(formatPa(2)).toBe('2+');
+    expect(formatPa(6)).toBe('6+');
+    // Garde-fou explicite contre les regressions de rendu brut.
+    expect(formatPa(null)).not.toBe('null+');
+    expect(formatPa(null)).not.toBe('NaN+');
+  });
+
+  it('le Roule-Mort se rend "-" via la convention d\'affichage', () => {
+    const rouleMort = SEASON_THREE_ROSTERS['dwarf'].positions.find(
+      (p) => p.slug === 'dwarf_roule_mort'
+    )!;
+    expect(formatPa(rouleMort.pa)).toBe('-');
+  });
+
+  it('toute position S3 avec pa = null possede no-hands (coherence regles)', () => {
+    for (const [teamKey, roster] of Object.entries(SEASON_THREE_ROSTERS)) {
+      for (const pos of roster.positions) {
+        if (pos.pa === null) {
+          expect(
+            pos.skills.split(',').map((s) => s.trim()),
+            `${teamKey}/${pos.slug}: pa=null mais pas de no-hands`
+          ).toContain('no-hands');
+        }
       }
     }
   });
