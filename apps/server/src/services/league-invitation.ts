@@ -27,6 +27,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "../prisma";
 import { addParticipant } from "./league";
+import { notifyInvitedCoach } from "./league-invitation-notify";
 
 export type LeagueInvitationStatus =
   | "pending"
@@ -101,7 +102,7 @@ export async function createInvitation(input: CreateInvitationInput) {
 
   const league = await prisma.league.findUnique({
     where: { id: input.leagueId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, name: true },
   });
   if (!league) {
     throw new LeagueInvitationError(
@@ -149,7 +150,7 @@ export async function createInvitation(input: CreateInvitationInput) {
   const code = generateInvitationCode();
   const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
 
-  return prisma.leagueInvitation.create({
+  const created = await prisma.leagueInvitation.create({
     data: {
       leagueId: input.leagueId,
       seasonId: input.seasonId ?? null,
@@ -163,6 +164,20 @@ export async function createInvitation(input: CreateInvitationInput) {
       expiresAt,
     },
   });
+
+  // A2 — notifie le coach invité (push + e-mail). Effet secondaire : son
+  // échec ne doit pas casser la création. `notifyInvitedCoach` est déjà
+  // tolérant en interne (try/catch + serverLog) ; ce try/catch est une
+  // ceinture+bretelles supplémentaire. Le chemin de déduplication (retour
+  // d'une invitation pending existante, plus haut) ne passe PAS ici, donc
+  // on ne renotifie pas une invitation déjà émise.
+  try {
+    await notifyInvitedCoach({ invitation: created, leagueName: league.name });
+  } catch {
+    // Toute exception inattendue est absorbée : la création reste valide.
+  }
+
+  return created;
 }
 
 export interface AcceptInvitationInput {
