@@ -2,6 +2,9 @@
 import {
   getRerollCost,
   canRosterHaveApothecary,
+  getFormatConstraints,
+  FORMATS,
+  type GameFormat,
   RULESETS,
   DEFAULT_RULESET,
   type Ruleset,
@@ -110,6 +113,17 @@ export default function TeamDetailClient({
     season_3: t.teams.rulesetSeason3 ?? "Saison 3 (2025)",
   };
 
+  // Format de jeu (BB à 11 / BB à 7). Axe orthogonal au ruleset : il ne
+  // change pas la fiche des positions (servie par l'API), uniquement les
+  // contraintes/coûts de sélection (budget, staff, relances, apothicaire).
+  // Source unique partagée avec le builder : `FORMAT_CONSTRAINTS`.
+  const [format, setFormat] = useState<GameFormat>("bb11");
+  const constraints = getFormatConstraints(format);
+  const formatLabels: Record<GameFormat, string> = {
+    bb11: t.teams.formatBB11 ?? "Blood Bowl à 11",
+    sevens: t.teams.formatSevens ?? "Blood Bowl à Sept",
+  };
+
   // Re-fetch only when the user toggles language away from the default (fr).
   useEffect(() => {
     if (language === "fr") {
@@ -191,7 +205,7 @@ export default function TeamDetailClient({
             <span className="text-gray-600 text-xs sm:text-sm">
               {t.teams.budgetLabel.replace(
                 /\{budget\}/g,
-                team.budget.toString(),
+                constraints.startingBudget.toString(),
               )}
             </span>
           </div>
@@ -230,8 +244,23 @@ export default function TeamDetailClient({
               </button>
             ))}
           </div>
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            {FORMATS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFormat(f)}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  format === f
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {formatLabels[f]}
+              </button>
+            ))}
+          </div>
           <Link
-            href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}`}
+            href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}&format=${format}`}
             className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center whitespace-nowrap"
           >
             {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
@@ -275,7 +304,7 @@ export default function TeamDetailClient({
                 {t.teams.startingBudget}
               </div>
               <div className="text-lg font-semibold text-gray-900">
-                {team.budget}k {t.teams.po}
+                {constraints.startingBudget}k {t.teams.po}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {t.teams.startingBudgetDesc}
@@ -600,7 +629,7 @@ export default function TeamDetailClient({
                 {t.teams.cheerleader}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                10k {t.teams.po}
+                {constraints.cheerleaderCost}k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">
                 {t.teams.perCheerleader}
@@ -611,7 +640,7 @@ export default function TeamDetailClient({
                 {t.teams.assistant}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                10k {t.teams.po}
+                {constraints.assistantCost}k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">
                 {t.teams.perAssistant}
@@ -622,20 +651,23 @@ export default function TeamDetailClient({
                 {t.teams.rerolls}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                {Math.round(getRerollCost(slug) / 1000)}k {t.teams.po}
+                {Math.round(getRerollCost(slug) / 1000) *
+                  constraints.rerollCostMultiplier}
+                k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">{t.teams.perReroll}</div>
             </div>
-            {/* Apothicaire : masqué pour les rosters qui n'y ont pas droit
-                (mort-vivants — régénération à la place). Même source de
-                vérité que le builder : `canRosterHaveApothecary`. */}
-            {canRosterHaveApothecary(slug) && (
+            {/* Apothicaire : masqué si le format l'interdit OU si le roster
+                n'y a pas droit (mort-vivants — régénération à la place).
+                Coût selon le format (50k BB11, 80k Sevens). Même source de
+                vérité que le builder : `constraints` + `canRosterHaveApothecary`. */}
+            {constraints.apothecaryAllowed && canRosterHaveApothecary(slug) && (
               <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="font-semibold text-lg mb-2">
                   {t.teams.apothecary}
                 </div>
                 <div className="text-2xl font-bold text-emerald-600 mb-1">
-                  50k {t.teams.po}
+                  {constraints.apothecaryCost}k {t.teams.po}
                 </div>
                 <div className="text-sm text-gray-600">
                   {t.teams.oneApothecary}
@@ -697,7 +729,7 @@ export default function TeamDetailClient({
 
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Link
-          href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}`}
+          href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}&format=${format}`}
           className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center"
         >
           {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
