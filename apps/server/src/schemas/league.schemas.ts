@@ -199,6 +199,20 @@ export const startSeasonSchema = z.object({
 });
 
 /**
+ * L2.B.5 — Body schema pour `PATCH /league/seasons/:seasonId/config`.
+ * Permet au commissaire d'activer/desactiver les options de saison
+ * (pour l'instant : le "coup de mecene"). Chaque champ est optionnel ;
+ * seuls les champs fournis sont mis a jour.
+ */
+export const updateSeasonConfigSchema = z
+  .object({
+    meceneEnabled: z.boolean().optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, {
+    message: "Au moins un champ de configuration doit etre fourni",
+  });
+
+/**
  * L2.A.4 — Body schema pour `POST /league/pairings/:id/match`.
  * Pas de body obligatoire pour l'instant : la creation utilise les
  * deux participants du pairing. Un seed optionnel permet de
@@ -285,6 +299,7 @@ export type ListSeasonsByThemeQuery = z.infer<
   typeof listSeasonsByThemeQuerySchema
 >;
 export type StartSeasonBody = z.infer<typeof startSeasonSchema>;
+export type UpdateSeasonConfigBody = z.infer<typeof updateSeasonConfigSchema>;
 export type CreateMatchFromPairingBody = z.infer<
   typeof createMatchFromPairingSchema
 >;

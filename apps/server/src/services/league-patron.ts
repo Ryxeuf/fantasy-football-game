@@ -24,6 +24,7 @@ export class LeaguePatronError extends Error {
       | "team_not_found"
       | "team_not_in_season"
       | "season_not_active"
+      | "mecene_disabled"
       | "withdrawn"
       | "already_played"
       | "match_in_progress",
@@ -54,7 +55,7 @@ export async function playMecene(
 
   const season = await prisma.leagueSeason.findUnique({
     where: { id: seasonId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, meceneEnabled: true },
   });
   if (!season) {
     throw new LeaguePatronError(
@@ -66,6 +67,14 @@ export async function playMecene(
     throw new LeaguePatronError(
       "season_not_active",
       "Le coup de mecene n'est disponible que pendant une saison en cours",
+    );
+  }
+  // L2.B.5 — le coup de mecene n'est plus dispo par defaut : le
+  // commissaire doit l'activer explicitement sur la saison.
+  if (!season.meceneEnabled) {
+    throw new LeaguePatronError(
+      "mecene_disabled",
+      "Le coup de mecene n'est pas active pour cette saison",
     );
   }
 

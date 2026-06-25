@@ -152,6 +152,7 @@ import {
   listSeasonsByThemeQuerySchema,
   attachMatchSchema,
   startSeasonSchema,
+  updateSeasonConfigSchema,
   createMatchFromPairingSchema,
   forfeitPairingSchema,
   recordOfflineResultSchema,
@@ -164,6 +165,7 @@ import {
   type ListSeasonsByThemeQuery,
   type AttachMatchBody,
   type StartSeasonBody,
+  type UpdateSeasonConfigBody,
   type CreateMatchFromPairingBody,
   type ForfeitPairingBody,
   type RecordOfflineResultBody,
@@ -1815,6 +1817,37 @@ export async function handleCloseSeason(
 }
 
 /**
+ * L2.B.5 — Mise a jour des options de configuration d'une saison par le
+ * commissaire (createur de la ligue). Pour l'instant : activation du
+ * "coup de mecene" (`meceneEnabled`). Disponible quel que soit le statut
+ * de la saison (le commissaire peut l'activer avant ou pendant).
+ */
+export async function handleUpdateSeasonConfig(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body: UpdateSeasonConfigBody = req.body;
+  try {
+    const season = await prisma.leagueSeason.update({
+      where: { id: seasonId },
+      data: {
+        ...(body.meceneEnabled !== undefined
+          ? { meceneEnabled: body.meceneEnabled }
+          : {}),
+      },
+      select: { id: true, meceneEnabled: true },
+    });
+    sendSuccess(res, { season });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * L2.A.4 — Cree un Match a partir d'un pairing du calendrier. Reserve
  * a un coach proprietaire de l'une des 2 equipes apparies. Idempotent :
  * si le pairing a deja un match, retourne l'existant.
@@ -2395,6 +2428,14 @@ router.post(
   handleRegenerateSchedule,
 );
 router.post("/seasons/:seasonId/close", authUser, handleCloseSeason);
+// L2.B.5 — Configuration de saison par le commissaire (ex : activer le
+// "coup de mecene"). Createur de la ligue uniquement.
+router.patch(
+  "/seasons/:seasonId/config",
+  authUser,
+  validate(updateSeasonConfigSchema),
+  handleUpdateSeasonConfig,
+);
 // L2.A.4 — Lancement d'une rencontre depuis un pairing pre-genere.
 router.post(
   "/pairings/:pairingId/match",

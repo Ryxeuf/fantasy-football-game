@@ -128,6 +128,11 @@ export interface LeagueSeasonDetail {
   startDate: string | null;
   endDate: string | null;
   leagueId: string;
+  /**
+   * L2.B.5 — "Coup de mecene" activable par le commissaire. Optionnel
+   * pour retro-compat API pre-L2.B.5 (absent => considere desactive).
+   */
+  meceneEnabled?: boolean;
   league: {
     id: string;
     name: string;

@@ -106,6 +106,24 @@ testees sans DB.
 - **z.record** : signature 2 args (`z.record(z.string(), z.unknown())`)
   dans la version Zod du repo.
 
+## Addendum 2026-06-25 — "Coup de mecene" opt-in commissaire
+
+Le "coup de mecene" (+100k po, 1x par equipe et par saison, service
+`league-patron.ts`) etait disponible par defaut des qu'une saison etait
+`in_progress`. Il devient une **option activable par le commissaire**,
+desactivee par defaut.
+
+- **Schema** : `LeagueSeason.meceneEnabled Boolean @default(false)`
+  (root `prisma/schema.prisma` + mirror `apps/server/prisma/sqlite/`).
+- **Service** : `playMecene` rejette avec le code `mecene_disabled`
+  (HTTP 400) si `season.meceneEnabled` est faux.
+- **Route** : `PATCH /leagues/seasons/:seasonId/config`
+  (`updateSeasonConfigSchema`, createur de la ligue uniquement) pour
+  basculer `meceneEnabled`.
+- **UI** : toggle dans `SeasonAdminPanel` (commissaire) ; le bouton
+  `MeceneButton` cote coach n'apparait que si `season.meceneEnabled`.
+- **Tests** : `mecene_disabled` (service), gating page, schema config.
+
 ## Reste / pistes futures
 
 - Editeurs riches inducements / prieres de Nuffle / achats detailles

@@ -84,6 +84,9 @@ const mockSeason = {
   startDate: null,
   endDate: null,
   leagueId: "lg-1",
+  // L2.B.5 — coup de mecene active par defaut dans les fixtures pour
+  // couvrir le happy path du bouton (gating teste explicitement plus bas).
+  meceneEnabled: true,
   league: {
     id: "lg-1",
     name: "Open 5 Teams",
@@ -503,6 +506,24 @@ describe("LeagueDetailPage", () => {
 
       // Le link "Gerer" reste visible tant que le coach a un
       // participant actif, mais le bouton mecene est cache hors saison.
+      await waitFor(() => {
+        expect(screen.getByTestId("manage-my-team")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("open-mecene-modal")).toBeNull();
+    });
+
+    it("hides mecene button when the commissioner has not enabled it (meceneEnabled=false)", async () => {
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "in_progress", meceneEnabled: false },
+        standings: mockStandings,
+        meUserId: "u1",
+      });
+
+      renderWithProvider();
+
+      // Le coach a bien un participant actif sur une saison in_progress,
+      // mais l'option n'est pas activee => bouton absent.
       await waitFor(() => {
         expect(screen.getByTestId("manage-my-team")).toBeTruthy();
       });

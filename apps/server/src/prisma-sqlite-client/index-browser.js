@@ -539,6 +539,7 @@ exports.Prisma.LeagueSeasonScalarFieldEnum = {
   theme: 'theme',
   themeYear: 'themeYear',
   playoffSize: 'playoffSize',
+  meceneEnabled: 'meceneEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -550,6 +551,26 @@ exports.Prisma.LeaguePoolScalarFieldEnum = {
   order: 'order',
   color: 'color',
   qualifiesForPlayoffs: 'qualifiesForPlayoffs',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LeagueInvitationScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  seasonId: 'seasonId',
+  inviterUserId: 'inviterUserId',
+  inviteeUserId: 'inviteeUserId',
+  inviteeTeamId: 'inviteeTeamId',
+  inviteeEmail: 'inviteeEmail',
+  status: 'status',
+  code: 'code',
+  message: 'message',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  declinedAt: 'declinedAt',
+  cancelledAt: 'cancelledAt',
+  acceptedParticipantId: 'acceptedParticipantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1191,6 +1212,7 @@ exports.Prisma.ModelName = {
   League: 'League',
   LeagueSeason: 'LeagueSeason',
   LeaguePool: 'LeaguePool',
+  LeagueInvitation: 'LeagueInvitation',
   LeagueParticipant: 'LeagueParticipant',
   LeagueRound: 'LeagueRound',
   LeaguePairing: 'LeaguePairing',

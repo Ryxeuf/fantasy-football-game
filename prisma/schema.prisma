@@ -1066,6 +1066,10 @@ model LeagueSeason {
   // Valeurs supportees : 0, 2 (final seulement), 4 (SF + final),
   // 8 (QF + SF + final). 16+ : non supporte pour l'instant.
   playoffSize  Int       @default(0)
+  // L2.B.5 — "Coup de mecene" : option activable par le commissaire.
+  // false par defaut => le bonus +100k po n'est PAS disponible pour les
+  // coachs. Le commissaire l'active explicitement par saison.
+  meceneEnabled Boolean  @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

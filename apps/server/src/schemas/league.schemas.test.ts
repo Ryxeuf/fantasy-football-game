@@ -12,6 +12,7 @@ import { describe, it, expect } from "vitest";
 import {
   createSeasonSchema,
   listSeasonsByThemeQuerySchema,
+  updateSeasonConfigSchema,
 } from "./league.schemas";
 
 describe("createSeasonSchema (S26.6 theme/themeYear)", () => {
@@ -73,6 +74,28 @@ describe("createSeasonSchema (S26.6 theme/themeYear)", () => {
       name: "Some Cup",
       themeYear: 2026,
     });
+    expect(parsed.success).toBe(false);
+  });
+});
+
+describe("updateSeasonConfigSchema (L2.B.5 coup de mecene)", () => {
+  it("accepte meceneEnabled=true", () => {
+    const parsed = updateSeasonConfigSchema.safeParse({ meceneEnabled: true });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("accepte meceneEnabled=false", () => {
+    const parsed = updateSeasonConfigSchema.safeParse({ meceneEnabled: false });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejette un payload vide (aucun champ a mettre a jour)", () => {
+    const parsed = updateSeasonConfigSchema.safeParse({});
+    expect(parsed.success).toBe(false);
+  });
+
+  it("rejette meceneEnabled non booleen", () => {
+    const parsed = updateSeasonConfigSchema.safeParse({ meceneEnabled: "yes" });
     expect(parsed.success).toBe(false);
   });
 });

@@ -21,14 +21,17 @@ import type { LeagueSeasonStatus } from "./types";
 interface SeasonAdminPanelProps {
   seasonId: string;
   status: LeagueSeasonStatus | string;
+  /** L2.B.5 — etat actuel de l'option "coup de mecene" sur la saison. */
+  meceneEnabled: boolean;
   onActionDone: () => void;
 }
 
-type AdminAction = "open" | "start" | "regenerate" | "close";
+type AdminAction = "open" | "start" | "regenerate" | "close" | "config";
 
 export function SeasonAdminPanel({
   seasonId,
   status,
+  meceneEnabled,
   onActionDone,
 }: SeasonAdminPanelProps) {
   const { t } = useLanguage();
@@ -96,6 +99,37 @@ export function SeasonAdminPanel({
     runAction("close");
   }, [runAction, t.leagues.adminSeasonConfirmClose]);
 
+  // L2.B.5 — activation/desactivation du "coup de mecene" par le
+  // commissaire (PATCH dedie, pas un POST action). Reflete immediatement
+  // l'etat via onActionDone (rechargement de la saison).
+  const onToggleMecene = useCallback(
+    async (next: boolean) => {
+      setBusy("config");
+      setError(null);
+      setSuccess(null);
+      try {
+        await apiRequest(`/leagues/seasons/${seasonId}/config`, {
+          method: "PATCH",
+          body: JSON.stringify({ meceneEnabled: next }),
+        });
+        setSuccess(t.leagues.adminActionSuccess);
+        onActionDone();
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : t.leagues.adminActionError,
+        );
+      } finally {
+        setBusy(null);
+      }
+    },
+    [
+      seasonId,
+      onActionDone,
+      t.leagues.adminActionSuccess,
+      t.leagues.adminActionError,
+    ],
+  );
+
   const canOpen = status === "draft";
   const canStart = status === "draft" || status === "scheduled";
   const canRegenerate = status !== "completed";
@@ -142,6 +176,27 @@ export function SeasonAdminPanel({
           {t.leagues.newSeasonDoubleRoundRobinLabel}
         </label>
       </div>
+
+      {/* L2.B.5 — option "coup de mecene" activable par le commissaire. */}
+      <label className="flex items-start gap-2 text-sm border-t border-amber-200 pt-3">
+        <input
+          data-testid="admin-mecene-enabled"
+          type="checkbox"
+          checked={meceneEnabled}
+          disabled={busy !== null}
+          onChange={(e) => onToggleMecene(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          <span className="font-medium text-gray-800">
+            💰 Coup de mécène (+100k po)
+          </span>
+          <span className="block text-xs text-gray-500">
+            Autorise chaque coach à créditer une fois +100 000 po à sa
+            trésorerie pendant la saison. Désactivé par défaut.
+          </span>
+        </span>
+      </label>
 
       <div className="flex flex-wrap gap-2 pt-1">
         {canOpen ? (

@@ -755,6 +755,8 @@ model LeagueSeason {
   themeYear    Int?
   // L2.C.3 — taille bracket playoffs (0 = disabled).
   playoffSize  Int       @default(0)
+  // L2.B.5 — "Coup de mecene" activable par le commissaire (mirror PG).
+  meceneEnabled Boolean  @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

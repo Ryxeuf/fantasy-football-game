@@ -224,6 +224,9 @@ export default function LeagueDetailPage() {
 
   const canPlayMecene = useMemo(() => {
     if (!myParticipant || !season) return false;
+    // L2.B.5 — le coup de mecene n'est propose que si le commissaire l'a
+    // active explicitement sur la saison.
+    if (season.meceneEnabled !== true) return false;
     return season.status === "in_progress";
   }, [myParticipant, season]);
 
@@ -440,6 +443,7 @@ export default function LeagueDetailPage() {
                 <SeasonAdminPanel
                   seasonId={season.id}
                   status={season.status}
+                  meceneEnabled={season.meceneEnabled === true}
                   onActionDone={() => {
                     if (selectedSeasonId) {
                       loadSeason(selectedSeasonId);

@@ -97,10 +97,31 @@ describe("playMecene (L2.B.5)", () => {
     ).rejects.toMatchObject({ code: "season_not_active" });
   });
 
+  it("400 quand le coup de mecene n'est pas active sur la saison", async () => {
+    (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
+      mockResolvedValue: (v: unknown) => void;
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: false,
+    });
+    await expect(
+      playMecene({
+        prisma: prisma as unknown as Parameters<typeof playMecene>[0]["prisma"],
+        seasonId,
+        teamId,
+      }),
+    ).rejects.toMatchObject({ code: "mecene_disabled" });
+  });
+
   it("404 quand l'equipe n'existe pas", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue(null);
@@ -116,7 +137,11 @@ describe("playMecene (L2.B.5)", () => {
   it("404 quand l'equipe n'est pas inscrite a la saison", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue({ id: teamId, treasury: 50_000 });
@@ -135,7 +160,11 @@ describe("playMecene (L2.B.5)", () => {
   it("400 quand le participant est withdrawn", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue({ id: teamId, treasury: 50_000 });
@@ -158,7 +187,11 @@ describe("playMecene (L2.B.5)", () => {
   it("409 quand le coup de mecene a deja ete joue", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue({ id: teamId, treasury: 50_000 });
@@ -181,7 +214,11 @@ describe("playMecene (L2.B.5)", () => {
   it("400 quand un match est en cours", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue({ id: teamId, treasury: 50_000 });
@@ -207,7 +244,11 @@ describe("playMecene (L2.B.5)", () => {
   it("happy path : credit MECENE_BONUS et set le flag", async () => {
     (prisma.leagueSeason.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
-    }).mockResolvedValue({ id: seasonId, status: "in_progress" });
+    }).mockResolvedValue({
+      id: seasonId,
+      status: "in_progress",
+      meceneEnabled: true,
+    });
     (prisma.team.findUnique as ReturnType<typeof makeFn> & {
       mockResolvedValue: (v: unknown) => void;
     }).mockResolvedValue({ id: teamId, treasury: 50_000 });
