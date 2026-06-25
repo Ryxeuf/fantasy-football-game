@@ -7,7 +7,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Response } from 'express';
 
 vi.mock('../prisma', () => ({
-  prisma: {},
+  prisma: {
+    // resolveStaffConfigBySlug : roster introuvable (undefined) → fallback
+    // sur defaultStaffConfig(slug, format) = valeurs historiques bb11.
+    roster: { findUnique: vi.fn() },
+    rosterStaffConfig: { findUnique: vi.fn() },
+  },
 }));
 
 vi.mock('../utils/server-log', () => ({
@@ -82,7 +87,7 @@ describe('handleBuildTeam — apothecary roster gating (retour A30)', () => {
       await handleBuildTeam(req, res);
       expect(res.statusCode).toBe(422);
       expect((res as { payload?: { error?: string } }).payload?.error).toMatch(
-        /mort-vivantes/i,
+        /apothicaire/i,
       );
     },
   );

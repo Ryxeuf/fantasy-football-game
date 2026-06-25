@@ -14,6 +14,10 @@ vi.mock('../prisma', () => ({
       updateMany: vi.fn(),
     },
     teamSelection: { findFirst: vi.fn() },
+    // resolveStaffConfigBySlug : roster introuvable (undefined) → fallback
+    // sur defaultStaffConfig(slug, format) = valeurs historiques bb11.
+    roster: { findUnique: vi.fn() },
+    rosterStaffConfig: { findUnique: vi.fn() },
   },
 }));
 
@@ -137,7 +141,7 @@ describe('handlePurchase — apothecary roster gating (retour A30)', () => {
       await handlePurchase(req, res);
       expect(res.statusCode).toBe(422);
       expect((res as { payload?: { error?: string } }).payload?.error).toMatch(
-        /mort-vivantes/i,
+        /apothicaire/i,
       );
       // Aucun débit ne doit avoir été tenté.
       expect(mockPrisma.team.updateMany).not.toHaveBeenCalled();

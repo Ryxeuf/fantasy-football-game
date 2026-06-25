@@ -35,11 +35,9 @@ import {
   type AllowedRoster,
   type GameFormat,
   getStarPlayerBySlug,
-  getRerollCost,
   getFormatConstraints,
   validateFormatSelection,
   isGameFormat,
-  canRosterHaveApothecary,
   isBigGuy,
   bigGuyLimitForRoster,
 } from '@bb/game-engine';
@@ -50,6 +48,7 @@ import {
 } from '../utils/star-player-validation';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
 
@@ -100,21 +99,22 @@ export async function handleBuildTeam(
       return;
     }
 
-    // Règle officielle BB : les équipes mort-vivantes (régénération) ne
-    // peuvent pas recruter d'apothicaire. Refus explicite à la création
-    // si le builder l'a quand même demandé pour un roster interdit.
-    if ((bodyApothecary ?? false) && !canRosterHaveApothecary(roster)) {
-      sendError(
-        res,
-        'Les équipes mort-vivantes ne peuvent pas recruter d\'apothicaire',
-        422,
-      );
-      return;
-    }
-
     const ruleset = resolveRuleset(bodyRuleset);
     const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
     const constraints = getFormatConstraints(format);
+
+    // Config staff résolue (DB par roster × format, sinon défaut dérivé).
+    // Source de vérité des coûts ET de l'autorisation apothicaire (la règle
+    // mort-vivants est encodée dans le défaut, mais l'admin peut surcharger).
+    const staff = await resolveStaffConfigBySlug(roster, ruleset, format);
+
+    // Refus explicite et précoce si l'apothicaire est demandé alors que la
+    // config (par roster × format) ne l'autorise pas. Avant les validations
+    // de format pour renvoyer une erreur spécifique (422).
+    if ((bodyApothecary ?? false) && !staff.apothecaryAllowed) {
+      sendError(res, "Cette équipe ne peut pas recruter d'apothicaire", 422);
+      return;
+    }
 
     const finalTeamValue = teamValue || constraints.startingBudget;
 
@@ -165,6 +165,8 @@ export async function handleBuildTeam(
       assistants,
       apothecary,
       dedicatedFans,
+      // Plafonds + autorisation apothicaire par roster (prime sur le format).
+      staffConfig: staff,
     });
     if (!formatCheck.valid) {
       sendError(res, formatCheck.error ?? 'Sélection invalide pour ce format', 400);
@@ -192,14 +194,15 @@ export async function handleBuildTeam(
       }
     }
 
-    const rerollUnitCost =
-      (getRerollCost(roster) / 1000) * constraints.rerollCostMultiplier;
+    // Coûts staff résolus (po dans `staff`) → ramenés en kpo pour rester
+    // homogène avec le reste du handler (budget/positions en kpo).
     const staffCost =
-      rerolls * rerollUnitCost +
-      cheerleaders * constraints.cheerleaderCost +
-      assistants * constraints.assistantCost +
-      (apothecary ? constraints.apothecaryCost : 0) +
-      Math.max(0, dedicatedFans - 1) * constraints.dedicatedFanCost;
+      (rerolls * staff.rerollCost +
+        cheerleaders * staff.cheerleaderCost +
+        assistants * staff.assistantCost +
+        (apothecary ? staff.apothecaryCost : 0) +
+        Math.max(0, dedicatedFans - 1) * staff.dedicatedFanCost) /
+      1000;
 
     let starPlayersCost = 0;
 

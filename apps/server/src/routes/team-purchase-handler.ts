@@ -32,10 +32,11 @@ import {
   type AllowedRoster,
   DEFAULT_RULESET,
   type Ruleset,
-  getRerollCost,
-  canRosterHaveApothecary,
+  type GameFormat,
+  isGameFormat,
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 
 type PurchaseType =
@@ -87,6 +88,15 @@ export async function handlePurchase(
       sendError(res, "Impossible d'acheter pendant un match en cours", 400);
       return;
     }
+
+    // Config staff résolue (DB par roster × format, sinon défaut dérivé).
+    // Source des coûts, plafonds et autorisation apothicaire (po).
+    const teamFormat: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+    const staff = await resolveStaffConfigBySlug(
+      team.roster,
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+      teamFormat,
+    );
 
     let cost = 0;
     let description = '';
@@ -213,9 +223,14 @@ export async function handlePurchase(
         // updateMany conditionnelle WHERE treasury >= cost AND
         // rerolls < 8, avec decrement/increment atomiques. Si
         // count===0, soit budget insuffisant soit limite atteinte.
-        cost = getRerollCost(team.roster) * 2;
+        // Achat post-création : coût DOUBLE du coût de relance (règle BB).
+        cost = staff.rerollCost * 2;
         const updateResult = await prisma.team.updateMany({
-          where: { id: teamId, treasury: { gte: cost }, rerolls: { lt: 8 } },
+          where: {
+            id: teamId,
+            treasury: { gte: cost },
+            rerolls: { lt: staff.maxRerolls },
+          },
           data: {
             rerolls: { increment: 1 },
             treasury: { decrement: cost },
@@ -226,8 +241,8 @@ export async function handlePurchase(
             where: { id: teamId },
             select: { rerolls: true, treasury: true },
           });
-          if (fresh && fresh.rerolls >= 8) {
-            sendError(res, 'Maximum 8 relances par equipe', 400);
+          if (fresh && fresh.rerolls >= staff.maxRerolls) {
+            sendError(res, `Maximum ${staff.maxRerolls} relances par equipe`, 400);
           } else {
             sendError(
               res,
@@ -242,12 +257,12 @@ export async function handlePurchase(
       }
 
       case 'cheerleader': {
-        cost = 10000;
+        cost = staff.cheerleaderCost;
         const updateResult = await prisma.team.updateMany({
           where: {
             id: teamId,
             treasury: { gte: cost },
-            cheerleaders: { lt: 12 },
+            cheerleaders: { lt: staff.maxCheerleaders },
           },
           data: {
             cheerleaders: { increment: 1 },
@@ -259,10 +274,10 @@ export async function handlePurchase(
             where: { id: teamId },
             select: { cheerleaders: true },
           });
-          if (fresh && fresh.cheerleaders >= 12) {
-            sendError(res, 'Maximum 12 cheerleaders', 400);
+          if (fresh && fresh.cheerleaders >= staff.maxCheerleaders) {
+            sendError(res, `Maximum ${staff.maxCheerleaders} cheerleaders`, 400);
           } else {
-            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+            sendError(res, `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po`, 400);
           }
           return;
         }
@@ -271,12 +286,12 @@ export async function handlePurchase(
       }
 
       case 'assistant': {
-        cost = 10000;
+        cost = staff.assistantCost;
         const updateResult = await prisma.team.updateMany({
           where: {
             id: teamId,
             treasury: { gte: cost },
-            assistants: { lt: 6 },
+            assistants: { lt: staff.maxAssistants },
           },
           data: {
             assistants: { increment: 1 },
@@ -288,10 +303,10 @@ export async function handlePurchase(
             where: { id: teamId },
             select: { assistants: true },
           });
-          if (fresh && fresh.assistants >= 6) {
-            sendError(res, 'Maximum 6 assistants', 400);
+          if (fresh && fresh.assistants >= staff.maxAssistants) {
+            sendError(res, `Maximum ${staff.maxAssistants} assistants`, 400);
           } else {
-            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+            sendError(res, `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po`, 400);
           }
           return;
         }
@@ -300,17 +315,17 @@ export async function handlePurchase(
       }
 
       case 'apothecary': {
-        // Règle officielle BB : les équipes mort-vivantes (régénération)
-        // ne peuvent pas recruter d'apothicaire. Refus avant tout débit.
-        if (!canRosterHaveApothecary(team.roster)) {
+        // Autorisation par roster × format (config DB ; défaut = règle BB :
+        // les équipes mort-vivantes à régénération ne peuvent pas en recruter).
+        if (!staff.apothecaryAllowed) {
           sendError(
             res,
-            'Les équipes mort-vivantes ne peuvent pas recruter d\'apothicaire',
+            "Cette équipe ne peut pas recruter d'apothicaire",
             422,
           );
           return;
         }
-        cost = 50000;
+        cost = staff.apothecaryCost;
         const updateResult = await prisma.team.updateMany({
           where: {
             id: teamId,
@@ -330,7 +345,7 @@ export async function handlePurchase(
           if (fresh && fresh.apothecary) {
             sendError(res, "L'equipe a deja un apothicaire", 400);
           } else {
-            sendError(res, 'Tresorerie insuffisante. Cout: 50k po', 400);
+            sendError(res, `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po`, 400);
           }
           return;
         }

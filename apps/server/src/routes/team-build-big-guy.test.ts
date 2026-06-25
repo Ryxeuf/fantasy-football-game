@@ -73,6 +73,9 @@ vi.mock('../prisma', () => ({
         starPlayers: [],
       })),
     },
+    // resolveStaffConfigBySlug : fallback defaultStaffConfig(slug, format).
+    roster: { findUnique: vi.fn() },
+    rosterStaffConfig: { findUnique: vi.fn() },
   },
 }));
 

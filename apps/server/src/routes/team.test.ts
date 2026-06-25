@@ -39,6 +39,14 @@ vi.mock("../prisma", () => ({
     localMatch: {
       findMany: vi.fn(),
     },
+    // resolveStaffConfigBySlug : fallback defaultStaffConfig(slug, format)
+    // quand le roster n'est pas mocké (undefined).
+    roster: {
+      findUnique: vi.fn(),
+    },
+    rosterStaffConfig: {
+      findUnique: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));

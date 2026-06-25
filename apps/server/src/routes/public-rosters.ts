@@ -10,6 +10,10 @@ import {
   getTeamSpecialRuleBySlug,
   getRegionalLeagueBySlug,
   getRegionalRulesForTeam,
+  defaultStaffConfig,
+  FORMATS,
+  type GameFormat,
+  type RosterStaffConfig,
   type Ruleset,
 } from "@bb/game-engine";
 import { prisma } from "../prisma";
@@ -44,6 +48,8 @@ interface RosterListPayload {
     naf: boolean;
     ruleset?: string;
     _count: { positions: number };
+    /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
+    staffConfigs: Record<GameFormat, RosterStaffConfig>;
   }>;
   ruleset: string;
   availableRulesets: readonly string[];
@@ -93,6 +99,8 @@ interface RosterDetailPayload {
     specialRules: RosterSpecialRuleView[];
     /** A11 — ligues régionales / "type de ligue" résolues (vide si aucune). */
     regionalLeagues: RosterRegionalLeagueView[];
+    /** Config staff par format (DB ; défaut dérivé si pas de ligne). Coûts en po. */
+    staffConfigs: Record<GameFormat, RosterStaffConfig>;
   };
   ruleset: string;
 }
@@ -196,6 +204,7 @@ async function loadRosterList(
       tier: true,
       naf: true,
       _count: { select: { positions: true } },
+      staffConfigs: true,
     },
   });
 
@@ -214,6 +223,7 @@ async function loadRosterList(
       tier: roster.tier,
       naf: roster.naf,
       _count: roster._count,
+      staffConfigs: staffConfigsByFormat(roster),
     })),
     ruleset,
     availableRulesets: RULESETS,
@@ -235,6 +245,7 @@ async function loadRosterDetail(
         },
         orderBy: { displayName: "asc" },
       },
+      staffConfigs: true,
     },
   });
 
@@ -386,7 +397,36 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
       ruleset,
       isEnglish,
     ),
+    staffConfigs: staffConfigsByFormat(roster),
   };
+}
+
+/**
+ * Construit la config staff par format pour un roster : ligne DB si présente,
+ * sinon défaut dérivé des constantes (`defaultStaffConfig`). Coûts en po.
+ */
+function staffConfigsByFormat(
+  roster: any,
+): Record<GameFormat, RosterStaffConfig> {
+  const out = {} as Record<GameFormat, RosterStaffConfig>;
+  for (const format of FORMATS) {
+    const row = roster.staffConfigs?.find((s: any) => s.format === format);
+    out[format] = row
+      ? {
+          rerollCost: row.rerollCost,
+          maxRerolls: row.maxRerolls,
+          apothecaryAllowed: row.apothecaryAllowed,
+          apothecaryCost: row.apothecaryCost,
+          maxCheerleaders: row.maxCheerleaders,
+          cheerleaderCost: row.cheerleaderCost,
+          maxAssistants: row.maxAssistants,
+          assistantCost: row.assistantCost,
+          maxDedicatedFans: row.maxDedicatedFans,
+          dedicatedFanCost: row.dedicatedFanCost,
+        }
+      : defaultStaffConfig(roster.slug, format);
+  }
+  return out;
 }
 
 export default router;
