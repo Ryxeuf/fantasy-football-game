@@ -298,6 +298,11 @@ export async function reverseOfflineLeagueResult(
     return { skipped: true, reason: "purchase-consumed" };
   }
 
+  // Licenciements reellement appliques par ce match (a re-activer).
+  const firedApplied: string[] = Array.isArray(snapshot.firedApplied)
+    ? snapshot.firedApplied.filter((s): s is string => typeof s === "string")
+    : [];
+
   // --- Reversion ---
   const { input } = snapshot;
   const winner = winnerOf(input.scoreHome, input.scoreAway);
@@ -466,6 +471,17 @@ export async function reverseOfflineLeagueResult(
     ops.push(...buildPurchaseReverseOps(away.teamId, rosterMutations.away));
   }
 
+  // 4c. Licenciements : re-activation (firedAt = null) des joueurs licencies
+  //     par ce match. TV recalculee apres la transaction.
+  if (firedApplied.length > 0) {
+    ops.push(
+      prisma.teamPlayer.updateMany({
+        where: { id: { in: firedApplied } },
+        data: { firedAt: null },
+      }),
+    );
+  }
+
   // 5. Suppression du Match synthetique : d'abord les TeamSelection (pas de
   //    cascade), puis le Match (cascade la post-match-sequence).
   ops.push(
@@ -491,13 +507,17 @@ export async function reverseOfflineLeagueResult(
 
   await prisma.$transaction(ops);
 
-  // Recalcul TV pour les equipes dont le roster a ete mute par les achats
-  // (apres la transaction : updateTeamValues lit puis ecrit).
-  if (sideHasMutation(rosterMutations.home)) {
-    await updateTeamValues(prisma, home.teamId);
+  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit) pour
+  // les equipes dont le roster a ete mute par les achats OU les licenciements.
+  const tvTeams = new Set<string>();
+  if (sideHasMutation(rosterMutations.home)) tvTeams.add(home.teamId);
+  if (sideHasMutation(rosterMutations.away)) tvTeams.add(away.teamId);
+  if (firedApplied.length > 0) {
+    tvTeams.add(home.teamId);
+    tvTeams.add(away.teamId);
   }
-  if (sideHasMutation(rosterMutations.away)) {
-    await updateTeamValues(prisma, away.teamId);
+  for (const teamId of tvTeams) {
+    await updateTeamValues(prisma, teamId);
   }
 
   serverLog.info(

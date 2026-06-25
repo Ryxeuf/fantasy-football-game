@@ -408,6 +408,61 @@ export interface PostMatchValues {
   costlyErrorsAway: CostlyError[];
   purchasesHome: Purchase[];
   purchasesAway: Purchase[];
+  /** Licenciements de fin de match : [teamPlayerId] (des 2 equipes). */
+  firedPlayerIds: string[];
+}
+
+/** Editeur de licenciements d'une equipe : liste de pickers joueur. */
+function FiredEditor({
+  team,
+  ids,
+  onChange,
+  disabled,
+  testId,
+}: {
+  team: SheetTeam | null;
+  ids: string[];
+  onChange: (l: string[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, v: string) =>
+    onChange(ids.map((it, idx) => (idx === i ? v : it)));
+  return (
+    <div data-testid={testId} className="space-y-1.5">
+      {ids.map((id, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <PlayerSelect
+              team={team}
+              value={id}
+              onChange={(v) => update(i, v)}
+              disabled={disabled}
+            />
+          </div>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(ids.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() => onChange([...ids, ""])}
+          className="text-xs font-medium text-blue-600"
+        >
+          + licenciement
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** Editeur de SPP bonus "Nuffle" pour une equipe (picker joueur + spp). */
@@ -691,6 +746,18 @@ export function PostMatchPanel({
   const [ceA, setCeA] = useState<CostlyError[]>(initial.costlyErrorsAway);
   const [buyH, setBuyH] = useState<Purchase[]>(initial.purchasesHome);
   const [buyA, setBuyA] = useState<Purchase[]>(initial.purchasesAway);
+  // Licenciements : un sous-etat par equipe (filtre par appartenance), fusionne
+  // au save (API = liste plate des teamPlayerId).
+  const [firedH, setFiredH] = useState<string[]>(
+    initial.firedPlayerIds.filter((id) =>
+      home?.players.some((p) => p.id === id),
+    ),
+  );
+  const [firedA, setFiredA] = useState<string[]>(
+    initial.firedPlayerIds.filter((id) =>
+      away?.players.some((p) => p.id === id),
+    ),
+  );
   const [rbH, setRbH] = useState<string>(
     initial.rankingBonusHome?.toString() ?? "",
   );
@@ -737,6 +804,7 @@ export function PostMatchPanel({
         costlyErrorsAway: ceA,
         purchasesHome: buyH,
         purchasesAway: buyA,
+        firedPlayerIds: [...firedH, ...firedA].filter((id) => id),
       });
     } finally {
       setBusy(false);
@@ -761,6 +829,8 @@ export function PostMatchPanel({
       setRb: setRbH,
       spp: sppH,
       setSpp: setSppH,
+      fired: firedH,
+      setFired: setFiredH,
     },
     {
       side: "away" as const,
@@ -779,6 +849,8 @@ export function PostMatchPanel({
       setRb: setRbA,
       spp: sppA,
       setSpp: setSppA,
+      fired: firedA,
+      setFired: setFiredA,
     },
   ];
 
@@ -886,6 +958,19 @@ export function PostMatchPanel({
                 onChange={c.setCe}
                 disabled={disabled}
                 testId={`costly-${c.side}`}
+              />
+            </div>
+
+            <div className="text-xs">
+              <div className="mb-1 font-medium text-slate-600">
+                Licenciements
+              </div>
+              <FiredEditor
+                team={c.team}
+                ids={c.fired}
+                onChange={c.setFired}
+                disabled={disabled}
+                testId={`fired-${c.side}`}
               />
             </div>
           </div>

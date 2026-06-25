@@ -479,6 +479,10 @@ model TeamPlayer {
   dead   Boolean   @default(false) // Player is dead (killed during a match)
   diedAt DateTime? // When the player died
 
+  // Licenciement (ligue physique) : le joueur est retiré du roster actif
+  // mais conservé en base (historique/carrière). `firedAt = null` => actif.
+  firedAt DateTime? // When the player was fired (released) from the team
+
   @@index([teamId])
 }
 
@@ -1338,6 +1342,9 @@ model LeagueMatchSheet {
   /// Achats post-match : [{ kind: 'player'|'reroll'|'staff', name, cost }].
   purchasesHome          Json?
   purchasesAway          Json?
+  /// Licenciements de fin de match : [teamPlayerId]. Appliques (firedAt) a
+  /// la validation, reversibles a l'invalidation.
+  firedPlayerIds         Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

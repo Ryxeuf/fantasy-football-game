@@ -13,7 +13,12 @@ vi.mock("../prisma", () => {
     leagueRound: { count: vi.fn(), update: vi.fn() },
     leaguePairing: { findUnique: vi.fn(), update: vi.fn() },
     leagueParticipant: { update: vi.fn() },
-    teamPlayer: { findMany: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
+    teamPlayer: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
     team: { update: vi.fn() },
     teamSelection: { deleteMany: vi.fn() },
     $transaction: vi.fn(async (ops: unknown) =>
@@ -45,6 +50,7 @@ vi.mock("./league-offline-result", async (importOriginal) => {
 
 import { prisma } from "../prisma";
 import { recordOfflineLeagueResult } from "./league-offline-result";
+import { updateTeamValues } from "../utils/team-values";
 import {
   reverseOfflineLeagueResult,
   editOfflineLeagueResult,
@@ -63,8 +69,10 @@ const m = {
   tpFindMany: prisma.teamPlayer.findMany as MockFn,
   tpUpdate: prisma.teamPlayer.update as MockFn,
   tpDeleteMany: prisma.teamPlayer.deleteMany as MockFn,
+  tpUpdateMany: prisma.teamPlayer.updateMany as MockFn,
   teamUpdate: prisma.team.update as MockFn,
   selDelete: prisma.teamSelection.deleteMany as MockFn,
+  updateTv: updateTeamValues as unknown as MockFn,
 };
 
 function buildSnapshot(over: Record<string, unknown> = {}) {
@@ -130,6 +138,7 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     m.partUpdate.mockResolvedValue({});
     m.tpUpdate.mockResolvedValue({});
     m.tpDeleteMany.mockResolvedValue({ count: 0 });
+    m.tpUpdateMany.mockResolvedValue({ count: 0 });
     m.teamUpdate.mockResolvedValue({});
     m.selDelete.mockResolvedValue({ count: 2 });
     m.matchDelete.mockResolvedValue({});
@@ -437,6 +446,23 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     // Aucune suppression : la reversion est refusee avant la transaction.
     expect(m.tpDeleteMany).not.toHaveBeenCalled();
     expect(m.matchDelete).not.toHaveBeenCalled();
+  });
+
+  it("reverse les licenciements : re-active firedAt=null + recalcule TV", async () => {
+    const snapshot = { ...buildSnapshot(), firedApplied: ["p1", "p2"] };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+
+    // Re-activation des joueurs licencies par ce match.
+    expect(m.tpUpdateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["p1", "p2"] } },
+      data: { firedAt: null },
+    });
+    // TV recalculee pour les 2 equipes (licenciements touchent home + away).
+    expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-home");
+    expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-away");
   });
 });
 

@@ -109,6 +109,8 @@ export const postMatchSchema = z
     purchasesHome: z.array(purchaseSchema).optional().nullable(),
     purchasesAway: z.array(purchaseSchema).optional().nullable(),
     motmPlayerIds: z.array(z.string().min(1)).max(20).optional(),
+    /** Licenciements de fin de match : [teamPlayerId]. */
+    firedPlayerIds: z.array(z.string().min(1)).max(32).optional().nullable(),
   })
   .refine(
     (v) => Object.keys(v).length > 0,

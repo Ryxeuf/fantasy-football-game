@@ -36,6 +36,9 @@ vi.mock("./league-offline-purchases", async (importOriginal) => {
   return { ...actual, applyOfflinePurchasesForTeam: vi.fn() };
 });
 
+// Recalcul TV isole (licenciements). Neutralise le calcul reel.
+vi.mock("../utils/team-values", () => ({ updateTeamValues: vi.fn() }));
+
 vi.mock("./league-match-result", () => ({
   recordLeagueMatchResult: vi.fn(),
 }));
@@ -56,6 +59,7 @@ import {
   applyOfflinePurchasesForTeam,
   EMPTY_MUTATION_SIDE,
 } from "./league-offline-purchases";
+import { updateTeamValues } from "../utils/team-values";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const m = {
@@ -70,6 +74,7 @@ const m = {
   partUpdate: prisma.leagueParticipant.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
   applyPurchases: applyOfflinePurchasesForTeam as unknown as MockFn,
+  updateTv: updateTeamValues as unknown as MockFn,
 };
 
 function buildPairing(overrides: Record<string, unknown> = {}) {
@@ -433,5 +438,45 @@ describe("recordOfflineLeagueResult (option b)", () => {
       casualtiesAway: 0,
     });
     expect(m.matchUpdate).not.toHaveBeenCalled();
+  });
+
+  it("licencie les joueurs (firedAt) + recalcule TV + snapshot firedApplied", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    // Validation appartenance + non deja licencie (firedAt: null).
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", teamId: "team-home" },
+      { id: "p2", teamId: "team-away" },
+    ]);
+
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      firedPlayerIds: ["p1", "p2"],
+    });
+
+    expect(m.tpFindMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ["p1", "p2"] },
+        teamId: { in: ["team-home", "team-away"] },
+        firedAt: null,
+      },
+      select: { id: true, teamId: true },
+    });
+    // Pose firedAt sur les 2 joueurs.
+    const firedCall = m.tpUpdateMany.mock.calls.find(
+      (c) => "firedAt" in (c[0] as { data: Record<string, unknown> }).data,
+    )?.[0] as { where: { id: { in: string[] } } };
+    expect(firedCall.where.id.in).toEqual(["p1", "p2"]);
+    // TV recalculee pour les 2 equipes.
+    expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-home");
+    expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-away");
+    // Snapshot : firedApplied = ids reellement licencies.
+    const upd = m.matchUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "m-1",
+    )?.[0] as { data: { offlineResultInput: { firedApplied: string[] } } };
+    expect(upd.data.offlineResultInput.firedApplied).toEqual(["p1", "p2"]);
   });
 });

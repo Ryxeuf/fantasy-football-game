@@ -318,6 +318,8 @@ export interface PostMatchPayload {
   purchasesAway?: unknown;
   /** Joueurs du match (MVP) : [playerId]. */
   motmPlayerIds?: readonly string[];
+  /** Licenciements de fin de match : [teamPlayerId]. */
+  firedPlayerIds?: readonly string[] | null;
 }
 
 /**
@@ -366,6 +368,8 @@ export async function updatePostMatch(input: {
     data.purchasesAway = p.purchasesAway ?? undefined;
   if (p.motmPlayerIds !== undefined)
     data.motmPlayerIds = [...p.motmPlayerIds];
+  if (p.firedPlayerIds !== undefined)
+    data.firedPlayerIds = [...(p.firedPlayerIds ?? [])];
 
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -588,6 +592,8 @@ export function buildOfflineInputFromSummary(
     costlyErrorsAway?: unknown;
     purchasesHome?: unknown;
     purchasesAway?: unknown;
+    /** Licenciements de fin de match : [teamPlayerId]. */
+    firedPlayerIds?: unknown;
   },
   eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
 ) {
@@ -662,6 +668,8 @@ export function buildOfflineInputFromSummary(
     // par treasuryDebit ci-dessus : pas de double-debit).
     purchasesHome: parsePurchases(sheet.purchasesHome),
     purchasesAway: parsePurchases(sheet.purchasesAway),
+    // Licenciements -> firedAt (retire du roster actif, reversible).
+    firedPlayerIds: parseStringArray(sheet.firedPlayerIds),
   };
 }
 
@@ -794,6 +802,7 @@ export async function validateByCommissioner(input: {
       costlyErrorsAway?: unknown;
       purchasesHome?: unknown;
       purchasesAway?: unknown;
+      firedPlayerIds?: unknown;
     },
     events,
   );
@@ -1100,6 +1109,10 @@ async function loadSheetTeams(
       name: true,
       roster: true,
       players: {
+        // Les joueurs licencies (firedAt) ne font plus partie du roster
+        // actif : on les exclut des pickers (comme un retrait definitif). Les
+        // morts restent inclus mais flagges.
+        where: { firedAt: null },
         orderBy: { number: "asc" },
         select: {
           id: true,

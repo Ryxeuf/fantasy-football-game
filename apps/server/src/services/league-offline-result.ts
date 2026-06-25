@@ -40,6 +40,7 @@ import {
   type OfflinePurchaseInput,
   type OfflineRosterMutations,
 } from "./league-offline-purchases";
+import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 
@@ -116,6 +117,12 @@ export interface RecordOfflineResultInput {
    */
   readonly purchasesHome?: readonly OfflinePurchaseInput[];
   readonly purchasesAway?: readonly OfflinePurchaseInput[];
+  /**
+   * Licenciements de fin de match : `teamPlayerId[]` (des 2 equipes). Les
+   * joueurs sont retires du roster actif (`firedAt`) — conserves en base
+   * (historique) et reversibles a l'invalidation.
+   */
+  readonly firedPlayerIds?: readonly string[];
 }
 
 export interface OfflineSppBonusInput {
@@ -197,6 +204,7 @@ export interface OfflineResultSnapshot {
     readonly injuries: readonly OfflineInjuryInput[];
     readonly purchasesHome: readonly OfflinePurchaseInput[];
     readonly purchasesAway: readonly OfflinePurchaseInput[];
+    readonly firedPlayerIds: readonly string[];
   };
   readonly dedicatedFansBefore: {
     readonly home: number;
@@ -208,6 +216,12 @@ export interface OfflineResultSnapshot {
    * `recordOfflineLeagueResult`). Optionnel pour retro-compat pre-achats.
    */
   readonly rosterMutations?: OfflineRosterMutations;
+  /**
+   * Licenciements REELLEMENT appliques par ce match (sous-ensemble valide de
+   * `input.firedPlayerIds` : appartenance aux 2 equipes + non deja licencie).
+   * Renseigne APRES coup ; reversion exacte = ces ids seulement.
+   */
+  readonly firedApplied?: readonly string[];
 }
 
 function buildOfflineSnapshot(
@@ -233,9 +247,45 @@ function buildOfflineSnapshot(
       injuries: input.injuries ?? [],
       purchasesHome: input.purchasesHome ?? [],
       purchasesAway: input.purchasesAway ?? [],
+      firedPlayerIds: input.firedPlayerIds ?? [],
     },
     dedicatedFansBefore: { home: fansBefore.home, away: fansBefore.away },
   };
+}
+
+/**
+ * Applique les licenciements de fin de match : pose `firedAt` sur les joueurs
+ * vises (filtres par appartenance aux 2 equipes + non deja licencies) et
+ * recalcule la TV des equipes touchees. Retourne les ids REELLEMENT licencies
+ * (pour la reversion exacte).
+ */
+async function applyOfflineFirings(
+  homeTeamId: string,
+  awayTeamId: string,
+  firedPlayerIds: readonly string[],
+): Promise<string[]> {
+  if (firedPlayerIds.length === 0) return [];
+  const valid = (await prisma.teamPlayer.findMany({
+    where: {
+      id: { in: [...firedPlayerIds] },
+      teamId: { in: [homeTeamId, awayTeamId] },
+      firedAt: null,
+    },
+    select: { id: true, teamId: true },
+  })) as Array<{ id: string; teamId: string }>;
+  if (valid.length === 0) return [];
+
+  const ids = valid.map((p) => p.id);
+  await prisma.teamPlayer.updateMany({
+    where: { id: { in: ids } },
+    data: { firedAt: new Date() },
+  });
+  // TV recompute pour les equipes touchees (les licencies quittent le roster).
+  const teamIds = new Set(valid.map((p) => p.teamId));
+  for (const teamId of teamIds) {
+    await updateTeamValues(prisma, teamId);
+  }
+  return ids;
 }
 
 /**
@@ -681,11 +731,20 @@ export async function recordOfflineLeagueResult(
         ? await applyOfflinePurchasesForTeam(away.teamId, input.purchasesAway)
         : EMPTY_MUTATION_SIDE,
   };
-  if (hasAnyMutation(rosterMutations)) {
+
+  // Licenciements de fin de match (firedAt) -> retire du roster actif, TV
+  // recalculee. Reversible via les ids reellement appliques (snapshot).
+  const firedApplied = await applyOfflineFirings(
+    home.teamId,
+    away.teamId,
+    input.firedPlayerIds ?? [],
+  );
+
+  if (hasAnyMutation(rosterMutations) || firedApplied.length > 0) {
     await prisma.match.update({
       where: { id: match.id },
       data: {
-        offlineResultInput: { ...offlineSnapshot, rosterMutations },
+        offlineResultInput: { ...offlineSnapshot, rosterMutations, firedApplied },
       },
     });
   }

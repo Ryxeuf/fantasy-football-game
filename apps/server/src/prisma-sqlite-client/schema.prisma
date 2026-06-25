@@ -405,6 +405,9 @@ model TeamPlayer {
   // Player death tracking
   dead   Boolean   @default(false)
   diedAt DateTime?
+
+  // Licenciement (ligue physique) : firedAt = null => actif.
+  firedAt DateTime?
 }
 
 // Star Player recruté pour une équipe (mirror minimal du schéma Postgres
@@ -988,6 +991,7 @@ model LeagueMatchSheet {
   motmPlayerIds          String        @default("[]")
   purchasesHome          String?
   purchasesAway          String?
+  firedPlayerIds         String?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
