@@ -98,9 +98,14 @@ services:
       # Degeler = "true". Voir docs/pro-league-freeze-2026-06-01.md.
       - PRO_LEAGUE_ENABLED=false
       # E-mail transactionnel (invitations de ligue, digest, etc.). Renseigner
-      # ces variables dans le `.env` de prod pour activer l'envoi réel. Si
-      # SMTP_HOST est vide, le mailer dégrade proprement (e-mails loggés only).
+      # ces variables dans le `.env` de prod pour activer l'envoi réel. Si rien
+      # n'est configuré, le mailer dégrade proprement (e-mails loggés only).
       # Voir docs/email.md.
+      # Option 1 (recommandée) : DSN unique façon Symfony, ex.
+      #   MAILER_DSN=smtp://user%40gmail.com:APP_PASSWORD@smtp.gmail.com:587
+      # Prioritaire sur les SMTP_* ci-dessous quand renseigné.
+      - MAILER_DSN=${MAILER_DSN:-}
+      # Option 2 : variables SMTP séparées (utilisées si MAILER_DSN est vide).
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}

@@ -122,6 +122,9 @@ services:
       # E-mail : en dev on pointe sur Mailpit (cf. service `mailpit`). Aucun
       # mail n'est réellement envoyé — tout est capturé dans l'UI Mailpit
       # (https://mailpit.nuffle-arena.orb.local).
+      # MAILER_DSN (façon Symfony) est prioritaire s'il est défini ; sinon on
+      # retombe sur les SMTP_* ci-dessous (Mailpit). Voir docs/email.md.
+      - MAILER_DSN=${MAILER_DSN:-}
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - MAIL_FROM=Nuffle Arena (dev) <no-reply@nuffle-arena.local>

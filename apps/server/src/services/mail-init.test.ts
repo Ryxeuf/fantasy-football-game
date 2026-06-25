@@ -14,6 +14,7 @@ vi.mock("nodemailer", () => ({
 import {
   buildMailTransportFromEnv,
   initMailTransportFromEnv,
+  parseMailerDsn,
   DEFAULT_MAIL_FROM,
   type SmtpEnv,
 } from "./mail-init";
@@ -96,6 +97,78 @@ describe("mail-init", () => {
 
       expect(sendMail).toHaveBeenCalledWith(
         expect.objectContaining({ from: "Ligue <ligue@nuffle.test>" }),
+      );
+    });
+  });
+
+  describe("parseMailerDsn", () => {
+    it("parses a Gmail-style DSN (STARTTLS on 587, percent-decoded user)", () => {
+      const cfg = parseMailerDsn(
+        "smtp://nufflearena%40gmail.com:MyPass@smtp.gmail.com:587",
+      );
+      expect(cfg).toEqual({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        user: "nufflearena@gmail.com",
+        pass: "MyPass",
+      });
+    });
+
+    it("treats smtps:// (and port 465) as implicit TLS", () => {
+      expect(parseMailerDsn("smtps://u:p@smtp.example.com")).toMatchObject({
+        port: 465,
+        secure: true,
+      });
+      expect(
+        parseMailerDsn("smtp://u:p@smtp.example.com:465"),
+      ).toMatchObject({ secure: true });
+    });
+
+    it("honours ?secure=true on a STARTTLS port", () => {
+      expect(
+        parseMailerDsn("smtp://u:p@host:587?secure=true"),
+      ).toMatchObject({ secure: true });
+    });
+
+    it("returns null for an invalid or unsupported DSN", () => {
+      expect(parseMailerDsn("not a url")).toBeNull();
+      expect(parseMailerDsn("http://host:587")).toBeNull();
+    });
+  });
+
+  describe("buildMailTransportFromEnv with MAILER_DSN", () => {
+    it("uses MAILER_DSN to configure nodemailer", () => {
+      buildMailTransportFromEnv({
+        MAILER_DSN: "smtp://nufflearena%40gmail.com:MyPass@smtp.gmail.com:587",
+      });
+      expect(createTransport).toHaveBeenCalledWith({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: { user: "nufflearena@gmail.com", pass: "MyPass" },
+      });
+    });
+
+    it("prioritises MAILER_DSN over SMTP_* variables", () => {
+      buildMailTransportFromEnv({
+        MAILER_DSN: "smtp://u:p@dsn-host:2525",
+        SMTP_HOST: "ignored-host",
+        SMTP_PORT: "1025",
+      });
+      expect(createTransport).toHaveBeenCalledWith(
+        expect.objectContaining({ host: "dsn-host", port: 2525 }),
+      );
+    });
+
+    it("falls back to SMTP_* when MAILER_DSN is invalid", () => {
+      buildMailTransportFromEnv({
+        MAILER_DSN: "garbage",
+        SMTP_HOST: "mailpit",
+        SMTP_PORT: "1025",
+      });
+      expect(createTransport).toHaveBeenCalledWith(
+        expect.objectContaining({ host: "mailpit", port: 1025 }),
       );
     });
   });
