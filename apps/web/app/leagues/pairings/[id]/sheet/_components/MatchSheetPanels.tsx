@@ -2,35 +2,188 @@
 
 import { useState } from "react";
 
-// Polish — panneaux pre/post-match + invalidation pour la feuille de
-// match. Composants presentational : ils recoivent les valeurs + des
-// callbacks de sauvegarde (la page parent gere les appels API).
+// Refonte mobile-first — panneaux de saisie d'une feuille de match de
+// ligue physique. Sections AVANT-MATCH / FIN DU MATCH calquees sur la
+// feuille de match officielle Blood Bowl. Composants presentational :
+// ils gerent un etat local seede par `initial` et appellent `onSave`
+// (la page parent fait l'appel API). Responsive : 1 colonne mobile ->
+// 2 colonnes home/away des `sm`.
 
-const WEATHER_OPTIONS = [
-  "",
-  "sweltering_heat",
-  "very_sunny",
-  "perfect",
-  "pouring_rain",
-  "blizzard",
+const WINNINGS_PER_POPULARITY = 10_000;
+
+const WEATHER_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "—" },
+  { value: "sweltering_heat", label: "Chaleur accablante" },
+  { value: "very_sunny", label: "Très ensoleillé" },
+  { value: "perfect", label: "Conditions idéales" },
+  { value: "pouring_rain", label: "Averse" },
+  { value: "blizzard", label: "Blizzard" },
 ];
+
+export interface SheetPlayer {
+  id: string;
+  number: number;
+  name: string;
+  position: string;
+  dead: boolean;
+  missNextMatch: boolean;
+  spp: number;
+}
+
+export interface SheetTeam {
+  teamId: string;
+  name: string;
+  roster: string;
+  players: SheetPlayer[];
+}
+
+function playerLabel(p: SheetPlayer): string {
+  const flags = p.dead ? " ☠" : p.missNextMatch ? " (blessé)" : "";
+  return `N°${p.number} ${p.name} — ${p.position}${flags}`;
+}
+
+/** Picker de joueur d'une equipe (dropdown). Valeur = teamPlayerId. */
+export function PlayerSelect({
+  team,
+  value,
+  onChange,
+  disabled,
+  allowEmpty = true,
+  testId,
+}: {
+  team: SheetTeam | null;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  allowEmpty?: boolean;
+  testId?: string;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled || !team}
+      data-testid={testId}
+      className="block w-full rounded border px-2 py-2 text-sm"
+    >
+      {allowEmpty && <option value="">— joueur —</option>}
+      {team?.players.map((p) => (
+        <option key={p.id} value={p.id}>
+          {playerLabel(p)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// ────────────────────────────── AVANT-MATCH ──────────────────────────────
+
+export interface Inducement {
+  name: string;
+  cost: number;
+  qty: number;
+}
 
 export interface PreMatchValues {
   weather: string;
   popularityHome: number | null;
   popularityAway: number | null;
+  inducementsHome: Inducement[];
+  inducementsAway: Inducement[];
+}
+
+function sumInducements(list: Inducement[]): number {
+  return list.reduce(
+    (acc, i) => acc + Math.max(0, i.cost) * Math.max(1, i.qty),
+    0,
+  );
+}
+
+function InducementEditor({
+  list,
+  onChange,
+  disabled,
+  testId,
+}: {
+  list: Inducement[];
+  onChange: (l: Inducement[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, patch: Partial<Inducement>) =>
+    onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+
+  return (
+    <div data-testid={testId} className="space-y-2">
+      <div className="text-xs font-medium text-slate-600">Coups de pouce</div>
+      {list.length === 0 && (
+        <p className="text-xs text-slate-400">Aucune prime de match.</p>
+      )}
+      {list.map((it, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <input
+            value={it.name}
+            onChange={(e) => update(i, { name: e.target.value })}
+            disabled={disabled}
+            placeholder="Nom"
+            className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
+          />
+          <input
+            type="number"
+            min={0}
+            value={it.cost}
+            onChange={(e) => update(i, { cost: Number(e.target.value) || 0 })}
+            disabled={disabled}
+            placeholder="Coût (po)"
+            className="w-24 rounded border px-2 py-1 text-sm"
+          />
+          <input
+            type="number"
+            min={1}
+            value={it.qty}
+            onChange={(e) => update(i, { qty: Number(e.target.value) || 1 })}
+            disabled={disabled}
+            title="Quantité"
+            className="w-14 rounded border px-2 py-1 text-sm"
+          />
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(list.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() => onChange([...list, { name: "", cost: 0, qty: 1 }])}
+          className="text-xs font-medium text-blue-600"
+        >
+          + coup de pouce
+        </button>
+      )}
+      <div className="text-[11px] text-slate-500">
+        Cash investi : {sumInducements(list).toLocaleString("fr-FR")} po
+      </div>
+    </div>
+  );
 }
 
 export function PreMatchPanel({
   initial,
-  computedWinningsHome,
-  computedWinningsAway,
+  homeName,
+  awayName,
   disabled,
   onSave,
 }: {
   initial: PreMatchValues;
-  computedWinningsHome: number;
-  computedWinningsAway: number;
+  homeName: string;
+  awayName: string;
   disabled?: boolean;
   onSave: (v: PreMatchValues) => Promise<void>;
 }) {
@@ -41,7 +194,12 @@ export function PreMatchPanel({
   const [popA, setPopA] = useState<string>(
     initial.popularityAway?.toString() ?? "",
   );
+  const [indH, setIndH] = useState<Inducement[]>(initial.inducementsHome);
+  const [indA, setIndA] = useState<Inducement[]>(initial.inducementsAway);
   const [busy, setBusy] = useState(false);
+
+  const winningsH = (Number(popH) || 0) * WINNINGS_PER_POPULARITY;
+  const winningsA = (Number(popA) || 0) * WINNINGS_PER_POPULARITY;
 
   const save = async () => {
     setBusy(true);
@@ -50,77 +208,121 @@ export function PreMatchPanel({
         weather,
         popularityHome: popH === "" ? null : Number(popH),
         popularityAway: popA === "" ? null : Number(popA),
+        inducementsHome: indH,
+        inducementsAway: indA,
       });
     } finally {
       setBusy(false);
     }
   };
 
+  const sides = [
+    {
+      side: "home" as const,
+      name: homeName,
+      pop: popH,
+      setPop: setPopH,
+      winnings: winningsH,
+      ind: indH,
+      setInd: setIndH,
+    },
+    {
+      side: "away" as const,
+      name: awayName,
+      pop: popA,
+      setPop: setPopA,
+      winnings: winningsA,
+      ind: indA,
+      setInd: setIndA,
+    },
+  ];
+
   return (
-    <section className="mb-4 rounded border p-3" data-testid="pre-match-panel">
-      <h2 className="mb-2 font-semibold">Avant-match</h2>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="text-xs">
-          Meteo
-          <select
-            value={weather}
-            onChange={(e) => setWeather(e.target.value)}
-            disabled={disabled}
-            className="block rounded border px-2 py-1"
+    <section
+      data-testid="pre-match-panel"
+      className="rounded-lg border bg-white p-4"
+    >
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+        Avant-match
+      </h2>
+
+      <label className="mb-3 block text-xs">
+        Météo initiale
+        <select
+          value={weather}
+          onChange={(e) => setWeather(e.target.value)}
+          disabled={disabled}
+          data-testid="weather-select"
+          className="mt-1 block w-full rounded border px-2 py-2 text-sm sm:max-w-xs"
+        >
+          {WEATHER_OPTIONS.map((w) => (
+            <option key={w.value} value={w.value}>
+              {w.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {sides.map((c) => (
+          <div
+            key={c.side}
+            className="space-y-3 rounded border bg-slate-50/60 p-3"
           >
-            {WEATHER_OPTIONS.map((w) => (
-              <option key={w} value={w}>
-                {w || "—"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs">
-          Facteur pop. domicile
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={popH}
-            onChange={(e) => setPopH(e.target.value)}
-            disabled={disabled}
-            className="block w-24 rounded border px-2 py-1"
-            data-testid="popularity-home"
-          />
-          <span className="text-[10px] text-slate-500">
-            → {computedWinningsHome.toLocaleString("fr-FR")} po
-          </span>
-        </label>
-        <label className="text-xs">
-          Facteur pop. exterieur
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={popA}
-            onChange={(e) => setPopA(e.target.value)}
-            disabled={disabled}
-            className="block w-24 rounded border px-2 py-1"
-            data-testid="popularity-away"
-          />
-          <span className="text-[10px] text-slate-500">
-            → {computedWinningsAway.toLocaleString("fr-FR")} po
-          </span>
-        </label>
-        {!disabled && (
-          <button
-            type="button"
-            className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-50"
-            onClick={save}
-            disabled={busy}
-            data-testid="save-pre-match"
-          >
-            Enregistrer
-          </button>
-        )}
+            <div className="text-sm font-semibold text-nuffle-anthracite">
+              {c.name}
+            </div>
+            <label className="block text-xs">
+              Facteur de popularité (1D3 + 5)
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={c.pop}
+                onChange={(e) => c.setPop(e.target.value)}
+                disabled={disabled}
+                data-testid={`popularity-${c.side}`}
+                className="mt-1 block w-24 rounded border px-2 py-2 text-sm"
+              />
+              <span className="mt-0.5 block text-[11px] text-slate-500">
+                Gains auto : {c.winnings.toLocaleString("fr-FR")} po
+              </span>
+            </label>
+            <InducementEditor
+              list={c.ind}
+              onChange={c.setInd}
+              disabled={disabled}
+              testId={`inducements-${c.side}`}
+            />
+          </div>
+        ))}
       </div>
+
+      {!disabled && (
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          data-testid="save-pre-match"
+          className="mt-3 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          Enregistrer l&apos;avant-match
+        </button>
+      )}
     </section>
   );
+}
+
+// ────────────────────────────── FIN DU MATCH ──────────────────────────────
+
+export interface CostlyError {
+  cost: number;
+  reason?: string;
+}
+export interface Purchase {
+  kind: "player" | "reroll" | "staff" | "other";
+  name: string;
+  cost: number;
 }
 
 export interface PostMatchValues {
@@ -129,14 +331,164 @@ export interface PostMatchValues {
   dedicatedFansDeltaHome: number;
   dedicatedFansDeltaAway: number;
   motmPlayerIds: string[];
+  costlyErrorsHome: CostlyError[];
+  costlyErrorsAway: CostlyError[];
+  purchasesHome: Purchase[];
+  purchasesAway: Purchase[];
+}
+
+const PURCHASE_KINDS: ReadonlyArray<{
+  value: Purchase["kind"];
+  label: string;
+}> = [
+  { value: "player", label: "Joueur" },
+  { value: "reroll", label: "Relance" },
+  { value: "staff", label: "Staff" },
+  { value: "other", label: "Autre" },
+];
+
+function CostlyErrorEditor({
+  list,
+  onChange,
+  disabled,
+  testId,
+}: {
+  list: CostlyError[];
+  onChange: (l: CostlyError[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, patch: Partial<CostlyError>) =>
+    onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  return (
+    <div data-testid={testId} className="space-y-1.5">
+      {list.map((it, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <input
+            value={it.reason ?? ""}
+            onChange={(e) => update(i, { reason: e.target.value })}
+            disabled={disabled}
+            placeholder="Raison (ex: Crise évitée)"
+            className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
+          />
+          <input
+            type="number"
+            min={0}
+            value={it.cost}
+            onChange={(e) => update(i, { cost: Number(e.target.value) || 0 })}
+            disabled={disabled}
+            placeholder="po perdus"
+            className="w-24 rounded border px-2 py-1 text-sm"
+          />
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(list.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() => onChange([...list, { cost: 0, reason: "" }])}
+          className="text-xs font-medium text-blue-600"
+        >
+          + erreur coûteuse
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PurchaseEditor({
+  list,
+  onChange,
+  disabled,
+  testId,
+}: {
+  list: Purchase[];
+  onChange: (l: Purchase[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, patch: Partial<Purchase>) =>
+    onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  return (
+    <div data-testid={testId} className="space-y-1.5">
+      {list.map((it, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <select
+            value={it.kind}
+            onChange={(e) =>
+              update(i, { kind: e.target.value as Purchase["kind"] })
+            }
+            disabled={disabled}
+            className="rounded border px-1.5 py-1 text-sm"
+          >
+            {PURCHASE_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+          <input
+            value={it.name}
+            onChange={(e) => update(i, { name: e.target.value })}
+            disabled={disabled}
+            placeholder="Nom"
+            className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
+          />
+          <input
+            type="number"
+            min={0}
+            value={it.cost}
+            onChange={(e) => update(i, { cost: Number(e.target.value) || 0 })}
+            disabled={disabled}
+            placeholder="Coût (po)"
+            className="w-24 rounded border px-2 py-1 text-sm"
+          />
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(list.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() =>
+            onChange([...list, { kind: "player", name: "", cost: 0 }])
+          }
+          className="text-xs font-medium text-blue-600"
+        >
+          + achat
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function PostMatchPanel({
   initial,
+  home,
+  away,
   disabled,
   onSave,
 }: {
   initial: PostMatchValues;
+  home: SheetTeam | null;
+  away: SheetTeam | null;
   disabled?: boolean;
   onSave: (v: PostMatchValues) => Promise<void>;
 }) {
@@ -148,8 +500,23 @@ export function PostMatchPanel({
   );
   const [fansH, setFansH] = useState(initial.dedicatedFansDeltaHome);
   const [fansA, setFansA] = useState(initial.dedicatedFansDeltaAway);
-  const [motm, setMotm] = useState(initial.motmPlayerIds.join(", "));
+  const [motm, setMotm] = useState<string[]>(initial.motmPlayerIds);
+  const [ceH, setCeH] = useState<CostlyError[]>(initial.costlyErrorsHome);
+  const [ceA, setCeA] = useState<CostlyError[]>(initial.costlyErrorsAway);
+  const [buyH, setBuyH] = useState<Purchase[]>(initial.purchasesHome);
+  const [buyA, setBuyA] = useState<Purchase[]>(initial.purchasesAway);
   const [busy, setBusy] = useState(false);
+
+  // MVP : 1 joueur par equipe (les ids des 2 cotes coexistent dans motm).
+  const motmHome = home?.players.find((p) => motm.includes(p.id))?.id ?? "";
+  const motmAway = away?.players.find((p) => motm.includes(p.id))?.id ?? "";
+  const setMotmSide = (side: "home" | "away", id: string) => {
+    const otherSide = side === "home" ? away : home;
+    const keepOther = motm.filter((m) =>
+      otherSide?.players.some((p) => p.id === m),
+    );
+    setMotm(id ? [...keepOther, id] : keepOther);
+  };
 
   const save = async () => {
     setBusy(true);
@@ -159,97 +526,147 @@ export function PostMatchPanel({
         winningsAwayManual: winA === "" ? null : Number(winA),
         dedicatedFansDeltaHome: fansH,
         dedicatedFansDeltaAway: fansA,
-        motmPlayerIds: motm
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        motmPlayerIds: motm,
+        costlyErrorsHome: ceH,
+        costlyErrorsAway: ceA,
+        purchasesHome: buyH,
+        purchasesAway: buyA,
       });
     } finally {
       setBusy(false);
     }
   };
 
+  const sides = [
+    {
+      side: "home" as const,
+      team: home,
+      name: home?.name ?? "Domicile",
+      win: winH,
+      setWin: setWinH,
+      fans: fansH,
+      setFans: setFansH,
+      motmVal: motmHome,
+      ce: ceH,
+      setCe: setCeH,
+      buy: buyH,
+      setBuy: setBuyH,
+    },
+    {
+      side: "away" as const,
+      team: away,
+      name: away?.name ?? "Extérieur",
+      win: winA,
+      setWin: setWinA,
+      fans: fansA,
+      setFans: setFansA,
+      motmVal: motmAway,
+      ce: ceA,
+      setCe: setCeA,
+      buy: buyA,
+      setBuy: setBuyA,
+    },
+  ];
+
   return (
-    <section className="mb-4 rounded border p-3" data-testid="post-match-panel">
-      <h2 className="mb-2 font-semibold">Apres-match</h2>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="text-xs">
-          Tresorerie domicile (override)
-          <input
-            type="number"
-            min={0}
-            value={winH}
-            onChange={(e) => setWinH(e.target.value)}
-            disabled={disabled}
-            placeholder="auto"
-            className="block w-28 rounded border px-2 py-1"
-            data-testid="winnings-home"
-          />
-        </label>
-        <label className="text-xs">
-          Tresorerie exterieur (override)
-          <input
-            type="number"
-            min={0}
-            value={winA}
-            onChange={(e) => setWinA(e.target.value)}
-            disabled={disabled}
-            placeholder="auto"
-            className="block w-28 rounded border px-2 py-1"
-            data-testid="winnings-away"
-          />
-        </label>
-        <label className="text-xs">
-          Fans devoues dom.
-          <select
-            value={fansH}
-            onChange={(e) => setFansH(Number(e.target.value))}
-            disabled={disabled}
-            className="block rounded border px-2 py-1"
+    <section
+      data-testid="post-match-panel"
+      className="rounded-lg border bg-white p-4"
+    >
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+        Fin du match
+      </h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {sides.map((c) => (
+          <div
+            key={c.side}
+            className="space-y-3 rounded border bg-slate-50/60 p-3"
           >
-            <option value={-1}>-1</option>
-            <option value={0}>0</option>
-            <option value={1}>+1</option>
-          </select>
-        </label>
-        <label className="text-xs">
-          Fans devoues ext.
-          <select
-            value={fansA}
-            onChange={(e) => setFansA(Number(e.target.value))}
-            disabled={disabled}
-            className="block rounded border px-2 py-1"
-          >
-            <option value={-1}>-1</option>
-            <option value={0}>0</option>
-            <option value={1}>+1</option>
-          </select>
-        </label>
-        <label className="text-xs">
-          Joueur(s) du match (ids, virgule)
-          <input
-            value={motm}
-            onChange={(e) => setMotm(e.target.value)}
-            disabled={disabled}
-            className="block w-48 rounded border px-2 py-1"
-            data-testid="motm-ids"
-          />
-        </label>
-        {!disabled && (
-          <button
-            type="button"
-            className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-50"
-            onClick={save}
-            disabled={busy}
-            data-testid="save-post-match"
-          >
-            Enregistrer
-          </button>
-        )}
+            <div className="text-sm font-semibold text-nuffle-anthracite">
+              {c.name}
+            </div>
+
+            <label className="block text-xs">
+              Joueur du match
+              <PlayerSelect
+                team={c.team}
+                value={c.motmVal}
+                onChange={(id) => setMotmSide(c.side, id)}
+                disabled={disabled}
+                testId={`motm-${c.side}`}
+              />
+            </label>
+
+            <label className="block text-xs">
+              Gains (override, sinon auto)
+              <input
+                type="number"
+                min={0}
+                value={c.win}
+                onChange={(e) => c.setWin(e.target.value)}
+                disabled={disabled}
+                placeholder="auto"
+                data-testid={`winnings-${c.side}`}
+                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+              />
+            </label>
+
+            <label className="block text-xs">
+              Fans dévoués
+              <select
+                value={c.fans}
+                onChange={(e) => c.setFans(Number(e.target.value))}
+                disabled={disabled}
+                data-testid={`fans-${c.side}`}
+                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+              >
+                <option value={-1}>-1</option>
+                <option value={0}>0</option>
+                <option value={1}>+1</option>
+              </select>
+            </label>
+
+            <div className="text-xs">
+              <div className="mb-1 font-medium text-slate-600">Achats</div>
+              <PurchaseEditor
+                list={c.buy}
+                onChange={c.setBuy}
+                disabled={disabled}
+                testId={`purchases-${c.side}`}
+              />
+            </div>
+
+            <div className="text-xs">
+              <div className="mb-1 font-medium text-slate-600">
+                Erreurs coûteuses
+              </div>
+              <CostlyErrorEditor
+                list={c.ce}
+                onChange={c.setCe}
+                disabled={disabled}
+                testId={`costly-${c.side}`}
+              />
+            </div>
+          </div>
+        ))}
       </div>
+
+      {!disabled && (
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          data-testid="save-post-match"
+          className="mt-3 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          Enregistrer la fin de match
+        </button>
+      )}
     </section>
   );
 }
+
+// ────────────────────────────── INVALIDATION ──────────────────────────────
 
 export function InvalidateControl({
   canInvalidate,
@@ -275,7 +692,7 @@ export function InvalidateControl({
   }
 
   return (
-    <div className="flex items-center gap-2" data-testid="invalidate-control">
+    <div className="flex flex-wrap items-center gap-2" data-testid="invalidate-control">
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}

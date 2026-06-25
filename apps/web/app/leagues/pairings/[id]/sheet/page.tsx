@@ -6,16 +6,21 @@ import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import {
   PreMatchPanel,
   PostMatchPanel,
+  PlayerSelect,
   InvalidateControl,
   type PreMatchValues,
   type PostMatchValues,
+  type SheetTeam,
+  type Inducement,
+  type CostlyError,
+  type Purchase,
 } from "./_components/MatchSheetPanels";
 
-const WINNINGS_PER_POPULARITY = 10_000;
-
-// Lot G.3 (minimal) — Feuille de match v2 : saisie d'evenements,
-// soumission par coach, validation par commissaire. Le score et les
-// blesses sont derives cote serveur (summary).
+// Feuille de match v2 (ligue physique) — saisie mobile-first.
+// Sections RÉSUMÉ / AVANT-MATCH / AU COURS DU MATCH / FIN DU MATCH.
+// Le score et les blessés sont dérivés des events côté serveur. Le flux :
+// les 2 coachs valident leur saisie -> notif commissaire -> validation
+// (applique classement + trésorerie + SPP + progression).
 
 type EventKind =
   | "kickoff"
@@ -28,6 +33,28 @@ type EventKind =
   | "crowd_surge"
   | "stalling"
   | "other_elim";
+
+const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
+  { value: "kickoff", label: "Coup d'envoi" },
+  { value: "touchdown", label: "Touchdown" },
+  { value: "casualty", label: "Blessure" },
+  { value: "pass_complete", label: "Passe réussie" },
+  { value: "interception", label: "Interception" },
+  { value: "aggression", label: "Agression" },
+  { value: "expulsion", label: "Expulsion" },
+  { value: "crowd_surge", label: "Sortie (foule)" },
+  { value: "stalling", label: "Temporisation" },
+  { value: "other_elim", label: "Autre élimination" },
+];
+
+const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "—" },
+  { value: "badly_hurt", label: "Sonné" },
+  { value: "mng", label: "Manque le prochain match" },
+  { value: "niggling", label: "Séquelle" },
+  { value: "stat_loss", label: "Perte de caractéristique" },
+  { value: "dead", label: "Mort" },
+];
 
 interface MatchEvent {
   id: string;
@@ -67,9 +94,55 @@ interface SheetResponse {
     dedicatedFansDeltaHome?: number | null;
     dedicatedFansDeltaAway?: number | null;
     motmPlayerIds?: string[] | string | null;
+    inducementsHome?: unknown;
+    inducementsAway?: unknown;
+    costlyErrorsHome?: unknown;
+    costlyErrorsAway?: unknown;
+    purchasesHome?: unknown;
+    purchasesAway?: unknown;
   };
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
+  teams: { home: SheetTeam | null; away: SheetTeam | null };
+}
+
+function parseArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? (p as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function parseInducements(raw: unknown): Inducement[] {
+  return parseArray<Record<string, unknown>>(raw).map((i) => ({
+    name: typeof i.name === "string" ? i.name : "",
+    cost: typeof i.cost === "number" ? i.cost : 0,
+    qty: typeof i.qty === "number" && i.qty > 0 ? i.qty : 1,
+  }));
+}
+
+function parseCostlyErrors(raw: unknown): CostlyError[] {
+  return parseArray<Record<string, unknown>>(raw).map((i) => ({
+    cost: typeof i.cost === "number" ? i.cost : 0,
+    reason: typeof i.reason === "string" ? i.reason : "",
+  }));
+}
+
+function parsePurchases(raw: unknown): Purchase[] {
+  return parseArray<Record<string, unknown>>(raw).map((i) => ({
+    kind:
+      i.kind === "reroll" || i.kind === "staff" || i.kind === "other"
+        ? i.kind
+        : "player",
+    name: typeof i.name === "string" ? i.name : "",
+    cost: typeof i.cost === "number" ? i.cost : 0,
+  }));
 }
 
 function parseMotm(raw: string[] | string | null | undefined): string[] {
@@ -85,20 +158,20 @@ function parseMotm(raw: string[] | string | null | undefined): string[] {
   return [];
 }
 
-const EVENT_KINDS: EventKind[] = [
-  "kickoff",
-  "touchdown",
-  "casualty",
-  "pass_complete",
-  "interception",
-  "aggression",
-  "expulsion",
-  "crowd_surge",
-  "stalling",
-  "other_elim",
-];
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Brouillon",
+  submitted_home: "Validé par le domicile",
+  submitted_away: "Validé par l'extérieur",
+  both_submitted: "Validé par les 2 joueurs — en attente du commissaire",
+  validated: "Validé par le commissaire ✓",
+  invalidated: "Invalidé",
+};
 
-const INJURY_SEVERITIES = ["", "badly_hurt", "mng", "niggling", "stat_loss", "dead"];
+function playerName(team: SheetTeam | null, id: string | null): string {
+  if (!id) return "";
+  const p = team?.players.find((pl) => pl.id === id);
+  return p ? `N°${p.number} ${p.name}` : id;
+}
 
 export default function MatchSheetPage() {
   const params = useParams<{ id: string }>();
@@ -109,7 +182,7 @@ export default function MatchSheetPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Form pour ajouter un event.
+  // Formulaire d'ajout d'event.
   const [kind, setKind] = useState<EventKind>("touchdown");
   const [team, setTeam] = useState<"home" | "away">("home");
   const [actorPlayerId, setActorPlayerId] = useState("");
@@ -125,7 +198,6 @@ export default function MatchSheetPage() {
       );
       setData(res);
     } catch (e: unknown) {
-      // 404 -> la feuille n'existe pas encore : on propose de l'ouvrir.
       if (e instanceof ApiClientError && e.status === 404) {
         setData(null);
       } else {
@@ -168,19 +240,22 @@ export default function MatchSheetPage() {
         body: JSON.stringify({
           kind,
           team,
-          actorPlayerId: actorPlayerId.trim() || undefined,
-          targetPlayerId: targetPlayerId.trim() || undefined,
+          actorPlayerId: actorPlayerId || undefined,
+          targetPlayerId: targetPlayerId || undefined,
           injurySeverity: injurySeverity || undefined,
         }),
       }),
-    );
+    ).then(() => {
+      setActorPlayerId("");
+      setTargetPlayerId("");
+      setInjurySeverity("");
+    });
 
   const removeEvent = (eventId: string) =>
     run(() =>
-      apiRequest(
-        `/leagues/pairings/${pairingId}/sheet/events/${eventId}`,
-        { method: "DELETE" },
-      ),
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/events/${eventId}`, {
+        method: "DELETE",
+      }),
     );
 
   const submit = () =>
@@ -202,7 +277,6 @@ export default function MatchSheetPage() {
       }),
     );
 
-  // Polish — sauvegarde pre/post-match + invalidation.
   const savePreMatch = (v: PreMatchValues) =>
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
@@ -211,6 +285,8 @@ export default function MatchSheetPage() {
           weather: v.weather || null,
           popularityHome: v.popularityHome,
           popularityAway: v.popularityAway,
+          inducementsHome: v.inducementsHome,
+          inducementsAway: v.inducementsAway,
         }),
       }),
     );
@@ -225,6 +301,10 @@ export default function MatchSheetPage() {
           dedicatedFansDeltaHome: v.dedicatedFansDeltaHome,
           dedicatedFansDeltaAway: v.dedicatedFansDeltaAway,
           motmPlayerIds: v.motmPlayerIds,
+          costlyErrorsHome: v.costlyErrorsHome,
+          costlyErrorsAway: v.costlyErrorsAway,
+          purchasesHome: v.purchasesHome,
+          purchasesAway: v.purchasesAway,
         }),
       }),
     );
@@ -237,12 +317,14 @@ export default function MatchSheetPage() {
       }),
     );
 
-  // Eligibilite a l'invalidation (chargee quand la feuille est validee).
   const [canInval, setCanInval] = useState<{ ok: boolean; reason?: string }>({
     ok: false,
   });
   useEffect(() => {
-    if (data?.sheet.status !== "validated" || data?.viewerRole !== "commissioner") {
+    if (
+      data?.sheet.status !== "validated" ||
+      data?.viewerRole !== "commissioner"
+    ) {
       return;
     }
     let cancelled = false;
@@ -261,23 +343,27 @@ export default function MatchSheetPage() {
   }, [data?.sheet.status, data?.viewerRole, pairingId]);
 
   const events = useMemo(() => data?.sheet.events ?? [], [data]);
+  const home = data?.teams.home ?? null;
+  const away = data?.teams.away ?? null;
+  const eventTeam = team === "home" ? home : away;
   const role = data?.viewerRole ?? "none";
   const status = data?.sheet.status ?? "";
   const isCoach = role === "home" || role === "away";
   const isCommissioner = role === "commissioner";
   const editable = status !== "validated";
+  const canEdit = editable && (isCoach || isCommissioner);
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-3xl p-6">
-        <p>Chargement de la feuille...</p>
+      <main className="mx-auto max-w-3xl p-4">
+        <p>Chargement de la feuille…</p>
       </main>
     );
   }
 
   if (!data) {
     return (
-      <main className="mx-auto max-w-3xl p-6">
+      <main className="mx-auto max-w-3xl p-4">
         <h1 className="mb-3 text-2xl font-bold">Feuille de match</h1>
         <p className="mb-4 text-slate-600">
           Aucune feuille ouverte pour ce match.
@@ -301,160 +387,218 @@ export default function MatchSheetPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-6" data-testid="match-sheet">
-      <h1 className="mb-1 text-2xl font-bold">Feuille de match</h1>
-      <p className="mb-4 text-sm text-slate-600">
-        Statut : <strong data-testid="sheet-status">{status}</strong> · vous
-        etes <strong>{role}</strong>
-      </p>
-
-      {error && (
-        <p className="mb-3 rounded bg-red-50 p-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
-      {/* Score derive */}
-      <section className="mb-4 rounded border bg-slate-50 p-4">
-        <h2 className="mb-2 font-semibold">Score (calcule)</h2>
-        <p className="text-2xl font-bold" data-testid="derived-score">
-          {data.summary.scoreHome} – {data.summary.scoreAway}
-        </p>
-        <p className="text-xs text-slate-500">
+    <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
+      {/* RÉSUMÉ */}
+      <section className="rounded-lg border bg-white p-4">
+        <h1 className="mb-2 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+          Résumé du match
+        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 text-right">
+            <div className="truncate font-semibold text-nuffle-anthracite">
+              {home?.name ?? "Domicile"}
+            </div>
+            <div className="truncate text-xs text-slate-500">
+              {home?.roster ?? ""}
+            </div>
+          </div>
+          <div
+            className="rounded bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
+            data-testid="derived-score"
+          >
+            {data.summary.scoreHome} – {data.summary.scoreAway}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-semibold text-nuffle-anthracite">
+              {away?.name ?? "Extérieur"}
+            </div>
+            <div className="truncate text-xs text-slate-500">
+              {away?.roster ?? ""}
+            </div>
+          </div>
+        </div>
+        <p className="mt-2 text-center text-xs text-slate-500">
           Sorties : {data.summary.casualtiesHome} / {data.summary.casualtiesAway}{" "}
-          · Blesses : {data.summary.injuries.length}
+          · Statut :{" "}
+          <strong data-testid="sheet-status">
+            {STATUS_LABELS[status] ?? status}
+          </strong>
         </p>
       </section>
 
-      {/* Avant-match */}
+      {error && (
+        <p className="rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
+      )}
+
+      {/* AVANT-MATCH */}
       {(isCoach || isCommissioner) && (
         <PreMatchPanel
           initial={{
             weather: data.sheet.weather ?? "",
             popularityHome: data.sheet.popularityHome ?? null,
             popularityAway: data.sheet.popularityAway ?? null,
+            inducementsHome: parseInducements(data.sheet.inducementsHome),
+            inducementsAway: parseInducements(data.sheet.inducementsAway),
           }}
-          computedWinningsHome={
-            (data.sheet.popularityHome ?? 0) * WINNINGS_PER_POPULARITY
-          }
-          computedWinningsAway={
-            (data.sheet.popularityAway ?? 0) * WINNINGS_PER_POPULARITY
-          }
+          homeName={home?.name ?? "Domicile"}
+          awayName={away?.name ?? "Extérieur"}
           disabled={!editable}
           onSave={savePreMatch}
         />
       )}
 
-      {/* Journal d'evenements */}
-      <section className="mb-4">
-        <h2 className="mb-2 font-semibold">Evenements</h2>
+      {/* AU COURS DU MATCH */}
+      <section className="rounded-lg border bg-white p-4">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+          Au cours du match
+        </h2>
+
         {events.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucun evenement saisi.</p>
+          <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
         ) : (
           <ul className="space-y-1" data-testid="events-list">
-            {events.map((ev) => (
-              <li
-                key={ev.id}
-                className="flex items-center justify-between rounded border px-2 py-1 text-sm"
-              >
-                <span>
-                  <strong>{ev.kind}</strong>
-                  {ev.team ? ` (${ev.team})` : ""}
-                  {ev.actorPlayerId ? ` — par ${ev.actorPlayerId}` : ""}
-                  {ev.targetPlayerId ? ` → ${ev.targetPlayerId}` : ""}
-                  {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
-                </span>
-                {editable && (isCoach || isCommissioner) && (
-                  <button
-                    type="button"
-                    className="ml-2 text-xs text-red-600"
-                    onClick={() => removeEvent(ev.id)}
-                    disabled={busy}
-                  >
-                    retirer
-                  </button>
-                )}
-              </li>
-            ))}
+            {events.map((ev) => {
+              const evTeam = ev.team === "home" ? home : away;
+              const kindLabel =
+                EVENT_KINDS.find((k) => k.value === ev.kind)?.label ?? ev.kind;
+              return (
+                <li
+                  key={ev.id}
+                  className="flex items-center justify-between gap-2 rounded border px-2 py-1.5 text-sm"
+                >
+                  <span className="min-w-0">
+                    <strong>{kindLabel}</strong>
+                    {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
+                    {ev.actorPlayerId
+                      ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
+                      : ""}
+                    {ev.targetPlayerId
+                      ? ` → ${playerName(
+                          ev.team === "home" ? away : home,
+                          ev.targetPlayerId,
+                        )}`
+                      : ""}
+                    {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
+                  </span>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="shrink-0 text-xs text-red-600"
+                      onClick={() => removeEvent(ev.id)}
+                      disabled={busy}
+                    >
+                      retirer
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
-      </section>
 
-      {/* Saisie d'un evenement */}
-      {editable && (isCoach || isCommissioner) && (
-        <section className="mb-4 rounded border p-3">
-          <h3 className="mb-2 text-sm font-semibold">Ajouter un evenement</h3>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="text-xs">
-              Type
-              <select
-                value={kind}
-                onChange={(e) => setKind(e.target.value as EventKind)}
-                className="block rounded border px-2 py-1"
-                data-testid="event-kind"
-              >
-                {EVENT_KINDS.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-xs">
-              Equipe
-              <select
-                value={team}
-                onChange={(e) => setTeam(e.target.value as "home" | "away")}
-                className="block rounded border px-2 py-1"
-              >
-                <option value="home">home</option>
-                <option value="away">away</option>
-              </select>
-            </label>
-            <label className="text-xs">
-              Acteur (id)
-              <input
-                value={actorPlayerId}
-                onChange={(e) => setActorPlayerId(e.target.value)}
-                className="block w-28 rounded border px-2 py-1"
-              />
-            </label>
-            <label className="text-xs">
-              Cible (id)
-              <input
-                value={targetPlayerId}
-                onChange={(e) => setTargetPlayerId(e.target.value)}
-                className="block w-28 rounded border px-2 py-1"
-              />
-            </label>
-            <label className="text-xs">
-              Blessure
-              <select
-                value={injurySeverity}
-                onChange={(e) => setInjurySeverity(e.target.value)}
-                className="block rounded border px-2 py-1"
-              >
-                {INJURY_SEVERITIES.map((s) => (
-                  <option key={s} value={s}>
-                    {s || "—"}
-                  </option>
-                ))}
-              </select>
-            </label>
+        {canEdit && (
+          <div className="mt-3 space-y-2 rounded border bg-slate-50/60 p-3">
+            <h3 className="text-xs font-semibold text-slate-600">
+              Ajouter un évènement
+            </h3>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <label className="text-xs">
+                Type
+                <select
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value as EventKind)}
+                  data-testid="event-kind"
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                >
+                  {EVENT_KINDS.map((k) => (
+                    <option key={k.value} value={k.value}>
+                      {k.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs">
+                Équipe
+                <select
+                  value={team}
+                  onChange={(e) => {
+                    setTeam(e.target.value as "home" | "away");
+                    setActorPlayerId("");
+                    setTargetPlayerId("");
+                  }}
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                >
+                  <option value="home">{home?.name ?? "Domicile"}</option>
+                  <option value="away">{away?.name ?? "Extérieur"}</option>
+                </select>
+              </label>
+              <label className="text-xs">
+                Acteur
+                <PlayerSelect
+                  team={eventTeam}
+                  value={actorPlayerId}
+                  onChange={setActorPlayerId}
+                  testId="event-actor"
+                />
+              </label>
+              <label className="text-xs">
+                Cible (équipe adverse)
+                <PlayerSelect
+                  team={team === "home" ? away : home}
+                  value={targetPlayerId}
+                  onChange={setTargetPlayerId}
+                  testId="event-target"
+                />
+              </label>
+              {(kind === "casualty" || kind === "other_elim") && (
+                <label className="text-xs">
+                  Gravité de la blessure
+                  <select
+                    value={injurySeverity}
+                    onChange={(e) => setInjurySeverity(e.target.value)}
+                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                  >
+                    {INJURY_SEVERITIES.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
             <button
               type="button"
-              className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+              className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
               onClick={addEvent}
               disabled={busy}
               data-testid="add-event"
             >
-              Ajouter
+              Ajouter l&apos;évènement
             </button>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* Apres-match */}
+        {data.summary.injuries.length > 0 && (
+          <div className="mt-3 text-xs text-slate-600">
+            <div className="mb-1 font-semibold">Blessures</div>
+            <ul className="space-y-0.5">
+              {data.summary.injuries.map((inj, i) => (
+                <li key={i}>
+                  {playerName(
+                    inj.side === "home" ? home : away,
+                    inj.playerId,
+                  )}{" "}
+                  — {inj.severity}
+                  {inj.cause ? ` (${inj.cause})` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {/* FIN DU MATCH */}
       {(isCoach || isCommissioner) && (
         <PostMatchPanel
           initial={{
@@ -463,7 +607,13 @@ export default function MatchSheetPage() {
             dedicatedFansDeltaHome: data.sheet.dedicatedFansDeltaHome ?? 0,
             dedicatedFansDeltaAway: data.sheet.dedicatedFansDeltaAway ?? 0,
             motmPlayerIds: parseMotm(data.sheet.motmPlayerIds),
+            costlyErrorsHome: parseCostlyErrors(data.sheet.costlyErrorsHome),
+            costlyErrorsAway: parseCostlyErrors(data.sheet.costlyErrorsAway),
+            purchasesHome: parsePurchases(data.sheet.purchasesHome),
+            purchasesAway: parsePurchases(data.sheet.purchasesAway),
           }}
+          home={home}
+          away={away}
           disabled={!editable}
           onSave={savePostMatch}
         />
@@ -475,7 +625,7 @@ export default function MatchSheetPage() {
           <>
             <button
               type="button"
-              className="rounded bg-green-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
               onClick={submit}
               disabled={busy}
               data-testid="submit-sheet"
@@ -487,8 +637,9 @@ export default function MatchSheetPage() {
               className="rounded bg-slate-300 px-4 py-2 text-sm disabled:opacity-50"
               onClick={unsubmit}
               disabled={busy}
+              data-testid="unsubmit-sheet"
             >
-              Retirer ma validation
+              Reprendre la saisie
             </button>
           </>
         )}
@@ -505,14 +656,14 @@ export default function MatchSheetPage() {
         )}
         {status === "validated" && (
           <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">
-            Match valide ✓
+            Match validé ✓ — classement et équipes mis à jour.
           </p>
         )}
       </section>
 
-      {/* Invalidation post-validation (commissaire, fenetre de correction) */}
+      {/* Invalidation post-validation (commissaire). */}
       {isCommissioner && status === "validated" && (
-        <section className="mt-4 rounded border border-red-200 bg-red-50 p-3">
+        <section className="rounded-lg border border-red-200 bg-red-50 p-3">
           <h2 className="mb-2 text-sm font-semibold">Corriger ce match</h2>
           <InvalidateControl
             canInvalidate={canInval.ok}

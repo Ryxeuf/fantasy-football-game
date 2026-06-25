@@ -966,6 +966,94 @@ export async function listPendingValidationsForCommissioner(
  * 2 coachs + commissaire. Le summary est recalcule a chaque read
  * (cheap, pur) pour refleter l'etat courant des events.
  */
+export interface MatchSheetPlayer {
+  readonly id: string;
+  readonly number: number;
+  readonly name: string;
+  readonly position: string;
+  readonly dead: boolean;
+  readonly missNextMatch: boolean;
+  /** SPP courant + level brut (pour surfacer les level-up en attente). */
+  readonly spp: number;
+}
+
+export interface MatchSheetTeam {
+  readonly teamId: string;
+  readonly name: string;
+  readonly roster: string;
+  readonly players: readonly MatchSheetPlayer[];
+}
+
+/**
+ * Charge les 2 equipes d'un pairing + leurs joueurs (pour alimenter les
+ * pickers de l'UI : joueur du match, acteur/cible d'un event…). Les joueurs
+ * morts sont inclus mais flagges (`dead`) pour l'affichage.
+ */
+async function loadSheetTeams(
+  pairingId: string,
+): Promise<{ home: MatchSheetTeam | null; away: MatchSheetTeam | null }> {
+  const pairing = (await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: {
+      homeParticipant: { select: { teamId: true } },
+      awayParticipant: { select: { teamId: true } },
+    },
+  })) as {
+    homeParticipant: { teamId: string } | null;
+    awayParticipant: { teamId: string } | null;
+  } | null;
+
+  const teamIds = [
+    pairing?.homeParticipant?.teamId,
+    pairing?.awayParticipant?.teamId,
+  ].filter((id): id is string => Boolean(id));
+
+  if (teamIds.length === 0) return { home: null, away: null };
+
+  const teams = (await prisma.team.findMany({
+    where: { id: { in: teamIds } },
+    select: {
+      id: true,
+      name: true,
+      roster: true,
+      players: {
+        orderBy: { number: "asc" },
+        select: {
+          id: true,
+          number: true,
+          name: true,
+          position: true,
+          dead: true,
+          missNextMatch: true,
+          spp: true,
+        },
+      },
+    },
+  })) as Array<{
+    id: string;
+    name: string;
+    roster: string;
+    players: MatchSheetPlayer[];
+  }>;
+
+  const byId = new Map(teams.map((t) => [t.id, t]));
+  const toTeam = (teamId?: string): MatchSheetTeam | null => {
+    if (!teamId) return null;
+    const t = byId.get(teamId);
+    if (!t) return null;
+    return {
+      teamId: t.id,
+      name: t.name,
+      roster: t.roster,
+      players: t.players,
+    };
+  };
+  return {
+    home: toTeam(pairing?.homeParticipant?.teamId),
+    away: toTeam(pairing?.awayParticipant?.teamId),
+  };
+}
+
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
@@ -973,6 +1061,7 @@ export async function getMatchSheet(input: {
   sheet: unknown;
   summary: MatchSummary;
   viewerRole: "home" | "away" | "commissioner" | "none";
+  teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -986,9 +1075,11 @@ export async function getMatchSheet(input: {
   }
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
+  const teams = await loadSheetTeams(input.pairingId);
   return {
     sheet,
     summary: summarizeMatchSheet(events),
+    teams,
     viewerRole: commissioner
       ? "commissioner"
       : side === "home"
