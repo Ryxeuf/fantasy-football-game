@@ -14,7 +14,6 @@ import {
   DEFAULT_RULESET,
   RULESETS,
   type Ruleset,
-  getRerollCost,
   FORMATS,
   DEFAULT_FORMAT,
   type GameFormat,
@@ -24,7 +23,8 @@ import {
   bigGuyLimitForRoster,
   countNonLinemen,
   validateFormatSelection,
-  canRosterHaveApothecary,
+  defaultStaffConfig,
+  type RosterStaffConfig,
 } from "@bb/game-engine";
 
 type Position = {
@@ -48,6 +48,8 @@ type Position = {
 type Roster = {
   slug: string;
   name: string;
+  /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
+  staffConfigs?: Record<GameFormat, RosterStaffConfig>;
 };
 
 export default function NewTeamBuilder() {
@@ -114,25 +116,27 @@ export default function NewTeamBuilder() {
   const [apothecary, setApothecary] = useState(false);
   const [dedicatedFans, setDedicatedFans] = useState(1);
 
-  // Contraintes du format (BB11 / Sevens) — source unique partagée avec le
-  // serveur (@bb/game-engine). Pilote budget, plafonds, staff et validation.
+  // Contraintes du format (BB11 / Sevens) — pilote budget, nombre de joueurs,
+  // non-Linemen, Big Guys, Star Players (source @bb/game-engine).
   const constraints = useMemo(() => getFormatConstraints(format), [format]);
 
-  // Apothicaire disponible seulement si le format ET le roster l'autorisent.
-  // Les équipes mort-vivantes (régénération) ne peuvent pas en recruter —
-  // source unique partagée avec le serveur (@bb/game-engine).
-  const rosterAllowsApothecary = useMemo(
-    () => canRosterHaveApothecary(rosterId),
-    [rosterId],
-  );
-  const apothecaryAvailable =
-    constraints.apothecaryAllowed && rosterAllowsApothecary;
+  // Config staff (coûts po + plafonds + apothicaire) du roster × format, issue
+  // de la base (admin). Fallback sur le défaut dérivé tant que la liste n'est
+  // pas chargée ou pour un roster sans ligne.
+  const staff = useMemo<RosterStaffConfig>(() => {
+    const fromApi = rosters.find((r) => r.slug === rosterId)?.staffConfigs?.[
+      format
+    ];
+    return fromApi ?? defaultStaffConfig(rosterId, format);
+  }, [rosters, rosterId, format]);
 
-  // Réaligne le toggle quand le roster sélectionné interdit l'apothicaire
-  // (ex. passage à un roster mort-vivant après l'avoir coché).
+  // Apothicaire disponible selon la config (par roster × format).
+  const apothecaryAvailable = staff.apothecaryAllowed;
+
+  // Réaligne le toggle quand le roster/format sélectionné interdit l'apothicaire.
   useEffect(() => {
-    if (!rosterAllowsApothecary) setApothecary(false);
-  }, [rosterAllowsApothecary]);
+    if (!staff.apothecaryAllowed) setApothecary(false);
+  }, [staff.apothecaryAllowed]);
 
   // Au changement de format (hors montage initial), réaligne le budget par
   // défaut et clampe le staff / star players sur les plafonds du nouveau format.
@@ -143,13 +147,13 @@ export default function NewTeamBuilder() {
       return;
     }
     setTeamValue(constraints.startingBudget);
-    setRerolls((v) => Math.min(v, constraints.maxRerolls));
-    setCheerleaders((v) => Math.min(v, constraints.maxCheerleaders));
-    setAssistants((v) => Math.min(v, constraints.maxAssistants));
-    setDedicatedFans((v) => Math.min(v, constraints.maxDedicatedFans));
-    if (!constraints.apothecaryAllowed) setApothecary(false);
+    setRerolls((v) => Math.min(v, staff.maxRerolls));
+    setCheerleaders((v) => Math.min(v, staff.maxCheerleaders));
+    setAssistants((v) => Math.min(v, staff.maxAssistants));
+    setDedicatedFans((v) => Math.min(v, staff.maxDedicatedFans));
+    if (!staff.apothecaryAllowed) setApothecary(false);
     if (!constraints.starPlayersAllowed) setSelectedStarPlayers([]);
-  }, [format, constraints]);
+  }, [format, constraints, staff]);
 
   useEffect(() => {
     const lang = language === "en" ? "en" : "fr";
@@ -162,9 +166,14 @@ export default function NewTeamBuilder() {
       .then((r) => r.json())
       .then((data) => {
         const rostersList = (data.rosters || []).map(
-          (r: { slug: string; name: string }) => ({
+          (r: {
+            slug: string;
+            name: string;
+            staffConfigs?: Record<GameFormat, RosterStaffConfig>;
+          }) => ({
             slug: r.slug,
             name: r.name,
+            staffConfigs: r.staffConfigs,
           }),
         );
         setRosters(rostersList);
@@ -220,18 +229,20 @@ export default function NewTeamBuilder() {
     [totalPlayers, selectedStarPlayers],
   );
 
+  // Coûts staff en kpo (la config DB est en po). Le coût de relance inclut
+  // déjà le multiplicateur de format (Sevens ×2) côté config.
   const rerollUnitCost = useMemo(
-    () => (getRerollCost(rosterId) / 1000) * constraints.rerollCostMultiplier,
-    [rosterId, constraints],
+    () => staff.rerollCost / 1000,
+    [staff],
   );
   const staffCost = useMemo(
     () =>
       rerolls * rerollUnitCost +
-      cheerleaders * constraints.cheerleaderCost +
-      assistants * constraints.assistantCost +
-      (apothecary ? constraints.apothecaryCost : 0) +
-      Math.max(0, dedicatedFans - 1) * constraints.dedicatedFanCost,
-    [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans, constraints],
+      cheerleaders * (staff.cheerleaderCost / 1000) +
+      assistants * (staff.assistantCost / 1000) +
+      (apothecary ? staff.apothecaryCost / 1000 : 0) +
+      Math.max(0, dedicatedFans - 1) * (staff.dedicatedFanCost / 1000),
+    [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans, staff],
   );
   const remainingBudget = teamValue - total - staffCost;
 
@@ -282,8 +293,10 @@ export default function NewTeamBuilder() {
         assistants,
         apothecary,
         dedicatedFans,
+        // Plafonds + autorisation apothicaire par roster (config DB).
+        staffConfig: staff,
       }),
-    [format, enginePositions, counts, selectedStarPlayers, rerolls, cheerleaders, assistants, apothecary, dedicatedFans],
+    [format, enginePositions, counts, selectedStarPlayers, rerolls, cheerleaders, assistants, apothecary, dedicatedFans, staff],
   );
 
   const rulesetLabels: Record<Ruleset, string> = {
@@ -808,7 +821,7 @@ export default function NewTeamBuilder() {
               <QuantityStepper
                 value={rerolls}
                 min={0}
-                max={constraints.maxRerolls}
+                max={staff.maxRerolls}
                 onChange={setRerolls}
                 label={t.teams.rerolls}
                 decrementAriaLabel={decLabel(t.teams.rerolls)}
@@ -821,13 +834,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.cheerleaders}
-              unitCost={`${constraints.cheerleaderCost}${t.teams.kpo}`}
+              unitCost={`${staff.cheerleaderCost / 1000}${t.teams.kpo}`}
               testId="staff-cheerleaders"
             >
               <QuantityStepper
                 value={cheerleaders}
                 min={0}
-                max={constraints.maxCheerleaders}
+                max={staff.maxCheerleaders}
                 onChange={setCheerleaders}
                 label={t.teams.cheerleaders}
                 decrementAriaLabel={decLabel(t.teams.cheerleaders)}
@@ -840,13 +853,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.assistants}
-              unitCost={`${constraints.assistantCost}${t.teams.kpo}`}
+              unitCost={`${staff.assistantCost / 1000}${t.teams.kpo}`}
               testId="staff-assistants"
             >
               <QuantityStepper
                 value={assistants}
                 min={0}
-                max={constraints.maxAssistants}
+                max={staff.maxAssistants}
                 onChange={setAssistants}
                 label={t.teams.assistants}
                 decrementAriaLabel={decLabel(t.teams.assistants)}
@@ -859,13 +872,13 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.dedicatedFans}
-              unitCost={`${constraints.dedicatedFanCost}${t.teams.kpo}`}
+              unitCost={`${staff.dedicatedFanCost / 1000}${t.teams.kpo}`}
               testId="staff-dedicated-fans"
             >
               <QuantityStepper
                 value={dedicatedFans}
                 min={1}
-                max={constraints.maxDedicatedFans}
+                max={staff.maxDedicatedFans}
                 onChange={setDedicatedFans}
                 label={t.teams.dedicatedFans}
                 decrementAriaLabel={decLabel(t.teams.dedicatedFans)}
@@ -889,14 +902,14 @@ export default function NewTeamBuilder() {
                   {t.teams.apothecary}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {constraints.apothecaryCost}{t.teams.kpo} · {t.teams.apothecaryHelp}
+                  {staff.apothecaryCost / 1000}{t.teams.kpo} · {t.teams.apothecaryHelp}
                 </div>
-                {!rosterAllowsApothecary && (
+                {!staff.apothecaryAllowed && (
                   <div
                     data-testid="apothecary-forbidden-roster"
                     className="text-xs text-red-600 mt-1"
                   >
-                    Indisponible pour les équipes mort-vivantes
+                    Indisponible pour cette équipe
                   </div>
                 )}
               </div>

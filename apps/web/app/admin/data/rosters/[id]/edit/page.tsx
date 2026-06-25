@@ -7,6 +7,23 @@ import {
   type Ruleset,
 } from "../../../ruleset-utils";
 
+type GameFormat = "bb11" | "sevens";
+
+type StaffConfig = {
+  rerollCost: number;
+  maxRerolls: number;
+  apothecaryAllowed: boolean;
+  apothecaryCost: number;
+  maxCheerleaders: number;
+  cheerleaderCost: number;
+  maxAssistants: number;
+  assistantCost: number;
+  maxDedicatedFans: number;
+  dedicatedFanCost: number;
+};
+
+type StaffConfigRow = StaffConfig & { format: GameFormat };
+
 type Roster = {
   id: string;
   slug: string;
@@ -20,7 +37,55 @@ type Roster = {
   regionalRules?: string[] | null;
   specialRules?: string | null;
   naf: boolean;
+  staffConfigs?: StaffConfigRow[];
 };
+
+const FORMAT_LABELS: Record<GameFormat, string> = {
+  bb11: "Blood Bowl à 11",
+  sevens: "Blood Bowl à 7",
+};
+
+// Champs staff éditables. `bool` pour l'apothicaire autorisé, sinon montant po
+// (ou plafond). L'ordre dicte l'affichage dans chaque colonne de format.
+const STAFF_FIELDS: Array<{
+  key: keyof StaffConfig;
+  label: string;
+  kind: "number" | "bool";
+}> = [
+  { key: "rerollCost", label: "Coût relance (po)", kind: "number" },
+  { key: "maxRerolls", label: "Relances max", kind: "number" },
+  { key: "apothecaryAllowed", label: "Apothicaire autorisé", kind: "bool" },
+  { key: "apothecaryCost", label: "Coût apothicaire (po)", kind: "number" },
+  { key: "maxCheerleaders", label: "Cheerleaders max", kind: "number" },
+  { key: "cheerleaderCost", label: "Coût cheerleader (po)", kind: "number" },
+  { key: "maxAssistants", label: "Coachs assistants max", kind: "number" },
+  { key: "assistantCost", label: "Coût coach assistant (po)", kind: "number" },
+  { key: "maxDedicatedFans", label: "Fans dévoués max", kind: "number" },
+  { key: "dedicatedFanCost", label: "Coût fan dévoué (po)", kind: "number" },
+];
+
+const EMPTY_STAFF: StaffConfig = {
+  rerollCost: 0,
+  maxRerolls: 0,
+  apothecaryAllowed: false,
+  apothecaryCost: 0,
+  maxCheerleaders: 0,
+  cheerleaderCost: 0,
+  maxAssistants: 0,
+  assistantCost: 0,
+  maxDedicatedFans: 0,
+  dedicatedFanCost: 0,
+};
+
+function staffFromRows(rows: StaffConfigRow[] | undefined): Record<GameFormat, StaffConfig> {
+  const pick = (fmt: GameFormat): StaffConfig => {
+    const row = rows?.find((r) => r.format === fmt);
+    if (!row) return { ...EMPTY_STAFF };
+    const { format: _f, ...cfg } = row;
+    return cfg;
+  };
+  return { bb11: pick("bb11"), sevens: pick("sevens") };
+}
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -60,6 +125,9 @@ export default function EditRosterPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [staff, setStaff] = useState<Record<GameFormat, StaffConfig> | null>(null);
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [staffSuccess, setStaffSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -82,6 +150,7 @@ export default function EditRosterPage() {
       }
       const { roster: data } = await fetchJSON(`/admin/data/rosters/${rosterId}`);
       setRoster(data);
+      setStaff(staffFromRows(data.staffConfigs));
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -117,6 +186,31 @@ export default function EditRosterPage() {
       setError(e.message || "Erreur lors de la mise à jour");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const setStaffField = (
+    fmt: GameFormat,
+    key: keyof StaffConfig,
+    value: number | boolean,
+  ) => {
+    setStaff((prev) =>
+      prev ? { ...prev, [fmt]: { ...prev[fmt], [key]: value } } : prev,
+    );
+  };
+
+  const handleSaveStaff = async () => {
+    if (!roster || !staff) return;
+    setSavingStaff(true);
+    setError(null);
+    setStaffSuccess(null);
+    try {
+      await putJSON(`/admin/data/rosters/${roster.id}/staff-config`, staff);
+      setStaffSuccess("Configuration staff enregistrée.");
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de l'enregistrement du staff");
+    } finally {
+      setSavingStaff(false);
     }
   };
 
@@ -277,6 +371,81 @@ export default function EditRosterPage() {
           </button>
         </div>
       </form>
+
+      {staff && (
+        <div className="bg-white p-6 border rounded shadow-sm mt-6">
+          <h2 className="text-lg font-bold mb-1">Staff par format</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Coûts en po (ex. 50000). Saisis indépendamment pour chaque format.
+          </p>
+
+          {staffSuccess && (
+            <p className="text-green-700 text-sm mb-4 p-3 bg-green-50 border border-green-200 rounded">
+              {staffSuccess}
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {(["bb11", "sevens"] as const).map((fmt) => (
+              <div key={fmt} className="border rounded p-4">
+                <h3 className="font-semibold mb-3">{FORMAT_LABELS[fmt]}</h3>
+                <div className="space-y-3">
+                  {STAFF_FIELDS.map((field) =>
+                    field.kind === "bool" ? (
+                      <label
+                        key={field.key}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          data-testid={`staff-${fmt}-${field.key}`}
+                          checked={Boolean(staff[fmt][field.key])}
+                          onChange={(e) =>
+                            setStaffField(fmt, field.key, e.target.checked)
+                          }
+                          className="w-5 h-5 rounded border-gray-300"
+                        />
+                        <span className="text-sm font-medium">{field.label}</span>
+                      </label>
+                    ) : (
+                      <div key={field.key}>
+                        <label className="block text-sm font-medium mb-1">
+                          {field.label}
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          data-testid={`staff-${fmt}-${field.key}`}
+                          value={Number(staff[fmt][field.key])}
+                          onChange={(e) =>
+                            setStaffField(
+                              fmt,
+                              field.key,
+                              e.target.value === "" ? 0 : parseInt(e.target.value, 10),
+                            )
+                          }
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleSaveStaff}
+              disabled={savingStaff}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingStaff ? "Enregistrement..." : "Enregistrer le staff"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
