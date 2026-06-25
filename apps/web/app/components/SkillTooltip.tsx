@@ -3,6 +3,10 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { getSkillDescription } from "../me/teams/skills-data";
 import { useSkillsCacheReady } from "../me/teams/use-skills-cache";
+import {
+  useSkillsCatalog,
+  resolveFromCatalog,
+} from "../me/teams/skills-catalog-context";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 
@@ -17,6 +21,8 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
   // catégorie du badge (getSkillDescription sync) ne se mettait à jour qu'au
   // premier survol. Voir me/teams/use-skills-cache.ts.
   useSkillsCacheReady(language);
+  // Catalogue SSR (si fourni) prioritaire sur le cache client.
+  const catalog = useSkillsCatalog();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0, placement: 'top' as 'top' | 'bottom' });
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -76,7 +82,10 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
     }
   }, [hoveredSkill]);
 
-  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill, language) : null;
+  const skillDescription = hoveredSkill
+    ? resolveFromCatalog(catalog, hoveredSkill, language) ??
+      getSkillDescription(hoveredSkill, language)
+    : null;
 
   // Fonction pour obtenir la couleur selon la catégorie
   const getCategoryColor = (category: string) => {
@@ -91,7 +100,9 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
     }
   };
 
-  const skillInfo = getSkillDescription(skillSlug, language);
+  const skillInfo =
+    resolveFromCatalog(catalog, skillSlug, language) ??
+    getSkillDescription(skillSlug, language);
   const displayName = skillInfo?.name || skillSlug;
   const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600 border-gray-300";
 

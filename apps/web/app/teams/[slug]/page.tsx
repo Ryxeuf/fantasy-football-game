@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
+import { fetchSkillsCatalog } from "../../lib/skills-catalog.server";
+import { SkillsCatalogProvider } from "../../me/teams/skills-catalog-context";
 import TeamDetailClient from "./TeamDetailClient";
 import TeamStructuredData from "./TeamStructuredData";
 
@@ -45,6 +47,12 @@ export default async function TeamDetailPage({
     notFound();
   }
 
+  // Catalogue de compétences résolu côté serveur (même ruleset que le roster)
+  // → les noms/catégories des badges sont corrects dès le HTML initial, sans
+  // flash ni changement au survol. Échec toléré → catalogue vide (fallback
+  // cache client).
+  const skillsCatalog = await fetchSkillsCatalog(payload.ruleset);
+
   return (
     <>
       <TeamStructuredData
@@ -54,12 +62,14 @@ export default async function TeamDetailPage({
         baseUrl={SITE_URL}
         lang="fr"
       />
-      <TeamDetailClient
-        slug={params.slug}
-        selectedRuleset={selectedRuleset}
-        actualRuleset={payload.ruleset}
-        initialTeam={payload.roster}
-      />
+      <SkillsCatalogProvider value={skillsCatalog}>
+        <TeamDetailClient
+          slug={params.slug}
+          selectedRuleset={selectedRuleset}
+          actualRuleset={payload.ruleset}
+          initialTeam={payload.roster}
+        />
+      </SkillsCatalogProvider>
     </>
   );
 }

@@ -5,6 +5,10 @@ import { getSkillDescription, getSkillDescriptionAsync, parseSkills, slugsToDisp
 import { separateSkills } from "../base-skills-data";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useSkillsCacheReady } from "../use-skills-cache";
+import {
+  useSkillsCatalog,
+  resolveFromCatalog,
+} from "../skills-catalog-context";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -17,6 +21,13 @@ interface SkillTooltipProps {
 
 export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false }: SkillTooltipProps) {
   const { language } = useLanguage();
+  // Catalogue résolu côté serveur (si fourni par la page) : prioritaire sur le
+  // cache client async → noms corrects dès le 1er rendu, aucun flash.
+  const catalog = useSkillsCatalog();
+  // Résolution unifiée : catalogue SSR d'abord, puis fallback cache/game-engine.
+  const resolveSkill = (slug: string) =>
+    resolveFromCatalog(catalog, slug, language) ??
+    getSkillDescription(slug, language);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string } | null>(null);
@@ -61,9 +72,11 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
       y: rect.top - 10
     });
     setHoveredSkill(skillSlug);
-    
-    // Charger la description depuis l'API pour avoir la bonne langue
-    const desc = await getSkillDescriptionAsync(skillSlug, language);
+
+    // Catalogue SSR d'abord (synchrone) ; sinon API async pour la bonne langue.
+    const desc =
+      resolveFromCatalog(catalog, skillSlug, language) ??
+      (await getSkillDescriptionAsync(skillSlug, language));
     setSkillDescription(desc);
   };
 
@@ -90,7 +103,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
       <div className={`flex flex-wrap gap-1 ${className}`}>
         {/* Compétences de base */}
         {baseSkillSlugs.map((skillSlug, index) => {
-          const skillInfo = getSkillDescription(skillSlug, language);
+          const skillInfo = resolveSkill(skillSlug);
           const displayName = skillInfo?.name || skillSlug;
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
           const baseSkillText = language === "fr" ? "Compétence de base" : "Base skill";
@@ -109,7 +122,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         
         {/* Compétences acquises */}
         {acquiredSkillSlugs.map((skillSlug, index) => {
-          const skillInfo = getSkillDescription(skillSlug, language);
+          const skillInfo = resolveSkill(skillSlug);
           const displayName = skillInfo?.name || skillSlug;
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
           const acquiredSkillText = language === "fr" ? "Compétence acquise" : "Acquired skill";

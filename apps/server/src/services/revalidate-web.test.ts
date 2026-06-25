@@ -36,7 +36,7 @@ describe("revalidate-web", () => {
       (opts.headers as Record<string, string>)["x-revalidate-secret"],
     ).toBe("s3cr3t");
     expect(JSON.parse(opts.body as string)).toEqual({
-      tags: ["rosters", "roster:underworld"],
+      tags: ["rosters", "skills", "roster:underworld"],
       paths: [],
     });
   });

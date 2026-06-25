@@ -73,6 +73,9 @@ export async function revalidateRosterPages(
 ): Promise<void> {
   const tags = [
     "rosters",
+    // Le catalogue de compétences (SSR, /api/skills) est taggé `skills` ; une
+    // resync roster peut en changer les noms/liens → on l'invalide aussi.
+    "skills",
     ...(slugs ?? []).filter(Boolean).map((s) => `roster:${s}`),
   ];
   await revalidateWeb({ tags });

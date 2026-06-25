@@ -39,6 +39,7 @@ vi.mock("../../../contexts/LanguageContext", () => ({
 }));
 
 import SkillTooltip from "./SkillTooltip";
+import { SkillsCatalogProvider } from "../skills-catalog-context";
 
 describe("SkillTooltip (me/teams) — rafraîchissement du cache compétences", () => {
   beforeEach(() => {
@@ -56,6 +57,27 @@ describe("SkillTooltip (me/teams) — rafraîchissement du cache compétences", 
     await waitFor(() => expect(screen.getByText("API-block")).toBeTruthy());
     expect(screen.getByText("API-dodge")).toBeTruthy();
     // Le fallback a bien disparu.
+    expect(screen.queryByText("FB-block")).toBeNull();
+  });
+
+  it("affiche le nom du catalogue SSR dès le 1er rendu (option 1, zéro flash)", () => {
+    const catalog = {
+      block: {
+        slug: "block",
+        nameFr: "Blocage",
+        nameEn: "Block",
+        description: "",
+        category: "General",
+      },
+    };
+    render(
+      <SkillsCatalogProvider value={catalog}>
+        <SkillTooltip skillsString="block" />
+      </SkillsCatalogProvider>,
+    );
+    // Synchrone : pas de waitFor, pas de survol → le catalogue prime sur le
+    // fallback game-engine mocké ("FB-block").
+    expect(screen.getByText("Blocage")).toBeTruthy();
     expect(screen.queryByText("FB-block")).toBeNull();
   });
 });
