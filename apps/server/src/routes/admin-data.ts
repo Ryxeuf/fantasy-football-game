@@ -42,6 +42,8 @@ import {
   duplicateToRulesetSchema,
   createRosterSchema,
   updateRosterSchema,
+  updateRosterStaffConfigSchema,
+  type UpdateRosterStaffConfigBody,
   createPositionSchema,
   updatePositionSchema,
   duplicatePositionSchema,
@@ -433,6 +435,7 @@ router.get("/rosters/:id", async (req, res) => {
           },
           orderBy: { displayName: "asc" },
         },
+        staffConfigs: true,
       },
     });
     if (!roster) {
@@ -578,6 +581,51 @@ router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
+
+// Upsert de la config staff (relances, apothicaire, cheerleaders, coachs,
+// fans) par roster ET par format (bb11 + sevens), saisie en admin. Coûts en po.
+router.put(
+  "/rosters/:id/staff-config",
+  validate(updateRosterStaffConfigSchema),
+  async (req, res) => {
+    try {
+      const body: UpdateRosterStaffConfigBody = req.body;
+      const roster = await prisma.roster.findUnique({
+        where: { id: req.params.id },
+        select: { id: true, slug: true },
+      });
+      if (!roster) {
+        return res.status(404).json({ error: "Roster non trouvé" });
+      }
+
+      const formats = ["bb11", "sevens"] as const;
+      const saved = [];
+      for (const format of formats) {
+        const cfg = body[format];
+        const row = await prisma.rosterStaffConfig.upsert({
+          where: { rosterId_format: { rosterId: roster.id, format } },
+          update: cfg,
+          create: { rosterId: roster.id, format, ...cfg },
+        });
+        saved.push(row);
+      }
+
+      await safeAudit(req, {
+        action: "roster.staffConfig.update",
+        entity: "RosterStaffConfig",
+        entityId: roster.id,
+        newValue: body,
+      });
+      res.json({ staffConfigs: saved });
+    } catch (error: any) {
+      serverLog.error(
+        "Erreur lors de la mise à jour de la config staff:",
+        error,
+      );
+      res.status(500).json({ error: error.message || "Erreur serveur" });
+    }
+  },
+);
 
 router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async (req, res) => {
   try {

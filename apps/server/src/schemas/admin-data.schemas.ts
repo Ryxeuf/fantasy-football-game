@@ -88,6 +88,31 @@ export const updateRosterSchema = z.object({
   ruleset: z.string().max(50).optional(),
 });
 
+// ── Body schema: config staff par roster × format ──
+// Tous les montants en po entiers. Plafonds/coûts >= 0.
+const staffConfigFormatSchema = z.object({
+  rerollCost: z.number().int().min(0).max(1_000_000),
+  maxRerolls: z.number().int().min(0).max(99),
+  apothecaryAllowed: z.boolean(),
+  apothecaryCost: z.number().int().min(0).max(1_000_000),
+  maxCheerleaders: z.number().int().min(0).max(99),
+  cheerleaderCost: z.number().int().min(0).max(1_000_000),
+  maxAssistants: z.number().int().min(0).max(99),
+  assistantCost: z.number().int().min(0).max(1_000_000),
+  maxDedicatedFans: z.number().int().min(0).max(99),
+  dedicatedFanCost: z.number().int().min(0).max(1_000_000),
+});
+
+export const updateRosterStaffConfigSchema = z.object({
+  bb11: staffConfigFormatSchema,
+  sevens: staffConfigFormatSchema,
+});
+
+export type StaffConfigFormatBody = z.infer<typeof staffConfigFormatSchema>;
+export type UpdateRosterStaffConfigBody = z.infer<
+  typeof updateRosterStaffConfigSchema
+>;
+
 // ── Body schemas: Positions ──
 
 export const createPositionSchema = z.object({
