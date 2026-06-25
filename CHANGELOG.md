@@ -1,3 +1,28 @@
+## [1.190.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.189.0...v1.190.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **db:** RosterStaffConfig (staff par roster x format) ([b054575](https://github.com/Ryxeuf/fantasy-football-game/commit/b05457545e1cd69d45e86a992db166cc1d9063de))
+* **game-engine:** config staff parametrable (fallback = defaut historique) ([d916c49](https://github.com/Ryxeuf/fantasy-football-game/commit/d916c49503060cb8e1137308c93fe4b46ce748f6))
+* **league:** applique les dépenses de trésorerie à la validation d'un match ([0a460d2](https://github.com/Ryxeuf/fantasy-football-game/commit/0a460d2dd365a938ccc4402ea844a73219c98072))
+* **league:** refonte mobile-first de la feuille de match physique ([2016537](https://github.com/Ryxeuf/fantasy-football-game/commit/2016537908c46a2db5afc27bedd916db3fc65d80))
+* **server:** admin staff-config (GET inclut staffConfigs, PUT upsert 2 formats) ([3d6150f](https://github.com/Ryxeuf/fantasy-football-game/commit/3d6150fe8ea2afb56a9a48ebac2023bc7b46db22))
+* **server:** couts/plafonds staff depuis la config resolue (DB) ([dd9d61b](https://github.com/Ryxeuf/fantasy-football-game/commit/dd9d61b216deb123a2d47d8247fbabbbf25dda67))
+* **server:** service resolveStaffConfig + seed RosterStaffConfig ([335229a](https://github.com/Ryxeuf/fantasy-football-game/commit/335229aef13c7d71a11379e2b9a482755a279c7d))
+* **web:** editeur staff BB11/BB7 (admin) + builder pilote par la config DB ([52694cd](https://github.com/Ryxeuf/fantasy-football-game/commit/52694cd1d8aefd61d147f6f0863de9583ba29b10))
+
+
+### 📝 Documentation
+
+* **league:** refonte gestion de ligue physique (découplage + saisie + UI) ([772b553](https://github.com/Ryxeuf/fantasy-football-game/commit/772b5539f8e64f9f27f9ad5f92f4c09e89d5f237))
+* **openspec:** change add-roster-staff-config ([3a72bb8](https://github.com/Ryxeuf/fantasy-football-game/commit/3a72bb803145b392b8268b2a871c78cb3740dd1f))
+
+
+### ♻️ Code Refactoring
+
+* **league:** découple les ligues du jeu en ligne (ligues 100% physiques) ([6fc9fd4](https://github.com/Ryxeuf/fantasy-football-game/commit/6fc9fd409e4bee769ba9d2c9aefbf778582ef43a))
+
 ## [1.189.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.188.1...v1.189.0) (2026-06-25)
 
 
