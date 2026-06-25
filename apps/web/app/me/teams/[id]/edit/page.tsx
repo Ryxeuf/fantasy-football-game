@@ -1529,6 +1529,7 @@ export default function TeamEditPage() {
             roster: team.roster,
           }}
           roster={team.roster}
+          staffConfig={team.staffConfig}
           initialBudgetK={team.initialBudget || 0}
           playersCost={(team.players || []).reduce((total: number, player: any) => {
             const base = getPlayerCost(player.position, team.roster);
@@ -1560,6 +1561,7 @@ export default function TeamEditPage() {
             assistants: team.assistants || 0,
             apothecary: team.apothecary || false,
             dedicatedFans: team.dedicatedFans || 1,
+            staffConfig: team.staffConfig,
             players: (team.players || []).map((p: any) => ({
               id: p.id,
               number: p.number,

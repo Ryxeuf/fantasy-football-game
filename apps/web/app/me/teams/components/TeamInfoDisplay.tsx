@@ -1,6 +1,6 @@
 "use client";
 
-import { getRerollCost } from "@bb/game-engine";
+import { getRerollCost, type RosterStaffConfig } from "@bb/game-engine";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface TeamInfo {
@@ -13,6 +13,8 @@ interface TeamInfo {
   teamValue?: number; // VE - Valeur d'Équipe (calculée)
   currentValue?: number; // VEA - Valeur d'Équipe Actuelle (calculée)
   roster?: string; // Roster pour calculer le coût des relances
+  /** Config staff résolue (DB par roster × format). Coûts en po. */
+  staffConfig?: RosterStaffConfig;
 }
 
 interface TeamInfoDisplayProps {
@@ -21,7 +23,8 @@ interface TeamInfoDisplayProps {
 
 export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
   const { t } = useLanguage();
-  const rerollCost = getRerollCost(info.roster || '');
+  // Coût de relance : config DB résolue si fournie, sinon défaut historique.
+  const rerollCost = info.staffConfig?.rerollCost ?? getRerollCost(info.roster || '');
 
   // Helper pour formater les nombres en toute sécurité
   const formatNumber = (value: number | undefined | null): string => {

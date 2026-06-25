@@ -2,7 +2,7 @@
  * Utilitaire pour exporter un roster d'équipe en PDF
  */
 
-import { getDisplayName, getDisplayNames, getRerollCost, parseSkillSlugs, getSkillBySlug } from '@bb/game-engine';
+import { getDisplayName, getDisplayNames, getRerollCost, parseSkillSlugs, getSkillBySlug, type RosterStaffConfig } from '@bb/game-engine';
 
 interface TeamData {
   name: string;
@@ -16,6 +16,8 @@ interface TeamData {
   assistants?: number;
   apothecary?: boolean;
   dedicatedFans?: number;
+  /** Config staff résolue (DB par roster × format). Coûts en po. */
+  staffConfig?: RosterStaffConfig;
 }
 
 const ROSTER_DISPLAY_NAMES: Record<string, string> = {
@@ -133,13 +135,15 @@ export async function exportTeamToPDF(
 
   // Calculer les valeurs
   const totalCost = team.players.reduce((sum, p) => sum + getPlayerCost(p.position, team.roster), 0);
-  const rerollUnit = getRerollCost(team.roster || '');
+  // Coûts staff issus de la config DB résolue, repli sur les défauts historiques.
+  const sc = team.staffConfig;
+  const rerollUnit = sc?.rerollCost ?? getRerollCost(team.roster || '');
   const rerollsCost = (team.rerolls || 0) * rerollUnit;
-  const cheerleadersCost = (team.cheerleaders || 0) * 10000;
-  const assistantsCost = (team.assistants || 0) * 10000;
+  const cheerleadersCost = (team.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000);
+  const assistantsCost = (team.assistants || 0) * (sc?.assistantCost ?? 10000);
   const fansCount = typeof team.dedicatedFans === 'number' ? team.dedicatedFans : 0;
-  const fansCost = Math.max(0, fansCount - 1) * 10000;
-  const apothecaryCost = team.apothecary ? 50000 : 0;
+  const fansCost = Math.max(0, fansCount - 1) * (sc?.dedicatedFanCost ?? 10000);
+  const apothecaryCost = team.apothecary ? (sc?.apothecaryCost ?? 50000) : 0;
 
   const rosterTotal = totalCost + rerollsCost + cheerleadersCost + assistantsCost + fansCost + apothecaryCost;
   const treasury = (team.initialBudget || 0) * 1000 - rosterTotal;

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
-import { getRerollCost, getDisplayName, canRosterHaveApothecary } from "@bb/game-engine";
+import { getRerollCost, getDisplayName, canRosterHaveApothecary, type RosterStaffConfig } from "@bb/game-engine";
 import { formatPlusStat } from "../../../lib/format-stats";
 
 interface AvailablePosition {
@@ -32,6 +32,8 @@ interface TeamData {
   apothecary: boolean;
   dedicatedFans: number;
   players: Array<{ id: string; number: number; dead: boolean; name: string }>;
+  /** Config staff résolue (DB par roster × format). Coûts en po. */
+  staffConfig?: RosterStaffConfig;
 }
 
 interface TreasuryPurchasePanelProps {
@@ -65,12 +67,21 @@ export default function TreasuryPurchasePanel({
   const [playerForm, setPlayerForm] = useState({ position: "", name: "", number: 1 });
 
   const treasury = team.treasury;
-  const rerollCostDouble = getRerollCost(team.roster) * 2;
+  // Coûts/plafonds staff : config DB résolue (par roster × format) si fournie,
+  // sinon repli sur les défauts historiques.
+  const sc = team.staffConfig;
+  const rerollCostDouble = (sc?.rerollCost ?? getRerollCost(team.roster)) * 2;
+  const cheerleaderCost = sc?.cheerleaderCost ?? 10000;
+  const assistantCost = sc?.assistantCost ?? 10000;
+  const apothecaryCost = sc?.apothecaryCost ?? 50000;
+  const dedicatedFanCost = sc?.dedicatedFanCost ?? 10000;
+  const maxRerolls = sc?.maxRerolls ?? 8;
+  const maxCheerleaders = sc?.maxCheerleaders ?? 12;
+  const maxAssistants = sc?.maxAssistants ?? 6;
+  const maxDedicatedFans = sc?.maxDedicatedFans ?? 6;
   const alivePlayers = team.players.filter(p => !p.dead);
-  // Règle officielle BB : les équipes mort-vivantes ne peuvent pas recruter
-  // d'apothicaire (régénération à la place). Source unique partagée avec le
-  // serveur (@bb/game-engine).
-  const apothecaryAllowed = canRosterHaveApothecary(team.roster);
+  // Apothicaire autorisé : config DB si fournie, sinon règle BB (morts-vivants).
+  const apothecaryAllowed = sc?.apothecaryAllowed ?? canRosterHaveApothecary(team.roster);
 
   const getNextAvailableNumber = (): number => {
     const usedNumbers = new Set(alivePlayers.map(p => p.number));
@@ -119,43 +130,43 @@ export default function TreasuryPurchasePanel({
       label: "Relance",
       cost: rerollCostDouble,
       current: team.rerolls,
-      max: 8,
-      disabled: team.rerolls >= 8 || treasury < rerollCostDouble,
+      max: maxRerolls,
+      disabled: team.rerolls >= maxRerolls || treasury < rerollCostDouble,
     },
     {
       type: "cheerleader",
       label: "Cheerleader",
-      cost: 10000,
+      cost: cheerleaderCost,
       current: team.cheerleaders,
-      max: 12,
-      disabled: team.cheerleaders >= 12 || treasury < 10000,
+      max: maxCheerleaders,
+      disabled: team.cheerleaders >= maxCheerleaders || treasury < cheerleaderCost,
     },
     {
       type: "assistant",
       label: "Assistant",
-      cost: 10000,
+      cost: assistantCost,
       current: team.assistants,
-      max: 6,
-      disabled: team.assistants >= 6 || treasury < 10000,
+      max: maxAssistants,
+      disabled: team.assistants >= maxAssistants || treasury < assistantCost,
     },
     {
       type: "apothecary",
       label: "Apothicaire",
-      cost: 50000,
+      cost: apothecaryCost,
       current: team.apothecary,
       max: 1,
-      disabled: !apothecaryAllowed || team.apothecary || treasury < 50000,
+      disabled: !apothecaryAllowed || team.apothecary || treasury < apothecaryCost,
       unavailableReason: apothecaryAllowed
         ? undefined
-        : "Indisponible pour les équipes mort-vivantes",
+        : "Indisponible pour cette équipe",
     },
     {
       type: "dedicated_fan",
       label: "Fan Devoue",
-      cost: 10000,
+      cost: dedicatedFanCost,
       current: team.dedicatedFans,
-      max: 6,
-      disabled: team.dedicatedFans >= 6 || treasury < 10000,
+      max: maxDedicatedFans,
+      disabled: team.dedicatedFans >= maxDedicatedFans || treasury < dedicatedFanCost,
     },
   ];
 

@@ -28,7 +28,10 @@
 - [x] 6.2 `team-purchase-handler` : idem (reroll ×2, cheerleader, assistant, apothicaire).
 - [x] 6.3 API publique `GET /api/rosters[/:slug]` expose `staffConfigs`.
 - [x] 6.4 Builder web `me/teams/new` consomme la config (coûts, plafonds, validation, apothicaire).
-- [ ] 6.5 (Suivi) Vues lecture-seule équipe (exportPDF, TeamDetailClient, panels) : porter la config sur le payload d'équipe.
+- [x] 6.5 Vues lecture-seule équipe « me » : `GET /team/:id` expose `staffConfig`
+      résolu ; `[id]/page`, `TeamInfoDisplay`, `TeamInfoEditor`,
+      `TreasuryPurchasePanel`, `exportPDF` l'utilisent (repli défaut historique).
+      Reste sur les défauts : page publique `teams/[slug]` (`TeamDetailClient`).
 
 ## 7. Vérification
 - [x] 7.1 tsc (game-engine, server, web) ; `make check-shadow`.

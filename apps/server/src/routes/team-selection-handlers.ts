@@ -26,7 +26,8 @@ import type { Response } from 'express';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
-import { getStarPlayerBySlug } from '@bb/game-engine';
+import { getStarPlayerBySlug, isGameFormat } from '@bb/game-engine';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 
 /**
@@ -244,10 +245,19 @@ export async function handleGetTeamDetail(
       touchdownDiff: touchdownsFor - touchdownsAgainst,
     };
 
+    // Config staff résolue (DB par roster × format, sinon défaut) — permet aux
+    // vues équipe d'afficher des coûts cohérents avec l'admin.
+    const staffConfig = await resolveStaffConfigBySlug(
+      team.roster,
+      team.ruleset,
+      isGameFormat(team.format) ? team.format : 'bb11',
+    );
+
     sendSuccess(res, {
       team: {
         ...team,
         starPlayers: enrichedStarPlayers,
+        staffConfig,
       },
       currentMatch: selection?.match || null,
       localMatchStats,

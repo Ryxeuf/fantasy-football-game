@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
-import { getRerollCost } from "@bb/game-engine";
+import { getRerollCost, type RosterStaffConfig } from "@bb/game-engine";
 
 interface TeamInfo {
   rerolls: number;
@@ -21,37 +21,41 @@ interface TeamInfoEditorProps {
   roster?: string;
   initialBudgetK?: number; // en milliers (k po)
   playersCost?: number; // en po
+  /** Config staff résolue (DB par roster × format). Coûts en po. */
+  staffConfig?: RosterStaffConfig;
 }
 
-export default function TeamInfoEditor({ 
-  teamId, 
-  initialInfo, 
-  onUpdate, 
+export default function TeamInfoEditor({
+  teamId,
+  initialInfo,
+  onUpdate,
   disabled = false,
   roster,
   initialBudgetK = 0,
   playersCost = 0,
+  staffConfig,
 }: TeamInfoEditorProps) {
   const [info, setInfo] = useState<TeamInfo>(initialInfo);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const rerollCost = getRerollCost((info.roster || roster || ''));
+
+  // Coûts staff : config DB résolue si fournie, sinon défauts historiques.
+  const rerollCost = staffConfig?.rerollCost ?? getRerollCost((info.roster || roster || ''));
   const [success, setSuccess] = useState(false);
 
   // Calculs en temps réel
   const { staffCost, rerollsCost, fansCost, rosterTotal, treasury } = useMemo(() => {
     const rerolls = (info.rerolls || 0) * rerollCost;
-    const cheer = (info.cheerleaders || 0) * 10000;
-    const assistants = (info.assistants || 0) * 10000;
-    const apo = info.apothecary ? 50000 : 0;
+    const cheer = (info.cheerleaders || 0) * (staffConfig?.cheerleaderCost ?? 10000);
+    const assistants = (info.assistants || 0) * (staffConfig?.assistantCost ?? 10000);
+    const apo = info.apothecary ? (staffConfig?.apothecaryCost ?? 50000) : 0;
     const fansCount = typeof info.dedicatedFans === 'number' ? info.dedicatedFans : 1;
-    const fans = Math.max(0, fansCount - 1) * 10000;
+    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 10000);
     const staff = rerolls + cheer + assistants + apo + fans;
     const total = (playersCost || 0) + staff;
     const treasuryPo = (initialBudgetK || 0) * 1000 - total;
     return { staffCost: staff, rerollsCost: rerolls, fansCost: fans, rosterTotal: total, treasury: treasuryPo };
-  }, [info, rerollCost, playersCost, initialBudgetK]);
+  }, [info, rerollCost, playersCost, initialBudgetK, staffConfig]);
 
   const handleSave = async () => {
     setLoading(true);

@@ -385,13 +385,16 @@ export default function TeamDetailPage() {
                   </div>
                 </div>
                 {(() => {
-                  const playersCost = (team.players?.reduce((total: number, player: any) => 
+                  const playersCost = (team.players?.reduce((total: number, player: any) =>
                     total + getPlayerCost(player.position, team.roster), 0) || 0);
-                  const rerolls = (team.rerolls || 0) * getRerollCost(team.roster || '');
-                  const cheer = (team.cheerleaders || 0) * 10000;
-                  const assistants = (team.assistants || 0) * 10000;
-                  const apo = team.apothecary ? 50000 : 0;
-                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * 10000;
+                  // Coûts staff issus de la config DB (résolue par roster × format),
+                  // avec repli sur les valeurs historiques si absente.
+                  const sc = team.staffConfig;
+                  const rerolls = (team.rerolls || 0) * (sc?.rerollCost ?? getRerollCost(team.roster || ''));
+                  const cheer = (team.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000);
+                  const assistants = (team.assistants || 0) * (sc?.assistantCost ?? 10000);
+                  const apo = team.apothecary ? (sc?.apothecaryCost ?? 50000) : 0;
+                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 10000);
                   const rosterTotal = playersCost + rerolls + cheer + assistants + apo + fans;
                   const remaining = (team.initialBudget || 0) * 1000 - rosterTotal;
                   const positive = remaining >= 0;
@@ -691,6 +694,7 @@ export default function TeamDetailPage() {
             teamValue: team.teamValue || 0,
             currentValue: team.currentValue || 0,
             roster: team.roster,
+            staffConfig: team.staffConfig,
           }}
         />
         </>
