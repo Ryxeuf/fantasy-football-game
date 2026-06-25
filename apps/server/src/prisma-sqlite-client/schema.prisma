@@ -953,8 +953,10 @@ model LeaguePairing {
   @@index([awayParticipantId])
 }
 
-/// Lot G — Feuille de match v2 (mirror PG). Les champs Json PG sont
-/// des String serialisees en sqlite.
+/// Lot G — Feuille de match v2 (mirror PG). Les champs Json sont `Json?`
+/// (comme en PG) pour que l'ecriture de valeurs natives (arrays/objets)
+/// fonctionne aussi sur le miroir sqlite. Les parsers de lecture restent
+/// tolerants (array natif OU string serialisee, cf. CLAUDE.md).
 model LeagueMatchSheet {
   id                     String        @id @default(cuid())
   pairing                LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
@@ -971,10 +973,10 @@ model LeagueMatchSheet {
   popularityHome         Int?
   popularityAway         Int?
   forfeitSide            String?
-  inducementsHome        String?
-  inducementsAway        String?
-  prayersHome            String?
-  prayersAway            String?
+  inducementsHome        Json?
+  inducementsAway        Json?
+  prayersHome            Json?
+  prayersAway            Json?
   scoreHome              Int           @default(0)
   scoreAway              Int           @default(0)
   winningsHome           Int           @default(0)
@@ -985,13 +987,13 @@ model LeagueMatchSheet {
   dedicatedFansDeltaAway Int?
   rankingBonusHome       Int?
   rankingBonusAway       Int?
-  sppBonus               String?
-  costlyErrorsHome       String?
-  costlyErrorsAway       String?
-  motmPlayerIds          String        @default("[]")
-  purchasesHome          String?
-  purchasesAway          String?
-  firedPlayerIds         String?
+  sppBonus               Json?
+  costlyErrorsHome       Json?
+  costlyErrorsAway       Json?
+  motmPlayerIds          Json          @default("[]")
+  purchasesHome          Json?
+  purchasesAway          Json?
+  firedPlayerIds         Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
