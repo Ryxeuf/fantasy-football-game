@@ -1,3 +1,22 @@
+## [1.187.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.186.0...v1.187.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **leagues:** invitations en attente côté coach + saisie de code ([f4c3c67](https://github.com/Ryxeuf/fantasy-football-game/commit/f4c3c67e517fd5a9a203b7dea780c0b10c383796))
+* **leagues:** panneau "Invitations envoyées" pour le commissaire ([643c4a4](https://github.com/Ryxeuf/fantasy-football-game/commit/643c4a4835a48fc661789c9ca7ada771594f6134))
+* **leagues:** rejoindre une ligue via invitation (e-mail, saison, routes) ([3f400f9](https://github.com/Ryxeuf/fantasy-football-game/commit/3f400f961f2ff970c1614ad801239751e8120819))
+* **teams:** fiche de roster enrichie (accès compétences, règles spéciales) + notation BB des caractéristiques ([#927](https://github.com/Ryxeuf/fantasy-football-game/issues/927)) ([aea4fb2](https://github.com/Ryxeuf/fantasy-football-game/commit/aea4fb2f9e3b0493397126d04eeefd23288ee480))
+* **teams:** invalidation ISR à la demande des pages roster ([cdd2456](https://github.com/Ryxeuf/fantasy-football-game/commit/cdd24561eb819a9ab1d3436fd46a02df1b9e3639))
+* **teams:** page roster format-aware (BB11 / Sevens) ([255df31](https://github.com/Ryxeuf/fantasy-football-game/commit/255df31919f98fdfbc772e14335003dee3cb3c82))
+* **teams:** suppression d'équipe par le coach (soft delete + garde compétition) ([1a1c0b3](https://github.com/Ryxeuf/fantasy-football-game/commit/1a1c0b3ca8b4b335824e68bd89bc5c9135291d11))
+
+
+### 🐛 Bug Fixes
+
+* **prisma:** mirror LeagueInvitation dans le schéma SQLite de test (E2E API rouge) ([#928](https://github.com/Ryxeuf/fantasy-football-game/issues/928)) ([e017ee7](https://github.com/Ryxeuf/fantasy-football-game/commit/e017ee7bf2e15805c6e61a25b8152ab8ca42dcac))
+* **rosters:** nom du trait Animosité Underworld → "Animosité (Gobelins des Bas-Fond)" ([aeb65d9](https://github.com/Ryxeuf/fantasy-football-game/commit/aeb65d9b9ce02d16c9d52cf8a692dbf388ebb60f))
+
 ## [1.186.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.185.0...v1.186.0) (2026-06-24)
 
 
