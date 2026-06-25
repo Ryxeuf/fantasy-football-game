@@ -752,8 +752,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "animosity-underworld",
-    nameFr: "Animosité (Underworld)*",
-    nameEn: "Animosity (Underworld)",
+    nameFr: "Animosité (Gobelins des Bas-Fond)*",
+    nameEn: "Animosity (Underworld Goblins)",
     description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
     category: "Trait"
   },
