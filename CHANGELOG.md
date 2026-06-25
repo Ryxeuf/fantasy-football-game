@@ -1,3 +1,10 @@
+## [1.188.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.187.0...v1.188.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **mail:** support MAILER_DSN (Symfony-style) en plus des SMTP_* ([7c6d593](https://github.com/Ryxeuf/fantasy-football-game/commit/7c6d593d4f8e0295f592850d712542efa7a704eb))
+
 ## [1.187.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.186.0...v1.187.0) (2026-06-25)
 
 
