@@ -127,7 +127,9 @@ services:
       - MAILER_DSN=${MAILER_DSN:-}
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
-      - MAIL_FROM=Nuffle Arena (dev) <no-reply@nuffle-arena.local>
+      # Substituable : un MAIL_FROM dans le fichier `.env` (racine) est honoré ;
+      # sinon défaut Mailpit. Utile quand on teste un vrai SMTP via MAILER_DSN.
+      - MAIL_FROM=${MAIL_FROM:-Nuffle Arena (dev) <no-reply@nuffle-arena.local>}
       # Invalidation ISR du front après écriture roster (cf docs/isr-cache-
       # invalidation.md). Secret partagé avec le service `web`.
       - WEB_REVALIDATE_URL=http://nufflearena_web:3100
