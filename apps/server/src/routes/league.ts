@@ -37,7 +37,6 @@ import {
   closeSeason,
   requireLeagueCreator,
 } from "../services/league-scheduler";
-import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { recordForfeit } from "../services/league-forfeit";
 import {
   recordOfflineLeagueResult,
@@ -150,10 +149,8 @@ import {
   createRoundSchema,
   listLeaguesQuerySchema,
   listSeasonsByThemeQuerySchema,
-  attachMatchSchema,
   startSeasonSchema,
   updateSeasonConfigSchema,
-  createMatchFromPairingSchema,
   forfeitPairingSchema,
   recordOfflineResultSchema,
   type CreateLeagueBody,
@@ -163,10 +160,8 @@ import {
   type CreateRoundBody,
   type ListLeaguesQuery,
   type ListSeasonsByThemeQuery,
-  type AttachMatchBody,
   type StartSeasonBody,
   type UpdateSeasonConfigBody,
-  type CreateMatchFromPairingBody,
   type ForfeitPairingBody,
   type RecordOfflineResultBody,
 } from "../schemas/league.schemas";
@@ -611,73 +606,6 @@ export async function handleCreateRound(
   } catch (e: unknown) {
     domainError(res, e);
   }
-}
-
-/**
- * L.7 — Rattache un match existant a un round de ligue.
- * Reserve au createur de la ligue. Refuse si le match est deja termine
- * ou deja rattache a une autre saison/round.
- */
-export async function handleAttachMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const userId = requireUserId(req, res);
-  if (!userId) return;
-  const { seasonId, roundId } = req.params;
-  const body: AttachMatchBody = req.body;
-
-  const season = await getSeasonById(seasonId);
-  if (!season) {
-    sendError(res, "Saison introuvable", 404);
-    return;
-  }
-  if ((season as { league: { creatorId: string } }).league.creatorId !== userId) {
-    sendError(
-      res,
-      "Seul le createur de la ligue peut rattacher un match",
-      403,
-    );
-    return;
-  }
-
-  const round = await prisma.leagueRound.findUnique({ where: { id: roundId } });
-  if (!round || (round as { seasonId: string }).seasonId !== seasonId) {
-    sendError(res, "Journee introuvable dans cette saison", 404);
-    return;
-  }
-
-  const match = await prisma.match.findUnique({
-    where: { id: body.matchId },
-    select: {
-      id: true,
-      status: true,
-      leagueSeasonId: true,
-      leagueScoredAt: true,
-    },
-  });
-  if (!match) {
-    sendError(res, "Partie introuvable", 404);
-    return;
-  }
-  if (match.status === "ended" || match.leagueScoredAt) {
-    sendError(
-      res,
-      "Impossible de rattacher un match deja termine ou deja comptabilise",
-      400,
-    );
-    return;
-  }
-  if (match.leagueSeasonId && match.leagueSeasonId !== seasonId) {
-    sendError(res, "Match deja rattache a une autre saison", 409);
-    return;
-  }
-
-  await prisma.match.update({
-    where: { id: match.id },
-    data: { leagueSeasonId: seasonId, leagueRoundId: roundId },
-  });
-  sendSuccess(res, { matchId: match.id, seasonId, roundId });
 }
 
 /**
@@ -1848,36 +1776,6 @@ export async function handleUpdateSeasonConfig(
 }
 
 /**
- * L2.A.4 — Cree un Match a partir d'un pairing du calendrier. Reserve
- * a un coach proprietaire de l'une des 2 equipes apparies. Idempotent :
- * si le pairing a deja un match, retourne l'existant.
- */
-export async function handleCreateMatchFromPairing(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const userId = requireUserId(req, res);
-  if (!userId) return;
-  const pairingId = req.params.pairingId;
-  const body: CreateMatchFromPairingBody = req.body;
-  try {
-    const result = await createMatchFromPairing({
-      pairingId,
-      userId,
-      seed: body?.seed,
-    });
-    sendSuccess(res, result, result.created ? 201 : 200);
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "";
-    if (/un des deux coachs/i.test(message)) {
-      sendError(res, message, 403);
-      return;
-    }
-    domainError(res, e);
-  }
-}
-
-/**
  * L2.A.11c — Force un forfait sur un pairing. Reserve au createur de
  * la ligue (verifie via le `seasonId` extrait du pairing). Le cron
  * `sweepDeadlinePairings` fait pareil automatiquement a la deadline,
@@ -2225,12 +2123,6 @@ router.post(
   validate(createRoundSchema),
   handleCreateRound,
 );
-router.post(
-  "/seasons/:seasonId/rounds/:roundId/matches",
-  authUser,
-  validate(attachMatchSchema),
-  handleAttachMatch,
-);
 // Lot F — saisie manuelle de matchs : creation d'un round vide hors
 // du calendrier auto-genere + ajout de pairings.
 router.post(
@@ -2435,13 +2327,6 @@ router.patch(
   authUser,
   validate(updateSeasonConfigSchema),
   handleUpdateSeasonConfig,
-);
-// L2.A.4 — Lancement d'une rencontre depuis un pairing pre-genere.
-router.post(
-  "/pairings/:pairingId/match",
-  authUser,
-  validate(createMatchFromPairingSchema),
-  handleCreateMatchFromPairing,
 );
 // L2.A.11c — Forfait force par le createur de la ligue. Le cron
 // `sweepDeadlinePairings` fait l'equivalent automatiquement a la

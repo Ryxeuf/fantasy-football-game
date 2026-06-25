@@ -161,10 +161,6 @@ export const createRoundSchema = z.object({
   endDate: z.coerce.date().optional().nullable(),
 });
 
-export const attachMatchSchema = z.object({
-  matchId: z.string().min(1, "matchId requis"),
-});
-
 export const listLeaguesQuerySchema = z.object({
   creatorId: z.string().optional(),
   status: z
@@ -211,16 +207,6 @@ export const updateSeasonConfigSchema = z
   .refine((v) => Object.keys(v).length > 0, {
     message: "Au moins un champ de configuration doit etre fourni",
   });
-
-/**
- * L2.A.4 — Body schema pour `POST /league/pairings/:id/match`.
- * Pas de body obligatoire pour l'instant : la creation utilise les
- * deux participants du pairing. Un seed optionnel permet de
- * reproduire un match (utile pour replay/tests).
- */
-export const createMatchFromPairingSchema = z.object({
-  seed: z.string().min(1).max(64).optional(),
-});
 
 /**
  * L2.A.11c — Body schema pour `POST /league/pairings/:id/forfeit`.
@@ -294,14 +280,10 @@ export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
 export type CreateRoundBody = z.infer<typeof createRoundSchema>;
 export type ListLeaguesQuery = z.infer<typeof listLeaguesQuerySchema>;
-export type AttachMatchBody = z.infer<typeof attachMatchSchema>;
 export type ListSeasonsByThemeQuery = z.infer<
   typeof listSeasonsByThemeQuerySchema
 >;
 export type StartSeasonBody = z.infer<typeof startSeasonSchema>;
 export type UpdateSeasonConfigBody = z.infer<typeof updateSeasonConfigSchema>;
-export type CreateMatchFromPairingBody = z.infer<
-  typeof createMatchFromPairingSchema
->;
 export type ForfeitPairingBody = z.infer<typeof forfeitPairingSchema>;
 export type RecordOfflineResultBody = z.infer<typeof recordOfflineResultSchema>;

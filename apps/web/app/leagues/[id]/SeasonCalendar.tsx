@@ -1,8 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { apiRequest } from "../../lib/api-client";
+import { useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { EnterResultModal } from "./EnterResultModal";
 import { MatchdayExport } from "./MatchdayExport";
@@ -13,13 +10,11 @@ import type {
   LeaguePairingTeamDetail,
 } from "./types";
 
-// Sprint Ligues v2 PR2 — calendrier interactif.
-// Affiche pour chaque round la liste des pairings (home vs away). Le
-// bouton "Lancer le match" est visible uniquement pour les coachs qui
-// possedent l'une des 2 equipes apparies (et que le pairing est encore
-// `scheduled`). Pour les pairings deja `in_progress` ou `played` on
-// expose un lien direct vers le match. Les forfaits / annulations
-// affichent uniquement un badge.
+// Sprint Ligues v2 PR2 — calendrier interactif (ligue 100% physique).
+// Affiche pour chaque round la liste des pairings (home vs away). La
+// ligue ne lance plus de match en ligne : la seule action sur un
+// pairing `scheduled` est la saisie manuelle du resultat (feuille de
+// match). Les forfaits / annulations affichent uniquement un badge.
 
 interface SeasonCalendarProps {
   rounds: LeagueRoundDetail[];
@@ -48,7 +43,6 @@ function formatDate(iso: string | null, locale: string): string | null {
 
 export function SeasonCalendar({
   rounds,
-  currentUserId,
   canRecordResult,
   onResultRecorded,
 }: SeasonCalendarProps) {
@@ -125,7 +119,6 @@ export function SeasonCalendar({
                   <PairingRow
                     key={pairing.id}
                     pairing={pairing}
-                    currentUserId={currentUserId}
                     canRecordResult={canRecordResult}
                     onResultRecorded={onResultRecorded}
                   />
@@ -141,21 +134,16 @@ export function SeasonCalendar({
 
 interface PairingRowProps {
   pairing: LeaguePairingDetail;
-  currentUserId: string | null;
   canRecordResult?: boolean;
   onResultRecorded?: () => void;
 }
 
 function PairingRow({
   pairing,
-  currentUserId,
   canRecordResult,
   onResultRecorded,
 }: PairingRowProps) {
   const { t } = useLanguage();
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
 
@@ -165,32 +153,6 @@ function PairingRow({
     canRecordResult &&
     pairing.status === "played" &&
     pairing.match?.mode === "offline";
-
-  const isOwnerOfHome =
-    currentUserId !== null &&
-    pairing.homeParticipant.team.ownerId === currentUserId;
-  const isOwnerOfAway =
-    currentUserId !== null &&
-    pairing.awayParticipant.team.ownerId === currentUserId;
-  const isInvolved = isOwnerOfHome || isOwnerOfAway;
-
-  const launchMatch = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await apiRequest<{ matchId: string }>(
-        `/leagues/pairings/${pairing.id}/match`,
-        { method: "POST", body: JSON.stringify({}) },
-      );
-      router.push(`/play/${result.matchId}`);
-    } catch (e: unknown) {
-      setError(
-        e instanceof Error ? e.message : t.leagues.adminActionError,
-      );
-      setBusy(false);
-    }
-  }, [busy, pairing.id, router, t.leagues.adminActionError]);
 
   const statusBadge = pairingStatusBadge(pairing.status, t);
 
@@ -205,9 +167,6 @@ function PairingRow({
           <span className="mx-2 text-gray-400">vs</span>
           <TeamSpan team={pairing.awayParticipant} side="away" />
         </div>
-        {error ? (
-          <div className="text-xs text-red-600 mt-0.5">{error}</div>
-        ) : null}
         <PairingBonusBreakdown
           pairingId={pairing.id}
           status={pairing.status}
@@ -224,30 +183,6 @@ function PairingRow({
         >
           {statusBadge.label}
         </span>
-        {pairing.status === "scheduled" && isInvolved ? (
-          <button
-            type="button"
-            data-testid={`pairing-launch-${pairing.id}`}
-            onClick={launchMatch}
-            disabled={busy}
-            className="text-xs px-2 py-1 rounded bg-nuffle-gold text-white font-medium hover:bg-nuffle-gold/90 disabled:opacity-50"
-          >
-            {t.leagues.pairingLaunchButton}
-          </button>
-        ) : null}
-        {(pairing.status === "in_progress" || pairing.status === "played") &&
-        pairing.match &&
-        pairing.match.mode !== "offline" ? (
-          <Link
-            href={`/play/${pairing.match.id}`}
-            data-testid={`pairing-view-${pairing.id}`}
-            className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-white"
-          >
-            {pairing.status === "in_progress"
-              ? t.leagues.pairingResumeButton
-              : t.leagues.pairingViewMatchButton}
-          </Link>
-        ) : null}
         {canRecordResult && pairing.status === "scheduled" ? (
           <button
             type="button"

@@ -32,26 +32,8 @@ export const adminLeagueTransferSchema = z.object({
   userId: z.string().min(1, "userId requis"),
 });
 
-/**
- * Sprint R lot R.E.3 — PATCH /admin/leagues/:id/match-mode body.
- *
- * Au moins un champ doit etre present. `matchMode` accepte "realtime"
- * | "async". `turnDeadlineHours` clamp [1, 168] (1 semaine).
- */
-export const adminLeagueMatchModeSchema = z
-  .object({
-    matchMode: z.enum(["realtime", "async"]).optional(),
-    turnDeadlineHours: z.number().int().min(1).max(168).optional(),
-  })
-  .refine((d) => Object.keys(d).length > 0, {
-    message: "Au moins un champ doit etre fourni.",
-  });
-
 export type AdminLeaguesQuery = z.infer<typeof adminLeaguesQuerySchema>;
 export type AdminLeagueStatusBody = z.infer<typeof adminLeagueStatusSchema>;
 export type AdminLeagueTransferBody = z.infer<
   typeof adminLeagueTransferSchema
->;
-export type AdminLeagueMatchModeBody = z.infer<
-  typeof adminLeagueMatchModeSchema
 >;

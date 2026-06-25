@@ -29,8 +29,6 @@ import {
   adminLeaguesQuerySchema,
   adminLeagueStatusSchema,
   adminLeagueTransferSchema,
-  adminLeagueMatchModeSchema,
-  type AdminLeagueMatchModeBody,
   type AdminLeaguesQuery,
   type AdminLeagueStatusBody,
   type AdminLeagueTransferBody,
@@ -271,49 +269,6 @@ export async function handleTransferLeagueCreator(
 }
 
 /**
- * Sprint R lot R.E.3 — PATCH /admin/leagues/:id/match-mode.
- *
- * Configure le mode de jeu (realtime/async) + duree par tour pour
- * la ligue. Refuse si status='in_progress'/'completed' (les matches
- * existants ne sont pas reconfigures). Les futurs matches crees via
- * `league-match-from-pairing` heriteront du nouveau mode.
- */
-export async function handlePatchLeagueMatchMode(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const id = req.params.id;
-  const body: AdminLeagueMatchModeBody = req.body;
-  const league = await prisma.league.findUnique({
-    where: { id },
-    select: { id: true, status: true, matchMode: true, turnDeadlineHours: true },
-  });
-  if (!league) {
-    res.status(404).json({ error: "league-not-found" });
-    return;
-  }
-  if (league.status === "in_progress" || league.status === "completed") {
-    res.status(409).json({
-      error: "league-already-started",
-      message:
-        "La ligue a deja demarre : les matches existants ne sont pas reconfigures.",
-    });
-    return;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: any = {};
-  if (body.matchMode !== undefined) data.matchMode = body.matchMode;
-  if (body.turnDeadlineHours !== undefined)
-    data.turnDeadlineHours = body.turnDeadlineHours;
-  const updated = await prisma.league.update({
-    where: { id },
-    data,
-    select: { id: true, matchMode: true, turnDeadlineHours: true },
-  });
-  sendSuccess(res, updated);
-}
-
-/**
  * Lot B — POST /admin/leagues/seasons/:seasonId/participants/:teamId/force-withdraw
  *
  * Permet a un admin de retirer une equipe d'une saison meme apres
@@ -369,15 +324,6 @@ router.patch(
   "/:id/creator",
   validate(adminLeagueTransferSchema),
   handleTransferLeagueCreator,
-);
-
-// Sprint R lot R.E.3 — configure le mode de jeu (realtime/async) +
-// duree par tour pour une ligue. Refuse si status='in_progress' ou
-// 'completed' (les matches existants ne sont pas reconfigures).
-router.patch(
-  "/:id/match-mode",
-  validate(adminLeagueMatchModeSchema),
-  handlePatchLeagueMatchMode,
 );
 
 // Lot B — retrait force d'une equipe par admin (bypass de la regle

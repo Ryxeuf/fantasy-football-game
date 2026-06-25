@@ -14,8 +14,7 @@
  *      saison/round termines.
  *
  * Garde-fou anti-regression pour PR3 et pour toute future modif des
- * routes /leagues/seasons/:id/start, /leagues/pairings/:id/match, et
- * /leagues/pairings/:id/forfeit.
+ * routes /leagues/seasons/:id/start et /leagues/pairings/:id/forfeit.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -58,11 +57,6 @@ interface SeasonDetailDTO {
       }>;
     }>;
   };
-}
-interface CreateMatchFromPairingDTO {
-  created: boolean;
-  matchId: string;
-  pairingId: string;
 }
 interface ForfeitDTO {
   recorded?: boolean;
@@ -161,36 +155,11 @@ describe("E2E API — MVP ligue : create -> start -> launch -> forfeit -> standi
     expect(pairing.status).toBe("scheduled");
     expect(pairing.match).toBeNull();
 
-    // 7. Identifier le cote home (le coach proprietaire de l'equipe
-    // home doit lancer le match). On fait un test conditionnel pour
-    // ne pas dependre de l'ordre des participantIds dans le
-    // generator round-robin (deterministe mais quand meme).
+    // 7. Ligue 100% physique : plus de lancement de match en ligne.
+    // Le commissaire passe directement le pairing `scheduled` en
+    // forfait (le chemin forfait accepte un pairing non joue).
     const homeOwner = pairing.homeParticipant.team.ownerId;
     const awayOwner = pairing.awayParticipant.team.ownerId;
-    const launchToken =
-      homeOwner === creator.userId ? creator.token : challenger.token;
-
-    // 8. Lance le match via l'endpoint pairing-to-match.
-    const matchCreated = unwrap(
-      await post<{ success: true; data: CreateMatchFromPairingDTO }>(
-        `/leagues/pairings/${pairing.id}/match`,
-        launchToken,
-        {},
-      ),
-    );
-    expect(matchCreated.created).toBe(true);
-    expect(matchCreated.matchId).toBeTruthy();
-
-    // 9. Verifie que le pairing est bien passe en in_progress.
-    const detail2 = unwrap(
-      await get<{ success: true; data: SeasonDetailDTO }>(
-        `/leagues/seasons/${season.id}`,
-        creator.token,
-      ),
-    );
-    const pairing2 = detail2.season.rounds[0].pairings[0];
-    expect(pairing2.status).toBe("in_progress");
-    expect(pairing2.match?.id).toBe(matchCreated.matchId);
 
     // 10. Le creator force un forfait cote home.
     const forfeit = unwrap(
