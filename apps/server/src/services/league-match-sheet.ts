@@ -520,6 +520,33 @@ function mapInjurySeverity(
  * Pur (testable). Les statLines portent deja le `side` ; le pipeline
  * offline resout l'equipe via le teamPlayerId.
  */
+/**
+ * Somme tolerante des couts (or) d'une liste JSON `[{ cost, qty? }]`
+ * (coups de pouce / erreurs couteuses / achats). Accepte array natif (PG)
+ * ou string serialisee (sqlite mirror). Ignore les entrees illisibles.
+ */
+function sumGold(raw: unknown): number {
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      return 0;
+    }
+  }
+  if (!Array.isArray(arr)) return 0;
+  let total = 0;
+  for (const entry of arr) {
+    if (!entry || typeof entry !== "object") continue;
+    const cost = (entry as { cost?: unknown }).cost;
+    const qty = (entry as { qty?: unknown }).qty;
+    const c = typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
+    const q = typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
+    total += Math.max(0, Math.floor(c)) * q;
+  }
+  return total;
+}
+
 export function buildOfflineInputFromSummary(
   pairingId: string,
   summary: MatchSummary,
@@ -533,6 +560,13 @@ export function buildOfflineInputFromSummary(
     winningsAwayManual?: number | null;
     dedicatedFansDeltaHome?: number | null;
     dedicatedFansDeltaAway?: number | null;
+    /** Depenses post/avant-match (debit treasury). */
+    inducementsHome?: unknown;
+    inducementsAway?: unknown;
+    costlyErrorsHome?: unknown;
+    costlyErrorsAway?: unknown;
+    purchasesHome?: unknown;
+    purchasesAway?: unknown;
   },
   eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
 ) {
@@ -588,6 +622,15 @@ export function buildOfflineInputFromSummary(
     // Polish — override manuel prioritaire, sinon gain auto-calcule.
     winningsHome: sheet.winningsHomeManual ?? sheet.winningsHome ?? undefined,
     winningsAway: sheet.winningsAwayManual ?? sheet.winningsAway ?? undefined,
+    // Depenses = coups de pouce + erreurs couteuses + achats -> debit treasury.
+    treasuryDebitHome:
+      sumGold(sheet.inducementsHome) +
+      sumGold(sheet.costlyErrorsHome) +
+      sumGold(sheet.purchasesHome),
+    treasuryDebitAway:
+      sumGold(sheet.inducementsAway) +
+      sumGold(sheet.costlyErrorsAway) +
+      sumGold(sheet.purchasesAway),
     dedicatedFansDeltaHome: sheet.dedicatedFansDeltaHome ?? undefined,
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     injuries,
@@ -662,6 +705,12 @@ export async function validateByCommissioner(input: {
       winningsAwayManual?: number | null;
       dedicatedFansDeltaHome?: number | null;
       dedicatedFansDeltaAway?: number | null;
+      inducementsHome?: unknown;
+      inducementsAway?: unknown;
+      costlyErrorsHome?: unknown;
+      costlyErrorsAway?: unknown;
+      purchasesHome?: unknown;
+      purchasesAway?: unknown;
     },
     events,
   );

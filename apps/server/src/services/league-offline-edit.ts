@@ -370,19 +370,30 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
-  // 3. Economie : treasury (decrement) + dedicatedFans restaure (pre-valeur).
+  // 3. Economie : annule le net treasury applique a la saisie
+  //    (gains - depenses) + restaure dedicatedFans (pre-valeur).
+  const treasuryDeltaHome =
+    input.winningsHome - (input.treasuryDebitHome ?? 0);
+  const treasuryDeltaAway =
+    input.winningsAway - (input.treasuryDebitAway ?? 0);
   ops.push(
     prisma.team.update({
       where: { id: home.teamId },
       data: {
-        treasury: { decrement: input.winningsHome },
+        treasury:
+          treasuryDeltaHome >= 0
+            ? { decrement: treasuryDeltaHome }
+            : { increment: -treasuryDeltaHome },
         dedicatedFans: snapshot.dedicatedFansBefore.home,
       },
     }),
     prisma.team.update({
       where: { id: away.teamId },
       data: {
-        treasury: { decrement: input.winningsAway },
+        treasury:
+          treasuryDeltaAway >= 0
+            ? { decrement: treasuryDeltaAway }
+            : { increment: -treasuryDeltaAway },
         dedicatedFans: snapshot.dedicatedFansBefore.away,
       },
     }),

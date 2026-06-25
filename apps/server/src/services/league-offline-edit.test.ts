@@ -256,6 +256,34 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     });
   });
 
+  it("reverse le net treasury applique (gains - depenses)", async () => {
+    // home : 60k gains - 50k depenses = +10k net applique -> reversion -10k.
+    // away : 0 gains - 30k depenses = -30k net applique -> reversion +30k.
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        offlineResultInput: buildSnapshot({
+          winningsHome: 60000,
+          treasuryDebitHome: 50000,
+          winningsAway: 0,
+          treasuryDebitAway: 30000,
+        }),
+      }),
+    );
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+
+    const homeTeam = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-home",
+    )?.[0] as { data: Record<string, unknown> };
+    expect(homeTeam.data.treasury).toEqual({ decrement: 10000 });
+
+    const awayTeam = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-away",
+    )?.[0] as { data: Record<string, unknown> };
+    expect(awayTeam.data.treasury).toEqual({ increment: 30000 });
+  });
+
   it("reverse le SPP par joueur (decrement exact) et les blessures", async () => {
     m.matchFind.mockResolvedValue(
       buildMatch({

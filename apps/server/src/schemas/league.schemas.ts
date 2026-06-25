@@ -251,6 +251,9 @@ export const recordOfflineResultSchema = z.object({
   // Phase 3 — economie post-match (saisie a la main, optionnel).
   winningsHome: z.number().int().min(0).max(300000).optional(),
   winningsAway: z.number().int().min(0).max(300000).optional(),
+  // Depenses (coups de pouce + erreurs couteuses + achats) -> debit treasury.
+  treasuryDebitHome: z.number().int().min(0).max(2000000).optional(),
+  treasuryDebitAway: z.number().int().min(0).max(2000000).optional(),
   dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional(),
   dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional(),
   // Phase 3b — blessures durables par joueur (optionnel).

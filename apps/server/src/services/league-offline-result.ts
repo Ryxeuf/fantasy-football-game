@@ -85,6 +85,13 @@ export interface RecordOfflineResultInput {
   /** Gain de tresorerie (or) optionnel par equipe (incremente treasury). */
   readonly winningsHome?: number;
   readonly winningsAway?: number;
+  /**
+   * Depense de tresorerie (or) optionnelle par equipe : somme des coups de
+   * pouce (inducements), erreurs couteuses et achats post-match. Decremente
+   * la treasury. Le net applique = winnings - treasuryDebit.
+   */
+  readonly treasuryDebitHome?: number;
+  readonly treasuryDebitAway?: number;
   /** Variation de dedicated fans (clampe 1-6) optionnelle par equipe. */
   readonly dedicatedFansDeltaHome?: number;
   readonly dedicatedFansDeltaAway?: number;
@@ -156,6 +163,8 @@ export interface OfflineResultSnapshot {
     readonly playerStats: readonly OfflinePlayerStatInput[];
     readonly winningsHome: number;
     readonly winningsAway: number;
+    readonly treasuryDebitHome: number;
+    readonly treasuryDebitAway: number;
     readonly dedicatedFansDeltaHome: number;
     readonly dedicatedFansDeltaAway: number;
     readonly injuries: readonly OfflineInjuryInput[];
@@ -179,6 +188,8 @@ function buildOfflineSnapshot(
       playerStats: input.playerStats ?? [],
       winningsHome: input.winningsHome ?? 0,
       winningsAway: input.winningsAway ?? 0,
+      treasuryDebitHome: input.treasuryDebitHome ?? 0,
+      treasuryDebitAway: input.treasuryDebitAway ?? 0,
       dedicatedFansDeltaHome: input.dedicatedFansDeltaHome ?? 0,
       dedicatedFansDeltaAway: input.dedicatedFansDeltaAway ?? 0,
       injuries: input.injuries ?? [],
@@ -222,21 +233,24 @@ async function applyOfflineEconomy(
     {
       teamId: home.teamId,
       fans: home.dedicatedFans,
-      winnings: input.winningsHome,
+      // Net = gains - depenses (coups de pouce + erreurs couteuses + achats).
+      treasuryDelta: (input.winningsHome ?? 0) - (input.treasuryDebitHome ?? 0),
       fansDelta: input.dedicatedFansDeltaHome,
     },
     {
       teamId: away.teamId,
       fans: away.dedicatedFans,
-      winnings: input.winningsAway,
+      treasuryDelta: (input.winningsAway ?? 0) - (input.treasuryDebitAway ?? 0),
       fansDelta: input.dedicatedFansDeltaAway,
     },
   ];
   const ops: Promise<unknown>[] = [];
   for (const s of sides) {
     const data: Record<string, unknown> = {};
-    if (s.winnings && s.winnings > 0) {
-      data.treasury = { increment: s.winnings };
+    if (s.treasuryDelta > 0) {
+      data.treasury = { increment: s.treasuryDelta };
+    } else if (s.treasuryDelta < 0) {
+      data.treasury = { decrement: -s.treasuryDelta };
     }
     if (s.fansDelta && s.fansDelta !== 0) {
       const next = Math.max(1, Math.min(6, s.fans + s.fansDelta));

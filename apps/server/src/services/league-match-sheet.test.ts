@@ -761,6 +761,26 @@ describe("Lot G — league-match-sheet", () => {
       ]);
     });
 
+    it("derive le debit treasury (coups de pouce + erreurs couteuses + achats)", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        {
+          motmPlayerIds: [],
+          // home : 2x coup de pouce 50k + erreur couteuse 100k + achat 60k
+          inducementsHome: [{ id: "bribe", name: "Pot-de-vin", cost: 50000, qty: 2 }],
+          costlyErrorsHome: [{ cost: 100000, reason: "Crise" }],
+          purchasesHome: [{ kind: "reroll", name: "Relance", cost: 60000 }],
+          // away : string serialisee (sqlite mirror)
+          inducementsAway: JSON.stringify([{ name: "Apo", cost: 50000 }]),
+        },
+        [],
+      );
+      // home = 50000*2 + 100000 + 60000 = 260000
+      expect(out.treasuryDebitHome).toBe(260000);
+      expect(out.treasuryDebitAway).toBe(50000);
+    });
+
     it("adds MVP-only players who had no stat line", () => {
       const out = buildOfflineInputFromSummary(
         "pair-1",

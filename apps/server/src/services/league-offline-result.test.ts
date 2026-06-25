@@ -230,6 +230,33 @@ describe("recordOfflineLeagueResult (option b)", () => {
     expect(awayUpdate).toBeFalsy();
   });
 
+  it("applique le net treasury = winnings - treasuryDebit (depenses)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing()); // home fans=1, away fans=6
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      // home : 60k gains - 50k depenses = +10k net
+      winningsHome: 60000,
+      treasuryDebitHome: 50000,
+      // away : 0 gains - 30k depenses (coups de pouce) = -30k net
+      winningsAway: 0,
+      treasuryDebitAway: 30000,
+    });
+
+    const homeUpdate = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-home",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(homeUpdate![0].data.treasury).toEqual({ increment: 10000 });
+
+    const awayUpdate = m.teamUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "team-away",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(awayUpdate![0].data.treasury).toEqual({ decrement: 30000 });
+  });
+
   it("applique les blessures durables (validation appartenance)", async () => {
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([{ id: "p1" }]); // p1 valide ; p9 hors equipes
