@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { getSkillDescription } from "../me/teams/skills-data";
+import { useSkillsCacheReady } from "../me/teams/use-skills-cache";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 
@@ -12,6 +13,10 @@ interface SkillTooltipProps {
 
 export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltipProps) {
   const { language } = useLanguage();
+  // Précharge le cache API + force un re-render quand prêt : sinon le nom/
+  // catégorie du badge (getSkillDescription sync) ne se mettait à jour qu'au
+  // premier survol. Voir me/teams/use-skills-cache.ts.
+  useSkillsCacheReady(language);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0, placement: 'top' as 'top' | 'bottom' });
   const tooltipRef = useRef<HTMLDivElement>(null);

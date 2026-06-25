@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { parseSkillSlugs } from "@bb/game-engine";
 import { getSkillDescription, getSkillDescriptionAsync, parseSkills, slugsToDisplayNames } from "../skills-data";
 import { separateSkills } from "../base-skills-data";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useSkillsCacheReady } from "../use-skills-cache";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -20,11 +21,11 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string } | null>(null);
 
-  // Charger les compétences depuis l'API au montage pour avoir les descriptions EN
-  useEffect(() => {
-    // Précharger le cache au montage et quand la langue change
-    getSkillDescriptionAsync("block", language).catch(() => {});
-  }, [language]);
+  // Précharge le cache API au montage ET force un re-render quand il est prêt,
+  // pour que les noms/catégories des badges (getSkillDescription synchrone)
+  // reflètent l'API au lieu du fallback game-engine — sinon ils ne se mettaient
+  // à jour qu'au premier survol. Voir use-skills-cache.ts.
+  useSkillsCacheReady(language);
 
   // Parser les slugs de compétences
   // Si useDirectParsing est true, on utilise parseSkillSlugs directement (pour les positions du roster)
