@@ -1,3 +1,21 @@
+## [1.192.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.191.0...v1.192.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **league:** bonus classement, SPP bonus, table météo et forfait sur la feuille ([5740468](https://github.com/Ryxeuf/fantasy-football-game/commit/57404687f9e209cd88e56d52e5edc0d5d0ed3f19))
+* **league:** lien vers les progressions depuis la feuille validée ([b164007](https://github.com/Ryxeuf/fantasy-football-game/commit/b164007ba1e169dd4c7a0c5bf8b6b0d381ec7d90))
+
+
+### 📝 Documentation
+
+* **league:** MAJ refonte (bonus/SPP/forfait, consolidation, progressions) ([feb5bfc](https://github.com/Ryxeuf/fantasy-football-game/commit/feb5bfc5ec5ec35d4a1ed3341a3072bc64f36aa9))
+
+
+### ♻️ Code Refactoring
+
+* **league:** UI de saisie unique via la feuille de match ([c3f1bc6](https://github.com/Ryxeuf/fantasy-football-game/commit/c3f1bc60365f30deee07ad5004d7022af130c412))
+
 ## [1.191.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.190.0...v1.191.0) (2026-06-25)
 
 
