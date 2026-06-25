@@ -36,7 +36,9 @@ export function SeasonAdminPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(false);
-  const [roundDurationDays, setRoundDurationDays] = useState<number | "">(7);
+  // Champ "Durée d'une journée" masqué pour le moment : valeur vide par
+  // défaut => roundDurationDays envoyé à null (pas de deadline / forfait auto).
+  const [roundDurationDays, setRoundDurationDays] = useState<number | "">("");
 
   const runAction = useCallback(
     async (action: AdminAction, body?: Record<string, unknown>) => {
@@ -128,23 +130,7 @@ export function SeasonAdminPanel({
       ) : null}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
-        <label className="block sm:col-span-2">
-          <span className="text-xs font-medium text-gray-700">
-            {t.leagues.adminSeasonRoundDurationLabel}
-          </span>
-          <input
-            data-testid="admin-round-duration"
-            type="number"
-            min={1}
-            max={365}
-            value={roundDurationDays}
-            onChange={(e) => {
-              const v = e.target.value;
-              setRoundDurationDays(v === "" ? "" : Number(v));
-            }}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-          />
-        </label>
+        {/* Champ "Durée d'une journée" masqué temporairement. */}
         <label className="inline-flex items-center text-sm sm:col-span-2 mt-3">
           <input
             data-testid="admin-double-round-robin"
