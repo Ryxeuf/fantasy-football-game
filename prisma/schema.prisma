@@ -1298,9 +1298,14 @@ model LeagueMatchSheet {
   invalidationReason String?
 
   // ── Avant-match ──
+  /// Table meteo utilisee (ex: "classique"). Distincte de la meteo initiale.
+  weatherTable    String?
+  /// Meteo initiale tiree (ex: "perfect").
   weather         String?
   popularityHome  Int?
   popularityAway  Int?
+  /// Cote ayant declare forfait : "home" | "away" | null (pas de forfait).
+  forfeitSide     String?
   /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
   inducementsHome Json?
   inducementsAway Json?
@@ -1320,6 +1325,11 @@ model LeagueMatchSheet {
   winningsAwayManual     Int?
   dedicatedFansDeltaHome Int?
   dedicatedFansDeltaAway Int?
+  /// Bonus au classement accorde par le commissaire (points en plus).
+  rankingBonusHome       Int?
+  rankingBonusAway       Int?
+  /// SPP bonus "accorde par Nuffle" par joueur : [{ playerId, spp }].
+  sppBonus               Json?
   /// Erreurs couteuses : [{ playerId?, cost, reason }].
   costlyErrorsHome       Json?
   costlyErrorsAway       Json?

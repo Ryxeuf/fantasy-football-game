@@ -14,6 +14,7 @@ import {
   type Inducement,
   type CostlyError,
   type Purchase,
+  type SppBonusEntry,
 } from "./_components/MatchSheetPanels";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
@@ -86,13 +87,18 @@ interface SheetResponse {
     id: string;
     status: string;
     events?: MatchEvent[];
+    weatherTable?: string | null;
     weather?: string | null;
+    forfeitSide?: "home" | "away" | null;
     popularityHome?: number | null;
     popularityAway?: number | null;
     winningsHomeManual?: number | null;
     winningsAwayManual?: number | null;
     dedicatedFansDeltaHome?: number | null;
     dedicatedFansDeltaAway?: number | null;
+    rankingBonusHome?: number | null;
+    rankingBonusAway?: number | null;
+    sppBonus?: unknown;
     motmPlayerIds?: string[] | string | null;
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -143,6 +149,15 @@ function parsePurchases(raw: unknown): Purchase[] {
     name: typeof i.name === "string" ? i.name : "",
     cost: typeof i.cost === "number" ? i.cost : 0,
   }));
+}
+
+function parseSppBonus(raw: unknown): SppBonusEntry[] {
+  return parseArray<Record<string, unknown>>(raw)
+    .map((i) => ({
+      playerId: typeof i.playerId === "string" ? i.playerId : "",
+      spp: typeof i.spp === "number" ? i.spp : 0,
+    }))
+    .filter((b) => b.playerId);
 }
 
 function parseMotm(raw: string[] | string | null | undefined): string[] {
@@ -282,7 +297,9 @@ export default function MatchSheetPage() {
       apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
         method: "PATCH",
         body: JSON.stringify({
+          weatherTable: v.weatherTable || null,
           weather: v.weather || null,
+          forfeitSide: v.forfeitSide,
           popularityHome: v.popularityHome,
           popularityAway: v.popularityAway,
           inducementsHome: v.inducementsHome,
@@ -300,6 +317,9 @@ export default function MatchSheetPage() {
           winningsAwayManual: v.winningsAwayManual,
           dedicatedFansDeltaHome: v.dedicatedFansDeltaHome,
           dedicatedFansDeltaAway: v.dedicatedFansDeltaAway,
+          rankingBonusHome: v.rankingBonusHome,
+          rankingBonusAway: v.rankingBonusAway,
+          sppBonus: v.sppBonus,
           motmPlayerIds: v.motmPlayerIds,
           costlyErrorsHome: v.costlyErrorsHome,
           costlyErrorsAway: v.costlyErrorsAway,
@@ -434,7 +454,9 @@ export default function MatchSheetPage() {
       {(isCoach || isCommissioner) && (
         <PreMatchPanel
           initial={{
+            weatherTable: data.sheet.weatherTable ?? "",
             weather: data.sheet.weather ?? "",
+            forfeitSide: data.sheet.forfeitSide ?? null,
             popularityHome: data.sheet.popularityHome ?? null,
             popularityAway: data.sheet.popularityAway ?? null,
             inducementsHome: parseInducements(data.sheet.inducementsHome),
@@ -606,6 +628,9 @@ export default function MatchSheetPage() {
             winningsAwayManual: data.sheet.winningsAwayManual ?? null,
             dedicatedFansDeltaHome: data.sheet.dedicatedFansDeltaHome ?? 0,
             dedicatedFansDeltaAway: data.sheet.dedicatedFansDeltaAway ?? 0,
+            rankingBonusHome: data.sheet.rankingBonusHome ?? null,
+            rankingBonusAway: data.sheet.rankingBonusAway ?? null,
+            sppBonus: parseSppBonus(data.sheet.sppBonus),
             motmPlayerIds: parseMotm(data.sheet.motmPlayerIds),
             costlyErrorsHome: parseCostlyErrors(data.sheet.costlyErrorsHome),
             costlyErrorsAway: parseCostlyErrors(data.sheet.costlyErrorsAway),

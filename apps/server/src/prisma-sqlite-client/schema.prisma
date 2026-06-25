@@ -963,9 +963,11 @@ model LeagueMatchSheet {
   validatedById          String?
   invalidatedAt          DateTime?
   invalidationReason     String?
+  weatherTable           String?
   weather                String?
   popularityHome         Int?
   popularityAway         Int?
+  forfeitSide            String?
   inducementsHome        String?
   inducementsAway        String?
   prayersHome            String?
@@ -978,6 +980,9 @@ model LeagueMatchSheet {
   winningsAwayManual     Int?
   dedicatedFansDeltaHome Int?
   dedicatedFansDeltaAway Int?
+  rankingBonusHome       Int?
+  rankingBonusAway       Int?
+  sppBonus               String?
   costlyErrorsHome       String?
   costlyErrorsAway       String?
   motmPlayerIds          String        @default("[]")

@@ -17,6 +17,7 @@ vi.mock("../prisma", () => {
     teamSelection: { createMany: vi.fn() },
     teamPlayer: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     team: { update: vi.fn() },
+    leagueParticipant: { update: vi.fn() },
     $transaction: vi.fn(async (arg: unknown) => {
       if (typeof arg === "function") {
         return (arg as (tx: unknown) => Promise<unknown>)(prisma);
@@ -53,6 +54,7 @@ const m = {
   tpUpdate: prisma.teamPlayer.update as MockFn,
   tpUpdateMany: prisma.teamPlayer.updateMany as MockFn,
   teamUpdate: prisma.team.update as MockFn,
+  partUpdate: prisma.leagueParticipant.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
 };
 
@@ -89,6 +91,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.tpUpdate.mockResolvedValue({});
     m.tpUpdateMany.mockResolvedValue({ count: 0 });
     m.teamUpdate.mockResolvedValue({});
+    m.partUpdate.mockResolvedValue({});
     m.tpFindMany.mockResolvedValue([]);
     m.record.mockResolvedValue({
       recorded: true,
@@ -255,6 +258,38 @@ describe("recordOfflineLeagueResult (option b)", () => {
       (c) => (c[0] as { where: { id: string } }).where.id === "team-away",
     ) as [{ data: Record<string, any> }] | undefined;
     expect(awayUpdate![0].data.treasury).toEqual({ decrement: 30000 });
+  });
+
+  it("applique le SPP bonus Nuffle (increment spp) et le bonus au classement", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    // p1 appartient bien a une des 2 equipes (filtre applySppBonus).
+    m.tpFindMany.mockResolvedValue([{ id: "p1" }]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      sppBonus: [{ teamPlayerId: "p1", spp: 4 }],
+      rankingBonusHome: 2,
+      rankingBonusAway: -1,
+    });
+
+    // SPP bonus -> increment spp du joueur.
+    const sppUpd = m.tpUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(sppUpd![0].data.spp).toEqual({ increment: 4 });
+
+    // Bonus classement -> increment/decrement points des participants.
+    const homeP = m.partUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "ph",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(homeP![0].data.points).toEqual({ increment: 2 });
+    const awayP = m.partUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "pa",
+    ) as [{ data: Record<string, any> }] | undefined;
+    expect(awayP![0].data.points).toEqual({ increment: -1 });
   });
 
   it("applique les blessures durables (validation appartenance)", async () => {

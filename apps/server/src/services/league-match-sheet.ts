@@ -34,6 +34,7 @@ import {
   type OfflineInjuryType,
 } from "./league-offline-result";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { serverLog } from "../utils/server-log";
 
@@ -242,9 +243,11 @@ export async function removeEvent(input: {
 }
 
 export interface PreMatchPayload {
+  weatherTable?: string | null;
   weather?: string | null;
   popularityHome?: number | null;
   popularityAway?: number | null;
+  forfeitSide?: "home" | "away" | null;
   inducementsHome?: unknown;
   inducementsAway?: unknown;
   prayersHome?: unknown;
@@ -270,7 +273,9 @@ export async function updatePreMatch(input: {
   const p = input.payload;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
+  if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
   if (p.weather !== undefined) data.weather = p.weather;
+  if (p.forfeitSide !== undefined) data.forfeitSide = p.forfeitSide;
   if (p.popularityHome !== undefined) {
     data.popularityHome = p.popularityHome;
     // Polish — auto-calcul du gain de tresorerie depuis le facteur de
@@ -299,6 +304,11 @@ export interface PostMatchPayload {
   /** Variation de fans devoues (-1/0/+1 typiquement, clampe a la validation). */
   dedicatedFansDeltaHome?: number | null;
   dedicatedFansDeltaAway?: number | null;
+  /** Bonus au classement (points) accorde par le commissaire. */
+  rankingBonusHome?: number | null;
+  rankingBonusAway?: number | null;
+  /** SPP bonus "Nuffle" par joueur : [{ playerId, spp }]. */
+  sppBonus?: unknown;
   /** Erreurs couteuses : [{ playerId?, cost, reason }]. */
   costlyErrorsHome?: unknown;
   costlyErrorsAway?: unknown;
@@ -340,6 +350,11 @@ export async function updatePostMatch(input: {
     data.dedicatedFansDeltaHome = p.dedicatedFansDeltaHome;
   if (p.dedicatedFansDeltaAway !== undefined)
     data.dedicatedFansDeltaAway = p.dedicatedFansDeltaAway;
+  if (p.rankingBonusHome !== undefined)
+    data.rankingBonusHome = p.rankingBonusHome;
+  if (p.rankingBonusAway !== undefined)
+    data.rankingBonusAway = p.rankingBonusAway;
+  if (p.sppBonus !== undefined) data.sppBonus = p.sppBonus ?? undefined;
   if (p.costlyErrorsHome !== undefined)
     data.costlyErrorsHome = p.costlyErrorsHome ?? undefined;
   if (p.costlyErrorsAway !== undefined)
@@ -560,6 +575,11 @@ export function buildOfflineInputFromSummary(
     winningsAwayManual?: number | null;
     dedicatedFansDeltaHome?: number | null;
     dedicatedFansDeltaAway?: number | null;
+    /** Bonus au classement (points) commissaire. */
+    rankingBonusHome?: number | null;
+    rankingBonusAway?: number | null;
+    /** SPP bonus "Nuffle" par joueur : [{ playerId, spp }]. */
+    sppBonus?: unknown;
     /** Depenses post/avant-match (debit treasury). */
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -633,8 +653,37 @@ export function buildOfflineInputFromSummary(
       sumGold(sheet.purchasesAway),
     dedicatedFansDeltaHome: sheet.dedicatedFansDeltaHome ?? undefined,
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
+    rankingBonusHome: sheet.rankingBonusHome ?? undefined,
+    rankingBonusAway: sheet.rankingBonusAway ?? undefined,
+    sppBonus: parseSppBonus(sheet.sppBonus),
     injuries,
   };
+}
+
+/**
+ * Parse tolerant du SPP bonus stocke (array PG / string sqlite) :
+ * [{ playerId, spp }] -> [{ teamPlayerId, spp }].
+ */
+function parseSppBonus(raw: unknown): Array<{ teamPlayerId: string; spp: number }> {
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(arr)) return [];
+  const out: Array<{ teamPlayerId: string; spp: number }> = [];
+  for (const e of arr) {
+    if (!e || typeof e !== "object") continue;
+    const id = (e as { playerId?: unknown }).playerId;
+    const spp = (e as { spp?: unknown }).spp;
+    if (typeof id === "string" && typeof spp === "number" && Number.isFinite(spp)) {
+      out.push({ teamPlayerId: id, spp: Math.floor(spp) });
+    }
+  }
+  return out;
 }
 
 function parseStringArray(raw: unknown): string[] {
@@ -693,6 +742,32 @@ export async function validateByCommissioner(input: {
   })) as Array<MatchEventInput & { meta?: unknown }>;
   const summary = summarizeMatchSheet(events);
 
+  // Forfait declare a l'avant-match : on route vers recordForfeit (le cote
+  // adverse gagne 2-0, bareme forfeit) au lieu de la saisie normale. Pas de
+  // SPP/tresorerie : un match forfait n'a pas de stats.
+  const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
+  if (forfeitSide === "home" || forfeitSide === "away") {
+    const ff = await recordForfeit({
+      pairingId: input.pairingId,
+      side: forfeitSide,
+    });
+    const updatedFf = await prisma.leagueMatchSheet.update({
+      where: { id: sheet.id },
+      data: {
+        status: "validated",
+        validatedAt: new Date(),
+        validatedById: input.userId,
+        scoreHome: forfeitSide === "home" ? 0 : 2,
+        scoreAway: forfeitSide === "away" ? 0 : 2,
+      },
+    });
+    return {
+      sheet: updatedFf,
+      summary,
+      effects: { applied: "recorded" in ff && ff.recorded },
+    };
+  }
+
   // Applique les effets (peut throw -> on ne valide pas).
   const offlineInput = buildOfflineInputFromSummary(
     input.pairingId,
@@ -705,6 +780,9 @@ export async function validateByCommissioner(input: {
       winningsAwayManual?: number | null;
       dedicatedFansDeltaHome?: number | null;
       dedicatedFansDeltaAway?: number | null;
+      rankingBonusHome?: number | null;
+      rankingBonusAway?: number | null;
+      sppBonus?: unknown;
       inducementsHome?: unknown;
       inducementsAway?: unknown;
       costlyErrorsHome?: unknown;

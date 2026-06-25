@@ -85,12 +85,20 @@ export interface Inducement {
 }
 
 export interface PreMatchValues {
+  weatherTable: string;
   weather: string;
+  forfeitSide: "home" | "away" | null;
   popularityHome: number | null;
   popularityAway: number | null;
   inducementsHome: Inducement[];
   inducementsAway: Inducement[];
 }
+
+const WEATHER_TABLES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "—" },
+  { value: "classique", label: "Classique" },
+  { value: "stade_couvert", label: "Stade couvert" },
+];
 
 function sumInducements(list: Inducement[]): number {
   return list.reduce(
@@ -187,7 +195,11 @@ export function PreMatchPanel({
   disabled?: boolean;
   onSave: (v: PreMatchValues) => Promise<void>;
 }) {
+  const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
+  const [forfeitSide, setForfeitSide] = useState<"home" | "away" | "">(
+    initial.forfeitSide ?? "",
+  );
   const [popH, setPopH] = useState<string>(
     initial.popularityHome?.toString() ?? "",
   );
@@ -205,7 +217,9 @@ export function PreMatchPanel({
     setBusy(true);
     try {
       await onSave({
+        weatherTable,
         weather,
+        forfeitSide: forfeitSide === "" ? null : forfeitSide,
         popularityHome: popH === "" ? null : Number(popH),
         popularityAway: popA === "" ? null : Number(popA),
         inducementsHome: indH,
@@ -246,22 +260,56 @@ export function PreMatchPanel({
         Avant-match
       </h2>
 
-      <label className="mb-3 block text-xs">
-        Météo initiale
-        <select
-          value={weather}
-          onChange={(e) => setWeather(e.target.value)}
-          disabled={disabled}
-          data-testid="weather-select"
-          className="mt-1 block w-full rounded border px-2 py-2 text-sm sm:max-w-xs"
-        >
-          {WEATHER_OPTIONS.map((w) => (
-            <option key={w.value} value={w.value}>
-              {w.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="block text-xs">
+          Table météo
+          <select
+            value={weatherTable}
+            onChange={(e) => setWeatherTable(e.target.value)}
+            disabled={disabled}
+            data-testid="weather-table-select"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+          >
+            {WEATHER_TABLES.map((w) => (
+              <option key={w.value} value={w.value}>
+                {w.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs">
+          Météo initiale
+          <select
+            value={weather}
+            onChange={(e) => setWeather(e.target.value)}
+            disabled={disabled}
+            data-testid="weather-select"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+          >
+            {WEATHER_OPTIONS.map((w) => (
+              <option key={w.value} value={w.value}>
+                {w.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs">
+          Déclarer forfait
+          <select
+            value={forfeitSide}
+            onChange={(e) =>
+              setForfeitSide(e.target.value as "home" | "away" | "")
+            }
+            disabled={disabled}
+            data-testid="forfeit-select"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+          >
+            <option value="">Aucun</option>
+            <option value="home">{homeName} forfait</option>
+            <option value="away">{awayName} forfait</option>
+          </select>
+        </label>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {sides.map((c) => (
@@ -325,16 +373,86 @@ export interface Purchase {
   cost: number;
 }
 
+export interface SppBonusEntry {
+  playerId: string;
+  spp: number;
+}
+
 export interface PostMatchValues {
   winningsHomeManual: number | null;
   winningsAwayManual: number | null;
   dedicatedFansDeltaHome: number;
   dedicatedFansDeltaAway: number;
+  rankingBonusHome: number | null;
+  rankingBonusAway: number | null;
+  sppBonus: SppBonusEntry[];
   motmPlayerIds: string[];
   costlyErrorsHome: CostlyError[];
   costlyErrorsAway: CostlyError[];
   purchasesHome: Purchase[];
   purchasesAway: Purchase[];
+}
+
+/** Editeur de SPP bonus "Nuffle" pour une equipe (picker joueur + spp). */
+function SppBonusEditor({
+  team,
+  entries,
+  onChange,
+  disabled,
+  testId,
+}: {
+  team: SheetTeam | null;
+  entries: SppBonusEntry[];
+  onChange: (l: SppBonusEntry[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, patch: Partial<SppBonusEntry>) =>
+    onChange(entries.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  return (
+    <div data-testid={testId} className="space-y-1.5">
+      {entries.map((it, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <PlayerSelect
+              team={team}
+              value={it.playerId}
+              onChange={(id) => update(i, { playerId: id })}
+              disabled={disabled}
+            />
+          </div>
+          <input
+            type="number"
+            min={0}
+            value={it.spp}
+            onChange={(e) => update(i, { spp: Number(e.target.value) || 0 })}
+            disabled={disabled}
+            placeholder="SPP"
+            className="w-16 rounded border px-2 py-1 text-sm"
+          />
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(entries.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() => onChange([...entries, { playerId: "", spp: 0 }])}
+          className="text-xs font-medium text-blue-600"
+        >
+          + SPP bonus
+        </button>
+      )}
+    </div>
+  );
 }
 
 const PURCHASE_KINDS: ReadonlyArray<{
@@ -505,6 +623,23 @@ export function PostMatchPanel({
   const [ceA, setCeA] = useState<CostlyError[]>(initial.costlyErrorsAway);
   const [buyH, setBuyH] = useState<Purchase[]>(initial.purchasesHome);
   const [buyA, setBuyA] = useState<Purchase[]>(initial.purchasesAway);
+  const [rbH, setRbH] = useState<string>(
+    initial.rankingBonusHome?.toString() ?? "",
+  );
+  const [rbA, setRbA] = useState<string>(
+    initial.rankingBonusAway?.toString() ?? "",
+  );
+  // SPP bonus : un sous-etat par equipe, fusionne au save (API = liste plate).
+  const [sppH, setSppH] = useState<SppBonusEntry[]>(
+    initial.sppBonus.filter((b) =>
+      home?.players.some((p) => p.id === b.playerId),
+    ),
+  );
+  const [sppA, setSppA] = useState<SppBonusEntry[]>(
+    initial.sppBonus.filter((b) =>
+      away?.players.some((p) => p.id === b.playerId),
+    ),
+  );
   const [busy, setBusy] = useState(false);
 
   // MVP : 1 joueur par equipe (les ids des 2 cotes coexistent dans motm).
@@ -526,6 +661,9 @@ export function PostMatchPanel({
         winningsAwayManual: winA === "" ? null : Number(winA),
         dedicatedFansDeltaHome: fansH,
         dedicatedFansDeltaAway: fansA,
+        rankingBonusHome: rbH === "" ? null : Number(rbH),
+        rankingBonusAway: rbA === "" ? null : Number(rbA),
+        sppBonus: [...sppH, ...sppA].filter((b) => b.playerId && b.spp),
         motmPlayerIds: motm,
         costlyErrorsHome: ceH,
         costlyErrorsAway: ceA,
@@ -551,6 +689,10 @@ export function PostMatchPanel({
       setCe: setCeH,
       buy: buyH,
       setBuy: setBuyH,
+      rb: rbH,
+      setRb: setRbH,
+      spp: sppH,
+      setSpp: setSppH,
     },
     {
       side: "away" as const,
@@ -565,6 +707,10 @@ export function PostMatchPanel({
       setCe: setCeA,
       buy: buyA,
       setBuy: setBuyA,
+      rb: rbA,
+      setRb: setRbA,
+      spp: sppA,
+      setSpp: setSppA,
     },
   ];
 
@@ -625,6 +771,32 @@ export function PostMatchPanel({
                 <option value={1}>+1</option>
               </select>
             </label>
+
+            <label className="block text-xs">
+              Bonus au classement (points)
+              <input
+                type="number"
+                value={c.rb}
+                onChange={(e) => c.setRb(e.target.value)}
+                disabled={disabled}
+                placeholder="0"
+                data-testid={`ranking-bonus-${c.side}`}
+                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+              />
+            </label>
+
+            <div className="text-xs">
+              <div className="mb-1 font-medium text-slate-600">
+                SPP bonus (Nuffle)
+              </div>
+              <SppBonusEditor
+                team={c.team}
+                entries={c.spp}
+                onChange={c.setSpp}
+                disabled={disabled}
+                testId={`spp-bonus-${c.side}`}
+              />
+            </div>
 
             <div className="text-xs">
               <div className="mb-1 font-medium text-slate-600">Achats</div>

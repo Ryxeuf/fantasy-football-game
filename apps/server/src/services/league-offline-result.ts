@@ -95,8 +95,18 @@ export interface RecordOfflineResultInput {
   /** Variation de dedicated fans (clampe 1-6) optionnelle par equipe. */
   readonly dedicatedFansDeltaHome?: number;
   readonly dedicatedFansDeltaAway?: number;
+  /** Bonus au classement (points) accorde par le commissaire, par equipe. */
+  readonly rankingBonusHome?: number;
+  readonly rankingBonusAway?: number;
+  /** SPP bonus "accorde par Nuffle" par joueur (en plus du SPP des stats). */
+  readonly sppBonus?: readonly OfflineSppBonusInput[];
   /** Blessures durables par joueur (optionnel). */
   readonly injuries?: readonly OfflineInjuryInput[];
+}
+
+export interface OfflineSppBonusInput {
+  readonly teamPlayerId: string;
+  readonly spp: number;
 }
 
 export type OfflineResultWinner = "home" | "away" | "draw";
@@ -167,6 +177,9 @@ export interface OfflineResultSnapshot {
     readonly treasuryDebitAway: number;
     readonly dedicatedFansDeltaHome: number;
     readonly dedicatedFansDeltaAway: number;
+    readonly rankingBonusHome: number;
+    readonly rankingBonusAway: number;
+    readonly sppBonus: readonly OfflineSppBonusInput[];
     readonly injuries: readonly OfflineInjuryInput[];
   };
   readonly dedicatedFansBefore: {
@@ -192,6 +205,9 @@ function buildOfflineSnapshot(
       treasuryDebitAway: input.treasuryDebitAway ?? 0,
       dedicatedFansDeltaHome: input.dedicatedFansDeltaHome ?? 0,
       dedicatedFansDeltaAway: input.dedicatedFansDeltaAway ?? 0,
+      rankingBonusHome: input.rankingBonusHome ?? 0,
+      rankingBonusAway: input.rankingBonusAway ?? 0,
+      sppBonus: input.sppBonus ?? [],
       injuries: input.injuries ?? [],
     },
     dedicatedFansBefore: { home: fansBefore.home, away: fansBefore.away },
@@ -401,6 +417,65 @@ async function applyOfflinePlayerSPP(
 }
 
 /**
+ * Applique le SPP bonus "accorde par Nuffle" : increment direct du spp des
+ * joueurs vises (sans toucher aux totaux carriere). Filtre par appartenance
+ * aux 2 equipes. A appeler AVANT recordLeagueMatchResult pour que la sequence
+ * post-match propose les level-up correspondants.
+ */
+async function applySppBonus(
+  homeTeamId: string,
+  awayTeamId: string,
+  bonuses: readonly OfflineSppBonusInput[],
+): Promise<void> {
+  const ids = bonuses.map((b) => b.teamPlayerId);
+  const players = (await prisma.teamPlayer.findMany({
+    where: { id: { in: ids }, teamId: { in: [homeTeamId, awayTeamId] } },
+    select: { id: true },
+  })) as Array<{ id: string }>;
+  const valid = new Set(players.map((p) => p.id));
+  const ops: Promise<unknown>[] = [];
+  for (const b of bonuses) {
+    if (!valid.has(b.teamPlayerId) || !b.spp) continue;
+    ops.push(
+      prisma.teamPlayer.update({
+        where: { id: b.teamPlayerId },
+        data: { spp: { increment: b.spp } },
+      }),
+    );
+  }
+  if (ops.length > 0) await prisma.$transaction(ops);
+}
+
+/**
+ * Applique le bonus au classement (points) accorde par le commissaire :
+ * increment direct des points des 2 participants. Reversible (cf.
+ * league-offline-edit).
+ */
+async function applyRankingBonus(
+  homeParticipantId: string,
+  awayParticipantId: string,
+  bonusHome: number,
+  bonusAway: number,
+): Promise<void> {
+  const ops: Promise<unknown>[] = [];
+  if (bonusHome)
+    ops.push(
+      prisma.leagueParticipant.update({
+        where: { id: homeParticipantId },
+        data: { points: { increment: bonusHome } },
+      }),
+    );
+  if (bonusAway)
+    ops.push(
+      prisma.leagueParticipant.update({
+        where: { id: awayParticipantId },
+        data: { points: { increment: bonusAway } },
+      }),
+    );
+  if (ops.length > 0) await prisma.$transaction(ops);
+}
+
+/**
  * Enregistre un resultat de match de ligue saisi a la main. Idempotent.
  */
 export async function recordOfflineLeagueResult(
@@ -517,6 +592,10 @@ export async function recordOfflineLeagueResult(
       input.playerStats,
     );
   }
+  // SPP bonus "accorde par Nuffle" (aussi avant la sequence post-match).
+  if (input.sppBonus && input.sppBonus.length > 0) {
+    await applySppBonus(home.teamId, away.teamId, input.sppBonus);
+  }
 
   // 3. Reutilise tout le pipeline : standings + ELO + pairing played +
   //    completion saison + sequence post-match (level-up).
@@ -544,6 +623,16 @@ export async function recordOfflineLeagueResult(
     { teamId: away.teamId, dedicatedFans: away.team.dedicatedFans },
     input,
   );
+
+  // Bonus au classement (points) accorde par le commissaire.
+  if (input.rankingBonusHome || input.rankingBonusAway) {
+    await applyRankingBonus(
+      home.id,
+      away.id,
+      input.rankingBonusHome ?? 0,
+      input.rankingBonusAway ?? 0,
+    );
+  }
 
   // Purge les suspensions purgees par ce match (joueurs des 2 equipes) AVANT
   // d'appliquer les nouvelles blessures, qui peuvent re-poser missNextMatch.

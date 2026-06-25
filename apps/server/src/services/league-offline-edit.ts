@@ -370,6 +370,33 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
+  // 2b. SPP bonus "Nuffle" (decrement) + bonus au classement (decrement).
+  for (const b of input.sppBonus ?? []) {
+    if (!b.spp) continue;
+    ops.push(
+      prisma.teamPlayer.update({
+        where: { id: b.teamPlayerId },
+        data: { spp: { decrement: b.spp } },
+      }),
+    );
+  }
+  if (input.rankingBonusHome) {
+    ops.push(
+      prisma.leagueParticipant.update({
+        where: { id: home.id },
+        data: { points: { decrement: input.rankingBonusHome } },
+      }),
+    );
+  }
+  if (input.rankingBonusAway) {
+    ops.push(
+      prisma.leagueParticipant.update({
+        where: { id: away.id },
+        data: { points: { decrement: input.rankingBonusAway } },
+      }),
+    );
+  }
+
   // 3. Economie : annule le net treasury applique a la saisie
   //    (gains - depenses) + restaure dedicatedFans (pre-valeur).
   const treasuryDeltaHome =

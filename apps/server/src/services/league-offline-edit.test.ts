@@ -256,6 +256,40 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     });
   });
 
+  it("reverse le SPP bonus Nuffle et le bonus au classement", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        offlineResultInput: buildSnapshot({
+          playerStats: [],
+          sppBonus: [{ teamPlayerId: "p1", spp: 4 }],
+          rankingBonusHome: 2,
+          rankingBonusAway: -1,
+        }),
+      }),
+    );
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+
+    // SPP bonus -> decrement spp du joueur.
+    const sppUpd = m.tpUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
+    ) as [{ data: Record<string, unknown> }] | undefined;
+    expect(sppUpd![0].data.spp).toEqual({ decrement: 4 });
+
+    // Bonus classement -> decrement points (annule l'increment de la saisie).
+    const homeP = m.partUpdate.mock.calls.find(
+      (c) =>
+        (c[0] as { where: { id: string }; data: Record<string, unknown> }).where
+          .id === "ph" &&
+        "points" in
+          (c[0] as { data: Record<string, unknown> }).data &&
+        ((c[0] as { data: { points?: { decrement?: number } } }).data.points
+          ?.decrement === 2),
+    );
+    expect(homeP).toBeTruthy();
+  });
+
   it("reverse le net treasury applique (gains - depenses)", async () => {
     // home : 60k gains - 50k depenses = +10k net applique -> reversion -10k.
     // away : 0 gains - 30k depenses = -30k net applique -> reversion +30k.

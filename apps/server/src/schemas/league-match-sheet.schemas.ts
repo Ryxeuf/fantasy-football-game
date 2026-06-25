@@ -31,9 +31,11 @@ export type AddEventBody = z.infer<typeof addEventSchema>;
 
 export const preMatchSchema = z
   .object({
+    weatherTable: z.string().max(64).optional().nullable(),
     weather: z.string().max(64).optional().nullable(),
     popularityHome: z.number().int().min(0).max(20).optional().nullable(),
     popularityAway: z.number().int().min(0).max(20).optional().nullable(),
+    forfeitSide: z.enum(["home", "away"]).optional().nullable(),
     inducementsHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     inducementsAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     prayersHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
@@ -54,6 +56,17 @@ export const postMatchSchema = z
     winningsAwayManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
     dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional().nullable(),
     dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional().nullable(),
+    rankingBonusHome: z.number().int().min(-50).max(50).optional().nullable(),
+    rankingBonusAway: z.number().int().min(-50).max(50).optional().nullable(),
+    sppBonus: z
+      .array(
+        z.object({
+          playerId: z.string().min(1),
+          spp: z.number().int().min(0).max(20),
+        }),
+      )
+      .optional()
+      .nullable(),
     costlyErrorsHome: z
       .array(
         z.object({
