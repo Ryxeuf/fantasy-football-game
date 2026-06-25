@@ -30,6 +30,7 @@ import {
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
+import { seedRosterStaffConfigs } from "./scripts/seed-roster-staff-config";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -302,6 +303,12 @@ async function main() {
     }
   }
   serverLog.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
+
+  // Config staff par roster × format (create-only : ne réécrit pas l'admin).
+  const staffRes = await seedRosterStaffConfigs();
+  serverLog.log(
+    `✅ Staff configs: ${staffRes.created} créées, ${staffRes.skipped} déjà présentes\n`,
+  );
 
   // =============================================================================
   // 3. SEED DES POSITIONS
