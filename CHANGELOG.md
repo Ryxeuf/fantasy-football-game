@@ -1,3 +1,24 @@
+## [1.189.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.188.1...v1.189.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **league:** coup de mécène opt-in commissaire + masquage durée de journée ([47f6522](https://github.com/Ryxeuf/fantasy-football-game/commit/47f6522a55d09eb35deb6ac32cec2bce459cab11))
+* **teams:** résolution SSR des noms de compétences (zéro flash) ([1af8760](https://github.com/Ryxeuf/fantasy-football-game/commit/1af87601bd9cf233ec665d6e94cd6a70f332fcda))
+
+
+### 🐛 Bug Fixes
+
+* **league:** auto-advance League.status from season lifecycle ([9078fec](https://github.com/Ryxeuf/fantasy-football-game/commit/9078feccd1b16a2690d6c004ad419b6e0e487f56))
+* **leagues:** le commissaire peut inscrire une de ses équipes ([ea248da](https://github.com/Ryxeuf/fantasy-football-game/commit/ea248da7b3d95ab3736abe39073bd15a788a6fdf))
+* **season-admin:** temporarily hide round duration input and set default to null ([b06d3e8](https://github.com/Ryxeuf/fantasy-football-game/commit/b06d3e8426f13f07b1bfed81ed761db0914bf5b1))
+* **teams:** badges de compétences figés jusqu'au premier survol ([323d241](https://github.com/Ryxeuf/fantasy-football-game/commit/323d2410f7c09dc7637850fa7099a06e3deb794f))
+
+
+### 📝 Documentation
+
+* **openspec:** change fix-league-status-lifecycle ([2a33e29](https://github.com/Ryxeuf/fantasy-football-game/commit/2a33e29e292299f9d3796f01f2aa52e6c7d149d8))
+
 ## [1.188.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.188.0...v1.188.1) (2026-06-25)
 
 
