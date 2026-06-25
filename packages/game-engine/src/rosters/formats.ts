@@ -161,6 +161,20 @@ export function getSelectablePositions(
   return positions.filter((p) => !isBigGuy(p));
 }
 
+/**
+ * Plafonds + autorisation apothicaire résolus PAR ROSTER (modèle DB
+ * `RosterStaffConfig`). `FormatConstraints` les satisfait structurellement et
+ * sert donc de fallback. Défini ici (et non importé de `staff-config`) pour
+ * éviter un cycle d'import formats ↔ staff-config.
+ */
+export interface StaffLimits {
+  maxRerolls: number;
+  maxCheerleaders: number;
+  maxAssistants: number;
+  maxDedicatedFans: number;
+  apothecaryAllowed: boolean;
+}
+
 export interface FormatTeamSelection {
   format: GameFormat;
   positions: ReadonlyArray<PositionDefinition>;
@@ -172,6 +186,11 @@ export interface FormatTeamSelection {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /**
+   * Plafonds/autorisation staff résolus par roster. S'ils sont fournis, ils
+   * priment sur les constantes de format pour les vérifications de staff.
+   */
+  staffConfig?: StaffLimits;
 }
 
 export interface FormatValidationResult {
@@ -234,20 +253,24 @@ export function validateFormatSelection(
     };
   }
 
-  if (input.rerolls > c.maxRerolls) {
-    return { valid: false, error: `Maximum ${c.maxRerolls} relances dans ce format` };
+  // Plafonds/autorisations staff : config par roster si fournie, sinon
+  // constantes du format (qui satisfont structurellement `StaffLimits`).
+  const limits: StaffLimits = input.staffConfig ?? c;
+
+  if (input.rerolls > limits.maxRerolls) {
+    return { valid: false, error: `Maximum ${limits.maxRerolls} relances dans ce format` };
   }
-  if (input.cheerleaders > c.maxCheerleaders) {
-    return { valid: false, error: `Maximum ${c.maxCheerleaders} cheerleaders dans ce format` };
+  if (input.cheerleaders > limits.maxCheerleaders) {
+    return { valid: false, error: `Maximum ${limits.maxCheerleaders} cheerleaders dans ce format` };
   }
-  if (input.assistants > c.maxAssistants) {
-    return { valid: false, error: `Maximum ${c.maxAssistants} coachs assistants dans ce format` };
+  if (input.assistants > limits.maxAssistants) {
+    return { valid: false, error: `Maximum ${limits.maxAssistants} coachs assistants dans ce format` };
   }
-  if (input.dedicatedFans > c.maxDedicatedFans) {
-    return { valid: false, error: `Maximum ${c.maxDedicatedFans} fans dévoués dans ce format` };
+  if (input.dedicatedFans > limits.maxDedicatedFans) {
+    return { valid: false, error: `Maximum ${limits.maxDedicatedFans} fans dévoués dans ce format` };
   }
-  if (input.apothecary && !c.apothecaryAllowed) {
-    return { valid: false, error: "L'apothicaire n'est pas autorisé dans ce format" };
+  if (input.apothecary && !limits.apothecaryAllowed) {
+    return { valid: false, error: "L'apothicaire n'est pas autorisé pour cette équipe" };
   }
 
   return { valid: true };

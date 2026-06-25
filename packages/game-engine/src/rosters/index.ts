@@ -121,6 +121,7 @@ export {
   type FormatConstraints,
   type FormatTeamSelection,
   type FormatValidationResult,
+  type StaffLimits,
 } from "./formats";
 
 // Accès à l'apothicaire par roster (interdit pour les morts-vivants)
@@ -128,6 +129,9 @@ export {
   APOTHECARY_FORBIDDEN_ROSTERS,
   canRosterHaveApothecary,
 } from "./apothecary-access";
+
+// Config staff par roster ET par format (source DB ; défaut dérivé des constantes)
+export { defaultStaffConfig, type RosterStaffConfig } from "./staff-config";
 
 // A36 — Plafond combiné de Gros Bras (Big Guy) par équipe
 export { bigGuyLimitForRoster } from "./big-guy-limits";

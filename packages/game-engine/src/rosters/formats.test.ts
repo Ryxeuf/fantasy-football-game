@@ -185,3 +185,50 @@ describe("formats — validateFormatSelection (bb11 non-régression)", () => {
     expect(r.valid).toBe(true);
   });
 });
+
+describe("formats — validateFormatSelection (staffConfig par roster)", () => {
+  const base = {
+    format: "bb11" as const,
+    positions: [lineman, blitzer, ogre],
+    counts: { human_lineman: 11 },
+    starPlayerCount: 0,
+    rerolls: 0,
+    cheerleaders: 0,
+    assistants: 0,
+    apothecary: false,
+    dedicatedFans: 1,
+  };
+
+  it("les plafonds par roster priment sur les constantes de format", () => {
+    // staffConfig plafonne les relances à 3 ; 5 relances → refus.
+    const r = validateFormatSelection({
+      ...base,
+      rerolls: 5,
+      staffConfig: {
+        maxRerolls: 3,
+        maxCheerleaders: 12,
+        maxAssistants: 6,
+        maxDedicatedFans: 6,
+        apothecaryAllowed: true,
+      },
+    });
+    expect(r.valid).toBe(false);
+    expect(r.error).toContain("3 relances");
+  });
+
+  it("refuse l'apothicaire si le roster ne l'autorise pas", () => {
+    const r = validateFormatSelection({
+      ...base,
+      apothecary: true,
+      staffConfig: {
+        maxRerolls: 8,
+        maxCheerleaders: 12,
+        maxAssistants: 6,
+        maxDedicatedFans: 6,
+        apothecaryAllowed: false,
+      },
+    });
+    expect(r.valid).toBe(false);
+    expect(r.error).toContain("apothicaire");
+  });
+});

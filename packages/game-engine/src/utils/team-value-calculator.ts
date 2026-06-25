@@ -3,9 +3,16 @@
  */
 
 import { DEFAULT_RULESET, type Ruleset, getPositionBySlug } from '../rosters/positions';
-import { getRerollCost } from '../rosters/reroll-costs';
+import { DEFAULT_FORMAT, type GameFormat } from '../rosters/formats';
+import { defaultStaffConfig, type RosterStaffConfig } from '../rosters/staff-config';
 
 export { getRerollCost, getAllRerollCosts, REROLL_COSTS, DEFAULT_REROLL_COST } from '../rosters/reroll-costs';
+
+/** Sous-ensemble "coûts" de la config staff (po) utilisé pour la VE/VEA. */
+export type StaffCosts = Pick<
+  RosterStaffConfig,
+  'rerollCost' | 'cheerleaderCost' | 'assistantCost' | 'apothecaryCost' | 'dedicatedFanCost'
+>;
 
 export interface TeamValueData {
   players: Array<{
@@ -19,6 +26,20 @@ export interface TeamValueData {
   dedicatedFans: number; // Ajout des fans dévoués
   roster: string; // Ajout du roster pour calculer le coût des relances
   ruleset?: Ruleset; // Ruleset utilisé pour récupérer les données associées au roster
+  /** Format de jeu (sert à résoudre la config staff par défaut). Défaut: bb11. */
+  format?: GameFormat;
+  /**
+   * Coûts staff résolus (po), idéalement issus du modèle DB `RosterStaffConfig`.
+   * Si absent, dérivé de `defaultStaffConfig(roster, format ?? bb11)` — qui
+   * reproduit à l'identique les coûts historiques codés en dur (rétro-compat).
+   */
+  staffConfig?: StaffCosts;
+}
+
+/** Résout les coûts staff : config explicite > défaut dérivé (roster, format). */
+function resolveStaffCosts(data: TeamValueData): StaffCosts {
+  if (data.staffConfig) return data.staffConfig;
+  return defaultStaffConfig(data.roster, data.format ?? DEFAULT_FORMAT);
 }
 
 export interface CalculatedValues {
@@ -34,8 +55,8 @@ export interface CalculatedValues {
 export function calculateTeamValue(data: TeamValueData): number {
   const playersCost = data.players.reduce((total, player) => total + player.cost, 0);
   const staffCost = calculateStaffCost(data);
-  const rerollsCost = data.rerolls * getRerollCost(data.roster);
-  
+  const rerollsCost = data.rerolls * resolveStaffCosts(data).rerollCost;
+
   return playersCost + staffCost + rerollsCost;
 }
 
@@ -48,33 +69,31 @@ export function calculateCurrentValue(data: TeamValueData): number {
     .filter(player => player.available)
     .reduce((total, player) => total + player.cost, 0);
   const staffCost = calculateStaffCost(data);
-  const rerollsCost = data.rerolls * getRerollCost(data.roster);
-  
+  const rerollsCost = data.rerolls * resolveStaffCosts(data).rerollCost;
+
   return availablePlayersCost + staffCost + rerollsCost;
 }
 
 /**
- * Calcule le coût du staff de banc de touche
+ * Calcule le coût du staff de banc de touche, à partir des coûts résolus
+ * (config DB ou défaut format-aware). Pour bb11 sans config explicite, les
+ * coûts dérivés valent 10k/10k/50k/10k — identiques à l'historique.
  */
 function calculateStaffCost(data: TeamValueData): number {
+  const s = resolveStaffCosts(data);
   let cost = 0;
-  
-  // Cheerleaders: 10k po chacune
-  cost += data.cheerleaders * 10000;
-  
-  // Assistants: 10k po chacun
-  cost += data.assistants * 10000;
-  
-  // Apothicaire: 50k po
+
+  cost += data.cheerleaders * s.cheerleaderCost;
+  cost += data.assistants * s.assistantCost;
   if (data.apothecary) {
-    cost += 50000;
+    cost += s.apothecaryCost;
   }
-  
-  // Fans Dévoués: 10k po chacun au-dessus du premier (gratuit)
-  // BUG fix : si `dedicatedFans` = 0 (equipe nouvelle pas encore loggee),
-  // (0 - 1) * 10000 = -10000 → cout total negatif. Clamp via Math.max(0).
-  cost += Math.max(0, data.dedicatedFans - 1) * 10000;
-  
+
+  // Fans Dévoués : payants au-dessus du premier (gratuit).
+  // Clamp : si `dedicatedFans` = 0 (équipe nouvelle pas encore loggée),
+  // (0 - 1) * coût = négatif → total négatif. Math.max(0) protège.
+  cost += Math.max(0, data.dedicatedFans - 1) * s.dedicatedFanCost;
+
   return cost;
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRerollCost, getAllRerollCosts, getPlayerCost } from '../utils/team-value-calculator';
+import { getRerollCost, getAllRerollCosts, getPlayerCost, calculateTeamValue } from '../utils/team-value-calculator';
 
 describe('Team Value Calculator', () => {
   describe('getRerollCost', () => {
@@ -106,6 +106,45 @@ describe('Team Value Calculator', () => {
 
     it('should return default cost for unknown roster', () => {
       expect(getPlayerCost('Lineman', 'unknown')).toBe(50000);
+    });
+  });
+
+  describe('calculateTeamValue — staff config', () => {
+    const base = {
+      players: [{ cost: 100000, available: true }],
+      rerolls: 2,
+      cheerleaders: 3,
+      assistants: 1,
+      apothecary: true,
+      dedicatedFans: 3,
+      roster: 'human',
+    } as const;
+
+    it('sans config : reproduit le comportement historique (bb11 par défaut)', () => {
+      // joueurs 100k + relances 2×50k + cheerleaders 3×10k + assistant 1×10k
+      // + apothicaire 50k + fans (3-1)×10k = 100k+100k+30k+10k+50k+20k = 310k
+      expect(calculateTeamValue({ ...base })).toBe(310000);
+    });
+
+    it('avec staffConfig explicite : utilise les coûts fournis', () => {
+      const v = calculateTeamValue({
+        ...base,
+        staffConfig: {
+          rerollCost: 100000,
+          cheerleaderCost: 20000,
+          assistantCost: 20000,
+          apothecaryCost: 80000,
+          dedicatedFanCost: 20000,
+        },
+      });
+      // 100k + 2×100k + 3×20k + 1×20k + 80k + 2×20k = 100k+200k+60k+20k+80k+40k = 500k
+      expect(v).toBe(500000);
+    });
+
+    it('format sevens (sans config) : relance ×2 et staff à 20k', () => {
+      const v = calculateTeamValue({ ...base, format: 'sevens' });
+      // 100k + 2×100k + 3×20k + 1×20k + 80k + 2×20k = 500k
+      expect(v).toBe(500000);
     });
   });
 });
