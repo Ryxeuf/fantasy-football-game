@@ -22,6 +22,10 @@ vi.mock("../prisma", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    league: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     leagueParticipant: {
       findMany: vi.fn(),
     },
@@ -58,6 +62,8 @@ type MockFn = ReturnType<typeof vi.fn>;
 const mocked = {
   seasonFind: prisma.leagueSeason.findUnique as MockFn,
   seasonUpdate: prisma.leagueSeason.update as MockFn,
+  leagueFind: prisma.league.findUnique as MockFn,
+  leagueUpdate: prisma.league.update as MockFn,
   participantFind: prisma.leagueParticipant.findMany as MockFn,
   roundCount: prisma.leagueRound.count as MockFn,
   roundCreate: prisma.leagueRound.create as MockFn,
@@ -274,6 +280,86 @@ describe("league-scheduler.openSeasonForRegistration", () => {
   it("rejects if season is in_progress or completed", async () => {
     mocked.seasonFind.mockResolvedValue({ id: "s1", status: "in_progress" });
     await expect(openSeasonForRegistration("s1")).rejects.toThrow(/status/i);
+  });
+});
+
+// Non-regression : `League.status` restait fige a "draft" (« Brouillon »)
+// car aucun chemin hors force-status admin ne le faisait avancer. Les
+// actions de saison doivent desormais le faire progresser, forward-only.
+describe("league-scheduler — auto-avancement du statut de ligue", () => {
+  it("openSeasonForRegistration fait passer la ligue draft -> open", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "draft",
+      leagueId: "l1",
+    });
+    mocked.leagueFind.mockResolvedValue({ id: "l1", status: "draft" });
+
+    await openSeasonForRegistration("s1");
+
+    expect(mocked.leagueUpdate).toHaveBeenCalledWith({
+      where: { id: "l1" },
+      data: { status: "open" },
+    });
+  });
+
+  it("startSeason fait passer la ligue (open) -> in_progress", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "scheduled",
+      leagueId: "l1",
+    });
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.participantFind.mockResolvedValue([
+      { id: "p1" },
+      { id: "p2" },
+    ]);
+    mocked.roundCreate.mockImplementation(async () => ({ id: "r1" }));
+    mocked.pairingCreateMany.mockResolvedValue({ count: 0 });
+    mocked.seasonUpdate.mockResolvedValue({});
+    mocked.leagueFind.mockResolvedValue({ id: "l1", status: "open" });
+
+    await startSeason("s1");
+
+    expect(mocked.leagueUpdate).toHaveBeenCalledWith({
+      where: { id: "l1" },
+      data: { status: "in_progress" },
+    });
+  });
+
+  it("ne retrograde jamais : startSeason ne touche pas une ligue completed", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "scheduled",
+      leagueId: "l1",
+    });
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.participantFind.mockResolvedValue([
+      { id: "p1" },
+      { id: "p2" },
+    ]);
+    mocked.roundCreate.mockImplementation(async () => ({ id: "r1" }));
+    mocked.pairingCreateMany.mockResolvedValue({ count: 0 });
+    mocked.seasonUpdate.mockResolvedValue({});
+    // completed / archived sont hors echelle : pilotes par l'admin.
+    mocked.leagueFind.mockResolvedValue({ id: "l1", status: "completed" });
+
+    await startSeason("s1");
+
+    expect(mocked.leagueUpdate).not.toHaveBeenCalled();
+  });
+
+  it("idempotent : openSeasonForRegistration n'ecrit pas si la ligue est deja in_progress", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "draft",
+      leagueId: "l1",
+    });
+    mocked.leagueFind.mockResolvedValue({ id: "l1", status: "in_progress" });
+
+    await openSeasonForRegistration("s1");
+
+    expect(mocked.leagueUpdate).not.toHaveBeenCalled();
   });
 });
 

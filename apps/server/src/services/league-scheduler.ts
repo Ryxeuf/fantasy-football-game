@@ -270,13 +270,53 @@ async function persistRoundsAndPairings(
  * participants actifs, persiste rounds + pairings, et passe la saison
  * a `in_progress`.
  */
+/**
+ * Auto-avancement du statut de la *ligue* en reaction aux actions sur
+ * ses saisons.
+ *
+ * Historiquement `League.status` restait fige a "draft" : `createLeague`
+ * ne l'ecrit jamais et aucun chemin (hors force-status admin) ne le
+ * faisait progresser. Resultat : toute ligue affichait « Brouillon » a
+ * vie alors que seul `Season.status` avancait. On le fait donc avancer
+ * en effet de bord des actions de saison qui existent deja.
+ *
+ * Echelle "forward-only" : draft < open < in_progress. `completed` et
+ * `archived` sont hors echelle — pilotes manuellement par l'admin
+ * (PATCH /admin/leagues/:id/status) et jamais retrogrades/ecrases ici.
+ * Idempotent : no-op si la ligue est deja au niveau cible ou au-dela.
+ */
+const LEAGUE_STATUS_FORWARD_RANK: Record<string, number> = {
+  draft: 0,
+  open: 1,
+  in_progress: 2,
+};
+
+async function advanceLeagueStatus(
+  leagueId: string,
+  target: "open" | "in_progress",
+): Promise<void> {
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { id: true, status: true },
+  });
+  if (!league) return;
+  const currentRank = LEAGUE_STATUS_FORWARD_RANK[league.status];
+  // Statut hors echelle (completed / archived / inconnu) : on n'y touche pas.
+  if (currentRank === undefined) return;
+  if (currentRank >= LEAGUE_STATUS_FORWARD_RANK[target]) return;
+  await prisma.league.update({
+    where: { id: leagueId },
+    data: { status: target },
+  });
+}
+
 export async function startSeason(
   seasonId: string,
   opts: StartSeasonOptions = {},
 ): Promise<StartSeasonResult> {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: seasonId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, leagueId: true },
   });
   if (!season) {
     throw new Error(`Saison introuvable: ${seasonId}`);
@@ -314,6 +354,10 @@ export async function startSeason(
     where: { id: seasonId },
     data: { status: "in_progress" },
   });
+
+  // Une saison qui demarre fait passer la ligue a `in_progress`
+  // (depuis draft ou open). Forward-only + idempotent.
+  await advanceLeagueStatus(season.leagueId, "in_progress");
 
   // L2.A.12 — fire-and-forget : push reminder a chaque coach implique
   // dans un pairing du round 1. Echec non-bloquant : on log mais on
@@ -418,7 +462,7 @@ export async function openSeasonForRegistration(
 ): Promise<void> {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: seasonId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, leagueId: true },
   });
   if (!season) {
     throw new Error(`Saison introuvable: ${seasonId}`);
@@ -435,6 +479,10 @@ export async function openSeasonForRegistration(
     where: { id: seasonId },
     data: { status: "scheduled" },
   });
+
+  // Ouvrir les inscriptions d'une saison fait sortir la ligue du
+  // brouillon : draft -> open. Forward-only + idempotent.
+  await advanceLeagueStatus(season.leagueId, "open");
 }
 
 /**
