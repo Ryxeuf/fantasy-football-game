@@ -535,36 +535,66 @@ model Roster {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  positions Position[]
-  hirableBy StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
+  positions    Position[]
+  hirableBy    StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
+  staffConfigs RosterStaffConfig[] // Config staff (relances, apothicaire, cheerleaders…) par format
 
   @@unique([slug, ruleset])
 }
 
+// Config staff d'équipe par roster ET par format (bb11 / sevens), saisie
+// indépendamment pour chaque format. Source de vérité des coûts/plafonds de
+// staff (relances, apothicaire, cheerleaders, coachs assistants, fans dévoués).
+// Tous les coûts sont en **po entiers** (ex. 50000), comme `REROLL_COSTS` et
+// `team-value-calculator`. Remplace les constantes codées en dur du package
+// `@bb/game-engine` (REROLL_COSTS / FORMAT_CONSTRAINTS), qui restent le défaut
+// de fallback si aucune ligne n'existe.
+model RosterStaffConfig {
+  id                String   @id @default(cuid())
+  roster            Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId          String
+  format            Format // "bb11" | "sevens"
+  rerollCost        Int // Coût d'une relance d'équipe (po)
+  maxRerolls        Int // Plafond de relances achetables
+  apothecaryAllowed Boolean // L'apothicaire est-il recrutable pour ce roster ?
+  apothecaryCost    Int // Coût de l'apothicaire (po)
+  maxCheerleaders   Int
+  cheerleaderCost   Int // po
+  maxAssistants     Int // Coachs assistants
+  assistantCost     Int // po
+  maxDedicatedFans  Int
+  dedicatedFanCost  Int // po (au-delà du 1er fan, gratuit)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([rosterId, format])
+  @@index([rosterId])
+}
+
 // Modèle pour les positions dans les rosters
 model Position {
-  id          String   @id @default(cuid())
-  roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
-  rosterId    String
-  slug        String // Slug unique (ex: "skaven_lineman")
-  displayName String // Nom d'affichage (ex: "Lineman")
-  cost        Int // Coût en kpo
-  min         Int // Minimum requis
-  max         Int // Maximum autorisé
-  ma          Int // Movement Allowance
-  st          Int // Strength
-  ag          Int // Agility
-  pa          Int? // Passing (null pour - : certaines positions n'ont pas de passe)
-  av          Int // Armour Value
-  keywords    String? // Mots-clés séparés par des virgules (ex: "elite,passive")
+  id              String   @id @default(cuid())
+  roster          Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId        String
+  slug            String // Slug unique (ex: "skaven_lineman")
+  displayName     String // Nom d'affichage (ex: "Lineman")
+  cost            Int // Coût en kpo
+  min             Int // Minimum requis
+  max             Int // Maximum autorisé
+  ma              Int // Movement Allowance
+  st              Int // Strength
+  ag              Int // Agility
+  pa              Int? // Passing (null pour - : certaines positions n'ont pas de passe)
+  av              Int // Armour Value
+  keywords        String? // Mots-clés séparés par des virgules (ex: "elite,passive")
   // Accès aux compétences en montée de niveau (BB Season 3). CSV de codes
   // catégorie "G,A,S,P,M". `null` = non renseigné (ex: season_2) → validation
   // désactivée. `""` = renseigné mais pool vide (ex: positions animales sans
   // accès primaire). Source : data/saison3/team/*.md (F=Force normalisé en S).
   primarySkills   String? // Catégories accessibles en primaire (ex: "G,S")
   secondarySkills String? // Catégories accessibles en secondaire (ex: "A")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   skills PositionSkill[]
@@ -943,43 +973,43 @@ model EmailDigestPreference {
 /// peut etre acceptee par le 1er user qui se connecte avec ce code
 /// (lien public). Sinon, seul le user cible peut accepter.
 model LeagueInvitation {
-  id              String   @id @default(cuid())
-  league          League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId        String
+  id                    String        @id @default(cuid())
+  league                League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId              String
   /// Optionnel : saison ciblee si l'invitation pointe sur une saison
   /// specifique. Si null, le coach choisira la saison a l'acceptation
   /// (utile pour les ligues avec plusieurs saisons en cours).
-  season          LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
-  seasonId        String?
+  season                LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  seasonId              String?
   /// Auteur de l'invitation (commissaire ou admin).
-  inviter         User     @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
-  inviterUserId   String
+  inviter               User          @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
+  inviterUserId         String
   /// Optionnel : coach cible identifie. Si null, lien d'invitation
   /// publique (1er user qui ouvre le lien et accepte).
-  invitee         User?    @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
-  inviteeUserId   String?
+  invitee               User?         @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
+  inviteeUserId         String?
   /// Optionnel : equipe pre-selectionnee. Le coach pourra confirmer
   /// ou choisir une autre equipe lors de l'acceptation.
-  inviteeTeam     Team?    @relation(fields: [inviteeTeamId], references: [id])
-  inviteeTeamId   String?
+  inviteeTeam           Team?         @relation(fields: [inviteeTeamId], references: [id])
+  inviteeTeamId         String?
   /// Optionnel : email cible quand l'invitation depasse les frontieres
   /// de la plateforme. Permet de prevoir un envoi mail (Lot futur).
-  inviteeEmail    String?
+  inviteeEmail          String?
   /// "pending" | "accepted" | "declined" | "cancelled" | "expired"
-  status          String   @default("pending")
+  status                String        @default("pending")
   /// Token unique pour partager le lien (publique mais inviolable).
   /// Format : alphanumeric ~24 chars (crypto.randomBytes(16).toString("base64url")).
-  code            String   @unique
+  code                  String        @unique
   /// Message libre du commissaire ("Salut, rejoins la Skaven Cup !").
-  message         String?
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  declinedAt      DateTime?
-  cancelledAt     DateTime?
+  message               String?
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  declinedAt            DateTime?
+  cancelledAt           DateTime?
   /// Renseigne au moment de l'acceptation (utile si invitee != team owner).
   acceptedParticipantId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   @@index([leagueId, status])
   @@index([inviteeUserId, status])
@@ -1037,33 +1067,33 @@ model League {
 // S26.6 — `theme` + `themeYear` : ligues thematiques saisonnieres
 // (Skaven Cup mars, Nordic Challenge avril, Underworld Open mai).
 model LeagueSeason {
-  id           String    @id @default(cuid())
-  league       League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId     String
-  seasonNumber Int
-  name         String
+  id            String    @id @default(cuid())
+  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId      String
+  seasonNumber  Int
+  name          String
   // "draft" | "scheduled" | "in_progress" | "completed"
-  status       String    @default("draft")
-  startDate    DateTime?
-  endDate      DateTime?
+  status        String    @default("draft")
+  startDate     DateTime?
+  endDate       DateTime?
   // S26.6 — slug du theme saisonnier (cf. services/league-themes.ts).
   // null si la saison n'est pas thematique (mode classique).
-  theme        String?
+  theme         String?
   // S26.6 — annee canonique du theme (4 chiffres). Toujours present si
   // `theme` est present (couple atomique enforce par le service).
-  themeYear    Int?
+  themeYear     Int?
   // L2.C.3 — taille du bracket de playoffs (top N qualifies pour
   // l'elimination directe en fin de saison reguliere). 0 = pas de
   // playoff (mode classique : champion = 1er du round-robin).
   // Valeurs supportees : 0, 2 (final seulement), 4 (SF + final),
   // 8 (QF + SF + final). 16+ : non supporte pour l'instant.
-  playoffSize  Int       @default(0)
+  playoffSize   Int       @default(0)
   // L2.B.5 — "Coup de mecene" : option activable par le commissaire.
   // false par defaut => le bonus +100k po n'est PAS disponible pour les
   // coachs. Le commissaire l'active explicitement par saison.
-  meceneEnabled Boolean  @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  meceneEnabled Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
@@ -1183,7 +1213,7 @@ model LeagueRound {
   pairings LeaguePairing[]
   // Lot C — round optionnellement rattache a une poule (pour les
   // saisons multi-poules ou chaque poule a son propre calendrier).
-  pool     LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  pool     LeaguePool?     @relation(fields: [poolId], references: [id], onDelete: SetNull)
   poolId   String?
 
   @@unique([seasonId, roundNumber])
@@ -1255,54 +1285,54 @@ model LeaguePairing {
 /// (`LeagueMatchEvent`) par le summarizer pur ; ils sont aussi
 /// snapshotes ici a la validation pour audit + lecture rapide.
 model LeagueMatchSheet {
-  id                String        @id @default(cuid())
-  pairing           LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId         String        @unique
-  status            String        @default("draft")
+  id        String        @id @default(cuid())
+  pairing   LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId String        @unique
+  status    String        @default("draft")
 
-  submittedByHomeAt DateTime?
-  submittedByAwayAt DateTime?
-  validatedAt       DateTime?
-  validatedById     String?
-  invalidatedAt     DateTime?
+  submittedByHomeAt  DateTime?
+  submittedByAwayAt  DateTime?
+  validatedAt        DateTime?
+  validatedById      String?
+  invalidatedAt      DateTime?
   invalidationReason String?
 
   // ── Avant-match ──
-  weather           String?
-  popularityHome    Int?
-  popularityAway    Int?
+  weather         String?
+  popularityHome  Int?
+  popularityAway  Int?
   /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
-  inducementsHome   Json?
-  inducementsAway   Json?
+  inducementsHome Json?
+  inducementsAway Json?
   /// Prieres de Nuffle : [{ playerId, effect, sppBonus }].
-  prayersHome       Json?
-  prayersAway       Json?
+  prayersHome     Json?
+  prayersAway     Json?
 
   // ── Score derive des events (snapshot a la validation) ──
-  scoreHome         Int           @default(0)
-  scoreAway         Int           @default(0)
+  scoreHome Int @default(0)
+  scoreAway Int @default(0)
 
   // ── Apres-match (snapshot, editable commissaire) ──
   /// Gain de tresorerie calcule (auto). Override possible via *Manual.
-  winningsHome      Int           @default(0)
-  winningsAway      Int           @default(0)
-  winningsHomeManual Int?
-  winningsAwayManual Int?
+  winningsHome           Int   @default(0)
+  winningsAway           Int   @default(0)
+  winningsHomeManual     Int?
+  winningsAwayManual     Int?
   dedicatedFansDeltaHome Int?
   dedicatedFansDeltaAway Int?
   /// Erreurs couteuses : [{ playerId?, cost, reason }].
-  costlyErrorsHome  Json?
-  costlyErrorsAway  Json?
+  costlyErrorsHome       Json?
+  costlyErrorsAway       Json?
   /// Joueurs du match (MVP) : [playerId].
-  motmPlayerIds     Json          @default("[]")
+  motmPlayerIds          Json  @default("[]")
   /// Achats post-match : [{ kind: 'player'|'reroll'|'staff', name, cost }].
-  purchasesHome     Json?
-  purchasesAway     Json?
+  purchasesHome          Json?
+  purchasesAway          Json?
 
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  events            LeagueMatchEvent[]
+  events LeagueMatchEvent[]
 
   @@index([status])
 }
@@ -1311,28 +1341,28 @@ model LeagueMatchSheet {
 /// permettre l'agregation (stats joueurs, blesses, score) et l'edition
 /// fine (ajout/suppression d'un event).
 model LeagueMatchEvent {
-  id           String           @id @default(cuid())
-  matchSheet   LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
-  matchSheetId String
+  id             String           @id @default(cuid())
+  matchSheet     LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
+  matchSheetId   String
   /// 'kickoff' | 'touchdown' | 'casualty' | 'pass_complete' |
   /// 'interception' | 'aggression' | 'expulsion' | 'crowd_surge' |
   /// 'stalling' | 'other_elim'
-  kind         String
+  kind           String
   /// 'home' | 'away' — equipe a l'origine de l'event.
-  team         String?
+  team           String?
   /// Acteur (auteur de l'action), rosterId TeamPlayer.
   actorPlayerId  String?
   /// Cible (subit l'action), rosterId TeamPlayer.
   targetPlayerId String?
   /// Pour other_elim/casualty : 'block' | 'failed_dodge' | 'failed_leap'
   /// | 'failed_gfi' | 'secret_weapon' | 'crowd' | ...
-  causeDetail  String?
+  causeDetail    String?
   /// Severite de blessure : 'badly_hurt' | 'mng' | 'niggling' |
   /// 'stat_loss' | 'dead' | null.
   injurySeverity String?
   /// Donnees additionnelles libres (turn number, dice, etc.).
-  meta         Json?
-  occurredAt   DateTime         @default(now())
+  meta           Json?
+  occurredAt     DateTime         @default(now())
 
   @@index([matchSheetId, kind])
 }
@@ -2687,17 +2717,17 @@ model NflPlayer {
   ///   - prix de base pour les nouvelles encheres mercato
   ///   - credit budget lors d'une revente (sellPlayer)
   /// Initialisation : 50 TV (plancher) jusqu'a la 1ere recompute.
-  currentValue  Int @default(50)
+  currentValue      Int       @default(50)
   /// Cote precedente (avant le dernier recompute) pour calculer le
   /// delta affiche cote UI (badge up/down). Snapshot detaille =
   /// NflPlayerValueSnapshot.
-  previousValue Int @default(50)
+  previousValue     Int       @default(50)
   /// Timestamp du dernier recompute. null si jamais recompute (joueur
   /// rookie / fresh ingest).
   valueRecomputedAt DateTime?
 
-  team      NflTeam?      @relation(fields: [teamCode], references: [code], onDelete: SetNull)
-  gameStats NflGameStat[]
+  team           NflTeam?                 @relation(fields: [teamCode], references: [code], onDelete: SetNull)
+  gameStats      NflGameStat[]
   valueSnapshots NflPlayerValueSnapshot[]
 
   @@index([teamCode, bbPosition])
@@ -2708,16 +2738,16 @@ model NflPlayer {
 /// recomputeAllPlayerValues apres chaque settle. Permet de tracer
 /// l'evolution sur une saison et d'afficher des graphs UI.
 model NflPlayerValueSnapshot {
-  id        String   @id @default(cuid())
-  playerId  String
+  id            String   @id @default(cuid())
+  playerId      String
   /// Format "{year}:W{n}" (FK logique vers NflWeek).
-  weekId    String
+  weekId        String
   /// Saison pour faciliter les queries par saison sans rejoindre week.
-  seasonId  String
-  value     Int
+  seasonId      String
+  value         Int
   /// SPP cumules au moment du snapshot (debug / explication UI).
-  sppAtSnapshot Int @default(0)
-  createdAt DateTime @default(now())
+  sppAtSnapshot Int      @default(0)
+  createdAt     DateTime @default(now())
 
   player NflPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -2807,43 +2837,43 @@ model NflIngestRun {
 // ─── Fantasy game cote user (Phase 2.C) ─────────────────────────────
 
 model NflFantasyLeague {
-  id        String   @id @default(cuid())
+  id          String   @id @default(cuid())
   /// Nom de la league, 3-50 caracteres (validation cote service).
-  name      String
+  name        String
   /// User.id du proprietaire (cf. memo : pas de FK explicite pour
   /// eviter de modifier le modele User).
-  ownerId   String
+  ownerId     String
   /// Taille cible. Default Q2 = 10 ; range 2-16.
-  size      Int      @default(10)
+  size        Int      @default(10)
   /// "public" | "private". Default Q1 = "private" (invite-only).
-  type      String   @default("private")
+  type        String   @default("private")
   /// "snake" | "auction" | "free". V2 mercato : valeur conservee en DB
   /// pour future extension snake interactif, mais l'UI publique ne
   /// propose plus que le mode unique "auction" (mercato a encheres
   /// secretes asynchrones, MPG-style).
-  draftMode String   @default("auction")
+  draftMode   String   @default("auction")
   /// "draft" | "in_progress" | "completed"
-  status    String   @default("draft")
+  status      String   @default("draft")
   /// FK logique vers NflSeason.id (string, pas de FK relationnelle).
-  seasonId  String
+  seasonId    String
   /// Code court (8 chars upper alphanum) pour les private leagues.
   /// null pour les leagues publiques.
-  inviteCode String? @unique
+  inviteCode  String?  @unique
   /// Budget initial alloue a chaque entry pour le mercato V2. Default
   /// 5000 TV (~10-15 joueurs, mix stars + rookies selon les prix).
-  draftBudget Int    @default(5000)
+  draftBudget Int      @default(5000)
   /// FK logique vers NflFantasySeasonCycle.id. Nullable pour
   /// retro-compat avec les championnats crees avant l'introduction des
   /// cycles ; pour les nouveaux championnats, la valeur est exigee par
   /// le service createLeague (snap-to-next-window).
-  cycleId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  cycleId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  entries        NflFantasyEntry[]
-  matchups       NflFantasyMatchup[]
-  draftSessions  NflFantasyDraftSession[]
-  cycle          NflFantasySeasonCycle? @relation(fields: [cycleId], references: [id])
+  entries       NflFantasyEntry[]
+  matchups      NflFantasyMatchup[]
+  draftSessions NflFantasyDraftSession[]
+  cycle         NflFantasySeasonCycle?   @relation(fields: [cycleId], references: [id])
 
   @@index([ownerId])
   @@index([status, type])
@@ -2879,22 +2909,22 @@ model NflFantasySeasonCycle {
   endWeek     Int
   createdAt   DateTime @default(now())
 
-  leagues     NflFantasyLeague[]
+  leagues NflFantasyLeague[]
 
   @@unique([seasonId, cycleNumber])
   @@index([seasonId])
 }
 
 model NflFantasyEntry {
-  id        String   @id @default(cuid())
-  leagueId  String
+  id              String   @id @default(cuid())
+  leagueId        String
   /// User.id du membre.
-  userId    String
+  userId          String
   /// Nom d'equipe choisi par l'user, 3-50 char. Unique par league.
-  teamName  String
+  teamName        String
   /// Race BB optionnelle (V2 variant "Pure BB"). null en V1 (Q5 = race
   /// fixe par equipe via NflPlayer.teamCode -> NflTeam.bbRace).
-  bbRace    String?
+  bbRace          String?
   /// Style de jeu choisi a la creation (modifiable tant que la semaine
   /// courante n'est pas lockee). Definit les plafonds de composition de
   /// lineup par archetype (PLAY_STYLE_CAPS dans @bb/nfl-mapper) :
@@ -2902,17 +2932,17 @@ model NflFantasyEntry {
   /// "balanced". Plafonds = max only sur les postes offensifs premium ;
   /// les fillers (lineman/defense) restent illimites → 11 titulaires
   /// toujours faisables meme avec des blessures.
-  playStyle String   @default("balanced")
+  playStyle       String   @default("balanced")
   /// Total Team Value (somme des tvCost sur les NflFantasyRoster).
   /// Mis a jour par le service mercato Phase 2.F.
-  totalTV   Int      @default(0)
+  totalTV         Int      @default(0)
   /// Budget restant pour le mercato V2. Initialise a
   /// `NflFantasyLeague.draftBudget` lors de la creation de l'entry,
   /// decremente a chaque enchere remportee a la resolution d'une session.
-  budgetRemaining Int @default(5000)
-  joinedAt  DateTime @default(now())
+  budgetRemaining Int      @default(5000)
+  joinedAt        DateTime @default(now())
 
-  league      NflFantasyLeague       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  league      NflFantasyLeague         @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   roster      NflFantasyRoster[]
   lineups     NflFantasyLineup[]
   rerolls     NflFantasyReroll[]
@@ -2974,22 +3004,22 @@ model NflFantasyPlayerCareer {
 }
 
 model NflFantasyLineup {
-  id        String    @id @default(cuid())
-  entryId   String
+  id            String    @id @default(cuid())
+  entryId       String
   /// FK logique vers NflWeek.id (format "{year}:W{n}").
-  weekId    String
+  weekId        String
   /// playerId du captain (×1.5). Doit etre dans starters.
-  captainId String?
+  captainId     String?
   /// playerId du vice-captain (×1.2). Doit etre dans starters,
   /// different du captain.
   viceCaptainId String?
-  lockedAt  DateTime?
+  lockedAt      DateTime?
   /// Total SPP apres settlement Phase 2.E. Null tant que pas settle.
-  totalSpp  Int?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  totalSpp      Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  entry    NflFantasyEntry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entry    NflFantasyEntry           @relation(fields: [entryId], references: [id], onDelete: Cascade)
   starters NflFantasyLineupStarter[]
 
   @@unique([entryId, weekId])
@@ -2999,13 +3029,13 @@ model NflFantasyLineup {
 // ─── Mercato : rerolls + inducements (Phase 2.F) ────────────────
 
 model NflFantasyReroll {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   entryId   String
   /// "team_reroll" | "skill_reroll" | "assistant_coach"
-  type      String   @default("team_reroll")
+  type      String    @default("team_reroll")
   /// "starter" | "purchased" | "achievement" | "mercato" | "reward"
-  source    String   @default("starter")
-  used      Boolean  @default(false)
+  source    String    @default("starter")
+  used      Boolean   @default(false)
   usedAt    DateTime?
   /// FK logique NflWeek.id quand consomme.
   weekId    String?
@@ -3013,7 +3043,7 @@ model NflFantasyReroll {
   matchupId String?
   /// NflPlayer.id sur lequel le reroll est applique (booste son SPP).
   appliedTo String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   entry NflFantasyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
@@ -3047,27 +3077,27 @@ model NflFantasyInducement {
 // ─── Matchups + settlement (Phase 2.E) ──────────────────────────
 
 model NflFantasyMatchup {
-  id          String   @id @default(cuid())
-  leagueId    String
+  id                 String    @id @default(cuid())
+  leagueId           String
   /// FK logique NflWeek.id ("{year}:W{n}").
-  weekId      String
+  weekId             String
   /// NflFantasyEntry.id de l'equipe home (premiere position pairing).
-  homeEntryId String
+  homeEntryId        String
   /// NflFantasyEntry.id de l'equipe away.
-  awayEntryId String
+  awayEntryId        String
   /// Set par settleNflFantasyWeek (sum des finalSpp des starters).
-  homeScore   Int?
-  awayScore   Int?
+  homeScore          Int?
+  awayScore          Int?
   /// NflFantasyEntry.id du winner ; null = tie ou non settle.
-  winnerId    String?
-  settledAt   DateTime?
+  winnerId           String?
+  settledAt          DateTime?
   /// Gazette narrative generee post-settle par LLM (Phase 3.H). Null
   /// tant que pas genere. Idempotent : skip si gazetteGeneratedAt
   /// non-null sauf si force=true.
   gazetteTitle       String?
   gazetteBody        String?
   gazetteGeneratedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt          DateTime  @default(now())
 
   league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
@@ -3108,19 +3138,19 @@ model NflFantasyLineupStarter {
 /// budget restant. Les bids perdants sont rembourses automatiquement
 /// (puisque le budget n'est decremente qu'a la resolution).
 model NflFantasyDraftSession {
-  id        String   @id @default(cuid())
-  leagueId  String
+  id            String    @id @default(cuid())
+  leagueId      String
   /// Numero ordinal de la session (1, 2, 3...) pour affichage UI.
   sessionNumber Int
-  opensAt   DateTime
-  closesAt  DateTime
-  resolvedAt DateTime?
+  opensAt       DateTime
+  closesAt      DateTime
+  resolvedAt    DateTime?
   /// "open" | "resolving" | "resolved" | "cancelled".
-  status    String   @default("open")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status        String    @default("open")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  league NflFantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  league NflFantasyLeague     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   bids   NflFantasyDraftBid[]
 
   @@unique([leagueId, sessionNumber])
@@ -3132,19 +3162,19 @@ model NflFantasyDraftSession {
 /// bid actif par player. Pour modifier, le service upsert. Pour
 /// retirer, le service delete (avant resolution).
 model NflFantasyDraftBid {
-  id         String   @id @default(cuid())
-  sessionId  String
-  entryId    String
+  id        String   @id @default(cuid())
+  sessionId String
+  entryId   String
   /// NflPlayer.id, FK logique.
-  playerId   String
+  playerId  String
   /// Montant de l'enchere en TV. Doit etre >= prix de base + <= budget
   /// dispo (budgetRemaining moins somme des autres bids actifs).
-  amount     Int
+  amount    Int
   /// "pending" (avant resolution) | "won" | "lost" (apres resolution).
   /// Permet de tracker historique pour audit / UI replay.
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   session NflFantasyDraftSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   entry   NflFantasyEntry        @relation(fields: [entryId], references: [id], onDelete: Cascade)

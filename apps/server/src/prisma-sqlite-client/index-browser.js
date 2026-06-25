@@ -363,6 +363,24 @@ exports.Prisma.RosterScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RosterStaffConfigScalarFieldEnum = {
+  id: 'id',
+  rosterId: 'rosterId',
+  format: 'format',
+  rerollCost: 'rerollCost',
+  maxRerolls: 'maxRerolls',
+  apothecaryAllowed: 'apothecaryAllowed',
+  apothecaryCost: 'apothecaryCost',
+  maxCheerleaders: 'maxCheerleaders',
+  cheerleaderCost: 'cheerleaderCost',
+  maxAssistants: 'maxAssistants',
+  assistantCost: 'assistantCost',
+  maxDedicatedFans: 'maxDedicatedFans',
+  dedicatedFanCost: 'dedicatedFanCost',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SkillScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
@@ -521,8 +539,6 @@ exports.Prisma.LeagueScalarFieldEnum = {
   lossPoints: 'lossPoints',
   forfeitPoints: 'forfeitPoints',
   tieBreakRules: 'tieBreakRules',
-  matchMode: 'matchMode',
-  turnDeadlineHours: 'turnDeadlineHours',
   bonusPointsConfig: 'bonusPointsConfig',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1199,6 +1215,7 @@ exports.Prisma.ModelName = {
   TeamPlayer: 'TeamPlayer',
   TeamStarPlayer: 'TeamStarPlayer',
   Roster: 'Roster',
+  RosterStaffConfig: 'RosterStaffConfig',
   Skill: 'Skill',
   Position: 'Position',
   PositionSkill: 'PositionSkill',

@@ -440,9 +440,34 @@ model Roster {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  positions Position[]
+  positions    Position[]
+  staffConfigs RosterStaffConfig[]
 
   @@unique([slug, ruleset])
+}
+
+// Mirror PG : config staff par roster ET par format (bb11 / sevens).
+// Coûts en po entiers. Cf. schéma principal pour la doc complète.
+model RosterStaffConfig {
+  id                String   @id @default(cuid())
+  roster            Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId          String
+  format            Format
+  rerollCost        Int
+  maxRerolls        Int
+  apothecaryAllowed Boolean
+  apothecaryCost    Int
+  maxCheerleaders   Int
+  cheerleaderCost   Int
+  maxAssistants     Int
+  assistantCost     Int
+  maxDedicatedFans  Int
+  dedicatedFanCost  Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([rosterId, format])
+  @@index([rosterId])
 }
 
 // Compétences BB3 (Skill). Utilisé par la route publique `/api/skills` et
@@ -724,9 +749,6 @@ model League {
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
   tieBreakRules     String?
-  /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
-  matchMode         String   @default("realtime")
-  turnDeadlineHours Int      @default(24)
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
   bonusPointsConfig String?
   createdAt         DateTime @default(now())

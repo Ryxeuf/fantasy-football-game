@@ -21,8 +21,8 @@ enum Format {
 }
 
 model User {
-  id                          String               @id @default(cuid())
-  email                       String               @unique
+  id                          String                      @id @default(cuid())
+  email                       String                      @unique
   passwordHash                String
   name                        String? // Conservé pour rétrocompatibilité
   coachName                   String // Nom de coach (obligatoire)
@@ -30,64 +30,64 @@ model User {
   lastName                    String? // Nom (optionnel)
   dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                        String               @default("user")
+  role                        String                      @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles                       String               @default("[]")
+  roles                       String                      @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon                     Boolean              @default(false)
+  patreon                     Boolean                     @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode                String?              @unique
+  kofiLinkCode                String?                     @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi).
-  discordUserId               String?              @unique
+  discordUserId               String?                     @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
   supporterTier               String?
   /// Fin de la période de supporter payée.
   supporterActiveUntil        DateTime?
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
-  totalDonatedCentsByCurrency String               @default("{}")
+  totalDonatedCentsByCurrency String                      @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
-  privateProfile              Boolean              @default(false)
+  privateProfile              Boolean                     @default(false)
   /// Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
   nafName                     String?
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid                       Boolean              @default(true)
+  valid                       Boolean                     @default(true)
   /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
   /// services admin/ban puissent etre testes en SQLite sans diverger.
   bannedAt                    DateTime?
   bannedUntil                 DateTime?
   banReason                   String?
   /// Lot P.C.2 — admin password reset override. Mirror du flag Postgres.
-  mustChangePassword          Boolean              @default(false)
+  mustChangePassword          Boolean                     @default(false)
   /// Lot P.A.2 — soft-delete RGPD-compatible. Mirror PG.
   deletedAt                   DateTime?
   deletionReason              String?
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
   /// Mirror PG — Visibilite dans le classement ELO ("visible" | "hidden_admin").
-  leaderboardStatus           String               @default("visible")
+  leaderboardStatus           String                      @default("visible")
   leaderboardStatusReason     String?
   leaderboardStatusUpdatedAt  DateTime?
   leaderboardStatusUpdatedBy  String?
-  createdAt                   DateTime             @default(now())
-  updatedAt                   DateTime             @updatedAt
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
   matches                     Match[]
-  createdMatches              Match[]              @relation("MatchCreator")
+  createdMatches              Match[]                     @relation("MatchCreator")
   teams                       Team[]
   teamSelections              TeamSelection[]
-  createdCups                 Cup[]                @relation("CupCreator")
-  createdLeagues              League[]             @relation("LeagueCreator")
-  createdLocalMatches         LocalMatch[]         @relation("LocalMatchCreator")
-  eloRating                   Int                  @default(1000)
+  createdCups                 Cup[]                       @relation("CupCreator")
+  createdLeagues              League[]                    @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]                @relation("LocalMatchCreator")
+  eloRating                   Int                         @default(1000)
   matchQueue                  MatchQueue?
   featureFlagOverrides        FeatureFlagUser[]
-  friendshipsSent             Friendship[]         @relation("FriendshipRequester")
-  friendshipsReceived         Friendship[]         @relation("FriendshipReceiver")
+  friendshipsSent             Friendship[]                @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]                @relation("FriendshipReceiver")
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
@@ -247,21 +247,21 @@ model FeatureFlagUser {
 }
 
 model Match {
-  id                String          @id @default(cuid())
-  createdAt         DateTime        @default(now())
-  status            String
-  seed              String
-  creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
-  creatorId         String?
-  currentTurnUserId String?
-  lastMoveAt        DateTime?
+  id                  String          @id @default(cuid())
+  createdAt           DateTime        @default(now())
+  status              String
+  seed                String
+  creator             User?           @relation("MatchCreator", fields: [creatorId], references: [id])
+  creatorId           String?
+  currentTurnUserId   String?
+  lastMoveAt          DateTime?
   /// Sprint R lot R.E.1 — mode "realtime" (defaut) | "async". Mirror PG.
-  mode              String          @default("realtime")
+  mode                String          @default("realtime")
   currentTurnDeadline DateTime?
-  turnDeadlineHours   Int           @default(24)
-  players           User[]
-  turns             Turn[]
-  teamSelections    TeamSelection[]
+  turnDeadlineHours   Int             @default(24)
+  players             User[]
+  turns               Turn[]
+  teamSelections      TeamSelection[]
 
   /// Lot P.B.4 — moderation matchs humains. Miroir des colonnes Postgres.
   forfeitedAt       DateTime?
@@ -440,9 +440,34 @@ model Roster {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  positions Position[]
+  positions    Position[]
+  staffConfigs RosterStaffConfig[]
 
   @@unique([slug, ruleset])
+}
+
+// Mirror PG : config staff par roster ET par format (bb11 / sevens).
+// Coûts en po entiers. Cf. schéma principal pour la doc complète.
+model RosterStaffConfig {
+  id                String   @id @default(cuid())
+  roster            Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId          String
+  format            Format
+  rerollCost        Int
+  maxRerolls        Int
+  apothecaryAllowed Boolean
+  apothecaryCost    Int
+  maxCheerleaders   Int
+  cheerleaderCost   Int
+  maxAssistants     Int
+  assistantCost     Int
+  maxDedicatedFans  Int
+  dedicatedFanCost  Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([rosterId, format])
+  @@index([rosterId])
 }
 
 // Compétences BB3 (Skill). Utilisé par la route publique `/api/skills` et
@@ -472,24 +497,24 @@ model Skill {
 // Utilisé par `getLinemanStats` pour peupler les journeymen et par
 // `/api/positions` (qui inclut la relation `skills`).
 model Position {
-  id          String   @id @default(cuid())
-  roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
-  rosterId    String
-  slug        String
-  displayName String
-  cost        Int
-  min         Int
-  max         Int
-  ma          Int
-  st          Int
-  ag          Int
-  pa          Int? // Passing (null pour - : certaines positions n'ont pas de passe)
-  av          Int
-  keywords    String?
+  id              String   @id @default(cuid())
+  roster          Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId        String
+  slug            String
+  displayName     String
+  cost            Int
+  min             Int
+  max             Int
+  ma              Int
+  st              Int
+  ag              Int
+  pa              Int? // Passing (null pour - : certaines positions n'ont pas de passe)
+  av              Int
+  keywords        String?
   primarySkills   String?
   secondarySkills String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   skills PositionSkill[]
 
@@ -707,32 +732,29 @@ model LocalMatchAction {
 
 // L.1 — Modeles de ligue (Sprint 17). Mirror SQLite du schema Postgres.
 model League {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  creator         User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId       String
-  ruleset         Ruleset  @default(season_3)
-  status          String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
-  isPublic        Boolean  @default(true)
-  maxParticipants Int      @default(16)
-  allowedRosters  String? // JSON array des rosters autorises (null = tous)
-  winPoints       Int      @default(3)
-  drawPoints      Int      @default(1)
-  lossPoints      Int      @default(0)
-  forfeitPoints   Int      @default(-1)
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  ruleset           Ruleset  @default(season_3)
+  status            String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  isPublic          Boolean  @default(true)
+  maxParticipants   Int      @default(16)
+  allowedRosters    String? // JSON array des rosters autorises (null = tous)
+  winPoints         Int      @default(3)
+  drawPoints        Int      @default(1)
+  lossPoints        Int      @default(0)
+  forfeitPoints     Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
-  tieBreakRules   String?
-  /// Sprint R lot R.E.3 — mode "realtime" | "async". Mirror PG.
-  matchMode         String   @default("realtime")
-  turnDeadlineHours Int      @default(24)
+  tieBreakRules     String?
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
   bonusPointsConfig String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  seasons LeagueSeason[]
+  seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue (mirror PG).
   invitations LeagueInvitation[]
 
@@ -742,23 +764,23 @@ model League {
 }
 
 model LeagueSeason {
-  id           String    @id @default(cuid())
-  league       League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId     String
-  seasonNumber Int
-  name         String
-  status       String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
-  startDate    DateTime?
-  endDate      DateTime?
+  id            String    @id @default(cuid())
+  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId      String
+  seasonNumber  Int
+  name          String
+  status        String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
+  startDate     DateTime?
+  endDate       DateTime?
   // S26.6 — themes saisonniers (cf. services/league-themes.ts).
-  theme        String?
-  themeYear    Int?
+  theme         String?
+  themeYear     Int?
   // L2.C.3 — taille bracket playoffs (0 = disabled).
-  playoffSize  Int       @default(0)
+  playoffSize   Int       @default(0)
   // L2.B.5 — "Coup de mecene" activable par le commissaire (mirror PG).
-  meceneEnabled Boolean  @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  meceneEnabled Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
@@ -798,30 +820,30 @@ model LeaguePool {
 /// Sans cette table, l'e2e-api SQLite plante sur les requetes filtrant
 /// `League.invitations` (Unknown argument `invitations`).
 model LeagueInvitation {
-  id            String        @id @default(cuid())
-  league        League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId      String
-  season        LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
-  seasonId      String?
-  inviter       User          @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
-  inviterUserId String
-  invitee       User?         @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
-  inviteeUserId String?
-  inviteeTeam   Team?         @relation(fields: [inviteeTeamId], references: [id])
-  inviteeTeamId String?
-  inviteeEmail  String?
+  id                    String        @id @default(cuid())
+  league                League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId              String
+  season                LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  seasonId              String?
+  inviter               User          @relation("LeagueInvitationInviter", fields: [inviterUserId], references: [id])
+  inviterUserId         String
+  invitee               User?         @relation("LeagueInvitationInvitee", fields: [inviteeUserId], references: [id])
+  inviteeUserId         String?
+  inviteeTeam           Team?         @relation(fields: [inviteeTeamId], references: [id])
+  inviteeTeamId         String?
+  inviteeEmail          String?
   /// "pending" | "accepted" | "declined" | "cancelled" | "expired"
-  status        String        @default("pending")
-  code          String        @unique
-  message       String?
-  expiresAt     DateTime
-  acceptedAt    DateTime?
-  declinedAt    DateTime?
-  cancelledAt   DateTime?
+  status                String        @default("pending")
+  code                  String        @unique
+  message               String?
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  declinedAt            DateTime?
+  cancelledAt           DateTime?
   /// Renseigne au moment de l'acceptation (utile si invitee != team owner).
   acceptedParticipantId String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   @@index([leagueId, status])
   @@index([inviteeUserId, status])
@@ -884,7 +906,7 @@ model LeagueRound {
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
   // Lot C — round optionnellement rattache a une poule (mirror PG).
-  pool     LeaguePool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  pool     LeaguePool?     @relation(fields: [poolId], references: [id], onDelete: SetNull)
   poolId   String?
 
   @@unique([seasonId, roundNumber])
@@ -931,57 +953,57 @@ model LeaguePairing {
 /// Lot G — Feuille de match v2 (mirror PG). Les champs Json PG sont
 /// des String serialisees en sqlite.
 model LeagueMatchSheet {
-  id                String        @id @default(cuid())
-  pairing           LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId         String        @unique
-  status            String        @default("draft")
-  submittedByHomeAt DateTime?
-  submittedByAwayAt DateTime?
-  validatedAt       DateTime?
-  validatedById     String?
-  invalidatedAt     DateTime?
-  invalidationReason String?
-  weather           String?
-  popularityHome    Int?
-  popularityAway    Int?
-  inducementsHome   String?
-  inducementsAway   String?
-  prayersHome       String?
-  prayersAway       String?
-  scoreHome         Int           @default(0)
-  scoreAway         Int           @default(0)
-  winningsHome      Int           @default(0)
-  winningsAway      Int           @default(0)
-  winningsHomeManual Int?
-  winningsAwayManual Int?
+  id                     String        @id @default(cuid())
+  pairing                LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId              String        @unique
+  status                 String        @default("draft")
+  submittedByHomeAt      DateTime?
+  submittedByAwayAt      DateTime?
+  validatedAt            DateTime?
+  validatedById          String?
+  invalidatedAt          DateTime?
+  invalidationReason     String?
+  weather                String?
+  popularityHome         Int?
+  popularityAway         Int?
+  inducementsHome        String?
+  inducementsAway        String?
+  prayersHome            String?
+  prayersAway            String?
+  scoreHome              Int           @default(0)
+  scoreAway              Int           @default(0)
+  winningsHome           Int           @default(0)
+  winningsAway           Int           @default(0)
+  winningsHomeManual     Int?
+  winningsAwayManual     Int?
   dedicatedFansDeltaHome Int?
   dedicatedFansDeltaAway Int?
-  costlyErrorsHome  String?
-  costlyErrorsAway  String?
-  motmPlayerIds     String        @default("[]")
-  purchasesHome     String?
-  purchasesAway     String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  costlyErrorsHome       String?
+  costlyErrorsAway       String?
+  motmPlayerIds          String        @default("[]")
+  purchasesHome          String?
+  purchasesAway          String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
-  events            LeagueMatchEvent[]
+  events LeagueMatchEvent[]
 
   @@index([status])
 }
 
 /// Lot G — Evenement unitaire de feuille de match (mirror PG).
 model LeagueMatchEvent {
-  id           String           @id @default(cuid())
-  matchSheet   LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
-  matchSheetId String
-  kind         String
-  team         String?
+  id             String           @id @default(cuid())
+  matchSheet     LeagueMatchSheet @relation(fields: [matchSheetId], references: [id], onDelete: Cascade)
+  matchSheetId   String
+  kind           String
+  team           String?
   actorPlayerId  String?
   targetPlayerId String?
-  causeDetail  String?
+  causeDetail    String?
   injurySeverity String?
-  meta         String?
-  occurredAt   DateTime         @default(now())
+  meta           String?
+  occurredAt     DateTime         @default(now())
 
   @@index([matchSheetId, kind])
 }
@@ -1186,9 +1208,9 @@ model ProLeagueSeason {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  rounds         ProLeagueRound[]
-  matches        ProLeagueMatch[]
-  standings      ProLeagueStandings[]
+  rounds          ProLeagueRound[]
+  matches         ProLeagueMatch[]
+  standings       ProLeagueStandings[]
   survivorEntries ProSurvivorEntry[]
 
   @@unique([leagueId, year])
@@ -1249,10 +1271,10 @@ model ProLeagueMatch {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  betMarkets       ProBetMarket[]
-  predictionPicks  ProPredictionPick[]
-  mvpVotes         ProPlayerOfMatchVote[]
-  fanPredictions   ProMatchPrediction[]
+  betMarkets      ProBetMarket[]
+  predictionPicks ProPredictionPick[]
+  mvpVotes        ProPlayerOfMatchVote[]
+  fanPredictions  ProMatchPrediction[]
 
   @@index([seasonId, status])
   @@index([roundId])
@@ -1410,7 +1432,7 @@ model ProGazetteArticle {
 }
 
 model ProHallOfFame {
-  id          String                     @id @default(cuid())
+  id          String                    @id @default(cuid())
   rosterId    String
   teamSlug    String
   teamName    String
@@ -1426,7 +1448,7 @@ model ProHallOfFame {
   careerStats String
   reason      String
   citation    String?
-  inductedAt  DateTime                   @default(now())
+  inductedAt  DateTime                  @default(now())
   /// Sprint P (Lot P.B.2) — dedications fans payees en Crowns.
   dedications ProHallOfFameDedication[]
 
@@ -1448,8 +1470,8 @@ model ProHallOfFameDedication {
   hallOfFame   ProHallOfFame @relation(fields: [hallOfFameId], references: [id], onDelete: Cascade)
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  message      String        // max 280 chars (validated cote service)
-  costCrowns   Int           // montant debite (500 par defaut)
+  message      String // max 280 chars (validated cote service)
+  costCrowns   Int // montant debite (500 par defaut)
   createdAt    DateTime      @default(now())
 
   @@unique([hallOfFameId, userId])
@@ -1459,18 +1481,18 @@ model ProHallOfFameDedication {
 
 // Lot P.B.2 — Tournois Pro League payants (sink Crowns).
 model ProTournament {
-  id              String                @id @default(cuid())
-  slug            String                @unique
-  name            String
-  description     String?
-  entryFeeCrowns  Int                   @default(100)
-  maxEntries      Int?
-  status          String                @default("open")
-  startsAt        DateTime?
-  endsAt          DateTime?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  entries         ProTournamentEntry[]
+  id             String               @id @default(cuid())
+  slug           String               @unique
+  name           String
+  description    String?
+  entryFeeCrowns Int                  @default(100)
+  maxEntries     Int?
+  status         String               @default("open")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  entries        ProTournamentEntry[]
 
   @@index([status, createdAt])
 }
@@ -1513,22 +1535,22 @@ model AuditLog {
 // Lot 3.B.2 — Snapshot d'une comparaison hybrid vs full driver.
 // Voir prisma/schema.prisma (postgres) pour la doc complete.
 model EngineComparison {
-  id          String   @id @default(cuid())
-  engineVer   String
-  homeTeamId  String
-  awayTeamId  String
-  matches     Int
-  seedOffset  Int
-  meanScoreDelta   Float
-  p95ScoreDelta    Float
-  maxScoreDelta    Float
-  meanTurnoverDelta Float
-  meanTouchdownDelta Float
-  meanCasualtyDelta Float
+  id                  String   @id @default(cuid())
+  engineVer           String
+  homeTeamId          String
+  awayTeamId          String
+  matches             Int
+  seedOffset          Int
+  meanScoreDelta      Float
+  p95ScoreDelta       Float
+  maxScoreDelta       Float
+  meanTurnoverDelta   Float
+  meanTouchdownDelta  Float
+  meanCasualtyDelta   Float
   outcomeFlippedCount Int
-  divergedPct      Float
-  source     String   @default("admin")
-  createdAt  DateTime @default(now())
+  divergedPct         Float
+  source              String   @default("admin")
+  createdAt           DateTime @default(now())
 
   @@index([engineVer, createdAt])
   @@index([homeTeamId, awayTeamId, createdAt])
@@ -1551,12 +1573,12 @@ model ProPredictionLeague {
 }
 
 model ProPredictionLeagueMember {
-  id        String              @id @default(cuid())
-  league    ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId  String
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  joinedAt  DateTime            @default(now())
+  id       String              @id @default(cuid())
+  league   ProPredictionLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId String
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime            @default(now())
 
   @@unique([leagueId, userId])
   @@index([userId])
@@ -1582,21 +1604,21 @@ model ProPredictionPick {
 }
 
 model ProSurvivorEntry {
-  id            String          @id @default(cuid())
-  season        ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId      String
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  round         ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId       String
-  weekN         Int
-  pickedTeam    ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
-  pickedTeamId  String
-  status        String          @default("pending")
-  result        String?
-  matchId       String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id           String          @id @default(cuid())
+  season       ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId     String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  round        ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId      String
+  weekN        Int
+  pickedTeam   ProTeam         @relation(fields: [pickedTeamId], references: [id], onDelete: Cascade)
+  pickedTeamId String
+  status       String          @default("pending")
+  result       String?
+  matchId      String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@unique([seasonId, userId, roundId])
   @@unique([seasonId, userId, pickedTeamId])
@@ -1606,31 +1628,31 @@ model ProSurvivorEntry {
 }
 
 model ProPlayerCareerSnapshot {
-  id               String        @id @default(cuid())
-  player           ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId         String        @unique
-  matchesPlayed    Int           @default(0)
-  tdTotal          Int           @default(0)
-  casTotal         Int           @default(0)
-  compTotal        Int           @default(0)
-  mvpTotal         Int           @default(0)
-  sppTotal         Int           @default(0)
-  bestMatchId      String?
-  bestMatchSpp     Int?
-  worstMatchId     String?
-  worstMatchSpp    Int?
-  topNemesisTeamId String?
-  topVictoryTeamId String?
-  topMatchesJson    Json?
-  topNemesisIdsJson Json?
-  topVictoryIdsJson Json?
-  casualtiesReceived Int          @default(0)
-  casualtiesDealt   Int           @default(0)
-  streakKind       String        @default("none")
-  streakLength     Int           @default(0)
-  recomputedAt     DateTime      @default(now())
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  player             ProTeamRoster @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId           String        @unique
+  matchesPlayed      Int           @default(0)
+  tdTotal            Int           @default(0)
+  casTotal           Int           @default(0)
+  compTotal          Int           @default(0)
+  mvpTotal           Int           @default(0)
+  sppTotal           Int           @default(0)
+  bestMatchId        String?
+  bestMatchSpp       Int?
+  worstMatchId       String?
+  worstMatchSpp      Int?
+  topNemesisTeamId   String?
+  topVictoryTeamId   String?
+  topMatchesJson     Json?
+  topNemesisIdsJson  Json?
+  topVictoryIdsJson  Json?
+  casualtiesReceived Int           @default(0)
+  casualtiesDealt    Int           @default(0)
+  streakKind         String        @default("none")
+  streakLength       Int           @default(0)
+  recomputedAt       DateTime      @default(now())
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@index([recomputedAt])
 }
@@ -1651,17 +1673,17 @@ model ProPlayerOfMatchVote {
 }
 
 model ProGazetteComment {
-  id              String            @id @default(cuid())
-  article         ProGazetteArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  articleId       String
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
-  body            String
-  deletedAt       DateTime?
-  flaggedAt       DateTime?
-  flagReason      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id         String            @id @default(cuid())
+  article    ProGazetteArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId  String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  body       String
+  deletedAt  DateTime?
+  flaggedAt  DateTime?
+  flagReason String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
   @@index([articleId, createdAt])
   @@index([userId, createdAt])
@@ -1670,16 +1692,16 @@ model ProGazetteComment {
 }
 
 model ProMatchPrediction {
-  id              String         @id @default(cuid())
-  match           ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId         String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
-  body            String
-  score           String?
-  scoredAt        DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  body      String
+  score     String?
+  scoredAt  DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@unique([matchId, userId])
   @@index([matchId, createdAt])
