@@ -1,3 +1,10 @@
+## [1.188.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.188.0...v1.188.1) (2026-06-25)
+
+
+### 🐛 Bug Fixes
+
+* **mail:** update MAIL_FROM configuration to support .env substitution ([82a97e2](https://github.com/Ryxeuf/fantasy-football-game/commit/82a97e2c5f35d67987a5c486d3f5c871b098454e))
+
 ## [1.188.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.187.0...v1.188.0) (2026-06-25)
 
 
