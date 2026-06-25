@@ -1,3 +1,10 @@
+## [1.191.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.190.0...v1.191.0) (2026-06-25)
+
+
+### ✨ Features
+
+* **web:** vues equipe « me » refletent la config staff DB ([6c00fb3](https://github.com/Ryxeuf/fantasy-football-game/commit/6c00fb3716752e73c4b760379fbbac3667df0088))
+
 ## [1.190.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.189.0...v1.190.0) (2026-06-25)
 
 
