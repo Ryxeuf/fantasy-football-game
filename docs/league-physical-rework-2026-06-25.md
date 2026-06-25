@@ -70,15 +70,37 @@ mais jamais appliqués. Câblage d'un **débit de trésorerie réversible** :
   - libellés FR du flux 2 joueurs (Valider ma saisie / Reprendre la saisie /
     Valider le match commissaire).
 
+### 4. Bonus classement / SPP bonus / météo / forfait (2b)
+
+Nouveaux champs `LeagueMatchSheet` (+ miroir sqlite + client) :
+`weatherTable`, `forfeitSide`, `rankingBonusHome/Away`, `sppBonus`.
+Effets appliqués et réversibles à la validation :
+- SPP bonus « Nuffle » → increment spp avant la séquence post-match (level-up) ;
+- bonus au classement → increment des points participants ;
+- forfait → validation routée vers `recordForfeit` (2-0, barème forfait).
+UI : table météo + toggle forfait (avant-match), bonus classement + éditeur
+SPP bonus avec picker joueur (fin de match).
+
+### 5. Consolidation UI (3b)
+
+Une seule UI de saisie = la feuille de match. `SeasonCalendar` mène à
+`/leagues/pairings/:id/sheet` (accessible aux 2 coachs impliqués + commissaire).
+`EnterResultModal` (saisie rapide legacy) supprimé.
+
+### 6. Progressions in-flow
+
+La séquence post-match (level-up) est déjà déclenchée à la validation offline
+(`runPostMatchLeagueSequence`). La feuille validée expose un lien direct vers
+les progressions de l'équipe du coach (`/me/teams/:id/level-up`, banner de
+pending-advancements existant).
+
 ## Reste à faire
 
-- **2b** : bonus au classement (commissaire) + SPP bonus (« accordé par
-  Nuffle ») + table météo distincte de la météo initiale + toggle « Déclarer
-  forfait » sur la feuille → **nécessite de nouveaux champs `LeagueMatchSheet`**.
-- **2c** : achats appliqués comme mutation de roster (ajout joueur/relance/
-  staff) ; licenciements ; surfaçage des progressions in-flow juste après
-  validation.
-- Consolidation : retirer `EnterResultModal` (saisie rapide legacy) au profit
-  de la feuille, en repointant le CTA `SeasonCalendar` et en ouvrant l'accès
-  feuille aux 2 coachs impliqués.
-- E2E Playwright : parcours 2 coachs → validation commissaire (mobile).
+- **Achats en mutation de roster** : aujourd'hui les achats sont saisis et
+  débités de la trésorerie (cf. §2) mais ne créent pas encore réellement les
+  joueurs / relances / staff dans le roster. À traiter prudemment (intégrité
+  TV / trésorerie / carrière) — non fait pour ne pas risquer la cohérence.
+- **Licenciements** : saisie + application (retrait de joueur) — non câblé.
+- **E2E Playwright** : parcours 2 coachs → validation commissaire (mobile).
+  Couverture actuelle : unit + intégration (973 tests ligue verts), dont
+  `validateByCommissioner` applique tous les effets et la réversion.
