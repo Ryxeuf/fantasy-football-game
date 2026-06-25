@@ -367,6 +367,8 @@ export default function MatchSheetPage() {
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
   const role = data?.viewerRole ?? "none";
+  const myTeamId =
+    role === "home" ? home?.teamId : role === "away" ? away?.teamId : null;
   const status = data?.sheet.status ?? "";
   const isCoach = role === "home" || role === "away";
   const isCommissioner = role === "commissioner";
@@ -680,9 +682,20 @@ export default function MatchSheetPage() {
           </button>
         )}
         {status === "validated" && (
-          <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">
-            Match validé ✓ — classement et équipes mis à jour.
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">
+              Match validé ✓ — classement et équipes mis à jour.
+            </p>
+            {myTeamId && (
+              <a
+                href={`/me/teams/${myTeamId}/level-up`}
+                data-testid="goto-progressions"
+                className="rounded border border-nuffle-gold px-3 py-2 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/10"
+              >
+                Progressions de mon équipe →
+              </a>
+            )}
+          </div>
         )}
       </section>
 
