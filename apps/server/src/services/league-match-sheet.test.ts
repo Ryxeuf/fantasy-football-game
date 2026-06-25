@@ -20,6 +20,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       delete: vi.fn(),
     },
+    team: { findMany: vi.fn() },
     match: { findFirst: vi.fn() },
   },
 }));
@@ -444,6 +445,30 @@ describe("Lot G — league-match-sheet", () => {
       });
       const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
       expect(out.viewerRole).toBe("commissioner");
+    });
+
+    it("exclut les joueurs licencies (firedAt) des pickers", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", players: [] },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", players: [] },
+      ]);
+
+      await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // La requete des joueurs filtre les licencies (firedAt: null).
+      const call = mockPrisma.team.findMany.mock.calls[0][0];
+      expect(call.select.players.where).toEqual({ firedAt: null });
     });
   });
 

@@ -33,6 +33,14 @@ import {
   loadLeagueSPPContext,
   type PlayerMatchStats,
 } from "./spp-tracking";
+import {
+  applyOfflinePurchasesForTeam,
+  hasAnyMutation,
+  EMPTY_MUTATION_SIDE,
+  type OfflinePurchaseInput,
+  type OfflineRosterMutations,
+} from "./league-offline-purchases";
+import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 
@@ -102,6 +110,19 @@ export interface RecordOfflineResultInput {
   readonly sppBonus?: readonly OfflineSppBonusInput[];
   /** Blessures durables par joueur (optionnel). */
   readonly injuries?: readonly OfflineInjuryInput[];
+  /**
+   * Achats post-match a MATERIALISER sur le roster (joueurs/relances/staff).
+   * Le DEBIT de tresorerie associe est deja porte par `treasuryDebit*` ;
+   * ces listes ne servent qu'a creer reellement les elements (reversible).
+   */
+  readonly purchasesHome?: readonly OfflinePurchaseInput[];
+  readonly purchasesAway?: readonly OfflinePurchaseInput[];
+  /**
+   * Licenciements de fin de match : `teamPlayerId[]` (des 2 equipes). Les
+   * joueurs sont retires du roster actif (`firedAt`) — conserves en base
+   * (historique) et reversibles a l'invalidation.
+   */
+  readonly firedPlayerIds?: readonly string[];
 }
 
 export interface OfflineSppBonusInput {
@@ -181,11 +202,26 @@ export interface OfflineResultSnapshot {
     readonly rankingBonusAway: number;
     readonly sppBonus: readonly OfflineSppBonusInput[];
     readonly injuries: readonly OfflineInjuryInput[];
+    readonly purchasesHome: readonly OfflinePurchaseInput[];
+    readonly purchasesAway: readonly OfflinePurchaseInput[];
+    readonly firedPlayerIds: readonly string[];
   };
   readonly dedicatedFansBefore: {
     readonly home: number;
     readonly away: number;
   };
+  /**
+   * Trace exacte des mutations de roster appliquees par les achats (joueurs
+   * crees, deltas de compteurs), renseignee APRES coup (cf.
+   * `recordOfflineLeagueResult`). Optionnel pour retro-compat pre-achats.
+   */
+  readonly rosterMutations?: OfflineRosterMutations;
+  /**
+   * Licenciements REELLEMENT appliques par ce match (sous-ensemble valide de
+   * `input.firedPlayerIds` : appartenance aux 2 equipes + non deja licencie).
+   * Renseigne APRES coup ; reversion exacte = ces ids seulement.
+   */
+  readonly firedApplied?: readonly string[];
 }
 
 function buildOfflineSnapshot(
@@ -209,9 +245,47 @@ function buildOfflineSnapshot(
       rankingBonusAway: input.rankingBonusAway ?? 0,
       sppBonus: input.sppBonus ?? [],
       injuries: input.injuries ?? [],
+      purchasesHome: input.purchasesHome ?? [],
+      purchasesAway: input.purchasesAway ?? [],
+      firedPlayerIds: input.firedPlayerIds ?? [],
     },
     dedicatedFansBefore: { home: fansBefore.home, away: fansBefore.away },
   };
+}
+
+/**
+ * Applique les licenciements de fin de match : pose `firedAt` sur les joueurs
+ * vises (filtres par appartenance aux 2 equipes + non deja licencies) et
+ * recalcule la TV des equipes touchees. Retourne les ids REELLEMENT licencies
+ * (pour la reversion exacte).
+ */
+async function applyOfflineFirings(
+  homeTeamId: string,
+  awayTeamId: string,
+  firedPlayerIds: readonly string[],
+): Promise<string[]> {
+  if (firedPlayerIds.length === 0) return [];
+  const valid = (await prisma.teamPlayer.findMany({
+    where: {
+      id: { in: [...firedPlayerIds] },
+      teamId: { in: [homeTeamId, awayTeamId] },
+      firedAt: null,
+    },
+    select: { id: true, teamId: true },
+  })) as Array<{ id: string; teamId: string }>;
+  if (valid.length === 0) return [];
+
+  const ids = valid.map((p) => p.id);
+  await prisma.teamPlayer.updateMany({
+    where: { id: { in: ids } },
+    data: { firedAt: new Date() },
+  });
+  // TV recompute pour les equipes touchees (les licencies quittent le roster).
+  const teamIds = new Set(valid.map((p) => p.teamId));
+  for (const teamId of teamIds) {
+    await updateTeamValues(prisma, teamId);
+  }
+  return ids;
 }
 
 /**
@@ -641,6 +715,38 @@ export async function recordOfflineLeagueResult(
   // Blessures durables saisies a la main.
   if (input.injuries && input.injuries.length > 0) {
     await applyOfflineInjuries(home.teamId, away.teamId, input.injuries);
+  }
+
+  // Achats post-match -> mutation reelle du roster (joueurs/relances/staff).
+  // Le debit de tresorerie est deja porte par treasuryDebit (pas de
+  // double-debit). On memorise la trace EXACTE des mutations dans le snapshot
+  // pour la reversion (cf. league-offline-edit).
+  const rosterMutations: OfflineRosterMutations = {
+    home:
+      input.purchasesHome && input.purchasesHome.length > 0
+        ? await applyOfflinePurchasesForTeam(home.teamId, input.purchasesHome)
+        : EMPTY_MUTATION_SIDE,
+    away:
+      input.purchasesAway && input.purchasesAway.length > 0
+        ? await applyOfflinePurchasesForTeam(away.teamId, input.purchasesAway)
+        : EMPTY_MUTATION_SIDE,
+  };
+
+  // Licenciements de fin de match (firedAt) -> retire du roster actif, TV
+  // recalculee. Reversible via les ids reellement appliques (snapshot).
+  const firedApplied = await applyOfflineFirings(
+    home.teamId,
+    away.teamId,
+    input.firedPlayerIds ?? [],
+  );
+
+  if (hasAnyMutation(rosterMutations) || firedApplied.length > 0) {
+    await prisma.match.update({
+      where: { id: match.id },
+      data: {
+        offlineResultInput: { ...offlineSnapshot, rosterMutations, firedApplied },
+      },
+    });
   }
 
   const winner: OfflineResultWinner =

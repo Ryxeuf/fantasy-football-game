@@ -335,7 +335,8 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   missNextMatch: 'missNextMatch',
   advancements: 'advancements',
   dead: 'dead',
-  diedAt: 'diedAt'
+  diedAt: 'diedAt',
+  firedAt: 'firedAt'
 };
 
 exports.Prisma.TeamStarPlayerScalarFieldEnum = {
@@ -676,6 +677,7 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   motmPlayerIds: 'motmPlayerIds',
   purchasesHome: 'purchasesHome',
   purchasesAway: 'purchasesAway',
+  firedPlayerIds: 'firedPlayerIds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

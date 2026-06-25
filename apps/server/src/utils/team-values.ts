@@ -15,8 +15,11 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     throw new Error(`Équipe ${teamId} non trouvée`);
   }
 
-  // Préparer les données pour le calcul (exclure les joueurs morts de la VE)
-  const alivePlayers = team.players.filter(player => !player.dead);
+  // Préparer les données pour le calcul (exclure les joueurs morts ET
+  // licenciés de la VE : ils ne font plus partie du roster actif).
+  const alivePlayers = team.players.filter(
+    player => !player.dead && !(player as { firedAt?: Date | null }).firedAt,
+  );
   const teamValueData: TeamValueData = {
     players: alivePlayers.map(player => {
       const baseCost = getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET);

@@ -33,6 +33,14 @@ import {
   loadLeagueSPPContext,
   type PlayerMatchStats,
 } from "./spp-tracking";
+import {
+  buildPurchaseReverseOps,
+  offlinePurchasesConsumed,
+  sideHasMutation,
+  EMPTY_MUTATION_SIDE,
+  type OfflineRosterMutations,
+} from "./league-offline-purchases";
+import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 
 export type ReverseOfflineSkipReason =
@@ -44,7 +52,8 @@ export type ReverseOfflineSkipReason =
   | "season-completed"
   | "playoffs-generated"
   | "injury-dead"
-  | "advancement-consumed";
+  | "advancement-consumed"
+  | "purchase-consumed";
 
 export type ReverseOfflineOutcome =
   | { readonly reversed: true; readonly matchId: string; readonly pairingId: string }
@@ -278,6 +287,22 @@ export async function reverseOfflineLeagueResult(
     }
   }
 
+  // Garde-fou : achats consommes. Un joueur ACHETE qui a deja joue / gagne
+  // du SPP / progresse / est mort ne peut pas etre supprime par la reversion
+  // (meme esprit que `advancement-consumed`).
+  const rosterMutations: OfflineRosterMutations = {
+    home: snapshot.rosterMutations?.home ?? EMPTY_MUTATION_SIDE,
+    away: snapshot.rosterMutations?.away ?? EMPTY_MUTATION_SIDE,
+  };
+  if (await offlinePurchasesConsumed(rosterMutations)) {
+    return { skipped: true, reason: "purchase-consumed" };
+  }
+
+  // Licenciements reellement appliques par ce match (a re-activer).
+  const firedApplied: string[] = Array.isArray(snapshot.firedApplied)
+    ? snapshot.firedApplied.filter((s): s is string => typeof s === "string")
+    : [];
+
   // --- Reversion ---
   const { input } = snapshot;
   const winner = winnerOf(input.scoreHome, input.scoreAway);
@@ -436,6 +461,27 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
+  // 4b. Achats : suppression des joueurs crees + decrement des compteurs
+  //     (des deltas EXACTS memorises dans le snapshot). TV recalculee apres
+  //     la transaction.
+  if (sideHasMutation(rosterMutations.home)) {
+    ops.push(...buildPurchaseReverseOps(home.teamId, rosterMutations.home));
+  }
+  if (sideHasMutation(rosterMutations.away)) {
+    ops.push(...buildPurchaseReverseOps(away.teamId, rosterMutations.away));
+  }
+
+  // 4c. Licenciements : re-activation (firedAt = null) des joueurs licencies
+  //     par ce match. TV recalculee apres la transaction.
+  if (firedApplied.length > 0) {
+    ops.push(
+      prisma.teamPlayer.updateMany({
+        where: { id: { in: firedApplied } },
+        data: { firedAt: null },
+      }),
+    );
+  }
+
   // 5. Suppression du Match synthetique : d'abord les TeamSelection (pas de
   //    cascade), puis le Match (cascade la post-match-sequence).
   ops.push(
@@ -460,6 +506,19 @@ export async function reverseOfflineLeagueResult(
   }
 
   await prisma.$transaction(ops);
+
+  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit) pour
+  // les equipes dont le roster a ete mute par les achats OU les licenciements.
+  const tvTeams = new Set<string>();
+  if (sideHasMutation(rosterMutations.home)) tvTeams.add(home.teamId);
+  if (sideHasMutation(rosterMutations.away)) tvTeams.add(away.teamId);
+  if (firedApplied.length > 0) {
+    tvTeams.add(home.teamId);
+    tvTeams.add(away.teamId);
+  }
+  for (const teamId of tvTeams) {
+    await updateTeamValues(prisma, teamId);
+  }
 
   serverLog.info(
     `[league-offline-edit] reversed match=${match.id} pairing=${pairing.id} ${input.scoreHome}-${input.scoreAway}`,

@@ -106,6 +106,7 @@ interface SheetResponse {
     costlyErrorsAway?: unknown;
     purchasesHome?: unknown;
     purchasesAway?: unknown;
+    firedPlayerIds?: unknown;
   };
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
@@ -148,6 +149,14 @@ function parsePurchases(raw: unknown): Purchase[] {
         : "player",
     name: typeof i.name === "string" ? i.name : "",
     cost: typeof i.cost === "number" ? i.cost : 0,
+    position: typeof i.position === "string" ? i.position : undefined,
+    staff:
+      i.staff === "assistant" ||
+      i.staff === "cheerleader" ||
+      i.staff === "apothecary" ||
+      i.staff === "dedicated_fan"
+        ? i.staff
+        : undefined,
   }));
 }
 
@@ -325,6 +334,7 @@ export default function MatchSheetPage() {
           costlyErrorsAway: v.costlyErrorsAway,
           purchasesHome: v.purchasesHome,
           purchasesAway: v.purchasesAway,
+          firedPlayerIds: v.firedPlayerIds,
         }),
       }),
     );
@@ -638,6 +648,9 @@ export default function MatchSheetPage() {
             costlyErrorsAway: parseCostlyErrors(data.sheet.costlyErrorsAway),
             purchasesHome: parsePurchases(data.sheet.purchasesHome),
             purchasesAway: parsePurchases(data.sheet.purchasesAway),
+            firedPlayerIds: parseArray<unknown>(
+              data.sheet.firedPlayerIds,
+            ).filter((s): s is string => typeof s === "string"),
           }}
           home={home}
           away={away}

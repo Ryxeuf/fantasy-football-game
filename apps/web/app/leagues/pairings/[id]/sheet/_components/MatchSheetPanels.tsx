@@ -367,11 +367,28 @@ export interface CostlyError {
   cost: number;
   reason?: string;
 }
+export type StaffKind =
+  | "assistant"
+  | "cheerleader"
+  | "apothecary"
+  | "dedicated_fan";
+
 export interface Purchase {
   kind: "player" | "reroll" | "staff" | "other";
   name: string;
   cost: number;
+  /** Pour `kind:'player'` : slug de position (sinon resolu par cout serveur). */
+  position?: string;
+  /** Pour `kind:'staff'` : sous-type de staff materialise. */
+  staff?: StaffKind;
 }
+
+const STAFF_KINDS: ReadonlyArray<{ value: StaffKind; label: string }> = [
+  { value: "assistant", label: "Assistant" },
+  { value: "cheerleader", label: "Pom-pom girl" },
+  { value: "apothecary", label: "Apothicaire" },
+  { value: "dedicated_fan", label: "Fan dévoué" },
+];
 
 export interface SppBonusEntry {
   playerId: string;
@@ -391,6 +408,61 @@ export interface PostMatchValues {
   costlyErrorsAway: CostlyError[];
   purchasesHome: Purchase[];
   purchasesAway: Purchase[];
+  /** Licenciements de fin de match : [teamPlayerId] (des 2 equipes). */
+  firedPlayerIds: string[];
+}
+
+/** Editeur de licenciements d'une equipe : liste de pickers joueur. */
+function FiredEditor({
+  team,
+  ids,
+  onChange,
+  disabled,
+  testId,
+}: {
+  team: SheetTeam | null;
+  ids: string[];
+  onChange: (l: string[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const update = (i: number, v: string) =>
+    onChange(ids.map((it, idx) => (idx === i ? v : it)));
+  return (
+    <div data-testid={testId} className="space-y-1.5">
+      {ids.map((id, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <PlayerSelect
+              team={team}
+              value={id}
+              onChange={(v) => update(i, v)}
+              disabled={disabled}
+            />
+          </div>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange(ids.filter((_, idx) => idx !== i))}
+              className="px-1.5 text-sm text-red-600"
+              aria-label="retirer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button
+          type="button"
+          onClick={() => onChange([...ids, ""])}
+          className="text-xs font-medium text-blue-600"
+        >
+          + licenciement
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** Editeur de SPP bonus "Nuffle" pour une equipe (picker joueur + spp). */
@@ -523,19 +595,28 @@ function CostlyErrorEditor({
   );
 }
 
+/** Positions distinctes deja fieldees par l'equipe (suggestions d'achat joueur). */
+function teamPositions(team: SheetTeam | null): string[] {
+  if (!team) return [];
+  return Array.from(new Set(team.players.map((p) => p.position))).sort();
+}
+
 function PurchaseEditor({
   list,
   onChange,
   disabled,
   testId,
+  team,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
   disabled?: boolean;
   testId?: string;
+  team: SheetTeam | null;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const positions = teamPositions(team);
   return (
     <div data-testid={testId} className="space-y-1.5">
       {list.map((it, i) => (
@@ -554,6 +635,48 @@ function PurchaseEditor({
               </option>
             ))}
           </select>
+          {/* Joueur : poste a recruter (sinon le serveur resout par cout). */}
+          {it.kind === "player" && (
+            <select
+              value={it.position ?? ""}
+              onChange={(e) =>
+                update(i, { position: e.target.value || undefined })
+              }
+              disabled={disabled}
+              aria-label="poste"
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">poste (auto)</option>
+              {positions.map((slug) => (
+                <option key={slug} value={slug}>
+                  {slug}
+                </option>
+              ))}
+            </select>
+          )}
+          {/* Staff : sous-type materialise. */}
+          {it.kind === "staff" && (
+            <select
+              value={it.staff ?? ""}
+              onChange={(e) =>
+                update(i, {
+                  staff: (e.target.value || undefined) as
+                    | StaffKind
+                    | undefined,
+                })
+              }
+              disabled={disabled}
+              aria-label="type de staff"
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">type…</option>
+              {STAFF_KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          )}
           <input
             value={it.name}
             onChange={(e) => update(i, { name: e.target.value })}
@@ -623,6 +746,18 @@ export function PostMatchPanel({
   const [ceA, setCeA] = useState<CostlyError[]>(initial.costlyErrorsAway);
   const [buyH, setBuyH] = useState<Purchase[]>(initial.purchasesHome);
   const [buyA, setBuyA] = useState<Purchase[]>(initial.purchasesAway);
+  // Licenciements : un sous-etat par equipe (filtre par appartenance), fusionne
+  // au save (API = liste plate des teamPlayerId).
+  const [firedH, setFiredH] = useState<string[]>(
+    initial.firedPlayerIds.filter((id) =>
+      home?.players.some((p) => p.id === id),
+    ),
+  );
+  const [firedA, setFiredA] = useState<string[]>(
+    initial.firedPlayerIds.filter((id) =>
+      away?.players.some((p) => p.id === id),
+    ),
+  );
   const [rbH, setRbH] = useState<string>(
     initial.rankingBonusHome?.toString() ?? "",
   );
@@ -669,6 +804,7 @@ export function PostMatchPanel({
         costlyErrorsAway: ceA,
         purchasesHome: buyH,
         purchasesAway: buyA,
+        firedPlayerIds: [...firedH, ...firedA].filter((id) => id),
       });
     } finally {
       setBusy(false);
@@ -693,6 +829,8 @@ export function PostMatchPanel({
       setRb: setRbH,
       spp: sppH,
       setSpp: setSppH,
+      fired: firedH,
+      setFired: setFiredH,
     },
     {
       side: "away" as const,
@@ -711,6 +849,8 @@ export function PostMatchPanel({
       setRb: setRbA,
       spp: sppA,
       setSpp: setSppA,
+      fired: firedA,
+      setFired: setFiredA,
     },
   ];
 
@@ -805,6 +945,7 @@ export function PostMatchPanel({
                 onChange={c.setBuy}
                 disabled={disabled}
                 testId={`purchases-${c.side}`}
+                team={c.team}
               />
             </div>
 
@@ -817,6 +958,19 @@ export function PostMatchPanel({
                 onChange={c.setCe}
                 disabled={disabled}
                 testId={`costly-${c.side}`}
+              />
+            </div>
+
+            <div className="text-xs">
+              <div className="mb-1 font-medium text-slate-600">
+                Licenciements
+              </div>
+              <FiredEditor
+                team={c.team}
+                ids={c.fired}
+                onChange={c.setFired}
+                disabled={disabled}
+                testId={`fired-${c.side}`}
               />
             </div>
           </div>
