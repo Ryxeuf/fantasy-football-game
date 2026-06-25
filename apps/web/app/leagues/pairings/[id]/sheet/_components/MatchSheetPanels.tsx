@@ -367,11 +367,28 @@ export interface CostlyError {
   cost: number;
   reason?: string;
 }
+export type StaffKind =
+  | "assistant"
+  | "cheerleader"
+  | "apothecary"
+  | "dedicated_fan";
+
 export interface Purchase {
   kind: "player" | "reroll" | "staff" | "other";
   name: string;
   cost: number;
+  /** Pour `kind:'player'` : slug de position (sinon resolu par cout serveur). */
+  position?: string;
+  /** Pour `kind:'staff'` : sous-type de staff materialise. */
+  staff?: StaffKind;
 }
+
+const STAFF_KINDS: ReadonlyArray<{ value: StaffKind; label: string }> = [
+  { value: "assistant", label: "Assistant" },
+  { value: "cheerleader", label: "Pom-pom girl" },
+  { value: "apothecary", label: "Apothicaire" },
+  { value: "dedicated_fan", label: "Fan dévoué" },
+];
 
 export interface SppBonusEntry {
   playerId: string;
@@ -523,19 +540,28 @@ function CostlyErrorEditor({
   );
 }
 
+/** Positions distinctes deja fieldees par l'equipe (suggestions d'achat joueur). */
+function teamPositions(team: SheetTeam | null): string[] {
+  if (!team) return [];
+  return Array.from(new Set(team.players.map((p) => p.position))).sort();
+}
+
 function PurchaseEditor({
   list,
   onChange,
   disabled,
   testId,
+  team,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
   disabled?: boolean;
   testId?: string;
+  team: SheetTeam | null;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const positions = teamPositions(team);
   return (
     <div data-testid={testId} className="space-y-1.5">
       {list.map((it, i) => (
@@ -554,6 +580,48 @@ function PurchaseEditor({
               </option>
             ))}
           </select>
+          {/* Joueur : poste a recruter (sinon le serveur resout par cout). */}
+          {it.kind === "player" && (
+            <select
+              value={it.position ?? ""}
+              onChange={(e) =>
+                update(i, { position: e.target.value || undefined })
+              }
+              disabled={disabled}
+              aria-label="poste"
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">poste (auto)</option>
+              {positions.map((slug) => (
+                <option key={slug} value={slug}>
+                  {slug}
+                </option>
+              ))}
+            </select>
+          )}
+          {/* Staff : sous-type materialise. */}
+          {it.kind === "staff" && (
+            <select
+              value={it.staff ?? ""}
+              onChange={(e) =>
+                update(i, {
+                  staff: (e.target.value || undefined) as
+                    | StaffKind
+                    | undefined,
+                })
+              }
+              disabled={disabled}
+              aria-label="type de staff"
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">type…</option>
+              {STAFF_KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          )}
           <input
             value={it.name}
             onChange={(e) => update(i, { name: e.target.value })}
@@ -805,6 +873,7 @@ export function PostMatchPanel({
                 onChange={c.setBuy}
                 disabled={disabled}
                 testId={`purchases-${c.side}`}
+                team={c.team}
               />
             </div>
 

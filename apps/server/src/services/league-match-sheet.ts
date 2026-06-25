@@ -33,6 +33,7 @@ import {
   type OfflineInjuryInput,
   type OfflineInjuryType,
 } from "./league-offline-result";
+import { parsePurchases } from "./league-offline-purchases";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
@@ -657,6 +658,10 @@ export function buildOfflineInputFromSummary(
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
     sppBonus: parseSppBonus(sheet.sppBonus),
     injuries,
+    // Achats -> materialisation roster (le debit treasury est deja porte
+    // par treasuryDebit ci-dessus : pas de double-debit).
+    purchasesHome: parsePurchases(sheet.purchasesHome),
+    purchasesAway: parsePurchases(sheet.purchasesAway),
   };
 }
 

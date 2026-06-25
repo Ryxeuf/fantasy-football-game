@@ -148,6 +148,14 @@ function parsePurchases(raw: unknown): Purchase[] {
         : "player",
     name: typeof i.name === "string" ? i.name : "",
     cost: typeof i.cost === "number" ? i.cost : 0,
+    position: typeof i.position === "string" ? i.position : undefined,
+    staff:
+      i.staff === "assistant" ||
+      i.staff === "cheerleader" ||
+      i.staff === "apothecary" ||
+      i.staff === "dedicated_fan"
+        ? i.staff
+        : undefined,
   }));
 }
 

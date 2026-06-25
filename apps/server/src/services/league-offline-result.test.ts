@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => {
   const prisma: any = {
     leaguePairing: { findUnique: vi.fn() },
-    match: { create: vi.fn() },
+    match: { create: vi.fn(), update: vi.fn() },
     teamSelection: { createMany: vi.fn() },
     teamPlayer: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     team: { update: vi.fn() },
@@ -26,6 +26,14 @@ vi.mock("../prisma", () => {
     }),
   };
   return { prisma };
+});
+
+// Materialisation des achats isolee (testee dans league-offline-purchases.test).
+// On garde les helpers reels (hasAnyMutation/EMPTY_MUTATION_SIDE) et on mocke
+// seulement l'application pour piloter la trace de mutation.
+vi.mock("./league-offline-purchases", async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return { ...actual, applyOfflinePurchasesForTeam: vi.fn() };
 });
 
 vi.mock("./league-match-result", () => ({
@@ -44,11 +52,16 @@ vi.mock("./spp-tracking", () => ({
 import { prisma } from "../prisma";
 import { recordLeagueMatchResult } from "./league-match-result";
 import { recordOfflineLeagueResult } from "./league-offline-result";
+import {
+  applyOfflinePurchasesForTeam,
+  EMPTY_MUTATION_SIDE,
+} from "./league-offline-purchases";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const m = {
   pairFind: prisma.leaguePairing.findUnique as MockFn,
   matchCreate: prisma.match.create as MockFn,
+  matchUpdate: prisma.match.update as MockFn,
   selCreate: prisma.teamSelection.createMany as MockFn,
   tpFindMany: prisma.teamPlayer.findMany as MockFn,
   tpUpdate: prisma.teamPlayer.update as MockFn,
@@ -56,6 +69,7 @@ const m = {
   teamUpdate: prisma.team.update as MockFn,
   partUpdate: prisma.leagueParticipant.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
+  applyPurchases: applyOfflinePurchasesForTeam as unknown as MockFn,
 };
 
 function buildPairing(overrides: Record<string, unknown> = {}) {
@@ -93,6 +107,8 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.teamUpdate.mockResolvedValue({});
     m.partUpdate.mockResolvedValue({});
     m.tpFindMany.mockResolvedValue([]);
+    m.matchUpdate.mockResolvedValue({});
+    m.applyPurchases.mockResolvedValue(EMPTY_MUTATION_SIDE);
     m.record.mockResolvedValue({
       recorded: true,
       winner: "A",
@@ -360,5 +376,62 @@ describe("recordOfflineLeagueResult (option b)", () => {
 
     // purge (updateMany) puis re-pose la suspension via la blessure (update).
     expect(order).toEqual(["clear", "injury"]);
+  });
+
+  it("materialise les achats et persiste rosterMutations dans le snapshot", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    // home : 1 joueur cree + 1 relance ; away : pas d'achat.
+    m.applyPurchases.mockResolvedValue({
+      createdPlayerIds: ["np-1"],
+      rerollsAdded: 1,
+      assistantsAdded: 0,
+      cheerleadersAdded: 0,
+      apothecaryAdded: false,
+      dedicatedFansAdded: 0,
+    });
+
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      // Le debit treasury est porte par treasuryDebit (pas de double-debit).
+      treasuryDebitHome: 170000,
+      purchasesHome: [
+        { kind: "player", name: "Grok", cost: 50000, position: "lineman" },
+        { kind: "reroll", name: "Relance", cost: 120000 },
+      ],
+    });
+
+    // Application appelee pour l'equipe domicile (away saute -> EMPTY direct).
+    expect(m.applyPurchases).toHaveBeenCalledWith("team-home", [
+      { kind: "player", name: "Grok", cost: 50000, position: "lineman" },
+      { kind: "reroll", name: "Relance", cost: 120000 },
+    ]);
+
+    // Snapshot mis a jour avec la trace EXACTE des mutations (reversion).
+    const upd = m.matchUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "m-1",
+    )?.[0] as { data: { offlineResultInput: { rosterMutations: any } } };
+    expect(upd.data.offlineResultInput.rosterMutations.home).toMatchObject({
+      createdPlayerIds: ["np-1"],
+      rerollsAdded: 1,
+    });
+    expect(upd.data.offlineResultInput.rosterMutations.away).toEqual(
+      EMPTY_MUTATION_SIDE,
+    );
+  });
+
+  it("ne touche pas au snapshot quand aucun achat ne mute le roster", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+    });
+    expect(m.matchUpdate).not.toHaveBeenCalled();
   });
 });

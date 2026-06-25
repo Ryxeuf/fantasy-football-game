@@ -33,6 +33,14 @@ import {
   loadLeagueSPPContext,
   type PlayerMatchStats,
 } from "./spp-tracking";
+import {
+  buildPurchaseReverseOps,
+  offlinePurchasesConsumed,
+  sideHasMutation,
+  EMPTY_MUTATION_SIDE,
+  type OfflineRosterMutations,
+} from "./league-offline-purchases";
+import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 
 export type ReverseOfflineSkipReason =
@@ -44,7 +52,8 @@ export type ReverseOfflineSkipReason =
   | "season-completed"
   | "playoffs-generated"
   | "injury-dead"
-  | "advancement-consumed";
+  | "advancement-consumed"
+  | "purchase-consumed";
 
 export type ReverseOfflineOutcome =
   | { readonly reversed: true; readonly matchId: string; readonly pairingId: string }
@@ -278,6 +287,17 @@ export async function reverseOfflineLeagueResult(
     }
   }
 
+  // Garde-fou : achats consommes. Un joueur ACHETE qui a deja joue / gagne
+  // du SPP / progresse / est mort ne peut pas etre supprime par la reversion
+  // (meme esprit que `advancement-consumed`).
+  const rosterMutations: OfflineRosterMutations = {
+    home: snapshot.rosterMutations?.home ?? EMPTY_MUTATION_SIDE,
+    away: snapshot.rosterMutations?.away ?? EMPTY_MUTATION_SIDE,
+  };
+  if (await offlinePurchasesConsumed(rosterMutations)) {
+    return { skipped: true, reason: "purchase-consumed" };
+  }
+
   // --- Reversion ---
   const { input } = snapshot;
   const winner = winnerOf(input.scoreHome, input.scoreAway);
@@ -436,6 +456,16 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
+  // 4b. Achats : suppression des joueurs crees + decrement des compteurs
+  //     (des deltas EXACTS memorises dans le snapshot). TV recalculee apres
+  //     la transaction.
+  if (sideHasMutation(rosterMutations.home)) {
+    ops.push(...buildPurchaseReverseOps(home.teamId, rosterMutations.home));
+  }
+  if (sideHasMutation(rosterMutations.away)) {
+    ops.push(...buildPurchaseReverseOps(away.teamId, rosterMutations.away));
+  }
+
   // 5. Suppression du Match synthetique : d'abord les TeamSelection (pas de
   //    cascade), puis le Match (cascade la post-match-sequence).
   ops.push(
@@ -460,6 +490,15 @@ export async function reverseOfflineLeagueResult(
   }
 
   await prisma.$transaction(ops);
+
+  // Recalcul TV pour les equipes dont le roster a ete mute par les achats
+  // (apres la transaction : updateTeamValues lit puis ecrit).
+  if (sideHasMutation(rosterMutations.home)) {
+    await updateTeamValues(prisma, home.teamId);
+  }
+  if (sideHasMutation(rosterMutations.away)) {
+    await updateTeamValues(prisma, away.teamId);
+  }
 
   serverLog.info(
     `[league-offline-edit] reversed match=${match.id} pairing=${pairing.id} ${input.scoreHome}-${input.scoreAway}`,

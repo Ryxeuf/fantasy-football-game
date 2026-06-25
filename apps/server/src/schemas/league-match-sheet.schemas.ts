@@ -50,6 +50,25 @@ export type PreMatchBody = z.infer<typeof preMatchSchema>;
 // Polish — apres-match : override tresorerie, fans, erreurs couteuses,
 // achats, MVP.
 const MAX_GOLD = 10_000_000;
+
+/**
+ * Achat post-match. `position` (slug roster) et `staff` (sous-type)
+ * sont optionnels : ils permettent de MATERIALISER precisement l'element
+ * achete (joueur d'une position donnee / type de staff). A defaut, le
+ * serveur tente de resoudre par cout (joueur) ou par libelle (staff).
+ */
+const purchaseSchema = z.object({
+  kind: z.enum(["player", "reroll", "staff", "other"]),
+  name: z.string().max(120),
+  cost: z.number().int().min(0).max(MAX_GOLD),
+  position: z.string().max(64).optional().nullable(),
+  staff: z
+    .enum(["assistant", "cheerleader", "apothecary", "dedicated_fan"])
+    .optional()
+    .nullable(),
+  number: z.number().int().min(1).max(99).optional().nullable(),
+});
+
 export const postMatchSchema = z
   .object({
     winningsHomeManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
@@ -87,26 +106,8 @@ export const postMatchSchema = z
       )
       .optional()
       .nullable(),
-    purchasesHome: z
-      .array(
-        z.object({
-          kind: z.enum(["player", "reroll", "staff", "other"]),
-          name: z.string().max(120),
-          cost: z.number().int().min(0).max(MAX_GOLD),
-        }),
-      )
-      .optional()
-      .nullable(),
-    purchasesAway: z
-      .array(
-        z.object({
-          kind: z.enum(["player", "reroll", "staff", "other"]),
-          name: z.string().max(120),
-          cost: z.number().int().min(0).max(MAX_GOLD),
-        }),
-      )
-      .optional()
-      .nullable(),
+    purchasesHome: z.array(purchaseSchema).optional().nullable(),
+    purchasesAway: z.array(purchaseSchema).optional().nullable(),
     motmPlayerIds: z.array(z.string().min(1)).max(20).optional(),
   })
   .refine(

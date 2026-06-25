@@ -13,7 +13,7 @@ vi.mock("../prisma", () => {
     leagueRound: { count: vi.fn(), update: vi.fn() },
     leaguePairing: { findUnique: vi.fn(), update: vi.fn() },
     leagueParticipant: { update: vi.fn() },
-    teamPlayer: { findMany: vi.fn(), update: vi.fn() },
+    teamPlayer: { findMany: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
     team: { update: vi.fn() },
     teamSelection: { deleteMany: vi.fn() },
     $transaction: vi.fn(async (ops: unknown) =>
@@ -22,6 +22,10 @@ vi.mock("../prisma", () => {
   };
   return { prisma };
 });
+
+// Recalcul TV isole : la reversion d'achats appelle updateTeamValues apres la
+// transaction (testee a part). On le neutralise ici.
+vi.mock("../utils/team-values", () => ({ updateTeamValues: vi.fn() }));
 
 vi.mock("./spp-tracking", () => ({
   loadLeagueSPPContext: vi.fn(async () => ({
@@ -58,6 +62,7 @@ const m = {
   partUpdate: prisma.leagueParticipant.update as MockFn,
   tpFindMany: prisma.teamPlayer.findMany as MockFn,
   tpUpdate: prisma.teamPlayer.update as MockFn,
+  tpDeleteMany: prisma.teamPlayer.deleteMany as MockFn,
   teamUpdate: prisma.team.update as MockFn,
   selDelete: prisma.teamSelection.deleteMany as MockFn,
 };
@@ -124,6 +129,7 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     m.tpFindMany.mockResolvedValue([]);
     m.partUpdate.mockResolvedValue({});
     m.tpUpdate.mockResolvedValue({});
+    m.tpDeleteMany.mockResolvedValue({ count: 0 });
     m.teamUpdate.mockResolvedValue({});
     m.selDelete.mockResolvedValue({ count: 2 });
     m.matchDelete.mockResolvedValue({});
@@ -345,6 +351,92 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
       missNextMatch: false,
       nigglingInjuries: { decrement: 1 },
     });
+  });
+
+  it("reverse les achats : supprime les joueurs crees + decremente les compteurs", async () => {
+    const snapshot = {
+      ...buildSnapshot(),
+      rosterMutations: {
+        home: {
+          createdPlayerIds: ["np-1", "np-2"],
+          rerollsAdded: 1,
+          assistantsAdded: 0,
+          cheerleadersAdded: 0,
+          apothecaryAdded: true,
+          dedicatedFansAdded: 0,
+        },
+        away: {
+          createdPlayerIds: [],
+          rerollsAdded: 0,
+          assistantsAdded: 0,
+          cheerleadersAdded: 0,
+          apothecaryAdded: false,
+          dedicatedFansAdded: 0,
+        },
+      },
+    };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+    // Garde-fou achats : les joueurs crees sont intacts (non consommes).
+    m.tpFindMany.mockResolvedValue([
+      { id: "np-1", spp: 0, matchesPlayed: 0, dead: false, advancements: "[]" },
+      { id: "np-2", spp: 0, matchesPlayed: 0, dead: false, advancements: "[]" },
+    ]);
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+
+    // Joueurs crees supprimes.
+    expect(m.tpDeleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["np-1", "np-2"] } },
+    });
+    // Compteurs home decrementes + apothicaire annule (update dedie aux achats).
+    const counterUpd = m.teamUpdate.mock.calls.find(
+      (c) =>
+        (c[0] as { where: { id: string }; data: Record<string, unknown> }).where
+          .id === "team-home" &&
+        "rerolls" in (c[0] as { data: Record<string, unknown> }).data,
+    )?.[0] as { data: Record<string, unknown> };
+    expect(counterUpd.data).toEqual({
+      rerolls: { decrement: 1 },
+      apothecary: false,
+    });
+  });
+
+  it("refuse la reversion si un joueur achete a deja joue (purchase-consumed)", async () => {
+    const snapshot = {
+      ...buildSnapshot(),
+      rosterMutations: {
+        home: {
+          createdPlayerIds: ["np-1"],
+          rerollsAdded: 0,
+          assistantsAdded: 0,
+          cheerleadersAdded: 0,
+          apothecaryAdded: false,
+          dedicatedFansAdded: 0,
+        },
+        away: {
+          createdPlayerIds: [],
+          rerollsAdded: 0,
+          assistantsAdded: 0,
+          cheerleadersAdded: 0,
+          apothecaryAdded: false,
+          dedicatedFansAdded: 0,
+        },
+      },
+    };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+    // np-1 a joue un match ulterieur -> consomme.
+    m.tpFindMany.mockResolvedValue([
+      { id: "np-1", spp: 6, matchesPlayed: 1, dead: false, advancements: "[]" },
+    ]);
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      skipped: true,
+      reason: "purchase-consumed",
+    });
+    // Aucune suppression : la reversion est refusee avant la transaction.
+    expect(m.tpDeleteMany).not.toHaveBeenCalled();
+    expect(m.matchDelete).not.toHaveBeenCalled();
   });
 });
 

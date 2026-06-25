@@ -33,6 +33,13 @@ import {
   loadLeagueSPPContext,
   type PlayerMatchStats,
 } from "./spp-tracking";
+import {
+  applyOfflinePurchasesForTeam,
+  hasAnyMutation,
+  EMPTY_MUTATION_SIDE,
+  type OfflinePurchaseInput,
+  type OfflineRosterMutations,
+} from "./league-offline-purchases";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 
@@ -102,6 +109,13 @@ export interface RecordOfflineResultInput {
   readonly sppBonus?: readonly OfflineSppBonusInput[];
   /** Blessures durables par joueur (optionnel). */
   readonly injuries?: readonly OfflineInjuryInput[];
+  /**
+   * Achats post-match a MATERIALISER sur le roster (joueurs/relances/staff).
+   * Le DEBIT de tresorerie associe est deja porte par `treasuryDebit*` ;
+   * ces listes ne servent qu'a creer reellement les elements (reversible).
+   */
+  readonly purchasesHome?: readonly OfflinePurchaseInput[];
+  readonly purchasesAway?: readonly OfflinePurchaseInput[];
 }
 
 export interface OfflineSppBonusInput {
@@ -181,11 +195,19 @@ export interface OfflineResultSnapshot {
     readonly rankingBonusAway: number;
     readonly sppBonus: readonly OfflineSppBonusInput[];
     readonly injuries: readonly OfflineInjuryInput[];
+    readonly purchasesHome: readonly OfflinePurchaseInput[];
+    readonly purchasesAway: readonly OfflinePurchaseInput[];
   };
   readonly dedicatedFansBefore: {
     readonly home: number;
     readonly away: number;
   };
+  /**
+   * Trace exacte des mutations de roster appliquees par les achats (joueurs
+   * crees, deltas de compteurs), renseignee APRES coup (cf.
+   * `recordOfflineLeagueResult`). Optionnel pour retro-compat pre-achats.
+   */
+  readonly rosterMutations?: OfflineRosterMutations;
 }
 
 function buildOfflineSnapshot(
@@ -209,6 +231,8 @@ function buildOfflineSnapshot(
       rankingBonusAway: input.rankingBonusAway ?? 0,
       sppBonus: input.sppBonus ?? [],
       injuries: input.injuries ?? [],
+      purchasesHome: input.purchasesHome ?? [],
+      purchasesAway: input.purchasesAway ?? [],
     },
     dedicatedFansBefore: { home: fansBefore.home, away: fansBefore.away },
   };
@@ -641,6 +665,29 @@ export async function recordOfflineLeagueResult(
   // Blessures durables saisies a la main.
   if (input.injuries && input.injuries.length > 0) {
     await applyOfflineInjuries(home.teamId, away.teamId, input.injuries);
+  }
+
+  // Achats post-match -> mutation reelle du roster (joueurs/relances/staff).
+  // Le debit de tresorerie est deja porte par treasuryDebit (pas de
+  // double-debit). On memorise la trace EXACTE des mutations dans le snapshot
+  // pour la reversion (cf. league-offline-edit).
+  const rosterMutations: OfflineRosterMutations = {
+    home:
+      input.purchasesHome && input.purchasesHome.length > 0
+        ? await applyOfflinePurchasesForTeam(home.teamId, input.purchasesHome)
+        : EMPTY_MUTATION_SIDE,
+    away:
+      input.purchasesAway && input.purchasesAway.length > 0
+        ? await applyOfflinePurchasesForTeam(away.teamId, input.purchasesAway)
+        : EMPTY_MUTATION_SIDE,
+  };
+  if (hasAnyMutation(rosterMutations)) {
+    await prisma.match.update({
+      where: { id: match.id },
+      data: {
+        offlineResultInput: { ...offlineSnapshot, rosterMutations },
+      },
+    });
   }
 
   const winner: OfflineResultWinner =
