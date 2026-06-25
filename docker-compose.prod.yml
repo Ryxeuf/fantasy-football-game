@@ -40,6 +40,10 @@ services:
       - NEXT_PUBLIC_UMAMI_ENABLED=true
       - SERVER_API_BASE=http://nufflearena_server:8201
       - JWT_SECRET=${JWT_SECRET}
+      # Secret partagé pour la route POST /api/revalidate (invalidation ISR).
+      # Doit être identique à celui du service `server`. Voir
+      # docs/isr-cache-invalidation.md.
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-}
       # Freeze Pro League (cf docs/pro-league-freeze-2026-06-01.md). Le layout
       # server-component lit PRO_LEAGUE_ENABLED au runtime (redirect /pro-league).
       - PRO_LEAGUE_ENABLED=false
@@ -103,6 +107,11 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_SECURE=${SMTP_SECURE:-}
       - MAIL_FROM=${MAIL_FROM:-Nuffle Arena <no-reply@nufflearena.fr>}
+      # Invalidation ISR du front à la demande après écriture roster. Le
+      # serveur poste sur WEB_REVALIDATE_URL/api/revalidate avec REVALIDATE_SECRET.
+      # Sans secret, no-op silencieux. Voir docs/isr-cache-invalidation.md.
+      - WEB_REVALIDATE_URL=${WEB_REVALIDATE_URL:-http://nufflearena_web:3100}
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-}
     networks:
       - traefik-network
     labels:

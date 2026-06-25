@@ -21,7 +21,9 @@ async function fetchRoster(
   const base = getServerApiBase();
   const data = await fetchServerJson<{ roster?: any; ruleset?: Ruleset }>(
     `${base}/api/rosters/${encodeURIComponent(slug)}?lang=fr&ruleset=${ruleset}`,
-    { next: { revalidate: 3600 } },
+    // Taggé pour l'invalidation à la demande (revalidateTag) après une
+    // écriture roster ; cf. apps/web/app/api/revalidate/route.ts.
+    { next: { revalidate: 3600, tags: ["rosters", `roster:${slug}`] } },
   );
   if (!data?.roster) return null;
   return { roster: data.roster, ruleset: (data.ruleset as Ruleset) || ruleset };

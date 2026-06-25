@@ -18,7 +18,8 @@ async function fetchRosters(season: Season): Promise<RosterSummary[]> {
   const base = getServerApiBase();
   const data = await fetchServerJson<{ rosters?: any[] }>(
     `${base}/api/rosters?lang=fr&ruleset=${season}`,
-    { next: { revalidate: 3600 } },
+    // Tag "rosters" pour l'invalidation à la demande (cf. /api/revalidate).
+    { next: { revalidate: 3600, tags: ["rosters"] } },
   );
   return (data?.rosters ?? []).map((roster: any) => ({
     slug: roster.slug,

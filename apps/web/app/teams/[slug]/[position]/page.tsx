@@ -152,7 +152,8 @@ async function loadBundle(
   const fetcher = throwing ? fetchServerJson : safeServerJson;
   const data = await fetcher<{ roster?: ApiRoster; ruleset?: Ruleset }>(
     `${base}/api/rosters/${encodeURIComponent(slug)}?lang=fr&ruleset=${ruleset}`,
-    { next: { revalidate: 3600 } },
+    // Tags pour invalidation à la demande après écriture roster.
+    { next: { revalidate: 3600, tags: ["rosters", `roster:${slug}`] } },
   );
   const roster = data?.roster;
   if (!roster) return null;

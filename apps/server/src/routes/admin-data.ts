@@ -13,6 +13,7 @@ import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
 import { toCanonicalAccessCsv } from "../services/skill-access";
+import { revalidateRosterPages } from "../services/revalidate-web";
 import { validate, validateQuery } from "../middleware/validate";
 
 /**
@@ -489,6 +490,7 @@ router.post("/rosters", validate(createRosterSchema), async (req, res) => {
       entityId: roster.id,
       newValue: { slug: roster.slug, ruleset: roster.ruleset, name: roster.name, tier: roster.tier },
     });
+    void revalidateRosterPages([roster.slug]);
     res.status(201).json({ roster });
   } catch (error: any) {
     if (error.code === "P2002") {
@@ -563,6 +565,7 @@ router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
         naf: roster.naf,
       },
     });
+    void revalidateRosterPages([roster.slug]);
     res.json({ roster });
   } catch (error: any) {
     if (error.code === "P2025") {
@@ -667,6 +670,7 @@ router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async 
       newValue: { slug: newRoster.slug, ruleset: newRoster.ruleset, positionCount: sourceRoster.positions.length },
     });
 
+    void revalidateRosterPages([newRoster.slug]);
     res.status(201).json({
       roster: newRoster,
       message: `Roster dupliqué avec succès vers ${newRuleset}`,
@@ -692,6 +696,7 @@ router.delete("/rosters/:id", async (req, res) => {
       entityId: req.params.id,
       oldValue: previous,
     });
+    void revalidateRosterPages(previous?.slug ? [previous.slug] : undefined);
     res.json({ success: true });
   } catch (error: any) {
     if (error.code === "P2025") {

@@ -47,6 +47,8 @@ services:
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - SERVER_API_BASE=http://nufflearena_server:8201
+      # Invalidation ISR à la demande (cf docs/isr-cache-invalidation.md).
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-dev-revalidate-secret}
       # Freeze Pro League (cf docs/pro-league-freeze-2026-06-01.md).
       # PRO_LEAGUE_ENABLED : lu par le layout server-component (redirect).
       # NEXT_PUBLIC_* : masque le lien onboarding (client). Degeler = "true".
@@ -123,6 +125,10 @@ services:
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - MAIL_FROM=Nuffle Arena (dev) <no-reply@nuffle-arena.local>
+      # Invalidation ISR du front après écriture roster (cf docs/isr-cache-
+      # invalidation.md). Secret partagé avec le service `web`.
+      - WEB_REVALIDATE_URL=http://nufflearena_web:3100
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-dev-revalidate-secret}
     volumes:
       - .:/app
       - /app/node_modules

@@ -20,6 +20,7 @@ import { validate } from "../middleware/validate";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import { invalidateAllMemo } from "../utils/memoize-async";
+import { revalidateRosterPages } from "../services/revalidate-web";
 import { seedProLeague } from "../seeders/pro-league";
 import { reimportSeason3SkillAccess } from "../seeders/season3-skill-access";
 import { syncRosters } from "../seeders/sync-rosters";
@@ -169,6 +170,8 @@ router.post("/sync-rosters", validate(syncRostersSchema), async (req, res) => {
     // servir l'ancien roster malgré la base à jour.
     if (result.write) {
       invalidateAllMemo();
+      // Invalide les pages ISR /teams/* du front (best-effort, ne throw pas).
+      void revalidateRosterPages();
       await safeRecordAdminActionFromRequest(prisma, req, {
         action: "utility.sync-rosters.run",
         entity: "Position",
