@@ -204,10 +204,12 @@ export default function LeagueDetailPage() {
 
   const canJoinSeason = useMemo(() => {
     if (!leagueEnabled || !season || !currentUserId) return false;
-    if (isCreator) return false;
+    // Le commissaire (createur) est AUSSI un coach : il peut inscrire une de
+    // ses equipes (player-commissaire, standard en Blood Bowl). Le backend
+    // l'autorise (handleJoinSeason ne verifie que la propriete de l'equipe).
     // Inscriptions ouvertes uniquement avant le demarrage de la saison.
     return season.status === "draft" || season.status === "scheduled";
-  }, [leagueEnabled, season, currentUserId, isCreator]);
+  }, [leagueEnabled, season, currentUserId]);
 
   // L2.B.5 — participant actif du coach courant (si inscrit). Sert au
   // bouton "Coup de mecene" et au lien "Gerer mon equipe".

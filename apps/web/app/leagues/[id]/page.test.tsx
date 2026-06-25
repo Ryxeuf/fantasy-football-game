@@ -427,6 +427,28 @@ describe("LeagueDetailPage", () => {
       expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
     });
 
+    it("shows Join button for the creator too (player-commissaire) when registrations are open", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (
+        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue(true);
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "draft" },
+        standings: mockStandings,
+        meUserId: mockLeague.creatorId,
+      });
+
+      renderWithProvider();
+
+      // Le commissaire est aussi coach : il voit le panneau admin ET peut
+      // inscrire une de ses equipes.
+      await waitFor(() => {
+        expect(screen.getByTestId("open-join-season")).toBeTruthy();
+      });
+      expect(screen.getByTestId("season-admin-panel")).toBeTruthy();
+    });
+
     it("hides Join button when the season is in_progress (registrations closed)", async () => {
       const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
       (
