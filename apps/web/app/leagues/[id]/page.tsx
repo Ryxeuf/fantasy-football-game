@@ -514,9 +514,6 @@ export default function LeagueDetailPage() {
                   rounds={season.rounds}
                   currentUserId={currentUserId}
                   canRecordResult={leagueEnabled && isCreator}
-                  onResultRecorded={() => {
-                    if (selectedSeasonId) loadSeason(selectedSeasonId);
-                  }}
                 />
               </div>
 

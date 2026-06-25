@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { EnterResultModal } from "./EnterResultModal";
 import { MatchdayExport } from "./MatchdayExport";
 import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import type {
@@ -12,18 +11,16 @@ import type {
 
 // Sprint Ligues v2 PR2 — calendrier interactif (ligue 100% physique).
 // Affiche pour chaque round la liste des pairings (home vs away). La
-// ligue ne lance plus de match en ligne : la seule action sur un
-// pairing `scheduled` est la saisie manuelle du resultat (feuille de
-// match). Les forfaits / annulations affichent uniquement un badge.
+// saisie d'un resultat se fait via la FEUILLE DE MATCH : les 2 coachs
+// impliques (et le commissaire) y accedent par un lien. Les forfaits /
+// annulations affichent uniquement un badge.
 
 interface SeasonCalendarProps {
   rounds: LeagueRoundDetail[];
   /** userId du coach connecte (null si non authentifie). */
   currentUserId: string | null;
-  /** Vrai si le user peut saisir un resultat offline (createur de ligue). */
+  /** Vrai si le user est commissaire (acces feuille sur tous les matchs). */
   canRecordResult?: boolean;
-  /** Callback apres saisie d'un resultat (refresh standings/calendrier). */
-  onResultRecorded?: () => void;
 }
 
 function formatDate(iso: string | null, locale: string): string | null {
@@ -43,8 +40,8 @@ function formatDate(iso: string | null, locale: string): string | null {
 
 export function SeasonCalendar({
   rounds,
+  currentUserId,
   canRecordResult,
-  onResultRecorded,
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
@@ -119,8 +116,8 @@ export function SeasonCalendar({
                   <PairingRow
                     key={pairing.id}
                     pairing={pairing}
+                    currentUserId={currentUserId}
                     canRecordResult={canRecordResult}
-                    onResultRecorded={onResultRecorded}
                   />
                 ))}
               </ul>
@@ -134,25 +131,29 @@ export function SeasonCalendar({
 
 interface PairingRowProps {
   pairing: LeaguePairingDetail;
+  currentUserId: string | null;
   canRecordResult?: boolean;
-  onResultRecorded?: () => void;
 }
 
 function PairingRow({
   pairing,
+  currentUserId,
   canRecordResult,
-  onResultRecorded,
 }: PairingRowProps) {
   const { t } = useLanguage();
-  const [showResult, setShowResult] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
 
-  // Edition possible uniquement pour un resultat OFFLINE deja saisi
-  // (createur), pour corriger une erreur de saisie.
-  const canEditResult =
-    canRecordResult &&
-    pairing.status === "played" &&
-    pairing.match?.mode === "offline";
+  const isInvolved =
+    currentUserId !== null &&
+    (pairing.homeParticipant.team.ownerId === currentUserId ||
+      pairing.awayParticipant.team.ownerId === currentUserId);
+  // Acces a la feuille de match : les 2 coachs impliques + le commissaire.
+  const canOpenSheet = Boolean(canRecordResult) || isInvolved;
+  const cancelled = pairing.status === "cancelled";
+  // Libelle selon que le match est deja joue ou non.
+  const played =
+    pairing.status === "played" ||
+    pairing.status === "forfeit_home" ||
+    pairing.status === "forfeit_away";
 
   const statusBadge = pairingStatusBadge(pairing.status, t);
 
@@ -183,46 +184,16 @@ function PairingRow({
         >
           {statusBadge.label}
         </span>
-        {canRecordResult && pairing.status === "scheduled" ? (
-          <button
-            type="button"
-            data-testid={`pairing-record-${pairing.id}`}
-            onClick={() => setShowResult(true)}
+        {canOpenSheet && !cancelled ? (
+          <Link
+            href={`/leagues/pairings/${pairing.id}/sheet`}
+            data-testid={`pairing-sheet-${pairing.id}`}
             className="text-xs px-2 py-1 rounded border border-nuffle-gold text-nuffle-anthracite font-medium hover:bg-nuffle-gold/10"
           >
-            {t.leagues.pairingRecordResultButton}
-          </button>
-        ) : null}
-        {canEditResult ? (
-          <button
-            type="button"
-            data-testid={`pairing-edit-${pairing.id}`}
-            onClick={() => setShowEdit(true)}
-            className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 font-medium hover:bg-white"
-          >
-            {t.leagues.pairingEditResultButton}
-          </button>
+            {played ? "Voir la feuille" : "Feuille de match"}
+          </Link>
         ) : null}
       </div>
-      {showResult ? (
-        <EnterResultModal
-          pairingId={pairing.id}
-          homeName={pairing.homeParticipant.team.name}
-          awayName={pairing.awayParticipant.team.name}
-          onClose={() => setShowResult(false)}
-          onRecorded={() => onResultRecorded?.()}
-        />
-      ) : null}
-      {showEdit ? (
-        <EnterResultModal
-          mode="edit"
-          pairingId={pairing.id}
-          homeName={pairing.homeParticipant.team.name}
-          awayName={pairing.awayParticipant.team.name}
-          onClose={() => setShowEdit(false)}
-          onRecorded={() => onResultRecorded?.()}
-        />
-      ) : null}
     </li>
   );
 }
