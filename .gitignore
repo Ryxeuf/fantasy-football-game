@@ -122,3 +122,12 @@ backups/
 # + chemin servi par le build web).
 /apps/web/public/images/blog/*
 !/apps/web/public/images/blog/.gitkeep
+
+# Transcription verbatim du livre de regles BB (reproduction litterale, PI
+# Games Workshop). Reference LOCALE uniquement : ne JAMAIS versionner sur ce
+# repo public. Le contenu publie est la version reecrite dans
+# apps/web/app/compendium/data/rules-bb-2025.json.
+/docs/regles-bb-2025/
+
+# Rosters verbatim (meme raison : PI GW, repo public). Reference locale.
+/docs/roster-bb-2025/
