@@ -71,6 +71,28 @@ interface MatchEvent {
   meta?: { half?: number; turn?: number } | null;
 }
 
+/**
+ * Trie les évènements de manière chronologique : mi-temps puis tour, en
+ * conservant l'ordre de saisie initial comme départage stable. Pur,
+ * exporté pour test. Renvoie chaque évènement accompagné de son `meta`
+ * résolu une seule fois.
+ */
+export function chronologicalTimeline<
+  T extends { meta?: { half?: number; turn?: number } | null },
+>(events: readonly T[]): Array<{ ev: T; m: { half?: number; turn?: number } }> {
+  const items = events.map((ev, i) => ({ ev, i, m: parseEventMeta(ev.meta) }));
+  items.sort((a, b) => {
+    const ha = a.m.half ?? 1;
+    const hb = b.m.half ?? 1;
+    if (ha !== hb) return ha - hb;
+    const ta = a.m.turn ?? 0;
+    const tb = b.m.turn ?? 0;
+    if (ta !== tb) return ta - tb;
+    return a.i - b.i;
+  });
+  return items.map(({ ev, m }) => ({ ev, m }));
+}
+
 /** Lit half/turn depuis le meta (tolérant : objet natif ou string JSON). */
 function parseEventMeta(raw: unknown): { half?: number; turn?: number } {
   let obj: unknown = raw;
@@ -241,6 +263,9 @@ export default function MatchSheetPage() {
   const [eventHalf, setEventHalf] = useState<1 | 2>(1);
   const [eventTurn, setEventTurn] = useState<string>("");
 
+  // Onglet actif : Avant-match / En cours / Fin de match.
+  const [tab, setTab] = useState<"before" | "during" | "after">("before");
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -403,6 +428,10 @@ export default function MatchSheetPage() {
   }, [data?.sheet.status, data?.viewerRole, pairingId]);
 
   const events = useMemo(() => data?.sheet.events ?? [], [data]);
+  // Timeline chronologique : tri par mi-temps puis tour, en conservant
+  // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
+  // résolu une seule fois ici.
+  const timeline = useMemo(() => chronologicalTimeline(events), [events]);
   const home = data?.teams.home ?? null;
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
@@ -490,8 +519,54 @@ export default function MatchSheetPage() {
         <p className="rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
       )}
 
+      {/* Navigation par phase (onglets). */}
+      <nav
+        role="tablist"
+        aria-label="Phases du match"
+        className="flex gap-1 rounded-lg border bg-white p-1"
+      >
+        {(
+          [
+            { id: "before", label: "Avant-match" },
+            { id: "during", label: "En cours" },
+            { id: "after", label: "Fin du match" },
+          ] as const
+        ).map((t) => {
+          const activeTab = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab}
+              onClick={() => setTab(t.id)}
+              data-testid={`tab-${t.id}`}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold transition ${
+                activeTab
+                  ? "bg-nuffle-anthracite text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              {t.label}
+              {t.id === "during" && events.length > 0 && (
+                <span
+                  className={`rounded-full px-1.5 text-[10px] font-bold tabular-nums ${
+                    activeTab
+                      ? "bg-white/20 text-white"
+                      : "bg-nuffle-anthracite/10 text-nuffle-anthracite"
+                  }`}
+                >
+                  {events.length}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
       {/* AVANT-MATCH */}
-      {(isCoach || isCommissioner) && (
+      {tab === "before" &&
+        ((isCoach || isCommissioner) ? (
         <PreMatchPanel
           initial={{
             weatherTable: data.sheet.weatherTable ?? "",
@@ -508,63 +583,78 @@ export default function MatchSheetPage() {
           onSave={savePreMatch}
           reference={data.reference}
         />
-      )}
+        ) : (
+          <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
+            L&apos;avant-match est réservé aux coachs et au commissaire.
+          </p>
+        ))}
 
       {/* AU COURS DU MATCH */}
+      {tab === "during" && (
       <section className="rounded-lg border bg-white p-4">
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
-          Au cours du match
+          Timeline du match
         </h2>
 
-        {events.length === 0 ? (
+        {timeline.length === 0 ? (
           <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
         ) : (
-          <ul className="space-y-1" data-testid="events-list">
-            {events.map((ev) => {
+          <ol
+            className="relative space-y-1 border-l-2 border-slate-200 pl-3"
+            data-testid="events-list"
+          >
+            {timeline.map(({ ev, m }, idx) => {
               const evTeam = ev.team === "home" ? home : away;
               const kindLabel =
                 EVENT_KINDS.find((k) => k.value === ev.kind)?.label ?? ev.kind;
-              const m = parseEventMeta(ev.meta);
+              // Séparateur de mi-temps quand elle change dans l'ordre trié.
+              const prevHalf =
+                idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
+              const curHalf = m.half ?? 1;
+              const showHalfDivider = curHalf !== prevHalf;
               return (
-                <li
-                  key={ev.id}
-                  className="flex items-center justify-between gap-2 rounded border px-2 py-1.5 text-sm"
-                >
-                  <span className="min-w-0">
-                    {(m.half || m.turn) && (
-                      <span className="mr-1.5 inline-flex shrink-0 items-center rounded bg-nuffle-anthracite/90 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
-                        {m.half ? `MT${m.half}` : ""}
-                        {m.half && m.turn ? " · " : ""}
-                        {m.turn ? `T${m.turn}` : ""}
-                      </span>
-                    )}
-                    <strong>{kindLabel}</strong>
-                    {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
-                    {ev.actorPlayerId
-                      ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
-                      : ""}
-                    {ev.targetPlayerId
-                      ? ` → ${playerName(
-                          ev.team === "home" ? away : home,
-                          ev.targetPlayerId,
-                        )}`
-                      : ""}
-                    {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
-                  </span>
-                  {canEdit && (
-                    <button
-                      type="button"
-                      className="shrink-0 text-xs text-red-600"
-                      onClick={() => removeEvent(ev.id)}
-                      disabled={busy}
-                    >
-                      retirer
-                    </button>
+                <li key={ev.id} className="space-y-1">
+                  {showHalfDivider && (
+                    <div className="-ml-3 flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
+                      <span className="h-2 w-2 rounded-full bg-nuffle-bronze" />
+                      {curHalf === 2 ? "2e mi-temps" : "1re mi-temps"}
+                    </div>
                   )}
+                  <div className="flex items-center justify-between gap-2 rounded border bg-white px-2 py-1.5 text-sm">
+                    <span className="min-w-0">
+                      {m.turn ? (
+                        <span className="mr-1.5 inline-flex shrink-0 items-center rounded bg-nuffle-anthracite/90 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
+                          T{m.turn}
+                        </span>
+                      ) : null}
+                      <strong>{kindLabel}</strong>
+                      {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
+                      {ev.actorPlayerId
+                        ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
+                        : ""}
+                      {ev.targetPlayerId
+                        ? ` → ${playerName(
+                            ev.team === "home" ? away : home,
+                            ev.targetPlayerId,
+                          )}`
+                        : ""}
+                      {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
+                    </span>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className="shrink-0 text-xs text-red-600"
+                        onClick={() => removeEvent(ev.id)}
+                        disabled={busy}
+                      >
+                        retirer
+                      </button>
+                    )}
+                  </div>
                 </li>
               );
             })}
-          </ul>
+          </ol>
         )}
 
         {canEdit && (
@@ -698,9 +788,11 @@ export default function MatchSheetPage() {
           </div>
         )}
       </section>
+      )}
 
       {/* FIN DU MATCH */}
-      {(isCoach || isCommissioner) && (
+      {tab === "after" &&
+        ((isCoach || isCommissioner) ? (
         <PostMatchPanel
           initial={{
             winningsHomeManual: data.sheet.winningsHomeManual ?? null,
@@ -724,7 +816,11 @@ export default function MatchSheetPage() {
           disabled={!editable}
           onSave={savePostMatch}
         />
-      )}
+        ) : (
+          <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
+            La fin de match est réservée aux coachs et au commissaire.
+          </p>
+        ))}
 
       {/* Actions de workflow */}
       <section className="flex flex-wrap gap-2">
