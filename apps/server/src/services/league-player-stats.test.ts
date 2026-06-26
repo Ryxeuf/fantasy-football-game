@@ -207,13 +207,14 @@ describe("Lot J — league-player-stats", () => {
   });
 
   describe("LEADERBOARD_CATEGORIES", () => {
-    it("exposes the 9 categories (incl. killer/aggressor)", () => {
+    it("exposes the 10 categories (incl. killer/aggressor/catapulte)", () => {
       const keys = LEADERBOARD_CATEGORIES.map((c) => c.key);
       expect(keys).toEqual([
         "topScorers",
         "topBashers",
         "topKillers",
         "topAggressors",
+        "topTeamThrowers",
         "topPassers",
         "topInterceptors",
         "topFutureStars",
@@ -244,6 +245,29 @@ describe("Lot J — league-player-stats", () => {
       ]);
       expect(cat.topAggressors.map((r) => [r.playerId, r.value])).toEqual([
         ["p2", 1],
+      ]);
+    });
+
+    it("classe lanceurs de coéquipier (team_throw) et sac de frappe sur events", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "team_throw", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
+        { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "mng" },
+        { kind: "crowd_surge", actorPlayerId: null, targetPlayerId: "p2", injurySeverity: null },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topTeamThrowers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
+      // p2 a subi 2 éliminations (casualty + crowd_surge) -> sac de frappe.
+      expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 2],
       ]);
     });
 

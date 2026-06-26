@@ -24,6 +24,7 @@ export type MatchEventKind =
   | "expulsion"
   | "crowd_surge"
   | "stalling"
+  | "team_throw"
   | "other_elim";
 
 export type MatchEventTeam = "home" | "away";

@@ -33,6 +33,7 @@ export type PlayerStatCategory =
   | "topBashers"
   | "topKillers"
   | "topAggressors"
+  | "topTeamThrowers"
   | "topPassers"
   | "topInterceptors"
   | "topFutureStars"
@@ -67,6 +68,8 @@ export interface PlayerStatsCatalogue {
   readonly topKillers: PlayerStatRow[];
   /** FR18 — agressions commises (events de saison). */
   readonly topAggressors: PlayerStatRow[];
+  /** FR18 — lancers de coéquipier réussis (La Catapulte, events de saison). */
+  readonly topTeamThrowers: PlayerStatRow[];
   readonly topPassers: PlayerStatRow[];
   readonly topInterceptors: PlayerStatRow[];
   readonly topFutureStars: PlayerStatRow[];
@@ -195,6 +198,15 @@ export async function computeLeaderboards(input: {
   // si le modèle n'existe pas (SQLite de test), classements events vides.
   const killCounts = new Map<string, number>();
   const aggrCounts = new Map<string, number>();
+  const throwCounts = new Map<string, number>();
+  const sufferedCounts = new Map<string, number>();
+  // Types d'élimination subie comptés pour le "sac de frappe".
+  const SUFFERED_KINDS = new Set([
+    "casualty",
+    "crowd_surge",
+    "aggression",
+    "other_elim",
+  ]);
   try {
     const events = (await (
       prisma as unknown as {
@@ -203,6 +215,7 @@ export async function computeLeaderboards(input: {
             Array<{
               kind: string;
               actorPlayerId: string | null;
+              targetPlayerId: string | null;
               injurySeverity: string | null;
             }>
           >;
@@ -214,30 +227,42 @@ export async function computeLeaderboards(input: {
       where: {
         matchSheet: { pairing: { round: { seasonId: input.seasonId } } },
       },
-      select: { kind: true, actorPlayerId: true, injurySeverity: true },
+      select: {
+        kind: true,
+        actorPlayerId: true,
+        targetPlayerId: true,
+        injurySeverity: true,
+      },
     })) as Array<{
       kind: string;
       actorPlayerId: string | null;
+      targetPlayerId: string | null;
       injurySeverity: string | null;
     }>;
+    const bump = (m: Map<string, number>, id: string) =>
+      m.set(id, (m.get(id) ?? 0) + 1);
     for (const e of events) {
-      if (!e.actorPlayerId) continue;
-      if (e.kind === "casualty" && e.injurySeverity === "dead") {
-        killCounts.set(
-          e.actorPlayerId,
-          (killCounts.get(e.actorPlayerId) ?? 0) + 1,
-        );
+      if (e.actorPlayerId) {
+        if (e.kind === "casualty" && e.injurySeverity === "dead") {
+          bump(killCounts, e.actorPlayerId);
+        }
+        if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
+        if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);
       }
-      if (e.kind === "aggression") {
-        aggrCounts.set(
-          e.actorPlayerId,
-          (aggrCounts.get(e.actorPlayerId) ?? 0) + 1,
-        );
+      if (e.targetPlayerId && SUFFERED_KINDS.has(e.kind)) {
+        bump(sufferedCounts, e.targetPlayerId);
       }
     }
   } catch {
     // Events indisponibles (tests SQLite) -> classements events vides.
   }
+
+  // Sac de frappe : éliminations subies (events de saison) si disponibles ;
+  // sinon repli sur la proxy "blessures durables" (compteur career).
+  const topPunchingBags =
+    sufferedCounts.size > 0
+      ? topByCount(players, sufferedCounts, topN)
+      : topByMetric(players, (p) => p.nigglingInjuries, topN);
 
   return {
     seasonId: input.seasonId,
@@ -247,13 +272,12 @@ export async function computeLeaderboards(input: {
     topBashers: topByMetric(players, (p) => p.totalCasualties, topN),
     topKillers: topByCount(players, killCounts, topN),
     topAggressors: topByCount(players, aggrCounts, topN),
+    topTeamThrowers: topByCount(players, throwCounts, topN),
     topPassers: topByMetric(players, (p) => p.totalCompletions, topN),
     topInterceptors: topByMetric(players, (p) => p.totalInterceptions, topN),
     topFutureStars: topByMetric(players, (p) => p.spp, topN),
     topMvps: topByMetric(players, (p) => p.totalMvpAwards, topN),
-    // Sac de frappe : heuristique sur les blessures permanentes
-    // accumulees (proxy faute d'event "subi une elim" precis).
-    topPunchingBags: topByMetric(players, (p) => p.nigglingInjuries, topN),
+    topPunchingBags,
   };
 }
 
@@ -284,6 +308,7 @@ function emptyCatalogue(seasonId: string, topN: number): PlayerStatsCatalogue {
     topBashers: [],
     topKillers: [],
     topAggressors: [],
+    topTeamThrowers: [],
     topPassers: [],
     topInterceptors: [],
     topFutureStars: [],
@@ -355,6 +380,11 @@ export const LEADERBOARD_CATEGORIES: ReadonlyArray<{
     description: "Plus d'agressions commises (saison).",
   },
   {
+    key: "topTeamThrowers",
+    label: "Meilleur lanceur de coéquipier",
+    description: "Plus de lancers de coéquipier (La Catapulte, saison).",
+  },
+  {
     key: "topPassers",
     label: "Meilleur passeur",
     description: "Plus de passes completes.",
@@ -377,6 +407,7 @@ export const LEADERBOARD_CATEGORIES: ReadonlyArray<{
   {
     key: "topPunchingBags",
     label: "Sac de frappe",
-    description: "Plus de blessures durables subies.",
+    description:
+      "Plus d'éliminations subies (events de saison ; repli sur blessures durables).",
   },
 ];

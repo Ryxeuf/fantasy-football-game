@@ -37,6 +37,7 @@ type EventKind =
   | "expulsion"
   | "crowd_surge"
   | "stalling"
+  | "team_throw"
   | "other_elim";
 
 const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
@@ -49,6 +50,7 @@ const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
   { value: "expulsion", label: "Expulsion" },
   { value: "crowd_surge", label: "Sortie (foule)" },
   { value: "stalling", label: "Temporisation" },
+  { value: "team_throw", label: "Lancer de coéquipier" },
   { value: "other_elim", label: "Autre élimination" },
 ];
 

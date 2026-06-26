@@ -30,6 +30,7 @@ interface PlayerStatsCatalogue {
   topBashers: PlayerStatRow[];
   topKillers: PlayerStatRow[];
   topAggressors: PlayerStatRow[];
+  topTeamThrowers: PlayerStatRow[];
   topPassers: PlayerStatRow[];
   topInterceptors: PlayerStatRow[];
   topFutureStars: PlayerStatRow[];
