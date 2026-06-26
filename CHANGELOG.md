@@ -1,3 +1,17 @@
+## [1.194.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.193.0...v1.194.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **game-engine:** index inverse Ligue régionale → rosters ([972df47](https://github.com/Ryxeuf/fantasy-football-game/commit/972df47453a32f450a86ad972c9dc6e6120ce9aa))
+* **ligues:** pages publiques des Ligues régionales + maillage interne ([8b5ac1b](https://github.com/Ryxeuf/fantasy-football-game/commit/8b5ac1bdf0eb7e0358d6f3f1ce6da3e74fe30dc2))
+* **skills:** bloc « Positions avec cette compétence » sur /skills/[slug] ([0fddcb5](https://github.com/Ryxeuf/fantasy-football-game/commit/0fddcb5d3c8577ee6ac10012170fb1c636c1a0b7))
+
+
+### 📝 Documentation
+
+* **openspec:** change pages Ligues régionales + maillage compétence→positions ([dd10109](https://github.com/Ryxeuf/fantasy-football-game/commit/dd10109f3fbf4a1166c21561baaaab79ad741a42))
+
 ## [1.193.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.192.0...v1.193.0) (2026-06-26)
 
 
