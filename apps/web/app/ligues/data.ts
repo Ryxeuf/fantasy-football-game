@@ -7,7 +7,7 @@
  * avec le reste du site et localisés. On fusionne les deux ici.
  */
 
-import { fetchServerJson } from "../lib/serverApi";
+import { safeServerJson } from "../lib/serverApi";
 import { getServerApiBase } from "../lib/serverApi";
 
 export interface RosterInfo {
@@ -23,7 +23,11 @@ export async function fetchRosterMap(
   ruleset: string,
 ): Promise<Map<string, RosterInfo>> {
   const base = getServerApiBase();
-  const data = await fetchServerJson<{ rosters?: any[] }>(
+  // Variante non-throwing : si l'API est injoignable (ex. build de prod sans
+  // backend up), on dégrade gracieusement vers une carte vide. La page reste
+  // robuste via `resolveRosters` (repli sur un nom dérivé du slug) et l'ISR
+  // (revalidate 3600s) recharge les vrais noms dès que l'API répond.
+  const data = await safeServerJson<{ rosters?: any[] }>(
     `${base}/api/rosters?lang=fr&ruleset=${encodeURIComponent(ruleset)}`,
     { next: { revalidate: 3600, tags: ["rosters"] } },
   );
