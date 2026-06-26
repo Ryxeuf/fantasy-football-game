@@ -182,6 +182,56 @@ describe("Lot G — league-match-sheet", () => {
       expect(args.data.kind).toBe("casualty");
       expect(args.data.injurySeverity).toBe("dead");
     });
+
+    it("merges half/turn into meta", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: { kind: "touchdown", team: "home", half: 2, turn: 5 },
+      });
+      const args = mockPrisma.leagueMatchEvent.create.mock.calls[0][0];
+      expect(args.data.meta).toEqual({ half: 2, turn: 5 });
+    });
+
+    it("preserves provided meta alongside half/turn", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: {
+          kind: "casualty",
+          team: "home",
+          half: 1,
+          meta: { stat: "st" },
+        },
+      });
+      const args = mockPrisma.leagueMatchEvent.create.mock.calls[0][0];
+      expect(args.data.meta).toEqual({ stat: "st", half: 1 });
+    });
+
+    it("leaves meta undefined when no half/turn/meta", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: { kind: "touchdown", team: "home" },
+      });
+      const args = mockPrisma.leagueMatchEvent.create.mock.calls[0][0];
+      expect(args.data.meta).toBeUndefined();
+    });
   });
 
   describe("removeEvent", () => {
@@ -470,6 +520,67 @@ describe("Lot G — league-match-sheet", () => {
       const call = mockPrisma.team.findMany.mock.calls[0][0];
       expect(call.select.players.where).toEqual({ firedAt: null });
     });
+
+    it("expose la reference (tables meteo, catalogue, budget) + identite equipe", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          currentValue: 1_000_000,
+          treasury: 50_000,
+          owner: { coachName: "Sepp" },
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          currentValue: 1_150_000,
+          treasury: 0,
+          owner: { coachName: "Grag" },
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // Identite equipe.
+      expect(out.teams.home).toMatchObject({
+        raceName: "Humains",
+        coachName: "Sepp",
+        currentValue: 1_000_000,
+        treasury: 50_000,
+      });
+      // Tables meteo + catalogue presents.
+      expect(out.reference.weatherTables.length).toBeGreaterThan(0);
+      const classique = out.reference.weatherTables.find(
+        (t) => t.id === "classique",
+      );
+      expect(classique?.results.length).toBe(11); // 2..12
+      expect(out.reference.inducements.some((i) => i.slug === "bribe")).toBe(
+        true,
+      );
+      // star_player exclu du catalogue generique.
+      expect(
+        out.reference.inducements.some((i) => i.slug === "star_player"),
+      ).toBe(false);
+      // Budget : home a la CTV la plus basse -> petty cash = 150k.
+      expect(out.reference.budget.home.pettyCash).toBe(150_000);
+      expect(out.reference.budget.home.maxBudget).toBe(200_000);
+      expect(out.reference.budget.away.pettyCash).toBe(0);
+    });
   });
 
   // Lot H — liste des matchs a valider pour le commissaire.
@@ -542,6 +653,73 @@ describe("Lot G — league-match-sheet", () => {
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.winningsHome).toBe(40_000);
       expect(data.winningsAway).toBe(20_000);
+    });
+  });
+
+  // Coups de pouce : budget = petty cash (diff de CTV) + tresorerie.
+  describe("updatePreMatch (budget coups de pouce)", () => {
+    function mockTeamsForBudget() {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      // home CTV 1.0M / cagnotte 50k ; away CTV 1.15M -> petty cash home 150k.
+      // Budget home = 150k + 50k = 200k.
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          currentValue: 1_000_000,
+          treasury: 50_000,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          currentValue: 1_150_000,
+          treasury: 0,
+          players: [],
+        },
+      ]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+    }
+
+    it("rejects an over-budget inducement selection", async () => {
+      mockTeamsForBudget();
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [{ slug: "wizard", cost: 250_000, qty: 1 }],
+          },
+        }),
+      ).rejects.toMatchObject({ code: "inducement_over_budget" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("accepts an inducement selection within budget", async () => {
+      mockTeamsForBudget();
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [{ slug: "wizard", cost: 150_000, qty: 1 }],
+          },
+        }),
+      ).resolves.toBeDefined();
+      expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
     });
   });
 
@@ -804,6 +982,27 @@ describe("Lot G — league-match-sheet", () => {
       // home = 50000*2 + 100000 + 60000 = 260000
       expect(out.treasuryDebitHome).toBe(260000);
       expect(out.treasuryDebitAway).toBe(50000);
+    });
+
+    it("ne debite la treasury que de l'excedent au-dela du petty cash", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        baseSummary,
+        {
+          motmPlayerIds: [],
+          // 100k de coup de pouce + 60k d'achat ; petty cash home = 70k.
+          inducementsHome: [{ slug: "wizard", cost: 100000, qty: 1 }],
+          purchasesHome: [{ kind: "reroll", name: "Relance", cost: 60000 }],
+          // away : 40k de coup de pouce entierement couvert par 50k de petty cash.
+          inducementsAway: [{ slug: "bribe", cost: 40000, qty: 1 }],
+        },
+        [],
+        { home: 70000, away: 50000 },
+      );
+      // home : max(0, 100000-70000) + 60000 = 90000 (achat non couvert).
+      expect(out.treasuryDebitHome).toBe(90000);
+      // away : max(0, 40000-50000) = 0.
+      expect(out.treasuryDebitAway).toBe(0);
     });
 
     it("adds MVP-only players who had no stat line", () => {

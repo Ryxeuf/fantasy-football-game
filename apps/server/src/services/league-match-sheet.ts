@@ -38,6 +38,13 @@ import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { serverLog } from "../utils/server-log";
+import {
+  WEATHER_TYPES,
+  INDUCEMENT_CATALOGUE,
+  calculatePettyCash,
+  getAvailableStarPlayers,
+  TEAM_ROSTERS,
+} from "@bb/game-engine";
 
 export type MatchSheetStatus =
   | "draft"
@@ -60,7 +67,8 @@ export class MatchSheetError extends Error {
       | "invalid_event"
       | "event_not_found"
       | "invalidation_window_closed"
-      | "invalidation_failed",
+      | "invalidation_failed"
+      | "inducement_over_budget",
     message: string,
   ) {
     super(message);
@@ -186,7 +194,13 @@ function ensureEditable(status: string): void {
 export async function addEvent(input: {
   pairingId: string;
   userId: string;
-  event: MatchEventInput & { meta?: Record<string, unknown> | null };
+  event: MatchEventInput & {
+    meta?: Record<string, unknown> | null;
+    /** Mi-temps (1|2) — fusionnee dans meta.half. */
+    half?: number | null;
+    /** Tour (1..16) — fusionne dans meta.turn. */
+    turn?: number | null;
+  };
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -202,6 +216,16 @@ export async function addEvent(input: {
   const sheet = await loadSheetOrThrow(input.pairingId);
   ensureEditable(sheet.status);
 
+  // Mi-temps / tour : portes via meta (pas de colonne dediee). On fusionne
+  // les champs explicites half/turn dans meta sans ecraser un meta fourni.
+  const baseMeta =
+    input.event.meta && typeof input.event.meta === "object"
+      ? { ...input.event.meta }
+      : {};
+  if (input.event.half != null) baseMeta.half = input.event.half;
+  if (input.event.turn != null) baseMeta.turn = input.event.turn;
+  const meta = Object.keys(baseMeta).length > 0 ? baseMeta : undefined;
+
   return prisma.leagueMatchEvent.create({
     data: {
       matchSheetId: sheet.id,
@@ -211,7 +235,7 @@ export async function addEvent(input: {
       targetPlayerId: input.event.targetPlayerId ?? null,
       causeDetail: input.event.causeDetail ?? null,
       injurySeverity: (input.event.injurySeverity as string | null) ?? null,
-      meta: (input.event.meta as object | null) ?? undefined,
+      meta: meta as object | undefined,
     },
   });
 }
@@ -272,6 +296,33 @@ export async function updatePreMatch(input: {
   ensureEditable(sheet.status);
 
   const p = input.payload;
+
+  // Coups de pouce : on borne la depense au budget officiel (petty cash +
+  // tresorerie). Le petty cash depend des 2 CTV -> on charge les equipes et
+  // calcule le budget une seule fois si une selection est presente.
+  if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
+    const teams = await loadSheetTeams(input.pairingId);
+    const { budget } = buildMatchSheetReference(teams);
+    if (p.inducementsHome !== undefined) {
+      const spent = sumGold(p.inducementsHome);
+      if (spent > budget.home.maxBudget) {
+        throw new MatchSheetError(
+          "inducement_over_budget",
+          `Budget de coups de pouce dépassé (domicile) : ${spent.toLocaleString("fr-FR")} po pour un budget de ${budget.home.maxBudget.toLocaleString("fr-FR")} po (petty cash ${budget.home.pettyCash.toLocaleString("fr-FR")} + trésorerie ${budget.home.treasury.toLocaleString("fr-FR")}).`,
+        );
+      }
+    }
+    if (p.inducementsAway !== undefined) {
+      const spent = sumGold(p.inducementsAway);
+      if (spent > budget.away.maxBudget) {
+        throw new MatchSheetError(
+          "inducement_over_budget",
+          `Budget de coups de pouce dépassé (extérieur) : ${spent.toLocaleString("fr-FR")} po pour un budget de ${budget.away.maxBudget.toLocaleString("fr-FR")} po (petty cash ${budget.away.pettyCash.toLocaleString("fr-FR")} + trésorerie ${budget.away.treasury.toLocaleString("fr-FR")}).`,
+        );
+      }
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
@@ -596,6 +647,13 @@ export function buildOfflineInputFromSummary(
     firedPlayerIds?: unknown;
   },
   eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
+  /**
+   * Petty cash recu par chaque equipe (regles BB). Les coups de pouce sont
+   * d'abord payes avec le petty cash : seul l'excedent debite la tresorerie.
+   * Defaut 0/0 (retro-compat) : tout le cout des coups de pouce debite alors
+   * la tresorerie comme avant.
+   */
+  pettyCash: { home: number; away: number } = { home: 0, away: 0 },
 ) {
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
@@ -650,12 +708,14 @@ export function buildOfflineInputFromSummary(
     winningsHome: sheet.winningsHomeManual ?? sheet.winningsHome ?? undefined,
     winningsAway: sheet.winningsAwayManual ?? sheet.winningsAway ?? undefined,
     // Depenses = coups de pouce + erreurs couteuses + achats -> debit treasury.
+    // Les coups de pouce sont d'abord couverts par le petty cash : seul
+    // l'excedent debite la tresorerie (regle officielle BB).
     treasuryDebitHome:
-      sumGold(sheet.inducementsHome) +
+      Math.max(0, sumGold(sheet.inducementsHome) - pettyCash.home) +
       sumGold(sheet.costlyErrorsHome) +
       sumGold(sheet.purchasesHome),
     treasuryDebitAway:
-      sumGold(sheet.inducementsAway) +
+      Math.max(0, sumGold(sheet.inducementsAway) - pettyCash.away) +
       sumGold(sheet.costlyErrorsAway) +
       sumGold(sheet.purchasesAway),
     dedicatedFansDeltaHome: sheet.dedicatedFansDeltaHome ?? undefined,
@@ -781,6 +841,11 @@ export async function validateByCommissioner(input: {
     };
   }
 
+  // Petty cash par equipe (regles BB) : sert a ne debiter la tresorerie que
+  // de l'excedent de coups de pouce au-dela du petty cash recu.
+  const teamsForBudget = await loadSheetTeams(input.pairingId);
+  const { budget } = buildMatchSheetReference(teamsForBudget);
+
   // Applique les effets (peut throw -> on ne valide pas).
   const offlineInput = buildOfflineInputFromSummary(
     input.pairingId,
@@ -805,6 +870,7 @@ export async function validateByCommissioner(input: {
       firedPlayerIds?: unknown;
     },
     events,
+    { home: budget.home.pettyCash, away: budget.away.pettyCash },
   );
   const outcome = await recordOfflineLeagueResult(offlineInput);
 
@@ -1073,7 +1139,23 @@ export interface MatchSheetTeam {
   readonly teamId: string;
   readonly name: string;
   readonly roster: string;
+  /** Libelle de la race (ex: "Skavens"), resolu depuis le roster slug. */
+  readonly raceName: string;
+  /** Nom du coach (owner de l'equipe). */
+  readonly coachName: string;
+  /** VE — Valeur d'Equipe. */
+  readonly teamValue: number;
+  /** VEA — Valeur d'Equipe Actuelle (= CTV pour le calcul du petty cash). */
+  readonly currentValue: number;
+  /** Tresorerie (cagnotte) en po. */
+  readonly treasury: number;
   readonly players: readonly MatchSheetPlayer[];
+}
+
+/** Libelle de race depuis un roster slug (fallback : le slug brut). */
+function raceNameForRoster(roster: string): string {
+  const def = (TEAM_ROSTERS as Record<string, { name?: string }>)[roster];
+  return def?.name ?? roster;
 }
 
 /**
@@ -1108,6 +1190,10 @@ async function loadSheetTeams(
       id: true,
       name: true,
       roster: true,
+      teamValue: true,
+      currentValue: true,
+      treasury: true,
+      owner: { select: { coachName: true } },
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
         // actif : on les exclut des pickers (comme un retrait definitif). Les
@@ -1129,6 +1215,10 @@ async function loadSheetTeams(
     id: string;
     name: string;
     roster: string;
+    teamValue?: number | null;
+    currentValue?: number | null;
+    treasury?: number | null;
+    owner?: { coachName?: string | null } | null;
     players: MatchSheetPlayer[];
   }>;
 
@@ -1141,12 +1231,157 @@ async function loadSheetTeams(
       teamId: t.id,
       name: t.name,
       roster: t.roster,
+      raceName: raceNameForRoster(t.roster),
+      coachName: t.owner?.coachName ?? "",
+      teamValue: t.teamValue ?? 0,
+      currentValue: t.currentValue ?? 0,
+      treasury: t.treasury ?? 0,
       players: t.players,
     };
   };
   return {
     home: toTeam(pairing?.homeParticipant?.teamId),
     away: toTeam(pairing?.awayParticipant?.teamId),
+  };
+}
+
+/** Une condition meteo d'une table (resultat 2..12). */
+export interface MatchSheetWeatherResult {
+  readonly roll: number;
+  readonly condition: string;
+  readonly description: string;
+}
+
+export interface MatchSheetWeatherTable {
+  readonly id: string;
+  readonly name: string;
+  readonly results: readonly MatchSheetWeatherResult[];
+}
+
+/** Entree du catalogue officiel de coups de pouce (hors star players). */
+export interface MatchSheetInducementOption {
+  readonly slug: string;
+  readonly name: string;
+  readonly cost: number;
+  readonly maxQuantity: number;
+  readonly description: string;
+}
+
+export interface MatchSheetStarPlayerOption {
+  readonly slug: string;
+  readonly name: string;
+  readonly cost: number;
+  readonly specialRule?: string;
+}
+
+/** Budget d'inducements d'une equipe (regles officielles BB). */
+export interface MatchSheetTeamBudget {
+  /** CTV = Valeur d'Equipe Actuelle. */
+  readonly ctv: number;
+  readonly treasury: number;
+  /** Petty cash recu (difference de CTV si equipe la moins chere). */
+  readonly pettyCash: number;
+  /** Budget total dépensable = petty cash + tresorerie. */
+  readonly maxBudget: number;
+}
+
+/**
+ * Donnees de reference (catalogues) attachees a la feuille pour piloter
+ * les selecteurs cote UI : tables meteo, catalogue de coups de pouce,
+ * star players disponibles par equipe, et budget d'inducements par equipe.
+ */
+export interface MatchSheetReference {
+  readonly weatherTables: readonly MatchSheetWeatherTable[];
+  readonly inducements: readonly MatchSheetInducementOption[];
+  readonly starPlayers: {
+    readonly home: readonly MatchSheetStarPlayerOption[];
+    readonly away: readonly MatchSheetStarPlayerOption[];
+  };
+  readonly budget: {
+    readonly home: MatchSheetTeamBudget;
+    readonly away: MatchSheetTeamBudget;
+  };
+}
+
+/** Mappe les tables meteo du moteur vers la forme plate consommee par l'UI. */
+function buildWeatherTables(): MatchSheetWeatherTable[] {
+  return WEATHER_TYPES.map((t) => ({
+    id: t.id,
+    name: t.name,
+    results: Object.entries(t.table)
+      .map(([roll, c]) => ({
+        roll: Number(roll),
+        condition: c.condition,
+        description: c.description,
+      }))
+      .sort((a, b) => a.roll - b.roll),
+  }));
+}
+
+/** Catalogue de coups de pouce (hors star_player, traite a part). */
+function buildInducementOptions(): MatchSheetInducementOption[] {
+  return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player").map(
+    (d) => ({
+      slug: d.slug,
+      name: d.displayNameFr,
+      cost: d.baseCost,
+      maxQuantity: d.maxQuantity,
+      description: d.description,
+    }),
+  );
+}
+
+function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
+  return getAvailableStarPlayers(roster).map((s) => ({
+    slug: s.slug,
+    name: s.displayName,
+    cost: s.cost,
+    ...(s.specialRule ? { specialRule: s.specialRule } : {}),
+  }));
+}
+
+/**
+ * Construit le bloc de reference (catalogues + budgets) pour une feuille.
+ * Le petty cash suit les regles BB : l'equipe a la CTV la plus basse recoit
+ * la difference, puis chaque equipe peut puiser dans sa tresorerie.
+ */
+export function buildMatchSheetReference(teams: {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}): MatchSheetReference {
+  const homeCtv = teams.home?.currentValue ?? 0;
+  const awayCtv = teams.away?.currentValue ?? 0;
+  const homeTreasury = teams.home?.treasury ?? 0;
+  const awayTreasury = teams.away?.treasury ?? 0;
+
+  const petty = calculatePettyCash({
+    ctvTeamA: homeCtv,
+    ctvTeamB: awayCtv,
+    treasuryTeamA: homeTreasury,
+    treasuryTeamB: awayTreasury,
+  });
+
+  return {
+    weatherTables: buildWeatherTables(),
+    inducements: buildInducementOptions(),
+    starPlayers: {
+      home: teams.home ? starPlayersFor(teams.home.roster) : [],
+      away: teams.away ? starPlayersFor(teams.away.roster) : [],
+    },
+    budget: {
+      home: {
+        ctv: homeCtv,
+        treasury: homeTreasury,
+        pettyCash: petty.teamA.pettyCash,
+        maxBudget: petty.teamA.maxBudget,
+      },
+      away: {
+        ctv: awayCtv,
+        treasury: awayTreasury,
+        pettyCash: petty.teamB.pettyCash,
+        maxBudget: petty.teamB.maxBudget,
+      },
+    },
   };
 }
 
@@ -1158,6 +1393,7 @@ export async function getMatchSheet(input: {
   summary: MatchSummary;
   viewerRole: "home" | "away" | "commissioner" | "none";
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+  reference: MatchSheetReference;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -1176,6 +1412,7 @@ export async function getMatchSheet(input: {
     sheet,
     summary: summarizeMatchSheet(events),
     teams,
+    reference: buildMatchSheetReference(teams),
     viewerRole: commissioner
       ? "commissioner"
       : side === "home"

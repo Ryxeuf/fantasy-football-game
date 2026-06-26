@@ -25,6 +25,10 @@ export const addEventSchema = z.object({
     .enum(["badly_hurt", "mng", "niggling", "stat_loss", "dead"])
     .optional()
     .nullable(),
+  /** Mi-temps de l'evenement (1 ou 2). Fusionne dans meta.half. */
+  half: z.number().int().min(1).max(2).optional().nullable(),
+  /** Tour de l'evenement (1..16). Fusionne dans meta.turn. */
+  turn: z.number().int().min(1).max(16).optional().nullable(),
   meta: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 export type AddEventBody = z.infer<typeof addEventSchema>;
