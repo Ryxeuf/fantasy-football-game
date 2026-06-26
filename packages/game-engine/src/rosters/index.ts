@@ -105,6 +105,13 @@ export {
   type RegionalLeagueDefinition,
 } from "./regional-leagues";
 
+// Index inverse Ligue régionale → rosters (pages publiques `/ligues`)
+export {
+  getRostersForRegionalLeague,
+  getRegionalLeaguesWithRosters,
+  type RegionalLeagueWithRosters,
+} from "./regional-league-rosters";
+
 // Formats de jeu : Blood Bowl à 11 vs Blood Bowl à Sept (axe orthogonal au ruleset)
 export {
   FORMATS,
