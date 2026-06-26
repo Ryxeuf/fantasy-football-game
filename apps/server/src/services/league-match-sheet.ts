@@ -34,6 +34,7 @@ import {
   type OfflineInjuryType,
 } from "./league-offline-result";
 import { parsePurchases } from "./league-offline-purchases";
+import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
@@ -1440,6 +1441,8 @@ export async function getMatchSheet(input: {
   viewerRole: "home" | "away" | "commissioner" | "none";
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
   reference: MatchSheetReference;
+  /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
+  computedSpp: Record<string, number>;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -1454,11 +1457,39 @@ export async function getMatchSheet(input: {
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
   const teams = await loadSheetTeams(input.pairingId);
+  const summary = summarizeMatchSheet(events);
+
+  // SPP autoritaire par joueur : meme calcul que celui applique a la
+  // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
+  const motm = new Set(
+    parseStringArray((sheet as { motmPlayerIds?: unknown }).motmPlayerIds),
+  );
+  const sppContext = await loadLeagueSPPContext(prisma, {
+    isLeagueMatch: true,
+    teamARoster: teams.home?.roster ?? "",
+    teamBRoster: teams.away?.roster ?? "",
+  });
+  const computedSpp: Record<string, number> = {};
+  for (const s of summary.playerStats) {
+    const modifier = s.side === "home" ? sppContext.teamA : sppContext.teamB;
+    computedSpp[s.playerId] = calculatePlayerSPP(
+      {
+        touchdowns: s.touchdowns,
+        casualties: s.casualtiesInflicted,
+        completions: s.completions,
+        interceptions: s.interceptions,
+        mvp: motm.has(s.playerId),
+      },
+      modifier,
+    );
+  }
+
   return {
     sheet,
-    summary: summarizeMatchSheet(events),
+    summary,
     teams,
     reference: buildMatchSheetReference(teams),
+    computedSpp,
     viewerRole: commissioner
       ? "commissioner"
       : side === "home"
