@@ -61,7 +61,8 @@ export interface PlayerStatRow {
 export interface PlayerStatsCatalogue {
   readonly seasonId: string;
   readonly topN: number;
-  readonly scope: "career";
+  /** "season" si dérivé des events de la saison, "career" en repli. */
+  readonly scope: "career" | "season";
   readonly topScorers: PlayerStatRow[];
   readonly topBashers: PlayerStatRow[];
   /** FR18 — éliminations "mort" infligées (events de saison). */
@@ -200,6 +201,12 @@ export async function computeLeaderboards(input: {
   const aggrCounts = new Map<string, number>();
   const throwCounts = new Map<string, number>();
   const sufferedCounts = new Map<string, number>();
+  // Catégories aussi dérivables des events -> scope par-saison (vs career).
+  const tdCounts = new Map<string, number>();
+  const compCounts = new Map<string, number>();
+  const intCounts = new Map<string, number>();
+  const casCounts = new Map<string, number>();
+  let hasEvents = false;
   // Types d'élimination subie comptés pour le "sac de frappe".
   const SUFFERED_KINDS = new Set([
     "casualty",
@@ -239,10 +246,15 @@ export async function computeLeaderboards(input: {
       targetPlayerId: string | null;
       injurySeverity: string | null;
     }>;
+    hasEvents = events.length > 0;
     const bump = (m: Map<string, number>, id: string) =>
       m.set(id, (m.get(id) ?? 0) + 1);
     for (const e of events) {
       if (e.actorPlayerId) {
+        if (e.kind === "touchdown") bump(tdCounts, e.actorPlayerId);
+        if (e.kind === "pass_complete") bump(compCounts, e.actorPlayerId);
+        if (e.kind === "interception") bump(intCounts, e.actorPlayerId);
+        if (e.kind === "casualty") bump(casCounts, e.actorPlayerId);
         if (e.kind === "casualty" && e.injurySeverity === "dead") {
           bump(killCounts, e.actorPlayerId);
         }
@@ -264,17 +276,28 @@ export async function computeLeaderboards(input: {
       ? topByCount(players, sufferedCounts, topN)
       : topByMetric(players, (p) => p.nigglingInjuries, topN);
 
+  // FR18 — scope par-saison quand des events existent (sinon repli career).
+  // MVP et Future Star restent basés sur les compteurs cumulés (intrinsèquement
+  // career) : pas d'event dédié fiable par saison.
   return {
     seasonId: input.seasonId,
     topN,
-    scope: "career",
-    topScorers: topByMetric(players, (p) => p.totalTouchdowns, topN),
-    topBashers: topByMetric(players, (p) => p.totalCasualties, topN),
+    scope: hasEvents ? "season" : "career",
+    topScorers: hasEvents
+      ? topByCount(players, tdCounts, topN)
+      : topByMetric(players, (p) => p.totalTouchdowns, topN),
+    topBashers: hasEvents
+      ? topByCount(players, casCounts, topN)
+      : topByMetric(players, (p) => p.totalCasualties, topN),
     topKillers: topByCount(players, killCounts, topN),
     topAggressors: topByCount(players, aggrCounts, topN),
     topTeamThrowers: topByCount(players, throwCounts, topN),
-    topPassers: topByMetric(players, (p) => p.totalCompletions, topN),
-    topInterceptors: topByMetric(players, (p) => p.totalInterceptions, topN),
+    topPassers: hasEvents
+      ? topByCount(players, compCounts, topN)
+      : topByMetric(players, (p) => p.totalCompletions, topN),
+    topInterceptors: hasEvents
+      ? topByCount(players, intCounts, topN)
+      : topByMetric(players, (p) => p.totalInterceptions, topN),
     topFutureStars: topByMetric(players, (p) => p.spp, topN),
     topMvps: topByMetric(players, (p) => p.totalMvpAwards, topN),
     topPunchingBags,

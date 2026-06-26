@@ -282,6 +282,37 @@ describe("Lot J — league-player-stats", () => {
       const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
       expect(cat.topKillers).toEqual([]);
       expect(cat.topAggressors).toEqual([]);
+      // Repli career : pas d'events -> scope career.
+      expect(cat.scope).toBe("career");
+    });
+
+    it("scope=season : marqueurs/passeurs/intercepteurs dérivés des events", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        // career: p1 a 12 TD, mais la saison ne compte que les events.
+        player({ id: "p1", teamId: "T1", totalTouchdowns: 12 }),
+        player({ id: "p2", teamId: "T1", totalTouchdowns: 0 }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "touchdown", actorPlayerId: "p2", targetPlayerId: null, injurySeverity: null },
+        { kind: "touchdown", actorPlayerId: "p2", targetPlayerId: null, injurySeverity: null },
+        { kind: "pass_complete", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        { kind: "interception", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.scope).toBe("season");
+      // Marqueur de la saison = p2 (2 TD events), pas p1 (12 TD career).
+      expect(cat.topScorers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 2],
+      ]);
+      expect(cat.topPassers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
+      expect(cat.topInterceptors.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
     });
   });
 });

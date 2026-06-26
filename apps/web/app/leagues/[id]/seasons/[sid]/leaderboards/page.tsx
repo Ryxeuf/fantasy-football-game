@@ -25,7 +25,7 @@ interface PlayerStatRow {
 interface PlayerStatsCatalogue {
   seasonId: string;
   topN: number;
-  scope: "career";
+  scope: "career" | "season";
   topScorers: PlayerStatRow[];
   topBashers: PlayerStatRow[];
   topKillers: PlayerStatRow[];
@@ -140,6 +140,15 @@ export default function LeaderboardsPage() {
       {error && (
         <p className="rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
       )}
+
+      {/* FR18 — indication du périmètre des stats (saison vs carrière). */}
+      {!loading && global ? (
+        <p className="text-xs text-slate-500" data-testid="leaderboards-scope">
+          {global.scope === "season"
+            ? "Statistiques de la saison (calculées sur les feuilles de match)."
+            : "Statistiques de carrière (aucune feuille de match saisie pour cette saison)."}
+        </p>
+      ) : null}
 
       {mode === "global" && global && <GlobalView catalogue={global} />}
       {mode === "by-team" && byTeam && <ByTeamView data={byTeam} />}
