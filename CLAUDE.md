@@ -550,23 +550,30 @@ vi.mock("./pro-roster-spp", () => ({
 ## Compendium des regles BB (docs .md <-> web .json)
 
 Les regles Blood Bowl 2025 (saison 3) existent en DEUX representations
-qui doivent rester synchronisees **dans le meme commit** :
+au role DIFFERENT, a garder coherentes **dans le meme commit** :
 
-- **Source lisible** : `docs/regles-bb-2025/*.md` (transcription fidele des
-  photos du livre, une page = un fichier + `README.md` sommaire).
-- **Source de rendu** : `apps/web/app/compendium/data/rules-bb-2025.json`
-  (un objet `Compendium` = `meta` + `chapters[]`, chaque chapitre ayant
-  `slug`, `title`, `summary`, `sourcePages[]` et des `blocks[]` typés —
-  heading/paragraph/list/table/callout). Importe statiquement par les pages
-  `apps/web/app/compendium/` (index + `[slug]`, SSG via
-  `generateStaticParams`, ISR 3600s). Pas de DB : contenu editorial statique.
+- **Reference fidele (NON publiee)** : `docs/regles-bb-2025/*.md` =
+  transcription mot a mot des photos du livre (une page = un fichier +
+  `README.md`). Sert de source d'exactitude. ATTENTION juridique : c'est une
+  reproduction litterale (PI Games Workshop) — a NE PAS exposer telle quelle
+  sur le site public ; la garder comme reference interne.
+- **Contenu publie (REECRIT)** : `apps/web/app/compendium/data/rules-bb-2025.json`
+  = resumes REFORMULES avec nos propres mots (anti-contrefacon), fluff/lore
+  et exemples nominatifs SUPPRIMES, donnees factuelles conservees (des, seuils,
+  couts, caracteristiques). Objet `Compendium` = `meta` + `chapters[]`
+  (`slug`, `title`, `summary`, `sourcePages[]`, `blocks[]` typés —
+  heading/paragraph/list/table/callout ; PAS de callout "info"/"example" sur
+  le contenu publie). Importe statiquement par `apps/web/app/compendium/`
+  (index + `[slug]`, SSG `generateStaticParams`, ISR 3600s). Pas de DB.
+  Disclaimer de non-affiliation rendu dans `layout.tsx`.
 
-**Regle** : toute modification d'une regle (correction de transcription,
-nouvelle edition, ajout/retrait de chapitre) doit etre repercutee
-SIMULTANEMENT sur le `.md` concerne ET sur le `.json`, en gardant
-`sourcePages` aligne. Le champ `meta.version` est bumpe a chaque revision.
-Apres edition du `.json`, `pnpm --filter web typecheck` doit passer (le
-schema est type dans `apps/web/app/compendium/types.ts`).
+**Regle** : le `.json` ne recopie PAS les phrases du `.md` (sinon le risque
+PI revient). Toute evolution d'une regle (correction, nouvelle edition,
+ajout/retrait de chapitre) se repercute sur le `.md` (transcription) ET sur
+le `.json` (version reformulee), en gardant la MEME structure (chapitres,
+`sourcePages`) et le meme SENS — mais des formulations distinctes. Bumper
+`meta.version`. Apres edition du `.json`, `pnpm --filter web typecheck` +
+`pnpm --filter web vitest run app/compendium/data.test.ts` doivent passer.
 
 ## Historique sessions
 
