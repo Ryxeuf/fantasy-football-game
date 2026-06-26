@@ -20,22 +20,25 @@ function renderInline(text: string): ReactNode {
 
 const CALLOUT_STYLES: Record<
   "info" | "warning" | "example",
-  { box: string; label: string; defaultTitle: string }
+  { box: string; label: string; defaultTitle: string; icon: string }
 > = {
   info: {
     box: "border-nuffle-gold/40 bg-nuffle-gold/5",
     label: "text-nuffle-gold",
     defaultTitle: "Le saviez-vous ?",
+    icon: "💡",
   },
   warning: {
     box: "border-nuffle-red/40 bg-nuffle-red/5",
     label: "text-nuffle-red",
     defaultTitle: "Attention",
+    icon: "⚠️",
   },
   example: {
     box: "border-nuffle-bronze/40 bg-nuffle-ivory/40",
     label: "text-nuffle-bronze",
     defaultTitle: "Exemple",
+    icon: "🎲",
   },
 };
 
@@ -65,8 +68,12 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
                 <h2
                   key={index}
                   id={id}
-                  className="scroll-mt-24 border-b border-nuffle-bronze/15 pb-2 pt-4 text-2xl font-semibold text-nuffle-anthracite"
+                  className="scroll-mt-24 flex items-center gap-2.5 border-b border-nuffle-bronze/15 pb-2 pt-5 font-heading text-2xl font-bold text-nuffle-anthracite"
                 >
+                  <span
+                    aria-hidden
+                    className="h-5 w-1.5 shrink-0 rounded-full bg-nuffle-gold"
+                  />
                   {block.text}
                 </h2>
               );
@@ -74,7 +81,7 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
             return (
               <h3
                 key={index}
-                className="pt-2 text-lg font-semibold text-nuffle-anthracite"
+                className="pt-2 font-heading text-lg font-semibold text-nuffle-bronze"
               >
                 {block.text}
               </h3>
@@ -85,7 +92,7 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
             return (
               <p
                 key={index}
-                className="text-[15px] leading-relaxed text-nuffle-anthracite/85"
+                className="max-w-prose text-[15px] leading-7 text-nuffle-anthracite/85"
               >
                 {renderInline(block.text)}
               </p>
@@ -93,12 +100,17 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
 
           case "list": {
             const className =
-              "ml-5 list-outside space-y-1 text-[15px] leading-relaxed text-nuffle-anthracite/85";
+              "ml-5 max-w-prose list-outside space-y-1.5 text-[15px] leading-7 text-nuffle-anthracite/85 marker:text-nuffle-gold";
             const items = block.items.map((item, i) => (
-              <li key={i}>{renderInline(item)}</li>
+              <li key={i} className="pl-1">
+                {renderInline(item)}
+              </li>
             ));
             return block.ordered ? (
-              <ol key={index} className={`list-decimal ${className}`}>
+              <ol
+                key={index}
+                className={`list-decimal marker:font-score marker:text-base ${className}`}
+              >
                 {items}
               </ol>
             ) : (
@@ -111,27 +123,30 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
           case "table":
             return (
               <figure key={index} className="space-y-2">
-                <div className="overflow-x-auto rounded-lg border border-nuffle-bronze/20">
+                <div className="overflow-x-auto rounded-xl border border-nuffle-bronze/20 shadow-sm">
                   <table className="w-full border-collapse text-sm">
-                    <thead className="bg-nuffle-ivory/50 text-left text-xs uppercase tracking-wide text-nuffle-bronze">
+                    <thead className="bg-nuffle-ivory/60 text-left text-xs uppercase tracking-wide text-nuffle-bronze">
                       <tr>
                         {block.columns.map((col, c) => (
                           <th
                             key={c}
-                            className="whitespace-nowrap px-3 py-2 font-semibold"
+                            className="whitespace-nowrap px-3 py-2.5 font-semibold"
                           >
                             {col}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-nuffle-bronze/15">
+                    <tbody>
                       {block.rows.map((row, r) => (
-                        <tr key={r} className="align-top">
+                        <tr
+                          key={r}
+                          className="align-top odd:bg-white even:bg-nuffle-ivory/20"
+                        >
                           {row.map((cell, c) => (
                             <td
                               key={c}
-                              className="px-3 py-2 text-nuffle-anthracite/85"
+                              className="border-t border-nuffle-bronze/10 px-3 py-2 text-nuffle-anthracite/85"
                             >
                               {renderInline(cell)}
                             </td>
@@ -154,16 +169,21 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
             return (
               <aside
                 key={index}
-                className={`rounded-lg border px-4 py-3 ${style.box}`}
+                className={`flex gap-3 rounded-xl border px-4 py-3 ${style.box}`}
               >
-                <p
-                  className={`mb-1 text-xs font-semibold uppercase tracking-wide ${style.label}`}
-                >
-                  {block.title ?? style.defaultTitle}
-                </p>
-                <p className="text-[15px] leading-relaxed text-nuffle-anthracite/85">
-                  {renderInline(block.text)}
-                </p>
+                <span aria-hidden className="select-none text-lg leading-6">
+                  {style.icon}
+                </span>
+                <div className="min-w-0">
+                  <p
+                    className={`mb-1 text-xs font-semibold uppercase tracking-wide ${style.label}`}
+                  >
+                    {block.title ?? style.defaultTitle}
+                  </p>
+                  <p className="text-[15px] leading-7 text-nuffle-anthracite/85">
+                    {renderInline(block.text)}
+                  </p>
+                </div>
               </aside>
             );
           }

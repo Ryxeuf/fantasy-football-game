@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { compendium } from "./data";
 
 export const metadata: Metadata = {
   title: "Compendium des règles Blood Bowl",
@@ -22,10 +21,5 @@ export default function CompendiumLayout({
 }: {
   children: React.ReactNode;
 }): JSX.Element {
-  return (
-    <div className="space-y-6">
-      <p className="text-xs text-nuffle-anthracite/50">{compendium.meta.edition}</p>
-      {children}
-    </div>
-  );
+  return <div className="mx-auto w-full max-w-5xl">{children}</div>;
 }
