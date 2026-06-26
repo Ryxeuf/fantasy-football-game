@@ -6,6 +6,11 @@ import { getSkillCategoryIcon } from "../../lib/skill-category-icons";
 import StructuredData from "../../components/StructuredData";
 import { buildSkillDetailSchema } from "../skill-detail-structured-data";
 import type { Skill } from "../SkillsClient";
+import {
+  groupPositionsByRoster,
+  type ApiPositionLite,
+  type SkillRosterGroup,
+} from "../positions-with-skill";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
@@ -36,6 +41,8 @@ const RULESET_LABELS: Record<string, string> = {
 interface SkillBundle {
   skill: Skill;
   related: Skill[];
+  /** Ruleset dans lequel la compétence a été trouvée (pour fetcher les positions). */
+  ruleset: string;
 }
 
 async function fetchSkillList(ruleset: string, throwing: boolean): Promise<Skill[]> {
@@ -56,10 +63,28 @@ async function getSkillBundle(slug: string, throwing: boolean): Promise<SkillBun
         .filter((s) => s.category === skill.category && s.slug !== skill.slug)
         .sort((a, b) => a.nameFr.localeCompare(b.nameFr))
         .slice(0, 8);
-      return { skill, related };
+      return { skill, related, ruleset };
     }
   }
   return null;
+}
+
+/**
+ * Positions qui DÉMARRENT avec cette compétence, groupées par roster. Le fetch
+ * de la liste des positions est best-effort (jamais bloquant pour l'affichage
+ * de la compétence) : en cas d'erreur réseau on rend simplement la page sans
+ * ce bloc de maillage interne.
+ */
+async function fetchPositionsWithSkill(
+  slug: string,
+  ruleset: string,
+): Promise<SkillRosterGroup[]> {
+  const base = getServerApiBase();
+  const url = `${base}/api/positions?lang=fr&ruleset=${encodeURIComponent(ruleset)}`;
+  const data = await safeServerJson<{ positions?: ApiPositionLite[] }>(url, {
+    next: { revalidate: 3600 },
+  });
+  return groupPositionsByRoster(data?.positions ?? [], slug);
 }
 
 export async function generateMetadata({ params }: SkillPageProps): Promise<Metadata> {
@@ -105,7 +130,12 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
   if (!bundle) {
     notFound();
   }
-  const { skill, related } = bundle;
+  const { skill, related, ruleset } = bundle;
+  const positionGroups = await fetchPositionsWithSkill(skill.slug, ruleset);
+  const positionCount = positionGroups.reduce(
+    (sum, group) => sum + group.positions.length,
+    0,
+  );
   const icon = getSkillCategoryIcon(skill.category);
   const categoryLabel = CATEGORY_LABELS[skill.category]?.fr ?? skill.category;
   const relatedHeading = CATEGORY_LABELS[skill.category]?.related ?? "Autres compétences";
@@ -195,6 +225,50 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* Positions qui démarrent avec cette compétence (maillage interne) */}
+        {positionGroups.length > 0 && (
+          <section className="mt-8" data-testid="skill-positions">
+            <h2 className="font-heading font-bold text-xl text-nuffle-anthracite">
+              Positions avec cette compétence
+            </h2>
+            <p className="mt-1 text-sm font-body text-nuffle-bronze/80">
+              {positionCount === 1
+                ? "1 poste démarre"
+                : `${positionCount} postes démarrent`}{" "}
+              avec {skill.nameFr} dès le recrutement.
+            </p>
+            <div className="mt-4 space-y-5">
+              {positionGroups.map((group) => (
+                <div key={group.rosterSlug}>
+                  <h3 className="font-subtitle text-sm font-semibold uppercase tracking-wide text-nuffle-bronze/70">
+                    <a
+                      href={`/teams/${group.rosterSlug}`}
+                      className="hover:text-nuffle-gold transition-colors"
+                    >
+                      {group.rosterName}
+                    </a>
+                  </h3>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {group.positions.map((position) => (
+                      <li key={`${group.rosterSlug}-${position.segment}`}>
+                        <a
+                          href={`/teams/${group.rosterSlug}/${position.segment}`}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[#FBF7EC] border border-nuffle-bronze/20 px-3 py-1.5 text-sm font-subtitle font-semibold text-nuffle-anthracite hover:border-nuffle-gold/60 hover:text-nuffle-gold transition-all"
+                        >
+                          {position.displayName}
+                          <span aria-hidden="true" className="text-nuffle-bronze/50">
+                            →
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
