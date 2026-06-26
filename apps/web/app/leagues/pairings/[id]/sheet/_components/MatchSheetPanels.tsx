@@ -74,11 +74,16 @@ export interface TeamBudget {
   pettyCash: number;
   maxBudget: number;
 }
+export interface TeamColors {
+  primary: string;
+  secondary: string;
+}
 export interface MatchSheetReference {
   weatherTables: WeatherTable[];
-  inducements: InducementOption[];
+  inducements: { home: InducementOption[]; away: InducementOption[] };
   starPlayers: { home: StarPlayerOption[]; away: StarPlayerOption[] };
   budget: { home: TeamBudget; away: TeamBudget };
+  colors: { home: TeamColors; away: TeamColors };
 }
 
 /** Badge race + coach affiché sous le nom d'équipe (RÉSUMÉ). */
@@ -469,6 +474,7 @@ export function PreMatchPanel({
       winnings: winningsH,
       ind: indH,
       setInd: setIndH,
+      catalogue: reference.inducements.home,
       stars: reference.starPlayers.home,
       budget: reference.budget.home,
     },
@@ -480,6 +486,7 @@ export function PreMatchPanel({
       winnings: winningsA,
       ind: indA,
       setInd: setIndA,
+      catalogue: reference.inducements.away,
       stars: reference.starPlayers.away,
       budget: reference.budget.away,
     },
@@ -602,7 +609,7 @@ export function PreMatchPanel({
               onChange={c.setInd}
               disabled={disabled}
               testId={`inducements-${c.side}`}
-              catalogue={reference.inducements}
+              catalogue={c.catalogue}
               starPlayers={c.stars}
               budget={c.budget}
             />

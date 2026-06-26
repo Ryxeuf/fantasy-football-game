@@ -489,12 +489,20 @@ export default function MatchSheetPage() {
             <div className="truncate font-semibold text-nuffle-anthracite">
               {home?.name ?? "Domicile"}
             </div>
+            <span
+              className="ml-auto mt-1 block h-1 w-12 rounded-full"
+              style={{ backgroundColor: data.reference.colors.home.primary }}
+            />
             <TeamIdentityBadges team={home} align="right" />
             <TeamValueStrip team={home} align="right" />
           </div>
           <div
-            className="mt-1 shrink-0 rounded bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
+            className="mt-1 shrink-0 rounded border-y-2 bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
             data-testid="derived-score"
+            style={{
+              borderTopColor: data.reference.colors.home.primary,
+              borderBottomColor: data.reference.colors.away.primary,
+            }}
           >
             {data.summary.scoreHome} – {data.summary.scoreAway}
           </div>
@@ -502,6 +510,10 @@ export default function MatchSheetPage() {
             <div className="truncate font-semibold text-nuffle-anthracite">
               {away?.name ?? "Extérieur"}
             </div>
+            <span
+              className="mt-1 block h-1 w-12 rounded-full"
+              style={{ backgroundColor: data.reference.colors.away.primary }}
+            />
             <TeamIdentityBadges team={away} align="left" />
             <TeamValueStrip team={away} align="left" />
           </div>
@@ -593,72 +605,12 @@ export default function MatchSheetPage() {
       {tab === "during" && (
       <section className="rounded-lg border bg-white p-4">
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
-          Timeline du match
+          Au cours du match
         </h2>
 
-        {timeline.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
-        ) : (
-          <ol
-            className="relative space-y-1 border-l-2 border-slate-200 pl-3"
-            data-testid="events-list"
-          >
-            {timeline.map(({ ev, m }, idx) => {
-              const evTeam = ev.team === "home" ? home : away;
-              const kindLabel =
-                EVENT_KINDS.find((k) => k.value === ev.kind)?.label ?? ev.kind;
-              // Séparateur de mi-temps quand elle change dans l'ordre trié.
-              const prevHalf =
-                idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
-              const curHalf = m.half ?? 1;
-              const showHalfDivider = curHalf !== prevHalf;
-              return (
-                <li key={ev.id} className="space-y-1">
-                  {showHalfDivider && (
-                    <div className="-ml-3 flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
-                      <span className="h-2 w-2 rounded-full bg-nuffle-bronze" />
-                      {curHalf === 2 ? "2e mi-temps" : "1re mi-temps"}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-2 rounded border bg-white px-2 py-1.5 text-sm">
-                    <span className="min-w-0">
-                      {m.turn ? (
-                        <span className="mr-1.5 inline-flex shrink-0 items-center rounded bg-nuffle-anthracite/90 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
-                          T{m.turn}
-                        </span>
-                      ) : null}
-                      <strong>{kindLabel}</strong>
-                      {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
-                      {ev.actorPlayerId
-                        ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
-                        : ""}
-                      {ev.targetPlayerId
-                        ? ` → ${playerName(
-                            ev.team === "home" ? away : home,
-                            ev.targetPlayerId,
-                          )}`
-                        : ""}
-                      {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
-                    </span>
-                    {canEdit && (
-                      <button
-                        type="button"
-                        className="shrink-0 text-xs text-red-600"
-                        onClick={() => removeEvent(ev.id)}
-                        disabled={busy}
-                      >
-                        retirer
-                      </button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        )}
-
+        {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
         {canEdit && (
-          <div className="mt-3 space-y-2 rounded border bg-slate-50/60 p-3">
+          <div className="space-y-2 rounded border bg-slate-50/60 p-3">
             <h3 className="text-xs font-semibold text-slate-600">
               Ajouter un évènement
             </h3>
@@ -769,6 +721,85 @@ export default function MatchSheetPage() {
             </button>
           </div>
         )}
+
+        {/* Timeline chronologique (colorée par équipe). */}
+        <div className={canEdit ? "mt-4" : ""}>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Timeline
+          </h3>
+          {timeline.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
+          ) : (
+            <ol
+              className="relative space-y-1 border-l-2 border-slate-200 pl-3"
+              data-testid="events-list"
+            >
+              {timeline.map(({ ev, m }, idx) => {
+                const evTeam = ev.team === "home" ? home : away;
+                const kindLabel =
+                  EVENT_KINDS.find((k) => k.value === ev.kind)?.label ??
+                  ev.kind;
+                const accent =
+                  ev.team === "home"
+                    ? data.reference.colors.home.primary
+                    : ev.team === "away"
+                      ? data.reference.colors.away.primary
+                      : "#94a3b8";
+                const prevHalf =
+                  idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
+                const curHalf = m.half ?? 1;
+                const showHalfDivider = curHalf !== prevHalf;
+                return (
+                  <li key={ev.id} className="space-y-1">
+                    {showHalfDivider && (
+                      <div className="-ml-3 flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
+                        <span className="h-2 w-2 rounded-full bg-nuffle-bronze" />
+                        {curHalf === 2 ? "2e mi-temps" : "1re mi-temps"}
+                      </div>
+                    )}
+                    <div
+                      className="flex items-center justify-between gap-2 rounded border border-l-4 bg-white px-2 py-1.5 text-sm"
+                      style={{ borderLeftColor: accent }}
+                    >
+                      <span className="min-w-0">
+                        {m.turn ? (
+                          <span
+                            className="mr-1.5 inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white"
+                            style={{ backgroundColor: accent }}
+                          >
+                            T{m.turn}
+                          </span>
+                        ) : null}
+                        <strong>{kindLabel}</strong>
+                        {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
+                        {ev.actorPlayerId
+                          ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
+                          : ""}
+                        {ev.targetPlayerId
+                          ? ` → ${playerName(
+                              ev.team === "home" ? away : home,
+                              ev.targetPlayerId,
+                            )}`
+                          : ""}
+                        {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
+                      </span>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          className="shrink-0 text-xs text-red-600"
+                          onClick={() => removeEvent(ev.id)}
+                          disabled={busy}
+                        >
+                          retirer
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
 
         {data.summary.injuries.length > 0 && (
           <div className="mt-3 text-xs text-slate-600">

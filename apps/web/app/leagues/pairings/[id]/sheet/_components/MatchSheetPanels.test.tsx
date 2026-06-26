@@ -41,22 +41,25 @@ const REFERENCE: MatchSheetReference = {
       ],
     },
   ],
-  inducements: [
-    {
-      slug: "bribe",
-      name: "Pot-de-vin",
-      cost: 100_000,
-      maxQuantity: 3,
-      description: "Évite une expulsion.",
-    },
-    {
-      slug: "wizard",
-      name: "Magicien",
-      cost: 150_000,
-      maxQuantity: 1,
-      description: "Lance un sort.",
-    },
-  ],
+  inducements: {
+    home: [
+      {
+        slug: "bribe",
+        name: "Pot-de-vin",
+        cost: 100_000,
+        maxQuantity: 3,
+        description: "Évite une expulsion.",
+      },
+      {
+        slug: "wizard",
+        name: "Magicien",
+        cost: 150_000,
+        maxQuantity: 1,
+        description: "Lance un sort.",
+      },
+    ],
+    away: [],
+  },
   starPlayers: {
     // budget home = pettyCash 150k + treasury 50k = 200k
     home: [{ slug: "morg", name: "Morg 'n' Thorg", cost: 380_000 }],
@@ -65,6 +68,10 @@ const REFERENCE: MatchSheetReference = {
   budget: {
     home: { ctv: 1_000_000, treasury: 50_000, pettyCash: 150_000, maxBudget: 200_000 },
     away: { ctv: 1_150_000, treasury: 0, pettyCash: 0, maxBudget: 0 },
+  },
+  colors: {
+    home: { primary: "#1e3a8a", secondary: "#fbbf24" },
+    away: { primary: "#166534", secondary: "#111827" },
   },
 };
 
