@@ -1,3 +1,10 @@
+## [1.199.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.198.0...v1.199.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** coups de pouce paramétrables au niveau ligue (FR17) ([c5f8a3b](https://github.com/Ryxeuf/fantasy-football-game/commit/c5f8a3bb977c28bdffabf92eeb465300569ac4ac))
+
 ## [1.198.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.197.0...v1.198.0) (2026-06-26)
 
 
