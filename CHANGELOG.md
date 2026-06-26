@@ -1,3 +1,15 @@
+## [1.202.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.201.0...v1.202.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** stats joueurs en scope par-saison via les events (FR18) ([702a53f](https://github.com/Ryxeuf/fantasy-football-game/commit/702a53f3d40e5fed440bf39d9a2d20dfaa2a3604))
+
+
+### 📝 Documentation
+
+* **roadmap:** FR17 enforcement + FR18 scope saison livrés ([bd3cabe](https://github.com/Ryxeuf/fantasy-football-game/commit/bd3cabef8d28744c849153ced59e6f319a89b79b))
+
 ## [1.201.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.200.0...v1.201.0) (2026-06-26)
 
 
