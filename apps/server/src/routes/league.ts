@@ -93,16 +93,23 @@ import {
   CommissionerEditError,
 } from "../services/commissioner-team-edit";
 import {
+  removeTeamFromLeague,
+  removePlayerFromTeam,
+  CommissionerRemovalError,
+} from "../services/commissioner-team-removal";
+import {
   adjustSppSchema,
   addSkillSchema,
   removeSkillSchema,
   adjustCharacteristicSchema,
   adjustTreasurySchema,
+  commissionerRemovalSchema,
   type AdjustSppBody,
   type AddSkillBody,
   type RemoveSkillBody,
   type AdjustCharacteristicBody,
   type AdjustTreasuryBody,
+  type CommissionerRemovalBody,
 } from "../schemas/commissioner-team-edit.schemas";
 import {
   createPoolSchema,
@@ -266,6 +273,22 @@ function domainError(res: Response, e: unknown): void {
             e.code === "player_not_in_team" ||
             e.code === "skill_already_present" ||
             e.code === "skill_not_present"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Suppression commissaire (equipe / joueur pre-saison).
+  if (e instanceof CommissionerRemovalError) {
+    const status =
+      e.code === "season_not_found" ||
+      e.code === "team_not_found" ||
+      e.code === "team_not_in_league" ||
+      e.code === "player_not_found"
+        ? 404
+        : e.code === "season_started" ||
+            e.code === "team_has_played" ||
+            e.code === "player_not_in_team"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -1326,6 +1349,54 @@ export async function handleAdjustTreasury(
   }
 }
 
+/** DELETE /leagues/:leagueId/seasons/:seasonId/teams/:teamId (commissaire). */
+export async function handleRemoveTeamFromLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, seasonId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: CommissionerRemovalBody = req.body;
+  try {
+    const out = await removeTeamFromLeague({
+      leagueId,
+      seasonId,
+      teamId,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** DELETE /leagues/:leagueId/teams/:teamId/players/:playerId (commissaire). */
+export async function handleRemovePlayerFromTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: CommissionerRemovalBody = req.body;
+  try {
+    const out = await removePlayerFromTeam({
+      leagueId,
+      teamId,
+      playerId,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** GET /leagues/:leagueId/audit-log */
 export async function handleGetAuditLog(
   req: AuthenticatedRequest,
@@ -2328,6 +2399,20 @@ router.patch(
   authUser,
   validate(adjustTreasurySchema),
   handleAdjustTreasury,
+);
+// Suppression commissaire (equipe / joueur pre-saison, tant qu'aucun
+// match n'a ete joue).
+router.delete(
+  "/:leagueId/seasons/:seasonId/teams/:teamId",
+  authUser,
+  validate(commissionerRemovalSchema),
+  handleRemoveTeamFromLeague,
+);
+router.delete(
+  "/:leagueId/teams/:teamId/players/:playerId",
+  authUser,
+  validate(commissionerRemovalSchema),
+  handleRemovePlayerFromTeam,
 );
 router.get(
   "/:leagueId/audit-log",

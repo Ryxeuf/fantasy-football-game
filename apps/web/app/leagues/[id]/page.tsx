@@ -684,6 +684,8 @@ export default function LeagueDetailPage() {
                   commissionerLeagueId={
                     leagueEnabled && isCreator ? league.id : undefined
                   }
+                  seasonId={season.id}
+                  seasonStatus={season.status}
                   onChanged={() => {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
