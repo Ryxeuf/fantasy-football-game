@@ -1,3 +1,11 @@
+## [1.202.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.0...v1.202.1) (2026-06-26)
+
+
+### 🐛 Bug Fixes
+
+* **ligues:** build deploy resilient quand l'API est injoignable ([b15c1b4](https://github.com/Ryxeuf/fantasy-football-game/commit/b15c1b48d8bc7fbc7a97a9d3d165da3881252ccf))
+* **ligues:** mirror allowedInducements dans le schema SQLite (FR17) ([32dbc41](https://github.com/Ryxeuf/fantasy-football-game/commit/32dbc41b0c925f3b18a4bea70c3db11f5bd70084))
+
 ## [1.202.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.201.0...v1.202.0) (2026-06-26)
 
 
