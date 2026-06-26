@@ -90,3 +90,33 @@ l'évènement.
 #### Scenario: Affichage
 - WHEN la liste des évènements est rendue
 - THEN la mi-temps et le tour de chaque évènement (s'ils existent) DOIVENT être affichés
+
+### Requirement: Timeline chronologique des évènements
+La liste des évènements DOIT être affichée dans l'ordre chronologique :
+par mi-temps croissante puis par tour croissant, l'ordre de saisie servant
+de départage stable. Les évènements sans mi-temps/tour DOIVENT rester
+affichables (traités comme début de 1re mi-temps).
+
+#### Scenario: Tri par mi-temps puis tour
+- WHEN plusieurs évènements ont des mi-temps/tours différents
+- THEN ils DOIVENT être ordonnés par mi-temps puis par tour, indépendamment de leur ordre de saisie
+
+#### Scenario: Départage stable
+- WHEN deux évènements ont la même mi-temps et le même tour
+- THEN leur ordre relatif de saisie DOIT être conservé
+
+### Requirement: Navigation par phase (onglets)
+La saisie DOIT être organisée en trois phases navigables — avant-match,
+en cours, fin du match — sur une seule page, sans rechargement ni perte
+de l'état de saisie en changeant de phase. Le résumé du match, les
+actions de validation (coach / commissaire) et l'invalidation DOIVENT
+rester accessibles quelle que soit la phase active.
+
+#### Scenario: Changement de phase
+- WHEN l'utilisateur sélectionne une autre phase
+- THEN le contenu correspondant DOIT s'afficher sans rechargement de page
+- AND l'état de saisie des autres phases NE DOIT PAS être perdu
+
+#### Scenario: Actions toujours accessibles
+- WHEN une phase quelconque est active
+- THEN le résumé et les actions de workflow DOIVENT rester visibles

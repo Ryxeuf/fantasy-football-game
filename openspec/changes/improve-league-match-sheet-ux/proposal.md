@@ -39,6 +39,13 @@ Bowl et restait austère :
 - **Évènements** : saisie de la **mi-temps** (1/2) et du **tour** (1..8),
   stockés dans `LeagueMatchEvent.meta` (`{ half, turn }`), affichés en
   badge.
+- **Timeline chronologique** : les évènements sont triés par mi-temps puis
+  tour (départage stable par ordre de saisie) et rendus en liste ordonnée
+  avec séparateurs de mi-temps.
+- **Navigation par onglets** : la feuille est découpée en 3 onglets
+  (Avant-match / En cours / Fin du match) sur la même page (état préservé,
+  pas de refetch) ; résumé, actions de workflow et invalidation restent
+  hors onglets.
 - **API** : `getMatchSheet` renvoie un bloc `reference` (tables météo,
   catalogue de coups de pouce, Star Players par équipe, budgets par
   équipe) et `MatchSheetTeam` est enrichi (`raceName`, `coachName`,

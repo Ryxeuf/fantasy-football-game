@@ -24,12 +24,17 @@
 - [x] 5.3 Éditeur de coups de pouce piloté par le catalogue + Star Players (coût auto, quantité bornée).
 - [x] 5.4 Jauge de budget (petty cash + cagnotte) + blocage du dépassement (save désactivé).
 
-## 6. Frontend — évènements
+## 6. Frontend — évènements & timeline
 - [x] 6.1 Sélecteurs mi-temps / tour dans le formulaire d'ajout.
-- [x] 6.2 Badge `MT… · T…` dans la liste des évènements (parse `meta` tolérant).
+- [x] 6.2 Helper pur `chronologicalTimeline(events)` (tri mi-temps → tour, départage stable) + test.
+- [x] 6.3 Timeline ordonnée (`<ol>` + rail), séparateurs de mi-temps, badge `T{n}`.
+
+## 6bis. Frontend — navigation par onglets
+- [x] 6bis.1 Onglets Avant-match / En cours / Fin du match (état préservé, pas de refetch) ; compteur d'évènements sur « En cours ».
+- [x] 6bis.2 Résumé, actions de workflow et invalidation hors onglets (toujours visibles).
 
 ## 7. Vérification
 - [x] 7.1 `tsc` (server + web).
-- [x] 7.2 Tests : `league-match-sheet.test.ts` (reference, budget, petty cash, half/turn) + `MatchSheetPanels.test.tsx` (badges, météo, budget).
+- [x] 7.2 Tests : `league-match-sheet.test.ts` (reference, budget, petty cash, half/turn) + `MatchSheetPanels.test.tsx` (badges, météo, budget) + `timeline.test.ts` (tri chronologique).
 - [x] 7.3 Lint sans erreur sur les fichiers touchés.
 - [ ] 7.4 Vérification visuelle staging (à faire au déploiement).

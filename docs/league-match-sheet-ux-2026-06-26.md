@@ -41,7 +41,17 @@ officielles Blood Bowl et la rendre plus agréable, dans l'esprit BB.
   évènement. Stockés dans `LeagueMatchEvent.meta` (`{ half, turn }`) —
   pas de migration. Schéma `addEventSchema` étendu (`half`, `turn`),
   fusionnés dans `meta` côté service sans écraser un `meta` fourni.
-- Affichage d'un badge `MT{n} · T{n}` devant chaque évènement.
+- **Timeline chronologique** : les évènements sont triés par mi-temps
+  puis par tour (ordre de saisie comme départage stable), rendus en
+  liste ordonnée (`<ol>`) avec rail vertical, séparateurs de mi-temps et
+  badge `T{n}`. Tri pur exporté : `chronologicalTimeline(events)`.
+
+### Navigation par onglets
+- La feuille est découpée en **3 onglets** (même page, état préservé,
+  pas de refetch) : **Avant-match / En cours / Fin du match**. Le résumé,
+  les actions de workflow (valider/commissaire) et l'invalidation restent
+  visibles hors onglets. L'onglet « En cours » porte un compteur
+  d'évènements.
 
 ## Données de référence (API)
 
