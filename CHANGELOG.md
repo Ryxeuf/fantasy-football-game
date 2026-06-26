@@ -1,3 +1,42 @@
+## [1.193.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.192.0...v1.193.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **compendium:** contenu réécrit (anti-contrefaçon) + disclaimer non-affiliation ([607cfb1](https://github.com/Ryxeuf/fantasy-football-game/commit/607cfb163f32641c7507713a9acb96ef27d7f14d))
+* **compendium:** pages de règles BB 2025 pilotées par JSON ([d04d70f](https://github.com/Ryxeuf/fantasy-football-game/commit/d04d70f3a38f8d214ca0b91ce7ac94e866766c43))
+* **compendium:** refonte UI des pages de regles (esprit BB) ([4491464](https://github.com/Ryxeuf/fantasy-football-game/commit/4491464c2a28882251485a284b8f957231c2ce53))
+* **league:** achats roster + licenciements réversibles + E2E feuille de match ([#929](https://github.com/Ryxeuf/fantasy-football-game/issues/929)) ([a71c516](https://github.com/Ryxeuf/fantasy-football-game/commit/a71c516c5612c2ed3c568060767f7e88f95826e9))
+* **league:** API feuille de match — reference, identite equipe, budget, mi-temps/tour ([bed7873](https://github.com/Ryxeuf/fantasy-football-game/commit/bed7873a7c65b843f033525ed938519412dd02ba))
+* **league:** coups de pouce par equipe + couleurs de roster sur la feuille ([5ef0392](https://github.com/Ryxeuf/fantasy-football-game/commit/5ef0392e05c86e3d265efbce6b15e8baf0326855))
+* **league:** evolutions inline dans la feuille + SPP serveur + gains auto ([8f466ee](https://github.com/Ryxeuf/fantasy-football-game/commit/8f466ee9360d6fd0ebdf2900542fe296b7d9ed6f))
+* **league:** feuille de match en onglets + timeline chronologique ([f8e5b60](https://github.com/Ryxeuf/fantasy-football-game/commit/f8e5b60a8065e9e3615cd2c465f945c1abb80978))
+* **league:** refonte UX feuille de match (badges, meteo, coups de pouce, mi-temps/tour) ([46bcc53](https://github.com/Ryxeuf/fantasy-football-game/commit/46bcc531073bfc2d7b979ec4e3ed11446e80dc51))
+* **league:** saisie evenements (bloc avant timeline) + couleurs equipe ([d2f236b](https://github.com/Ryxeuf/fantasy-football-game/commit/d2f236b014eb3c68ac73d1764e29d0d5543edfef))
+* **league:** SPP autoritaire par joueur dans la reponse feuille de match ([c2787f5](https://github.com/Ryxeuf/fantasy-football-game/commit/c2787f555a7e8ab2a8528b6b4d731b5bde12c35c))
+* **league:** SPP estimés auto en fin de match + onglet Évolutions ([204f4eb](https://github.com/Ryxeuf/fantasy-football-game/commit/204f4eb9ff70add379fd2c67964f4f64a199eccc))
+* **roster:** add special rules and keywords display in team management ([4fe9e1b](https://github.com/Ryxeuf/fantasy-football-game/commit/4fe9e1beb0732cf93f0068f72ba33ec7da60ed3b))
+* **search:** moteur de recherche du contenu public du site ([55c6e3f](https://github.com/Ryxeuf/fantasy-football-game/commit/55c6e3faad30d4c7e60576b6448785f8a55bec49))
+
+
+### 🐛 Bug Fixes
+
+* **admin:** propager les editions roster (config staff) aux pages publiques ([9169db4](https://github.com/Ryxeuf/fantasy-football-game/commit/9169db4490f20be638b6bb35c8ec05c0f334c2cf))
+* **builder:** rosters via proxy ISR tagge (revalidation a la demande) ([a0c4471](https://github.com/Ryxeuf/fantasy-football-game/commit/a0c4471e7d39b532c9ef9af122885bfbc2f7fa12))
+* **compendium:** masquer la source et les textes illisibles sur les pages de regles ([601cebf](https://github.com/Ryxeuf/fantasy-football-game/commit/601cebfdfd6ff554c1bdbac6d4ff597122b0920d))
+* **rosters:** renomme la compétence animosity-underworld en « Animosité (Gobelins) » ([2d7c7d3](https://github.com/Ryxeuf/fantasy-football-game/commit/2d7c7d3c2c35fb2081a506dad3f65e305b89bff9))
+* **teams:** la section Staff lit la config staff en BDD (et non les defauts moteur) ([76d767e](https://github.com/Ryxeuf/fantasy-football-game/commit/76d767eece03e22bc839363246424510d7848343))
+
+
+### 📝 Documentation
+
+* **compendium:** complète le "Le saviez-vous" sur les Snotlings (page-14) ([67173fd](https://github.com/Ryxeuf/fantasy-football-game/commit/67173fd44e8d458cac1c34f008e5a9759d6f5d87))
+* **league:** note refonte UX feuille de match (2026-06-26) ([8ed0b22](https://github.com/Ryxeuf/fantasy-football-game/commit/8ed0b22ef6808173db8082ecde26354becb997f8))
+* **openspec:** lot feuille de match — couleurs, acces coups de pouce, auto-calculs, evolutions inline ([68da232](https://github.com/Ryxeuf/fantasy-football-game/commit/68da2322c16ad501ab0017d1f485a3822902c599))
+* **openspec:** onglets + timeline chronologique feuille de match ([851886f](https://github.com/Ryxeuf/fantasy-football-game/commit/851886f9ad317e25b2c22225f317b42017b59a09))
+* **openspec:** proposition moteur de recherche du contenu public ([6cf3ed5](https://github.com/Ryxeuf/fantasy-football-game/commit/6cf3ed5b29782709c44b24d845dcd3f39bda02ac))
+* **openspec:** proposition refonte UX feuille de match ligue ([02228c3](https://github.com/Ryxeuf/fantasy-football-game/commit/02228c35b3eaf15d5289be55d3884b24cabe7bea))
+
 ## [1.192.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.191.0...v1.192.0) (2026-06-25)
 
 
