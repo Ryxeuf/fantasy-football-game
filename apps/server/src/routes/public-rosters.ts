@@ -22,7 +22,7 @@ import {
   DEFAULT_RULESET,
   RULESETS,
 } from "../utils/ruleset-helpers";
-import { memoizeAsync } from "../utils/memoize-async";
+import { memoizeAsync, invalidateMemoNamespace } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
 import { getRosterPositionStats } from "../services/position-usage-stats";
 
@@ -38,6 +38,18 @@ const ROSTER_CACHE_TTL_MS =
 const ROSTER_LIST_NS = "public-rosters-list";
 const ROSTER_DETAIL_NS = "public-rosters-detail";
 const POSITION_STATS_NS = "public-position-stats";
+
+/**
+ * Vide le cache mémoire des endpoints publics rosters (liste + détail +
+ * stats). À appeler après toute écriture admin sur un roster (config staff,
+ * resync, édition) pour que `/api/rosters[/:slug]` resserve des données
+ * fraîches immédiatement, sans attendre l'expiration du TTL (5 min en prod).
+ */
+export function invalidateRosterCaches(): void {
+  invalidateMemoNamespace(ROSTER_LIST_NS);
+  invalidateMemoNamespace(ROSTER_DETAIL_NS);
+  invalidateMemoNamespace(POSITION_STATS_NS);
+}
 
 interface RosterListPayload {
   rosters: Array<{

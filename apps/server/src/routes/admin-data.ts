@@ -14,6 +14,7 @@ import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
 import { toCanonicalAccessCsv } from "../services/skill-access";
 import { revalidateRosterPages } from "../services/revalidate-web";
+import { invalidateRosterCaches } from "./public-rosters";
 import { validate, validateQuery } from "../middleware/validate";
 
 /**
@@ -493,6 +494,7 @@ router.post("/rosters", validate(createRosterSchema), async (req, res) => {
       entityId: roster.id,
       newValue: { slug: roster.slug, ruleset: roster.ruleset, name: roster.name, tier: roster.tier },
     });
+    invalidateRosterCaches();
     void revalidateRosterPages([roster.slug]);
     res.status(201).json({ roster });
   } catch (error: any) {
@@ -568,6 +570,7 @@ router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
         naf: roster.naf,
       },
     });
+    invalidateRosterCaches();
     void revalidateRosterPages([roster.slug]);
     res.json({ roster });
   } catch (error: any) {
@@ -616,6 +619,14 @@ router.put(
         entityId: roster.id,
         newValue: body,
       });
+
+      // Propagation immédiate : vide le cache mémoire des endpoints publics
+      // rosters (sinon stale jusqu'à 5 min) ET déclenche la régénération ISR
+      // des pages /teams/* du front (sinon stale jusqu'à 1 h). Les autres
+      // écritures roster le font déjà — la config staff l'avait oublié.
+      invalidateRosterCaches();
+      void revalidateRosterPages([roster.slug]);
+
       res.json({ staffConfigs: saved });
     } catch (error: any) {
       serverLog.error(
@@ -718,6 +729,7 @@ router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async 
       newValue: { slug: newRoster.slug, ruleset: newRoster.ruleset, positionCount: sourceRoster.positions.length },
     });
 
+    invalidateRosterCaches();
     void revalidateRosterPages([newRoster.slug]);
     res.status(201).json({
       roster: newRoster,
@@ -744,6 +756,7 @@ router.delete("/rosters/:id", async (req, res) => {
       entityId: req.params.id,
       oldValue: previous,
     });
+    invalidateRosterCaches();
     void revalidateRosterPages(previous?.slug ? [previous.slug] : undefined);
     res.json({ success: true });
   } catch (error: any) {
