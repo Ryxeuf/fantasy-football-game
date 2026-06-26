@@ -11,14 +11,13 @@ import { useState } from "react";
 
 const WINNINGS_PER_POPULARITY = 10_000;
 
-const WEATHER_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "", label: "—" },
-  { value: "sweltering_heat", label: "Chaleur accablante" },
-  { value: "very_sunny", label: "Très ensoleillé" },
-  { value: "perfect", label: "Conditions idéales" },
-  { value: "pouring_rain", label: "Averse" },
-  { value: "blizzard", label: "Blizzard" },
-];
+/** Formate un montant en po (1 200 000 -> "1 200 k"). */
+export function formatGold(po: number): string {
+  if (Math.abs(po) >= 1_000) {
+    return `${Math.round(po / 1_000).toLocaleString("fr-FR")} k`;
+  }
+  return `${po.toLocaleString("fr-FR")} po`;
+}
 
 export interface SheetPlayer {
   id: string;
@@ -34,7 +33,108 @@ export interface SheetTeam {
   teamId: string;
   name: string;
   roster: string;
+  raceName: string;
+  coachName: string;
+  teamValue: number;
+  currentValue: number;
+  treasury: number;
   players: SheetPlayer[];
+}
+
+// ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
+// Catalogues fournis par le serveur (cf. getMatchSheet) : tables météo,
+// coups de pouce officiels, star players par équipe, budgets par équipe.
+
+export interface WeatherResult {
+  roll: number;
+  condition: string;
+  description: string;
+}
+export interface WeatherTable {
+  id: string;
+  name: string;
+  results: WeatherResult[];
+}
+export interface InducementOption {
+  slug: string;
+  name: string;
+  cost: number;
+  maxQuantity: number;
+  description: string;
+}
+export interface StarPlayerOption {
+  slug: string;
+  name: string;
+  cost: number;
+  specialRule?: string;
+}
+export interface TeamBudget {
+  ctv: number;
+  treasury: number;
+  pettyCash: number;
+  maxBudget: number;
+}
+export interface MatchSheetReference {
+  weatherTables: WeatherTable[];
+  inducements: InducementOption[];
+  starPlayers: { home: StarPlayerOption[]; away: StarPlayerOption[] };
+  budget: { home: TeamBudget; away: TeamBudget };
+}
+
+/** Badge race + coach affiché sous le nom d'équipe (RÉSUMÉ). */
+export function TeamIdentityBadges({
+  team,
+  align = "left",
+}: {
+  team: SheetTeam | null;
+  align?: "left" | "right";
+}) {
+  if (!team) return null;
+  return (
+    <div
+      className={`mt-1 flex flex-wrap items-center gap-1 ${
+        align === "right" ? "justify-end" : ""
+      }`}
+    >
+      {team.raceName && (
+        <span className="inline-flex items-center rounded-full bg-nuffle-gold/15 px-2 py-0.5 text-[11px] font-semibold text-nuffle-anthracite ring-1 ring-inset ring-nuffle-gold/40">
+          {team.raceName}
+        </span>
+      )}
+      {team.coachName && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+          <span aria-hidden>🎲</span>
+          {team.coachName}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Bandeau TV (VE/VEA) + trésorerie d'une équipe. */
+export function TeamValueStrip({
+  team,
+  align = "left",
+}: {
+  team: SheetTeam | null;
+  align?: "left" | "right";
+}) {
+  if (!team) return null;
+  return (
+    <div
+      className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 ${
+        align === "right" ? "justify-end" : ""
+      }`}
+    >
+      <span title="Valeur d'Équipe Actuelle">
+        TV <strong className="text-slate-700">{formatGold(team.currentValue)}</strong>
+      </span>
+      <span title="Trésorerie (cagnotte)">
+        Cagnotte{" "}
+        <strong className="text-slate-700">{formatGold(team.treasury)}</strong>
+      </span>
+    </div>
+  );
 }
 
 function playerLabel(p: SheetPlayer): string {
@@ -79,9 +179,14 @@ export function PlayerSelect({
 // ────────────────────────────── AVANT-MATCH ──────────────────────────────
 
 export interface Inducement {
+  /** Slug catalogue (ex: "bribe") ou "star_player". */
+  slug: string;
+  /** Libellé affichable (nom FR du coup de pouce ou nom du star player). */
   name: string;
   cost: number;
   qty: number;
+  /** Pour slug="star_player" : slug du star player choisi. */
+  starPlayerSlug?: string;
 }
 
 export interface PreMatchValues {
@@ -94,12 +199,6 @@ export interface PreMatchValues {
   inducementsAway: Inducement[];
 }
 
-const WEATHER_TABLES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "", label: "—" },
-  { value: "classique", label: "Classique" },
-  { value: "stade_couvert", label: "Stade couvert" },
-];
-
 function sumInducements(list: Inducement[]): number {
   return list.reduce(
     (acc, i) => acc + Math.max(0, i.cost) * Math.max(1, i.qty),
@@ -107,77 +206,196 @@ function sumInducements(list: Inducement[]): number {
   );
 }
 
+/** Trouve la table météo sélectionnée (ou undefined). */
+function findWeatherTable(
+  tables: WeatherTable[],
+  id: string,
+): WeatherTable | undefined {
+  return tables.find((t) => t.id === id);
+}
+
+/**
+ * Sélecteur de coups de pouce piloté par le catalogue officiel :
+ * un menu déroulant (coups de pouce + star players de l'équipe) ajoute des
+ * lignes au coût auto-rempli. La quantité est bornée par `maxQuantity`. Le
+ * total est confronté au budget (petty cash + trésorerie).
+ */
 function InducementEditor({
   list,
   onChange,
   disabled,
   testId,
+  catalogue,
+  starPlayers,
+  budget,
 }: {
   list: Inducement[];
   onChange: (l: Inducement[]) => void;
   disabled?: boolean;
   testId?: string;
+  catalogue: InducementOption[];
+  starPlayers: StarPlayerOption[];
+  budget: TeamBudget;
 }) {
+  const [pick, setPick] = useState("");
+
+  const optBySlug = new Map(catalogue.map((o) => [o.slug, o]));
+  const starBySlug = new Map(starPlayers.map((s) => [s.slug, s]));
+
+  const total = sumInducements(list);
+  const remaining = budget.maxBudget - total;
+  const overBudget = remaining < 0;
+
   const update = (i: number, patch: Partial<Inducement>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
 
+  const addPick = (value: string) => {
+    if (!value) return;
+    if (value.startsWith("star:")) {
+      const slug = value.slice(5);
+      const sp = starBySlug.get(slug);
+      if (sp) {
+        onChange([
+          ...list,
+          {
+            slug: "star_player",
+            starPlayerSlug: sp.slug,
+            name: sp.name,
+            cost: sp.cost,
+            qty: 1,
+          },
+        ]);
+      }
+    } else {
+      const opt = optBySlug.get(value);
+      if (opt) {
+        onChange([
+          ...list,
+          { slug: opt.slug, name: opt.name, cost: opt.cost, qty: 1 },
+        ]);
+      }
+    }
+    setPick("");
+  };
+
   return (
     <div data-testid={testId} className="space-y-2">
-      <div className="text-xs font-medium text-slate-600">Coups de pouce</div>
-      {list.length === 0 && (
-        <p className="text-xs text-slate-400">Aucune prime de match.</p>
-      )}
-      {list.map((it, i) => (
-        <div key={i} className="flex flex-wrap items-center gap-1.5">
-          <input
-            value={it.name}
-            onChange={(e) => update(i, { name: e.target.value })}
-            disabled={disabled}
-            placeholder="Nom"
-            className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
-          />
-          <input
-            type="number"
-            min={0}
-            value={it.cost}
-            onChange={(e) => update(i, { cost: Number(e.target.value) || 0 })}
-            disabled={disabled}
-            placeholder="Coût (po)"
-            className="w-24 rounded border px-2 py-1 text-sm"
-          />
-          <input
-            type="number"
-            min={1}
-            value={it.qty}
-            onChange={(e) => update(i, { qty: Number(e.target.value) || 1 })}
-            disabled={disabled}
-            title="Quantité"
-            className="w-14 rounded border px-2 py-1 text-sm"
-          />
-          {!disabled && (
-            <button
-              type="button"
-              onClick={() => onChange(list.filter((_, idx) => idx !== i))}
-              className="px-1.5 text-sm text-red-600"
-              aria-label="retirer"
-            >
-              ✕
-            </button>
-          )}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium text-slate-600">Coups de pouce</div>
+        <div className="text-[11px] text-slate-500">
+          Budget {formatGold(budget.maxBudget)}
         </div>
-      ))}
-      {!disabled && (
-        <button
-          type="button"
-          onClick={() => onChange([...list, { name: "", cost: 0, qty: 1 }])}
-          className="text-xs font-medium text-blue-600"
-        >
-          + coup de pouce
-        </button>
-      )}
-      <div className="text-[11px] text-slate-500">
-        Cash investi : {sumInducements(list).toLocaleString("fr-FR")} po
       </div>
+
+      {/* Jauge de budget. */}
+      <div className="space-y-0.5">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            className={`h-full ${overBudget ? "bg-red-500" : "bg-emerald-500"}`}
+            style={{
+              width: `${Math.min(100, budget.maxBudget > 0 ? (total / budget.maxBudget) * 100 : total > 0 ? 100 : 0)}%`,
+            }}
+          />
+        </div>
+        <div className="flex justify-between text-[11px] text-slate-500">
+          <span>
+            Petty cash {formatGold(budget.pettyCash)} + cagnotte{" "}
+            {formatGold(budget.treasury)}
+          </span>
+          <span
+            className={overBudget ? "font-semibold text-red-600" : ""}
+            data-testid={`${testId}-remaining`}
+          >
+            {overBudget
+              ? `Dépassé de ${formatGold(-remaining)}`
+              : `Reste ${formatGold(remaining)}`}
+          </span>
+        </div>
+      </div>
+
+      {list.length === 0 && (
+        <p className="text-xs text-slate-400">Aucun coup de pouce.</p>
+      )}
+      {list.map((it, i) => {
+        const opt = optBySlug.get(it.slug);
+        const maxQty = it.slug === "star_player" ? 1 : (opt?.maxQuantity ?? 1);
+        return (
+          <div
+            key={i}
+            className="flex flex-wrap items-center gap-1.5 rounded border bg-white px-2 py-1.5"
+          >
+            <span className="min-w-0 flex-1 truncate text-sm" title={opt?.description}>
+              {it.name}
+              {it.slug === "star_player" && (
+                <span className="ml-1 text-[10px] font-semibold text-nuffle-gold">
+                  ★
+                </span>
+              )}
+            </span>
+            {maxQty > 1 ? (
+              <input
+                type="number"
+                min={1}
+                max={maxQty}
+                value={it.qty}
+                onChange={(e) =>
+                  update(i, {
+                    qty: Math.max(
+                      1,
+                      Math.min(maxQty, Number(e.target.value) || 1),
+                    ),
+                  })
+                }
+                disabled={disabled}
+                title={`Quantité (max ${maxQty})`}
+                className="w-14 rounded border px-2 py-1 text-sm"
+              />
+            ) : (
+              <span className="w-8 text-center text-xs text-slate-400">×1</span>
+            )}
+            <span className="w-20 text-right text-xs tabular-nums text-slate-600">
+              {formatGold(it.cost * it.qty)}
+            </span>
+            {!disabled && (
+              <button
+                type="button"
+                onClick={() => onChange(list.filter((_, idx) => idx !== i))}
+                className="px-1.5 text-sm text-red-600"
+                aria-label="retirer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        );
+      })}
+
+      {!disabled && (
+        <select
+          value={pick}
+          onChange={(e) => addPick(e.target.value)}
+          data-testid={`${testId}-add`}
+          className="block w-full rounded border border-dashed px-2 py-1.5 text-sm text-slate-600"
+        >
+          <option value="">+ Ajouter un coup de pouce…</option>
+          <optgroup label="Coups de pouce">
+            {catalogue.map((o) => (
+              <option key={o.slug} value={o.slug}>
+                {o.name} — {formatGold(o.cost)}
+              </option>
+            ))}
+          </optgroup>
+          {starPlayers.length > 0 && (
+            <optgroup label="Joueurs Star">
+              {starPlayers.map((s) => (
+                <option key={s.slug} value={`star:${s.slug}`}>
+                  ★ {s.name} — {formatGold(s.cost)}
+                </option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+      )}
     </div>
   );
 }
@@ -188,12 +406,14 @@ export function PreMatchPanel({
   awayName,
   disabled,
   onSave,
+  reference,
 }: {
   initial: PreMatchValues;
   homeName: string;
   awayName: string;
   disabled?: boolean;
   onSave: (v: PreMatchValues) => Promise<void>;
+  reference: MatchSheetReference;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -212,6 +432,16 @@ export function PreMatchPanel({
 
   const winningsH = (Number(popH) || 0) * WINNINGS_PER_POPULARITY;
   const winningsA = (Number(popA) || 0) * WINNINGS_PER_POPULARITY;
+
+  const tables = reference.weatherTables;
+  const selectedTable = findWeatherTable(tables, weatherTable);
+  // La météo dépend de la table : on liste les conditions de la table choisie.
+  const weatherResults = selectedTable?.results ?? [];
+  const selectedWeather = weatherResults.find((r) => r.condition === weather);
+
+  const overHome = sumInducements(indH) > reference.budget.home.maxBudget;
+  const overAway = sumInducements(indA) > reference.budget.away.maxBudget;
+  const overBudget = overHome || overAway;
 
   const save = async () => {
     setBusy(true);
@@ -239,6 +469,8 @@ export function PreMatchPanel({
       winnings: winningsH,
       ind: indH,
       setInd: setIndH,
+      stars: reference.starPlayers.home,
+      budget: reference.budget.home,
     },
     {
       side: "away" as const,
@@ -248,6 +480,8 @@ export function PreMatchPanel({
       winnings: winningsA,
       ind: indA,
       setInd: setIndA,
+      stars: reference.starPlayers.away,
+      budget: reference.budget.away,
     },
   ];
 
@@ -265,32 +499,46 @@ export function PreMatchPanel({
           Table météo
           <select
             value={weatherTable}
-            onChange={(e) => setWeatherTable(e.target.value)}
+            onChange={(e) => {
+              setWeatherTable(e.target.value);
+              setWeather(""); // la météo dépend de la table -> on réinitialise
+            }}
             disabled={disabled}
             data-testid="weather-table-select"
             className="mt-1 block w-full rounded border px-2 py-2 text-sm"
           >
-            {WEATHER_TABLES.map((w) => (
-              <option key={w.value} value={w.value}>
-                {w.label}
+            <option value="">— Choisir —</option>
+            {tables.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
               </option>
             ))}
+            {/* Valeur héritée hors catalogue (ancienne saisie). */}
+            {weatherTable && !selectedTable && (
+              <option value={weatherTable}>{weatherTable}</option>
+            )}
           </select>
         </label>
         <label className="block text-xs">
-          Météo initiale
+          Météo (2D6)
           <select
             value={weather}
             onChange={(e) => setWeather(e.target.value)}
-            disabled={disabled}
+            disabled={disabled || weatherResults.length === 0}
             data-testid="weather-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
           >
-            {WEATHER_OPTIONS.map((w) => (
-              <option key={w.value} value={w.value}>
-                {w.label}
+            <option value="">
+              {weatherResults.length === 0 ? "— Table d'abord —" : "—"}
+            </option>
+            {weatherResults.map((r) => (
+              <option key={r.roll} value={r.condition}>
+                {r.roll} — {r.condition}
               </option>
             ))}
+            {weather && !selectedWeather && (
+              <option value={weather}>{weather}</option>
+            )}
           </select>
         </label>
         <label className="block text-xs">
@@ -310,6 +558,19 @@ export function PreMatchPanel({
           </select>
         </label>
       </div>
+
+      {/* Conséquences (informatives) de la météo sélectionnée. */}
+      {selectedWeather && (
+        <div
+          data-testid="weather-consequence"
+          className="mb-3 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700"
+        >
+          <span className="font-semibold text-nuffle-anthracite">
+            {selectedWeather.condition}
+          </span>{" "}
+          — {selectedWeather.description}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {sides.map((c) => (
@@ -341,21 +602,31 @@ export function PreMatchPanel({
               onChange={c.setInd}
               disabled={disabled}
               testId={`inducements-${c.side}`}
+              catalogue={reference.inducements}
+              starPlayers={c.stars}
+              budget={c.budget}
             />
           </div>
         ))}
       </div>
 
       {!disabled && (
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy}
-          data-testid="save-pre-match"
-          className="mt-3 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          Enregistrer l&apos;avant-match
-        </button>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy || overBudget}
+            data-testid="save-pre-match"
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            Enregistrer l&apos;avant-match
+          </button>
+          {overBudget && (
+            <span className="text-xs font-medium text-red-600">
+              Budget de coups de pouce dépassé.
+            </span>
+          )}
+        </div>
       )}
     </section>
   );

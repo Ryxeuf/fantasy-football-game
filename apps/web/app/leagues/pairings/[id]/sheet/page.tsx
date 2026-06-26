@@ -8,6 +8,8 @@ import {
   PostMatchPanel,
   PlayerSelect,
   InvalidateControl,
+  TeamIdentityBadges,
+  TeamValueStrip,
   type PreMatchValues,
   type PostMatchValues,
   type SheetTeam,
@@ -15,6 +17,7 @@ import {
   type CostlyError,
   type Purchase,
   type SppBonusEntry,
+  type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
@@ -65,6 +68,24 @@ interface MatchEvent {
   targetPlayerId: string | null;
   causeDetail: string | null;
   injurySeverity: string | null;
+  meta?: { half?: number; turn?: number } | null;
+}
+
+/** Lit half/turn depuis le meta (tolérant : objet natif ou string JSON). */
+function parseEventMeta(raw: unknown): { half?: number; turn?: number } {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (!obj || typeof obj !== "object") return {};
+  const o = obj as Record<string, unknown>;
+  const half = typeof o.half === "number" ? o.half : undefined;
+  const turn = typeof o.turn === "number" ? o.turn : undefined;
+  return { half, turn };
 }
 
 interface InjuredPlayer {
@@ -111,6 +132,7 @@ interface SheetResponse {
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
   teams: { home: SheetTeam | null; away: SheetTeam | null };
+  reference: MatchSheetReference;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -128,9 +150,13 @@ function parseArray<T>(raw: unknown): T[] {
 
 function parseInducements(raw: unknown): Inducement[] {
   return parseArray<Record<string, unknown>>(raw).map((i) => ({
+    slug: typeof i.slug === "string" ? i.slug : "other",
     name: typeof i.name === "string" ? i.name : "",
     cost: typeof i.cost === "number" ? i.cost : 0,
     qty: typeof i.qty === "number" && i.qty > 0 ? i.qty : 1,
+    ...(typeof i.starPlayerSlug === "string"
+      ? { starPlayerSlug: i.starPlayerSlug }
+      : {}),
   }));
 }
 
@@ -212,6 +238,8 @@ export default function MatchSheetPage() {
   const [actorPlayerId, setActorPlayerId] = useState("");
   const [targetPlayerId, setTargetPlayerId] = useState("");
   const [injurySeverity, setInjurySeverity] = useState("");
+  const [eventHalf, setEventHalf] = useState<1 | 2>(1);
+  const [eventTurn, setEventTurn] = useState<string>("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -267,6 +295,8 @@ export default function MatchSheetPage() {
           actorPlayerId: actorPlayerId || undefined,
           targetPlayerId: targetPlayerId || undefined,
           injurySeverity: injurySeverity || undefined,
+          half: eventHalf,
+          turn: eventTurn ? Number(eventTurn) : undefined,
         }),
       }),
     ).then(() => {
@@ -425,17 +455,16 @@ export default function MatchSheetPage() {
         <h1 className="mb-2 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
           Résumé du match
         </h1>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 text-right">
             <div className="truncate font-semibold text-nuffle-anthracite">
               {home?.name ?? "Domicile"}
             </div>
-            <div className="truncate text-xs text-slate-500">
-              {home?.roster ?? ""}
-            </div>
+            <TeamIdentityBadges team={home} align="right" />
+            <TeamValueStrip team={home} align="right" />
           </div>
           <div
-            className="rounded bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
+            className="mt-1 shrink-0 rounded bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
             data-testid="derived-score"
           >
             {data.summary.scoreHome} – {data.summary.scoreAway}
@@ -444,9 +473,8 @@ export default function MatchSheetPage() {
             <div className="truncate font-semibold text-nuffle-anthracite">
               {away?.name ?? "Extérieur"}
             </div>
-            <div className="truncate text-xs text-slate-500">
-              {away?.roster ?? ""}
-            </div>
+            <TeamIdentityBadges team={away} align="left" />
+            <TeamValueStrip team={away} align="left" />
           </div>
         </div>
         <p className="mt-2 text-center text-xs text-slate-500">
@@ -478,6 +506,7 @@ export default function MatchSheetPage() {
           awayName={away?.name ?? "Extérieur"}
           disabled={!editable}
           onSave={savePreMatch}
+          reference={data.reference}
         />
       )}
 
@@ -495,12 +524,20 @@ export default function MatchSheetPage() {
               const evTeam = ev.team === "home" ? home : away;
               const kindLabel =
                 EVENT_KINDS.find((k) => k.value === ev.kind)?.label ?? ev.kind;
+              const m = parseEventMeta(ev.meta);
               return (
                 <li
                   key={ev.id}
                   className="flex items-center justify-between gap-2 rounded border px-2 py-1.5 text-sm"
                 >
                   <span className="min-w-0">
+                    {(m.half || m.turn) && (
+                      <span className="mr-1.5 inline-flex shrink-0 items-center rounded bg-nuffle-anthracite/90 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white">
+                        {m.half ? `MT${m.half}` : ""}
+                        {m.half && m.turn ? " · " : ""}
+                        {m.turn ? `T${m.turn}` : ""}
+                      </span>
+                    )}
                     <strong>{kindLabel}</strong>
                     {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
                     {ev.actorPlayerId
@@ -535,7 +572,37 @@ export default function MatchSheetPage() {
             <h3 className="text-xs font-semibold text-slate-600">
               Ajouter un évènement
             </h3>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+              <label className="text-xs">
+                Mi-temps
+                <select
+                  value={eventHalf}
+                  onChange={(e) =>
+                    setEventHalf(Number(e.target.value) === 2 ? 2 : 1)
+                  }
+                  data-testid="event-half"
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                >
+                  <option value={1}>1re mi-temps</option>
+                  <option value={2}>2e mi-temps</option>
+                </select>
+              </label>
+              <label className="text-xs">
+                Tour
+                <select
+                  value={eventTurn}
+                  onChange={(e) => setEventTurn(e.target.value)}
+                  data-testid="event-turn"
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                >
+                  <option value="">—</option>
+                  {Array.from({ length: 8 }, (_, i) => i + 1).map((t) => (
+                    <option key={t} value={t}>
+                      Tour {t}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="text-xs">
                 Type
                 <select
