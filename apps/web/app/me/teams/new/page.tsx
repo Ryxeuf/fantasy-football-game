@@ -169,12 +169,12 @@ export default function NewTeamBuilder() {
 
   useEffect(() => {
     const lang = language === "en" ? "en" : "fr";
-    const API_BASE_PUBLIC =
-      process.env.NEXT_PUBLIC_API_BASE ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:8201";
-
-    fetch(`${API_BASE_PUBLIC}/api/rosters?lang=${lang}&ruleset=${ruleset}`)
+    // Passe par le proxy ISR taggé (`/api/builder-rosters`) plutôt qu'un fetch
+    // direct vers l'API publique : pas de cache navigateur, fraîcheur pilotée
+    // à la demande par le tag `rosters` (édition admin → revalidation).
+    fetch(`/api/builder-rosters?lang=${lang}&ruleset=${ruleset}`, {
+      cache: "no-store",
+    })
       .then((r) => r.json())
       .then((data) => {
         const rostersList = (data.rosters || []).map(
