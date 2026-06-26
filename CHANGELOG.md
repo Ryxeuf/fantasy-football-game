@@ -1,3 +1,10 @@
+## [1.201.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.200.0...v1.201.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** enforcement à la soumission des coups de pouce autorisés (FR17) ([17fbff7](https://github.com/Ryxeuf/fantasy-football-game/commit/17fbff749acf5d953d8d439e25d47aa0e622f192))
+
 ## [1.200.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.199.0...v1.200.0) (2026-06-26)
 
 
