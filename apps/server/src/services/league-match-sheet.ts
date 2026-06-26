@@ -73,7 +73,8 @@ export class MatchSheetError extends Error {
       | "event_not_found"
       | "invalidation_window_closed"
       | "invalidation_failed"
-      | "inducement_over_budget",
+      | "inducement_over_budget"
+      | "inducement_not_allowed",
     message: string,
   ) {
     super(message);
@@ -308,6 +309,12 @@ export async function updatePreMatch(input: {
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
     const teams = await loadSheetTeams(input.pairingId);
     const { budget } = buildMatchSheetReference(teams);
+    // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
+    // ligue. Les Star Players (slug "star_player") sont exemptés (ils
+    // dépendent des rosters / règles régionales, pas de l'allowlist).
+    const allowlist = await loadLeagueAllowedInducements(input.pairingId);
+    assertInducementsAllowed(p.inducementsHome, allowlist, "domicile");
+    assertInducementsAllowed(p.inducementsAway, allowlist, "extérieur");
     if (p.inducementsHome !== undefined) {
       const spent = sumGold(p.inducementsHome);
       if (spent > budget.home.maxBudget) {
@@ -1418,6 +1425,31 @@ async function loadLeagueAllowedInducements(
       : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * FR17 — rejette toute sélection de coup de pouce hors `allowlist` (sauf les
+ * Star Players, slug "star_player"). No-op si `allowlist` est null (tous
+ * autorisés) ou si la sélection est absente.
+ */
+function assertInducementsAllowed(
+  selection: unknown,
+  allowlist: string[] | null,
+  sideLabel: string,
+): void {
+  if (allowlist === null || !Array.isArray(selection)) return;
+  const allow = new Set(allowlist);
+  for (const raw of selection) {
+    const slug = (raw as { slug?: unknown }).slug;
+    if (typeof slug !== "string") continue;
+    if (slug === "star_player") continue; // exempté (dépend du roster)
+    if (!allow.has(slug)) {
+      throw new MatchSheetError(
+        "inducement_not_allowed",
+        `Coup de pouce non autorisé par la ligue (${sideLabel}) : "${slug}".`,
+      );
+    }
   }
 }
 

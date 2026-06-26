@@ -305,8 +305,8 @@ describe("Lot G — league-match-sheet", () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValueOnce({
         id: "pair-1",
         round: { season: { league: { id: "L1", creatorId: COMMISH } } },
-        homeParticipant: { team: { ownerId: HOME } },
-        awayParticipant: { team: { ownerId: AWAY } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
       });
       mockPrisma.leaguePairing.findUnique.mockResolvedValueOnce({
         homeParticipant: { team: { name: "Reikland" } },
@@ -731,6 +731,64 @@ describe("Lot G — league-match-sheet", () => {
       ).resolves.toBeDefined();
       expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
     });
+
+    it("FR17 — rejette un coup de pouce hors allowlist ligue", async () => {
+      mockTeamsForBudget();
+      // La ligue n'autorise que "bribe" : wizard doit être refusé.
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: {
+          season: {
+            league: {
+              id: "L1",
+              creatorId: COMMISH,
+              allowedInducements: JSON.stringify(["bribe"]),
+            },
+          },
+        },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [{ slug: "wizard", cost: 150_000, qty: 1 }],
+          },
+        }),
+      ).rejects.toMatchObject({ code: "inducement_not_allowed" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("FR17 — autorise les Star Players même hors allowlist", async () => {
+      mockTeamsForBudget();
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: {
+          season: {
+            league: {
+              id: "L1",
+              creatorId: COMMISH,
+              allowedInducements: JSON.stringify(["bribe"]),
+            },
+          },
+        },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [
+              { slug: "star_player", starPlayerSlug: "griff", cost: 150_000, qty: 1 },
+            ],
+          },
+        }),
+      ).resolves.toBeDefined();
+    });
   });
 
   // Polish — apres-match.
@@ -861,8 +919,8 @@ describe("Lot G — league-match-sheet", () => {
           roundNumber: 3,
           season: { league: { id: "L1", creatorId: COMMISH } },
         },
-        homeParticipant: { team: { ownerId: HOME } },
-        awayParticipant: { team: { ownerId: AWAY } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
       });
     }
 
