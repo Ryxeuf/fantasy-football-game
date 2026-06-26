@@ -573,13 +573,14 @@ export default function TeamDetailClient({
           <div className="p-4 sm:p-6">
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {regionalLeagues.map((league) => (
-                <span
+                <a
                   key={league.slug}
+                  href={`/ligues/${league.slug}`}
                   data-testid={`roster-league-${league.slug}`}
-                  className="px-3 sm:px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-xs sm:text-sm border border-indigo-100"
+                  className="px-3 sm:px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 font-medium text-xs sm:text-sm border border-indigo-100 transition-colors"
                 >
                   {league.name}
-                </span>
+                </a>
               ))}
             </div>
           </div>

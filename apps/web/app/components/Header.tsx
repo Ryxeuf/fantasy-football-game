@@ -207,6 +207,7 @@ export default function Header() {
                 {dropdownItem("/recherche", "🔍", "Rechercher")}
                 {dropdownItem("/compendium", "📜", t.nav.rules)}
                 {dropdownItem("/teams", "⚽", t.nav.teams)}
+                {dropdownItem("/ligues", "🏆", "Ligues")}
                 {dropdownItem("/skills", "📚", t.nav.skills)}
                 {dropdownItem("/star-players", "⭐", t.nav.starPlayers)}
               </div>
@@ -413,6 +414,13 @@ export default function Header() {
                 className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 ⚽ {t.nav.teams}
+              </a>
+              <a
+                href="/ligues"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                🏆 Ligues
               </a>
               <a
                 href="/skills"
