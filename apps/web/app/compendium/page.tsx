@@ -58,8 +58,33 @@ export default function CompendiumIndexPage(): JSX.Element {
           coup d&apos;envoi aux star players. Cliquez sur un chapitre pour le
           lire.
         </p>
-        <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-nuffle-gold/30 bg-nuffle-gold/10 px-4 py-1.5 font-score text-lg tracking-wide text-nuffle-gold">
-          {chapters.length} chapitres
+        {/* Recherche globale (GET — fonctionne sans JS). */}
+        <form
+          action="/recherche"
+          method="get"
+          role="search"
+          className="mx-auto mt-7 flex max-w-md items-center gap-2 rounded-2xl border border-nuffle-gold/30 bg-white/95 p-1.5 shadow-sm"
+        >
+          <span aria-hidden className="pl-2 text-nuffle-anthracite/40">
+            🔍
+          </span>
+          <input
+            type="search"
+            name="q"
+            aria-label="Rechercher sur le site"
+            placeholder="Rechercher une règle, une compétence…"
+            className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-nuffle-anthracite outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-nuffle-anthracite px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-black"
+          >
+            Rechercher
+          </button>
+        </form>
+        <p className="mt-4 text-xs text-nuffle-ivory/60">
+          {chapters.length} chapitres · règles, compétences, positions, équipes
+          &amp; star players
         </p>
       </header>
 
