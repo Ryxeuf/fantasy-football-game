@@ -1385,6 +1385,12 @@ function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
  * Le petty cash suit les regles BB : l'equipe a la CTV la plus basse recoit
  * la difference, puis chaque equipe peut puiser dans sa tresorerie.
  */
+/**
+ * FR14 — montant (po) que l'équipe la plus faible peut investir en plus de la
+ * cagnotte (différence de VEA) pour acheter des coups de pouce, en Jeu en Ligue.
+ */
+export const LEAGUE_UNDERDOG_INDUCEMENT_BONUS = 50000;
+
 export function buildMatchSheetReference(teams: {
   home: MatchSheetTeam | null;
   away: MatchSheetTeam | null;
@@ -1399,6 +1405,9 @@ export function buildMatchSheetReference(teams: {
     ctvTeamB: awayCtv,
     treasuryTeamA: homeTreasury,
     treasuryTeamB: awayTreasury,
+    // FR14 — règle de ligue : l'équipe la plus faible peut investir 50 000 po
+    // supplémentaires en coups de pouce (au-delà de la différence de VEA).
+    underdogBonus: LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
   });
 
   return {

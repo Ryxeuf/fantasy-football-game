@@ -82,6 +82,13 @@ export interface PettyCashInput {
   ctvTeamB: number;
   treasuryTeamA: number;
   treasuryTeamB: number;
+  /**
+   * FR14 — bonus fixe ajouté à la cagnotte de l'équipe la plus faible (CTV le
+   * plus bas) pour acheter des coups de pouce. Règle de ligue (ex: 50000).
+   * `0` = désactivé (défaut, jeu en ligne inchangé). Aucun bonus si égalité de
+   * CTV.
+   */
+  underdogBonus?: number;
 }
 
 /** Résultat du calcul de petty cash */
@@ -195,9 +202,11 @@ export function getInducementDefinition(slug: InducementSlug): InducementDefinit
  */
 export function calculatePettyCash(input: PettyCashInput): PettyCashResult {
   const diff = input.ctvTeamA - input.ctvTeamB;
+  const bonus = input.underdogBonus ?? 0;
 
-  const pettyCashA = diff < 0 ? Math.abs(diff) : 0;
-  const pettyCashB = diff > 0 ? diff : 0;
+  // FR14 — le bonus underdog ne va qu'à l'équipe au CTV strictement le plus bas.
+  const pettyCashA = (diff < 0 ? Math.abs(diff) : 0) + (diff < 0 ? bonus : 0);
+  const pettyCashB = (diff > 0 ? diff : 0) + (diff > 0 ? bonus : 0);
 
   return {
     teamA: {

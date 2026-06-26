@@ -583,9 +583,10 @@ describe("Lot G — league-match-sheet", () => {
       expect(homeSlugs).not.toContain("igor");
       // Couleurs de roster exposees (hex).
       expect(out.reference.colors.home.primary).toMatch(/^#[0-9a-f]{6}$/);
-      // Budget : home a la CTV la plus basse -> petty cash = 150k.
-      expect(out.reference.budget.home.pettyCash).toBe(150_000);
-      expect(out.reference.budget.home.maxBudget).toBe(200_000);
+      // Budget : home a la CTV la plus basse -> petty cash = diff 150k +
+      // bonus underdog FR14 50k = 200k ; maxBudget = 200k + tresorerie 50k.
+      expect(out.reference.budget.home.pettyCash).toBe(200_000);
+      expect(out.reference.budget.home.maxBudget).toBe(250_000);
       expect(out.reference.budget.away.pettyCash).toBe(0);
     });
   });
@@ -676,8 +677,8 @@ describe("Lot G — league-match-sheet", () => {
         id: "ms1",
         status: "draft",
       });
-      // home CTV 1.0M / cagnotte 50k ; away CTV 1.15M -> petty cash home 150k.
-      // Budget home = 150k + 50k = 200k.
+      // home CTV 1.0M / cagnotte 50k ; away CTV 1.15M -> petty cash home
+      // diff 150k + bonus underdog FR14 50k = 200k. Budget home = 200k + 50k.
       mockPrisma.team.findMany.mockResolvedValue([
         {
           id: "team-home",
@@ -708,7 +709,8 @@ describe("Lot G — league-match-sheet", () => {
           pairingId: "pair-1",
           userId: HOME,
           payload: {
-            inducementsHome: [{ slug: "wizard", cost: 250_000, qty: 1 }],
+            // Budget home = 250k (200k cagnotte + 50k tréso) -> 300k dépasse.
+            inducementsHome: [{ slug: "wizard", cost: 300_000, qty: 1 }],
           },
         }),
       ).rejects.toMatchObject({ code: "inducement_over_budget" });

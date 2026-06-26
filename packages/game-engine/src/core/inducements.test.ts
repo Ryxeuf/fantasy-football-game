@@ -124,6 +124,31 @@ describe('Règle: Petty Cash', () => {
     expect(result.teamA.pettyCash).toBe(0);
     expect(result.teamB.pettyCash).toBe(500_000);
   });
+
+  it('FR14 — ajoute le bonus underdog à l\'équipe la plus faible uniquement', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_200_000,
+      treasuryTeamA: 0,
+      treasuryTeamB: 0,
+      underdogBonus: 50_000,
+    });
+    // A (CTV plus bas) reçoit diff (200k) + bonus (50k).
+    expect(result.teamA.pettyCash).toBe(250_000);
+    expect(result.teamB.pettyCash).toBe(0);
+  });
+
+  it('FR14 — aucun bonus underdog en cas d\'égalité de CTV', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_000_000,
+      treasuryTeamA: 0,
+      treasuryTeamB: 0,
+      underdogBonus: 50_000,
+    });
+    expect(result.teamA.pettyCash).toBe(0);
+    expect(result.teamB.pettyCash).toBe(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
