@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
+import { AdvancementEditor } from "../../../../components/AdvancementEditor";
 import {
   PreMatchPanel,
   PostMatchPanel,
@@ -145,6 +146,8 @@ interface SheetResponse {
     forfeitSide?: "home" | "away" | null;
     popularityHome?: number | null;
     popularityAway?: number | null;
+    winningsHome?: number | null;
+    winningsAway?: number | null;
     winningsHomeManual?: number | null;
     winningsAwayManual?: number | null;
     dedicatedFansDeltaHome?: number | null;
@@ -165,6 +168,7 @@ interface SheetResponse {
   viewerRole: "home" | "away" | "commissioner" | "none";
   teams: { home: SheetTeam | null; away: SheetTeam | null };
   reference: MatchSheetReference;
+  computedSpp: Record<string, number>;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -444,21 +448,9 @@ export default function MatchSheetPage() {
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
   const timeline = useMemo(() => chronologicalTimeline(events), [events]);
-  // SPP estimés par joueur (auto) : TD ×3, sortie ×2, passe ×1, interception
-  // ×2, MVP ×4. Informatif ; le calcul officiel s'applique à la validation.
-  const computedSpp = useMemo(() => {
-    const motm = new Set(parseMotm(data?.sheet.motmPlayerIds));
-    const map: Record<string, number> = {};
-    for (const s of data?.summary.playerStats ?? []) {
-      map[s.playerId] =
-        s.touchdowns * 3 +
-        s.casualtiesInflicted * 2 +
-        s.completions * 1 +
-        s.interceptions * 2 +
-        (motm.has(s.playerId) ? 4 : 0);
-    }
-    return map;
-  }, [data]);
+  // SPP autoritaire par joueur, calculé côté serveur (calcul officiel +
+  // modificateur d'équipe). Informatif : appliqué au roster à la validation.
+  const computedSpp = data?.computedSpp ?? {};
   const home = data?.teams.home ?? null;
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
@@ -875,6 +867,10 @@ export default function MatchSheetPage() {
           disabled={!editable}
           onSave={savePostMatch}
           computedSpp={computedSpp}
+          autoWinnings={{
+            home: data.sheet.winningsHome ?? 0,
+            away: data.sheet.winningsAway ?? 0,
+          }}
         />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
@@ -906,18 +902,22 @@ export default function MatchSheetPage() {
 
           {status === "validated" ? (
             myTeamId ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Le match est validé : tu peux désormais réaliser les
-                  évolutions de ton équipe (choix des compétences / stats des
-                  joueurs ayant assez de SPP).
+                  Le match est validé : choisis et applique les évolutions des
+                  joueurs de ton équipe ayant assez de SPP.
                 </p>
+                {/* Édition inline (composant partagé avec la page level-up). */}
+                <AdvancementEditor
+                  teamId={myTeamId}
+                  emptyLabel="Aucun joueur de ton équipe n'a d'évolution en attente."
+                />
                 <a
                   href={`/me/teams/${myTeamId}/level-up`}
                   data-testid="goto-advancements"
-                  className="inline-flex items-center gap-2 rounded-lg bg-nuffle-anthracite px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-black"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-nuffle-bronze hover:text-nuffle-gold"
                 >
-                  Faire les évolutions de mon équipe →
+                  Voir toutes les évolutions de mon équipe →
                 </a>
               </div>
             ) : (

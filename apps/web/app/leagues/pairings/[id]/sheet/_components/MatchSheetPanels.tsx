@@ -1005,14 +1005,17 @@ export function PostMatchPanel({
   disabled,
   onSave,
   computedSpp = {},
+  autoWinnings,
 }: {
   initial: PostMatchValues;
   home: SheetTeam | null;
   away: SheetTeam | null;
   disabled?: boolean;
   onSave: (v: PostMatchValues) => Promise<void>;
-  /** SPP estimés par teamPlayerId (calcul auto depuis les évènements + MVP). */
+  /** SPP autoritaire par teamPlayerId (calcul officiel serveur). */
   computedSpp?: Record<string, number>;
+  /** Gains auto-calculés (depuis la popularité) par côté, en po. */
+  autoWinnings?: { home: number; away: number };
 }) {
   const [winH, setWinH] = useState<string>(
     initial.winningsHomeManual?.toString() ?? "",
@@ -1176,6 +1179,16 @@ export function PostMatchPanel({
                 data-testid={`winnings-${c.side}`}
                 className="mt-1 block w-full rounded border px-2 py-2 text-sm"
               />
+              {autoWinnings ? (
+                <span className="mt-0.5 block text-[11px] text-slate-500">
+                  Gains auto :{" "}
+                  {(c.side === "home"
+                    ? autoWinnings.home
+                    : autoWinnings.away
+                  ).toLocaleString("fr-FR")}{" "}
+                  po
+                </span>
+              ) : null}
             </label>
 
             <label className="block text-xs">
