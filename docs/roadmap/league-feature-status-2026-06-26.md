@@ -73,15 +73,27 @@ commissaire). La **feuille de match (FR7→FR16) est le bloc le plus abouti**
 **P3 (partiel) :** ✅ FR1 — bouton « Se retirer » (coach, avant démarrage,
 `POST /seasons/:sid/leave`).
 
-**Reste à faire :**
-- FR4 : exposer la **saisie manuelle** de matchs (`league-manual-pairing` prêt côté
-  serveur, pas d'UI).
-- FR14 : clarifier/implémenter la règle « cash +50k » (actuellement cagnotte = diff VAE).
-- FR16 : décider si la progression se saisit dans la FDM (aujourd'hui sur `/level-up`).
-- FR17 : config des coups de pouce au niveau ligue — **nécessite une migration Prisma**
-  (nouveau modèle), non incluse ici pour ne pas mêler une migration à ce lot UI.
-- FR18 (suite) : catégorie « Catapulte » (ajouter un event `team_throw`) ; passer
-  « sac de frappe » sur les events ; scope par-saison pour les compteurs career.
+**P2/P3 — ✅ LIVRÉ (26/06/2026, lots commités + poussés un par un) :**
+- ✅ FR4 : `ManualScheduleEditor` — saisie manuelle du calendrier (création de
+  journées + ajout/retrait de matchs).
+- ✅ FR14 : bonus underdog `+50 000 po` en coups de pouce pour l'équipe au CTV le
+  plus bas (`calculatePettyCash({ underdogBonus })`, fixé dans la FDM ; jeu en
+  ligne inchangé).
+- ✅ FR17 : `League.allowedInducements` (colonne additive + migration) ; la FDM
+  filtre les coups de pouce proposés ; config dans `LeagueForm`.
+- ✅ FR18 (suite) : event `team_throw` (Catapulte) + catégories `topTeamThrowers`,
+  `topKillers`, `topAggressors` ; « sac de frappe » sur les events de saison
+  (repli proxy blessures durables).
+- ✅ FR16 : **déjà implémenté** — onglet « Évolutions » de la FDM (post-validation)
+  via `AdvancementEditor` (proposition des joueurs éligibles + choix des gains) +
+  lien `/level-up`. Choix de design conservé (progression après validation).
+
+**Reste optionnel :**
+- FR17 : enforcement à la soumission (au-delà du filtrage d'affichage) — non fait
+  car les Star Players sont mêlés aux inducements dans le payload ; le filtrage de
+  la liste proposée suffit.
+- FR18 : passer les compteurs « career » (marqueur/passeur/MVP…) en scope
+  strictement par-saison (snapshot ou agrégation events).
 
 ## Composants/fichiers ajoutés (P1)
 
