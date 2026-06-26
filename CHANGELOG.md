@@ -1,3 +1,10 @@
+## [1.196.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.195.0...v1.196.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** saisie manuelle du calendrier par le commissaire (FR4) ([fd8b392](https://github.com/Ryxeuf/fantasy-football-game/commit/fd8b392d5dac62ef5ced3b96ba9774541977be84))
+
 ## [1.195.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.194.0...v1.195.0) (2026-06-26)
 
 
