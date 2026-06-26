@@ -62,7 +62,7 @@ const UTILITIES: ReadonlyArray<UtilityDef> = [
     icon: "🔄",
     title: "Synchroniser les rosters",
     description:
-      "Applique les données de roster du code (noms, stats, coût, accès, compétences) à la base : purge les positions orphelines, met à jour les positions existantes, recrée les liens de compétences. " +
+      "Applique les données de roster du code (noms, stats, coût, accès, compétences, règles spéciales d'équipe) à la base : synchronise les règles spéciales, purge les positions orphelines, met à jour les positions existantes, recrée les liens de compétences. " +
       "À relancer après un déploiement qui modifie un roster (ex: renommage Blitzer Haut Elfe → Lion Blanc). Aperçu (dry-run) d'abord, puis application confirmée.",
     buttonLabel: "Prévisualiser (dry-run)",
     endpoint: "/admin/utilities/sync-rosters",
@@ -88,6 +88,7 @@ interface UtilityResult {
   upserted?: number;
   pruned?: number;
   prunedPositions?: PrunedPosition[];
+  rosterSpecialRulesUpdated?: number;
   [key: string]: unknown;
 }
 
@@ -228,6 +229,20 @@ export default function AdminUtilitiesPage() {
                   {result.write === false ? "🔍" : "✅"}{" "}
                   {result.message ??
                     `Termine en ${result.durationMs ?? 0}ms`}
+                </div>
+              )}
+
+              {/* Règles spéciales d'équipe (re)synchronisées depuis le code. */}
+              {result?.ok && (result.rosterSpecialRulesUpdated ?? 0) > 0 && (
+                <div
+                  data-testid={`utility-special-rules-${util.key}`}
+                  className="mt-2 p-3 bg-white border border-sky-200 rounded-lg text-xs text-sky-900"
+                >
+                  🛡️ {result.rosterSpecialRulesUpdated} équipe(s){" "}
+                  {result.write === false
+                    ? "verraient leurs règles spéciales mises à jour"
+                    : "ont eu leurs règles spéciales mises à jour"}
+                  .
                 </div>
               )}
 

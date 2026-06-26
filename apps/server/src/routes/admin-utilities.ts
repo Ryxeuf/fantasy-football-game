@@ -182,6 +182,7 @@ router.post("/sync-rosters", validate(syncRostersSchema), async (req, res) => {
           upserted: result.upserted,
           pruned: result.pruned,
           skillLinks: result.skillLinks,
+          rosterSpecialRulesUpdated: result.rosterSpecialRulesUpdated,
         },
       });
     }
@@ -197,13 +198,16 @@ router.post("/sync-rosters", validate(syncRostersSchema), async (req, res) => {
       upserted: result.upserted,
       pruned: result.pruned,
       skillLinks: result.skillLinks,
+      rosterSpecialRulesUpdated: result.rosterSpecialRulesUpdated,
+      specialRulesUpdates: result.specialRulesUpdates,
       prunedPositions: result.prunedPositions,
       upsertedPositions: result.upsertedPositions,
       missingSkills: result.missingSkills,
       missingRosters: result.missingRosters,
       message:
         `${verb} en ${durationMs}ms : ${result.upserted} positions upsert, ` +
-        `${result.pruned} purgées, ${result.skillLinks} liens de compétence.` +
+        `${result.pruned} purgées, ${result.skillLinks} liens de compétence, ` +
+        `${result.rosterSpecialRulesUpdated} règles spéciales d'équipe.` +
         warnPart +
         (result.write ? "" : " (Relancer avec write=true pour appliquer.)"),
     });

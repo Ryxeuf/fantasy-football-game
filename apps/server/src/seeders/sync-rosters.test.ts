@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    roster: { findUnique: vi.fn() },
+    roster: { findUnique: vi.fn(), update: vi.fn() },
     position: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -32,6 +32,7 @@ vi.mock("../../../../packages/game-engine/src/rosters/positions", () => ({
   TEAM_ROSTERS_BY_RULESET: {
     season_3: {
       high_elf: {
+        specialRules: "favori_de",
         positions: [
           {
             slug: "high_elf_blitzer_haut_elfe",
@@ -90,6 +91,7 @@ import { syncRosters } from "./sync-rosters";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const rosterFindUnique = prisma.roster.findUnique as MockFn;
+const rosterUpdate = prisma.roster.update as MockFn;
 const posFindMany = prisma.position.findMany as MockFn;
 const posFindFirst = prisma.position.findFirst as MockFn;
 const posUpdate = prisma.position.update as MockFn;
@@ -101,7 +103,8 @@ const skillFindUnique = prisma.skill.findUnique as MockFn;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  rosterFindUnique.mockResolvedValue({ id: "r1" });
+  // En base : specialRules absentes (null) → diff avec le code ("favori_de").
+  rosterFindUnique.mockResolvedValue({ id: "r1", specialRules: null });
   // Une position orpheline en base : ancien "Blitzer Haut Elfe" générique.
   posFindMany.mockResolvedValue([
     { id: "old1", slug: "high_elf_blitzer_old", displayName: "Blitzer Haut Elfe" },
@@ -136,12 +139,19 @@ describe("syncRosters", () => {
       action: "update",
     });
 
+    // Règles spéciales : diff détecté (null → "favori_de") mais pas écrit.
+    expect(result.rosterSpecialRulesUpdated).toBe(1);
+    expect(result.specialRulesUpdates).toEqual([
+      { roster: "high_elf", ruleset: "season_3", from: null, to: "favori_de" },
+    ]);
+
     // CRITIQUE : zéro effet de bord en dry-run.
     expect(posDelete).not.toHaveBeenCalled();
     expect(posUpdate).not.toHaveBeenCalled();
     expect(posCreate).not.toHaveBeenCalled();
     expect(psDeleteMany).not.toHaveBeenCalled();
     expect(psCreate).not.toHaveBeenCalled();
+    expect(rosterUpdate).not.toHaveBeenCalled();
   });
 
   it("WRITE : purge l'orphelin, update les positions, relink les compétences", async () => {
@@ -169,6 +179,23 @@ describe("syncRosters", () => {
     // Relink : on vide puis recrée les liens (2 skills pour le Lion Blanc).
     expect(psDeleteMany).toHaveBeenCalled();
     expect(psCreate).toHaveBeenCalledTimes(2);
+
+    // Règles spéciales : écrites au niveau roster.
+    expect(result.rosterSpecialRulesUpdated).toBe(1);
+    expect(rosterUpdate).toHaveBeenCalledWith({
+      where: { id: "r1" },
+      data: { specialRules: "favori_de" },
+    });
+  });
+
+  it("idempotent : ne réécrit pas specialRules si déjà à jour", async () => {
+    rosterFindUnique.mockResolvedValue({ id: "r1", specialRules: "favori_de" });
+
+    const result = await syncRosters({ write: true });
+
+    expect(result.rosterSpecialRulesUpdated).toBe(0);
+    expect(result.specialRulesUpdates).toEqual([]);
+    expect(rosterUpdate).not.toHaveBeenCalled();
   });
 
   it("reporte un skill introuvable sans planter (write)", async () => {

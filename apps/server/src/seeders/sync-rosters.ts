@@ -8,6 +8,8 @@
  * `reimportSeason3SkillAccess` (qui ne touche QUE `primary/secondarySkills`).
  * Ce service applique la totalité du code à la base :
  *
+ *  0. SYNC le champ `specialRules` du roster (règles spéciales d'équipe)
+ *     depuis le code, s'il diffère de la base ;
  *  1. PURGE les positions présentes en base mais absentes du code pour ce
  *     roster (slug orphelin — ex: un ancien "White Lion" → "Lion Blanc") ;
  *  2. UPSERT chaque position du code (nom, stats, coût, accès S3) ;
@@ -72,6 +74,13 @@ export interface MissingRoster {
   readonly ruleset: string;
 }
 
+export interface RosterSpecialRulesUpdate {
+  readonly roster: string;
+  readonly ruleset: string;
+  readonly from: string | null;
+  readonly to: string | null;
+}
+
 export interface SyncRostersResult {
   /** `true` si les écritures ont été appliquées (sinon dry-run). */
   readonly write: boolean;
@@ -81,6 +90,9 @@ export interface SyncRostersResult {
   readonly pruned: number;
   /** Nombre de liens de compétence (PositionSkill) recréés. */
   readonly skillLinks: number;
+  /** Nombre de rosters dont `specialRules` a été (ou serait) mis à jour. */
+  readonly rosterSpecialRulesUpdated: number;
+  readonly specialRulesUpdates: readonly RosterSpecialRulesUpdate[];
   readonly upsertedPositions: readonly SyncedPosition[];
   readonly prunedPositions: readonly PrunedPosition[];
   /** Compétences référencées par le code mais absentes de la table Skill. */
@@ -102,10 +114,12 @@ export async function syncRosters(
   let upserted = 0;
   let pruned = 0;
   let skillLinks = 0;
+  let rosterSpecialRulesUpdated = 0;
   const upsertedPositions: SyncedPosition[] = [];
   const prunedPositions: PrunedPosition[] = [];
   const missingSkills: MissingSkillLink[] = [];
   const missingRosters: MissingRoster[] = [];
+  const specialRulesUpdates: RosterSpecialRulesUpdate[] = [];
 
   const rulesets = (RULESETS as readonly Ruleset[]).filter(
     (r) => !options.ruleset || r === options.ruleset,
@@ -120,11 +134,34 @@ export async function syncRosters(
 
       const roster = await prisma.roster.findUnique({
         where: { slug_ruleset: { slug: rosterSlug, ruleset } },
-        select: { id: true },
+        select: { id: true, specialRules: true },
       });
       if (!roster) {
         missingRosters.push({ roster: rosterSlug, ruleset });
         continue;
+      }
+
+      // 0) SYNC du champ `specialRules` (règles spéciales d'équipe) depuis le
+      // code. Normalisation : chaîne vide / undefined => null.
+      const desiredSpecialRules =
+        rosterDef.specialRules && rosterDef.specialRules.trim().length > 0
+          ? rosterDef.specialRules.trim()
+          : null;
+      const currentSpecialRules = roster.specialRules ?? null;
+      if (desiredSpecialRules !== currentSpecialRules) {
+        specialRulesUpdates.push({
+          roster: rosterSlug,
+          ruleset,
+          from: currentSpecialRules,
+          to: desiredSpecialRules,
+        });
+        rosterSpecialRulesUpdated++;
+        if (write) {
+          await prisma.roster.update({
+            where: { id: roster.id },
+            data: { specialRules: desiredSpecialRules },
+          });
+        }
       }
 
       const codeSlugs = new Set(rosterDef.positions.map((p) => p.slug));
@@ -232,6 +269,8 @@ export async function syncRosters(
     upserted,
     pruned,
     skillLinks,
+    rosterSpecialRulesUpdated,
+    specialRulesUpdates,
     upsertedPositions,
     prunedPositions,
     missingSkills,
