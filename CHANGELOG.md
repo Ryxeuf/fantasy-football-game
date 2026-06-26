@@ -1,3 +1,10 @@
+## [1.198.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.197.0...v1.198.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** bonus de coups de pouce +50k pour l'équipe la plus faible (FR14) ([fe06669](https://github.com/Ryxeuf/fantasy-football-game/commit/fe066692b50f43ec0851936055e30751d6e343c8))
+
 ## [1.197.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.196.0...v1.197.0) (2026-06-26)
 
 
