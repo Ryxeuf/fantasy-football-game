@@ -35,7 +35,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         displayName: "Aspirant Halfling",
         cost: 30,
         min: 0,
-        max: 5,
+        max: 3,
         ma: 5,
         st: 2,
         ag: 3,
@@ -213,7 +213,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
       },
       {
         slug: "amazon_guerriere_jaguar",
-        displayName: "Guerrière Jaguar",
+        displayName: "Guerrière Léopard",
         cost: 110,
         min: 0,
         max: 2,
@@ -229,6 +229,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   underworld: {
     name: "Bas-Fonds",
+    specialRules: "chantage_et_corruption",
     budget: 1000,
     tier: "I",
     naf: false,
@@ -237,7 +238,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     positions: [
       {
         slug: "underworld_gobelin_des_bas_fond",
-        displayName: "Gobelin des Bas-Fond",
+        displayName: "Trois-quart Gobelin",
         cost: 40,
         min: 0,
         max: 16,
@@ -246,11 +247,11 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "dodge,titchy,right-stuff",
+        skills: "dodge,right-stuff,stunty",
       },
       {
         slug: "underworld_snotling_des_bas_fond",
-        displayName: "Snotling des Bas-Fond",
+        displayName: "Trois-quart Snotling",
         cost: 15,
         min: 0,
         max: 6,
@@ -259,7 +260,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,insignifiant,titchy,right-stuff",
+        skills: "right-stuff,titchy,stunty,insignifiant,sidestep,dodge",
       },
       {
         slug: "underworld_skaven_du_clan_du_rat",
@@ -431,7 +432,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         displayName: "Trois-quart Elfe Sylvain",
         cost: 65,
         min: 0,
-        max: 12,
+        max: 16,
         ma: 7,
         st: 3,
         ag: 2,
@@ -496,6 +497,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   chaos_chosen: {
     name: "Élus du Chaos",
+    specialRules: "favori_de",
     budget: 1000,
     tier: "III",
     naf: false,
@@ -648,6 +650,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   goblin: {
     name: "Gobelins",
+    specialRules: "chantage_et_corruption",
     budget: 1000,
     tier: "IV",
     naf: false,
@@ -656,7 +659,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     positions: [
       {
         slug: "goblin_gobelin",
-        displayName: "Gobelin",
+        displayName: "Trois-quart Gobelin",
         cost: 40,
         min: 0,
         max: 16,
@@ -665,7 +668,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "dodge,titchy,right-stuff",
+        skills: "stunty,right-stuff,dodge",
       },
       {
         slug: "goblin_troll_entraine",
@@ -911,7 +914,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "dodge,titchy",
+        skills: "stunty,dodge",
       },
       {
         slug: "lizardmen_bloqueur_saurus",
@@ -957,6 +960,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   necromantic_horror: {
     name: "Horreurs nécromantiques",
+    specialRules: "maitres_de_la_non_vie",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -1033,6 +1037,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   human: {
     name: "Humains",
+    specialRules: "capitaine",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -1122,6 +1127,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   khorne: {
     name: "Khorne",
+    specialRules: "bagarreurs_brutaux,favori_de",
     budget: 1000,
     tier: "III",
     naf: false,
@@ -1185,6 +1191,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   undead: {
     name: "Morts ambulants",
+    specialRules: "maitres_de_la_non_vie",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -1261,6 +1268,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   chaos_dwarf: {
     name: "Nains du chaos",
+    specialRules: "favori_de",
     budget: 1000,
     tier: "I",
     naf: false,
@@ -1350,6 +1358,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   dwarf: {
     name: "Nains",
+    specialRules: "bagarreurs_brutaux,chantage_et_corruption",
     budget: 1000,
     tier: "I",
     naf: false,
@@ -1530,13 +1539,13 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ma: 5,
         st: 1,
         ag: 3,
-        pa: 6,
+        pa: 0,
         av: 6,
-        skills: "dodge,titchy,pick-me-up,no-hands",
+        skills: "no-hands,pick-me-up,titchy,stunty,dodge",
       },
       {
         slug: "norse_berzerker",
-        displayName: "Berserker Nordique",
+        displayName: "Berzerker Nordique",
         cost: 90,
         min: 0,
         max: 2,
@@ -1591,6 +1600,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   nurgle: {
     name: "Nurgle",
+    specialRules: "bagarreurs_brutaux,favori_de",
     budget: 1000,
     tier: "III",
     naf: false,
@@ -1654,6 +1664,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   ogre: {
     name: "Ogres",
+    specialRules: "bagarreurs_brutaux,trois_quarts_a_vil_prix",
     budget: 1000,
     tier: "IV",
     naf: false,
@@ -1671,7 +1682,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,titchy,right-stuff",
+        skills: "dodge,sidestep,stunty,titchy,right-stuff",
       },
       {
         slug: "ogre_bloqueur_ogre",
@@ -1704,6 +1715,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   black_orc: {
     name: "Orques Noirs",
+    specialRules: "bagarreurs_brutaux,chantage_et_corruption",
     budget: 1000,
     tier: "III",
     naf: false,
@@ -1721,7 +1733,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "thick-skull,dodge,titchy,right-stuff",
+        skills: "stunty,right-stuff,dodge,thick-skull",
       },
       {
         slug: "black_orc_orque_noir",
@@ -1754,6 +1766,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   orc: {
     name: "Orques",
+    specialRules: "bagarreurs_brutaux,capitaine",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -1785,7 +1798,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         // Errata mai 2026 (p.181) : Passe 3+ -> 4+ (Trois-Quart Gobelin orc).
         pa: 4,
         av: 8,
-        skills: "dodge,titchy,right-stuff",
+        skills: "stunty,right-stuff,dodge",
       },
       {
         slug: "orc_lanceur_orque",
@@ -1844,6 +1857,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   chaos_renegade: {
     name: "Renégats du Chaos",
+    specialRules: "favori_de",
     budget: 1000,
     tier: "III",
     naf: false,
@@ -1874,7 +1888,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "animosity,dodge,titchy,right-stuff",
+        skills: "stunty,right-stuff,dodge,animosity",
       },
       {
         slug: "chaos_renegade_orque_renegat",
@@ -1986,6 +2000,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   tomb_kings: {
     name: "Rois des tombes",
+    specialRules: "maitres_de_la_non_vie",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -2188,6 +2203,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   snotling: {
     name: "Snotlings",
+    specialRules: "chantage_et_corruption,trois_quarts_a_vil_prix,deferlement",
     budget: 1000,
     tier: "IV",
     naf: false,
@@ -2205,7 +2221,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,insignifiant,titchy,right-stuff",
+        skills: "dodge,sidestep,insignifiant,stunty,titchy,right-stuff",
       },
       {
         slug: "snotling_echassier",
@@ -2218,7 +2234,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,titchy,right-stuff,sprint",
+        skills: "stunty,sprint,right-stuff,sidestep,dodge",
       },
       {
         slug: "snotling_r_bondisseur",
@@ -2244,7 +2260,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "secret-weapon,bombardier,dodge,sidestep,titchy,right-stuff",
+        skills: "secret-weapon,bombardier,dodge,sidestep,stunty,titchy,right-stuff",
       },
       {
         slug: "snotling_chariot_a_pompe",
@@ -2340,6 +2356,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
 
   vampire: {
     name: "Vampires",
+    specialRules: "maitres_de_la_non_vie",
     budget: 1000,
     tier: "II",
     naf: false,
@@ -2383,7 +2400,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 4,
         av: 9,
-        skills: "juggernaut,hypnotic-gaze,regeneration,bloodlust",
+        skills: "bloodlust-3,regeneration,hypnotic-gaze,juggernaut",
       },
       {
         slug: "vampire_lanceur_vampire",
@@ -2409,7 +2426,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 4,
         pa: 6,
         av: 10,
-        skills: "frenzy,claws,regeneration,bloodlust,loner-4",
+        skills: "bloodlust-3,loner-4,regeneration,claws,frenzy",
       }
     ],
   },

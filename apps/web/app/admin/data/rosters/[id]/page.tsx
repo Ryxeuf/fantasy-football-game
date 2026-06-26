@@ -8,6 +8,21 @@ import {
   getRulesetLabel,
   type Ruleset,
 } from "../../ruleset-utils";
+import { getTeamSpecialRuleBySlug } from "@bb/game-engine";
+
+type StaffConfig = {
+  format: string;
+  rerollCost: number;
+  maxRerolls: number;
+  apothecaryAllowed: boolean;
+  apothecaryCost: number;
+  maxCheerleaders: number;
+  cheerleaderCost: number;
+  maxAssistants: number;
+  assistantCost: number;
+  maxDedicatedFans: number;
+  dedicatedFanCost: number;
+};
 
 type Position = {
   id: string;
@@ -40,7 +55,32 @@ type Roster = {
   createdAt: string;
   updatedAt: string;
   positions: Position[];
+  staffConfigs?: StaffConfig[];
 };
+
+/** Résout un CSV de slugs de règles spéciales en {slug, nom FR, description}. */
+function resolveSpecialRules(
+  raw: string | null | undefined,
+): Array<{ slug: string; name: string; description: string }> {
+  return (raw ?? "")
+    .split(/[,\s]+/g)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((slug) => {
+      const def = getTeamSpecialRuleBySlug(slug);
+      return def
+        ? { slug: def.slug, name: def.nameFr, description: def.description }
+        : { slug, name: slug, description: "" };
+    });
+}
+
+const STAFF_FIELDS: Array<{ key: keyof StaffConfig; label: string; cost?: keyof StaffConfig }> = [
+  { key: "maxRerolls", label: "Relances (max)", cost: "rerollCost" },
+  { key: "apothecaryAllowed", label: "Apothicaire", cost: "apothecaryCost" },
+  { key: "maxCheerleaders", label: "Pom-pom girls (max)", cost: "cheerleaderCost" },
+  { key: "maxAssistants", label: "Coachs assistants (max)", cost: "assistantCost" },
+  { key: "maxDedicatedFans", label: "Fans dévoués (max)", cost: "dedicatedFanCost" },
+];
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -502,12 +542,30 @@ export default function AdminRosterDetailPage() {
           </div>
         )}
         
-        {roster.specialRules && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="text-sm font-medium text-gray-600 mb-2">Règles spéciales</div>
-            <div className="text-gray-900">{roster.specialRules}</div>
-          </div>
-        )}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="text-sm font-medium text-gray-600 mb-2">Règles spéciales</div>
+          {resolveSpecialRules(roster.specialRules).length > 0 ? (
+            <div className="space-y-2">
+              {resolveSpecialRules(roster.specialRules).map((rule) => (
+                <div
+                  key={rule.slug}
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2"
+                >
+                  <div className="text-sm font-semibold text-amber-900">{rule.name}</div>
+                  {rule.description && (
+                    <div className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                      {rule.description}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : roster.specialRules ? (
+            <div className="text-gray-900 font-mono text-sm">{roster.specialRules}</div>
+          ) : (
+            <div className="text-sm text-gray-400">Aucune</div>
+          )}
+        </div>
       </div>
 
       {/* Positions */}
@@ -582,6 +640,62 @@ export default function AdminRosterDetailPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Configuration du staff (par format) */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-heading font-semibold text-nuffle-anthracite">
+            Staff & coûts
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Plafonds et coûts (en po) du staff par format de jeu.
+          </p>
+        </div>
+        <div className="p-6">
+          {roster.staffConfigs && roster.staffConfigs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {roster.staffConfigs.map((sc) => (
+                <div
+                  key={sc.format}
+                  className="rounded-lg border border-gray-200 overflow-hidden"
+                >
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                      {sc.format === "bb11" ? "Blood Bowl 11" : sc.format === "sevens" ? "Sevens" : sc.format}
+                    </span>
+                  </div>
+                  <table className="w-full text-sm">
+                    <tbody className="divide-y divide-gray-100">
+                      {STAFF_FIELDS.map((f) => (
+                        <tr key={String(f.key)}>
+                          <td className="px-4 py-2 text-gray-600">{f.label}</td>
+                          <td className="px-4 py-2 text-right font-mono text-gray-900">
+                            {f.key === "apothecaryAllowed"
+                              ? sc.apothecaryAllowed
+                                ? "Oui"
+                                : "Non"
+                              : String(sc[f.key])}
+                          </td>
+                          <td className="px-4 py-2 text-right font-mono text-gray-500">
+                            {f.cost &&
+                            (f.key !== "apothecaryAllowed" || sc.apothecaryAllowed)
+                              ? `${Number(sc[f.cost]).toLocaleString("fr-FR")} po`
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Aucune config staff dédiée — les coûts par défaut du moteur s'appliquent.
+            </p>
+          )}
         </div>
       </div>
 

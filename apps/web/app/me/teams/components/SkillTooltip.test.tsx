@@ -60,6 +60,27 @@ describe("SkillTooltip (me/teams) — rafraîchissement du cache compétences", 
     expect(screen.queryByText("FB-block")).toBeNull();
   });
 
+  it("dbBaseSkills (source DB) classe base vs acquise — encadré orange réservé aux acquises", () => {
+    // block est dans les compétences par défaut (DB), tackle ne l'est pas.
+    const { container } = render(
+      <SkillTooltip
+        skillsString="block,tackle"
+        position="dwarf_blitzer"
+        dbBaseSkills={["block"]}
+      />,
+    );
+    const badges = Array.from(container.querySelectorAll("span")).filter((el) =>
+      /FB-(block|tackle)/.test(el.textContent ?? ""),
+    );
+    const blockBadge = badges.find((b) => b.textContent === "FB-block");
+    const tackleBadge = badges.find((b) => b.textContent === "FB-tackle");
+    // Compétence par défaut : bordure neutre (pas d'orange).
+    expect(blockBadge?.className).toContain("border-gray-300");
+    expect(blockBadge?.className).not.toContain("border-orange-400");
+    // Compétence acquise : encadré orange.
+    expect(tackleBadge?.className).toContain("border-orange-400");
+  });
+
   it("affiche le nom du catalogue SSR dès le 1er rendu (option 1, zéro flash)", () => {
     const catalog = {
       block: {

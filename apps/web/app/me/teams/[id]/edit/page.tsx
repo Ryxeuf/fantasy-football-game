@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
 import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
+import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
 import { formatPlusStat } from "../../../../lib/format-stats";
@@ -72,6 +73,11 @@ export default function TeamEditPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [rosterName, setRosterName] = useState<string>("");
+  // Méta position (compétences de base DB) pour distinguer base vs acquise
+  // sans dépendre de la liste hardcodée du game-engine (encadré orange).
+  const [positionMeta, setPositionMeta] = useState<Map<string, PositionMeta>>(
+    new Map(),
+  );
   const [teamName, setTeamName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,6 +189,9 @@ export default function TeamEditPage() {
             if (rosterResponse.ok) {
               const rosterData = await rosterResponse.json();
               setRosterName(rosterData.roster?.name || d.team.roster);
+              setPositionMeta(
+                buildPositionMetaByPosition(rosterData.roster?.positions),
+              );
             } else {
               setRosterName(d.team.roster);
             }
@@ -671,6 +680,7 @@ export default function TeamEditPage() {
                         skillsString={player.skills}
                         teamName={team?.roster}
                         position={player.position}
+                        dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -798,10 +808,11 @@ export default function TeamEditPage() {
                 <div className="mb-4">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compétences</div>
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <SkillTooltip 
-                      skillsString={player.skills} 
+                    <SkillTooltip
+                      skillsString={player.skills}
                       teamName={team?.roster}
                       position={player.position}
+                      dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
                     />
                   </div>
                 </div>
@@ -941,10 +952,11 @@ export default function TeamEditPage() {
                         <div className="mt-3 pt-3 border-t border-blue-200">
                           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Compétences de base</div>
                           <div className="bg-white rounded-lg p-3">
-                            <SkillTooltip 
-                              skillsString={position.stats.skills} 
+                            <SkillTooltip
+                              skillsString={position.stats.skills}
                               teamName={team?.roster}
                               position={position.key}
+                              showAsBaseSkillsOnly={true}
                             />
                           </div>
                         </div>

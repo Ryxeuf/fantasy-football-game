@@ -7,6 +7,8 @@ import { apiRequest } from "../../../lib/api-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
+import SpecialRulesBadges from "../../../components/SpecialRulesBadges";
+import KeywordChips from "../../../components/KeywordChips";
 import QuantityStepper from "../components/QuantityStepper";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -39,10 +41,19 @@ type Position = {
   pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
+  // Mots-clés (lignée/type du joueur). CSV ; optionnels (serveur pré-feature).
+  keywords?: string | null;
+  keywordsEn?: string | null;
   // Accès aux compétences (montée de niveau, BB S3). CSV "G,A,S,P,M" ou null
   // (ex: season_2). Optionnels pour rétro-compat avec un serveur pré-E5.
   primarySkills?: string | null;
   secondarySkills?: string | null;
+};
+
+type RosterSpecialRule = {
+  slug: string;
+  name: string;
+  description: string;
 };
 
 type Roster = {
@@ -102,6 +113,7 @@ export default function NewTeamBuilder() {
   });
 
   const [positions, setPositions] = useState<Position[]>([]);
+  const [specialRules, setSpecialRules] = useState<RosterSpecialRule[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [selectedStarPlayers, setSelectedStarPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -196,11 +208,13 @@ export default function NewTeamBuilder() {
 
   useEffect(() => {
     const query = ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : "";
-    apiRequest<{ roster: { positions?: Position[] }; ruleset: string }>(
-      `/team/rosters/${rosterId}${query}`,
-    )
+    apiRequest<{
+      roster: { positions?: Position[]; specialRules?: RosterSpecialRule[] };
+      ruleset: string;
+    }>(`/team/rosters/${rosterId}${query}`)
       .then((d) => {
         setPositions(d.roster.positions || []);
+        setSpecialRules(d.roster.specialRules || []);
         const init: Record<string, number> = {};
         (d.roster.positions || []).forEach((p: Position) => {
           init[p.slug] = p.min || 0;
@@ -581,6 +595,13 @@ export default function NewTeamBuilder() {
             </div>
           </div>
 
+          <div className="mt-3" data-testid="builder-special-rules">
+            <div className="text-sm font-medium text-gray-700 mb-1">
+              {t.teams.specialRules ?? "Règles spéciales"}
+            </div>
+            <SpecialRulesBadges rules={specialRules} />
+          </div>
+
           <p
             className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
             data-testid="format-constraints-hint"
@@ -645,6 +666,10 @@ export default function NewTeamBuilder() {
                           {t.teams.kpo}
                         </span>
                       </div>
+                      <KeywordChips
+                        keywords={language === "fr" ? p.keywords : p.keywordsEn}
+                        className="mt-1"
+                      />
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-600">
                         <Stat label="MA" value={p.ma} />
                         <Stat label="ST" value={p.st} />
@@ -746,7 +771,13 @@ export default function NewTeamBuilder() {
                       key={p.slug}
                       className="odd:bg-white even:bg-gray-50 border-t border-gray-100"
                     >
-                      <td className="p-3 font-medium">{p.displayName}</td>
+                      <td className="p-3 font-medium">
+                        <div>{p.displayName}</div>
+                        <KeywordChips
+                          keywords={language === "fr" ? p.keywords : p.keywordsEn}
+                          className="mt-1"
+                        />
+                      </td>
                       <td className="p-3 tabular-nums">
                         {p.cost}
                         {t.teams.kpo}

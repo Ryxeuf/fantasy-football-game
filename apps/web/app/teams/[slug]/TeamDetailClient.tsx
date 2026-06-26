@@ -581,18 +581,22 @@ export default function TeamDetailClient({
         </div>
       )}
 
-      {specialRules.length > 0 && (
-        <div
-          data-testid="roster-special-rules"
-          className="bg-white rounded-lg border overflow-hidden"
-        >
-          <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
-            <h2 className="text-base sm:text-lg font-semibold">
-              {t.teams.specialRules}
-            </h2>
-          </div>
-          <div className="p-4 sm:p-6 space-y-2">
-            {specialRules.map((rule) => (
+      <div
+        data-testid="roster-special-rules"
+        className="bg-white rounded-lg border overflow-hidden"
+      >
+        <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">
+            {t.teams.specialRules}
+          </h2>
+        </div>
+        <div className="p-4 sm:p-6 space-y-2">
+          {specialRules.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              {language === "fr" ? "Aucune" : "None"}
+            </p>
+          ) : (
+            specialRules.map((rule) => (
               <details
                 key={rule.slug}
                 data-testid={`special-rule-${rule.slug}`}
@@ -608,10 +612,10 @@ export default function TeamDetailClient({
                   {rule.description}
                 </p>
               </details>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
 
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">

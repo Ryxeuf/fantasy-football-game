@@ -5,7 +5,10 @@
  * partielles (positions sans accès renseigné, roster pas encore chargé).
  */
 import { describe, it, expect } from "vitest";
-import { buildSkillAccessByPosition } from "./roster-skill-access";
+import {
+  buildSkillAccessByPosition,
+  buildPositionMetaByPosition,
+} from "./roster-skill-access";
 
 describe("buildSkillAccessByPosition", () => {
   it("indexe l'accès primaire/secondaire par slug de position", () => {
@@ -46,5 +49,42 @@ describe("buildSkillAccessByPosition", () => {
   it("tolère null / undefined (roster non chargé)", () => {
     expect(buildSkillAccessByPosition(null).size).toBe(0);
     expect(buildSkillAccessByPosition(undefined).size).toBe(0);
+  });
+});
+
+describe("buildPositionMetaByPosition", () => {
+  it("parse les compétences de base (DB) en slugs et indexe les mots-clés", () => {
+    const map = buildPositionMetaByPosition([
+      {
+        slug: "old_world_alliance_ogre",
+        skills: "cerveau_lent, chataigne, crane_epais",
+        keywords: "Ogre, Gros Bras",
+        keywordsEn: "Ogre, Big Guy",
+      },
+    ]);
+    const meta = map.get("old_world_alliance_ogre");
+    expect(meta?.baseSkills).toEqual([
+      "cerveau_lent",
+      "chataigne",
+      "crane_epais",
+    ]);
+    expect(meta?.keywords).toBe("Ogre, Gros Bras");
+    expect(meta?.keywordsEn).toBe("Ogre, Big Guy");
+  });
+
+  it("retourne une liste vide de compétences de base si aucune", () => {
+    const map = buildPositionMetaByPosition([
+      { slug: "skaven_lineman", skills: "", keywords: null },
+    ]);
+    expect(map.get("skaven_lineman")?.baseSkills).toEqual([]);
+    expect(map.get("skaven_lineman")?.keywords).toBeNull();
+  });
+
+  it("ignore les entrées sans slug et tolère null/undefined", () => {
+    expect(buildPositionMetaByPosition(null).size).toBe(0);
+    expect(
+      buildPositionMetaByPosition([{ skills: "block" } as { skills: string }])
+        .size,
+    ).toBe(0);
   });
 });

@@ -2,8 +2,46 @@
  * Fonctions helpers pour récupérer les rosters depuis la base de données
  */
 
-import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
+import {
+  DEFAULT_RULESET,
+  translateKeywordsCsv,
+  getTeamSpecialRuleBySlug,
+  type Ruleset,
+} from "@bb/game-engine";
 import { prisma } from "../prisma";
+
+/**
+ * Résout `Roster.specialRules` (CSV de slugs) en vues localisées
+ * (slug + nom + description) via le catalogue game-engine. Les slugs
+ * inconnus (ex: sentinelle "NONE") sont ignorés. Mutualise la même logique
+ * que la route publique sans créer de cycle d'import routes ↔ utils.
+ */
+export interface RosterSpecialRuleView {
+  slug: string;
+  name: string;
+  description: string;
+}
+
+export function resolveSpecialRulesCsv(
+  raw: string | null | undefined,
+  isEnglish: boolean,
+): RosterSpecialRuleView[] {
+  const out: RosterSpecialRuleView[] = [];
+  for (const slug of (raw ?? "")
+    .split(/[,\s]+/g)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)) {
+    const def = getTeamSpecialRuleBySlug(slug);
+    if (!def) continue;
+    out.push({
+      slug: def.slug,
+      name: isEnglish ? def.nameEn : def.nameFr,
+      description:
+        isEnglish && def.descriptionEn ? def.descriptionEn : def.description,
+    });
+  }
+  return out;
+}
 
 // In-process cache. Roster data is effectively static between seeds, and
 // this helper is called many times per team creation/display cycle. A short
@@ -35,6 +73,9 @@ export interface RosterPosition {
   pa: number | null; // null = pas de passe ("-")
   av: number;
   skills: string;
+  // Mots-clés (lignée/type du joueur) localisés. CSV ; `null` si aucun.
+  keywords: string | null;
+  keywordsEn: string | null;
   // Accès aux compétences en montée de niveau (BB Season 3). CSV "G,A,S,P,M".
   // `null` = non renseigné (ex: season_2). Exposé pour l'affichage builder (E5).
   primarySkills: string | null;
@@ -47,6 +88,8 @@ export interface RosterPayload {
   tier: string;
   naf: boolean;
   positions: RosterPosition[];
+  /** Règles spéciales d'équipe résolues (vide si aucune). Localisées. */
+  specialRules: RosterSpecialRuleView[];
 }
 
 const singleRosterCache = new Map<string, CacheEntry<RosterPayload>>();
@@ -135,9 +178,12 @@ export async function getRosterFromDb(
       skills: position.skills
         .map((ps: any) => ps.skill.slug)
         .join(","),
+      keywords: position.keywords ?? null,
+      keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
     })),
+    specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
   };
 
   cacheSet(singleRosterCache, cacheKey, result);
@@ -198,9 +244,12 @@ export async function getAllRostersFromDb(
         skills: position.skills
           .map((ps: any) => ps.skill.slug)
           .join(","),
+        keywords: position.keywords ?? null,
+        keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
         primarySkills: position.primarySkills ?? null,
         secondarySkills: position.secondarySkills ?? null,
       })),
+      specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
     };
   }
   cacheSet(allRostersCache, cacheKey, result);

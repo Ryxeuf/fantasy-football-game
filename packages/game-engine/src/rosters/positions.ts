@@ -344,7 +344,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Nains sont une race robuste et résistante, connue pour leur force et leur endurance. Leurs équipes Blood Bowl sont lentes mais très résistantes, spécialisées dans le blocage défensif.",
     descriptionEn: "Dwarves are a sturdy and resilient race, known for their strength and endurance. Their Blood Bowl teams are slow but very tough, specializing in defensive blocking.",
     regionalRules: ["old_world_classic", "worlds_edge_superleague"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,chantage_et_corruption",
     positions: [
       {
         slug: "dwarf_blocker_lineman",
@@ -421,7 +421,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Gobelins sont de petits joueurs agiles mais fragiles, connus pour leur utilisation d'armes secrètes et de tactiques déloyales. Leurs équipes Blood Bowl sont imprévisibles et dangereuses.",
     descriptionEn: "Goblins are small, agile but fragile players, known for their use of secret weapons and underhanded tactics. Their Blood Bowl teams are unpredictable and dangerous.",
     regionalRules: ["badlands_brawl", "underworld_challenge"],
-    specialRules: undefined,
+    specialRules: "chantage_et_corruption",
     positions: [
       {
         slug: "goblin_lineman",
@@ -537,7 +537,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Morts-Vivants sont une équipe composée de squelettes, zombies et autres créatures ressuscitées. Leurs équipes sont résistantes et bénéficient de la régénération, mais manquent d'agilité.",
     descriptionEn: "The Undead are a team composed of skeletons, zombies and other resurrected creatures. Their teams are resilient and benefit from regeneration, but lack agility.",
     regionalRules: ["sylvanian_spotlight"],
-    specialRules: undefined,
+    specialRules: "maitres_de_la_non_vie",
     positions: [
       {
         slug: "undead_skeleton_lineman",
@@ -614,7 +614,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Renégats du Chaos sont des équipes composées de joueurs de différentes races unis par leur rejet de l'ordre. Leurs équipes sont variées et imprévisibles.",
     descriptionEn: "Chaos Renegades are teams composed of players from different races united by their rejection of order. Their teams are varied and unpredictable.",
     regionalRules: ["favoured_of"],
-    specialRules: undefined,
+    specialRules: "favori_de",
     positions: [
       {
         slug: "chaos_renegade_human_lineman",
@@ -756,7 +756,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Ogres sont des géants puissants mais peu intelligents, accompagnés de leurs serviteurs Gnoblars. Leurs équipes sont très fortes mais manquent de finesse.",
     descriptionEn: "Ogres are powerful but unintelligent giants, accompanied by their Gnoblar servants. Their teams are very strong but lack finesse.",
     regionalRules: ["badlands_brawl", "old_world_classic"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,trois_quarts_a_vil_prix",
     positions: [
       {
         slug: "ogre_gnoblar_lineman",
@@ -871,7 +871,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Bas-Fonds sont une équipe mixte composée de Skavens et de Gobelins mutants. Leurs équipes combinent agilité et utilisation d'armes secrètes.",
     descriptionEn: "Underworld Denizens are a mixed team composed of Skaven and mutant Goblins. Their teams combine agility with the use of secret weapons.",
     regionalRules: ["underworld_challenge"],
-    specialRules: undefined,
+    specialRules: "chantage_et_corruption",
     positions: [
       {
         slug: "underworld_underworld_goblin_lineman",
@@ -987,7 +987,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Élus du Chaos sont des guerriers dévoués aux dieux du Chaos, développant des mutations au fil du temps. Leurs équipes deviennent plus puissantes avec l'expérience.",
     descriptionEn: "Chaos Chosen are warriors dedicated to the Chaos gods, developing mutations over time. Their teams become more powerful with experience.",
     regionalRules: ["favoured_of"],
-    specialRules: undefined,
+    specialRules: "favori_de",
     positions: [
       {
         slug: "chaos_chosen_beastman_runner_lineman",
@@ -1141,7 +1141,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Horreurs Nécromantiques sont des créatures ressuscitées par la magie nécromantique, combinant morts-vivants et créatures monstrueuses. Leurs équipes sont résistantes et dangereuses.",
     descriptionEn: "Necromantic Horrors are creatures resurrected by necromantic magic, combining undead and monstrous creatures. Their teams are resilient and dangerous.",
     regionalRules: ["sylvanian_spotlight"],
-    specialRules: undefined,
+    specialRules: "maitres_de_la_non_vie",
     positions: [
       {
         slug: "necromantic_horror_zombie_lineman",
@@ -1218,7 +1218,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Orques sont une race brutale et agressive, connue pour leur force et leur violence. Leurs équipes Blood Bowl sont puissantes et spécialisées dans le blocage offensif.",
     descriptionEn: "Orcs are a brutal and aggressive race, known for their strength and violence. Their Blood Bowl teams are powerful and specialize in offensive blocking.",
     regionalRules: ["badlands_brawl"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,capitaine",
     positions: [
       {
         slug: "orc_orc_lineman",
@@ -1308,7 +1308,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les équipes de Nurgle sont dédiées au dieu de la peste et de la décomposition. Leurs joueurs sont résistants et peuvent transmettre des maladies à leurs adversaires.",
     descriptionEn: "Nurgle teams are dedicated to the god of plague and decay. Their players are resilient and can spread diseases to their opponents.",
     regionalRules: ["favoured_of"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,favori_de",
     positions: [
       {
         slug: "nurgle_rotter_lineman",
@@ -1591,7 +1591,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Humains sont une race polyvalente et adaptable, capable de jouer tous les styles de jeu. Leurs équipes Blood Bowl sont équilibrées et peuvent s'adapter à différentes stratégies.",
     descriptionEn: "Humans are a versatile and adaptable race, capable of playing all styles of play. Their Blood Bowl teams are balanced and can adapt to different strategies.",
     regionalRules: ["old_world_classic"],
-    specialRules: undefined,
+    specialRules: "capitaine",
     positions: [
       {
         slug: "human_human_lineman",
@@ -1681,7 +1681,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Orques Noirs sont des guerriers disciplinés et bien équipés, plus organisés que les Orques standards. Leurs équipes Blood Bowl sont puissantes et mieux structurées.",
     descriptionEn: "Black Orcs are disciplined and well-equipped warriors, more organized than standard Orcs. Their Blood Bowl teams are powerful and better structured.",
     regionalRules: ["badlands_brawl"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,chantage_et_corruption",
     positions: [
       {
         slug: "black_orc_goblin_bruiser_lineman",
@@ -1732,7 +1732,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Nains du Chaos sont des nains corrompus par le Chaos, combinant la résistance des nains avec la brutalité du Chaos. Leurs équipes sont résistantes et agressives.",
     descriptionEn: "Chaos Dwarves are dwarves corrupted by Chaos, combining dwarven resilience with Chaos brutality. Their teams are resilient and aggressive.",
     regionalRules: ["badlands_brawl", "worlds_edge_superleague", "favoured_of"],
-    specialRules: undefined,
+    specialRules: "favori_de",
     positions: [
       {
         slug: "chaos_dwarf_hobgoblin_lineman",
@@ -2014,7 +2014,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les équipes de Khorne sont dédiées au dieu du sang et du combat. Leurs joueurs sont des berserkers violents qui recherchent la destruction de leurs adversaires.",
     descriptionEn: "Khorne teams are dedicated to the god of blood and combat. Their players are violent berserkers who seek the destruction of their opponents.",
     regionalRules: ["favoured_of"],
-    specialRules: undefined,
+    specialRules: "bagarreurs_brutaux,favori_de",
     positions: [
       {
         slug: "khorne_marauder",
@@ -2078,7 +2078,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les équipes de Vampires sont composées de maîtres vampires et de leurs serviteurs Thralls. Les vampires sont puissants mais doivent contrôler leur soif de sang.",
     descriptionEn: "Vampire teams are composed of master vampires and their Thrall servants. Vampires are powerful but must control their bloodlust.",
     regionalRules: ["sylvanian_spotlight"],
-    specialRules: undefined,
+    specialRules: "maitres_de_la_non_vie",
     positions: [
       {
         slug: "vampire_vampire",
@@ -2116,7 +2116,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Rois des Tombes sont des équipes de morts-vivants égyptiens ressuscités, combinant squelettes et créatures momifiées. Leurs équipes sont résistantes et mystérieuses.",
     descriptionEn: "Tomb Kings are teams of resurrected Egyptian undead, combining skeletons and mummified creatures. Their teams are resilient and mysterious.",
     regionalRules: ["sylvanian_spotlight"],
-    specialRules: undefined,
+    specialRules: "maitres_de_la_non_vie",
     positions: [
       {
         slug: "tomb_kings_skeleton",
@@ -2347,7 +2347,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
     descriptionFr: "Les Snotlings sont les plus petits et les plus faibles des gobelinoïdes, mais ils compensent par leur nombre et leur utilisation d'armes secrètes. Leurs équipes sont chaotiques et imprévisibles.",
     descriptionEn: "Snotlings are the smallest and weakest of goblinoids, but they compensate with their numbers and use of secret weapons. Their teams are chaotic and unpredictable.",
     regionalRules: ["underworld_challenge"],
-    specialRules: undefined,
+    specialRules: "chantage_et_corruption,trois_quarts_a_vil_prix,deferlement",
     positions: [
       {
         slug: "snotling_snotling_lineman",

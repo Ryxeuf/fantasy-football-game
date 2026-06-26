@@ -290,7 +290,8 @@ describe('S3 Rules Validation: Coherence des skills', () => {
     // Traits
     'always-hungry', 'animal-savagery', 'animosity', 'animosity-all',
     'animosity-all-dwarf-halfling', 'animosity-all-dwarf-human',
-    'animosity-underworld', 'ball-and-chain', 'bloodlust', 'bombardier',
+    'animosity-underworld', 'ball-and-chain', 'bloodlust', 'bloodlust-2',
+    'bloodlust-3', 'bombardier',
     'bone-head', 'breathe-fire', 'chainsaw', 'contagieux', 'decay',
     'fork', 'hypnotic-gaze', 'insignifiant', 'instable',
     'loner-3', 'loner-4', 'loner-5', 'my-ball', 'no-hands',

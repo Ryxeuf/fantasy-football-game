@@ -4,10 +4,11 @@ import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
+import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { formatPlusStat } from "../../../lib/format-stats";
-import { buildSkillAccessByPosition } from "./roster-skill-access";
+import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
@@ -182,6 +183,11 @@ export default function TeamDetailPage() {
   // règles spéciales d'équipe et ligues régionales, dérivés du détail roster.
   const skillAccessByPosition = useMemo(
     () => buildSkillAccessByPosition(rosterDetail?.positions),
+    [rosterDetail],
+  );
+  // Méta position (compétences de base DB + mots-clés), indexée par slug.
+  const positionMetaByPosition = useMemo(
+    () => buildPositionMetaByPosition(rosterDetail?.positions),
     [rosterDetail],
   );
   const specialRules: Array<{
@@ -514,7 +520,17 @@ export default function TeamDetailPage() {
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
                       <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">{p.name}</td>
-                      <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">{getDisplayName(p.position)}</td>
+                      <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">
+                        <div>{getDisplayName(p.position)}</div>
+                        <KeywordChips
+                          keywords={
+                            language === "fr"
+                              ? positionMetaByPosition.get(p.position)?.keywords
+                              : positionMetaByPosition.get(p.position)?.keywordsEn
+                          }
+                          className="mt-1"
+                        />
+                      </td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">
                         {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
                       </td>
@@ -528,6 +544,7 @@ export default function TeamDetailPage() {
                           skillsString={p.skills}
                           teamName={team.roster}
                           position={p.position}
+                          dbBaseSkills={positionMetaByPosition.get(p.position)?.baseSkills}
                         />
                         <SkillAccessBadges
                           primary={skillAccessByPosition.get(p.position)?.primary ?? null}
@@ -549,6 +566,14 @@ export default function TeamDetailPage() {
                         <div>
                           <div className="font-semibold text-base">{p.name}</div>
                           <div className="text-xs text-gray-600">{getDisplayName(p.position)}</div>
+                          <KeywordChips
+                            keywords={
+                              language === "fr"
+                                ? positionMetaByPosition.get(p.position)?.keywords
+                                : positionMetaByPosition.get(p.position)?.keywordsEn
+                            }
+                            className="mt-1"
+                          />
                         </div>
                       </div>
                       <div className="text-right">
@@ -586,6 +611,7 @@ export default function TeamDetailPage() {
                         skillsString={p.skills}
                         teamName={team.roster}
                         position={p.position}
+                        dbBaseSkills={positionMetaByPosition.get(p.position)?.baseSkills}
                       />
                       <SkillAccessBadges
                         primary={skillAccessByPosition.get(p.position)?.primary ?? null}
@@ -626,22 +652,26 @@ export default function TeamDetailPage() {
           )}
 
           {/* A11 — Règles spéciales d'équipe (certaines modifient les PSP) */}
-          {specialRules.length > 0 && (
-            <div
-              data-testid="roster-special-rules"
-              className="bg-white rounded-lg border overflow-hidden"
-            >
-              <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
-                <h2 className="text-base sm:text-lg font-semibold">
-                  {t.teams.specialRules}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                  {t.teams.specialRulesSppNote ??
-                    "Certaines règles spéciales modifient les PSP gagnés en match."}
+          <div
+            data-testid="roster-special-rules"
+            className="bg-white rounded-lg border overflow-hidden"
+          >
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+              <h2 className="text-base sm:text-lg font-semibold">
+                {t.teams.specialRules}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                {t.teams.specialRulesSppNote ??
+                  "Certaines règles spéciales modifient les PSP gagnés en match."}
+              </p>
+            </div>
+            <div className="p-4 sm:p-6 space-y-2">
+              {specialRules.length === 0 ? (
+                <p className="text-sm text-gray-400">
+                  {language === "fr" ? "Aucune" : "None"}
                 </p>
-              </div>
-              <div className="p-4 sm:p-6 space-y-2">
-                {specialRules.map((rule) => (
+              ) : (
+                specialRules.map((rule) => (
                   <details
                     key={rule.slug}
                     data-testid={`special-rule-${rule.slug}`}
@@ -657,10 +687,10 @@ export default function TeamDetailPage() {
                       {rule.description}
                     </p>
                   </details>
-                ))}
-              </div>
+                ))
+              )}
             </div>
-          )}
+          </div>
 
           {match && (
             <div className="bg-white rounded-lg border p-4 sm:p-6">

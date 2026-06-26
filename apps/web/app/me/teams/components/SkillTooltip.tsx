@@ -17,9 +17,14 @@ interface SkillTooltipProps {
   className?: string;
   useDirectParsing?: boolean; // Si true, utilise parseSkillSlugs directement (pour les positions du roster)
   showAsBaseSkillsOnly?: boolean; // Si true, toutes les compétences sont affichées comme compétences de base (pour les définitions de roster)
+  // Slugs des compétences PAR DÉFAUT de la position, sourcés depuis la base de
+  // données (`Position.skills`). Quand fourni, prioritaire sur la liste
+  // hardcodée du game-engine pour distinguer base vs acquise : évite que des
+  // compétences par défaut soient affichées par erreur en encadré orange.
+  dbBaseSkills?: readonly string[];
 }
 
-export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false }: SkillTooltipProps) {
+export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false, dbBaseSkills }: SkillTooltipProps) {
   const { language } = useLanguage();
   // Catalogue résolu côté serveur (si fourni par la page) : prioritaire sur le
   // cache client async → noms corrects dès le 1er rendu, aucun flash.
@@ -51,6 +56,15 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   // (utile pour afficher les définitions de roster où il n'y a pas de compétences acquises)
   if (showAsBaseSkillsOnly) {
     baseSkillSlugs = skillSlugs;
+  } else if (dbBaseSkills) {
+    // Source de vérité = compétences par défaut de la position en base de
+    // données. Une compétence du joueur présente dans cette liste est "de
+    // base" (encadré neutre), sinon "acquise" (encadré orange).
+    const baseSet = new Set(dbBaseSkills);
+    for (const slug of skillSlugs) {
+      if (baseSet.has(slug)) baseSkillSlugs.push(slug);
+      else acquiredSkillSlugs.push(slug);
+    }
   } else if (position && skillSlugs.length > 0) {
     const separated = separateSkills(position, skillSlugs);
     baseSkillSlugs = separated.baseSkills;

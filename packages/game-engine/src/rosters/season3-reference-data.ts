@@ -65,7 +65,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Human Lineman', cost: 50, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [] },
-      { nameEn: 'Halfling Hopeful', cost: 30, max: 5, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Halfling Hopeful', cost: 30, max: 3, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'titchy'] },
       { nameEn: 'Dwarf Blocker', cost: 70, max: 3, ma: 4, st: 3, ag: 4, pa: 5, av: 10, skills: ['block', 'defensive', 'thick-skull'] },
       { nameEn: 'Ogre', cost: 140, max: 1, ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: ['bone-head', 'loner-3', 'mighty-blow-1', 'thick-skull', 'throw-team-mate'] },
     ],
@@ -88,7 +88,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 8,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Underworld Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Underworld Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Skaven Clanrat Lineman', cost: 50, max: 3, ma: 7, st: 3, ag: 3, pa: 4, av: 8, skills: ['animosity-underworld'] },
       { nameEn: 'Rat Ogre', cost: 150, max: 1, ma: 6, st: 5, ag: 4, pa: 6, av: 9, skills: ['animal-savagery', 'frenzy', 'loner-4', 'mighty-blow-1', 'prehensile-tail'] },
     ],
@@ -112,7 +112,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 5,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Wood Elf Lineman', cost: 65, max: 12, ma: 7, st: 3, ag: 2, pa: 3, av: 8, skills: [] },
+      { nameEn: 'Wood Elf Lineman', cost: 65, max: 16, ma: 7, st: 3, ag: 2, pa: 3, av: 8, skills: [] },
       { nameEn: 'Wardancer', cost: 130, max: 2, ma: 8, st: 3, ag: 2, pa: 3, av: 8, skills: ['block', 'dodge', 'leap'] },
       { nameEn: 'Treeman', cost: 120, max: 1, ma: 2, st: 6, ag: 5, pa: 5, av: 11, skills: ['loner-4', 'mighty-blow-1', 'stand-firm', 'strong-arm', 'take-root', 'thick-skull', 'throw-team-mate'] },
     ],
@@ -169,7 +169,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 4,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Skink Runner Lineman', cost: 60, max: 16, ma: 8, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'titchy'] },
+      { nameEn: 'Skink Runner Lineman', cost: 60, max: 16, ma: 8, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'stunty'] },
       { nameEn: 'Saurus Blocker', cost: 90, max: 6, ma: 6, st: 4, ag: 5, pa: 6, av: 10, skills: ['instable', 'juggernaut'] },
       { nameEn: 'Kroxigor', cost: 140, max: 1, ma: 6, st: 5, ag: 5, pa: 6, av: 10, skills: ['bone-head', 'loner-4', 'mighty-blow-1', 'prehensile-tail', 'thick-skull'] },
     ],
@@ -182,7 +182,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Norse Lineman', cost: 50, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: ['block', 'drunkard', 'instable', 'thick-skull'] },
-      { nameEn: 'Beer Boar', cost: 20, max: 2, ma: 5, st: 1, ag: 3, pa: 6, av: 6, skills: ['dodge', 'no-hands', 'pick-me-up', 'titchy'] },
+      { nameEn: 'Beer Boar', cost: 20, max: 2, ma: 5, st: 1, ag: 3, pa: 0, av: 6, skills: ['dodge', 'no-hands', 'pick-me-up', 'stunty', 'titchy'] },
       { nameEn: 'Ulfwerener', cost: 105, max: 2, ma: 6, st: 4, ag: 4, pa: 6, av: 9, skills: ['frenzy', 'instable'] },
       { nameEn: 'Yhetee', cost: 140, max: 1, ma: 5, st: 5, ag: 4, pa: 6, av: 9, skills: ['claws', 'disturbing-presence', 'frenzy', 'loner-4', 'wild-animal'] },
     ],
@@ -262,7 +262,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Orc Lineman', cost: 50, max: 16, ma: 5, st: 3, ag: 3, pa: 4, av: 10, skills: [] },
-      { nameEn: 'Goblin Lineman', cost: 40, max: 4, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Goblin Lineman', cost: 40, max: 4, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Orc Blitzer', cost: 85, max: 2, ma: 6, st: 3, ag: 3, pa: 4, av: 10, skills: ['block', 'break-tackle'] },
       { nameEn: 'Troll', cost: 115, max: 1, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'loner-4', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
     ],
@@ -327,8 +327,8 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     keyPositions: [
       { nameEn: 'Thrall Lineman', cost: 40, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: [] },
       { nameEn: 'Vampire Runner', cost: 100, max: 2, ma: 8, st: 3, ag: 2, pa: 3, av: 8, skills: ['bloodlust', 'hypnotic-gaze', 'regeneration'] },
-      { nameEn: 'Vampire Blitzer', cost: 110, max: 2, ma: 6, st: 4, ag: 2, pa: 4, av: 9, skills: ['bloodlust', 'hypnotic-gaze', 'juggernaut', 'regeneration'] },
-      { nameEn: 'Vargheist', cost: 150, max: 1, ma: 5, st: 5, ag: 4, pa: 6, av: 10, skills: ['bloodlust', 'claws', 'frenzy', 'loner-4', 'regeneration'] },
+      { nameEn: 'Vampire Blitzer', cost: 110, max: 2, ma: 6, st: 4, ag: 2, pa: 4, av: 9, skills: ['bloodlust-3', 'hypnotic-gaze', 'juggernaut', 'regeneration'] },
+      { nameEn: 'Vargheist', cost: 150, max: 1, ma: 5, st: 5, ag: 4, pa: 6, av: 10, skills: ['bloodlust-3', 'claws', 'frenzy', 'loner-4', 'regeneration'] },
     ],
   },
 
@@ -376,7 +376,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 3,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Goblin Bruiser Lineman', cost: 45, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'thick-skull', 'titchy'] },
+      { nameEn: 'Goblin Bruiser Lineman', cost: 45, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'stunty', 'thick-skull'] },
       { nameEn: 'Black Orc', cost: 90, max: 6, ma: 4, st: 4, ag: 4, pa: 5, av: 10, skills: ['brawler', 'grab'] },
       { nameEn: 'Trained Troll', cost: 115, max: 1, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
     ],
@@ -413,7 +413,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 8,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Trained Troll', cost: 115, max: 2, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
       { nameEn: 'Fanatic', cost: 70, max: 1, ma: 3, st: 7, ag: 3, pa: 0, av: 8, skills: ['ball-and-chain', 'no-hands', 'secret-weapon', 'titchy'] },
     ],
@@ -437,7 +437,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 3,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Gnoblar Lineman', cost: 15, max: 16, ma: 5, st: 1, ag: 3, pa: 4, av: 6, skills: ['dodge', 'right-stuff', 'sidestep', 'titchy'] },
+      { nameEn: 'Gnoblar Lineman', cost: 15, max: 16, ma: 5, st: 1, ag: 3, pa: 4, av: 6, skills: ['dodge', 'right-stuff', 'sidestep', 'stunty', 'titchy'] },
       { nameEn: 'Ogre Blocker', cost: 140, max: 5, ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: ['bone-head', 'mighty-blow-1', 'thick-skull', 'throw-team-mate'] },
     ],
   },
@@ -448,7 +448,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 6,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Snotling Lineman', cost: 15, max: 16, ma: 5, st: 1, ag: 3, pa: 4, av: 6, skills: ['dodge', 'insignifiant', 'right-stuff', 'sidestep', 'titchy'] },
+      { nameEn: 'Snotling Lineman', cost: 15, max: 16, ma: 5, st: 1, ag: 3, pa: 4, av: 6, skills: ['dodge', 'insignifiant', 'right-stuff', 'sidestep', 'stunty', 'titchy'] },
       { nameEn: 'Pump Wagon', cost: 100, max: 2, ma: 5, st: 5, ag: 5, pa: 6, av: 9, skills: ['dirty-player-1', 'juggernaut', 'mighty-blow-1', 'really-stupid', 'stand-firm'] },
       { nameEn: 'Trained Troll', cost: 115, max: 2, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
     ],
