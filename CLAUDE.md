@@ -547,6 +547,27 @@ vi.mock("./pro-roster-spp", () => ({
 }));
 ```
 
+## Compendium des regles BB (docs .md <-> web .json)
+
+Les regles Blood Bowl 2025 (saison 3) existent en DEUX representations
+qui doivent rester synchronisees **dans le meme commit** :
+
+- **Source lisible** : `docs/regles-bb-2025/*.md` (transcription fidele des
+  photos du livre, une page = un fichier + `README.md` sommaire).
+- **Source de rendu** : `apps/web/app/compendium/data/rules-bb-2025.json`
+  (un objet `Compendium` = `meta` + `chapters[]`, chaque chapitre ayant
+  `slug`, `title`, `summary`, `sourcePages[]` et des `blocks[]` typés —
+  heading/paragraph/list/table/callout). Importe statiquement par les pages
+  `apps/web/app/compendium/` (index + `[slug]`, SSG via
+  `generateStaticParams`, ISR 3600s). Pas de DB : contenu editorial statique.
+
+**Regle** : toute modification d'une regle (correction de transcription,
+nouvelle edition, ajout/retrait de chapitre) doit etre repercutee
+SIMULTANEMENT sur le `.md` concerne ET sur le `.json`, en gardant
+`sourcePages` aligne. Le champ `meta.version` est bumpe a chaque revision.
+Apres edition du `.json`, `pnpm --filter web typecheck` doit passer (le
+schema est type dans `apps/web/app/compendium/types.ts`).
+
 ## Historique sessions
 
 - **2026-05-10** : Pro League UI polish, 12 lots/PRs (#728-#742). Voir

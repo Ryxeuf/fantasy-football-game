@@ -204,6 +204,7 @@ export default function Header() {
             </button>
             {openDropdown === "compendium" && (
               <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                {dropdownItem("/compendium", "📜", t.nav.rules)}
                 {dropdownItem("/teams", "⚽", t.nav.teams)}
                 {dropdownItem("/skills", "📚", t.nav.skills)}
                 {dropdownItem("/star-players", "⭐", t.nav.starPlayers)}
@@ -391,6 +392,13 @@ export default function Header() {
               <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 📖 {t.nav.compendium}
               </p>
+              <a
+                href="/compendium"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                📜 {t.nav.rules}
+              </a>
               <a
                 href="/teams"
                 onClick={() => setMobileMenuOpen(false)}

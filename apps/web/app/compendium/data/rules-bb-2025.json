@@ -1,0 +1,2218 @@
+{
+  "meta": {
+    "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
+    "edition": "Blood Bowl 2025 (Saison 3)",
+    "sourceDir": "docs/regles-bb-2025/",
+    "version": "2026-06-26",
+    "disclaimer": "Transcription issue des pages du livre de règles BB 2025 (saison 3). Quelques coquilles d_impression du livre source peuvent subsister ; les zones illisibles sont marquées [illisible]."
+  },
+  "chapters": [
+    {
+      "slug": "coup-d-envoi",
+      "title": "Coup d'envoi & événements",
+      "summary": "Le jet 2D6 après la déviation du ballon et les tableaux d'événements de coup d'envoi (2D6 et D16).",
+      "sourcePages": [
+        "page-01",
+        "page-14"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Quand le ballon est botté en l'air, le signal que le match commence et que tout peut se produire. En fait, nombre de fans de Blood Bowl parlent du principe que des lors, ils peuvent commencer leur raffut, qui n'encourage que plus ceux sur le terrain."
+        },
+        {
+          "type": "paragraph",
+          "text": "Immédiatement après que le ballon a Dévié, le Coach de l'équipe qui joue jette 2D6 et consulte le Tableau des Événements de Coup d'Envoi ci-dessous pour voir de quelles perturbations le coup d'envoi sera fait."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tableau des événements de coup d'envoi"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau des événements de coup d'envoi",
+          "columns": [
+            "2D6",
+            "Événement de coup d'envoi"
+          ],
+          "rows": [
+            [
+              "2",
+              "**À MORT L'ARBITRE !** Chaque équipe reçoit immédiatement 1 Coup de Pouce de Pot-de-vin gratuit. Ce Pot-de-vin doit être utilisé avant la fin du tour suivant, ou bien il est perdu."
+            ],
+            [
+              "3",
+              "**TEMPS MORT !** Si le Marqueur de Tour de l'équipe qui engage est sur le 6, 7 ou 8 de la mi-temps, reculez ce Marqueur de Tour des deux équipes. Sinon, avancez de 1 case le Marqueur de Tour des deux équipes."
+            ],
+            [
+              "4",
+              "**SOLIDE DÉFENSE !** Le Coach de l'équipe qui engage choisit jusqu'à D3+3 joueurs Démarqués de son équipe. Les joueurs choisis sont ensuite retirés du terrain et peuvent être à nouveau placés selon les restrictions habituelles du placement d'équipe."
+            ],
+            [
+              "5",
+              "**CHANDELLE !** 1 joueur Démarqué de l'équipe qui réceptionne peut immédiatement être placé sur la case sur laquelle le ballon va atterrir."
+            ],
+            [
+              "6",
+              "**FANS EN FOLIE !** Chaque équipe jette un D6 et y ajoute le nombre de Cheerleaders sur sa Fiche d'Équipe. La première Action de Blocage effectuée lors du prochain Tour du Coach qui a obtenu le résultat le plus élevé reçoit un Soutien Offensif supplémentaire. Si les deux Coachs obtiennent le même résultat, les deux reçoivent ce bénéfice lors de leur prochain Tour."
+            ],
+            [
+              "7",
+              "**COACHING BRILLANT !** Chaque Coach jette un D6 et y ajoute le nombre de Coachs Assistants sur sa Fiche d'Équipe. Le Coach qui a obtenu le résultat le plus élevé, ou les deux Coachs en cas d'égalité, gagne immédiatement une Relance d'Équipe gratuite pour la Phase à venir. Si cette Relance d'Équipe gratuite n'est pas été utilisée avant la fin de la Phase, elle est perdue."
+            ],
+            [
+              "8",
+              "**MÉTÉO CAPRICIEUSE !** Faites immédiatement un nouveau jet sur le Tableau de Météo. Si le nouveau résultat est Conditions Idéales, le ballon Dévie. Sinon, le ballon n'est pas affecté et n'a pas atterri."
+            ],
+            [
+              "9",
+              "**SURPRISE !** Le Coach de l'équipe qui réceptionne choisit jusqu'à D3+3 joueurs Démarqués de son équipe. Les joueurs choisis peuvent immédiatement se déplacer de 1 case dans n'importe quelle direction, même si cela les fait passer dans la moitié de terrain adverse."
+            ],
+            [
+              "10",
+              "**CHARGE !** Le Coach de l'équipe qui engage choisit jusqu'à D3+3 joueurs Démarqués de son équipe. Les joueurs choisis avant alors être activés, un à l'état le Tour de leur équipe, et faire une Action de Mouvement gratuite. 1 des joueurs choisis peut, à la place faire une Action une Action de Lancer de Coéquipier gratuite, et 1 peut faire une Action de Botter de Coéquipier gratuite. Si des joueurs choisis Chute ou est Plaqué à son activation, on ne peut plus activer de joueurs et la Charge prend fin."
+            ],
+            [
+              "11",
+              "**EN-CAS SUSPECT !** Chaque Coach jette un D6. Le Coach du résultat le plus bas, ou les deux en cas d'égalité, désigne au hasard 1 de ses joueurs sur le terrain et jette un D6. Sur 2+, l'en-cas d'avant match du joueur n'est pas bien passé, et pour la durée de la Phase, le joueur réduit de 1 ses Caractéristiques de Mouvement et d'Armure. Sur 1, l'en-cas d'avant match du joueur est passé, et il reste de la Phase enfermé dans les latrines. La Box des Réserves tenant qu'il passe le reste de la Phase enfermé dans les latrines."
+            ],
+            [
+              "12",
+              "**INVASION DU TERRAIN !** Chaque Coach jette un D6 et y ajoute son Facteur de Popularité. Le Coach au résultat le plus bas, ou les deux en cas d'égalité, désigne au hasard D3 joueurs sur le terrain. Les joueurs choisis sont immédiatement Mis à Terre et deviennent Sonnés."
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tableau d'Événement de Coup d'Envoi (D16)"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau d'Événement de Coup d'Envoi (D16)",
+          "columns": [
+            "D16",
+            "RÉSULTAT"
+          ],
+          "rows": [
+            [
+              "1",
+              "**TRAPPE TRAÎTRESSE :** Chaque fois qu'un joueur d'une des deux équipes entre sur une case contenant une Trappe, quelle qu'en soit la raison, jetez un D6. Sur 1, la Trappe s'ouvre et le joueur y tombe. Une Blessure pour le joueur exactement comme s'il avait été Poussé dans le Public. Si le joueur était en possession du ballon, celui-ci Rebondit depuis la case de la Trappe."
+            ],
+            [
+              "2",
+              "**POTES AVEC L'ARBITRE :** Chaque fois que vous Contestez la Décision, traitez tout jet de 5 ou 6 comme \"Ah oui, présenté comme ça…\""
+            ],
+            [
+              "3",
+              "**STYLE !** Désignez au hasard 1 joueur de votre équipe qui joue le match. Le joueur désigné gagne le Trait Poignard pour la durée du match."
+            ],
+            [
+              "4",
+              "**HOMME DE FER :** Désignez 1 joueur de votre équipe qui joue le match. Le joueur choisi améliore de 1 sa Caractéristique d'Armure (jusqu'à un maximum de 11+) pour la durée du match."
+            ],
+            [
+              "5",
+              "**GANTS CLOUTÉS :** Choisissez 1 joueur de votre équipe qui joue le match. Le joueur désigné gagne la Compétence Châtaigne pour la durée du match."
+            ],
+            [
+              "6",
+              "**MAUVAISES HABITUDES :** Désignez au hasard D3 joueurs adverses qui jouent le match. Les joueurs choisis gagnent le Trait Solitaire (1) pour la durée du match."
+            ],
+            [
+              "7",
+              "**CRAMPONS GRAISSEUX :** Désignez au hasard 1 joueur adverse qui joue le match. Le joueur désigné réduit de 1 sa Caractéristique de Mouvement (jusqu'à un minimum de 1) pour la durée du match."
+            ],
+            [
+              "8",
+              "**BÉNÉDICTION DE NUFFLE :** Désignez au hasard 1 joueur de votre équipe qui joue le match. Le joueur désigné gagne la Compétence Pro pour la durée du match."
+            ],
+            [
+              "9",
+              "**DES TAUPES SOUS LE TERRAIN :** Les joueurs adverses appliquent un modificateur de -1 au jet quand ils tentent de Foncer."
+            ],
+            [
+              "10",
+              "**PASSE PARFAITE :** Tout joueur de votre équipe qui accomplit une Réussite gagne 2PSP au lieu de 1PSP."
+            ],
+            [
+              "11",
+              "**RÉCEPTION ÉTOURDISSANTE :** Tout joueur de votre équipe qui Réceptionne avec succès le ballon suite à une Action de Passe gagne 1 PSP."
+            ],
+            [
+              "12",
+              "**INTERACTION AVEC LES FANS :** Le joueur adverse suivant une Élimination en conséquence du fait d'avoir été Poussé dans le Public, le joueur qui l'a poussé dans le public gagne 2 PSP."
+            ],
+            [
+              "13",
+              "**FRÉNÉSIE D'AGRESSION :** Tout joueur de votre équipe qui réalise une Élimination grâce à une Action d'Agression gagne 2 PSP."
+            ],
+            [
+              "14",
+              "**LANCER DE PIERRE :** Une fois par match, au début de l'un quelconque de vos Tours, avant d'activer le moindre joueur, vous pouvez désignez au hasard 1 joueur adverse sur le terrain et jeter un D6. Sur 4+, un fan en colère lui jette une pierre et le joueur désigné est Assommé."
+            ],
+            [
+              "15",
+              "**SOUS SURVEILLANCE :** Désignez au hasard qui affectue une Action d'Agression est automatiquement Expulsé s'il pénètre l'armure, qu'un double naturel ait été obtenu ou non."
+            ],
+            [
+              "16",
+              "**ENTRAÎNEMENT INTENSIF :** Désignez au hasard 1 joueur de votre équipe qui joue le match. Le joueur désigné gagne une unique Compétence Principale au choix pour la durée du match."
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "LE SAVIEZ-VOUS…",
+          "text": "Quand les équipes de Skavens sont apparues, les érudits s'écrièrent qu'aucun argument ne plaidait pour l'existence des hommes-rats. Pour compenser, ils commencèrent à prétendre que les Snotlings n'étaient que des [illisible : texte coupé] [illisible]"
+        }
+      ]
+    },
+    {
+      "slug": "blessures-eliminations",
+      "title": "Armure, blessures & éliminations",
+      "summary": "Jets d'armure et de blessure (tableaux standard et Minus) et jets d'élimination (séquelles, blessure persistante, mort).",
+      "sourcePages": [
+        "page-02",
+        "page-03"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Comme son nom l'indique, le jeu sacré de Nuffle est des plus sanglants ! Il n'est pas rare qu'un joueur se casse quelque chose lors d'un tacle ou d'une collision, mais au Blood Bowl, vous avez autant de chances de vous blesser en trébuchant sur un cailloux que de vous faire mordre par un Zombie ou encorner par un Minotaure : même la mort est une menace omniprésente !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nombre de joueurs de Blood Bowl arborent un nombre impressionnant d'ecchymoses et de cicatrices, chacune évoquant un exploit, quoique bien souvent exagéré, sur le gazon ou l'astrogranite."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Risque de blessures"
+        },
+        {
+          "type": "paragraph",
+          "text": "Lorsqu'on fait un Jet d'Armure pour un joueur, il court le risque d'une Blessure. Comme décrit en page 37, si l'armure d'un joueur n'est pas pénétrée, alors il ira bien et ne subira pas d'autre effet. Toutefois, si l'armure est pénétrée, alors il faut faire un Jet de Blessure pour le joueur."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Jets de blessure"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand on doit faire un Jet de Blessure pour un joueur, le Coach de l'équipe adverse jette 2D6 et consulte le Tableau de Blessure ci-dessous :"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Tableau de blessure"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau de blessure",
+          "columns": [
+            "2D6",
+            "Résultat"
+          ],
+          "rows": [
+            [
+              "2-7",
+              "**SONNÉ :** Le joueur est immédiatement Sonné."
+            ],
+            [
+              "8-9",
+              "**K.-O. :** Le joueur est immédiatement K.-O. Retirez-le du terrain et placez-le dans le Box des Joueurs K.-O. de sa Fosse."
+            ],
+            [
+              "10-12",
+              "**ÉLIMINÉ :** Le joueur subit une Élimination. Retirez-le du terrain et placez-le dans le Box des Joueurs Éliminés de sa Fosse. Le Coach de l'équipe adverse fait ensuite un Jet d'Élimination contre lui."
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Joueurs minus"
+        },
+        {
+          "type": "paragraph",
+          "text": "S'il faut faire un Jet de Blessure pour un joueur sans le Trait Minus, alors utilisez le Tableau de Blessure de Minus ci-dessous au lieu du tableau standard. Après tout, quoi de plus enragé et fragile, on a plus de chance de se faire mal !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Tableau de blessure de minus"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau de blessure de minus",
+          "columns": [
+            "2D6",
+            "Résultat"
+          ],
+          "rows": [
+            [
+              "2-6",
+              "**SONNÉ :** Le joueur est immédiatement Sonné."
+            ],
+            [
+              "7-8",
+              "**K.-O. :** Le joueur est immédiatement K.-O. Retirez-le du terrain et placez-le dans le Box des Joueurs K.-O. de sa Fosse."
+            ],
+            [
+              "9",
+              "**COMMOTION :** Le joueur subit une Élimination. Retirez-le du terrain et placez-le dans le Box des Joueurs Éliminés de sa Fosse. En jeu en Ligue, on ne fait pas pas de Jet d'Élimination pour lui : à la place, il subit automatiquement le résultat Commotion sur le Tableau d'Élimination."
+            ],
+            [
+              "10-12",
+              "**UNE ÉLIMINÉ :** Le joueur subit une Élimination. Retirez-le du terrain et placez-le dans le Box des Joueurs Éliminés de sa Fosse. Le Coach de l'équipe adverse fait ensuite un Jet d'Élimination contre lui."
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Jets d'élimination"
+        },
+        {
+          "type": "paragraph",
+          "text": "Chaque fois qu'un joueur subit une Élimination, le Coach adverse fait un Jet d'Élimination contre lui en consultant le Tableau d'Élimination ci-dessous. Dans tous les cas, le joueur rate le match en cours, mais il peut aussi subir des effets à long terme."
+        },
+        {
+          "type": "paragraph",
+          "text": "En Match Hors-concours et de Jeu Égal, cela n'a que peu d'effet sur le match, et vous pouvez même sauter cette étape entièrement pour accélérer les choses. Toutefois, si votre adversaire a un Applicateur ou une Règle Spéciale associée à un résultat spécifique du Tableau d'Élimination (en général le résultat Mort) alors faites le jet, au cas où."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Tableau d'élimination"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau d'élimination",
+          "columns": [
+            "D16",
+            "Résultat"
+          ],
+          "rows": [
+            [
+              "1-8",
+              "**COMMOTION :** Le joueur ne subit aucun effet à long terme."
+            ],
+            [
+              "9-10",
+              "**AMOCHÉ :** Le joueur doit rater son prochain match."
+            ],
+            [
+              "11-12",
+              "**BLESSURE SÉRIEUSE :** Le joueur subit une Blessure Persistante et doit rater son prochain match."
+            ],
+            [
+              "13-14",
+              "**SÉQUELLE :** Le joueur subit une réduction de Caractéristique et doit rater son prochain match."
+            ],
+            [
+              "15-16",
+              "**MORT :** Le joueur est mort !"
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Rate le prochain match"
+        },
+        {
+          "type": "paragraph",
+          "text": "En Jeu en Ligue, quand un joueur rate son prochain match, il n'est pas éligible pour la prochaine partie jouée avec son équipe. Notez-le sur votre fiche d'équipe."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Blessure persistante"
+        },
+        {
+          "type": "paragraph",
+          "text": "Notez sur votre fiche d'équipe que le joueur a subi une Blessure Persistante. Lors d'un Jet d'Élimination pour un joueur avec une Blessure Persistante, appliquez un modificateur de +1 par tranche de chacune des Blessures Persistantes qu'a le joueur."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Réduction de caractéristique"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le joueur voit une de ses Caractéristiques réduite de 1. Pour déterminer quelle Caractéristique a été réduite, jetez un D6 et consultez le Tableau de Séquelle ci-dessous :"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau de séquelle",
+          "columns": [
+            "D6",
+            "Séquelle",
+            "Réduction de caractéristique"
+          ],
+          "rows": [
+            [
+              "1-2",
+              "TRAUMATISME CRÂNIEN",
+              "-1 AR"
+            ],
+            [
+              "3",
+              "GENOU DÉBOÎTÉ",
+              "-1 M"
+            ],
+            [
+              "4",
+              "BRAS CASSÉ",
+              "-1 CP"
+            ],
+            [
+              "5",
+              "HANCHE DISLOQUÉE",
+              "-1 AG"
+            ],
+            [
+              "6",
+              "COU BRISÉ",
+              "-1 F"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Dans le cas du Mouvement et de la Force, réduisez simplement de 1 la valeur."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Caractéristiques représentées par un résultat requis sont affectées un peu différemment. Pour la Capacité de Passe et l'Agilité, augmentez de 1 le nombre devant le symbole +, pour rendre le test concerné plus difficile à réussir. Pour l'Armure, réduisez de 1 le nombre devant le +, pour faire un Jet d'Armure contre le joueur plus facile pour le Coach adverse."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si on ne peut pas appliquer la réduction de Caractéristique obtenue, par exemple si la Caractéristique ne peut pas être plus mauvaise qu'elle ne l'est, alors n'appliquez pas la réduction de Caractéristique et traitez le résultat comme Rate le Prochain Match à la place. Nuffle estime manifestement que ce joueur a assez souffert !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Mort"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le joueur est mort. Retirez-le de votre fiche d'équipe."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "LE SAVIEZ-VOUS…",
+          "text": "[illisible — texte coupé en bas de page : « …une équipe de Hauts Elfes des Dragon Princes était… »]"
+        }
+      ]
+    },
+    {
+      "slug": "agressions",
+      "title": "Actions d'agression",
+      "summary": "Procédure d'une Action d'Agression (jet d'armure + soutiens), expulsion sur double, et contester la décision.",
+      "sourcePages": [
+        "page-04"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Cela vous surprendra peut-être, mais une agression au sol va à l'encontre des règles du Blood Bowl, même si cela n'a jamais arrêté personne ! Nombre de joueurs n'ont de cesse chaque année de venger la colère des arbitres simplement pour piétiner un adversaire irritant. En fait, nombre d'équipes sont connues pour leurs pratiques déloyales, et plus d'un joueur a fondé sa carrière sur l'art subtil de l'agression !"
+        },
+        {
+          "type": "paragraph",
+          "text": "De nos jours, l'agression au sol n'est pas pas tolérée légalement : les fans comme les experts attendent la moindre d'entre elles. À tel point que la Guilde des Arbitres et Régulateurs Réunis (GARR) a édicté des recommandations pour permettre à ses membres de fermer les yeux devant ces fourbes bottes sur le terrain !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Effectuer une Action d'Agression"
+        },
+        {
+          "type": "paragraph",
+          "text": "Comme mentionné plus tôt, un seul joueur de l'équipe active peut annoncer une Action d'Agression à chaque Tour. Quand un joueur annonce une Action d'Agression, il est d'abord autorisé à faire une Action de Mouvement, mais il ne peut pas continuer de se déplacer après avoir commis l'Action d'Agression. Le joueur doit finir son Action d'Agression adjacent à un joueur adverse Mis à Terre ou Sonné et effectuer l'Action d'Agression."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour effectuer l'Action d'Agression, le joueur fait un Jet d'Armure (voir page 37) pour la cible de l'Action d'Agression. Les Soutiens Offensifs et Défensifs s'appliquent à une Action d'Agression de la même manière que pour une Action de Blocage. Lors du Jet d'Armure, le joueur qui fait l'Action d'Agression peut appliquer un modificateur de +1 pour chaque Soutien Offensif, et doit appliquer un modificateur de -1 pour chaque Soutien Défensif."
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "**Par exemple :** le Blitzer des Rois des Tombes annonce une Action d'Agression à fini son Action de Mouvement adjacent à l'Écuyer Bretonnien. Il fait un Jet d'Armure pour l'Écuyer Bretonnien, en appliquant un modificateur de +1 pour le Trois-quart Squelette qui fournit un Soutien Offensif. Comme le Gardien des Tombes est aussi Marqué par le Chevalier du Graal, il ne peut pas fournir de Soutien Offensif."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Être Expulsé"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quelle que soit l'issue, si lors d'une Action d'Agression, on obtient un double naturel sur le Jet d'Armure ou le Jet de Blessure, alors le joueur qui effectue l'Action d'Agression est Expulsé. Le joueur Expulsé est immédiatement retiré du terrain et ne participe plus au match. Quand un joueur de l'équipe active est Expulsé, un Turnover survient."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Contester la décision"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur est Expulsé, quelle qu'en soit la raison, son Coach peut tenter de Contester la Décision : jetez un D6 et consultez le tableau ci-dessous :"
+        },
+        {
+          "type": "table",
+          "caption": "Contester la Décision",
+          "columns": [
+            "D6",
+            "Résultat"
+          ],
+          "rows": [
+            [
+              "1",
+              "**DÉGAGEZ !** L'arbitre est si remonté que le Coach est éjecté pour avoir osé remettre en question son autorité ! Le joueur est quand même Expulsé, et le Coach par la Décision pour le reste du match."
+            ],
+            [
+              "2-5",
+              "**JE M'EN FICHE !** L'arbitre se fiche de vos arguments et reste sur sa décision. Le joueur est quand même Expulsé."
+            ],
+            [
+              "6",
+              "**AH OUI, PRÉSENTÉ COMME ÇA… !** Certains de vos arguments font mouche, et l'arbitre se laisse influencer. Le joueur est replacé sur la case où il était et n'est pas Expulsé, même si cela provoque quand même un Turnover."
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Exemple",
+          "text": "En continuant notre exemple, le Blitzer des Rois des Tombes fait un Jet d'Armure pour l'Écuyer Bretonnien pour son agression, et obtient un 6 et un double 3, ce qui pénètre son armure. Comme il fait un Jet de Blessure et obtient un double 2, provoquant l'Expulsion du Blitzer des Rois des Tombes, tandis que l'Écuyer Bretonnien devient Sonné. Le Coach des Rois des Tombes tente de Contester la Décision et [illisible — texte coupé en bas de page]"
+        }
+      ]
+    },
+    {
+      "slug": "jeu-en-ligue",
+      "title": "Jeu en ligue : séquences & finances",
+      "summary": "Séquences d'avant et d'après match, gains et affluence, erreurs coûteuses et concession de match.",
+      "sourcePages": [
+        "page-05",
+        "page-06",
+        "page-11",
+        "page-12"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Le Jeu en Ligue est un système qui relie vos matchs de Blood Bowl et voit vos équipes se développer au fil des parties. Ainsi, de nouvelles étapes viennent s'ajouter au début et à la fin du match, représentant les maintes situations qui s'enchaînent lors d'une ligue. Les Coachs doivent aussi tenir le compte des Points de Star Player et des Éliminations lors du match, deux points que nous allons aborder plus loin dans cette section."
+        },
+        {
+          "type": "paragraph",
+          "text": "Dans cette section, nous allons détailler ces différences afin que vous disposiez de toutes les informations supplémentaires pour disputer vos matchs de ligue, soit les étapes qui viennent s'ajouter à la Séquence d'Avant Match. Nous vous expliquerons aussi comment organiser vos propres ligues."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SÉQUENCE D'AVANT MATCH"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nous mentionnions plus tôt les deux étapes de la Séquence d'Avant Match qui ne sont utilisées qu'en Jeu en Ligue : Prendre des Journaliers et Coups de Pouce. Ici, nous expliquons ce que sont ces deux étapes, et ce que vous devez faire lorsqu'elles s'offrent à vous."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "PRENDRE DES JOURNALIERS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Si à cette étape de la Séquence d'Avant Match, votre équipe ne peut pas aligner 11 joueurs, quelle qu'en soit la raison (que les joueurs raient le prochain match ou aient été tués), alors vous devez utiliser des Journaliers, des joueurs intérimaires participant au match pour aider l'équipe."
+        },
+        {
+          "type": "paragraph",
+          "text": "Un Journalier est toujours un joueur issu de la Fiche d'Équipe de l'équipe, au poste de **Trois-quart** avec une QTE de 0-16, et c'est un joueur normal à l'exception du fait qu'il gagne le trait Solitaire (4+). Si la Fiche d'Équipe de votre équipe à plusieurs postes de **Trois-quart**, vous pouvez choisir le type de Journalier. Si une équipe a plusieurs postes de **Trois-quart** avec une QTE de 0-16, alors elle ne peut jouer comme Journalier."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Journaliers peuvent temporairement amener le nombre de joueurs d'une équipe au-delà de 16 en comptant les joueurs blessés, mais ils ne peuvent pas amener le nombre de joueurs capables de participer au match au-delà de 11."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Journaliers comptent toujours dans la Valeur d'Équipe Actuelle d'une équipe pour un match, donc une équipe doit inclure ses Journaliers avant de calculer sa VEA."
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "**Par exemple :** Jay se prépare à jouer son équipe de Skavens pour son prochain match. Toutefois, lorsque les joueurs prêts à participer sont passés en revue avant son prochain match à cause d'une blessure, et il n'a que neuf joueurs capables de jouer ce match. Par conséquent, pour amener son compte de joueurs à onze, Jay engage deux Journaliers issus du poste de **Trois-quart**, ici, deux Rats des Clans Skavens. Les deux Journaliers ainsi embauchés compteront dans la Valeur d'Équipe Actuelle de Jay."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "COUPS DE POUCE"
+        },
+        {
+          "type": "paragraph",
+          "text": "Avant toute Rencontre de Ligue, les équipes ont le droit de dépenser des pièces d'or de leur Trésorerie ou de leur Petite Monnaie pour acheter des Coups de Pouce pour leur équipe. Ceux-ci sont ensuite consignés sur la Feuille de Résultat de Match de l'équipe. On procède ainsi :"
+        },
+        {
+          "type": "paragraph",
+          "text": "Si une équipe a une VEA (voir page 91) inférieure (Journaliers inclus) alors elle repoit de la Petite Monnaie à dépenser en Coups de Pouce. Pour calculer la Petite Monnaie d'une équipe, suivez ces étapes dans l'ordre :"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Tout d'abord, l'équipe avec la VEA la plus élevée à l'occasion de dépenser des pièces d'or de sa Trésorerie pour acheter des Coups de Pouce.",
+            "Une fois ceci réalisé, l'équipe avec la VEA la plus basse gagne une quantité de Petite Monnaie égale à la différence de VEA entre les deux équipes, plus une quantité égale à la quantité d'or que l'autre équipe a dépensé de sa Trésorerie.",
+            "L'équipe avec la VEA la plus basse peut dépenser cette Petite Monnaie en Coups de Pouce, mais tout ce qui n'est pas dépensé est perdu. Elle peut aussi dépenser jusqu'à un maximum de 50 000 pièces d'or de sa Trésorerie pour enrichir sa Petite Monnaie.",
+            "Si les deux équipes ont la même VEA, aucune ne peut dépenser d'or de sa Trésorerie, les équipes sont à égalité."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "**Par exemple :** Jay affronte Dan en Rencontre de Ligue. La VEA de l'équipe de Jay est de 1 240 000 tandis que celle de Dan est de 1 060 000. Comme Jay a la VEA la plus élevée, il peut dépenser des pièces d'or de sa Trésorerie en premier, et décide d'acheter un Fût de Bibo Premium pour 50 000 pièces d'or. Dan gagne alors 80 000 de Petite Monnaie (la différence entre les VEA des deux équipes) plus 50 000 (ce qu'a dépensé Jay) et acquiert la possibilité d'ajouter 10 000 de sa Trésorerie, pour un total de 140 000 pièces d'or."
+        },
+        {
+          "type": "paragraph",
+          "text": "La liste des Coups de Pouce se trouve en page 143, et la quantité disponible pour chacun, et les équipes peuvent en acheter."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SÉQUENCE D'APRÈS MATCH"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois que le coup de sifflet final a retenti lors d'une Rencontre de Ligue et que les fans ont quitté les gradins pour se rendre vers leur troquet préféré, les deux Coachs résolvent la Séquence d'Après Match pour déterminer les Gains de leur équipe et les conséquences du match, et pour se préparer pour leur prochaine Rencontre de Ligue."
+        },
+        {
+          "type": "paragraph",
+          "text": "La Séquence d'Après Match compte plusieurs étapes, à résoudre dans l'ordre :"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Consigner les Résultats et les Gains",
+            "Mettre à Jour les Fans Dévoués",
+            "Amélioration de Joueur",
+            "Embauches, Renvois et Retraites Temporaires",
+            "Erreurs Coûteuses",
+            "Préparer la Prochaine Rencontre"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CONSIGNER LES RÉSULTATS ET LES GAINS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Chaque Coach consigne l'issue du match sur la Feuille de Résultat de Match, et note les informations suivantes :"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Le résultat : Victoire, Défaite ou Match Nul",
+            "Le nombre de Touchdowns que chaque équipe a marqués",
+            "Le nombre d'Éliminations que chaque équipe a infligées, en comptant seulement celles qui ont rapporté des Points de Star Player (voir page 96)",
+            "Le nombre de Points de Ligue gagnés (voir page 103)"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Puis, les Coachs calculent le nombre de pièces d'or que leur équipe a reçu en Gains. Pour calculer les Gains d'une équipe, vous devez calculer l'Affluence des Fans en additionnant les Facteurs de Popularité des deux équipes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Divisez l'Affluence des Fans du match par deux et ajoutez le nombre de Touchdowns que votre équipe a marqués. Ajoutez 1 si aucun Joueur de votre équipe n'a été considéré comme en train de se Temporiser pendant le match. Puis multipliez le résultat par 10 000 pour calculer le nombre de pièces d'or que votre équipe reçoit en Gains."
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "**Par exemple :** Jay calcule ses Gains après son match avec Dan. Le Facteur de Popularité de Jay était de 4 tandis que celui de Dan était de 3, donnant une Affluence de Fans de 7. Jay divise ceci par deux, et obtient 3,5, puis il ajoute le nombre de Touchdowns qu'il a marqués à ce match, 2 dans ce cas, et ajoute encore 1 car il n'a pas Temporisé pendant le match, ce qui lui fait un total de 6,5. Jay multiplie ceci par 10 000, ce qui lui donne 65 000 pièces d'or de Gains."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Gains sont aussitôt ajoutés à la Trésorerie d'une équipe et peuvent être dépensés plus tard à la Séquence d'Après Match."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "METTRE À JOUR LES FANS DÉVOUÉS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le meilleur moyen d'augmenter la popularité d'une équipe est de gagner. Les supporters adorent suivre leur équipe joue bien, et enchaîner les victoires décuple le nombre de fans qui affluent dans les stades et désert les stands de vente de produits dérivés. Assistre sa popularité contribue ainsi à la santé financière d'une équipe."
+        },
+        {
+          "type": "paragraph",
+          "text": "Après chaque Rencontre de Ligue, vous devez voir si l'équipe gagne plus de fans, ou si elle en perd en raison de ses piètres performances."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si votre équipe a gagné, jetez un D6. Si le résultat est égal ou supérieur à la Caractéristique de Fans Dévoués, de votre équipe, augmentez de 1 cette Caractéristique de Fans Dévoués. Ceci ne peut jamais dépasser 7."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si votre équipe a perdu, jetez un D6. Si le résultat est inférieur à la Caractéristique de Fans Dévoués de votre équipe, réduisez de 1 cette Caractéristique de Fans Dévoués. Ceci ne peut jamais descendre en dessous de 1."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si votre équipe a fait un match nul, sa Caractéristique de Fans Dévoués reste la même."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Erreurs coûteuses"
+        },
+        {
+          "type": "paragraph",
+          "text": "Après chaque match de Blood Bowl, une équipe voit ses efforts récompensés par de l'or. Elle ajoute ces gains à sa Trésorerie, si bien que certaines équipes finissent par accumuler une bonne quantité d'or. Mais comme n'importe quel Coach de Blood Bowl vous le dira, il est plus facile d'avoir une grosse trésorerie ; tout peut lui arriver ! Qu'il s'agisse d'un Coach Assistant trop crapule qui pique dans la caisse ou d'un nouvel équipement, qui en dispose de journalistes qui exigent un dessous-de-table pour étouffer un scandale, des joueurs qui réclament le surplus de contrats de revues clandestins, ou du Coach en chef qui doit réparation à un taverner après que son équipe a détruit l'établissement en célébrant sa dernière victoire avec un peu trop d'enthousiasme, on ne compte plus les manières dont l'or peut se volatiliser des caisses. Et bien sûr, cela arrive toujours au pire moment !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Après chaque Rencontre de Ligue, si une équipe a au moins 100 000 pièces d'or dans sa Trésorerie à cette étape de la Séquence d'Après-Match, alors elle doit consulter la colonne correspondant à la quantité de pièces d'or dans sa Trésorerie sur le Tableau des Erreurs Coûteuses et jeter un D6 pour voir ce qu'il se passe. La description de chaque résultat se trouve ci-après, et détaille ce qui arrive à cet or."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Tableau des erreurs coûteuses"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau des erreurs coûteuses",
+          "columns": [
+            "D6",
+            "100 000 - 195 000 pièces d'or",
+            "200 000 - 295 000 pièces d'or",
+            "300 000 - 395 000 pièces d'or",
+            "400 000 - 495 000 pièces d'or",
+            "500 000 - 595 000 pièces d'or",
+            "600 000+ pièces d'or"
+          ],
+          "rows": [
+            [
+              "1",
+              "Incident Mineur",
+              "Incident Mineur",
+              "Incident Mineur",
+              "Incident Majeur",
+              "Incident Majeur",
+              "Catastrophe"
+            ],
+            [
+              "2",
+              "Crise Évitée",
+              "Incident Mineur",
+              "Incident Mineur",
+              "Incident Majeur",
+              "Catastrophe",
+              "Catastrophe"
+            ],
+            [
+              "3",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Incident Mineur",
+              "Incident Mineur",
+              "Incident Majeur",
+              "Incident Majeur"
+            ],
+            [
+              "4",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Incident Mineur",
+              "Incident Mineur",
+              "Incident Majeur"
+            ],
+            [
+              "5",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Incident Mineur",
+              "Incident Majeur"
+            ],
+            [
+              "6",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Crise Évitée",
+              "Incident Mineur"
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Crise évitée"
+        },
+        {
+          "type": "paragraph",
+          "text": "Grâce à un encadrement avisé, et beaucoup de chance, l'équipe se tient à carreau et ne perd rien."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Incident mineur"
+        },
+        {
+          "type": "paragraph",
+          "text": "L'équipe commet une bévue et est forcée de payer des frais pour calmer le jeu. Vous perdez immédiatement D3 x 10 000 pièces d'or de votre Trésorerie."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Incident majeur"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quelque chose a coûté à l'équipe a fait, mais ça va vous coûter cher ! Divisez immédiatement par deux la quantité de pièces d'or de votre Trésorerie, en arrondissant aux 5 000 pièces d'or inférieures."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Catastrophe"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rien ne va plus ! La Trésorerie est vide, sauf les 2D6 x 10 000 pièces d'or que vous aviez astucieusement mises de côté en cas de coup dur."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Préparer la prochaine rencontre"
+        },
+        {
+          "type": "paragraph",
+          "text": "La dernière étape de la Séquence d'Après-Match est de préparer la prochaine Rencontre de Ligue. Pour ce faire, assurez-vous que votre Valeur d'Équipe (VE) et votre Valeur d'Équipe Actuelle (VEA) sont à jour. N'oubliez pas de tenir compte de tout nouveau joueur, Staff de Banc de Touche et Relance d'Équipe achetés pendant la Séquence d'Après-Match, ainsi que des joueurs ayant subi une Hausse de Valeur, car cela joue sur votre VE et votre VEA."
+        },
+        {
+          "type": "paragraph",
+          "text": "Souvenez-vous aussi que si les joueurs qui raient le prochain match ne comptent pas dans votre VEA, les joueurs qui ont raté le match précédent et se sont désormais remis y ajoutent à nouveau leur coût."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Concéder le match"
+        },
+        {
+          "type": "paragraph",
+          "text": "Il est rare qu'une équipe de Blood Bowl concède un match. La plupart des joueurs sont trop fiers pour abandonner, et ils savent que leurs supporters ne le leur pardonneraient pas, même un joueur coriace y réfléchirait à deux fois avant d'affronter une foule de fans en colère !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Toutefois, un Coach peut préférer la discrétion à la vaillance, et décider qu'il en a assez tout en espérant que ni ses joueurs, ni ses supporters ne verront sa décision d'un mauvais œil !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Un Coach peut décider de Concéder un match au début de n'importe quelle de ses Tours. Si une équipe Concède, les points suivants se produisent :"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Son adversaire gagne automatiquement 2 à 0, sauf s'il avait déjà marqué plus de Touchdowns, auquel cas le compte comme avant gagné X à 0, où X est le nombre de Touchdowns qu'il a marqués jusqu'ici.",
+            "Il ne peut être retiré JDM aucun de ses joueurs. À la place, son adversaire peut retirer un deuxième JDM parmi ses propres joueurs.",
+            "Il ne génère aucun Gain, et son adversaire reçoit des Gains égaux à la totalité de l'Affluence des Fans plus le nombre de Touchdowns qu'il a marqués x 10 000 pièces d'or.",
+            "Tout Point de Star Player ne peut être gagné pendant le match est perdu.",
+            "La Caractéristique de Fans Dévoués de l'équipe est réduite de D3, jusqu'à un minimum de 1."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "De plus, si une équipe Concède, alors elle doit jeter un D6 pour chacun de ses joueurs ayant trois améliorations ou plus. Sur 4+, le joueur reste dans l'équipe. Toutefois, sur 1-3, le joueur est dégoûté et quitte immédiatement l'équipe : retirez-le de votre Liste d'Équipe."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Concéder sans pénalité"
+        },
+        {
+          "type": "paragraph",
+          "text": "Parfois, une équipe est trop malmenée pour envisager de continuer, et même les fans les plus acharnés sont assez lucides pour s'en rendre compte. Si une équipe est incapable de placer trois joueurs ou plus sur la Ligne d'Engagement lors de n'importe quelle Séquence de Début de Phase, alors elle peut choisir de Concéder sans Pénalité. Si une équipe Concède sans Pénalité, alors son adversaire remporte automatiquement une victoire 2 à 0, sauf s'il avait déjà marqué plus de Touchdowns, auquel cas il compte comme avant gagné X à 0, où X est le nombre de Touchdowns qu'il a marqués jusqu'ici."
+        },
+        {
+          "type": "paragraph",
+          "text": "Toutefois, l'équipe ne subit aucune des pénalités listées dans les règles pour avoir Concédé le Match : elle a déjà bien assez souffert !"
+        }
+      ]
+    },
+    {
+      "slug": "amelioration-joueurs",
+      "title": "Amélioration des joueurs",
+      "summary": "Points de Star Player (PSP), tableau des améliorations, nouvelles compétences, améliorations de caractéristique, embauches/renvois/retraite.",
+      "sourcePages": [
+        "page-07",
+        "page-08",
+        "page-09",
+        "page-10"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Pendant une ligue, les joueurs de votre équipe gagnent de l'expérience grâce à leurs efforts sur le terrain. Cette expérience leur permet de gagner de nouvelles compétences avec lesquelles adopter leurs stratégies, voire d'améliorer leur physique. En jeu, cela se traduit par engranger des Points de Star Player en accomplissant des prouesses pendant le match. On dépense ensuite ces Points de Star Player pour donner au joueur une nouvelle Compétence, voire améliorer une de ses Caractéristiques. Ainsi, au cours d'une ligue, vos joueurs se développent et deviennent peut-être des légendes du Blood Bowl !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "CONSIGNER LES POINTS DE STAR PLAYER"
+        },
+        {
+          "type": "paragraph",
+          "text": "Votre Liste d'Équipe contient un champ pour tenir le compte des Points de Star Player (PSP) que chaque joueur a cumulés. À la fin de chaque match, vous devez y ajouter tout PSP qu'un joueur a gagné, il est donc important de prendre des notes lors d'un match chaque fois qu'un joueur accomplit quelque chose qui génère des PSP."
+        },
+        {
+          "type": "paragraph",
+          "text": "Par ailleurs, notez que les Star Players ne génèrent pas du tout de PSP lors d'un match. Les Journaliers, toutefois, en génèrent bel et bien, pensez-en donc compte lorsqu'un vous donnera l'option de les embaucher plus tard à la Séquence d'Après Match."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "GAGNER DES POINTS DE STAR PLAYER"
+        },
+        {
+          "type": "paragraph",
+          "text": "Que ce soit en marquant un Touchdown, en Éliminant un joueur adverse ou en réalisant une passe, vos joueurs ont des moyens de générer des PSP lors d'un match ne manquant pas, voici ci-après les manières standards de générer des PSP : toutefois, il existe aussi des situations plus spécifiques générant des PSP dans des circonstances précises. Lorsque c'est le cas, la règle associée le précise."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "RÉUSSITES"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur fait une Action de Passe qui résulte en une Passe Précise, et qu'elle est réceptionnée avec succès par un coéquipier sans que le ballon touche le sol et Rebondisse, on appelle ceci une Réussite. Un joueur qui accomplit une Réussite gagne 1 PSP."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "LANCER DE COÉQUIPIER"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur fait une Action de Lancer de Coéquipier qui résulte en un Lancer Sécurisé, le co-équipier lancé atterrit sur ses pieds avec succès, le joueur qui a fait l'Action de Lancer de Coéquipier gagne 1 PSP."
+        },
+        {
+          "type": "paragraph",
+          "text": "De plus, si un joueur est lancé par un coéquipier et atterrit sur ses pieds avec succès, il gagne aussi 1 PSP pour avoir atterri sur ses pieds, quel que soit le type de lancer."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "INTERCEPTION"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur Intercepte avec succès une Action de Passe lobée par un joueur adverse, il gagne 2 PSP."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "ÉLIMINATION"
+        },
+        {
+          "type": "paragraph",
+          "text": "Si un joueur est Plaqué suite à une Action de Blocage et subit une Élimination, alors que le joueur qui effectuait l'Action de Blocage, alors un de joueur qui l'a plaqué qu'il a infligé une Élimination. Un joueur qui inflige une Élimination gagne 2 PSP."
+        },
+        {
+          "type": "paragraph",
+          "text": "Un joueur gagne les 2 PSP même si les deux joueurs ont été Plaqués et sont Plaqués et ont subi une Élimination, et il gagne les 2 PSP même si l'Élimination est annulée par une méthode quelconque, que ce soit un Apothicaire ou le Trait Régénération. Les Éliminations infligées par d'autres méthodes, comme des Actions Spéciales ou lorsqu'un est Blessé par le Public ne génèrent pas de PSP."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TOUCHDOWN"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur marque un Touchdown, il repoit 3 PSP. Si votre équipe repoit des Touchdowns car l'équipe adverse a Concédé le match, alors vous pouvez choisir le ou les joueurs de votre équipe à qui allouer les PSP des Touchdowns marqués."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "JOUEUR DU MATCH"
+        },
+        {
+          "type": "paragraph",
+          "text": "À la fin de chaque match, vous devez élire votre Joueur du Match (JDM). Pour ce faire, chaque Coach nomme un joueur de son équipe qui sera pendant le match et leur assigne un nombre de 1 à 6. Puis il jette un D6 pour déterminer lequel d'entre eux est élu JDM. Le joueur tiré est élu JDM gagne 4 PSP."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "DÉPENSER DES POINTS DE STAR PLAYER"
+        },
+        {
+          "type": "paragraph",
+          "text": "Après avoir assigné tous les PSP suite à un match, les joueurs peuvent ensuite les dépenser pour gagner des améliorations, que ce soit de nouvelles Compétences ou pour accroître leurs Caractéristiques. Le nombre de PSP qu'une amélioration coûte à un joueur dépend du nombre d'améliorations dont dispose déjà le joueur, et du type d'amélioration qu'il souhaite acheter. Les joueurs n'ont pas à dépenser leurs PSP sitôt qu'ils le souhaitent, toutefois, lorsqu'un joueur a accumulé assez de PSP pour améliorer une Caractéristique (comme indiqué par le Tableau des Améliorations en page 97), alors il doit prendre une amélioration ; toutefois, rien ne l'oblige à choisir une amélioration de Caractéristique s'il ne le souhaite pas."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TABLEAU DES AMÉLIORATIONS"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau des améliorations",
+          "columns": [
+            "Amélioration",
+            "Déterminer au hasard une Compétence Principale",
+            "Choisir une Compétence Principale",
+            "Choisir une Compétence Secondaire",
+            "Amélioration de Caractéristique"
+          ],
+          "rows": [
+            [
+              "Expérimenté (1ʳᵉ amélioration)",
+              "3 PSP",
+              "6 PSP",
+              "10 PSP",
+              "14 PSP"
+            ],
+            [
+              "Vétéran (2ᵉ amélioration)",
+              "4 PSP",
+              "8 PSP",
+              "12 PSP",
+              "16 PSP"
+            ],
+            [
+              "Future Star (3ᵉ amélioration)",
+              "6 PSP",
+              "12 PSP",
+              "16 PSP",
+              "20 PSP"
+            ],
+            [
+              "Star (4ᵉ amélioration)",
+              "8 PSP",
+              "16 PSP",
+              "20 PSP",
+              "24 PSP"
+            ],
+            [
+              "Superstar (5ᵉ amélioration)",
+              "10 PSP",
+              "20 PSP",
+              "24 PSP",
+              "28 PSP"
+            ],
+            [
+              "Légende (6ᵉ amélioration)",
+              "15 PSP",
+              "30 PSP",
+              "34 PSP",
+              "38 PSP"
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "NOUVELLES COMPÉTENCES"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le profil de chaque joueur dispose de deux sections, l'une intitulée Principale et l'autre Secondaire. Elles indiquent les catégories de Compétences dans lesquelles il peut prendre des Compétences selon le Tableau des Améliorations ci-dessus. Les Compétences Principales d'un joueur étant plus faciles à apprendre, elles coûtent moins de PSP que les Compétences Secondaires, plus difficiles à apprendre. Les joueurs n'ont pas forcément accès à toutes les catégories de Compétence, et leur profil indique les catégories dans lesquelles ils peuvent prendre des Compétences par des lettres, comme suit :"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**A** – Compétences d'Agilité",
+            "**F** – Compétences de Force",
+            "**G** – Compétences Générales",
+            "**M** – Compétences de Mutation",
+            "**P** – Compétences de Passe",
+            "**S** – Compétences Scélérates"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Choisir une Compétence est simple. Choisissez la catégorie de Compétences dans laquelle le joueur aimerait prendre une Compétence, et décidez s'il en génère une au hasard (pour moins de PSP, comme le Tableau des Améliorations l'indique) ou s'il choisit une. Ensuite, déduisez la quantité de PSP requise des PSP accumulés sur le profil du joueur."
+        },
+        {
+          "type": "paragraph",
+          "text": "De plus, certaines Compétences sont listées comme des Compétences d'Élite. Si un joueur gagne une Compétence d'Élite, augmentez sa valeur de 10 000 pièces d'or supplémentaires."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si le joueur choisit sa Compétence, ajoutez-la simplement au profil du joueur sur votre Liste d'Équipe."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si le joueur détermine au hasard sa compétence, choisissez une catégorie puis jetez deux D6, l'un après l'autre, et consultez le Tableau de Compétences en page 121. Le premier jet détermine dans quelle partie du Tableau de Compétences vous allez tirer au dé, et le deuxième jet détermine une Compétence proprement dite. Faites ceci deux fois, puis choisissez laquelle des deux Compétences déterminées au hasard le joueur reçoit. Si vous obtenez la même Compétence les deux fois, vous devez choisir celle-ci (si possible). Consignez la Compétence nouvellement acquise sur le profil de votre joueur."
+        },
+        {
+          "type": "paragraph",
+          "text": "Un joueur ne peut pas choisir une Compétence qu'il a déjà, ni une qu'il ne peut pas utiliser à cause d'autres Compétences. Si un joueur tire au hasard une Compétence qu'il a déjà ou qu'il ne peut pas utiliser, tirez à nouveau au hasard pour lui déterminer une nouvelle Compétence."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Améliorations de caractéristique"
+        },
+        {
+          "type": "paragraph",
+          "text": "Si un joueur décide de dépenser ses PSP pour améliorer une Caractéristique, alors déduisez de son profil la quantité de PSP requise, puis jetez un D8 et consultez le Tableau d'Amélioration de Caractéristique ci-dessous."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Tableau d'amélioration de caractéristique"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau d'amélioration de caractéristique",
+          "columns": [
+            "D8",
+            "Amélioration de caractéristique"
+          ],
+          "rows": [
+            [
+              "1",
+              "Améliorez de 1 l'AR du joueur."
+            ],
+            [
+              "2",
+              "Améliorez de 1 l'AR ou le CP du joueur."
+            ],
+            [
+              "3-4",
+              "Améliorez de 1 l'AR, le M ou la CP du joueur."
+            ],
+            [
+              "5",
+              "Améliorez de 1 le M ou la CP du joueur."
+            ],
+            [
+              "6",
+              "Améliorez de 1 l'AG ou le M du joueur."
+            ],
+            [
+              "7",
+              "Améliorez de 1 l'AG ou la F du joueur."
+            ],
+            [
+              "8",
+              "Améliorez de 1 la Caractéristique de votre choix."
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Si un joueur ne souhaite pas prendre l'Amélioration de Caractéristique qu'il a tirée, il peut choisir une Compétence Principale ou Secondaire à la place ; cependant, les PSP dépensés pour avoir fait un jet d'Amélioration de Caractéristique restent dépensés. Souvenez-vous qu'un joueur ne peut jamais améliorer plus de deux fois une Caractéristique, ni l'améliorer au-delà de sa valeur maximale indiquée en page 37."
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand vous améliorez le Mouvement ou la Force d'un joueur, augmentez simplement de 1 le total. Quand vous améliorez l'Agilité ou la Capacité de Passe d'un joueur, réduisez de 1 la valeur devant le signe +. Quand vous améliorez l'Armure d'un joueur, augmentez de 1 le nombre devant le signe +."
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "Par exemple : Un joueur avec une Force de 3 qui améliore sa Force aura une Force de 4. Un joueur avec une Agilité de 4+ qui améliore son Agilité aura une Agilité de 3+. Un joueur avec une Armure de 8+ qui améliore son Armure aura une Armure de 9+."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Hausse de valeur"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur gagne de nouvelles Compétences ou améliore une de ses Caractéristiques, sa valeur augmente. Ceci signifie que la Valeur Actuelle d'un joueur sur sa Liste d'Équipe augmente en fonction des améliorations qu'il a prises. Le Tableau de Hausse de Valeur ci-dessous montre combien de pièces d'or chaque type d'amélioration ajoute à la Valeur Actuelle d'un joueur. Toute hausse de valeur d'un joueur doit être consignée sur la section de Valeur Actuelle du profil du joueur sur sa Liste d'Équipe."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Tableau de hausse de valeur"
+        },
+        {
+          "type": "table",
+          "caption": "Tableau de hausse de valeur",
+          "columns": [
+            "Type d'amélioration",
+            "Hausse de valeur"
+          ],
+          "rows": [
+            [
+              "Compétence Principale",
+              "+20 000 pièces d'or"
+            ],
+            [
+              "Compétence Secondaire",
+              "+40 000 pièces d'or"
+            ],
+            [
+              "+1 AR",
+              "+10 000 pièces d'or"
+            ],
+            [
+              "+1 M",
+              "+20 000 pièces d'or"
+            ],
+            [
+              "+1 CP",
+              "+20 000 pièces d'or"
+            ],
+            [
+              "+1 AG",
+              "+30 000 pièces d'or"
+            ],
+            [
+              "+1 F",
+              "+80 000 pièces d'or"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Les potins de vestiaire de Bob…",
+          "text": "Pendant la grève de 2473, les Asgard Ravens en ont profité pour aligner leur escouade de cheerleaders face aux Lowdown Rats. Ça a été un des matchs les plus violents que j'ai pu voir !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Embauches, renvois et retraite temporaire"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le Blood Bowl est un sport violent qui ne manque pas d'occasionner des blessures, ou pire ! Fort heureusement, il ne manque pas non plus de recrues prêtes à se faire un nom pour un salaire bien inférieur à celui des stars ! À cette étape de la Séquence d'Après-Match, les Coachs s'occupent de leurs joueurs Morts ou blessés, et peuvent aussi recruter de nouveaux joueurs pour leur équipe. Ils peuvent aussi embaucher et renvoyer n'importe quel membre de leur Staff de Banc de Touche."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour ce faire, suivez les étapes ci-dessous dans l'ordre :"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Retirez tout joueur Mort de votre Liste d'Équipe.",
+            "Embauchez de nouveaux joueurs si vous le souhaitez, en utilisant les pièces d'or de la Trésorerie de votre équipe, et ajoutez-les à votre Liste d'Équipe.",
+            "Vous pouvez renvoyer des joueurs de votre Liste d'Équipe : retirez tout joueur renvoyé de votre Liste d'Équipe. On ne peut pas renvoyer un joueur si cela amène à moins de 11 (le nombre de joueurs éligibles pour le prochain match).",
+            "Embauchez et renvoyez du Staff de Banc de Touche si vous le souhaitez. Vous pouvez aussi acheter des Relances d'Équipe supplémentaires au double de leur coût normal, mais pas en retirer de votre Liste d'Équipe.",
+            "Embauchez et vous le souhaitez un ou plusieurs des Journaliers qui ont joué pour votre équipe lors de ce match. Embaucher un Journalier coûte les Frais d'Embauche, plus toute éventuelle hausse de Valeur éventuelle gagnée en vertu de ses améliorations. Un Journalier embauché perd le Trait Solitaire (X+) et conserve les PSP gagnés pendant le match. Sinon, comme tous les autres, tout Journalier qui n'est pas joueur parmi les autres. Tout Journalier qui n'est pas embauché de façon permanente est perdu."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Retraite temporaire"
+        },
+        {
+          "type": "paragraph",
+          "text": "Lorsqu'un joueur subit un résultat Séquelle au Tableau d'Élimination, son Coach peut décider de le retirer ou non pour le reste de la saison afin qu'il se remette. On dit que le joueur est en Retraite Temporaire (RT) : notez-le sur votre Liste d'Équipe. Un joueur en Retraite Temporaire pourra rejoindre en forme si son Coach décide de le sélectionner à nouveau pour une saison future."
+        },
+        {
+          "type": "paragraph",
+          "text": "Un joueur en Retraite Temporaire ne prend plus part à la saison, mais il n'est pas supprimé de la Liste d'Équipe. Il compte toujours dans le nombre maximum de 16 joueurs autorisés sur la Liste d'Équipe. La Valeur Actuelle d'un joueur en Retraite Temporaire n'est pas prise en compte lorsque vous calculez votre Valeur d'Équipe Actuelle."
+        }
+      ]
+    },
+    {
+      "slug": "tableau-competences",
+      "title": "Tableau de compétences",
+      "summary": "Compétences actives/passives et le grand tableau D6×D6 des compétences par catégorie (Agilité, Force, Générales, Mutation, Passe, Scélérates).",
+      "sourcePages": [
+        "page-13"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Chaque Compétence sera soit Active, soit Passive."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une Compétence Active peut être utilisée n'importe quand, tant que le joueur est blessé et non Déconcerté. Si un joueur peut utiliser une Compétence Active alors qu'il est À Terre, Sonné ou Déconcerté, la description de la Compétence le spécifie. Si une Compétence Active autorise un joueur à exécuter une Action Spéciale, alors il peut quand même annoncer l'Action Spéciale en étant À Terre, du moment que la Compétence Active lui permet de réaliser cette Action Spéciale. Une Action de Mouvement Gratuite peut utiliser l'Action Spéciale."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une Compétence Passive est toujours active, quel que soit le statut du joueur, ou s'il est Déconcerté."
+        },
+        {
+          "type": "paragraph",
+          "text": "Un joueur n'est pas obligé d'utiliser une Compétence s'il ne le souhaite pas. Toutefois, si une Compétence est marquée d'un astérisque (*) alors, le joueur doit toujours utiliser la Compétence si elle est applicable."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si une Compétence modifie un jet de dé, alors on peut appliquer ce modificateur après avoir jeté les dés. On peut combiner tout bonus et modificateur appliqués à partir de Compétences et de Traits."
+        },
+        {
+          "type": "paragraph",
+          "text": "Sauf mention contraire de la Compétence, plusieurs joueurs peuvent utiliser la même Compétence lors d'un même Tour, et un joueur peut utiliser la même Compétence plusieurs fois pendant le Tour de son équipe."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "TABLEAU DE COMPÉTENCES"
+        },
+        {
+          "type": "paragraph",
+          "text": "Voici ci-dessous la liste complète des différentes Compétences et les catégories auxquelles elles appartiennent. Quand vous déterminez au hasard une Compétence pour un joueur, choisissez d'abord une des catégories de Compétence éligibles pour ce joueur, puis jetez deux D6, l'un après l'autre. Le premier dé désigne une des moitiés du tableau dans lequel vous faites le jet, et le deuxième jet désigne la Compétence déterminée."
+        },
+        {
+          "type": "table",
+          "caption": "Tableau de compétences",
+          "columns": [
+            "1ᵉʳ D6",
+            "2ᵉ D6",
+            "AGILITÉ",
+            "FORCE",
+            "GÉNÉRALES",
+            "MUTATION",
+            "PASSE",
+            "SCÉLÉRATES"
+          ],
+          "rows": [
+            [
+              "1-3",
+              "1",
+              "Réception",
+              "Clé de Bras",
+              "Blocage",
+              "Main Démesurée",
+              "Précision",
+              "Joueur Déloyal"
+            ],
+            [
+              "",
+              "2",
+              "Réception Plongeante",
+              "Bagarreur",
+              "Intrépide",
+              "Griffes",
+              "Canonnier",
+              "Fourchette"
+            ],
+            [
+              "",
+              "3",
+              "Tacle Plongeant",
+              "Esquive en Force",
+              "Parade",
+              "Présence Perturbante*",
+              "Perce-nuages",
+              "Fumberooski"
+            ],
+            [
+              "",
+              "4",
+              "Esquive",
+              "Dans le Mille",
+              "Frénésie*",
+              "Bras Supplémentaires",
+              "Délestage",
+              "Vol Fatal"
+            ],
+            [
+              "",
+              "5",
+              "Défenseur",
+              "Projection",
+              "Frappe Précise",
+              "Répulsion*",
+              "Transmission dans la Course",
+              "Agresseur Solitaire"
+            ],
+            [
+              "",
+              "6",
+              "Frappe-et-court",
+              "Garde",
+              "Pro",
+              "Cornes",
+              "Passe Désespérée",
+              "Marteau-pilon"
+            ],
+            [
+              "4-6",
+              "1",
+              "Rétablissement",
+              "Juggernaut",
+              "Appuis Sûrs",
+              "Peau de Fer",
+              "Chef",
+              "Coup de Crampons"
+            ],
+            [
+              "",
+              "2",
+              "Saut",
+              "Châtaigne",
+              "Arracher le Ballon",
+              "Grande Gueule",
+              "Nerfs d'Acier",
+              "Agression Éclair"
+            ],
+            [
+              "",
+              "3",
+              "Libération Contrôlée",
+              "Blocage Multiple",
+              "Prise Sûre",
+              "Queue Préhensile",
+              "Sur le Ballon",
+              "Saboteur"
+            ],
+            [
+              "",
+              "4",
+              "Glissade Contrôlée",
+              "Stabilité",
+              "Tacle",
+              "Tentacules",
+              "Passe",
+              "Poursuite"
+            ],
+            [
+              "",
+              "5",
+              "Sprint",
+              "Bras Musclé",
+              "Provocation",
+              "Deux Têtes",
+              "Dégagement",
+              "Sournois"
+            ],
+            [
+              "",
+              "6",
+              "Équilibre",
+              "Crâne Épais",
+              "Lutte",
+              "Très Longues Jambes",
+              "Passe Assurée",
+              "Innovateur Violent"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "Par exemple : Dani prend une Compétence Principale aléatoire pour un de ses Aspirants Halfling, et choisit la Catégorie Agilité. Son premier jet est un 4 et son deuxième un 2. Pour deuxième tirage, il obtient un 5 puis un 3. Sur le Tableau de Compétence, nous voyons que l'Aspirant Halfling a ainsi le choix entre la Compétence Saut et la Compétence Défenseur en guise de Compétence aléatoire."
+        }
+      ]
+    },
+    {
+      "slug": "coups-de-pouce",
+      "title": "Coups de pouce",
+      "summary": "Acheter des coups de pouce communs (liste et coûts), Prières à Nuffle, et descriptions détaillées des coups de pouce.",
+      "sourcePages": [
+        "page-15",
+        "page-16"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Les pages qui suivent listent les Coups de Pouce couramment accessibles à Blood Bowl. D'autres publications consacrées à Blood Bowl peuvent inclure des Coups de Pouce supplémentaires qui ne seront pas forcément autorisés : il vous revient d'en discuter en amont avec votre Commissaire de Ligue, Organisateur de Tournoi ou adversaire régulier si vous prévoyez d'utiliser de tels Coups de Pouce."
+        },
+        {
+          "type": "paragraph",
+          "text": "Chaque Coup de Pouce a un coût en pièces d'or, et indique le nombre de fois qu'on peut le prendre (ex. 0-2). Il indique aussi quelles équipes peuvent le prendre. Parfois, il faudra que l'équipe dispose d'une règle spéciale particulière si elle souhaite acheter le Coup de Pouce en question. Les règles spéciales des équipes sont expliquées en page 154."
+        },
+        {
+          "type": "paragraph",
+          "text": "Certains Coups de Pouce sont moins chers pour certaines équipes, ou les équipes avec une règle spéciale spécifique."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "COUPS DE POUCE COMMUNS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Voici une liste des Coups de Pouce communs et de leur coût associés pour vous y référer aisément. Chacun est ensuite expliqué en détail sur les pages suivantes."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "0-3 Prêtres Apothicaires – 10 000 pièces d'or",
+            "0-5 Coachs Assistants à Temps Partiel – 20 000 pièces d'or",
+            "0-5 Cheerleaders Intérimaires – 5 000 pièces d'or",
+            "0-1 Mascotte d'Équipe – 25 000 pièces d'or",
+            "0-1 Mage Météo – 25 000 pièces d'or",
+            "0-2 Fûts de Blitz Premium – 50 000 pièces d'or",
+            "0-8 Entraînement Supplémentaire – 100 000 pièces d'or",
+            "0-1 Assistant Funéraire – 100 000 pièces d'or (équipes avec la règle spéciale Maîtres de la Non-vie seulement)",
+            "0-1 Médecin de la Peste – 100 000 pièces d'or (équipes avec la règle spéciale Favoris de Nurgle seulement)",
+            "0-1 Débutants Déchaînés – 150 000 pièces d'or (équipes avec la règle spéciale Trois-quarts à Vil Prix seulement)",
+            "0-2 Apothicaire Ambulant – 100 000 pièces d'or (inaccessible aux équipes qui ne peuvent pas embaucher d'Apothicaire)",
+            "0-1 Chef Custot Halfling – 300 000 pièces d'or (100 000 pièces d'or pour les équipes de Halflings)",
+            "0-1 Arbitre Partial – prix variable",
+            "0-1 Staff Célèbre – prix variable",
+            "0-3 Joueurs Mercenaires – prix variable",
+            "0-2 Star Players – prix variable",
+            "0-1 Sorcier – prix variable"
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-3 PRIÈRES À NUFFLE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**10 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Il n'est pas rare que les équipes, leurs coachs et les fans en appellent à une intervention divine lors d'un match de Blood Bowl, en particulier si leur équipe affronte un adversaire manifestement supérieur ! Bien que cela soit rarement un impact significatif, il s'avère qu'avec une petite dose supplémentaire, Nuffle soit plus enclin à exaucer les prières qui lui sont adressées !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour chaque Prière à Nuffle qu'une équipe achète, jetez un D16 (en relançant tout résultat qu'une équipe a déjà obtenu) et consultez le Tableau des Prières à Nuffle ci-contre pour voir l'effet que Nuffle a accordé à l'équipe. Les Prières à Nuffle durent jusqu'à la fin du match. Si une Prière à Nuffle demande de choisir des joueurs, alors on ne peut jamais choisir de Star Players quelle qu'en soit la raison."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-5 COACHS ASSISTANTS À TEMPS PARTIEL"
+        },
+        {
+          "type": "paragraph",
+          "text": "**20 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Tout le monde est un expert ou, du moins, prétend l'être ! Les équipes ont l'habitude de payer une petite fortune à ces soi-disant spécialistes afin qu'ils rejoignent ses coachs titulaires et leur fassent part de leurs conseils."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour la durée du match, augmentez de 1 le nombre de vos Coachs Assistants pour chaque Coach Assistant à Temps Partiel acheté."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-5 CHEERLEADERS INTÉRIMAIRES"
+        },
+        {
+          "type": "paragraph",
+          "text": "**5 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Toutes les cheerleaders n'ont pas la chance d'avoir une place à demeure chez une équipe, et nombre d'aspirantes iront de stade en stade pour encourager les équipes locales dans l'espoir qu'on les remarque enfin."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour la durée du match, augmentez de 1 le nombre de vos Cheerleaders pour chaque Cheerleader Intérimaire achetée."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 MASCOTTE D'ÉQUIPE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**25 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une mascotte ayant atteint des sommets d'incroyables popularités, et la plupart des fans se délectent de voir leurs gesticulations hilarantes le long des lignes de touche. Invariablement vêtues d'atours grotesques, ces mascottes s'équipe ouvent là pour chauffer le stade avant que des danses facétieuses, leur humour potache et une malice sans borne !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une équipe ayant une Mascotte d'Équipe gagne une Relance d'Équipe supplémentaire pour chaque mi-temps. Toutefois, chaque fois que l'équipe veut utiliser cette Relance d'Équipe, elle doit d'abord jeter un D6. Sur 4+, la mascotte agit comme prévu et la Relance d'Équipe fonctionne normalement. Sur 1-3, la Mascotte d'Équipe s'est avérée inefficace et la Relance d'Équipe est perdue pour cette mi-temps. On peut alors utiliser une autre Relance d'Équipe à la place."
+        },
+        {
+          "type": "paragraph",
+          "text": "De plus, une équipe ayant une Mascotte d'Équipe peut relancer tout jet de 1 naturel lorsqu'elle jette le D6 pour le résultat Fans en Folie sur le Tableau d'Événement de Coup d'Envoi."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 MAGE MÉTÉO"
+        },
+        {
+          "type": "paragraph",
+          "text": "**25 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "La météo est au mieux imprévisible, et certains propriétaires de stade paient rubis sur l'ongle un mage capable de contrôler le climat. Ainsi, ils s'assurent que les fans sont au chaud, au sec et contents, mais aussi que la météo est favorable à leur équipe sur le terrain !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, au début de l'importe lequel de vos Tours, vous pouvez immédiatement faire un jet sur le Tableau de Météo, en appliquant un modificateur de jusqu'à +2 ou -2 au jet. Les conditions météo qui en résultent sont immédiatement appliquées et durent jusqu'à la prochaine fois où l'on obtient un résultat Météo Capricieuse sur le Tableau d'Événement de Coup d'Envoi."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-2 FÛTS DE BLITZ PREMIUM"
+        },
+        {
+          "type": "paragraph",
+          "text": "**50 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Rien n'incite plus un joueur à remettre le pied à l'étrier que la promesse d'une bonne pinte de Blitz Premium bien fraîche tout juste tirée du fût ! Certains joueurs font même mine d'être blessés seulement pour s'en jeter un petit coup derrière la cravate avant de retourner sur le terrain."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour la durée du match, chaque Fût de Blitz Premium acheté, applique un modificateur de +1 au jet chaque fois que l'on jette pour le rétablissement d'un joueur K.O."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-3 POTS-DE-VIN (0-6 POUR LES ÉQUIPES AVEC LA RÈGLE SPÉCIALE CHANTAGE ET CORRUPTION)"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR (50 000 PIÈCES D'OR POUR LES ÉQUIPES AVEC LA RÈGLE SPÉCIALE CHANTAGE ET CORRUPTION)**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Un sac d'or bien rempli peut transformer le plus intègre des coachs à la gorge en honnête plaquage en bonne et due forme, du moins aux yeux de l'arbitre qui regard ledit sac. En effet, quoi de mieux qu'un beau geste de bienséance avec l'argent pour officier en visière de l'aider à voir les choses à votre façon ?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand un joueur est Expulsé, après avoir tenté de Contester la Décision, vous pouvez utiliser un Pot-de-vin tant que vous en êtes capable. Quand vous utilisez un Pot-de-vin, jetez un D6. Sur 2+, le joueur n'est pas Expulsé (et aucun Turnover ne survient). Sur un 1 naturel, l'arbitre empoche le Pot-de-vin mais expulse quand même le joueur ; le joueur est quand même Expulsé et le Pot-de-vin est perdu."
+        }
+      ]
+    },
+    {
+      "slug": "personnel-equipe",
+      "title": "Personnel d'équipe & staff",
+      "summary": "Personnel spécial (entraînement, assistant funéraire, médecin de la peste, débutants déchaînés, apothicaire, chef cuistot, arbitre partial), staff célèbre et joueurs mercenaires.",
+      "sourcePages": [
+        "page-17",
+        "page-18",
+        "page-19"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-8 ENTRAÎNEMENT SUPPLÉMENTAIRE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Il est déjà compliqué de réunir l'équipe pour qu'elle s'entraîne en temps normal, alors imaginez quand le Coach souhaite la soumettre à des sessions d'entraînement supplémentaires. Un Coach qui veut inciter ses joueurs à se présenter à des entraînements exceptionnels devra vraisemblablement mettre la main à la poche."
+        },
+        {
+          "type": "paragraph",
+          "text": "Chaque Entraînement Supplémentaire confère une Relance d'Équipe supplémentaire pour la durée du match."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 ASSISTANT FUNÉRAIRE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE AVEC LA RÈGLE SPÉCIALE MAÎTRES DE LA NON-VIE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les nécromanciens ne refusent jamais un peu d'aide dans leur métier macabre. Fort heureusement, une foule d'assistants funéraires locaux se tiennent prêts à tendre une main secourable pour relever les morts-vivants."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, une équipe qui a acheté un Assistant Funéraire peut l'utiliser pour relancer un Jet de Régénération raté pour l'un de ses joueurs."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 MÉDECIN DE LA PESTE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE AVEC LA RÈGLE SPÉCIALE FAVORIS DE NURGLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "On aperçoit souvent des Médecins de la Peste sur le banc de touche des équipes vouées à Nurgle. Ces experts médicaux sont coutumiers des souches virulentes qui affectent leurs joueurs, et bien placés pour s'en occuper le cas échéant."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, une équipe qui a acheté un Médecin de la Peste peut l'utiliser pour relancer un Jet de Régénération raté pour l'un de ses joueurs. Alternativement, une équipe qui a acheté le Médecin de la Peste peut l'utiliser de la même façon qu'un Apothicaire."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 DÉBUTANTS DÉCHAÎNÉS"
+        },
+        {
+          "type": "paragraph",
+          "text": "**150 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE AVEC LA RÈGLE SPÉCIALE TROIS-QUARTS À VIL PRIX**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Certains coachs renforcent les rangs de leur équipe en recrutant quelques heureux fans à qui ils offrent une chance de se faire connaître en échange d'une poignée de « haricots magiques » ou de babioles."
+        },
+        {
+          "type": "paragraph",
+          "text": "Après avoir ajouté le ou les Joueurs éventuels pour amener le compte des joueurs à 11, une équipe qui a acheté Débutants Déchaînés gagne 2D3+1 Joueurs supplémentaires pour ce match. Ces Journaliers supplémentaires sont des Journaliers normaux à tous les égards et, sauf s'ils sont embauchés après le match, quitteront l'équipe à la fin du match."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "LE SAVIEZ-VOUS...",
+          "text": "Le nouveau menu salade de Nurgle Burger est actuellement responsable de la moitié des pathologies associées au Blood Bowl."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-2 APOTHICAIRE AMBULANT"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE QUI PEUT EMBAUCHER UN APOTHICAIRE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nombre de membres de la profession médicale exercent en indépendant, voyageant d'un stade à l'autre pour fournir, contre rémunération bien sûr, leurs services aux équipes dans le besoin."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une équipe qui a acheté un Apothicaire Ambulant peut l'utiliser, une fois par partie, de la même façon qu'un Apothicaire normal."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 CHEF CUISTOT HALFLING"
+        },
+        {
+          "type": "paragraph",
+          "text": "**300 000 PIÈCES D'OR (OU 100 000 PIÈCES D'OR POUR LES ÉQUIPES DE HALFLINGS)**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Certaines équipes voyagent avec des chefs émérites venu du Moot, qui leur préparent des mets exquis à toute heure. L'odeur de la nourriture fraîchement préparée qui dérive sur le terrain est tout aussi prompte à déconcentrer l'adversaire qu'à revigorer vos propres joueurs."
+        },
+        {
+          "type": "paragraph",
+          "text": "Au début de chaque mi-temps, avant le Coup d'Envoi, une équipe qui a acheté un Chef Cuistot Halfling peut jeter trois D6. Pour chaque 4+, l'équipe gagne une Relance d'Équipe supplémentaire pour la mi-temps et l'adversaire perd une Relance d'Équipe pour la mi-temps. Ces Relances supplémentaires ne sont pas conférées par les Compétences, Traits et autres règles spéciales."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "LES RUMEURS DE MINDY PIEWHISTLE...",
+          "text": "On peut en apprendre beaucoup sur une équipe en observant ce qu'elle fait entre deux saisons. Par exemple, les Reikland Reavers se consacrent à leurs tournées et à leurs dédicaces. Sur cette seule année, Griff a publié sa dernière autobiographie et d'après les premiers chiffres, les ventes vont sûrement dépasser celles des 22 précédentes !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 ARBITRE PARTIAL"
+        },
+        {
+          "type": "paragraph",
+          "text": "**PRIX VARIABLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Il n'y a pas que les joueurs qui deviennent des vedettes ; certains arbitres se font une réputation pour leurs décisions non orthodoxes, leurs étranges manies, ou un biais clairement marqué envers certaines équipes. Il arrive que des équipes paient généreusement un arbitre particulier afin qu'il se charge de leur match ; après tout, être dans les petits papiers de l'arbitre facilite bien des choses !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le coût des Arbitres Partiaux varie. Nous vous fournissons ici les règles et le coût d'un Représentant de Ligue Louche, mais d'autres Arbitres Partiaux nommés apparaîtront dans d'autres publications dédiées à Blood Bowl. Les autres Arbitres Partiaux ont leur propre entrée, qui liste leur coût, les équipes qui peuvent les embaucher et leurs règles spéciales."
+        },
+        {
+          "type": "paragraph",
+          "text": "Il est possible pour les deux équipes d'embaucher le même Arbitre Partial nommé."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "ARBITRE PARTIAL : REPRÉSENTANT DE LIGUE LOUCHE",
+          "text": "**120 000 PIÈCES D'OR POUR LES ÉQUIPES AVEC LA RÈGLE SPÉCIALE CHANTAGE ET CORRUPTION**\n**ACCESSIBLE À TOUTE ÉQUIPE**\n\nSi on ne compte pas les arbitres ravis d'accepter les pots-de-vin, on en compte beaucoup d'autres prêts à laisser leurs services à une équipe spécifique pour la durée du match !\n\nUne équipe qui a embauché un Représentant de Ligue Louche gagne les bénéfices suivants :\n\n**ŒIL ATTENTIF**\nImmédiatement après qu'un joueur adverse ait effectué une Action d'Agression, s'il n'a pas été Expulsé, jetez un D6. Sur 1-4, rien ne se passe. Sur 5+, le joueur adverse est immédiatement Expulsé.\n\n**« MOI JE N'AI RIEN VU ! »**\nChaque fois que vous tentez de Contester la Décision, appliquez un modificateur de +1 au jet. Un jet de 1 naturel compte quand même comme un « Dégagé ! »"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 STAFF CÉLÈBRE"
+        },
+        {
+          "type": "paragraph",
+          "text": "**PRIX VARIABLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Nombre de membres de staff sont devenus aussi célèbres que les joueurs qu'ils encadrent. La plupart d'entre eux sont si réputés qu'ils voyagent aux quatre coins du monde pour offrir leur expertise aux équipes en difficulté."
+        },
+        {
+          "type": "paragraph",
+          "text": "Le coût du Staff Célèbre dépend de son fonctionnement. Vous trouverez ici les règles et le coût de Josef Bugman, mais d'autres membres de Staff Célèbre nommés peuvent apparaître dans d'autres publications dédiées à Blood Bowl. Ces autres membres de Staff Célèbre ont leur propre entrée, qui liste leur coût, les équipes qui peuvent les embaucher et leurs règles spéciales. Il est possible pour les deux équipes d'embaucher le même membre de Staff Célèbre."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "STAFF CÉLÈBRE : JOSEF BUGMAN"
+        },
+        {
+          "type": "paragraph",
+          "text": "**100 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le nom de Josef Bugman engendre une de deux choses : Bière au Blood Bowl. Pour ce dernier, Josef Bugman est réputé pour encarder les équipes qui ont signé un contrat de sponsoring lucratif avec la Bugman's XXXXXX, et il se vend lui-même très bien."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une équipe qui a embauché Josef Bugman gagne les bénéfices suivants. De plus, elle ne peut pas recruter Josef Bugman en tant que Star Player :"
+        },
+        {
+          "type": "paragraph",
+          "text": "**BUGMAN'S XXXXXX**\nPour la durée du match, appliquez un modificateur de +1 au jet chaque fois que vous tentez de relever un joueur Sonné suite à un K.-O."
+        },
+        {
+          "type": "paragraph",
+          "text": "**SAGESSE DES NAINS**\nUne fois par match, après que les équipes ont été placées mais avant le Coup d'Envoi, une équipe qui a embauché Josef Bugman peut retirer D3 de ses joueurs sur le terrain et les placer à nouveau selon toutes les restrictions habituelles."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-3 JOUEURS MERCENAIRES"
+        },
+        {
+          "type": "paragraph",
+          "text": "**PRIX VARIABLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour chaque joueur contractuel, il y en a des dizaines d'autres prêts à revêtir un maillot contre rémunération. Ces mercenaires ne sont pas loyaux, mais ils n'hésitent pas à faire le sale boulot auquel rechigne le reste de l'équipe."
+        },
+        {
+          "type": "callout",
+          "variant": "example",
+          "title": "Par exemple",
+          "text": "Toute équipe peut embaucher des Joueurs Mercenaires. Ce sont des joueurs de votre Fiche d'Équipe, mais ils coûtent 30 000 pièces d'or de plus. Par exemple, un Trois-Quart Mercenaire coûte 80 000 pièces d'or : 50 000 pour son coût initial, plus 30 000 pour être un Mercenaire."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Joueurs Mercenaires conservent le type de joueur auquel ils appartiennent, et le peuvent donc pas servir à dépasser le nombre maximum d'un type de joueur donné pour votre équipe. Toutefois, les joueurs qui ratent leur prochain match ne comptent pas dans le nombre maximum de leur type de joueur pour leur équipe, et s'empêchent pas le recrutement d'un Joueur Mercenaire de leur type."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Joueurs Mercenaires gagnent automatiquement le Trait Solitaire (4+) en plus de leurs Compétences et Traits habituels. Les Joueurs Mercenaires peuvent recevoir une unique Compétence Principale pour 50 000 pièces d'or. Contrairement aux Journaliers, on ne peut pas embaucher un Joueur Mercenaire dans la Séquence d'Après-Match."
+        }
+      ]
+    },
+    {
+      "slug": "stars-sorcier",
+      "title": "Star Players & Sorcier",
+      "summary": "Règles d'embauche des Star Players et le coup de pouce Sorcier (Sorcier-Sportif : sorts Boule de Feu et Zap !, profil de la Grenouille).",
+      "sourcePages": [
+        "page-20",
+        "page-21"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-2 STAR PLAYERS"
+        },
+        {
+          "type": "paragraph",
+          "text": "**PRIX VARIABLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À DIVERSES ÉQUIPES**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Star Players sont les meilleurs joueurs à jamais avoir foulé la terre sacrée de Nuffle. Ce sont des légendes du sport, qui ont tout donné à la discipline et ont toujours eu un impact significatif sur les matchs auxquels ils ont participé. Nombre de ces Star Players sont des célébrités à part entière qui amassent de colossales sommes pour jouer aux côtés d'autres équipes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une équipe peut embaucher jusqu'à un maximum de deux Star Players pour un match. Ceci ne peut pas amener le nombre de joueurs d'une équipe au-delà de 16 ; toutefois, les joueurs qui ratent le prochain match ne comptent pas lorsqu'on calcule le nombre de joueurs disponibles dans une équipe."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Star Players qu'on doit recruter par paire comptent pour un seul choix de Star Player, mais ils occupent deux champs distincts sur la Fiche d'Équipe d'une équipe."
+        },
+        {
+          "type": "paragraph",
+          "text": "Il est possible que les deux équipes aient embauché le même Star Player, auquel cas, les deux équipes peuvent aligner le Star Player. L'un d'eux est simplement un sosie très talentueux !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Star Players ne peuvent pas gagner de Points de Star Players, être élu JDM, ni gagner d'Améliorations de Joueur, et les Jets d'Élimination qu'on fait contre eux n'ont pas de conséquence après la fin du match : les Star Players sont assez fortunés pour payer les meilleurs traitements médicaux après la fin du match."
+        },
+        {
+          "type": "paragraph",
+          "text": "La liste des Star Players disponibles se trouve en pages 193-196. Le profil de chaque Star Player indique quelles équipes peuvent les embaucher et combien de pièces d'or leur embauche coûte. Vous trouverez d'autres Star Players dans le PDF de Star Players sur warhammer-community.com."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "0-1 SORCIER"
+        },
+        {
+          "type": "paragraph",
+          "text": "**PRIX VARIABLE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Collèges de Magie sont de grands fans du Blood Bowl, et beaucoup de Sorciers s'intéressent de très près au sport. Certains d'entre eux viennent à s'impliquer directement et se servent de leurs talents magiques pour aider une équipe particulière qui leur aurait gracié la patte."
+        },
+        {
+          "type": "paragraph",
+          "text": "Le coût des Sorciers varie. Nous vous fournissons ici les règles et le coût d'un Sorcier sportif, mais d'autres Sorciers nommés apparaîtront dans d'autres publications dédiées à Blood Bowl. Les autres Sorciers ont leur propre entrée, qui liste leur coût, les équipes qui peuvent les embaucher et leurs règles spéciales. Il est possible pour les deux équipes d'embaucher le même Sorcier nommé."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "SORCIER : SORCIER-SPORTIF"
+        },
+        {
+          "type": "paragraph",
+          "text": "**150 000 PIÈCES D'OR**"
+        },
+        {
+          "type": "paragraph",
+          "text": "**ACCESSIBLE À TOUTE ÉQUIPE**"
+        },
+        {
+          "type": "paragraph",
+          "text": "*Les Sorciers-sportifs sont là pour épater la galerie dans un déluge de sortilèges et autres tours spectaculaires. Les boules de feu montent du terrain et, parfois, un joueur est mystérieusement changé en grenouille avant de reprendre sa forme quand il s'y attend le moins. Du moins, s'il reprend sa forme un jour !*"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, un Sorcier-sportif peut lancer un des deux sorts suivants :"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "BOULE DE FEU"
+        },
+        {
+          "type": "paragraph",
+          "text": "À la fin de n'importe quel Tour, avant que le Tour suivant ne commence, vous pouvez choisir n'importe quelle case sur le terrain. Jetez un D6 pour chaque joueur sur ou adjacent à la case choisie. Sur 1-3, il évite la boule de feu rien ne se passe. Sur 4+, le joueur est touché par la boule de feu."
+        },
+        {
+          "type": "paragraph",
+          "text": "Tout joueur Debout touché par la boule de feu est immédiatement Plaqué et on applique un modificateur de +1 au Jet d'Armure. On fait immédiatement un Jet d'Armure pour tout joueur À Terre ou Sonné touché par une boule de feu, en appliquant un modificateur de +1 au Jet d'Armure. On doit toujours appliquer ces modificateurs."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "ZAP !"
+        },
+        {
+          "type": "paragraph",
+          "text": "À la fin de n'importe quel Tour, avant que le Tour suivant ne commence, vous pouvez choisir n'importe quel joueur sur le terrain et jeter un D6. Si le jet sur le D6 est inférieur à la Force du joueur choisi, ou si le jet est un 1 naturel, alors rien ne se passe. Si le jet sur le D6 est supérieur ou égal à la Force du joueur choisi, ou si le jet est un 6 naturel, alors le joueur est changé en Grenouille. S'il était en possession du ballon, alors celui-ci Rebondit depuis sa case."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une Grenouille a le profil suivant :"
+        },
+        {
+          "type": "table",
+          "caption": "",
+          "columns": [
+            "",
+            "M",
+            "F",
+            "AG",
+            "CP",
+            "AR",
+            "COMPÉTENCES & TRAITS"
+          ],
+          "rows": [
+            [
+              "**GRENOUILLE** *(Grenouille, Spécial)*",
+              "5",
+              "1",
+              "2+",
+              "-",
+              "5+",
+              "Esquive, Microbe, Minus, Sans Ballon, Saut, Très Longue Jambes"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Si une Grenouille subit une Élimination, ne faites pas de Jet d'Élimination pour elle. À la place, elle subit automatiquement le résultat Commotion. On ne peut pas utiliser d'Apothicaire sur une Grenouille. À la fin de la Phase en cours, le joueur changé en Grenouille revient à la normale, sans effet secondaire, et est placé dans le Box des Réserves prêt pour la Phase suivante."
+        }
+      ]
+    },
+    {
+      "slug": "equipes-ligues-regles-speciales",
+      "title": "Équipes, ligues & règles spéciales",
+      "summary": "Fiches d'équipe, liste des ligues d'équipes et règles spéciales d'équipe (Bagarreurs Brutaux, Chantage et Corruption, Favori de…).",
+      "sourcePages": [
+        "page-22",
+        "page-23",
+        "page-24"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "LES ÉQUIPES DE BLOOD BOWL !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Dans cette section, nous présenterons toutes les différentes Fiches d'Équipe à partir desquelles vous pourrez composer vos équipes. Chaque Fiche d'Équipe inclut le coût de votre équipe. Nous expliquons ceci ci-après. présente le coût de chaque Fiche d'Équipe et l'équipe peut embaucher un Apothicaire. Elle stipule aussi le ou les Ligues pour lesquelles l'équipe peut aligner, ainsi que les différents types de joueurs que l'équipe peut aligner, leur profil, et combien on peut en embaucher. Une Fiche d'Équipe indique aussi le coût d'une Relance d'Équipe et si l'équipe peut embaucher un Apothicaire. Elle stipule aussi le ou les Ligues pour lesquelles l'équipe peut aligner."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "LES LIGUES D'ÉQUIPES !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Certains Coups de Pouce ne sont accessibles qu'aux équipes d'une Ligue donnée. C'est notamment le cas des Star Players, dont les cartes indiquent les Ligues pour lesquelles ils peuvent jouer. Ainsi, une équipe doit avoir choisi précisément cette Ligue pour acheter ces Coups de Pouce et embaucher ces Star Players."
+        },
+        {
+          "type": "paragraph",
+          "text": "La plupart des équipes n'auront qu'une seule Ligue, mais certaines peuvent en avoir plusieurs. Si une équipe a plusieurs Ligues, alors quand vous créez votre Liste d'Équipe pour celle-ci, vous devez choisir une de ces Ligues : vous ne pouvez pas choisir les deux. Voici ci-dessous la liste des Ligues auxquelles une équipe peut appartenir :"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "BAGARRE DES TERRES ARIDES"
+        },
+        {
+          "type": "paragraph",
+          "text": "Foyer de nombre d'équipes de Peaux-vertes et d'Ogres, la Bagarre des Terres Arides est une affaire violente et brutale où les équipes font la part belle au carnage plutôt qu'aux touchdowns. Personne ne sera surpris d'apprendre que les matchs des Terres Arides sont malhonnêtes et truqués, et c'est d'ailleurs ce qui en fait la popularité !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "CLASH DU CHAOS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les équipes dédiées à un (ou plusieurs !) Dieux du Chaos jouent pour le Clash du Chaos. Il s'agit d'une ligue à juste titre chaotique, et on raconte que les Dieux du Chaos s'y investissent parfois, pour des résultats spectaculaires et le plus grand plaisir des fans !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "LIGUE DES ROYAUMES ELFIQUES"
+        },
+        {
+          "type": "paragraph",
+          "text": "La Ligue des Royaumes Elfiques est le pinacle du Blood Bowl techniquement correct et bien exécuté, et les équipes s'enorgueillissent de leur bon droit. Les amoureux d'un jeu de passe élégant, d'époustouflantes courses sinueuses et de maillots somptueusement taillés n'iront pas à chercher plus loin que la Ligue des Royaumes Elfiques !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "COUPE DE À COUDRE HALFLING"
+        },
+        {
+          "type": "paragraph",
+          "text": "La Coupe De À Coudre Halfling est un pilier du calendrier du Blood Bowl, et plusieurs équipes de Halflings et de gnomes s'affrontent non seulement lors des matchs du jour mais aussi durant la nuit, mais aussi lors de nombreux défis culinaires en marge du terrain !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "SUPER-LIGUE DE LUSTRIE"
+        },
+        {
+          "type": "paragraph",
+          "text": "De loin la plus ancienne compétition du monde connu, la Super-ligue de Lustrie accueille certaines des plus anciennes équipes de la discipline. Lors des premiers millénaires, la compétition ne rassemblait que des Hommes-lézards ; plus récemment, la Super-ligue de Lustrie s'est mise à accueillir d'autres peuples venus de la jungle."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "CLASSIQUE DU VIEUX MONDE"
+        },
+        {
+          "type": "paragraph",
+          "text": "À l'effondrement de la NAF, le Blood Bowl s'est retrouvé en difficulté dans le Vieux Monde. Ce ne fut qu'à l'instauration de la Classique du Vieux Monde que les équipes du continent retrouvèrent enfin une nouvelle ligue structurée dans laquelle jouer. Grâce aux dons de mécènes impériaux et la couverture constante de Cabalvision, la Classique du Vieux Monde est devenue la ligue la plus influente du monde connu."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "SPOT DE SYLVANIE"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le Spot de Sylvanie est la ligue pour laquelle jouent la grande majorité des équipes de morts-vivants. Jadis, c'était uniquement du au fait qu'il s'agissait de la seule ligue commode pour les équipes assoiffées de chair ou allergiques au soleil, mais ces dernières années, l'amélioration de la technologie magique pare-soleil a permis au Spot de Sylvanie de sortir de l'ombre pour se placer sous les projecteurs de Cabalvision !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "DÉFI DES BAS-FONDS"
+        },
+        {
+          "type": "paragraph",
+          "text": "Jusqu'à récemment, bon nombre de fans et d'experts ne croyaient même pas à l'existence du Défi des Bas-fonds ! Les matchs de cette ligue sont peut-être les plus exotiques de la discipline, réunissant Skavens, Snotlings, Gobelins et quiconque fréquente les égouts les plus nauséabonds en quête d'un match de Blood Bowl !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "LIGUE SYLVESTRE"
+        },
+        {
+          "type": "paragraph",
+          "text": "La Ligue Sylvestre est disputée dans les forêts et les bosquets reculés du monde connu. Ses terrains sont émaillés d'une végétation luxuriante et ne font qu'un avec la nature, créant un environnement rassérénant et apaisant. Du moins, jusqu'au coup d'envoi, à un moment où les joueurs exploiteront la forêt à leur avantage !"
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "SUPER-LIGUE DU BORD DU MONDE"
+        },
+        {
+          "type": "paragraph",
+          "text": "Disputée sur les sommets les plus forts âpres et dans les forts âpres des Montagnes du Bord du Monde, la Super-ligue est sans concession. Si elle n'était jadis que la ligue lors de laquelle les équipes de Nains faisaient étalage de leurs talents, ces dernières années, d'autres royaumes montagnards se sont joints à eux, le plus souvent grâce à leur force brute et leur opiniâtreté !"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Règles spéciales !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les équipes de Blood Bowl sont toutes différentes, et la plupart ont accès à au moins une règle spéciale. D'une manière générale, elles traduisent en jeu le style ou les aspects uniques propres aux équipes telles qu'on les décrit."
+        },
+        {
+          "type": "paragraph",
+          "text": "Ces règles spéciales, en s'ajoutant aux autres règles, auront leur impact à diverses étapes du jeu."
+        },
+        {
+          "type": "paragraph",
+          "text": "Certains Coups de Pouce ne sont accessibles qu'aux équipes ayant une certaine règle spéciale. C'est aussi le cas de certains Star Players ou de la règle spéciale Favori de... Ceci signifie qu'une équipe a besoin d'avoir une règle spéciale afin d'acheter ces Coups de Pouce ou embaucher ces Star Players."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous trouverez ici une liste des règles spéciales d'équipe, ainsi que le détail de ce qu'elles font."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "BAGARREURS BRUTAUX"
+        },
+        {
+          "type": "paragraph",
+          "text": "Pour ces équipes, Blood Bowl est synonyme de violence, et ils n'hésitent pas à se jeter dans la mêlée sitôt que le sifflet retentit. Bien souvent, les supporters de ces équipes célèbreront un tacle fracassant avec plus d'entrain qu'un touchdown, et à leurs yeux, le carnage infligé prime absolument sur le score !"
+        },
+        {
+          "type": "paragraph",
+          "text": "En jeu en Ligue, une équipe avec cette règle spéciale gagne des PSP un peu différemment. Les joueurs de cette équipe gagnent 3 PSP au lieu de 2 pour avoir infligé une Élimination. De plus, les joueurs de cette équipe gagnent seulement 2 PSP au lieu de 4 pour avoir marqué un Touchdown."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "CHANTAGE ET CORRUPTION"
+        },
+        {
+          "type": "paragraph",
+          "text": "Ces équipes sont notoirement sans scrupule, et connues pour l'expertise avec laquelle elles tordent les règles à la limite de l'infraction. Elles n'ont pas non plus peur de faire pression sur les officiels du match afin de les convaincre de voir les choses à leur manière, que ce soit par le chantage, l'extorsion, le graissage de patte, ou tout autre moyen innovant de pousser l'arbitre à fermer les yeux !"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, quand une équipe ayant cette règle spéciale obtient un 1 pour Contester la Décision, elle peut relancer le D6."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "FAVORI DE..."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les partisans des Dieux du Chaos sont naturellement attirés par la nature violente du Blood Bowl. Certaines équipes rendent hommage à un unique Dieu du Chaos, tandis que d'autres célèbrent le Panthéon du Chaos comme un tout indivisible. Quoi qu'il en soit, ces équipes exaucent les volontés de leur dieu sur le terrain."
+        },
+        {
+          "type": "paragraph",
+          "text": "Certaines équipes ont un alignement spécifique automatique (ex. Favoris de Khorne), tandis que d'autres ont le choix. Si une équipe a le choix de son alignement, il sera fait entre parenthèses après la règle spéciale ; par exemple, Favoris de (Khorne, Nurgle, Slaanesh ou Tzeentch)."
+        },
+        {
+          "type": "paragraph",
+          "text": "Quand vous créez une Liste d'Équipe avec cette règle spéciale et qu'il vous faut faire un choix, vous devez choisir parmi les options proposées et ne pouvez plus en changer."
+        },
+        {
+          "type": "paragraph",
+          "text": "Certains Star Players nécessitent pour jouer que pour des équipes qui sont Favorites d'un Dieu du Chaos spécifique. Par exemple, le profil d'un Star Player peut dire qu'il ne peut jouer que pour les équipes avec la règle spéciale Favoris de Khorne. Un tel Star Player ne peut donc pas jouer pour une équipe avec la règle spéciale Favoris de Nurgle, Slaanesh, etc."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si une équipe a un choix de n'importe quel alignement, elle peut choisir parmi les suivants : Hashut, Khorne, Nurgle, Slaanesh, Tzeentch, Chaos Universel."
+        }
+      ]
+    }
+  ]
+}
