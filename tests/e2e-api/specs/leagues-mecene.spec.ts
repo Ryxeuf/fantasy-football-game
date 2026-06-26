@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { get, post, rawPost, unwrap, resetDb } from "../helpers/api";
+import { get, post, rawPost, rawPatch, unwrap, resetDb } from "../helpers/api";
 import { seedAndLogin, createTeam } from "../helpers/factories";
 
 interface LeagueDTO {
@@ -70,6 +70,11 @@ async function setupSeasonInProgress(): Promise<{
     teamId: bobTeam.teamId,
   });
   await post(`/leagues/seasons/${season.id}/start`, creator.token, {});
+  // L2.B.5 — le coup de mecene n'est plus actif par defaut : le commissaire
+  // (createur de la ligue) doit l'activer explicitement sur la saison.
+  await rawPatch(`/leagues/seasons/${season.id}/config`, creator.token, {
+    meceneEnabled: true,
+  });
 
   return {
     creatorToken: creator.token,
