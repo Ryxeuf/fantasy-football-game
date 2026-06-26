@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-06-26b",
+    "version": "2026-06-26c",
     "disclaimer": "Règles de Blood Bowl 2025 (saison 3) reproduites à des fins de consultation. Quelques coquilles peuvent subsister."
   },
   "chapters": [
@@ -166,7 +166,7 @@
           "type": "callout",
           "variant": "info",
           "title": "LE SAVIEZ-VOUS…",
-          "text": "Quand les équipes de Skavens sont apparues, les érudits s'écrièrent qu'aucun argument ne plaidait pour l'existence des hommes-rats. Pour compenser, ils commencèrent à prétendre que les Snotlings n'étaient que des [illisible : texte coupé] [illisible]"
+          "text": "Quand les équipes de Skavens sont apparues, les érudits s'écrièrent qu'aucun argument ne plaidait pour l'existence des hommes-rats. Pour compenser, ils commencèrent à prétendre que les Snotlings n'étaient que des Gobelins juvéniles, et qu'il fallait arrêter de les considérer comme deux espèces distinctes. Jusqu'ici, personne n'a osé se lancer dans l'étude de l'origine des Gobelins pour réfuter cette hypothèse."
         }
       ]
     },
