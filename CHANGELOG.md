@@ -1,3 +1,17 @@
+## [1.195.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.194.0...v1.195.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **admin:** règles spéciales en sélection multiple (cases à cocher) ([70e0f26](https://github.com/Ryxeuf/fantasy-football-game/commit/70e0f26afedb59948401344cbe84b1dfcf1bb7f5))
+* **ligues:** UI gestion des poules, PO, édition commissaire & stats (FR1-3,5,6,12,18) ([fb72baf](https://github.com/Ryxeuf/fantasy-football-game/commit/fb72baf6ff206213f10772ec138fbc113f0019ba))
+* **sync-rosters:** synchronise aussi les règles spéciales d_équipe depuis le code ([70d79ae](https://github.com/Ryxeuf/fantasy-football-game/commit/70d79ae4255e31720d9eb496ffc715b417ed1021))
+
+
+### 📝 Documentation
+
+* **roadmap:** point de suivi ligue FR1-FR18 (audit + plan) ([57e6a7e](https://github.com/Ryxeuf/fantasy-football-game/commit/57e6a7e7eb07a90a1121e14c9aef4fe7914d8095))
+
 ## [1.194.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.193.0...v1.194.0) (2026-06-26)
 
 
