@@ -19,6 +19,7 @@ import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
 import { SeasonAdminPanel } from "./SeasonAdminPanel";
 import { PoolsManagerPanel } from "./PoolsManagerPanel";
+import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import type {
@@ -606,6 +607,17 @@ export default function LeagueDetailPage() {
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.calendarSection}
                 </h3>
+                {/* FR4 — saisie manuelle du calendrier (commissaire). */}
+                {leagueEnabled && isCreator ? (
+                  <ManualScheduleEditor
+                    seasonId={season.id}
+                    rounds={season.rounds}
+                    participants={season.participants}
+                    onChanged={() => {
+                      if (selectedSeasonId) loadSeason(selectedSeasonId);
+                    }}
+                  />
+                ) : null}
                 <SeasonCalendar
                   rounds={season.rounds}
                   currentUserId={currentUserId}
