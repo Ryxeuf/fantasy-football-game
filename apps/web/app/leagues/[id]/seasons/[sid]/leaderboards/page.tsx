@@ -28,6 +28,8 @@ interface PlayerStatsCatalogue {
   scope: "career";
   topScorers: PlayerStatRow[];
   topBashers: PlayerStatRow[];
+  topKillers: PlayerStatRow[];
+  topAggressors: PlayerStatRow[];
   topPassers: PlayerStatRow[];
   topInterceptors: PlayerStatRow[];
   topFutureStars: PlayerStatRow[];

@@ -467,6 +467,52 @@ function parseSkillsCsv(raw: string | null | undefined): string[] {
  * par le commissaire sur les teams d'une ligue. Filtre par prefixe
  * d'action + leagueId stocke dans `newValue.leagueId`.
  */
+/**
+ * FR12 — vue lecture de l'équipe d'un coach pour l'édition commissaire.
+ * Renvoie l'équipe (nom, roster, trésorerie) + ses joueurs actifs (non
+ * licenciés). Réservé au commissaire via la garde `ensureTeamInLeague`.
+ */
+export async function getTeamForEdit(input: {
+  leagueId: string;
+  teamId: string;
+}) {
+  await ensureTeamInLeague(input);
+  const team = (await prisma.team.findUnique({
+    where: { id: input.teamId },
+    select: { id: true, name: true, roster: true, treasury: true },
+  })) as {
+    id: string;
+    name: string;
+    roster: string;
+    treasury: number;
+  } | null;
+  if (!team) {
+    throw new CommissionerEditError(
+      "team_not_found",
+      `Equipe introuvable: ${input.teamId}`,
+    );
+  }
+  const players = await prisma.teamPlayer.findMany({
+    where: { teamId: input.teamId, firedAt: null },
+    orderBy: { number: "asc" },
+    select: {
+      id: true,
+      name: true,
+      position: true,
+      number: true,
+      ma: true,
+      st: true,
+      ag: true,
+      pa: true,
+      av: true,
+      skills: true,
+      spp: true,
+      dead: true,
+    },
+  });
+  return { team, players };
+}
+
 export async function listAuditLog(input: {
   leagueId: string;
   limit?: number;

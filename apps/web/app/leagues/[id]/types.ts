@@ -104,11 +104,33 @@ export interface LeagueRoundDetail {
   pairings?: LeaguePairingDetail[];
 }
 
+/** Lot C — poule (groupe) d'une saison. */
+export interface LeaguePool {
+  id: string;
+  name: string;
+  order: number;
+  color: string | null;
+  /** Nombre d'équipes de cette poule qualifiées pour les play-offs. */
+  qualifiesForPlayoffs: number;
+  _count?: { participants: number };
+}
+
+/** Lot C — classement d'une poule (un bloc de standings par poule). */
+export interface PoolStandings {
+  poolId: string;
+  poolName: string;
+  poolOrder: number;
+  qualifiesForPlayoffs: number;
+  standings: StandingRow[];
+}
+
 export interface LeagueParticipantDetail {
   id: string;
   seasonElo: number;
   status: LeagueParticipantStatus | string;
   teamId: string;
+  /** Lot C — poule d'affectation (null si non assigné). */
+  poolId?: string | null;
   // L2.B.5 — flag "coup de mecene" deja joue pour cette saison.
   mecenePlayed?: boolean;
   mecenePlayedAt?: string | null;
@@ -162,6 +184,8 @@ export interface StandingRow {
   casualtiesAgainst: number;
   seasonElo: number;
   status: string;
+  /** Lot C — poule d'affectation (null si non assigné). */
+  poolId?: string | null;
   /**
    * E2 — Sous-total de points bonus de la saison (déjà inclus dans
    * `points`). Optionnel pour rétro-compat API pré-E2.

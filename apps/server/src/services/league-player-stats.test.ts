@@ -8,6 +8,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     leagueParticipant: { findMany: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
+    leagueMatchEvent: { findMany: vi.fn() },
   },
 }));
 
@@ -206,17 +207,57 @@ describe("Lot J — league-player-stats", () => {
   });
 
   describe("LEADERBOARD_CATEGORIES", () => {
-    it("exposes the 7 categories", () => {
+    it("exposes the 9 categories (incl. killer/aggressor)", () => {
       const keys = LEADERBOARD_CATEGORIES.map((c) => c.key);
       expect(keys).toEqual([
         "topScorers",
         "topBashers",
+        "topKillers",
+        "topAggressors",
         "topPassers",
         "topInterceptors",
         "topFutureStars",
         "topMvps",
         "topPunchingBags",
       ]);
+    });
+  });
+
+  describe("FR18 — killers / aggressors (events de saison)", () => {
+    it("classe killers (casualty+dead) et agresseurs (aggression) par acteur", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", name: "Tueur", teamId: "T1" }),
+        player({ id: "p2", name: "Brute", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "casualty", actorPlayerId: "p1", injurySeverity: "dead" },
+        { kind: "casualty", actorPlayerId: "p1", injurySeverity: "dead" },
+        { kind: "casualty", actorPlayerId: "p2", injurySeverity: "mng" },
+        { kind: "aggression", actorPlayerId: "p2", injurySeverity: null },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topKillers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 2],
+      ]);
+      expect(cat.topAggressors.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 1],
+      ]);
+    });
+
+    it("classements events vides si le modèle est indisponible (tolérant)", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockRejectedValue(new Error("no model"));
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topKillers).toEqual([]);
+      expect(cat.topAggressors).toEqual([]);
     });
   });
 });

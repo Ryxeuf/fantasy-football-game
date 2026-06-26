@@ -18,12 +18,15 @@ import { PlayoffBracketView } from "./PlayoffBracketView";
 import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
 import { SeasonAdminPanel } from "./SeasonAdminPanel";
+import { PoolsManagerPanel } from "./PoolsManagerPanel";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import type {
   LeagueDetail,
   LeagueSeasonDetail,
   StandingRow,
+  LeaguePool,
+  PoolStandings,
 } from "./types";
 
 // S25.5d — `apiRequest<T>` (lib/api-client) prend en charge `API_BASE`,
@@ -50,6 +53,10 @@ export default function LeagueDetailPage() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
   const [season, setSeason] = useState<LeagueSeasonDetail | null>(null);
   const [standings, setStandings] = useState<StandingRow[]>([]);
+  // FR6 — classements par poule (vide si la saison n'a pas de poules).
+  const [poolStandings, setPoolStandings] = useState<PoolStandings[]>([]);
+  // FR2 — poules de la saison (liste éditable, avec compteur de participants).
+  const [pools, setPools] = useState<LeaguePool[]>([]);
   const [showSeasonElo, setShowSeasonElo] = useState(false);
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [seasonError, setSeasonError] = useState<string | null>(null);
@@ -116,22 +123,33 @@ export default function LeagueDetailPage() {
       try {
         setSeasonLoading(true);
         setSeasonError(null);
-        const [seasonRes, standingsRes] = await Promise.all([
+        const [seasonRes, standingsRes, poolsRes] = await Promise.all([
           apiRequest<{ season: LeagueSeasonDetail }>(
             `/leagues/seasons/${seasonId}`,
           ),
+          // FR6 — `byPool=true` ajoute le groupement par poule (vide si aucune
+          // poule), tout en conservant le classement global.
           apiRequest<{
             seasonId: string;
             standings: StandingRow[];
             showSeasonElo?: boolean;
-          }>(`/leagues/seasons/${seasonId}/standings`),
+            pools?: PoolStandings[];
+          }>(`/leagues/seasons/${seasonId}/standings?byPool=true`),
+          // FR2 — poules de la saison (lecture publique). Tolérant à l'échec.
+          apiRequest<{ pools: LeaguePool[] }>(
+            `/leagues/seasons/${seasonId}/pools`,
+          ).catch(() => ({ pools: [] as LeaguePool[] })),
         ]);
         setSeason(seasonRes.season);
         setStandings(standingsRes.standings);
+        setPoolStandings(standingsRes.pools ?? []);
+        setPools(poolsRes.pools ?? []);
         setShowSeasonElo(standingsRes.showSeasonElo === true);
       } catch (e: unknown) {
         setSeason(null);
         setStandings([]);
+        setPoolStandings([]);
+        setPools([]);
         setShowSeasonElo(false);
         setSeasonError(
           e instanceof Error ? e.message : t.leagues.seasonError,
@@ -147,6 +165,8 @@ export default function LeagueDetailPage() {
     if (!selectedSeasonId) {
       setSeason(null);
       setStandings([]);
+      setPoolStandings([]);
+      setPools([]);
       return;
     }
     loadSeason(selectedSeasonId);
@@ -200,6 +220,26 @@ export default function LeagueDetailPage() {
   const registeredTeamIds = useMemo<string[]>(() => {
     if (!season) return [];
     return season.participants.map((p) => p.teamId);
+  }, [season]);
+
+  // FR2 — saison éditable (poules modifiables) tant qu'elle n'a pas démarré.
+  const seasonEditable = useMemo(
+    () => season?.status === "draft" || season?.status === "scheduled",
+    [season],
+  );
+
+  // FR5 — index participantId -> poule, pour grouper le calendrier par poule.
+  const poolNamesById = useMemo<Record<string, string>>(() => {
+    const m: Record<string, string> = {};
+    for (const pool of pools) m[pool.id] = pool.name;
+    return m;
+  }, [pools]);
+  const poolIdByParticipantId = useMemo<Record<string, string | null>>(() => {
+    const m: Record<string, string | null> = {};
+    if (season) {
+      for (const p of season.participants) m[p.id] = p.poolId ?? null;
+    }
+    return m;
   }, [season]);
 
   const canJoinSeason = useMemo(() => {
@@ -452,18 +492,40 @@ export default function LeagueDetailPage() {
                 />
               ) : null}
 
-              {/* L2.C.2c — lien vers le recap quand la saison est terminee.
-                  Le recap reste accessible meme si leagueEnabled est off
-                  (l'endpoint awards est public). */}
-              {season.status === "completed" ? (
-                <Link
-                  href={`/leagues/${leagueId}/seasons/${season.id}/recap`}
-                  data-testid="season-recap-link"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-amber-100 border border-amber-300 text-amber-900 text-sm font-medium hover:bg-amber-200"
-                >
-                  🏆 Voir le recap de la saison
-                </Link>
+              {/* FR2 — gestion des poules (commissaire). Affiché aussi quand
+                  des poules existent déjà (lecture seule si saison démarrée). */}
+              {leagueEnabled && isCreator && (seasonEditable || pools.length > 0) ? (
+                <PoolsManagerPanel
+                  seasonId={season.id}
+                  pools={pools}
+                  participants={season.participants}
+                  editable={seasonEditable}
+                  onChanged={() => {
+                    if (selectedSeasonId) loadSeason(selectedSeasonId);
+                  }}
+                />
               ) : null}
+
+              {/* FR18 — accès aux classements joueurs/équipes (toujours
+                  visible) + L2.C.2c recap quand la saison est terminée. */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/leagues/${leagueId}/seasons/${season.id}/leaderboards`}
+                  data-testid="season-leaderboards-link"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-100 border border-indigo-300 text-indigo-900 text-sm font-medium hover:bg-indigo-200"
+                >
+                  📊 Statistiques de la ligue
+                </Link>
+                {season.status === "completed" ? (
+                  <Link
+                    href={`/leagues/${leagueId}/seasons/${season.id}/recap`}
+                    data-testid="season-recap-link"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-amber-100 border border-amber-300 text-amber-900 text-sm font-medium hover:bg-amber-200"
+                  >
+                    🏆 Voir le recap de la saison
+                  </Link>
+                ) : null}
+              </div>
 
               {canJoinSeason ? (
                 <div>
@@ -492,6 +554,40 @@ export default function LeagueDetailPage() {
                   >
                     🛠 Gerer mon equipe
                   </Link>
+                  {/* FR1 — retrait de l'équipe avant le démarrage de la saison. */}
+                  {seasonEditable ? (
+                    <button
+                      type="button"
+                      data-testid="withdraw-my-team"
+                      onClick={async () => {
+                        if (
+                          !confirm(
+                            "Retirer votre équipe de cette saison ? (possible uniquement avant le démarrage)",
+                          )
+                        )
+                          return;
+                        try {
+                          await apiRequest(
+                            `/leagues/seasons/${season.id}/leave`,
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                teamId: myParticipant.teamId,
+                              }),
+                            },
+                          );
+                          if (selectedSeasonId) loadSeason(selectedSeasonId);
+                        } catch (e) {
+                          alert(
+                            e instanceof Error ? e.message : "Erreur de retrait",
+                          );
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-300 bg-white text-sm font-medium text-red-700 hover:bg-red-50"
+                    >
+                      🚪 Se retirer
+                    </button>
+                  ) : null}
                   {canPlayMecene ? (
                     <MeceneButton
                       seasonId={season.id}
@@ -514,6 +610,8 @@ export default function LeagueDetailPage() {
                   rounds={season.rounds}
                   currentUserId={currentUserId}
                   canRecordResult={leagueEnabled && isCreator}
+                  poolNamesById={poolNamesById}
+                  poolIdByParticipantId={poolIdByParticipantId}
                 />
               </div>
 
@@ -521,13 +619,47 @@ export default function LeagueDetailPage() {
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.standingsSection}
                 </h3>
-                <SeasonStandings rows={standings} showSeasonElo={showSeasonElo} />
+                {/* FR6 — un classement par poule si la saison en a, sinon global. */}
+                {poolStandings.length > 0 ? (
+                  <div className="space-y-4">
+                    {poolStandings.map((pool) => (
+                      <div key={pool.poolId} data-testid={`pool-standings-${pool.poolId}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-semibold text-nuffle-anthracite">
+                            {pool.poolName}
+                          </h4>
+                          {pool.qualifiesForPlayoffs > 0 ? (
+                            <span className="text-[11px] uppercase tracking-wide bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+                              {pool.qualifiesForPlayoffs} qualifié(s) PO
+                            </span>
+                          ) : null}
+                        </div>
+                        <SeasonStandings
+                          rows={pool.standings}
+                          showSeasonElo={showSeasonElo}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <SeasonStandings rows={standings} showSeasonElo={showSeasonElo} />
+                )}
               </div>
 
               {/* L2.C.3 — bracket de playoffs (rendu null si pas
                   encore declenche : playoffSize=0 OU saison reguliere
-                  pas terminee). */}
-              <PlayoffBracketView seasonId={season.id} />
+                  pas terminee). FR3 — édition des participants par le
+                  commissaire tant qu'aucun match PO n'est lancé. */}
+              <PlayoffBracketView
+                seasonId={season.id}
+                isCommissioner={leagueEnabled && isCreator}
+                eligibleParticipants={season.participants
+                  .filter((p) => p.status === "active")
+                  .map((p) => ({ id: p.id, name: p.team.name }))}
+                onChanged={() => {
+                  if (selectedSeasonId) loadSeason(selectedSeasonId);
+                }}
+              />
 
               <div className="space-y-3">
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
@@ -536,6 +668,13 @@ export default function LeagueDetailPage() {
                 <SeasonParticipants
                   participants={season.participants}
                   showSeasonElo={showSeasonElo}
+                  poolNamesById={poolNamesById}
+                  commissionerLeagueId={
+                    leagueEnabled && isCreator ? league.id : undefined
+                  }
+                  onChanged={() => {
+                    if (selectedSeasonId) loadSeason(selectedSeasonId);
+                  }}
                 />
               </div>
             </>

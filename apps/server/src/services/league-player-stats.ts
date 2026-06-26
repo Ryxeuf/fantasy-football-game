@@ -31,6 +31,8 @@ import { prisma } from "../prisma";
 export type PlayerStatCategory =
   | "topScorers"
   | "topBashers"
+  | "topKillers"
+  | "topAggressors"
   | "topPassers"
   | "topInterceptors"
   | "topFutureStars"
@@ -61,6 +63,10 @@ export interface PlayerStatsCatalogue {
   readonly scope: "career";
   readonly topScorers: PlayerStatRow[];
   readonly topBashers: PlayerStatRow[];
+  /** FR18 — éliminations "mort" infligées (events de saison). */
+  readonly topKillers: PlayerStatRow[];
+  /** FR18 — agressions commises (events de saison). */
+  readonly topAggressors: PlayerStatRow[];
   readonly topPassers: PlayerStatRow[];
   readonly topInterceptors: PlayerStatRow[];
   readonly topFutureStars: PlayerStatRow[];
@@ -184,12 +190,63 @@ export async function computeLeaderboards(input: {
     },
   })) as PlayerSelected[];
 
+  // FR18 — agrégation des events de feuille de match de la SAISON (kills,
+  // agressions). Source précise par-saison (vs compteurs career). Tolérant :
+  // si le modèle n'existe pas (SQLite de test), classements events vides.
+  const killCounts = new Map<string, number>();
+  const aggrCounts = new Map<string, number>();
+  try {
+    const events = (await (
+      prisma as unknown as {
+        leagueMatchEvent: {
+          findMany: (args: unknown) => Promise<
+            Array<{
+              kind: string;
+              actorPlayerId: string | null;
+              injurySeverity: string | null;
+            }>
+          >;
+        };
+      }
+    ).leagueMatchEvent.findMany({
+      // teamId non filtré ici : `topByCount` ne classe que les joueurs de
+      // `players` (déjà restreints à la team quand `teamId` est fourni).
+      where: {
+        matchSheet: { pairing: { round: { seasonId: input.seasonId } } },
+      },
+      select: { kind: true, actorPlayerId: true, injurySeverity: true },
+    })) as Array<{
+      kind: string;
+      actorPlayerId: string | null;
+      injurySeverity: string | null;
+    }>;
+    for (const e of events) {
+      if (!e.actorPlayerId) continue;
+      if (e.kind === "casualty" && e.injurySeverity === "dead") {
+        killCounts.set(
+          e.actorPlayerId,
+          (killCounts.get(e.actorPlayerId) ?? 0) + 1,
+        );
+      }
+      if (e.kind === "aggression") {
+        aggrCounts.set(
+          e.actorPlayerId,
+          (aggrCounts.get(e.actorPlayerId) ?? 0) + 1,
+        );
+      }
+    }
+  } catch {
+    // Events indisponibles (tests SQLite) -> classements events vides.
+  }
+
   return {
     seasonId: input.seasonId,
     topN,
     scope: "career",
     topScorers: topByMetric(players, (p) => p.totalTouchdowns, topN),
     topBashers: topByMetric(players, (p) => p.totalCasualties, topN),
+    topKillers: topByCount(players, killCounts, topN),
+    topAggressors: topByCount(players, aggrCounts, topN),
     topPassers: topByMetric(players, (p) => p.totalCompletions, topN),
     topInterceptors: topByMetric(players, (p) => p.totalInterceptions, topN),
     topFutureStars: topByMetric(players, (p) => p.spp, topN),
@@ -200,6 +257,24 @@ export async function computeLeaderboards(input: {
   };
 }
 
+/**
+ * Classe les joueurs par un compteur d'events (Map playerId -> n). Seuls les
+ * joueurs présents dans `players` (équipes de la saison) sont classés ; ceux à
+ * 0 sont exclus.
+ */
+function topByCount(
+  players: ReadonlyArray<PlayerSelected>,
+  counts: ReadonlyMap<string, number>,
+  topN: number,
+): PlayerStatRow[] {
+  return [...players]
+    .map((p) => ({ p, v: counts.get(p.id) ?? 0 }))
+    .filter((x) => x.v > 0)
+    .sort((a, b) => b.v - a.v)
+    .slice(0, topN)
+    .map((x, idx) => toRow(x.p, x.v, idx + 1));
+}
+
 function emptyCatalogue(seasonId: string, topN: number): PlayerStatsCatalogue {
   return {
     seasonId,
@@ -207,6 +282,8 @@ function emptyCatalogue(seasonId: string, topN: number): PlayerStatsCatalogue {
     scope: "career",
     topScorers: [],
     topBashers: [],
+    topKillers: [],
+    topAggressors: [],
     topPassers: [],
     topInterceptors: [],
     topFutureStars: [],
@@ -266,6 +343,16 @@ export const LEADERBOARD_CATEGORIES: ReadonlyArray<{
     key: "topBashers",
     label: "Meilleur castagneur",
     description: "Plus de sorties infligees (sur blocage et autres).",
+  },
+  {
+    key: "topKillers",
+    label: "Meilleur killer",
+    description: "Plus de blessures Mort infligees (saison).",
+  },
+  {
+    key: "topAggressors",
+    label: "Meilleur agresseur",
+    description: "Plus d'agressions commises (saison).",
   },
   {
     key: "topPassers",

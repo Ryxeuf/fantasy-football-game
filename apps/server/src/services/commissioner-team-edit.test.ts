@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     leagueParticipant: { count: vi.fn() },
-    teamPlayer: { findUnique: vi.fn(), update: vi.fn() },
+    teamPlayer: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     team: { findUnique: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn(), findMany: vi.fn() },
   },
@@ -21,6 +21,7 @@ import {
   adjustCharacteristic,
   adjustTreasury,
   listAuditLog,
+  getTeamForEdit,
   CommissionerEditError,
 } from "./commissioner-team-edit";
 
@@ -33,6 +34,43 @@ describe("Lot I — commissioner-team-edit", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockPrisma.auditLog.create.mockResolvedValue({});
+  });
+
+  describe("getTeamForEdit (FR12)", () => {
+    it("rejette si l'équipe n'est pas inscrite dans la ligue", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      await expect(
+        getTeamForEdit({ leagueId: "L1", teamId: "T1" }),
+      ).rejects.toMatchObject({ code: "team_not_in_league" });
+    });
+
+    it("renvoie l'équipe + joueurs actifs quand elle appartient à la ligue", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: "T1",
+        name: "Skavens",
+        roster: "skaven",
+        treasury: 50000,
+      });
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        { id: "P1", name: "Rat", position: "skaven_lineman", number: 1, ma: 7, st: 3, ag: 3, pa: 4, av: 8, skills: "block", spp: 6, dead: false },
+      ]);
+      const out = await getTeamForEdit({ leagueId: "L1", teamId: "T1" });
+      expect(out.team.treasury).toBe(50000);
+      expect(out.players).toHaveLength(1);
+      // Filtre sur joueurs non licenciés.
+      expect(mockPrisma.teamPlayer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { teamId: "T1", firedAt: null } }),
+      );
+    });
+
+    it("rejette si l'équipe est introuvable", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.team.findUnique.mockResolvedValue(null);
+      await expect(
+        getTeamForEdit({ leagueId: "L1", teamId: "T1" }),
+      ).rejects.toMatchObject({ code: "team_not_found" });
+    });
   });
 
   describe("adjustPlayerSpp", () => {

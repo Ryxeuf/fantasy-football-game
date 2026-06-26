@@ -89,6 +89,7 @@ import {
   adjustCharacteristic,
   adjustTreasury,
   listAuditLog,
+  getTeamForEdit,
   CommissionerEditError,
 } from "../services/commissioner-team-edit";
 import {
@@ -1173,6 +1174,23 @@ async function ensureLeagueCommissioner(
     return false;
   }
   return true;
+}
+
+/** GET /leagues/:leagueId/teams/:teamId/roster (commissaire). */
+export async function handleGetTeamForEdit(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  try {
+    const out = await getTeamForEdit({ leagueId, teamId });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
 }
 
 /** POST /leagues/:leagueId/teams/:teamId/players/:playerId/spp */
@@ -2269,6 +2287,11 @@ router.get(
 );
 
 // Lot I — edition ex-post des equipes par le commissaire.
+router.get(
+  "/:leagueId/teams/:teamId/roster",
+  authUser,
+  handleGetTeamForEdit,
+);
 router.post(
   "/:leagueId/teams/:teamId/players/:playerId/spp",
   authUser,

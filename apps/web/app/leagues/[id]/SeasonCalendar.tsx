@@ -21,6 +21,48 @@ interface SeasonCalendarProps {
   currentUserId: string | null;
   /** Vrai si le user est commissaire (acces feuille sur tous les matchs). */
   canRecordResult?: boolean;
+  /** FR5 — nom de poule par id (vide => pas de groupement par poule). */
+  poolNamesById?: Record<string, string>;
+  /** FR5 — poule d'un participant par id (pour grouper les pairings). */
+  poolIdByParticipantId?: Record<string, string | null>;
+}
+
+interface PoolGroup {
+  poolId: string | null;
+  poolName: string | null;
+  pairings: LeaguePairingDetail[];
+}
+
+/**
+ * FR5 — regroupe les pairings d'une journée par poule (via la poule du
+ * participant à domicile). Retourne `null` si aucun groupement n'est
+ * pertinent (pas de poules, ou une seule poule effective).
+ */
+export function groupPairingsByPool(
+  pairings: LeaguePairingDetail[],
+  poolNamesById: Record<string, string>,
+  poolIdByParticipantId: Record<string, string | null>,
+): PoolGroup[] | null {
+  if (Object.keys(poolNamesById).length === 0) return null;
+  const groups = new Map<string | null, PoolGroup>();
+  for (const pairing of pairings) {
+    const poolId = poolIdByParticipantId[pairing.homeParticipant.id] ?? null;
+    const existing = groups.get(poolId);
+    if (existing) {
+      existing.pairings.push(pairing);
+    } else {
+      groups.set(poolId, {
+        poolId,
+        poolName: poolId ? poolNamesById[poolId] ?? null : null,
+        pairings: [pairing],
+      });
+    }
+  }
+  // Pas de découpage utile si tous les pairings tombent dans une seule poule.
+  if (groups.size <= 1) return null;
+  return Array.from(groups.values()).sort((a, b) =>
+    (a.poolName ?? "￿").localeCompare(b.poolName ?? "￿"),
+  );
 }
 
 function formatDate(iso: string | null, locale: string): string | null {
@@ -42,6 +84,8 @@ export function SeasonCalendar({
   rounds,
   currentUserId,
   canRecordResult,
+  poolNamesById = {},
+  poolIdByParticipantId = {},
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
@@ -111,16 +155,51 @@ export function SeasonCalendar({
                 {t.leagues.pairingsEmpty}
               </div>
             ) : (
-              <ul className="space-y-1.5">
-                {pairings.map((pairing) => (
-                  <PairingRow
-                    key={pairing.id}
-                    pairing={pairing}
-                    currentUserId={currentUserId}
-                    canRecordResult={canRecordResult}
-                  />
-                ))}
-              </ul>
+              (() => {
+                const groups = groupPairingsByPool(
+                  pairings,
+                  poolNamesById,
+                  poolIdByParticipantId,
+                );
+                if (!groups) {
+                  return (
+                    <ul className="space-y-1.5">
+                      {pairings.map((pairing) => (
+                        <PairingRow
+                          key={pairing.id}
+                          pairing={pairing}
+                          currentUserId={currentUserId}
+                          canRecordResult={canRecordResult}
+                        />
+                      ))}
+                    </ul>
+                  );
+                }
+                return (
+                  <div className="space-y-2">
+                    {groups.map((group) => (
+                      <div
+                        key={group.poolId ?? "__unassigned__"}
+                        data-testid={`round-pool-${round.id}-${group.poolId ?? "none"}`}
+                      >
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-indigo-700 mb-1">
+                          {group.poolName ?? "Non affecté"}
+                        </div>
+                        <ul className="space-y-1.5">
+                          {group.pairings.map((pairing) => (
+                            <PairingRow
+                              key={pairing.id}
+                              pairing={pairing}
+                              currentUserId={currentUserId}
+                              canRecordResult={canRecordResult}
+                            />
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
             )}
           </li>
         );
