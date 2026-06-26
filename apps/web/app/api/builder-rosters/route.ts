@@ -28,16 +28,35 @@ export async function GET(request: Request): Promise<NextResponse> {
     { headers: { "Cache-Control": "no-store" } },
   );
 
+  const upstream = `${base}/api/rosters?lang=${lang}&ruleset=${ruleset}`;
+  const rosterCount = (data: unknown): number =>
+    Array.isArray((data as { rosters?: unknown[] } | null)?.rosters)
+      ? (data as { rosters: unknown[] }).rosters.length
+      : 0;
+
   try {
-    const res = await fetch(
-      `${base}/api/rosters?lang=${lang}&ruleset=${ruleset}`,
-      // Data Cache partagé + taggé : revalidation à la demande sur `rosters`,
-      // filet de sécurité temporel d'1 h.
-      { next: { tags: ["rosters"], revalidate: 3600 } },
-    );
-    if (!res.ok) return fallback;
-    const data = await res.json();
-    return NextResponse.json(data, {
+    // Data Cache partagé + taggé : revalidation à la demande sur `rosters`,
+    // filet de sécurité temporel d'1 h.
+    const res = await fetch(upstream, {
+      next: { tags: ["rosters"], revalidate: 3600 },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // Ne jamais SERVIR (ni laisser le Data Cache empoisonné par) un catalogue
+      // vide : un blip de l'API ou une DB en cours de (re)seed renverrait `[]`,
+      // et `revalidate: 3600` figerait ce vide pendant 1 h (builder sans roster).
+      // Dans ce cas on refait un fetch LIVE (non caché) pour servir l'état réel.
+      if (rosterCount(data) > 0) {
+        return NextResponse.json(data, {
+          headers: { "Cache-Control": "no-store" },
+        });
+      }
+    }
+
+    const fresh = await fetch(upstream, { cache: "no-store" });
+    if (!fresh.ok) return fallback;
+    const freshData = await fresh.json();
+    return NextResponse.json(freshData, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch {
