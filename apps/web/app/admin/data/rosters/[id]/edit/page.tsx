@@ -6,6 +6,7 @@ import {
   RULESET_OPTIONS,
   type Ruleset,
 } from "../../../ruleset-utils";
+import { TEAM_SPECIAL_RULES } from "@bb/game-engine";
 
 type GameFormat = "bb11" | "sevens";
 
@@ -128,6 +129,9 @@ export default function EditRosterPage() {
   const [staff, setStaff] = useState<Record<GameFormat, StaffConfig> | null>(null);
   const [savingStaff, setSavingStaff] = useState(false);
   const [staffSuccess, setStaffSuccess] = useState<string | null>(null);
+  // Règles spéciales sélectionnées (slugs). Source de vérité du champ :
+  // liste canonique TEAM_SPECIAL_RULES, sérialisée en CSV pour l'API.
+  const [specialRules, setSpecialRules] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -151,6 +155,14 @@ export default function EditRosterPage() {
       const { roster: data } = await fetchJSON(`/admin/data/rosters/${rosterId}`);
       setRoster(data);
       setStaff(staffFromRows(data.staffConfigs));
+      setSpecialRules(
+        data.specialRules
+          ? data.specialRules
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter((s: string) => s.length > 0)
+          : [],
+      );
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -176,7 +188,7 @@ export default function EditRosterPage() {
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
         regionalRules: regionalRules,
-        specialRules: formData.get("specialRules") || null,
+        specialRules: specialRules.length > 0 ? specialRules.join(",") : null,
         naf: formData.get("naf") === "on",
         ruleset: formData.get("ruleset"),
       };
@@ -346,13 +358,53 @@ export default function EditRosterPage() {
         
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Règles spéciales</label>
-          <input
-            type="text"
-            name="specialRules"
-            defaultValue={roster.specialRules || ""}
-            placeholder="ex: NONE"
-            className="w-full border rounded px-3 py-2"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded px-3 py-3">
+            {(() => {
+              const knownSlugs = TEAM_SPECIAL_RULES.map((r) => r.slug);
+              // Préserve un éventuel slug déjà en base mais absent du catalogue.
+              const extraSlugs = specialRules.filter(
+                (s) => !knownSlugs.includes(s),
+              );
+              const options = [
+                ...TEAM_SPECIAL_RULES.map((r) => ({
+                  slug: r.slug,
+                  label: r.nameFr,
+                })),
+                ...extraSlugs.map((s) => ({
+                  slug: s,
+                  label: `${s} (hors catalogue)`,
+                })),
+              ];
+              return options.map((opt) => {
+                const checked = specialRules.includes(opt.slug);
+                return (
+                  <label
+                    key={opt.slug}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        setSpecialRules((prev) =>
+                          prev.includes(opt.slug)
+                            ? prev.filter((s) => s !== opt.slug)
+                            : [...prev, opt.slug],
+                        )
+                      }
+                    />
+                    <span>
+                      {opt.label}{" "}
+                      <span className="text-gray-400 text-xs">({opt.slug})</span>
+                    </span>
+                  </label>
+                );
+              });
+            })()}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Sélection multiple. Aucune case cochée = aucune règle spéciale.
+          </p>
         </div>
         <div className="flex gap-2">
           <button
