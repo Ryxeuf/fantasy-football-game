@@ -37,3 +37,12 @@ export const adjustTreasurySchema = z.object({
   reason: z.string().max(500).optional(),
 });
 export type AdjustTreasuryBody = z.infer<typeof adjustTreasurySchema>;
+
+/**
+ * Suppression d'equipe / de joueur par le commissaire. Seul un motif
+ * optionnel est accepte dans le corps (la cible est dans l'URL).
+ */
+export const commissionerRemovalSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+export type CommissionerRemovalBody = z.infer<typeof commissionerRemovalSchema>;

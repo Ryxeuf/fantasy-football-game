@@ -44,7 +44,7 @@ export class CommissionerEditError extends Error {
 const VALID_CHARS = ["MA", "ST", "AG", "PA", "AV"] as const;
 export type Characteristic = (typeof VALID_CHARS)[number];
 
-interface AuditEntry {
+export interface AuditEntry {
   readonly leagueId: string;
   readonly byCommissionerId: string;
   readonly teamId: string;
@@ -55,7 +55,12 @@ interface AuditEntry {
   readonly reason?: string | null;
 }
 
-async function appendAudit(entry: AuditEntry): Promise<void> {
+/**
+ * Journalise une action commissaire dans `AuditLog`. Exporte pour
+ * etre reutilise par les services soeurs (ex: suppression d'equipe /
+ * de joueur, cf. `commissioner-team-removal.ts`).
+ */
+export async function appendAudit(entry: AuditEntry): Promise<void> {
   // Reutilise le modele AuditLog generique : `userId` = commissaire,
   // `action` = "league.commissioner-edit:<sub>", `entity` = "Team"
   // ou "TeamPlayer", `entityId` = id cible, `oldValue`/`newValue`

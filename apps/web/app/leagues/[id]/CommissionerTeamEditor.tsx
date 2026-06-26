@@ -33,6 +33,12 @@ interface Props {
   teamId: string;
   teamName: string;
   open: boolean;
+  /**
+   * Autorise la suppression de joueurs (uniquement avant le démarrage de
+   * la saison, tant qu'aucun match n'a été joué). Le backend ré-applique
+   * cette garde ; ce flag ne fait que masquer le bouton côté UI.
+   */
+  canRemovePlayers?: boolean;
   onClose: () => void;
   /** Rappelé après une modification (pour rafraîchir la saison au besoin). */
   onChanged?: () => void;
@@ -43,6 +49,7 @@ export function CommissionerTeamEditor({
   teamId,
   teamName,
   open,
+  canRemovePlayers = false,
   onClose,
   onChanged,
 }: Props) {
@@ -140,6 +147,7 @@ export function CommissionerTeamEditor({
                   teamId={teamId}
                   player={p}
                   busy={busy}
+                  canRemove={canRemovePlayers}
                   act={act}
                 />
               ))}
@@ -197,18 +205,21 @@ function PlayerEditRow({
   teamId,
   player,
   busy,
+  canRemove,
   act,
 }: {
   leagueId: string;
   teamId: string;
   player: EditPlayer;
   busy: boolean;
+  canRemove: boolean;
   act: (fn: () => Promise<unknown>) => Promise<void>;
 }) {
   const [sppDelta, setSppDelta] = useState<number>(0);
   const [newSkill, setNewSkill] = useState("");
   const [charKind, setCharKind] = useState<(typeof CHARS)[number]>("MA");
   const [charDelta, setCharDelta] = useState<number>(0);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const skills = player.skills
     .split(",")
@@ -230,7 +241,50 @@ function PlayerEditRow({
             <span className="ml-2 text-xs text-red-600">(mort)</span>
           ) : null}
         </div>
-        <div className="text-xs text-gray-600">SPP {player.spp}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">SPP {player.spp}</span>
+          {/* Suppression du joueur (pré-saison, aucun match joué). */}
+          {canRemove ? (
+            confirmRemove ? (
+              <span className="inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  data-testid={`confirm-remove-player-${player.id}`}
+                  disabled={busy}
+                  onClick={() =>
+                    act(() =>
+                      apiRequest(
+                        `/leagues/${leagueId}/teams/${teamId}/players/${player.id}`,
+                        { method: "DELETE" },
+                      ),
+                    ).then(() => setConfirmRemove(false))
+                  }
+                  className="text-xs px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  Confirmer
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setConfirmRemove(false)}
+                  className="text-xs px-1.5 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                data-testid={`remove-player-${player.id}`}
+                disabled={busy}
+                onClick={() => setConfirmRemove(true)}
+                className="text-xs px-1.5 py-0.5 rounded border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                🗑 Supprimer
+              </button>
+            )
+          ) : null}
+        </div>
       </div>
 
       {/* Compétences */}
