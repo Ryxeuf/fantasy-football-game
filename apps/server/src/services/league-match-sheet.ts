@@ -42,7 +42,11 @@ import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   calculatePettyCash,
+  getInducementCost,
   getAvailableStarPlayers,
+  getRegionalRulesForTeam,
+  APOTHECARY_FORBIDDEN_ROSTERS,
+  getTeamColors,
   TEAM_ROSTERS,
 } from "@bb/game-engine";
 
@@ -1274,6 +1278,12 @@ export interface MatchSheetStarPlayerOption {
   readonly specialRule?: string;
 }
 
+/** Couleurs (hex) d'une equipe, derivees du roster. */
+export interface MatchSheetTeamColors {
+  readonly primary: string;
+  readonly secondary: string;
+}
+
 /** Budget d'inducements d'une equipe (regles officielles BB). */
 export interface MatchSheetTeamBudget {
   /** CTV = Valeur d'Equipe Actuelle. */
@@ -1292,7 +1302,11 @@ export interface MatchSheetTeamBudget {
  */
 export interface MatchSheetReference {
   readonly weatherTables: readonly MatchSheetWeatherTable[];
-  readonly inducements: readonly MatchSheetInducementOption[];
+  /** Coups de pouce accessibles PAR EQUIPE (filtres + cout selon le roster). */
+  readonly inducements: {
+    readonly home: readonly MatchSheetInducementOption[];
+    readonly away: readonly MatchSheetInducementOption[];
+  };
   readonly starPlayers: {
     readonly home: readonly MatchSheetStarPlayerOption[];
     readonly away: readonly MatchSheetStarPlayerOption[];
@@ -1300,6 +1314,10 @@ export interface MatchSheetReference {
   readonly budget: {
     readonly home: MatchSheetTeamBudget;
     readonly away: MatchSheetTeamBudget;
+  };
+  readonly colors: {
+    readonly home: MatchSheetTeamColors;
+    readonly away: MatchSheetTeamColors;
   };
 }
 
@@ -1318,17 +1336,38 @@ function buildWeatherTables(): MatchSheetWeatherTable[] {
   }));
 }
 
-/** Catalogue de coups de pouce (hors star_player, traite a part). */
-function buildInducementOptions(): MatchSheetInducementOption[] {
-  return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player").map(
-    (d) => ({
+/**
+ * Catalogue de coups de pouce ACCESSIBLES a une equipe : on filtre selon
+ * `canPurchase` (apothicaire itinerant / Igor selon l'acces apothicaire du
+ * roster) et on resout le cout effectif (rabais regional). `star_player`
+ * est traite a part. Suit les regles officielles d'acces par equipe.
+ */
+function inducementOptionsFor(roster: string): MatchSheetInducementOption[] {
+  const ctx = {
+    teamId: "A" as const,
+    regionalRules: getRegionalRulesForTeam(roster),
+    hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
+    rosterSlug: roster,
+  };
+  return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
+    .filter((d) => !d.canPurchase || d.canPurchase(ctx))
+    .map((d) => ({
       slug: d.slug,
       name: d.displayNameFr,
-      cost: d.baseCost,
+      cost: getInducementCost(d.slug, ctx),
       maxQuantity: d.maxQuantity,
       description: d.description,
-    }),
-  );
+    }));
+}
+
+/** Couleur 24 bits -> hex CSS (#rrggbb). */
+function colorHex(n: number): string {
+  return `#${(n & 0xffffff).toString(16).padStart(6, "0")}`;
+}
+
+function colorsFor(roster: string | undefined): MatchSheetTeamColors {
+  const c = getTeamColors(roster);
+  return { primary: colorHex(c.primary), secondary: colorHex(c.secondary) };
 }
 
 function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
@@ -1363,10 +1402,17 @@ export function buildMatchSheetReference(teams: {
 
   return {
     weatherTables: buildWeatherTables(),
-    inducements: buildInducementOptions(),
+    inducements: {
+      home: teams.home ? inducementOptionsFor(teams.home.roster) : [],
+      away: teams.away ? inducementOptionsFor(teams.away.roster) : [],
+    },
     starPlayers: {
       home: teams.home ? starPlayersFor(teams.home.roster) : [],
       away: teams.away ? starPlayersFor(teams.away.roster) : [],
+    },
+    colors: {
+      home: colorsFor(teams.home?.roster),
+      away: colorsFor(teams.away?.roster),
     },
     budget: {
       home: {

@@ -569,13 +569,20 @@ describe("Lot G — league-match-sheet", () => {
         (t) => t.id === "classique",
       );
       expect(classique?.results.length).toBe(11); // 2..12
-      expect(out.reference.inducements.some((i) => i.slug === "bribe")).toBe(
-        true,
-      );
+      expect(
+        out.reference.inducements.home.some((i) => i.slug === "bribe"),
+      ).toBe(true);
       // star_player exclu du catalogue generique.
       expect(
-        out.reference.inducements.some((i) => i.slug === "star_player"),
+        out.reference.inducements.home.some((i) => i.slug === "star_player"),
       ).toBe(false);
+      // Acces apothicaire par equipe : human (apothicaire autorise) -> peut
+      // prendre l'apothicaire itinerant, pas Igor.
+      const homeSlugs = out.reference.inducements.home.map((i) => i.slug);
+      expect(homeSlugs).toContain("wandering_apothecary");
+      expect(homeSlugs).not.toContain("igor");
+      // Couleurs de roster exposees (hex).
+      expect(out.reference.colors.home.primary).toMatch(/^#[0-9a-f]{6}$/);
       // Budget : home a la CTV la plus basse -> petty cash = 150k.
       expect(out.reference.budget.home.pettyCash).toBe(150_000);
       expect(out.reference.budget.home.maxBudget).toBe(200_000);
