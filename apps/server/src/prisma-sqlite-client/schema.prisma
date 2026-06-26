@@ -735,27 +735,29 @@ model LocalMatchAction {
 
 // L.1 — Modeles de ligue (Sprint 17). Mirror SQLite du schema Postgres.
 model League {
-  id                String   @id @default(cuid())
-  name              String
-  description       String?
-  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId         String
-  ruleset           Ruleset  @default(season_3)
-  status            String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
-  isPublic          Boolean  @default(true)
-  maxParticipants   Int      @default(16)
-  allowedRosters    String? // JSON array des rosters autorises (null = tous)
-  winPoints         Int      @default(3)
-  drawPoints        Int      @default(1)
-  lossPoints        Int      @default(0)
-  forfeitPoints     Int      @default(-1)
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  creator            User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId          String
+  ruleset            Ruleset  @default(season_3)
+  status             String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  isPublic           Boolean  @default(true)
+  maxParticipants    Int      @default(16)
+  allowedRosters     String? // JSON array des rosters autorises (null = tous)
+  // FR17 — JSON array des coups de pouce (inducements) autorises (null = tous). Miroir PG.
+  allowedInducements String? // JSON array des inducements autorises (null = tous)
+  winPoints          Int      @default(3)
+  drawPoints         Int      @default(1)
+  lossPoints         Int      @default(0)
+  forfeitPoints      Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
-  tieBreakRules     String?
+  tieBreakRules      String?
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
-  bonusPointsConfig String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  bonusPointsConfig  String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue (mirror PG).

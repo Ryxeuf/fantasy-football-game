@@ -535,6 +535,7 @@ exports.Prisma.LeagueScalarFieldEnum = {
   isPublic: 'isPublic',
   maxParticipants: 'maxParticipants',
   allowedRosters: 'allowedRosters',
+  allowedInducements: 'allowedInducements',
   winPoints: 'winPoints',
   drawPoints: 'drawPoints',
   lossPoints: 'lossPoints',

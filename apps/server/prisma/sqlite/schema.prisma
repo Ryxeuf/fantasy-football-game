@@ -745,6 +745,8 @@ model League {
   isPublic          Boolean  @default(true)
   maxParticipants   Int      @default(16)
   allowedRosters    String? // JSON array des rosters autorises (null = tous)
+  // FR17 — JSON array des coups de pouce (inducements) autorises (null = tous). Miroir PG.
+  allowedInducements String? // JSON array des inducements autorises (null = tous)
   winPoints         Int      @default(3)
   drawPoints        Int      @default(1)
   lossPoints        Int      @default(0)
