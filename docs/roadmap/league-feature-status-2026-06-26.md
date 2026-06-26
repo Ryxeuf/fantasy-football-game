@@ -88,12 +88,13 @@ commissaire). La **feuille de match (FR7→FR16) est le bloc le plus abouti**
   via `AdvancementEditor` (proposition des joueurs éligibles + choix des gains) +
   lien `/level-up`. Choix de design conservé (progression après validation).
 
-**Reste optionnel :**
-- FR17 : enforcement à la soumission (au-delà du filtrage d'affichage) — non fait
-  car les Star Players sont mêlés aux inducements dans le payload ; le filtrage de
-  la liste proposée suffit.
-- FR18 : passer les compteurs « career » (marqueur/passeur/MVP…) en scope
-  strictement par-saison (snapshot ou agrégation events).
+**Optionnel — ✅ LIVRÉ (26/06/2026) :**
+- ✅ FR17 : enforcement à la soumission (`updatePreMatch` rejette tout coup de
+  pouce hors allowlist, code `inducement_not_allowed`), Star Players exemptés.
+- ✅ FR18 : marqueurs / castagneurs / passeurs / intercepteurs en **scope saison**
+  (agrégation des events de feuille de match), repli career si aucun event ;
+  `scope` ("season"|"career") exposé et affiché sur la page leaderboards. MVP et
+  Future Star restent cumulés (pas d'event dédié fiable par saison).
 
 ## Composants/fichiers ajoutés (P1)
 
