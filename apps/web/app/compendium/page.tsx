@@ -70,10 +70,6 @@ export default function CompendiumIndexPage(): JSX.Element {
               <p className="text-sm text-nuffle-anthracite/70">
                 {chapter.summary}
               </p>
-              <p className="mt-auto pt-2 text-xs text-nuffle-anthracite/50">
-                {chapter.sourcePages.length} page
-                {chapter.sourcePages.length > 1 ? "s" : ""} de règles
-              </p>
             </Link>
           </li>
         ))}

@@ -1,7 +1,76 @@
 import raw from "./data/rules-bb-2025.json";
 import type { Compendium, CompendiumBlock, CompendiumChapter } from "./types";
 
-export const compendium = raw as Compendium;
+/**
+ * Les transcriptions marquent les zones illisibles du livre source par
+ * `[illisible ...]`. La transcription `.md`/`.json` reste fidèle (elle
+ * conserve ces marqueurs), mais on ne les AFFICHE pas : on les retire au
+ * rendu et on supprime les blocs qui deviennent vides.
+ */
+const ILLEGIBLE_RE = /\[illisible[^\]]*\]/gi;
+
+/** Retire les marqueurs `[illisible …]` et nettoie les espaces résiduels. */
+export function stripIllegible(text: string): string {
+  return text
+    .replace(ILLEGIBLE_RE, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([.,;:!?»])/g, "$1")
+    .replace(/(«)\s+/g, "$1")
+    .trim();
+}
+
+/** Nettoie un bloc ; renvoie `null` si le bloc devient vide (à supprimer). */
+function sanitizeBlock(block: CompendiumBlock): CompendiumBlock | null {
+  switch (block.type) {
+    case "heading": {
+      const text = stripIllegible(block.text);
+      return text ? { ...block, text } : null;
+    }
+    case "paragraph": {
+      const text = stripIllegible(block.text);
+      return text ? { ...block, text } : null;
+    }
+    case "callout": {
+      const text = stripIllegible(block.text);
+      if (!text) return null;
+      return {
+        ...block,
+        text,
+        ...(block.title ? { title: stripIllegible(block.title) } : {}),
+      };
+    }
+    case "list": {
+      const items = block.items.map(stripIllegible).filter(Boolean);
+      return items.length ? { ...block, items } : null;
+    }
+    case "table": {
+      return {
+        ...block,
+        columns: block.columns.map(stripIllegible),
+        rows: block.rows.map((row) => row.map(stripIllegible)),
+        ...(block.caption ? { caption: stripIllegible(block.caption) } : {}),
+      };
+    }
+    default:
+      return block;
+  }
+}
+
+function sanitizeChapter(chapter: CompendiumChapter): CompendiumChapter {
+  return {
+    ...chapter,
+    blocks: chapter.blocks
+      .map(sanitizeBlock)
+      .filter((b): b is CompendiumBlock => b !== null),
+  };
+}
+
+const rawCompendium = raw as Compendium;
+
+export const compendium: Compendium = {
+  ...rawCompendium,
+  chapters: rawCompendium.chapters.map(sanitizeChapter),
+};
 export const chapters = compendium.chapters;
 
 export function getChapter(slug: string): CompendiumChapter | undefined {

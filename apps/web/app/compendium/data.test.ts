@@ -1,5 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { chapters, chapterToc, compendium, getChapter, headingId } from "./data";
+import {
+  chapters,
+  chapterToc,
+  compendium,
+  getChapter,
+  headingId,
+  stripIllegible,
+} from "./data";
+import type { CompendiumBlock } from "./types";
+
+/** Concatène tout le texte rendu d'un bloc (pour les assertions). */
+function blockText(b: CompendiumBlock): string {
+  switch (b.type) {
+    case "heading":
+    case "paragraph":
+      return b.text;
+    case "callout":
+      return `${b.title ?? ""} ${b.text}`;
+    case "list":
+      return b.items.join(" ");
+    case "table":
+      return [b.caption ?? "", ...b.columns, ...b.rows.flat()].join(" ");
+  }
+}
 
 describe("compendium data integrity", () => {
   it("expose une meta complète", () => {
@@ -55,6 +78,34 @@ describe("compendium data integrity", () => {
       const ids = toc.map((t) => t.id);
       expect(new Set(ids).size, `${c.slug} toc ids`).toBe(ids.length);
     }
+  });
+
+  it("ne rend aucun marqueur illisible ni bloc vide", () => {
+    for (const c of chapters) {
+      for (const b of c.blocks) {
+        const text = blockText(b);
+        expect(text, `${c.slug} illisible`).not.toMatch(/illisible/i);
+        // Aucun bloc texte vide ne doit subsister après nettoyage.
+        if (b.type === "paragraph" || b.type === "heading") {
+          expect(b.text.trim().length, `${c.slug} bloc vide`).toBeGreaterThan(0);
+        }
+        if (b.type === "list") {
+          expect(b.items.every((i) => i.trim().length > 0)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("le disclaimer n'expose ni source ni marqueur illisible", () => {
+    expect(compendium.meta.disclaimer).not.toMatch(/illisible/i);
+    expect(compendium.meta.disclaimer).not.toMatch(/docs\//);
+  });
+
+  it("stripIllegible retire les marqueurs et nettoie les espaces", () => {
+    expect(stripIllegible("avant [illisible] après")).toBe("avant après");
+    expect(stripIllegible("texte [illisible : coupé] .")).toBe("texte.");
+    expect(stripIllegible("[illisible — coupé en bas]")).toBe("");
+    expect(stripIllegible("propre")).toBe("propre");
   });
 
   it("headingId enlève accents et caractères spéciaux", () => {

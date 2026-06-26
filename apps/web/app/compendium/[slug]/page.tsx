@@ -128,8 +128,7 @@ export default function ChapterPage({ params }: ChapterPageProps): JSX.Element {
       </nav>
 
       <footer className="rounded-lg border border-nuffle-bronze/20 bg-nuffle-ivory/30 px-4 py-3 text-xs text-nuffle-anthracite/60">
-        Source : {chapter.sourcePages.join(", ")} —{" "}
-        {compendium.meta.sourceDir}. {compendium.meta.disclaimer}
+        {compendium.meta.disclaimer}
       </footer>
     </article>
   );
