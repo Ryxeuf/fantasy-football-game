@@ -55,6 +55,7 @@ import {
   getMatchSheet,
   buildOfflineInputFromSummary,
   listPendingValidationsForCommissioner,
+  buildMatchSheetReference,
   MatchSheetError,
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
@@ -1146,5 +1147,55 @@ describe("Lot G — league-match-sheet", () => {
       );
       expect(out.playerStats[0].mvp).toBe(true);
     });
+  });
+});
+
+describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
+  function team(roster: string, currentValue: number): {
+    teamId: string;
+    name: string;
+    roster: string;
+    raceName: string;
+    coachName: string;
+    teamValue: number;
+    currentValue: number;
+    treasury: number;
+    players: [];
+  } {
+    return {
+      teamId: `t-${roster}`,
+      name: roster,
+      roster,
+      raceName: roster,
+      coachName: "Coach",
+      teamValue: currentValue,
+      currentValue,
+      treasury: 0,
+      players: [],
+    };
+  }
+
+  it("null = tous les coups de pouce sont proposés", () => {
+    const ref = buildMatchSheetReference(
+      { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
+      null,
+    );
+    expect(ref.inducements.home.length).toBeGreaterThan(1);
+  });
+
+  it("restreint la liste aux slugs autorisés (Star Players non concernés)", () => {
+    const full = buildMatchSheetReference(
+      { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
+      null,
+    );
+    const firstSlug = full.inducements.home[0]?.slug;
+    expect(firstSlug).toBeTruthy();
+    const restricted = buildMatchSheetReference(
+      { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
+      [firstSlug as string],
+    );
+    expect(restricted.inducements.home.map((i) => i.slug)).toEqual([firstSlug]);
+    // Les Star Players ne sont pas filtrés par l'allowlist.
+    expect(restricted.starPlayers.home).toEqual(full.starPlayers.home);
   });
 });

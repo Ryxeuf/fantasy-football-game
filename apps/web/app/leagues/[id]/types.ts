@@ -35,6 +35,8 @@ export interface LeagueDetail {
   isPublic: boolean;
   maxParticipants: number;
   allowedRosters: string[] | null;
+  /** FR17 — coups de pouce autorisés (slugs) ; null = tous autorisés. */
+  allowedInducements?: string[] | null;
   winPoints: number;
   drawPoints: number;
   lossPoints: number;

@@ -92,6 +92,10 @@ export default function EditLeaguePage() {
             maxParticipants: values.maxParticipants,
             allowedRosters:
               values.allowedRosters.length > 0 ? values.allowedRosters : null,
+            allowedInducements:
+              values.allowedInducements.length > 0
+                ? values.allowedInducements
+                : null,
             winPoints: values.winPoints,
             drawPoints: values.drawPoints,
             lossPoints: values.lossPoints,
@@ -167,6 +171,7 @@ export default function EditLeaguePage() {
           isPublic: league.isPublic,
           maxParticipants: league.maxParticipants,
           allowedRosters: league.allowedRosters ?? [],
+          allowedInducements: league.allowedInducements ?? [],
           winPoints: league.winPoints,
           drawPoints: league.drawPoints,
           lossPoints: league.lossPoints,

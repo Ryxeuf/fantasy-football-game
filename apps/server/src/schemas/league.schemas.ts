@@ -59,6 +59,12 @@ export const createLeagueSchema = z.object({
   isPublic: z.boolean().optional(),
   maxParticipants: z.number().int().min(2).max(128).optional(),
   allowedRosters: z.array(rosterSlug).max(64).optional().nullable(),
+  // FR17 — coups de pouce autorisés (slugs). null = tous autorisés.
+  allowedInducements: z
+    .array(z.string().trim().min(1).max(64))
+    .max(64)
+    .optional()
+    .nullable(),
   winPoints: z.number().int().min(0).max(10).optional(),
   drawPoints: z.number().int().min(0).max(10).optional(),
   lossPoints: z.number().int().min(-10).max(10).optional(),

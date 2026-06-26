@@ -43,6 +43,10 @@ export default function NewLeaguePage() {
             maxParticipants: values.maxParticipants,
             allowedRosters:
               values.allowedRosters.length > 0 ? values.allowedRosters : null,
+            allowedInducements:
+              values.allowedInducements.length > 0
+                ? values.allowedInducements
+                : null,
             winPoints: values.winPoints,
             drawPoints: values.drawPoints,
             lossPoints: values.lossPoints,

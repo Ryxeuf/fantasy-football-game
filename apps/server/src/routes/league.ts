@@ -180,6 +180,7 @@ function requireUserId(req: AuthenticatedRequest, res: Response): string | null 
 function serializeLeague(
   league: Record<string, unknown> & {
     allowedRosters?: string | null;
+    allowedInducements?: string | null;
     tieBreakRules?: string | null;
   },
 ) {
@@ -199,6 +200,10 @@ function serializeLeague(
     ...league,
     allowedRosters: parseAllowedRosters(
       (league.allowedRosters as string | null) ?? null,
+    ),
+    // FR17 — réutilise le parser générique (string[] | null).
+    allowedInducements: parseAllowedRosters(
+      (league.allowedInducements as string | null) ?? null,
     ),
     tieBreakRules,
   };
@@ -318,6 +323,7 @@ export async function handleCreateLeague(
       isPublic: body.isPublic,
       maxParticipants: body.maxParticipants,
       allowedRosters: body.allowedRosters ?? null,
+      allowedInducements: body.allowedInducements ?? null,
       winPoints: body.winPoints,
       drawPoints: body.drawPoints,
       lossPoints: body.lossPoints,
@@ -370,6 +376,7 @@ export async function handleUpdateLeague(
       isPublic: body.isPublic,
       maxParticipants: body.maxParticipants,
       allowedRosters: body.allowedRosters,
+      allowedInducements: body.allowedInducements,
       winPoints: body.winPoints,
       drawPoints: body.drawPoints,
       lossPoints: body.lossPoints,

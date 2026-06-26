@@ -1036,6 +1036,10 @@ model League {
   // Ex: ["skaven","gnomes","lizardmen","dwarf","imperial_nobility"]
   // pour la ligue L.9 "Open 5 Teams".
   allowedRosters    String?
+  // FR17 — JSON array de slugs de coups de pouce (inducements) autorises pour
+  // la ligue. null = tous autorises (defaut). Les Star Players ne sont PAS
+  // filtres par ce champ (ils dependent des rosters / regles regionales).
+  allowedInducements String?
   winPoints         Int      @default(3)
   drawPoints        Int      @default(1)
   lossPoints        Int      @default(0)

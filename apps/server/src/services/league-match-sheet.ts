@@ -1343,15 +1343,22 @@ function buildWeatherTables(): MatchSheetWeatherTable[] {
  * roster) et on resout le cout effectif (rabais regional). `star_player`
  * est traite a part. Suit les regles officielles d'acces par equipe.
  */
-function inducementOptionsFor(roster: string): MatchSheetInducementOption[] {
+function inducementOptionsFor(
+  roster: string,
+  // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
+  // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
+  allowedInducements: string[] | null = null,
+): MatchSheetInducementOption[] {
   const ctx = {
     teamId: "A" as const,
     regionalRules: getRegionalRulesForTeam(roster),
     hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
     rosterSlug: roster,
   };
+  const allow = allowedInducements ? new Set(allowedInducements) : null;
   return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
     .filter((d) => !d.canPurchase || d.canPurchase(ctx))
+    .filter((d) => allow === null || allow.has(d.slug))
     .map((d) => ({
       slug: d.slug,
       name: d.displayNameFr,
@@ -1381,6 +1388,40 @@ function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
 }
 
 /**
+ * FR17 — charge l'allowlist de coups de pouce de la ligue (via
+ * pairing → round → saison → ligue). `null` = tous autorisés. Tolérant
+ * (JSON invalide / absence → null).
+ */
+async function loadLeagueAllowedInducements(
+  pairingId: string,
+): Promise<string[] | null> {
+  try {
+    const row = (await prisma.leaguePairing.findUnique({
+      where: { id: pairingId },
+      select: {
+        round: {
+          select: {
+            season: {
+              select: { league: { select: { allowedInducements: true } } },
+            },
+          },
+        },
+      },
+    })) as {
+      round?: { season?: { league?: { allowedInducements?: string | null } } };
+    } | null;
+    const raw = row?.round?.season?.league?.allowedInducements ?? null;
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
+      ? (parsed as string[])
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Construit le bloc de reference (catalogues + budgets) pour une feuille.
  * Le petty cash suit les regles BB : l'equipe a la CTV la plus basse recoit
  * la difference, puis chaque equipe peut puiser dans sa tresorerie.
@@ -1391,10 +1432,14 @@ function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
  */
 export const LEAGUE_UNDERDOG_INDUCEMENT_BONUS = 50000;
 
-export function buildMatchSheetReference(teams: {
-  home: MatchSheetTeam | null;
-  away: MatchSheetTeam | null;
-}): MatchSheetReference {
+export function buildMatchSheetReference(
+  teams: {
+    home: MatchSheetTeam | null;
+    away: MatchSheetTeam | null;
+  },
+  // FR17 — coups de pouce autorisés par la ligue (null = tous).
+  allowedInducements: string[] | null = null,
+): MatchSheetReference {
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
   const homeTreasury = teams.home?.treasury ?? 0;
@@ -1413,8 +1458,12 @@ export function buildMatchSheetReference(teams: {
   return {
     weatherTables: buildWeatherTables(),
     inducements: {
-      home: teams.home ? inducementOptionsFor(teams.home.roster) : [],
-      away: teams.away ? inducementOptionsFor(teams.away.roster) : [],
+      home: teams.home
+        ? inducementOptionsFor(teams.home.roster, allowedInducements)
+        : [],
+      away: teams.away
+        ? inducementOptionsFor(teams.away.roster, allowedInducements)
+        : [],
     },
     starPlayers: {
       home: teams.home ? starPlayersFor(teams.home.roster) : [],
@@ -1493,11 +1542,15 @@ export async function getMatchSheet(input: {
     );
   }
 
+  const allowedInducements = await loadLeagueAllowedInducements(
+    input.pairingId,
+  );
+
   return {
     sheet,
     summary,
     teams,
-    reference: buildMatchSheetReference(teams),
+    reference: buildMatchSheetReference(teams, allowedInducements),
     computedSpp,
     viewerRole: commissioner
       ? "commissioner"

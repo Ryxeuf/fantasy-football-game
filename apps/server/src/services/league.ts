@@ -48,6 +48,8 @@ export interface CreateLeagueInput {
   isPublic?: boolean;
   maxParticipants?: number;
   allowedRosters?: string[] | null;
+  /** FR17 — coups de pouce autorises (slugs) ; null = tous autorises. */
+  allowedInducements?: string[] | null;
   winPoints?: number;
   drawPoints?: number;
   lossPoints?: number;
@@ -155,6 +157,12 @@ export async function createLeague(input: CreateLeagueInput) {
       ? JSON.stringify(input.allowedRosters)
       : null;
 
+  // FR17 — coups de pouce autorises. [] ou absent => null (tous autorises).
+  const allowedInducements =
+    input.allowedInducements && input.allowedInducements.length > 0
+      ? JSON.stringify(input.allowedInducements)
+      : null;
+
   // L2.C.5 — valide les slugs cote serveur. Les slugs inconnus sont
   // filtres ; si plus rien ne reste, on stocke null (= ordre defaut).
   let tieBreakRules: string | null = null;
@@ -179,6 +187,7 @@ export async function createLeague(input: CreateLeagueInput) {
       isPublic: input.isPublic ?? true,
       maxParticipants,
       allowedRosters,
+      allowedInducements,
       winPoints: input.winPoints ?? 3,
       drawPoints: input.drawPoints ?? 1,
       lossPoints: input.lossPoints ?? 0,
@@ -882,6 +891,8 @@ export interface UpdateLeagueInput {
   isPublic?: boolean;
   maxParticipants?: number;
   allowedRosters?: string[] | null;
+  /** FR17 — coups de pouce autorises (slugs) ; null = tous autorises. */
+  allowedInducements?: string[] | null;
   winPoints?: number;
   drawPoints?: number;
   lossPoints?: number;
@@ -933,6 +944,12 @@ export async function updateLeague(
     data.allowedRosters =
       input.allowedRosters && input.allowedRosters.length > 0
         ? JSON.stringify(input.allowedRosters)
+        : null;
+  }
+  if (input.allowedInducements !== undefined) {
+    data.allowedInducements =
+      input.allowedInducements && input.allowedInducements.length > 0
+        ? JSON.stringify(input.allowedInducements)
         : null;
   }
   if (input.winPoints !== undefined) data.winPoints = input.winPoints;
