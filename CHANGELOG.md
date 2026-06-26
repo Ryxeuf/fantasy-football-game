@@ -1,3 +1,10 @@
+## [1.202.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.1...v1.202.2) (2026-06-26)
+
+
+### 🐛 Bug Fixes
+
+* **web:** builder-rosters ne sert jamais un catalogue vide mis en cache ([30c9d78](https://github.com/Ryxeuf/fantasy-football-game/commit/30c9d78580f4a9302d217800663c68960d37491d))
+
 ## [1.202.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.0...v1.202.1) (2026-06-26)
 
 
