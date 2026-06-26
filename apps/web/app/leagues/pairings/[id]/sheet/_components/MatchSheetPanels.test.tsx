@@ -2,10 +2,12 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   PreMatchPanel,
+  PostMatchPanel,
   TeamIdentityBadges,
   TeamValueStrip,
   type MatchSheetReference,
   type PreMatchValues,
+  type PostMatchValues,
   type SheetTeam,
 } from "./MatchSheetPanels";
 
@@ -124,6 +126,53 @@ describe("PreMatchPanel — météo dépendante de la table", () => {
     const consequence = screen.getByTestId("weather-consequence");
     expect(consequence.textContent).toContain("Pluie battante");
     expect(consequence.textContent).toContain("Ballon glissant.");
+  });
+});
+
+const EMPTY_POST: PostMatchValues = {
+  winningsHomeManual: null,
+  winningsAwayManual: null,
+  dedicatedFansDeltaHome: 0,
+  dedicatedFansDeltaAway: 0,
+  rankingBonusHome: null,
+  rankingBonusAway: null,
+  sppBonus: [],
+  motmPlayerIds: [],
+  costlyErrorsHome: [],
+  costlyErrorsAway: [],
+  purchasesHome: [],
+  purchasesAway: [],
+  firedPlayerIds: [],
+};
+
+describe("PostMatchPanel — SPP estimés (auto)", () => {
+  it("affiche les SPP auto par joueur de l'équipe", () => {
+    const teamWithPlayer: SheetTeam = {
+      ...TEAM,
+      players: [
+        {
+          id: "p1",
+          number: 7,
+          name: "Griff",
+          position: "Blitzer",
+          dead: false,
+          missNextMatch: false,
+          spp: 0,
+        },
+      ],
+    };
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+        computedSpp={{ p1: 7 }}
+      />,
+    );
+    const block = screen.getByTestId("auto-spp-home");
+    expect(block.textContent).toContain("+7");
+    expect(block.textContent).toContain("Griff");
   });
 });
 

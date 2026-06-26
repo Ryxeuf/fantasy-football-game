@@ -1004,12 +1004,15 @@ export function PostMatchPanel({
   away,
   disabled,
   onSave,
+  computedSpp = {},
 }: {
   initial: PostMatchValues;
   home: SheetTeam | null;
   away: SheetTeam | null;
   disabled?: boolean;
   onSave: (v: PostMatchValues) => Promise<void>;
+  /** SPP estimés par teamPlayerId (calcul auto depuis les évènements + MVP). */
+  computedSpp?: Record<string, number>;
 }) {
   const [winH, setWinH] = useState<string>(
     initial.winningsHomeManual?.toString() ?? "",
@@ -1202,6 +1205,44 @@ export function PostMatchPanel({
                 className="mt-1 block w-full rounded border px-2 py-2 text-sm"
               />
             </label>
+
+            {/* SPP estimés (auto, depuis les évènements + MVP). Read-only :
+                le calcul officiel est appliqué à la validation. */}
+            {(() => {
+              const players = (c.team?.players ?? []).filter(
+                (p) => (computedSpp[p.id] ?? 0) > 0,
+              );
+              if (players.length === 0) return null;
+              const total = players.reduce(
+                (acc, p) => acc + (computedSpp[p.id] ?? 0),
+                0,
+              );
+              return (
+                <div
+                  className="rounded border border-emerald-200 bg-emerald-50/60 p-2 text-xs"
+                  data-testid={`auto-spp-${c.side}`}
+                >
+                  <div className="mb-1 font-medium text-emerald-800">
+                    SPP estimés (auto) · +{total}
+                  </div>
+                  <ul className="space-y-0.5 text-emerald-900/80">
+                    {players.map((p) => (
+                      <li key={p.id} className="flex justify-between gap-2">
+                        <span className="truncate">
+                          N°{p.number} {p.name}
+                        </span>
+                        <span className="tabular-nums">
+                          +{computedSpp[p.id]}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-[10px] text-emerald-700/70">
+                    Appliqué au roster à la validation du commissaire.
+                  </p>
+                </div>
+              );
+            })()}
 
             <div className="text-xs">
               <div className="mb-1 font-medium text-slate-600">

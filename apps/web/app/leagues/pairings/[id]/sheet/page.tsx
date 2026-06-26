@@ -117,12 +117,22 @@ interface InjuredPlayer {
   cause: string | null;
 }
 
+interface PlayerStatLine {
+  playerId: string;
+  side: "home" | "away";
+  touchdowns: number;
+  casualtiesInflicted: number;
+  completions: number;
+  interceptions: number;
+}
+
 interface Summary {
   scoreHome: number;
   scoreAway: number;
   casualtiesHome: number;
   casualtiesAway: number;
   injuries: InjuredPlayer[];
+  playerStats: PlayerStatLine[];
 }
 
 interface SheetResponse {
@@ -263,8 +273,10 @@ export default function MatchSheetPage() {
   const [eventHalf, setEventHalf] = useState<1 | 2>(1);
   const [eventTurn, setEventTurn] = useState<string>("");
 
-  // Onglet actif : Avant-match / En cours / Fin de match.
-  const [tab, setTab] = useState<"before" | "during" | "after">("before");
+  // Onglet actif : Avant-match / En cours / Fin de match / Évolutions.
+  const [tab, setTab] = useState<
+    "before" | "during" | "after" | "advancements"
+  >("before");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -432,6 +444,21 @@ export default function MatchSheetPage() {
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
   const timeline = useMemo(() => chronologicalTimeline(events), [events]);
+  // SPP estimés par joueur (auto) : TD ×3, sortie ×2, passe ×1, interception
+  // ×2, MVP ×4. Informatif ; le calcul officiel s'applique à la validation.
+  const computedSpp = useMemo(() => {
+    const motm = new Set(parseMotm(data?.sheet.motmPlayerIds));
+    const map: Record<string, number> = {};
+    for (const s of data?.summary.playerStats ?? []) {
+      map[s.playerId] =
+        s.touchdowns * 3 +
+        s.casualtiesInflicted * 2 +
+        s.completions * 1 +
+        s.interceptions * 2 +
+        (motm.has(s.playerId) ? 4 : 0);
+    }
+    return map;
+  }, [data]);
   const home = data?.teams.home ?? null;
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
@@ -542,6 +569,7 @@ export default function MatchSheetPage() {
             { id: "before", label: "Avant-match" },
             { id: "during", label: "En cours" },
             { id: "after", label: "Fin du match" },
+            { id: "advancements", label: "Évolutions" },
           ] as const
         ).map((t) => {
           const activeTab = tab === t.id;
@@ -846,12 +874,65 @@ export default function MatchSheetPage() {
           away={away}
           disabled={!editable}
           onSave={savePostMatch}
+          computedSpp={computedSpp}
         />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
             La fin de match est réservée aux coachs et au commissaire.
           </p>
         ))}
+
+      {/* ÉVOLUTIONS DES JOUEURS */}
+      {tab === "advancements" && (
+        <section
+          className="space-y-3 rounded-lg border bg-white p-4"
+          data-testid="advancements-panel"
+        >
+          <h2 className="text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+            Évolutions des joueurs
+          </h2>
+
+          {/* Règle de staging (item : appliqué seulement après validation). */}
+          <div className="flex gap-2 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700">
+            <span aria-hidden>🛡️</span>
+            <p>
+              Les évolutions (montées de niveau, compétences, améliorations de
+              caractéristique) ne sont <strong>jamais appliquées aux rosters
+              avant la validation du match par le commissaire</strong>. Le SPP
+              et les avancements en attente sont créés au moment de la
+              validation.
+            </p>
+          </div>
+
+          {status === "validated" ? (
+            myTeamId ? (
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600">
+                  Le match est validé : tu peux désormais réaliser les
+                  évolutions de ton équipe (choix des compétences / stats des
+                  joueurs ayant assez de SPP).
+                </p>
+                <a
+                  href={`/me/teams/${myTeamId}/level-up`}
+                  data-testid="goto-advancements"
+                  className="inline-flex items-center gap-2 rounded-lg bg-nuffle-anthracite px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-black"
+                >
+                  Faire les évolutions de mon équipe →
+                </a>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">
+                Les évolutions concernent les coachs des deux équipes, sur la
+                page de leur équipe.
+              </p>
+            )
+          ) : (
+            <p className="rounded border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
+              Disponible une fois le match validé par le commissaire.
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Actions de workflow */}
       <section className="flex flex-wrap gap-2">
