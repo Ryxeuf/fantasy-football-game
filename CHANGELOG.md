@@ -1,3 +1,10 @@
+## [1.197.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.196.0...v1.197.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** stats Catapulte + sac de frappe sur events (FR18) ([b23c10f](https://github.com/Ryxeuf/fantasy-football-game/commit/b23c10ff30b18134b2724ecd0cc278fab124b235))
+
 ## [1.196.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.195.0...v1.196.0) (2026-06-26)
 
 
