@@ -1,8 +1,8 @@
 "use client";
 import {
-  getRerollCost,
-  canRosterHaveApothecary,
   getFormatConstraints,
+  defaultStaffConfig,
+  type RosterStaffConfig,
   FORMATS,
   type GameFormat,
   RULESETS,
@@ -119,6 +119,11 @@ export default function TeamDetailClient({
   // Source unique partagée avec le builder : `FORMAT_CONSTRAINTS`.
   const [format, setFormat] = useState<GameFormat>("bb11");
   const constraints = getFormatConstraints(format);
+  // Config staff (coûts po + plafonds + apothicaire) du roster × format, issue
+  // de la BASE (admin) ; repli sur le défaut dérivé si la ligne n'existe pas.
+  // Même source de vérité que le builder -> les éditions admin se reflètent ici.
+  const staff: RosterStaffConfig =
+    team?.staffConfigs?.[format] ?? defaultStaffConfig(slug, format);
   const formatLabels: Record<GameFormat, string> = {
     bb11: t.teams.formatBB11 ?? "Blood Bowl à 11",
     sevens: t.teams.formatSevens ?? "Blood Bowl à Sept",
@@ -633,7 +638,7 @@ export default function TeamDetailClient({
                 {t.teams.cheerleader}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                {constraints.cheerleaderCost}k {t.teams.po}
+                {staff.cheerleaderCost / 1000}k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">
                 {t.teams.perCheerleader}
@@ -644,7 +649,7 @@ export default function TeamDetailClient({
                 {t.teams.assistant}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                {constraints.assistantCost}k {t.teams.po}
+                {staff.assistantCost / 1000}k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">
                 {t.teams.perAssistant}
@@ -655,23 +660,20 @@ export default function TeamDetailClient({
                 {t.teams.rerolls}
               </div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">
-                {Math.round(getRerollCost(slug) / 1000) *
-                  constraints.rerollCostMultiplier}
-                k {t.teams.po}
+                {staff.rerollCost / 1000}k {t.teams.po}
               </div>
               <div className="text-sm text-gray-600">{t.teams.perReroll}</div>
             </div>
-            {/* Apothicaire : masqué si le format l'interdit OU si le roster
-                n'y a pas droit (mort-vivants — régénération à la place).
-                Coût selon le format (50k BB11, 80k Sevens). Même source de
-                vérité que le builder : `constraints` + `canRosterHaveApothecary`. */}
-            {constraints.apothecaryAllowed && canRosterHaveApothecary(slug) && (
+            {/* Apothicaire : visible si la config (roster × format) l'autorise.
+                Coût et autorisation issus de la BASE (repli défaut dérivé) —
+                même source de vérité que le builder. */}
+            {staff.apothecaryAllowed && (
               <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="font-semibold text-lg mb-2">
                   {t.teams.apothecary}
                 </div>
                 <div className="text-2xl font-bold text-emerald-600 mb-1">
-                  {constraints.apothecaryCost}k {t.teams.po}
+                  {staff.apothecaryCost / 1000}k {t.teams.po}
                 </div>
                 <div className="text-sm text-gray-600">
                   {t.teams.oneApothecary}
