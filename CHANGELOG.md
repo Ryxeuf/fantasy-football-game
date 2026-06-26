@@ -1,3 +1,15 @@
+## [1.200.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.199.0...v1.200.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ligues:** enable mecene feature explicitly for league seasons ([6e57d2d](https://github.com/Ryxeuf/fantasy-football-game/commit/6e57d2dd8b21ee5ed5ebf0203b420b5e8a05e012))
+
+
+### 📝 Documentation
+
+* **roadmap:** FR4/14/16/17/18 livrés — point de suivi ligue à jour ([687957f](https://github.com/Ryxeuf/fantasy-football-game/commit/687957f32e1ffbde7bbac481b8370714e78c4a09))
+
 ## [1.199.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.198.0...v1.199.0) (2026-06-26)
 
 
