@@ -41,8 +41,15 @@ export type AdjustTreasuryBody = z.infer<typeof adjustTreasurySchema>;
 /**
  * Suppression d'equipe / de joueur par le commissaire. Seul un motif
  * optionnel est accepte dans le corps (la cible est dans l'URL).
+ *
+ * `.default({})` : une requete DELETE sans corps laisse `req.body`
+ * `undefined`. Sans default, `z.object` rejette ("expected object,
+ * received undefined") et la suppression echoue cote UI. Le default
+ * normalise l'absence de corps en objet vide.
  */
-export const commissionerRemovalSchema = z.object({
-  reason: z.string().max(500).optional(),
-});
+export const commissionerRemovalSchema = z
+  .object({
+    reason: z.string().max(500).optional(),
+  })
+  .default({});
 export type CommissionerRemovalBody = z.infer<typeof commissionerRemovalSchema>;

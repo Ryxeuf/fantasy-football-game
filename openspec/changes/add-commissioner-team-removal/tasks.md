@@ -50,3 +50,16 @@
 - [x] 5.4 `pnpm --filter web typecheck` vert.
 - [ ] 5.5 `pnpm --filter server typecheck` — à valider en CI (client Prisma
       non générable hors-ligne dans le sandbox).
+
+## 6. Correctif + retrait de coach (suivi post-merge #930)
+- [x] 6.1 Bug : `DELETE` sans corps faisait échouer `validate` ("expected
+      object, received undefined"). `commissionerRemovalSchema` → `.default({})`
+      pour normaliser l'absence de corps. Test de régression schéma.
+- [x] 6.2 `removeCoachFromSeason` : supprime toutes les équipes du coach sur la
+      saison (mêmes gardes) + annule ses invitations en attente (best-effort) +
+      audit `remove_coach`. Code d'erreur `coach_not_in_league` (404).
+- [x] 6.3 Route `DELETE /leagues/:leagueId/seasons/:seasonId/coaches/:coachUserId`
+      + handler + mapping d'erreur.
+- [x] 6.4 UI : bouton « Retirer le coach » (confirmation inline) dans
+      `SeasonParticipants`, gated pré-saison.
+- [x] 6.5 Tests : service (6 cas coach) + schéma (4) + UI (2 cas coach).

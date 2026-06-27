@@ -63,3 +63,17 @@ Prisma.
   `SeasonParticipants.test.tsx` (5).
 - **Données** : aucune migration. Hard delete d'un participant non engagé et
   d'un joueur pré-saison — pas d'historique impacté.
+
+## Addendum (suivi #930)
+
+- **Correctif** : la suppression d'équipe échouait côté UI avec « Invalid input:
+  expected object, received undefined » car la requête `DELETE` n'envoie pas de
+  corps et `req.body` valait `undefined`. `commissionerRemovalSchema` reçoit
+  `.default({})` pour normaliser l'absence de corps.
+- **Retrait d'un coach** : nouvelle action commissaire
+  `removeCoachFromSeason(leagueId, seasonId, coachUserId)` — supprime toutes les
+  équipes du coach sur la saison (mêmes gardes pré-saison + aucun match joué) et
+  annule ses invitations en attente sur la ligue. Exposée via
+  `DELETE /leagues/:leagueId/seasons/:seasonId/coaches/:coachUserId` et un bouton
+  « Retirer le coach » dans la liste des participants. Portée volontairement
+  limitée à la **saison affichée** (extensible à toute la ligue si besoin).

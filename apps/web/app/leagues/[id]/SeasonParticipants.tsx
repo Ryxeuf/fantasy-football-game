@@ -31,16 +31,23 @@ export function SeasonParticipants({
   onChanged,
 }: SeasonParticipantsProps) {
   const { t } = useLanguage();
-  const [editing, setEditing] = useState<{ teamId: string; name: string } | null>(
-    null,
-  );
+  const [editing, setEditing] = useState<{
+    teamId: string;
+    name: string;
+  } | null>(null);
   // Suppression d'équipe : id en attente de confirmation + erreur éventuelle.
   const [confirmingTeamId, setConfirmingTeamId] = useState<string | null>(null);
   const [removingTeamId, setRemovingTeamId] = useState<string | null>(null);
+  // Retrait de coach : id du coach en attente de confirmation / en cours.
+  const [confirmingCoachId, setConfirmingCoachId] = useState<string | null>(
+    null,
+  );
+  const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
 
-  // La suppression d'équipe n'est proposée qu'avant le démarrage de la saison
-  // (draft / scheduled). Une fois la saison lancée, on passe par le forfait.
+  // La suppression d'équipe / le retrait de coach ne sont proposés qu'avant le
+  // démarrage de la saison (draft / scheduled). Une fois la saison lancée, on
+  // passe par le forfait.
   const canRemoveTeams =
     !!commissionerLeagueId &&
     !!seasonId &&
@@ -61,6 +68,26 @@ export function SeasonParticipants({
       setRemoveError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setRemovingTeamId(null);
+    }
+  }
+
+  // Retire un coach de la saison : supprime son/ses équipe(s) inscrites et
+  // annule ses invitations en attente (côté serveur).
+  async function handleRemoveCoach(coachUserId: string) {
+    if (!commissionerLeagueId || !seasonId) return;
+    setRemovingCoachId(coachUserId);
+    setRemoveError(null);
+    try {
+      await apiRequest(
+        `/leagues/${commissionerLeagueId}/seasons/${seasonId}/coaches/${coachUserId}`,
+        { method: "DELETE" },
+      );
+      setConfirmingCoachId(null);
+      onChanged?.();
+    } catch (e: unknown) {
+      setRemoveError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setRemovingCoachId(null);
     }
   }
 
@@ -104,9 +131,7 @@ export function SeasonParticipants({
               </div>
               <div className="text-xs text-gray-600 mt-0.5">
                 {p.team.roster}
-                {p.team.owner.coachName
-                  ? ` • ${p.team.owner.coachName}`
-                  : ""}
+                {p.team.owner.coachName ? ` • ${p.team.owner.coachName}` : ""}
               </div>
               {p.poolId && poolNamesById[p.poolId] ? (
                 <span className="inline-block mt-1 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
@@ -175,6 +200,44 @@ export function SeasonParticipants({
                         className="text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50"
                       >
                         🗑 Supprimer
+                      </button>
+                    )
+                  ) : null}
+                  {/* Retrait du coach (son équipe + ses invitations en attente). */}
+                  {canRemoveTeams && !isWithdrawn ? (
+                    confirmingCoachId === p.team.owner.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          data-testid={`confirm-remove-coach-${p.team.owner.id}`}
+                          disabled={removingCoachId === p.team.owner.id}
+                          onClick={() => handleRemoveCoach(p.team.owner.id)}
+                          className="text-xs px-2 py-1 rounded bg-red-700 text-white hover:bg-red-800 disabled:opacity-50"
+                        >
+                          {removingCoachId === p.team.owner.id
+                            ? "Retrait…"
+                            : "Confirmer le retrait du coach"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={removingCoachId === p.team.owner.id}
+                          onClick={() => setConfirmingCoachId(null)}
+                          className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          Annuler
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        data-testid={`remove-coach-${p.team.owner.id}`}
+                        onClick={() => {
+                          setRemoveError(null);
+                          setConfirmingCoachId(p.team.owner.id);
+                        }}
+                        className="text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        🚫 Retirer le coach
                       </button>
                     )
                   ) : null}

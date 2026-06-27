@@ -29,7 +29,9 @@ function participant(
   };
 }
 
-function renderParticipants(props: Partial<Parameters<typeof SeasonParticipants>[0]> = {}) {
+function renderParticipants(
+  props: Partial<Parameters<typeof SeasonParticipants>[0]> = {},
+) {
   const onChanged = vi.fn();
   render(
     <LanguageProvider>
@@ -107,9 +109,42 @@ describe("SeasonParticipants — suppression d'équipe (commissaire)", () => {
     fireEvent.click(screen.getByTestId("confirm-remove-team-p1-team"));
 
     await waitFor(() =>
-      expect(screen.getByTestId("participant-remove-error").textContent).toContain(
-        "déjà participé",
-      ),
+      expect(
+        screen.getByTestId("participant-remove-error").textContent,
+      ).toContain("déjà participé"),
     );
+  });
+
+  it("retire un coach via l'API DELETE coaches/:coachUserId", async () => {
+    apiRequestMock.mockResolvedValue({
+      removed: true,
+      coachUserId: "p1-owner",
+      removedTeamIds: ["p1-team"],
+      cancelledInvitations: 0,
+    });
+    const { onChanged } = renderParticipants({
+      commissionerLeagueId: "L1",
+      seasonId: "S1",
+      seasonStatus: "draft",
+    });
+
+    fireEvent.click(screen.getByTestId("remove-coach-p1-owner"));
+    fireEvent.click(screen.getByTestId("confirm-remove-coach-p1-owner"));
+
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    expect(apiRequestMock).toHaveBeenCalledWith(
+      "/leagues/L1/seasons/S1/coaches/p1-owner",
+      { method: "DELETE" },
+    );
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+  });
+
+  it("masque le retrait de coach une fois la saison démarrée", () => {
+    renderParticipants({
+      commissionerLeagueId: "L1",
+      seasonId: "S1",
+      seasonStatus: "in_progress",
+    });
+    expect(screen.queryByTestId("remove-coach-p1-owner")).toBeNull();
   });
 });

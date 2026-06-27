@@ -95,6 +95,7 @@ import {
 import {
   removeTeamFromLeague,
   removePlayerFromTeam,
+  removeCoachFromSeason,
   CommissionerRemovalError,
 } from "../services/commissioner-team-removal";
 import {
@@ -144,10 +145,7 @@ import {
   type PostMatchBody,
   type InvalidateSheetBody,
 } from "../schemas/league-match-sheet.schemas";
-import {
-  playMecene,
-  LeaguePatronError,
-} from "../services/league-patron";
+import { playMecene, LeaguePatronError } from "../services/league-patron";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -175,7 +173,10 @@ import {
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 
-function requireUserId(req: AuthenticatedRequest, res: Response): string | null {
+function requireUserId(
+  req: AuthenticatedRequest,
+  res: Response,
+): string | null {
   const id = req.user?.id;
   if (!id) {
     sendError(res, "Non authentifie", 401);
@@ -266,8 +267,7 @@ function domainError(res: Response, e: unknown): void {
   // Lot I — commissioner team edit errors.
   if (e instanceof CommissionerEditError) {
     const status =
-      e.code === "team_not_found" ||
-      e.code === "player_not_found"
+      e.code === "team_not_found" || e.code === "player_not_found"
         ? 404
         : e.code === "team_not_in_league" ||
             e.code === "player_not_in_team" ||
@@ -284,6 +284,7 @@ function domainError(res: Response, e: unknown): void {
       e.code === "season_not_found" ||
       e.code === "team_not_found" ||
       e.code === "team_not_in_league" ||
+      e.code === "coach_not_in_league" ||
       e.code === "player_not_found"
         ? 404
         : e.code === "season_started" ||
@@ -508,11 +509,7 @@ export async function handleCreateSeason(
     return;
   }
   if ((league as { creatorId: string }).creatorId !== userId) {
-    sendError(
-      res,
-      "Seul le createur de la ligue peut creer une saison",
-      403,
-    );
+    sendError(res, "Seul le createur de la ligue peut creer une saison", 403);
     return;
   }
   const body: CreateSeasonBody = req.body;
@@ -557,11 +554,7 @@ export async function handleJoinSeason(
     return;
   }
   if ((team as { ownerId: string }).ownerId !== userId) {
-    sendError(
-      res,
-      "Vous ne pouvez inscrire que vos propres equipes",
-      403,
-    );
+    sendError(res, "Vous ne pouvez inscrire que vos propres equipes", 403);
     return;
   }
 
@@ -590,16 +583,15 @@ export async function handleLeaveSeason(
     return;
   }
   if ((team as { ownerId: string }).ownerId !== userId) {
-    sendError(
-      res,
-      "Vous ne pouvez retirer que vos propres equipes",
-      403,
-    );
+    sendError(res, "Vous ne pouvez retirer que vos propres equipes", 403);
     return;
   }
 
   try {
-    const updated = await withdrawParticipant({ seasonId, teamId: body.teamId });
+    const updated = await withdrawParticipant({
+      seasonId,
+      teamId: body.teamId,
+    });
     sendSuccess(res, updated);
   } catch (e: unknown) {
     domainError(res, e);
@@ -620,7 +612,9 @@ export async function handleCreateRound(
     sendError(res, "Saison introuvable", 404);
     return;
   }
-  if ((season as { league: { creatorId: string } }).league.creatorId !== userId) {
+  if (
+    (season as { league: { creatorId: string } }).league.creatorId !== userId
+  ) {
     sendError(res, "Seul le createur de la ligue peut planifier", 403);
     return;
   }
@@ -889,7 +883,11 @@ async function ensureLeagueCreator(
     if (msg === "season-not-found") {
       sendError(res, "Saison introuvable", 404);
     } else if (msg === "forbidden") {
-      sendError(res, "Seul le createur de la ligue peut faire cette action", 403);
+      sendError(
+        res,
+        "Seul le createur de la ligue peut faire cette action",
+        403,
+      );
     } else {
       domainError(res, e);
     }
@@ -1373,6 +1371,30 @@ export async function handleRemoveTeamFromLeague(
   }
 }
 
+/** DELETE /leagues/:leagueId/seasons/:seasonId/coaches/:coachUserId (commissaire). */
+export async function handleRemoveCoachFromSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, seasonId, coachUserId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: CommissionerRemovalBody = req.body;
+  try {
+    const out = await removeCoachFromSeason({
+      leagueId,
+      seasonId,
+      coachUserId,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** DELETE /leagues/:leagueId/teams/:teamId/players/:playerId (commissaire). */
 export async function handleRemovePlayerFromTeam(
   req: AuthenticatedRequest,
@@ -1419,8 +1441,8 @@ export async function handleGetAuditLog(
     // entries "commissioner-edit:*", on filtre par newValue.leagueId.
     const filtered = entries.filter(
       (e) =>
-        ((e as { newValue?: { leagueId?: string } }).newValue?.leagueId ?? "") ===
-        leagueId,
+        ((e as { newValue?: { leagueId?: string } }).newValue?.leagueId ??
+          "") === leagueId,
     );
     sendSuccess(res, { entries: filtered });
   } catch (e: unknown) {
@@ -1672,8 +1694,7 @@ export async function handleGetLeaderboards(
 ): Promise<void> {
   const seasonId = req.params.seasonId;
   const topNRaw = req.query.topN;
-  const topN =
-    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
   const teamId =
     typeof req.query.teamId === "string" ? req.query.teamId : undefined;
   try {
@@ -1701,8 +1722,7 @@ export async function handleGetLeaderboardsByTeam(
 ): Promise<void> {
   const seasonId = req.params.seasonId;
   const topNRaw = req.query.topN;
-  const topN =
-    typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
   try {
     const teams = await computeLeaderboardsByTeam({
       seasonId,
@@ -2183,7 +2203,12 @@ router.patch(
   validate(updateLeagueSchema),
   handleUpdateLeague,
 );
-router.get("/", authUser, validateQuery(listLeaguesQuerySchema), handleListLeagues);
+router.get(
+  "/",
+  authUser,
+  validateQuery(listLeaguesQuerySchema),
+  handleListLeagues,
+);
 // S26.6b — catalogue public des themes (pas d'auth : contenu de jeu
 // statique, utilise par l'UI calendrier et le sitemap SEO).
 router.get("/themes", handleListThemes);
@@ -2233,11 +2258,7 @@ router.post(
   validate(createManualPairingSchema),
   handleCreateManualPairing,
 );
-router.delete(
-  "/pairings/:pairingId",
-  authUser,
-  handleDeleteManualPairing,
-);
+router.delete("/pairings/:pairingId", authUser, handleDeleteManualPairing);
 router.patch(
   "/pairings/:pairingId",
   authUser,
@@ -2283,16 +2304,8 @@ router.patch(
 );
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
-router.get(
-  "/pairings/:pairingId/sheet",
-  authUser,
-  handleGetMatchSheet,
-);
-router.post(
-  "/pairings/:pairingId/sheet",
-  authUser,
-  handleCreateMatchSheet,
-);
+router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
+router.post("/pairings/:pairingId/sheet", authUser, handleCreateMatchSheet);
 router.patch(
   "/pairings/:pairingId/sheet/pre-match",
   authUser,
@@ -2347,29 +2360,18 @@ router.post(
   handleInvalidateMatchSheet,
 );
 // Lot H — liste des matchs a valider pour le commissaire (cloche).
-router.get(
-  "/me/pending-validations",
-  authUser,
-  handleListPendingValidations,
-);
+router.get("/me/pending-validations", authUser, handleListPendingValidations);
 
 // Lot J — classements top-N joueurs (public). Decline aussi par
 // equipe via /by-team pour le mode "top 3 par equipe".
-router.get(
-  "/seasons/:seasonId/leaderboards",
-  handleGetLeaderboards,
-);
+router.get("/seasons/:seasonId/leaderboards", handleGetLeaderboards);
 router.get(
   "/seasons/:seasonId/leaderboards/by-team",
   handleGetLeaderboardsByTeam,
 );
 
 // Lot I — edition ex-post des equipes par le commissaire.
-router.get(
-  "/:leagueId/teams/:teamId/roster",
-  authUser,
-  handleGetTeamForEdit,
-);
+router.get("/:leagueId/teams/:teamId/roster", authUser, handleGetTeamForEdit);
 router.post(
   "/:leagueId/teams/:teamId/players/:playerId/spp",
   authUser,
@@ -2409,16 +2411,18 @@ router.delete(
   handleRemoveTeamFromLeague,
 );
 router.delete(
+  "/:leagueId/seasons/:seasonId/coaches/:coachUserId",
+  authUser,
+  validate(commissionerRemovalSchema),
+  handleRemoveCoachFromSeason,
+);
+router.delete(
   "/:leagueId/teams/:teamId/players/:playerId",
   authUser,
   validate(commissionerRemovalSchema),
   handleRemovePlayerFromTeam,
 );
-router.get(
-  "/:leagueId/audit-log",
-  authUser,
-  handleGetAuditLog,
-);
+router.get("/:leagueId/audit-log", authUser, handleGetAuditLog);
 // L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
 // regeneration calendrier, cloture forcee). Reservees au createur.
 router.post("/seasons/:seasonId/open", authUser, handleOpenSeason);
@@ -2470,33 +2474,18 @@ router.put(
 );
 // Rosters des 2 equipes d'un pairing (createur only) pour la saisie de
 // stats par joueur.
-router.get(
-  "/pairings/:pairingId/rosters",
-  authUser,
-  handleGetPairingRosters,
-);
+router.get("/pairings/:pairingId/rosters", authUser, handleGetPairingRosters);
 // W-B4 — saisie brute d'un resultat offline existant (createur only) pour
 // pre-remplir la modale d'edition.
-router.get(
-  "/pairings/:pairingId/result",
-  authUser,
-  handleGetOfflineResult,
-);
+router.get("/pairings/:pairingId/result", authUser, handleGetOfflineResult);
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // L2.C.1 — recap public de fin de saison : champion + awards.
 // Pas d'auth : la page recap doit etre indexable / partageable.
 router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
 // L2.C.3 — bracket playoffs (public, indexable).
-router.get(
-  "/seasons/:seasonId/playoff-bracket",
-  handleGetPlayoffBracket,
-);
+router.get("/seasons/:seasonId/playoff-bracket", handleGetPlayoffBracket);
 // L2.C.3 — demarrage manuel des playoffs (createur de la ligue).
-router.post(
-  "/seasons/:seasonId/playoff/start",
-  authUser,
-  handleStartPlayoffs,
-);
+router.post("/seasons/:seasonId/playoff/start", authUser, handleStartPlayoffs);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
 
 // L2.B.5 — Coup de mecene par equipe et par saison.
