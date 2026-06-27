@@ -33,6 +33,7 @@ export type CommissionerRemovalErrorCode =
   | "season_not_found"
   | "team_not_found"
   | "team_not_in_league"
+  | "coach_not_in_league"
   | "player_not_found"
   | "player_not_in_team"
   | "season_started"
@@ -75,10 +76,7 @@ export async function hasTeamPlayedInLeague(
     where: {
       status: { in: ENGAGED_PAIRING_STATUSES },
       round: { season: { leagueId } },
-      OR: [
-        { homeParticipant: { teamId } },
-        { awayParticipant: { teamId } },
-      ],
+      OR: [{ homeParticipant: { teamId } }, { awayParticipant: { teamId } }],
     },
     select: { id: true },
   });
@@ -155,6 +153,116 @@ export async function removeTeamFromLeague(input: RemoveTeamInput) {
   return { removed: true as const, teamId: input.teamId };
 }
 
+export interface RemoveCoachInput {
+  leagueId: string;
+  seasonId: string;
+  coachUserId: string;
+  byCommissionerId: string;
+  reason?: string;
+}
+
+/**
+ * Retire un coach d'une saison : supprime toutes ses equipes inscrites
+ * sur cette saison (memes gardes que `removeTeamFromLeague` —
+ * pre-demarrage + aucun match joue) et annule ses invitations en
+ * attente sur la ligue (scope saison ou ligue-wide). Atomique sur les
+ * participants ; l'annulation des invitations est best-effort.
+ *
+ * Un coach est rattache a la ligue uniquement via ses equipes
+ * (`Team.ownerId`) ; il n'existe pas de table d'adhesion dediee.
+ */
+export async function removeCoachFromSeason(input: RemoveCoachInput) {
+  const season = await prisma.leagueSeason.findFirst({
+    where: { id: input.seasonId, leagueId: input.leagueId },
+    select: { id: true, status: true },
+  });
+  if (!season) {
+    throw new CommissionerRemovalError(
+      "season_not_found",
+      "Saison introuvable dans cette ligue",
+    );
+  }
+
+  const participants = await prisma.leagueParticipant.findMany({
+    where: {
+      seasonId: input.seasonId,
+      team: { ownerId: input.coachUserId },
+    },
+    select: { id: true, teamId: true, team: { select: { name: true } } },
+  });
+  if (participants.length === 0) {
+    throw new CommissionerRemovalError(
+      "coach_not_in_league",
+      "Ce coach n'a aucune equipe inscrite sur cette saison",
+    );
+  }
+
+  if (!REMOVABLE_SEASON_STATUSES.has(season.status)) {
+    throw new CommissionerRemovalError(
+      "season_started",
+      "Saison demarree : utilisez la procedure de forfait pour retirer un coach",
+    );
+  }
+
+  for (const p of participants) {
+    if (await hasTeamPlayedInLeague(input.leagueId, p.teamId)) {
+      throw new CommissionerRemovalError(
+        "team_has_played",
+        `Impossible de retirer le coach : l'equipe « ${
+          p.team?.name ?? p.teamId
+        } » a deja participe a un match`,
+      );
+    }
+  }
+
+  await prisma.leagueParticipant.deleteMany({
+    where: { id: { in: participants.map((p) => p.id) } },
+  });
+
+  // Annulation best-effort des invitations en attente du coach sur la
+  // ligue (ciblant cette saison ou ligue-wide) pour que le retrait soit
+  // complet (le coach ne reapparait pas via une invitation pendante).
+  let cancelledInvitations = 0;
+  try {
+    const res = await prisma.leagueInvitation.updateMany({
+      where: {
+        leagueId: input.leagueId,
+        inviteeUserId: input.coachUserId,
+        status: "pending",
+        OR: [{ seasonId: input.seasonId }, { seasonId: null }],
+      },
+      data: { status: "cancelled", cancelledAt: new Date() },
+    });
+    cancelledInvitations = res.count;
+  } catch {
+    // L'echec de l'annulation des invitations ne doit pas faire echouer
+    // le retrait des equipes (deja committe).
+  }
+
+  for (const p of participants) {
+    await appendAudit({
+      leagueId: input.leagueId,
+      byCommissionerId: input.byCommissionerId,
+      teamId: p.teamId,
+      action: "remove_coach",
+      beforeState: {
+        seasonId: input.seasonId,
+        coachUserId: input.coachUserId,
+        teamName: p.team?.name ?? null,
+      },
+      afterState: null,
+      reason: input.reason ?? null,
+    });
+  }
+
+  return {
+    removed: true as const,
+    coachUserId: input.coachUserId,
+    removedTeamIds: participants.map((p) => p.teamId),
+    cancelledInvitations,
+  };
+}
+
 export interface RemovePlayerInput {
   leagueId: string;
   teamId: string;
@@ -188,7 +296,13 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
 
   const player = (await prisma.teamPlayer.findUnique({
     where: { id: input.playerId },
-    select: { id: true, teamId: true, name: true, position: true, number: true },
+    select: {
+      id: true,
+      teamId: true,
+      name: true,
+      position: true,
+      number: true,
+    },
   })) as {
     id: string;
     teamId: string;

@@ -134,3 +134,26 @@ gardées par `authUser` + `ensureLeagueCommissioner` + `validate`.
 - **UI** (`SeasonParticipants.test.tsx`) : bouton absent hors commissaire,
   présent en `scheduled`, masqué en `in_progress`, flux confirmation → `DELETE`
   + `onChanged`, affichage de l'erreur API.
+
+## Addendum (suivi #930) — correctif body + retrait de coach
+
+### Le bug : `validate` rejette un `DELETE` sans corps
+
+`validate(schema)` fait `schema.safeParse(req.body)`. Une requête `DELETE` sans
+corps laisse `req.body === undefined` ; `z.object({...})` rejette alors avec
+« expected object, received undefined », que l'UI affiche tel quel. Le fix le
+plus robuste (indépendant du client) est `z.object({...}).default({})` :
+l'absence de corps est normalisée en `{}`, et un motif fourni reste validé.
+Alternative écartée : faire envoyer `{}` par le front — corrige le symptôme mais
+pas la robustesse de l'API.
+
+### Retrait de coach : pas de table d'adhésion, donc on agit sur les équipes
+
+Un coach n'a pas d'enregistrement d'adhésion : il est lié à la ligue uniquement
+via `Team.ownerId` (et d'éventuelles `LeagueInvitation`). « Retirer un coach »
+se traduit donc en : supprimer ses `LeagueParticipant` sur la saison (réutilise
+les gardes de `removeTeamFromLeague`) + annuler ses invitations en attente. Les
+suppressions de participants sont groupées (`deleteMany`) ; l'annulation des
+invitations est **best-effort** (un échec ne doit pas annuler le retrait déjà
+committé). Portée = saison affichée (mirroir de l'UI). Le code d'erreur
+`coach_not_in_league` (404) couvre le coach sans équipe sur la saison.

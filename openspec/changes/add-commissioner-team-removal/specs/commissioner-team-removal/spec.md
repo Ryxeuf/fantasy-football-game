@@ -87,3 +87,38 @@ saison de la ligue, un pairing la concernant dont le statut est `in_progress`,
 - WHEN une équipe a un pairing `forfeit_home` ou `forfeit_away` dans la ligue
 - THEN elle est réputée avoir participé à un match
 - AND sa suppression DOIT être refusée
+
+### Requirement: Retrait d'un coach d'une saison
+Le commissaire DOIT pouvoir retirer un coach d'une saison : l'opération supprime
+toutes les équipes de ce coach inscrites sur la saison (mêmes gardes que la
+suppression d'équipe — `draft`/`scheduled` et aucun match joué) et annule ses
+invitations en attente sur la ligue (ciblant cette saison ou ligue-wide). Un
+coach est rattaché à la ligue uniquement via ses équipes (`Team.ownerId`) ; il
+n'existe pas de table d'adhésion dédiée. Le retrait DOIT être journalisé (une
+entrée par équipe retirée).
+
+#### Scenario: Retrait avant le démarrage
+- WHEN le commissaire retire un coach d'une saison `draft`/`scheduled` et
+  qu'aucune de ses équipes n'a participé à un match
+- THEN toutes les équipes de ce coach sur la saison DOIVENT être supprimées
+- AND ses invitations en attente sur la ligue DOIVENT être annulées
+- AND le retrait DOIT être journalisé
+
+#### Scenario: Coach sans équipe sur la saison
+- WHEN le commissaire vise un coach n'ayant aucune équipe inscrite sur la saison
+- THEN l'opération DOIT être refusée (`coach_not_in_league`, HTTP 404)
+
+#### Scenario: Une équipe du coach a déjà joué
+- WHEN au moins une équipe du coach a participé à un match dans la ligue
+- THEN le retrait DOIT être refusé (`team_has_played`, HTTP 409)
+- AND aucune équipe NE DOIT être supprimée
+
+### Requirement: Tolérance d'un corps de requête absent
+Les routes de suppression/retrait acceptent un motif optionnel dans le corps. Un
+appel `DELETE` sans corps (cas par défaut de l'UI) NE DOIT PAS échouer à la
+validation : l'absence de corps DOIT être normalisée en objet vide.
+
+#### Scenario: DELETE sans corps
+- WHEN une requête `DELETE` de suppression est émise sans corps
+- THEN la validation DOIT réussir (motif considéré absent)
+- AND l'action DOIT s'exécuter normalement

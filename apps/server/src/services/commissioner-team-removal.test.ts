@@ -10,10 +10,13 @@ vi.mock("../prisma", () => ({
     leagueSeason: { findFirst: vi.fn() },
     leagueParticipant: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       count: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
     leaguePairing: { findFirst: vi.fn() },
+    leagueInvitation: { updateMany: vi.fn() },
     teamPlayer: { findUnique: vi.fn(), delete: vi.fn() },
     auditLog: { create: vi.fn() },
   },
@@ -23,6 +26,7 @@ import { prisma } from "../prisma";
 import {
   removeTeamFromLeague,
   removePlayerFromTeam,
+  removeCoachFromSeason,
   hasTeamPlayedInLeague,
   CommissionerRemovalError,
 } from "./commissioner-team-removal";
@@ -38,6 +42,7 @@ describe("commissioner-team-removal", () => {
     mockPrisma.auditLog.create.mockResolvedValue({});
     // Par defaut, aucune participation a un match.
     mockPrisma.leaguePairing.findFirst.mockResolvedValue(null);
+    mockPrisma.leagueInvitation.updateMany.mockResolvedValue({ count: 0 });
   });
 
   describe("hasTeamPlayedInLeague", () => {
@@ -261,6 +266,129 @@ describe("commissioner-team-removal", () => {
           }),
         }),
       );
+    });
+  });
+
+  describe("removeCoachFromSeason", () => {
+    const base = {
+      leagueId: "L1",
+      seasonId: "S1",
+      coachUserId: "COACH1",
+      byCommissionerId: commish,
+    };
+
+    it("rejette si la saison est introuvable dans la ligue", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+      await expect(removeCoachFromSeason(base)).rejects.toMatchObject({
+        code: "season_not_found",
+      });
+    });
+
+    it("rejette si le coach n'a aucune equipe sur la saison", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue({
+        id: "S1",
+        status: "draft",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([]);
+      await expect(removeCoachFromSeason(base)).rejects.toMatchObject({
+        code: "coach_not_in_league",
+      });
+      expect(mockPrisma.leagueParticipant.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("rejette si la saison a demarre", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue({
+        id: "S1",
+        status: "in_progress",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "PART1", teamId: "T1", team: { name: "Skavens" } },
+      ]);
+      await expect(removeCoachFromSeason(base)).rejects.toMatchObject({
+        code: "season_started",
+      });
+      expect(mockPrisma.leagueParticipant.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("rejette si une equipe du coach a deja participe a un match", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue({
+        id: "S1",
+        status: "scheduled",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "PART1", teamId: "T1", team: { name: "Skavens" } },
+      ]);
+      mockPrisma.leaguePairing.findFirst.mockResolvedValue({ id: "PR1" });
+      await expect(removeCoachFromSeason(base)).rejects.toMatchObject({
+        code: "team_has_played",
+      });
+      expect(mockPrisma.leagueParticipant.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("supprime les equipes du coach, annule ses invitations et journalise", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue({
+        id: "S1",
+        status: "draft",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "PART1", teamId: "T1", team: { name: "Skavens" } },
+        { id: "PART2", teamId: "T2", team: { name: "Gobs" } },
+      ]);
+      mockPrisma.leagueParticipant.deleteMany.mockResolvedValue({ count: 2 });
+      mockPrisma.leagueInvitation.updateMany.mockResolvedValue({ count: 1 });
+
+      const out = await removeCoachFromSeason({
+        ...base,
+        reason: "desistement",
+      });
+
+      expect(out).toEqual({
+        removed: true,
+        coachUserId: "COACH1",
+        removedTeamIds: ["T1", "T2"],
+        cancelledInvitations: 1,
+      });
+      expect(mockPrisma.leagueParticipant.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ["PART1", "PART2"] } },
+      });
+      expect(mockPrisma.leagueInvitation.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            leagueId: "L1",
+            inviteeUserId: "COACH1",
+            status: "pending",
+          }),
+          data: expect.objectContaining({ status: "cancelled" }),
+        }),
+      );
+      // Un audit par equipe retiree.
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: "league.commissioner-edit:remove_coach",
+          }),
+        }),
+      );
+    });
+
+    it("reste fonctionnel si l'annulation des invitations echoue", async () => {
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue({
+        id: "S1",
+        status: "scheduled",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "PART1", teamId: "T1", team: { name: "Skavens" } },
+      ]);
+      mockPrisma.leagueParticipant.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.leagueInvitation.updateMany.mockRejectedValue(
+        new Error("no invitation table"),
+      );
+
+      const out = await removeCoachFromSeason(base);
+      expect(out.removed).toBe(true);
+      expect(out.cancelledInvitations).toBe(0);
+      expect(mockPrisma.leagueParticipant.deleteMany).toHaveBeenCalled();
     });
   });
 
