@@ -1140,7 +1140,10 @@ export interface MatchSheetPlayer {
   readonly id: string;
   readonly number: number;
   readonly name: string;
+  /** Slug technique de la position (ex: "gnome_belluaire_gnome"). */
   readonly position: string;
+  /** Nom d'affichage lisible de la position (ex: "Belluaire Gnome"). */
+  readonly positionName: string;
   readonly dead: boolean;
   readonly missNextMatch: boolean;
   /** SPP courant + level brut (pour surfacer les level-up en attente). */
@@ -1168,6 +1171,26 @@ export interface MatchSheetTeam {
 function raceNameForRoster(roster: string): string {
   const def = (TEAM_ROSTERS as Record<string, { name?: string }>)[roster];
   return def?.name ?? roster;
+}
+
+/**
+ * Map slug de position -> nom d'affichage pour un roster donne (ex:
+ * "gnome_belluaire_gnome" -> "Belluaire Gnome"). Permet d'afficher des
+ * libelles lisibles dans les pickers de l'UI plutot que le slug technique.
+ * Fallback : le slug lui-meme si le roster/position est introuvable.
+ */
+function positionNamesForRoster(roster: string): Map<string, string> {
+  const def = (
+    TEAM_ROSTERS as Record<
+      string,
+      { positions?: ReadonlyArray<{ slug: string; displayName: string }> }
+    >
+  )[roster];
+  const map = new Map<string, string>();
+  for (const p of def?.positions ?? []) {
+    map.set(p.slug, p.displayName);
+  }
+  return map;
 }
 
 /**
@@ -1231,7 +1254,7 @@ async function loadSheetTeams(
     currentValue?: number | null;
     treasury?: number | null;
     owner?: { coachName?: string | null } | null;
-    players: MatchSheetPlayer[];
+    players: Array<Omit<MatchSheetPlayer, "positionName">>;
   }>;
 
   const byId = new Map(teams.map((t) => [t.id, t]));
@@ -1239,6 +1262,7 @@ async function loadSheetTeams(
     if (!teamId) return null;
     const t = byId.get(teamId);
     if (!t) return null;
+    const positionNames = positionNamesForRoster(t.roster);
     return {
       teamId: t.id,
       name: t.name,
@@ -1248,7 +1272,10 @@ async function loadSheetTeams(
       teamValue: t.teamValue ?? 0,
       currentValue: t.currentValue ?? 0,
       treasury: t.treasury ?? 0,
-      players: t.players,
+      players: t.players.map((p) => ({
+        ...p,
+        positionName: positionNames.get(p.position) ?? p.position,
+      })),
     };
   };
   return {
