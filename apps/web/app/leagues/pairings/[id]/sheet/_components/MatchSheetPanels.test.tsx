@@ -213,3 +213,108 @@ describe("PreMatchPanel — budget coups de pouce", () => {
     ).toBe(true);
   });
 });
+
+describe("PreMatchPanel — forfait par équipe", () => {
+  it("coche le forfait d'une équipe, exclut l'autre, et l'enregistre", () => {
+    const onSave = vi.fn();
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={onSave}
+        reference={REFERENCE}
+      />,
+    );
+
+    const home = screen.getByTestId("forfeit-home") as HTMLInputElement;
+    const away = screen.getByTestId("forfeit-away") as HTMLInputElement;
+    expect(home.checked).toBe(false);
+    expect(away.checked).toBe(false);
+
+    // Cocher domicile.
+    fireEvent.click(home);
+    expect(home.checked).toBe(true);
+    expect(away.checked).toBe(false);
+
+    // Cocher extérieur : exclusion mutuelle (un seul forfeitSide).
+    fireEvent.click(away);
+    expect(home.checked).toBe(false);
+    expect(away.checked).toBe(true);
+
+    fireEvent.click(screen.getByTestId("save-pre-match"));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ forfeitSide: "away" }),
+    );
+  });
+});
+
+describe("PostMatchPanel — achats (positions lisibles + champ Nom contextuel)", () => {
+  const teamWithPlayer: SheetTeam = {
+    ...TEAM,
+    players: [
+      {
+        id: "p1",
+        number: 1,
+        name: "Belluaire 1",
+        position: "gnome_belluaire_gnome",
+        positionName: "Belluaire Gnome",
+        dead: false,
+        missNextMatch: false,
+        spp: 0,
+      },
+    ],
+  };
+
+  it("affiche le nom lisible de la position (pas le slug) dans le poste d'achat joueur", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "player", name: "", cost: 0 }],
+        }}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const block = screen.getByTestId("purchases-home");
+    expect(within(block).getByText("Belluaire Gnome")).toBeTruthy();
+    expect(within(block).queryByText("gnome_belluaire_gnome")).toBeNull();
+  });
+
+  it("masque le champ Nom pour une relance", () => {
+    const { unmount } = render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "reroll", name: "", cost: 0 }],
+        }}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const block = screen.getByTestId("purchases-home");
+    expect(
+      within(block).queryByPlaceholderText(/Nom du joueur|Libellé/),
+    ).toBeNull();
+    unmount();
+  });
+
+  it("affiche le champ Nom (libellé) pour une dépense diverse", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "other", name: "", cost: 0 }],
+        }}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const block = screen.getByTestId("purchases-home");
+    expect(within(block).getByPlaceholderText(/Libellé/)).toBeTruthy();
+  });
+});

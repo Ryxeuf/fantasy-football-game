@@ -23,10 +23,18 @@ export interface SheetPlayer {
   id: string;
   number: number;
   name: string;
+  /** Slug technique de la position (ex: "gnome_belluaire_gnome"). */
   position: string;
+  /** Nom d'affichage lisible (ex: "Belluaire Gnome"). Fallback : slug. */
+  positionName?: string;
   dead: boolean;
   missNextMatch: boolean;
   spp: number;
+}
+
+/** Nom de position lisible d'un joueur (fallback : slug technique). */
+function playerPositionName(p: SheetPlayer): string {
+  return p.positionName ?? p.position;
 }
 
 export interface SheetTeam {
@@ -144,7 +152,7 @@ export function TeamValueStrip({
 
 function playerLabel(p: SheetPlayer): string {
   const flags = p.dead ? " ☠" : p.missNextMatch ? " (blessé)" : "";
-  return `N°${p.number} ${p.name} — ${p.position}${flags}`;
+  return `N°${p.number} ${p.name} — ${playerPositionName(p)}${flags}`;
 }
 
 /** Picker de joueur d'une equipe (dropdown). Valeur = teamPlayerId. */
@@ -501,7 +509,7 @@ export function PreMatchPanel({
         Avant-match
       </h2>
 
-      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block text-xs">
           Table météo
           <select
@@ -548,22 +556,6 @@ export function PreMatchPanel({
             )}
           </select>
         </label>
-        <label className="block text-xs">
-          Déclarer forfait
-          <select
-            value={forfeitSide}
-            onChange={(e) =>
-              setForfeitSide(e.target.value as "home" | "away" | "")
-            }
-            disabled={disabled}
-            data-testid="forfeit-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-          >
-            <option value="">Aucun</option>
-            <option value="home">{homeName} forfait</option>
-            <option value="away">{awayName} forfait</option>
-          </select>
-        </label>
       </div>
 
       {/* Conséquences (informatives) de la météo sélectionnée. */}
@@ -588,6 +580,19 @@ export function PreMatchPanel({
             <div className="text-sm font-semibold text-nuffle-anthracite">
               {c.name}
             </div>
+            <label className="flex items-center gap-2 text-xs font-medium text-red-700">
+              <input
+                type="checkbox"
+                checked={forfeitSide === c.side}
+                onChange={(e) =>
+                  setForfeitSide(e.target.checked ? c.side : "")
+                }
+                disabled={disabled}
+                data-testid={`forfeit-${c.side}`}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              Déclarer forfait
+            </label>
             <label className="block text-xs">
               Facteur de popularité (1D3 + 5)
               <input
@@ -812,8 +817,22 @@ const PURCHASE_KINDS: ReadonlyArray<{
   { value: "player", label: "Joueur" },
   { value: "reroll", label: "Relance" },
   { value: "staff", label: "Staff" },
-  { value: "other", label: "Autre" },
+  { value: "other", label: "Dépense diverse" },
 ];
+
+/**
+ * Le champ « Nom » n'a un sens que pour un joueur recruté (son nom) ou une
+ * dépense diverse (son libellé). Pour une relance il est ignoré par le
+ * serveur, et pour le staff le sous-type vient déjà du select « type… ».
+ */
+function purchaseHasNameField(kind: Purchase["kind"]): boolean {
+  return kind === "player" || kind === "other";
+}
+
+/** Placeholder du champ « Nom » selon le type d'achat. */
+function purchaseNamePlaceholder(kind: Purchase["kind"]): string {
+  return kind === "other" ? "Libellé (ex: ajustement)" : "Nom du joueur";
+}
 
 function CostlyErrorEditor({
   list,
@@ -873,10 +892,22 @@ function CostlyErrorEditor({
   );
 }
 
-/** Positions distinctes deja fieldees par l'equipe (suggestions d'achat joueur). */
-function teamPositions(team: SheetTeam | null): string[] {
+/**
+ * Positions distinctes deja fieldees par l'equipe (suggestions d'achat
+ * joueur), avec leur nom d'affichage lisible. `slug` = valeur technique
+ * envoyee au serveur ; `name` = libelle montre au coach.
+ */
+function teamPositions(
+  team: SheetTeam | null,
+): ReadonlyArray<{ slug: string; name: string }> {
   if (!team) return [];
-  return Array.from(new Set(team.players.map((p) => p.position))).sort();
+  const bySlug = new Map<string, string>();
+  for (const p of team.players) {
+    if (!bySlug.has(p.position)) bySlug.set(p.position, playerPositionName(p));
+  }
+  return Array.from(bySlug, ([slug, name]) => ({ slug, name })).sort((a, b) =>
+    a.name.localeCompare(b.name, "fr"),
+  );
 }
 
 function PurchaseEditor({
@@ -925,9 +956,9 @@ function PurchaseEditor({
               className="rounded border px-1.5 py-1 text-sm"
             >
               <option value="">poste (auto)</option>
-              {positions.map((slug) => (
-                <option key={slug} value={slug}>
-                  {slug}
+              {positions.map((pos) => (
+                <option key={pos.slug} value={pos.slug}>
+                  {pos.name}
                 </option>
               ))}
             </select>
@@ -955,13 +986,17 @@ function PurchaseEditor({
               ))}
             </select>
           )}
-          <input
-            value={it.name}
-            onChange={(e) => update(i, { name: e.target.value })}
-            disabled={disabled}
-            placeholder="Nom"
-            className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
-          />
+          {purchaseHasNameField(it.kind) ? (
+            <input
+              value={it.name}
+              onChange={(e) => update(i, { name: e.target.value })}
+              disabled={disabled}
+              placeholder={purchaseNamePlaceholder(it.kind)}
+              className="min-w-0 flex-1 rounded border px-2 py-1 text-sm"
+            />
+          ) : (
+            <span className="flex-1" />
+          )}
           <input
             type="number"
             min={0}
@@ -1279,6 +1314,10 @@ export function PostMatchPanel({
                 testId={`purchases-${c.side}`}
                 team={c.team}
               />
+              <p className="mt-1 text-[10px] text-slate-500">
+                « Dépense diverse » débite seulement la trésorerie (aucun
+                joueur/relance/staff créé).
+              </p>
             </div>
 
             <div className="text-xs">
