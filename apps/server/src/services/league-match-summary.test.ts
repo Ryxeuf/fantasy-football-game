@@ -223,12 +223,15 @@ describe("Lot G — summarizeMatchSheet", () => {
 });
 
 describe("Lot G — isMatchEventKind / MATCH_EVENT_KINDS", () => {
-  it("exposes 10 kinds", () => {
-    expect(MATCH_EVENT_KINDS).toHaveLength(10);
+  it("exposes 11 kinds", () => {
+    expect(MATCH_EVENT_KINDS).toHaveLength(11);
   });
   it("validates known kinds", () => {
     expect(isMatchEventKind("touchdown")).toBe(true);
     expect(isMatchEventKind("crowd_surge")).toBe(true);
+    // FR18 — La Catapulte : team_throw doit être accepté à la saisie
+    // (régression : présent dans le type/Zod/UI mais absent du whitelist).
+    expect(isMatchEventKind("team_throw")).toBe(true);
     expect(isMatchEventKind("nope")).toBe(false);
     expect(isMatchEventKind(42)).toBe(false);
   });

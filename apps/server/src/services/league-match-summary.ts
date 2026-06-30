@@ -237,6 +237,7 @@ export const MATCH_EVENT_KINDS: ReadonlyArray<MatchEventKind> = [
   "expulsion",
   "crowd_surge",
   "stalling",
+  "team_throw",
   "other_elim",
 ];
 
