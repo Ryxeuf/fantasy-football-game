@@ -1,3 +1,18 @@
+## [1.205.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.204.0...v1.205.0) (2026-06-30)
+
+
+### ✨ Features
+
+* **league:** bouton « Voir le roster » des participants ([4167138](https://github.com/Ryxeuf/fantasy-football-game/commit/41671387df795281beb781864d4965bfaadf4143))
+* **league:** expose le nom lisible des positions sur la feuille de match ([cb48554](https://github.com/Ryxeuf/fantasy-football-game/commit/cb48554efd07da80e17c25788855f2c715e1c404))
+* **league:** refonte UX de la saisie de match (avant + fin) ([a3a2cbe](https://github.com/Ryxeuf/fantasy-football-game/commit/a3a2cbebccd253916e072c72da331b90890bd738))
+* **league:** roster-view lisible par tout coach inscrit ([2bb9896](https://github.com/Ryxeuf/fantasy-football-game/commit/2bb9896b783a884833d3df0d31afa66a3fe832e2))
+
+
+### ♻️ Code Refactoring
+
+* **league:** flag unique "league" — suppression des 7 sous-flags ([4ef30ee](https://github.com/Ryxeuf/fantasy-football-game/commit/4ef30ee55cc811c08247ffe5b9a83517c9585e70))
+
 ## [1.204.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.203.0...v1.204.0) (2026-06-30)
 
 
