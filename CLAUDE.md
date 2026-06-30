@@ -605,8 +605,10 @@ le `.json` (version reformulee), en gardant la MEME structure (chapitres,
   manuelle), G/H (feuille de match v2 : events + summarizer pur +
   validation branchee offline + alerte commissaire), I/J (edition
   ex-post commissaire + classements joueurs), polish (auto-tresorerie,
-  panneaux pre/post-match, fenetre d'invalidation). 5 migrations, 8
-  feature flags `league*`. Voir
+  panneaux pre/post-match, fenetre d'invalidation). 5 migrations. Gating
+  par un flag UNIQUE `league` (les 7 sous-flags `league_*` ont ete
+  fusionnes le 2026-06-30 — voir memoire `nuffle-arena ligue = flag
+  unique`). Voir
   [`docs/roadmap/sessions/2026-06-06-league-management.md`](./docs/roadmap/sessions/2026-06-06-league-management.md)
   + guide rollout
   [`docs/roadmap/league-feature-flags-rollout.md`](./docs/roadmap/league-feature-flags-rollout.md).

@@ -5,10 +5,7 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import {
-  LEAGUE_FLAG,
-  LEAGUE_INVITATIONS_FLAG,
-} from "../../lib/featureFlagKeys";
+import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
@@ -45,7 +42,6 @@ export default function LeagueDetailPage() {
   const params = useParams();
   const leagueId = typeof params.id === "string" ? params.id : "";
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
-  const invitationsEnabled = useFeatureFlag(LEAGUE_INVITATIONS_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -390,18 +386,16 @@ export default function LeagueDetailPage() {
           </h2>
           {leagueEnabled && isCreator ? (
             <div className="flex flex-wrap items-center gap-2">
-              {/* Lot A — invitation d'un coach (commissaire), gatee par le
-                  flag `league_invitations`. */}
-              {invitationsEnabled ? (
-                <button
-                  type="button"
-                  data-testid="open-invite-coach"
-                  onClick={() => setInviteOpen(true)}
-                  className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
-                >
-                  ✉️ {t.leagues.inviteCoachButton}
-                </button>
-              ) : null}
+              {/* Lot A — invitation d'un coach (commissaire). Gatee par le
+                  flag unique `league` via le bloc parent. */}
+              <button
+                type="button"
+                data-testid="open-invite-coach"
+                onClick={() => setInviteOpen(true)}
+                className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
+              >
+                ✉️ {t.leagues.inviteCoachButton}
+              </button>
               {/* Dev only : ajoute une equipe de test inscrite a la saison
                   selectionnee (la route serveur est 404 hors dev). */}
               {season ? (
@@ -421,7 +415,7 @@ export default function LeagueDetailPage() {
             </div>
           ) : null}
         </div>
-        {leagueEnabled && isCreator && invitationsEnabled ? (
+        {leagueEnabled && isCreator ? (
           <SentInvitationsPanel
             leagueId={league.id}
             refreshKey={invitationsRefreshKey}
@@ -733,7 +727,7 @@ export default function LeagueDetailPage() {
         />
       ) : null}
 
-      {leagueEnabled && isCreator && invitationsEnabled ? (
+      {leagueEnabled && isCreator ? (
         <InviteCoachModal
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}

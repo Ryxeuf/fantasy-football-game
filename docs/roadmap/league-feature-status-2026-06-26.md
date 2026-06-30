@@ -9,9 +9,10 @@ Le **backend (services + routes + Prisma) est très complet**. Le point faible
 est l'**UI web** : plusieurs fonctions « indispensables » existent côté serveur
 mais n'ont aucune interface (poules, gestion des PO, édition d'équipe par le
 commissaire). La **feuille de match (FR7→FR16) est le bloc le plus abouti**
-(backend + UI). Tout est **gaté par feature flags** (`league`,
-`league_match_sheet`, `league_leaderboards`, `league_invitations`,
-`league_bonus_points`) → implémenté ≠ activé en prod.
+(backend + UI). Tout est **gaté par un feature flag unique** `league`
+(les anciens sous-flags ont été fusionnés le 2026-06-30, cf.
+[`league-feature-flags-rollout.md`](./league-feature-flags-rollout.md)) →
+implémenté ≠ activé en prod.
 
 ## Tableau de synthèse
 

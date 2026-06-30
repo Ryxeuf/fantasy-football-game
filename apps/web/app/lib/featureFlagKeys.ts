@@ -19,12 +19,6 @@ export const AI_TRAINING_FLAG = "ai_training" as const;
  */
 export const LEAGUE_FLAG = "league" as const;
 /**
- * Sous-flags de la brique Ligue (rollout granulaire — livrés 2026-06-06).
- * Miroir de `apps/server/src/services/featureFlags.ts`. Les admins voient
- * tous les flags (bypass de rôle).
- */
-export const LEAGUE_INVITATIONS_FLAG = "league_invitations" as const;
-/**
  * Nuffle Coach (fantasy NFL) — gate l'UI publique : menu, sous-nav,
  * pages user (catalogue players, fiche player, standings, draft, about).
  * Doit etre synchronise avec `apps/server/src/services/featureFlags.ts.NUFFLE_COACH_FLAG`.

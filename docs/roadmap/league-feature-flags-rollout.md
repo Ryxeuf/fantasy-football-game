@@ -1,9 +1,16 @@
-# Guide d'activation — Feature flags Ligue (rollout au compte-goutte)
+# Guide d'activation — Feature flag Ligue
 
-> Strategie d'ouverture progressive de la brique "gestion des ligues"
-> (audit 2026-06-06, cf.
-> [`sessions/2026-06-06-league-management.md`](./sessions/2026-06-06-league-management.md)).
-> Toute la surface est OFF par defaut ; on l'ouvre cohorte par cohorte.
+> Strategie d'ouverture de la brique "gestion des ligues". Toute la
+> surface est OFF par defaut ; on l'ouvre cohorte par cohorte via un
+> **flag unique** `league`.
+>
+> **Maj 2026-06-30** : les 7 anciens sous-flags de rollout granulaire
+> (`league_invitations`, `league_pools`, `league_manual_pairings`,
+> `league_bonus_points`, `league_match_sheet`, `league_leaderboards`,
+> `league_commissioner_edit`) ont ete **supprimes** et fusionnes dans
+> `league`. Toute la fonctionnalite ligue s'active/se desactive desormais
+> d'un seul geste. (Audit initial : 2026-06-06, cf.
+> [`sessions/2026-06-06-league-management.md`](./sessions/2026-06-06-league-management.md).)
 
 ## 1. Comment un flag est evalue
 
@@ -21,26 +28,19 @@ pour un utilisateur** si **l'une** de ces conditions est vraie :
 >
 > Les **kill-switches** (`maintenance_mode`,
 > `registration_requires_validation`) sont l'exception : ils ne sont PAS
-> force-ON par la CI ni le bypass admin. Aucun flag ligue n'est un
-> kill-switch — ce sont tous des flags d'activation classiques.
+> force-ON par la CI ni le bypass admin. `league` n'est PAS un
+> kill-switch — c'est un flag d'activation classique.
 
-## 2. Les 8 flags ligue
+## 2. Le flag ligue (unique)
 
-| Flag | Gate | Depend de |
-|------|------|-----------|
-| `league` | Hub `/leagues` + tous les ecrans de gestion (creation, edition, saisons, calendrier, classements, level-up, admin). **Porte d'entree.** | — |
-| `league_invitations` | UI invitations coachs (recherche, lien partage, accept/decline). | `league` |
-| `league_pools` | UI multi-poules (editeur de poules, standings/calendrier par poule). | `league` |
-| `league_manual_pairings` | UI saisie manuelle de matchs (rounds custom, ajout/suppression/deplacement). | `league` |
-| `league_bonus_points` | Editeur de points bonus dans la creation/edition de ligue. | `league` |
-| `league_match_sheet` | Feuille de match v2 (saisie joueurs, evenements, validation, panneaux pre/post-match, invalidation). | `league` |
-| `league_leaderboards` | Page classements top-N joueurs par saison. | `league` |
-| `league_commissioner_edit` | Edition ex-post des equipes par le commissaire (SPP/comp/carac/treso, auditee). | `league` |
+| Flag | Gate |
+|------|------|
+| `league` | **Toute** la brique ligue : hub `/leagues`, creation/edition, saisons, invitations de coachs, multi-poules, calendrier (auto + saisie manuelle), points bonus, feuille de match v2 (saisie joueurs, evenements, validation, panneaux pre/post-match, invalidation), edition ex-post commissaire (SPP/comp/carac/treso, auditee), classements + leaderboards, level-up, section admin. |
 
-> **Important** : les sous-flags gatent l'**UI**. Les routes API sont
-> protegees par l'authentification + les roles (commissaire = createur de
-> la ligue, admin global). Activer un sous-flag pour un user lui rend la
-> section visible ; il ne peut agir que sur ses propres ligues.
+> **Important** : le flag gate l'**UI**. Les routes API restent protegees
+> par l'authentification + les roles (commissaire = createur de la ligue,
+> admin global). Activer `league` pour un user lui rend la section
+> visible ; il ne peut agir que sur ses propres ligues.
 
 ## 3. Outils d'activation (admin)
 
@@ -52,11 +52,12 @@ pour un utilisateur** si **l'une** de ces conditions est vraie :
 
 | Methode | Route | Effet |
 |---------|-------|-------|
-| `POST` | `/admin/feature-flags/sync` | Cree en base tout flag du code absent (avec `enabled=false`). **A lancer une fois** apres deploiement pour materialiser les 8 flags. |
+| `POST` | `/admin/feature-flags/sync` | Cree en base tout flag du code absent (avec `enabled=false`). **A lancer une fois** apres deploiement. |
 | `GET` | `/admin/feature-flags` | Liste les flags + compteur d'overrides. |
 | `PATCH` | `/admin/feature-flags/:id` | Bascule `enabled` global (ou la description). |
 | `GET` | `/admin/feature-flags/:id/users` | Liste les overrides par-user. |
 | `POST` | `/admin/feature-flags/:id/users` | **Ajoute un override** (ouvre le flag a un user). |
+| `DELETE` | `/admin/feature-flags/:id` | **Supprime un flag** (sert au menage des anciens sous-flags orphelins, cf. §6). |
 | `DELETE` | `/admin/feature-flags/:id/users/:userId` | Retire l'override (referme pour ce user). |
 
 > Apres tout changement, le cache flags se vide en <= 30 s
@@ -65,52 +66,51 @@ pour un utilisateur** si **l'une** de ces conditions est vraie :
 
 ## 4. Sequence de rollout recommandee
 
-### Etape 0 — Materialiser les flags
-Deployer puis `POST /admin/feature-flags/sync`. Verifier que les 8
-flags `league*` apparaissent dans `/admin/feature-flags`, tous OFF.
+### Etape 0 — Materialiser le flag
+Deployer puis `POST /admin/feature-flags/sync`. Verifier que `league`
+apparait dans `/admin/feature-flags`, OFF.
 
-### Etape 1 — Cohorte pilote sur le coeur
-Choisir 1-3 comptes commissaires de confiance. Pour chacun, ajouter un
-override sur :
-1. `league` (sans lui, rien n'est visible) ;
-2. `league_match_sheet` (le gros morceau a eprouver en premier) ;
-3. `league_invitations` (pour qu'ils remplissent leurs ligues).
+### Etape 1 — Cohorte pilote
+Choisir 1-3 comptes commissaires de confiance et ajouter un override
+`league` a chacun. Faire jouer un cycle complet : creer une ligue →
+inviter → demarrer une saison → saisir une feuille de match → valider →
+verifier le classement + les leaderboards.
 
-Faire jouer un cycle complet : creer une ligue → inviter → demarrer une
-saison → saisir une feuille de match → valider → verifier le classement.
+### Etape 2 — Cohorte elargie
+Repliquer l'override `league` sur une cohorte plus large (10-50
+commissaires). Surveiller les retours.
 
-### Etape 2 — Elargir les fonctionnalites a la cohorte pilote
-Quand le coeur est valide, ajouter pour les memes users :
-`league_pools`, `league_bonus_points`, `league_manual_pairings`,
-`league_leaderboards`, `league_commissioner_edit`.
-
-### Etape 3 — Cohorte elargie
-Repliquer les overrides `league` + `league_match_sheet` (+ invitations)
-sur une cohorte plus large (10-50 commissaires). Surveiller les retours.
-
-### Etape 4 — Bascule globale
-Quand la confiance est la, passer `enabled=true` (global) flag par flag,
-en commencant par `league` puis les sous-flags. Retirer les overrides
-par-user devenus redondants (optionnel — sans effet de bord).
+### Etape 3 — Bascule globale
+Quand la confiance est la, passer `league` en `enabled=true` (global).
+Retirer les overrides par-user devenus redondants (optionnel — sans
+effet de bord).
 
 ## 5. Rollback
 
-- **Couper une feature pour tout le monde** : `PATCH` le flag a
-  `enabled=false`. Les overrides par-user restent et redeviennent
-  actifs ; pour une coupure totale, retirer aussi les overrides.
+- **Couper pour tout le monde** : `PATCH` `league` a `enabled=false`. Les
+  overrides par-user restent et redeviennent actifs ; pour une coupure
+  totale, retirer aussi les overrides.
 - **Couper pour un user** : `DELETE /admin/feature-flags/:id/users/:userId`.
 - Les donnees deja creees (ligues, feuilles de match) ne sont pas
-  supprimees par la coupure d'un flag — seule la **visibilite UI**
-  change. Les effets deja appliques au classement persistent.
+  supprimees par la coupure du flag — seule la **visibilite UI** change.
+  Les effets deja appliques au classement persistent.
 
-## 6. Pieges
+## 6. Menage des anciens sous-flags (apres 2026-06-30)
 
-- **CI** : `e2e.yml` exporte `FEATURE_FLAGS_FORCE_ENABLED=true` — tous
-  les flags ligue sont donc ON pendant les E2E. Les nouveaux flags
-  ligue etant des flags d'activation (pas des kill-switches), c'est le
-  comportement voulu.
-- **Admin = tout ON** : un compte admin voit toujours toutes les
-  features (bypass). Pour tester l'experience d'un commissaire non-admin,
-  utiliser un compte dedie sans le role admin.
-- **Dependance implicite** : ouvrir un sous-flag sans `league` ne sert a
-  rien (le hub reste masque). Toujours ouvrir `league` en premier.
+Les 7 sous-flags supprimes du code ne sont plus recrees par `sync`, mais
+les lignes deja presentes en base (issues d'un `sync` anterieur)
+subsistent comme **orphelins** : inoffensifs (plus rien ne les lit) mais
+visibles dans `/admin/feature-flags`. Pour nettoyer, les supprimer une
+fois via `DELETE /admin/feature-flags/:id` (ou le bouton du panneau) :
+`league_invitations`, `league_pools`, `league_manual_pairings`,
+`league_bonus_points`, `league_match_sheet`, `league_leaderboards`,
+`league_commissioner_edit`.
+
+## 7. Pieges
+
+- **CI** : `e2e.yml` exporte `FEATURE_FLAGS_FORCE_ENABLED=true` — `league`
+  est donc ON pendant les E2E. C'est un flag d'activation (pas un
+  kill-switch), donc c'est le comportement voulu.
+- **Admin = tout ON** : un compte admin voit toujours toutes les features
+  (bypass). Pour tester l'experience d'un commissaire non-admin, utiliser
+  un compte dedie sans le role admin.
