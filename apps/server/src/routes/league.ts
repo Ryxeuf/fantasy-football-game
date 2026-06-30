@@ -28,8 +28,10 @@ import {
   withdrawParticipant,
   listThemedSeasons,
   parseAllowedRosters,
+  isLeagueParticipant,
   LeagueWithdrawError,
 } from "../services/league";
+import { getPositionBySlug } from "@bb/game-engine";
 import {
   startSeason,
   regenerateSchedule,
@@ -1221,6 +1223,59 @@ export async function handleGetTeamForEdit(
   }
 }
 
+/**
+ * Autorise la lecture des rosters de la ligue : commissaire OU coach
+ * inscrit (participant d'au moins une saison). Renvoie false + reponse
+ * d'erreur deja envoyee sinon.
+ */
+async function ensureLeagueViewer(
+  userId: string,
+  leagueId: string,
+  res: Response,
+): Promise<boolean> {
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { creatorId: true },
+  });
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return false;
+  }
+  if (league.creatorId === userId) return true;
+  if (await isLeagueParticipant(userId, leagueId)) return true;
+  sendError(
+    res,
+    "Seuls les coachs inscrits a la ligue peuvent voir les rosters",
+    403,
+  );
+  return false;
+}
+
+/**
+ * GET /leagues/:leagueId/teams/:teamId/roster-view — roster en lecture
+ * seule, accessible a tout coach inscrit a la ligue (pas seulement le
+ * commissaire). Enrichit chaque joueur d'un `positionName` lisible.
+ */
+export async function handleGetLeagueTeamRoster(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueViewer(userId, leagueId, res))) return;
+  try {
+    const out = await getTeamForEdit({ leagueId, teamId });
+    const players = out.players.map((p: { position: string }) => ({
+      ...p,
+      positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
+    }));
+    sendSuccess(res, { team: out.team, players });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** POST /leagues/:leagueId/teams/:teamId/players/:playerId/spp */
 export async function handleAdjustPlayerSpp(
   req: AuthenticatedRequest,
@@ -2368,6 +2423,13 @@ router.get("/seasons/:seasonId/leaderboards", handleGetLeaderboards);
 router.get(
   "/seasons/:seasonId/leaderboards/by-team",
   handleGetLeaderboardsByTeam,
+);
+
+// Roster en lecture seule, visible par tout coach inscrit a la ligue.
+router.get(
+  "/:leagueId/teams/:teamId/roster-view",
+  authUser,
+  handleGetLeagueTeamRoster,
 );
 
 // Lot I — edition ex-post des equipes par le commissaire.

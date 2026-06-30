@@ -992,6 +992,22 @@ export async function getLeagueById(leagueId: string) {
   });
 }
 
+/**
+ * Vrai si `userId` participe a la ligue `leagueId` : il possede une equipe
+ * inscrite dans au moins une saison de la ligue. Sert a autoriser la
+ * consultation des rosters des autres participants (un coach inscrit voit
+ * tous les rosters de sa ligue).
+ */
+export async function isLeagueParticipant(
+  userId: string,
+  leagueId: string,
+): Promise<boolean> {
+  const count = await prisma.leagueParticipant.count({
+    where: { team: { ownerId: userId }, season: { leagueId } },
+  });
+  return count > 0;
+}
+
 export async function getSeasonById(seasonId: string) {
   return prisma.leagueSeason.findUnique({
     where: { id: seasonId },

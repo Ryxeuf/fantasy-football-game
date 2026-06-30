@@ -58,6 +58,7 @@ import {
   listLeagues,
   listThemedSeasons,
   withdrawParticipant,
+  isLeagueParticipant,
   LeagueWithdrawError,
 } from "./league";
 
@@ -72,6 +73,22 @@ describe("Rule: League service", () => {
   const teamId = "team-1";
   const leagueId = "league-1";
   const seasonId = "season-1";
+
+  describe("isLeagueParticipant", () => {
+    it("retourne true si le coach possède une équipe inscrite dans la ligue", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      const out = await isLeagueParticipant("user-x", leagueId);
+      expect(out).toBe(true);
+      expect(mockPrisma.leagueParticipant.count).toHaveBeenCalledWith({
+        where: { team: { ownerId: "user-x" }, season: { leagueId } },
+      });
+    });
+
+    it("retourne false si le coach n'a aucune équipe inscrite", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      expect(await isLeagueParticipant("outsider", leagueId)).toBe(false);
+    });
+  });
 
   describe("createLeague", () => {
     it("creates a league with default status 'draft' and sensible defaults", async () => {
