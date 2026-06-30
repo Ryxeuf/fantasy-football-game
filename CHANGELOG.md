@@ -1,3 +1,15 @@
+## [1.207.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.206.1...v1.207.0) (2026-06-30)
+
+
+### ✨ Features
+
+* **league:** add "team_throw" to MATCH_EVENT_KINDS and update tests ([3da17e8](https://github.com/Ryxeuf/fantasy-football-game/commit/3da17e81f93c919256d5f9cfdaed3596e51e7dce))
+
+
+### 🐛 Bug Fixes
+
+* **league:** catalogue skills introuvable dans l'éditeur d'évolutions ([0cfc4bf](https://github.com/Ryxeuf/fantasy-football-game/commit/0cfc4bffe0645bb07dde8cfd5b1e28f062cc21fa))
+
 ## [1.206.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.206.0...v1.206.1) (2026-06-30)
 
 
