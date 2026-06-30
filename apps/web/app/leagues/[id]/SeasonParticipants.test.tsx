@@ -164,39 +164,9 @@ describe("SeasonParticipants — consultation du roster", () => {
     expect(screen.queryByTestId("view-roster-p1-team")).toBeNull();
   });
 
-  it("ouvre le roster en lecture seule pour un coach inscrit", async () => {
-    apiRequestMock.mockResolvedValue({
-      team: { id: "p1-team", name: "p1", roster: "humans", treasury: 0 },
-      players: [
-        {
-          id: "pl1",
-          name: "Griff",
-          position: "human_blitzer",
-          positionName: "Blitzer",
-          number: 7,
-          ma: 7,
-          st: 3,
-          ag: 3,
-          pa: 4,
-          av: 9,
-          skills: "block",
-          spp: 0,
-          dead: false,
-        },
-      ],
-    });
+  it("lie vers la page roster dédiée pour un coach inscrit", () => {
     renderParticipants({ leagueId: "L1", canViewRosters: true });
-
-    fireEvent.click(screen.getByTestId("view-roster-p1-team"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("league-roster-modal")).toBeTruthy(),
-    );
-    expect(apiRequestMock).toHaveBeenCalledWith(
-      "/leagues/L1/teams/p1-team/roster-view",
-    );
-    // Position lisible affichée (pas le slug technique).
-    await waitFor(() => expect(screen.getByText("Blitzer")).toBeTruthy());
-    expect(screen.queryByText("human_blitzer")).toBeNull();
+    const link = screen.getByTestId("view-roster-p1-team");
+    expect(link.getAttribute("href")).toBe("/leagues/L1/teams/p1-team");
   });
 });

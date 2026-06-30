@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { apiRequest } from "../../lib/api-client";
 import { CommissionerTeamEditor } from "./CommissionerTeamEditor";
-import { LeagueRosterModal } from "./LeagueRosterModal";
 import type { LeagueParticipantDetail } from "./types";
 
 interface SeasonParticipantsProps {
@@ -40,11 +40,6 @@ export function SeasonParticipants({
 }: SeasonParticipantsProps) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState<{
-    teamId: string;
-    name: string;
-  } | null>(null);
-  // Consultation du roster d'un participant (lecture seule).
-  const [viewingRoster, setViewingRoster] = useState<{
     teamId: string;
     name: string;
   } | null>(null);
@@ -170,19 +165,13 @@ export function SeasonParticipants({
               {/* Consultation du roster — ouverte à tout coach inscrit. */}
               {showRosterButton ? (
                 <div className="mt-2">
-                  <button
-                    type="button"
+                  <Link
+                    href={`/leagues/${leagueId}/teams/${p.teamId}`}
                     data-testid={`view-roster-${p.teamId}`}
-                    onClick={() =>
-                      setViewingRoster({
-                        teamId: p.teamId,
-                        name: p.team.name,
-                      })
-                    }
-                    className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    className="inline-block text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     👥 Voir le roster
-                  </button>
+                  </Link>
                 </div>
               ) : null}
               {/* FR12 — édition de l'équipe par le commissaire. */}
@@ -290,15 +279,6 @@ export function SeasonParticipants({
           canRemovePlayers={canRemoveTeams}
           onClose={() => setEditing(null)}
           onChanged={onChanged}
-        />
-      ) : null}
-
-      {leagueId && viewingRoster ? (
-        <LeagueRosterModal
-          leagueId={leagueId}
-          teamId={viewingRoster.teamId}
-          teamName={viewingRoster.name}
-          onClose={() => setViewingRoster(null)}
         />
       ) : null}
     </>
