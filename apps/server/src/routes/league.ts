@@ -31,7 +31,7 @@ import {
   isLeagueParticipant,
   LeagueWithdrawError,
 } from "../services/league";
-import { getPositionBySlug } from "@bb/game-engine";
+import { getPositionBySlug, TEAM_ROSTERS } from "@bb/game-engine";
 import {
   startSeason,
   regenerateSchedule,
@@ -1265,12 +1265,53 @@ export async function handleGetLeagueTeamRoster(
   const { leagueId, teamId } = req.params;
   if (!(await ensureLeagueViewer(userId, leagueId, res))) return;
   try {
+    // getTeamForEdit garde la verification "equipe ∈ ligue" + charge les
+    // joueurs ; on complete avec les meta d'equipe pour une page riche.
     const out = await getTeamForEdit({ leagueId, teamId });
+    const meta = (await prisma.team.findUnique({
+      where: { id: teamId },
+      select: {
+        teamValue: true,
+        currentValue: true,
+        rerolls: true,
+        cheerleaders: true,
+        assistants: true,
+        apothecary: true,
+        dedicatedFans: true,
+        owner: { select: { coachName: true } },
+      },
+    })) as {
+      teamValue: number;
+      currentValue: number;
+      rerolls: number;
+      cheerleaders: number;
+      assistants: number;
+      apothecary: boolean;
+      dedicatedFans: number;
+      owner: { coachName: string | null } | null;
+    } | null;
     const players = out.players.map((p: { position: string }) => ({
       ...p,
       positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
     }));
-    sendSuccess(res, { team: out.team, players });
+    const raceName =
+      (TEAM_ROSTERS as Record<string, { name?: string }>)[out.team.roster]
+        ?.name ?? out.team.roster;
+    sendSuccess(res, {
+      team: {
+        ...out.team,
+        raceName,
+        coachName: meta?.owner?.coachName ?? null,
+        teamValue: meta?.teamValue ?? 0,
+        currentValue: meta?.currentValue ?? 0,
+        rerolls: meta?.rerolls ?? 0,
+        cheerleaders: meta?.cheerleaders ?? 0,
+        assistants: meta?.assistants ?? 0,
+        apothecary: meta?.apothecary ?? false,
+        dedicatedFans: meta?.dedicatedFans ?? 0,
+      },
+      players,
+    });
   } catch (e: unknown) {
     domainError(res, e);
   }
