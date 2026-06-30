@@ -77,6 +77,61 @@ describe("AdvancementEditor", () => {
     );
   });
 
+  it("charge le catalogue depuis /api/skills et peuple le picker selon l'accès", async () => {
+    const PENDING_WITH_ACCESS = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "gnome1",
+          playerName: "Belluaire Gnome 1",
+          // Accès primaire = Agilité (A) → seules les compétences Agilité
+          // sont éligibles en « random-primary »/« primary ».
+          primarySkills: "A",
+          secondarySkills: "G,S,K",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements"))
+        return Promise.resolve(PENDING_WITH_ACCESS);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+            { slug: "block", nameFr: "Blocage", category: "General" },
+          ],
+        });
+      return Promise.resolve({});
+    });
+    setup();
+
+    // Le catalogue est bien demandé sur /api/skills (et pas /skills).
+    await waitFor(() =>
+      expect(
+        apiRequest.mock.calls.some(([path]) =>
+          String(path).startsWith("/api/skills"),
+        ),
+      ).toBe(true),
+    );
+
+    const select = (await screen.findByTestId(
+      "level-up-skill-gnome1",
+    )) as HTMLSelectElement;
+    // Agilité éligible, Général exclu (accès primaire = A).
+    await waitFor(() =>
+      expect(
+        Array.from(select.options).some((o) => o.textContent === "Esquive"),
+      ).toBe(true),
+    );
+    expect(
+      Array.from(select.options).some((o) => o.textContent === "Blocage"),
+    ).toBe(false);
+    expect(select.textContent).not.toContain("aucune compétence pour ce type");
+  });
+
   it("affiche un état vide quand aucun joueur n'est en attente", async () => {
     apiRequest.mockImplementation((path: string) => {
       if (path.includes("/pending-advancements"))

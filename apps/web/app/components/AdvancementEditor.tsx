@@ -138,7 +138,7 @@ export function AdvancementEditor({
       setItems(data.items ?? []);
       try {
         const skills = await apiRequest<SkillsResponse>(
-          `/skills?ruleset=${encodeURIComponent(data.ruleset ?? "season_3")}`,
+          `/api/skills?ruleset=${encodeURIComponent(data.ruleset ?? "season_3")}`,
         );
         setCatalog(skills.skills ?? []);
       } catch {
