@@ -59,7 +59,10 @@ opt-in : c'est automatique entre inscrits (le partage public par
   - Pastilles staff : relances / pom-pom / assistants / apothicaire /
     fans dévoués.
   - Tableau roster : N°, nom, **poste en clair**, MA/ST/AG/PA/AV
-    (`+`/`–`), compétences en tags, SPP ; joueurs morts grisés/barrés.
+    (`+`/`–`), **compétences nommées avec description** (réutilise
+    `SkillTooltip` comme une fiche de roster : nom + catégorie colorée +
+    tooltip de règle, base vs acquise via la position), SPP ; joueurs
+    morts grisés/barrés.
   - États chargement / erreur (ex. `403` si non inscrit).
 - **`SeasonParticipants`** : bouton « 👥 Voir le roster » → **lien**
   (`next/link`) vers la page, gaté par `canViewRosters` (commissaire OU

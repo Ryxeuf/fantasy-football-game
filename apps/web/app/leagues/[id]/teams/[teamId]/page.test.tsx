@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { LanguageProvider } from "../../../../contexts/LanguageContext";
 import LeagueTeamRosterPage from "./page";
 
 const apiRequestMock = vi.fn();
@@ -40,7 +41,7 @@ const ROSTER = {
       ag: 3,
       pa: 4,
       av: 9,
-      skills: "block, dodge",
+      skills: "block,dodge",
       spp: 12,
       dead: false,
     },
@@ -52,9 +53,13 @@ describe("LeagueTeamRosterPage", () => {
     vi.resetAllMocks();
   });
 
-  it("affiche l'équipe, ses stats et un poste lisible (pas le slug)", async () => {
+  it("affiche l'équipe, ses stats, un poste lisible et les compétences nommées", async () => {
     apiRequestMock.mockResolvedValue(ROSTER);
-    render(<LeagueTeamRosterPage />);
+    render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
 
     await waitFor(() =>
       expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
@@ -67,16 +72,21 @@ describe("LeagueTeamRosterPage", () => {
     ).toBeTruthy();
     expect(screen.getByText("Blitzer")).toBeTruthy();
     expect(screen.queryByText("human_blitzer")).toBeNull();
-    // Compétences éclatées en tags.
-    expect(screen.getByText("block")).toBeTruthy();
-    expect(screen.getByText("dodge")).toBeTruthy();
+    // Compétences affichées par leur nom lisible (pas le slug).
+    expect(screen.getByText("Blocage")).toBeTruthy();
+    expect(screen.getByText("Esquive")).toBeTruthy();
+    expect(screen.queryByText("block")).toBeNull();
   });
 
   it("affiche l'erreur renvoyée par l'API (ex: 403 non inscrit)", async () => {
     apiRequestMock.mockRejectedValue(
       new Error("Seuls les coachs inscrits a la ligue peuvent voir les rosters"),
     );
-    render(<LeagueTeamRosterPage />);
+    render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
 
     await waitFor(() =>
       expect(

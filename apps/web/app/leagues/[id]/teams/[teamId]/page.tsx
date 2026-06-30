@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest } from "../../../../lib/api-client";
 import TeamLogo from "../../../../components/TeamLogo";
+import SkillTooltip from "../../../../me/teams/components/SkillTooltip";
 
 // Page roster d'un participant de la ligue (lecture seule). Accessible à
 // tout coach inscrit à la ligue via la route serveur
@@ -48,13 +49,6 @@ interface RosterResponse {
 
 function formatGold(n: number): string {
   return `${n.toLocaleString("fr-FR")} po`;
-}
-
-function formatSkills(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -191,7 +185,6 @@ export default function LeagueTeamRosterPage() {
                 </thead>
                 <tbody>
                   {data.players.map((p) => {
-                    const skills = formatSkills(p.skills);
                     return (
                       <tr
                         key={p.id}
@@ -227,20 +220,11 @@ export default function LeagueTeamRosterPage() {
                           {p.av}+
                         </td>
                         <td className="px-3 py-2">
-                          {skills.length === 0 ? (
-                            <span className="text-gray-400">—</span>
-                          ) : (
-                            <span className="flex flex-wrap gap-1">
-                              {skills.map((s) => (
-                                <span
-                                  key={s}
-                                  className="rounded bg-nuffle-gold/10 px-1.5 py-0.5 text-[11px] text-nuffle-bronze"
-                                >
-                                  {s}
-                                </span>
-                              ))}
-                            </span>
-                          )}
+                          <SkillTooltip
+                            skillsString={p.skills}
+                            position={p.position}
+                            useDirectParsing
+                          />
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           {p.spp}
