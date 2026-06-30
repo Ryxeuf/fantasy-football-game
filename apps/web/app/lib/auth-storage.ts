@@ -12,6 +12,13 @@
 const ACCESS_KEY = "auth_token";
 const REFRESH_KEY = "auth_refresh_token";
 
+// Impersonation admin (« se connecter en tant que ») : on sauvegarde les
+// tokens de l'admin avant de basculer sur le token de la cible, pour pouvoir
+// revenir a la session admin sans re-login.
+const IMP_BACKUP_ACCESS_KEY = "imp_backup_token";
+const IMP_BACKUP_REFRESH_KEY = "imp_backup_refresh_token";
+const IMP_TARGET_LABEL_KEY = "imp_target_label";
+
 function hasWindow(): boolean {
   return typeof window !== "undefined";
 }
@@ -41,6 +48,67 @@ export function clearAuthTokens(): void {
   if (!hasWindow()) return;
   window.localStorage.removeItem(ACCESS_KEY);
   window.localStorage.removeItem(REFRESH_KEY);
+}
+
+/**
+ * Démarre une session d'impersonation : sauvegarde les tokens admin courants,
+ * puis bascule l'access token actif sur celui de la cible. On RETIRE le
+ * refresh token actif : la session usurpée ne doit pas pouvoir se renouveler
+ * silencieusement (le token serveur n'a d'ailleurs pas de refresh associé),
+ * et un refresh accidentel rebasculerait sur l'identité admin.
+ */
+export function startImpersonation(token: string, targetLabel: string): void {
+  if (!hasWindow()) return;
+  const currentAccess = window.localStorage.getItem(ACCESS_KEY);
+  const currentRefresh = window.localStorage.getItem(REFRESH_KEY);
+  if (currentAccess) {
+    window.localStorage.setItem(IMP_BACKUP_ACCESS_KEY, currentAccess);
+  }
+  if (currentRefresh) {
+    window.localStorage.setItem(IMP_BACKUP_REFRESH_KEY, currentRefresh);
+  }
+  window.localStorage.setItem(IMP_TARGET_LABEL_KEY, targetLabel);
+  window.localStorage.setItem(ACCESS_KEY, token);
+  window.localStorage.removeItem(REFRESH_KEY);
+}
+
+/**
+ * Vrai si une session d'impersonation est active (tokens admin sauvegardés).
+ * Indépendant de la validité du token d'impersonation : tant que la sauvegarde
+ * existe, on peut revenir à la session admin.
+ */
+export function isImpersonating(): boolean {
+  if (!hasWindow()) return false;
+  return window.localStorage.getItem(IMP_BACKUP_ACCESS_KEY) !== null;
+}
+
+/** Libellé de l'utilisateur actuellement impersonné (email ou coachName). */
+export function getImpersonationTargetLabel(): string | null {
+  if (!hasWindow()) return null;
+  return window.localStorage.getItem(IMP_TARGET_LABEL_KEY);
+}
+
+/**
+ * Met fin à l'impersonation et restaure les tokens admin sauvegardés.
+ * Retourne true si une session admin a été restaurée, false sinon.
+ */
+export function stopImpersonation(): boolean {
+  if (!hasWindow()) return false;
+  const backupAccess = window.localStorage.getItem(IMP_BACKUP_ACCESS_KEY);
+  const backupRefresh = window.localStorage.getItem(IMP_BACKUP_REFRESH_KEY);
+  window.localStorage.removeItem(IMP_BACKUP_ACCESS_KEY);
+  window.localStorage.removeItem(IMP_BACKUP_REFRESH_KEY);
+  window.localStorage.removeItem(IMP_TARGET_LABEL_KEY);
+  if (!backupAccess) {
+    return false;
+  }
+  window.localStorage.setItem(ACCESS_KEY, backupAccess);
+  if (backupRefresh) {
+    window.localStorage.setItem(REFRESH_KEY, backupRefresh);
+  } else {
+    window.localStorage.removeItem(REFRESH_KEY);
+  }
+  return true;
 }
 
 /**

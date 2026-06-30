@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../../auth-client";
 import BanUserModal from "./_components/BanUserModal";
 import PasswordResetModal from "./_components/PasswordResetModal";
+import { startImpersonation } from "../../lib/auth-storage";
 
 type LeaderboardStatus = "visible" | "hidden_admin";
 
@@ -295,6 +296,33 @@ export default function AdminUsersPage() {
     } catch (e: any) {
       alert(e.message || "Erreur lors de la restauration");
     } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // « Se connecter en tant que » — impersonation admin.
+  const handleImpersonate = async (user: User) => {
+    const label = user.coachName || user.email;
+    if (
+      !confirm(
+        `Se connecter en tant que « ${label} » ?\n\nVotre session admin sera mise de côté ; vous pourrez y revenir via la bannière en haut de page.`,
+      )
+    ) {
+      return;
+    }
+    setActionLoading(user.id);
+    try {
+      const data = await fetchJSON(`/admin/users/${user.id}/impersonate`, {
+        method: "POST",
+      });
+      if (!data?.token) {
+        throw new Error("Token d'impersonation manquant dans la réponse");
+      }
+      startImpersonation(data.token, label);
+      // Rechargement complet vers l'accueil avec l'identité de la cible.
+      window.location.href = "/";
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la connexion en tant que cet utilisateur");
       setActionLoading(null);
     }
   };
@@ -677,6 +705,22 @@ export default function AdminUsersPage() {
                         <span>{actionLoading === u.id ? "⏳" : "🗑️"}</span>
                         <span>Supprimer</span>
                       </button>
+                      {!u.deletedAt &&
+                        !(
+                          u.bannedUntil &&
+                          new Date(u.bannedUntil).getTime() > Date.now()
+                        ) && (
+                          <button
+                            onClick={() => handleImpersonate(u)}
+                            disabled={actionLoading === u.id}
+                            data-testid={`impersonate-${u.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors text-xs font-medium"
+                            title="Se connecter en tant que cet utilisateur"
+                          >
+                            <span>🎭</span>
+                            <span>Se connecter en tant que</span>
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>
