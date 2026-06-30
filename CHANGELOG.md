@@ -1,3 +1,16 @@
+## [1.203.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.2...v1.203.0) (2026-06-30)
+
+
+### ✨ Features
+
+* **ligues:** suppression d'équipes/joueurs par le commissaire avant le démarrage ([#930](https://github.com/Ryxeuf/fantasy-football-game/issues/930)) ([a1e011d](https://github.com/Ryxeuf/fantasy-football-game/commit/a1e011de0556c27e19fe133ad7d06f26233f5234))
+
+
+### 🐛 Bug Fixes
+
+* **ci:** type le findMany participants dans removeCoachFromSeason ([fc93119](https://github.com/Ryxeuf/fantasy-football-game/commit/fc93119d6fff5fe0b746b994637e8d27859e30a2))
+* **ligues:** suppression d'équipe sans corps DELETE + retrait de coach par le commissaire ([#931](https://github.com/Ryxeuf/fantasy-football-game/issues/931)) ([e7219f0](https://github.com/Ryxeuf/fantasy-football-game/commit/e7219f0d1fdde63c809adaa9a0de61de38362903)), closes [#930](https://github.com/Ryxeuf/fantasy-football-game/issues/930)
+
 ## [1.202.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.1...v1.202.2) (2026-06-26)
 
 
