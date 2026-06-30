@@ -1,3 +1,10 @@
+## [1.207.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.0...v1.207.1) (2026-06-30)
+
+
+### 🐛 Bug Fixes
+
+* **league:** update reversion logic for injuries and match invalidation ([5d6470b](https://github.com/Ryxeuf/fantasy-football-game/commit/5d6470b2b020881b8ed1304fff76a661ae120d51))
+
 ## [1.207.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.206.1...v1.207.0) (2026-06-30)
 
 
