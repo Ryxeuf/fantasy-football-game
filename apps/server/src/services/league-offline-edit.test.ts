@@ -202,7 +202,9 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     });
   });
 
-  it("skip si une blessure 'dead' a ete appliquee", async () => {
+  it("ressuscite un joueur tue : reverse une blessure 'dead' (dead:false)", async () => {
+    // La mort est un flag (pas une suppression) -> la reversion la leve.
+    // L'UI previent le commissaire avant de confirmer.
     m.matchFind.mockResolvedValue(
       buildMatch({
         offlineResultInput: buildSnapshot({
@@ -210,10 +212,14 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
         }),
       }),
     );
-    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
-      skipped: true,
-      reason: "injury-dead",
-    });
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+
+    const injUpd = m.tpUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
+    )?.[0] as { data: Record<string, unknown> };
+    expect(injUpd.data).toEqual({ dead: false, missNextMatch: false });
   });
 
   it("skip si un level-up issu de ce match a ete consomme", async () => {

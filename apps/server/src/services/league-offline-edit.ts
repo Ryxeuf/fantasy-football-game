@@ -15,7 +15,11 @@
  * Garde-fous (refus de reversion) :
  *  - saison clôturee / playoffs generes (le classement final est fige) ;
  *  - un joueur a deja **consomme** un level-up issu de ce match ;
- *  - une blessure `dead` a ete appliquee (on ne ressuscite pas un joueur).
+ *  - un achat post-match a deja ete **consomme**.
+ *
+ * Une mort EST reversible : elle n'est qu'un flag `dead:true` (la ligne
+ * TeamPlayer n'est pas supprimee), donc la reversion remet `dead:false` et
+ * ressuscite le joueur. L'UI previent le commissaire avant de confirmer.
  */
 
 import { prisma } from "../prisma";
@@ -51,7 +55,6 @@ export type ReverseOfflineSkipReason =
   | "pairing-missing"
   | "season-completed"
   | "playoffs-generated"
-  | "injury-dead"
   | "advancement-consumed"
   | "purchase-consumed";
 
@@ -147,8 +150,10 @@ function injuryReverseData(type: OfflineInjuryType): Record<string, unknown> {
     case "av":
       return { missNextMatch: false, avReduction: { decrement: 1 } };
     case "dead":
-      // Garde-fou en amont : on ne reverse jamais une mort.
-      return {};
+      // Ressuscite le joueur tue par ce match (la mort est un flag, pas une
+      // suppression). `missNextMatch:false` car il n'a servi aucune
+      // suspension issue de cette mort.
+      return { dead: false, missNextMatch: false };
   }
 }
 
@@ -223,10 +228,10 @@ export async function reverseOfflineLeagueResult(
   if (playoffRounds > 0) {
     return { skipped: true, reason: "playoffs-generated" };
   }
-  // Garde-fou : une mort ne se reverse pas.
-  if (snapshot.input.injuries.some((i) => i.type === "dead")) {
-    return { skipped: true, reason: "injury-dead" };
-  }
+  // Note : une mort EST reversible (la mort est un simple flag `dead:true`,
+  // la ligne TeamPlayer n'est jamais supprimee). La reversion remet
+  // `dead:false` (cf. injuryReverseData). L'UI previent le commissaire que
+  // des joueurs vont etre ressuscites avant de confirmer l'invalidation.
 
   const pairing = (await prisma.leaguePairing.findUnique({
     where: { id: match.leaguePairingId },

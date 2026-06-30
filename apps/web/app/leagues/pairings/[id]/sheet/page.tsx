@@ -450,6 +450,12 @@ export default function MatchSheetPage() {
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
   const timeline = useMemo(() => chronologicalTimeline(events), [events]);
+  // FR — nb de joueurs tués dans ce match : invalider la feuille les
+  // ressuscite (dead:false). On en avertit le commissaire avant de confirmer.
+  const deadCount = useMemo(
+    () => events.filter((e) => e.injurySeverity === "dead").length,
+    [events],
+  );
   // SPP autoritaire par joueur, calculé côté serveur (calcul officiel +
   // modificateur d'équipe). Informatif : appliqué au roster à la validation.
   const computedSpp = data?.computedSpp ?? {};
@@ -996,6 +1002,7 @@ export default function MatchSheetPage() {
           <InvalidateControl
             canInvalidate={canInval.ok}
             reasonClosed={canInval.reason}
+            deadCount={deadCount}
             onInvalidate={invalidate}
           />
         </section>

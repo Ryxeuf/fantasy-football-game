@@ -966,7 +966,7 @@ describe("Lot G — league-match-sheet", () => {
       expect(out).toBeDefined();
     });
 
-    it("aborts when reversion is impossible (e.g. a death)", async () => {
+    it("aborts when reversion is impossible (e.g. a consumed level-up)", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
         status: "validated",
@@ -974,7 +974,10 @@ describe("Lot G — league-match-sheet", () => {
       mockMergedPairing();
       mockPrisma.leaguePairing.count.mockResolvedValue(0);
       mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
-      mockReverse.mockResolvedValue({ skipped: true, reason: "injury-dead" });
+      mockReverse.mockResolvedValue({
+        skipped: true,
+        reason: "advancement-consumed",
+      });
       await expect(
         invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
       ).rejects.toMatchObject({ code: "invalidation_failed" });

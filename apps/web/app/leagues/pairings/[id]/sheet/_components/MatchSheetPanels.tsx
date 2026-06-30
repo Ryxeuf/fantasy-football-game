@@ -1368,10 +1368,13 @@ export function PostMatchPanel({
 export function InvalidateControl({
   canInvalidate,
   reasonClosed,
+  deadCount = 0,
   onInvalidate,
 }: {
   canInvalidate: boolean;
   reasonClosed?: string;
+  /** Nb de joueurs tués dans ce match : l'invalidation les ressuscitera. */
+  deadCount?: number;
   onInvalidate: (reason: string) => Promise<void>;
 }) {
   const [reason, setReason] = useState("");
@@ -1389,29 +1392,50 @@ export function InvalidateControl({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2" data-testid="invalidate-control">
-      <input
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Motif (optionnel)"
-        className="rounded border px-2 py-1 text-sm"
-      />
-      <button
-        type="button"
-        className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          try {
-            await onInvalidate(reason);
-          } finally {
-            setBusy(false);
-          }
-        }}
-        data-testid="invalidate-sheet"
-      >
-        Invalider le match
-      </button>
+    <div className="flex flex-col gap-2" data-testid="invalidate-control">
+      {deadCount > 0 && (
+        <p
+          className="rounded border border-amber-400 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"
+          data-testid="invalidate-dead-warning"
+        >
+          ⚠️ {deadCount} joueur{deadCount > 1 ? "s" : ""} tué
+          {deadCount > 1 ? "s" : ""} dans ce match{" "}
+          {deadCount > 1 ? "seront ressuscités" : "sera ressuscité"} (statut «
+          mort » annulé) si vous invalidez la feuille.
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Motif (optionnel)"
+          className="rounded border px-2 py-1 text-sm"
+        />
+        <button
+          type="button"
+          className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+          disabled={busy}
+          onClick={async () => {
+            if (
+              deadCount > 0 &&
+              !window.confirm(
+                `Invalider ce match ressuscitera ${deadCount} joueur(s) tué(s) (leur mort sera annulée). Confirmer ?`,
+              )
+            ) {
+              return;
+            }
+            setBusy(true);
+            try {
+              await onInvalidate(reason);
+            } finally {
+              setBusy(false);
+            }
+          }}
+          data-testid="invalidate-sheet"
+        >
+          Invalider le match
+        </button>
+      </div>
     </div>
   );
 }
