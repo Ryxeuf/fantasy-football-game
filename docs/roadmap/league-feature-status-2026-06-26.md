@@ -94,8 +94,26 @@ implémenté ≠ activé en prod.
   pouce hors allowlist, code `inducement_not_allowed`), Star Players exemptés.
 - ✅ FR18 : marqueurs / castagneurs / passeurs / intercepteurs en **scope saison**
   (agrégation des events de feuille de match), repli career si aucun event ;
-  `scope` ("season"|"career") exposé et affiché sur la page leaderboards. MVP et
-  Future Star restent cumulés (pas d'event dédié fiable par saison).
+  `scope` ("season"|"career") exposé et affiché sur la page leaderboards.
+
+## Addendum FR18 — MVP & Future Star par saison (2026-06-30)
+
+Les deux dernières limites « scope carrière » de FR18 sont levées (sans
+migration, données déjà présentes) :
+
+- **MVP par saison** : agrégation des `motmPlayerIds` des feuilles de match de
+  la saison (vs compteur career `totalMvpAwards`).
+- **Future Star par saison** : PSP **recalculés sur la saison** depuis les
+  agrégats d'events (TD/cas/comp/int) + titres de MVP, via le barème partagé
+  `SPP_VALUES` (`spp-tracking.ts`) avec l'override « Bagarreurs Brutaux » par
+  roster. Repli career (`spp`) hors saison.
+- **Sac de frappe** : déjà par-saison via `targetPlayerId` des events (le proxy
+  `nigglingInjuries` ne sert que de repli sans-events). Inchangé.
+
+Implémentation : `league-player-stats.ts` (+ exports `calculateAggregateSPP` /
+`rosterToModifier` dans `spp-tracking.ts`). Tests : `league-player-stats.test.ts`
+(+4 cas saison) et `spp-tracking.test.ts` (+4). **Toutes les catégories FR18
+sont désormais en scope saison quand des events existent.**
 
 ## Composants/fichiers ajoutés (P1)
 

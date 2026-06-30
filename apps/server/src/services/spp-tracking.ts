@@ -8,7 +8,7 @@ import type { PrismaClient } from "@prisma/client";
  * - Interception: 1 SPP
  * - MVP: 4 SPP
  */
-const SPP_VALUES = {
+export const SPP_VALUES = {
   touchdown: 3,
   casualty: 2,
   completion: 1,
@@ -33,6 +33,20 @@ export interface PlayerMatchStats {
   completions: number;
   interceptions: number;
   mvp: boolean;
+}
+
+/**
+ * FR18 — variante agregee (sur une saison) des stats SPP : `mvps` est un
+ * compteur (vs le booleen par-match de `PlayerMatchStats`). Permet de
+ * recalculer les PSP gagnes sur une saison entiere depuis les agregats
+ * d'events + le nombre de titres de MVP.
+ */
+export interface PlayerAggregateStats {
+  touchdowns: number;
+  casualties: number;
+  completions: number;
+  interceptions: number;
+  mvps: number;
 }
 
 export interface GameStateForSPP {
@@ -129,7 +143,38 @@ export async function loadLeagueSPPContext(
   }
 }
 
-function rosterToModifier(specialRulesText: string): TeamSPPModifier {
+/**
+ * FR18 — PSP gagnes sur une periode (saison) a partir d'agregats. Reutilise
+ * exactement les memes valeurs et le meme override "Bagarreurs Brutaux" que
+ * `calculatePlayerSPP` (source unique `SPP_VALUES`), avec un compteur de MVP
+ * (×4 PSP chacun) au lieu d'un booleen par-match.
+ */
+export function calculateAggregateSPP(
+  stats: PlayerAggregateStats,
+  modifier: TeamSPPModifier = NEUTRAL_MODIFIER,
+): number {
+  const useBagarreurs = modifier.bagarreursBrutaux;
+  const tdValue = useBagarreurs
+    ? BAGARREURS_BRUTAUX_OVERRIDE.touchdown
+    : SPP_VALUES.touchdown;
+  const casValue = useBagarreurs
+    ? BAGARREURS_BRUTAUX_OVERRIDE.casualty
+    : SPP_VALUES.casualty;
+  return (
+    stats.touchdowns * tdValue +
+    stats.casualties * casValue +
+    stats.completions * SPP_VALUES.completion +
+    stats.interceptions * SPP_VALUES.interception +
+    stats.mvps * SPP_VALUES.mvp
+  );
+}
+
+/**
+ * Convertit la chaine `Roster.specialRules` (CSV/whitespace de slugs) en
+ * modificateur SPP d'equipe. Exporte pour FR18 (calcul des PSP de saison
+ * par joueur selon la regle de son roster).
+ */
+export function rosterToModifier(specialRulesText: string): TeamSPPModifier {
   if (!specialRulesText) return NEUTRAL_MODIFIER;
   // Tolerant parsing : split on `,` (CSV) ou tout whitespace pour
   // accommoder les formats existants en base. Trim + lowercase.

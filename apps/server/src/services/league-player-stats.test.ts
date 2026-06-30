@@ -9,6 +9,8 @@ vi.mock("../prisma", () => ({
     leagueParticipant: { findMany: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
     leagueMatchEvent: { findMany: vi.fn() },
+    leagueMatchSheet: { findMany: vi.fn() },
+    roster: { findMany: vi.fn() },
   },
 }));
 
@@ -35,6 +37,7 @@ function player(overrides: Partial<{
   nigglingInjuries: number;
   teamId: string;
   teamName: string;
+  roster: string;
 }>) {
   return {
     id: overrides.id ?? "p1",
@@ -51,7 +54,7 @@ function player(overrides: Partial<{
     team: {
       id: overrides.teamId ?? "team-1",
       name: overrides.teamName ?? "Team",
-      roster: "skaven",
+      roster: overrides.roster ?? "skaven",
       owner: { id: "u1", coachName: "Bob" },
     },
   };
@@ -312,6 +315,113 @@ describe("Lot J — league-player-stats", () => {
       ]);
       expect(cat.topInterceptors.map((r) => [r.playerId, r.value])).toEqual([
         ["p1", 1],
+      ]);
+    });
+  });
+
+  describe("FR18 — MVP & Future Star par saison", () => {
+    it("MVP de saison = agrégation des motmPlayerIds (vs compteur career)", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        // p1 a 9 MVP career mais 0 cette saison -> ne doit PAS sortir.
+        player({ id: "p1", teamId: "T1", totalMvpAwards: 9 }),
+        player({ id: "p2", teamId: "T1", totalMvpAwards: 0 }),
+        player({ id: "p3", teamId: "T1", totalMvpAwards: 0 }),
+      ]);
+      // Un event suffit a basculer en scope saison.
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "touchdown", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        { motmPlayerIds: ["p2", "p3"] },
+        { motmPlayerIds: ["p2"] },
+      ]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.scope).toBe("season");
+      // p2 = 2 titres, p3 = 1 ; p1 (career) absent.
+      expect(cat.topMvps.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 2],
+        ["p3", 1],
+      ]);
+    });
+
+    it("Future Star de saison = PSP recalculés (events + MVP), pas le spp career", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        // p1 a 99 spp career mais on doit voir ses PSP DE SAISON.
+        player({ id: "p1", teamId: "T1", spp: 99 }),
+        player({ id: "p2", teamId: "T1", spp: 0 }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        // p1 : 2 TD (3 PSP chacun) = 6
+        { kind: "touchdown", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        { kind: "touchdown", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        // p2 : 1 casualty (2) + 1 completion (1) = 3
+        { kind: "casualty", actorPlayerId: "p2", targetPlayerId: "p1", injurySeverity: "mng" },
+        { kind: "pass_complete", actorPlayerId: "p2", targetPlayerId: null, injurySeverity: null },
+      ]);
+      // p1 MVP une fois (+4) -> 6 + 4 = 10.
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        { motmPlayerIds: ["p1"] },
+      ]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.scope).toBe("season");
+      expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 10],
+        ["p2", 3],
+      ]);
+    });
+
+    it("Future Star applique l'override Bagarreurs Brutaux du roster", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1", roster: "orc" }),
+      ]);
+      // 2 TD : vanilla = 6 PSP ; Bagarreurs Brutaux = 2 PSP/TD -> 4.
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "touchdown", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        { kind: "touchdown", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+      mockPrisma.roster.findMany.mockResolvedValue([
+        { slug: "orc", specialRules: "bagarreurs_brutaux" },
+      ]);
+
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 4],
+      ]);
+    });
+
+    it("repli career pour MVP & Future Star quand aucun event de saison", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1", totalMvpAwards: 3, spp: 50 }),
+        player({ id: "p2", teamId: "T1", totalMvpAwards: 1, spp: 80 }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockRejectedValue(new Error("no model"));
+
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.scope).toBe("career");
+      expect(cat.topMvps.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 3],
+        ["p2", 1],
+      ]);
+      expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 80],
+        ["p1", 50],
       ]);
     });
   });

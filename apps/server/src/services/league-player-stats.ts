@@ -12,21 +12,28 @@
  *                        (heuristique — non-precise mais lit les LASTING
  *                        INJURIES comme proxy du "sac de frappe").
  *
- * Limitation V1 — les compteurs sont **career** : un joueur qui a
- * joue en dehors de la saison aura un total gonfle. Pour une V2
- * precise par-saison, il faudra agreger depuis les events de la
- * feuille de match (Lot G) ou stocker un snapshot start-of-season.
+ * FR18 — scope PAR-SAISON quand des events de feuille de match (Lot G)
+ * existent pour la saison (`scope: 'season'`), sinon repli sur les compteurs
+ * career (`scope: 'career'`, ex: saison sans feuille saisie / tests SQLite) :
+ *   * topScorers/Bashers/Passers/Interceptors : agreges des events de saison.
+ *   * topKillers/Aggressors/TeamThrowers      : events de saison uniquement.
+ *   * topMvps        : agregation des `motmPlayerIds` des feuilles de saison.
+ *   * topFutureStars : PSP gagnes sur la saison (recalcul depuis les agregats
+ *                      d'events + MVP, barème `SPP_VALUES` partage, override
+ *                      "Bagarreurs Brutaux" par roster).
+ *   * topPunchingBags: eliminations subies (events de saison) ; repli proxy
+ *                      "blessures durables" career hors saison.
  *
- * Pour minimiser cette limite : on filtre les joueurs sur les
- * teams inscrites a la saison ET on indique clairement le scope
- * "carriere" dans la reponse (le flag `scope: 'career'`).
- *
- * Les categories manquantes (killer / catapulte / agresseur / sac
- * de frappe stricto sensu) seront ajoutees quand la match-sheet v2
- * (Lot G) tracera les events detailles.
+ * Les joueurs sont filtres sur les teams inscrites a la saison.
  */
 
 import { prisma } from "../prisma";
+import {
+  calculateAggregateSPP,
+  rosterToModifier,
+  type TeamSPPModifier,
+} from "./spp-tracking";
+import { parseStringArrayJson } from "./pro-player-career-stats";
 
 export type PlayerStatCategory =
   | "topScorers"
@@ -73,7 +80,9 @@ export interface PlayerStatsCatalogue {
   readonly topTeamThrowers: PlayerStatRow[];
   readonly topPassers: PlayerStatRow[];
   readonly topInterceptors: PlayerStatRow[];
+  /** FR18 — PSP gagnés sur la saison (events + MVP) ; repli career hors saison. */
   readonly topFutureStars: PlayerStatRow[];
+  /** FR18 — titres de MVP de la saison (`motmPlayerIds`) ; repli career hors saison. */
   readonly topMvps: PlayerStatRow[];
   readonly topPunchingBags: PlayerStatRow[];
 }
@@ -269,6 +278,65 @@ export async function computeLeaderboards(input: {
     // Events indisponibles (tests SQLite) -> classements events vides.
   }
 
+  // FR18 — MVP par SAISON : agrégation des `motmPlayerIds` des feuilles de
+  // match de la saison (le commissaire désigne le/les MVP après validation).
+  // Source par-saison fiable, vs le compteur career `totalMvpAwards`.
+  const mvpCounts = new Map<string, number>();
+  try {
+    const sheets = (await (
+      prisma as unknown as {
+        leagueMatchSheet: {
+          findMany: (args: unknown) => Promise<
+            Array<{ motmPlayerIds: unknown }>
+          >;
+        };
+      }
+    ).leagueMatchSheet.findMany({
+      where: { pairing: { round: { seasonId: input.seasonId } } },
+      select: { motmPlayerIds: true },
+    })) as Array<{ motmPlayerIds: unknown }>;
+    for (const s of sheets) {
+      for (const playerId of parseStringArrayJson(s.motmPlayerIds)) {
+        mvpCounts.set(playerId, (mvpCounts.get(playerId) ?? 0) + 1);
+      }
+    }
+  } catch {
+    // Feuilles de match indisponibles (tests SQLite) -> repli career.
+  }
+
+  // FR18 — Future Star par SAISON : PSP gagnés sur la saison, recalculés
+  // depuis les agrégats d'events (TD/cas/comp/int) + titres de MVP, avec
+  // l'override "Bagarreurs Brutaux" du roster de chaque joueur. Source unique
+  // de barème : `SPP_VALUES` (cf. spp-tracking). Repli career (`p.spp`) hors
+  // saison. Tolérant : si `Roster.specialRules` est illisible, barème vanilla.
+  const modifierByRoster = new Map<string, TeamSPPModifier>();
+  try {
+    const rosterSlugs = [...new Set(players.map((p) => p.team.roster))];
+    const rosters = (await prisma.roster.findMany({
+      where: { slug: { in: rosterSlugs } },
+      select: { slug: true, specialRules: true },
+    })) as Array<{ slug: string; specialRules: string | null }>;
+    for (const r of rosters) {
+      modifierByRoster.set(r.slug, rosterToModifier(r.specialRules ?? ""));
+    }
+  } catch {
+    // specialRules indisponible -> barème vanilla pour tous (map vide).
+  }
+  const seasonSppByPlayer = new Map<string, number>();
+  for (const p of players) {
+    const earned = calculateAggregateSPP(
+      {
+        touchdowns: tdCounts.get(p.id) ?? 0,
+        casualties: casCounts.get(p.id) ?? 0,
+        completions: compCounts.get(p.id) ?? 0,
+        interceptions: intCounts.get(p.id) ?? 0,
+        mvps: mvpCounts.get(p.id) ?? 0,
+      },
+      modifierByRoster.get(p.team.roster),
+    );
+    if (earned > 0) seasonSppByPlayer.set(p.id, earned);
+  }
+
   // Sac de frappe : éliminations subies (events de saison) si disponibles ;
   // sinon repli sur la proxy "blessures durables" (compteur career).
   const topPunchingBags =
@@ -277,8 +345,9 @@ export async function computeLeaderboards(input: {
       : topByMetric(players, (p) => p.nigglingInjuries, topN);
 
   // FR18 — scope par-saison quand des events existent (sinon repli career).
-  // MVP et Future Star restent basés sur les compteurs cumulés (intrinsèquement
-  // career) : pas d'event dédié fiable par saison.
+  // MVP = agrégation des `motmPlayerIds` de la saison ; Future Star = PSP
+  // gagnés sur la saison (recalcul depuis agrégats + MVP). Repli career pour
+  // les deux quand aucun event de saison n'est disponible.
   return {
     seasonId: input.seasonId,
     topN,
@@ -298,8 +367,12 @@ export async function computeLeaderboards(input: {
     topInterceptors: hasEvents
       ? topByCount(players, intCounts, topN)
       : topByMetric(players, (p) => p.totalInterceptions, topN),
-    topFutureStars: topByMetric(players, (p) => p.spp, topN),
-    topMvps: topByMetric(players, (p) => p.totalMvpAwards, topN),
+    topFutureStars: hasEvents
+      ? topByCount(players, seasonSppByPlayer, topN)
+      : topByMetric(players, (p) => p.spp, topN),
+    topMvps: hasEvents
+      ? topByCount(players, mvpCounts, topN)
+      : topByMetric(players, (p) => p.totalMvpAwards, topN),
     topPunchingBags,
   };
 }

@@ -1,12 +1,67 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   calculatePlayerSPP,
+  calculateAggregateSPP,
+  rosterToModifier,
   persistMatchSPP,
   loadLeagueSPPContext,
   type PlayerMatchStats,
   type GameStateForSPP,
   type LeagueSPPContext,
 } from "./spp-tracking";
+
+describe("calculateAggregateSPP (FR18 — PSP de saison)", () => {
+  it("somme TD×3 + cas×2 + comp×1 + int×1 + mvps×4 (vanilla)", () => {
+    // 2 TD (6) + 1 cas (2) + 3 comp (3) + 1 int (1) + 2 MVP (8) = 20
+    expect(
+      calculateAggregateSPP({
+        touchdowns: 2,
+        casualties: 1,
+        completions: 3,
+        interceptions: 1,
+        mvps: 2,
+      }),
+    ).toBe(20);
+  });
+
+  it("compte plusieurs MVP (×4 chacun), pas un simple booléen", () => {
+    expect(
+      calculateAggregateSPP({
+        touchdowns: 0,
+        casualties: 0,
+        completions: 0,
+        interceptions: 0,
+        mvps: 3,
+      }),
+    ).toBe(12);
+  });
+
+  it("applique l'override Bagarreurs Brutaux (TD=2, cas=3)", () => {
+    // 2 TD (4) + 2 cas (6) = 10 au lieu de 6+4=10... distinct : 2 TD seuls.
+    expect(
+      calculateAggregateSPP(
+        {
+          touchdowns: 2,
+          casualties: 0,
+          completions: 0,
+          interceptions: 0,
+          mvps: 0,
+        },
+        { bagarreursBrutaux: true },
+      ),
+    ).toBe(4); // vanilla aurait donné 6
+  });
+});
+
+describe("rosterToModifier", () => {
+  it("détecte bagarreurs_brutaux dans une chaîne CSV/whitespace", () => {
+    expect(rosterToModifier("foo, bagarreurs_brutaux ,bar").bagarreursBrutaux).toBe(
+      true,
+    );
+    expect(rosterToModifier("foo bar").bagarreursBrutaux).toBe(false);
+    expect(rosterToModifier("").bagarreursBrutaux).toBe(false);
+  });
+});
 
 describe("calculatePlayerSPP", () => {
   it("returns 0 for a player with no stats", () => {
