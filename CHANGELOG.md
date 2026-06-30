@@ -1,3 +1,18 @@
+## [1.206.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.205.0...v1.206.0) (2026-06-30)
+
+
+### ✨ Features
+
+* **league:** compétences avec nom + description sur la page roster ([e0045c1](https://github.com/Ryxeuf/fantasy-football-game/commit/e0045c1506618101a5883bc22189e6f96e4e3c23))
+* **league:** enrichit roster-view (coach, valeur d'equipe, staff, race) ([e176a36](https://github.com/Ryxeuf/fantasy-football-game/commit/e176a360bc5a6817d4eda4a20f86de458244cd4d))
+* **league:** implement seasonal MVP and Future Star calculations ([1a8dc4d](https://github.com/Ryxeuf/fantasy-football-game/commit/1a8dc4d832ff688df651c18236abf30e90a6aacb))
+* **league:** page roster dediee a la place de la modale ([c09fe02](https://github.com/Ryxeuf/fantasy-football-game/commit/c09fe0209fd27ac8250cd43fee7d2568be85278e))
+
+
+### 📝 Documentation
+
+* **league:** consultation des rosters + polish saisie de match (2026-06-30) ([69a28aa](https://github.com/Ryxeuf/fantasy-football-game/commit/69a28aa656bd2e8a40953a8b90c26096866102da))
+
 ## [1.205.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.204.0...v1.205.0) (2026-06-30)
 
 
