@@ -1,3 +1,10 @@
+## [1.206.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.206.0...v1.206.1) (2026-06-30)
+
+
+### 🐛 Bug Fixes
+
+* **skills:** swap French names for Stunty and Titchy skills ([a004466](https://github.com/Ryxeuf/fantasy-football-game/commit/a00446650cb32906073aa3a1319bcebf226bc416))
+
 ## [1.206.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.205.0...v1.206.0) (2026-06-30)
 
 
