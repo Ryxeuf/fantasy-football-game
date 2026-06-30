@@ -183,13 +183,17 @@ export async function removeCoachFromSeason(input: RemoveCoachInput) {
     );
   }
 
-  const participants = await prisma.leagueParticipant.findMany({
+  const participants = (await prisma.leagueParticipant.findMany({
     where: {
       seasonId: input.seasonId,
       team: { ownerId: input.coachUserId },
     },
     select: { id: true, teamId: true, team: { select: { name: true } } },
-  });
+  })) as ReadonlyArray<{
+    id: string;
+    teamId: string;
+    team: { name: string } | null;
+  }>;
   if (participants.length === 0) {
     throw new CommissionerRemovalError(
       "coach_not_in_league",
