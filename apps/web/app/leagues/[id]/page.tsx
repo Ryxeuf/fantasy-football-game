@@ -681,6 +681,8 @@ export default function LeagueDetailPage() {
                   participants={season.participants}
                   showSeasonElo={showSeasonElo}
                   poolNamesById={poolNamesById}
+                  leagueId={league.id}
+                  canViewRosters={isCreator || !!myParticipant}
                   commissionerLeagueId={
                     leagueEnabled && isCreator ? league.id : undefined
                   }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { apiRequest } from "../../lib/api-client";
 import { CommissionerTeamEditor } from "./CommissionerTeamEditor";
+import { LeagueRosterModal } from "./LeagueRosterModal";
 import type { LeagueParticipantDetail } from "./types";
 
 interface SeasonParticipantsProps {
@@ -11,6 +12,11 @@ interface SeasonParticipantsProps {
   showSeasonElo?: boolean;
   /** FR2 — nom de poule par id, pour afficher l'affectation de chaque équipe. */
   poolNamesById?: Record<string, string>;
+  /** id de la ligue — requis pour consulter les rosters des participants. */
+  leagueId?: string;
+  /** Vrai si le coach courant est inscrit (ou commissaire) : il peut voir
+   * les rosters de tous les participants de la ligue. */
+  canViewRosters?: boolean;
   /** FR12 — leagueId si l'utilisateur est commissaire (active l'édition). */
   commissionerLeagueId?: string;
   /** Saison courante — requis pour la suppression d'équipe par le commissaire. */
@@ -25,6 +31,8 @@ export function SeasonParticipants({
   participants,
   showSeasonElo = false,
   poolNamesById = {},
+  leagueId,
+  canViewRosters = false,
   commissionerLeagueId,
   seasonId,
   seasonStatus,
@@ -35,6 +43,13 @@ export function SeasonParticipants({
     teamId: string;
     name: string;
   } | null>(null);
+  // Consultation du roster d'un participant (lecture seule).
+  const [viewingRoster, setViewingRoster] = useState<{
+    teamId: string;
+    name: string;
+  } | null>(null);
+  // Un coach inscrit peut voir les rosters dès qu'on connaît la ligue.
+  const showRosterButton = canViewRosters && !!leagueId;
   // Suppression d'équipe : id en attente de confirmation + erreur éventuelle.
   const [confirmingTeamId, setConfirmingTeamId] = useState<string | null>(null);
   const [removingTeamId, setRemovingTeamId] = useState<string | null>(null);
@@ -152,6 +167,24 @@ export function SeasonParticipants({
                   ) : null}
                 </div>
               )}
+              {/* Consultation du roster — ouverte à tout coach inscrit. */}
+              {showRosterButton ? (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    data-testid={`view-roster-${p.teamId}`}
+                    onClick={() =>
+                      setViewingRoster({
+                        teamId: p.teamId,
+                        name: p.team.name,
+                      })
+                    }
+                    className="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    👥 Voir le roster
+                  </button>
+                </div>
+              ) : null}
               {/* FR12 — édition de l'équipe par le commissaire. */}
               {commissionerLeagueId ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -257,6 +290,15 @@ export function SeasonParticipants({
           canRemovePlayers={canRemoveTeams}
           onClose={() => setEditing(null)}
           onChanged={onChanged}
+        />
+      ) : null}
+
+      {leagueId && viewingRoster ? (
+        <LeagueRosterModal
+          leagueId={leagueId}
+          teamId={viewingRoster.teamId}
+          teamName={viewingRoster.name}
+          onClose={() => setViewingRoster(null)}
         />
       ) : null}
     </>
