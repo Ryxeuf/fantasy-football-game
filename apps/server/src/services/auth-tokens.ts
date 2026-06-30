@@ -11,10 +11,27 @@ import { JWT_SECRET } from "../config";
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 
+/**
+ * TTL d'un token d'impersonation (admin « se connecter en tant que »).
+ * Volontairement court et SANS refresh token associe : la session
+ * d'impersonation expire d'elle-meme et ne peut pas etre renouvelee
+ * silencieusement, ce qui borne la fenetre d'usurpation a 1 heure.
+ */
+export const IMPERSONATION_TOKEN_TTL_SECONDS = 60 * 60;
+
 interface AccessTokenClaims {
   sub: string;
   role: string;
   roles: string[];
+}
+
+interface ImpersonationTokenClaims {
+  /** Utilisateur cible (impersonne) — devient le `sub` du token. */
+  sub: string;
+  role: string;
+  roles: string[];
+  /** Admin a l'origine de l'impersonation (claim « actor », cf. RFC 8693). */
+  act: string;
 }
 
 interface RefreshTokenClaims {
@@ -45,6 +62,21 @@ export function signAccessToken(claims: AccessTokenClaims): string {
     { ...claims, typ: "access" },
     JWT_SECRET,
     { ...COMMON_OPTIONS, expiresIn: ACCESS_TOKEN_TTL_SECONDS },
+  );
+}
+
+/**
+ * Token d'impersonation : un access token normal (`typ: "access"`) dont le
+ * `sub` est l'utilisateur cible et dont les `roles` sont ceux de la cible
+ * (l'admin n'a que les droits de l'utilisateur pendant l'impersonation). Le
+ * claim `act` trace l'admin a l'origine, et `imp: true` signale a `/auth/me`
+ * et a l'UI qu'il s'agit d'une session usurpee.
+ */
+export function signImpersonationToken(claims: ImpersonationTokenClaims): string {
+  return jwt.sign(
+    { sub: claims.sub, role: claims.role, roles: claims.roles, act: claims.act, imp: true, typ: "access" },
+    JWT_SECRET,
+    { ...COMMON_OPTIONS, expiresIn: IMPERSONATION_TOKEN_TTL_SECONDS },
   );
 }
 

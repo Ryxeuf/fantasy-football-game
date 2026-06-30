@@ -446,6 +446,19 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
     if (!user) return res.status(404).json({ error: "Introuvable" });
 
     const roles = normalizeRoles(user.role);
+
+    // Session d'impersonation admin (« se connecter en tant que ») : on
+    // expose l'admin a l'origine pour que l'UI affiche une banniere et un
+    // bouton « revenir a mon compte ».
+    let impersonatedBy: { id: string; coachName: string } | null = null;
+    if (req.user?.impersonatorId) {
+      const actor = await prisma.user.findUnique({
+        where: { id: req.user.impersonatorId },
+        select: { id: true, coachName: true },
+      });
+      if (actor) impersonatedBy = actor;
+    }
+
     const publicUser = {
       ...user,
       roles,
@@ -453,6 +466,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         patreon: user.patreon,
         supporterActiveUntil: user.supporterActiveUntil,
       }),
+      impersonatedBy,
     };
 
     res.json({ user: publicUser });

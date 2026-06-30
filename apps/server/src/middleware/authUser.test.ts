@@ -217,4 +217,32 @@ describe("authUser middleware", () => {
       expect(user.role).toBe("manager");
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Impersonation — claim `act` (« se connecter en tant que »)
+  // -------------------------------------------------------------------------
+
+  describe("impersonation actor claim", () => {
+    it("expose impersonatorId quand le token porte un claim act", () => {
+      const token = signToken({ sub: "target-1", roles: ["user"], act: "admin-9" });
+      const req = createMockReq(`Bearer ${token}`);
+      const res = createMockRes();
+
+      authUser(req as AuthenticatedRequest, res, mockNext);
+
+      const user = (req as AuthenticatedRequest).user!;
+      expect(user.id).toBe("target-1");
+      expect(user.impersonatorId).toBe("admin-9");
+    });
+
+    it("laisse impersonatorId undefined pour une session normale", () => {
+      const token = signToken({ sub: "user-1", roles: ["user"] });
+      const req = createMockReq(`Bearer ${token}`);
+      const res = createMockRes();
+
+      authUser(req as AuthenticatedRequest, res, mockNext);
+
+      expect((req as AuthenticatedRequest).user!.impersonatorId).toBeUndefined();
+    });
+  });
 });

@@ -6,6 +6,10 @@ import { adminOnly } from "../middleware/adminOnly";
 import { normalizeRoles } from "../utils/roles";
 import { validate, validateQuery } from "../middleware/validate";
 import { generateTempPassword } from "../services/temp-password";
+import {
+  signImpersonationToken,
+  IMPERSONATION_TOKEN_TTL_SECONDS,
+} from "../services/auth-tokens";
 import { getRefreshTokenStore } from "./auth";
 import {
   adminUsersQuerySchema,
@@ -687,6 +691,92 @@ router.post("/users/:id/password-reset", async (req, res) => {
     }
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors du reset du mot de passe" });
+  }
+});
+
+/**
+ * « Se connecter en tant que » — impersonation admin.
+ *
+ * Un admin obtient un access token court (1h, cf.
+ * IMPERSONATION_TOKEN_TTL_SECONDS) signe pour l'utilisateur cible. Le token
+ * porte le claim `act` = id de l'admin (tracabilite) et `imp: true`. AUCUN
+ * refresh token n'est emis : la session usurpee expire d'elle-meme et ne peut
+ * pas etre prolongee silencieusement. Le token herite des roles de la CIBLE
+ * (l'admin n'a que les droits de l'utilisateur pendant l'impersonation).
+ *
+ * Gardes : on refuse de s'impersonner soi-meme, un compte soft-delete ou un
+ * compte banni (memes regles que /auth/login qui rejetterait ces comptes).
+ * L'action est tracee dans l'audit log (jamais le token en clair).
+ */
+router.post("/users/:id/impersonate", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = (req as AuthenticatedRequest).user?.id;
+
+    if (adminId === id) {
+      return res.status(400).json({
+        error: "Vous ne pouvez pas vous connecter en tant que vous-même",
+      });
+    }
+
+    const target = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        coachName: true,
+        role: true,
+        roles: true,
+        deletedAt: true,
+        bannedUntil: true,
+      },
+    });
+
+    if (!target) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    if (target.deletedAt) {
+      return res.status(400).json({
+        error: "Impossible de se connecter en tant qu'un compte supprimé",
+      });
+    }
+    if (target.bannedUntil && target.bannedUntil.getTime() > Date.now()) {
+      return res.status(400).json({
+        error: "Impossible de se connecter en tant qu'un compte banni",
+      });
+    }
+
+    const roles = normalizeRoles(
+      (target as { roles?: string[] | null }).roles ?? target.role,
+    );
+    const token = signImpersonationToken({
+      sub: target.id,
+      role: roles[0] ?? "user",
+      roles,
+      act: adminId!,
+    });
+
+    await safeAudit(req, {
+      action: "user.impersonate",
+      entity: "User",
+      entityId: id,
+      // Ne JAMAIS logger le token. On trace l'admin et la cible.
+      newValue: { impersonatorId: adminId },
+    });
+
+    res.json({
+      token,
+      expiresIn: IMPERSONATION_TOKEN_TTL_SECONDS,
+      impersonatedUser: {
+        id: target.id,
+        email: target.email,
+        coachName: target.coachName,
+        roles,
+      },
+    });
+  } catch (e) {
+    serverLog.error("[admin.impersonate]", e);
+    res.status(500).json({ error: "Erreur lors de la connexion en tant que cet utilisateur" });
   }
 });
 

@@ -7,6 +7,12 @@ export interface AuthenticatedUser {
   id: string;
   role?: string;
   roles: string[];
+  /**
+   * Quand la session est une impersonation admin (« se connecter en tant
+   * que »), id de l'admin a l'origine (claim `act` du token). Absent pour
+   * une session normale.
+   */
+  impersonatorId?: string;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -28,10 +34,16 @@ export function authUser(
         (payload && (payload.role as string | undefined)),
     );
 
+    const impersonatorId =
+      payload && typeof payload.act === "string" && payload.act
+        ? (payload.act as string)
+        : undefined;
+
     req.user = {
       id: payload.sub,
       role: roles[0],
       roles,
+      ...(impersonatorId ? { impersonatorId } : {}),
     };
     return next();
   } catch {
