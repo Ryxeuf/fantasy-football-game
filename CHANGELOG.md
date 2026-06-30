@@ -1,3 +1,16 @@
+## [1.204.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.203.0...v1.204.0) (2026-06-30)
+
+
+### ✨ Features
+
+* **admin:** "se connecter en tant que" — token + route + /auth/me (serveur) ([6a01f96](https://github.com/Ryxeuf/fantasy-football-game/commit/6a01f96697cf9032cf6ddeaf8946ff1df618bff1))
+* **admin:** UI "se connecter en tant que" + bascule de session (web) ([1b24197](https://github.com/Ryxeuf/fantasy-football-game/commit/1b24197eed6f9c2d8e3b38b8ade6a5af96337608))
+
+
+### 📝 Documentation
+
+* **admin:** impersonation — change OpenSpec + doc ([bab3994](https://github.com/Ryxeuf/fantasy-football-game/commit/bab39944325db3338ab7cc0df6f52c8f8251cbcc))
+
 ## [1.203.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.202.2...v1.203.0) (2026-06-30)
 
 
