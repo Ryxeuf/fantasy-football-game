@@ -529,9 +529,9 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "stunty",
-    nameFr: "Microbe*",
+    nameFr: "Minus*",
     nameEn: "Stunty",
-    description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive.",
+    description: "Lorsque ce joueur tente d'esquiver, il ne subit aucun modificateur négatif à son test d'agilité pour avoir été marqué par des joueurs adverses. De plus, ce joueur applique un modificateur de -1 au test d'agilité lorsqu'il tente d'intercepter le ballon. Un joueur doté de ce trait est plus sujet aux blessures. Ainsi, si un jet de blessure est effectué pour lui, lancez le dé sur la table des blessures de Minus à la place.",
     category: "Trait",
     isModified: true
   },
@@ -553,9 +553,9 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "titchy",
-    nameFr: "Minus*",
+    nameFr: "Microbe*",
     nameEn: "Titchy",
-    description: "Lorsque ce joueur tente d'esquiver, il ne subit aucun modificateur négatif à son test d'agilité pour avoir été marqué par des joueurs adverses. De plus, ce joueur applique un modificateur de -1 au test d'agilité lorsqu'il tente d'intercepter le ballon. Un joueur doté de ce trait est plus sujet aux blessures. Ainsi, si un jet de blessure est effectué pour lui, lancez le dé sur la table des blessures de Minus à la place.",
+    description: "Lorsque ce joueur tente d'esquiver, il applique un modificateur de +1 à son test d'agilité. De plus, il n'applique pas le modificateur de -1 pour « marquage » aux adversaires qui tentent d'esquiver pour sortir de sa zone de tacle.",
     category: "Trait",
     isModified: true
   },

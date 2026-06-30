@@ -13,6 +13,7 @@ import {
   collectModifiers,
   getSkillEffect,
 } from "./skill-registry";
+import { getSkillBySlug } from "./index";
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
@@ -104,5 +105,25 @@ describe("S27.7.1 — Stunty AV via registry", () => {
     });
     expect(dodgeMods.dodgeModifier).toBe(1);
     expect(dodgeMods.armorModifier).toBeUndefined();
+  });
+});
+
+describe("Noms FR des traits Stunty/Titchy (anti-régression du swap Minus/Microbe)", () => {
+  // BB2025 FR : Stunty = « Minus », Titchy = « Microbe ». Le slug porte la
+  // mécanique ; le nom FR doit rester aligné (cf. apps/server static-skills-data
+  // + data/positionnels-bloodbowl-2025.md). Un swap rendait les positions
+  // Minus en « Microbe » en prod.
+  it("le slug stunty s'affiche « Minus » (pas Microbe)", () => {
+    const skill = getSkillBySlug("stunty");
+    expect(skill?.nameEn).toBe("Stunty");
+    expect(skill?.nameFr).toMatch(/^Minus/);
+    expect(skill?.nameFr).not.toMatch(/Microbe/);
+  });
+
+  it("le slug titchy s'affiche « Microbe » (pas Minus)", () => {
+    const skill = getSkillBySlug("titchy");
+    expect(skill?.nameEn).toBe("Titchy");
+    expect(skill?.nameFr).toMatch(/^Microbe/);
+    expect(skill?.nameFr).not.toMatch(/Minus/);
   });
 });
