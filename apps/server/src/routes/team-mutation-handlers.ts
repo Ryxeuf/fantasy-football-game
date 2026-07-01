@@ -29,6 +29,10 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import { serverLog } from '../utils/server-log';
 import { deleteTeam, TeamDeleteError } from '../services/team-delete';
+import {
+  isTeamRosterFrozen,
+  TEAM_ENGAGED_MESSAGE,
+} from '../services/team-lock-status';
 
 /**
  * S27.8.25 — `PUT /team/:id/info`
@@ -72,6 +76,13 @@ export async function handlePutTeamInfo(
         'Impossible de modifier cette equipe car elle est engagee dans un match en cours',
         400,
       );
+      return;
+    }
+
+    // Anti-triche : le staff/inducements d'une equipe engagee ne se modifie
+    // plus via cet endpoint (page d'edition verrouillee).
+    if (await isTeamRosterFrozen(teamId)) {
+      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
 
@@ -194,6 +205,13 @@ export async function handleUpdateTeam(
         'Impossible de modifier cette equipe car elle est engagee dans un match en cours',
         400,
       );
+      return;
+    }
+
+    // Anti-triche : une equipe engagee est verrouillee (renommage joueurs/
+    // equipe inclus via cet endpoint).
+    if (await isTeamRosterFrozen(teamId)) {
+      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
 

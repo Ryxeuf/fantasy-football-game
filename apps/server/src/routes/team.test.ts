@@ -59,6 +59,16 @@ vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
 }));
 
+// Statut d'engagement de l'equipe : mocke pour piloter le verrouillage
+// (engagee => 403) sans dependre des tables match/ligue/coupe. Defaut = non
+// engagee (false) ; les tests qui veulent l'etat engage utilisent
+// `mockResolvedValueOnce(true)` (clearAllMocks ne reinitialise pas le default).
+vi.mock("../services/team-lock-status", () => ({
+  isTeamRosterFrozen: vi.fn().mockResolvedValue(false),
+  TEAM_ENGAGED_MESSAGE:
+    "Cette equipe est engagee dans une competition (match, ligue ou coupe) et ne peut plus etre modifiee",
+}));
+
 vi.mock("../utils/star-player-validation", () => ({
   requiresPair: vi.fn(),
   // Other exports kept undefined; tests only invoke routes that need requiresPair.
@@ -111,6 +121,7 @@ import {
   validateStarPlayerHire,
 } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
+import { isTeamRosterFrozen } from "../services/team-lock-status";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockGetRosterFromDb = getRosterFromDb as ReturnType<typeof vi.fn>;
@@ -805,6 +816,7 @@ describe("Route: DELETE /team/:id/players/:playerId (S25.5t)", () => {
       >,
       playerDelete: prismaMock.teamPlayer.delete as ReturnType<typeof vi.fn>,
       updateValues: updateTeamValues as ReturnType<typeof vi.fn>,
+      frozen: isTeamRosterFrozen as ReturnType<typeof vi.fn>,
     };
   }
 
@@ -848,9 +860,10 @@ describe("Route: DELETE /team/:id/players/:playerId (S25.5t)", () => {
   });
 
   it("returns 404 ApiError when player not in team", async () => {
-    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    const { teamFindFirst, selectionFindFirst, frozen } = await getMocks();
     teamFindFirst.mockResolvedValue(makeTeamWithPlayers(12));
     selectionFindFirst.mockResolvedValue(null);
+    frozen.mockResolvedValue(false);
 
     const req = createReq({ params: { id: "team-1", playerId: "p-missing" } });
     const res = createRes();
@@ -863,19 +876,51 @@ describe("Route: DELETE /team/:id/players/:playerId (S25.5t)", () => {
     });
   });
 
-  it("returns 400 ApiError when team would drop below 11 players", async () => {
-    const { teamFindFirst, selectionFindFirst } = await getMocks();
-    teamFindFirst.mockResolvedValue(makeTeamWithPlayers(11, "p-0"));
+  it("returns 403 when the team is ENGAGED (locked, anti-cheat)", async () => {
+    const { teamFindFirst, selectionFindFirst, frozen } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers(12, "p-0"));
     selectionFindFirst.mockResolvedValue(null);
+    // Equipe engagee (ligue / coupe / match joue) => edition verrouillee.
+    frozen.mockResolvedValueOnce(true);
 
     const req = createReq({ params: { id: "team-1", playerId: "p-0" } });
     const res = createRes();
     await handleDeleteTeamPlayer(req, res);
 
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(403);
     expect(res.payload).toMatchObject({
       success: false,
-      error: expect.stringContaining("11"),
+      error: expect.stringContaining("engagee"),
+    });
+  });
+
+  it("allows a DRAFT team to drop below 11 players (free editing)", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      selectionFindFirst,
+      playerDelete,
+      updateValues,
+      frozen,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers(11, "p-0"));
+    selectionFindFirst.mockResolvedValue(null);
+    // Brouillon (jamais engagee) => on peut descendre sous 11 pour remanier.
+    frozen.mockResolvedValue(false);
+    playerDelete.mockResolvedValue({ id: "p-0" });
+    updateValues.mockResolvedValue({ teamValue: 900, currentValue: 900 });
+    const updatedTeam = { id: "team-1", players: [] };
+    teamFindUnique.mockResolvedValue(updatedTeam);
+
+    const req = createReq({ params: { id: "team-1", playerId: "p-0" } });
+    const res = createRes();
+    await handleDeleteTeamPlayer(req, res);
+
+    expect(playerDelete).toHaveBeenCalledWith({ where: { id: "p-0" } });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { team: updatedTeam },
     });
   });
 
@@ -886,9 +931,11 @@ describe("Route: DELETE /team/:id/players/:playerId (S25.5t)", () => {
       selectionFindFirst,
       playerDelete,
       updateValues,
+      frozen,
     } = await getMocks();
     teamFindFirst.mockResolvedValue(makeTeamWithPlayers(12, "p-1"));
     selectionFindFirst.mockResolvedValue(null);
+    frozen.mockResolvedValue(false);
     playerDelete.mockResolvedValue({ id: "p-1" });
     updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
     const updatedTeam = { id: "team-1", players: [] };

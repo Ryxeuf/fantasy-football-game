@@ -38,6 +38,10 @@ import {
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { serverLog } from '../utils/server-log';
+import {
+  isTeamRosterFrozen,
+  TEAM_ENGAGED_MESSAGE,
+} from '../services/team-lock-status';
 
 /**
  * S25.5z / S27.8.24 — `POST /team/:id/players`
@@ -83,6 +87,14 @@ export async function handleAddTeamPlayer(
         'Impossible de modifier cette equipe car elle est engagee dans un match en cours',
         400,
       );
+      return;
+    }
+
+    // Anti-triche : une equipe engagee (ligue / coupe / match joue) est
+    // verrouillee. La progression legitime passe par des flux dedies
+    // (tresorerie, montee de niveau), pas par cet ajout a budget initial.
+    if (await isTeamRosterFrozen(teamId)) {
+      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
 
@@ -250,19 +262,19 @@ export async function handleDeleteTeamPlayer(
       return;
     }
 
+    // Anti-triche : une equipe engagee (ligue / coupe / match joue) est
+    // verrouillee, on ne retire pas un joueur de sa composition. Tant qu'elle
+    // est en brouillon, le coach peut au contraire descendre librement sous 11
+    // (le plancher BB n'est verifie qu'a la sauvegarde du roster).
+    if (await isTeamRosterFrozen(teamId)) {
+      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const player = team.players.find((p: any) => p.id === playerId);
     if (!player) {
       sendError(res, 'Joueur introuvable', 404);
-      return;
-    }
-
-    // L2.B.6 — Funeral : un joueur mort peut etre retire meme si
-    // l'equipe est sous le seuil de 11 (sa mort en est la cause).
-    // Pour un joueur vivant on garde la regle BB : minimum 11 joueurs
-    // a la liste, les remplacants sont des journeymen au match-start.
-    if (!(player as { dead?: boolean }).dead && team.players.length <= 11) {
-      sendError(res, 'Une equipe doit avoir au minimum 11 joueurs', 400);
       return;
     }
 
@@ -350,10 +362,16 @@ export async function handleListAvailablePositions(
       };
     });
 
+    // `frozen` indique a l'UI si le plancher de 11 joueurs s'applique
+    // (equipe engagee) ou si le roster est encore en brouillon librement
+    // editable. L'UI conditionne le bouton "retirer" la-dessus.
+    const frozen = await isTeamRosterFrozen(teamId);
+
     sendSuccess(res, {
       availablePositions,
       currentPlayerCount: team.players.length,
       maxPlayers: 16,
+      frozen,
     });
   } catch (e: unknown) {
     serverLog.error(
