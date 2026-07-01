@@ -1,3 +1,11 @@
+## [1.210.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.210.0...v1.210.1) (2026-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **league:** un commissaire-participant peut faire évoluer son équipe depuis la feuille de match ([c23bb67](https://github.com/Ryxeuf/fantasy-football-game/commit/c23bb67239c1bc6c6152b22c1fd60041d0351664))
+* **skills:** traduit la catégorie de compétence dans les tooltips ([c46cf39](https://github.com/Ryxeuf/fantasy-football-game/commit/c46cf3900245a5bf66a5309818cca80f4eb9e1e3))
+
 ## [1.210.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.209.0...v1.210.0) (2026-07-01)
 
 
