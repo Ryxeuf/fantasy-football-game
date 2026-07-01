@@ -43,6 +43,40 @@ export const updateTeamSchema = z.object({
   name: z.string().min(1, "Le nom de l'équipe ne peut pas être vide").max(100, "Le nom de l'équipe ne peut pas dépasser 100 caractères").optional(),
 });
 
+// Sauvegarde batch du roster (page d'edition d'une equipe NON engagee).
+// A la difference de `updateTeamSchema` (renommage seul), on accepte des
+// joueurs SANS `id` (ajouts) et une liste qui differe du roster courant
+// (suppressions implicites : tout joueur existant absent est retire). Le
+// `position` est requis pour materialiser un nouveau joueur ; il est ignore
+// pour les joueurs existants (leurs stats/position ne changent pas). La
+// validation "comme a la creation" (bornes de format, min/max par poste,
+// budget) est faite dans le handler.
+const rosterSavePlayerItem = z.object({
+  id: z.string().min(1).optional(),
+  position: z.string().min(1, "position requise"),
+  name: z.string().min(1, "Tous les joueurs doivent avoir un nom").max(100),
+  number: z
+    .number()
+    .int()
+    .min(1, "Les numéros doivent être des entiers entre 1 et 99")
+    .max(99, "Les numéros doivent être des entiers entre 1 et 99"),
+});
+
+export const saveRosterSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Le nom de l'équipe ne peut pas être vide")
+    .max(100, "Le nom de l'équipe ne peut pas dépasser 100 caractères")
+    .optional(),
+  // Borne haute = 16 (cap BB). La borne basse par format (11 / 7) est
+  // verifiee dans le handler pour renvoyer un message clair.
+  players: z
+    .array(rosterSavePlayerItem)
+    .min(1, "players requis (array)")
+    .max(16, "Une équipe ne peut pas avoir plus de 16 joueurs"),
+});
+export type SaveRosterBody = z.infer<typeof saveRosterSchema>;
+
 export const updateTeamInfoSchema = z.object({
   rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),

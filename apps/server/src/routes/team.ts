@@ -10,6 +10,7 @@ import {
   addPlayerSchema,
   updatePlayerSkillsSchema,
   addStarPlayerToTeamSchema,
+  saveRosterSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
@@ -104,6 +105,8 @@ import {
   handleUpdateTeam as handleUpdateTeamImpl,
   handleDeleteTeam as handleDeleteTeamImpl,
 } from './team-mutation-handlers';
+export { handleSaveRoster } from './team-roster-save-handler';
+import { handleSaveRoster as handleSaveRosterImpl } from './team-roster-save-handler';
 
 router.put(
   "/:id/info",
@@ -113,6 +116,13 @@ router.put(
 );
 router.post("/:id/recalculate", authUser, handleRecalculateTeamImpl);
 router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeamImpl);
+// Sauvegarde batch du roster (edition libre d'une equipe non engagee).
+router.put(
+  "/:id/roster",
+  authUser,
+  validate(saveRosterSchema),
+  handleSaveRosterImpl,
+);
 router.delete("/:id", authUser, handleDeleteTeamImpl);
 
 // #3 — Partage public opt-in du roster (boucle d'acquisition).
