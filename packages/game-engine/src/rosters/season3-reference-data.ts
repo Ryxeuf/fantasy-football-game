@@ -65,7 +65,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Human Lineman', cost: 50, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [] },
-      { nameEn: 'Halfling Hopeful', cost: 30, max: 3, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Halfling Hopeful', cost: 30, max: 3, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Dwarf Blocker', cost: 70, max: 3, ma: 4, st: 3, ag: 4, pa: 5, av: 10, skills: ['block', 'defensive', 'thick-skull'] },
       { nameEn: 'Ogre', cost: 140, max: 1, ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: ['bone-head', 'loner-3', 'mighty-blow-1', 'thick-skull', 'throw-team-mate'] },
     ],
@@ -222,7 +222,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     budget: 1000,
     keyPositions: [
       { nameEn: 'Human Lineman', cost: 50, max: 16, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [] },
-      { nameEn: 'Halfling Hopeful', cost: 30, max: 3, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'titchy'] },
+      { nameEn: 'Halfling Hopeful', cost: 30, max: 3, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Human Thrower', cost: 75, max: 2, ma: 6, st: 3, ag: 3, pa: 3, av: 9, skills: ['pass', 'sure-hands'] },
       { nameEn: 'Human Blitzer', cost: 85, max: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['block', 'tackle'] },
       { nameEn: 'Ogre', cost: 140, max: 1, ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: ['bone-head', 'loner-3', 'mighty-blow-1', 'thick-skull', 'throw-team-mate'] },
@@ -402,7 +402,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 5,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Gnome Lineman', cost: 40, max: 16, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['jump-up', 'right-stuff', 'titchy', 'wrestle'] },
+      { nameEn: 'Gnome Lineman', cost: 40, max: 16, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['jump-up', 'right-stuff', 'stunty', 'wrestle'] },
       { nameEn: 'Treeman', cost: 120, max: 2, ma: 2, st: 6, ag: 5, pa: 5, av: 11, skills: ['mighty-blow-1', 'stand-firm', 'strong-arm', 'take-root', 'thick-skull', 'throw-team-mate', 'timmm-ber'] },
     ],
   },
@@ -415,7 +415,7 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     keyPositions: [
       { nameEn: 'Goblin Lineman', cost: 40, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'right-stuff', 'stunty'] },
       { nameEn: 'Trained Troll', cost: 115, max: 2, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
-      { nameEn: 'Fanatic', cost: 70, max: 1, ma: 3, st: 7, ag: 3, pa: 0, av: 8, skills: ['ball-and-chain', 'no-hands', 'secret-weapon', 'titchy'] },
+      { nameEn: 'Fanatic', cost: 70, max: 1, ma: 3, st: 7, ag: 3, pa: 0, av: 8, skills: ['ball-and-chain', 'no-hands', 'secret-weapon', 'stunty'] },
     ],
   },
 
@@ -425,8 +425,8 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
     positionCount: 4,
     budget: 1000,
     keyPositions: [
-      { nameEn: 'Halfling Hopeful Lineman', cost: 30, max: 16, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'titchy'] },
-      { nameEn: 'Halfling Catcher', cost: 55, max: 2, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['catch', 'dodge', 'right-stuff', 'sprint', 'titchy'] },
+      { nameEn: 'Halfling Hopeful Lineman', cost: 30, max: 16, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['dodge', 'right-stuff', 'stunty'] },
+      { nameEn: 'Halfling Catcher', cost: 55, max: 2, ma: 5, st: 2, ag: 3, pa: 4, av: 7, skills: ['catch', 'dodge', 'right-stuff', 'sprint', 'stunty'] },
       { nameEn: 'Treeman', cost: 120, max: 2, ma: 2, st: 6, ag: 5, pa: 5, av: 11, skills: ['mighty-blow-1', 'stand-firm', 'strong-arm', 'take-root', 'thick-skull', 'throw-team-mate', 'timmm-ber'] },
     ],
   },

@@ -41,7 +41,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 7,
-        skills: "dodge,titchy,right-stuff",
+        skills: "dodge,stunty,right-stuff",
       },
       {
         slug: "old_world_alliance_trois_quart_nain",
@@ -591,7 +591,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 7,
-        skills: "wrestle,titchy,right-stuff,jump-up",
+        skills: "wrestle,stunty,right-stuff,jump-up",
       },
       {
         slug: "gnome_gnome_illusioniste",
@@ -604,7 +604,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 3,
         av: 7,
-        skills: "trickster,wrestle,titchy,jump-up",
+        skills: "trickster,wrestle,stunty,jump-up",
       },
       {
         slug: "gnome_renard_sylvestre",
@@ -617,7 +617,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 0,
         av: 6,
-        skills: "dodge,sidestep,my-ball,titchy",
+        skills: "dodge,sidestep,my-ball,stunty",
       },
       {
         slug: "gnome_belluaire_gnome",
@@ -630,7 +630,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "guard,wrestle,titchy,jump-up",
+        skills: "guard,wrestle,stunty,jump-up",
       },
       {
         slug: "gnome_homme_arbre",
@@ -694,7 +694,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 0,
         av: 8,
-        skills: "secret-weapon,titchy,no-hands,chainsaw",
+        skills: "secret-weapon,stunty,no-hands,chainsaw",
       },
       {
         slug: "goblin_bomba",
@@ -707,7 +707,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "secret-weapon,bombardier,dodge,titchy",
+        skills: "secret-weapon,bombardier,dodge,stunty",
       },
       {
         slug: "goblin_ouligan",
@@ -720,7 +720,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 5,
         av: 8,
-        skills: "dodge,dirty-player-1,titchy,right-stuff,disturbing-presence,provocation",
+        skills: "dodge,dirty-player-1,stunty,right-stuff,disturbing-presence,provocation",
       },
       {
         slug: "goblin_plongeur_de_la_mort",
@@ -733,7 +733,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 6,
         av: 8,
-        skills: "dodge,titchy,pile-on,right-stuff",
+        skills: "dodge,stunty,pile-on,right-stuff",
       },
       {
         slug: "goblin_fanatique",
@@ -746,7 +746,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 0,
         av: 8,
-        skills: "secret-weapon,ball-and-chain,titchy,no-hands",
+        skills: "secret-weapon,ball-and-chain,stunty,no-hands",
       },
       {
         slug: "goblin_echassier_a_ressort",
@@ -759,7 +759,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "dodge,titchy,pogo-stick",
+        skills: "dodge,stunty,pogo-stick",
       }
     ],
   },
@@ -783,7 +783,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 7,
-        skills: "dodge,titchy,right-stuff",
+        skills: "dodge,stunty,right-stuff",
       },
       {
         slug: "halfling_balaise_halfling",
@@ -796,7 +796,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 3,
         av: 8,
-        skills: "dodge,titchy,fend",
+        skills: "dodge,stunty,fend",
       },
       {
         slug: "halfling_receveur_halfling",
@@ -809,7 +809,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 7,
-        skills: "dodge,titchy,right-stuff,catch,sprint",
+        skills: "dodge,stunty,right-stuff,catch,sprint",
       },
       {
         slug: "halfling_homme_arbre_de_l_altern",
@@ -940,7 +940,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 3,
         av: 8,
-        skills: "dodge,titchy,shadowing,on-the-ball",
+        skills: "dodge,stunty,shadowing,on-the-ball",
       },
       {
         slug: "lizardmen_kroxigor",
@@ -1068,7 +1068,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 7,
-        skills: "dodge,titchy,right-stuff",
+        skills: "dodge,stunty,right-stuff",
       },
       {
         slug: "human_lanceur",
@@ -2247,7 +2247,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "dodge,sidestep,titchy,pogo-stick,right-stuff",
+        skills: "dodge,sidestep,stunty,pogo-stick,right-stuff",
       },
       {
         slug: "snotling_lance_champis",
