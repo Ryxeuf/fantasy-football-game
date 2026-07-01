@@ -9,6 +9,7 @@ import {
 } from "../me/teams/skills-catalog-context";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
+import { getSkillCategoryLabel } from "../lib/skill-category-labels";
 
 interface SkillTooltipProps {
   skillSlug: string;
@@ -162,7 +163,7 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
             )}
             <span>
               {language === "fr" ? "Catégorie" : "Category"}:{" "}
-              {skillDescription.category}
+              {getSkillCategoryLabel(skillDescription.category, language)}
             </span>
           </div>
           

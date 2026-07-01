@@ -9,6 +9,7 @@ import {
   useSkillsCatalog,
   resolveFromCatalog,
 } from "../skills-catalog-context";
+import { getSkillCategoryLabel } from "../../../lib/skill-category-labels";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -168,7 +169,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
             {skillDescription.name}
           </div>
           <div className="text-xs text-gray-300 mb-1">
-            {skillDescription.category}
+            {getSkillCategoryLabel(skillDescription.category, language)}
           </div>
           <div className="text-xs leading-relaxed">
             {skillDescription.description}

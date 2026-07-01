@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
+import { getSkillCategoryLabel } from "../lib/skill-category-labels";
 
 export interface Skill {
   id: string;
@@ -29,21 +30,6 @@ const categoryNames: Record<string, { fr: string; en: string; key: string }> = {
   Mutation: { fr: "Mutations", en: "Mutations", key: "Mutation" },
   Trait: { fr: "Traits", en: "Traits", key: "Trait" },
   "Scélérates": { fr: "Scélérates", en: "Villainous", key: "Scélérates" },
-};
-
-// Libellés courts (badge) traduits par catégorie. Les clés couvrent les
-// variantes rencontrées (singulier/pluriel) présentes dans les données.
-const categoryTagLabels: Record<string, { fr: string; en: string }> = {
-  General: { fr: "Générale", en: "General" },
-  Agility: { fr: "Agilité", en: "Agility" },
-  Strength: { fr: "Force", en: "Strength" },
-  Passing: { fr: "Passe", en: "Passing" },
-  Mutation: { fr: "Mutation", en: "Mutation" },
-  Mutations: { fr: "Mutation", en: "Mutation" },
-  Trait: { fr: "Trait", en: "Trait" },
-  Traits: { fr: "Trait", en: "Trait" },
-  Extraordinary: { fr: "Extraordinaire", en: "Extraordinary" },
-  "Scélérates": { fr: "Scélérates", en: "Villainous" },
 };
 
 interface SkillsClientProps {
@@ -323,11 +309,7 @@ export default function SkillsClient({
                               className="object-contain"
                             />
                           )}
-                          {categoryTagLabels[skill.category]
-                            ? language === "fr"
-                              ? categoryTagLabels[skill.category].fr
-                              : categoryTagLabels[skill.category].en
-                            : skill.category}
+                          {getSkillCategoryLabel(skill.category, language)}
                         </span>
                       </div>
                     </div>
