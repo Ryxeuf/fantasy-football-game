@@ -496,6 +496,35 @@ describe("Lot G — league-match-sheet", () => {
       });
       const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
       expect(out.viewerRole).toBe("commissioner");
+      // Commissaire non-participant : aucune equipe possedee.
+      expect(out.viewerTeamId).toBeNull();
+    });
+
+    it("expose viewerTeamId pour un commissaire qui participe avec sa propre equipe", async () => {
+      // Regression : un commissaire (createur) possede AUSSI l'equipe away.
+      // viewerRole reste "commissioner" (boutons valider/invalider), mais
+      // viewerTeamId doit pointer sur son equipe pour que l'UI affiche
+      // l'editeur d'evolutions de SES joueurs (sinon masque -> le coach ne
+      // peut pas ameliorer son equipe malgre les SPP gagnes).
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: COMMISH } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", players: [] },
+        { id: "team-away", name: "Test gob", roster: "goblin", players: [] },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+      expect(out.viewerRole).toBe("commissioner");
+      expect(out.viewerTeamId).toBe("team-away");
     });
 
     it("exclut les joueurs licencies (firedAt) des pickers", async () => {

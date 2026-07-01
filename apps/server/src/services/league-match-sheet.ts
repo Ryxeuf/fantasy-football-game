@@ -1556,6 +1556,13 @@ export async function getMatchSheet(input: {
   sheet: unknown;
   summary: MatchSummary;
   viewerRole: "home" | "away" | "commissioner" | "none";
+  /**
+   * Équipe possédée par le viewer parmi les deux du match, INDÉPENDAMMENT de
+   * `viewerRole`. Un commissaire qui participe aussi avec une équipe a
+   * `viewerRole="commissioner"` mais `viewerTeamId` renseigné, ce qui permet
+   * à l'UI d'afficher l'éditeur d'évolutions de SON équipe (sinon masqué).
+   */
+  viewerTeamId: string | null;
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
   reference: MatchSheetReference;
   /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
@@ -1618,5 +1625,13 @@ export async function getMatchSheet(input: {
         : side === "away"
           ? "away"
           : "none",
+    // Dérivé de `side` (ownerId), pas de `viewerRole` : un commissaire-coach
+    // conserve ainsi l'accès aux évolutions de son équipe.
+    viewerTeamId:
+      side === "home"
+        ? (teams.home?.teamId ?? null)
+        : side === "away"
+          ? (teams.away?.teamId ?? null)
+          : null,
   };
 }

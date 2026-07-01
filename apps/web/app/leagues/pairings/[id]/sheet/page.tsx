@@ -168,6 +168,12 @@ interface SheetResponse {
   };
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
+  /**
+   * Équipe du viewer parmi les deux du match, indépendante de `viewerRole`.
+   * Renseignée même pour un commissaire qui participe avec sa propre équipe.
+   * Optionnel : rétro-compat avec un serveur pré-fix (repli sur `viewerRole`).
+   */
+  viewerTeamId?: string | null;
   teams: { home: SheetTeam | null; away: SheetTeam | null };
   reference: MatchSheetReference;
   computedSpp: Record<string, number>;
@@ -463,8 +469,13 @@ export default function MatchSheetPage() {
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
   const role = data?.viewerRole ?? "none";
+  // `myTeamId` doit refléter l'équipe possédée par le viewer, y compris quand
+  // il est commissaire ET participant (viewerRole="commissioner"). On lit
+  // `viewerTeamId` (dérivé de l'ownerId côté serveur) ; repli role-based pour
+  // rétro-compat avec un serveur pré-fix.
   const myTeamId =
-    role === "home" ? home?.teamId : role === "away" ? away?.teamId : null;
+    data?.viewerTeamId ??
+    (role === "home" ? home?.teamId : role === "away" ? away?.teamId : null);
   const status = data?.sheet.status ?? "";
   const isCoach = role === "home" || role === "away";
   const isCommissioner = role === "commissioner";
