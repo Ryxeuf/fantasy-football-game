@@ -1,3 +1,10 @@
+## [1.207.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.1...v1.207.2) (2026-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **rosters:** Minus (stunty) au lieu de Microbe (titchy) — gobelins & co ([61c0df4](https://github.com/Ryxeuf/fantasy-football-game/commit/61c0df47302809771eb7575a783521858f0f27ab))
+
 ## [1.207.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.0...v1.207.1) (2026-06-30)
 
 
