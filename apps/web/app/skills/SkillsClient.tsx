@@ -31,6 +31,21 @@ const categoryNames: Record<string, { fr: string; en: string; key: string }> = {
   "Scélérates": { fr: "Scélérates", en: "Villainous", key: "Scélérates" },
 };
 
+// Libellés courts (badge) traduits par catégorie. Les clés couvrent les
+// variantes rencontrées (singulier/pluriel) présentes dans les données.
+const categoryTagLabels: Record<string, { fr: string; en: string }> = {
+  General: { fr: "Générale", en: "General" },
+  Agility: { fr: "Agilité", en: "Agility" },
+  Strength: { fr: "Force", en: "Strength" },
+  Passing: { fr: "Passe", en: "Passing" },
+  Mutation: { fr: "Mutation", en: "Mutation" },
+  Mutations: { fr: "Mutation", en: "Mutation" },
+  Trait: { fr: "Trait", en: "Trait" },
+  Traits: { fr: "Trait", en: "Trait" },
+  Extraordinary: { fr: "Extraordinaire", en: "Extraordinary" },
+  "Scélérates": { fr: "Scélérates", en: "Villainous" },
+};
+
 interface SkillsClientProps {
   skills: Skill[];
   selectedRuleset: string;
@@ -308,7 +323,11 @@ export default function SkillsClient({
                               className="object-contain"
                             />
                           )}
-                          {skill.category}
+                          {categoryTagLabels[skill.category]
+                            ? language === "fr"
+                              ? categoryTagLabels[skill.category].fr
+                              : categoryTagLabels[skill.category].en
+                            : skill.category}
                         </span>
                       </div>
                     </div>
