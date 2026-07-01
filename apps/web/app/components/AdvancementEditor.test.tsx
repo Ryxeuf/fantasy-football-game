@@ -63,9 +63,7 @@ describe("AdvancementEditor", () => {
     await screen.findByText("Griff Oberwald");
     // Le défaut est « random-primary » (flux de tirage) : on bascule sur
     // « primary » (choix libre) pour ce test d'application générique.
-    fireEvent.change(screen.getByTestId("level-up-type-p1"), {
-      target: { value: "primary" },
-    });
+    fireEvent.click(screen.getByTestId("level-up-type-primary-p1"));
     // Saisie libre (pas de catalogue chargé ici) : on tape un slug puis applique.
     fireEvent.change(screen.getByTestId("level-up-skill-p1"), {
       target: { value: "block" },
@@ -115,19 +113,17 @@ describe("AdvancementEditor", () => {
     setup();
     await screen.findByText("Gobelin");
 
-    // Catégorie principale = Agilité, puis tirage.
-    fireEvent.change(screen.getByTestId("level-up-category-gob1"), {
-      target: { value: "A" },
-    });
+    // Catégorie principale = Agilité (chip), puis tirage.
+    fireEvent.click(screen.getByTestId("level-up-category-A-gob1"));
     fireEvent.click(screen.getByTestId("level-up-roll-gob1"));
 
-    // Les 2 candidats tirés s'affichent (par leur nom FR).
+    // Les 2 candidats tirés s'affichent (cartes cliquables, nom FR).
     await screen.findByTestId("level-up-candidates-gob1");
     expect(screen.getByText("Esquive")).toBeTruthy();
     expect(screen.getByText("Saut")).toBeTruthy();
 
-    // On choisit « Esquive » et on applique.
-    fireEvent.click(screen.getByLabelText("Esquive"));
+    // On choisit « Esquive » (carte candidate) et on applique.
+    fireEvent.click(screen.getByTestId("level-up-candidate-dodge-gob1"));
     fireEvent.click(screen.getByTestId("level-up-apply-gob1"));
 
     await waitFor(() =>
@@ -184,25 +180,66 @@ describe("AdvancementEditor", () => {
       ).toBe(true),
     );
 
-    // Bascule sur « primary » (choix libre filtré par accès) — le défaut
-    // random-primary passe désormais par le tirage serveur.
-    fireEvent.change(await screen.findByTestId("level-up-type-gnome1"), {
-      target: { value: "primary" },
-    });
+    // Bascule sur « primary » (picker de compétences filtré par accès) — le
+    // défaut random-primary passe désormais par le tirage serveur.
+    fireEvent.click(await screen.findByTestId("level-up-type-primary-gnome1"));
 
-    const select = (await screen.findByTestId(
-      "level-up-skill-gnome1",
-    )) as HTMLSelectElement;
-    // Agilité éligible, Général exclu (accès primaire = A).
-    await waitFor(() =>
-      expect(
-        Array.from(select.options).some((o) => o.textContent === "Esquive"),
-      ).toBe(true),
-    );
-    expect(
-      Array.from(select.options).some((o) => o.textContent === "Blocage"),
-    ).toBe(false);
-    expect(select.textContent).not.toContain("aucune compétence pour ce type");
+    // Agilité éligible (chip « Esquive » présent), Général exclu (accès A).
+    await screen.findByTestId("level-up-skill-dodge-gnome1");
+    expect(screen.getByText("Esquive")).toBeTruthy();
+    expect(screen.queryByText("Blocage")).toBeNull();
+  });
+
+  it("groupe les compétences par catégorie et prévisualise la description au survol", async () => {
+    const PENDING_ACCESS = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "cat1",
+          playerName: "Coach Cat",
+          primarySkills: "A,G", // Agilité + Générales en principale
+          secondarySkills: "S",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements"))
+        return Promise.resolve(PENDING_ACCESS);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            {
+              slug: "dodge",
+              nameFr: "Esquive",
+              category: "Agility",
+              description: "Esquive un joueur adverse sans risque.",
+            },
+            {
+              slug: "block",
+              nameFr: "Blocage",
+              category: "General",
+              description: "Ignore un résultat Les Deux Plaqués.",
+            },
+          ],
+        });
+      return Promise.resolve({});
+    });
+    setup();
+    await screen.findByText("Coach Cat");
+    fireEvent.click(await screen.findByTestId("level-up-type-primary-cat1"));
+
+    // Les compétences sont groupées sous leurs entêtes de catégorie.
+    await screen.findByTestId("level-up-skill-dodge-cat1");
+    expect(screen.getByText("Agilité")).toBeTruthy();
+    expect(screen.getByText("Générales")).toBeTruthy();
+
+    // Survol d'une compétence -> sa description s'affiche avant tout choix.
+    fireEvent.mouseEnter(screen.getByTestId("level-up-skill-dodge-cat1"));
+    const desc = await screen.findByTestId("level-up-skill-desc-cat1");
+    expect(desc.textContent).toContain("Esquive un joueur adverse");
   });
 
   it("affiche un état vide quand aucun joueur n'est en attente", async () => {

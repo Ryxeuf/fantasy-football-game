@@ -61,6 +61,19 @@ interface SkillCatalogItem {
   slug: string;
   nameFr: string;
   category: string;
+  nameEn?: string;
+  description?: string;
+  descriptionEn?: string;
+}
+
+/** Description localisée d'une compétence (repli FR si EN absent). */
+function skillDesc(
+  s: SkillCatalogItem | undefined,
+  language: string,
+): string | null {
+  if (!s) return null;
+  const d = language === "en" ? s.descriptionEn || s.description : s.description;
+  return d && d.trim().length > 0 ? d : null;
 }
 
 interface SkillsResponse {
@@ -119,6 +132,31 @@ const ADVANCEMENT_COSTS: Record<AdvancementType, number[]> = {
 function costFor(type: AdvancementType, advancementsTaken: number): number {
   const idx = Math.min(Math.max(advancementsTaken, 0), 5);
   return ADVANCEMENT_COSTS[type][idx];
+}
+
+/** Métadonnées d'affichage des 4 types d'amélioration (ordre = du moins cher). */
+const TYPE_META: ReadonlyArray<{
+  value: AdvancementType;
+  short: string;
+  icon: string;
+}> = [
+  { value: "random-primary", short: "Hasard", icon: "🎲" },
+  { value: "primary", short: "Principale", icon: "⭐" },
+  { value: "secondary", short: "Secondaire", icon: "✦" },
+  { value: "characteristic", short: "Carac.", icon: "💪" },
+];
+
+/** Style d'une puce/chip sélectionnable (pill). */
+function chipClass(active: boolean, disabled = false): string {
+  const base =
+    "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition select-none";
+  if (disabled) {
+    return `${base} cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300`;
+  }
+  if (active) {
+    return `${base} border-nuffle-gold bg-nuffle-gold text-white shadow-sm`;
+  }
+  return `${base} border-gray-300 bg-white text-nuffle-anthracite hover:border-nuffle-gold hover:text-nuffle-bronze`;
 }
 
 export interface AdvancementEditorProps {
@@ -192,7 +230,10 @@ export function AdvancementEditor({
     );
   }
   return (
-    <ul className="space-y-3" data-testid="advancement-list">
+    <div
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+      data-testid="advancement-list"
+    >
       {items.map((it) => (
         <PlayerRow
           key={it.teamPlayerId}
@@ -202,7 +243,7 @@ export function AdvancementEditor({
           onApplied={loadItems}
         />
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -214,7 +255,7 @@ interface PlayerRowProps {
 }
 
 function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [type, setType] = useState<AdvancementType>("random-primary");
   const [skillSlug, setSkillSlug] = useState("");
   const [stat, setStat] = useState<CharacteristicKind | "">("");
@@ -226,6 +267,10 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const [category, setCategory] = useState<string>("");
   const [rollCandidates, setRollCandidates] = useState<string[] | null>(null);
   const [rolling, setRolling] = useState(false);
+  // Recherche dans le picker de compétence (primary/secondary).
+  const [skillSearch, setSkillSearch] = useState("");
+  // Compétence survolée/focus pour prévisualiser sa description avant de choisir.
+  const [previewSlug, setPreviewSlug] = useState<string | null>(null);
 
   const isCharacteristic = type === "characteristic";
   const isRandomPrimary = type === "random-primary";
@@ -236,12 +281,16 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
     return CATEGORY_ORDER.filter((c) => pool.has(c));
   }, [item.primarySkills]);
 
-  // slug -> nom FR (pour afficher les candidats tirés).
-  const nameBySlug = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const s of catalog) m.set(s.slug, s.nameFr);
+  // slug -> item complet (nom + description) pour l'affichage.
+  const catalogBySlug = useMemo(() => {
+    const m = new Map<string, SkillCatalogItem>();
+    for (const s of catalog) m.set(s.slug, s);
     return m;
   }, [catalog]);
+  const nameOf = useCallback(
+    (slug: string) => catalogBySlug.get(slug)?.nameFr ?? slug,
+    [catalogBySlug],
+  );
 
   const cost = useMemo(
     () => costFor(type, item.advancementsTaken),
@@ -269,6 +318,36 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       })
       .sort((a, b) => a.nameFr.localeCompare(b.nameFr));
   }, [hasAccess, catalog, type, item.primarySkills, item.secondarySkills]);
+
+  const filteredSkills = useMemo(() => {
+    const q = skillSearch.trim().toLowerCase();
+    if (!q) return eligibleSkills;
+    return eligibleSkills.filter((s) => s.nameFr.toLowerCase().includes(q));
+  }, [eligibleSkills, skillSearch]);
+
+  // Regroupement des compétences éligibles par catégorie (ordre canonique).
+  const skillsByCategory = useMemo(() => {
+    const groups = new Map<string, SkillCatalogItem[]>();
+    for (const s of filteredSkills) {
+      const code = CATEGORY_CODE[s.category] ?? s.category;
+      const list = groups.get(code);
+      if (list) list.push(s);
+      else groups.set(code, [s]);
+    }
+    return CATEGORY_ORDER.filter((c) => groups.has(c)).map((c) => ({
+      code: c,
+      label: CATEGORY_LABELS[c],
+      skills: groups.get(c) as SkillCatalogItem[],
+    }));
+  }, [filteredSkills]);
+
+  // Description à prévisualiser : survol prioritaire, sinon sélection courante.
+  const previewDesc = useMemo(() => {
+    const slug = previewSlug ?? skillSlug;
+    const item = slug ? catalogBySlug.get(slug) : undefined;
+    if (!item) return null;
+    return { name: item.nameFr, text: skillDesc(item, language) };
+  }, [previewSlug, skillSlug, catalogBySlug, language]);
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -371,150 +450,172 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   );
 
   return (
-    <li
+    <div
       data-testid={`level-up-row-${item.teamPlayerId}`}
-      className="space-y-3 rounded-lg border border-gray-200 bg-white p-4"
+      className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div className="font-semibold text-nuffle-anthracite">
+      {/* En-tête joueur */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate font-semibold text-nuffle-anthracite">
             {item.playerName}
           </div>
-          <div className="text-xs text-gray-500">
-            PSP: <strong>{item.spp}</strong>
-            {" • "}
-            {t.teams.levelUpAdvancementsTaken ?? "Ameliorations prises"}:{" "}
-            <strong>{item.advancementsTaken}</strong>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
+            <span className="inline-flex items-center rounded-full bg-nuffle-gold/10 px-2 py-0.5 font-semibold text-nuffle-bronze">
+              {item.spp} PSP
+            </span>
+            <span>· {item.advancementsTaken}/6 amél.</span>
           </div>
         </div>
-        {applied?.applied ? (
-          <div
-            data-testid={`level-up-applied-${item.teamPlayerId}`}
-            className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-700"
-          >
-            ✓ +
-            {applied.addedStat
-              ? applied.addedStat.toUpperCase()
-              : applied.addedSkill}
-            {" • "}
-            {t.teams.levelUpRemainingSpp ?? "PSP restants"}: {applied.newSpp}
-          </div>
-        ) : null}
       </div>
 
-      {error ? (
-        <div className="rounded border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700">
-          {error}
-        </div>
-      ) : null}
-
-      {!applied?.applied ? (
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 items-end gap-2 sm:grid-cols-3"
+      {applied?.applied ? (
+        <div
+          data-testid={`level-up-applied-${item.teamPlayerId}`}
+          className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
         >
-          <label className="block">
-            <span className="text-xs font-medium text-gray-700">
-              {t.teams.levelUpTypeLabel ?? "Type"}
-            </span>
-            <select
-              data-testid={`level-up-type-${item.teamPlayerId}`}
-              value={type}
-              onChange={(e) => setType(e.target.value as AdvancementType)}
-              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm"
-            >
-              <option value="random-primary">
-                Random Primary (
-                {costFor("random-primary", item.advancementsTaken)} PSP)
-              </option>
-              <option value="primary">
-                Primary ({costFor("primary", item.advancementsTaken)} PSP)
-              </option>
-              <option value="secondary">
-                Secondary ({costFor("secondary", item.advancementsTaken)} PSP)
-              </option>
-              <option value="characteristic">
-                Caractéristique (
-                {costFor("characteristic", item.advancementsTaken)} PSP)
-              </option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-gray-700">
-              {isCharacteristic
-                ? "Caractéristique"
-                : t.teams.levelUpSkillLabel ?? "Compétence"}
-            </span>
-            {isRandomPrimary ? (
-              <div className="mt-1 space-y-1.5">
-                <select
-                  data-testid={`level-up-category-${item.teamPlayerId}`}
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm"
-                >
-                  <option value="">
-                    {primaryCategories.length === 0
-                      ? "— aucune catégorie principale —"
-                      : "— catégorie principale —"}
-                  </option>
-                  {primaryCategories.map((c) => (
-                    <option key={c} value={c}>
-                      {CATEGORY_LABELS[c]}
-                    </option>
-                  ))}
-                </select>
+          ✓{" "}
+          <strong>
+            {applied.addedStat
+              ? `+${applied.addedStat.toUpperCase()}`
+              : applied.addedSkill
+                ? nameOf(applied.addedSkill)
+                : ""}
+          </strong>{" "}
+          appris · {applied.newSpp} PSP restants
+        </div>
+      ) : (
+        <>
+          {/* Type d'amélioration — puces */}
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="group"
+            aria-label={t.teams.levelUpTypeLabel ?? "Type d'amélioration"}
+          >
+            {TYPE_META.map((tm) => {
+              const c = costFor(tm.value, item.advancementsTaken);
+              const afford = item.spp >= c;
+              const active = type === tm.value;
+              return (
                 <button
+                  key={tm.value}
                   type="button"
-                  data-testid={`level-up-roll-${item.teamPlayerId}`}
-                  onClick={handleRoll}
-                  disabled={!category || rolling}
-                  className="block w-full rounded-md bg-amber-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                  data-testid={`level-up-type-${tm.value}-${item.teamPlayerId}`}
+                  onClick={() => setType(tm.value)}
+                  aria-pressed={active}
+                  title={afford ? undefined : `${c} PSP requis`}
+                  className={`${chipClass(active)}${afford ? "" : " opacity-50"}`}
                 >
-                  🎲{" "}
-                  {rolling
-                    ? "Tirage…"
-                    : rollCandidates
-                      ? "Relancer"
-                      : "Tirer 2 compétences"}
+                  <span>{tm.icon}</span>
+                  <span>{tm.short}</span>
+                  <span className={active ? "text-white/80" : "text-gray-400"}>
+                    · {c}
+                  </span>
                 </button>
-                {rollCandidates ? (
-                  <div
-                    className="space-y-1"
-                    data-testid={`level-up-candidates-${item.teamPlayerId}`}
-                  >
-                    <div className="text-xs text-gray-600">
-                      Choisissez l&apos;une des deux :
-                    </div>
-                    {rollCandidates.map((slug) => (
-                      <label
-                        key={slug}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <input
-                          type="radio"
-                          name={`cand-${item.teamPlayerId}`}
-                          checked={skillSlug === slug}
-                          onChange={() => setSkillSlug(slug)}
-                        />
-                        <span>{nameBySlug.get(slug) ?? slug}</span>
-                      </label>
-                    ))}
-                    {rollCandidates.length < 2 ? (
-                      <div className="text-xs text-amber-700">
-                        Une seule compétence disponible dans cette catégorie.
-                      </div>
-                    ) : null}
+              );
+            })}
+          </div>
+
+          {error ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700">
+              {error}
+            </div>
+          ) : null}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+            {/* Corps selon le type choisi */}
+            {isRandomPrimary ? (
+              <div className="flex flex-col gap-2">
+                {primaryCategories.length === 0 ? (
+                  <div className="text-xs text-gray-400">
+                    Aucune catégorie principale pour ce joueur.
                   </div>
                 ) : (
-                  <div className="text-xs text-gray-500">
-                    Choisissez une catégorie principale puis tirez : le serveur
-                    propose 2 compétences au hasard, vous en gardez une.
+                  <div className="flex flex-wrap gap-1.5">
+                    {primaryCategories.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        data-testid={`level-up-category-${code}-${item.teamPlayerId}`}
+                        onClick={() => setCategory(code)}
+                        aria-pressed={category === code}
+                        className={chipClass(category === code)}
+                      >
+                        {CATEGORY_LABELS[code]}
+                      </button>
+                    ))}
                   </div>
                 )}
+                {category ? (
+                  <button
+                    type="button"
+                    data-testid={`level-up-roll-${item.teamPlayerId}`}
+                    onClick={handleRoll}
+                    disabled={rolling}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-amber-600 disabled:opacity-50"
+                  >
+                    🎲{" "}
+                    {rolling
+                      ? "Tirage…"
+                      : rollCandidates
+                        ? "Relancer"
+                        : "Tirer 2 compétences"}
+                  </button>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    Choisis une catégorie principale, puis tire : 2 compétences
+                    au hasard, tu en gardes une.
+                  </p>
+                )}
+                {rollCandidates ? (
+                  <div
+                    data-testid={`level-up-candidates-${item.teamPlayerId}`}
+                    className="flex flex-col gap-1.5"
+                  >
+                    {rollCandidates.map((slug) => {
+                      const active = skillSlug === slug;
+                      const desc = skillDesc(catalogBySlug.get(slug), language);
+                      return (
+                        <button
+                          key={slug}
+                          type="button"
+                          data-testid={`level-up-candidate-${slug}-${item.teamPlayerId}`}
+                          onClick={() => setSkillSlug(slug)}
+                          aria-pressed={active}
+                          className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            active
+                              ? "border-nuffle-gold bg-nuffle-gold/10 ring-1 ring-nuffle-gold"
+                              : "border-gray-200 bg-white hover:border-nuffle-gold"
+                          }`}
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="font-medium text-nuffle-anthracite">
+                              {nameOf(slug)}
+                            </span>
+                            {active ? (
+                              <span className="text-xs text-nuffle-bronze">
+                                ✓ choisi
+                              </span>
+                            ) : null}
+                          </span>
+                          {desc ? (
+                            <span className="mt-1 block text-xs leading-snug text-gray-500">
+                              {desc}
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                    {rollCandidates.length < 2 ? (
+                      <p className="text-xs text-amber-700">
+                        Une seule compétence disponible dans cette catégorie.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             ) : isCharacteristic ? (
-              <div className="mt-1 space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   data-testid={`level-up-d8-${item.teamPlayerId}`}
@@ -522,103 +623,132 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
                     setD8Roll(Math.floor(Math.random() * 8) + 1);
                     setStat("");
                   }}
-                  className="block w-full rounded-md bg-amber-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-amber-600"
                 >
                   🎲 {d8Roll != null ? "Relancer le D8" : "Lancer le D8"}
                 </button>
                 {d8Roll != null ? (
-                  <>
+                  <div className="flex flex-col gap-1.5">
                     <div className="text-xs text-amber-800">
-                      Jet D8 : {d8Roll} →{" "}
-                      {d8AllowedStats
-                        .map(
-                          (s) =>
-                            CHARACTERISTIC_OPTIONS.find((o) => o.code === s)
-                              ?.label ?? s.toUpperCase(),
-                        )
-                        .join(" ou ")}
+                      Jet D8 : <strong>{d8Roll}</strong> → caractéristiques
+                      possibles :
                     </div>
-                    <select
-                      data-testid={`level-up-stat-${item.teamPlayerId}`}
-                      required
-                      value={stat}
-                      onChange={(e) =>
-                        setStat(e.target.value as CharacteristicKind | "")
-                      }
-                      className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm"
-                    >
-                      <option value="">— choisir —</option>
+                    <div className="flex flex-wrap gap-1.5">
                       {d8AllowedStats.map((code) => (
-                        <option key={code} value={code}>
+                        <button
+                          key={code}
+                          type="button"
+                          data-testid={`level-up-stat-${code}-${item.teamPlayerId}`}
+                          onClick={() => setStat(code)}
+                          aria-pressed={stat === code}
+                          className={chipClass(stat === code)}
+                        >
                           {CHARACTERISTIC_OPTIONS.find((o) => o.code === code)
                             ?.label ?? code.toUpperCase()}
-                        </option>
+                        </button>
                       ))}
-                    </select>
-                  </>
-                ) : (
-                  <div className="text-xs text-gray-500">
-                    Lancez le D8 pour révéler les caractéristiques améliorables.
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    Lance le D8 pour révéler les caractéristiques améliorables.
+                  </p>
                 )}
               </div>
             ) : hasAccess ? (
-              <select
-                data-testid={`level-up-skill-${item.teamPlayerId}`}
-                required
-                value={skillSlug}
-                onChange={(e) => setSkillSlug(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm"
-              >
-                <option value="">
-                  {eligibleSkills.length === 0
-                    ? "— aucune compétence pour ce type —"
-                    : "— choisir —"}
-                </option>
-                {eligibleSkills.map((s) => (
-                  <option key={s.slug} value={s.slug}>
-                    {s.nameFr}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-col gap-1.5">
+                <input
+                  value={skillSearch}
+                  onChange={(e) => setSkillSearch(e.target.value)}
+                  data-testid={`level-up-skill-search-${item.teamPlayerId}`}
+                  placeholder="Rechercher une compétence…"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                />
+                <div className="flex max-h-56 flex-col gap-2 overflow-auto">
+                  {skillsByCategory.length === 0 ? (
+                    <span className="text-xs text-gray-400">
+                      Aucune compétence pour ce type.
+                    </span>
+                  ) : (
+                    skillsByCategory.map((g) => (
+                      <div key={g.code}>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                          {g.label}
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {g.skills.map((s) => (
+                            <button
+                              key={s.slug}
+                              type="button"
+                              data-testid={`level-up-skill-${s.slug}-${item.teamPlayerId}`}
+                              onClick={() => setSkillSlug(s.slug)}
+                              onMouseEnter={() => setPreviewSlug(s.slug)}
+                              onMouseLeave={() => setPreviewSlug(null)}
+                              onFocus={() => setPreviewSlug(s.slug)}
+                              onBlur={() => setPreviewSlug(null)}
+                              aria-pressed={skillSlug === s.slug}
+                              className={chipClass(skillSlug === s.slug)}
+                            >
+                              {s.nameFr}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {/* Aperçu de la description (survol prioritaire, sinon choix). */}
+                {previewDesc ? (
+                  <div
+                    data-testid={`level-up-skill-desc-${item.teamPlayerId}`}
+                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700"
+                  >
+                    <div className="font-semibold text-nuffle-anthracite">
+                      {previewDesc.name}
+                    </div>
+                    <div className="mt-0.5 leading-snug">
+                      {previewDesc.text ?? "Pas de description disponible."}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <input
                 data-testid={`level-up-skill-${item.teamPlayerId}`}
                 type="text"
-                required
                 maxLength={64}
                 value={skillSlug}
                 onChange={(e) => setSkillSlug(e.target.value)}
-                placeholder="block, dodge, sure-hands..."
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                placeholder="block, dodge, sure-hands…"
+                className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
               />
             )}
-          </label>
-          <button
-            type="submit"
-            data-testid={`level-up-apply-${item.teamPlayerId}`}
-            disabled={
-              !canAfford ||
-              submitting ||
-              (isCharacteristic
-                ? d8Roll == null || stat === ""
-                : skillSlug.trim().length === 0)
-            }
-            className="rounded-md bg-nuffle-gold px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {submitting
-              ? t.leagues.formSubmitting
-              : t.teams.levelUpApplyButton ?? "Appliquer"}
-          </button>
-        </form>
-      ) : null}
 
-      {!canAfford && !applied?.applied ? (
-        <div className="text-xs text-amber-700">
-          {t.teams.levelUpNeedMoreSpp ?? "PSP insuffisants pour ce type"} ({cost}{" "}
-          PSP requis)
-        </div>
-      ) : null}
-    </li>
+            <button
+              type="submit"
+              data-testid={`level-up-apply-${item.teamPlayerId}`}
+              disabled={
+                !canAfford ||
+                submitting ||
+                (isCharacteristic
+                  ? d8Roll == null || stat === ""
+                  : skillSlug.trim().length === 0)
+              }
+              className="mt-1 inline-flex items-center justify-center rounded-lg bg-nuffle-gold px-3 py-2 text-sm font-semibold text-white transition hover:bg-nuffle-bronze disabled:opacity-40"
+            >
+              {submitting
+                ? t.leagues.formSubmitting
+                : `${t.teams.levelUpApplyButton ?? "Appliquer"} · ${cost} PSP`}
+            </button>
+            {!canAfford ? (
+              <p className="text-xs text-amber-700">
+                {t.teams.levelUpNeedMoreSpp ?? "PSP insuffisants"} ({cost} PSP
+                requis).
+              </p>
+            ) : null}
+          </form>
+        </>
+      )}
+    </div>
   );
 }
