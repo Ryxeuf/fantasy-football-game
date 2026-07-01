@@ -1,3 +1,11 @@
+## [1.208.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.2...v1.208.0) (2026-07-01)
+
+
+### ✨ Features
+
+* **league:** amélioration "compétence Principale au hasard" (random-primary, p.121) ([67acb8d](https://github.com/Ryxeuf/fantasy-football-game/commit/67acb8dee9610610bcefb8de115403f04fe0bf34))
+* **skills:** badge de catégorie traduit FR/EN sur la page /skills ([34bf1be](https://github.com/Ryxeuf/fantasy-football-game/commit/34bf1be16317e602026c18b6c2f654a7a5d4e6a9))
+
 ## [1.207.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.1...v1.207.2) (2026-07-01)
 
 
