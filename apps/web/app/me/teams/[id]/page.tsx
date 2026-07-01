@@ -289,6 +289,13 @@ export default function TeamDetailPage() {
           >
             Stats de carriere
           </a>
+          <a
+            data-testid="team-treasury-link"
+            href={`/me/teams/${id}/treasury`}
+            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors text-center"
+          >
+            {t.teams.treasuryTitle ?? "Tresorerie"}
+          </a>
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
