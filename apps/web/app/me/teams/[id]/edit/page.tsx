@@ -7,7 +7,6 @@ import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
-import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
 import { formatPlusStat } from "../../../../lib/format-stats";
 import {
   getPlayerCost,
@@ -23,6 +22,15 @@ import {
   type CharacteristicKind
 } from "@bb/game-engine";
 import { useLanguage } from "../../../../contexts/LanguageContext";
+
+// Compteur pour générer des ids temporaires uniques côté client. Les joueurs
+// ajoutés localement portent un id préfixé "tmp_" tant qu'ils ne sont pas
+// persistés ; la sauvegarde batch (PUT /roster) crée les vrais joueurs.
+let tmpPlayerCounter = 0;
+function nextTmpId(): string {
+  tmpPlayerCounter += 1;
+  return `tmp_${Date.now()}_${tmpPlayerCounter}`;
+}
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -85,6 +93,10 @@ export default function TeamEditPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [availablePositions, setAvailablePositions] = useState<AvailablePosition[]>([]);
+  // Roster fige (equipe engagee dans un match/competition) => plancher de 11
+  // joueurs applique. Tant qu'il est en brouillon, on peut descendre sous 11
+  // pour remanier. Defaut `true` par prudence avant le 1er chargement.
+  const [frozen, setFrozen] = useState<boolean>(true);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [newPlayerForm, setNewPlayerForm] = useState({
     position: '',
@@ -163,7 +175,7 @@ export default function TeamEditPage() {
         const [me, d, positionsData] = await Promise.all([
           fetchJSON("/auth/me"),
           apiRequest<any>(`/team/${id}`),
-          apiRequest<{ availablePositions: AvailablePosition[] }>(
+          apiRequest<{ availablePositions: AvailablePosition[]; frozen?: boolean }>(
             `/team/${id}/available-positions`,
           ),
         ]);
@@ -177,6 +189,7 @@ export default function TeamEditPage() {
         setPlayers(d.team?.players || []);
         setTeamName(d.team?.name || "");
         setAvailablePositions(positionsData.availablePositions || []);
+        setFrozen(positionsData.frozen ?? true);
 
         // Roster name fetch depends on d.team.roster, kept separate and
         // non-blocking — the main UI can render without it.
@@ -211,12 +224,14 @@ export default function TeamEditPage() {
   const match = data?.currentMatch;
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
 
-  // Rediriger si l'équipe ne peut pas être modifiée
+  // Rediriger si l'équipe ne peut pas être modifiée (match en cours) OU si
+  // elle est engagée (frozen) : une équipe engagée n'est jamais éditable ici,
+  // on redirige vers sa fiche détail.
   useEffect(() => {
-    if (!loading && !canEdit) {
+    if (!loading && (!canEdit || frozen)) {
       router.push(`/me/teams/${id}`);
     }
-  }, [loading, canEdit, id, router]);
+  }, [loading, canEdit, frozen, id, router]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -262,16 +277,22 @@ export default function TeamEditPage() {
     setError(null);
 
     try {
-      // S25.5y — apiRequest unwrap l'enveloppe ApiResponse<T>
-      await apiRequest<{ team: unknown }>(`/team/${id}`, {
+      // Sauvegarde batch : PUT /team/{id}/roster.
+      // - joueur avec `id` serveur => conservé (maj nom/numéro)
+      // - joueur avec id "tmp_" => créé (on omet l'id)
+      // - joueur existant absent de la liste => supprimé côté serveur
+      // La validation métier (11-16 joueurs, budget, min/max par poste) est
+      // faite UNIQUEMENT côté serveur. apiRequest unwrap l'enveloppe.
+      await apiRequest<{ team: unknown }>(`/team/${id}/roster`, {
         method: "PUT",
         body: JSON.stringify({
           name: teamName.trim(),
           players: players.map(p => ({
-            id: p.id,
+            ...(!String(p.id).startsWith("tmp_") ? { id: p.id } : {}),
+            position: p.position,
             name: p.name.trim(),
-            number: p.number
-          }))
+            number: p.number,
+          })),
         }),
       });
 
@@ -299,86 +320,55 @@ export default function TeamEditPage() {
     }
   };
 
-  const handleDeletePlayer = async (playerId: string) => {
+  const handleDeletePlayer = (playerId: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce joueur ?")) {
       return;
     }
 
-    try {
-      // S25.5t — apiRequest unwrap l'enveloppe ApiResponse<T>
-      await apiRequest<{ team: unknown }>(
-        `/team/${id}/players/${playerId}`,
-        { method: "DELETE" },
-      );
-
-      // Parallelize the two refetches; they are independent.
-      const [d, positionsData] = await Promise.all([
-        apiRequest<any>(`/team/${id}`),
-        apiRequest<{ availablePositions: AvailablePosition[] }>(
-          `/team/${id}/available-positions`,
-        ),
-      ]);
-      setData(d);
-      setPlayers(d.team?.players || []);
-      setAvailablePositions(positionsData.availablePositions || []);
-      toast.success("Joueur supprimé");
-    } catch (e: any) {
-      const message = e?.message || "Erreur lors de la suppression du joueur";
-      setError(message);
-      toast.error(message);
-    }
+    // Suppression LOCALE : le retrait n'est persisté qu'à la sauvegarde batch.
+    // Aucune restriction de nombre (on peut descendre sous 11 en brouillon) ;
+    // la validation 11-16 se fait côté serveur au moment du PUT /roster.
+    setPlayers(prev => prev.filter(p => p.id !== playerId));
+    toast.success("Joueur retiré");
   };
 
-  const handleAddPlayer = async () => {
+  const handleAddPlayer = () => {
     if (!newPlayerForm.position || !newPlayerForm.name.trim()) {
       setError("Veuillez remplir tous les champs");
       return;
     }
 
-    // Vérifier le budget avant d'ajouter le joueur
+    // Ajout LOCAL : on construit un joueur avec un id temporaire à partir des
+    // stats de la position choisie. Aucun garde-fou budget ici (le dépassement
+    // est autorisé pendant l'édition, validé à la sauvegarde côté serveur).
     const selectedPosition = availablePositions.find(pos => pos.key === newPlayerForm.position);
-    if (selectedPosition) {
-      const currentTotalCost = players.reduce((total, player) => {
-        return total + getPlayerCost(player.position, team?.roster || '');
-      }, 0);
-      
-      const newTotalCost = currentTotalCost + selectedPosition.cost;
-      const budgetInPo = (team?.initialBudget || 0) * 1000; // Convertir le budget de kpo en po
-      if (newTotalCost > budgetInPo) {
-        setError(`Budget dépassé ! Coût actuel: ${Math.round(currentTotalCost / 1000)}k po, nouveau coût: ${Math.round(newTotalCost / 1000)}k po, budget: ${team?.initialBudget || 0}k po`);
-        return;
-      }
+    if (!selectedPosition) {
+      setError("Position introuvable");
+      return;
     }
 
-    try {
-      // S25.5z — apiRequest unwrap l'enveloppe ApiResponse<T>
-      await apiRequest<{ team: unknown; newPlayer: unknown }>(
-        `/team/${id}/players`,
-        {
-          method: "POST",
-          body: JSON.stringify(newPlayerForm),
-        },
-      );
+    const newPlayer: Player = {
+      id: nextTmpId(),
+      name: newPlayerForm.name.trim(),
+      position: newPlayerForm.position,
+      number: newPlayerForm.number,
+      ma: selectedPosition.stats.ma,
+      st: selectedPosition.stats.st,
+      ag: selectedPosition.stats.ag,
+      pa: selectedPosition.stats.pa,
+      av: selectedPosition.stats.av,
+      skills: selectedPosition.stats.skills,
+      spp: 0,
+      advancements: "[]",
+    };
 
-      const [d, positionsData] = await Promise.all([
-        apiRequest<any>(`/team/${id}`),
-        apiRequest<{ availablePositions: AvailablePosition[] }>(
-          `/team/${id}/available-positions`,
-        ),
-      ]);
-      setData(d);
-      setPlayers(d.team?.players || []);
-      setAvailablePositions(positionsData.availablePositions || []);
+    setPlayers(prev => [...prev, newPlayer]);
+    setError(null);
 
-      // Réinitialiser le formulaire
-      setNewPlayerForm({ position: '', name: '', number: 1 });
-      setShowAddPlayerForm(false);
-      toast.success("Joueur ajouté");
-    } catch (e: any) {
-      const message = e?.message || "Erreur lors de l'ajout du joueur";
-      setError(message);
-      toast.error(message);
-    }
+    // Réinitialiser le formulaire + fermer le modal (pas de refetch).
+    setNewPlayerForm({ position: '', name: '', number: 1 });
+    setShowAddPlayerForm(false);
+    toast.success("Joueur ajouté");
   };
 
   const getNextAvailableNumber = () => {
@@ -403,8 +393,8 @@ export default function TeamEditPage() {
     );
   }
 
-  if (!canEdit) {
-    return null; // Redirection en cours
+  if (!canEdit || frozen) {
+    return null; // Redirection en cours (match en cours ou équipe engagée)
   }
 
   // Calculer les coûts
@@ -423,6 +413,16 @@ export default function TeamEditPage() {
   const budgetInPo = (team?.initialBudget || 0) * 1000;
   const remaining = budgetInPo - playersCost;
   const isOverBudget = remaining < 0;
+
+  // Compteurs LOCAUX par poste (à partir du state `players`) : sert à filtrer
+  // les positions ajoutables dans le modal, indépendamment du `canAdd` renvoyé
+  // par le serveur (calculé sur l'état DB, désormais désynchronisé de l'UI).
+  const localCountByPosition = players.reduce<Record<string, number>>((acc, p) => {
+    acc[p.position] = (acc[p.position] ?? 0) + 1;
+    return acc;
+  }, {});
+  const canAddPositionLocally = (pos: AvailablePosition): boolean =>
+    (localCountByPosition[pos.key] ?? 0) < pos.maxCount;
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -693,9 +693,8 @@ export default function TeamEditPage() {
                         </button>
                         <button
                           onClick={() => handleDeletePlayer(player.id)}
-                          disabled={players.length <= 11}
-                          className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                          title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                          className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors font-medium"
+                          title="Retirer ce joueur"
                         >
                           🗑️
                         </button>
@@ -827,9 +826,8 @@ export default function TeamEditPage() {
                   </button>
                   <button
                     onClick={() => handleDeletePlayer(player.id)}
-                    disabled={players.length <= 11}
-                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                    title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    title="Retirer ce joueur"
                   >
                     🗑️
                   </button>
@@ -880,10 +878,10 @@ export default function TeamEditPage() {
                   >
                     <option value="">Sélectionner une position</option>
                     {availablePositions
-                      .filter(pos => pos.canAdd)
+                      .filter(pos => canAddPositionLocally(pos))
                       .map(pos => (
                         <option key={pos.key} value={pos.key}>
-                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
+                          {pos.name} ({localCountByPosition[pos.key] ?? 0}/{pos.maxCount}) - {pos.cost}k po
                         </option>
                       ))}
                   </select>
@@ -1561,37 +1559,17 @@ export default function TeamEditPage() {
         />
       )}
 
-      {/* Achats avec la trésorerie (entre matchs) */}
-      {team && team.treasury > 0 && (
-        <TreasuryPurchasePanel
-          team={{
-            id: team.id,
-            roster: team.roster,
-            treasury: team.treasury,
-            rerolls: team.rerolls || 0,
-            cheerleaders: team.cheerleaders || 0,
-            assistants: team.assistants || 0,
-            apothecary: team.apothecary || false,
-            dedicatedFans: team.dedicatedFans || 1,
-            staffConfig: team.staffConfig,
-            players: (team.players || []).map((p: any) => ({
-              id: p.id,
-              number: p.number,
-              dead: p.dead || false,
-              name: p.name,
-            })),
-          }}
-          availablePositions={availablePositions}
-          onPurchaseComplete={async () => {
-            const d = await apiRequest<any>(`/team/${id}`);
-            setData(d);
-            setPlayers(d.team?.players || []);
-            const positionsData = await apiRequest<{ availablePositions: AvailablePosition[] }>(
-              `/team/${id}/available-positions`,
-            );
-            setAvailablePositions(positionsData.availablePositions || []);
-          }}
-        />
+      {/* Lien vers la page dédiée Trésorerie (achats entre matchs) */}
+      {team && (
+        <div className="flex justify-end">
+          <a
+            href={`/me/teams/${id}/treasury`}
+            data-testid="edit-treasury-link"
+            className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 border border-amber-300 bg-amber-50 text-amber-800 rounded-lg hover:bg-amber-100 transition-colors font-medium text-sm sm:text-base"
+          >
+            💰 Trésorerie
+          </a>
+        </div>
       )}
 
       {/* Informations */}
@@ -1615,15 +1593,11 @@ export default function TeamEditPage() {
           </div>
           <div className="flex items-start gap-2">
             <span className="text-blue-600">•</span>
-            <span>Une équipe doit avoir entre 11 et 16 joueurs (règles Blood Bowl)</span>
+            <span>Vous pouvez ajouter/retirer des joueurs et descendre sous 11 tant que l'équipe n'est pas engagée ; l'équipe est validée (11-16 joueurs, budget) au moment de l'enregistrement</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-blue-600">•</span>
             <span>Chaque position a des limites min/max selon le roster</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Vous pouvez ajouter/supprimer des joueurs tant que l'équipe n'est pas engagée dans un match</span>
           </div>
         </div>
       </div>
