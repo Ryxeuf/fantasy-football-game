@@ -1,3 +1,10 @@
+## [1.208.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.208.0...v1.208.1) (2026-07-01)
+
+
+### ♻️ Code Refactoring
+
+* **AdvancementEditor:** improve skill selection and description preview ([30472d9](https://github.com/Ryxeuf/fantasy-football-game/commit/30472d993097cf6219662dce48896426d5937fb9))
+
 ## [1.208.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.207.2...v1.208.0) (2026-07-01)
 
 
