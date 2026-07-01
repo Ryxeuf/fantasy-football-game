@@ -1,3 +1,10 @@
+## [1.209.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.208.1...v1.209.0) (2026-07-01)
+
+
+### ✨ Features
+
+* **league:** éditeur d'évolutions modernisé (grille, pills/chips, fiche joueur) ([3fa010c](https://github.com/Ryxeuf/fantasy-football-game/commit/3fa010c667ca6ce56b8626b0bed28eb2b333d876))
+
 ## [1.208.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.208.0...v1.208.1) (2026-07-01)
 
 
