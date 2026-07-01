@@ -113,17 +113,35 @@ export async function handleListPendingAdvancements(
     orderBy: { createdAt: "desc" },
   });
 
-  const teamPlayers = await prisma.teamPlayer.findMany({
+  interface TeamPlayerRow {
+    id: string;
+    position: string;
+    name: string;
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+    skills: string | null;
+  }
+  const teamPlayers = (await prisma.teamPlayer.findMany({
     where: { teamId },
-    select: { id: true, position: true },
-  });
-  const positionByPlayerId = new Map<string, string>(
-    teamPlayers.map((p: { id: string; position: string }) => [
-      p.id,
-      p.position,
-    ]),
+    select: {
+      id: true,
+      position: true,
+      name: true,
+      ma: true,
+      st: true,
+      ag: true,
+      pa: true,
+      av: true,
+      skills: true,
+    },
+  })) as TeamPlayerRow[];
+  const playerById = new Map<string, TeamPlayerRow>(
+    teamPlayers.map((p) => [p.id, p]),
   );
-  const teamPlayerIds = new Set(positionByPlayerId.keys());
+  const teamPlayerIds = new Set(playerById.keys());
 
   // Accès primaire/secondaire par slug de position (pour le picker filtré
   // cote UI). Une seule requete pour le roster+ruleset de l'equipe.
@@ -163,6 +181,15 @@ export async function handleListPendingAdvancements(
     position: string | null;
     primarySkills: string | null;
     secondarySkills: string | null;
+    // Fiche du joueur (pour le toggle « caractéristiques & compétences »).
+    stats: {
+      ma: number;
+      st: number;
+      ag: number;
+      pa: number | null;
+      av: number;
+    };
+    skills: string | null;
   }> = [];
   for (const seq of sequences) {
     const choices = parsePendingChoices(seq.pendingChoices);
@@ -170,7 +197,8 @@ export async function handleListPendingAdvancements(
       if (!teamPlayerIds.has(c.teamPlayerId)) continue;
       if (seen.has(c.teamPlayerId)) continue;
       seen.add(c.teamPlayerId);
-      const positionSlug = positionByPlayerId.get(c.teamPlayerId) ?? null;
+      const player = playerById.get(c.teamPlayerId);
+      const positionSlug = player?.position ?? null;
       const access = positionSlug ? accessBySlug.get(positionSlug) : undefined;
       items.push({
         sequenceId: seq.id,
@@ -185,6 +213,14 @@ export async function handleListPendingAdvancements(
         position: positionSlug,
         primarySkills: access?.primarySkills ?? null,
         secondarySkills: access?.secondarySkills ?? null,
+        stats: {
+          ma: player?.ma ?? 0,
+          st: player?.st ?? 0,
+          ag: player?.ag ?? 0,
+          pa: player?.pa ?? null,
+          av: player?.av ?? 0,
+        },
+        skills: player?.skills ?? null,
       });
     }
   }

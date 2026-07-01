@@ -242,6 +242,49 @@ describe("AdvancementEditor", () => {
     expect(desc.textContent).toContain("Esquive un joueur adverse");
   });
 
+  it("affiche la fiche (caractéristiques + compétences) via le toggle", async () => {
+    const PENDING_SHEET = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "sheet1",
+          playerName: "Blitzeur",
+          stats: { ma: 7, st: 3, ag: 3, pa: 4, av: 9 },
+          skills: "block,dodge",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements"))
+        return Promise.resolve(PENDING_SHEET);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "block", nameFr: "Blocage", category: "General" },
+            { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+          ],
+        });
+      return Promise.resolve({});
+    });
+    setup();
+    await screen.findByText("Blitzeur");
+
+    // Masqué par défaut.
+    expect(screen.queryByTestId("level-up-sheet-sheet1")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("level-up-toggle-sheet-sheet1"));
+    const sheet = await screen.findByTestId("level-up-sheet-sheet1");
+    // Caractéristiques (AG en cible "3+", MA en clair "7").
+    expect(sheet.textContent).toContain("7");
+    expect(sheet.textContent).toContain("3+");
+    // Compétences actuelles résolues en nom FR.
+    expect(sheet.textContent).toContain("Blocage");
+    expect(sheet.textContent).toContain("Esquive");
+  });
+
   it("affiche un état vide quand aucun joueur n'est en attente", async () => {
     apiRequest.mockImplementation((path: string) => {
       if (path.includes("/pending-advancements"))

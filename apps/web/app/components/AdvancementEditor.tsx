@@ -49,6 +49,15 @@ interface PendingAdvancementItem {
   position: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
+  // Fiche du joueur (toggle « caractéristiques & compétences »).
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
+  skills?: string | null;
 }
 
 interface PendingResponse {
@@ -271,6 +280,17 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const [skillSearch, setSkillSearch] = useState("");
   // Compétence survolée/focus pour prévisualiser sa description avant de choisir.
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
+  // Toggle « fiche du joueur » (caractéristiques + compétences actuelles).
+  const [showSheet, setShowSheet] = useState(false);
+
+  const playerSkillSlugs = useMemo(
+    () =>
+      (item.skills ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0),
+    [item.skills],
+  );
 
   const isCharacteristic = type === "characteristic";
   const isRandomPrimary = type === "random-primary";
@@ -467,7 +487,75 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
             <span>· {item.advancementsTaken}/6 amél.</span>
           </div>
         </div>
+        <button
+          type="button"
+          data-testid={`level-up-toggle-sheet-${item.teamPlayerId}`}
+          onClick={() => setShowSheet((v) => !v)}
+          aria-expanded={showSheet}
+          className="shrink-0 rounded-lg border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition hover:border-nuffle-gold hover:text-nuffle-bronze"
+        >
+          {showSheet ? "▲ Fiche" : "▼ Fiche"}
+        </button>
       </div>
+
+      {/* Fiche du joueur : caractéristiques + compétences actuelles */}
+      {showSheet ? (
+        <div
+          data-testid={`level-up-sheet-${item.teamPlayerId}`}
+          className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+        >
+          <div className="grid grid-cols-5 gap-1.5 text-center">
+            {(
+              [
+                ["MA", item.stats?.ma],
+                ["ST", item.stats?.st],
+                ["AG", item.stats?.ag],
+                ["PA", item.stats?.pa],
+                ["AV", item.stats?.av],
+              ] as ReadonlyArray<[string, number | null | undefined]>
+            ).map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-md border border-gray-200 bg-white py-1"
+              >
+                <div className="text-[10px] font-semibold uppercase text-gray-400">
+                  {label}
+                </div>
+                <div className="text-sm font-bold text-nuffle-anthracite">
+                  {value == null
+                    ? "—"
+                    : `${value}${
+                        label === "AG" || label === "PA" || label === "AV"
+                          ? "+"
+                          : ""
+                      }`}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              Compétences ({playerSkillSlugs.length})
+            </div>
+            {playerSkillSlugs.length === 0 ? (
+              <div className="mt-1 text-xs text-gray-400">
+                Aucune compétence.
+              </div>
+            ) : (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {playerSkillSlugs.map((slug) => (
+                  <span
+                    key={slug}
+                    className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-nuffle-anthracite"
+                  >
+                    {nameOf(slug)}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
 
       {applied?.applied ? (
         <div
