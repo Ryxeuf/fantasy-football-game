@@ -1,3 +1,18 @@
+## [1.210.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.209.0...v1.210.0) (2026-07-01)
+
+
+### ✨ Features
+
+* **team:** edition libre du brouillon, redirection si engagee (web) ([8bf34e9](https://github.com/Ryxeuf/fantasy-football-game/commit/8bf34e98ce43176c413ea969e0e8b213b83a83a6))
+* **team:** page tresorerie dediee accessible meme engagee (web) ([47238a5](https://github.com/Ryxeuf/fantasy-football-game/commit/47238a5e7e609d5d22eb8c8394aa277abe299d03))
+* **team:** PUT /:id/roster - sauvegarde batch validee du roster ([76d8157](https://github.com/Ryxeuf/fantasy-football-game/commit/76d8157476b6089d30685edd88fe459e21834093))
+* **team:** verrou anti-triche des equipes engagees (serveur) ([3f94744](https://github.com/Ryxeuf/fantasy-football-game/commit/3f947445c8530466e613b891032617cc84d02ffc))
+
+
+### 📝 Documentation
+
+* **team:** change OpenSpec + doc edition d'equipe (engagee vs brouillon) ([4935e2e](https://github.com/Ryxeuf/fantasy-football-game/commit/4935e2e42b0987f3e9dad09503098c9c4336ee36))
+
 ## [1.209.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.208.1...v1.209.0) (2026-07-01)
 
 
