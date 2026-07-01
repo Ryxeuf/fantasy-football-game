@@ -36,9 +36,40 @@ import {
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
+  rollRandomPrimaryCandidates,
+  isRandomSkillCategory,
+  type RandomSkillCategoryCode,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
-import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
+import {
+  categoryCodeForSkill,
+  checkSkillAccess,
+  parseAccessCsv,
+} from "./skill-access";
+
+/**
+ * Seed déterministe du tirage random-primary d'un joueur : stable entre le
+ * tirage (endpoint roll) et l'application, tant que l'amélioration n'est pas
+ * posée (`advancementIndex` = nombre d'améliorations déjà prises). Lié à la
+ * catégorie choisie → changer de catégorie re-tire (choix de catégorie), mais
+ * une même catégorie donne toujours la même paire (pas de reroll-abus).
+ */
+export function randomPrimarySeed(
+  playerId: string,
+  advancementIndex: number,
+  category: string,
+): string {
+  return `${playerId}:${advancementIndex}:${category}`;
+}
+
+/** Découpe le CSV de compétences d'un joueur en slugs (kebab-case). */
+function parsePlayerSkillSlugs(csv: string | null | undefined): string[] {
+  if (!csv) return [];
+  return csv
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
 
 /**
  * Cout SPP du prochain avancement le moins cher (random-primary @ N+1)
@@ -291,7 +322,10 @@ export type ApplyAdvancementOutcome =
         | "missing-stat"
         | "missing-d8"
         | "stat-roll-mismatch"
-        | "stat-not-improvable";
+        | "stat-not-improvable"
+        | "missing-category"
+        | "invalid-category"
+        | "random-not-in-candidates";
       readonly required?: number;
       readonly available?: number;
     };
@@ -301,11 +335,18 @@ export interface ApplyAdvancementInput {
   readonly playerId: string;
   readonly type: AdvancementType;
   /**
-   * Slug de la competence ajoutee. Pour `random-primary`, le caller tire
-   * au sort cote handler avant d'appeler ce service. Absent pour les
-   * ameliorations de caracteristique (type='characteristic').
+   * Slug de la competence ajoutee. Pour `random-primary`, il DOIT faire
+   * partie des 2 candidats tires par le serveur pour (`playerId`,
+   * advancementIndex, `category`) — validation anti-triche ci-dessous.
+   * Absent pour les ameliorations de caracteristique (type='characteristic').
    */
   readonly skillSlug?: string;
+  /**
+   * Categorie choisie pour un tirage `random-primary` (code A/S/G/M/P/K).
+   * Obligatoire pour ce type : sert a re-deriver les candidats et a valider
+   * que `skillSlug` est bien l'un d'eux.
+   */
+  readonly category?: string;
   /**
    * Caracteristique a ameliorer. Obligatoire (et uniquement utilise)
    * pour type='characteristic'.
@@ -316,6 +357,87 @@ export interface ApplyAdvancementInput {
    * ameliorables. Obligatoire pour type='characteristic'.
    */
   readonly d8?: number;
+}
+
+export type RollRandomPrimaryOutcome =
+  | {
+      readonly rolled: true;
+      readonly category: RandomSkillCategoryCode;
+      readonly candidates: string[];
+    }
+  | {
+      readonly skipped: true;
+      readonly reason:
+        | "player-not-found"
+        | "player-not-on-team"
+        | "player-dead"
+        | "invalid-category"
+        | "category-not-primary"
+        | "no-candidates";
+    };
+
+/**
+ * Tire au sort les 2 compétences candidates d'un `random-primary` (règle
+ * p.121 : catégorie choisie → 2D6 ×2 → le coach choisit l'une des deux). Le
+ * tirage est autoritaire cote serveur et déterministe (seed stable), donc
+ * l'application (`applyAdvancementChoice`) peut re-vérifier que le skill
+ * confirmé fait bien partie des candidats. La catégorie doit être une
+ * catégorie **Principale** de la position (season_3). Les compétences déjà
+ * possédées sont exclues (reroll des doublons).
+ */
+export async function rollRandomPrimarySkill(input: {
+  teamId: string;
+  playerId: string;
+  category: string;
+}): Promise<RollRandomPrimaryOutcome> {
+  if (!isRandomSkillCategory(input.category)) {
+    return { skipped: true, reason: "invalid-category" };
+  }
+  const category = input.category as RandomSkillCategoryCode;
+  const player = await prisma.teamPlayer.findUnique({
+    where: { id: input.playerId },
+    select: {
+      id: true,
+      teamId: true,
+      dead: true,
+      skills: true,
+      advancements: true,
+      position: true,
+      team: { select: { roster: true, ruleset: true } },
+    },
+  });
+  if (!player) return { skipped: true, reason: "player-not-found" };
+  if (player.teamId !== input.teamId) {
+    return { skipped: true, reason: "player-not-on-team" };
+  }
+  if (player.dead) return { skipped: true, reason: "player-dead" };
+
+  // La categorie doit etre Principale pour la position (si l'acces est
+  // renseigne — season_3). Sinon (season_2, acces null) on n'impose rien.
+  const ruleset = player.team?.ruleset ?? "season_3";
+  const positionAccess = await prisma.position.findFirst({
+    where: {
+      slug: player.position,
+      roster: { slug: player.team?.roster, ruleset: ruleset as never },
+    },
+    select: { primarySkills: true },
+  });
+  if (positionAccess?.primarySkills != null) {
+    if (!parseAccessCsv(positionAccess.primarySkills).has(category)) {
+      return { skipped: true, reason: "category-not-primary" };
+    }
+  }
+
+  const taken = parseAdvancements(player.advancements);
+  const candidates = rollRandomPrimaryCandidates({
+    category,
+    ownedSlugs: parsePlayerSkillSlugs(player.skills),
+    seed: randomPrimarySeed(player.id, taken.length, category),
+  });
+  if (candidates.length === 0) {
+    return { skipped: true, reason: "no-candidates" };
+  }
+  return { rolled: true, category, candidates };
 }
 
 /**
@@ -451,6 +573,27 @@ export async function applyAdvancementChoice(
     return { skipped: true, reason: "missing-skill" };
   }
   const skillSlug = input.skillSlug;
+
+  // Anti-triche `random-primary` : le tirage est autoritaire cote serveur.
+  // On re-derive les 2 candidats (memes seed + owned que l'endpoint roll) et
+  // on exige que `skillSlug` soit l'un d'eux — sinon un coach pourrait
+  // s'offrir n'importe quelle competence Principale au tarif reduit du random.
+  if (input.type === "random-primary") {
+    if (!input.category || !isRandomSkillCategory(input.category)) {
+      return {
+        skipped: true,
+        reason: input.category ? "invalid-category" : "missing-category",
+      };
+    }
+    const candidates = rollRandomPrimaryCandidates({
+      category: input.category as RandomSkillCategoryCode,
+      ownedSlugs: parsePlayerSkillSlugs(player.skills),
+      seed: randomPrimarySeed(player.id, taken.length, input.category),
+    });
+    if (!candidates.includes(skillSlug)) {
+      return { skipped: true, reason: "random-not-in-candidates" };
+    }
+  }
 
   // Validation de l'acces primaire/secondaire (souple) : la skill choisie
   // doit appartenir au pool de la position pour le type d'avancement. On ne

@@ -61,6 +61,11 @@ describe("AdvancementEditor", () => {
   it("applique un avancement via l'API", async () => {
     setup();
     await screen.findByText("Griff Oberwald");
+    // Le défaut est « random-primary » (flux de tirage) : on bascule sur
+    // « primary » (choix libre) pour ce test d'application générique.
+    fireEvent.change(screen.getByTestId("level-up-type-p1"), {
+      target: { value: "primary" },
+    });
     // Saisie libre (pas de catalogue chargé ici) : on tape un slug puis applique.
     fireEvent.change(screen.getByTestId("level-up-skill-p1"), {
       target: { value: "block" },
@@ -72,6 +77,68 @@ describe("AdvancementEditor", () => {
           ([path, init]) =>
             path === "/team/team-1/players/p1/advancement" &&
             init?.method === "POST",
+        ),
+      ).toBe(true),
+    );
+  });
+
+  it("random-primary : tire 2 candidats via le serveur puis en applique un", async () => {
+    const PENDING_A = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "gob1",
+          playerName: "Gobelin",
+          primarySkills: "A", // Agilité en principale
+          secondarySkills: "G",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements")) return Promise.resolve(PENDING_A);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+            { slug: "leap", nameFr: "Saut", category: "Agility" },
+          ],
+        });
+      if (path.includes("/roll-random-primary"))
+        return Promise.resolve({ candidates: ["dodge", "leap"] });
+      if (path.includes("/advancement"))
+        return Promise.resolve({ applied: true, newSpp: 13, addedSkill: "dodge" });
+      return Promise.resolve({});
+    });
+    setup();
+    await screen.findByText("Gobelin");
+
+    // Catégorie principale = Agilité, puis tirage.
+    fireEvent.change(screen.getByTestId("level-up-category-gob1"), {
+      target: { value: "A" },
+    });
+    fireEvent.click(screen.getByTestId("level-up-roll-gob1"));
+
+    // Les 2 candidats tirés s'affichent (par leur nom FR).
+    await screen.findByTestId("level-up-candidates-gob1");
+    expect(screen.getByText("Esquive")).toBeTruthy();
+    expect(screen.getByText("Saut")).toBeTruthy();
+
+    // On choisit « Esquive » et on applique.
+    fireEvent.click(screen.getByLabelText("Esquive"));
+    fireEvent.click(screen.getByTestId("level-up-apply-gob1"));
+
+    await waitFor(() =>
+      expect(
+        apiRequest.mock.calls.some(
+          ([path, init]) =>
+            path === "/team/team-1/players/gob1/advancement" &&
+            init?.method === "POST" &&
+            JSON.parse(String(init?.body)).type === "random-primary" &&
+            JSON.parse(String(init?.body)).category === "A" &&
+            JSON.parse(String(init?.body)).skillSlug === "dodge",
         ),
       ).toBe(true),
     );
@@ -116,6 +183,12 @@ describe("AdvancementEditor", () => {
         ),
       ).toBe(true),
     );
+
+    // Bascule sur « primary » (choix libre filtré par accès) — le défaut
+    // random-primary passe désormais par le tirage serveur.
+    fireEvent.change(await screen.findByTestId("level-up-type-gnome1"), {
+      target: { value: "primary" },
+    });
 
     const select = (await screen.findByTestId(
       "level-up-skill-gnome1",

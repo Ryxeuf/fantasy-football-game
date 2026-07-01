@@ -26,12 +26,15 @@ import { validate } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
   applyAdvancementChoice,
+  rollRandomPrimarySkill,
   markSequenceCompletedIfDone,
   parsePendingChoices,
 } from "../services/post-match-league-sequence";
 import {
   applyAdvancementSchema,
   type ApplyAdvancementBody,
+  rollRandomPrimarySchema,
+  type RollRandomPrimaryBody,
 } from "../schemas/advancement.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 
@@ -236,6 +239,7 @@ export async function handleApplyAdvancement(
     playerId,
     type: body.type,
     skillSlug: body.skillSlug,
+    category: body.category,
     stat: body.stat,
     d8: body.d8,
   });
@@ -275,10 +279,54 @@ export async function handleApplyAdvancement(
   });
 }
 
+/**
+ * POST /team/:teamId/players/:playerId/advancement/roll-random-primary
+ *
+ * Tire au sort les 2 compétences candidates d'un `random-primary` (p.121) pour
+ * la catégorie choisie. Tirage autoritaire serveur (seed déterministe) : le
+ * coach choisira l'une des deux et la confirmera via l'endpoint d'application,
+ * qui re-vérifie l'appartenance (anti-triche). Réservé au propriétaire.
+ */
+export async function handleRollRandomPrimary(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const teamId = req.params.teamId;
+  const playerId = req.params.playerId;
+  const team = await ensureTeamOwner(userId, teamId, res);
+  if (!team) return;
+  const body: RollRandomPrimaryBody = req.body;
+
+  const result = await rollRandomPrimarySkill({
+    teamId,
+    playerId,
+    category: body.category,
+  });
+  if ("skipped" in result && result.skipped) {
+    const status =
+      result.reason === "player-not-found"
+        ? 404
+        : result.reason === "player-not-on-team"
+          ? 403
+          : 400;
+    sendError(res, `Tirage refusé: ${result.reason}`, status);
+    return;
+  }
+  sendSuccess(res, result);
+}
+
 router.get(
   "/:teamId/pending-advancements",
   authUser,
   handleListPendingAdvancements,
+);
+router.post(
+  "/:teamId/players/:playerId/advancement/roll-random-primary",
+  authUser,
+  validate(rollRandomPrimarySchema),
+  handleRollRandomPrimary,
 );
 router.post(
   "/:teamId/players/:playerId/advancement",

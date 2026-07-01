@@ -368,6 +368,7 @@ export * from './analytics';
 // Export des compétences (skills)
 export * from './skills';
 export * from './skills/skill-effects';
+export * from './skills/random-skill-table-2025';
 
 // Enregistrement des règles spéciales des Star Players
 export {

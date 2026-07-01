@@ -32,6 +32,11 @@ export const SEASON_3_CATEGORY_CHANGES: Record<string, string> = {
   "pile-driver": "Scélérates",      // Marteau-Pilon -> Scélérates
   "fumblerooskie": "Scélérates",    // Fumblerooskie -> Scélérates
   "hit-and-run": "Agility",         // A4/A15 — Frappe-et-court : Trait -> Compétence d'Agilité en S3
+  // p.121 (tableau de compétences aléatoires) : Provocation est Générale et
+  // Dégagement une compétence de Passe en S3 (sinon le contrôle d'accès au
+  // level-up les rejetterait alors qu'elles sont tirables/choisissables).
+  "provocation": "General",         // Provocation -> Générales
+  "clearance": "Passing",           // Dégagement -> Passe
 };
 
 /**

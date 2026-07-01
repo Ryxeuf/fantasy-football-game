@@ -77,6 +77,17 @@ const CATEGORY_CODE: Record<string, string> = {
   "Scélérates": "K",
 };
 
+/** Code catégorie → libellé FR (pour le tirage random-primary, p.121). */
+const CATEGORY_LABELS: Record<string, string> = {
+  G: "Générales",
+  A: "Agilité",
+  S: "Force",
+  P: "Passe",
+  M: "Mutation",
+  K: "Scélérates",
+};
+const CATEGORY_ORDER = ["G", "A", "S", "P", "M", "K"] as const;
+
 /** Parse un CSV d'accès en Set de codes (robuste "G,S" / "GS" ; F->S alias). */
 function parseAccess(csv: string | null): Set<string> {
   const out = new Set<string>();
@@ -211,8 +222,26 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<ApplyResponse | null>(null);
+  // random-primary (p.121) : catégorie choisie + 2 candidats tirés par le serveur.
+  const [category, setCategory] = useState<string>("");
+  const [rollCandidates, setRollCandidates] = useState<string[] | null>(null);
+  const [rolling, setRolling] = useState(false);
 
   const isCharacteristic = type === "characteristic";
+  const isRandomPrimary = type === "random-primary";
+
+  // Catégories Principales de la position (pour le tirage random-primary).
+  const primaryCategories = useMemo(() => {
+    const pool = parseAccess(item.primarySkills);
+    return CATEGORY_ORDER.filter((c) => pool.has(c));
+  }, [item.primarySkills]);
+
+  // slug -> nom FR (pour afficher les candidats tirés).
+  const nameBySlug = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of catalog) m.set(s.slug, s.nameFr);
+    return m;
+  }, [catalog]);
 
   const cost = useMemo(
     () => costFor(type, item.advancementsTaken),
@@ -255,6 +284,33 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
     }
   }, [isCharacteristic, stat, d8Roll]);
 
+  // Changer de type ou de catégorie invalide le tirage en cours.
+  useEffect(() => {
+    setRollCandidates(null);
+    if (isRandomPrimary) setSkillSlug("");
+  }, [type, category, isRandomPrimary]);
+
+  const handleRoll = useCallback(async () => {
+    if (!category || rolling) return;
+    setRolling(true);
+    setError(null);
+    setSkillSlug("");
+    setRollCandidates(null);
+    try {
+      const res = await apiRequest<{ candidates: string[] }>(
+        `/team/${teamId}/players/${item.teamPlayerId}/advancement/roll-random-primary`,
+        { method: "POST", body: JSON.stringify({ category }) },
+      );
+      setRollCandidates(res.candidates);
+    } catch (e: unknown) {
+      setError(
+        e instanceof Error ? e.message : t.teams.levelUpApplyError ?? "Erreur",
+      );
+    } finally {
+      setRolling(false);
+    }
+  }, [category, rolling, teamId, item.teamPlayerId, t.teams.levelUpApplyError]);
+
   const d8AllowedStats: readonly CharacteristicKind[] =
     d8Roll != null ? characteristicOptionsForRoll(d8Roll) : [];
 
@@ -277,7 +333,9 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       try {
         const body = isCharacteristic
           ? { type, stat, d8: d8Roll }
-          : { type, skillSlug: trimmed };
+          : isRandomPrimary
+            ? { type, category, skillSlug: trimmed }
+            : { type, skillSlug: trimmed };
         const res = await apiRequest<ApplyResponse>(
           `/team/${teamId}/players/${item.teamPlayerId}/advancement`,
           { method: "POST", body: JSON.stringify(body) },
@@ -298,6 +356,8 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       submitting,
       skillSlug,
       isCharacteristic,
+      isRandomPrimary,
+      category,
       stat,
       d8Roll,
       canAfford,
@@ -385,7 +445,75 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
                 ? "Caractéristique"
                 : t.teams.levelUpSkillLabel ?? "Compétence"}
             </span>
-            {isCharacteristic ? (
+            {isRandomPrimary ? (
+              <div className="mt-1 space-y-1.5">
+                <select
+                  data-testid={`level-up-category-${item.teamPlayerId}`}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm"
+                >
+                  <option value="">
+                    {primaryCategories.length === 0
+                      ? "— aucune catégorie principale —"
+                      : "— catégorie principale —"}
+                  </option>
+                  {primaryCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {CATEGORY_LABELS[c]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  data-testid={`level-up-roll-${item.teamPlayerId}`}
+                  onClick={handleRoll}
+                  disabled={!category || rolling}
+                  className="block w-full rounded-md bg-amber-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                >
+                  🎲{" "}
+                  {rolling
+                    ? "Tirage…"
+                    : rollCandidates
+                      ? "Relancer"
+                      : "Tirer 2 compétences"}
+                </button>
+                {rollCandidates ? (
+                  <div
+                    className="space-y-1"
+                    data-testid={`level-up-candidates-${item.teamPlayerId}`}
+                  >
+                    <div className="text-xs text-gray-600">
+                      Choisissez l&apos;une des deux :
+                    </div>
+                    {rollCandidates.map((slug) => (
+                      <label
+                        key={slug}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name={`cand-${item.teamPlayerId}`}
+                          checked={skillSlug === slug}
+                          onChange={() => setSkillSlug(slug)}
+                        />
+                        <span>{nameBySlug.get(slug) ?? slug}</span>
+                      </label>
+                    ))}
+                    {rollCandidates.length < 2 ? (
+                      <div className="text-xs text-amber-700">
+                        Une seule compétence disponible dans cette catégorie.
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">
+                    Choisissez une catégorie principale puis tirez : le serveur
+                    propose 2 compétences au hasard, vous en gardez une.
+                  </div>
+                )}
+              </div>
+            ) : isCharacteristic ? (
               <div className="mt-1 space-y-1.5">
                 <button
                   type="button"

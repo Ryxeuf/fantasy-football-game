@@ -41,9 +41,12 @@ vi.mock("../prisma", () => {
 });
 
 import { prisma } from "../prisma";
+import { rollRandomPrimaryCandidates } from "@bb/game-engine";
 import {
   runPostMatchLeagueSequence,
   applyAdvancementChoice,
+  rollRandomPrimarySkill,
+  randomPrimarySeed,
   markSequenceCompletedIfDone,
 } from "./post-match-league-sequence";
 
@@ -363,15 +366,128 @@ describe("applyAdvancementChoice", () => {
     mocked.teamUpdate.mockResolvedValue({});
     mocked.teamFind.mockResolvedValue({ currentValue: 1010000 });
 
+    // random-primary : le skill confirmé DOIT être l'un des 2 candidats
+    // tirés par le serveur (anti-triche). On reproduit le tirage.
+    const candidate = rollRandomPrimaryCandidates({
+      category: "G",
+      ownedSlugs: [],
+      seed: randomPrimarySeed("p1", 0, "G"),
+    })[0];
+
     await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "random-primary",
+      category: "G",
+      skillSlug: candidate,
+    });
+
+    const teamArgs = mocked.teamUpdate.mock.calls[0][0];
+    expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
+  });
+
+  it("random-primary : refuse un skill hors des 2 candidats tirés (anti-triche)", async () => {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "",
+      advancements: "[]",
+      dead: false,
+    });
+
+    // On choisit délibérément un skill de la catégorie G qui n'est PAS dans
+    // la paire tirée pour ce seed.
+    const seed = randomPrimarySeed("p1", 0, "G");
+    const drawn = new Set(
+      rollRandomPrimaryCandidates({ category: "G", ownedSlugs: [], seed }),
+    );
+    const outsider = ["block", "wrestle", "tackle", "pro", "kick", "fend"].find(
+      (s) => !drawn.has(s),
+    )!;
+
+    const res = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "random-primary",
+      category: "G",
+      skillSlug: outsider,
+    });
+    expect(res).toMatchObject({ skipped: true, reason: "random-not-in-candidates" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("random-primary : refuse si la catégorie est absente", async () => {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "",
+      advancements: "[]",
+      dead: false,
+    });
+    const res = await applyAdvancementChoice({
       teamId: "t1",
       playerId: "p1",
       type: "random-primary",
       skillSlug: "block",
     });
+    expect(res).toMatchObject({ skipped: true, reason: "missing-category" });
+  });
 
-    const teamArgs = mocked.teamUpdate.mock.calls[0][0];
-    expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
+  describe("rollRandomPrimarySkill", () => {
+    it("tire 2 candidats distincts d'une catégorie Principale", async () => {
+      mocked.playerFind.mockResolvedValue({
+        id: "p1",
+        teamId: "t1",
+        dead: false,
+        skills: "",
+        advancements: "[]",
+        position: "dwarf_blocker",
+        team: { roster: "dwarf", ruleset: "season_3" },
+      });
+      mocked.positionFind.mockResolvedValue({ primarySkills: "G,S" });
+
+      const res = await rollRandomPrimarySkill({
+        teamId: "t1",
+        playerId: "p1",
+        category: "G",
+      });
+      expect(res).toMatchObject({ rolled: true, category: "G" });
+      if ("rolled" in res) {
+        expect(res.candidates).toHaveLength(2);
+        expect(res.candidates[0]).not.toBe(res.candidates[1]);
+      }
+    });
+
+    it("refuse une catégorie non-Principale de la position", async () => {
+      mocked.playerFind.mockResolvedValue({
+        id: "p1",
+        teamId: "t1",
+        dead: false,
+        skills: "",
+        advancements: "[]",
+        position: "dwarf_blocker",
+        team: { roster: "dwarf", ruleset: "season_3" },
+      });
+      mocked.positionFind.mockResolvedValue({ primarySkills: "G,S" });
+
+      const res = await rollRandomPrimarySkill({
+        teamId: "t1",
+        playerId: "p1",
+        category: "A", // Agilité pas dans le pool primaire G,S
+      });
+      expect(res).toMatchObject({ skipped: true, reason: "category-not-primary" });
+    });
+
+    it("refuse un code de catégorie invalide", async () => {
+      const res = await rollRandomPrimarySkill({
+        teamId: "t1",
+        playerId: "p1",
+        category: "Z",
+      });
+      expect(res).toMatchObject({ skipped: true, reason: "invalid-category" });
+    });
   });
 
   // --- Validation acces primaire/secondaire (C2) ---

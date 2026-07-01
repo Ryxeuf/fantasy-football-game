@@ -23,9 +23,25 @@ const advancementType = z.enum([
 
 const characteristicStat = z.enum(["ma", "st", "ag", "pa", "av"]);
 
+/** Codes catégorie de compétence (A=Agilité, S=Force, G=Générales,
+ *  M=Mutation, P=Passe, K=Scélérates). Utilisé pour le tirage random-primary. */
+const skillCategoryCode = z.enum(["A", "S", "G", "M", "P", "K"]);
+
+/** Corps de `POST …/advancement/roll-random-primary` : la catégorie choisie. */
+export const rollRandomPrimarySchema = z.object({
+  category: skillCategoryCode,
+});
+export type RollRandomPrimaryBody = z.infer<typeof rollRandomPrimarySchema>;
+
 export const applyAdvancementSchema = z
   .object({
     type: advancementType,
+    /**
+     * Categorie choisie pour un tirage `random-primary` (le serveur re-derive
+     * les candidats a partir d'elle pour valider `skillSlug`). Obligatoire
+     * pour ce type, inutilisee sinon.
+     */
+    category: skillCategoryCode.optional(),
     /**
      * Slug de la skill choisie. Obligatoire pour `primary` /
      * `secondary` (choix du coach), facultatif pour `random-primary`
@@ -52,15 +68,26 @@ export const applyAdvancementSchema = z
   })
   .refine(
     (v) => {
-      if (v.type === "primary" || v.type === "secondary") {
+      if (
+        v.type === "primary" ||
+        v.type === "secondary" ||
+        v.type === "random-primary"
+      ) {
         return typeof v.skillSlug === "string" && v.skillSlug.length > 0;
       }
       return true;
     },
     {
       message:
-        "skillSlug est obligatoire pour type=primary ou secondary (choix du coach)",
+        "skillSlug est obligatoire pour type=primary/secondary/random-primary (le coach confirme la compétence)",
       path: ["skillSlug"],
+    },
+  )
+  .refine(
+    (v) => v.type !== "random-primary" || v.category !== undefined,
+    {
+      message: "category est obligatoire pour type=random-primary",
+      path: ["category"],
     },
   )
   .refine(
