@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { getDisplayName, type Ruleset } from "@bb/game-engine";
 import { API_BASE } from "../../../../auth-client";
 
 interface TeamCareerRecord {
@@ -129,6 +130,7 @@ export default function TeamCareerPage() {
   const { team, record, history, players } = data;
   const sortedPlayers = [...players].sort((a, b) => b.spp - a.spp);
   const winRatePct = (record.winRate * 100).toFixed(1);
+  const ruleset = team.ruleset as Ruleset;
 
   return (
     <div className="w-full max-w-5xl mx-auto p-6 space-y-6 text-white">
@@ -227,54 +229,107 @@ export default function TeamCareerPage() {
         {sortedPlayers.length === 0 ? (
           <p className="text-gray-400 text-sm">Aucun joueur dans cette equipe.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
-                  <th className="py-2 pr-3">#</th>
-                  <th className="py-2 pr-3">Joueur</th>
-                  <th className="py-2 pr-3">Poste</th>
-                  <th className="py-2 pr-3">Matchs</th>
-                  <th className="py-2 pr-3">SPP</th>
-                  <th className="py-2 pr-3">TD</th>
-                  <th className="py-2 pr-3">Sorties</th>
-                  <th className="py-2 pr-3">Passes</th>
-                  <th className="py-2 pr-3">Int.</th>
-                  <th className="py-2 pr-3">MVP</th>
-                  <th className="py-2 pr-3">Lvl-ups</th>
-                  <th className="py-2 pr-3">Bles. graves</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedPlayers.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={`border-b border-gray-800 ${p.dead ? "text-red-400" : ""}`}
-                  >
-                    <td className="py-2 pr-3 text-gray-400">{p.number}</td>
-                    <td className="py-2 pr-3 font-semibold">
-                      {p.name}
-                      {p.dead ? (
-                        <span className="ml-2 text-xs bg-red-900 text-red-200 px-2 py-0.5 rounded-full">
-                          RIP
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="py-2 pr-3 text-gray-300">{p.position}</td>
-                    <td className="py-2 pr-3">{p.matchesPlayed}</td>
-                    <td className="py-2 pr-3 font-semibold">{p.spp}</td>
-                    <td className="py-2 pr-3">{p.totalTouchdowns}</td>
-                    <td className="py-2 pr-3">{p.totalCasualties}</td>
-                    <td className="py-2 pr-3">{p.totalCompletions}</td>
-                    <td className="py-2 pr-3">{p.totalInterceptions}</td>
-                    <td className="py-2 pr-3">{p.totalMvpAwards}</td>
-                    <td className="py-2 pr-3">{p.advancementsCount}</td>
-                    <td className="py-2 pr-3">{p.nigglingInjuries}</td>
+          <>
+            {/* Version desktop : tableau */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="py-2 pr-3">#</th>
+                    <th className="py-2 pr-3">Joueur</th>
+                    <th className="py-2 pr-3">Poste</th>
+                    <th className="py-2 pr-3">Matchs</th>
+                    <th className="py-2 pr-3">SPP</th>
+                    <th className="py-2 pr-3">TD</th>
+                    <th className="py-2 pr-3">Sorties</th>
+                    <th className="py-2 pr-3">Passes</th>
+                    <th className="py-2 pr-3">Int.</th>
+                    <th className="py-2 pr-3">MVP</th>
+                    <th className="py-2 pr-3">Lvl-ups</th>
+                    <th className="py-2 pr-3">Bles. graves</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {sortedPlayers.map((p) => (
+                    <tr
+                      key={p.id}
+                      className={`border-b border-gray-800 ${p.dead ? "text-red-400" : ""}`}
+                    >
+                      <td className="py-2 pr-3 text-gray-400">{p.number}</td>
+                      <td className="py-2 pr-3 font-semibold">
+                        {p.name}
+                        {p.dead ? (
+                          <span className="ml-2 text-xs bg-red-900 text-red-200 px-2 py-0.5 rounded-full">
+                            RIP
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="py-2 pr-3 text-gray-300">
+                        {getDisplayName(p.position, ruleset)}
+                      </td>
+                      <td className="py-2 pr-3">{p.matchesPlayed}</td>
+                      <td className="py-2 pr-3 font-semibold">{p.spp}</td>
+                      <td className="py-2 pr-3">{p.totalTouchdowns}</td>
+                      <td className="py-2 pr-3">{p.totalCasualties}</td>
+                      <td className="py-2 pr-3">{p.totalCompletions}</td>
+                      <td className="py-2 pr-3">{p.totalInterceptions}</td>
+                      <td className="py-2 pr-3">{p.totalMvpAwards}</td>
+                      <td className="py-2 pr-3">{p.advancementsCount}</td>
+                      <td className="py-2 pr-3">{p.nigglingInjuries}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Version mobile : cartes */}
+            <div className="md:hidden space-y-3">
+              {sortedPlayers.map((p) => (
+                <div
+                  key={p.id}
+                  className={`rounded-lg border border-gray-700 bg-gray-900/50 p-3 ${p.dead ? "text-red-400" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold truncate">
+                        <span className="text-gray-400 font-mono mr-2">
+                          #{p.number}
+                        </span>
+                        {p.name}
+                        {p.dead ? (
+                          <span className="ml-2 text-xs bg-red-900 text-red-200 px-2 py-0.5 rounded-full">
+                            RIP
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {getDisplayName(p.position, ruleset)}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-lg font-bold leading-none">{p.spp}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-gray-500">
+                        SPP
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <CareerStatCell label="Matchs" value={p.matchesPlayed} />
+                    <CareerStatCell label="TD" value={p.totalTouchdowns} />
+                    <CareerStatCell label="Sorties" value={p.totalCasualties} />
+                    <CareerStatCell label="Passes" value={p.totalCompletions} />
+                    <CareerStatCell label="Int." value={p.totalInterceptions} />
+                    <CareerStatCell label="MVP" value={p.totalMvpAwards} />
+                    <CareerStatCell label="Lvl-ups" value={p.advancementsCount} />
+                    <CareerStatCell
+                      label="Bles. graves"
+                      value={p.nigglingInjuries}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
     </div>
@@ -286,6 +341,23 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     <div className="bg-gray-900/50 rounded p-3 border border-gray-700">
       <div className="text-xs text-gray-400">{label}</div>
       <div className="text-lg font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function CareerStatCell({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded bg-gray-800/60 py-1.5">
+      <div className="text-sm font-semibold leading-none">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-wide text-gray-500">
+        {label}
+      </div>
     </div>
   );
 }

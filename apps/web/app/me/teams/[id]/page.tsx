@@ -343,11 +343,11 @@ export default function TeamDetailPage() {
             </button>
             {exportMenuOpen && (
               <>
-                <div 
-                  className="fixed inset-0 z-10" 
+                <div
+                  className="fixed inset-0 z-10 bg-black/40 sm:bg-transparent"
                   onClick={() => setExportMenuOpen(false)}
                 ></div>
-                <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 mx-auto max-w-xs z-20 bg-white rounded-lg shadow-lg border border-gray-200 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:translate-y-0 sm:mx-0 sm:mt-2 sm:w-64 sm:max-w-none">
                   <div className="py-1">
                     <button
                       onClick={handleExportRoster}
