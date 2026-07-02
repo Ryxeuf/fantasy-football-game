@@ -544,10 +544,11 @@ model PositionSkill {
 
 // Modèle pour les coupes (tournois)
 model Cup {
-  id        String   @id @default(cuid())
-  name      String // Nom de la coupe (obligatoire)
-  creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
-  creatorId String
+  id          String  @id @default(cuid())
+  name        String // Nom de la coupe (obligatoire)
+  description String? // Description optionnelle (miroir SQLite)
+  creator     User    @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId   String
   ruleset   Ruleset  @default(season_2)
   format    Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions

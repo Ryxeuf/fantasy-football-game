@@ -8,7 +8,10 @@ import { RULESETS } from "@bb/game-engine";
 type Cup = {
   id: string;
   name: string;
+  description?: string | null;
   ruleset: string;
+  format?: string;
+  isAdjusted?: boolean;
   creator: {
     id: string;
     coachName: string;
@@ -103,7 +106,7 @@ export default function CupsPage() {
   const [foulCasualtyPoints, setFoulCasualtyPoints] = useState(2);
   const [passPoints, setPassPoints] = useState(2);
   // Règles avancées de composition (mode coupe).
-  const [resurrectionMode, setResurrectionMode] = useState(false);
+  const [newCupDescription, setNewCupDescription] = useState("");
   const [tierBudgets, setTierBudgets] = useState<Record<string, string>>({
     I: "",
     II: "",
@@ -127,7 +130,6 @@ export default function CupsPage() {
     Array<{ slug: string; name: string }>
   >([]);
   const [creating, setCreating] = useState(false);
-  const [selectedTeamForRegistration, setSelectedTeamForRegistration] = useState<Record<string, string>>({});
   const rulesetLabels: Record<string, string> = {
     season_2: "Saison 2",
     season_3: "Saison 3",
@@ -240,6 +242,7 @@ export default function CupsPage() {
 
       const response = await postJSON("/cup", {
         name: newCupName.trim(),
+        description: newCupDescription.trim() || undefined,
         isPublic: newCupIsPublic,
         ruleset: newCupRuleset,
         format: newCupFormat,
@@ -253,7 +256,7 @@ export default function CupsPage() {
           foulCasualtyPoints,
           passPoints,
         },
-        resurrectionMode,
+        // resurrectionMode : forcé côté serveur (seul mode disponible).
         tierBudgets: toNumberMap(tierBudgets),
         tierStartingPsp: toNumberMap(tierStartingPsp),
         rosterBudgetOverrides:
@@ -271,7 +274,7 @@ export default function CupsPage() {
       setBlockCasualtyPoints(3);
       setFoulCasualtyPoints(2);
       setPassPoints(2);
-      setResurrectionMode(false);
+      setNewCupDescription("");
       setNewCupFormat("bb11");
       setTierBudgets({ I: "", II: "", III: "", IV: "" });
       setTierStartingPsp({ I: "", II: "", III: "", IV: "" });
@@ -289,22 +292,6 @@ export default function CupsPage() {
       setError(e.message || "Erreur lors de la création");
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleRegister = async (cupId: string) => {
-    const teamId = selectedTeamForRegistration[cupId];
-    if (!teamId) {
-      setError("Veuillez sélectionner une équipe");
-      return;
-    }
-    setError(null);
-    try {
-      await postJSON(`/cup/${cupId}/register`, { teamId });
-      setSelectedTeamForRegistration({ ...selectedTeamForRegistration, [cupId]: "" });
-      loadCups();
-    } catch (e: any) {
-      setError(e.message || "Erreur lors de l'inscription");
     }
   };
 
@@ -387,6 +374,21 @@ export default function CupsPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
                 maxLength={100}
                 required
+              />
+            </div>
+            <div>
+              <label htmlFor="cupDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                Description <span className="text-gray-400 font-normal">(optionnelle)</span>
+              </label>
+              <textarea
+                id="cupDescription"
+                value={newCupDescription}
+                onChange={(e) => setNewCupDescription(e.target.value)}
+                placeholder="Ex: Tournoi amical en résurrection, ouvert à tous les rosters T3."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+                rows={2}
+                maxLength={1000}
+                data-testid="cup-description-input"
               />
             </div>
             <div>
@@ -545,18 +547,10 @@ export default function CupsPage() {
                 ).
               </p>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={resurrectionMode}
-                  onChange={(e) => setResurrectionMode(e.target.checked)}
-                  className="rounded border-gray-300 text-nuffle-gold focus:ring-nuffle-gold"
-                  data-testid="cup-resurrection-toggle"
-                />
-                <span className="text-sm text-gray-700">
-                  Mode résurrection (même roster à chaque match, aucun PSP gagné)
-                </span>
-              </label>
+              <p className="text-xs text-gray-500 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                ♻️ Mode résurrection (même roster à chaque match, aucun PSP gagné) —
+                seul mode disponible actuellement.
+              </p>
 
               <div>
                 <p className="text-xs font-medium text-gray-600 mb-1">
@@ -776,7 +770,6 @@ export default function CupsPage() {
           </div>
         ) : (
           cups.map((cup) => {
-            const eligibleTeams = teams.filter((team) => team.ruleset === cup.ruleset);
             return (
             <div
               key={cup.id}
@@ -821,7 +814,34 @@ export default function CupsPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
                       {rulesetLabels[cup.ruleset] || cup.ruleset}
                     </span>
+                    <span
+                      data-testid="cup-format-badge"
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        (cup.format ?? "bb11") === "sevens"
+                          ? "bg-purple-50 text-purple-700"
+                          : "bg-blue-50 text-blue-700"
+                      }`}
+                    >
+                      {(cup.format ?? "bb11") === "sevens"
+                        ? "Blood Bowl à Sept"
+                        : "Blood Bowl à 11"}
+                    </span>
+                    <span
+                      data-testid="cup-adjusted-badge"
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        cup.isAdjusted
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {cup.isAdjusted ? "⚙️ Règles ajustées" : "Règles standard"}
+                    </span>
                   </div>
+                  {cup.description && (
+                    <p className="text-sm text-gray-700 mb-1 whitespace-pre-line">
+                      {cup.description}
+                    </p>
+                  )}
                   <p className="text-sm text-gray-600">
                     Créée par <span className="font-medium">{cup.creator.coachName}</span>
                     {" • "}
@@ -869,61 +889,21 @@ export default function CupsPage() {
                     Fermer les inscriptions
                   </button>
                 )}
-                {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length > 0 && (
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Choisir une équipe
-                      </label>
-                      <select
-                        value={selectedTeamForRegistration[cup.id] || ""}
-                        onChange={(e) => setSelectedTeamForRegistration({ ...selectedTeamForRegistration, [cup.id]: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
-                      >
-                        <option value="">-- Sélectionner une équipe --</option>
-                        <option value="">-- Sélectionner une équipe --</option>
-                        {eligibleTeams.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name} ({team.roster})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      onClick={() => handleRegister(cup.id)}
-                      disabled={!selectedTeamForRegistration[cup.id]}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Inscrire l'équipe
-                    </button>
-                  </div>
-                )}
-                {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (
-                  <div className="text-sm text-gray-600">
-                    Aucune équipe avec le ruleset {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une avant de vous inscrire.
-                  </div>
-                )}
                 {cup.hasTeamParticipating && (
                   <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
                     ✓ Une de vos équipes est inscrite
                   </div>
                 )}
-                {teams.length === 0 && !cup.hasTeamParticipating && cup.status === "ouverte" && (
-                  <div className="text-sm text-gray-600">
-                    <p className="mb-2">Vous devez créer une équipe pour participer à une coupe.</p>
-                    <a
-                      href="/me/teams/new"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      Créer une équipe →
-                    </a>
-                  </div>
+                {!cup.hasTeamParticipating && cup.status === "ouverte" && (
+                  <p className="text-xs text-gray-500">
+                    L'inscription se fait depuis la page de la coupe.
+                  </p>
                 )}
                 <button
                   onClick={() => router.push(`/cups/${cup.id}`)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all"
                 >
-                  Voir les détails
+                  Voir les détails{!cup.hasTeamParticipating && cup.status === "ouverte" ? " & s'inscrire" : ""}
                 </button>
               </div>
             </div>

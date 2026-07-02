@@ -428,6 +428,7 @@ exports.Prisma.PositionSkillScalarFieldEnum = {
 exports.Prisma.CupScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  description: 'description',
   creatorId: 'creatorId',
   ruleset: 'ruleset',
   format: 'format',

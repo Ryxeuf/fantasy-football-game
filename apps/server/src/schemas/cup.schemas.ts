@@ -68,6 +68,7 @@ export const createCupSchema = z
       .string()
       .min(1, "Le nom de la coupe est requis")
       .max(100, "Le nom de la coupe ne peut pas depasser 100 caracteres"),
+    description: z.string().max(1000).optional().nullable(),
     isPublic: z.boolean().optional().default(true),
     ruleset: z.string().max(50).optional(),
     format: z.enum(["bb11", "sevens"]).optional(),

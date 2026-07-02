@@ -274,6 +274,17 @@ export default function CupDetailPage() {
       team.ruleset === cup.ruleset &&
       (team.format ?? "bb11") === (cup.format ?? "bb11"),
   );
+  // Coupe « ajustée » = elle impose un budget/PSP par tier/roster. Si ajustée,
+  // l'inscription d'une équipe existante passe forcément par une adaptation
+  // (clone) ; sinon on peut inscrire l'équipe telle quelle.
+  const rc = cup.rulesConfig;
+  const cupAdjusted = Boolean(
+    rc &&
+      (Object.keys(rc.tierBudgets).length > 0 ||
+        Object.keys(rc.rosterBudgetOverrides).length > 0 ||
+        Object.keys(rc.tierStartingPsp).length > 0 ||
+        Object.keys(rc.rosterStartingPspOverrides).length > 0),
+  );
 
   return (
     <div className="w-full p-6 space-y-6">
@@ -962,32 +973,45 @@ export default function CupDetailPage() {
                   </option>
                 ))}
               </select>
-              <button
-                onClick={handleRegister}
-                disabled={!selectedTeamId}
-                className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Inscrire tel quel
-              </button>
-              <button
-                onClick={() =>
-                  selectedTeamId &&
-                  router.push(
-                    `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
-                  )
-                }
-                disabled={!selectedTeamId}
-                className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="cup-adapt-existing-team"
-              >
-                Adapter à la coupe
-              </button>
+              {cupAdjusted ? (
+                <button
+                  onClick={() =>
+                    selectedTeamId &&
+                    router.push(
+                      `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
+                    )
+                  }
+                  disabled={!selectedTeamId}
+                  className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="cup-adapt-existing-team"
+                >
+                  Adapter à la coupe
+                </button>
+              ) : (
+                <button
+                  onClick={handleRegister}
+                  disabled={!selectedTeamId}
+                  className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="cup-register-as-is"
+                >
+                  Inscrire tel quel
+                </button>
+              )}
             </div>
             <p className="text-xs text-gray-500">
-              <strong>Inscrire tel quel</strong> : l'équipe doit déjà respecter le
-              budget et les PSP de la coupe. <strong>Adapter à la coupe</strong> :
-              crée une copie pré-remplie de cette équipe avec le budget et les PSP
-              de la coupe à dépenser (l'équipe de base reste disponible).
+              {cupAdjusted ? (
+                <>
+                  Cette coupe applique des règles ajustées (budget/PSP) :
+                  l'inscription crée une <strong>copie adaptée</strong> de l'équipe
+                  choisie avec le budget et les PSP de la coupe à dépenser (l'équipe
+                  de base reste disponible).
+                </>
+              ) : (
+                <>
+                  Cette coupe n'applique aucun ajustement : l'équipe est inscrite{" "}
+                  <strong>telle quelle</strong>.
+                </>
+              )}
             </p>
           </div>
         )}

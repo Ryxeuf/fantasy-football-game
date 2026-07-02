@@ -544,17 +544,18 @@ model PositionSkill {
 
 // Modèle pour les coupes (tournois)
 model Cup {
-  id        String   @id @default(cuid())
-  name      String // Nom de la coupe (obligatoire)
-  creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
-  creatorId String
-  ruleset   Ruleset  @default(season_2)
-  format    Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
-  validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
-  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
-  status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String // Nom de la coupe (obligatoire)
+  description String? // Description optionnelle (miroir SQLite)
+  creator     User     @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId   String
+  ruleset     Ruleset  @default(season_2)
+  format      Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
+  validated   Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
+  isPublic    Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
+  status      String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Configuration des points (cf. schema Postgres). Necessaire pour
   // que `POST /cup` ne crashe pas en E2E (le route fait un create avec

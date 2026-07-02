@@ -96,6 +96,22 @@ function formatCupRules(cup: {
   };
 }
 
+/**
+ * `true` si la coupe applique un ajustement de composition (budget ou PSP par
+ * tier/roster). Le mode résurrection n'est PAS un ajustement de composition.
+ * Sert à décider si l'on peut « inscrire tel quel » (aucun ajustement) ou si
+ * l'inscription passe forcément par une adaptation.
+ */
+function isCupAdjusted(cup: CupRulesConfig): boolean {
+  const rc = formatCupRules(cup);
+  return (
+    Object.keys(rc.tierBudgets).length > 0 ||
+    Object.keys(rc.rosterBudgetOverrides).length > 0 ||
+    Object.keys(rc.tierStartingPsp).length > 0 ||
+    Object.keys(rc.rosterStartingPspOverrides).length > 0
+  );
+}
+
 // GET /cup - Liste les coupes visibles par l'utilisateur
 // Règles : coupes publiques ET ouvertes, OU coupes auxquelles l'utilisateur participe
 router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
@@ -194,10 +210,12 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     const formattedCups = cups.map((cup: typeof cups[number]) => ({
       id: cup.id,
       name: cup.name,
+      description: cup.description,
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -280,10 +298,12 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
     const formattedCups = cups.map((cup: typeof cups[number]) => ({
       id: cup.id,
       name: cup.name,
+      description: cup.description,
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -515,10 +535,12 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     const formattedCup = {
       id: cup.id,
       name: cup.name,
+      description: cup.description,
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -575,6 +597,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedRequest, res) => {
   const body: {
     name: string;
+    description?: string | null;
     isPublic?: boolean;
     ruleset?: string;
     format?: "bb11" | "sevens";
@@ -684,6 +707,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     const cup = await prisma.cup.create({
       data: {
         name: name.trim(),
+        description: body.description?.trim() || null,
         creatorId: req.user!.id,
         ruleset,
         format,
@@ -693,6 +717,8 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // Règles avancées de composition (mode coupe). Maps JSON sérialisées
         // en string pour rester compatibles PG (Json) + miroir SQLite (String).
         ...serializeCupRulesData(body),
+        // Mode résurrection : seul mode disponible actuellement en coupe.
+        resurrectionMode: true,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
           ? {
@@ -716,10 +742,12 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     const formattedCup = {
       id: cup.id,
       name: cup.name,
+      description: cup.description,
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status || "ouverte",
