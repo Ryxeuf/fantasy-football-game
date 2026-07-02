@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { createCupSchema } from "./cup.schemas";
+import { createCupSchema, updateCupRulesSchema } from "./cup.schemas";
 
 describe("createCupSchema (S27.1i monthlyYear/Month)", () => {
   it("accepte un payload sans monthlyYear/Month (cup privee retro-compat)", () => {
@@ -75,5 +75,34 @@ describe("createCupSchema (S27.1i monthlyYear/Month)", () => {
       monthlyMonth: 4,
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe("règles de composition (createCupSchema + updateCupRulesSchema)", () => {
+  it("accepte la config complète à la création", () => {
+    const r = createCupSchema.safeParse({
+      name: "Coupe Tier",
+      resurrectionMode: true,
+      tierBudgets: { I: 1150, II: 1100 },
+      rosterBudgetOverrides: { skaven: 1200 },
+      tierStartingPsp: { II: 6, IV: 14 },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejette un tier inconnu dans tierBudgets", () => {
+    const r = updateCupRulesSchema.safeParse({ tierBudgets: { V: 1000 } });
+    expect(r.success).toBe(false);
+  });
+
+  it("rejette une valeur négative", () => {
+    expect(
+      updateCupRulesSchema.safeParse({ tierStartingPsp: { I: -1 } }).success,
+    ).toBe(false);
+  });
+
+  it("accepte un patch partiel (résurrection seule)", () => {
+    const r = updateCupRulesSchema.safeParse({ resurrectionMode: false });
+    expect(r.success).toBe(true);
   });
 });

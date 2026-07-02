@@ -39,6 +39,14 @@ vi.mock("../prisma", () => ({
     localMatch: {
       findMany: vi.fn(),
     },
+    // GET /team/mine enrichit chaque équipe avec son engagement compétition
+    // (getTeamsEngagement) → findMany coupe + ligue.
+    cupParticipant: {
+      findMany: vi.fn(() => Promise.resolve([])),
+    },
+    leagueParticipant: {
+      findMany: vi.fn(() => Promise.resolve([])),
+    },
     // resolveStaffConfigBySlug : fallback defaultStaffConfig(slug, format)
     // quand le roster n'est pas mocké (undefined).
     roster: {

@@ -17,6 +17,7 @@
 
 import { prisma } from "../prisma";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
+import { getTeamEngagement } from "./team-competition-status";
 import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
 
 export type LeagueStatus =
@@ -327,6 +328,19 @@ export async function addParticipant(input: AddParticipantInput) {
   });
   if (existing) {
     throw new Error("Cette equipe est deja inscrite sur la saison");
+  }
+
+  // Regle « une equipe = une seule competition active » : refuser si l'equipe
+  // est deja engagee dans une coupe ou une autre saison de ligue active.
+  const engagement = await getTeamEngagement(input.teamId, {
+    excludeSeasonId: input.seasonId,
+  });
+  if (engagement.engaged) {
+    throw new Error(
+      `Cette equipe est deja engagee dans ${
+        engagement.name ?? "une autre competition"
+      } et n'est pas disponible`,
+    );
   }
 
   const currentCount = await prisma.leagueParticipant.count({

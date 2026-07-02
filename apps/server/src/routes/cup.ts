@@ -14,10 +14,12 @@ import {
   registerCupSchema,
   unregisterCupSchema,
   updateCupStatusSchema,
+  updateCupRulesSchema,
   listMonthlyCupsQuerySchema,
   setMatchOfTheWeekSchema,
   type ListMonthlyCupsQuery,
   type SetMatchOfTheWeekBody,
+  type CupRulesConfigInput,
 } from "../schemas/cup.schemas";
 import { listMonthlyCups } from "../services/cup-monthly-listing";
 import {
@@ -25,8 +27,74 @@ import {
   setMatchOfTheWeek,
 } from "../services/match-of-the-week";
 import { serverLog } from "../utils/server-log";
+import {
+  parseNumberMap,
+  resolveCupBudget,
+  resolveCupStartingPsp,
+  teamAdvancementsPspCost,
+  type CupRulesConfig,
+} from "../services/cup-rules";
+import { captureRosterSnapshot } from "../services/cup-roster-snapshot";
+import { getTeamEngagement } from "../services/team-competition-status";
 
 const router = Router();
+
+/** Champs de config « règles avancées » attendus dans un body de coupe. */
+interface CupRulesBody {
+  resurrectionMode?: boolean;
+  tierBudgets?: Record<string, number>;
+  rosterBudgetOverrides?: Record<string, number>;
+  tierStartingPsp?: Record<string, number>;
+  rosterStartingPspOverrides?: Record<string, number>;
+}
+
+/**
+ * Sérialise les maps de config coupe en string JSON (ou null) pour un
+ * `create`/`update` Prisma compatible PG (Json) + miroir SQLite (String).
+ * Les champs absents ne sont pas inclus (patch partiel).
+ */
+function serializeCupRulesData(body: CupRulesBody): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
+  if (body.resurrectionMode !== undefined) {
+    data.resurrectionMode = Boolean(body.resurrectionMode);
+  }
+  if (body.tierBudgets !== undefined) {
+    data.tierBudgets = body.tierBudgets ? JSON.stringify(body.tierBudgets) : null;
+  }
+  if (body.rosterBudgetOverrides !== undefined) {
+    data.rosterBudgetOverrides = body.rosterBudgetOverrides
+      ? JSON.stringify(body.rosterBudgetOverrides)
+      : null;
+  }
+  if (body.tierStartingPsp !== undefined) {
+    data.tierStartingPsp = body.tierStartingPsp
+      ? JSON.stringify(body.tierStartingPsp)
+      : null;
+  }
+  if (body.rosterStartingPspOverrides !== undefined) {
+    data.rosterStartingPspOverrides = body.rosterStartingPspOverrides
+      ? JSON.stringify(body.rosterStartingPspOverrides)
+      : null;
+  }
+  return data;
+}
+
+/** Projette la config « règles avancées » d'une coupe pour les réponses API. */
+function formatCupRules(cup: {
+  resurrectionMode?: boolean | null;
+  tierBudgets?: unknown;
+  rosterBudgetOverrides?: unknown;
+  tierStartingPsp?: unknown;
+  rosterStartingPspOverrides?: unknown;
+}) {
+  return {
+    resurrectionMode: Boolean(cup.resurrectionMode),
+    tierBudgets: parseNumberMap(cup.tierBudgets),
+    rosterBudgetOverrides: parseNumberMap(cup.rosterBudgetOverrides),
+    tierStartingPsp: parseNumberMap(cup.tierStartingPsp),
+    rosterStartingPspOverrides: parseNumberMap(cup.rosterStartingPspOverrides),
+  };
+}
 
 // GET /cup - Liste les coupes visibles par l'utilisateur
 // Règles : coupes publiques ET ouvertes, OU coupes auxquelles l'utilisateur participe
@@ -129,6 +197,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
+      format: cup.format,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -214,6 +283,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
+      format: cup.format,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -448,6 +518,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
+      format: cup.format,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -465,6 +536,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       hasTeamParticipating: cup.participants.some((p: any) => userTeamIds.has(p.team.id)),
       userParticipatingTeamIds, // Liste des IDs des équipes de l'utilisateur qui participent
       scoringConfig: standingsResult.scoringConfig,
+      rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
       standings: standingsResult.teamStats,
       actionAwards: standingsResult.awards,
       matches: (cup.localMatches || []).map((m: any) => ({
@@ -505,6 +577,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     name: string;
     isPublic?: boolean;
     ruleset?: string;
+    format?: "bb11" | "sevens";
     scoringConfig?: Partial<{
       winPoints: number;
       drawPoints: number;
@@ -525,6 +598,10 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     passPoints?: number;
     monthlyYear?: number;
     monthlyMonth?: number;
+    resurrectionMode?: boolean;
+    tierBudgets?: Record<string, number>;
+    rosterBudgetOverrides?: Record<string, number>;
+    tierStartingPsp?: Record<string, number>;
   } = req.body;
 
   // S27.1i — La creation d'une cup mensuelle (avec slot canonique) est
@@ -540,6 +617,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
 
   const { name, isPublic } = body;
   const ruleset = resolveRuleset(body.ruleset);
+  const format = body.format === "sevens" ? "sevens" : "bb11";
 
   // Par défaut, la coupe est publique
   const cupIsPublic = isPublic !== undefined ? Boolean(isPublic) : true;
@@ -608,9 +686,13 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         name: name.trim(),
         creatorId: req.user!.id,
         ruleset,
+        format,
         validated: false,
         isPublic: cupIsPublic,
         ...finalScoring,
+        // Règles avancées de composition (mode coupe). Maps JSON sérialisées
+        // en string pour rester compatibles PG (Json) + miroir SQLite (String).
+        ...serializeCupRulesData(body),
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
           ? {
@@ -637,6 +719,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       creator: cup.creator,
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
+      format: cup.format,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status || "ouverte",
@@ -654,6 +737,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         foulCasualtyPoints: cup.foulCasualtyPoints,
         passPoints: cup.passPoints,
       },
+      rulesConfig: formatCupRules(cup),
     };
 
     res.status(201).json({ cup: formattedCup });
@@ -662,6 +746,59 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// PATCH /cup/:id/rules - Met à jour les règles avancées de composition
+// (résurrection, budgets par tier, overrides roster, PSP par tier).
+// Réservé au créateur de la coupe ou à un admin. Tant que la coupe n'est
+// pas validée (inscriptions ouvertes) pour éviter de changer les règles
+// sous les pieds des équipes déjà inscrites.
+router.patch(
+  "/:id/rules",
+  authUser,
+  validate(updateCupRulesSchema),
+  async (req: AuthenticatedRequest, res) => {
+    const cupId = req.params.id;
+    const body: CupRulesConfigInput = req.body;
+    try {
+      const cup = await prisma.cup.findUnique({
+        where: { id: cupId },
+        select: { id: true, creatorId: true, validated: true },
+      });
+      if (!cup) {
+        return res.status(404).json({ error: "Coupe introuvable" });
+      }
+      const isAdmin = hasRole(req.user!.roles, "admin");
+      if (cup.creatorId !== req.user!.id && !isAdmin) {
+        return res
+          .status(403)
+          .json({ error: "Seul le commissaire de la coupe peut modifier ses règles" });
+      }
+      if (cup.validated && !isAdmin) {
+        return res.status(400).json({
+          error:
+            "Les inscriptions sont closes : les règles ne sont plus modifiables",
+        });
+      }
+
+      const updated = await prisma.cup.update({
+        where: { id: cupId },
+        data: serializeCupRulesData(body),
+        select: {
+          resurrectionMode: true,
+          tierBudgets: true,
+          rosterBudgetOverrides: true,
+          tierStartingPsp: true,
+          rosterStartingPspOverrides: true,
+        },
+      });
+
+      res.json({ rulesConfig: formatCupRules(updated as unknown as CupRulesConfig) });
+    } catch (e: any) {
+      serverLog.error("Erreur lors de la mise à jour des règles de coupe:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
 
 // POST /cup/:id/register - Inscrire une équipe à une coupe
 router.post(
@@ -707,6 +844,12 @@ router.post(
         });
       }
 
+      if (team.format !== cup.format) {
+        return res.status(400).json({
+          error: "Cette équipe utilise un format différent de la coupe",
+        });
+      }
+
       // Vérifier que l'équipe n'est pas déjà inscrite
       const alreadyParticipant = cup.participants.some(
         (p: any) => p.teamId === teamId,
@@ -717,11 +860,80 @@ router.post(
           .json({ error: "Cette équipe est déjà inscrite à cette coupe" });
       }
 
+      // Règle « une équipe = une seule compétition active » : refuser si
+      // l'équipe est déjà engagée dans une autre coupe ou une saison de ligue.
+      const engagement = await getTeamEngagement(teamId, { excludeCupId: cupId });
+      if (engagement.engaged) {
+        return res.status(409).json({
+          error: `Cette équipe est déjà engagée dans ${
+            engagement.name ?? "une autre compétition"
+          } et n'est pas disponible`,
+        });
+      }
+
+      // Flow A — vérification des règles de composition à l'inscription.
+      // On ne contraint budget / PSP QUE si la coupe définit ces règles :
+      // sans config, une équipe vétéran (VE > budget de départ du roster)
+      // reste inscriptible comme avant. Le snapshot, lui, est toujours
+      // capturé (utile pour le mode résurrection + audit).
+      const rules = formatCupRules(cup as unknown as CupRulesConfig);
+      let pspPoolGranted = 0;
+      const rosterDef = await prisma.roster.findFirst({
+        where: { slug: team.roster, ruleset: cup.ruleset },
+        select: { tier: true, budget: true },
+      });
+      if (rosterDef) {
+        const rosterForRules = {
+          slug: team.roster,
+          tier: rosterDef.tier,
+          budget: rosterDef.budget,
+        };
+        const hasBudgetRules =
+          Object.keys(rules.tierBudgets).length > 0 ||
+          Object.keys(rules.rosterBudgetOverrides).length > 0;
+        const hasPspRules = Object.keys(rules.tierStartingPsp).length > 0;
+
+        if (hasBudgetRules) {
+          // budget en kpo ; team.teamValue (VE) est stocké en po → conversion.
+          const budgetKpo = resolveCupBudget(
+            cup as unknown as CupRulesConfig,
+            rosterForRules,
+          );
+          const teamValueKpo = Math.round(team.teamValue / 1000);
+          if (team.teamValue > budgetKpo * 1000) {
+            return res.status(422).json({
+              error: `Cette équipe (VE ${teamValueKpo}k) dépasse le budget autorisé pour cette coupe (${budgetKpo}k)`,
+            });
+          }
+        }
+        if (hasPspRules) {
+          pspPoolGranted = resolveCupStartingPsp(
+            cup as unknown as CupRulesConfig,
+            rosterForRules,
+          );
+          const players = await prisma.teamPlayer.findMany({
+            where: { teamId, firedAt: null },
+            select: { advancements: true },
+          });
+          const spent = teamAdvancementsPspCost(players);
+          if (spent > pspPoolGranted) {
+            return res.status(422).json({
+              error: `Cette équipe a dépensé ${spent} PSP d'améliorations, au-delà du pool autorisé (${pspPoolGranted}) pour cette coupe`,
+            });
+          }
+        }
+      }
+
+      // Snapshot du roster tel qu'inscrit (référence mode résurrection).
+      const snapshot = await captureRosterSnapshot(teamId);
+
       // Ajouter le participant (l'équipe)
       await prisma.cupParticipant.create({
         data: {
           cupId: cupId,
           teamId: teamId,
+          pspPoolGranted,
+          rosterSnapshot: snapshot ? JSON.stringify(snapshot) : null,
         },
       });
 

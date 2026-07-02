@@ -28,6 +28,7 @@ import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { persistMatchSPP } from "../services/spp-tracking";
+import { shouldPersistMatchOutcome } from "../services/resurrection";
 import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
@@ -939,14 +940,22 @@ router.put("/:id/state", authUser, validate(updateLocalMatchStateSchema), async 
 router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { scoreTeamA, scoreTeamB } = req.body;
-    
+
     const localMatch = await prisma.localMatch.findUnique({
       where: { id: req.params.id },
+      include: { cup: { select: { resurrectionMode: true } } },
     });
-    
+
     if (!localMatch) {
       return res.status(404).json({ error: "Partie offline introuvable" });
     }
+
+    // Mode résurrection (coupe) : aucun PSP gagné, aucune blessure/mort
+    // conservée. L'équipe repart de son snapshot d'inscription à chaque match.
+    const isResurrection = Boolean(
+      (localMatch as { cup?: { resurrectionMode?: boolean } | null }).cup
+        ?.resurrectionMode,
+    );
     
     // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
     const isCreator = localMatch.creatorId === req.user!.id;
@@ -1006,7 +1015,13 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
     let sppUpdatedCount = 0;
     let deathsPersistedCount = 0;
     let injuriesPersistedCount = 0;
-    if (localMatch.gameState && localMatch.teamAId && localMatch.teamBId) {
+    if (
+      shouldPersistMatchOutcome({
+        resurrectionMode: isResurrection,
+        hasGameState: Boolean(localMatch.gameState),
+        hasBothTeams: Boolean(localMatch.teamAId && localMatch.teamBId),
+      })
+    ) {
       const gameState = localMatch.gameState as any;
       try {
         if (gameState.matchStats && gameState.players) {

@@ -51,6 +51,13 @@ import { resolveRuleset } from '../utils/ruleset-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
+import { resolveCupBudget, resolveCupStartingPsp } from '../services/cup-rules';
+import {
+  applyCupBuildAdvancements,
+  CupBuildAdvancementError,
+  type BuildAdvancementInput,
+} from '../services/cup-build-advancements';
+import { captureRosterSnapshot } from '../services/cup-roster-snapshot';
 
 /**
  * S27.8.27 — `POST /team/build`
@@ -79,6 +86,9 @@ export async function handleBuildTeam(
       assistants: bodyAssistants,
       apothecary: bodyApothecary,
       dedicatedFans: bodyDedicatedFans,
+      startingPspPool: bodyStartingPspPool,
+      advancements: bodyAdvancements,
+      cupId: bodyCupId,
     }: {
       name: string;
       roster: string;
@@ -92,6 +102,17 @@ export async function handleBuildTeam(
       assistants?: number;
       apothecary?: boolean;
       dedicatedFans?: number;
+      startingPspPool?: number;
+      advancements?: Array<{
+        positionSlug: string;
+        ordinal: number;
+        type: 'primary' | 'secondary' | 'random-primary' | 'characteristic';
+        skillSlug?: string;
+        category?: string;
+        stat?: 'ma' | 'st' | 'ag' | 'pa' | 'av';
+        d8?: number;
+      }>;
+      cupId?: string;
     } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!isAllowedTeamRoster(roster)) {
@@ -116,12 +137,56 @@ export async function handleBuildTeam(
       return;
     }
 
-    const finalTeamValue = teamValue || constraints.startingBudget;
+    let finalTeamValue = teamValue || constraints.startingBudget;
 
     const def = await getRosterFromDb(roster as AllowedRoster, 'fr', ruleset);
     if (!def) {
       sendError(res, 'Roster non trouve', 400);
       return;
+    }
+
+    // Construction « pour une coupe » (Flow B) : le serveur IMPOSE le budget et
+    // le pool de PSP depuis la config de la coupe (les valeurs client sont
+    // ignorées → non modifiables), et l'équipe est auto-inscrite plus bas.
+    // En jeu libre, `pspPool` vient du mode « édition avancée » du coach.
+    let pspPool = Math.max(0, bodyStartingPspPool ?? 0);
+    let cupForRegister: { id: string } | null = null;
+    if (bodyCupId) {
+      const cup = await prisma.cup.findUnique({
+        where: { id: bodyCupId },
+        select: {
+          id: true,
+          ruleset: true,
+          format: true,
+          status: true,
+          validated: true,
+          resurrectionMode: true,
+          tierBudgets: true,
+          rosterBudgetOverrides: true,
+          tierStartingPsp: true,
+          rosterStartingPspOverrides: true,
+        },
+      });
+      if (!cup) {
+        sendError(res, 'Coupe introuvable', 404);
+        return;
+      }
+      if (cup.status !== 'ouverte' || cup.validated) {
+        sendError(res, 'Cette coupe est fermée aux inscriptions', 400);
+        return;
+      }
+      if (cup.ruleset !== ruleset) {
+        sendError(res, 'Le ruleset de l’équipe diffère de celui de la coupe', 400);
+        return;
+      }
+      if (cup.format !== format) {
+        sendError(res, 'Le format de l’équipe diffère de celui de la coupe', 400);
+        return;
+      }
+      const rosterForRules = { slug: roster, tier: def.tier, budget: def.budget };
+      finalTeamValue = resolveCupBudget(cup, rosterForRules);
+      pspPool = resolveCupStartingPsp(cup, rosterForRules);
+      cupForRegister = { id: cup.id };
     }
 
     let totalPlayers = 0;
@@ -293,6 +358,7 @@ export async function handleBuildTeam(
           apothecary,
           dedicatedFans,
           currentValue: 0,
+          startingPspPool: pspPool,
         },
       });
       await tx.teamPlayer.createMany({
@@ -306,8 +372,78 @@ export async function handleBuildTeam(
       return newTeam;
     });
 
+    // Améliorations achetées au build depuis le pool de PSP (mode « édition
+    // avancée » ou coupe). On mappe (positionSlug, ordinal) → joueur créé, puis
+    // on dépense le pool. En cas d'échec, on annule le build (suppression de
+    // l'équipe) pour rester « tout ou rien ».
+    const advancements = bodyAdvancements ?? [];
+    if (advancements.length > 0) {
+      const createdPlayers = await prisma.teamPlayer.findMany({
+        where: { teamId: team.id },
+        orderBy: { number: 'asc' },
+        select: { id: true, position: true },
+      });
+      const byPosition = new Map<string, string[]>();
+      for (const p of createdPlayers) {
+        const list = byPosition.get(p.position) ?? [];
+        list.push(p.id);
+        byPosition.set(p.position, list);
+      }
+      const mapped: BuildAdvancementInput[] = [];
+      for (const adv of advancements) {
+        const playerId = byPosition.get(adv.positionSlug)?.[adv.ordinal];
+        if (!playerId) {
+          await prisma.team.delete({ where: { id: team.id } }).catch(() => {});
+          sendError(
+            res,
+            `Amélioration invalide : aucun joueur ${adv.positionSlug} #${adv.ordinal}`,
+            400,
+          );
+          return;
+        }
+        mapped.push({
+          playerId,
+          type: adv.type,
+          skillSlug: adv.skillSlug,
+          category: adv.category,
+          stat: adv.stat,
+          d8: adv.d8,
+        });
+      }
+      try {
+        await applyCupBuildAdvancements(team.id, pspPool, mapped);
+      } catch (e) {
+        await prisma.team.delete({ where: { id: team.id } }).catch(() => {});
+        if (e instanceof CupBuildAdvancementError) {
+          sendError(res, e.message, 400);
+          return;
+        }
+        throw e;
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, team.id);
+
+    // Flow B — auto-inscription à la coupe + snapshot du roster (après
+    // application des améliorations et recalcul de la VE).
+    if (cupForRegister) {
+      try {
+        const snapshot = await captureRosterSnapshot(team.id);
+        await prisma.cupParticipant.create({
+          data: {
+            cupId: cupForRegister.id,
+            teamId: team.id,
+            pspPoolGranted: pspPool,
+            rosterSnapshot: snapshot ? JSON.stringify(snapshot) : null,
+          },
+        });
+      } catch (e) {
+        serverLog.error('Echec auto-inscription coupe (build):', e);
+        // L'équipe est créée ; on n'échoue pas le build pour autant. Le coach
+        // pourra s'inscrire manuellement. (Doublon éventuel → contrainte unique.)
+      }
+    }
 
     const withPlayers = await prisma.team.findUnique({
       where: { id: team.id },
@@ -344,6 +480,9 @@ export async function handleBuildTeam(
           starPlayers: starPlayersCost,
           staff: staffCost,
         },
+        // Pool de PSP alloué + coupe auto-inscrite (Flow B), pour l'UI.
+        startingPspPool: pspPool,
+        cupId: cupForRegister?.id ?? null,
       },
       201,
     );

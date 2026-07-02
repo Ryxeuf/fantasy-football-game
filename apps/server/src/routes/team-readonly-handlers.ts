@@ -33,6 +33,7 @@ import { getRosterFromDb } from '../utils/roster-helpers';
 import { parsePagination, buildApiMeta } from '../utils/pagination';
 import { generateTeamName } from '../services/team-name-generator';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
+import { getTeamsEngagement } from '../services/team-competition-status';
 
 /**
  * S27.8.22 — `GET /team/name-generator`
@@ -136,7 +137,19 @@ export async function handleListMyTeams(
     }),
     prisma.team.count({ where }),
   ]);
-  sendSuccess(res, { teams, meta: buildApiMeta({ total, limit, offset }) });
+  // Engagement compétition par équipe (badge « équipe de coupe / ligue »).
+  // Batché pour éviter le N+1 (cf. CLAUDE.md).
+  const engagement = await getTeamsEngagement(
+    teams.map((t: (typeof teams)[number]) => t.id),
+  );
+  const teamsWithEngagement = teams.map((t: (typeof teams)[number]) => ({
+    ...t,
+    competition: engagement.get(t.id) ?? null,
+  }));
+  sendSuccess(res, {
+    teams: teamsWithEngagement,
+    meta: buildApiMeta({ total, limit, offset }),
+  });
 }
 
 /**

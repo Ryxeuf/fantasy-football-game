@@ -27,10 +27,14 @@ vi.mock("../prisma", () => ({
     },
     leagueParticipant: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
+    },
+    cupParticipant: {
+      findFirst: vi.fn(),
     },
     leagueRound: {
       findUnique: vi.fn(),

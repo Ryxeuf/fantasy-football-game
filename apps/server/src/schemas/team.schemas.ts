@@ -30,7 +30,32 @@ export const buildTeamSchema = z.object({
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
   apothecary: z.boolean().optional(),
   dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
+  // Mode « édition avancée » : pool de PSP à dépenser en améliorations au
+  // build. En jeu libre, fourni par le coach ; en construction pour une
+  // coupe (`cupId`), IGNORÉ et re-résolu côté serveur (non modifiable).
+  startingPspPool: z.number().int().min(0).max(200).optional(),
+  // Améliorations achetées au build, ciblant le N-ième (`ordinal`, 0-based)
+  // joueur d'un poste (`positionSlug`). Même vocabulaire que le flux de ligue.
+  advancements: z
+    .array(
+      z.object({
+        positionSlug: z.string().min(1),
+        ordinal: z.number().int().min(0).max(31),
+        type: z.enum(["primary", "secondary", "random-primary", "characteristic"]),
+        skillSlug: z.string().max(60).optional(),
+        category: z.string().max(2).optional(),
+        stat: z.enum(["ma", "st", "ag", "pa", "av"]).optional(),
+        d8: z.number().int().min(1).max(8).optional(),
+      }),
+    )
+    .max(96)
+    .optional(),
+  // Construction « pour une coupe » (Flow B) : le serveur impose budget + pool
+  // depuis la config de la coupe et auto-inscrit l'équipe.
+  cupId: z.string().min(1).optional(),
 });
+
+export type BuildTeamInput = z.infer<typeof buildTeamSchema>;
 
 const playerUpdateItem = z.object({
   id: z.string().min(1),
