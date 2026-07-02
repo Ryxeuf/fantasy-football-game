@@ -1,3 +1,18 @@
+## [1.211.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.210.1...v1.211.0) (2026-07-02)
+
+
+### ✨ Features
+
+* **cup:** API composition (config, inscription Flow A/B + clone, resurrection, garde competition) ([52591d0](https://github.com/Ryxeuf/fantasy-football-game/commit/52591d06f97b0a5b2153bda3164c47746df23557))
+* **cup:** services regles de composition, snapshot, PSP au build, resurrection, engagement ([6b5fe8f](https://github.com/Ryxeuf/fantasy-football-game/commit/6b5fe8fdb407c44fc04084f6356c73608c6c7f0f))
+* **db:** schema regles de composition des coupes ([cd63909](https://github.com/Ryxeuf/fantasy-football-game/commit/cd63909796b9f4e11acf3a6ff95910e6c1a56a2d))
+* **web:** UI regles de composition des coupes ([977a948](https://github.com/Ryxeuf/fantasy-football-game/commit/977a94853c2c4bb026d9c36a6fbf9be5340b59e3))
+
+
+### 📝 Documentation
+
+* regles de composition des coupes ([04caaf8](https://github.com/Ryxeuf/fantasy-football-game/commit/04caaf80e06dc0000837dd9168e9b8172f8497fe))
+
 ## [1.210.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.210.0...v1.210.1) (2026-07-01)
 
 
