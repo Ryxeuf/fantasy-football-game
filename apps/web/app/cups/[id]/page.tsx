@@ -58,6 +58,7 @@ type Cup = {
   id: string;
   name: string;
   ruleset: string;
+  format?: string;
   creator: {
     id: string;
     coachName: string;
@@ -85,6 +86,13 @@ type Cup = {
   hasTeamParticipating?: boolean;
   userParticipatingTeamIds?: string[]; // Liste des IDs des équipes de l'utilisateur qui participent
   scoringConfig?: CupScoringConfig;
+  rulesConfig?: {
+    resurrectionMode: boolean;
+    tierBudgets: Record<string, number>;
+    rosterBudgetOverrides: Record<string, number>;
+    tierStartingPsp: Record<string, number>;
+    rosterStartingPspOverrides: Record<string, number>;
+  };
   standings?: CupTeamStats[];
   actionAwards?: CupActionAwards;
   matches?: Array<{
@@ -105,6 +113,7 @@ type Team = {
   name: string;
   roster: string;
   ruleset: string;
+  format?: string;
   createdAt: string;
 };
 
@@ -260,7 +269,11 @@ export default function CupDetailPage() {
     return null;
   }
 
-  const eligibleTeams = teams.filter((team: Team) => team.ruleset === cup.ruleset);
+  const eligibleTeams = teams.filter(
+    (team: Team) =>
+      team.ruleset === cup.ruleset &&
+      (team.format ?? "bb11") === (cup.format ?? "bb11"),
+  );
 
   return (
     <div className="w-full p-6 space-y-6">
@@ -455,6 +468,62 @@ export default function CupDetailPage() {
                   </div>
                 </div>
               )}
+              {cup.rulesConfig &&
+                (cup.rulesConfig.resurrectionMode ||
+                  Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
+                  Object.keys(cup.rulesConfig.rosterBudgetOverrides).length > 0 ||
+                  Object.keys(cup.rulesConfig.tierStartingPsp).length > 0 ||
+                  Object.keys(cup.rulesConfig.rosterStartingPspOverrides).length >
+                    0) && (
+                  <div className="pt-2 border-t border-gray-200" data-testid="cup-rules-display">
+                    <div className="text-sm font-semibold text-gray-700 mb-2">
+                      Règles de composition
+                    </div>
+                    {cup.rulesConfig.resurrectionMode && (
+                      <div className="inline-flex items-center gap-1 px-2 py-1 mb-2 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">
+                        ♻️ Mode résurrection
+                      </div>
+                    )}
+                    {(Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
+                      Object.keys(cup.rulesConfig.tierStartingPsp).length > 0) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                        {Object.keys(cup.rulesConfig.tierBudgets).length > 0 && (
+                          <div className="text-xs text-gray-600">
+                            <span className="font-medium">Budgets par tier : </span>
+                            {Object.entries(cup.rulesConfig.tierBudgets)
+                              .map(([tier, b]) => `${tier} : ${b}k`)
+                              .join(" · ")}
+                          </div>
+                        )}
+                        {Object.keys(cup.rulesConfig.tierStartingPsp).length > 0 && (
+                          <div className="text-xs text-gray-600">
+                            <span className="font-medium">PSP de départ : </span>
+                            {Object.entries(cup.rulesConfig.tierStartingPsp)
+                              .map(([tier, p]) => `${tier} : ${p}`)
+                              .join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {Object.keys(cup.rulesConfig.rosterBudgetOverrides).length > 0 && (
+                      <div className="text-xs text-gray-600 mt-1">
+                        <span className="font-medium">Overrides budget roster : </span>
+                        {Object.entries(cup.rulesConfig.rosterBudgetOverrides)
+                          .map(([slug, b]) => `${slug} : ${b}k`)
+                          .join(" · ")}
+                      </div>
+                    )}
+                    {Object.keys(cup.rulesConfig.rosterStartingPspOverrides).length >
+                      0 && (
+                      <div className="text-xs text-gray-600 mt-1">
+                        <span className="font-medium">Overrides PSP roster : </span>
+                        {Object.entries(cup.rulesConfig.rosterStartingPspOverrides)
+                          .map(([slug, p]) => `${slug} : ${p}`)
+                          .join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                )}
               {cup.isCreator && cup.status !== "archivee" && cup.status !== "ouverte" && (
                 <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   {cup.status === "terminee" ? (
@@ -898,9 +967,43 @@ export default function CupDetailPage() {
                 disabled={!selectedTeamId}
                 className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Inscrire l'équipe
+                Inscrire tel quel
+              </button>
+              <button
+                onClick={() =>
+                  selectedTeamId &&
+                  router.push(
+                    `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
+                  )
+                }
+                disabled={!selectedTeamId}
+                className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="cup-adapt-existing-team"
+              >
+                Adapter à la coupe
               </button>
             </div>
+            <p className="text-xs text-gray-500">
+              <strong>Inscrire tel quel</strong> : l'équipe doit déjà respecter le
+              budget et les PSP de la coupe. <strong>Adapter à la coupe</strong> :
+              crée une copie pré-remplie de cette équipe avec le budget et les PSP
+              de la coupe à dépenser (l'équipe de base reste disponible).
+            </p>
+          </div>
+        )}
+        {!cup.hasTeamParticipating && cup.status === "ouverte" && (
+          <div className="mt-3">
+            <a
+              href={`/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all"
+              data-testid="cup-build-for-cup"
+            >
+              🛠️ Construire une équipe pour cette coupe
+            </a>
+            <p className="text-xs text-gray-500 mt-1">
+              Le budget et les PSP de départ seront appliqués automatiquement et non
+              modifiables ; l'équipe sera inscrite directement.
+            </p>
           </div>
         )}
         {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (

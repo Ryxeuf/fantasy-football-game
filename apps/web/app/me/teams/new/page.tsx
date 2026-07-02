@@ -10,6 +10,9 @@ import SkillAccessBadges from "../components/SkillAccessBadges";
 import SpecialRulesBadges from "../../../components/SpecialRulesBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import QuantityStepper from "../components/QuantityStepper";
+import BuildAdvancementAllocator, {
+  type BuildAdvancement,
+} from "./BuildAdvancementAllocator";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -59,8 +62,21 @@ type RosterSpecialRule = {
 type Roster = {
   slug: string;
   name: string;
+  /** Tier (I..IV) — sert à résoudre budget/PSP imposés par une coupe. */
+  tier?: string;
+  /** Budget par défaut du roster (kpo). */
+  budget?: number;
   /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
   staffConfigs?: Record<GameFormat, RosterStaffConfig>;
+};
+
+/** Règles de composition d'une coupe (Flow B), renvoyées par GET /cup/:id. */
+type CupRulesConfig = {
+  resurrectionMode: boolean;
+  tierBudgets: Record<string, number>;
+  rosterBudgetOverrides: Record<string, number>;
+  tierStartingPsp: Record<string, number>;
+  rosterStartingPspOverrides: Record<string, number>;
 };
 
 export default function NewTeamBuilder() {
@@ -122,6 +138,31 @@ export default function NewTeamBuilder() {
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [loadingRosters, setLoadingRosters] = useState(true);
 
+  // Construction « pour une coupe » (Flow B) : budget + pool imposés.
+  const cupId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("cupId");
+  }, []);
+  // Clone : équipe de base à recopier (compo + staff + stars). Le budget/pool
+  // viennent de la coupe (Flow B) ; les advancements de la base ne sont PAS
+  // recopiés (chacun repart avec le pool de PSP de la coupe).
+  const fromTeamId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("fromTeamId");
+  }, []);
+  // Compo de base en attente (appliquée quand les positions du roster chargent).
+  const baseCountsRef = useRef<{
+    roster: string;
+    counts: Record<string, number>;
+  } | null>(null);
+  const [cupRules, setCupRules] = useState<CupRulesConfig | null>(null);
+  // Mode « édition avancée » (budget custom + pool de PSP). Forcé en coupe.
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [startingPspPool, setStartingPspPool] = useState(0);
+  const [buildAdvancements, setBuildAdvancements] = useState<BuildAdvancement[]>(
+    [],
+  );
+
   const [rerolls, setRerolls] = useState(0);
   const [cheerleaders, setCheerleaders] = useState(0);
   const [assistants, setAssistants] = useState(0);
@@ -158,7 +199,9 @@ export default function NewTeamBuilder() {
       formatMountRef.current = false;
       return;
     }
-    setTeamValue(constraints.startingBudget);
+    // En construction pour une coupe (Flow B), le budget est imposé par la
+    // coupe : ne pas le réinitialiser au budget par défaut du format.
+    if (!cupId) setTeamValue(constraints.startingBudget);
     setRerolls((v) => Math.min(v, staff.maxRerolls));
     setCheerleaders((v) => Math.min(v, staff.maxCheerleaders));
     setAssistants((v) => Math.min(v, staff.maxAssistants));
@@ -181,10 +224,14 @@ export default function NewTeamBuilder() {
           (r: {
             slug: string;
             name: string;
+            tier?: string;
+            budget?: number;
             staffConfigs?: Record<GameFormat, RosterStaffConfig>;
           }) => ({
             slug: r.slug,
             name: r.name,
+            tier: r.tier,
+            budget: r.budget,
             staffConfigs: r.staffConfigs,
           }),
         );
@@ -213,16 +260,108 @@ export default function NewTeamBuilder() {
       ruleset: string;
     }>(`/team/rosters/${rosterId}${query}`)
       .then((d) => {
-        setPositions(d.roster.positions || []);
+        const pos = d.roster.positions || [];
+        setPositions(pos);
         setSpecialRules(d.roster.specialRules || []);
+        // Clone (fromTeamId) : si une compo de base est en attente pour ce
+        // roster, on l'applique (clampée min/max) au lieu du minimum. Sinon
+        // on initialise chaque poste à son minimum.
+        const base = baseCountsRef.current;
+        const useBase = base && base.roster === rosterId;
         const init: Record<string, number> = {};
-        (d.roster.positions || []).forEach((p: Position) => {
-          init[p.slug] = p.min || 0;
+        pos.forEach((p: Position) => {
+          const desired = useBase ? (base!.counts[p.slug] ?? p.min ?? 0) : p.min ?? 0;
+          init[p.slug] = Math.max(p.min ?? 0, Math.min(p.max ?? 16, desired));
         });
         setCounts(init);
+        if (useBase) baseCountsRef.current = null; // consommé une seule fois
       })
       .catch(() => setError(t.teams.errorLoadingRoster));
   }, [rosterId, ruleset, t]);
+
+  // Flow B — charge la config de la coupe et force le mode avancé + le ruleset.
+  useEffect(() => {
+    if (!cupId) return;
+    apiRequest<{
+      cup: { ruleset?: string; format?: string; rulesConfig?: CupRulesConfig };
+    }>(`/cup/${cupId}`)
+      .then((d) => {
+        setCupRules(d.cup.rulesConfig ?? null);
+        setAdvancedMode(true);
+        const cr = d.cup.ruleset;
+        if (cr && RULESETS.includes(cr as Ruleset)) setRuleset(cr as Ruleset);
+        const cf = d.cup.format;
+        if (cf && FORMATS.includes(cf as GameFormat)) setFormat(cf as GameFormat);
+      })
+      .catch(() => {
+        /* la coupe reste sans config → build libre */
+      });
+  }, [cupId]);
+
+  // Flow B — résout budget + pool imposés pour le roster sélectionné.
+  // Précédence : override roster > budget du tier > budget par défaut.
+  useEffect(() => {
+    if (!cupId || !cupRules) return;
+    const r = rosters.find((x) => x.slug === rosterId);
+    if (!r || r.tier == null || r.budget == null) return;
+    const budget =
+      cupRules.rosterBudgetOverrides[r.slug] ??
+      cupRules.tierBudgets[r.tier] ??
+      r.budget;
+    const pool =
+      cupRules.rosterStartingPspOverrides[r.slug] ??
+      cupRules.tierStartingPsp[r.tier] ??
+      0;
+    setTeamValue(budget);
+    setStartingPspPool(pool);
+  }, [cupId, cupRules, rosters, rosterId]);
+
+  // Clone — préremplit le builder depuis une équipe de base (compo + staff +
+  // stars). Le roster déclenche le chargement des positions qui applique la
+  // compo mise en attente dans `baseCountsRef`.
+  useEffect(() => {
+    if (!fromTeamId) return;
+    apiRequest<{
+      team: {
+        name?: string;
+        roster: string;
+        players?: Array<{
+          position: string;
+          dead?: boolean;
+          firedAt?: string | null;
+        }>;
+        starPlayers?: Array<{ slug?: string }>;
+        rerolls?: number;
+        cheerleaders?: number;
+        assistants?: number;
+        apothecary?: boolean;
+        dedicatedFans?: number;
+      };
+    }>(`/team/${fromTeamId}`)
+      .then(({ team }) => {
+        const counts: Record<string, number> = {};
+        (team.players || []).forEach((p) => {
+          if (p.dead || p.firedAt) return;
+          counts[p.position] = (counts[p.position] ?? 0) + 1;
+        });
+        baseCountsRef.current = { roster: team.roster, counts };
+        setRosterId(team.roster);
+        setRerolls(team.rerolls ?? 0);
+        setCheerleaders(team.cheerleaders ?? 0);
+        setAssistants(team.assistants ?? 0);
+        setApothecary(Boolean(team.apothecary));
+        setDedicatedFans(team.dedicatedFans ?? 1);
+        setSelectedStarPlayers(
+          (team.starPlayers || [])
+            .map((s) => s.slug)
+            .filter((s): s is string => Boolean(s)),
+        );
+        if (team.name) setName(`${team.name} (Coupe)`.slice(0, 100));
+      })
+      .catch(() => {
+        /* équipe de base introuvable → build normal */
+      });
+  }, [fromTeamId]);
 
   const total = useMemo(
     () =>
@@ -360,10 +499,20 @@ export default function NewTeamBuilder() {
           assistants,
           apothecary,
           dedicatedFans,
+          // Mode « édition avancée » / coupe : pool de PSP + améliorations.
+          // En Flow B, le serveur ré-impose budget + pool (valeurs ignorées).
+          ...(cupId ? { cupId } : {}),
+          ...(advancedMode || cupId
+            ? {
+                startingPspPool,
+                advancements: buildAdvancements.length > 0 ? buildAdvancements : undefined,
+              }
+            : {}),
         }),
       });
       toast.success(t.teams.teamCreatedToast);
-      router.push(`/me/teams/${json.team.id}`);
+      // Flow B : retour vers la coupe (équipe auto-inscrite) ; sinon fiche équipe.
+      router.push(cupId ? `/cups/${cupId}` : `/me/teams/${json.team.id}`);
     } catch (e: any) {
       const message = e?.message || t.teams.error;
       setError(message);
@@ -508,9 +657,10 @@ export default function NewTeamBuilder() {
               <select
                 id="format"
                 data-testid="format-select"
-                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-amber-50 disabled:text-amber-900 disabled:cursor-not-allowed"
                 value={format}
                 onChange={(e) => setFormat(e.target.value as GameFormat)}
+                disabled={Boolean(cupId)}
               >
                 {FORMATS.map((value) => (
                   <option key={value} value={value}>
@@ -520,6 +670,9 @@ export default function NewTeamBuilder() {
                   </option>
                 ))}
               </select>
+              {cupId && (
+                <p className="text-xs text-amber-700 mt-1">🔒 Imposé par la coupe</p>
+              )}
             </div>
 
             <div>
@@ -532,9 +685,10 @@ export default function NewTeamBuilder() {
               <select
                 id="ruleset"
                 data-testid="ruleset-select"
-                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-amber-50 disabled:text-amber-900 disabled:cursor-not-allowed"
                 value={ruleset}
                 onChange={(e) => setRuleset(e.target.value as Ruleset)}
+                disabled={Boolean(cupId)}
               >
                 {RULESETS.map((value) => (
                   <option key={value} value={value}>
@@ -542,6 +696,9 @@ export default function NewTeamBuilder() {
                   </option>
                 ))}
               </select>
+              {cupId && (
+                <p className="text-xs text-amber-700 mt-1">🔒 Imposé par la coupe</p>
+              )}
             </div>
 
             <div>
@@ -575,23 +732,38 @@ export default function NewTeamBuilder() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.teams.teamValue}
               </label>
-              <div className="flex items-center justify-between gap-2">
-                <QuantityStepper
-                  value={teamValue}
-                  min={100}
-                  max={2000}
-                  step={50}
-                  onChange={setTeamValue}
-                  label={t.teams.teamValue}
-                  decrementAriaLabel={decLabel(t.teams.teamValue)}
-                  incrementAriaLabel={incLabel(t.teams.teamValue)}
-                  size="md"
-                />
-                <span className="text-base font-semibold text-gray-900 tabular-nums">
-                  {teamValue}
-                  {t.teams.kpo}
-                </span>
-              </div>
+              {cupId ? (
+                <div
+                  className="flex items-center justify-between gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+                  data-testid="cup-locked-budget"
+                >
+                  <span className="text-xs text-amber-800">
+                    🔒 Budget imposé par la coupe
+                  </span>
+                  <span className="text-base font-semibold text-amber-900 tabular-nums">
+                    {teamValue}
+                    {t.teams.kpo}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <QuantityStepper
+                    value={teamValue}
+                    min={100}
+                    max={2000}
+                    step={50}
+                    onChange={setTeamValue}
+                    label={t.teams.teamValue}
+                    decrementAriaLabel={decLabel(t.teams.teamValue)}
+                    incrementAriaLabel={incLabel(t.teams.teamValue)}
+                    size="md"
+                  />
+                  <span className="text-base font-semibold text-gray-900 tabular-nums">
+                    {teamValue}
+                    {t.teams.kpo}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -610,6 +782,67 @@ export default function NewTeamBuilder() {
               ? `Blood Bowl à Sept — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs · max ${constraints.maxNonLinemen} non-Linemen · relances ×${constraints.rerollCostMultiplier} · sans Star Players`
               : `Blood Bowl à 11 — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs`}
           </p>
+
+          {/* Mode « édition avancée » : pool de PSP + améliorations au build.
+              Forcé et verrouillé (valeurs de la coupe) en Flow B. */}
+          <div className="mt-3">
+            {!cupId && (
+              <label className="flex items-center gap-2 cursor-pointer mb-2">
+                <input
+                  type="checkbox"
+                  checked={advancedMode}
+                  onChange={(e) => {
+                    setAdvancedMode(e.target.checked);
+                    if (!e.target.checked) {
+                      setStartingPspPool(0);
+                      setBuildAdvancements([]);
+                    }
+                  }}
+                  className="rounded border-gray-300 text-nuffle-gold focus:ring-nuffle-gold"
+                  data-testid="builder-advanced-toggle"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Édition avancée (budget custom + pool de PSP)
+                </span>
+              </label>
+            )}
+
+            {(advancedMode || cupId) && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-700">Pool de PSP :</label>
+                  {cupId ? (
+                    <span
+                      className="text-sm font-semibold text-amber-900"
+                      data-testid="builder-psp-pool-locked"
+                    >
+                      🔒 {startingPspPool}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      min={0}
+                      max={200}
+                      value={startingPspPool}
+                      onChange={(e) =>
+                        setStartingPspPool(Math.max(0, Number(e.target.value) || 0))
+                      }
+                      className="w-24 border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                      data-testid="builder-psp-pool-input"
+                    />
+                  )}
+                </div>
+                <BuildAdvancementAllocator
+                  ruleset={ruleset}
+                  positions={positions}
+                  counts={counts}
+                  pool={startingPspPool}
+                  value={buildAdvancements}
+                  onChange={setBuildAdvancements}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Position picker: table on desktop, cards on mobile */}

@@ -92,7 +92,8 @@ export default function CupsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCupName, setNewCupName] = useState("");
   const [newCupIsPublic, setNewCupIsPublic] = useState(true);
-  const [newCupRuleset, setNewCupRuleset] = useState<string>("season_2");
+  const [newCupRuleset, setNewCupRuleset] = useState<string>("season_3");
+  const [newCupFormat, setNewCupFormat] = useState<string>("bb11");
   const [winPoints, setWinPoints] = useState(1000);
   const [drawPoints, setDrawPoints] = useState(400);
   const [lossPoints, setLossPoints] = useState(0);
@@ -101,6 +102,30 @@ export default function CupsPage() {
   const [blockCasualtyPoints, setBlockCasualtyPoints] = useState(3);
   const [foulCasualtyPoints, setFoulCasualtyPoints] = useState(2);
   const [passPoints, setPassPoints] = useState(2);
+  // Règles avancées de composition (mode coupe).
+  const [resurrectionMode, setResurrectionMode] = useState(false);
+  const [tierBudgets, setTierBudgets] = useState<Record<string, string>>({
+    I: "",
+    II: "",
+    III: "",
+    IV: "",
+  });
+  const [tierStartingPsp, setTierStartingPsp] = useState<Record<string, string>>({
+    I: "",
+    II: "",
+    III: "",
+    IV: "",
+  });
+  const [rosterOverrides, setRosterOverrides] = useState<
+    Array<{ slug: string; budget: string }>
+  >([]);
+  const [rosterPspOverrides, setRosterPspOverrides] = useState<
+    Array<{ slug: string; psp: string }>
+  >([]);
+  // Rosters du ruleset sélectionné (pour les menus déroulants d'override).
+  const [availableRosters, setAvailableRosters] = useState<
+    Array<{ slug: string; name: string }>
+  >([]);
   const [creating, setCreating] = useState(false);
   const [selectedTeamForRegistration, setSelectedTeamForRegistration] = useState<Record<string, string>>({});
   const rulesetLabels: Record<string, string> = {
@@ -112,6 +137,29 @@ export default function CupsPage() {
     loadCups();
     loadTeams();
   }, []);
+
+  // Charge les rosters du ruleset choisi pour alimenter les menus déroulants
+  // des surcharges par roster (budget + PSP).
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/builder-rosters?lang=fr&ruleset=${newCupRuleset}`, {
+      cache: "no-store",
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const list = (data.rosters || []).map(
+          (r: { slug: string; name: string }) => ({ slug: r.slug, name: r.name }),
+        );
+        setAvailableRosters(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableRosters([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [newCupRuleset]);
 
   const loadTeams = async () => {
     try {
@@ -163,10 +211,38 @@ export default function CupsPage() {
     setCreating(true);
     setError(null);
     try {
-      const response = await postJSON("/cup", { 
+      // Convertit une map string→string en map string→number (entrées vides
+      // ignorées). Renvoie undefined si vide (pas de contrainte).
+      const toNumberMap = (
+        src: Record<string, string>,
+      ): Record<string, number> | undefined => {
+        const out: Record<string, number> = {};
+        for (const [k, v] of Object.entries(src)) {
+          const n = parseInt(v, 10);
+          if (v.trim() !== "" && Number.isFinite(n) && n >= 0) out[k] = n;
+        }
+        return Object.keys(out).length > 0 ? out : undefined;
+      };
+      const overridesMap: Record<string, number> = {};
+      for (const o of rosterOverrides) {
+        const n = parseInt(o.budget, 10);
+        if (o.slug.trim() && Number.isFinite(n) && n >= 0) {
+          overridesMap[o.slug.trim()] = n;
+        }
+      }
+      const pspOverridesMap: Record<string, number> = {};
+      for (const o of rosterPspOverrides) {
+        const n = parseInt(o.psp, 10);
+        if (o.slug.trim() && Number.isFinite(n) && n >= 0) {
+          pspOverridesMap[o.slug.trim()] = n;
+        }
+      }
+
+      const response = await postJSON("/cup", {
         name: newCupName.trim(),
         isPublic: newCupIsPublic,
         ruleset: newCupRuleset,
+        format: newCupFormat,
         scoringConfig: {
           winPoints,
           drawPoints,
@@ -177,6 +253,13 @@ export default function CupsPage() {
           foulCasualtyPoints,
           passPoints,
         },
+        resurrectionMode,
+        tierBudgets: toNumberMap(tierBudgets),
+        tierStartingPsp: toNumberMap(tierStartingPsp),
+        rosterBudgetOverrides:
+          Object.keys(overridesMap).length > 0 ? overridesMap : undefined,
+        rosterStartingPspOverrides:
+          Object.keys(pspOverridesMap).length > 0 ? pspOverridesMap : undefined,
       });
       setNewCupName("");
       setNewCupIsPublic(true);
@@ -188,6 +271,12 @@ export default function CupsPage() {
       setBlockCasualtyPoints(3);
       setFoulCasualtyPoints(2);
       setPassPoints(2);
+      setResurrectionMode(false);
+      setNewCupFormat("bb11");
+      setTierBudgets({ I: "", II: "", III: "", IV: "" });
+      setTierStartingPsp({ I: "", II: "", III: "", IV: "" });
+      setRosterOverrides([]);
+      setRosterPspOverrides([]);
       setShowCreateForm(false);
       
       // Si la coupe est privée, rediriger vers la page de la coupe avec le lien
@@ -316,6 +405,23 @@ export default function CupsPage() {
                 ))}
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Format
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+                value={newCupFormat}
+                onChange={(e) => setNewCupFormat(e.target.value)}
+                data-testid="cup-format-select"
+              >
+                <option value="bb11">Blood Bowl à 11</option>
+                <option value="sevens">Blood Bowl à Sept</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Les équipes inscrites devront utiliser ce format.
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
               <div>
                 <h3 className="text-sm font-semibold text-gray-800 mb-2">
@@ -424,6 +530,201 @@ export default function CupsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Règles avancées de composition (mode coupe) */}
+            <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50/50">
+              <h3 className="text-sm font-semibold text-gray-800">
+                Règles de composition
+              </h3>
+              <p className="text-xs text-gray-500 -mt-2">
+                Les listes de rosters des surcharges dépendent du ruleset de la
+                coupe (actuellement :{" "}
+                <span className="font-medium">
+                  {rulesetLabels[newCupRuleset] || newCupRuleset}
+                </span>
+                ).
+              </p>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={resurrectionMode}
+                  onChange={(e) => setResurrectionMode(e.target.checked)}
+                  className="rounded border-gray-300 text-nuffle-gold focus:ring-nuffle-gold"
+                  data-testid="cup-resurrection-toggle"
+                />
+                <span className="text-sm text-gray-700">
+                  Mode résurrection (même roster à chaque match, aucun PSP gagné)
+                </span>
+              </label>
+
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-1">
+                  Budget max par tier (kpo — laisser vide = budget par défaut du roster)
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["I", "II", "III", "IV"] as const).map((tier) => (
+                    <div key={`b-${tier}`}>
+                      <label className="block text-[11px] text-gray-500 mb-0.5">
+                        Tier {tier}
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={tierBudgets[tier]}
+                        onChange={(e) =>
+                          setTierBudgets((prev) => ({ ...prev, [tier]: e.target.value }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                        data-testid={`cup-tier-budget-${tier}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-1">
+                  PSP de départ par tier (à dépenser au build — vide = 0)
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["I", "II", "III", "IV"] as const).map((tier) => (
+                    <div key={`p-${tier}`}>
+                      <label className="block text-[11px] text-gray-500 mb-0.5">
+                        Tier {tier}
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={tierStartingPsp[tier]}
+                        onChange={(e) =>
+                          setTierStartingPsp((prev) => ({ ...prev, [tier]: e.target.value }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                        data-testid={`cup-tier-psp-${tier}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-1">
+                  Surcharge de budget par roster (prime sur le tier)
+                </p>
+                {rosterOverrides.map((o, i) => (
+                  <div key={`o-${i}`} className="flex gap-2 mb-2">
+                    <select
+                      value={o.slug}
+                      onChange={(e) =>
+                        setRosterOverrides((prev) =>
+                          prev.map((x, j) => (j === i ? { ...x, slug: e.target.value } : x)),
+                        )
+                      }
+                      className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                      data-testid={`cup-budget-override-roster-${i}`}
+                    >
+                      <option value="">— Choisir un roster —</option>
+                      {availableRosters.map((r) => (
+                        <option key={r.slug} value={r.slug}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="budget kpo"
+                      value={o.budget}
+                      onChange={(e) =>
+                        setRosterOverrides((prev) =>
+                          prev.map((x, j) => (j === i ? { ...x, budget: e.target.value } : x)),
+                        )
+                      }
+                      className="w-32 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRosterOverrides((prev) => prev.filter((_, j) => j !== i))
+                      }
+                      className="px-2 text-red-600 hover:text-red-800"
+                      aria-label="Retirer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRosterOverrides((prev) => [...prev, { slug: "", budget: "" }])
+                  }
+                  className="text-xs text-nuffle-gold hover:underline"
+                >
+                  + Ajouter un override budget roster
+                </button>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-1">
+                  Surcharge de PSP de départ par roster (prime sur le tier)
+                </p>
+                {rosterPspOverrides.map((o, i) => (
+                  <div key={`op-${i}`} className="flex gap-2 mb-2">
+                    <select
+                      value={o.slug}
+                      onChange={(e) =>
+                        setRosterPspOverrides((prev) =>
+                          prev.map((x, j) => (j === i ? { ...x, slug: e.target.value } : x)),
+                        )
+                      }
+                      className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                      data-testid={`cup-psp-override-roster-${i}`}
+                    >
+                      <option value="">— Choisir un roster —</option>
+                      {availableRosters.map((r) => (
+                        <option key={r.slug} value={r.slug}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="PSP"
+                      value={o.psp}
+                      onChange={(e) =>
+                        setRosterPspOverrides((prev) =>
+                          prev.map((x, j) => (j === i ? { ...x, psp: e.target.value } : x)),
+                        )
+                      }
+                      className="w-32 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRosterPspOverrides((prev) => prev.filter((_, j) => j !== i))
+                      }
+                      className="px-2 text-red-600 hover:text-red-800"
+                      aria-label="Retirer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRosterPspOverrides((prev) => [...prev, { slug: "", psp: "" }])
+                  }
+                  className="text-xs text-nuffle-gold hover:underline"
+                >
+                  + Ajouter un override PSP roster
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input

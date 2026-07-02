@@ -32,6 +32,40 @@ async function fetchJSON(path: string) {
   return res.json();
 }
 
+// Barème SPP par palier (miroir de packages/game-engine advancements.ts) pour
+// afficher les PSP dépensés au build sur la fiche d'équipe.
+const ADVANCEMENT_PSP_COSTS: Record<string, number[]> = {
+  primary: [6, 8, 12, 16, 20, 30],
+  secondary: [10, 12, 16, 20, 24, 34],
+  "random-primary": [3, 4, 6, 8, 10, 15],
+  characteristic: [14, 16, 20, 24, 28, 38],
+};
+
+/** PSP dépensés par un joueur (somme des paliers de ses advancements). */
+function pspSpentForPlayer(advancementsJson: unknown): number {
+  if (typeof advancementsJson !== "string") return 0;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(advancementsJson);
+  } catch {
+    return 0;
+  }
+  if (!Array.isArray(parsed)) return 0;
+  return parsed.reduce((sum: number, adv: any, index: number) => {
+    const table = ADVANCEMENT_PSP_COSTS[adv?.type];
+    return sum + (table ? table[Math.min(index, table.length - 1)] : 0);
+  }, 0);
+}
+
+/** PSP dépensés par toute l'équipe. */
+function pspSpentForTeam(players: unknown): number {
+  if (!Array.isArray(players)) return 0;
+  return players.reduce(
+    (sum: number, p: any) => sum + pspSpentForPlayer(p?.advancements),
+    0,
+  );
+}
+
 export default function TeamDetailPage() {
   const { t, language } = useLanguage();
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
@@ -425,6 +459,54 @@ export default function TeamDetailPage() {
                   );
                 })()}
               </div>
+              {/* Bloc PSP de départ (mode « édition avancée » / coupe). Affiché
+                  seulement si un pool a été alloué à la construction. */}
+              {(team.startingPspPool ?? 0) > 0 &&
+                (() => {
+                  const pool = team.startingPspPool ?? 0;
+                  const spent = pspSpentForTeam(team.players);
+                  const available = Math.max(0, pool - spent);
+                  return (
+                    <div
+                      className="mt-3 sm:mt-4 grid grid-cols-3 gap-3 sm:gap-4"
+                      data-testid="team-psp-summary"
+                    >
+                      <div className="text-center p-3 sm:p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="text-xs sm:text-sm text-amber-700 font-medium">
+                          {t.teams.pspPool ?? "Pool de PSP"}
+                        </div>
+                        <div
+                          className="text-xl sm:text-2xl font-bold text-amber-900"
+                          data-testid="team-psp-pool"
+                        >
+                          {pool}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 sm:p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="text-xs sm:text-sm text-amber-700 font-medium">
+                          {t.teams.pspSpent ?? "PSP dépensés"}
+                        </div>
+                        <div
+                          className="text-xl sm:text-2xl font-bold text-amber-900"
+                          data-testid="team-psp-spent"
+                        >
+                          {spent}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 sm:p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="text-xs sm:text-sm text-amber-700 font-medium">
+                          {t.teams.pspAvailable ?? "PSP disponibles"}
+                        </div>
+                        <div
+                          className="text-xl sm:text-2xl font-bold text-amber-900"
+                          data-testid="team-psp-available"
+                        >
+                          {available}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               <div className="mt-3 sm:mt-4 text-xs text-gray-500">
                 <p><strong>{t.teams.initialBudget}</strong> : {t.teams.initialBudgetDesc}</p>
                 <p><strong>{t.teams.currentCost}</strong> : {t.teams.currentCostDesc}</p>

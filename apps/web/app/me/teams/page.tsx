@@ -13,9 +13,12 @@ type Team = {
   ruleset?: string;
   format?: string;
   createdAt: string;
+  // Engagement compétition (coupe/ligue active) — null si équipe libre.
+  competition?: { kind: "cup" | "league"; name: string } | null;
 };
 
 type FormatFilter = "all" | "bb11" | "sevens";
+type CompetitionFilter = "all" | "cup" | "league" | "free";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -51,6 +54,8 @@ export default function MyTeamsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [formatFilter, setFormatFilter] = useState<FormatFilter>("all");
+  const [competitionFilter, setCompetitionFilter] =
+    useState<CompetitionFilter>("all");
   /** Lot O.B.3 — `createdAt` du user pour decider d'afficher le modal welcome. */
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
   // Suppression d'équipe : équipe en attente de confirmation + état/erreur.
@@ -87,10 +92,15 @@ export default function MyTeamsPage() {
       ? (t.teams.formatSevens ?? "Blood Bowl à Sept")
       : (t.teams.formatBB11 ?? "Blood Bowl à 11");
 
-  const visibleTeams =
-    formatFilter === "all"
-      ? teams
-      : teams.filter((team) => (team.format ?? "bb11") === formatFilter);
+  const visibleTeams = teams
+    .filter((team) =>
+      formatFilter === "all" ? true : (team.format ?? "bb11") === formatFilter,
+    )
+    .filter((team) => {
+      if (competitionFilter === "all") return true;
+      if (competitionFilter === "free") return !team.competition;
+      return team.competition?.kind === competitionFilter;
+    });
 
   useEffect(() => {
     (async () => {
@@ -172,6 +182,22 @@ export default function MyTeamsPage() {
               <option value="sevens">{t.teams.formatSevens ?? "Blood Bowl à Sept"}</option>
             </select>
           </label>
+          <label className="flex items-center gap-2 text-xs text-gray-600">
+            <span>Compétition</span>
+            <select
+              data-testid="teams-competition-filter"
+              className="min-h-[36px] border border-gray-300 rounded-lg px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={competitionFilter}
+              onChange={(e) =>
+                setCompetitionFilter(e.target.value as CompetitionFilter)
+              }
+            >
+              <option value="all">{t.common?.all ?? "Toutes"}</option>
+              <option value="cup">En coupe</option>
+              <option value="league">En ligue</option>
+              <option value="free">Libres</option>
+            </select>
+          </label>
         </div>
       )}
 
@@ -205,6 +231,19 @@ export default function MyTeamsPage() {
                   >
                     {formatLabel(team.format)}
                   </span>
+                  {team.competition && (
+                    <span
+                      data-testid="team-competition-badge"
+                      title={team.competition.name}
+                      className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
+                        team.competition.kind === "cup"
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-teal-50 text-teal-700"
+                      }`}
+                    >
+                      {team.competition.kind === "cup" ? "🏆 Coupe" : "🏅 Ligue"}
+                    </span>
+                  )}
                 </div>
               </a>
               <button
