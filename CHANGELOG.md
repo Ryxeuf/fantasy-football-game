@@ -1,3 +1,13 @@
+## [1.212.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.211.0...v1.212.0) (2026-07-02)
+
+
+### ✨ Features
+
+* **cup:** classements individuels par joueur (leaderboards) ([f315b4e](https://github.com/Ryxeuf/fantasy-football-game/commit/f315b4e873e3833b4ccc0cf03bd880f0a6f965fb))
+* **cup:** description, resurrection par defaut, inscription depuis la page coupe ([8081b88](https://github.com/Ryxeuf/fantasy-football-game/commit/8081b88a01520b17a0b2322804d023d7660e450f))
+* **cup:** invitations de coupe (backend) + extraction de l'inscription ([3afdb82](https://github.com/Ryxeuf/fantasy-football-game/commit/3afdb8292cae1c02bad2a7a7c17770e324977a71))
+* **web:** invitations de coupe (UI) ([310857d](https://github.com/Ryxeuf/fantasy-football-game/commit/310857d9254da5a2680c37c8b14855c95504ec5d))
+
 ## [1.211.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.210.1...v1.211.0) (2026-07-02)
 
 
