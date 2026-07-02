@@ -50,6 +50,7 @@ import nflFantasyCyclesRoutes from "./routes/nfl-fantasy-cycles";
 import nflFantasyTeamsRoutes from "./routes/nfl-fantasy-teams";
 import nflFantasyPublicRoutes from "./routes/nfl-fantasy-public";
 import cupRoutes from "./routes/cup";
+import cupInvitationRoutes from "./routes/cup-invitation";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -262,6 +263,10 @@ app.use("/api", publicCache(), publicBlogRoutes);
 app.use("/api", publicCache(), publicStatsRoutes);
 app.use("/api", publicCache(), publicTeamsRoutes);
 app.use("/api/admin/blog", adminBlogRoutes);
+// Invitations montées AVANT cupRoutes : les routes littérales
+// (/cup/invitations/..., /cup/me/..., /cup/coaches/...) ne doivent pas être
+// shadowées par `/:id` de cupRoutes.
+app.use("/cup", cupInvitationRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(

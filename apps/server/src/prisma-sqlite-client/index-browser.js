@@ -603,6 +603,25 @@ exports.Prisma.LeagueInvitationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CupInvitationScalarFieldEnum = {
+  id: 'id',
+  cupId: 'cupId',
+  inviterUserId: 'inviterUserId',
+  inviteeUserId: 'inviteeUserId',
+  inviteeTeamId: 'inviteeTeamId',
+  inviteeEmail: 'inviteeEmail',
+  status: 'status',
+  code: 'code',
+  message: 'message',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  declinedAt: 'declinedAt',
+  cancelledAt: 'cancelledAt',
+  acceptedParticipantId: 'acceptedParticipantId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.LeagueParticipantScalarFieldEnum = {
   id: 'id',
   seasonId: 'seasonId',
@@ -1248,6 +1267,7 @@ exports.Prisma.ModelName = {
   LeagueSeason: 'LeagueSeason',
   LeaguePool: 'LeaguePool',
   LeagueInvitation: 'LeagueInvitation',
+  CupInvitation: 'CupInvitation',
   LeagueParticipant: 'LeagueParticipant',
   LeagueRound: 'LeagueRound',
   LeaguePairing: 'LeaguePairing',

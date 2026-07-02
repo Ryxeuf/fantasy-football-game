@@ -140,6 +140,8 @@ model User {
   // Lot A — invitations envoyees / recues sur les ligues.
   leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
   leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
+  cupInvitationsSent          CupInvitation[]             @relation("CupInvitationInviter")
+  cupInvitationsReceived      CupInvitation[]             @relation("CupInvitationInvitee")
 
   @@index([leaderboardStatus])
 }
@@ -405,6 +407,7 @@ model Team {
   starPlayers          TeamStarPlayer[]
   selections           TeamSelection[]
   cupParticipants      CupParticipant[]
+  cupInvitations       CupInvitation[]     @relation("CupInvitationTeam")
   localMatchesAsTeamA  LocalMatch[]        @relation("LocalMatchTeamA")
   localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
   matchQueue           MatchQueue[]
@@ -746,6 +749,7 @@ model Cup {
 
   // Relations
   participants CupParticipant[]
+  invitations  CupInvitation[]
   localMatches LocalMatch[]
 
   @@index([creatorId])
@@ -776,6 +780,39 @@ model CupParticipant {
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
+}
+
+// Invitation à rejoindre une coupe (miroir de LeagueInvitation, sans saison).
+// Deux modes : ciblée (inviteeUserId/inviteeEmail) ou lien public (code seul).
+model CupInvitation {
+  id                    String    @id @default(cuid())
+  cup                   Cup       @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId                 String
+  inviter               User      @relation("CupInvitationInviter", fields: [inviterUserId], references: [id])
+  inviterUserId         String
+  invitee               User?     @relation("CupInvitationInvitee", fields: [inviteeUserId], references: [id])
+  inviteeUserId         String?
+  inviteeTeam           Team?     @relation("CupInvitationTeam", fields: [inviteeTeamId], references: [id])
+  inviteeTeamId         String?
+  inviteeEmail          String?
+  /// "pending" | "accepted" | "declined" | "cancelled" | "expired"
+  status                String    @default("pending")
+  /// Token unique partageable (crypto.randomBytes(16).toString("base64url")).
+  code                  String    @unique
+  message               String?
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  declinedAt            DateTime?
+  cancelledAt           DateTime?
+  /// Id du CupParticipant créé à l'acceptation.
+  acceptedParticipantId String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([cupId, status])
+  @@index([inviteeUserId, status])
+  @@index([code])
+  @@index([expiresAt, status])
 }
 
 // Modèle pour la file d'attente de matchmaking

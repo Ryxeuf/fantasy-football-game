@@ -27,20 +27,34 @@ import {
   setMatchOfTheWeek,
 } from "../services/match-of-the-week";
 import { serverLog } from "../utils/server-log";
-import {
-  parseNumberMap,
-  resolveCupBudget,
-  resolveCupStartingPsp,
-  teamAdvancementsPspCost,
-  type CupRulesConfig,
-} from "../services/cup-rules";
-import { captureRosterSnapshot } from "../services/cup-roster-snapshot";
-import { getTeamEngagement } from "../services/team-competition-status";
+import { parseNumberMap, type CupRulesConfig } from "../services/cup-rules";
 import {
   computeCupPlayerLeaderboards,
   CUP_LEADERBOARD_CATEGORIES,
   type CupMatchForPlayerStats,
 } from "../services/cup-player-stats";
+import {
+  registerTeamToCup,
+  CupRegistrationError,
+  type CupRegistrationErrorCode,
+} from "../services/cup-registration";
+
+/** Mappe un code d'erreur d'inscription coupe vers un status HTTP. */
+function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
+  switch (code) {
+    case "cup_not_found":
+    case "team_not_found":
+      return 404;
+    case "already_engaged":
+    case "already_registered":
+      return 409;
+    case "budget_exceeded":
+    case "psp_exceeded":
+      return 422;
+    default:
+      return 400;
+  }
+}
 
 const router = Router();
 
@@ -851,132 +865,9 @@ router.post(
     const { teamId } = req.body;
 
     try {
-      // Vérifier que la coupe existe
-      const cup = await prisma.cup.findUnique({
-        where: { id: cupId },
-        include: {
-          participants: true,
-        },
-      });
-
-      if (!cup) {
-        return res.status(404).json({ error: "Coupe introuvable" });
-      }
-
-      // Vérifier que la coupe est ouverte aux inscriptions
-      if (cup.status !== "ouverte" || cup.validated) {
-        return res
-          .status(400)
-          .json({ error: "Cette coupe est fermée aux inscriptions" });
-      }
-
-      // Vérifier que l'équipe existe et appartient à l'utilisateur
-      const team = await prisma.team.findFirst({
-        where: { id: teamId, ownerId: req.user!.id },
-      });
-
-      if (!team) {
-        return res.status(404).json({ error: "Équipe introuvable ou vous n'en êtes pas le propriétaire" });
-      }
-
-      if (team.ruleset !== cup.ruleset) {
-        return res.status(400).json({
-          error: "Cette équipe utilise un ruleset différent de la coupe",
-        });
-      }
-
-      if (team.format !== cup.format) {
-        return res.status(400).json({
-          error: "Cette équipe utilise un format différent de la coupe",
-        });
-      }
-
-      // Vérifier que l'équipe n'est pas déjà inscrite
-      const alreadyParticipant = cup.participants.some(
-        (p: any) => p.teamId === teamId,
-      );
-      if (alreadyParticipant) {
-        return res
-          .status(400)
-          .json({ error: "Cette équipe est déjà inscrite à cette coupe" });
-      }
-
-      // Règle « une équipe = une seule compétition active » : refuser si
-      // l'équipe est déjà engagée dans une autre coupe ou une saison de ligue.
-      const engagement = await getTeamEngagement(teamId, { excludeCupId: cupId });
-      if (engagement.engaged) {
-        return res.status(409).json({
-          error: `Cette équipe est déjà engagée dans ${
-            engagement.name ?? "une autre compétition"
-          } et n'est pas disponible`,
-        });
-      }
-
-      // Flow A — vérification des règles de composition à l'inscription.
-      // On ne contraint budget / PSP QUE si la coupe définit ces règles :
-      // sans config, une équipe vétéran (VE > budget de départ du roster)
-      // reste inscriptible comme avant. Le snapshot, lui, est toujours
-      // capturé (utile pour le mode résurrection + audit).
-      const rules = formatCupRules(cup as unknown as CupRulesConfig);
-      let pspPoolGranted = 0;
-      const rosterDef = await prisma.roster.findFirst({
-        where: { slug: team.roster, ruleset: cup.ruleset },
-        select: { tier: true, budget: true },
-      });
-      if (rosterDef) {
-        const rosterForRules = {
-          slug: team.roster,
-          tier: rosterDef.tier,
-          budget: rosterDef.budget,
-        };
-        const hasBudgetRules =
-          Object.keys(rules.tierBudgets).length > 0 ||
-          Object.keys(rules.rosterBudgetOverrides).length > 0;
-        const hasPspRules = Object.keys(rules.tierStartingPsp).length > 0;
-
-        if (hasBudgetRules) {
-          // budget en kpo ; team.teamValue (VE) est stocké en po → conversion.
-          const budgetKpo = resolveCupBudget(
-            cup as unknown as CupRulesConfig,
-            rosterForRules,
-          );
-          const teamValueKpo = Math.round(team.teamValue / 1000);
-          if (team.teamValue > budgetKpo * 1000) {
-            return res.status(422).json({
-              error: `Cette équipe (VE ${teamValueKpo}k) dépasse le budget autorisé pour cette coupe (${budgetKpo}k)`,
-            });
-          }
-        }
-        if (hasPspRules) {
-          pspPoolGranted = resolveCupStartingPsp(
-            cup as unknown as CupRulesConfig,
-            rosterForRules,
-          );
-          const players = await prisma.teamPlayer.findMany({
-            where: { teamId, firedAt: null },
-            select: { advancements: true },
-          });
-          const spent = teamAdvancementsPspCost(players);
-          if (spent > pspPoolGranted) {
-            return res.status(422).json({
-              error: `Cette équipe a dépensé ${spent} PSP d'améliorations, au-delà du pool autorisé (${pspPoolGranted}) pour cette coupe`,
-            });
-          }
-        }
-      }
-
-      // Snapshot du roster tel qu'inscrit (référence mode résurrection).
-      const snapshot = await captureRosterSnapshot(teamId);
-
-      // Ajouter le participant (l'équipe)
-      await prisma.cupParticipant.create({
-        data: {
-          cupId: cupId,
-          teamId: teamId,
-          pspPoolGranted,
-          rosterSnapshot: snapshot ? JSON.stringify(snapshot) : null,
-        },
-      });
+      // Toute la logique d'inscription est centralisée (réutilisée par
+      // l'acceptation d'invitation). Les erreurs typées sont mappées ci-dessous.
+      await registerTeamToCup({ cupId, teamId, userId: req.user!.id });
 
       // Récupérer la coupe mise à jour
       const updatedCup = await prisma.cup.findUnique({
@@ -1034,6 +925,9 @@ router.post(
         message: "Équipe inscrite avec succès",
       });
     } catch (e: any) {
+      if (e instanceof CupRegistrationError) {
+        return res.status(mapCupRegistrationStatus(e.code)).json({ error: e.message });
+      }
       serverLog.error("Erreur lors de l'inscription à la coupe:", e);
       if (e?.code === "P2002") {
         return res
