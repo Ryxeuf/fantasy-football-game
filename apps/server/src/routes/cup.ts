@@ -36,6 +36,11 @@ import {
 } from "../services/cup-rules";
 import { captureRosterSnapshot } from "../services/cup-roster-snapshot";
 import { getTeamEngagement } from "../services/team-competition-status";
+import {
+  computeCupPlayerLeaderboards,
+  CUP_LEADERBOARD_CATEGORIES,
+  type CupMatchForPlayerStats,
+} from "../services/cup-player-stats";
 
 const router = Router();
 
@@ -532,6 +537,12 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       (cup.localMatches || []) as unknown as LocalMatchWithRelations[],
     );
 
+    // Classements individuels (par joueur) — équivalent leaderboards de ligue,
+    // sans « future star » (PSP) ni « MVP » (indisponibles en coupe).
+    const playerLeaderboards = computeCupPlayerLeaderboards(
+      (cup.localMatches || []) as unknown as CupMatchForPlayerStats[],
+    );
+
     const formattedCup = {
       id: cup.id,
       name: cup.name,
@@ -561,6 +572,8 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
       standings: standingsResult.teamStats,
       actionAwards: standingsResult.awards,
+      playerLeaderboards,
+      playerLeaderboardCategories: CUP_LEADERBOARD_CATEGORIES,
       matches: (cup.localMatches || []).map((m: any) => ({
         id: m.id,
         name: m.name,

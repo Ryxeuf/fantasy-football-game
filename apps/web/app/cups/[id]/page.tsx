@@ -43,6 +43,16 @@ type CupAwardEntry = {
   value: number;
 };
 
+type CupPlayerStatRow = {
+  rank: number;
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  teamRoster: string;
+  value: number;
+};
+
 type CupActionAwards = {
   topScorers?: CupAwardEntry[];
   bestDefense?: CupAwardEntry[];
@@ -95,6 +105,12 @@ type Cup = {
   };
   standings?: CupTeamStats[];
   actionAwards?: CupActionAwards;
+  playerLeaderboards?: Record<string, CupPlayerStatRow[]>;
+  playerLeaderboardCategories?: Array<{
+    key: string;
+    label: string;
+    description: string;
+  }>;
   matches?: Array<{
     id: string;
     name: string | null;
@@ -944,6 +960,60 @@ export default function CupDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Classements individuels (par joueur) */}
+      {cup.playerLeaderboards &&
+        cup.playerLeaderboardCategories &&
+        cup.playerLeaderboardCategories.some(
+          (c) => (cup.playerLeaderboards?.[c.key]?.length ?? 0) > 0,
+        ) && (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              Classements individuels
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">
+              Agrégés depuis les actions saisies. Pas de « future star » (PSP) ni
+              de « MVP » en coupe.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cup.playerLeaderboardCategories.map((cat) => {
+                const rows = cup.playerLeaderboards?.[cat.key] ?? [];
+                if (rows.length === 0) return null;
+                return (
+                  <div
+                    key={cat.key}
+                    className="border border-gray-200 rounded-lg p-4"
+                    data-testid={`cup-leaderboard-${cat.key}`}
+                  >
+                    <h3 className="text-sm font-bold text-gray-900">{cat.label}</h3>
+                    <p className="text-[11px] text-gray-500 mb-2">
+                      {cat.description}
+                    </p>
+                    <ol className="space-y-1">
+                      {rows.map((row) => (
+                        <li
+                          key={row.playerId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="truncate">
+                            <span className="text-gray-400 mr-1">{row.rank}.</span>
+                            <span className="font-medium text-gray-900">
+                              {row.playerName}
+                            </span>
+                            <span className="text-gray-500"> · {row.teamName}</span>
+                          </span>
+                          <span className="font-semibold text-gray-800 ml-2">
+                            {row.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       {/* Actions */}
       <div className="space-y-3">
