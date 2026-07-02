@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import CupBracketView from "./CupBracketView";
+import CupInvitationsManager from "./CupInvitationsManager";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -598,6 +599,12 @@ export default function CupDetailPage() {
               )}
             </div>
           </div>
+
+          {cup.isCreator && cup.status === "ouverte" && (
+            <div className="pt-4 border-t border-gray-200">
+              <CupInvitationsManager cupId={cup.id} />
+            </div>
+          )}
 
           <div className="pt-4 border-t border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">

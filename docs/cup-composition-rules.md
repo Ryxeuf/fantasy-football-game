@@ -78,9 +78,37 @@ persisté. Le roster live reste identique au snapshot d'inscription.
 - `me/teams/[id]/page.tsx` — budget de départ + bloc PSP (pool / dépensés /
   disponibles).
 
+## Invitations de coupe
+
+Le créateur d'une coupe peut inviter des coachs (utile pour les coupes privées) :
+- **Lien partageable** (`code` public) ou **invitation personnelle** (coach ciblé
+  via autocomplete). Modèle `CupInvitation` (miroir simplifié de
+  `LeagueInvitation`, sans saison), service `cup-invitation.ts`, notif non
+  bloquante `cup-invitation-notify.ts`, routes `cup-invitation.ts` montées sous
+  `/cup` **avant** `cupRoutes`.
+- L'invité ouvre `/cups/invitations/:code`, choisit une équipe existante (ou
+  construit pour la coupe via Flow B) → l'inscription réutilise `registerTeamToCup`
+  (`services/cup-registration.ts`, logique extraite de `POST /:id/register`).
+- UI : `CupInvitationsManager` (créateur), `cups/invitations/[code]/page.tsx`
+  (acceptation), `PendingCupInvitations` (invitations reçues sur `/cups`).
+
+## Classements individuels (leaderboards)
+
+`services/cup-player-stats.ts` agrège par joueur depuis `LocalMatchAction` :
+marqueur, castagneur, agresseur, passeur, intercepteur, sac de frappe. Exposé
+dans `GET /cup/:id` (`playerLeaderboards`), affiché sur le détail coupe. Exclut
+« future star » (PSP, absents en coupe) et « MVP » (aucun MVP en coupe).
+
+## Divers
+
+- **Description** de coupe (optionnelle) affichée dans la liste ; badges format +
+  « règles ajustées/standard ». **Mode résurrection** forcé (seul mode dispo).
+  L'inscription se fait depuis la page de la coupe : « tel quel » si aucun
+  ajustement, sinon « Adapter à la coupe » (clone).
+
 ## Endpoints
 
-- `POST /cup` — accepte la config de composition.
+- `POST /cup` — accepte la config de composition + `description`.
 - `PATCH /cup/:id/rules` — met à jour la config (créateur/admin, avant validation).
 - `GET /cup/:id` — expose `rulesConfig`.
 - `POST /cup/:id/register` — Flow A : valide budget + PSP (si la coupe définit

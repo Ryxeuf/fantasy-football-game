@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
 import { RULESETS } from "@bb/game-engine";
+import PendingCupInvitations from "./PendingCupInvitations";
 
 type Cup = {
   id: string;
@@ -321,6 +322,7 @@ export default function CupsPage() {
 
   return (
     <div className="w-full p-6 space-y-6">
+      <PendingCupInvitations />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
