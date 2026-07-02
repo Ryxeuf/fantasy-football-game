@@ -1,3 +1,10 @@
+## [1.212.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.212.0...v1.212.1) (2026-07-02)
+
+
+### 🐛 Bug Fixes
+
+* **teams:** responsive career stats + traduction postes + menu export mobile ([b31a9c3](https://github.com/Ryxeuf/fantasy-football-game/commit/b31a9c3133a4d1b740f8657a674efb6ca46fccf2))
+
 ## [1.212.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.211.0...v1.212.0) (2026-07-02)
 
 
