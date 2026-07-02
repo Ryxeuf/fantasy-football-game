@@ -302,6 +302,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   teamValue: 'teamValue',
   currentValue: 'currentValue',
   initialBudget: 'initialBudget',
+  startingPspPool: 'startingPspPool',
   isPublic: 'isPublic',
   shareToken: 'shareToken',
   deletedAt: 'deletedAt'
@@ -429,6 +430,7 @@ exports.Prisma.CupScalarFieldEnum = {
   name: 'name',
   creatorId: 'creatorId',
   ruleset: 'ruleset',
+  format: 'format',
   validated: 'validated',
   isPublic: 'isPublic',
   status: 'status',
@@ -441,14 +443,21 @@ exports.Prisma.CupScalarFieldEnum = {
   touchdownPoints: 'touchdownPoints',
   blockCasualtyPoints: 'blockCasualtyPoints',
   foulCasualtyPoints: 'foulCasualtyPoints',
-  passPoints: 'passPoints'
+  passPoints: 'passPoints',
+  resurrectionMode: 'resurrectionMode',
+  tierBudgets: 'tierBudgets',
+  rosterBudgetOverrides: 'rosterBudgetOverrides',
+  tierStartingPsp: 'tierStartingPsp',
+  rosterStartingPspOverrides: 'rosterStartingPspOverrides'
 };
 
 exports.Prisma.CupParticipantScalarFieldEnum = {
   id: 'id',
   cupId: 'cupId',
   teamId: 'teamId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  rosterSnapshot: 'rosterSnapshot',
+  pspPoolGranted: 'pspPoolGranted'
 };
 
 exports.Prisma.MatchQueueScalarFieldEnum = {

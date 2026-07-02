@@ -425,6 +425,14 @@ model Team {
   currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
   initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
 
+  // Pool de PSP alloué à la construction (mode « édition avancée » du builder,
+  // ou imposé par une coupe). Les advancements achetés au build ne dépensent
+  // PAS `TeamPlayer.spp` (ils restent à 0) : ils puisent dans ce pool. La
+  // fiche d'équipe affiche pool = `startingPspPool`, dépensés = Σ coûts des
+  // advancements des joueurs, disponibles = pool − dépensés. 0 = comportement
+  // historique (aucune amélioration au build).
+  startingPspPool Int @default(0)
+
   // Partage public opt-in (boucle d'acquisition). Le coach active le
   // partage -> `shareToken` généré ; lien public en lecture seule via
   // /api/public/teams/:token. Désactivé par défaut (vie privée).
@@ -680,6 +688,7 @@ model Cup {
   creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
   creatorId String
   ruleset   Ruleset  @default(season_2)
+  format    Format   @default(bb11) // Format imposé aux équipes (BB11 / Sevens)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
   isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
@@ -707,6 +716,33 @@ model Cup {
   monthlyYear  Int?
   monthlyMonth Int?
 
+  /// Règles avancées de composition (mode coupe). Tous optionnels /
+  /// défaut neutre → une coupe sans config se comporte comme avant.
+  ///
+  /// `resurrectionMode` : à chaque match de coupe, l'équipe repart de son
+  /// snapshot d'inscription (aucun PSP gagné, aucune blessure/mort/gain
+  /// conservés — cf. `CupParticipant.rosterSnapshot`).
+  resurrectionMode Boolean @default(false)
+
+  /// Budget max par tier de roster, en kpo. JSON objet `{ "I": 1150,
+  /// "II": 1100, "III": 1050, "IV": 1000 }`. Peut être un objet natif (PG)
+  /// ou une string sérialisée (miroir sqlite en test) → parser tolérant
+  /// côté `services/cup-rules.ts`. null = pas de contrainte par tier.
+  tierBudgets Json?
+
+  /// Surcharge de budget par roster précis (slug), en kpo. JSON objet
+  /// `{ "skaven": 1200 }`. Prime sur `tierBudgets`. null = aucun override.
+  rosterBudgetOverrides Json?
+
+  /// Pool de PSP de départ par tier. JSON objet `{ "I": 0, "II": 6,
+  /// "III": 10, "IV": 14 }`. Le coach dépense ce pool en améliorations au
+  /// build. null / tier absent = 0 PSP.
+  tierStartingPsp Json?
+
+  /// Surcharge du pool de PSP par roster précis (slug). JSON objet
+  /// `{ "skaven": 8 }`. Prime sur `tierStartingPsp`. null = aucun override.
+  rosterStartingPspOverrides Json?
+
   // Relations
   participants CupParticipant[]
   localMatches LocalMatch[]
@@ -726,6 +762,15 @@ model CupParticipant {
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
   createdAt DateTime @default(now())
+
+  /// Snapshot du roster tel qu'inscrit (joueurs + stats + skills +
+  /// advancements). Sert de référence pour le mode résurrection (l'équipe
+  /// repart de cet état à chaque match). Objet natif (PG) ou string (sqlite)
+  /// → parser tolérant. null = participant historique sans snapshot.
+  rosterSnapshot Json?
+
+  /// Pool de PSP accordé à cette équipe pour cette coupe (trace / affichage).
+  pspPoolGranted Int @default(0)
 
   @@unique([cupId, teamId])
   @@index([cupId])
