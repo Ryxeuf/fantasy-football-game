@@ -9,6 +9,7 @@ import {
   purchaseSchema,
   addPlayerSchema,
   updatePlayerSkillsSchema,
+  updatePlayerIdentitySchema,
   addStarPlayerToTeamSchema,
   saveRosterSchema,
 } from "../schemas/team.schemas";
@@ -141,12 +142,14 @@ export {
   handleAddTeamPlayer,
   handleDeleteTeamPlayer,
   handleUpdatePlayerSkills,
+  handleUpdatePlayerIdentity,
   handleListAvailablePositions,
 } from './team-player-handlers';
 import {
   handleAddTeamPlayer as handleAddTeamPlayerImpl,
   handleDeleteTeamPlayer as handleDeleteTeamPlayerImpl,
   handleUpdatePlayerSkills as handleUpdatePlayerSkillsImpl,
+  handleUpdatePlayerIdentity as handleUpdatePlayerIdentityImpl,
   handleListAvailablePositions as handleListAvailablePositionsImpl,
 } from './team-player-handlers';
 
@@ -166,6 +169,13 @@ router.put(
   authUser,
   validate(updatePlayerSkillsSchema),
   handleUpdatePlayerSkillsImpl,
+);
+// E12 — identite (nom + numero) editable par le coach, meme equipe engagee.
+router.patch(
+  "/:id/players/:playerId/identity",
+  authUser,
+  validate(updatePlayerIdentitySchema),
+  handleUpdatePlayerIdentityImpl,
 );
 router.get(
   "/:id/available-positions",

@@ -9,6 +9,7 @@ import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { formatPlusStat } from "../../../lib/format-stats";
 import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
+import { PlayerIdentityInlineEdit } from "./PlayerIdentityInlineEdit";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
@@ -148,6 +149,23 @@ export default function TeamDetailPage() {
       cancelled = true;
     };
   }, [id, t, language]);
+
+  // E12 — après édition inline du nom/numéro, mutation locale du state.
+  const handleIdentitySaved = (
+    playerId: string,
+    name: string,
+    number: number,
+  ) => {
+    setData((prev: any) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        players: (prev.team?.players ?? []).map((pl: any) =>
+          pl.id === playerId ? { ...pl, name, number } : pl,
+        ),
+      },
+    }));
+  };
 
   const handleRecalculate = async () => {
     setRecalculating(true);
@@ -608,7 +626,13 @@ export default function TeamDetailPage() {
                   {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
-                      <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">{p.name}</td>
+                      <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">
+                        <PlayerIdentityInlineEdit
+                          teamId={String(id)}
+                          player={p}
+                          onSaved={handleIdentitySaved}
+                        />
+                      </td>
                       <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">
                         <div>{getDisplayName(p.position)}</div>
                         <KeywordChips
@@ -653,7 +677,13 @@ export default function TeamDetailPage() {
                       <div className="flex items-center gap-3">
                         <span className="font-mono text-xl font-bold text-gray-900">{p.number}</span>
                         <div>
-                          <div className="font-semibold text-base">{p.name}</div>
+                          <div className="font-semibold text-base">
+                            <PlayerIdentityInlineEdit
+                              teamId={String(id)}
+                              player={p}
+                              onSaved={handleIdentitySaved}
+                            />
+                          </div>
                           <div className="text-xs text-gray-600">{getDisplayName(p.position)}</div>
                           <KeywordChips
                             keywords={

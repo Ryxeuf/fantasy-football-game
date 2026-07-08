@@ -21,6 +21,11 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  surchargeForAdvancement,
+  type PlayerAdvancement,
+} from "@bb/game-engine";
+import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
 
 export class CommissionerEditError extends Error {
   constructor(
@@ -33,6 +38,9 @@ export class CommissionerEditError extends Error {
       | "invalid_value"
       | "skill_already_present"
       | "skill_not_present"
+      | "skill_not_accessible"
+      | "innate_skill"
+      | "number_taken"
       | "invalid_characteristic",
     message: string,
   ) {
@@ -180,6 +188,111 @@ export async function adjustPlayerSpp(input: AddSppInput) {
   return updated;
 }
 
+export interface UpdatePlayerIdentityInput {
+  leagueId: string;
+  teamId: string;
+  playerId: string;
+  /** Nom complet (« Prénom Nom ») — champ unique `TeamPlayer.name`. */
+  name?: string;
+  number?: number;
+  byCommissionerId: string;
+  reason?: string;
+}
+
+/**
+ * A64 — met a jour l'identite d'un joueur (nom et/ou numero) par le
+ * commissaire. Le numero doit rester unique (1..99) parmi les joueurs
+ * actifs de l'equipe. Journalise dans l'audit log.
+ */
+export async function updatePlayerIdentity(input: UpdatePlayerIdentityInput) {
+  const name = input.name?.trim();
+  const number = input.number;
+  if ((name === undefined || name.length === 0) && number === undefined) {
+    throw new CommissionerEditError(
+      "invalid_value",
+      "Fournir un nom et/ou un numero",
+    );
+  }
+  if (name !== undefined && (name.length === 0 || name.length > 60)) {
+    throw new CommissionerEditError(
+      "invalid_value",
+      "Le nom doit faire entre 1 et 60 caracteres",
+    );
+  }
+  if (
+    number !== undefined &&
+    (!Number.isInteger(number) || number < 1 || number > 99)
+  ) {
+    throw new CommissionerEditError(
+      "invalid_value",
+      "Le numero doit etre un entier entre 1 et 99",
+    );
+  }
+  await ensureTeamInLeague(input);
+
+  const player = (await prisma.teamPlayer.findUnique({
+    where: { id: input.playerId },
+    select: { id: true, teamId: true, name: true, number: true },
+  })) as {
+    id: string;
+    teamId: string;
+    name: string;
+    number: number;
+  } | null;
+  if (!player) {
+    throw new CommissionerEditError(
+      "player_not_found",
+      `Joueur introuvable: ${input.playerId}`,
+    );
+  }
+  if (player.teamId !== input.teamId) {
+    throw new CommissionerEditError(
+      "player_not_in_team",
+      "Le joueur n'appartient pas a la team specifiee",
+    );
+  }
+
+  if (number !== undefined && number !== player.number) {
+    const taken = await prisma.teamPlayer.count({
+      where: {
+        teamId: input.teamId,
+        number,
+        firedAt: null,
+        id: { not: input.playerId },
+      },
+    });
+    if (taken > 0) {
+      throw new CommissionerEditError(
+        "number_taken",
+        `Le numero ${number} est deja pris dans cette equipe`,
+      );
+    }
+  }
+
+  const updated = await prisma.teamPlayer.update({
+    where: { id: input.playerId },
+    data: {
+      ...(name !== undefined ? { name } : {}),
+      ...(number !== undefined ? { number } : {}),
+    },
+  });
+
+  await appendAudit({
+    leagueId: input.leagueId,
+    byCommissionerId: input.byCommissionerId,
+    teamId: input.teamId,
+    playerId: input.playerId,
+    action: "update_identity",
+    beforeState: { name: player.name, number: player.number },
+    afterState: {
+      name: name ?? player.name,
+      number: number ?? player.number,
+    },
+    reason: input.reason ?? null,
+  });
+  return updated;
+}
+
 export interface AddSkillInput {
   leagueId: string;
   teamId: string;
@@ -192,17 +305,40 @@ export interface AddSkillInput {
 }
 
 /**
- * Ajoute une competence a un joueur. La competence est stockee dans
- * le champ libre `TeamPlayer.skills` (CSV). Refuse si la competence
- * est deja presente.
+ * E13/A6 — Ajoute une competence GAGNEE a un joueur. La competence est
+ * validee contre le pool d'acces de la position (primaire/secondaire),
+ * enregistree comme un vrai avancement (`TeamPlayer.advancements`) et la
+ * valeur d'equipe est incrementee du surcout officiel (+20k primaire /
+ * random, +40k secondaire) — avant ce fix, l'ajout commissaire ne
+ * touchait ni les avancements ni la VE (cause du « A6 : je ne vois pas
+ * de changement » du testeur). Les SPP ne sont PAS decomptes ici (outil
+ * de correction : l'ajustement SPP est une action separee).
+ * Retro-compat : si la position n'a pas de donnees d'acces (season_2),
+ * l'ajout reste libre, sans avancement ni VE.
  */
 export async function addPlayerSkill(input: AddSkillInput) {
   await ensureTeamInLeague(input);
 
   const player = (await prisma.teamPlayer.findUnique({
     where: { id: input.playerId },
-    select: { id: true, teamId: true, skills: true, name: true },
-  })) as { id: string; teamId: string; skills: string; name: string } | null;
+    select: {
+      id: true,
+      teamId: true,
+      skills: true,
+      name: true,
+      position: true,
+      advancements: true,
+      team: { select: { roster: true, ruleset: true } },
+    },
+  })) as {
+    id: string;
+    teamId: string;
+    skills: string;
+    name: string;
+    position: string;
+    advancements: string | null;
+    team: { roster: string; ruleset: string | null } | null;
+  } | null;
   if (!player) {
     throw new CommissionerEditError(
       "player_not_found",
@@ -230,10 +366,87 @@ export async function addPlayerSkill(input: AddSkillInput) {
       `Le joueur possede deja la competence "${trimmedSkill}"`,
     );
   }
+
+  // E13 — validation d'acces + determination du type d'avancement.
+  const ruleset = player.team?.ruleset ?? "season_3";
+  const positionAccess = (await prisma.position.findFirst({
+    where: {
+      slug: player.position,
+      roster: { slug: player.team?.roster, ruleset: ruleset as never },
+    },
+    select: { primarySkills: true, secondarySkills: true },
+  })) as { primarySkills: string | null; secondarySkills: string | null } | null;
+
+  let advancementType: "primary" | "secondary" | "random-primary" | null =
+    null;
+  if (
+    positionAccess &&
+    (positionAccess.primarySkills != null ||
+      positionAccess.secondarySkills != null)
+  ) {
+    const code = await categoryCodeForSkill(trimmedSkill, ruleset);
+    const inPrimary =
+      checkSkillAccess({
+        type: "primary",
+        skillCode: code,
+        primarySkills: positionAccess.primarySkills,
+        secondarySkills: positionAccess.secondarySkills,
+      }) === "ok";
+    const inSecondary =
+      checkSkillAccess({
+        type: "secondary",
+        skillCode: code,
+        primarySkills: positionAccess.primarySkills,
+        secondarySkills: positionAccess.secondarySkills,
+      }) === "ok";
+    if (!inPrimary && !inSecondary) {
+      throw new CommissionerEditError(
+        "skill_not_accessible",
+        `La competence "${trimmedSkill}" n'est pas accessible pour ce joueur (pool primaire/secondaire)`,
+      );
+    }
+    advancementType = inPrimary
+      ? input.pickKind === "random"
+        ? "random-primary"
+        : "primary"
+      : "secondary";
+  }
+
   const newSkills = [...existing, trimmedSkill];
-  const updated = await prisma.teamPlayer.update({
-    where: { id: input.playerId },
-    data: { skills: newSkills.join(",") },
+  const taken = parseAdvancementsJson(player.advancements);
+  const newAdvancements: PlayerAdvancement[] = advancementType
+    ? [
+        ...taken,
+        {
+          skillSlug: trimmedSkill,
+          type: advancementType,
+          isRandom: advancementType === "random-primary",
+          at: Date.now(),
+        },
+      ]
+    : taken;
+  const surcharge = advancementType
+    ? surchargeForAdvancement({ type: advancementType })
+    : 0;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updated = await prisma.$transaction(async (tx: any) => {
+    const p = await tx.teamPlayer.update({
+      where: { id: input.playerId },
+      data: {
+        skills: newSkills.join(","),
+        ...(advancementType
+          ? { advancements: JSON.stringify(newAdvancements) }
+          : {}),
+      },
+    });
+    if (surcharge > 0) {
+      await tx.team.update({
+        where: { id: input.teamId },
+        data: { currentValue: { increment: surcharge } },
+      });
+    }
+    return p;
   });
 
   await appendAudit({
@@ -243,7 +456,11 @@ export async function addPlayerSkill(input: AddSkillInput) {
     playerId: input.playerId,
     action: `add_skill:${input.pickKind ?? "chosen"}`,
     beforeState: { skills: existing },
-    afterState: { skills: newSkills },
+    afterState: {
+      skills: newSkills,
+      advancementType,
+      teamValueSurcharge: surcharge,
+    },
     reason: input.reason ?? null,
   });
   return updated;
@@ -258,14 +475,33 @@ export interface RemoveSkillInput {
   reason?: string;
 }
 
-/** Retire une competence d'un joueur. */
+/**
+ * Retire une competence d'un joueur.
+ * E15 — refuse la suppression d'une competence INNEE (celles du poste).
+ * Si la competence correspond a un avancement enregistre, l'entree est
+ * retiree et la valeur d'equipe decrémentee du surcout correspondant.
+ */
 export async function removePlayerSkill(input: RemoveSkillInput) {
   await ensureTeamInLeague(input);
 
   const player = (await prisma.teamPlayer.findUnique({
     where: { id: input.playerId },
-    select: { id: true, teamId: true, skills: true },
-  })) as { id: string; teamId: string; skills: string } | null;
+    select: {
+      id: true,
+      teamId: true,
+      skills: true,
+      position: true,
+      advancements: true,
+      team: { select: { roster: true, ruleset: true } },
+    },
+  })) as {
+    id: string;
+    teamId: string;
+    skills: string;
+    position: string;
+    advancements: string | null;
+    team: { roster: string; ruleset: string | null } | null;
+  } | null;
   if (!player) {
     throw new CommissionerEditError(
       "player_not_found",
@@ -285,10 +521,50 @@ export async function removePlayerSkill(input: RemoveSkillInput) {
       `Le joueur ne possede pas la competence "${input.skill}"`,
     );
   }
+
+  // E15 — les competences innees du poste ne sont pas supprimables.
+  const innate = await innateSkillsForPlayer(
+    player.position,
+    player.team?.roster,
+    player.team?.ruleset,
+  );
+  if (innate.has(input.skill)) {
+    throw new CommissionerEditError(
+      "innate_skill",
+      `"${input.skill}" est une competence innee du poste : suppression interdite`,
+    );
+  }
+
   const newSkills = existing.filter((s) => s !== input.skill);
-  const updated = await prisma.teamPlayer.update({
-    where: { id: input.playerId },
-    data: { skills: newSkills.join(",") },
+
+  // Reverse l'avancement correspondant (une seule entree) + la VE.
+  const taken = parseAdvancementsJson(player.advancements);
+  const advIdx = taken.findIndex((a) => a.skillSlug === input.skill);
+  const removedAdv = advIdx >= 0 ? taken[advIdx] : null;
+  const newAdvancements =
+    advIdx >= 0 ? taken.filter((_, i) => i !== advIdx) : taken;
+  const surcharge = removedAdv
+    ? surchargeForAdvancement({ type: removedAdv.type, stat: removedAdv.stat })
+    : 0;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updated = await prisma.$transaction(async (tx: any) => {
+    const p = await tx.teamPlayer.update({
+      where: { id: input.playerId },
+      data: {
+        skills: newSkills.join(","),
+        ...(removedAdv
+          ? { advancements: JSON.stringify(newAdvancements) }
+          : {}),
+      },
+    });
+    if (surcharge > 0) {
+      await tx.team.update({
+        where: { id: input.teamId },
+        data: { currentValue: { decrement: surcharge } },
+      });
+    }
+    return p;
   });
   await appendAudit({
     leagueId: input.leagueId,
@@ -311,8 +587,11 @@ export interface SetCharacteristicInput {
   /**
    * Delta a appliquer (peut etre negatif). On preserve les bornes
    * minimales (>=1) cote serveur pour eviter les saisies aberrantes.
+   * E14 — exclusif avec `value`.
    */
-  delta: number;
+  delta?: number;
+  /** E14 — valeur cible absolue (1..10), plus intuitive qu'un delta. */
+  value?: number;
   byCommissionerId: string;
   reason?: string;
 }
@@ -331,10 +610,29 @@ export async function adjustCharacteristic(input: SetCharacteristicInput) {
       `Caracteristique invalide: ${input.characteristic}`,
     );
   }
-  if (!Number.isInteger(input.delta) || input.delta === 0) {
+  const hasDelta = input.delta !== undefined;
+  const hasValue = input.value !== undefined;
+  if (hasDelta === hasValue) {
+    throw new CommissionerEditError(
+      "invalid_value",
+      "Fournir soit un delta, soit une valeur cible (exclusif)",
+    );
+  }
+  if (hasDelta && (!Number.isInteger(input.delta) || input.delta === 0)) {
     throw new CommissionerEditError(
       "invalid_delta",
       "Le delta doit etre un entier non nul",
+    );
+  }
+  if (
+    hasValue &&
+    (!Number.isInteger(input.value) ||
+      (input.value as number) < MIN_CHAR ||
+      (input.value as number) > MAX_CHAR)
+  ) {
+    throw new CommissionerEditError(
+      "invalid_value",
+      `La valeur cible doit etre un entier entre ${MIN_CHAR} et ${MAX_CHAR}`,
     );
   }
   await ensureTeamInLeague(input);
@@ -379,11 +677,18 @@ export async function adjustCharacteristic(input: SetCharacteristicInput) {
     | "pa"
     | "av";
   const before = player[key];
-  const after = Math.min(MAX_CHAR, Math.max(MIN_CHAR, before + input.delta));
+  // E14 — valeur cible absolue prioritaire ; sinon delta historique.
+  const after =
+    input.value !== undefined
+      ? input.value
+      : Math.min(
+          MAX_CHAR,
+          Math.max(MIN_CHAR, before + (input.delta as number)),
+        );
   if (after === before) {
     throw new CommissionerEditError(
       "invalid_value",
-      `Valeur deja a la borne pour ${input.characteristic}`,
+      `Valeur deja a ${before} pour ${input.characteristic}`,
     );
   }
 
@@ -467,6 +772,40 @@ function parseSkillsCsv(raw: string | null | undefined): string[] {
     .filter((s) => s.length > 0);
 }
 
+/** Parse tolerant du JSON `TeamPlayer.advancements` (string ou array). */
+function parseAdvancementsJson(raw: unknown): PlayerAdvancement[] {
+  if (Array.isArray(raw)) return raw as PlayerAdvancement[];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as PlayerAdvancement[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * E15 — competences innees du poste (relation `Position.skills` ->
+ * `Skill.slug`). Fallback : ensemble vide si la position est introuvable
+ * (retro-compat).
+ */
+async function innateSkillsForPlayer(
+  positionSlug: string,
+  rosterSlug: string | undefined,
+  ruleset: string | null | undefined,
+): Promise<Set<string>> {
+  const position = (await prisma.position.findFirst({
+    where: {
+      slug: positionSlug,
+      roster: { slug: rosterSlug, ruleset: (ruleset ?? "season_3") as never },
+    },
+    select: { skills: { select: { skill: { select: { slug: true } } } } },
+  })) as { skills: Array<{ skill: { slug: string } }> } | null;
+  return new Set((position?.skills ?? []).map((ps) => ps.skill.slug));
+}
+
 /**
  * Helper pour la route audit log : liste les actions effectuees
  * par le commissaire sur les teams d'une ligue. Filtre par prefixe
@@ -484,12 +823,19 @@ export async function getTeamForEdit(input: {
   await ensureTeamInLeague(input);
   const team = (await prisma.team.findUnique({
     where: { id: input.teamId },
-    select: { id: true, name: true, roster: true, treasury: true },
+    select: {
+      id: true,
+      name: true,
+      roster: true,
+      treasury: true,
+      ruleset: true,
+    },
   })) as {
     id: string;
     name: string;
     roster: string;
     treasury: number;
+    ruleset: string | null;
   } | null;
   if (!team) {
     throw new CommissionerEditError(
@@ -515,7 +861,45 @@ export async function getTeamForEdit(input: {
       dead: true,
     },
   });
-  return { team, players };
+
+  // E13/E15 — expose par position les acces de competences (CSV G/A/S/P/M/K)
+  // et les competences innees (non supprimables) pour piloter l'UI.
+  const positions = (await prisma.position.findMany({
+    where: {
+      roster: {
+        slug: team.roster,
+        ruleset: (team.ruleset ?? "season_3") as never,
+      },
+    },
+    select: {
+      slug: true,
+      primarySkills: true,
+      secondarySkills: true,
+      skills: { select: { skill: { select: { slug: true } } } },
+    },
+  })) as Array<{
+    slug: string;
+    primarySkills: string | null;
+    secondarySkills: string | null;
+    skills: Array<{ skill: { slug: string } }>;
+  }>;
+  const accessByPosition: Record<
+    string,
+    {
+      primarySkills: string | null;
+      secondarySkills: string | null;
+      innateSkills: string[];
+    }
+  > = {};
+  for (const p of positions) {
+    accessByPosition[p.slug] = {
+      primarySkills: p.primarySkills,
+      secondarySkills: p.secondarySkills,
+      innateSkills: p.skills.map((ps) => ps.skill.slug),
+    };
+  }
+
+  return { team, players, accessByPosition };
 }
 
 export async function listAuditLog(input: {

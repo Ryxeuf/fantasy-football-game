@@ -21,9 +21,50 @@ interface EditPlayer {
   dead: boolean;
 }
 
+/** E13/E15 — accès compétences + innées d'un poste (fourni par l'API). */
+interface PositionAccess {
+  primarySkills: string | null;
+  secondarySkills: string | null;
+  innateSkills: string[];
+}
+
 interface RosterResponse {
-  team: { id: string; name: string; roster: string; treasury: number };
+  team: {
+    id: string;
+    name: string;
+    roster: string;
+    treasury: number;
+    ruleset?: string | null;
+  };
   players: EditPlayer[];
+  accessByPosition?: Record<string, PositionAccess>;
+}
+
+interface SkillCatalogItem {
+  slug: string;
+  nameFr: string;
+  category: string;
+}
+
+/** Nom de catégorie DB → code canonique (cf. AdvancementEditor). */
+const SKILL_CATEGORY_CODE: Record<string, string> = {
+  General: "G",
+  Agility: "A",
+  Strength: "S",
+  Passing: "P",
+  Mutation: "M",
+  "Scélérates": "K",
+};
+
+/** Parse un CSV d'accès ("G,S" / "GS", alias F→S) en Set de codes. */
+function parseAccessCodes(csv: string | null | undefined): Set<string> {
+  const out = new Set<string>();
+  if (!csv) return out;
+  for (const ch of csv.toUpperCase()) {
+    if (ch === "F") out.add("S");
+    else if ("GASPMK".includes(ch)) out.add(ch);
+  }
+  return out;
 }
 
 const CHARS = ["MA", "ST", "AG", "PA", "AV"] as const;
@@ -67,6 +108,8 @@ export function CommissionerTeamEditor({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // E13 — catalogue de compétences (slug → nom/catégorie) pour le select.
+  const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,6 +129,18 @@ export function CommissionerTeamEditor({
   useEffect(() => {
     if (open) load();
   }, [open, load]);
+
+  // E13 — charge le catalogue une fois le roster connu (ruleset).
+  useEffect(() => {
+    if (!open || !data) return;
+    const ruleset = data.team.ruleset ?? "season_3";
+    apiRequest<{ skills: SkillCatalogItem[] }>(
+      `/api/skills?ruleset=${encodeURIComponent(ruleset)}`,
+    )
+      .then((r) => setCatalog(r.skills ?? []))
+      .catch(() => setCatalog([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, data?.team.ruleset]);
 
   const act = useCallback(
     async (fn: () => Promise<unknown>) => {
@@ -159,6 +214,8 @@ export function CommissionerTeamEditor({
                   busy={busy}
                   canRemove={canRemovePlayers}
                   act={act}
+                  access={data.accessByPosition?.[p.position]}
+                  catalog={catalog}
                 />
               ))}
             </div>
@@ -217,6 +274,8 @@ function PlayerEditRow({
   busy,
   canRemove,
   act,
+  access,
+  catalog,
 }: {
   leagueId: string;
   teamId: string;
@@ -224,12 +283,18 @@ function PlayerEditRow({
   busy: boolean;
   canRemove: boolean;
   act: (fn: () => Promise<unknown>) => Promise<void>;
+  access?: PositionAccess;
+  catalog: SkillCatalogItem[];
 }) {
   const [sppDelta, setSppDelta] = useState<number>(0);
   const [newSkill, setNewSkill] = useState("");
   const [charKind, setCharKind] = useState<(typeof CHARS)[number]>("MA");
-  const [charDelta, setCharDelta] = useState<number>(0);
+  // E14 — valeur cible absolue ("" = non renseignée).
+  const [charValue, setCharValue] = useState<string>("");
   const [confirmRemove, setConfirmRemove] = useState(false);
+  // A64 — édition de l'identité (nom complet + numéro).
+  const [editName, setEditName] = useState(player.name);
+  const [editNumber, setEditNumber] = useState<string>(String(player.number));
 
   const skills = player.skills
     .split(",")
@@ -238,17 +303,91 @@ function PlayerEditRow({
 
   const base = `/leagues/${leagueId}/teams/${teamId}/players/${player.id}`;
 
+  // E15 — compétences innées du poste : pas de suppression possible.
+  const innate = new Set(access?.innateSkills ?? []);
+
+  // E13 — compétences sélectionnables : catalogue filtré par le pool
+  // d'accès primaire+secondaire du poste, moins celles déjà possédées.
+  const skillNameOf = (slug: string) =>
+    catalog.find((c) => c.slug === slug)?.nameFr ?? slug;
+  const accessibleSkills = (() => {
+    if (!access) return [];
+    const pool = new Set([
+      ...parseAccessCodes(access.primarySkills),
+      ...parseAccessCodes(access.secondarySkills),
+    ]);
+    const owned = new Set(skills);
+    return catalog
+      .filter((c) => {
+        const code = SKILL_CATEGORY_CODE[c.category];
+        return code !== undefined && pool.has(code) && !owned.has(c.slug);
+      })
+      .sort((a, b) => a.nameFr.localeCompare(b.nameFr));
+  })();
+
+  const identityDirty =
+    editName.trim() !== player.name ||
+    Number(editNumber) !== player.number;
+
   return (
     <div
       data-testid={`player-edit-${player.id}`}
       className="border border-gray-200 rounded p-2 space-y-1.5 text-sm"
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="font-medium">
-          #{player.number} {player.name}
-          <span className="ml-2 text-xs text-gray-500">{player.position}</span>
+        {/* A64 — nom + numéro éditables par le commissaire. */}
+        <div className="flex flex-wrap items-center gap-1 font-medium">
+          <span className="text-gray-500">#</span>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            value={editNumber}
+            disabled={busy}
+            onChange={(e) => setEditNumber(e.target.value)}
+            data-testid={`identity-number-${player.id}`}
+            className="w-14 border border-gray-300 rounded px-1 py-0.5 text-sm"
+          />
+          <input
+            type="text"
+            value={editName}
+            disabled={busy}
+            maxLength={60}
+            onChange={(e) => setEditName(e.target.value)}
+            data-testid={`identity-name-${player.id}`}
+            className="w-40 border border-gray-300 rounded px-1 py-0.5 text-sm"
+            placeholder="Prénom Nom"
+          />
+          {identityDirty ? (
+            <button
+              type="button"
+              data-testid={`identity-save-${player.id}`}
+              disabled={
+                busy ||
+                editName.trim().length === 0 ||
+                !Number.isInteger(Number(editNumber)) ||
+                Number(editNumber) < 1 ||
+                Number(editNumber) > 99
+              }
+              onClick={() =>
+                act(() =>
+                  apiRequest(`${base}/identity`, {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                      name: editName.trim(),
+                      number: Number(editNumber),
+                    }),
+                  }),
+                )
+              }
+              className="text-xs px-1.5 py-0.5 rounded bg-nuffle-gold text-white disabled:opacity-50"
+            >
+              OK
+            </button>
+          ) : null}
+          <span className="ml-1 text-xs text-gray-500">{player.position}</span>
           {player.dead ? (
-            <span className="ml-2 text-xs text-red-600">(mort)</span>
+            <span className="ml-1 text-xs text-red-600">(mort)</span>
           ) : null}
         </div>
         <div className="flex items-center gap-2">
@@ -305,25 +444,33 @@ function PlayerEditRow({
           skills.map((skill) => (
             <span
               key={skill}
-              className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-800 rounded px-1.5 py-0.5"
+              className={`inline-flex items-center gap-1 text-xs rounded px-1.5 py-0.5 ${
+                innate.has(skill)
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-blue-50 text-blue-800"
+              }`}
+              title={innate.has(skill) ? "Compétence innée du poste" : undefined}
             >
-              {skill}
-              <button
-                type="button"
-                aria-label={`Retirer ${skill}`}
-                disabled={busy}
-                onClick={() =>
-                  act(() =>
-                    apiRequest(`${base}/skills`, {
-                      method: "DELETE",
-                      body: JSON.stringify({ skill }),
-                    }),
-                  )
-                }
-                className="text-blue-500 hover:text-red-600 disabled:opacity-50"
-              >
-                ×
-              </button>
+              {skillNameOf(skill)}
+              {/* E15 — pas de suppression pour les compétences innées. */}
+              {!innate.has(skill) ? (
+                <button
+                  type="button"
+                  aria-label={`Retirer ${skill}`}
+                  disabled={busy}
+                  onClick={() =>
+                    act(() =>
+                      apiRequest(`${base}/skills`, {
+                        method: "DELETE",
+                        body: JSON.stringify({ skill }),
+                      }),
+                    )
+                  }
+                  className="text-blue-500 hover:text-red-600 disabled:opacity-50"
+                >
+                  ×
+                </button>
+              ) : null}
             </span>
           ))
         )}
@@ -360,14 +507,34 @@ function PlayerEditRow({
 
         <span className="inline-flex items-center gap-1">
           + Compétence
-          <input
-            type="text"
-            value={newSkill}
-            disabled={busy}
-            placeholder="block"
-            onChange={(e) => setNewSkill(e.target.value)}
-            className="w-24 border border-gray-300 rounded px-1 py-0.5"
-          />
+          {/* E13 — select alimenté par les compétences ACCESSIBLES au
+              joueur (pool primaire+secondaire du poste), plus de saisie
+              libre. Fallback input libre si pas de données d'accès. */}
+          {access && catalog.length > 0 ? (
+            <select
+              value={newSkill}
+              disabled={busy}
+              onChange={(e) => setNewSkill(e.target.value)}
+              data-testid={`skill-select-${player.id}`}
+              className="max-w-44 border border-gray-300 rounded px-1 py-0.5"
+            >
+              <option value="">—</option>
+              {accessibleSkills.map((s) => (
+                <option key={s.slug} value={s.slug}>
+                  {s.nameFr}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={newSkill}
+              disabled={busy}
+              placeholder="block"
+              onChange={(e) => setNewSkill(e.target.value)}
+              className="w-24 border border-gray-300 rounded px-1 py-0.5"
+            />
+          )}
           <button
             type="button"
             data-testid={`skill-add-${player.id}`}
@@ -402,27 +569,46 @@ function PlayerEditRow({
               </option>
             ))}
           </select>
+          {/* E14 — saisie de la VALEUR cible (plus un modificateur). */}
           <input
             type="number"
-            value={charDelta}
+            min={1}
+            max={10}
+            value={charValue}
             disabled={busy}
-            onChange={(e) => setCharDelta(Number(e.target.value))}
+            onChange={(e) => setCharValue(e.target.value)}
+            placeholder={String(
+              {
+                MA: player.ma,
+                ST: player.st,
+                AG: player.ag,
+                PA: player.pa ?? "",
+                AV: player.av,
+              }[charKind],
+            )}
+            data-testid={`char-value-${player.id}`}
             className="w-14 border border-gray-300 rounded px-1 py-0.5"
           />
           <button
             type="button"
             data-testid={`char-apply-${player.id}`}
-            disabled={busy || charDelta === 0}
+            disabled={
+              busy ||
+              charValue === "" ||
+              !Number.isInteger(Number(charValue)) ||
+              Number(charValue) < 1 ||
+              Number(charValue) > 10
+            }
             onClick={() =>
               act(() =>
                 apiRequest(`${base}/characteristic`, {
                   method: "PATCH",
                   body: JSON.stringify({
                     characteristic: charKind,
-                    delta: charDelta,
+                    value: Number(charValue),
                   }),
                 }),
-              ).then(() => setCharDelta(0))
+              ).then(() => setCharValue(""))
             }
             className="px-1.5 py-0.5 rounded bg-gray-700 text-white disabled:opacity-50"
           >

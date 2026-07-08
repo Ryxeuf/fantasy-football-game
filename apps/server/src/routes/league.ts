@@ -89,6 +89,7 @@ import {
   addPlayerSkill,
   removePlayerSkill,
   adjustCharacteristic,
+  updatePlayerIdentity,
   adjustTreasury,
   listAuditLog,
   getTeamForEdit,
@@ -105,12 +106,14 @@ import {
   addSkillSchema,
   removeSkillSchema,
   adjustCharacteristicSchema,
+  updatePlayerIdentitySchema,
   adjustTreasurySchema,
   commissionerRemovalSchema,
   type AdjustSppBody,
   type AddSkillBody,
   type RemoveSkillBody,
   type AdjustCharacteristicBody,
+  type UpdatePlayerIdentityBody,
   type AdjustTreasuryBody,
   type CommissionerRemovalBody,
 } from "../schemas/commissioner-team-edit.schemas";
@@ -1393,6 +1396,32 @@ export async function handleRemovePlayerSkill(
   }
 }
 
+/** PATCH /leagues/:leagueId/teams/:teamId/players/:playerId/identity (A64) */
+export async function handleUpdatePlayerIdentity(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId, playerId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: UpdatePlayerIdentityBody = req.body;
+  try {
+    const out = await updatePlayerIdentity({
+      leagueId,
+      teamId,
+      playerId,
+      name: body.name,
+      number: body.number,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** PATCH /leagues/:leagueId/teams/:teamId/players/:playerId/characteristic */
 export async function handleAdjustCharacteristic(
   req: AuthenticatedRequest,
@@ -1410,6 +1439,7 @@ export async function handleAdjustCharacteristic(
       playerId,
       characteristic: body.characteristic,
       delta: body.delta,
+      value: body.value,
       byCommissionerId: userId,
       reason: body.reason,
     });
@@ -2500,6 +2530,13 @@ router.delete(
   authUser,
   validate(removeSkillSchema),
   handleRemovePlayerSkill,
+);
+// A64 — identite du joueur (nom + numero) par le commissaire.
+router.patch(
+  "/:leagueId/teams/:teamId/players/:playerId/identity",
+  authUser,
+  validate(updatePlayerIdentitySchema),
+  handleUpdatePlayerIdentity,
 );
 router.patch(
   "/:leagueId/teams/:teamId/players/:playerId/characteristic",

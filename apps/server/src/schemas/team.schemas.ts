@@ -151,3 +151,17 @@ export const updatePlayerSkillsSchema = z.object({
 export const addStarPlayerToTeamSchema = z.object({
   starPlayerSlug: z.string().min(1, "starPlayerSlug requis"),
 });
+
+/**
+ * E12 — édition cosmétique de l'identité d'un joueur (nom + numéro) par
+ * son coach, AUTORISÉE même équipe engagée (pas d'impact anti-triche).
+ */
+export const updatePlayerIdentitySchema = z
+  .object({
+    name: z.string().trim().min(1).max(60).optional(),
+    number: z.number().int().min(1).max(99).optional(),
+  })
+  .refine(
+    (v) => v.name !== undefined || v.number !== undefined,
+    "Fournir un nom et/ou un numéro",
+  );

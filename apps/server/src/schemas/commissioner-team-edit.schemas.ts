@@ -23,13 +23,35 @@ export const removeSkillSchema = z.object({
 });
 export type RemoveSkillBody = z.infer<typeof removeSkillSchema>;
 
-export const adjustCharacteristicSchema = z.object({
-  characteristic: z.enum(["MA", "ST", "AG", "PA", "AV"]),
-  delta: z.number().int().min(-10).max(10),
-  reason: z.string().max(500).optional(),
-});
+export const adjustCharacteristicSchema = z
+  .object({
+    characteristic: z.enum(["MA", "ST", "AG", "PA", "AV"]),
+    delta: z.number().int().min(-10).max(10).optional(),
+    /** E14 — valeur cible absolue (plus intuitive qu'un delta). */
+    value: z.number().int().min(1).max(10).optional(),
+    reason: z.string().max(500).optional(),
+  })
+  .refine(
+    (v) => (v.delta !== undefined) !== (v.value !== undefined),
+    "Fournir soit delta, soit value (exclusif)",
+  );
 export type AdjustCharacteristicBody = z.infer<
   typeof adjustCharacteristicSchema
+>;
+
+/** A64 — édition de l'identité d'un joueur (nom complet + numéro). */
+export const updatePlayerIdentitySchema = z
+  .object({
+    name: z.string().trim().min(1).max(60).optional(),
+    number: z.number().int().min(1).max(99).optional(),
+    reason: z.string().max(500).optional(),
+  })
+  .refine(
+    (v) => v.name !== undefined || v.number !== undefined,
+    "Fournir un nom et/ou un numéro",
+  );
+export type UpdatePlayerIdentityBody = z.infer<
+  typeof updatePlayerIdentitySchema
 >;
 
 export const adjustTreasurySchema = z.object({

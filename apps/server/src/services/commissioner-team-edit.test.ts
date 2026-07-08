@@ -7,9 +7,17 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     leagueParticipant: { count: vi.fn() },
-    teamPlayer: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    teamPlayer: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    },
     team: { findUnique: vi.fn(), update: vi.fn() },
+    position: { findFirst: vi.fn(), findMany: vi.fn() },
+    skill: { findFirst: vi.fn() },
     auditLog: { create: vi.fn(), findMany: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -19,6 +27,7 @@ import {
   addPlayerSkill,
   removePlayerSkill,
   adjustCharacteristic,
+  updatePlayerIdentity,
   adjustTreasury,
   listAuditLog,
   getTeamForEdit,
@@ -34,6 +43,15 @@ describe("Lot I — commissioner-team-edit", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockPrisma.auditLog.create.mockResolvedValue({});
+    // Par défaut : pas de données d'accès (retro-compat season_2) et pas
+    // de compétences innées connues.
+    mockPrisma.position.findFirst.mockResolvedValue(null);
+    mockPrisma.position.findMany.mockResolvedValue([]);
+    mockPrisma.teamPlayer.count.mockResolvedValue(0);
+    // $transaction : exécute le callback avec le mock lui-même.
+    mockPrisma.$transaction.mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) => fn(mockPrisma),
+    );
   });
 
   describe("getTeamForEdit (FR12)", () => {
@@ -297,6 +315,274 @@ describe("Lot I — commissioner-team-edit", () => {
         byCommissionerId: commish,
       });
       expect((out as { skills: string }).skills).toBe("Block,Tackle");
+    });
+  });
+
+  describe("A64 — updatePlayerIdentity", () => {
+    it("rejette un numéro déjà pris dans l'équipe", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        name: "Rat",
+        number: 3,
+      });
+      mockPrisma.teamPlayer.count.mockResolvedValue(1); // numéro occupé
+      await expect(
+        updatePlayerIdentity({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          number: 7,
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "number_taken" });
+    });
+
+    it("met à jour nom + numéro et journalise", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        name: "Rat",
+        number: 3,
+      });
+      mockPrisma.teamPlayer.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "P1",
+          ...a.data,
+        }),
+      );
+      const out = await updatePlayerIdentity({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        name: "Scrat Le Rapide",
+        number: 7,
+        byCommissionerId: commish,
+      });
+      expect(out).toMatchObject({ name: "Scrat Le Rapide", number: 7 });
+      const auditArgs = mockPrisma.auditLog.create.mock.calls[0][0];
+      expect(auditArgs.data.action).toBe(
+        "league.commissioner-edit:update_identity",
+      );
+    });
+  });
+
+  describe("E13/A6 — addPlayerSkill avec données d'accès", () => {
+    function mockAccess(primary: string | null, secondary: string | null) {
+      mockPrisma.position.findFirst.mockResolvedValue({
+        primarySkills: primary,
+        secondarySkills: secondary,
+      });
+    }
+
+    it("rejette une compétence hors pool primaire+secondaire", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "",
+        name: "X",
+        position: "skaven_lineman",
+        advancements: "[]",
+        team: { roster: "skaven", ruleset: "season_3" },
+      });
+      mockAccess("G", "A");
+      // "claw" = Mutation (M) → hors pool G/A.
+      mockPrisma.skill.findFirst.mockResolvedValue({ category: "Mutation" });
+      await expect(
+        addPlayerSkill({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          skill: "claw",
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "skill_not_accessible" });
+    });
+
+    it("A6 — enregistre un avancement et incrémente la VE (+20k primaire)", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "",
+        name: "X",
+        position: "skaven_lineman",
+        advancements: "[]",
+        team: { roster: "skaven", ruleset: "season_3" },
+      });
+      mockAccess("G", "A");
+      mockPrisma.skill.findFirst.mockResolvedValue({ category: "General" });
+      let updatedPlayerData: Record<string, unknown> | null = null;
+      mockPrisma.teamPlayer.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => {
+          updatedPlayerData = a.data;
+          return { id: "P1", ...a.data };
+        },
+      );
+      await addPlayerSkill({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        skill: "block",
+        pickKind: "random",
+        byCommissionerId: commish,
+      });
+      // Avancement random-primary enregistré + VE +20k (comme une choisie, A6).
+      const advs = JSON.parse(
+        (updatedPlayerData as unknown as { advancements: string })
+          .advancements,
+      );
+      expect(advs).toHaveLength(1);
+      expect(advs[0]).toMatchObject({
+        skillSlug: "block",
+        type: "random-primary",
+        isRandom: true,
+      });
+      expect(mockPrisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { currentValue: { increment: 20000 } },
+        }),
+      );
+    });
+
+    it("compétence secondaire → +40k", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "",
+        name: "X",
+        position: "skaven_lineman",
+        advancements: "[]",
+        team: { roster: "skaven", ruleset: "season_3" },
+      });
+      mockAccess("G", "A");
+      mockPrisma.skill.findFirst.mockResolvedValue({ category: "Agility" });
+      mockPrisma.teamPlayer.update.mockResolvedValue({ id: "P1" });
+      await addPlayerSkill({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        skill: "dodge",
+        byCommissionerId: commish,
+      });
+      expect(mockPrisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { currentValue: { increment: 40000 } },
+        }),
+      );
+    });
+  });
+
+  describe("E15 — removePlayerSkill et compétences innées", () => {
+    it("refuse de supprimer une compétence innée du poste", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "dodge,block",
+        position: "skaven_gutter_runner",
+        advancements: "[]",
+        team: { roster: "skaven", ruleset: "season_3" },
+      });
+      mockPrisma.position.findFirst.mockResolvedValue({
+        skills: [{ skill: { slug: "dodge" } }],
+      });
+      await expect(
+        removePlayerSkill({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          skill: "dodge",
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "innate_skill" });
+    });
+
+    it("reverse l'avancement correspondant et décrémente la VE", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "dodge,block",
+        position: "skaven_gutter_runner",
+        advancements: JSON.stringify([
+          { skillSlug: "block", type: "secondary", isRandom: false, at: 1 },
+        ]),
+        team: { roster: "skaven", ruleset: "season_3" },
+      });
+      mockPrisma.position.findFirst.mockResolvedValue({
+        skills: [{ skill: { slug: "dodge" } }],
+      });
+      mockPrisma.teamPlayer.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "P1",
+          ...a.data,
+        }),
+      );
+      const out = await removePlayerSkill({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        skill: "block",
+        byCommissionerId: commish,
+      });
+      expect((out as { skills: string }).skills).toBe("dodge");
+      expect(
+        JSON.parse((out as { advancements: string }).advancements),
+      ).toEqual([]);
+      expect(mockPrisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { currentValue: { decrement: 40000 } },
+        }),
+      );
+    });
+  });
+
+  describe("E14 — adjustCharacteristic par valeur cible", () => {
+    it("applique une valeur absolue", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        ma: 7,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 8,
+      });
+      mockPrisma.teamPlayer.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "P1",
+          ...a.data,
+        }),
+      );
+      const out = await adjustCharacteristic({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        characteristic: "ST",
+        value: 4,
+        byCommissionerId: commish,
+      });
+      expect((out as { st: number }).st).toBe(4);
+    });
+
+    it("rejette delta ET value simultanés", async () => {
+      await expect(
+        adjustCharacteristic({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          characteristic: "ST",
+          delta: 1,
+          value: 4,
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "invalid_value" });
     });
   });
 

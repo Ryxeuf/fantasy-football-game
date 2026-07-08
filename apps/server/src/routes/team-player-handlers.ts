@@ -381,3 +381,70 @@ export async function handleListAvailablePositions(
     sendError(res, 'Erreur serveur', 500);
   }
 }
+
+/**
+ * E12 — PATCH /team/:id/players/:playerId/identity
+ *
+ * Edition cosmetique (nom + numero) par le COACH proprietaire, autorisee
+ * meme quand l'equipe est engagee : renommer/renumeroter un joueur n'a
+ * aucun impact anti-triche (composition/budget inchanges), donc PAS de
+ * garde `isTeamRosterFrozen` ici — contrairement au PUT /roster.
+ */
+export async function handleUpdatePlayerIdentity(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const teamId = req.params.id;
+  const playerId = req.params.playerId;
+  const body = req.body as { name?: string; number?: number };
+
+  try {
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      select: { id: true },
+    });
+    if (!team) {
+      sendError(res, 'Equipe introuvable', 404);
+      return;
+    }
+
+    const player = await prisma.teamPlayer.findFirst({
+      where: { id: playerId, teamId, firedAt: null },
+      select: { id: true, number: true },
+    });
+    if (!player) {
+      sendError(res, 'Joueur introuvable', 404);
+      return;
+    }
+
+    const name = body.name?.trim();
+    const number = body.number;
+    if (number !== undefined && number !== player.number) {
+      const taken = await prisma.teamPlayer.count({
+        where: {
+          teamId,
+          number,
+          firedAt: null,
+          id: { not: playerId },
+        },
+      });
+      if (taken > 0) {
+        sendError(res, `Le numero ${number} est deja pris dans cette equipe`, 409);
+        return;
+      }
+    }
+
+    const updated = await prisma.teamPlayer.update({
+      where: { id: playerId },
+      data: {
+        ...(name !== undefined && name.length > 0 ? { name } : {}),
+        ...(number !== undefined ? { number } : {}),
+      },
+      select: { id: true, name: true, number: true },
+    });
+    sendSuccess(res, { player: updated });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de la mise a jour de l'identite du joueur:", e);
+    sendError(res, 'Erreur serveur', 500);
+  }
+}
