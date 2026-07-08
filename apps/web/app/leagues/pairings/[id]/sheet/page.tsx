@@ -43,25 +43,37 @@ type EventKind =
 const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
   { value: "kickoff", label: "Coup d'envoi" },
   { value: "touchdown", label: "Touchdown" },
-  { value: "casualty", label: "Blessure" },
+  { value: "casualty", label: "Élimination sur Blocage" },
   { value: "pass_complete", label: "Passe réussie" },
   { value: "interception", label: "Interception" },
   { value: "aggression", label: "Agression" },
   { value: "expulsion", label: "Expulsion" },
-  { value: "crowd_surge", label: "Sortie (foule)" },
+  { value: "crowd_surge", label: "Sortie (Public)" },
   { value: "stalling", label: "Temporisation" },
   { value: "team_throw", label: "Lancer de coéquipier" },
   { value: "other_elim", label: "Autre élimination" },
 ];
 
+// A58 — libellés officiels du livre de règles (les valeurs internes
+// badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté API).
 const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
   { value: "", label: "—" },
-  { value: "badly_hurt", label: "Sonné" },
-  { value: "mng", label: "Manque le prochain match" },
-  { value: "niggling", label: "Séquelle" },
-  { value: "stat_loss", label: "Perte de caractéristique" },
+  { value: "badly_hurt", label: "Commotion" },
+  { value: "mng", label: "Amoché" },
+  { value: "niggling", label: "Blessure Sérieuse" },
+  { value: "stat_loss", label: "Séquelle" },
   { value: "dead", label: "Mort" },
 ];
+
+// A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
+// les tables de libellés FR ci-dessus.
+function injurySeverityLabel(value: string): string {
+  return INJURY_SEVERITIES.find((s) => s.value === value)?.label ?? value;
+}
+
+function eventCauseLabel(value: string): string {
+  return EVENT_KINDS.find((k) => k.value === value)?.label ?? value;
+}
 
 interface MatchEvent {
   id: string;
@@ -820,7 +832,9 @@ export default function MatchSheetPage() {
                               ev.targetPlayerId,
                             )}`
                           : ""}
-                        {ev.injurySeverity ? ` [${ev.injurySeverity}]` : ""}
+                        {ev.injurySeverity
+                          ? ` [${injurySeverityLabel(ev.injurySeverity)}]`
+                          : ""}
                       </span>
                       {canEdit && (
                         <button
@@ -850,8 +864,8 @@ export default function MatchSheetPage() {
                     inj.side === "home" ? home : away,
                     inj.playerId,
                   )}{" "}
-                  — {inj.severity}
-                  {inj.cause ? ` (${inj.cause})` : ""}
+                  — {injurySeverityLabel(inj.severity)}
+                  {inj.cause ? ` (${eventCauseLabel(inj.cause)})` : ""}
                 </li>
               ))}
             </ul>
