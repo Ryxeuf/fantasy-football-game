@@ -1,3 +1,35 @@
+## [1.213.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.212.1...v1.213.0) (2026-07-08)
+
+
+### ✨ Features
+
+* **advancement:** catégories visibles en bleu, non accessibles grisées (E2, E6) ([fad89ee](https://github.com/Ryxeuf/fantasy-football-game/commit/fad89ee5603dc295f22d3ed73fefaadccc0a0cdf))
+* **builder:** empilement de 2 compétences par joueur au build custom (E10) ([84057a9](https://github.com/Ryxeuf/fantasy-football-game/commit/84057a9c4aac4b946742f91ff0e4f5e7540445e8))
+* **league-sheet:** choix de l'évènement de coup d'envoi (A56) ([e2bad38](https://github.com/Ryxeuf/fantasy-football-game/commit/e2bad38951f59956f54b63caf6200a09ff4f5ee3))
+* **league-sheet:** roster « version du match » consultable (E11) ([b6b6cdd](https://github.com/Ryxeuf/fantasy-football-game/commit/b6b6cdd8ecbffc1f8a0af8bd80809f3157311b9e))
+* **league:** édition joueur commissaire + coach (A64, E12, E13, E14, E15, A6) ([1f5c792](https://github.com/Ryxeuf/fantasy-football-game/commit/1f5c792abd447c1fc3a3f2361950bd3d6fcb9c35))
+* **league:** règles spéciales + type de ligue sur la fiche roster (A11) ([c8e9955](https://github.com/Ryxeuf/fantasy-football-game/commit/c8e9955bd83e0a1a70d38d52a840e17154ced7bb))
+* **skills:** badge Actif/Passif sur les pages compétences (E8) ([a9f8f5b](https://github.com/Ryxeuf/fantasy-football-game/commit/a9f8f5b354cc7b3c7cfdf46e707f35c4f18e79b8))
+
+
+### 🐛 Bug Fixes
+
+* **inducements:** catalogue officiel des coups de pouce S2025 (A53) ([171845c](https://github.com/Ryxeuf/fantasy-football-game/commit/171845c5b878ce35047ea11e480ee8655390a9b0))
+* **league-sheet:** budget coups de pouce de l'underdog (A55) ([e2baf4c](https://github.com/Ryxeuf/fantasy-football-game/commit/e2baf4ca660f3e47a4cc47acba66df4d3e0952ac))
+* **league-sheet:** chaîne blessures complète FDM (A59, A61, A62, A67, A68) ([fd9a1cd](https://github.com/Ryxeuf/fantasy-football-game/commit/fd9a1cdf1662fd455fa6d9751d6ba471f5a4dec8))
+* **league-sheet:** formule officielle des gains auto (A63) ([d8b003e](https://github.com/Ryxeuf/fantasy-football-game/commit/d8b003ebf703feb1482e50eff44088e71900a068))
+* **league-sheet:** libellés officiels FR des évènements et blessures (A57, A58, A60) ([9c6125f](https://github.com/Ryxeuf/fantasy-football-game/commit/9c6125f69a149408f5ffff47098d3db32f1ed1e4))
+* **league-stats:** crash « Statistiques par équipe » (A66) ([fab749f](https://github.com/Ryxeuf/fantasy-football-game/commit/fab749f13866b7c9203e7d4cc9b53491aceebe2a))
+* **league-stats:** noms d'affichage poste/équipe sans underscore (E16) ([3398bb7](https://github.com/Ryxeuf/fantasy-football-game/commit/3398bb74d8f59e515424066907f2353027c4dc4f))
+* **league:** abréviations de caractéristiques en français M/F/AG/CP/AR (A65) ([5a2618c](https://github.com/Ryxeuf/fantasy-football-game/commit/5a2618c417a720fa07a4fdedca19f94d519e86de))
+* **league:** la saisie manuelle du calendrier respecte les poules (A54) ([7ff8c2f](https://github.com/Ryxeuf/fantasy-football-game/commit/7ff8c2f08a5147e04e342358f4fa9c724141d8ff))
+* **team:** typage z.infer du body identity (garde no-raw-body-cast) ([fb558d9](https://github.com/Ryxeuf/fantasy-football-game/commit/fb558d9f58bf98309afa96283bf91d22c6bfef07))
+
+
+### 📝 Documentation
+
+* **openspec:** change fix-qa-log-2026-07 (corrections log QA testeur) ([53d07ab](https://github.com/Ryxeuf/fantasy-football-game/commit/53d07ab2d9cf05d19619f9853b0899da72e190d7))
+
 ## [1.212.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.212.0...v1.212.1) (2026-07-02)
 
 
