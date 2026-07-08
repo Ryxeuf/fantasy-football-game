@@ -88,6 +88,27 @@ describe("Lot G — summarizeMatchSheet", () => {
     });
   });
 
+  it("A62 — other_elim sans cible : victime = acteur, rien d'infligé", () => {
+    const events: MatchEventInput[] = [
+      {
+        kind: "other_elim",
+        team: "home",
+        actorPlayerId: "h7",
+        injurySeverity: "mng",
+      },
+    ];
+    const out = summarizeMatchSheet(events);
+    expect(out.injuries).toEqual([
+      { playerId: "h7", severity: "mng", side: "home", cause: "other_elim" },
+    ]);
+    // Auto-élimination : aucun compteur d'élimination infligée (ni équipe
+    // ni joueur — donc pas de SPP indus).
+    expect(out.casualtiesHome).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+    const h7 = out.playerStats.find((p) => p.playerId === "h7");
+    expect(h7?.casualtiesInflicted ?? 0).toBe(0);
+  });
+
   it("aggression increments aggressions and casualty when injured", () => {
     const events: MatchEventInput[] = [
       { kind: "aggression", team: "away", actorPlayerId: "a3" },

@@ -31,7 +31,26 @@ export const addEventSchema = z.object({
   /** Tour de l'evenement (1..16). Fusionne dans meta.turn. */
   turn: z.number().int().min(1).max(16).optional().nullable(),
   meta: z.record(z.string(), z.unknown()).optional().nullable(),
-});
+})
+  // A67/A68 — une Sequelle (stat_loss) sans caracteristique visee etait
+  // silencieusement droppee a l'application sur le roster. On refuse
+  // l'event a la saisie plutot que de perdre la blessure.
+  .superRefine((v, ctx) => {
+    if (v.injurySeverity !== "stat_loss") return;
+    const rawStat =
+      v.meta && typeof v.meta === "object"
+        ? (v.meta as Record<string, unknown>).stat
+        : undefined;
+    const stat = typeof rawStat === "string" ? rawStat.toLowerCase() : "";
+    if (!["ma", "st", "ag", "pa", "av"].includes(stat)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["meta", "stat"],
+        message:
+          "Une Séquelle (stat_loss) requiert la caractéristique affectée (meta.stat parmi ma/st/ag/pa/av)",
+      });
+    }
+  });
 export type AddEventBody = z.infer<typeof addEventSchema>;
 
 export const preMatchSchema = z

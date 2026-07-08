@@ -65,10 +65,46 @@ const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
   { value: "dead", label: "Mort" },
 ];
 
+// A62 — seuls ces types d'évènement portent une cible (joueur adverse
+// touché). Pour les autres (TD, passe, interception, lancer de
+// coéquipier, expulsion, temporisation, autre élimination), le champ
+// Cible est masqué.
+const TARGET_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
+  "casualty",
+  "aggression",
+  "crowd_surge",
+]);
+
+// A59/A61 — types pouvant porter une blessure : élimination sur blocage,
+// agression, sortie public, autre élimination.
+const INJURY_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
+  "casualty",
+  "aggression",
+  "crowd_surge",
+  "other_elim",
+]);
+
+// A68 — caractéristique affectée par une Séquelle (stat_loss). Codes
+// internes ma/st/ag/pa/av, abréviations FR affichées.
+const INJURY_STAT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "ma", label: "M (Mouvement)" },
+  { value: "st", label: "F (Force)" },
+  { value: "ag", label: "AG (Agilité)" },
+  { value: "pa", label: "CP (Capacité de Passe)" },
+  { value: "av", label: "AR (Armure)" },
+];
+
 // A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
 // les tables de libellés FR ci-dessus.
 function injurySeverityLabel(value: string): string {
   return INJURY_SEVERITIES.find((s) => s.value === value)?.label ?? value;
+}
+
+function injuryStatLabel(value: string): string {
+  return (
+    INJURY_STAT_OPTIONS.find((s) => s.value === value)?.label.split(" ")[0] ??
+    value
+  );
 }
 
 function eventCauseLabel(value: string): string {
@@ -83,7 +119,7 @@ interface MatchEvent {
   targetPlayerId: string | null;
   causeDetail: string | null;
   injurySeverity: string | null;
-  meta?: { half?: number; turn?: number } | null;
+  meta?: { half?: number; turn?: number; stat?: string } | null;
 }
 
 /**
@@ -294,6 +330,8 @@ export default function MatchSheetPage() {
   const [actorPlayerId, setActorPlayerId] = useState("");
   const [targetPlayerId, setTargetPlayerId] = useState("");
   const [injurySeverity, setInjurySeverity] = useState("");
+  // A68 — caractéristique affectée quand la gravité est « Séquelle ».
+  const [injuryStat, setInjuryStat] = useState("");
   const [eventHalf, setEventHalf] = useState<1 | 2>(1);
   const [eventTurn, setEventTurn] = useState<string>("");
 
@@ -354,16 +392,27 @@ export default function MatchSheetPage() {
           kind,
           team,
           actorPlayerId: actorPlayerId || undefined,
-          targetPlayerId: targetPlayerId || undefined,
-          injurySeverity: injurySeverity || undefined,
+          // A62 — pas de cible pour les évènements qui n'en portent pas.
+          targetPlayerId: TARGET_BEARING_KINDS.has(kind)
+            ? targetPlayerId || undefined
+            : undefined,
+          injurySeverity: INJURY_BEARING_KINDS.has(kind)
+            ? injurySeverity || undefined
+            : undefined,
           half: eventHalf,
           turn: eventTurn ? Number(eventTurn) : undefined,
+          // A68 — la Séquelle porte la caractéristique affectée.
+          meta:
+            injurySeverity === "stat_loss" && injuryStat
+              ? { stat: injuryStat }
+              : undefined,
         }),
       }),
     ).then(() => {
       setActorPlayerId("");
       setTargetPlayerId("");
       setInjurySeverity("");
+      setInjuryStat("");
     });
 
   const removeEvent = (eventId: string) =>
@@ -700,7 +749,16 @@ export default function MatchSheetPage() {
                 Type
                 <select
                   value={kind}
-                  onChange={(e) => setKind(e.target.value as EventKind)}
+                  onChange={(e) => {
+                    const next = e.target.value as EventKind;
+                    setKind(next);
+                    // A62 — purge les champs qui ne s'appliquent plus.
+                    if (!TARGET_BEARING_KINDS.has(next)) setTargetPlayerId("");
+                    if (!INJURY_BEARING_KINDS.has(next)) {
+                      setInjurySeverity("");
+                      setInjuryStat("");
+                    }
+                  }}
                   data-testid="event-kind"
                   className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                 >
@@ -727,7 +785,7 @@ export default function MatchSheetPage() {
                 </select>
               </label>
               <label className="text-xs">
-                Acteur
+                {kind === "other_elim" ? "Joueur éliminé" : "Acteur"}
                 <PlayerSelect
                   team={eventTeam}
                   value={actorPlayerId}
@@ -735,21 +793,31 @@ export default function MatchSheetPage() {
                   testId="event-actor"
                 />
               </label>
-              <label className="text-xs">
-                Cible (équipe adverse)
-                <PlayerSelect
-                  team={team === "home" ? away : home}
-                  value={targetPlayerId}
-                  onChange={setTargetPlayerId}
-                  testId="event-target"
-                />
-              </label>
-              {(kind === "casualty" || kind === "other_elim") && (
+              {/* A62 — cible uniquement pour les évènements qui en portent une. */}
+              {TARGET_BEARING_KINDS.has(kind) && (
+                <label className="text-xs">
+                  {kind === "crowd_surge"
+                    ? "Joueur sorti (équipe adverse)"
+                    : "Cible (équipe adverse)"}
+                  <PlayerSelect
+                    team={team === "home" ? away : home}
+                    value={targetPlayerId}
+                    onChange={setTargetPlayerId}
+                    testId="event-target"
+                  />
+                </label>
+              )}
+              {/* A59/A61 — blessure saisissable aussi sur Sortie Public et Agression. */}
+              {INJURY_BEARING_KINDS.has(kind) && (
                 <label className="text-xs">
                   Gravité de la blessure
                   <select
                     value={injurySeverity}
-                    onChange={(e) => setInjurySeverity(e.target.value)}
+                    onChange={(e) => {
+                      setInjurySeverity(e.target.value);
+                      if (e.target.value !== "stat_loss") setInjuryStat("");
+                    }}
+                    data-testid="event-injury-severity"
                     className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                   >
                     {INJURY_SEVERITIES.map((s) => (
@@ -760,12 +828,34 @@ export default function MatchSheetPage() {
                   </select>
                 </label>
               )}
+              {/* A68 — Séquelle : choisir la caractéristique affectée. */}
+              {INJURY_BEARING_KINDS.has(kind) &&
+                injurySeverity === "stat_loss" && (
+                  <label className="text-xs">
+                    Caractéristique affectée
+                    <select
+                      value={injuryStat}
+                      onChange={(e) => setInjuryStat(e.target.value)}
+                      data-testid="event-injury-stat"
+                      className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                    >
+                      <option value="">—</option>
+                      {INJURY_STAT_OPTIONS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
             </div>
             <button
               type="button"
               className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
               onClick={addEvent}
-              disabled={busy}
+              disabled={
+                busy || (injurySeverity === "stat_loss" && !injuryStat)
+              }
               data-testid="add-event"
             >
               Ajouter l&apos;évènement
@@ -833,7 +923,12 @@ export default function MatchSheetPage() {
                             )}`
                           : ""}
                         {ev.injurySeverity
-                          ? ` [${injurySeverityLabel(ev.injurySeverity)}]`
+                          ? ` [${injurySeverityLabel(ev.injurySeverity)}${
+                              ev.injurySeverity === "stat_loss" &&
+                              ev.meta?.stat
+                                ? ` ${injuryStatLabel(ev.meta.stat)}`
+                                : ""
+                            }]`
                           : ""}
                       </span>
                       {canEdit && (

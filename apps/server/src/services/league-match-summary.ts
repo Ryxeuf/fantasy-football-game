@@ -173,23 +173,29 @@ export function summarizeMatchSheet(
           ensureStat(ev.actorPlayerId, team).aggressions += 1;
         }
         if (CASUALTY_BEARING.has(ev.kind) && severity) {
-          // L'acteur inflige une casualty (sauf crowd_surge : la foule
-          // n'a pas d'acteur ; on credite l'equipe via `team` = celle
-          // qui beneficie, mais pas de stat joueur).
-          if (team === "home") casualtiesHome += 1;
-          else if (team === "away") casualtiesAway += 1;
-          if (
-            ev.actorPlayerId &&
-            team &&
-            ev.kind !== "crowd_surge"
-          ) {
-            ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+          // A62 — other_elim est une auto-elimination (esquive ratee,
+          // chute…) saisie SANS cible : la victime est l'acteur, dans sa
+          // propre equipe. Personne n'« inflige » cette sortie : pas de
+          // compteur equipe ni de casualtiesInflicted (donc pas de SPP).
+          if (ev.kind !== "other_elim") {
+            // L'acteur inflige une casualty (sauf crowd_surge : la foule
+            // n'a pas d'acteur ; on credite l'equipe via `team` = celle
+            // qui beneficie, mais pas de stat joueur).
+            if (team === "home") casualtiesHome += 1;
+            else if (team === "away") casualtiesAway += 1;
+            if (ev.actorPlayerId && team && ev.kind !== "crowd_surge") {
+              ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+            }
           }
           // Le joueur blesse est dans l'equipe opposee a `team`
-          // (l'auteur). Pour other_elim (esquive ratee, etc.) la
-          // victime EST dans `team` (auto-elimination) : on gere via
-          // un flag `causeDetail` self-cause.
-          if (ev.targetPlayerId) {
+          // (l'auteur), sauf auto-elimination (victime dans `team`).
+          // Retro-compat : les anciens events other_elim portaient la
+          // victime en targetPlayerId.
+          const victimId =
+            ev.kind === "other_elim"
+              ? (ev.actorPlayerId ?? ev.targetPlayerId)
+              : ev.targetPlayerId;
+          if (victimId) {
             const isSelfCause =
               ev.kind === "other_elim" || ev.causeDetail === "self";
             const side = team
@@ -198,7 +204,7 @@ export function summarizeMatchSheet(
                 : opposite(team)
               : "home";
             injuries.push({
-              playerId: ev.targetPlayerId,
+              playerId: victimId,
               severity,
               side,
               cause: ev.causeDetail ?? ev.kind,

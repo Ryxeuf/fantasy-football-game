@@ -693,9 +693,12 @@ export function buildOfflineInputFromSummary(
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
   for (const inj of summary.injuries) {
+    // A62 — la victime d'un other_elim est portee par actorPlayerId
+    // (auto-elimination sans cible) : on matche acteur OU cible.
     const src = eventsForMeta.find(
       (e) =>
-        e.targetPlayerId === inj.playerId &&
+        (e.targetPlayerId === inj.playerId ||
+          e.actorPlayerId === inj.playerId) &&
         (e.injurySeverity as string | null) === inj.severity,
     );
     const metaStat =

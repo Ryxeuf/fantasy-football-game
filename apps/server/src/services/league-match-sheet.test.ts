@@ -1163,6 +1163,50 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.injuries).toEqual([{ teamPlayerId: "a5", type: "st" }]);
     });
 
+    it("A62/A68 — stat_loss d'un other_elim (victime = acteur) matche via actorPlayerId", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          { playerId: "h7", severity: "stat_loss", side: "home", cause: "other_elim" },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        { motmPlayerIds: [] },
+        [
+          {
+            kind: "other_elim",
+            team: "home",
+            actorPlayerId: "h7",
+            injurySeverity: "stat_loss",
+            meta: { stat: "av" },
+          },
+        ],
+      );
+      expect(out.injuries).toEqual([{ teamPlayerId: "h7", type: "av" }]);
+    });
+
+    it("A59/A61 — blessures sur crowd_surge et aggression appliquées au roster", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          { playerId: "a9", severity: "mng", side: "away", cause: "crowd_surge" },
+          { playerId: "h2", severity: "niggling", side: "home", cause: "aggression" },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        { motmPlayerIds: [] },
+        [],
+      );
+      expect(out.injuries).toEqual([
+        { teamPlayerId: "a9", type: "mng" },
+        { teamPlayerId: "h2", type: "niggling" },
+      ]);
+    });
+
     it("skips stat_loss when no specific stat is provided", () => {
       const summary: MatchSummary = {
         ...baseSummary,
