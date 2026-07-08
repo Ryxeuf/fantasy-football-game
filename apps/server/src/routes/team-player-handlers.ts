@@ -27,6 +27,7 @@
  */
 
 import type { Response } from 'express';
+import type { UpdatePlayerIdentityBody } from '../schemas/team.schemas';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
@@ -396,7 +397,7 @@ export async function handleUpdatePlayerIdentity(
 ): Promise<void> {
   const teamId = req.params.id;
   const playerId = req.params.playerId;
-  const body = req.body as { name?: string; number?: number };
+  const body: UpdatePlayerIdentityBody = req.body;
 
   try {
     const team = await prisma.team.findFirst({

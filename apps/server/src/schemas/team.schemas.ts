@@ -165,3 +165,6 @@ export const updatePlayerIdentitySchema = z
     (v) => v.name !== undefined || v.number !== undefined,
     "Fournir un nom et/ou un numéro",
   );
+export type UpdatePlayerIdentityBody = z.infer<
+  typeof updatePlayerIdentitySchema
+>;
