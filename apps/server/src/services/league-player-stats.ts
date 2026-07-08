@@ -28,12 +28,35 @@
  */
 
 import { prisma } from "../prisma";
+import { TEAM_ROSTERS } from "@bb/game-engine";
 import {
   calculateAggregateSPP,
   rosterToModifier,
   type TeamSPPModifier,
 } from "./spp-tracking";
 import { parseStringArrayJson } from "./pro-player-career-stats";
+
+// E16 — les classements affichent des noms lisibles, jamais les slugs
+// techniques (ex: "gnome_belluaire_gnome"). Fallback : slug sans underscores.
+function humanizeSlug(slug: string): string {
+  return slug.replace(/_/g, " ");
+}
+
+function rosterDisplayName(roster: string): string {
+  const def = (TEAM_ROSTERS as Record<string, { name?: string }>)[roster];
+  return def?.name ?? humanizeSlug(roster);
+}
+
+function positionDisplayName(roster: string, position: string): string {
+  const def = (
+    TEAM_ROSTERS as Record<
+      string,
+      { positions?: ReadonlyArray<{ slug: string; displayName: string }> }
+    >
+  )[roster];
+  const found = def?.positions?.find((p) => p.slug === position);
+  return found?.displayName ?? humanizeSlug(position);
+}
 
 export type PlayerStatCategory =
   | "topScorers"
@@ -120,10 +143,10 @@ function toRow(p: PlayerSelected, value: number, rank: number): PlayerStatRow {
     rank,
     playerId: p.id,
     playerName: p.name,
-    position: p.position,
+    position: positionDisplayName(p.team.roster, p.position),
     teamId: p.team.id,
     teamName: p.team.name,
-    teamRoster: p.team.roster,
+    teamRoster: rosterDisplayName(p.team.roster),
     ownerId: p.team.owner.id,
     ownerCoachName: p.team.owner.coachName ?? null,
     value,

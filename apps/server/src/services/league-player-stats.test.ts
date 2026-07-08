@@ -27,6 +27,7 @@ const mockPrisma = prisma as any;
 function player(overrides: Partial<{
   id: string;
   name: string;
+  position: string;
   totalTouchdowns: number;
   totalCasualties: number;
   totalCompletions: number;
@@ -42,7 +43,7 @@ function player(overrides: Partial<{
   return {
     id: overrides.id ?? "p1",
     name: overrides.name ?? "Player",
-    position: "Lineman",
+    position: overrides.position ?? "Lineman",
     spp: overrides.spp ?? 0,
     totalTouchdowns: overrides.totalTouchdowns ?? 0,
     totalCasualties: overrides.totalCasualties ?? 0,
@@ -97,6 +98,34 @@ describe("Lot J — league-player-stats", () => {
       ]);
       expect(out.topScorers[0].rank).toBe(1);
       expect(out.topScorers[0].value).toBe(12);
+    });
+
+    it("E16 — maps position/roster slugs to display names (no underscores)", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "team-1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({
+          id: "p1",
+          totalTouchdowns: 3,
+          position: "skaven_rat_des_clans_skaven",
+          roster: "skaven",
+        }),
+        player({
+          id: "p2",
+          totalTouchdowns: 1,
+          position: "unknown_position_slug",
+          roster: "unknown_roster",
+        }),
+      ]);
+      const out = await computeLeaderboards({ seasonId: "s1" });
+      const p1 = out.topScorers.find((r) => r.playerId === "p1");
+      const p2 = out.topScorers.find((r) => r.playerId === "p2");
+      expect(p1?.position).toBe("Rat des clans Skaven");
+      expect(p1?.teamRoster).toBe("Skavens");
+      // Fallback : jamais d'underscores affichés, même slug inconnu.
+      expect(p2?.position).toBe("unknown position slug");
+      expect(p2?.teamRoster).toBe("unknown roster");
     });
 
     it("includes secondary stats (matchesPlayed + spp)", async () => {
