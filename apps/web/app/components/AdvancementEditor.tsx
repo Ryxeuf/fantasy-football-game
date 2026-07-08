@@ -168,6 +168,23 @@ function chipClass(active: boolean, disabled = false): string {
   return `${base} border-gray-300 bg-white text-nuffle-anthracite hover:border-nuffle-gold hover:text-nuffle-bronze`;
 }
 
+/**
+ * E2/E6 — chip de catégorie de compétence : TOUTES les catégories sont
+ * affichées ; celles autorisées par le type d'avancement sont en BLEU et
+ * cliquables, les autres grisées et non sélectionnables.
+ */
+function categoryChipClass(active: boolean, accessible: boolean): string {
+  const base =
+    "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition select-none";
+  if (!accessible) {
+    return `${base} cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300`;
+  }
+  if (active) {
+    return `${base} border-blue-600 bg-blue-600 text-white shadow-sm`;
+  }
+  return `${base} border-blue-400 bg-blue-50 text-blue-700 hover:bg-blue-100`;
+}
+
 export interface AdvancementEditorProps {
   readonly teamId: string;
   /** Libellé quand aucun joueur n'est en attente. */
@@ -278,6 +295,8 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const [rolling, setRolling] = useState(false);
   // Recherche dans le picker de compétence (primary/secondary).
   const [skillSearch, setSkillSearch] = useState("");
+  // E2 — filtre de catégorie (picker primary/secondary). "" = toutes.
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   // Compétence survolée/focus pour prévisualiser sa description avant de choisir.
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   // Toggle « fiche du joueur » (caractéristiques + compétences actuelles).
@@ -321,6 +340,15 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
   const hasAccess =
     item.primarySkills != null || item.secondarySkills != null;
 
+  // E2/E6 — catégories accessibles pour le type d'avancement choisi.
+  const accessPool = useMemo(
+    () =>
+      parseAccess(
+        type === "secondary" ? item.secondarySkills : item.primarySkills,
+      ),
+    [type, item.primarySkills, item.secondarySkills],
+  );
+
   const eligibleSkills = useMemo(() => {
     if (!hasAccess || catalog.length === 0) return [];
     const isPrimary = type === "primary" || type === "random-primary";
@@ -354,12 +382,14 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       if (list) list.push(s);
       else groups.set(code, [s]);
     }
-    return CATEGORY_ORDER.filter((c) => groups.has(c)).map((c) => ({
-      code: c,
-      label: CATEGORY_LABELS[c],
-      skills: groups.get(c) as SkillCatalogItem[],
-    }));
-  }, [filteredSkills]);
+    return CATEGORY_ORDER.filter((c) => groups.has(c))
+      .filter((c) => !categoryFilter || c === categoryFilter)
+      .map((c) => ({
+        code: c,
+        label: CATEGORY_LABELS[c],
+        skills: groups.get(c) as SkillCatalogItem[],
+      }));
+  }, [filteredSkills, categoryFilter]);
 
   // Description à prévisualiser : survol prioritaire, sinon sélection courante.
   const previewDesc = useMemo(() => {
@@ -589,7 +619,10 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
                   key={tm.value}
                   type="button"
                   data-testid={`level-up-type-${tm.value}-${item.teamPlayerId}`}
-                  onClick={() => setType(tm.value)}
+                  onClick={() => {
+                    setType(tm.value);
+                    setCategoryFilter("");
+                  }}
                   aria-pressed={active}
                   title={afford ? undefined : `${c} PSP requis`}
                   className={`${chipClass(active)}${afford ? "" : " opacity-50"}`}
@@ -619,19 +652,33 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
                     Aucune catégorie principale pour ce joueur.
                   </div>
                 ) : (
+                  // E2/E6 — toutes les catégories affichées : accessibles en
+                  // bleu, les autres grisées non sélectionnables.
                   <div className="flex flex-wrap gap-1.5">
-                    {primaryCategories.map((code) => (
-                      <button
-                        key={code}
-                        type="button"
-                        data-testid={`level-up-category-${code}-${item.teamPlayerId}`}
-                        onClick={() => setCategory(code)}
-                        aria-pressed={category === code}
-                        className={chipClass(category === code)}
-                      >
-                        {CATEGORY_LABELS[code]}
-                      </button>
-                    ))}
+                    {CATEGORY_ORDER.map((code) => {
+                      const accessible = primaryCategories.includes(code);
+                      return (
+                        <button
+                          key={code}
+                          type="button"
+                          data-testid={`level-up-category-${code}-${item.teamPlayerId}`}
+                          onClick={() => accessible && setCategory(code)}
+                          disabled={!accessible}
+                          aria-pressed={category === code}
+                          title={
+                            accessible
+                              ? undefined
+                              : "Non accessible en Principale pour ce joueur"
+                          }
+                          className={categoryChipClass(
+                            category === code,
+                            accessible,
+                          )}
+                        >
+                          {CATEGORY_LABELS[code]}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 {category ? (
@@ -745,6 +792,42 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
               </div>
             ) : hasAccess ? (
               <div className="flex flex-col gap-1.5">
+                {/* E2/E6 — catégories : autorisées en bleu (filtre),
+                    non autorisées grisées non sélectionnables. */}
+                <div
+                  className="flex flex-wrap gap-1.5"
+                  role="group"
+                  aria-label="Catégories de compétences"
+                >
+                  {CATEGORY_ORDER.map((code) => {
+                    const accessible = accessPool.has(code);
+                    const active = categoryFilter === code;
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        data-testid={`level-up-cat-${code}-${item.teamPlayerId}`}
+                        onClick={() =>
+                          accessible && setCategoryFilter(active ? "" : code)
+                        }
+                        disabled={!accessible}
+                        aria-pressed={active}
+                        title={
+                          accessible
+                            ? undefined
+                            : `Non accessible en ${
+                                type === "secondary"
+                                  ? "Secondaire"
+                                  : "Principale"
+                              } pour ce joueur`
+                        }
+                        className={categoryChipClass(active, accessible)}
+                      >
+                        {CATEGORY_LABELS[code]}
+                      </button>
+                    );
+                  })}
+                </div>
                 <input
                   value={skillSearch}
                   onChange={(e) => setSkillSearch(e.target.value)}

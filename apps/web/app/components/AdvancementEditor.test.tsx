@@ -231,15 +231,86 @@ describe("AdvancementEditor", () => {
     await screen.findByText("Coach Cat");
     fireEvent.click(await screen.findByTestId("level-up-type-primary-cat1"));
 
-    // Les compétences sont groupées sous leurs entêtes de catégorie.
+    // Les compétences sont groupées sous leurs entêtes de catégorie
+    // (le libellé apparaît aussi dans les chips E2 → getAllByText).
     await screen.findByTestId("level-up-skill-dodge-cat1");
-    expect(screen.getByText("Agilité")).toBeTruthy();
-    expect(screen.getByText("Générales")).toBeTruthy();
+    expect(screen.getAllByText("Agilité").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Générales").length).toBeGreaterThan(0);
 
     // Survol d'une compétence -> sa description s'affiche avant tout choix.
     fireEvent.mouseEnter(screen.getByTestId("level-up-skill-dodge-cat1"));
     const desc = await screen.findByTestId("level-up-skill-desc-cat1");
     expect(desc.textContent).toContain("Esquive un joueur adverse");
+  });
+
+  it("E2/E6 — catégories autorisées en bleu, autres grisées non sélectionnables", async () => {
+    // Cas du log QA : une lineman Amazon a Général (G) en Principale.
+    const PENDING_AMAZON = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "ama1",
+          playerName: "Amazon Lineman",
+          primarySkills: "G",
+          secondarySkills: "A,S",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements"))
+        return Promise.resolve(PENDING_AMAZON);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "block", nameFr: "Blocage", category: "General" },
+            { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+          ],
+        });
+      return Promise.resolve({});
+    });
+    setup();
+    await screen.findByText("Amazon Lineman");
+    fireEvent.click(await screen.findByTestId("level-up-type-primary-ama1"));
+    await screen.findByTestId("level-up-skill-block-ama1");
+
+    // Générale accessible (cliquable), Agilité grisée/désactivée en Primaire.
+    const gChip = screen.getByTestId("level-up-cat-G-ama1");
+    const aChip = screen.getByTestId("level-up-cat-A-ama1");
+    expect((gChip as HTMLButtonElement).disabled).toBe(false);
+    expect(gChip.className).toContain("blue");
+    expect((aChip as HTMLButtonElement).disabled).toBe(true);
+
+    // En Secondaire, l'accès s'inverse : A accessible, G grisée.
+    fireEvent.click(screen.getByTestId("level-up-type-secondary-ama1"));
+    await waitFor(() => {
+      expect(
+        (screen.getByTestId("level-up-cat-A-ama1") as HTMLButtonElement)
+          .disabled,
+      ).toBe(false);
+      expect(
+        (screen.getByTestId("level-up-cat-G-ama1") as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+    });
+
+    // Le tirage au hasard (random-primary) affiche aussi TOUTES les
+    // catégories, seules les principales étant cliquables.
+    fireEvent.click(
+      screen.getByTestId("level-up-type-random-primary-ama1"),
+    );
+    await waitFor(() => {
+      expect(
+        (screen.getByTestId("level-up-category-G-ama1") as HTMLButtonElement)
+          .disabled,
+      ).toBe(false);
+      expect(
+        (screen.getByTestId("level-up-category-A-ama1") as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+    });
   });
 
   it("affiche la fiche (caractéristiques + compétences) via le toggle", async () => {
