@@ -443,8 +443,15 @@ export function PreMatchPanel({
   const [indA, setIndA] = useState<Inducement[]>(initial.inducementsAway);
   const [busy, setBusy] = useState(false);
 
-  const winningsH = (Number(popH) || 0) * WINNINGS_PER_POPULARITY;
-  const winningsA = (Number(popA) || 0) * WINNINGS_PER_POPULARITY;
+  // A63 — formule officielle : chaque équipe reçoit la moyenne des deux
+  // facteurs de popularité × 10k ; les +10k/TD s'ajoutent en cours de
+  // match (gains auto recalculés côté serveur).
+  const sharedWinnings = Math.floor(
+    (((Number(popH) || 0) + (Number(popA) || 0)) * WINNINGS_PER_POPULARITY) /
+      2,
+  );
+  const winningsH = sharedWinnings;
+  const winningsA = sharedWinnings;
 
   const tables = reference.weatherTables;
   const selectedTable = findWeatherTable(tables, weatherTable);
@@ -606,7 +613,8 @@ export function PreMatchPanel({
                 className="mt-1 block w-24 rounded border px-2 py-2 text-sm"
               />
               <span className="mt-0.5 block text-[11px] text-slate-500">
-                Gains auto : {c.winnings.toLocaleString("fr-FR")} po
+                Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000
+                po par TD marqué)
               </span>
             </label>
             <InducementEditor

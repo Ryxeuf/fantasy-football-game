@@ -257,19 +257,37 @@ export function isMatchEventKind(v: unknown): v is MatchEventKind {
 /**
  * Polish — Gold gagne par point de "facteur de popularite" (BB : le
  * resultat du jet de gains / affluence saisi en avant-match). 1 point
- * = 10 000 po. Heuristique configurable ici ; le commissaire peut
- * toujours overrider la valeur calculee sur la feuille.
+ * = 10 000 po. Le commissaire peut toujours overrider la valeur
+ * calculee sur la feuille.
  */
 export const WINNINGS_PER_POPULARITY = 10_000;
 
+function clampPopularity(v: number | null | undefined): number {
+  if (typeof v !== "number" || !Number.isFinite(v)) return 0;
+  return Math.max(0, Math.floor(v));
+}
+
 /**
- * Calcule le gain de tresorerie auto a partir du facteur de
- * popularite (clampe >= 0). Pur. `null`/undefined -> 0.
+ * A63 — Gains officiels BB pour CHAQUE equipe :
+ *   (facteur pop domicile + facteur pop exterieur) × 10k / 2
+ *   + 10k par TD marque par l'equipe.
+ * Exemple du livre : pop 3 et 2, score 2-1 -> 45 000 / 35 000. Pur.
  */
-export function computeWinnings(popularity: number | null | undefined): number {
-  if (typeof popularity !== "number" || !Number.isFinite(popularity)) {
-    return 0;
-  }
-  return Math.max(0, Math.floor(popularity)) * WINNINGS_PER_POPULARITY;
+export function computeMatchWinnings(input: {
+  popularityHome: number | null | undefined;
+  popularityAway: number | null | undefined;
+  scoreHome: number;
+  scoreAway: number;
+}): { home: number; away: number } {
+  const shared = Math.floor(
+    ((clampPopularity(input.popularityHome) +
+      clampPopularity(input.popularityAway)) *
+      WINNINGS_PER_POPULARITY) /
+      2,
+  );
+  return {
+    home: shared + Math.max(0, input.scoreHome) * WINNINGS_PER_POPULARITY,
+    away: shared + Math.max(0, input.scoreAway) * WINNINGS_PER_POPULARITY,
+  };
 }
 

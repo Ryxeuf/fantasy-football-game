@@ -22,7 +22,7 @@ import { prisma } from "../prisma";
 import {
   summarizeMatchSheet,
   isMatchEventKind,
-  computeWinnings,
+  computeMatchWinnings,
   type MatchEventInput,
   type MatchSummary,
   type InjurySeverity,
@@ -340,15 +340,34 @@ export async function updatePreMatch(input: {
   if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
   if (p.weather !== undefined) data.weather = p.weather;
   if (p.forfeitSide !== undefined) data.forfeitSide = p.forfeitSide;
-  if (p.popularityHome !== undefined) {
-    data.popularityHome = p.popularityHome;
-    // Polish — auto-calcul du gain de tresorerie depuis le facteur de
-    // popularite (override manuel possible cote post-match).
-    data.winningsHome = computeWinnings(p.popularityHome);
-  }
-  if (p.popularityAway !== undefined) {
-    data.popularityAway = p.popularityAway;
-    data.winningsAway = computeWinnings(p.popularityAway);
+  if (p.popularityHome !== undefined) data.popularityHome = p.popularityHome;
+  if (p.popularityAway !== undefined) data.popularityAway = p.popularityAway;
+  // A63 — gains auto : (pop dom + pop ext) × 10k / 2 + 10k par TD de
+  // l'equipe. La popularite change ici, les TD via les events : on
+  // recalcule les deux gains avec l'etat courant (override manuel
+  // toujours possible cote post-match).
+  if (p.popularityHome !== undefined || p.popularityAway !== undefined) {
+    const events = ((await prisma.leagueMatchEvent.findMany({
+      where: { matchSheetId: sheet.id },
+      orderBy: { occurredAt: "asc" },
+    })) ?? []) as MatchEventInput[];
+    const summary = summarizeMatchSheet(events);
+    const winnings = computeMatchWinnings({
+      popularityHome:
+        p.popularityHome !== undefined
+          ? p.popularityHome
+          : ((sheet as { popularityHome?: number | null }).popularityHome ??
+            null),
+      popularityAway:
+        p.popularityAway !== undefined
+          ? p.popularityAway
+          : ((sheet as { popularityAway?: number | null }).popularityAway ??
+            null),
+      scoreHome: summary.scoreHome,
+      scoreAway: summary.scoreAway,
+    });
+    data.winningsHome = winnings.home;
+    data.winningsAway = winnings.away;
   }
   if (p.inducementsHome !== undefined) data.inducementsHome = p.inducementsHome ?? undefined;
   if (p.inducementsAway !== undefined) data.inducementsAway = p.inducementsAway ?? undefined;
@@ -861,11 +880,29 @@ export async function validateByCommissioner(input: {
   const teamsForBudget = await loadSheetTeams(input.pairingId);
   const { budget } = buildMatchSheetReference(teamsForBudget);
 
+  // A63 — les gains auto dependent du score final (10k/TD) : on les
+  // recalcule a la validation avec le summary derive des events, plutot
+  // que de faire confiance a la valeur stockee au pre-match.
+  const sheetPop = sheet as {
+    popularityHome?: number | null;
+    popularityAway?: number | null;
+  };
+  const autoWinnings = computeMatchWinnings({
+    popularityHome: sheetPop.popularityHome ?? null,
+    popularityAway: sheetPop.popularityAway ?? null,
+    scoreHome: summary.scoreHome,
+    scoreAway: summary.scoreAway,
+  });
+
   // Applique les effets (peut throw -> on ne valide pas).
   const offlineInput = buildOfflineInputFromSummary(
     input.pairingId,
     summary,
-    sheet as {
+    {
+      ...(sheet as Record<string, unknown>),
+      winningsHome: autoWinnings.home,
+      winningsAway: autoWinnings.away,
+    } as {
       motmPlayerIds?: unknown;
       winningsHome?: number | null;
       winningsAway?: number | null;
@@ -1615,8 +1652,25 @@ export async function getMatchSheet(input: {
     input.pairingId,
   );
 
+  // A63 — expose des gains auto toujours frais : la partie TD depend des
+  // events, qui peuvent changer apres le pre-match (valeur stockee stale).
+  const sheetPopularity = sheet as {
+    popularityHome?: number | null;
+    popularityAway?: number | null;
+  };
+  const autoWinnings = computeMatchWinnings({
+    popularityHome: sheetPopularity.popularityHome ?? null,
+    popularityAway: sheetPopularity.popularityAway ?? null,
+    scoreHome: summary.scoreHome,
+    scoreAway: summary.scoreAway,
+  });
+
   return {
-    sheet,
+    sheet: {
+      ...(sheet as Record<string, unknown>),
+      winningsHome: autoWinnings.home,
+      winningsAway: autoWinnings.away,
+    } as typeof sheet,
     summary,
     teams,
     reference: buildMatchSheetReference(teams, allowedInducements),

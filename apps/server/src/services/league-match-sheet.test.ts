@@ -673,24 +673,31 @@ describe("Lot G — league-match-sheet", () => {
     });
   });
 
-  // Polish — pre-match auto-calcule les winnings depuis la popularite.
+  // A63 — pre-match auto-calcule les winnings : moyenne des deux
+  // popularites × 10k + 10k par TD (events).
   describe("updatePreMatch (auto winnings)", () => {
-    it("computes winningsHome/Away from popularity", async () => {
+    it("computes winningsHome/Away = (popH+popA)*10k/2 + 10k/TD", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
         status: "draft",
       });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "touchdown", team: "home", actorPlayerId: "h1" },
+        { kind: "touchdown", team: "home", actorPlayerId: "h1" },
+        { kind: "touchdown", team: "away", actorPlayerId: "a1" },
+      ]);
       mockPrisma.leagueMatchSheet.update.mockImplementation(
         async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
       );
       await updatePreMatch({
         pairingId: "pair-1",
         userId: HOME,
-        payload: { popularityHome: 4, popularityAway: 2 },
+        payload: { popularityHome: 3, popularityAway: 2 },
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
-      expect(data.winningsHome).toBe(40_000);
-      expect(data.winningsAway).toBe(20_000);
+      // Exemple du log QA : (3+2)*10000/2 + TD*10000 -> 45k / 35k.
+      expect(data.winningsHome).toBe(45_000);
+      expect(data.winningsAway).toBe(35_000);
     });
   });
 

@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   summarizeMatchSheet,
   isMatchEventKind,
-  computeWinnings,
+  computeMatchWinnings,
   WINNINGS_PER_POPULARITY,
   MATCH_EVENT_KINDS,
   type MatchEventInput,
@@ -258,19 +258,51 @@ describe("Lot G — isMatchEventKind / MATCH_EVENT_KINDS", () => {
   });
 });
 
-describe("Polish — computeWinnings", () => {
-  it("multiplies popularity by 10k", () => {
-    expect(computeWinnings(0)).toBe(0);
-    expect(computeWinnings(3)).toBe(3 * WINNINGS_PER_POPULARITY);
-    expect(computeWinnings(6)).toBe(60_000);
+describe("A63 — computeMatchWinnings", () => {
+  it("exemple du log QA : pop 3 et 2, score 2-1 -> 45k / 35k", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 3,
+      popularityAway: 2,
+      scoreHome: 2,
+      scoreAway: 1,
+    });
+    expect(w).toEqual({ home: 45_000, away: 35_000 });
   });
-  it("clamps negatives to 0 and floors decimals", () => {
-    expect(computeWinnings(-5)).toBe(0);
-    expect(computeWinnings(2.9)).toBe(20_000);
+  it("partage la somme des popularités, TD par équipe", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 4,
+      popularityAway: 0,
+      scoreHome: 0,
+      scoreAway: 3,
+    });
+    expect(w).toEqual({
+      home: 2 * WINNINGS_PER_POPULARITY,
+      away: 2 * WINNINGS_PER_POPULARITY + 3 * WINNINGS_PER_POPULARITY,
+    });
   });
-  it("returns 0 for null/undefined/NaN", () => {
-    expect(computeWinnings(null)).toBe(0);
-    expect(computeWinnings(undefined)).toBe(0);
-    expect(computeWinnings(NaN)).toBe(0);
+  it("clampe négatifs/null/NaN à 0", () => {
+    const w = computeMatchWinnings({
+      popularityHome: -5,
+      popularityAway: null,
+      scoreHome: 0,
+      scoreAway: 0,
+    });
+    expect(w).toEqual({ home: 0, away: 0 });
+    const w2 = computeMatchWinnings({
+      popularityHome: NaN,
+      popularityAway: undefined,
+      scoreHome: 1,
+      scoreAway: 0,
+    });
+    expect(w2).toEqual({ home: 10_000, away: 0 });
+  });
+  it("somme impaire de popularités : division entière", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 2,
+      popularityAway: 1,
+      scoreHome: 0,
+      scoreAway: 0,
+    });
+    expect(w).toEqual({ home: 15_000, away: 15_000 });
   });
 });
