@@ -308,7 +308,26 @@ export async function updatePreMatch(input: {
   // calcule le budget une seule fois si une selection est presente.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
     const teams = await loadSheetTeams(input.pairingId);
-    const { budget } = buildMatchSheetReference(teams);
+    // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
+    // les deux sélections (payload prioritaire, sinon valeur déjà stockée).
+    const sheetInd = sheet as {
+      inducementsHome?: unknown;
+      inducementsAway?: unknown;
+    };
+    const spentHome = sumGold(
+      p.inducementsHome !== undefined
+        ? p.inducementsHome
+        : sheetInd.inducementsHome,
+    );
+    const spentAway = sumGold(
+      p.inducementsAway !== undefined
+        ? p.inducementsAway
+        : sheetInd.inducementsAway,
+    );
+    const { budget } = buildMatchSheetReference(teams, null, {
+      home: spentHome,
+      away: spentAway,
+    });
     // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
     // ligue. Les Star Players (slug "star_player") sont exemptés (ils
     // dépendent des rosters / règles régionales, pas de l'allowlist).
@@ -876,9 +895,17 @@ export async function validateByCommissioner(input: {
   }
 
   // Petty cash par equipe (regles BB) : sert a ne debiter la tresorerie que
-  // de l'excedent de coups de pouce au-dela du petty cash recu.
+  // de l'excedent de coups de pouce au-dela du petty cash recu. A55 — la
+  // cagnotte de l'underdog inclut la depense adverse.
   const teamsForBudget = await loadSheetTeams(input.pairingId);
-  const { budget } = buildMatchSheetReference(teamsForBudget);
+  const sheetIndForBudget = sheet as {
+    inducementsHome?: unknown;
+    inducementsAway?: unknown;
+  };
+  const { budget } = buildMatchSheetReference(teamsForBudget, null, {
+    home: sumGold(sheetIndForBudget.inducementsHome),
+    away: sumGold(sheetIndForBudget.inducementsAway),
+  });
 
   // A63 — les gains auto dependent du score final (10k/TD) : on les
   // recalcule a la validation avec le summary derive des events, plutot
@@ -1538,6 +1565,9 @@ export function buildMatchSheetReference(
   },
   // FR17 — coups de pouce autorisés par la ligue (null = tous).
   allowedInducements: string[] | null = null,
+  // A55 — dépenses de coups de pouce déjà engagées : la dépense de la plus
+  // forte équipe augmente d'autant la cagnotte de l'underdog.
+  spent: { home: number; away: number } = { home: 0, away: 0 },
 ): MatchSheetReference {
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
@@ -1549,9 +1579,12 @@ export function buildMatchSheetReference(
     ctvTeamB: awayCtv,
     treasuryTeamA: homeTreasury,
     treasuryTeamB: awayTreasury,
-    // FR14 — règle de ligue : l'équipe la plus faible peut investir 50 000 po
-    // supplémentaires en coups de pouce (au-delà de la différence de VEA).
+    // FR14/A55 — règle de ligue : l'équipe la plus faible peut investir
+    // jusqu'à 50 000 po de SA trésorerie (selon disponibilité) au-delà de la
+    // différence de VEA + des dépenses adverses.
     underdogBonus: LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
+    spentTeamA: spent.home,
+    spentTeamB: spent.away,
   });
 
   return {

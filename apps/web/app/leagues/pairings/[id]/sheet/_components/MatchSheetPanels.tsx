@@ -459,8 +459,18 @@ export function PreMatchPanel({
   const weatherResults = selectedTable?.results ?? [];
   const selectedWeather = weatherResults.find((r) => r.condition === weather);
 
-  const overHome = sumInducements(indH) > reference.budget.home.maxBudget;
-  const overAway = sumInducements(indA) > reference.budget.away.maxBudget;
+  // A55 — le budget de l'underdog (pettyCash > 0) augmente de la dépense
+  // adverse (règle officielle : la CTV de la plus forte inclut ses achats).
+  const spentH = sumInducements(indH);
+  const spentA = sumInducements(indA);
+  const effectiveMaxHome =
+    reference.budget.home.maxBudget +
+    (reference.budget.home.pettyCash > 0 ? spentA : 0);
+  const effectiveMaxAway =
+    reference.budget.away.maxBudget +
+    (reference.budget.away.pettyCash > 0 ? spentH : 0);
+  const overHome = spentH > effectiveMaxHome;
+  const overAway = spentA > effectiveMaxAway;
   const overBudget = overHome || overAway;
 
   const save = async () => {
@@ -491,7 +501,7 @@ export function PreMatchPanel({
       setInd: setIndH,
       catalogue: reference.inducements.home,
       stars: reference.starPlayers.home,
-      budget: reference.budget.home,
+      budget: { ...reference.budget.home, maxBudget: effectiveMaxHome },
     },
     {
       side: "away" as const,
@@ -503,7 +513,7 @@ export function PreMatchPanel({
       setInd: setIndA,
       catalogue: reference.inducements.away,
       stars: reference.starPlayers.away,
-      budget: reference.budget.away,
+      budget: { ...reference.budget.away, maxBudget: effectiveMaxAway },
     },
   ];
 

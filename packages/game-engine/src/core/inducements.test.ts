@@ -125,17 +125,48 @@ describe('Règle: Petty Cash', () => {
     expect(result.teamB.pettyCash).toBe(500_000);
   });
 
-  it('FR14 — ajoute le bonus underdog à l\'équipe la plus faible uniquement', () => {
+  it('A55 — le bonus underdog vient de la trésorerie, plafonné par sa disponibilité', () => {
+    // Exemple du log QA : 20k de trésorerie -> seulement +20k possibles
+    // au-delà de la différence de VEA.
     const result = calculatePettyCash({
       ctvTeamA: 1_000_000,
       ctvTeamB: 1_200_000,
-      treasuryTeamA: 0,
+      treasuryTeamA: 20_000,
       treasuryTeamB: 0,
       underdogBonus: 50_000,
     });
-    // A (CTV plus bas) reçoit diff (200k) + bonus (50k).
-    expect(result.teamA.pettyCash).toBe(250_000);
+    // A (CTV plus bas) : cagnotte gratuite = diff (200k), PAS de bonus
+    // gratuit ; budget = 200k + min(50k, 20k de trésorerie).
+    expect(result.teamA.pettyCash).toBe(200_000);
+    expect(result.teamA.maxBudget).toBe(220_000);
     expect(result.teamB.pettyCash).toBe(0);
+  });
+
+  it('A55 — trésorerie underdog abondante : extra plafonné à 50k', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_200_000,
+      treasuryTeamA: 300_000,
+      treasuryTeamB: 0,
+      underdogBonus: 50_000,
+    });
+    expect(result.teamA.maxBudget).toBe(250_000); // 200k diff + 50k max
+  });
+
+  it('A55 — la dépense de la plus forte équipe augmente la cagnotte de l\'underdog', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_200_000,
+      treasuryTeamA: 20_000,
+      treasuryTeamB: 100_000,
+      underdogBonus: 50_000,
+      spentTeamB: 80_000,
+    });
+    // A : diff 200k + dépense adverse 80k + min(50k, 20k) = 300k.
+    expect(result.teamA.pettyCash).toBe(280_000);
+    expect(result.teamA.maxBudget).toBe(300_000);
+    // B (favori) : dépense librement sa trésorerie.
+    expect(result.teamB.maxBudget).toBe(100_000);
   });
 
   it('FR14 — aucun bonus underdog en cas d\'égalité de CTV', () => {
@@ -148,6 +179,17 @@ describe('Règle: Petty Cash', () => {
     });
     expect(result.teamA.pettyCash).toBe(0);
     expect(result.teamB.pettyCash).toBe(0);
+  });
+
+  it('A55 — sans underdogBonus (jeu en ligne), trésorerie libre inchangée', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_200_000,
+      treasuryTeamA: 300_000,
+      treasuryTeamB: 30_000,
+    });
+    expect(result.teamA.maxBudget).toBe(500_000); // 200k diff + treasury libre
+    expect(result.teamB.maxBudget).toBe(30_000);
   });
 });
 

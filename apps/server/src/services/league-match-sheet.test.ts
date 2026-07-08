@@ -613,10 +613,11 @@ describe("Lot G — league-match-sheet", () => {
       expect(homeSlugs).not.toContain("igor");
       // Couleurs de roster exposees (hex).
       expect(out.reference.colors.home.primary).toMatch(/^#[0-9a-f]{6}$/);
-      // Budget : home a la CTV la plus basse -> petty cash = diff 150k +
-      // bonus underdog FR14 50k = 200k ; maxBudget = 200k + tresorerie 50k.
-      expect(out.reference.budget.home.pettyCash).toBe(200_000);
-      expect(out.reference.budget.home.maxBudget).toBe(250_000);
+      // Budget : home a la CTV la plus basse -> petty cash = diff 150k ;
+      // A55 : l'extra vient de la tresorerie, plafonne a min(50k, 50k
+      // dispo) -> maxBudget = 150k + 50k = 200k.
+      expect(out.reference.budget.home.pettyCash).toBe(150_000);
+      expect(out.reference.budget.home.maxBudget).toBe(200_000);
       expect(out.reference.budget.away.pettyCash).toBe(0);
     });
   });

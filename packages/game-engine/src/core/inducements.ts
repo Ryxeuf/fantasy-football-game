@@ -83,12 +83,22 @@ export interface PettyCashInput {
   treasuryTeamA: number;
   treasuryTeamB: number;
   /**
-   * FR14 — bonus fixe ajouté à la cagnotte de l'équipe la plus faible (CTV le
-   * plus bas) pour acheter des coups de pouce. Règle de ligue (ex: 50000).
-   * `0` = désactivé (défaut, jeu en ligne inchangé). Aucun bonus si égalité de
+   * FR14/A55 — plafond de trésorerie que l'équipe la plus faible (CTV le
+   * plus bas) peut investir en coups de pouce AU-DELÀ de la différence de
+   * CTV. Règle de ligue (ex: 50000) : l'extra vient de SA trésorerie,
+   * selon disponibilité (20k dispo -> +20k max). `0`/absent = désactivé
+   * (jeu en ligne inchangé : trésorerie libre). Aucun effet si égalité de
    * CTV.
    */
   underdogBonus?: number;
+  /**
+   * A55 — dépenses de coups de pouce déjà engagées par chaque équipe.
+   * En mode ligue (underdogBonus défini), la dépense de l'équipe la plus
+   * forte augmente d'autant la cagnotte de l'équipe la plus faible
+   * (règle officielle : la CTV de la plus forte inclut ses achats).
+   */
+  spentTeamA?: number;
+  spentTeamB?: number;
 }
 
 /** Résultat du calcul de petty cash */
@@ -203,19 +213,37 @@ export function getInducementDefinition(slug: InducementSlug): InducementDefinit
 export function calculatePettyCash(input: PettyCashInput): PettyCashResult {
   const diff = input.ctvTeamA - input.ctvTeamB;
   const bonus = input.underdogBonus ?? 0;
+  const leagueMode = bonus > 0;
+  const spentA = Math.max(0, input.spentTeamA ?? 0);
+  const spentB = Math.max(0, input.spentTeamB ?? 0);
 
-  // FR14 — le bonus underdog ne va qu'à l'équipe au CTV strictement le plus bas.
-  const pettyCashA = (diff < 0 ? Math.abs(diff) : 0) + (diff < 0 ? bonus : 0);
-  const pettyCashB = (diff > 0 ? diff : 0) + (diff > 0 ? bonus : 0);
+  // La cagnotte gratuite = différence de CTV (équipe au CTV strictement le
+  // plus bas). A55 — en mode ligue, la dépense de l'adversaire (plus fort)
+  // s'ajoute à la cagnotte de l'underdog.
+  const pettyCashA =
+    diff < 0 ? Math.abs(diff) + (leagueMode ? spentB : 0) : 0;
+  const pettyCashB = diff > 0 ? diff + (leagueMode ? spentA : 0) : 0;
+
+  // A55 — en mode ligue, l'underdog ne peut ajouter que min(bonus,
+  // trésorerie dispo) de SA trésorerie (le bonus n'est plus une cagnotte
+  // gratuite). L'équipe la plus forte dépense librement sa trésorerie.
+  const treasurySpendableA =
+    leagueMode && diff < 0
+      ? Math.min(bonus, input.treasuryTeamA)
+      : input.treasuryTeamA;
+  const treasurySpendableB =
+    leagueMode && diff > 0
+      ? Math.min(bonus, input.treasuryTeamB)
+      : input.treasuryTeamB;
 
   return {
     teamA: {
       pettyCash: pettyCashA,
-      maxBudget: pettyCashA + input.treasuryTeamA,
+      maxBudget: pettyCashA + treasurySpendableA,
     },
     teamB: {
       pettyCash: pettyCashB,
-      maxBudget: pettyCashB + input.treasuryTeamB,
+      maxBudget: pettyCashB + treasurySpendableB,
     },
   };
 }
