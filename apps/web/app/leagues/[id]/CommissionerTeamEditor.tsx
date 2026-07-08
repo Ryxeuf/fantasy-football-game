@@ -28,6 +28,16 @@ interface RosterResponse {
 
 const CHARS = ["MA", "ST", "AG", "PA", "AV"] as const;
 
+// A65 — abréviations FR affichées (M/F/AG/CP/AR). Les codes internes
+// MA/ST/AG/PA/AV restent inchangés côté API/DB.
+const CHAR_LABELS: Record<(typeof CHARS)[number], string> = {
+  MA: "M",
+  ST: "F",
+  AG: "AG",
+  PA: "CP",
+  AV: "AR",
+};
+
 interface Props {
   leagueId: string;
   teamId: string;
@@ -388,7 +398,7 @@ function PlayerEditRow({
           >
             {CHARS.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {CHAR_LABELS[c]}
               </option>
             ))}
           </select>
