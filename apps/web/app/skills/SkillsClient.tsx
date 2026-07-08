@@ -15,6 +15,8 @@ export interface Skill {
   description: string;
   descriptionEn?: string | null;
   category: string;
+  /** E8 — compétence/trait passif (soulignée dans le livre). */
+  isPassive?: boolean;
 }
 
 const RULESET_OPTIONS = [
@@ -310,6 +312,23 @@ export default function SkillsClient({
                             />
                           )}
                           {getSkillCategoryLabel(skill.category, language)}
+                        </span>
+                        {/* E8 — Actif / Passif */}
+                        <span
+                          className={`ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            skill.isPassive
+                              ? "bg-violet-100 text-violet-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
+                          data-testid={`skill-active-passive-${skill.slug}`}
+                        >
+                          {skill.isPassive
+                            ? language === "fr"
+                              ? "Passif"
+                              : "Passive"
+                            : language === "fr"
+                              ? "Actif"
+                              : "Active"}
                         </span>
                       </div>
                     </div>

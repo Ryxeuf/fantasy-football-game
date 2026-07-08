@@ -221,6 +221,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "disturbing-presence",
+    isPassive: true,
     nameFr: "Présence Perturbante",
     nameEn: "Disturbing Presence",
     description: "Quand un joueur adverse effectue soit une action de Passe, soit une action de Lancer d'Équipier, soit une action Spéciale de Lancer de Bombe, ou tente soit d'interférer avec une passe soit de réceptionner le ballon, il doit appliquer un modificateur de -1 au test pour chaque joueur de votre équipe ayant cette compétence qui se trouve à trois cases de lui.",
@@ -251,6 +252,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "iron-hard-skin",
+    isPassive: true,
     nameFr: "Peau de Fer",
     nameEn: "Iron Hard Skin",
     description: "La compétence Griffes ne peut pas être utilisée lors d'un jet d'Armure contre ce joueur. Les joueurs adverses ne peuvent pas modifier les jets d'Armure effectués contre ce joueur.",
@@ -337,6 +339,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "leader",
+    isPassive: true,
     nameFr: "Chef",
     nameEn: "Leader",
     description: "Une équipe qui a un ou plusieurs joueurs avec cette compétence gagne un seul relance d'équipe supplémentaire, appelé relance de Chef. Cependant, la relance de Chef ne peut être utilisée que s'il y a au moins un joueur avec cette compétence sur le terrain.",
@@ -473,6 +476,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "thick-skull",
+    isPassive: true,
     nameFr: "Crâne Épais",
     nameEn: "Thick Skull",
     description: "Quand ce joueur est Renversé, vous pouvez appliquer un modificateur de +1 au jet de Blessure effectué contre lui.",
@@ -497,6 +501,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "bone-head",
+    isPassive: true,
     nameFr: "Cerveau Lent*",
     nameEn: "Bone Head",
     description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
@@ -505,6 +510,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "really-stupid",
+    isPassive: true,
     nameFr: "Gros Débile*",
     nameEn: "Really Stupid",
     description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
@@ -513,6 +519,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "regeneration",
+    isPassive: true,
     nameFr: "Régénération",
     nameEn: "Regeneration",
     description: "Quand ce joueur est retiré du jeu à la suite d'un jet de Blessure, jetez un D6. Sur un résultat de 4+, ce joueur n'est pas retiré du jeu et peut revenir jouer plus tard dans le match. Faire le jet de D6 de régénération avant le jet d'élimination => le jet pour apothicaire se fait donc après.",
@@ -521,6 +528,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "right-stuff",
+    isPassive: true,
     nameFr: "Poids Plume*",
     nameEn: "Right Stuff",
     description: "Ce joueur peut être lancé par un coéquipier ayant la compétence Lancer d'Équipier.",
@@ -529,6 +537,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "stunty",
+    isPassive: true,
     nameFr: "Minus*",
     nameEn: "Stunty",
     description: "Lorsque ce joueur tente d'esquiver, il ne subit aucun modificateur négatif à son test d'agilité pour avoir été marqué par des joueurs adverses. De plus, ce joueur applique un modificateur de -1 au test d'agilité lorsqu'il tente d'intercepter le ballon. Un joueur doté de ce trait est plus sujet aux blessures. Ainsi, si un jet de blessure est effectué pour lui, lancez le dé sur la table des blessures de Minus à la place.",
@@ -544,6 +553,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "take-root",
+    isPassive: true,
     nameFr: "Prendre Racine*",
     nameEn: "Take Root",
     description: "Chaque fois qu'on active ce joueur, après avoir annoncé son action, s'il est Debout il doit jeter un D6. Sur 2+, il peut effectuer l'action annoncée normalement. Sur un 1, il ne peut effectuer aucune action et son activation se termine immédiatement.",
@@ -553,6 +563,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "titchy",
+    isPassive: true,
     nameFr: "Microbe*",
     nameEn: "Titchy",
     description: "Lorsque ce joueur tente d'esquiver, il applique un modificateur de +1 à son test d'agilité. De plus, il n'applique pas le modificateur de -1 pour « marquage » aux adversaires qui tentent d'esquiver pour sortir de sa zone de tacle.",
@@ -561,6 +572,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "loner-3",
+    isPassive: true,
     nameFr: "Solitaire (3+)*",
     nameEn: "Loner (3+)",
     description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 3+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
@@ -569,6 +581,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "loner-4",
+    isPassive: true,
     nameFr: "Solitaire (4+)*",
     nameEn: "Loner (4+)",
     description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 4+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
@@ -577,6 +590,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "loner-5",
+    isPassive: true,
     nameFr: "Solitaire (5+)*",
     nameEn: "Loner (5+)",
     description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 5+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
@@ -599,6 +613,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "always-hungry",
+    isPassive: true,
     nameFr: "Toujours Affamé*",
     nameEn: "Always Hungry",
     description: "Ce joueur doit effectuer un test lorsqu'il tente de lancer un coéquipier. Sur un résultat de 1, il essaie de manger le coéquipier à la place.",
@@ -607,6 +622,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "no-hands",
+    isPassive: true,
     nameFr: "Sans Ballon",
     nameEn: "No Hands",
     description: "Ce joueur ne peut ni ramasser, ni attraper, ni transporter le ballon.",
@@ -615,6 +631,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "secret-weapon",
+    isPassive: true,
     nameFr: "Arme Secrète*",
     nameEn: "Secret Weapon",
     description: "Ce joueur est expulsé après avoir effectué une action ou à la fin du tour.",
@@ -654,6 +671,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "decay",
+    isPassive: true,
     nameFr: "Décomposition*",
     nameEn: "Decay",
     description: "Ce joueur se décompose progressivement au cours du match.",
@@ -723,6 +741,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "timmm-ber",
+    isPassive: true,
     nameFr: "Timmm-ber!*",
     nameEn: "Timmm-ber!",
     description: "Si le joueur a une Allocation de Mouvement de 2 ou moins, appliquez un modificateur de +1 au jet de dé lorsqu'il tente de se relever pour chaque coéquipier Debout et en position ouverte actuellement adjacent à lui. Un 1 naturel est toujours un échec, peu importe le nombre de coéquipiers qui aident. Ce trait peut toujours être utilisé si le joueur est À Terre ou a perdu sa Zone de Tacle.",
@@ -737,6 +756,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "drunkard",
+    isPassive: true,
     nameFr: "Ivrogne*",
     nameEn: "Drunkard",
     description: "Ce joueur subit une pénalité de -1 au jet de dé lorsqu'il tente de Foncer.",
@@ -780,6 +800,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "really-stupid-2",
+    isPassive: true,
     nameFr: "Gros Débile (+2)*",
     nameEn: "Really Stupid (+2)",
     description: "Quand ce joueur est activé, même s'il est À Terre ou a perdu sa Zone de Tacle, jetez un D6 juste après avoir annoncé l'action qu'il va faire mais avant d'effectuer l'action, en appliquant un modificateur de +2 au jet si ce joueur est actuellement adjacent à un ou plusieurs coéquipiers Debout et n'ayant pas ce trait: Sur 1-3, ce joueur oublie ce qu'il était censé faire et son activation se termine immédiatement. De plus, il perd sa Zone de Tacle jusqu'à sa prochaine activation. Sur 4+, il continue normalement son activation et effectue l'action annoncée.",
@@ -787,6 +808,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "kick-team-mate",
+    isPassive: true,
     nameFr: "Botter de Coéquipier",
     nameEn: "Kick Team-mate",
     description: "Une fois par tour d'équipe, en plus d'un autre joueur effectuant soit une Passe soit une action de Lancer d'Équipier, un seul joueur avec ce trait sur l'équipe active peut effectuer une action Spéciale 'Kick Team-mate'.",
@@ -910,6 +932,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "hate",
+    isPassive: true,
     nameFr: "Haine (X)*",
     nameEn: "Hate (X)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
@@ -920,6 +943,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   {
     // A20 — variante paramétrée pour le Tueur de Trolls (Haine du Mot-clé Troll).
     slug: "hate-troll",
+    isPassive: true,
     nameFr: "Haine (Troll)",
     nameEn: "Hate (Troll)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-clé Troll, ce joueur peut relancer un résultat Attaquant Plaqué.",
@@ -929,6 +953,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "insignifiant",
+    isPassive: true,
     nameFr: "Insignifiant*",
     nameEn: "Insignificant",
     description: "Quand vous créez une Liste d'Équipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
@@ -938,6 +963,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "contagieux",
+    isPassive: true,
     nameFr: "Contagieux",
     nameEn: "Contagious",
     description: "Une fois par match, quand un joueur ayant ce Trait inflige une Élimination à un joueur adverse suite à une Action de Blocage et que celui-ci subit un résultat Mort sur son Jet d'Élimination, s'il n'est pas sauvé par un Apothicaire, vous pouvez immédiatement ajouter 1 nouveau joueur Trois-quart de votre Fiche d'Équipe à votre Box des Réserves (cela peut amener votre équipe à compter plus de 16 joueurs pour le restant du match). Pendant la Séquence d'Après Match, vous pouvez embaucher ce joueur comme un Joueur Journalier. Inutilisable contre les Gros Bras, ni contre un joueur ayant les Traits Décomposition, Régénération ou Minus.",
@@ -947,6 +973,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "instable",
+    isPassive: true,
     nameFr: "Instable*",
     nameEn: "Unstable",
     description: "Ce joueur ne peut pas déclarer d'Action de Sécurisation du Ballon.",
@@ -965,6 +992,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "my-ball",
+    isPassive: true,
     nameFr: "Mon Ballon*",
     nameEn: "My Ball",
     description: "Un joueur ayant ce Trait ne peut pas abandonner volontairement le ballon quand il en est en possession, et ne peut donc pas déclarer d'Actions de Passe ni de Transmission, ni utiliser la moindre Compétence ou Trait qui l'autoriserait à renoncer à la possession du ballon.",

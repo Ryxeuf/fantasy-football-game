@@ -176,6 +176,16 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
                 <span className="inline-flex items-center rounded-full border border-nuffle-gold/40 bg-nuffle-gold/10 px-3 py-0.5 text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-bronze">
                   {rulesetLabel}
                 </span>
+                {/* E8 — Actif / Passif */}
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-subtitle font-semibold uppercase tracking-wide ${
+                    skill.isPassive
+                      ? "border-violet-300 bg-violet-50 text-violet-800"
+                      : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                  }`}
+                >
+                  {skill.isPassive ? "Passif" : "Actif"}
+                </span>
               </div>
               <h1 className="mt-2 font-heading font-bold text-3xl sm:text-4xl text-nuffle-anthracite leading-tight">
                 {skill.nameFr}

@@ -23,6 +23,8 @@ interface SkillRow {
   description: string;
   descriptionEn: string;
   category: string;
+  /** E8 — compétence/trait passif (soulignée dans le livre). */
+  isPassive: boolean;
 }
 
 async function loadSkills(
@@ -43,6 +45,7 @@ async function loadSkills(
       description: true,
       descriptionEn: true,
       category: true,
+      isPassive: true,
     },
   });
   return { skills: skills as SkillRow[] };
@@ -77,6 +80,7 @@ router.get("/skills", async (req, res) => {
           description: true,
           descriptionEn: true,
           category: true,
+          isPassive: true,
         },
       });
       res.json({ skills });
