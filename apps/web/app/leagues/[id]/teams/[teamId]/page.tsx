@@ -5,6 +5,9 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../../../lib/api-client";
 import TeamLogo from "../../../../components/TeamLogo";
 import SkillTooltip from "../../../../me/teams/components/SkillTooltip";
+import SpecialRulesBadges, {
+  type SpecialRuleView,
+} from "../../../../components/SpecialRulesBadges";
 
 // Page roster d'un participant de la ligue (lecture seule). Accessible à
 // tout coach inscrit à la ligue via la route serveur
@@ -40,6 +43,10 @@ interface RosterTeam {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /** A11 — règles spéciales d'équipe (certaines impactent les PSP). */
+  specialRules?: SpecialRuleView[];
+  /** A11 — type de ligue (ligues régionales). */
+  regionalLeagues?: Array<{ slug: string; name: string }>;
 }
 
 interface RosterResponse {
@@ -163,6 +170,34 @@ export default function LeagueTeamRosterPage() {
             <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
               Fans dévoués : <strong>{data.team.dedicatedFans}</strong>
             </span>
+          </section>
+
+          {/* A11 — règles spéciales + type de ligue (impactent parfois les
+              PSP, ex. Bagarreurs Brutaux : TD 2 PSP / élimination 3 PSP). */}
+          <section
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+            data-testid="league-roster-special-rules"
+          >
+            <SpecialRulesBadges
+              rules={data.team.specialRules ?? []}
+              withLabel
+            />
+            {data.team.regionalLeagues &&
+            data.team.regionalLeagues.length > 0 ? (
+              <span className="inline-flex flex-wrap items-center gap-1">
+                <span className="mr-1 text-xs text-gray-500">
+                  Type de ligue :
+                </span>
+                {data.team.regionalLeagues.map((l) => (
+                  <span
+                    key={l.slug}
+                    className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-800 ring-1 ring-amber-200"
+                  >
+                    {l.name}
+                  </span>
+                ))}
+              </span>
+            ) : null}
           </section>
 
           {/* Roster */}

@@ -31,7 +31,11 @@ import {
   isLeagueParticipant,
   LeagueWithdrawError,
 } from "../services/league";
-import { getPositionBySlug, TEAM_ROSTERS } from "@bb/game-engine";
+import { getPositionBySlug, TEAM_ROSTERS, type Ruleset } from "@bb/game-engine";
+import {
+  resolveSpecialRules,
+  resolveRegionalLeagues,
+} from "./public-rosters";
 import {
   startSeason,
   regenerateSchedule,
@@ -1300,6 +1304,26 @@ export async function handleGetLeagueTeamRoster(
     const raceName =
       (TEAM_ROSTERS as Record<string, { name?: string }>)[out.team.roster]
         ?.name ?? out.team.roster;
+
+    // A11 — règles spéciales + type de ligue sur la fiche roster de ligue
+    // (certaines impactent les PSP, ex. Bagarreurs Brutaux). Résolution
+    // identique aux pages équipe publiques (public-rosters).
+    const ruleset = (out.team.ruleset ?? "season_3") as Ruleset;
+    const rosterRow = (await prisma.roster.findFirst({
+      where: { slug: out.team.roster, ruleset: ruleset as never },
+      select: { specialRules: true, regionalRules: true },
+    })) as { specialRules: unknown; regionalRules: unknown } | null;
+    const specialRules = resolveSpecialRules(
+      rosterRow?.specialRules ?? null,
+      false,
+    );
+    const regionalLeagues = resolveRegionalLeagues(
+      rosterRow?.regionalRules ?? null,
+      out.team.roster,
+      ruleset,
+      false,
+    );
+
     sendSuccess(res, {
       team: {
         ...out.team,
@@ -1312,6 +1336,8 @@ export async function handleGetLeagueTeamRoster(
         assistants: meta?.assistants ?? 0,
         apothecary: meta?.apothecary ?? false,
         dedicatedFans: meta?.dedicatedFans ?? 0,
+        specialRules,
+        regionalLeagues,
       },
       players,
     });
