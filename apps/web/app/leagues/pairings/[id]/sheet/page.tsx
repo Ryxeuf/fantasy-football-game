@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { AdvancementEditor } from "../../../../components/AdvancementEditor";
+import { KICKOFF_EVENTS } from "@bb/game-engine";
 import {
   PreMatchPanel,
   PostMatchPanel,
@@ -94,6 +95,18 @@ const INJURY_STAT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "av", label: "AR (Armure)" },
 ];
 
+// A56 — résultats de la table de coup d'envoi (2D6), source game-engine.
+const KICKOFF_EVENT_OPTIONS: ReadonlyArray<{ value: string; label: string }> =
+  Object.entries(KICKOFF_EVENTS).map(([roll, ev]) => ({
+    value: ev.id,
+    label: `${roll} — ${ev.nameFr}`,
+  }));
+
+function kickoffEventLabel(id: string): string {
+  const found = Object.values(KICKOFF_EVENTS).find((ev) => ev.id === id);
+  return found?.nameFr ?? id;
+}
+
 // A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
 // les tables de libellés FR ci-dessus.
 function injurySeverityLabel(value: string): string {
@@ -119,7 +132,12 @@ interface MatchEvent {
   targetPlayerId: string | null;
   causeDetail: string | null;
   injurySeverity: string | null;
-  meta?: { half?: number; turn?: number; stat?: string } | null;
+  meta?: {
+    half?: number;
+    turn?: number;
+    stat?: string;
+    kickoffEvent?: string;
+  } | null;
 }
 
 /**
@@ -332,6 +350,8 @@ export default function MatchSheetPage() {
   const [injurySeverity, setInjurySeverity] = useState("");
   // A68 — caractéristique affectée quand la gravité est « Séquelle ».
   const [injuryStat, setInjuryStat] = useState("");
+  // A56 — résultat de la table de coup d'envoi (événement kickoff).
+  const [kickoffEvent, setKickoffEvent] = useState("");
   const [eventHalf, setEventHalf] = useState<1 | 2>(1);
   const [eventTurn, setEventTurn] = useState<string>("");
 
@@ -402,10 +422,13 @@ export default function MatchSheetPage() {
           half: eventHalf,
           turn: eventTurn ? Number(eventTurn) : undefined,
           // A68 — la Séquelle porte la caractéristique affectée.
+          // A56 — le coup d'envoi porte le résultat de la table 2D6.
           meta:
             injurySeverity === "stat_loss" && injuryStat
               ? { stat: injuryStat }
-              : undefined,
+              : kind === "kickoff" && kickoffEvent
+                ? { kickoffEvent }
+                : undefined,
         }),
       }),
     ).then(() => {
@@ -413,6 +436,7 @@ export default function MatchSheetPage() {
       setTargetPlayerId("");
       setInjurySeverity("");
       setInjuryStat("");
+      setKickoffEvent("");
     });
 
   const removeEvent = (eventId: string) =>
@@ -807,6 +831,25 @@ export default function MatchSheetPage() {
                   />
                 </label>
               )}
+              {/* A56 — résultat de la table de coup d'envoi (2D6). */}
+              {kind === "kickoff" && (
+                <label className="text-xs">
+                  Évènement de coup d'envoi
+                  <select
+                    value={kickoffEvent}
+                    onChange={(e) => setKickoffEvent(e.target.value)}
+                    data-testid="event-kickoff-event"
+                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                  >
+                    <option value="">—</option>
+                    {KICKOFF_EVENT_OPTIONS.map((k) => (
+                      <option key={k.value} value={k.value}>
+                        {k.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {/* A59/A61 — blessure saisissable aussi sur Sortie Public et Agression. */}
               {INJURY_BEARING_KINDS.has(kind) && (
                 <label className="text-xs">
@@ -912,6 +955,10 @@ export default function MatchSheetPage() {
                           </span>
                         ) : null}
                         <strong>{kindLabel}</strong>
+                        {/* A56 — affiche le résultat du coup d'envoi. */}
+                        {ev.kind === "kickoff" && ev.meta?.kickoffEvent
+                          ? ` : ${kickoffEventLabel(ev.meta.kickoffEvent)}`
+                          : ""}
                         {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
                         {ev.actorPlayerId
                           ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
