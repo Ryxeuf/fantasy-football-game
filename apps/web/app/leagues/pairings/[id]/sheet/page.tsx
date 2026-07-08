@@ -107,6 +107,113 @@ function kickoffEventLabel(id: string): string {
   return found?.nameFr ?? id;
 }
 
+// ---------------------------------------------------------------------------
+// E11 — roster « version du match » (snapshot figé à la 1re soumission).
+// ---------------------------------------------------------------------------
+
+interface SnapshotPlayerView {
+  name: string;
+  position: string;
+  number: number;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number | null;
+  av: number;
+  skills: string;
+  spp: number;
+}
+
+/** Parse tolérant (JSON string PG/sqlite ou objet natif). */
+function parseRosterSnapshot(raw: unknown): {
+  capturedAt?: number;
+  players: SnapshotPlayerView[];
+} | null {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== "object") return null;
+  const players = (obj as { players?: unknown }).players;
+  if (!Array.isArray(players)) return null;
+  return {
+    capturedAt: (obj as { capturedAt?: number }).capturedAt,
+    players: players as SnapshotPlayerView[],
+  };
+}
+
+function SnapshotRosterSection({
+  label,
+  raw,
+}: {
+  label: string;
+  raw: unknown;
+}) {
+  const [open, setOpen] = useState(false);
+  const snapshot = useMemo(() => parseRosterSnapshot(raw), [raw]);
+  if (!snapshot) return null;
+  return (
+    <div className="rounded border border-slate-200">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        data-testid={`snapshot-roster-toggle-${label}`}
+        className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-semibold text-slate-700"
+      >
+        <span>
+          Roster de {label} — version du match
+          {snapshot.capturedAt
+            ? ` (figé le ${new Date(snapshot.capturedAt).toLocaleDateString("fr-FR")})`
+            : ""}
+        </span>
+        <span className="text-slate-400">{open ? "▲" : "▼"}</span>
+      </button>
+      {open ? (
+        <div className="overflow-x-auto px-2 pb-2">
+          <table className="w-full text-xs">
+            <thead className="text-left uppercase tracking-wide text-slate-400">
+              <tr>
+                <th className="px-1 py-1">N°</th>
+                <th className="px-1 py-1">Nom</th>
+                <th className="px-1 py-1">M</th>
+                <th className="px-1 py-1">F</th>
+                <th className="px-1 py-1">AG</th>
+                <th className="px-1 py-1">CP</th>
+                <th className="px-1 py-1">AR</th>
+                <th className="px-1 py-1">Compétences</th>
+                <th className="px-1 py-1">PSP</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[...snapshot.players]
+                .sort((a, b) => a.number - b.number)
+                .map((p) => (
+                  <tr key={`${p.number}-${p.name}`}>
+                    <td className="px-1 py-1 font-mono">{p.number}</td>
+                    <td className="px-1 py-1 font-medium">{p.name}</td>
+                    <td className="px-1 py-1 tabular-nums">{p.ma}</td>
+                    <td className="px-1 py-1 tabular-nums">{p.st}</td>
+                    <td className="px-1 py-1 tabular-nums">{p.ag}+</td>
+                    <td className="px-1 py-1 tabular-nums">
+                      {p.pa != null ? `${p.pa}+` : "—"}
+                    </td>
+                    <td className="px-1 py-1 tabular-nums">{p.av}+</td>
+                    <td className="px-1 py-1 text-slate-500">{p.skills}</td>
+                    <td className="px-1 py-1 tabular-nums">{p.spp}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
 // les tables de libellés FR ci-dessus.
 function injurySeverityLabel(value: string): string {
@@ -231,6 +338,9 @@ interface SheetResponse {
     purchasesHome?: unknown;
     purchasesAway?: unknown;
     firedPlayerIds?: unknown;
+    /** E11 — snapshots roster figés à la 1re soumission (JSON string). */
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
   };
   summary: Summary;
   viewerRole: "home" | "away" | "commissioner" | "none";
@@ -648,6 +758,21 @@ export default function MatchSheetPage() {
             {STATUS_LABELS[status] ?? status}
           </strong>
         </p>
+
+        {/* E11 — rosters « version du match » (figés à la 1re soumission),
+            consultables par chaque coach, y compris celui de l'adversaire. */}
+        {(data.sheet.rosterSnapshotHome || data.sheet.rosterSnapshotAway) && (
+          <div className="mt-3 space-y-1.5">
+            <SnapshotRosterSection
+              label={home?.name ?? "Domicile"}
+              raw={data.sheet.rosterSnapshotHome}
+            />
+            <SnapshotRosterSection
+              label={away?.name ?? "Extérieur"}
+              raw={data.sheet.rosterSnapshotAway}
+            />
+          </div>
+        )}
       </section>
 
       {error && (

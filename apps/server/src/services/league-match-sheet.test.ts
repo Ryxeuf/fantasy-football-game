@@ -36,6 +36,12 @@ vi.mock("./league-offline-edit", () => ({
 }));
 
 // Lot H — mock du push commissaire (fire-and-forget).
+// E11 — snapshot roster figé à la soumission (module mocké, testé à part).
+// NB : `vi.resetAllMocks()` efface l'implémentation → la re-poser dans le test.
+vi.mock("./cup-roster-snapshot", () => ({
+  captureRosterSnapshot: vi.fn(),
+}));
+
 vi.mock("./push-notifications", () => ({
   sendLeagueMatchValidationPush: vi.fn(),
 }));
@@ -61,6 +67,7 @@ import {
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
+import { captureRosterSnapshot } from "./cup-roster-snapshot";
 import type { MatchSummary } from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -323,6 +330,68 @@ describe("Lot G — league-match-sheet", () => {
           pairingId: "pair-1",
         }),
       );
+    });
+
+    it("E11 — fige les rosters des 2 équipes à la première soumission", async () => {
+      vi.mocked(captureRosterSnapshot).mockImplementation(
+        async (teamId: string) =>
+          ({ capturedAt: 1, roster: "human", players: [], teamId }) as never,
+      );
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        submittedByHomeAt: null,
+        submittedByAwayAt: null,
+        rosterSnapshotHome: null,
+        rosterSnapshotAway: null,
+      });
+      // loadSheetTeams : pairing (teamIds) + teams.
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", currentValue: 1, treasury: 0, players: [] },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", currentValue: 1, treasury: 0, players: [] },
+      ]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      await submitByCoach({ pairingId: "pair-1", userId: HOME });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(JSON.parse(data.rosterSnapshotHome as string)).toMatchObject({
+        teamId: "team-home",
+      });
+      expect(JSON.parse(data.rosterSnapshotAway as string)).toMatchObject({
+        teamId: "team-away",
+      });
+    });
+
+    it("E11 — ne re-capture pas si le snapshot existe déjà", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "submitted_home",
+        submittedByHomeAt: new Date(),
+        submittedByAwayAt: null,
+        rosterSnapshotHome: '{"players":[]}',
+        rosterSnapshotAway: '{"players":[]}',
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      // notifyCommissionerSheetReady re-lit le pairing.
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME, name: "R" } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY, name: "G" } },
+      });
+      await submitByCoach({ pairingId: "pair-1", userId: AWAY });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.rosterSnapshotHome).toBeUndefined();
+      expect(data.rosterSnapshotAway).toBeUndefined();
     });
 
     it("does not notify when only one coach submitted", async () => {

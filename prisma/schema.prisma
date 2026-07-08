@@ -1433,6 +1433,13 @@ model LeagueMatchSheet {
   /// la validation, reversibles a l'invalidation.
   firedPlayerIds         Json?
 
+  /// E11 — snapshot du roster de chaque equipe fige a la PREMIERE
+  /// soumission de la feuille (« version du match », consultable par
+  /// l'adversaire). String JSON d'un RosterSnapshot
+  /// (cf. cup-roster-snapshot.ts).
+  rosterSnapshotHome     Json?
+  rosterSnapshotAway     Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

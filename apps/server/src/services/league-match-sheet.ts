@@ -38,6 +38,7 @@ import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
+import { captureRosterSnapshot } from "./cup-roster-snapshot";
 import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
@@ -514,6 +515,32 @@ export async function submitByCoach(input: {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
 
+  // E11 — fige le roster des DEUX equipes a la premiere soumission
+  // (« version du match » consultable par l'adversaire). Best-effort :
+  // un echec de snapshot ne bloque pas la soumission.
+  const sheetSnap = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  };
+  let snapshotData: Record<string, unknown> = {};
+  if (!sheetSnap.rosterSnapshotHome || !sheetSnap.rosterSnapshotAway) {
+    try {
+      const teams = await loadSheetTeams(input.pairingId);
+      if (!sheetSnap.rosterSnapshotHome && teams.home?.teamId) {
+        const snap = await captureRosterSnapshot(teams.home.teamId);
+        if (snap) snapshotData.rosterSnapshotHome = JSON.stringify(snap);
+      }
+      if (!sheetSnap.rosterSnapshotAway && teams.away?.teamId) {
+        const snap = await captureRosterSnapshot(teams.away.teamId);
+        if (snap) snapshotData.rosterSnapshotAway = JSON.stringify(snap);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league-match-sheet] roster snapshot failed: ${msg}`);
+      snapshotData = {};
+    }
+  }
+
   const next = nextStatusOnSubmit(sheet.status, side);
   const updated = await prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -522,6 +549,7 @@ export async function submitByCoach(input: {
       ...(side === "home"
         ? { submittedByHomeAt: new Date() }
         : { submittedByAwayAt: new Date() }),
+      ...snapshotData,
     },
   });
 

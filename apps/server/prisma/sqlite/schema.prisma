@@ -1048,6 +1048,9 @@ model LeagueMatchSheet {
   purchasesHome          Json?
   purchasesAway          Json?
   firedPlayerIds         Json?
+  /// E11 — snapshots roster figes a la premiere soumission (JSON string).
+  rosterSnapshotHome     Json?
+  rosterSnapshotAway     Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
