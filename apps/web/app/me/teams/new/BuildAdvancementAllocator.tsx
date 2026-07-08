@@ -8,9 +8,10 @@
  * (positionSlug, ordinal) — le serveur crée les joueurs dans le même ordre puis
  * applique les advancements (cf. `applyCupBuildAdvancements`).
  *
- * MVP : une amélioration de compétence choisie (Principale/Secondaire) par
- * joueur, la compétence étant piochée dans le pool d'accès de la position. Le
- * coût est décompté du pool (barème BB, 1er palier). Le serveur re-valide tout.
+ * E10 : jusqu'à DEUX améliorations de compétence choisies (Principale/
+ * Secondaire) par joueur, piochées dans le pool d'accès de la position. Le
+ * coût suit le barème BB (1er puis 2e palier). Le serveur re-valide tout
+ * (coût croissant par avancement déjà pris).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -50,11 +51,19 @@ const CATEGORY_CODE: Record<string, string> = {
   "Scélérates": "K",
 };
 
-// Coût du 1er palier (barème BB2025), miroir de advancements.ts.
-const FIRST_TIER_COST: Record<BuildAdvancement["type"], number> = {
-  primary: 6,
-  secondary: 10,
+// E10 — 2 améliorations max par joueur au build.
+const MAX_ADVANCEMENTS_PER_PLAYER = 2;
+
+// Coûts des 2 premiers paliers (barème BB2025), miroir de advancements.ts :
+// le coût dépend du nombre d'avancements DÉJÀ pris par le joueur.
+const TIER_COSTS: Record<BuildAdvancement["type"], [number, number]> = {
+  primary: [6, 8],
+  secondary: [10, 12],
 };
+
+function costForSlot(type: BuildAdvancement["type"], slot: number): number {
+  return TIER_COSTS[type][Math.min(Math.max(slot, 0), 1)];
+}
 
 /** Parse un CSV d'accès ("G,S" / "GS", alias F→S) en Set de codes. */
 function parseAccessCsv(raw: string | null | undefined): Set<string> {
@@ -115,11 +124,24 @@ export default function BuildAdvancementAllocator({
     return list;
   }, [positions, counts]);
 
-  const spent = value.reduce((s, a) => s + FIRST_TIER_COST[a.type], 0);
-  const remaining = Math.max(0, pool - spent);
+  // E10 — avancements d'une instance, dans l'ordre (slot 0 puis 1).
+  const advsFor = (slug: string, ordinal: number): BuildAdvancement[] =>
+    value.filter((a) => a.positionSlug === slug && a.ordinal === ordinal);
 
-  const findAdv = (slug: string, ordinal: number) =>
-    value.find((a) => a.positionSlug === slug && a.ordinal === ordinal);
+  // Coût total : pour chaque instance, le 1er avancement coûte le palier 1,
+  // le 2e le palier 2 (le serveur applique le même barème croissant).
+  const spent = useMemo(() => {
+    let total = 0;
+    const seen = new Map<string, number>();
+    for (const a of value) {
+      const key = `${a.positionSlug}#${a.ordinal}`;
+      const slot = seen.get(key) ?? 0;
+      total += costForSlot(a.type, slot);
+      seen.set(key, slot + 1);
+    }
+    return total;
+  }, [value]);
+  const remaining = Math.max(0, pool - spent);
 
   const skillsForType = (
     pos: AllocatorPosition,
@@ -136,26 +158,43 @@ export default function BuildAdvancementAllocator({
     });
   };
 
-  const setAdv = (
+  /** Remplace les avancements d'une instance par la liste donnée. */
+  const setAdvs = (
     slug: string,
     ordinal: number,
-    patch: Partial<BuildAdvancement> | null,
+    advs: BuildAdvancement[],
   ) => {
     const others = value.filter(
       (a) => !(a.positionSlug === slug && a.ordinal === ordinal),
     );
+    onChange([...others, ...advs]);
+  };
+
+  const patchSlot = (
+    slug: string,
+    ordinal: number,
+    slot: number,
+    patch: Partial<BuildAdvancement> | null,
+  ) => {
+    const advs = advsFor(slug, ordinal);
     if (patch === null) {
-      onChange(others);
+      setAdvs(
+        slug,
+        ordinal,
+        advs.filter((_, i) => i !== slot),
+      );
       return;
     }
-    const existing = findAdv(slug, ordinal);
+    const existing = advs[slot];
     const next: BuildAdvancement = {
       positionSlug: slug,
       ordinal,
       type: patch.type ?? existing?.type ?? "primary",
       skillSlug: patch.skillSlug ?? existing?.skillSlug ?? "",
     };
-    onChange([...others, next]);
+    const copy = [...advs];
+    copy[slot] = next;
+    setAdvs(slug, ordinal, copy);
   };
 
   if (pool <= 0) return null;
@@ -174,6 +213,10 @@ export default function BuildAdvancementAllocator({
           {pool} PSP
         </div>
       </div>
+      <p className="text-xs text-amber-800/80">
+        Jusqu'à {MAX_ADVANCEMENTS_PER_PLAYER} compétences par joueur (coût
+        croissant : 2e amélioration au palier supérieur).
+      </p>
 
       {instances.length === 0 ? (
         <p className="text-xs text-gray-500">
@@ -182,61 +225,93 @@ export default function BuildAdvancementAllocator({
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto">
           {instances.map(({ position, ordinal }) => {
-            const adv = findAdv(position.slug, ordinal);
-            const type = adv?.type ?? "primary";
-            const options = skillsForType(position, type);
-            const cost = FIRST_TIER_COST[type];
-            const cannotAfford = !adv && cost > remaining;
+            const advs = advsFor(position.slug, ordinal);
+            // Lignes affichées : les avancements existants + une ligne vide
+            // s'il reste un slot (E10 : max 2).
+            const rowCount = Math.min(
+              advs.length + 1,
+              MAX_ADVANCEMENTS_PER_PLAYER,
+            );
             return (
               <div
                 key={`${position.slug}-${ordinal}`}
-                className="flex flex-wrap items-center gap-2 text-sm bg-white rounded border border-gray-200 px-2 py-1.5"
+                className="space-y-1 bg-white rounded border border-gray-200 px-2 py-1.5"
               >
-                <span className="min-w-[9rem] font-medium text-gray-700">
-                  {position.displayName} #{ordinal + 1}
-                </span>
-                <select
-                  value={type}
-                  onChange={(e) =>
-                    setAdv(position.slug, ordinal, {
-                      type: e.target.value as BuildAdvancement["type"],
-                      skillSlug: "",
-                    })
-                  }
-                  className="border border-gray-300 rounded px-2 py-1 text-xs"
-                  disabled={cannotAfford && !adv}
-                >
-                  <option value="primary">Principale (6)</option>
-                  <option value="secondary">Secondaire (10)</option>
-                </select>
-                <select
-                  value={adv?.skillSlug ?? ""}
-                  onChange={(e) =>
-                    e.target.value
-                      ? setAdv(position.slug, ordinal, {
-                          skillSlug: e.target.value,
-                        })
-                      : setAdv(position.slug, ordinal, null)
-                  }
-                  className="flex-1 min-w-[10rem] border border-gray-300 rounded px-2 py-1 text-xs"
-                  disabled={cannotAfford && !adv}
-                >
-                  <option value="">— Aucune —</option>
-                  {options.map((s) => (
-                    <option key={s.slug} value={s.slug}>
-                      {s.nameFr}
-                    </option>
-                  ))}
-                </select>
-                {adv && (
-                  <button
-                    type="button"
-                    onClick={() => setAdv(position.slug, ordinal, null)}
-                    className="text-red-600 hover:text-red-800 text-xs"
-                  >
-                    retirer
-                  </button>
-                )}
+                {Array.from({ length: rowCount }, (_, slot) => {
+                  const adv = advs[slot];
+                  const type = adv?.type ?? "primary";
+                  const options = skillsForType(position, type).filter(
+                    // La 2e compétence doit différer de la 1re (empilement,
+                    // pas doublon).
+                    (s) =>
+                      !advs.some(
+                        (a, i) => i !== slot && a.skillSlug === s.slug,
+                      ),
+                  );
+                  const cost = costForSlot(type, slot);
+                  const cannotAfford = !adv && cost > remaining;
+                  return (
+                    <div
+                      key={slot}
+                      className="flex flex-wrap items-center gap-2 text-sm"
+                    >
+                      <span className="min-w-[9rem] font-medium text-gray-700">
+                        {slot === 0
+                          ? `${position.displayName} #${ordinal + 1}`
+                          : ""}
+                      </span>
+                      <select
+                        value={type}
+                        onChange={(e) =>
+                          patchSlot(position.slug, ordinal, slot, {
+                            type: e.target.value as BuildAdvancement["type"],
+                            skillSlug: "",
+                          })
+                        }
+                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        disabled={cannotAfford && !adv}
+                      >
+                        <option value="primary">
+                          Principale ({costForSlot("primary", slot)})
+                        </option>
+                        <option value="secondary">
+                          Secondaire ({costForSlot("secondary", slot)})
+                        </option>
+                      </select>
+                      <select
+                        value={adv?.skillSlug ?? ""}
+                        data-testid={`allocator-skill-${position.slug}-${ordinal}-${slot}`}
+                        onChange={(e) =>
+                          e.target.value
+                            ? patchSlot(position.slug, ordinal, slot, {
+                                skillSlug: e.target.value,
+                              })
+                            : patchSlot(position.slug, ordinal, slot, null)
+                        }
+                        className="flex-1 min-w-[10rem] border border-gray-300 rounded px-2 py-1 text-xs"
+                        disabled={cannotAfford && !adv}
+                      >
+                        <option value="">— Aucune —</option>
+                        {options.map((s) => (
+                          <option key={s.slug} value={s.slug}>
+                            {s.nameFr}
+                          </option>
+                        ))}
+                      </select>
+                      {adv && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patchSlot(position.slug, ordinal, slot, null)
+                          }
+                          className="text-red-600 hover:text-red-800 text-xs"
+                        >
+                          retirer
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
