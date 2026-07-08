@@ -187,7 +187,7 @@ function ByTeamView({ data }: { data: ByTeamResponse }) {
         >
           <h2 className="mb-2 font-semibold">{t.teamName}</h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {t.catalogue.categories.map((cat) => {
+            {(t.catalogue.categories ?? []).map((cat) => {
               const rows = (t.catalogue[cat.key] as unknown) as PlayerStatRow[];
               return (
                 <LeaderboardCard

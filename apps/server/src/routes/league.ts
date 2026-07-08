@@ -1824,7 +1824,15 @@ export async function handleGetLeaderboardsByTeam(
       seasonId,
       topN: Number.isFinite(topN) ? topN : undefined,
     });
-    sendSuccess(res, { seasonId, teams });
+    // A66 — comme la vue globale, chaque catalogue par equipe doit
+    // embarquer `categories` : l'UI itere dessus (crash client sinon).
+    sendSuccess(res, {
+      seasonId,
+      teams: teams.map((t) => ({
+        ...t,
+        catalogue: { ...t.catalogue, categories: LEADERBOARD_CATEGORIES },
+      })),
+    });
   } catch (e: unknown) {
     domainError(res, e);
   }
