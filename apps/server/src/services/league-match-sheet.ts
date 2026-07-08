@@ -45,6 +45,8 @@ import {
   INDUCEMENT_CATALOGUE,
   calculatePettyCash,
   getInducementCost,
+  getInducementMaxQuantity,
+  getSpecialRulesForTeam,
   getAvailableStarPlayers,
   getRegionalRulesForTeam,
   APOTHECARY_FORBIDDEN_ROSTERS,
@@ -1399,6 +1401,8 @@ export interface MatchSheetInducementOption {
   readonly cost: number;
   readonly maxQuantity: number;
   readonly description: string;
+  /** A53 — prix variable (ex: Mercenaires) : le coach saisit le coût. */
+  readonly variableCost?: boolean;
 }
 
 export interface MatchSheetStarPlayerOption {
@@ -1483,6 +1487,9 @@ function inducementOptionsFor(
     regionalRules: getRegionalRulesForTeam(roster),
     hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
     rosterSlug: roster,
+    // A53 — les restrictions/remises officielles dépendent des règles
+    // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
+    specialRules: getSpecialRulesForTeam(roster),
   };
   const allow = allowedInducements ? new Set(allowedInducements) : null;
   return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
@@ -1492,8 +1499,9 @@ function inducementOptionsFor(
       slug: d.slug,
       name: d.displayNameFr,
       cost: getInducementCost(d.slug, ctx),
-      maxQuantity: d.maxQuantity,
+      maxQuantity: getInducementMaxQuantity(d.slug, ctx),
       description: d.description,
+      ...(d.variableCost ? { variableCost: true } : {}),
     }));
 }
 

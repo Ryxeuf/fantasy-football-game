@@ -119,3 +119,23 @@ export function getTeamSpecialRuleBySlug(
 
 /** Type utilitaire des slugs valides. */
 export type TeamSpecialRuleSlug = (typeof TEAM_SPECIAL_RULES)[number]["slug"];
+
+import { TEAM_ROSTERS_BY_RULESET, DEFAULT_RULESET, type Ruleset } from "./positions";
+
+/**
+ * A53 — règles spéciales d'une équipe (slugs) depuis la source statique
+ * des rosters (`TeamRoster.specialRules`, CSV). Sert notamment aux
+ * restrictions/remises des Coups de Pouce (Assistant Funéraire, Pots-de-vin
+ * à 50k avec Chantage et Corruption…).
+ */
+export function getSpecialRulesForTeam(
+  rosterSlug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): string[] {
+  const map = TEAM_ROSTERS_BY_RULESET[ruleset] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
+  const csv = (map[rosterSlug] as { specialRules?: string } | undefined)?.specialRules ?? "";
+  return csv
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}

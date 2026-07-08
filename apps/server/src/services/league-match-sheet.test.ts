@@ -1409,4 +1409,43 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
     // Les Star Players ne sont pas filtrés par l'allowlist.
     expect(restricted.starPlayers.home).toEqual(full.starPlayers.home);
   });
+
+  it("A53 — options selon les règles spéciales de l'équipe (p.142-148)", () => {
+    const ref = buildMatchSheetReference(
+      {
+        home: team("goblin", 1_000_000),
+        away: team("necromantic_horror", 1_000_000),
+      },
+      null,
+    );
+    // Goblin (Chantage et Corruption) : Pots-de-vin à 50k, 0-6.
+    const bribeGob = ref.inducements.home.find((i) => i.slug === "bribe");
+    expect(bribeGob).toMatchObject({ cost: 50_000, maxQuantity: 6 });
+    // Arbitre Partial à 80k pour Goblin.
+    const refGob = ref.inducements.home.find(
+      (i) => i.slug === "biased_referee",
+    );
+    expect(refGob?.cost).toBe(80_000);
+    // Assistant Funéraire : Maîtres de la Non-vie seulement.
+    const homeSlugs = ref.inducements.home.map((i) => i.slug);
+    const awaySlugs = ref.inducements.away.map((i) => i.slug);
+    expect(homeSlugs).not.toContain("mortuary_assistant");
+    expect(awaySlugs).toContain("mortuary_assistant");
+    // Mercenaires : prix variable exposé à l'UI.
+    const merc = ref.inducements.home.find(
+      (i) => i.slug === "mercenary_players",
+    );
+    expect(merc?.variableCost).toBe(true);
+    // igor (BB2020) n'est plus proposé.
+    expect(homeSlugs).not.toContain("igor");
+    // Nouveautés S2025 présentes.
+    expect(homeSlugs).toEqual(
+      expect.arrayContaining([
+        "prayers_to_nuffle",
+        "team_mascot",
+        "weather_mage",
+        "infamous_coaching_staff",
+      ]),
+    );
+  });
 });

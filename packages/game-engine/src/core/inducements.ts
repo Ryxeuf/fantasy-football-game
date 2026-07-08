@@ -14,14 +14,25 @@ import { TeamId } from './types';
 
 /** Identifiant unique d'un type d'inducement */
 export type InducementSlug =
+  | 'prayers_to_nuffle'
+  | 'part_time_assistant_coaches'
+  | 'temp_agency_cheerleaders'
+  | 'team_mascot'
+  | 'weather_mage'
   | 'extra_team_training'
   | 'bloodweiser_kegs'
   | 'bribe'
+  | 'mortuary_assistant'
+  | 'plague_doctor'
+  | 'riotous_rookies'
   | 'wandering_apothecary'
   | 'halfling_master_chef'
+  | 'biased_referee'
+  | 'infamous_coaching_staff'
+  | 'mercenary_players'
   | 'wizard'
+  /** Retiré du catalogue S3 (A53) — conservé pour les données historiques. */
   | 'igor'
-  | 'riotous_rookies'
   | 'star_player';
 
 /** Définition d'un inducement dans le catalogue */
@@ -31,10 +42,22 @@ export interface InducementDefinition {
   displayNameFr: string;
   baseCost: number;
   maxQuantity: number;
-  /** Règle régionale qui donne un prix réduit (ex: badlands_brawl pour Bribe) */
+  /**
+   * Règle (régionale OU spéciale d'équipe) qui donne un prix réduit
+   * (ex: chantage_et_corruption pour Pots-de-vin).
+   */
   discountRule?: string;
-  /** Coût réduit si l'équipe a la règle régionale */
+  /** Coût réduit si l'équipe a la règle. */
   discountCost?: number;
+  /** Roster qui bénéficie du prix réduit (ex: halfling pour le Chef Cuistot). */
+  discountRoster?: string;
+  /** A53 — quantité max augmentée pour les équipes ayant la règle. */
+  ruleMaxQuantity?: { rule: string; max: number };
+  /**
+   * A53 — prix variable (ex: Joueurs Mercenaires) : le coût est saisi par
+   * le coach (baseCost = 0, indicatif).
+   */
+  variableCost?: boolean;
   /** Fonction de restriction : retourne true si l'équipe peut acheter cet inducement */
   canPurchase?: (ctx: InducementContext) => boolean;
   description: string;
@@ -46,6 +69,16 @@ export interface InducementContext {
   regionalRules: string[];
   hasApothecary: boolean;
   rosterSlug: string;
+  /**
+   * A53 — règles spéciales d'équipe (slugs, cf. team-special-rules.ts).
+   * Optionnel pour rétro-compat : absent = aucune.
+   */
+  specialRules?: string[];
+}
+
+/** Toutes les règles (régionales + spéciales) du contexte. */
+function contextRules(ctx: InducementContext): string[] {
+  return [...ctx.regionalRules, ...(ctx.specialRules ?? [])];
 }
 
 /** Un inducement acheté par une équipe */
@@ -111,76 +144,179 @@ export interface PettyCashResult {
 // Catalogue
 // ---------------------------------------------------------------------------
 
+/**
+ * A53 — Catalogue officiel Saison 2025 (« Acheter des Coups de Pouce ! »,
+ * livre p.142-149). Une entrée par Coup de Pouce commun ; les prix
+ * « variables » du livre sont soit fixés à la variante publiée (Arbitre
+ * Partial = Représentant de Ligue Louche, Staff Célèbre = Josef Bugman,
+ * Sorcier = Sorcier-Sportif), soit saisis par le coach (Mercenaires).
+ */
 export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
   {
-    slug: 'extra_team_training',
-    displayName: 'Extra Team Training',
-    displayNameFr: 'Entraînement supplémentaire',
-    baseCost: 100_000,
-    maxQuantity: 4,
-    description: '+1 Team Re-roll for the match per purchase.',
+    slug: 'prayers_to_nuffle',
+    displayName: 'Prayers to Nuffle',
+    displayNameFr: 'Prières à Nuffle',
+    baseCost: 10_000,
+    maxQuantity: 3,
+    description:
+      "Pour chaque prière achetée, jetez un D16 sur le Tableau des Prières à Nuffle (relancez les doublons). L'effet dure jusqu'à la fin du match.",
+  },
+  {
+    slug: 'part_time_assistant_coaches',
+    displayName: 'Part-time Assistant Coaches',
+    displayNameFr: 'Coachs Assistants à Temps Partiel',
+    baseCost: 20_000,
+    maxQuantity: 5,
+    description: '+1 coach assistant pour la durée du match, par unité achetée.',
+  },
+  {
+    slug: 'temp_agency_cheerleaders',
+    displayName: 'Temp Agency Cheerleaders',
+    displayNameFr: 'Cheerleaders Intérimaires',
+    baseCost: 5_000,
+    maxQuantity: 5,
+    description: '+1 cheerleader pour la durée du match, par unité achetée.',
+  },
+  {
+    slug: 'team_mascot',
+    displayName: 'Team Mascot',
+    displayNameFr: "Mascotte d'Équipe",
+    baseCost: 25_000,
+    maxQuantity: 1,
+    description:
+      "Une relance d'équipe supplémentaire à chaque mi-temps (sur 1-3 au D6, elle s'avère inefficace) ; permet aussi de relancer un 1 naturel au D6 du résultat Fans en Folie du coup d'envoi.",
+  },
+  {
+    slug: 'weather_mage',
+    displayName: 'Weather Mage',
+    displayNameFr: 'Mage Météo',
+    baseCost: 25_000,
+    maxQuantity: 1,
+    description:
+      "Une fois par match, au début d'un de vos tours : refaites immédiatement un jet sur le Tableau de Météo avec un modificateur de -2 à +2, appliqué jusqu'au prochain changement de météo.",
   },
   {
     slug: 'bloodweiser_kegs',
-    displayName: 'Bloodweiser Kegs',
-    displayNameFr: 'Fûts de Bloodweiser',
+    displayName: 'Premium Blitz Kegs',
+    displayNameFr: 'Fûts de Blitz Premium',
     baseCost: 50_000,
     maxQuantity: 2,
-    description: '+1 to KO recovery rolls for each keg purchased.',
+    description:
+      '+1 aux jets de rétablissement de vos joueurs K.-O. pour chaque fût acheté.',
   },
   {
     slug: 'bribe',
-    displayName: 'Bribe',
-    displayNameFr: 'Pot-de-vin',
+    displayName: 'Bribes',
+    displayNameFr: 'Pots-de-vin',
     baseCost: 100_000,
     maxQuantity: 3,
-    discountRule: 'badlands_brawl',
+    discountRule: 'chantage_et_corruption',
     discountCost: 50_000,
-    description: 'May be used once per bribe to avoid a send-off after committing a foul.',
+    ruleMaxQuantity: { rule: 'chantage_et_corruption', max: 6 },
+    description:
+      "Quand un joueur est Expulsé, jetez un D6 : sur 2+ il reste en jeu (le pot-de-vin est dépensé, et perdu même sur un 1). 0-6 à 50 000 po pour les équipes avec Chantage et Corruption.",
   },
   {
-    slug: 'wandering_apothecary',
-    displayName: 'Wandering Apothecary',
-    displayNameFr: 'Apothicaire itinérant',
+    slug: 'extra_team_training',
+    displayName: 'Extra Team Training',
+    displayNameFr: 'Entraînement Supplémentaire',
+    baseCost: 100_000,
+    maxQuantity: 8,
+    description:
+      "+1 relance d'équipe pour la durée du match, par entraînement acheté.",
+  },
+  {
+    slug: 'mortuary_assistant',
+    displayName: 'Mortuary Assistant',
+    displayNameFr: 'Assistant Funéraire',
     baseCost: 100_000,
     maxQuantity: 1,
-    canPurchase: (ctx) => ctx.hasApothecary,
-    description: 'Grants one additional apothecary use during the match.',
+    canPurchase: (ctx) =>
+      contextRules(ctx).includes('maitres_de_la_non_vie'),
+    description:
+      'Une fois par match, relance un jet de Régénération raté pour un de vos joueurs. Équipes avec la règle spéciale Maîtres de la Non-vie seulement.',
   },
   {
-    slug: 'halfling_master_chef',
-    displayName: 'Halfling Master Chef',
-    displayNameFr: 'Maître-queux halfling',
-    baseCost: 300_000,
-    maxQuantity: 1,
-    discountRule: 'halfling_thimble_cup',
-    discountCost: 100_000,
-    description: 'At the start of each drive, roll 3D6. For each 4+, steal one reroll from the opponent.',
-  },
-  {
-    slug: 'wizard',
-    displayName: 'Wizard',
-    displayNameFr: 'Magicien',
-    baseCost: 150_000,
-    maxQuantity: 1,
-    description: 'Once per match, cast Fireball or Lightning Bolt.',
-  },
-  {
-    slug: 'igor',
-    displayName: 'Igor',
-    displayNameFr: 'Igor',
+    slug: 'plague_doctor',
+    displayName: 'Plague Doctor',
+    displayNameFr: 'Médecin de la Peste',
     baseCost: 100_000,
     maxQuantity: 1,
-    canPurchase: (ctx) => !ctx.hasApothecary,
-    description: 'Works like an apothecary for teams that normally cannot hire one.',
+    canPurchase: (ctx) =>
+      contextRules(ctx).includes('favori_de') && ctx.rosterSlug === 'nurgle',
+    description:
+      "Une fois par match, relance un jet de Régénération raté ; peut aussi être utilisé comme un apothicaire. Équipes avec la règle spéciale Favoris de Nurgle seulement.",
   },
   {
     slug: 'riotous_rookies',
     displayName: 'Riotous Rookies',
-    displayNameFr: 'Recrues indisciplinées',
+    displayNameFr: 'Débutants Déchaînés',
+    baseCost: 150_000,
+    maxQuantity: 1,
+    canPurchase: (ctx) =>
+      contextRules(ctx).includes('trois_quarts_a_vil_prix'),
+    description:
+      'Ajoute 2D3+1 Journaliers à votre équipe pour ce match. Équipes avec la règle spéciale Trois-quarts à Vil Prix seulement.',
+  },
+  {
+    slug: 'wandering_apothecary',
+    displayName: 'Wandering Apothecary',
+    displayNameFr: 'Apothicaire Ambulant',
+    baseCost: 100_000,
+    maxQuantity: 2,
+    canPurchase: (ctx) => ctx.hasApothecary,
+    description:
+      "Un usage d'apothicaire supplémentaire pendant le match, utilisable une fois par partie comme un apothicaire normal. Inaccessible aux équipes qui ne peuvent pas embaucher d'apothicaire.",
+  },
+  {
+    slug: 'halfling_master_chef',
+    displayName: 'Halfling Master Chef',
+    displayNameFr: 'Chef Cuistot Halfling',
+    baseCost: 300_000,
+    maxQuantity: 1,
+    discountRoster: 'halfling',
+    discountCost: 100_000,
+    description:
+      "Avant le coup d'envoi de chaque mi-temps, jetez 3 D6 : pour chaque 4+, votre équipe gagne une relance et l'adversaire en perd une pour la mi-temps. 100 000 po pour les équipes de Halflings.",
+  },
+  {
+    slug: 'biased_referee',
+    displayName: 'Biased Referee',
+    displayNameFr: 'Arbitre Partial (Représentant de Ligue Louche)',
+    baseCost: 120_000,
+    maxQuantity: 1,
+    discountRule: 'chantage_et_corruption',
+    discountCost: 80_000,
+    description:
+      "Œil Attentif : après une Action d'Agression adverse sans expulsion, sur 5+ au D6 le joueur adverse est Expulsé. « Moi je n'ai rien vu ! » : +1 pour Contester la Décision. 80 000 po avec Chantage et Corruption.",
+  },
+  {
+    slug: 'infamous_coaching_staff',
+    displayName: 'Infamous Coaching Staff',
+    displayNameFr: 'Staff Célèbre (Josef Bugman)',
     baseCost: 100_000,
     maxQuantity: 1,
-    description: 'D3+3 additional Rookie players (Loner 4+) for the match.',
+    description:
+      "Josef Bugman : +1 chaque fois que vous jetez pour le rétablissement d'un joueur K.-O. ; une fois par match, après les placements mais avant le coup d'envoi, retirez et replacez D3 de vos joueurs. Ne peut pas aussi être recruté en Star Player.",
+  },
+  {
+    slug: 'mercenary_players',
+    displayName: 'Mercenary Players',
+    displayNameFr: 'Joueurs Mercenaires',
+    baseCost: 0,
+    maxQuantity: 3,
+    variableCost: true,
+    description:
+      "Joueur issu de votre fiche d'équipe, embauché pour le match : coût de la fiche + 30 000 po (+ 50 000 po pour une unique Compétence Principale au choix). Gagne Solitaire (4+). Saisissez le coût calculé.",
+  },
+  {
+    slug: 'wizard',
+    displayName: 'Wizard',
+    displayNameFr: 'Sorcier (Sorcier-Sportif)',
+    baseCost: 150_000,
+    maxQuantity: 1,
+    description:
+      'Sorcier-Sportif : une fois par match, lance Boule de Feu ou Zap !',
   },
   {
     slug: 'star_player',
@@ -199,6 +335,26 @@ const CATALOGUE_MAP = new Map<InducementSlug, InducementDefinition>(
 
 export function getInducementDefinition(slug: InducementSlug): InducementDefinition | undefined {
   return CATALOGUE_MAP.get(slug);
+}
+
+/**
+ * A53 — quantité maximum effective pour une équipe : certains Coups de
+ * Pouce ont un plafond augmenté avec une règle spéciale (ex: Pots-de-vin
+ * 0-6 avec Chantage et Corruption, au lieu de 0-3).
+ */
+export function getInducementMaxQuantity(
+  slug: InducementSlug,
+  ctx: InducementContext,
+): number {
+  const def = CATALOGUE_MAP.get(slug);
+  if (!def) return 0;
+  if (
+    def.ruleMaxQuantity &&
+    contextRules(ctx).includes(def.ruleMaxQuantity.rule)
+  ) {
+    return def.ruleMaxQuantity.max;
+  }
+  return def.maxQuantity;
 }
 
 // ---------------------------------------------------------------------------
@@ -271,7 +427,20 @@ export function getInducementCost(
   const def = CATALOGUE_MAP.get(slug);
   if (!def) return 0;
 
-  if (def.discountRule && def.discountCost && ctx.regionalRules.includes(def.discountRule)) {
+  // A53 — remise par règle (régionale OU spéciale d'équipe)…
+  if (
+    def.discountRule &&
+    def.discountCost &&
+    contextRules(ctx).includes(def.discountRule)
+  ) {
+    return def.discountCost;
+  }
+  // …ou par roster (ex: Chef Cuistot Halfling à 100k pour les Halflings).
+  if (
+    def.discountRoster &&
+    def.discountCost &&
+    ctx.rosterSlug === def.discountRoster
+  ) {
     return def.discountCost;
   }
 
@@ -338,8 +507,10 @@ export function validateInducementSelection(
     const currentQty = quantityMap.get(item.slug) ?? 0;
     const newQty = currentQty + item.quantity;
 
-    if (newQty > def.maxQuantity) {
-      errors.push(`${def.displayName} : maximum ${def.maxQuantity}, demandé ${newQty}.`);
+    // A53 — plafond effectif (peut être augmenté par une règle spéciale).
+    const maxQty = getInducementMaxQuantity(item.slug, ctx);
+    if (newQty > maxQty) {
+      errors.push(`${def.displayName} : maximum ${maxQty}, demandé ${newQty}.`);
       continue;
     }
 

@@ -87,6 +87,7 @@ export type { JourneymanStats } from './core/pre-match-sequence';
 export {
   INDUCEMENT_CATALOGUE,
   getInducementDefinition,
+  getInducementMaxQuantity,
   calculatePettyCash,
   getInducementCost,
   validateInducementSelection,

@@ -8,7 +8,7 @@
 - [x] Phase 5 — A11 fiche roster ligue, E8 Actif/Passif, E10 empilement build
 - [x] Phase 6 — A54 poules, A56 kickoff, E11 snapshot roster
 - [x] Suites complètes server/web/game-engine vertes
-- [ ] A53 — étendre INDUCEMENT_CATALOGUE (attend pages 142-148 du livre)
+- [x] A53 — catalogue officiel des coups de pouce (photos p.142-149 fournies le 08/07)
 - [ ] A49-A52 — libellés exacts compétences (attend pages du livre)
 - [ ] A16 — filtrage Star Players (différé, exemples testeur requis)
 - [ ] Déploiement : migrate deploy + generate + seed (isPassive) + re-validation testeur

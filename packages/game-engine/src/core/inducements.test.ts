@@ -4,6 +4,7 @@ import {
   validateInducementSelection,
   getInducementCost,
   getInducementDefinition,
+  getInducementMaxQuantity,
   applyInducementEffects,
   processInducementsWithSelection,
   INDUCEMENT_CATALOGUE,
@@ -63,8 +64,51 @@ function makeState() {
 // ---------------------------------------------------------------------------
 
 describe('Inducement Catalogue', () => {
-  it('devrait contenir 9 types d\'inducements', () => {
-    expect(INDUCEMENT_CATALOGUE).toHaveLength(9);
+  it('A53 — contient la liste officielle S2025 (p.142)', () => {
+    const slugs = INDUCEMENT_CATALOGUE.map((d) => d.slug);
+    expect(slugs).toEqual([
+      'prayers_to_nuffle',
+      'part_time_assistant_coaches',
+      'temp_agency_cheerleaders',
+      'team_mascot',
+      'weather_mage',
+      'bloodweiser_kegs',
+      'bribe',
+      'extra_team_training',
+      'mortuary_assistant',
+      'plague_doctor',
+      'riotous_rookies',
+      'wandering_apothecary',
+      'halfling_master_chef',
+      'biased_referee',
+      'infamous_coaching_staff',
+      'mercenary_players',
+      'wizard',
+      'star_player',
+    ]);
+    // igor (BB2020) est retiré du catalogue S3.
+    expect(slugs).not.toContain('igor');
+  });
+
+  it('A53 — coûts et quantités du livre (p.142)', () => {
+    const bySlug = new Map(INDUCEMENT_CATALOGUE.map((d) => [d.slug, d]));
+    expect(bySlug.get('prayers_to_nuffle')).toMatchObject({ baseCost: 10_000, maxQuantity: 3 });
+    expect(bySlug.get('part_time_assistant_coaches')).toMatchObject({ baseCost: 20_000, maxQuantity: 5 });
+    expect(bySlug.get('temp_agency_cheerleaders')).toMatchObject({ baseCost: 5_000, maxQuantity: 5 });
+    expect(bySlug.get('team_mascot')).toMatchObject({ baseCost: 25_000, maxQuantity: 1 });
+    expect(bySlug.get('weather_mage')).toMatchObject({ baseCost: 25_000, maxQuantity: 1 });
+    expect(bySlug.get('bloodweiser_kegs')).toMatchObject({ baseCost: 50_000, maxQuantity: 2 });
+    expect(bySlug.get('extra_team_training')).toMatchObject({ baseCost: 100_000, maxQuantity: 8 });
+    expect(bySlug.get('mortuary_assistant')).toMatchObject({ baseCost: 100_000, maxQuantity: 1 });
+    expect(bySlug.get('plague_doctor')).toMatchObject({ baseCost: 100_000, maxQuantity: 1 });
+    expect(bySlug.get('riotous_rookies')).toMatchObject({ baseCost: 150_000, maxQuantity: 1 });
+    expect(bySlug.get('wandering_apothecary')).toMatchObject({ baseCost: 100_000, maxQuantity: 2 });
+    expect(bySlug.get('halfling_master_chef')).toMatchObject({ baseCost: 300_000, maxQuantity: 1 });
+    expect(bySlug.get('biased_referee')).toMatchObject({ baseCost: 120_000, maxQuantity: 1 });
+    expect(bySlug.get('infamous_coaching_staff')).toMatchObject({ baseCost: 100_000, maxQuantity: 1 });
+    expect(bySlug.get('mercenary_players')).toMatchObject({ maxQuantity: 3, variableCost: true });
+    expect(bySlug.get('wizard')).toMatchObject({ baseCost: 150_000, maxQuantity: 1 });
+    expect(bySlug.get('star_player')).toMatchObject({ maxQuantity: 2 });
   });
 
   it('devrait retrouver un inducement par slug', () => {
@@ -205,14 +249,55 @@ describe('Règle: Coût des inducements', () => {
     expect(getInducementCost('extra_team_training', ctx)).toBe(100_000);
   });
 
-  it('devrait appliquer le discount Badlands Brawl pour les Bribes', () => {
-    const ctx = makeCtx({ regionalRules: ['badlands_brawl'], rosterSlug: 'goblin' });
+  it('A53 — Pots-de-vin à 50k et 0-6 avec Chantage et Corruption', () => {
+    const ctx = makeCtx({
+      rosterSlug: 'goblin',
+      specialRules: ['chantage_et_corruption'],
+    });
     expect(getInducementCost('bribe', ctx)).toBe(50_000);
+    expect(getInducementMaxQuantity('bribe', ctx)).toBe(6);
+    // Sans la règle : 100k, 0-3.
+    const noRule = makeCtx();
+    expect(getInducementCost('bribe', noRule)).toBe(100_000);
+    expect(getInducementMaxQuantity('bribe', noRule)).toBe(3);
   });
 
-  it('devrait appliquer le discount Halfling Thimble Cup pour le Master Chef', () => {
-    const ctx = makeCtx({ regionalRules: ['halfling_thimble_cup'], rosterSlug: 'halfling' });
+  it('A53 — Arbitre Partial à 80k avec Chantage et Corruption', () => {
+    const ctx = makeCtx({ specialRules: ['chantage_et_corruption'] });
+    expect(getInducementCost('biased_referee', ctx)).toBe(80_000);
+    expect(getInducementCost('biased_referee', makeCtx())).toBe(120_000);
+  });
+
+  it('A53 — Chef Cuistot à 100k pour les équipes de Halflings', () => {
+    const ctx = makeCtx({ rosterSlug: 'halfling' });
     expect(getInducementCost('halfling_master_chef', ctx)).toBe(100_000);
+    expect(getInducementCost('halfling_master_chef', makeCtx())).toBe(300_000);
+  });
+
+  it('A53 — restrictions par règle spéciale (Assistant Funéraire, Médecin de la Peste, Débutants Déchaînés)', () => {
+    const mortuary = getInducementDefinition('mortuary_assistant')!;
+    expect(mortuary.canPurchase!(makeCtx())).toBe(false);
+    expect(
+      mortuary.canPurchase!(
+        makeCtx({ specialRules: ['maitres_de_la_non_vie'] }),
+      ),
+    ).toBe(true);
+
+    const plague = getInducementDefinition('plague_doctor')!;
+    expect(plague.canPurchase!(makeCtx())).toBe(false);
+    expect(
+      plague.canPurchase!(
+        makeCtx({ rosterSlug: 'nurgle', specialRules: ['favori_de'] }),
+      ),
+    ).toBe(true);
+
+    const rookies = getInducementDefinition('riotous_rookies')!;
+    expect(rookies.canPurchase!(makeCtx())).toBe(false);
+    expect(
+      rookies.canPurchase!(
+        makeCtx({ specialRules: ['trois_quarts_a_vil_prix'] }),
+      ),
+    ).toBe(true);
   });
 
   it('devrait retourner 0 pour un star player inconnu', () => {
@@ -261,12 +346,22 @@ describe('Règle: Validation des inducements', () => {
 
   it('devrait rejeter si la quantité maximum est dépassée', () => {
     const result = validateInducementSelection(
-      { items: [{ slug: 'extra_team_training', quantity: 5 }] },
+      { items: [{ slug: 'extra_team_training', quantity: 9 }] },
       makeCtx(),
       1_000_000,
     );
     expect(result.valid).toBe(false);
-    expect(result.errors).toContainEqual(expect.stringContaining('maximum 4'));
+    expect(result.errors).toContainEqual(expect.stringContaining('maximum 8'));
+  });
+
+  it('A53 — accepte 6 Pots-de-vin avec Chantage et Corruption', () => {
+    const result = validateInducementSelection(
+      { items: [{ slug: 'bribe', quantity: 6 }] },
+      makeCtx({ specialRules: ['chantage_et_corruption'] }),
+      1_000_000,
+    );
+    expect(result.valid).toBe(true);
+    expect(result.totalCost).toBe(300_000); // 6 × 50k
   });
 
   it('devrait rejeter le Wandering Apothecary si l\'équipe n\'a pas d\'apothicaire', () => {
@@ -279,23 +374,13 @@ describe('Règle: Validation des inducements', () => {
     expect(result.errors).toContainEqual(expect.stringContaining('pas disponible'));
   });
 
-  it('devrait rejeter Igor si l\'équipe a déjà un apothicaire', () => {
-    const result = validateInducementSelection(
-      { items: [{ slug: 'igor', quantity: 1 }] },
-      makeCtx({ hasApothecary: true }),
-      500_000,
-    );
-    expect(result.valid).toBe(false);
-    expect(result.errors).toContainEqual(expect.stringContaining('pas disponible'));
-  });
-
-  it('devrait accepter Igor si l\'équipe n\'a pas d\'apothicaire', () => {
+  it('A53 — Igor (BB2020) n\'est plus achetable en S3', () => {
     const result = validateInducementSelection(
       { items: [{ slug: 'igor', quantity: 1 }] },
       makeCtx({ hasApothecary: false }),
       500_000,
     );
-    expect(result.valid).toBe(true);
+    expect(result.valid).toBe(false);
   });
 
   it('devrait valider plusieurs inducements combinés', () => {

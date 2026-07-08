@@ -93,6 +93,7 @@ export {
   TEAM_SPECIAL_RULES,
   TEAM_SPECIAL_RULES_BY_SLUG,
   getTeamSpecialRuleBySlug,
+  getSpecialRulesForTeam,
   type TeamSpecialRuleDefinition,
   type TeamSpecialRuleSlug,
 } from "./team-special-rules";

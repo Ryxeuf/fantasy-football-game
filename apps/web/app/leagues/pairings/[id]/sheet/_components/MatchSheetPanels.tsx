@@ -69,6 +69,8 @@ export interface InducementOption {
   cost: number;
   maxQuantity: number;
   description: string;
+  /** A53 — prix variable (ex: Mercenaires) : coût saisi par le coach. */
+  variableCost?: boolean;
 }
 export interface StarPlayerOption {
   slug: string;
@@ -366,6 +368,22 @@ function InducementEditor({
             ) : (
               <span className="w-8 text-center text-xs text-slate-400">×1</span>
             )}
+            {/* A53 — prix variable (Mercenaires) : coût unitaire saisi. */}
+            {opt?.variableCost ? (
+              <input
+                type="number"
+                min={0}
+                step={5000}
+                value={it.cost}
+                onChange={(e) =>
+                  update(i, { cost: Math.max(0, Number(e.target.value) || 0) })
+                }
+                disabled={disabled}
+                title="Coût unitaire (po) — prix variable"
+                data-testid={`${testId}-cost-${i}`}
+                className="w-24 rounded border px-2 py-1 text-sm tabular-nums"
+              />
+            ) : null}
             <span className="w-20 text-right text-xs tabular-nums text-slate-600">
               {formatGold(it.cost * it.qty)}
             </span>
