@@ -157,6 +157,46 @@ describe("Lot F — league-manual-pairing service", () => {
       ).rejects.toMatchObject({ code: "participant_not_active" });
     });
 
+    it("A54 — rejects participants from different pools", async () => {
+      mockPrisma.leagueRound.findUnique.mockResolvedValue({
+        id: "r1",
+        seasonId: "s1",
+        status: "pending",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "p1", seasonId: "s1", status: "active", poolId: "poolA" },
+        { id: "p2", seasonId: "s1", status: "active", poolId: "poolB" },
+      ]);
+      await expect(
+        createManualPairing({
+          roundId: "r1",
+          homeParticipantId: "p1",
+          awayParticipantId: "p2",
+        }),
+      ).rejects.toMatchObject({ code: "different_pools" });
+    });
+
+    it("A54 — accepts two participants of the same pool", async () => {
+      mockPrisma.leagueRound.findUnique.mockResolvedValue({
+        id: "r1",
+        seasonId: "s1",
+        status: "pending",
+      });
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { id: "p1", seasonId: "s1", status: "active", poolId: "poolA" },
+        { id: "p2", seasonId: "s1", status: "active", poolId: "poolA" },
+      ]);
+      mockPrisma.leaguePairing.findFirst.mockResolvedValue(null);
+      mockPrisma.leaguePairing.create.mockResolvedValue({ id: "new" });
+      await expect(
+        createManualPairing({
+          roundId: "r1",
+          homeParticipantId: "p1",
+          awayParticipantId: "p2",
+        }),
+      ).resolves.toMatchObject({ id: "new" });
+    });
+
     it("rejects if participant not in same season as round", async () => {
       mockPrisma.leagueRound.findUnique.mockResolvedValue({
         id: "r1",

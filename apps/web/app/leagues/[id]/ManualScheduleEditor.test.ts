@@ -20,3 +20,20 @@ describe("awayOptions", () => {
     ]);
   });
 });
+
+// A54 — saison à poules : pas de match inter-poules en saisie manuelle.
+describe("awayOptions (poules, A54)", () => {
+  const pooled = [
+    { id: "a", poolId: "pool1" },
+    { id: "b", poolId: "pool1" },
+    { id: "c", poolId: "pool2" },
+    { id: "d", poolId: null },
+  ];
+
+  it("restreint l'extérieur à la poule de l'équipe à domicile", () => {
+    expect(awayOptions(pooled, "a").map((p) => p.id)).toEqual(["b"]);
+    expect(awayOptions(pooled, "c").map((p) => p.id)).toEqual([]);
+    // Sans poule (null) : seules les autres équipes sans poule.
+    expect(awayOptions(pooled, "d").map((p) => p.id)).toEqual([]);
+  });
+});

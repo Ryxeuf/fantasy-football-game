@@ -28,7 +28,8 @@ export class LeagueManualPairingError extends Error {
       | "duplicate_pairing"
       | "same_participant"
       | "pairing_already_played"
-      | "round_completed",
+      | "round_completed"
+      | "different_pools",
     message: string,
   ) {
     super(message);
@@ -127,7 +128,7 @@ export async function createManualPairing(input: CreateManualPairingInput) {
     where: {
       id: { in: [input.homeParticipantId, input.awayParticipantId] },
     },
-    select: { id: true, seasonId: true, status: true },
+    select: { id: true, seasonId: true, status: true, poolId: true },
   });
   if (participants.length !== 2) {
     throw new LeagueManualPairingError(
@@ -148,6 +149,17 @@ export async function createManualPairing(input: CreateManualPairingInput) {
         `Le participant ${p.id} n'est pas actif (status=${p.status})`,
       );
     }
+  }
+
+  // A54 — quand la saison a des poules, on refuse un match entre des
+  // equipes de poules differentes (les inter-poules n'existent qu'en
+  // phase finale, pas en saison reguliere saisie manuellement).
+  const [pa, pb] = participants as Array<{ poolId?: string | null }>;
+  if ((pa.poolId ?? null) !== (pb.poolId ?? null)) {
+    throw new LeagueManualPairingError(
+      "different_pools",
+      "Les deux participants ne sont pas dans la meme poule",
+    );
   }
 
   // Refus du doublon (meme couple dans le meme round, indifferent

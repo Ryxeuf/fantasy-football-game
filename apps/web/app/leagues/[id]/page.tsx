@@ -607,6 +607,7 @@ export default function LeagueDetailPage() {
                     seasonId={season.id}
                     rounds={season.rounds}
                     participants={season.participants}
+                    pools={pools}
                     onChanged={() => {
                       if (selectedSeasonId) loadSeason(selectedSeasonId);
                     }}

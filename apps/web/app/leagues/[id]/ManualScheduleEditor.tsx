@@ -1,24 +1,40 @@
 "use client";
 import { useCallback, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
-import type { LeagueRoundDetail, LeagueParticipantDetail } from "./types";
+import type {
+  LeagueRoundDetail,
+  LeagueParticipantDetail,
+  LeaguePool,
+} from "./types";
 
 // FR4 — saisie manuelle du calendrier : le commissaire crée des journées
 // (rounds) et y ajoute/retire des matchs (pairings) à la main, en complément
 // (ou à la place) de la génération automatique. Backend : Lot F.
 
-/** Options "extérieur" possibles : tous les participants sauf l'équipe à domicile. */
+/**
+ * Options "extérieur" possibles : tous les participants sauf l'équipe à
+ * domicile. A54 — quand la saison a des poules, seules les équipes de la
+ * MÊME poule que l'équipe à domicile sont proposées (pas d'inter-poules
+ * en saison régulière ; le serveur re-valide).
+ */
 export function awayOptions(
-  participants: ReadonlyArray<{ id: string }>,
+  participants: ReadonlyArray<{ id: string; poolId?: string | null }>,
   homeId: string,
-): Array<{ id: string }> {
-  return participants.filter((p) => p.id !== homeId);
+): Array<{ id: string; poolId?: string | null }> {
+  const home = participants.find((p) => p.id === homeId);
+  return participants.filter(
+    (p) =>
+      p.id !== homeId &&
+      (home === undefined || (p.poolId ?? null) === (home.poolId ?? null)),
+  );
 }
 
 interface Props {
   seasonId: string;
   rounds: LeagueRoundDetail[];
   participants: LeagueParticipantDetail[];
+  /** A54 — poules de la saison (vide si saison sans poules). */
+  pools?: LeaguePool[];
   onChanged: () => void;
 }
 
@@ -26,6 +42,7 @@ export function ManualScheduleEditor({
   seasonId,
   rounds,
   participants,
+  pools = [],
   onChanged,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -138,6 +155,7 @@ export function ManualScheduleEditor({
               key={round.id}
               round={round}
               active={active}
+              pools={pools}
               busy={busy}
               nameOf={nameOf}
               onAddPairing={(homeId, awayId) =>
@@ -169,6 +187,7 @@ export function ManualScheduleEditor({
 function RoundEditor({
   round,
   active,
+  pools,
   busy,
   nameOf,
   onAddPairing,
@@ -176,6 +195,7 @@ function RoundEditor({
 }: {
   round: LeagueRoundDetail;
   active: LeagueParticipantDetail[];
+  pools: LeaguePool[];
   busy: boolean;
   nameOf: (id: string) => string;
   onAddPairing: (homeId: string, awayId: string) => void;
@@ -184,7 +204,34 @@ function RoundEditor({
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
   const pairings = round.pairings ?? [];
+  // A54 — l'extérieur est restreint à la poule de l'équipe à domicile.
   const aways = awayOptions(active, home);
+
+  const hasPools = pools.length > 0;
+  const poolNameById = new Map(pools.map((p) => [p.id, p.name]));
+  const poolOf = (participantId: string): string | null =>
+    active.find((p) => p.id === participantId)?.poolId ?? null;
+  const poolLabel = (participantId: string): string | null => {
+    const poolId = poolOf(participantId);
+    return poolId ? (poolNameById.get(poolId) ?? null) : null;
+  };
+  // A54 — affichage des matchs de la journée regroupés par poule.
+  const pairingGroups = (() => {
+    if (!hasPools) return [{ poolName: null as string | null, pairings }];
+    const groups = new Map<
+      string | null,
+      { poolName: string | null; pairings: typeof pairings }
+    >();
+    for (const p of pairings) {
+      const name = poolLabel(p.homeParticipant.id);
+      const g = groups.get(name);
+      if (g) g.pairings.push(p);
+      else groups.set(name, { poolName: name, pairings: [p] });
+    }
+    return Array.from(groups.values()).sort((a, b) =>
+      (a.poolName ?? "￿").localeCompare(b.poolName ?? "￿"),
+    );
+  })();
 
   return (
     <li className="bg-white border border-gray-200 rounded p-2 space-y-1.5">
@@ -194,29 +241,40 @@ function RoundEditor({
       </div>
 
       {pairings.length > 0 ? (
-        <ul className="space-y-1">
-          {pairings.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between gap-2 text-sm bg-gray-50 rounded px-2 py-1"
-            >
-              <span>
-                {p.homeParticipant.team.name}
-                <span className="mx-1 text-gray-400">vs</span>
-                {p.awayParticipant.team.name}
-              </span>
-              <button
-                type="button"
-                data-testid={`manual-delete-pairing-${p.id}`}
-                disabled={busy}
-                onClick={() => onDeletePairing(p.id)}
-                className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
-              >
-                Supprimer
-              </button>
-            </li>
+        <div className="space-y-1.5">
+          {pairingGroups.map((group) => (
+            <div key={group.poolName ?? "__none"}>
+              {hasPools && group.poolName ? (
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                  {group.poolName}
+                </div>
+              ) : null}
+              <ul className="space-y-1">
+                {group.pairings.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between gap-2 text-sm bg-gray-50 rounded px-2 py-1"
+                  >
+                    <span>
+                      {p.homeParticipant.team.name}
+                      <span className="mx-1 text-gray-400">vs</span>
+                      {p.awayParticipant.team.name}
+                    </span>
+                    <button
+                      type="button"
+                      data-testid={`manual-delete-pairing-${p.id}`}
+                      disabled={busy}
+                      onClick={() => onDeletePairing(p.id)}
+                      className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                    >
+                      Supprimer
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -226,7 +284,14 @@ function RoundEditor({
           disabled={busy}
           onChange={(e) => {
             setHome(e.target.value);
-            if (e.target.value === away) setAway("");
+            // A54 — reset l'extérieur s'il ne partage plus la poule.
+            if (
+              e.target.value === away ||
+              (away &&
+                (poolOf(away) ?? null) !== (poolOf(e.target.value) ?? null))
+            ) {
+              setAway("");
+            }
           }}
           className="border border-gray-300 rounded px-1 py-0.5 text-xs"
         >
@@ -234,6 +299,7 @@ function RoundEditor({
           {active.map((p) => (
             <option key={p.id} value={p.id}>
               {p.team.name}
+              {hasPools && poolLabel(p.id) ? ` (${poolLabel(p.id)})` : ""}
             </option>
           ))}
         </select>
