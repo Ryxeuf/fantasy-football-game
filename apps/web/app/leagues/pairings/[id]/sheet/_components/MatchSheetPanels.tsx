@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  EXPENSIVE_MISTAKE_LABELS_FR,
+  EXPENSIVE_MISTAKES_THRESHOLD,
+  expensiveMistakeLoss,
+  expensiveMistakeOutcome,
+  type ExpensiveMistakeOutcome,
+} from "@bb/game-engine";
 
 // Refonte mobile-first — panneaux de saisie d'une feuille de match de
 // ligue physique. Sections AVANT-MATCH / FIN DU MATCH calquees sur la
@@ -929,6 +936,153 @@ function CostlyErrorEditor({
 }
 
 /**
+ * FR16 — assistant « Erreurs Coûteuses » : à partir de la trésorerie
+ * estimée à cette étape de la séquence d'après-match (trésorerie +
+ * gains − achats), propose le résultat du tableau officiel pour le jet
+ * de D6 fait autour de la table, calcule la perte (D3/2D6 saisis si le
+ * résultat l'exige) et pré-remplit une ligne d'erreur coûteuse.
+ */
+function ExpensiveMistakeHelper({
+  treasuryAtStep,
+  onAdd,
+  disabled,
+  testId,
+}: {
+  treasuryAtStep: number;
+  onAdd: (entry: CostlyError) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const [d6, setD6] = useState<string>("");
+  const [d3, setD3] = useState<string>("");
+  const [twoD6, setTwoD6] = useState<string>("");
+
+  if (disabled) return null;
+  if (treasuryAtStep < EXPENSIVE_MISTAKES_THRESHOLD) {
+    return (
+      <p className="text-[11px] text-slate-500" data-testid={testId}>
+        Trésorerie estimée à cette étape :{" "}
+        {treasuryAtStep.toLocaleString("fr-FR")} po — sous 100 000 po, pas
+        de jet d&apos;Erreurs Coûteuses.
+      </p>
+    );
+  }
+
+  const outcome: ExpensiveMistakeOutcome | null =
+    d6 === "" ? null : expensiveMistakeOutcome(treasuryAtStep, Number(d6));
+  const needsD3 = outcome === "minor_incident";
+  const needsTwoD6 = outcome === "catastrophe";
+  let loss: number | null = null;
+  if (outcome) {
+    try {
+      loss = expensiveMistakeLoss(treasuryAtStep, outcome, {
+        d3: d3 === "" ? undefined : Number(d3),
+        twoD6: twoD6 === "" ? undefined : Number(twoD6),
+      });
+    } catch {
+      loss = null; // dé complémentaire pas encore saisi
+    }
+  }
+
+  return (
+    <div
+      data-testid={testId}
+      className="space-y-1.5 rounded border border-amber-200 bg-amber-50/60 p-2"
+    >
+      <p className="text-[11px] text-amber-800">
+        Trésorerie estimée à cette étape :{" "}
+        <strong>{treasuryAtStep.toLocaleString("fr-FR")} po</strong> — jet
+        d&apos;Erreurs Coûteuses requis (≥ 100 000 po).
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+        <label>
+          D6
+          <select
+            value={d6}
+            onChange={(e) => setD6(e.target.value)}
+            data-testid={testId ? `${testId}-d6` : undefined}
+            className="ml-1 rounded border px-1.5 py-1"
+          >
+            <option value="">—</option>
+            {[1, 2, 3, 4, 5, 6].map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+        {outcome ? (
+          <span
+            className="font-medium text-amber-900"
+            data-testid={testId ? `${testId}-outcome` : undefined}
+          >
+            → {EXPENSIVE_MISTAKE_LABELS_FR[outcome]}
+          </span>
+        ) : null}
+        {needsD3 ? (
+          <label>
+            D3
+            <select
+              value={d3}
+              onChange={(e) => setD3(e.target.value)}
+              data-testid={testId ? `${testId}-d3` : undefined}
+              className="ml-1 rounded border px-1.5 py-1"
+            >
+              <option value="">—</option>
+              {[1, 2, 3].map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        {needsTwoD6 ? (
+          <label>
+            2D6
+            <input
+              type="number"
+              min={2}
+              max={12}
+              value={twoD6}
+              onChange={(e) => setTwoD6(e.target.value)}
+              data-testid={testId ? `${testId}-2d6` : undefined}
+              className="ml-1 w-14 rounded border px-1.5 py-1"
+            />
+          </label>
+        ) : null}
+      </div>
+      {outcome && loss !== null ? (
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[11px] text-amber-900"
+            data-testid={testId ? `${testId}-loss` : undefined}
+          >
+            Perte : {loss.toLocaleString("fr-FR")} po
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              onAdd({
+                cost: loss ?? 0,
+                reason: EXPENSIVE_MISTAKE_LABELS_FR[outcome],
+              });
+              setD6("");
+              setD3("");
+              setTwoD6("");
+            }}
+            data-testid={testId ? `${testId}-add` : undefined}
+            className="rounded bg-amber-600 px-2 py-1 text-[11px] font-medium text-white"
+          >
+            Ajouter la perte
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
  * Positions distinctes deja fieldees par l'equipe (suggestions d'achat
  * joueur), avec leur nom d'affichage lisible. `slug` = valeur technique
  * envoyee au serveur ; `name` = libelle montre au coach.
@@ -1360,6 +1514,20 @@ export function PostMatchPanel({
               <div className="mb-1 font-medium text-slate-600">
                 Erreurs coûteuses
               </div>
+              <ExpensiveMistakeHelper
+                treasuryAtStep={
+                  (c.team?.treasury ?? 0) +
+                  (c.win !== ""
+                    ? Number(c.win) || 0
+                    : ((c.side === "home"
+                        ? autoWinnings?.home
+                        : autoWinnings?.away) ?? 0)) -
+                  c.buy.reduce((sum, p) => sum + (p.cost || 0), 0)
+                }
+                onAdd={(entry) => c.setCe([...c.ce, entry])}
+                disabled={disabled}
+                testId={`expensive-mistake-${c.side}`}
+              />
               <CostlyErrorEditor
                 list={c.ce}
                 onChange={c.setCe}

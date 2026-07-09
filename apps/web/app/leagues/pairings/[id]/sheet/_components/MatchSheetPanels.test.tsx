@@ -145,6 +145,68 @@ const EMPTY_POST: PostMatchValues = {
   firedPlayerIds: [],
 };
 
+describe("PostMatchPanel — FR16 assistant Erreurs Coûteuses", () => {
+  it("sous 100 000 po : indique qu'aucun jet n'est requis", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM} // trésorerie 50k, pas de gains
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("expensive-mistake-home").textContent).toContain(
+      "pas de jet",
+    );
+  });
+
+  it("550 000 po : D6=2 → Catastrophe, 2D6=7 → perte 480 000 pré-remplie", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={{ ...TEAM, treasury: 550_000 }}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("expensive-mistake-home-d6"), {
+      target: { value: "2" },
+    });
+    expect(
+      screen.getByTestId("expensive-mistake-home-outcome").textContent,
+    ).toContain("Catastrophe");
+    fireEvent.change(screen.getByTestId("expensive-mistake-home-2d6"), {
+      target: { value: "7" },
+    });
+    expect(
+      screen.getByTestId("expensive-mistake-home-loss").textContent,
+    ).toContain("480");
+    fireEvent.click(screen.getByTestId("expensive-mistake-home-add"));
+    // La ligne pré-remplie atterrit dans l'éditeur d'erreurs coûteuses.
+    const costly = screen.getByTestId("costly-home");
+    expect(within(costly).getByDisplayValue("Catastrophe")).toBeTruthy();
+    expect(within(costly).getByDisplayValue("480000")).toBeTruthy();
+  });
+
+  it("la trésorerie estimée tient compte des gains et des achats", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "reroll", name: "", cost: 60_000 }],
+        }}
+        home={{ ...TEAM, treasury: 100_000 }} // 100k + 50k gains − 60k achat = 90k
+        away={null}
+        onSave={vi.fn()}
+        autoWinnings={{ home: 50_000, away: 0 }}
+      />,
+    );
+    const helper = screen.getByTestId("expensive-mistake-home");
+    expect(helper.textContent).toContain("90");
+    expect(helper.textContent).toContain("pas de jet");
+  });
+});
+
 describe("PostMatchPanel — SPP estimés (auto)", () => {
   it("affiche les SPP auto par joueur de l'équipe", () => {
     const teamWithPlayer: SheetTeam = {

@@ -105,6 +105,17 @@ export type {
   PettyCashResult,
 } from './core/inducements';
 
+// FR16 — table des Erreurs Coûteuses (séquence d'après-match de ligue)
+export {
+  EXPENSIVE_MISTAKES_THRESHOLD,
+  EXPENSIVE_MISTAKE_LABELS_FR,
+  expensiveMistakeBand,
+  expensiveMistakeOutcome,
+  possibleExpensiveMistakeOutcomes,
+  expensiveMistakeLoss,
+} from './core/expensive-mistakes';
+export type { ExpensiveMistakeOutcome } from './core/expensive-mistakes';
+
 // Export du handler d'inducements
 export {
   handleInducementSubmission,
