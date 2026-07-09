@@ -95,9 +95,9 @@ export default function LeaderboardsPage() {
     <main className="mx-auto max-w-5xl p-6">
       <h1 className="mb-2 text-2xl font-bold">Classements de la saison</h1>
       <p className="mb-4 text-sm text-slate-600">
-        Stats agregees sur les compteurs carriere des joueurs des
-        equipes inscrites. La version par-saison precise arrivera
-        avec la feuille de match v2.
+        Stats agregees depuis les evenements des feuilles de match de
+        la saison (repli sur les compteurs carriere des joueurs quand
+        aucune feuille n&apos;a encore ete saisie).
       </p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
