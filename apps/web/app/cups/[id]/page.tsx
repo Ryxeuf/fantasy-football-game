@@ -5,6 +5,8 @@ import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
+import RosterBadge from "../../components/RosterBadge";
+import { getRosterName } from "@bb/game-engine";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -537,7 +539,7 @@ export default function CupDetailPage() {
                       <div className="text-xs text-gray-600 mt-1">
                         <span className="font-medium">Overrides budget roster : </span>
                         {Object.entries(cup.rulesConfig.rosterBudgetOverrides)
-                          .map(([slug, b]) => `${slug} : ${b}k`)
+                          .map(([slug, b]) => `${getRosterName(slug)} : ${b}k`)
                           .join(" · ")}
                       </div>
                     )}
@@ -546,7 +548,7 @@ export default function CupDetailPage() {
                       <div className="text-xs text-gray-600 mt-1">
                         <span className="font-medium">Overrides PSP roster : </span>
                         {Object.entries(cup.rulesConfig.rosterStartingPspOverrides)
-                          .map(([slug, p]) => `${slug} : ${p}`)
+                          .map(([slug, p]) => `${getRosterName(slug)} : ${p}`)
                           .join(" · ")}
                       </div>
                     )}
@@ -626,8 +628,9 @@ export default function CupDetailPage() {
                       <div className="font-medium text-gray-900">
                         {participant.name}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {participant.roster} • {participant.owner.coachName}
+                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+                        <RosterBadge slug={participant.roster} />
+                        <span>{participant.owner.coachName}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {participant.owner.email}
@@ -1046,7 +1049,7 @@ export default function CupDetailPage() {
                 <option value="">-- Sélectionner une équipe --</option>
                 {eligibleTeams.map((team) => (
                   <option key={team.id} value={team.id}>
-                    {team.name} ({team.roster})
+                    {team.name} ({getRosterName(team.roster)})
                   </option>
                 ))}
               </select>

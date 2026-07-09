@@ -5,6 +5,7 @@ import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
 import { RULESETS } from "@bb/game-engine";
 import PendingCupInvitations from "./PendingCupInvitations";
+import { getRosterName } from "@bb/game-engine";
 
 type Cup = {
   id: string;
@@ -872,7 +873,7 @@ export default function CupsPage() {
                       <span
                         key={participant.id}
                         className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
-                        title={`${participant.name} (${participant.roster}) - ${participant.owner.coachName}`}
+                        title={`${participant.name} (${getRosterName(participant.roster)}) - ${participant.owner.coachName}`}
                       >
                         {participant.name} ({participant.owner.coachName})
                       </span>

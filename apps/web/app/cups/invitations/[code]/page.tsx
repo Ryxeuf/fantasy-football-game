@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
+import { getRosterName } from "@bb/game-engine";
 
 type InvitationInfo = {
   code: string;
@@ -181,7 +182,7 @@ export default function CupInvitationPage() {
                 <option value="">-- Sélectionner une équipe --</option>
                 {eligibleTeams.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} ({t.roster})
+                    {t.name} ({getRosterName(t.roster)})
                   </option>
                 ))}
               </select>
