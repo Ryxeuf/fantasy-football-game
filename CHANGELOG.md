@@ -1,3 +1,10 @@
+## [1.213.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.1...v1.213.2) (2026-07-09)
+
+
+### 🐛 Bug Fixes
+
+* **web:** typecheck feuille de match — extrait chronologicalTimeline de page.tsx ([3565533](https://github.com/Ryxeuf/fantasy-football-game/commit/3565533d5bae173c94462edf167c8caf2274355d))
+
 ## [1.213.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.0...v1.213.1) (2026-07-09)
 
 
