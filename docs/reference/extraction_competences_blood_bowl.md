@@ -145,6 +145,10 @@ Chaque fois qu’un joueur adverse tente d’effectuer une Action de Blocage con
 
 Avant de déterminer combien de dés on jette, ce joueur peut être retiré du terrain et placé sur n’importe quelle autre case inoccupée adjacente au joueur qui effectue l’action. L’action se déroule ensuite normalement. Si le joueur qui utilise ce Trait est en possession [texte coupé sur l’image].
 
+## Frappe Précise (Active)
+
+Si ce joueur est désigné comme le joueur qui engage, alors quand le coup d’envoi Dévie, le Coach de ce joueur peut décider qu’il ne Dévie que de D3 cases plutôt que de D6 cases.
+
 ## Intrépide (Active)
 
 Quand ce joueur ayant cette Compétence effectue une Action de Blocage contre un joueur adverse qui a une Caractéristique de Force supérieure (avant d’appliquer des modificateurs aux deux joueurs), ce joueur peut jeter un D6 et ajouter sa propre Caractéristique de Force. Si le résultat est supérieur à la Caractéristique de Force non modifiée du joueur adverse, alors ce joueur augmente sa Caractéristique de Force non modifiée pour qu’elle soit égale à celle du joueur adverse pour la durée de l’Action de Blocage. Puis on applique les modificateurs normalement.
@@ -312,6 +316,22 @@ De plus, ce joueur peut appliquer un modificateur de +1 à ses Test d’Agilité
 Quand on active ce joueur, il peut annoncer une Action Spéciale de Regard Hypnotique ; il n’y a pas de limite au nombre de joueurs qui peuvent annoncer cette Action Spéciale à chaque Tour. Quand un joueur annonce une Action Spéciale de Regard Hypnotique, il a d’abord le droit de faire une Action de Mouvement, mais il ne peut pas continuer de se déplacer après avoir tenté l’Action Spéciale de Regard Hypnotique.
 
 Quand un joueur effectue une Action Spéciale de Regard Hypnotique, il choisit un joueur adverse Debout adjacent et jette un D6. Sur un 1-2, rien ne se passe et l’activation de ce joueur prend immédiatement fin. Sur 3+, le joueur adverse choisi devient Déconcentré et l’activation de ce joueur prend immédiatement fin.
+
+## Rétablissement (Active)
+
+Un joueur peut utiliser cette Compétence alors qu’il est À Terre. Un joueur À Terre ayant cette Compétence peut se relever gratuitement, sans dépenser 3 cases de mouvement pour cela.
+
+De plus, un joueur À Terre ayant cette Compétence peut annoncer une Action de Blocage alors qu’il est À Terre. En ce cas, il doit faire un Test d’Agilité, en appliquant un modificateur de +1 au résultat. Si le Test d’Agilité est réussi, il peut immédiatement se relever et effectuer l’Action de Blocage. Si le Test d’Agilité est raté, alors le joueur reste À Terre et son activation prend immédiatement fin.
+
+## Saut (Active)
+
+Pendant son Action de Mouvement, un joueur ayant cette Compétence peut tenter de Sauter par-dessus une seule case adjacente, peu importe ce qui se trouve sur la case. Sauter fonctionne exactement comme Bondir, comme décrit en page 56, à l’exception du fait que le joueur qui Saute peut réduire de 1 les modificateurs négatifs reçus en Sautant, jusqu’à un minimum de -1.
+
+Un joueur ayant cette Compétence ne peut pas aussi avoir le Trait Monté sur Ressort.
+
+## Sprint (Active)
+
+Quand ce joueur effectue une Action de Mouvement, il peut tenter de Foncer une fois de plus que le nombre de fois auxquelles il a normalement droit.
 
 ## Sur le Ballon (Active)
 

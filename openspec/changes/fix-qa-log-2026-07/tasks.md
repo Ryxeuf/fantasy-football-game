@@ -9,6 +9,6 @@
 - [x] Phase 6 — A54 poules, A56 kickoff, E11 snapshot roster
 - [x] Suites complètes server/web/game-engine vertes
 - [x] A53 — catalogue officiel des coups de pouce (photos p.142-149 fournies le 08/07)
-- [ ] A49-A52 — libellés exacts compétences (attend pages du livre)
+- [x] A49-A52 — libellés exacts compétences Rétablissement/Saut/Sprint/Frappe Précise (photos p.128/135/136 fournies le 09/07, overrides seed S3 reformulés)
 - [ ] A16 — filtrage Star Players (différé, exemples testeur requis)
 - [ ] Déploiement : migrate deploy + generate + seed (isPassive) + re-validation testeur

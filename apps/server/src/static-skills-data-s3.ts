@@ -158,6 +158,40 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
     descriptionEn:
       "Each time this player is activated, immediately after declaring their action, if they are Standing they must roll a D6. On 2+, they may perform the declared action as normal. On a 1, they cannot perform any action and their activation ends immediately.",
   },
+  // A49 — Rétablissement : le texte S3 précise le coût évité (3 cases) et la
+  // conséquence d'un Test d'Agilité raté (reste À Terre, fin d'activation).
+  // Reformulé (politique PI), cf. docs/reference/extraction_competences_blood_bowl.md.
+  "jump-up": {
+    description:
+      "Cette Compétence s'utilise quand le joueur est À Terre : il peut alors se relever gratuitement, sans dépenser les 3 cases de mouvement habituelles. Un joueur À Terre ayant cette Compétence peut aussi annoncer une Action de Blocage ; il fait alors un Test d'Agilité en appliquant un modificateur de +1. En cas de réussite, il se relève immédiatement et effectue l'Action de Blocage. En cas d'échec, il reste À Terre et son activation prend fin immédiatement.",
+    descriptionEn:
+      "This skill is used while the player is Prone: they may stand up for free, without spending the usual 3 squares of movement. A Prone player with this skill may also declare a Block action; they then make an Agility test with a +1 modifier. If passed, they immediately stand up and perform the Block action. If failed, they remain Prone and their activation ends immediately.",
+  },
+  // A50 — Saut : en S3, on Saute par-dessus UNE case adjacente quel que soit son
+  // contenu, résolu comme Bondir avec les modificateurs négatifs réduits de 1
+  // (minimum -1) ; incompatible avec Monté sur Ressort.
+  leap: {
+    description:
+      "Pendant son Action de Mouvement, ce joueur peut tenter de Sauter par-dessus une unique case adjacente, quel que soit ce qu'elle contient. Le Saut se résout exactement comme Bondir, à ceci près que ce joueur réduit de 1 les modificateurs négatifs appliqués à son Test d'Agilité de Saut, sans pouvoir aller en dessous de -1. Un joueur ayant cette Compétence ne peut pas avoir aussi le Trait Monté sur Ressort.",
+    descriptionEn:
+      "During their Move action, this player may attempt to Jump over a single adjacent square, regardless of what it contains. The Jump is resolved exactly like Leaping over a player, except this player reduces any negative modifiers to the Jump's Agility test by 1, to a minimum of -1. A player with this skill cannot also have the Pogo Stick trait.",
+  },
+  // A51 — Sprint : le texte S3 dit « une fois de plus que la normale » (et non
+  // « trois fois plutôt que deux »), pour composer avec d'autres effets.
+  sprint: {
+    description:
+      "Quand ce joueur effectue une Action de Mouvement, il peut tenter de Foncer une fois de plus que le nombre de tentatives auxquelles il a normalement droit.",
+    descriptionEn:
+      "When this player performs a Move action, they may attempt to Rush one more time than the number of attempts they are normally allowed.",
+  },
+  // A52 — Frappe Précise : en S3 la Déviation du coup d'envoi passe à D3 cases
+  // (au choix du Coach) au lieu de D6 — plus de division par deux arrondie.
+  kick: {
+    description:
+      "Quand ce joueur est désigné pour effectuer le coup d'envoi, son Coach peut décider, au moment où le ballon Dévie, que la Déviation ne soit que de D3 cases au lieu de D6.",
+    descriptionEn:
+      "When this player is nominated to take the kick-off, their coach may decide, when the ball Deviates, that it only Deviates D3 squares instead of D6.",
+  },
   insignifiant: {
     description:
       "Quand vous créez une Liste d'Équipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
