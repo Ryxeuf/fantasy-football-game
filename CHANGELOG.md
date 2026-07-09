@@ -1,3 +1,21 @@
+## [1.214.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.3...v1.214.0) (2026-07-09)
+
+
+### ✨ Features
+
+* **league-sheet:** assistant Erreurs Coûteuses selon la trésorerie (FR16) ([b2c3b70](https://github.com/Ryxeuf/fantasy-football-game/commit/b2c3b70226e9ce75c0c0c483c7ba83f830ca5591))
+* **league:** stats par joueur, blessures durables et dispo sur le roster de ligue (FR20) ([037e6b4](https://github.com/Ryxeuf/fantasy-football-game/commit/037e6b4cd96bb1055f96cdea3081ae6fac667d1a))
+
+
+### 🐛 Bug Fixes
+
+* **web:** texte périmé de la page classements de saison (FR18) ([19123e6](https://github.com/Ryxeuf/fantasy-football-game/commit/19123e68b1fc27b56783feddb9704cb20185d707))
+
+
+### 📝 Documentation
+
+* **openspec:** pointage feuille de route FR3-FR20 dans fix-qa-log-2026-07 ([39022d3](https://github.com/Ryxeuf/fantasy-football-game/commit/39022d335073298b419f94372ac4f888711be5b1))
+
 ## [1.213.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.2...v1.213.3) (2026-07-09)
 
 
