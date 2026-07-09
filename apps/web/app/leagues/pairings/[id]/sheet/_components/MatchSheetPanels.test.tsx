@@ -85,6 +85,8 @@ const EMPTY_VALUES: PreMatchValues = {
   popularityAway: null,
   inducementsHome: [],
   inducementsAway: [],
+  prayersHome: [],
+  prayersAway: [],
 };
 
 describe("TeamIdentityBadges / TeamValueStrip", () => {
@@ -308,6 +310,62 @@ describe("PreMatchPanel — forfait par équipe", () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ forfeitSide: "away" }),
     );
+  });
+});
+
+describe("PreMatchPanel — Prières à Nuffle (D16)", () => {
+  it("ajoute une prière depuis la table, bloque le doublon et l'enregistre", () => {
+    const onSave = vi.fn();
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={onSave}
+        reference={REFERENCE}
+      />,
+    );
+
+    // Ajoute le résultat 3 (Stiletto) côté domicile.
+    fireEvent.change(screen.getByTestId("prayers-home-add"), {
+      target: { value: "3" },
+    });
+    const entry = screen.getByTestId("prayers-home-entry-3");
+    expect(entry.textContent).toContain("Stiletto");
+
+    // Le jet 3 disparaît des options (doublons relancés à la table).
+    const addSelect = screen.getByTestId(
+      "prayers-home-add",
+    ) as HTMLSelectElement;
+    const values = Array.from(addSelect.options).map((o) => o.value);
+    expect(values).not.toContain("3");
+
+    fireEvent.click(screen.getByTestId("save-pre-match"));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prayersHome: [{ roll: 3, prayerId: "stiletto" }],
+        prayersAway: [],
+      }),
+    );
+  });
+
+  it("cape à 3 prières par équipe (coup de pouce 0-3)", () => {
+    render(
+      <PreMatchPanel
+        initial={{
+          ...EMPTY_VALUES,
+          prayersAway: [{ roll: 1 }, { roll: 2 }, { roll: 8 }],
+        }}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+      />,
+    );
+    expect(screen.queryByTestId("prayers-away-add")).toBeNull();
+    expect(
+      screen.getByTestId("prayers-away").textContent,
+    ).toContain("Maximum de 3");
   });
 });
 

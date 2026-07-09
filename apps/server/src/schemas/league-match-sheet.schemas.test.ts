@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { addEventSchema } from "./league-match-sheet.schemas";
+import { addEventSchema, preMatchSchema } from "./league-match-sheet.schemas";
 
 describe("A67/A68 — addEventSchema stat_loss", () => {
   const base = {
@@ -49,5 +49,44 @@ describe("A67/A68 — addEventSchema stat_loss", () => {
       injurySeverity: "mng",
     });
     expect(res.success).toBe(true);
+  });
+});
+
+describe("Prières à Nuffle — preMatchSchema.prayers*", () => {
+  it("accepte une liste de jets de D16 valides (avec ou sans prayerId)", () => {
+    const res = preMatchSchema.safeParse({
+      prayersHome: [
+        { roll: 3, prayerId: "stiletto" },
+        { roll: 16 },
+      ],
+      prayersAway: [],
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it("refuse un jet hors 1-16", () => {
+    for (const roll of [0, 17]) {
+      const res = preMatchSchema.safeParse({ prayersHome: [{ roll }] });
+      expect(res.success).toBe(false);
+    }
+  });
+
+  it("refuse plus de 3 prières par équipe (coup de pouce 0-3)", () => {
+    const res = preMatchSchema.safeParse({
+      prayersHome: [{ roll: 1 }, { roll: 2 }, { roll: 3 }, { roll: 4 }],
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("refuse un doublon de jet (relancé à la table)", () => {
+    const res = preMatchSchema.safeParse({
+      prayersHome: [{ roll: 5 }, { roll: 5 }],
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("tolère null / absent (rétro-compat)", () => {
+    expect(preMatchSchema.safeParse({ prayersHome: null }).success).toBe(true);
+    expect(preMatchSchema.safeParse({ weather: "Pluie" }).success).toBe(true);
   });
 });

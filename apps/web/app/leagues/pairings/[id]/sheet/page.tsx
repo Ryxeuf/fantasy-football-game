@@ -16,6 +16,7 @@ import {
   type PostMatchValues,
   type SheetTeam,
   type Inducement,
+  type PrayerEntry,
   type CostlyError,
   type Purchase,
   type SppBonusEntry,
@@ -295,6 +296,8 @@ interface SheetResponse {
     motmPlayerIds?: string[] | string | null;
     inducementsHome?: unknown;
     inducementsAway?: unknown;
+    prayersHome?: unknown;
+    prayersAway?: unknown;
     costlyErrorsHome?: unknown;
     costlyErrorsAway?: unknown;
     purchasesHome?: unknown;
@@ -340,6 +343,16 @@ function parseInducements(raw: unknown): Inducement[] {
       ? { starPlayerSlug: i.starPlayerSlug }
       : {}),
   }));
+}
+
+/** Prières à Nuffle (jets de D16) — tolérant array natif / JSON string. */
+function parsePrayers(raw: unknown): PrayerEntry[] {
+  return parseArray<Record<string, unknown>>(raw)
+    .filter((e) => typeof e.roll === "number" && e.roll >= 1 && e.roll <= 16)
+    .map((e) => ({
+      roll: e.roll as number,
+      ...(typeof e.prayerId === "string" ? { prayerId: e.prayerId } : {}),
+    }));
 }
 
 function parseCostlyErrors(raw: unknown): CostlyError[] {
@@ -549,6 +562,8 @@ export default function MatchSheetPage() {
           popularityAway: v.popularityAway,
           inducementsHome: v.inducementsHome,
           inducementsAway: v.inducementsAway,
+          prayersHome: v.prayersHome,
+          prayersAway: v.prayersAway,
         }),
       }),
     );
@@ -801,6 +816,8 @@ export default function MatchSheetPage() {
             popularityAway: data.sheet.popularityAway ?? null,
             inducementsHome: parseInducements(data.sheet.inducementsHome),
             inducementsAway: parseInducements(data.sheet.inducementsAway),
+            prayersHome: parsePrayers(data.sheet.prayersHome),
+            prayersAway: parsePrayers(data.sheet.prayersAway),
           }}
           homeName={home?.name ?? "Domicile"}
           awayName={away?.name ?? "Extérieur"}

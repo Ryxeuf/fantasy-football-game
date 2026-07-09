@@ -7,6 +7,7 @@ import {
   expensiveMistakeLoss,
   expensiveMistakeOutcome,
   type ExpensiveMistakeOutcome,
+  PRAYERS_TABLE,
 } from "@bb/game-engine";
 
 // Refonte mobile-first — panneaux de saisie d'une feuille de match de
@@ -211,6 +212,13 @@ export interface Inducement {
   starPlayerSlug?: string;
 }
 
+/** Prière à Nuffle obtenue au D16 (coup de pouce 0-3, 10 000 po pièce). */
+export interface PrayerEntry {
+  roll: number;
+  /** Id de la prière dans la table du moteur (dérivable du jet). */
+  prayerId?: string;
+}
+
 export interface PreMatchValues {
   weatherTable: string;
   weather: string;
@@ -219,12 +227,112 @@ export interface PreMatchValues {
   popularityAway: number | null;
   inducementsHome: Inducement[];
   inducementsAway: Inducement[];
+  prayersHome: PrayerEntry[];
+  prayersAway: PrayerEntry[];
 }
 
 function sumInducements(list: Inducement[]): number {
   return list.reduce(
     (acc, i) => acc + Math.max(0, i.cost) * Math.max(1, i.qty),
     0,
+  );
+}
+
+/** Nombre max de Prières à Nuffle par équipe (coup de pouce 0-3). */
+const MAX_PRAYERS = 3;
+
+/**
+ * FR16 — éditeur des Prières à Nuffle : enregistre les résultats du D16
+ * (jets faits autour de la table, doublons relancés donc interdits ici)
+ * à partir de la table du moteur (`PRAYERS_TABLE`, D16 → nom + effet).
+ */
+function PrayersEditor({
+  list,
+  onChange,
+  disabled,
+  testId,
+}: {
+  list: PrayerEntry[];
+  onChange: (l: PrayerEntry[]) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const usedRolls = new Set(list.map((e) => e.roll));
+  const addable = Object.entries(PRAYERS_TABLE).filter(
+    ([roll]) => !usedRolls.has(Number(roll)),
+  );
+  return (
+    <div data-testid={testId} className="text-xs">
+      <div className="mb-1 font-medium text-slate-600">
+        Prières à Nuffle{" "}
+        <span className="font-normal text-slate-400">
+          (coup de pouce 0-3, D16 par prière achetée)
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {list.map((entry, i) => {
+          const prayer = PRAYERS_TABLE[entry.roll];
+          return (
+            <div
+              key={entry.roll}
+              className="flex items-start gap-1.5 rounded border border-violet-200 bg-violet-50/60 p-1.5"
+              data-testid={testId ? `${testId}-entry-${entry.roll}` : undefined}
+            >
+              <span className="shrink-0 rounded bg-violet-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                {entry.roll}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="font-medium text-violet-900">
+                  {prayer?.nameFr ?? `Prière ${entry.roll}`}
+                </span>
+                {prayer ? (
+                  <span className="block text-[11px] text-slate-600">
+                    {prayer.description}
+                  </span>
+                ) : null}
+              </span>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => onChange(list.filter((_, idx) => idx !== i))}
+                  className="px-1 text-sm text-red-600"
+                  aria-label="retirer la prière"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {!disabled && list.length < MAX_PRAYERS && (
+          <select
+            value=""
+            onChange={(e) => {
+              const roll = Number(e.target.value);
+              if (!roll) return;
+              onChange([
+                ...list,
+                { roll, prayerId: PRAYERS_TABLE[roll]?.id },
+              ]);
+            }}
+            data-testid={testId ? `${testId}-add` : undefined}
+            className="w-full rounded border px-2 py-1.5 text-xs"
+          >
+            <option value="">+ résultat du D16…</option>
+            {addable.map(([roll, prayer]) => (
+              <option key={roll} value={roll}>
+                {roll} — {prayer.nameFr}
+              </option>
+            ))}
+          </select>
+        )}
+        {!disabled && list.length >= MAX_PRAYERS && (
+          <p className="text-[11px] text-slate-400">
+            Maximum de {MAX_PRAYERS} prières atteint.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -466,6 +574,8 @@ export function PreMatchPanel({
   );
   const [indH, setIndH] = useState<Inducement[]>(initial.inducementsHome);
   const [indA, setIndA] = useState<Inducement[]>(initial.inducementsAway);
+  const [prH, setPrH] = useState<PrayerEntry[]>(initial.prayersHome);
+  const [prA, setPrA] = useState<PrayerEntry[]>(initial.prayersAway);
   const [busy, setBusy] = useState(false);
 
   // A63 — formule officielle : chaque équipe reçoit la moyenne des deux
@@ -509,6 +619,8 @@ export function PreMatchPanel({
         popularityAway: popA === "" ? null : Number(popA),
         inducementsHome: indH,
         inducementsAway: indA,
+        prayersHome: prH,
+        prayersAway: prA,
       });
     } finally {
       setBusy(false);
@@ -524,6 +636,8 @@ export function PreMatchPanel({
       winnings: winningsH,
       ind: indH,
       setInd: setIndH,
+      prayers: prH,
+      setPrayers: setPrH,
       catalogue: reference.inducements.home,
       stars: reference.starPlayers.home,
       budget: { ...reference.budget.home, maxBudget: effectiveMaxHome },
@@ -536,6 +650,8 @@ export function PreMatchPanel({
       winnings: winningsA,
       ind: indA,
       setInd: setIndA,
+      prayers: prA,
+      setPrayers: setPrA,
       catalogue: reference.inducements.away,
       stars: reference.starPlayers.away,
       budget: { ...reference.budget.away, maxBudget: effectiveMaxAway },
@@ -660,6 +776,12 @@ export function PreMatchPanel({
               catalogue={c.catalogue}
               starPlayers={c.stars}
               budget={c.budget}
+            />
+            <PrayersEditor
+              list={c.prayers}
+              onChange={c.setPrayers}
+              disabled={disabled}
+              testId={`prayers-${c.side}`}
             />
           </div>
         ))}

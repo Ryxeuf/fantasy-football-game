@@ -53,6 +53,23 @@ export const addEventSchema = z.object({
   });
 export type AddEventBody = z.infer<typeof addEventSchema>;
 
+// Prières à Nuffle (coup de pouce 0-3, S2025) : chaque entrée = un jet de
+// D16 sur la table des Prières. Les doublons sont relancés à la table,
+// donc interdits ici.
+const prayerEntrySchema = z.object({
+  roll: z.number().int().min(1).max(16),
+  prayerId: z.string().max(64).optional().nullable(),
+});
+const prayersSchema = z
+  .array(prayerEntrySchema)
+  .max(3, "Maximum 3 Prières à Nuffle par équipe")
+  .refine(
+    (l) => new Set(l.map((e) => e.roll)).size === l.length,
+    "Doublon de jet de D16 : les résultats déjà obtenus se relancent",
+  )
+  .optional()
+  .nullable();
+
 export const preMatchSchema = z
   .object({
     weatherTable: z.string().max(64).optional().nullable(),
@@ -62,8 +79,8 @@ export const preMatchSchema = z
     forfeitSide: z.enum(["home", "away"]).optional().nullable(),
     inducementsHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     inducementsAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
-    prayersHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
-    prayersAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
+    prayersHome: prayersSchema,
+    prayersAway: prayersSchema,
   })
   .refine(
     (v) => Object.keys(v).length > 0,
