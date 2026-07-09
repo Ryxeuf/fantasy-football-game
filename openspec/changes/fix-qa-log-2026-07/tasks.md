@@ -11,4 +11,5 @@
 - [x] A53 — catalogue officiel des coups de pouce (photos p.142-149 fournies le 08/07)
 - [x] A49-A52 — libellés exacts compétences Rétablissement/Saut/Sprint/Frappe Précise (photos p.128/135/136 fournies le 09/07, overrides seed S3 reformulés)
 - [x] A16 — filtrage Star Players (PDF officiel « Star Players! » 2025 fourni le 09/07 : hirableBy S3 réalignés star par star, règles régionales 2025 ajoutées — woodland_league/chaos_clash/favoured_of_*, Dribl & Drull ajoutés en paire)
-- [ ] Déploiement : migrate deploy + generate + seed (isPassive) + re-validation testeur
+- [x] Feuille de route (09/07) : FR3/FR5/FR6/FR8/FR14/FR18 déjà couverts (audit) ; FR20 livré (stats joueurs + dispo sur roster-view) ; FR16 complété (assistant table Erreurs Coûteuses S2025)
+- [ ] Déploiement : db push (auto) + `db-migrate.sh --seed` manuel + restart server + re-validation testeur
