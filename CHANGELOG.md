@@ -1,3 +1,10 @@
+## [1.215.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.214.0...v1.215.0) (2026-07-09)
+
+
+### ✨ Features
+
+* **league-sheet:** Prières à Nuffle sur l'avant-match de la feuille de match (FR16) ([6bd2366](https://github.com/Ryxeuf/fantasy-football-game/commit/6bd236698e7ac07a044d97cf3cd26f32a29174ed))
+
 ## [1.214.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.3...v1.214.0) (2026-07-09)
 
 
