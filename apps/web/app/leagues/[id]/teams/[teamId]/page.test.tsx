@@ -44,6 +44,40 @@ const ROSTER = {
       skills: "block,dodge",
       spp: 12,
       dead: false,
+      // FR20 — stats + dispo
+      totalTouchdowns: 4,
+      totalCasualties: 2,
+      totalCompletions: 5,
+      totalInterceptions: 1,
+      aggressions: 3,
+      matchesPlayed: 6,
+      missNextMatch: false,
+      nigglingInjuries: 0,
+      statReductions: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+    },
+    {
+      id: "pl2",
+      name: "Boris",
+      position: "human_lineman",
+      positionName: "Trois-quarts",
+      number: 3,
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: "",
+      spp: 2,
+      dead: false,
+      totalTouchdowns: 0,
+      totalCasualties: 0,
+      totalCompletions: 0,
+      totalInterceptions: 0,
+      aggressions: 0,
+      matchesPlayed: 5,
+      missNextMatch: true,
+      nigglingInjuries: 2,
+      statReductions: { ma: 1, st: 0, ag: 0, pa: 0, av: 0 },
     },
   ],
 };
@@ -76,6 +110,39 @@ describe("LeagueTeamRosterPage", () => {
     expect(screen.getByText("Blocage")).toBeTruthy();
     expect(screen.getByText("Esquive")).toBeTruthy();
     expect(screen.queryByText("block")).toBeNull();
+  });
+
+  it("FR20 — affiche les stats par joueur, les blessures permanentes et la dispo", async () => {
+    apiRequestMock.mockResolvedValue(ROSTER);
+    render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+    );
+
+    // En-têtes des colonnes stats.
+    for (const header of ["TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Blessures", "Dispo"]) {
+      expect(screen.getByText(header)).toBeTruthy();
+    }
+
+    // Griff : disponible, sans blessure durable.
+    expect(
+      screen.getByTestId("player-availability-pl1").textContent,
+    ).toContain("✓");
+    expect(
+      screen.getByTestId("player-injuries-pl1").textContent,
+    ).toContain("—");
+
+    // Boris : rate le prochain match, -1 M + 2 séquelles.
+    expect(
+      screen.getByTestId("player-availability-pl2").textContent,
+    ).toContain("Absent");
+    const borisInjuries = screen.getByTestId("player-injuries-pl2").textContent;
+    expect(borisInjuries).toContain("-1 M");
+    expect(borisInjuries).toContain("2 séquelles");
   });
 
   it("affiche l'erreur renvoyée par l'API (ex: 403 non inscrit)", async () => {

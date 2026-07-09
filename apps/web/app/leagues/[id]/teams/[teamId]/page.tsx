@@ -27,6 +27,41 @@ interface RosterPlayer {
   skills: string;
   spp: number;
   dead: boolean;
+  /** FR20 — stats + blessures durables + dispo (optionnels : rétro-compat API). */
+  totalTouchdowns?: number;
+  totalCasualties?: number;
+  totalCompletions?: number;
+  totalInterceptions?: number;
+  aggressions?: number;
+  matchesPlayed?: number;
+  missNextMatch?: boolean;
+  nigglingInjuries?: number;
+  statReductions?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number;
+    av: number;
+  };
+}
+
+/** FR20 — libellé compact des blessures permanentes (BP + séquelles). */
+function lastingInjuriesLabel(p: RosterPlayer): string {
+  const parts: string[] = [];
+  const r = p.statReductions;
+  if (r) {
+    if (r.ma > 0) parts.push(`-${r.ma} M`);
+    if (r.st > 0) parts.push(`-${r.st} F`);
+    if (r.ag > 0) parts.push(`+${r.ag} AG`);
+    if (r.pa > 0) parts.push(`+${r.pa} CP`);
+    if (r.av > 0) parts.push(`-${r.av} AR`);
+  }
+  if ((p.nigglingInjuries ?? 0) > 0) {
+    parts.push(
+      `${p.nigglingInjuries} séquelle${(p.nigglingInjuries ?? 0) > 1 ? "s" : ""}`,
+    );
+  }
+  return parts.join(", ");
 }
 
 interface RosterTeam {
@@ -215,11 +250,19 @@ export default function LeagueTeamRosterPage() {
                     <th className="px-2 py-2 text-right">PA</th>
                     <th className="px-2 py-2 text-right">AV</th>
                     <th className="px-3 py-2 text-left">Compétences</th>
-                    <th className="px-2 py-2 text-right">SPP</th>
+                    <th className="px-2 py-2 text-right" title="Touchdowns marqués">TD</th>
+                    <th className="px-2 py-2 text-right" title="Éliminations provoquées sur Blocage">Élim.</th>
+                    <th className="px-2 py-2 text-right" title="Passes complétées">Pas.</th>
+                    <th className="px-2 py-2 text-right" title="Interceptions">Int.</th>
+                    <th className="px-2 py-2 text-right" title="Agressions">Agr.</th>
+                    <th className="px-2 py-2 text-right" title="Points de Star Player gagnés">PSP</th>
+                    <th className="px-3 py-2 text-left" title="Blessures permanentes (BP, séquelles)">Blessures</th>
+                    <th className="px-2 py-2 text-center" title="Disponible pour le prochain match">Dispo</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.players.map((p) => {
+                    const injuries = lastingInjuriesLabel(p);
                     return (
                       <tr
                         key={p.id}
@@ -262,7 +305,50 @@ export default function LeagueTeamRosterPage() {
                           />
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
+                          {p.totalTouchdowns ?? 0}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {p.totalCasualties ?? 0}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {p.totalCompletions ?? 0}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {p.totalInterceptions ?? 0}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {p.aggressions ?? 0}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
                           {p.spp}
+                        </td>
+                        <td
+                          className="px-3 py-2 text-xs text-red-700"
+                          data-testid={`player-injuries-${p.id}`}
+                        >
+                          {injuries || <span className="text-gray-300">—</span>}
+                        </td>
+                        <td
+                          className="px-2 py-2 text-center"
+                          data-testid={`player-availability-${p.id}`}
+                        >
+                          {p.dead ? (
+                            <span title="Décédé">☠</span>
+                          ) : p.missNextMatch ? (
+                            <span
+                              className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700"
+                              title="Rate le prochain match (blessure)"
+                            >
+                              Absent
+                            </span>
+                          ) : (
+                            <span
+                              className="text-emerald-600"
+                              title="Disponible pour le prochain match"
+                            >
+                              ✓
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );

