@@ -1,3 +1,19 @@
+## [1.216.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.215.0...v1.216.0) (2026-07-09)
+
+
+### ✨ Features
+
+* **rosters:** noms FR des rosters + composant RosterBadge coloré ([d88e734](https://github.com/Ryxeuf/fantasy-football-game/commit/d88e73418d611f654c52733a11e4cfde6cafedb5))
+* **web:** refonte visuelle de la page classements de saison ([eca2fa9](https://github.com/Ryxeuf/fantasy-football-game/commit/eca2fa9c64a2cf6dd2a40d91508824996f31945b))
+
+
+### 🐛 Bug Fixes
+
+* **cups:** plus de slug de roster brut dans l'UI coupe ([4e6f38a](https://github.com/Ryxeuf/fantasy-football-game/commit/4e6f38a79dca9c66e3e764d9156c9136bcd767fa))
+* **leagues:** plus de slug de roster brut dans l'UI ligue ([bc56849](https://github.com/Ryxeuf/fantasy-football-game/commit/bc5684975e74eb225e762859ccc4770a259340ed))
+* **prayers:** table des Prières à Nuffle alignée sur le livre S2025 ([fd3c0f9](https://github.com/Ryxeuf/fantasy-football-game/commit/fd3c0f98cf6bad60750b9ec7766c5ffc6bbd85db))
+* **teams:** RosterBadge sur carrière, sélecteur de match, mes équipes et dashboard ([1192c3d](https://github.com/Ryxeuf/fantasy-football-game/commit/1192c3d2ac0d31e93839efd75a3be59e0c765bc6))
+
 ## [1.215.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.214.0...v1.215.0) (2026-07-09)
 
 
