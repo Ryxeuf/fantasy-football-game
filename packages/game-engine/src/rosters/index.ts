@@ -49,6 +49,9 @@ export {
   type TeamColors,
 } from './team-colors';
 
+// Export des noms d'affichage FR des rosters (module léger pour le client)
+export { ROSTER_NAMES, getRosterName } from './roster-names';
+
 // Export des logos d'equipes (O.8b — cosmetiques visuels)
 export {
   DEFAULT_TEAM_LOGO,
