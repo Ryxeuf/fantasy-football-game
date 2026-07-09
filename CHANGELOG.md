@@ -1,3 +1,10 @@
+## [1.213.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.2...v1.213.3) (2026-07-09)
+
+
+### 🐛 Bug Fixes
+
+* **star-players:** « Plays for » S3 alignés sur le PDF officiel 2025 (A16) ([9666277](https://github.com/Ryxeuf/fantasy-football-game/commit/96662770edfb92ad8eb2749d3816627c90a702ac))
+
 ## [1.213.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.1...v1.213.2) (2026-07-09)
 
 
