@@ -12,7 +12,7 @@ describe("buildLeaguesListSchema", () => {
       baseUrl: BASE,
       items: [
         { slug: "badlands_brawl", name: "Bagarre des Terres Arides" },
-        { slug: "favoured_of", name: "Clash du Chaos" },
+        { slug: "chaos_clash", name: "Clash du Chaos" },
       ],
     });
     const graph = schema["@graph"] as Array<Record<string, unknown>>;

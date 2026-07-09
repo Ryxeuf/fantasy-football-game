@@ -187,6 +187,42 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     specialRuleEn: "Reliable: A failed Throw Team-Mate performed by Deeproot Strongbranch does not cause a turnover and the landing square deviates only one square instead of three. This also applies to failed passes he makes."
   },
 
+  // A16 — Dribl & Drull (paire de Skinks, PDF officiel « Star Players! » 2025).
+  // Le coût de 230 000 po couvre la paire : porté par Dribl, Drull à 0
+  // (même convention que Grak/Crumbleberry). La carte 2025 liste aussi
+  // « Quick Foul » sur Dribl, compétence absente du catalogue actuel — omise.
+  dribl: {
+    slug: "dribl",
+    displayName: "Dribl",
+    cost: 230000,
+    ma: 8,
+    st: 2,
+    ag: 3,
+    pa: 4,
+    av: 8,
+    skills: "dirty-player-1,dodge,loner-4,sidestep,sneaky-git,stunty",
+    hirableBy: ["lustrian_superleague"],
+    imageUrl: "/data/Star-Players_files/dribl.svg",
+    specialRule: "Paire Sournoise : Dribl ne se recrute qu'avec Drull. Quand Dribl effectue une Action d'Agression ou une Action Spéciale Poignarder contre un adversaire Marqué à la fois par Dribl et Drull, il peut appliquer un modificateur de +1 au jet.",
+    specialRuleEn: "A Sneaky Pair: Dribl can only be hired together with Drull. When Dribl performs a Foul action or a Stab Special Action against an opponent Marked by both Dribl and Drull, he may apply a +1 modifier to the roll."
+  },
+
+  drull: {
+    slug: "drull",
+    displayName: "Drull",
+    cost: 0,
+    ma: 8,
+    st: 2,
+    ag: 3,
+    pa: 4,
+    av: 8,
+    skills: "dodge,loner-4,sidestep,stab,stunty",
+    hirableBy: ["lustrian_superleague"],
+    imageUrl: "/data/Star-Players_files/drull.svg",
+    specialRule: "Paire Sournoise : Drull ne se recrute qu'avec Dribl. Quand Drull effectue une Action d'Agression ou une Action Spéciale Poignarder contre un adversaire Marqué à la fois par Drull et Dribl, il peut appliquer un modificateur de +1 au jet.",
+    specialRuleEn: "A Sneaky Pair: Drull can only be hired together with Dribl. When Drull performs a Foul action or a Stab Special Action against an opponent Marked by both Drull and Dribl, he may apply a +1 modifier to the roll."
+  },
+
   eldril_sidewinder: {
     slug: "eldril_sidewinder",
     displayName: "Eldril Sidewinder",
@@ -1110,11 +1146,31 @@ const cloneStarPlayersMap = (source: Record<string, StarPlayerDefinition>): Reco
  * To add a future S3 change, add an entry here with only the changed fields.
  */
 const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefinition>> = {
-  // Hakflem Skuttlespike: expanded availability in S3 (BB 2020 S2 rules)
-  // Now also available to Sylvanian Spotlight teams (Undead, Necromantic Horror, Vampire)
-  hakflem_skuttlespike: {
-    hirableBy: ["underworld_challenge", "sylvanian_spotlight"],
-  },
+  // A16 — « Plays for » alignés sur le PDF officiel GW « Star Players! »
+  // (Blood Bowl Third Season Edition, 2025). Seule la disponibilité S3
+  // change ici ; la base S2 (BB2020) reste intacte. Hakflem n'a plus
+  // d'override : le PDF 2025 le limite à Underworld Challenge (= base S2).
+  barik_farblast: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
+  bilerot_vomitflesh: { hirableBy: ["favoured_of_nurgle"] },
+  deeproot_strongbranch: { hirableBy: ["woodland_league"] },
+  grashnak_blackhoof: { hirableBy: ["chaos_clash"] },
+  grombrindal: { hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"] },
+  guffle_pussmaw: { hirableBy: ["favoured_of_nurgle"] },
+  helmut_wulf: { hirableBy: ["old_world_classic"] },
+  hthark_the_unstoppable: { hirableBy: ["badlands_brawl", "favoured_of_hashut"] },
+  jordell_freshbreeze: { hirableBy: ["elven_kingdoms_league", "woodland_league"] },
+  maple_highgrove: { hirableBy: ["woodland_league"] },
+  max_spleenripper: { hirableBy: ["favoured_of_khorne"] },
+  mighty_zug: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
+  rowana_forestfoot: { hirableBy: ["woodland_league"] },
+  scyla_anfingrimm: { hirableBy: ["favoured_of_khorne"] },
+  skorg_snowpelt: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
+  skrull_halfheight: { hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"] },
+  swiftvine_glimmershard: { hirableBy: ["woodland_league"] },
+  thorsson_stoutmead: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
+  willow_rosebark: { hirableBy: ["woodland_league"] },
+  withergrasp_doubledrool: { hirableBy: ["favoured_of_nurgle"] },
+  zzharg_madeye: { hirableBy: ["favoured_of_hashut"] },
 };
 
 /**
@@ -1246,12 +1302,48 @@ const cloneRegionalRules = (
     Object.entries(source).map(([slug, rules]) => [slug, [...rules]]),
   );
 
+/**
+ * A16 — Ajustements S3 (Blood Bowl 2025) du mapping équipes → règles
+ * régionales, nécessaires pour les « Plays for » du PDF officiel 2025 :
+ * - `woodland_league` (nouvelle ligue) : Elfes Sylvains, Halflings, Gnomes.
+ * - `chaos_clash` (nouvelle ligue chaotique) : équipes du Chaos.
+ * - `favoured_of` générique éclaté en `favoured_of_nurgle` /
+ *   `favoured_of_khorne` / `favoured_of_hashut` (les stars 2025 sont
+ *   liées à un dieu précis).
+ * Limites du modèle : le choix de dieu des Élus/Renégats du Chaos
+ * (« Favoured of… » au choix à la création) n'est pas stocké par équipe,
+ * on ne leur donne donc que `chaos_clash` ; les Nordiques sont mappés sur
+ * `favoured_of_khorne` (spécialisation de l'ancien `favoured_of` générique).
+ */
+const SEASON_THREE_TEAM_REGIONAL_RULES_OVERRIDES: Record<string, string[]> = {
+  wood_elf: ["elven_kingdoms_league", "woodland_league"],
+  halfling: ["halfling_thimble_cup", "old_world_classic", "woodland_league"],
+  gnome: ["halfling_thimble_cup", "woodland_league"],
+  nurgle: ["favoured_of_nurgle", "chaos_clash"],
+  khorne: ["favoured_of_khorne", "chaos_clash"],
+  chaos_dwarf: ["badlands_brawl", "worlds_edge_superleague", "favoured_of_hashut", "chaos_clash"],
+  chaos_chosen: ["chaos_clash"],
+  chaos_renegade: ["chaos_clash"],
+  norse: ["old_world_classic", "favoured_of_khorne"],
+  bretonnian: ["old_world_classic"],
+};
+
+function buildSeasonThreeTeamRegionalRules(): Record<string, string[]> {
+  const base = cloneRegionalRules(TEAM_REGIONAL_RULES);
+  for (const [team, rules] of Object.entries(
+    SEASON_THREE_TEAM_REGIONAL_RULES_OVERRIDES,
+  )) {
+    base[team] = [...rules];
+  }
+  return base;
+}
+
 export const TEAM_REGIONAL_RULES_BY_RULESET: Record<
   Ruleset,
   Record<string, string[]>
 > = {
   season_2: TEAM_REGIONAL_RULES,
-  season_3: cloneRegionalRules(TEAM_REGIONAL_RULES),
+  season_3: buildSeasonThreeTeamRegionalRules(),
 };
 
 export function getRegionalRulesForTeam(
@@ -1267,7 +1359,7 @@ export function getRegionalRulesForTeam(
 /**
  * Types utilitaires pour les règles régionales
  */
-export type RegionalRule = 
+export type RegionalRule =
   | "badlands_brawl"
   | "elven_kingdoms_league"
   | "halfling_thimble_cup"
@@ -1276,4 +1368,10 @@ export type RegionalRule =
   | "sylvanian_spotlight"
   | "underworld_challenge"
   | "worlds_edge_superleague"
-  | "favoured_of";
+  | "favoured_of"
+  // A16 — règles régionales introduites par Blood Bowl 2025 (S3)
+  | "woodland_league"
+  | "chaos_clash"
+  | "favoured_of_nurgle"
+  | "favoured_of_khorne"
+  | "favoured_of_hashut";

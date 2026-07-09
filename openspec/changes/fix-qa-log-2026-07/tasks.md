@@ -10,5 +10,5 @@
 - [x] Suites complètes server/web/game-engine vertes
 - [x] A53 — catalogue officiel des coups de pouce (photos p.142-149 fournies le 08/07)
 - [x] A49-A52 — libellés exacts compétences Rétablissement/Saut/Sprint/Frappe Précise (photos p.128/135/136 fournies le 09/07, overrides seed S3 reformulés)
-- [ ] A16 — filtrage Star Players (différé, exemples testeur requis)
+- [x] A16 — filtrage Star Players (PDF officiel « Star Players! » 2025 fourni le 09/07 : hirableBy S3 réalignés star par star, règles régionales 2025 ajoutées — woodland_league/chaos_clash/favoured_of_*, Dribl & Drull ajoutés en paire)
 - [ ] Déploiement : migrate deploy + generate + seed (isPassive) + re-validation testeur

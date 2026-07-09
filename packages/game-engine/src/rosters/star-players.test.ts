@@ -19,8 +19,9 @@ describe('Star Players', () => {
         expect(starPlayer.slug).toBe(slug);
         expect(starPlayer.displayName).toBeTruthy();
         
-        // Crumbleberry est gratuit car inclus avec Grak
-        if (slug === 'crumbleberry') {
+        // Crumbleberry (inclus avec Grak) et Drull (inclus avec Dribl)
+        // sont gratuits : le coût de la paire est porté par le partenaire.
+        if (slug === 'crumbleberry' || slug === 'drull') {
           expect(starPlayer.cost).toBe(0);
         } else {
           expect(starPlayer.cost).toBeGreaterThan(0);
@@ -38,8 +39,9 @@ describe('Star Players', () => {
 
     it('devrait avoir des coûts cohérents avec les règles (entre 50,000 et 340,000 po)', () => {
       Object.values(STAR_PLAYERS).forEach(starPlayer => {
-        // Crumbleberry est gratuit car inclus avec Grak
-        if (starPlayer.slug === 'crumbleberry') {
+        // Crumbleberry (inclus avec Grak) et Drull (inclus avec Dribl)
+        // sont gratuits : le coût de la paire est porté par le partenaire.
+        if (starPlayer.slug === 'crumbleberry' || starPlayer.slug === 'drull') {
           expect(starPlayer.cost).toBe(0);
         } else {
           // Les moins chers sont Bomber & Cindy à 50k
@@ -136,6 +138,26 @@ describe('Star Players', () => {
       expect(crumbleberry?.specialRule).toContain('Grak');
     });
 
+    it('Dribl et Drull - devraient être recrutés ensemble (A16, PDF 2025)', () => {
+      const dribl = getStarPlayerBySlug('dribl');
+      const drull = getStarPlayerBySlug('drull');
+
+      expect(dribl).toBeDefined();
+      expect(drull).toBeDefined();
+
+      // 230 000 po pour la paire : coût porté par Dribl, Drull gratuit
+      expect(dribl?.cost).toBe(230000);
+      expect(drull?.cost).toBe(0);
+
+      // Skinks de la Lustrian Superleague
+      expect(dribl?.hirableBy).toEqual(['lustrian_superleague']);
+      expect(drull?.hirableBy).toEqual(['lustrian_superleague']);
+
+      // Les deux devraient avoir des règles spéciales mentionnant l'autre
+      expect(dribl?.specialRule).toContain('Drull');
+      expect(drull?.specialRule).toContain('Dribl');
+    });
+
     it('Les Swift Twins - devraient être recrutés ensemble', () => {
       const lucien = getStarPlayerBySlug('lucien_swift');
       const valen = getStarPlayerBySlug('valen_swift');
@@ -164,10 +186,10 @@ describe('Star Players', () => {
       // Hakflem devrait être disponible (Underworld Challenge)
       const hakflem = availablePlayers.find(sp => sp.slug === 'hakflem_skuttlespike');
       expect(hakflem).toBeDefined();
-      
-      // Helmut Wulf devrait être disponible (pour tous)
-      const helmut = availablePlayers.find(sp => sp.slug === 'helmut_wulf');
-      expect(helmut).toBeDefined();
+
+      // Morg 'n' Thorg devrait être disponible (pour tous)
+      const morg = availablePlayers.find(sp => sp.slug === 'morg_n_thorg');
+      expect(morg).toBeDefined();
     });
 
     it('devrait retourner les star players disponibles pour une équipe Elfe Sylvain', () => {
@@ -205,9 +227,9 @@ describe('Star Players', () => {
         const regionalRules = TEAM_REGIONAL_RULES[team];
         const availablePlayers = getAvailableStarPlayers(team, regionalRules);
 
-        // Helmut Wulf (disponible pour tous) devrait être dans chaque liste
-        const helmut = availablePlayers.find(sp => sp.slug === 'helmut_wulf');
-        expect(helmut).toBeDefined();
+        // Grak (« Any Team » sur le PDF 2025) devrait être dans chaque liste
+        const grak = availablePlayers.find(sp => sp.slug === 'grak');
+        expect(grak).toBeDefined();
 
         // Morg 'n' Thorg (disponible pour tous) devrait être dans chaque liste
         const morg = availablePlayers.find(sp => sp.slug === 'morg_n_thorg');
@@ -248,9 +270,9 @@ describe('Star Players', () => {
         const slugs = available.map((sp) => sp.slug);
         expect(slugs.length).toBe(new Set(slugs).size);
 
-        // Un star "all" (Helmut) éligible inconditionnellement reste unique.
-        const helmut = available.filter((sp) => sp.slug === 'helmut_wulf');
-        expect(helmut.length).toBe(1);
+        // Un star "all" (Morg) éligible inconditionnellement reste unique.
+        const morg = available.filter((sp) => sp.slug === 'morg_n_thorg');
+        expect(morg.length).toBe(1);
       });
     });
   });
@@ -271,6 +293,109 @@ describe('Star Players', () => {
         expect(Array.isArray(rules)).toBe(true);
         expect(rules.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe('A16 — « Plays for » S3 alignés sur le PDF officiel « Star Players! » 2025', () => {
+    const S3 = 'season_3' as const;
+    const s3Available = (team: string) =>
+      getAvailableStarPlayers(team, [], S3).map((sp) => sp.slug);
+
+    it('les stars « Favoured of Nurgle » ne sont plus proposées à tout le monde', () => {
+      const human = s3Available('human');
+      for (const slug of ['bilerot_vomitflesh', 'guffle_pussmaw', 'withergrasp_doubledrool']) {
+        expect(human, `human ne doit pas proposer ${slug}`).not.toContain(slug);
+      }
+      const nurgle = s3Available('nurgle');
+      for (const slug of ['bilerot_vomitflesh', 'guffle_pussmaw', 'withergrasp_doubledrool']) {
+        expect(nurgle, `nurgle doit proposer ${slug}`).toContain(slug);
+      }
+    });
+
+    it('les stars « Favoured of Khorne » sont réservées à Khorne (et Nordiques)', () => {
+      for (const slug of ['max_spleenripper', 'scyla_anfingrimm']) {
+        expect(s3Available('khorne')).toContain(slug);
+        expect(s3Available('norse')).toContain(slug);
+        expect(s3Available('human')).not.toContain(slug);
+        expect(s3Available('nurgle')).not.toContain(slug);
+      }
+    });
+
+    it('Zzharg et H\'thark relèvent de « Favoured of Hashut » (Nains du Chaos)', () => {
+      const chaosDwarf = s3Available('chaos_dwarf');
+      expect(chaosDwarf).toContain('zzharg_madeye');
+      expect(chaosDwarf).toContain('hthark_the_unstoppable');
+      // Zzharg n'est plus proposé aux équipes Badlands génériques
+      expect(s3Available('orc')).not.toContain('zzharg_madeye');
+      expect(s3Available('goblin')).not.toContain('zzharg_madeye');
+      // H'thark reste accessible via Badlands Brawl
+      expect(s3Available('orc')).toContain('hthark_the_unstoppable');
+    });
+
+    it('Grashnak joue pour « Chaos Clash », plus pour tout le monde', () => {
+      expect(s3Available('human')).not.toContain('grashnak_blackhoof');
+      for (const team of ['chaos_chosen', 'chaos_renegade', 'nurgle', 'khorne', 'chaos_dwarf']) {
+        expect(s3Available(team), `${team} doit proposer grashnak`).toContain('grashnak_blackhoof');
+      }
+    });
+
+    it('la Woodland League (Elfes Sylvains, Halflings, Gnomes) récupère ses stars', () => {
+      const woodlandStars = ['deeproot_strongbranch', 'maple_highgrove', 'rowana_forestfoot', 'swiftvine_glimmershard', 'willow_rosebark'];
+      for (const team of ['wood_elf', 'halfling', 'gnome']) {
+        const available = s3Available(team);
+        for (const slug of woodlandStars) {
+          expect(available, `${team} doit proposer ${slug}`).toContain(slug);
+        }
+      }
+      // Deeproot n'est plus Old World Classic ; Rowana n'est plus « all »
+      expect(s3Available('human')).not.toContain('deeproot_strongbranch');
+      expect(s3Available('human')).not.toContain('rowana_forestfoot');
+      // Jordell : Elven Kingdoms League OU Woodland League
+      expect(s3Available('wood_elf')).toContain('jordell_freshbreeze');
+      expect(s3Available('dark_elf')).toContain('jordell_freshbreeze');
+    });
+
+    it('les stars naines couvrent la Worlds Edge Superleague et Grombrindal la Thimble Cup', () => {
+      const dwarf = s3Available('dwarf');
+      for (const slug of ['barik_farblast', 'grombrindal', 'skorg_snowpelt', 'thorsson_stoutmead', 'mighty_zug', 'skrull_halfheight']) {
+        expect(dwarf, `dwarf doit proposer ${slug}`).toContain(slug);
+      }
+      // Grombrindal : Halfling Thimble Cup + OWC + WES — plus Lustrian
+      expect(s3Available('halfling')).toContain('grombrindal');
+      expect(s3Available('lizardmen')).not.toContain('grombrindal');
+      // Zug : OWC + WES — plus Lustrian
+      expect(s3Available('lizardmen')).not.toContain('mighty_zug');
+    });
+
+    it('Helmut Wulf est Old World Classic (plus « all ») et Hakflem strictement Underworld', () => {
+      expect(s3Available('human')).toContain('helmut_wulf');
+      expect(s3Available('skaven')).not.toContain('helmut_wulf');
+      // L'ancien override S3 (+Sylvanian) est contredit par le PDF 2025
+      expect(s3Available('skaven')).toContain('hakflem_skuttlespike');
+      expect(s3Available('vampire')).not.toContain('hakflem_skuttlespike');
+      // Skrull dessert Sylvanian ET Worlds Edge
+      expect(s3Available('vampire')).toContain('skrull_halfheight');
+    });
+
+    it('Dribl & Drull existent et sont proposés aux équipes lustriennes', () => {
+      const lizardmen = s3Available('lizardmen');
+      expect(lizardmen).toContain('dribl');
+      expect(lizardmen).toContain('drull');
+      expect(s3Available('human')).not.toContain('dribl');
+    });
+
+    it('les Bretonniens (roster S3) ont des règles régionales et voient les stars OWC', () => {
+      expect(TEAM_REGIONAL_RULES_BY_RULESET.season_3['bretonnian']).toEqual(['old_world_classic']);
+      expect(s3Available('bretonnian')).toContain('helmut_wulf');
+    });
+
+    it('non-régression : la base season_2 (BB2020) reste inchangée', () => {
+      const s2 = STAR_PLAYERS_BY_RULESET.season_2;
+      expect(s2['deeproot_strongbranch'].hirableBy).toEqual(['old_world_classic']);
+      expect(s2['helmut_wulf'].hirableBy).toEqual(['all']);
+      expect(s2['zzharg_madeye'].hirableBy).toEqual(['badlands_brawl']);
+      expect(s2['grashnak_blackhoof'].hirableBy).toEqual(['all']);
+      expect(TEAM_REGIONAL_RULES_BY_RULESET.season_2['nurgle']).toEqual(['favoured_of']);
     });
   });
 
@@ -476,11 +601,12 @@ describe('Star Players', () => {
     });
 
     describe('S3-specific star player changes', () => {
-      it('Hakflem Skuttlespike devrait être disponible pour sylvanian_spotlight en S3', () => {
+      it('Hakflem Skuttlespike est strictement Underworld Challenge en S3 (A16, PDF 2025)', () => {
+        // L'ancien override S3 (+sylvanian_spotlight) était contredit par le
+        // PDF officiel « Star Players! » 2025 : Plays for = Underworld Challenge.
         const s3Hakflem = getStarPlayerBySlug('hakflem_skuttlespike', 'season_3');
         expect(s3Hakflem).toBeDefined();
-        expect(s3Hakflem?.hirableBy).toContain('underworld_challenge');
-        expect(s3Hakflem?.hirableBy).toContain('sylvanian_spotlight');
+        expect(s3Hakflem?.hirableBy).toEqual(['underworld_challenge']);
       });
 
       it('Hakflem Skuttlespike S2 ne devrait PAS avoir sylvanian_spotlight', () => {
@@ -538,10 +664,10 @@ describe('Star Players', () => {
         expect(boa).toBeDefined();
       });
 
-      it('les équipes undead S3 devraient avoir accès à Hakflem via sylvanian_spotlight', () => {
+      it('les équipes undead S3 ne devraient PAS avoir accès à Hakflem (A16, PDF 2025)', () => {
         const availablePlayers = getAvailableStarPlayers('undead', [], 'season_3');
         const hakflem = availablePlayers.find(sp => sp.slug === 'hakflem_skuttlespike');
-        expect(hakflem).toBeDefined();
+        expect(hakflem).toBeUndefined();
       });
 
       it('les équipes undead S2 ne devraient PAS avoir accès à Hakflem', () => {

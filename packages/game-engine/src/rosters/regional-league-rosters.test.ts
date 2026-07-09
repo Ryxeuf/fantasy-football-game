@@ -32,7 +32,7 @@ describe("getRostersForRegionalLeague", () => {
     expect(getRostersForRegionalLeague("worlds_edge_superleague")).toContain(
       "chaos_dwarf",
     );
-    expect(getRostersForRegionalLeague("favoured_of")).toContain("chaos_dwarf");
+    expect(getRostersForRegionalLeague("chaos_clash")).toContain("chaos_dwarf");
   });
 
   it("retourne un tableau vide pour un slug de Ligue inconnu", () => {

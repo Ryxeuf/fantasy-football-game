@@ -29,7 +29,7 @@ export const REGIONAL_LEAGUES: RegionalLeagueDefinition[] = [
       "Home to many Greenskin and Ogre teams, the Badlands Brawl is a violent and brutal affair where teams favour carnage over touchdowns. The games are infamously dishonest and rigged, which is exactly what makes them popular.",
   },
   {
-    slug: "favoured_of",
+    slug: "chaos_clash",
     nameFr: "Clash du Chaos",
     nameEn: "Chaos Clash",
     description:
@@ -83,9 +83,9 @@ export const REGIONAL_LEAGUES: RegionalLeagueDefinition[] = [
       "The Sylvanian Spotlight is the league for the vast majority of undead teams. It used to be the only common league for flesh-craving or sun-allergic teams; better sun-blocking magic has now brought it back under Cabalvision's spotlight.",
   },
   {
-    slug: "elven_woodland_league",
+    slug: "woodland_league",
     nameFr: "Ligue Sylvestre",
-    nameEn: "Elven Woodland League",
+    nameEn: "Woodland League",
     description:
       "La Ligue Sylvestre est disputée dans les forêts et les bosquets les plus secrets du monde connu. Ses terrains sont envahis d'une végétation luxuriante et offrent un environnement rassérénant et apaisant. Du moins, jusqu'au coup d'envoi et au moment où les joueurs exploiteront la forêt à leur avantage.",
     descriptionEn:

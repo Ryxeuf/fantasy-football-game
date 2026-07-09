@@ -169,6 +169,8 @@ export function requiresPair(starPlayerSlug: string): string | null {
     crumbleberry: "grak",
     lucien_swift: "valen_swift",
     valen_swift: "lucien_swift",
+    dribl: "drull",
+    drull: "dribl",
   };
 
   return pairs[starPlayerSlug] || null;

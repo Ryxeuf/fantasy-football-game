@@ -62,6 +62,12 @@ export default function StarPlayerDetailPage() {
       'underworld_challenge': 'Défi des Bas-fonds',
       'worlds_edge_superleague': 'Super-ligue du Bout du Monde',
       'favoured_of': 'Favoris de...',
+      // A16 — règles régionales Blood Bowl 2025 (S3)
+      'woodland_league': 'Ligue Sylvestre',
+      'chaos_clash': 'Clash du Chaos',
+      'favoured_of_nurgle': 'Favoris de Nurgle',
+      'favoured_of_khorne': 'Favoris de Khorne',
+      'favoured_of_hashut': 'Favoris de Hashut',
     };
     return labels[rule] || rule;
   };

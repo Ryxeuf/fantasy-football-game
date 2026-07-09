@@ -112,10 +112,10 @@ describe('P2.7 — Star players hirables par equipe prioritaire', () => {
   });
 
   describe('getStarPlayersHirableByPriorityTeams (season_3)', () => {
-    it('inclut la nouvelle eligibilite de Hakflem en Sylvanian Spotlight (S3)', () => {
+    it('Hakflem reste Underworld Challenge en S3 (A16, PDF officiel 2025)', () => {
       const s3Map = getStarPlayersHirableByPriorityTeams('season_3');
       const skavenSlugs = s3Map.skaven.map((sp) => sp.slug);
-      // Hakflem reste disponible aux Skavens via underworld_challenge
+      // Hakflem est disponible aux Skavens via underworld_challenge
       expect(skavenSlugs).toContain('hakflem_skuttlespike');
     });
 
