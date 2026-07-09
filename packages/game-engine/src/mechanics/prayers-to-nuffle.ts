@@ -19,7 +19,10 @@ export interface PrayerDefinition {
   id: string;
   name: string;
   nameFr: string;
+  /** Effet (EN) — reformulé d'après la table officielle S2025. */
   description: string;
+  /** Effet (FR) — reformulé d'après la table officielle S2025. */
+  descriptionFr: string;
 }
 
 /** Persistent prayer effect tracked during the match */
@@ -52,101 +55,122 @@ const PRIMARY_SKILLS: readonly string[] = [
 // ---------------------------------------------------------------------------
 
 export const PRAYERS_TABLE: Record<number, PrayerDefinition> = {
+  // Table officielle Blood Bowl 2025 (S3) — transcription interne :
+  // docs/regles-bb-2025/page-25.md. Libellés/effets reformulés (PI GW).
+  // NB : `applyPrayerEffect` ci-dessous implémente encore les effets
+  // simplifiés S2 du match online — alignement mécanique à traiter dans
+  // le chantier online play (les textes ci-dessous font foi côté ligue).
   1: {
     id: 'treacherous-trapdoor',
     name: 'Treacherous Trapdoor',
-    nameFr: 'Trappe traîtresse',
-    description: 'Randomly select one opposition player — that player is immediately removed from play and placed in the Reserves box.',
+    nameFr: 'Trappe Traîtresse',
+    description: 'Whenever any player (either team) enters a Trapdoor square for any reason, roll a D6: on a 1 the trapdoor opens and the player falls through — make an Injury roll as if they had been pushed into the crowd. If they carried the ball, it bounces from the trapdoor square.',
+    descriptionFr: "Dès qu'un joueur (des deux équipes) pénètre sur une case de Trappe, pour quelque raison que ce soit, jetez un D6 : sur 1, la Trappe cède et le joueur tombe — faites un Jet de Blessure comme s'il avait été Poussé dans le Public. S'il portait le ballon, celui-ci Rebondit depuis la case de la Trappe.",
   },
   2: {
     id: 'friends-with-the-ref',
     name: 'Friends with the Ref',
-    nameFr: 'Ami avec l\'arbitre',
-    description: 'The team gains one free Bribe inducement for this match.',
+    nameFr: "Potes avec l'Arbitre",
+    description: 'Each time you Argue the Call, treat any roll of 5 or 6 as "Well, When You Put It Like That…".',
+    descriptionFr: "À chaque fois que vous Contestez la Décision de l'arbitre, tout jet de 5 ou 6 est traité comme « Ah oui, présenté comme ça… ».",
   },
   3: {
     id: 'stiletto',
     name: 'Stiletto',
-    nameFr: 'Stiletto',
-    description: 'Randomly select one player on the team — that player gains the Stab trait for this match.',
+    nameFr: 'Stylet',
+    description: 'Randomly select one of your players playing this match: they gain the Stab trait until the end of the match.',
+    descriptionFr: "Désignez au hasard un joueur de votre équipe présent pour ce match : il gagne le Trait Poignard jusqu'à la fin du match.",
   },
   4: {
     id: 'iron-man',
     name: 'Iron Man',
-    nameFr: 'Homme de fer',
-    description: 'Randomly select one player on the team — that player gains Iron Hard Skin for this match.',
+    nameFr: 'Homme de Fer',
+    description: 'Choose one of your players playing this match: they improve their Armour Value by 1 (to a maximum of 11+) until the end of the match.',
+    descriptionFr: "Choisissez un joueur de votre équipe présent pour ce match : son Armure s'améliore de 1 (maximum 11+) jusqu'à la fin du match.",
   },
   5: {
     id: 'knuckle-dusters',
     name: 'Knuckle Dusters',
-    nameFr: 'Coups de poing américains',
-    description: 'Randomly select one player on the team — that player gains Mighty Blow (+1) for this match.',
+    nameFr: 'Gants Cloutés',
+    description: 'Choose one of your players playing this match: they gain the Mighty Blow skill until the end of the match.',
+    descriptionFr: "Choisissez un joueur de votre équipe présent pour ce match : il gagne la Compétence Châtaigne jusqu'à la fin du match.",
   },
   6: {
     id: 'bad-habits',
     name: 'Bad Habits',
-    nameFr: 'Mauvaises habitudes',
-    description: 'Randomly select one opposition player — that player gains Loner (4+) for this match.',
+    nameFr: 'Mauvaises Habitudes',
+    description: 'Randomly select D3 opposing players playing this match: they gain the Loner (2+) trait until the end of the match.',
+    descriptionFr: "Désignez au hasard D3 joueurs adverses présents pour ce match : ils gagnent le Trait Solitaire (2+) jusqu'à la fin du match.",
   },
   7: {
     id: 'greasy-cleats',
     name: 'Greasy Cleats',
-    nameFr: 'Crampons graissés',
-    description: 'Randomly select one opposition player — that player suffers -1 MA for this match (minimum 1).',
+    nameFr: 'Crampons Graisseux',
+    description: 'Randomly select one opposing player playing this match: their Movement Allowance is reduced by 1 (minimum 1) until the end of the match.',
+    descriptionFr: "Désignez au hasard un joueur adverse présent pour ce match : son Mouvement est réduit de 1 (minimum 1) jusqu'à la fin du match.",
   },
   8: {
     id: 'blessed-statue-of-nuffle',
     name: 'Blessed Statue of Nuffle',
-    nameFr: 'Statue bénie de Nuffle',
-    description: 'The team gains +1 team re-roll for this match.',
+    nameFr: 'Bénédiction de Nuffle',
+    description: 'Randomly select one of your players playing this match: they gain the Pro skill until the end of the match.',
+    descriptionFr: "Désignez au hasard un joueur de votre équipe présent pour ce match : il gagne la Compétence Pro jusqu'à la fin du match.",
   },
   9: {
     id: 'moles-under-the-pitch',
     name: 'Moles Under the Pitch',
-    nameFr: 'Taupes sous le terrain',
-    description: 'Randomly select one opposition player — that player is placed prone. No Armour roll is made.',
+    nameFr: 'Des Taupes sous le Terrain',
+    description: 'Opposing players suffer a -1 modifier when they attempt to Rush.',
+    descriptionFr: 'Les joueurs adverses subissent un modificateur de -1 à leurs jets quand ils tentent de Foncer.',
   },
   10: {
     id: 'perfect-passing',
     name: 'Perfect Passing',
-    nameFr: 'Passe parfaite',
-    description: 'Randomly select one player on the team — that player gains +1 PA for this match (minimum 1+).',
+    nameFr: 'Passe Parfaite',
+    description: 'Any player on your team who earns a Completion gains 2 SPP instead of 1.',
+    descriptionFr: 'Tout joueur de votre équipe qui accomplit une Réussite gagne 2 PSP au lieu de 1 PSP.',
   },
   11: {
-    id: 'fan-interaction',
-    name: 'Fan Interaction',
-    nameFr: 'Interaction avec les fans',
-    description: 'Randomly select one opposition player — that player is immediately Stunned.',
+    id: 'stunning-catch',
+    name: 'Stunning Catch',
+    nameFr: 'Réception Étourdissante',
+    description: 'Any player on your team who successfully catches the ball following a Pass action gains 1 SPP.',
+    descriptionFr: "Tout joueur de votre équipe qui Réceptionne le ballon avec succès à la suite d'une Action de Passe gagne 1 PSP.",
   },
   12: {
-    id: 'necessary-violence',
-    name: 'Necessary Violence',
-    nameFr: 'Violence nécessaire',
-    description: 'Randomly select one player on the team — that player gains Mighty Blow (+1) and Piling On for this match.',
+    id: 'fan-interaction',
+    name: 'Fan Interaction',
+    nameFr: 'Interaction avec les Fans',
+    description: 'When an opposing player suffers a Casualty as a result of being pushed into the crowd, the player who pushed them gains 2 SPP.',
+    descriptionFr: "Quand un joueur adverse subit une Élimination après avoir été Poussé dans le Public, le joueur qui l'y a poussé gagne 2 PSP.",
   },
   13: {
     id: 'fouling-frenzy',
     name: 'Fouling Frenzy',
-    nameFr: 'Frénésie de fautes',
-    description: 'The team gains one free Bribe inducement for this match.',
+    nameFr: "Frénésie d'Agression",
+    description: 'Any player on your team who inflicts a Casualty with a Foul action gains 2 SPP.',
+    descriptionFr: "Tout joueur de votre équipe qui inflige une Élimination lors d'une Action d'Agression gagne 2 PSP.",
   },
   14: {
     id: 'throw-a-rock',
     name: 'Throw a Rock',
-    nameFr: 'Lancer de pierre',
-    description: 'Randomly select one opposition player — an Injury roll is immediately made against them (no Armour roll).',
+    nameFr: 'Lancer de Pierre',
+    description: 'Once per match, at the start of any of your turns and before activating any player, randomly select an opposing player on the pitch and roll a D6: on 4+, an angry fan throws a rock and that player is immediately Knocked Down.',
+    descriptionFr: "Une fois par match, au début d'un de vos Tours et avant toute activation, désignez au hasard un joueur adverse sur le terrain et jetez un D6 : sur 4+, un fan en colère lui jette une pierre et il est immédiatement Plaqué.",
   },
   15: {
     id: 'under-scrutiny',
     name: 'Under Scrutiny',
-    nameFr: 'Sous surveillance',
-    description: 'All opposition players suffer a -1 modifier on Armour rolls made as part of Foul actions for this match.',
+    nameFr: 'Sous Surveillance',
+    description: 'Any opposing player who performs a Foul action is automatically Sent Off if the armour is broken, whether or not a natural double was rolled.',
+    descriptionFr: "Tout joueur adverse qui effectue une Action d'Agression est automatiquement Expulsé si l'armure est pénétrée, qu'un double naturel ait été obtenu ou non.",
   },
   16: {
     id: 'intensive-training',
     name: 'Intensive Training',
-    nameFr: 'Entraînement intensif',
-    description: 'Randomly select one player on the team — that player gains a randomly selected Primary skill for this match.',
+    nameFr: 'Entraînement Intensif',
+    description: 'Randomly select one of your players playing this match: they gain a single Primary skill of your choice until the end of the match.',
+    descriptionFr: "Désignez au hasard un joueur de votre équipe présent pour ce match : il gagne une unique Compétence Principale de votre choix jusqu'à la fin du match.",
   },
 };
 

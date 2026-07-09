@@ -287,7 +287,7 @@ function PrayersEditor({
                 </span>
                 {prayer ? (
                   <span className="block text-[11px] text-slate-600">
-                    {prayer.description}
+                    {prayer.descriptionFr ?? prayer.description}
                   </span>
                 ) : null}
               </span>

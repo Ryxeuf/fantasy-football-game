@@ -46,6 +46,66 @@ describe('Prayers to Nuffle', () => {
     });
   });
 
+  describe('PRAYERS_TABLE — table officielle S2025 (docs/regles-bb-2025/page-25.md)', () => {
+    const expectedNamesFr: Record<number, string> = {
+      1: 'Trappe Traîtresse',
+      2: "Potes avec l'Arbitre",
+      3: 'Stylet',
+      4: 'Homme de Fer',
+      5: 'Gants Cloutés',
+      6: 'Mauvaises Habitudes',
+      7: 'Crampons Graisseux',
+      8: 'Bénédiction de Nuffle',
+      9: 'Des Taupes sous le Terrain',
+      10: 'Passe Parfaite',
+      11: 'Réception Étourdissante',
+      12: 'Interaction avec les Fans',
+      13: "Frénésie d'Agression",
+      14: 'Lancer de Pierre',
+      15: 'Sous Surveillance',
+      16: 'Entraînement Intensif',
+    };
+
+    it('porte les 16 noms FR officiels S2025', () => {
+      for (const [roll, nameFr] of Object.entries(expectedNamesFr)) {
+        expect(PRAYERS_TABLE[Number(roll)].nameFr).toBe(nameFr);
+      }
+    });
+
+    it('chaque prière a une descriptionFr non vide', () => {
+      for (let i = 1; i <= 16; i++) {
+        expect(PRAYERS_TABLE[i].descriptionFr).toBeTruthy();
+      }
+    });
+
+    it('les effets clés S2025 sont présents (jetons)', () => {
+      // 5 — Gants Cloutés : Châtaigne (plus « Mighty Blow » côté FR).
+      expect(PRAYERS_TABLE[5].descriptionFr).toContain('Châtaigne');
+      // 6 — Mauvaises Habitudes : D3 adversaires, Solitaire (2+).
+      expect(PRAYERS_TABLE[6].descriptionFr).toContain('D3');
+      expect(PRAYERS_TABLE[6].descriptionFr).toContain('(2+)');
+      // 8 — Bénédiction de Nuffle : compétence Pro.
+      expect(PRAYERS_TABLE[8].descriptionFr).toContain('Pro');
+      // 9 — Taupes : malus de Foncer (plus de mise À Terre).
+      expect(PRAYERS_TABLE[9].descriptionFr).toContain('Foncer');
+      // 10-13 — les prières à PSP (la remarque FR16 du testeur).
+      expect(PRAYERS_TABLE[10].descriptionFr).toContain('2 PSP');
+      expect(PRAYERS_TABLE[11].descriptionFr).toContain('1 PSP');
+      expect(PRAYERS_TABLE[12].descriptionFr).toContain('2 PSP');
+      expect(PRAYERS_TABLE[13].descriptionFr).toContain('2 PSP');
+      // 15 — Sous Surveillance : expulsion automatique sur agression.
+      expect(PRAYERS_TABLE[15].descriptionFr).toContain('Expulsé');
+    });
+
+    it('le jet 11 est désormais Réception Étourdissante (id stunning-catch)', () => {
+      expect(PRAYERS_TABLE[11].id).toBe('stunning-catch');
+      expect(PRAYERS_TABLE[12].id).toBe('fan-interaction');
+      // « Necessary Violence » (S2) n'existe plus dans la table S2025.
+      const ids = Object.values(PRAYERS_TABLE).map((prayer) => prayer.id);
+      expect(ids).not.toContain('necessary-violence');
+    });
+  });
+
   describe('applyPrayerEffect', () => {
     const underdogTeam: TeamId = 'A';
     const opponentTeam: TeamId = 'B';

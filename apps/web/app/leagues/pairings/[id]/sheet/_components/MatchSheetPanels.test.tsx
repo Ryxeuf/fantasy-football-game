@@ -331,7 +331,7 @@ describe("PreMatchPanel — Prières à Nuffle (D16)", () => {
       target: { value: "3" },
     });
     const entry = screen.getByTestId("prayers-home-entry-3");
-    expect(entry.textContent).toContain("Stiletto");
+    expect(entry.textContent).toContain("Stylet");
 
     // Le jet 3 disparaît des options (doublons relancés à la table).
     const addSelect = screen.getByTestId(
