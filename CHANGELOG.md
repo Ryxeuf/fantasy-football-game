@@ -1,3 +1,10 @@
+## [1.213.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.213.0...v1.213.1) (2026-07-09)
+
+
+### 🐛 Bug Fixes
+
+* **skills:** textes S3 officiels Rétablissement/Saut/Sprint/Frappe Précise (A49-A52) ([1cd8fbe](https://github.com/Ryxeuf/fantasy-football-game/commit/1cd8fbe167cc160855071591fcfeda957e27f6d0))
+
 ## [1.213.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.212.1...v1.213.0) (2026-07-08)
 
 
