@@ -1,6 +1,7 @@
 "use client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { StandingRow } from "./types";
+import RosterBadge from "../../components/RosterBadge";
 
 interface SeasonStandingsProps {
   rows: StandingRow[];
@@ -97,9 +98,7 @@ export function SeasonStandings({ rows, showSeasonElo = false }: SeasonStandings
               </td>
               <td className="px-2 py-1 text-gray-900 font-medium">
                 {row.teamName}
-                <span className="ml-2 text-xs text-gray-500">
-                  {row.roster}
-                </span>
+                <RosterBadge slug={row.roster} className="ml-2" />
               </td>
               <td className="px-2 py-1 text-center">{row.played}</td>
               <td className="px-2 py-1 text-center">{row.wins}</td>

@@ -19,6 +19,7 @@ import { PoolsManagerPanel } from "./PoolsManagerPanel";
 import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
+import { getRosterName } from "@bb/game-engine";
 import type {
   LeagueDetail,
   LeagueSeasonDetail,
@@ -349,7 +350,7 @@ export default function LeagueDetailPage() {
             {" • "}
             {t.leagues.maxParticipants} : {league.maxParticipants}
             {league.allowedRosters && league.allowedRosters.length > 0
-              ? ` • ${t.leagues.allowedRosters} : ${league.allowedRosters.join(", ")}`
+              ? ` • ${t.leagues.allowedRosters} : ${league.allowedRosters.map(getRosterName).join(", ")}`
               : ""}
           </span>
         </p>

@@ -5,6 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { apiRequest } from "../../lib/api-client";
 import { CommissionerTeamEditor } from "./CommissionerTeamEditor";
 import type { LeagueParticipantDetail } from "./types";
+import RosterBadge from "../../components/RosterBadge";
 
 interface SeasonParticipantsProps {
   participants: LeagueParticipantDetail[];
@@ -139,9 +140,9 @@ export function SeasonParticipants({
               <div className="font-medium text-nuffle-anthracite">
                 {p.team.name}
               </div>
-              <div className="text-xs text-gray-600 mt-0.5">
-                {p.team.roster}
-                {p.team.owner.coachName ? ` • ${p.team.owner.coachName}` : ""}
+              <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5">
+                <RosterBadge slug={p.team.roster} />
+                {p.team.owner.coachName ? <span>{p.team.owner.coachName}</span> : null}
               </div>
               {p.poolId && poolNamesById[p.poolId] ? (
                 <span className="inline-block mt-1 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">

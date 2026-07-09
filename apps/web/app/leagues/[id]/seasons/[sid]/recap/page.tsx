@@ -23,6 +23,7 @@ import { SeasonStandings } from "../../../SeasonStandings";
 import type { StandingRow } from "../../../types";
 import { buildSeasonEventSchema } from "../../../../season-event-schema";
 import { safeJsonLd } from "../../../../../lib/safe-json-ld";
+import RosterBadge from "../../../../../components/RosterBadge";
 
 interface AwardEntry {
   teamId: string;
@@ -238,9 +239,7 @@ export default function SeasonRecapPage() {
               </p>
               <p className="text-sm text-gray-700">
                 {champion.teamName}{" "}
-                <span className="text-gray-500">
-                  ({champion.roster})
-                </span>
+                <RosterBadge slug={champion.roster} />
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 {champion.wins}V {champion.draws}N {champion.losses}D{" "}

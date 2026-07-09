@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getRosterName } from "@bb/game-engine";
 
 // Sprint Ligues v2 PR2 — modale "Inscrire une equipe a la saison".
 // Charge les equipes de l'utilisateur via `/team/mine`, filtre par
@@ -179,7 +180,7 @@ export function JoinSeasonModal({
                 <option value="">—</option>
                 {eligibleTeams.map((team) => (
                   <option key={team.id} value={team.id}>
-                    {team.name} ({team.roster})
+                    {team.name} ({getRosterName(team.roster)})
                   </option>
                 ))}
               </select>

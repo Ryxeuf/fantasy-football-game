@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../lib/api-client";
+import { getRosterName } from "@bb/game-engine";
 
 // Lot A — Page publique d'acceptation d'invitation.
 // URL : /leagues/invitations/[code]
@@ -358,7 +359,7 @@ export default function InvitationAcceptPage() {
           {eligibleTeams.length === 0 ? (
             <p className="text-sm text-red-700">
               Aucune equipe eligible. Verifiez les rosters autorises (
-              {allowedRosters?.join(", ") ?? "tous"}).
+              {allowedRosters?.map(getRosterName).join(", ") ?? "tous"}).
             </p>
           ) : (
             <select
@@ -370,7 +371,7 @@ export default function InvitationAcceptPage() {
               <option value="">-- Selectionner --</option>
               {eligibleTeams.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} ({t.roster})
+                  {t.name} ({getRosterName(t.roster)})
                 </option>
               ))}
             </select>
