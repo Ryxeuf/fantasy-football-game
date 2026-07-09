@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chronologicalTimeline } from "./page";
+import { chronologicalTimeline } from "./timeline";
 
 interface Ev {
   id: string;
