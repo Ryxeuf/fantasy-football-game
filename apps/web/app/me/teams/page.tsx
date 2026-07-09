@@ -5,6 +5,7 @@ import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import OnboardingModal from "./_components/OnboardingModal";
+import RosterBadge from "../../components/RosterBadge";
 
 type Team = {
   id: string;
@@ -211,8 +212,9 @@ export default function MyTeamsPage() {
                 href={`/me/teams/${team.id}`}
               >
                 <div className="font-semibold text-base sm:text-lg">{team.name}</div>
-                <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                  {t.teams.roster}: {rosterNames[team.roster] || team.roster}
+                <div className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center gap-1.5">
+                  <span>{t.teams.roster}:</span>
+                  <RosterBadge slug={team.roster} name={rosterNames[team.roster]} />
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">

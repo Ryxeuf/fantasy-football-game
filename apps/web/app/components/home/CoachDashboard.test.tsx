@@ -97,7 +97,7 @@ describe("CoachDashboard", () => {
     expect(createLink.getAttribute("href")).toBe("/me/teams/new");
   });
 
-  it("retombe sur le slug brut quand l'endpoint rosters echoue", async () => {
+  it("retombe sur le nom FR local (jamais le slug brut) quand l'endpoint rosters echoue", async () => {
     mockedApiRequest.mockImplementation((path: string) => {
       if (path.startsWith("/team/mine"))
         return Promise.resolve({
@@ -109,7 +109,9 @@ describe("CoachDashboard", () => {
     renderDashboard({ id: "u1", coachName: "Coach" });
     await waitFor(() => {
       const card = screen.getByTestId("dashboard-team-card");
-      expect(card.textContent).toContain("orc");
+      // RosterBadge résout via ROSTER_NAMES du moteur : « Orques », pas "orc".
+      expect(card.textContent).toContain("Orques");
+      expect(card.textContent).not.toMatch(/\borc\b/);
     });
   });
 });

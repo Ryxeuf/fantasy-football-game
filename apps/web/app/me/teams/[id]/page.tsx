@@ -20,6 +20,7 @@ import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
 import { MatchReportBanner } from "./MatchReportBanner";
 import TeamShareToggle from "./TeamShareToggle";
 import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
+import RosterBadge from "../../../components/RosterBadge";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -289,7 +290,10 @@ export default function TeamDetailPage() {
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold">{team?.name || t.teams.team}</h1>
           <div className="text-xs sm:text-sm text-gray-600 mt-1">
-            {t.teams.roster}: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
+            {t.teams.roster}:{" "}
+            {team?.roster ? (
+              <RosterBadge slug={team.roster} name={rosterName} />
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
             {team?.ruleset && (

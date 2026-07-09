@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
+import RosterBadge from "../../components/RosterBadge";
 
 export default function TeamSelectPage() {
   const [teams, setTeams] = useState<
@@ -48,8 +49,8 @@ export default function TeamSelectPage() {
             className="rounded-xl border p-6 bg-white hover:shadow text-left"
           >
             <div className="text-xl font-semibold">{t.name}</div>
-            <div className="text-sm text-gray-600 mt-1 capitalize">
-              Roster: {t.roster}
+            <div className="text-sm text-gray-600 mt-1">
+              <RosterBadge slug={t.roster} />
             </div>
           </button>
         ))}

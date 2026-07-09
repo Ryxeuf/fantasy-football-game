@@ -22,6 +22,7 @@ import {
   type CharacteristicKind
 } from "@bb/game-engine";
 import { useLanguage } from "../../../../contexts/LanguageContext";
+import RosterBadge from "../../../../components/RosterBadge";
 
 // Compteur pour générer des ids temporaires uniques côté client. Les joueurs
 // ajoutés localement portent un id préfixé "tmp_" tant qu'ils ne sont pas
@@ -460,7 +461,10 @@ export default function TeamEditPage() {
           
           <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <div>
-              Roster: <span className="font-semibold text-gray-900">{rosterName || team?.roster || ''}</span>
+              Roster:{" "}
+              {team?.roster ? (
+                <RosterBadge slug={team.roster} name={rosterName} />
+              ) : null}
             </div>
             <div>
               Budget initial: <span className="font-semibold text-gray-900">{team?.initialBudget?.toLocaleString()}k po</span>

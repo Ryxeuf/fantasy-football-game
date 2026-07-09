@@ -5,6 +5,7 @@ import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
 import { coachDisplayName, type CoachUser } from "./coach";
+import RosterBadge from "../RosterBadge";
 import {
   EmblemRosters,
   EmblemStar,
@@ -283,8 +284,11 @@ export default function CoachDashboard({ user }: CoachDashboardProps) {
                         <h3 className="font-heading font-bold text-lg leading-tight text-nuffle-anthracite truncate group-hover:text-nuffle-bronze transition-colors">
                           {team.name}
                         </h3>
-                        <p className="mt-1 text-sm text-nuffle-anthracite/65 font-body">
-                          {rosterNames[team.roster] || team.roster}
+                        <p className="mt-1 text-sm font-body">
+                          <RosterBadge
+                            slug={team.roster}
+                            name={rosterNames[team.roster]}
+                          />
                         </p>
                         <div className="mt-4 flex items-center justify-between gap-2">
                           <span className="inline-flex items-center gap-1.5 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/15 px-3 py-1 text-xs font-subtitle font-bold uppercase tracking-wide text-nuffle-bronze">

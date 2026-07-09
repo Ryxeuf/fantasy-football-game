@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getDisplayName, type Ruleset } from "@bb/game-engine";
 import { API_BASE } from "../../../../auth-client";
+import RosterBadge from "../../../../components/RosterBadge";
 
 interface TeamCareerRecord {
   matchesPlayed: number;
@@ -139,8 +140,9 @@ export default function TeamCareerPage() {
           <h1 className="text-2xl font-bold">
             {team.name} — Stats de carriere
           </h1>
-          <p className="text-sm text-gray-400">
-            Roster {team.roster} ({team.ruleset === "season_3" ? "S3" : "S2"})
+          <p className="text-sm text-gray-400 flex items-center gap-1.5">
+            <RosterBadge slug={team.roster} />
+            <span>({team.ruleset === "season_3" ? "S3" : "S2"})</span>
           </p>
         </div>
         <a
