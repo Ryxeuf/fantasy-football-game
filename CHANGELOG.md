@@ -1,3 +1,12 @@
+## [1.217.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.216.0...v1.217.0) (2026-07-10)
+
+
+### ✨ Features
+
+* **league:** évolutions saisies dans la feuille de match — module serveur (staging/application/reversal) ([2b7ffb2](https://github.com/Ryxeuf/fantasy-football-game/commit/2b7ffb252470512b27d3b32efc888832e381c0a6))
+* **league:** saisie du toss sur la feuille de match (vainqueur + choix du coup d'envoi) ([38ab8fc](https://github.com/Ryxeuf/fantasy-football-game/commit/38ab8fc9eb46c5dc3f589fb5e81f61eb19db052a))
+* **web:** saisie des évolutions dans l'onglet Évolutions de la feuille de match ([f1fa6c3](https://github.com/Ryxeuf/fantasy-football-game/commit/f1fa6c382d0a5fc5f7f9bd844ee945a90c2187c9))
+
 ## [1.216.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.215.0...v1.216.0) (2026-07-09)
 
 
