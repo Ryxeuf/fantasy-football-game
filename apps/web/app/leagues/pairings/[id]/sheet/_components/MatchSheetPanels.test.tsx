@@ -81,6 +81,8 @@ const EMPTY_VALUES: PreMatchValues = {
   weatherTable: "",
   weather: "",
   forfeitSide: null,
+  tossWinner: null,
+  tossChoice: null,
   popularityHome: null,
   popularityAway: null,
   inducementsHome: [],
@@ -309,6 +311,75 @@ describe("PreMatchPanel — forfait par équipe", () => {
     fireEvent.click(screen.getByTestId("save-pre-match"));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ forfeitSide: "away" }),
+    );
+  });
+});
+
+describe("PreMatchPanel — toss (vainqueur + choix du coup d'envoi)", () => {
+  it("saisit le vainqueur puis son choix, déduit l'équipe qui engage et enregistre", () => {
+    const onSave = vi.fn();
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={onSave}
+        reference={REFERENCE}
+      />,
+    );
+
+    const winner = screen.getByTestId("toss-winner-select") as HTMLSelectElement;
+    const choice = screen.getByTestId("toss-choice-select") as HTMLSelectElement;
+    // Le choix appartient au vainqueur : désactivé tant qu'il n'est pas saisi.
+    expect(choice.disabled).toBe(true);
+    expect(screen.queryByTestId("toss-kicking-team")).toBeNull();
+
+    fireEvent.change(winner, { target: { value: "home" } });
+    expect(choice.disabled).toBe(false);
+
+    // Vainqueur domicile qui choisit de recevoir -> l'extérieur engage.
+    fireEvent.change(choice, { target: { value: "receive" } });
+    expect(
+      screen.getByTestId("toss-kicking-team").textContent,
+    ).toContain("Gouged Eye");
+
+    // Vainqueur domicile qui choisit d'engager -> domicile engage.
+    fireEvent.change(choice, { target: { value: "kick" } });
+    expect(
+      screen.getByTestId("toss-kicking-team").textContent,
+    ).toContain("Reikland");
+
+    fireEvent.click(screen.getByTestId("save-pre-match"));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ tossWinner: "home", tossChoice: "kick" }),
+    );
+  });
+
+  it("efface le choix quand le vainqueur est retiré", () => {
+    const onSave = vi.fn();
+    render(
+      <PreMatchPanel
+        initial={{ ...EMPTY_VALUES, tossWinner: "away", tossChoice: "kick" }}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={onSave}
+        reference={REFERENCE}
+      />,
+    );
+
+    const winner = screen.getByTestId("toss-winner-select") as HTMLSelectElement;
+    // Valeurs initiales rechargées depuis la feuille.
+    expect(winner.value).toBe("away");
+    expect(
+      screen.getByTestId("toss-kicking-team").textContent,
+    ).toContain("Gouged Eye");
+
+    fireEvent.change(winner, { target: { value: "" } });
+    expect(screen.queryByTestId("toss-kicking-team")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("save-pre-match"));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ tossWinner: null, tossChoice: null }),
     );
   });
 });

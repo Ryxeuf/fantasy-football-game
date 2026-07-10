@@ -1397,6 +1397,11 @@ model LeagueMatchSheet {
   popularityAway  Int?
   /// Cote ayant declare forfait : "home" | "away" | null (pas de forfait).
   forfeitSide     String?
+  /// Cote ayant gagne le toss : "home" | "away" | null (non saisi).
+  tossWinner      String?
+  /// Choix du vainqueur du toss : "kick" (donne le coup d'envoi) |
+  /// "receive" (recoit) | null. L'equipe qui engage s'en deduit.
+  tossChoice      String?
   /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
   inducementsHome Json?
   inducementsAway Json?
@@ -1432,6 +1437,12 @@ model LeagueMatchSheet {
   /// Licenciements de fin de match : [teamPlayerId]. Appliques (firedAt) a
   /// la validation, reversibles a l'invalidation.
   firedPlayerIds         Json?
+  /// Evolutions de joueurs saisies par chaque coach AVANT la validation
+  /// (staging) : [{ playerId, type, skillSlug?, category?, stat?, d8? }].
+  /// Appliquees aux rosters a la validation commissaire (entrees alors
+  /// enrichies { applied, cost }), reversees a l'invalidation.
+  advancementsHome       Json?
+  advancementsAway       Json?
 
   /// E11 — snapshot du roster de chaque equipe fige a la PREMIERE
   /// soumission de la feuille (« version du match », consultable par

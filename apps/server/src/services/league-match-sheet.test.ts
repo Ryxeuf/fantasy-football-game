@@ -46,6 +46,15 @@ vi.mock("./push-notifications", () => ({
   sendLeagueMatchValidationPush: vi.fn(),
 }));
 
+// Évolutions stagées : application/reversal mockés (testés à part dans
+// league-sheet-advancements.test.ts). Le parse reste une vraie fonction
+// (non-vi.fn) pour survivre à resetAllMocks.
+vi.mock("./league-sheet-advancements", () => ({
+  parseStagedAdvancements: (raw: unknown) => (Array.isArray(raw) ? raw : []),
+  applyStagedAdvancements: vi.fn(),
+  reverseAppliedAdvancements: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   createMatchSheet,
@@ -66,6 +75,10 @@ import {
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import {
+  applyStagedAdvancements,
+  reverseAppliedAdvancements,
+} from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
 import type { MatchSummary } from "./league-match-summary";
@@ -75,6 +88,10 @@ const mockPrisma = prisma as any;
 const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockReverse = reverseOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockPush = sendLeagueMatchValidationPush as ReturnType<typeof vi.fn>;
+const mockApplyStaged = applyStagedAdvancements as ReturnType<typeof vi.fn>;
+const mockReverseStaged = reverseAppliedAdvancements as ReturnType<
+  typeof vi.fn
+>;
 
 const HOME = "home-owner";
 const AWAY = "away-owner";
@@ -543,6 +560,70 @@ describe("Lot G — league-match-sheet", () => {
         validateByCommissioner({ pairingId: "pair-1", userId: COMMISH }),
       ).rejects.toMatchObject({ code: "already_validated" });
     });
+
+    it("applique les évolutions stagées après les PSP et réécrit les entrées enrichies", async () => {
+      // Pairing avec teamIds pour loadSheetTeams (budget + application).
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "H", roster: "human", players: [] },
+        { id: "team-away", name: "A", roster: "orc", players: [] },
+      ]);
+      const staged = [{ playerId: "h1", type: "primary", skillSlug: "block" }];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+        advancementsHome: staged,
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockResolvedValue({ recorded: true });
+      const enriched = [{ ...staged[0], applied: true, cost: 6 }];
+      mockApplyStaged.mockResolvedValue(enriched);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+
+      await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(mockApplyStaged).toHaveBeenCalledWith({
+        teamId: "team-home",
+        entries: staged,
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.advancementsHome).toEqual(enriched);
+    });
+
+    it("n'applique PAS les évolutions quand le pipeline offline skip (déjà compté)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+        advancementsHome: [
+          { playerId: "h1", type: "primary", skillSlug: "block" },
+        ],
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockResolvedValue({
+        skipped: true,
+        reason: "match-already-scored",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+      await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+      expect(mockApplyStaged).not.toHaveBeenCalled();
+    });
   });
 
   describe("getMatchSheet", () => {
@@ -771,6 +852,54 @@ describe("Lot G — league-match-sheet", () => {
     });
   });
 
+  describe("updatePreMatch (toss)", () => {
+    beforeEach(() => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+    });
+
+    it("persiste le vainqueur du toss et son choix", async () => {
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { tossWinner: "away", tossChoice: "kick" },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.tossWinner).toBe("away");
+      expect(data.tossChoice).toBe("kick");
+    });
+
+    it("ne touche pas au toss quand le payload ne le mentionne pas (PATCH partiel)", async () => {
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { weather: "perfect" },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect("tossWinner" in data).toBe(false);
+      expect("tossChoice" in data).toBe(false);
+    });
+
+    it("accepte l'effacement explicite (null)", async () => {
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { tossWinner: null, tossChoice: null },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.tossWinner).toBeNull();
+      expect(data.tossChoice).toBeNull();
+    });
+  });
+
   // Coups de pouce : budget = petty cash (diff de CTV) + tresorerie.
   describe("updatePreMatch (budget coups de pouce)", () => {
     function mockTeamsForBudget() {
@@ -952,6 +1081,125 @@ describe("Lot G — league-match-sheet", () => {
       });
       expect(out).toBeDefined();
     });
+
+    // Nouveau workflow évolutions : staging par coach sur la feuille.
+    describe("évolutions stagées (staging)", () => {
+      function mockPairingWithTeams() {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        mockPrisma.team.findMany.mockResolvedValue([
+          {
+            id: "team-home",
+            name: "Home",
+            roster: "human",
+            players: [{ id: "h1", position: "human_blitzer" }],
+          },
+          {
+            id: "team-away",
+            name: "Away",
+            roster: "orc",
+            players: [{ id: "a1", position: "orc_blitzer" }],
+          },
+        ]);
+      }
+
+      it("un coach ne peut pas stager les évolutions de l'équipe adverse", async () => {
+        mockPairingWithTeams();
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: HOME,
+            payload: {
+              advancementsAway: [
+                { playerId: "a1", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_wrong_side" });
+      });
+
+      it("rejette un joueur hors de l'équipe du côté visé", async () => {
+        mockPairingWithTeams();
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: HOME,
+            payload: {
+              advancementsHome: [
+                { playerId: "a1", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_invalid_player" });
+      });
+
+      it("stocke les évolutions stagées du coach pour son côté", async () => {
+        mockPairingWithTeams();
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        mockPrisma.leagueMatchSheet.update.mockImplementation(
+          async (a: { data: Record<string, unknown> }) => ({
+            id: "ms1",
+            ...a.data,
+          }),
+        );
+        await updatePostMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            advancementsHome: [
+              { playerId: "h1", type: "primary", skillSlug: "block" },
+            ],
+          },
+        });
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsHome).toEqual([
+          { playerId: "h1", type: "primary", skillSlug: "block" },
+        ]);
+      });
+
+      it("le commissaire peut corriger les deux côtés", async () => {
+        mockPairingWithTeams();
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "both_submitted",
+        });
+        mockPrisma.leagueMatchSheet.update.mockImplementation(
+          async (a: { data: Record<string, unknown> }) => ({
+            id: "ms1",
+            ...a.data,
+          }),
+        );
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: COMMISH,
+            payload: {
+              advancementsHome: [
+                { playerId: "h1", type: "primary", skillSlug: "block" },
+              ],
+              advancementsAway: [
+                { playerId: "a1", type: "secondary", skillSlug: "dodge" },
+              ],
+            },
+          }),
+        ).resolves.toBeDefined();
+      });
+    });
   });
 
   // Polish — fenetre d'invalidation.
@@ -1070,6 +1318,50 @@ describe("Lot G — league-match-sheet", () => {
         invalidationReason: "erreur de saisie",
       });
       expect(out).toBeDefined();
+    });
+
+    it("reverse les évolutions appliquées et nettoie les marqueurs", async () => {
+      const applied = [
+        {
+          playerId: "h1",
+          type: "primary",
+          skillSlug: "block",
+          applied: true,
+          cost: 6,
+        },
+      ];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        advancementsHome: applied,
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0);
+      mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
+      mockReverse.mockResolvedValue({ reversed: true, matchId: "m1" });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "H", roster: "human", players: [] },
+        { id: "team-away", name: "A", roster: "orc", players: [] },
+      ]);
+      const cleaned = [
+        { playerId: "h1", type: "primary", skillSlug: "block" },
+      ];
+      mockReverseStaged.mockResolvedValue(cleaned);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+
+      await invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(mockReverseStaged).toHaveBeenCalledWith({
+        teamId: "team-home",
+        entries: applied,
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.advancementsHome).toEqual(cleaned);
     });
 
     it("aborts when reversion is impossible (e.g. a consumed level-up)", async () => {

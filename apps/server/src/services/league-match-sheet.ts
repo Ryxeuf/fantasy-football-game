@@ -39,6 +39,12 @@ import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
+import {
+  parseStagedAdvancements,
+  applyStagedAdvancements,
+  reverseAppliedAdvancements,
+  type StagedAdvancement,
+} from "./league-sheet-advancements";
 import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
@@ -77,7 +83,9 @@ export class MatchSheetError extends Error {
       | "invalidation_window_closed"
       | "invalidation_failed"
       | "inducement_over_budget"
-      | "inducement_not_allowed",
+      | "inducement_not_allowed"
+      | "advancement_wrong_side"
+      | "advancement_invalid_player",
     message: string,
   ) {
     super(message);
@@ -282,6 +290,8 @@ export interface PreMatchPayload {
   popularityHome?: number | null;
   popularityAway?: number | null;
   forfeitSide?: "home" | "away" | null;
+  tossWinner?: "home" | "away" | null;
+  tossChoice?: "kick" | "receive" | null;
   inducementsHome?: unknown;
   inducementsAway?: unknown;
   prayersHome?: unknown;
@@ -362,6 +372,8 @@ export async function updatePreMatch(input: {
   if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
   if (p.weather !== undefined) data.weather = p.weather;
   if (p.forfeitSide !== undefined) data.forfeitSide = p.forfeitSide;
+  if (p.tossWinner !== undefined) data.tossWinner = p.tossWinner;
+  if (p.tossChoice !== undefined) data.tossChoice = p.tossChoice;
   if (p.popularityHome !== undefined) data.popularityHome = p.popularityHome;
   if (p.popularityAway !== undefined) data.popularityAway = p.popularityAway;
   // A63 — gains auto : (pop dom + pop ext) × 10k / 2 + 10k par TD de
@@ -424,6 +436,12 @@ export interface PostMatchPayload {
   motmPlayerIds?: readonly string[];
   /** Licenciements de fin de match : [teamPlayerId]. */
   firedPlayerIds?: readonly string[] | null;
+  /**
+   * Évolutions stagées par coach (appliquées aux rosters uniquement à
+   * la validation commissaire). Un coach ne peut saisir que son côté.
+   */
+  advancementsHome?: readonly StagedAdvancement[] | null;
+  advancementsAway?: readonly StagedAdvancement[] | null;
 }
 
 /**
@@ -437,16 +455,52 @@ export async function updatePostMatch(input: {
   payload: PostMatchPayload;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (
-    !coachSide(ctx, input.userId) &&
-    !isCommissioner(ctx, input.userId)
-  ) {
+  const side = coachSide(ctx, input.userId);
+  const commissioner = isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(input.pairingId);
   ensureEditable(sheet.status);
 
   const p = input.payload;
+
+  // Évolutions stagées : chaque coach ne saisit QUE son côté (le
+  // commissaire peut corriger les deux) et chaque playerId doit
+  // appartenir à l'équipe du côté visé.
+  if (p.advancementsHome !== undefined || p.advancementsAway !== undefined) {
+    if (p.advancementsHome !== undefined && !commissioner && side !== "home") {
+      throw new MatchSheetError(
+        "advancement_wrong_side",
+        "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
+      );
+    }
+    if (p.advancementsAway !== undefined && !commissioner && side !== "away") {
+      throw new MatchSheetError(
+        "advancement_wrong_side",
+        "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
+      );
+    }
+    const teams = await loadSheetTeams(input.pairingId);
+    const assertOwnership = (
+      entries: readonly StagedAdvancement[] | null | undefined,
+      team: MatchSheetTeam | null,
+      label: string,
+    ): void => {
+      if (!entries || entries.length === 0) return;
+      const ids = new Set((team?.players ?? []).map((pl) => pl.id));
+      for (const e of entries) {
+        if (!ids.has(e.playerId)) {
+          throw new MatchSheetError(
+            "advancement_invalid_player",
+            `Joueur ${e.playerId} hors de l'équipe ${label}`,
+          );
+        }
+      }
+    };
+    assertOwnership(p.advancementsHome, teams.home, "domicile");
+    assertOwnership(p.advancementsAway, teams.away, "extérieur");
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   if (p.winningsHomeManual !== undefined)
@@ -474,6 +528,10 @@ export async function updatePostMatch(input: {
     data.motmPlayerIds = [...p.motmPlayerIds];
   if (p.firedPlayerIds !== undefined)
     data.firedPlayerIds = [...(p.firedPlayerIds ?? [])];
+  if (p.advancementsHome !== undefined)
+    data.advancementsHome = [...(p.advancementsHome ?? [])];
+  if (p.advancementsAway !== undefined)
+    data.advancementsAway = [...(p.advancementsAway ?? [])];
 
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -996,6 +1054,35 @@ export async function validateByCommissioner(input: {
     effects = { applied: false };
   }
 
+  // Évolutions stagées par les coachs pendant la saisie : appliquées
+  // APRÈS l'attribution des PSP (recordOfflineLeagueResult), puis
+  // réécrites enrichies ({ applied, cost } / { applied: false,
+  // skipReason }) — trace pour l'UI + support du reversal à
+  // l'invalidation. Tolérant : une entrée refusée (PSP insuffisants,
+  // accès, candidats du tirage…) ne bloque pas la validation.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const advData: any = {};
+  if (effects.applied) {
+    const sheetAdv = sheet as {
+      advancementsHome?: unknown;
+      advancementsAway?: unknown;
+    };
+    const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+    const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+    if (stagedHome.length > 0 && teamsForBudget.home?.teamId) {
+      advData.advancementsHome = await applyStagedAdvancements({
+        teamId: teamsForBudget.home.teamId,
+        entries: stagedHome,
+      });
+    }
+    if (stagedAway.length > 0 && teamsForBudget.away?.teamId) {
+      advData.advancementsAway = await applyStagedAdvancements({
+        teamId: teamsForBudget.away.teamId,
+        entries: stagedAway,
+      });
+    }
+  }
+
   const updated = await prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data: {
@@ -1004,6 +1091,7 @@ export async function validateByCommissioner(input: {
       validatedById: input.userId,
       scoreHome: summary.scoreHome,
       scoreAway: summary.scoreAway,
+      ...advData,
     },
   });
   return { sheet: updated, summary, effects };
@@ -1120,12 +1208,40 @@ export async function invalidateMatchSheet(input: {
     }
   }
 
+  // Reverse les évolutions appliquées à la validation (PSP remboursés,
+  // compétence/carac retirée, VE décrémentée) et nettoie les marqueurs
+  // `applied` pour qu'une re-validation ré-applique proprement.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const advData: any = {};
+  const sheetAdv = sheet as {
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
+  };
+  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+  if (stagedHome.length > 0 || stagedAway.length > 0) {
+    const teams = await loadSheetTeams(input.pairingId);
+    if (stagedHome.length > 0 && teams.home?.teamId) {
+      advData.advancementsHome = await reverseAppliedAdvancements({
+        teamId: teams.home.teamId,
+        entries: stagedHome,
+      });
+    }
+    if (stagedAway.length > 0 && teams.away?.teamId) {
+      advData.advancementsAway = await reverseAppliedAdvancements({
+        teamId: teams.away.teamId,
+        entries: stagedAway,
+      });
+    }
+  }
+
   const updated = await prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data: {
       status: "invalidated",
       invalidatedAt: new Date(),
       invalidationReason: input.reason ?? null,
+      ...advData,
     },
   });
   serverLog.info(
@@ -1245,12 +1361,26 @@ export interface MatchSheetPlayer {
   readonly missNextMatch: boolean;
   /** SPP courant + level brut (pour surfacer les level-up en attente). */
   readonly spp: number;
+  /** Compétences actuelles (CSV de slugs) — staging des évolutions. */
+  readonly skills: string | null;
+  /** Nombre d'avancements déjà pris (coût du prochain palier). */
+  readonly advancementsTaken: number;
+  /** Caractéristiques courantes (fiche joueur du staging). */
+  readonly stats: {
+    readonly ma: number;
+    readonly st: number;
+    readonly ag: number;
+    readonly pa: number | null;
+    readonly av: number;
+  };
 }
 
 export interface MatchSheetTeam {
   readonly teamId: string;
   readonly name: string;
   readonly roster: string;
+  /** Ruleset de l'équipe (catalogue de compétences du staging). */
+  readonly ruleset: string;
   /** Libelle de la race (ex: "Skavens"), resolu depuis le roster slug. */
   readonly raceName: string;
   /** Nom du coach (owner de l'equipe). */
@@ -1322,6 +1452,7 @@ async function loadSheetTeams(
       id: true,
       name: true,
       roster: true,
+      ruleset: true,
       teamValue: true,
       currentValue: true,
       treasury: true,
@@ -1340,6 +1471,14 @@ async function loadSheetTeams(
           dead: true,
           missNextMatch: true,
           spp: true,
+          // Staging des évolutions (fiche joueur + coût du prochain palier).
+          skills: true,
+          advancements: true,
+          ma: true,
+          st: true,
+          ag: true,
+          pa: true,
+          av: true,
         },
       },
     },
@@ -1347,12 +1486,37 @@ async function loadSheetTeams(
     id: string;
     name: string;
     roster: string;
+    ruleset?: string | null;
     teamValue?: number | null;
     currentValue?: number | null;
     treasury?: number | null;
     owner?: { coachName?: string | null } | null;
-    players: Array<Omit<MatchSheetPlayer, "positionName">>;
+    players: Array<{
+      id: string;
+      number: number;
+      name: string;
+      position: string;
+      dead: boolean;
+      missNextMatch: boolean;
+      spp: number;
+      skills: string | null;
+      advancements: string | null;
+      ma: number;
+      st: number;
+      ag: number;
+      pa: number | null;
+      av: number;
+    }>;
   }>;
+
+  const countAdvancements = (raw: string | null): number => {
+    try {
+      const parsed = JSON.parse(raw ?? "[]");
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  };
 
   const byId = new Map(teams.map((t) => [t.id, t]));
   const toTeam = (teamId?: string): MatchSheetTeam | null => {
@@ -1364,13 +1528,23 @@ async function loadSheetTeams(
       teamId: t.id,
       name: t.name,
       roster: t.roster,
+      ruleset: t.ruleset ?? "season_3",
       raceName: raceNameForRoster(t.roster),
       coachName: t.owner?.coachName ?? "",
       teamValue: t.teamValue ?? 0,
       currentValue: t.currentValue ?? 0,
       treasury: t.treasury ?? 0,
       players: t.players.map((p) => ({
-        ...p,
+        id: p.id,
+        number: p.number,
+        name: p.name,
+        position: p.position,
+        dead: p.dead,
+        missNextMatch: p.missNextMatch,
+        spp: p.spp,
+        skills: p.skills,
+        advancementsTaken: countAdvancements(p.advancements),
+        stats: { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
         positionName: positionNames.get(p.position) ?? p.position,
       })),
     };

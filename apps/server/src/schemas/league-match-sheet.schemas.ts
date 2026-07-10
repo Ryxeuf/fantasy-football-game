@@ -77,6 +77,9 @@ export const preMatchSchema = z
     popularityHome: z.number().int().min(0).max(20).optional().nullable(),
     popularityAway: z.number().int().min(0).max(20).optional().nullable(),
     forfeitSide: z.enum(["home", "away"]).optional().nullable(),
+    /** Toss d'avant-match : côté vainqueur + son choix (engager/recevoir). */
+    tossWinner: z.enum(["home", "away"]).optional().nullable(),
+    tossChoice: z.enum(["kick", "receive"]).optional().nullable(),
     inducementsHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     inducementsAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     prayersHome: prayersSchema,
@@ -109,6 +112,61 @@ const purchaseSchema = z.object({
     .nullable(),
   number: z.number().int().min(1).max(99).optional().nullable(),
 });
+
+// Évolutions saisies pendant la feuille de match (staging) : appliquées
+// aux rosters uniquement à la validation commissaire. Une seule évolution
+// par joueur et par match (le tirage random-primary est seedé sur le
+// nombre d'avancements pris : plusieurs entrées le fausseraient).
+const stagedAdvancementSchema = z
+  .object({
+    playerId: z.string().min(1).max(64),
+    type: z.enum(["primary", "secondary", "random-primary", "characteristic"]),
+    skillSlug: z.string().max(64).optional().nullable(),
+    category: z.string().max(2).optional().nullable(),
+    stat: z.enum(["ma", "st", "ag", "pa", "av"]).optional().nullable(),
+    d8: z.number().int().min(1).max(8).optional().nullable(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.type === "characteristic") {
+      if (!v.stat)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["stat"],
+          message: "stat requise pour une amélioration de caractéristique",
+        });
+      if (typeof v.d8 !== "number")
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["d8"],
+          message: "d8 requis pour une amélioration de caractéristique",
+        });
+      return;
+    }
+    if (!v.skillSlug || v.skillSlug.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["skillSlug"],
+        message: "skillSlug requis pour une évolution de compétence",
+      });
+    }
+    if (v.type === "random-primary" && !v.category) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["category"],
+        message: "category requise pour un tirage aléatoire",
+      });
+    }
+  });
+
+const stagedAdvancementsSchema = z
+  .array(stagedAdvancementSchema)
+  .max(32)
+  .refine(
+    (l) => new Set(l.map((e) => e.playerId)).size === l.length,
+    "Une seule évolution par joueur et par match",
+  )
+  .optional()
+  .nullable();
 
 export const postMatchSchema = z
   .object({
@@ -152,6 +210,9 @@ export const postMatchSchema = z
     motmPlayerIds: z.array(z.string().min(1)).max(20).optional(),
     /** Licenciements de fin de match : [teamPlayerId]. */
     firedPlayerIds: z.array(z.string().min(1)).max(32).optional().nullable(),
+    /** Évolutions stagées par coach (appliquées à la validation). */
+    advancementsHome: stagedAdvancementsSchema,
+    advancementsAway: stagedAdvancementsSchema,
   })
   .refine(
     (v) => Object.keys(v).length > 0,

@@ -223,6 +223,10 @@ export interface PreMatchValues {
   weatherTable: string;
   weather: string;
   forfeitSide: "home" | "away" | null;
+  /** Côté ayant gagné le toss d'avant-match. */
+  tossWinner: "home" | "away" | null;
+  /** Choix du vainqueur : engager (donner le coup d'envoi) ou recevoir. */
+  tossChoice: "kick" | "receive" | null;
   popularityHome: number | null;
   popularityAway: number | null;
   inducementsHome: Inducement[];
@@ -566,6 +570,12 @@ export function PreMatchPanel({
   const [forfeitSide, setForfeitSide] = useState<"home" | "away" | "">(
     initial.forfeitSide ?? "",
   );
+  const [tossWinner, setTossWinner] = useState<"home" | "away" | "">(
+    initial.tossWinner ?? "",
+  );
+  const [tossChoice, setTossChoice] = useState<"kick" | "receive" | "">(
+    initial.tossChoice ?? "",
+  );
   const [popH, setPopH] = useState<string>(
     initial.popularityHome?.toString() ?? "",
   );
@@ -615,6 +625,9 @@ export function PreMatchPanel({
         weatherTable,
         weather,
         forfeitSide: forfeitSide === "" ? null : forfeitSide,
+        tossWinner: tossWinner === "" ? null : tossWinner,
+        tossChoice:
+          tossWinner === "" || tossChoice === "" ? null : tossChoice,
         popularityHome: popH === "" ? null : Number(popH),
         popularityAway: popA === "" ? null : Number(popA),
         inducementsHome: indH,
@@ -715,6 +728,62 @@ export function PreMatchPanel({
           </select>
         </label>
       </div>
+
+      {/* Toss d'avant-match : vainqueur + choix (engager ou recevoir). */}
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block text-xs">
+          Toss gagné par
+          <select
+            value={tossWinner}
+            onChange={(e) => {
+              const v = e.target.value as "home" | "away" | "";
+              setTossWinner(v);
+              // Le choix appartient au vainqueur : sans vainqueur, pas de choix.
+              if (v === "") setTossChoice("");
+            }}
+            disabled={disabled}
+            data-testid="toss-winner-select"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+          >
+            <option value="">—</option>
+            <option value="home">{homeName}</option>
+            <option value="away">{awayName}</option>
+          </select>
+        </label>
+        <label className="block text-xs">
+          Choix du vainqueur
+          <select
+            value={tossChoice}
+            onChange={(e) =>
+              setTossChoice(e.target.value as "kick" | "receive" | "")
+            }
+            disabled={disabled || tossWinner === ""}
+            data-testid="toss-choice-select"
+            className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
+          >
+            <option value="">
+              {tossWinner === "" ? "— Vainqueur d'abord —" : "—"}
+            </option>
+            <option value="kick">Donne le coup d&apos;envoi (engage)</option>
+            <option value="receive">Reçoit le coup d&apos;envoi</option>
+          </select>
+        </label>
+      </div>
+
+      {/* Équipe qui engage, déduite du toss (informatif). */}
+      {tossWinner !== "" && tossChoice !== "" && (
+        <div
+          data-testid="toss-kicking-team"
+          className="mb-3 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700"
+        >
+          <span className="font-semibold text-nuffle-anthracite">
+            {(tossChoice === "kick") === (tossWinner === "home")
+              ? homeName
+              : awayName}
+          </span>{" "}
+          donne le coup d&apos;envoi.
+        </div>
+      )}
 
       {/* Conséquences (informatives) de la météo sélectionnée. */}
       {selectedWeather && (

@@ -90,3 +90,28 @@ describe("Prières à Nuffle — preMatchSchema.prayers*", () => {
     expect(preMatchSchema.safeParse({ weather: "Pluie" }).success).toBe(true);
   });
 });
+
+describe("Toss — preMatchSchema.tossWinner/tossChoice", () => {
+  it("accepte un vainqueur et un choix valides", () => {
+    const res = preMatchSchema.safeParse({
+      tossWinner: "home",
+      tossChoice: "receive",
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it("refuse un côté ou un choix hors enum", () => {
+    expect(preMatchSchema.safeParse({ tossWinner: "middle" }).success).toBe(
+      false,
+    );
+    expect(preMatchSchema.safeParse({ tossChoice: "flip" }).success).toBe(
+      false,
+    );
+  });
+
+  it("tolère null / absent (rétro-compat)", () => {
+    expect(
+      preMatchSchema.safeParse({ tossWinner: null, tossChoice: null }).success,
+    ).toBe(true);
+  });
+});

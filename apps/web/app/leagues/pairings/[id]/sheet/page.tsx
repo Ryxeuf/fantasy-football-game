@@ -282,6 +282,8 @@ interface SheetResponse {
     weatherTable?: string | null;
     weather?: string | null;
     forfeitSide?: "home" | "away" | null;
+    tossWinner?: "home" | "away" | null;
+    tossChoice?: "kick" | "receive" | null;
     popularityHome?: number | null;
     popularityAway?: number | null;
     winningsHome?: number | null;
@@ -558,6 +560,8 @@ export default function MatchSheetPage() {
           weatherTable: v.weatherTable || null,
           weather: v.weather || null,
           forfeitSide: v.forfeitSide,
+          tossWinner: v.tossWinner,
+          tossChoice: v.tossChoice,
           popularityHome: v.popularityHome,
           popularityAway: v.popularityAway,
           inducementsHome: v.inducementsHome,
@@ -812,6 +816,8 @@ export default function MatchSheetPage() {
             weatherTable: data.sheet.weatherTable ?? "",
             weather: data.sheet.weather ?? "",
             forfeitSide: data.sheet.forfeitSide ?? null,
+            tossWinner: data.sheet.tossWinner ?? null,
+            tossChoice: data.sheet.tossChoice ?? null,
             popularityHome: data.sheet.popularityHome ?? null,
             popularityAway: data.sheet.popularityAway ?? null,
             inducementsHome: parseInducements(data.sheet.inducementsHome),
