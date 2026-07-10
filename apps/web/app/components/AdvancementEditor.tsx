@@ -36,7 +36,7 @@ const CHARACTERISTIC_OPTIONS: ReadonlyArray<{
   { code: "av", label: "AV (Armure)" },
 ];
 
-interface PendingAdvancementItem {
+export interface PendingAdvancementItem {
   sequenceId: string;
   matchId: string;
   seasonId: string;
@@ -66,13 +66,30 @@ interface PendingResponse {
   items: PendingAdvancementItem[];
 }
 
-interface SkillCatalogItem {
+export interface SkillCatalogItem {
   slug: string;
   nameFr: string;
   category: string;
   nameEn?: string;
   description?: string;
   descriptionEn?: string;
+}
+
+/**
+ * Choix d'évolution stagé sur la feuille de match (nouveau workflow :
+ * la saisie des évolutions fait partie de la feuille, l'application au
+ * roster n'a lieu qu'à la validation commissaire).
+ */
+export interface StagedAdvancementChoice {
+  type: AdvancementType;
+  skillSlug?: string | null;
+  category?: string | null;
+  stat?: CharacteristicKind | null;
+  d8?: number | null;
+  /** Renseignés par le serveur à la validation (recap). */
+  applied?: boolean;
+  cost?: number;
+  skipReason?: string;
 }
 
 /** Description localisée d'une compétence (repli FR si EN absent). */
@@ -273,14 +290,31 @@ export function AdvancementEditor({
   );
 }
 
-interface PlayerRowProps {
+export interface PlayerRowProps {
   item: PendingAdvancementItem;
   teamId: string;
   catalog: SkillCatalogItem[];
   onApplied: () => void;
+  /**
+   * Mode « staging feuille de match » : le choix n'est PAS appliqué au
+   * roster (pas de POST advancement) mais remonté au parent, qui le
+   * stocke sur la feuille. Le tirage random-primary reste serveur.
+   */
+  stage?: {
+    staged: StagedAdvancementChoice | null;
+    onStage: (choice: StagedAdvancementChoice) => void;
+    onUnstage: () => void;
+    disabled?: boolean;
+  };
 }
 
-function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
+export function PlayerRow({
+  item,
+  teamId,
+  catalog,
+  onApplied,
+  stage,
+}: PlayerRowProps) {
   const { t, language } = useLanguage();
   const [type, setType] = useState<AdvancementType>("random-primary");
   const [skillSlug, setSkillSlug] = useState("");
@@ -457,6 +491,20 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
         setError(t.teams.levelUpInsufficientSpp ?? "PSP insuffisants");
         return;
       }
+      // Mode staging : pas d'application — le choix est remonté au parent
+      // (stocké sur la feuille de match, appliqué à la validation).
+      if (stage) {
+        stage.onStage(
+          isCharacteristic
+            ? { type, stat: stat || null, d8: d8Roll }
+            : isRandomPrimary
+              ? { type, category, skillSlug: trimmed }
+              : { type, skillSlug: trimmed },
+        );
+        setStat("");
+        setD8Roll(null);
+        return;
+      }
       setSubmitting(true);
       setError(null);
       try {
@@ -494,6 +542,7 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
       item.teamPlayerId,
       type,
       onApplied,
+      stage,
       t.teams.levelUpInsufficientSpp,
       t.teams.levelUpApplyError,
     ],
@@ -587,7 +636,38 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
         </div>
       ) : null}
 
-      {applied?.applied ? (
+      {stage?.staged ? (
+        <div
+          data-testid={`level-up-staged-${item.teamPlayerId}`}
+          className="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+        >
+          <div>
+            📋{" "}
+            <strong>
+              {stage.staged.type === "characteristic"
+                ? `+${(stage.staged.stat ?? "").toUpperCase()}`
+                : nameOf(stage.staged.skillSlug ?? "")}
+            </strong>{" "}
+            ({TYPE_META.find((tm) => tm.value === stage.staged?.type)?.short ??
+              stage.staged.type}
+            ) — sera appliqué à la validation du commissaire.
+          </div>
+          {!stage.disabled ? (
+            <button
+              type="button"
+              data-testid={`level-up-unstage-${item.teamPlayerId}`}
+              onClick={stage.onUnstage}
+              className="self-start rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100"
+            >
+              Retirer de ma saisie
+            </button>
+          ) : null}
+        </div>
+      ) : stage?.disabled ? (
+        <p className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-500">
+          Saisie verrouillée (déjà validée de ton côté).
+        </p>
+      ) : applied?.applied ? (
         <div
           data-testid={`level-up-applied-${item.teamPlayerId}`}
           className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
@@ -909,7 +989,9 @@ function PlayerRow({ item, teamId, catalog, onApplied }: PlayerRowProps) {
             >
               {submitting
                 ? t.leagues.formSubmitting
-                : `${t.teams.levelUpApplyButton ?? "Appliquer"} · ${cost} PSP`}
+                : stage
+                  ? `Ajouter à ma saisie · ${cost} PSP`
+                  : `${t.teams.levelUpApplyButton ?? "Appliquer"} · ${cost} PSP`}
             </button>
             {!canAfford ? (
               <p className="text-xs text-amber-700">

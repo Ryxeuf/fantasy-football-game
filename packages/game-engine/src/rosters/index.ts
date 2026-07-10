@@ -52,6 +52,13 @@ export {
 // Export des noms d'affichage FR des rosters (module léger pour le client)
 export { ROSTER_NAMES, getRosterName } from './roster-names';
 
+// Export des accès aux compétences par position S3 (staging des évolutions
+// sur la feuille de match : filtres primaire/secondaire côté client)
+export {
+  SKILL_ACCESS_SEASON3,
+  type PositionSkillAccessS3,
+} from './skill-access-season3';
+
 // Export des logos d'equipes (O.8b — cosmetiques visuels)
 export {
   DEFAULT_TEAM_LOGO,

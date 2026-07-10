@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { AdvancementEditor } from "../../../../components/AdvancementEditor";
+import {
+  SheetAdvancementsEditor,
+  StagedAdvancementsRecap,
+  type StagedAdvancementEntry,
+} from "./_components/SheetAdvancementsEditor";
 import { KICKOFF_EVENTS } from "@bb/game-engine";
 import {
   PreMatchPanel,
@@ -305,6 +310,9 @@ interface SheetResponse {
     purchasesHome?: unknown;
     purchasesAway?: unknown;
     firedPlayerIds?: unknown;
+    /** Évolutions stagées par coach (appliquées à la validation). */
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
     /** E11 — snapshots roster figés à la 1re soumission (JSON string). */
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
@@ -355,6 +363,18 @@ function parsePrayers(raw: unknown): PrayerEntry[] {
       roll: e.roll as number,
       ...(typeof e.prayerId === "string" ? { prayerId: e.prayerId } : {}),
     }));
+}
+
+/** Évolutions stagées — tolérant array natif / JSON string. */
+function parseStagedAdvancements(raw: unknown): StagedAdvancementEntry[] {
+  return parseArray<Record<string, unknown>>(raw)
+    .filter(
+      (e) =>
+        typeof e.playerId === "string" &&
+        e.playerId.length > 0 &&
+        typeof e.type === "string",
+    )
+    .map((e) => e as unknown as StagedAdvancementEntry);
 }
 
 function parseCostlyErrors(raw: unknown): CostlyError[] {
@@ -594,6 +614,23 @@ export default function MatchSheetPage() {
       }),
     );
 
+  // Évolutions stagées : sauvegarde du côté du viewer uniquement (le
+  // serveur vérifie le côté + l'appartenance des joueurs).
+  const saveAdvancements = (
+    side: "home" | "away",
+    entries: StagedAdvancementEntry[],
+  ) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/post-match`, {
+        method: "PATCH",
+        body: JSON.stringify(
+          side === "home"
+            ? { advancementsHome: entries }
+            : { advancementsAway: entries },
+        ),
+      }),
+    );
+
   const invalidate = (reason: string) =>
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/invalidate`, {
@@ -657,6 +694,23 @@ export default function MatchSheetPage() {
   const isCommissioner = role === "commissioner";
   const editable = status !== "validated";
   const canEdit = editable && (isCoach || isCommissioner);
+  // Staging des évolutions : côté du viewer + entrées stagées par côté.
+  const mySide: "home" | "away" | null =
+    myTeamId && myTeamId === home?.teamId
+      ? "home"
+      : myTeamId && myTeamId === away?.teamId
+        ? "away"
+        : null;
+  const stagedHome = parseStagedAdvancements(data?.sheet.advancementsHome);
+  const stagedAway = parseStagedAdvancements(data?.sheet.advancementsAway);
+  const myStaged = mySide === "home" ? stagedHome : stagedAway;
+  const sppBonusEntries = parseSppBonus(data?.sheet.sppBonus);
+  // Ma saisie est verrouillée dès que MON côté a validé (l'ensemble du
+  // match — fin de match ET évolutions — est alors figé jusqu'à reprise).
+  const mySideSubmitted =
+    status === "both_submitted" ||
+    (mySide === "home" && status === "submitted_home") ||
+    (mySide === "away" && status === "submitted_away");
 
   if (loading) {
     return (
@@ -1175,47 +1229,104 @@ export default function MatchSheetPage() {
             Évolutions des joueurs
           </h2>
 
-          {/* Règle de staging (item : appliqué seulement après validation). */}
+          {/* Règle : la saisie fait partie de la feuille, l'application
+              au roster n'a lieu qu'à la validation commissaire. */}
           <div className="flex gap-2 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700">
             <span aria-hidden>🛡️</span>
             <p>
-              Les évolutions (montées de niveau, compétences, améliorations de
-              caractéristique) ne sont <strong>jamais appliquées aux rosters
-              avant la validation du match par le commissaire</strong>. Le SPP
-              et les avancements en attente sont créés au moment de la
-              validation.
+              La saisie des évolutions <strong>fait partie de la feuille de
+              match</strong> : choisis-les ici avec tes PSP projetés, puis
+              « Valider ma saisie » couvre le match dans son ensemble (fin de
+              match et évolutions comprises). Rien n&apos;est appliqué aux
+              rosters avant la <strong>validation du commissaire</strong>.
             </p>
           </div>
 
           {status === "validated" ? (
-            myTeamId ? (
-              <div className="space-y-3">
-                <p className="text-sm text-slate-600">
-                  Le match est validé : choisis et applique les évolutions des
-                  joueurs de ton équipe ayant assez de SPP.
+            <div className="space-y-3">
+              {/* Récap de ce qui a été appliqué à la validation. */}
+              <StagedAdvancementsRecap
+                entries={stagedHome}
+                players={home?.players ?? []}
+                title={`Évolutions saisies — ${home?.name ?? "Domicile"}`}
+              />
+              <StagedAdvancementsRecap
+                entries={stagedAway}
+                players={away?.players ?? []}
+                title={`Évolutions saisies — ${away?.name ?? "Extérieur"}`}
+              />
+              {myTeamId ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-600">
+                    Le match est validé. S&apos;il reste des PSP à dépenser,
+                    tu peux encore faire évoluer tes joueurs ici.
+                  </p>
+                  {/* Édition inline (composant partagé avec la page level-up). */}
+                  <AdvancementEditor
+                    teamId={myTeamId}
+                    emptyLabel="Aucun joueur de ton équipe n'a d'évolution en attente."
+                  />
+                  <a
+                    href={`/me/teams/${myTeamId}/level-up`}
+                    data-testid="goto-advancements"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-nuffle-bronze hover:text-nuffle-gold"
+                  >
+                    Voir toutes les évolutions de mon équipe →
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          ) : myTeamId && mySide ? (
+            <div className="space-y-3">
+              {mySideSubmitted ? (
+                <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Ta saisie est validée : les évolutions sont figées avec le
+                  reste de la feuille. Utilise « Reprendre la saisie » pour
+                  les modifier.
                 </p>
-                {/* Édition inline (composant partagé avec la page level-up). */}
-                <AdvancementEditor
-                  teamId={myTeamId}
-                  emptyLabel="Aucun joueur de ton équipe n'a d'évolution en attente."
-                />
-                <a
-                  href={`/me/teams/${myTeamId}/level-up`}
-                  data-testid="goto-advancements"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-nuffle-bronze hover:text-nuffle-gold"
-                >
-                  Voir toutes les évolutions de mon équipe →
-                </a>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">
-                Les évolutions concernent les coachs des deux équipes, sur la
-                page de leur équipe.
+              ) : null}
+              <SheetAdvancementsEditor
+                teamId={myTeamId}
+                ruleset={
+                  (mySide === "home" ? home?.ruleset : away?.ruleset) ??
+                  "season_3"
+                }
+                players={
+                  (mySide === "home" ? home?.players : away?.players) ?? []
+                }
+                computedSpp={computedSpp}
+                sppBonus={sppBonusEntries}
+                staged={myStaged}
+                disabled={mySideSubmitted || busy}
+                onChange={(next) => void saveAdvancements(mySide, next)}
+              />
+            </div>
+          ) : isCommissioner ? (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-600">
+                Évolutions saisies par les coachs (appliquées aux rosters à ta
+                validation) :
               </p>
-            )
+              <StagedAdvancementsRecap
+                entries={stagedHome}
+                players={home?.players ?? []}
+                title={`${home?.name ?? "Domicile"}`}
+              />
+              <StagedAdvancementsRecap
+                entries={stagedAway}
+                players={away?.players ?? []}
+                title={`${away?.name ?? "Extérieur"}`}
+              />
+              {stagedHome.length === 0 && stagedAway.length === 0 ? (
+                <p className="text-sm italic text-slate-400">
+                  Aucune évolution saisie pour l&apos;instant.
+                </p>
+              ) : null}
+            </div>
           ) : (
-            <p className="rounded border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
-              Disponible une fois le match validé par le commissaire.
+            <p className="text-sm text-slate-500">
+              Les évolutions sont saisies par chaque coach sur sa propre
+              équipe, pendant la saisie de la feuille.
             </p>
           )}
         </section>

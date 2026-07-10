@@ -38,6 +38,18 @@ export interface SheetPlayer {
   dead: boolean;
   missNextMatch: boolean;
   spp: number;
+  /** Compétences actuelles (CSV de slugs) — staging des évolutions. */
+  skills?: string | null;
+  /** Nombre d'avancements déjà pris (coût du prochain palier). */
+  advancementsTaken?: number;
+  /** Caractéristiques courantes (fiche joueur du staging). */
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
 }
 
 /** Nom de position lisible d'un joueur (fallback : slug technique). */
@@ -49,6 +61,8 @@ export interface SheetTeam {
   teamId: string;
   name: string;
   roster: string;
+  /** Ruleset de l'équipe (catalogue de compétences du staging). */
+  ruleset?: string;
   raceName: string;
   coachName: string;
   teamValue: number;
