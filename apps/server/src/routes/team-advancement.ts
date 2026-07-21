@@ -21,6 +21,7 @@
 
 import { Router } from "express";
 import type { Response } from "express";
+import { getNextAdvancementPspCost } from "@bb/game-engine";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
 import { prisma } from "../prisma";
@@ -76,12 +77,50 @@ async function ensureTeamOwner(
   return team;
 }
 
+/** État live d'un joueur pour recalculer son éligibilité à un avancement. */
+export interface LiveAdvancementState {
+  readonly spp: number;
+  readonly advancements: string | null;
+  readonly dead: boolean;
+}
+
+/**
+ * Recalcule spp / advancementsTaken / nextAdvancementCost depuis l'état
+ * LIVE du joueur. Les valeurs snapshotées dans `pendingChoices` datent de
+ * la création de la séquence : les évolutions stagées sur la feuille de
+ * match sont appliquées APRÈS (validation commissaire) et débitent les
+ * PSP sans rafraîchir le snapshot — le servir tel quel affichait des PSP
+ * déjà dépensés et un coût faux, puis le POST refusait (insufficient-spp).
+ * Retourne null si le joueur n'est plus éligible (mort, cap 6 atteint,
+ * PSP < prochain palier le moins cher).
+ */
+export function liveAdvancementItem(player: LiveAdvancementState): {
+  spp: number;
+  advancementsTaken: number;
+  nextAdvancementCost: number;
+} | null {
+  if (player.dead) return null;
+  let advancementsTaken = 0;
+  try {
+    const parsed: unknown = JSON.parse(player.advancements ?? "[]");
+    advancementsTaken = Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    advancementsTaken = 0;
+  }
+  if (advancementsTaken >= 6) return null;
+  const cheapest = getNextAdvancementPspCost(advancementsTaken, "random-primary");
+  if (player.spp < cheapest) return null;
+  return { spp: player.spp, advancementsTaken, nextAdvancementCost: cheapest };
+}
+
 /**
  * GET /team/:teamId/pending-advancements
  *
  * Liste les pending choices ouverts pour les joueurs de l'equipe.
  * Aggregation a partir des LeaguePostMatchSequence en status
  * awaiting_choices (toutes saisons confondues, deduplique par player).
+ * Les compteurs (spp, avancements, coût) sont relus sur le joueur —
+ * cf. `liveAdvancementItem` — pas depuis le snapshot de la séquence.
  */
 export async function handleListPendingAdvancements(
   req: AuthenticatedRequest,
@@ -123,6 +162,9 @@ export async function handleListPendingAdvancements(
     pa: number | null;
     av: number;
     skills: string | null;
+    spp: number;
+    advancements: string | null;
+    dead: boolean;
   }
   const teamPlayers = (await prisma.teamPlayer.findMany({
     where: { teamId },
@@ -136,6 +178,9 @@ export async function handleListPendingAdvancements(
       pa: true,
       av: true,
       skills: true,
+      spp: true,
+      advancements: true,
+      dead: true,
     },
   })) as TeamPlayerRow[];
   const playerById = new Map<string, TeamPlayerRow>(
@@ -198,7 +243,12 @@ export async function handleListPendingAdvancements(
       if (seen.has(c.teamPlayerId)) continue;
       seen.add(c.teamPlayerId);
       const player = playerById.get(c.teamPlayerId);
-      const positionSlug = player?.position ?? null;
+      if (!player) continue;
+      // État live (le snapshot de la séquence peut être périmé : évolutions
+      // stagées appliquées à la validation, avancement pris ailleurs…).
+      const live = liveAdvancementItem(player);
+      if (!live) continue;
+      const positionSlug = player.position ?? null;
       const access = positionSlug ? accessBySlug.get(positionSlug) : undefined;
       items.push({
         sequenceId: seq.id,
@@ -206,9 +256,9 @@ export async function handleListPendingAdvancements(
         seasonId: seq.seasonId,
         teamPlayerId: c.teamPlayerId,
         playerName: c.playerName,
-        spp: c.spp,
-        advancementsTaken: c.advancementsTaken,
-        nextAdvancementCost: c.nextAdvancementCost,
+        spp: live.spp,
+        advancementsTaken: live.advancementsTaken,
+        nextAdvancementCost: live.nextAdvancementCost,
         createdAt: seq.createdAt,
         position: positionSlug,
         primarySkills: access?.primarySkills ?? null,
