@@ -1,3 +1,10 @@
+## [1.217.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.217.0...v1.217.1) (2026-07-21)
+
+
+### 🐛 Bug Fixes
+
+* **league:** pending-advancements sert l'état live du joueur, pas le snapshot ([dd14c87](https://github.com/Ryxeuf/fantasy-football-game/commit/dd14c87681f299935d60d8a36a3b273fe71c35d2))
+
 ## [1.217.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.216.0...v1.217.0) (2026-07-10)
 
 
