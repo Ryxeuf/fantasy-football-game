@@ -222,6 +222,77 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     expect(injUpd.data).toEqual({ dead: false, missNextMatch: false });
   });
 
+  it("A68 : reverse une Séquelle en restaurant la caractéristique perdue", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        offlineResultInput: buildSnapshot({
+          injuries: [{ teamPlayerId: "p1", type: "ma" }],
+        }),
+      }),
+    );
+    // La saisie avait appliqué MA 8 -> 7 + maReduction 1.
+    m.tpFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        ma: 7,
+        st: 2,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        maReduction: 1,
+        stReduction: 0,
+        agReduction: 0,
+        paReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+
+    const injUpd = m.tpUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
+    )?.[0] as { data: Record<string, unknown> };
+    expect(injUpd.data).toEqual({
+      missNextMatch: false,
+      maReduction: { decrement: 1 },
+      ma: 8,
+    });
+  });
+
+  it("A68 : pas de restauration si la Séquelle n'avait rien posé (plancher)", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        offlineResultInput: buildSnapshot({
+          injuries: [{ teamPlayerId: "p1", type: "st" }],
+        }),
+      }),
+    );
+    // ST était au plancher à la saisie : compteur jamais incrémenté.
+    m.tpFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        ma: 8,
+        st: 1,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        maReduction: 0,
+        stReduction: 0,
+        agReduction: 0,
+        paReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    await reverseOfflineLeagueResult("m-1");
+
+    const injUpd = m.tpUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
+    )?.[0] as { data: Record<string, unknown> };
+    expect(injUpd.data).toEqual({ missNextMatch: false });
+  });
+
   it("skip si un level-up issu de ce match a ete consomme", async () => {
     m.matchFind.mockResolvedValue(
       buildMatch({

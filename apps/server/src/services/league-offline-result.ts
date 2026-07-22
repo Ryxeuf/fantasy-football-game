@@ -27,6 +27,12 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  applyCharacteristicReduction,
+  isAtCharacteristicReductionFloor,
+  type CharacteristicKind,
+  type PlayerStats,
+} from "@bb/game-engine";
 import { recordLeagueMatchResult } from "./league-match-result";
 import {
   calculatePlayerSPP,
@@ -353,6 +359,21 @@ async function applyOfflineEconomy(
   if (ops.length > 0) await prisma.$transaction(ops);
 }
 
+/** Types de blessure qui reduisent une caracteristique (Séquelle). */
+const STAT_INJURY_TYPES: ReadonlySet<OfflineInjuryType> = new Set([
+  "ma",
+  "st",
+  "ag",
+  "pa",
+  "av",
+]);
+
+export function isStatInjury(
+  type: OfflineInjuryType,
+): type is Extract<OfflineInjuryType, CharacteristicKind> {
+  return STAT_INJURY_TYPES.has(type);
+}
+
 /** Map un type de blessure offline -> update Prisma TeamPlayer. */
 function injuryUpdateData(type: OfflineInjuryType): Record<string, unknown> {
   switch (type) {
@@ -373,6 +394,42 @@ function injuryUpdateData(type: OfflineInjuryType): Record<string, unknown> {
     case "dead":
       return { dead: true };
   }
+}
+
+/**
+ * A68 — construit l'update d'une blessure en appliquant AUSSI la perte de
+ * caractéristique sur la fiche du joueur pour les Séquelles. Le compteur
+ * `xxReduction` seul n'était consommé nulle part (ni affichages, ni
+ * moteur) : la Séquelle n'avait aucun effet. Comme les avancements, la
+ * caractéristique de base est désormais mutée (−1 MA/ST/AV, +1 cible
+ * AG/PA), bornée par `CHARACTERISTIC_REDUCE_LIMIT` (BB2025).
+ *
+ * Caractéristique déjà au plancher : la Séquelle reste subie (MNG) mais
+ * ne modifie NI la carac NI le compteur — le reverse (invalidation) ne
+ * restaure que si le compteur a bougé, ce qui garde les deux chemins
+ * symétriques. `stats` est le snapshot courant du joueur, retourné mis à
+ * jour pour chaîner plusieurs blessures du même joueur dans le même match.
+ */
+export function buildInjuryUpdate(
+  type: OfflineInjuryType,
+  stats: PlayerStats,
+): { data: Record<string, unknown>; nextStats: PlayerStats } {
+  if (!isStatInjury(type)) {
+    return { data: injuryUpdateData(type), nextStats: stats };
+  }
+  const stat = type as CharacteristicKind;
+  const current = stat === "pa" ? stats.pa : stats[stat];
+  if (isAtCharacteristicReductionFloor(stat, current)) {
+    return { data: { missNextMatch: true }, nextStats: stats };
+  }
+  const reduced = applyCharacteristicReduction(stats, stat);
+  return {
+    data: {
+      ...injuryUpdateData(type),
+      [stat]: stat === "pa" ? reduced.pa : reduced[stat],
+    },
+    nextStats: reduced,
+  };
 }
 
 /**
@@ -413,18 +470,33 @@ async function applyOfflineInjuries(
   injuries: readonly OfflineInjuryInput[],
 ): Promise<number> {
   const ids = injuries.map((i) => i.teamPlayerId);
-  const valid = await prisma.teamPlayer.findMany({
+  const valid = (await prisma.teamPlayer.findMany({
     where: { id: { in: ids }, teamId: { in: [homeTeamId, awayTeamId] } },
-    select: { id: true },
-  });
-  const validSet = new Set(valid.map((p: { id: string }) => p.id));
+    select: { id: true, ma: true, st: true, ag: true, pa: true, av: true },
+  })) as Array<{
+    id: string;
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  }>;
+  const statsById = new Map<string, PlayerStats>(
+    valid.map((p) => [
+      p.id,
+      { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
+    ]),
+  );
   const ops: Promise<unknown>[] = [];
   for (const inj of injuries) {
-    if (!validSet.has(inj.teamPlayerId)) continue;
+    const stats = statsById.get(inj.teamPlayerId);
+    if (!stats) continue;
+    const { data, nextStats } = buildInjuryUpdate(inj.type, stats);
+    statsById.set(inj.teamPlayerId, nextStats);
     ops.push(
       prisma.teamPlayer.update({
         where: { id: inj.teamPlayerId },
-        data: injuryUpdateData(inj.type),
+        data,
       }),
     );
   }

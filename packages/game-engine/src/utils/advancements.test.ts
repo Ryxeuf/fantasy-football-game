@@ -7,6 +7,8 @@ import {
   CHARACTERISTIC_VALUE_INCREASE,
   isRandomAdvancement,
   applyCharacteristicImprovement,
+  applyCharacteristicReduction,
+  isAtCharacteristicReductionFloor,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
   isAtCharacteristicLimit,
@@ -177,6 +179,49 @@ describe('advancements utils (BB2025 / Saison 3)', () => {
     it('refuse PA quand le joueur n’a pas de passe (— / null)', () => {
       expect(isAtCharacteristicLimit('pa', null)).toBe(true);
       expect(canImproveCharacteristic({ ...fresh, pa: null }, 'pa', 0)).toBe(false);
+    });
+  });
+
+  describe('Characteristic reductions — Séquelle / Lasting Injury (A68)', () => {
+    const fresh: PlayerStats = { ma: 6, st: 3, ag: 3, pa: 4, av: 9 };
+
+    it('réduit MA/ST/AV de 1 (plus haut = meilleur)', () => {
+      expect(applyCharacteristicReduction(fresh, 'ma').ma).toBe(5);
+      expect(applyCharacteristicReduction(fresh, 'st').st).toBe(2);
+      expect(applyCharacteristicReduction(fresh, 'av').av).toBe(8);
+    });
+
+    it('dégrade la cible AG/PA de +1 (plus bas = meilleur)', () => {
+      expect(applyCharacteristicReduction(fresh, 'ag').ag).toBe(4);
+      expect(applyCharacteristicReduction(fresh, 'pa').pa).toBe(5);
+    });
+
+    it('borne aux limites BB2025 (MA/ST 1, AV 3+, AG/PA 6+)', () => {
+      expect(applyCharacteristicReduction({ ...fresh, ma: 1 }, 'ma').ma).toBe(1);
+      expect(applyCharacteristicReduction({ ...fresh, st: 1 }, 'st').st).toBe(1);
+      expect(applyCharacteristicReduction({ ...fresh, av: 3 }, 'av').av).toBe(3);
+      expect(applyCharacteristicReduction({ ...fresh, ag: 6 }, 'ag').ag).toBe(6);
+      expect(applyCharacteristicReduction({ ...fresh, pa: 6 }, 'pa').pa).toBe(6);
+    });
+
+    it('PA « — » (null) reste intacte', () => {
+      expect(applyCharacteristicReduction({ ...fresh, pa: null }, 'pa').pa).toBeNull();
+    });
+
+    it('détecte le plancher (une Séquelle au plancher ne change plus rien)', () => {
+      expect(isAtCharacteristicReductionFloor('ma', 1)).toBe(true);
+      expect(isAtCharacteristicReductionFloor('ma', 2)).toBe(false);
+      expect(isAtCharacteristicReductionFloor('ag', 6)).toBe(true);
+      expect(isAtCharacteristicReductionFloor('ag', 5)).toBe(false);
+      expect(isAtCharacteristicReductionFloor('av', 3)).toBe(true);
+      expect(isAtCharacteristicReductionFloor('pa', null)).toBe(true);
+    });
+
+    it('réduction puis amélioration = identité (réversibilité du reverse)', () => {
+      const reduced = applyCharacteristicReduction(fresh, 'ma');
+      expect(applyCharacteristicImprovement(reduced, 'ma')).toEqual(fresh);
+      const reducedAg = applyCharacteristicReduction(fresh, 'ag');
+      expect(applyCharacteristicImprovement(reducedAg, 'ag')).toEqual(fresh);
     });
   });
 });

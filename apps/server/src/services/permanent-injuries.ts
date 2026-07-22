@@ -1,5 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 import type { CasualtyOutcome, LastingInjuryType, LastingInjuryDetail } from "@bb/game-engine";
+import {
+  applyCharacteristicReduction,
+  isAtCharacteristicReductionFloor,
+  type CharacteristicKind,
+  type PlayerStats,
+} from "@bb/game-engine";
 
 export interface GameStateForInjuries {
   casualtyResults: Record<string, CasualtyOutcome>;
@@ -22,6 +28,18 @@ function getInjuryUpdate(injuryType: LastingInjuryType): Record<string, { increm
     case '-1ag': return { agReduction: { increment: 1 } };
     case '-1pa': return { paReduction: { increment: 1 } };
     case '-1av': return { avReduction: { increment: 1 } };
+  }
+}
+
+/** Caractéristique visée par une lasting injury '-1xx' (null pour niggling). */
+function statForInjury(injuryType: LastingInjuryType): CharacteristicKind | null {
+  switch (injuryType) {
+    case '-1ma': return 'ma';
+    case '-1st': return 'st';
+    case '-1ag': return 'ag';
+    case '-1pa': return 'pa';
+    case '-1av': return 'av';
+    default: return null;
   }
 }
 
@@ -58,25 +76,55 @@ export async function persistPermanentInjuries(
     return 0;
   }
 
-  // Load all TeamPlayer records for both teams
-  const [teamAPlayers, teamBPlayers] = await Promise.all([
+  // Load all TeamPlayer records for both teams (stats incluses : une
+  // lasting injury mute la caractéristique de base, cf. A68 ci-dessous).
+  const playerSelect = {
+    id: true,
+    number: true,
+    ma: true,
+    st: true,
+    ag: true,
+    pa: true,
+    av: true,
+  } as const;
+  const [teamAPlayers, teamBPlayers] = (await Promise.all([
     prisma.teamPlayer.findMany({
       where: { teamId: teamAId },
-      select: { id: true, number: true },
+      select: playerSelect,
     }),
     prisma.teamPlayer.findMany({
       where: { teamId: teamBId },
-      select: { id: true, number: true },
+      select: playerSelect,
     }),
-  ]);
+  ])) as Array<
+    Array<{
+      id: string;
+      number: number;
+      ma: number;
+      st: number;
+      ag: number;
+      pa: number | null;
+      av: number;
+    }>
+  >;
 
-  // Build lookup: game engine player ID -> database TeamPlayer ID
+  // Build lookup: game engine player ID -> database TeamPlayer ID + stats
   const playerIdMap = new Map<string, string>();
+  const statsByDbId = new Map<string, PlayerStats>();
   for (const dbPlayer of teamAPlayers) {
     playerIdMap.set(`A${dbPlayer.number}`, dbPlayer.id);
   }
   for (const dbPlayer of teamBPlayers) {
     playerIdMap.set(`B${dbPlayer.number}`, dbPlayer.id);
+  }
+  for (const dbPlayer of [...teamAPlayers, ...teamBPlayers]) {
+    statsByDbId.set(dbPlayer.id, {
+      ma: dbPlayer.ma,
+      st: dbPlayer.st,
+      ag: dbPlayer.ag,
+      pa: dbPlayer.pa,
+      av: dbPlayer.av,
+    });
   }
 
   // Build update operations
@@ -102,9 +150,25 @@ export async function persistPermanentInjuries(
       // Niggling injury
       data.nigglingInjuries = { increment: 1 };
     } else if (outcome === 'lasting_injury') {
-      // Stat reduction
-      const injuryUpdate = getInjuryUpdate(detail.injuryType);
-      Object.assign(data, injuryUpdate);
+      // A68 — la lasting injury mute la caractéristique de base (comme le
+      // chemin offline, cf. buildInjuryUpdate) : le compteur xxReduction
+      // seul n'était consommé nulle part, le prochain match repartait des
+      // caracs intactes. Carac déjà au plancher BB2025 : MNG seul, ni
+      // compteur ni carac.
+      const stat = statForInjury(detail.injuryType);
+      const stats = statsByDbId.get(dbPlayerId);
+      if (stat && stats) {
+        const current = stat === 'pa' ? stats.pa : stats[stat];
+        if (!isAtCharacteristicReductionFloor(stat, current)) {
+          const reduced = applyCharacteristicReduction(stats, stat);
+          statsByDbId.set(dbPlayerId, reduced);
+          Object.assign(data, getInjuryUpdate(detail.injuryType));
+          data[stat] = stat === 'pa' ? reduced.pa : reduced[stat];
+        }
+      } else {
+        // niggling arrivée via lasting_injury (défensif) : compteur seul.
+        Object.assign(data, getInjuryUpdate(detail.injuryType));
+      }
     }
 
     if (Object.keys(data).length > 0) {

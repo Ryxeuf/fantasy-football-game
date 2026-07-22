@@ -221,6 +221,72 @@ export function canImproveCharacteristic(
 }
 
 /**
+ * Pire valeur atteignable par réduction de caractéristique (Séquelle,
+ * BB2025) — miroir de `CHARACTERISTIC_IMPROVE_LIMIT`. MA/ST/AV se
+ * dégradent vers le bas (plancher) ; AG/PA sont des cibles « X+ » où
+ * plus haut = pire ⇒ se dégradent vers le haut (plafond 6+). Une
+ * caractéristique déjà à sa limite ne peut plus être réduite (la
+ * Séquelle reste subie : MNG, trace), mais la valeur ne bouge plus.
+ */
+export const CHARACTERISTIC_REDUCE_LIMIT: Record<CharacteristicKind, number> = {
+  ma: 1, // plancher
+  st: 1, // plancher (Force)
+  av: 3, // pire armure (cible la plus basse)
+  ag: 6, // pire cible (la plus haute)
+  pa: 6, // pire cible (la plus haute)
+};
+
+/**
+ * `true` si `stat` est déjà à sa limite de réduction (ou non réductible,
+ * ex: PA « — ») : une nouvelle Séquelle ne doit alors PAS modifier la
+ * valeur (ni incrémenter le compteur de réduction, pour rester
+ * réversible).
+ */
+export function isAtCharacteristicReductionFloor(
+  stat: CharacteristicKind,
+  value: number | null,
+): boolean {
+  const limit = CHARACTERISTIC_REDUCE_LIMIT[stat];
+  // `==` volontaire : couvre aussi un `undefined` runtime (fixture/mirror
+  // incomplet) — dans le doute on ne touche pas à la caractéristique.
+  if (value == null) return true;
+  if (stat === 'ag' || stat === 'pa') {
+    // Cibles « X+ » : on se dégrade vers le haut.
+    return value >= limit;
+  }
+  // MA/ST/AV : on se dégrade vers le bas.
+  return value <= limit;
+}
+
+/**
+ * Applique (immutable) une réduction de caractéristique — Séquelle
+ * (Lasting Injury) BB2025. Inverse exact d'`applyCharacteristicImprovement` :
+ * MA/ST/AV −1 (borné par le plancher), AG/PA +1 (cible dégradée, bornée
+ * à 6+). PA `null` (« — ») inchangée. Le caller doit tester
+ * `isAtCharacteristicReductionFloor` en amont s'il veut distinguer une
+ * réduction effective d'un no-op (compteur/réversibilité).
+ */
+export function applyCharacteristicReduction(
+  stats: PlayerStats,
+  stat: CharacteristicKind,
+): PlayerStats {
+  switch (stat) {
+    case 'ma':
+      return { ...stats, ma: Math.max(CHARACTERISTIC_REDUCE_LIMIT.ma, stats.ma - 1) };
+    case 'st':
+      return { ...stats, st: Math.max(CHARACTERISTIC_REDUCE_LIMIT.st, stats.st - 1) };
+    case 'av':
+      return { ...stats, av: Math.max(CHARACTERISTIC_REDUCE_LIMIT.av, stats.av - 1) };
+    case 'ag':
+      return { ...stats, ag: Math.min(CHARACTERISTIC_REDUCE_LIMIT.ag, stats.ag + 1) };
+    case 'pa':
+      return stats.pa === null
+        ? stats
+        : { ...stats, pa: Math.min(CHARACTERISTIC_REDUCE_LIMIT.pa, stats.pa + 1) };
+  }
+}
+
+/**
  * Vérifie si un type d'avancement est aléatoire. En S3, seul
  * `random-primary` subsiste (la secondaire au hasard a été retirée).
  */

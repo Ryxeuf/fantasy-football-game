@@ -24,8 +24,14 @@
 
 import { prisma } from "../prisma";
 import {
+  applyCharacteristicImprovement,
+  type CharacteristicKind,
+  type PlayerStats,
+} from "@bb/game-engine";
+import {
   parseOfflineSnapshot,
   recordOfflineLeagueResult,
+  isStatInjury,
   OFFLINE_MATCH_MODE,
   type OfflineInjuryType,
   type OfflineResultSnapshot,
@@ -155,6 +161,44 @@ function injuryReverseData(type: OfflineInjuryType): Record<string, unknown> {
       // suspension issue de cette mort.
       return { dead: false, missNextMatch: false };
   }
+}
+
+/** Etat courant d'un joueur pour reverser ses Séquelles (A68). */
+interface InjuryReverseState {
+  stats: PlayerStats;
+  reductions: Record<CharacteristicKind, number>;
+}
+
+/**
+ * A68 — inverse d'une blessure en restaurant AUSSI la caractéristique
+ * pour les Séquelles (miroir de `buildInjuryUpdate`). La restauration
+ * n'a lieu que si le compteur `xxReduction` est > 0 : une Séquelle
+ * appliquée alors que la carac était déjà au plancher n'a modifié ni la
+ * carac ni le compteur, et ne doit donc rien restaurer. `state` est
+ * retourné mis à jour pour chaîner plusieurs blessures du même joueur.
+ */
+function buildInjuryReverse(
+  type: OfflineInjuryType,
+  state: InjuryReverseState,
+): { data: Record<string, unknown>; nextState: InjuryReverseState } {
+  if (!isStatInjury(type)) {
+    return { data: injuryReverseData(type), nextState: state };
+  }
+  const stat = type as CharacteristicKind;
+  if ((state.reductions[stat] ?? 0) <= 0) {
+    return { data: { missNextMatch: false }, nextState: state };
+  }
+  const restored = applyCharacteristicImprovement(state.stats, stat);
+  return {
+    data: {
+      ...injuryReverseData(type),
+      [stat]: stat === "pa" ? restored.pa : restored[stat],
+    },
+    nextState: {
+      stats: restored,
+      reductions: { ...state.reductions, [stat]: state.reductions[stat] - 1 },
+    },
+  };
 }
 
 /**
@@ -456,12 +500,70 @@ export async function reverseOfflineLeagueResult(
     }),
   );
 
-  // 4. Blessures (decrement compteurs + missNextMatch=false).
+  // 4. Blessures (decrement compteurs + missNextMatch=false + restauration
+  //    des caracteristiques perdues sur Séquelle, cf. buildInjuryReverse).
+  const injuredRows = (await prisma.teamPlayer.findMany({
+    where: { id: { in: input.injuries.map((i) => i.teamPlayerId) } },
+    select: {
+      id: true,
+      ma: true,
+      st: true,
+      ag: true,
+      pa: true,
+      av: true,
+      maReduction: true,
+      stReduction: true,
+      agReduction: true,
+      paReduction: true,
+      avReduction: true,
+    },
+  })) as Array<{
+    id: string;
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+    maReduction: number;
+    stReduction: number;
+    agReduction: number;
+    paReduction: number;
+    avReduction: number;
+  }>;
+  const reverseStateById = new Map<string, InjuryReverseState>(
+    injuredRows.map((p) => [
+      p.id,
+      {
+        stats: { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
+        reductions: {
+          ma: p.maReduction,
+          st: p.stReduction,
+          ag: p.agReduction,
+          pa: p.paReduction,
+          av: p.avReduction,
+        },
+      },
+    ]),
+  );
   for (const inj of input.injuries) {
+    const state = reverseStateById.get(inj.teamPlayerId);
+    // Ligne joueur introuvable (defensif) : reversion legacy des compteurs
+    // seuls, sans restauration de caracteristique.
+    if (!state) {
+      ops.push(
+        prisma.teamPlayer.update({
+          where: { id: inj.teamPlayerId },
+          data: injuryReverseData(inj.type),
+        }),
+      );
+      continue;
+    }
+    const { data, nextState } = buildInjuryReverse(inj.type, state);
+    reverseStateById.set(inj.teamPlayerId, nextState);
     ops.push(
       prisma.teamPlayer.update({
         where: { id: inj.teamPlayerId },
-        data: injuryReverseData(inj.type),
+        data,
       }),
     );
   }

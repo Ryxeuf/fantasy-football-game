@@ -64,11 +64,13 @@ describe("persistPermanentInjuries", () => {
     expect(updateCall.data.missNextMatch).toBe(true);
   });
 
-  it("persists stat reduction for lasting_injury outcome (-1 MA)", async () => {
+  it("persists stat reduction for lasting_injury outcome (-1 MA) + mute la carac (A68)", async () => {
     const { prisma } = createMockPrisma();
 
     prisma.teamPlayer.findMany
-      .mockResolvedValueOnce([{ id: "db-a5", number: 5 }])
+      .mockResolvedValueOnce([
+        { id: "db-a5", number: 5, ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+      ])
       .mockResolvedValueOnce([]);
 
     const gameState: GameStateForInjuries = {
@@ -84,15 +86,18 @@ describe("persistPermanentInjuries", () => {
     expect(result).toBe(1);
     const updateCall = prisma.teamPlayer.update.mock.calls[0][0];
     expect(updateCall.data.maReduction).toEqual({ increment: 1 });
+    expect(updateCall.data.ma).toBe(5);
     expect(updateCall.data.missNextMatch).toBe(true);
   });
 
-  it("persists stat reduction for lasting_injury outcome (-1 ST)", async () => {
+  it("persists stat reduction for lasting_injury outcome (-1 ST) + mute la carac (A68)", async () => {
     const { prisma } = createMockPrisma();
 
     prisma.teamPlayer.findMany
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ id: "db-b2", number: 2 }]);
+      .mockResolvedValueOnce([
+        { id: "db-b2", number: 2, ma: 5, st: 3, ag: 3, pa: 5, av: 9 },
+      ]);
 
     const gameState: GameStateForInjuries = {
       casualtyResults: { B2: "lasting_injury" },
@@ -107,7 +112,34 @@ describe("persistPermanentInjuries", () => {
     expect(result).toBe(1);
     const updateCall = prisma.teamPlayer.update.mock.calls[0][0];
     expect(updateCall.data.stReduction).toEqual({ increment: 1 });
+    expect(updateCall.data.st).toBe(2);
     expect(updateCall.data.missNextMatch).toBe(true);
+  });
+
+  it("A68 : carac au plancher BB2025 -> MNG seul, ni compteur ni carac", async () => {
+    const { prisma } = createMockPrisma();
+
+    prisma.teamPlayer.findMany
+      .mockResolvedValueOnce([
+        { id: "db-a5", number: 5, ma: 6, st: 1, ag: 3, pa: 4, av: 9 },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const gameState: GameStateForInjuries = {
+      casualtyResults: { A5: "lasting_injury" },
+      lastingInjuryDetails: {
+        A5: { outcome: "lasting_injury", injuryType: "-1st", missNextMatch: true },
+      },
+      players: [{ id: "A5", team: "A", number: 5 }],
+    };
+
+    const result = await persistPermanentInjuries(prisma, gameState, "teamA-id", "teamB-id");
+
+    expect(result).toBe(1);
+    const updateCall = prisma.teamPlayer.update.mock.calls[0][0];
+    expect(updateCall.data.missNextMatch).toBe(true);
+    expect(updateCall.data.stReduction).toBeUndefined();
+    expect(updateCall.data.st).toBeUndefined();
   });
 
   it("persists missNextMatch for seriously_hurt without stat changes", async () => {
@@ -140,10 +172,12 @@ describe("persistPermanentInjuries", () => {
 
     prisma.teamPlayer.findMany
       .mockResolvedValueOnce([
-        { id: "db-a2", number: 2 },
-        { id: "db-a7", number: 7 },
+        { id: "db-a2", number: 2, ma: 5, st: 3, ag: 3, pa: 4, av: 9 },
+        { id: "db-a7", number: 7, ma: 5, st: 3, ag: 3, pa: 4, av: 9 },
       ])
-      .mockResolvedValueOnce([{ id: "db-b4", number: 4 }]);
+      .mockResolvedValueOnce([
+        { id: "db-b4", number: 4, ma: 5, st: 3, ag: 3, pa: 4, av: 9 },
+      ]);
 
     const gameState: GameStateForInjuries = {
       casualtyResults: {

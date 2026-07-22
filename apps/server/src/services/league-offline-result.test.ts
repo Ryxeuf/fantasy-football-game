@@ -335,6 +335,85 @@ describe("recordOfflineLeagueResult (option b)", () => {
     });
   });
 
+  it("A68 : une Séquelle mute la caractéristique de base (compteur + carac)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", ma: 8, st: 2, ag: 3, pa: 4, av: 8 },
+    ]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 1,
+      casualtiesAway: 0,
+      injuries: [{ teamPlayerId: "p1", type: "ma" }],
+    });
+    expect(m.tpUpdate).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { missNextMatch: true, maReduction: { increment: 1 }, ma: 7 },
+    });
+  });
+
+  it("A68 : les cibles AG/PA se dégradent vers le haut (+1)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", ma: 8, st: 2, ag: 3, pa: 4, av: 8 },
+    ]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 1,
+      casualtiesAway: 0,
+      injuries: [{ teamPlayerId: "p1", type: "ag" }],
+    });
+    expect(m.tpUpdate).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { missNextMatch: true, agReduction: { increment: 1 }, ag: 4 },
+    });
+  });
+
+  it("A68 : deux Séquelles du même joueur dans le même match se chaînent", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", ma: 8, st: 2, ag: 3, pa: 4, av: 8 },
+    ]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 2,
+      casualtiesAway: 0,
+      injuries: [
+        { teamPlayerId: "p1", type: "ma" },
+        { teamPlayerId: "p1", type: "ma" },
+      ],
+    });
+    const maUpdates = m.tpUpdate.mock.calls
+      .map((c) => (c[0] as { data: Record<string, unknown> }).data)
+      .filter((d) => "maReduction" in d);
+    expect(maUpdates.map((d) => d.ma)).toEqual([7, 6]);
+  });
+
+  it("A68 : carac déjà au plancher BB2025 -> MNG seul (ni compteur ni carac)", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", ma: 8, st: 1, ag: 3, pa: 4, av: 8 }, // ST 1 = plancher
+    ]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 1,
+      casualtiesAway: 0,
+      injuries: [{ teamPlayerId: "p1", type: "st" }],
+    });
+    expect(m.tpUpdate).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { missNextMatch: true },
+    });
+  });
+
   it("purge missNextMatch des 2 equipes (suspensions purgees par ce match)", async () => {
     m.pairFind.mockResolvedValue(buildPairing());
     await recordOfflineLeagueResult({
