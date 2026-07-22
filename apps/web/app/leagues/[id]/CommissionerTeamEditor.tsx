@@ -23,6 +23,9 @@ interface EditPlayer {
 
 /** E13/E15 — accès compétences + innées d'un poste (fourni par l'API). */
 interface PositionAccess {
+  /** Nom d'affichage du poste (ex: "Blitzer Orque"). Optionnel pour
+      rétro-compat avec un serveur pré-déploiement de ce champ. */
+  displayName?: string;
   primarySkills: string | null;
   secondarySkills: string | null;
   innateSkills: string[];
@@ -385,7 +388,9 @@ function PlayerEditRow({
               OK
             </button>
           ) : null}
-          <span className="ml-1 text-xs text-gray-500">{player.position}</span>
+          <span className="ml-1 text-xs text-gray-500">
+            {access?.displayName ?? player.position}
+          </span>
           {player.dead ? (
             <span className="ml-1 text-xs text-red-600">(mort)</span>
           ) : null}

@@ -82,6 +82,34 @@ describe("Lot I — commissioner-team-edit", () => {
       );
     });
 
+    it("expose le displayName du poste dans accessByPosition", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: "T1",
+        name: "Orks",
+        roster: "orc",
+        treasury: 0,
+        ruleset: "season_3",
+      });
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([]);
+      mockPrisma.position.findMany.mockResolvedValue([
+        {
+          slug: "orc_blitzer_orque",
+          displayName: "Blitzer Orque",
+          primarySkills: "G,S",
+          secondarySkills: "A,P",
+          skills: [{ skill: { slug: "block" } }],
+        },
+      ]);
+      const out = await getTeamForEdit({ leagueId: "L1", teamId: "T1" });
+      expect(out.accessByPosition["orc_blitzer_orque"]).toEqual({
+        displayName: "Blitzer Orque",
+        primarySkills: "G,S",
+        secondarySkills: "A,P",
+        innateSkills: ["block"],
+      });
+    });
+
     it("rejette si l'équipe est introuvable", async () => {
       mockPrisma.leagueParticipant.count.mockResolvedValue(1);
       mockPrisma.team.findUnique.mockResolvedValue(null);
