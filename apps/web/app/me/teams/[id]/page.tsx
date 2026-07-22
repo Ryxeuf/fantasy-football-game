@@ -21,6 +21,7 @@ import { MatchReportBanner } from "./MatchReportBanner";
 import TeamShareToggle from "./TeamShareToggle";
 import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
 import RosterBadge from "../../../components/RosterBadge";
+import CaptainPanel from "./CaptainPanel";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -168,6 +169,22 @@ export default function TeamDetailPage() {
     }));
   };
 
+  // Règle "Capitaine" : après désignation, recharger la fiche équipe (le
+  // capitaine vient de gagner la compétence Pro dans son CSV de skills).
+  const refetchTeam = async () => {
+    try {
+      const d = await apiRequest<{
+        team: unknown;
+        currentMatch: unknown;
+        localMatchStats: unknown;
+      }>(`/team/${id}`);
+      setData(d);
+    } catch {
+      // Non-critique : la fiche affichée reste valide, le prochain
+      // chargement de page reflétera la désignation.
+    }
+  };
+
   const handleRecalculate = async () => {
     setRecalculating(true);
     try {
@@ -285,6 +302,12 @@ export default function TeamDetailPage() {
           initialIsPublic={Boolean(team.isPublic)}
           initialShareToken={team.shareToken ?? null}
         />
+      ) : null}
+      {/* Règle spéciale "Capitaine" : rendu interne uniquement si le roster
+          possède la règle (fetch autonome du statut). Après désignation, on
+          recharge la fiche (le capitaine gagne la compétence Pro). */}
+      {id ? (
+        <CaptainPanel teamId={id} onDesignated={refetchTeam} />
       ) : null}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
@@ -631,11 +654,22 @@ export default function TeamDetailPage() {
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
                       <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">
-                        <PlayerIdentityInlineEdit
-                          teamId={String(id)}
-                          player={p}
-                          onSaved={handleIdentitySaved}
-                        />
+                        <span className="inline-flex items-center gap-1.5">
+                          <PlayerIdentityInlineEdit
+                            teamId={String(id)}
+                            player={p}
+                            onSaved={handleIdentitySaved}
+                          />
+                          {p.isCaptain && !p.dead && !p.firedAt ? (
+                            <span
+                              data-testid={`captain-badge-${p.number}`}
+                              title="Capitaine d'équipe"
+                              className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5"
+                            >
+                              C
+                            </span>
+                          ) : null}
+                        </span>
                       </td>
                       <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">
                         <div>{getDisplayName(p.position)}</div>
@@ -681,12 +715,20 @@ export default function TeamDetailPage() {
                       <div className="flex items-center gap-3">
                         <span className="font-mono text-xl font-bold text-gray-900">{p.number}</span>
                         <div>
-                          <div className="font-semibold text-base">
+                          <div className="font-semibold text-base inline-flex items-center gap-1.5">
                             <PlayerIdentityInlineEdit
                               teamId={String(id)}
                               player={p}
                               onSaved={handleIdentitySaved}
                             />
+                            {p.isCaptain && !p.dead && !p.firedAt ? (
+                              <span
+                                title="Capitaine d'équipe"
+                                className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5"
+                              >
+                                C
+                              </span>
+                            ) : null}
                           </div>
                           <div className="text-xs text-gray-600">{getDisplayName(p.position)}</div>
                           <KeywordChips

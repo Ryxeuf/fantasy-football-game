@@ -337,7 +337,8 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   advancements: 'advancements',
   dead: 'dead',
   diedAt: 'diedAt',
-  firedAt: 'firedAt'
+  firedAt: 'firedAt',
+  isCaptain: 'isCaptain'
 };
 
 exports.Prisma.TeamStarPlayerScalarFieldEnum = {
@@ -687,6 +688,8 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   popularityHome: 'popularityHome',
   popularityAway: 'popularityAway',
   forfeitSide: 'forfeitSide',
+  tossWinner: 'tossWinner',
+  tossChoice: 'tossChoice',
   inducementsHome: 'inducementsHome',
   inducementsAway: 'inducementsAway',
   prayersHome: 'prayersHome',
@@ -708,6 +711,10 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   purchasesHome: 'purchasesHome',
   purchasesAway: 'purchasesAway',
   firedPlayerIds: 'firedPlayerIds',
+  advancementsHome: 'advancementsHome',
+  advancementsAway: 'advancementsAway',
+  rosterSnapshotHome: 'rosterSnapshotHome',
+  rosterSnapshotAway: 'rosterSnapshotAway',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

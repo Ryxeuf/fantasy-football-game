@@ -414,6 +414,9 @@ model TeamPlayer {
 
   // Licenciement (ligue physique) : firedAt = null => actif.
   firedAt DateTime?
+
+  // Règle spéciale "Capitaine" : joueur désigné capitaine de l'équipe.
+  isCaptain Boolean @default(false)
 }
 
 // Star Player recruté pour une équipe (mirror minimal du schéma Postgres

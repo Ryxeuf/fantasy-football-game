@@ -142,35 +142,30 @@ export async function acceptAndMaybeStartMatch(
   // au suivant.
   const isEligible = (p: { dead?: boolean; missNextMatch?: boolean }) =>
     !p.dead && !p.missNextMatch;
+  // Règle spéciale "Capitaine" : le flag n'est propagé que pour un
+  // capitaine encore actif (ni mort — déjà filtré — ni licencié) pour
+  // garantir au plus un capitaine par équipe côté moteur.
+  const toTeamPlayerData = (p: any): TeamPlayerData => ({
+    id: p.id,
+    name: p.name,
+    position: p.position,
+    number: p.number,
+    ma: p.ma,
+    st: p.st,
+    ag: p.ag,
+    pa: p.pa,
+    av: p.av,
+    skills: p.skills || "",
+    isCaptain: Boolean(p.isCaptain) && !p.firedAt,
+  });
+
   const teamAData: TeamPlayerData[] = teamA.players
     .filter(isEligible)
-    .map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      position: p.position,
-      number: p.number,
-      ma: p.ma,
-      st: p.st,
-      ag: p.ag,
-      pa: p.pa,
-      av: p.av,
-      skills: p.skills || "",
-    }));
+    .map(toTeamPlayerData);
 
   const teamBData: TeamPlayerData[] = teamB.players
     .filter(isEligible)
-    .map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      position: p.position,
-      number: p.number,
-      ma: p.ma,
-      st: p.st,
-      ag: p.ag,
-      pa: p.pa,
-      av: p.av,
-      skills: p.skills || "",
-    }));
+    .map(toTeamPlayerData);
 
   // L2.B.7 — efface `missNextMatch` pour les joueurs qui viennent
   // d'etre exclus : ils servent leur suspension par cette exclusion

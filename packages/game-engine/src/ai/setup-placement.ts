@@ -109,8 +109,12 @@ export function autoSetupAITeam(
   // logical state but their pos.x has been reset to -1 elsewhere — without
   // this filter the AI would happily place a KO'd or expelled secret
   // weapon back on the pitch for the next drive.
+  // Règle "Capitaine" : le capitaine doit être aligné si possible —
+  // `validatePlayerPlacement` refuse un placement qui le laisse en réserve.
+  // On le met donc en tête de liste avant le cap des 11.
   const teamPlayersInReserves = state.players
     .filter((p) => p.team === teamId && p.pos.x < 0 && (!p.state || p.state === 'active'))
+    .sort((a, b) => (b.isCaptain ? 1 : 0) - (a.isCaptain ? 1 : 0))
     .slice(0, 11);
 
   let current = state;

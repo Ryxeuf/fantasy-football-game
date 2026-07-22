@@ -414,6 +414,9 @@ model TeamPlayer {
 
   // Licenciement (ligue physique) : firedAt = null => actif.
   firedAt DateTime?
+
+  // Règle spéciale "Capitaine" : joueur désigné capitaine de l'équipe.
+  isCaptain Boolean @default(false)
 }
 
 // Star Player recruté pour une équipe (mirror minimal du schéma Postgres
@@ -1027,6 +1030,8 @@ model LeagueMatchSheet {
   popularityHome         Int?
   popularityAway         Int?
   forfeitSide            String?
+  tossWinner             String?
+  tossChoice             String?
   inducementsHome        Json?
   inducementsAway        Json?
   prayersHome            Json?
@@ -1048,6 +1053,12 @@ model LeagueMatchSheet {
   purchasesHome          Json?
   purchasesAway          Json?
   firedPlayerIds         Json?
+  /// Evolutions stagees par coach (appliquees a la validation).
+  advancementsHome       Json?
+  advancementsAway       Json?
+  /// E11 — snapshots roster figes a la premiere soumission (JSON string).
+  rosterSnapshotHome     Json?
+  rosterSnapshotAway     Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 

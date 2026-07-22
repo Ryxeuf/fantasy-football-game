@@ -12,6 +12,7 @@ import {
   updatePlayerIdentitySchema,
   addStarPlayerToTeamSchema,
   saveRosterSchema,
+  designateCaptainSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
@@ -132,6 +133,25 @@ router.patch(
   authUser,
   validate(shareTeamSchema),
   handleSetTeamShare,
+);
+
+// Règle spéciale "Capitaine" : statut + désignation (création de la liste,
+// ou successeur si le capitaine est mort/licencié en ligue).
+export {
+  handleGetCaptainStatus,
+  handleDesignateCaptain,
+} from './team-captain-handlers';
+import {
+  handleGetCaptainStatus as handleGetCaptainStatusImpl,
+  handleDesignateCaptain as handleDesignateCaptainImpl,
+} from './team-captain-handlers';
+
+router.get("/:id/captain", authUser, handleGetCaptainStatusImpl);
+router.post(
+  "/:id/captain",
+  authUser,
+  validate(designateCaptainSchema),
+  handleDesignateCaptainImpl,
 );
 
 // S27.8.24 — Handlers Player CRUD (add / delete / update-skills /

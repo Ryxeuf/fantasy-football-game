@@ -475,36 +475,30 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ error: "La partie a déjà été démarrée ou terminée" });
     }
     
-    // Préparer les données des équipes (exclure les joueurs morts)
+    // Préparer les données des équipes (exclure les joueurs morts).
+    // Règle "Capitaine" : flag propagé uniquement si le capitaine est
+    // toujours actif (non licencié).
+    const toLocalTeamPlayerData = (p: any) => ({
+      id: p.id,
+      name: p.name,
+      position: p.position,
+      number: p.number,
+      ma: p.ma,
+      st: p.st,
+      ag: p.ag,
+      pa: p.pa,
+      av: p.av,
+      skills: p.skills || "",
+      isCaptain: Boolean(p.isCaptain) && !p.firedAt,
+    });
+
     const teamAData = localMatch.teamA.players
       .filter((p: any) => !p.dead)
-      .map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        number: p.number,
-        ma: p.ma,
-        st: p.st,
-        ag: p.ag,
-        pa: p.pa,
-        av: p.av,
-        skills: p.skills || "",
-      }));
+      .map(toLocalTeamPlayerData);
 
     const teamBData = localMatch.teamB.players
       .filter((p: any) => !p.dead)
-      .map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        number: p.number,
-        ma: p.ma,
-        st: p.st,
-        ag: p.ag,
-        pa: p.pa,
-        av: p.av,
-        skills: p.skills || "",
-      }));
+      .map(toLocalTeamPlayerData);
     
     // Récupérer les fans dévoués des équipes
     const dedicatedFansA = localMatch.teamA.dedicatedFans || 1;

@@ -153,6 +153,15 @@ export const addStarPlayerToTeamSchema = z.object({
 });
 
 /**
+ * Règle spéciale "Capitaine" : désignation du capitaine de l'équipe
+ * (création de la liste, ou successeur si le capitaine est mort/licencié).
+ */
+export const designateCaptainSchema = z.object({
+  playerId: z.string().min(1, "playerId requis"),
+});
+export type DesignateCaptainBody = z.infer<typeof designateCaptainSchema>;
+
+/**
  * E12 — édition cosmétique de l'identité d'un joueur (nom + numéro) par
  * son coach, AUTORISÉE même équipe engagée (pas d'impact anti-triche).
  */
