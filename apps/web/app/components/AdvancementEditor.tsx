@@ -107,7 +107,7 @@ interface SkillsResponse {
 }
 
 /** Nom de catégorie DB -> code canonique. « Scélérates » = Sournoiserie (K). */
-const CATEGORY_CODE: Record<string, string> = {
+export const CATEGORY_CODE: Record<string, string> = {
   General: "G",
   Agility: "A",
   Strength: "S",
@@ -117,7 +117,7 @@ const CATEGORY_CODE: Record<string, string> = {
 };
 
 /** Code catégorie → libellé FR (pour le tirage random-primary, p.121). */
-const CATEGORY_LABELS: Record<string, string> = {
+export const CATEGORY_LABELS: Record<string, string> = {
   G: "Générales",
   A: "Agilité",
   S: "Force",
