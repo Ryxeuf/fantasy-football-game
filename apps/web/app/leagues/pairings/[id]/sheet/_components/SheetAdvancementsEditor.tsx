@@ -21,6 +21,8 @@ import {
 } from "@bb/game-engine";
 import { apiRequest } from "../../../../../lib/api-client";
 import {
+  CATEGORY_CODE,
+  CATEGORY_LABELS,
   PlayerRow,
   type PendingAdvancementItem,
   type SkillCatalogItem,
@@ -31,6 +33,27 @@ import type { SheetPlayer } from "./MatchSheetPanels";
 /** Entrée stagée telle que stockée sur la feuille (choix + playerId). */
 export interface StagedAdvancementEntry extends StagedAdvancementChoice {
   playerId: string;
+}
+
+/** Catalogue de compétences par ruleset, partagé entre éditeur et récaps. */
+function useSkillCatalog(ruleset: string): SkillCatalogItem[] {
+  const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest<{ skills: SkillCatalogItem[] }>(
+      `/api/skills?ruleset=${encodeURIComponent(ruleset || "season_3")}`,
+    )
+      .then((r) => {
+        if (!cancelled) setCatalog(r.skills ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCatalog([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ruleset]);
+  return catalog;
 }
 
 export interface SheetAdvancementsEditorProps {
@@ -61,23 +84,7 @@ export function SheetAdvancementsEditor({
   onChange,
   disabled,
 }: SheetAdvancementsEditorProps): JSX.Element {
-  const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiRequest<{ skills: SkillCatalogItem[] }>(
-      `/api/skills?ruleset=${encodeURIComponent(ruleset || "season_3")}`,
-    )
-      .then((r) => {
-        if (!cancelled) setCatalog(r.skills ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setCatalog([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [ruleset]);
+  const catalog = useSkillCatalog(ruleset);
 
   const bonusByPlayer = useMemo(() => {
     const m = new Map<string, number>();
@@ -188,15 +195,34 @@ export function StagedAdvancementsRecap({
   entries,
   players,
   title,
+  ruleset,
 }: {
   readonly entries: readonly StagedAdvancementEntry[];
   readonly players: readonly SheetPlayer[];
   readonly title: string;
+  /** Ruleset de l'équipe, pour résoudre nom + catégorie des compétences. */
+  readonly ruleset?: string;
 }): JSX.Element | null {
+  const catalog = useSkillCatalog(ruleset ?? "season_3");
+  const catalogBySlug = useMemo(() => {
+    const m = new Map<string, SkillCatalogItem>();
+    for (const s of catalog) m.set(s.slug, s);
+    return m;
+  }, [catalog]);
   if (entries.length === 0) return null;
   const nameOf = (id: string): string => {
     const p = players.find((pl) => pl.id === id);
     return p ? `N°${p.number} ${p.name}` : id;
+  };
+  // Slug -> « Nom FR (Catégorie) » ; repli sur le slug tant que le
+  // catalogue n'est pas chargé (ou compétence inconnue).
+  const skillLabel = (slug: string | null | undefined): string => {
+    if (!slug) return "?";
+    const s = catalogBySlug.get(slug);
+    if (!s) return slug;
+    const code = CATEGORY_CODE[s.category] ?? s.category;
+    const categoryLabel = CATEGORY_LABELS[code] ?? s.category;
+    return `${s.nameFr} (${categoryLabel})`;
   };
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -210,7 +236,7 @@ export function StagedAdvancementsRecap({
               {nameOf(e.playerId)} —{" "}
               {e.type === "characteristic"
                 ? `+${(e.stat ?? "").toUpperCase()}`
-                : e.skillSlug}
+                : skillLabel(e.skillSlug)}
             </span>
             {e.applied === true ? (
               <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-800">

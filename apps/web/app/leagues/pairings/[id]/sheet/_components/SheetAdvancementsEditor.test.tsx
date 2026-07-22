@@ -149,7 +149,21 @@ describe("SheetAdvancementsEditor (staging feuille de match)", () => {
 });
 
 describe("StagedAdvancementsRecap", () => {
-  it("affiche le statut appliqué/refusé renvoyé par la validation", () => {
+  beforeEach(() => {
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/api/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "block", nameFr: "Blocage", category: "General" },
+            { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+          ],
+        });
+      return Promise.resolve({});
+    });
+  });
+
+  it("affiche le statut appliqué/refusé renvoyé par la validation", async () => {
     render(
       <StagedAdvancementsRecap
         title="Domicile"
@@ -176,5 +190,32 @@ describe("StagedAdvancementsRecap", () => {
     expect(recap.textContent).toContain("N°4 Griff");
     expect(recap.textContent).toContain("✓ appliqué · 6 PSP");
     expect(recap.textContent).toContain("refusé (insufficient-spp)");
+    // Nom FR + catégorie de la compétence, pas le slug brut.
+    await waitFor(() => {
+      expect(recap.textContent).toContain("Blocage (Générales)");
+      expect(recap.textContent).toContain("Esquive (Agilité)");
+      expect(recap.textContent).not.toContain("block");
+    });
+  });
+
+  it("replie sur le slug quand la compétence est absente du catalogue", async () => {
+    render(
+      <StagedAdvancementsRecap
+        title="Domicile"
+        players={[player({ id: "p1", name: "Griff", number: 4 })]}
+        entries={[
+          { playerId: "p1", type: "primary", skillSlug: "mystery-skill" },
+        ]}
+      />,
+    );
+    const recap = screen.getByTestId("sheet-advancements-recap");
+    expect(recap.textContent).toContain("mystery-skill");
+    await waitFor(() =>
+      expect(apiRequest).toHaveBeenCalledWith(
+        expect.stringContaining("/api/skills"),
+        undefined,
+      ),
+    );
+    expect(recap.textContent).toContain("mystery-skill");
   });
 });

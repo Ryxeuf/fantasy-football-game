@@ -1249,11 +1249,13 @@ export default function MatchSheetPage() {
                 entries={stagedHome}
                 players={home?.players ?? []}
                 title={`Évolutions saisies — ${home?.name ?? "Domicile"}`}
+                ruleset={home?.ruleset}
               />
               <StagedAdvancementsRecap
                 entries={stagedAway}
                 players={away?.players ?? []}
                 title={`Évolutions saisies — ${away?.name ?? "Extérieur"}`}
+                ruleset={away?.ruleset}
               />
               {myTeamId ? (
                 <div className="space-y-3">
@@ -1311,11 +1313,13 @@ export default function MatchSheetPage() {
                 entries={stagedHome}
                 players={home?.players ?? []}
                 title={`${home?.name ?? "Domicile"}`}
+                ruleset={home?.ruleset}
               />
               <StagedAdvancementsRecap
                 entries={stagedAway}
                 players={away?.players ?? []}
                 title={`${away?.name ?? "Extérieur"}`}
+                ruleset={away?.ruleset}
               />
               {stagedHome.length === 0 && stagedAway.length === 0 ? (
                 <p className="text-sm italic text-slate-400">
