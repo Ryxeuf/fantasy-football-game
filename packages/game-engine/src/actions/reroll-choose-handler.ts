@@ -39,6 +39,7 @@ import { createLogEntry } from '../utils/logging';
 import { applyRollFailure, applyPickupFailure } from './failure-helpers';
 import { handleBallPickup } from './ball-pickup';
 import { getWeatherModifiers } from '../mechanics/weather-effects';
+import { findCaptainOnPitch } from '../mechanics/captain';
 
 /**
  * Retourne le seuil Loner du joueur (3, 4 ou 5) ou `null` s'il n'a
@@ -53,8 +54,36 @@ function getLonerThreshold(player: Player): number | null {
 
 /**
  * Consomme une relance d'equipe et marque le flag `rerollUsedThisTurn`.
+ *
+ * Regle speciale "Capitaine" (Saison 3) : si le capitaine de l'equipe est
+ * sur le terrain, chaque utilisation d'une relance d'equipe declenche un
+ * D6 — sur un 6 NATUREL, la relance est gratuite (non decomptee). Le jet
+ * n'est effectue QUE si un capitaine est present, ce qui preserve le
+ * determinisme des replays des matchs sans capitaine.
  */
-function consumeTeamReroll(state: GameState, team: TeamId): GameState {
+function consumeTeamReroll(state: GameState, team: TeamId, rng: RNG): GameState {
+  const captain = findCaptainOnPitch(state, team);
+  if (captain) {
+    const roll = Math.floor(rng() * 6) + 1;
+    const free = roll === 6;
+    const captainLog = createLogEntry(
+      'dice',
+      `Capitaine ${captain.name} sur le terrain : D6 = ${roll}${
+        free ? ' — relance d’équipe gratuite !' : ''
+      }`,
+      captain.id,
+      team,
+      { diceRoll: roll, targetNumber: 6, success: free },
+    );
+    if (free) {
+      return {
+        ...state,
+        gameLog: [...state.gameLog, captainLog],
+        rerollUsedThisTurn: true,
+      };
+    }
+    state = { ...state, gameLog: [...state.gameLog, captainLog] };
+  }
   const newRerolls = { ...state.teamRerolls };
   if (team === 'A') {
     newRerolls.teamA = Math.max(0, (newRerolls.teamA ?? 0) - 1);
@@ -138,7 +167,7 @@ export function handleRerollChoose(
     if (!lonerSuccess) {
       // Loner check failed: team reroll is consumed (wasted), original
       // failure applies
-      newState = consumeTeamReroll(newState, team);
+      newState = consumeTeamReroll(newState, team, rng);
       const wastedLog = createLogEntry(
         'action',
         `Relance d'équipe gaspillée (Solitaire raté)`,
@@ -156,7 +185,7 @@ export function handleRerollChoose(
   }
 
   // Relance acceptee : consommer la relance
-  newState = consumeTeamReroll(newState, team);
+  newState = consumeTeamReroll(newState, team, rng);
   const rerollLog = createLogEntry(
     'action',
     `Relance d'équipe utilisée !`,

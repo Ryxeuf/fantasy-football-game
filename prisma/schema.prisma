@@ -494,6 +494,12 @@ model TeamPlayer {
   // mais conservé en base (historique/carrière). `firedAt = null` => actif.
   firedAt DateTime? // When the player was fired (released) from the team
 
+  // Règle spéciale d'équipe "Capitaine" (Saison 3) : joueur désigné capitaine
+  // à la création de la liste (ou re-désigné si le capitaine précédent est
+  // mort/licencié). Le capitaine gagne la compétence Pro sans augmenter la
+  // valeur d'équipe (Pro est injectée dans `skills`, hors advancements).
+  isCaptain Boolean @default(false)
+
   @@index([teamId])
 }
 

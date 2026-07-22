@@ -18,6 +18,7 @@ import { hasSkill } from '../skills/skill-effects';
 import { collectModifiers } from '../skills/skill-registry';
 import { isSneakyGitActive } from '../skills/skill-bridge';
 import { assertSinglePending } from './pending-state';
+import { findPlaceableCaptain } from '../mechanics/captain';
 
 export type { PreMatchState };
 
@@ -39,6 +40,11 @@ export interface TeamPlayerData {
   pa: number;
   av: number;
   skills: string;
+  /**
+   * Règle spéciale "Capitaine" (Saison 3) : ce joueur est le capitaine
+   * désigné de l'équipe. Propagé sur `Player.isCaptain`.
+   */
+  isCaptain?: boolean;
 }
 
 /**
@@ -95,6 +101,7 @@ export function setupPreMatchWithTeams(
     pm: tp.ma, // PM = MA au début
     hasBall: false,
     state: 'active',
+    ...(tp.isCaptain ? { isCaptain: true } : {}),
   }));
 
   // Créer les joueurs de l'équipe B
@@ -119,6 +126,7 @@ export function setupPreMatchWithTeams(
     pm: tp.ma, // PM = MA au début
     hasBall: false,
     state: 'active',
+    ...(tp.isCaptain ? { isCaptain: true } : {}),
   }));
 
   const allPlayers = [...teamAPlayers, ...teamBPlayers];
@@ -1482,6 +1490,25 @@ export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameS
 
   if (coachPlayersOnField !== expectedOnField) {
     return state; // Pas le bon nombre de joueurs placés
+  }
+
+  // Règle spéciale "Capitaine" : lors du placement, le capitaine doit être
+  // aligné si possible. S'il est disponible (état actif) mais laissé en
+  // réserve, le placement est refusé.
+  const placeableCaptain = findPlaceableCaptain(state, currentCoach);
+  if (placeableCaptain && placeableCaptain.pos.x < 0) {
+    return {
+      ...state,
+      gameLog: [
+        ...state.gameLog,
+        createLogEntry(
+          'info',
+          `Placement refusé : le capitaine ${placeableCaptain.name} doit être aligné si possible (règle Capitaine)`,
+          placeableCaptain.id,
+          currentCoach,
+        ),
+      ],
+    };
   }
 
   const logEntry = createLogEntry(

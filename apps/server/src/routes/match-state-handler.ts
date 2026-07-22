@@ -151,38 +151,30 @@ export async function handleGetMatchState(
         return;
       }
 
+      // Règle "Capitaine" : flag propagé uniquement si le capitaine est
+      // toujours actif (non licencié).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const toStateTeamPlayerData = (p: any) => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        ma: p.ma,
+        st: p.st,
+        ag: p.ag,
+        pa: p.pa,
+        av: p.av,
+        skills: p.skills || '',
+        isCaptain: Boolean(p.isCaptain) && !p.firedAt,
+      });
       const teamAData = teamA.players
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((p: any) => !p.dead)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          number: p.number,
-          ma: p.ma,
-          st: p.st,
-          ag: p.ag,
-          pa: p.pa,
-          av: p.av,
-          skills: p.skills || '',
-        }));
+        .map(toStateTeamPlayerData);
       const teamBData = teamB.players
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((p: any) => !p.dead)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          number: p.number,
-          ma: p.ma,
-          st: p.st,
-          ag: p.ag,
-          pa: p.pa,
-          av: p.av,
-          skills: p.skills || '',
-        }));
+        .map(toStateTeamPlayerData);
 
       serverLog.log(
         'Players loaded for prematch:',

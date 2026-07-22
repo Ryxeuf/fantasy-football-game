@@ -542,7 +542,16 @@ describe("recordOfflineLeagueResult (option b)", () => {
         teamId: { in: ["team-home", "team-away"] },
         firedAt: null,
       },
-      select: { id: true, teamId: true },
+      select: {
+        id: true,
+        teamId: true,
+        isCaptain: true,
+        maReduction: true,
+        stReduction: true,
+        agReduction: true,
+        paReduction: true,
+        avReduction: true,
+      },
     });
     // Pose firedAt sur les 2 joueurs.
     const firedCall = m.tpUpdateMany.mock.calls.find(
@@ -557,5 +566,47 @@ describe("recordOfflineLeagueResult (option b)", () => {
       (c) => (c[0] as { where: { id: string } }).where.id === "m-1",
     )?.[0] as { data: { offlineResultInput: { firedApplied: string[] } } };
     expect(upd.data.offlineResultInput.firedApplied).toEqual(["p1", "p2"]);
+  });
+
+  it("règle Capitaine : refuse le licenciement du capitaine sans blessure de carac", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      // Capitaine indemne → licenciement refusé.
+      {
+        id: "cap-ok",
+        teamId: "team-home",
+        isCaptain: true,
+        maReduction: 0,
+        stReduction: 0,
+        agReduction: 0,
+        paReduction: 0,
+        avReduction: 0,
+      },
+      // Capitaine avec -1 ST → licenciable.
+      {
+        id: "cap-hurt",
+        teamId: "team-away",
+        isCaptain: true,
+        maReduction: 0,
+        stReduction: 1,
+        agReduction: 0,
+        paReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      firedPlayerIds: ["cap-ok", "cap-hurt"],
+    });
+
+    const firedCall = m.tpUpdateMany.mock.calls.find(
+      (c) => "firedAt" in (c[0] as { data: Record<string, unknown> }).data,
+    )?.[0] as { where: { id: { in: string[] } } };
+    expect(firedCall.where.id.in).toEqual(["cap-hurt"]);
   });
 });

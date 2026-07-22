@@ -49,6 +49,7 @@ import {
 import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
+import { canFirePlayer } from "./team-captain";
 
 /** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
 export { OFFLINE_MATCH_MODE };
@@ -264,6 +265,11 @@ function buildOfflineSnapshot(
  * vises (filtres par appartenance aux 2 equipes + non deja licencies) et
  * recalcule la TV des equipes touchees. Retourne les ids REELLEMENT licencies
  * (pour la reversion exacte).
+ *
+ * Regle speciale "Capitaine" : un capitaine ne peut etre licencie que s'il a
+ * subi une blessure ayant reduit une de ses caracteristiques
+ * (`canFirePlayer`). Les ids non conformes sont ignores (meme convention que
+ * les autres ids invalides de la saisie) et traces en log.
  */
 async function applyOfflineFirings(
   homeTeamId: string,
@@ -271,14 +277,39 @@ async function applyOfflineFirings(
   firedPlayerIds: readonly string[],
 ): Promise<string[]> {
   if (firedPlayerIds.length === 0) return [];
-  const valid = (await prisma.teamPlayer.findMany({
+  const candidates = (await prisma.teamPlayer.findMany({
     where: {
       id: { in: [...firedPlayerIds] },
       teamId: { in: [homeTeamId, awayTeamId] },
       firedAt: null,
     },
-    select: { id: true, teamId: true },
-  })) as Array<{ id: string; teamId: string }>;
+    select: {
+      id: true,
+      teamId: true,
+      isCaptain: true,
+      maReduction: true,
+      stReduction: true,
+      agReduction: true,
+      paReduction: true,
+      avReduction: true,
+    },
+  })) as Array<{
+    id: string;
+    teamId: string;
+    isCaptain: boolean;
+    maReduction: number;
+    stReduction: number;
+    agReduction: number;
+    paReduction: number;
+    avReduction: number;
+  }>;
+  const valid = candidates.filter((p) => {
+    if (canFirePlayer(p)) return true;
+    serverLog.warn(
+      `[league-offline] licenciement refuse pour le capitaine ${p.id} : aucune blessure reduisant une caracteristique`,
+    );
+    return false;
+  });
   if (valid.length === 0) return [];
 
   const ids = valid.map((p) => p.id);

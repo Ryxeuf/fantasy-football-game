@@ -65,6 +65,14 @@ export interface Player {
   breakTackleUsed?: boolean; // Break Tackle utilisé pendant cette activation (BB3 — reset chaque tour d'équipe)
   hasBall?: boolean; // indique si le joueur a la balle
   state?: PlayerState; // état du joueur pour les zones de dugout
+  /**
+   * Règle spéciale d'équipe "Capitaine" (Saison 3) : ce joueur est le
+   * capitaine désigné de son équipe. S'il est sur le terrain, chaque
+   * relance d'équipe déclenche un D6 — sur un 6 naturel elle est gratuite.
+   * Au placement, le capitaine doit être aligné si possible. Optionnel
+   * pour compatibilité avec les états/replays antérieurs.
+   */
+  isCaptain?: boolean;
 }
 
 export interface GameLogEntry {
