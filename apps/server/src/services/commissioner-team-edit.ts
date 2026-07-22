@@ -873,12 +873,14 @@ export async function getTeamForEdit(input: {
     },
     select: {
       slug: true,
+      displayName: true,
       primarySkills: true,
       secondarySkills: true,
       skills: { select: { skill: { select: { slug: true } } } },
     },
   })) as Array<{
     slug: string;
+    displayName: string;
     primarySkills: string | null;
     secondarySkills: string | null;
     skills: Array<{ skill: { slug: string } }>;
@@ -886,6 +888,7 @@ export async function getTeamForEdit(input: {
   const accessByPosition: Record<
     string,
     {
+      displayName: string;
       primarySkills: string | null;
       secondarySkills: string | null;
       innateSkills: string[];
@@ -893,6 +896,7 @@ export async function getTeamForEdit(input: {
   > = {};
   for (const p of positions) {
     accessByPosition[p.slug] = {
+      displayName: p.displayName,
       primarySkills: p.primarySkills,
       secondarySkills: p.secondarySkills,
       innateSkills: p.skills.map((ps) => ps.skill.slug),
