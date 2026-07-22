@@ -1,3 +1,16 @@
+## [1.218.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.217.1...v1.218.0) (2026-07-22)
+
+
+### ✨ Features
+
+* **league:** affiche le nom du poste dans l'édition commissaire ([#933](https://github.com/Ryxeuf/fantasy-football-game/issues/933)) ([ddcc541](https://github.com/Ryxeuf/fantasy-football-game/commit/ddcc54145e01a0821f154906b9e9baa91d8754e6))
+* **league:** nom et catégorie des compétences dans le récap des évolutions ([#932](https://github.com/Ryxeuf/fantasy-football-game/issues/932)) ([9acb887](https://github.com/Ryxeuf/fantasy-football-game/commit/9acb88783e2df647e929db2f23266c027a3eb36f))
+
+
+### 🐛 Bug Fixes
+
+* **league:** les Séquelles réduisent réellement la caractéristique du joueur (A68) ([21bf808](https://github.com/Ryxeuf/fantasy-football-game/commit/21bf80872c759244dd4fee1779bee7be06793f68))
+
 ## [1.217.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.217.0...v1.217.1) (2026-07-21)
 
 
