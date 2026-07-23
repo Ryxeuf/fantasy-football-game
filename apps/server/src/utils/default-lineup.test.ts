@@ -99,6 +99,17 @@ describe('buildDefaultLineup', () => {
     });
   });
 
+  it('propage un PA null (pas de passe) sans le rematérialiser en 0/NaN', () => {
+    const positions = [
+      pos('looney', { cost: 40, min: 1, max: 1, pa: null }),
+      pos('lineman', { cost: 50, max: 16 }),
+    ];
+    const lineup = buildDefaultLineup(positions);
+    const looney = lineup.find((e) => e.position === 'looney');
+    expect(looney).toBeTruthy();
+    expect(looney?.pa).toBeNull();
+  });
+
   it('keeps results deterministic for equal cap and cost (slug tiebreak)', () => {
     const positions = [
       pos('zebra', { cost: 50, max: 16 }),

@@ -56,7 +56,8 @@ vi.mock("../../../../packages/game-engine/src/rosters/positions", () => ({
             ma: 6,
             st: 3,
             ag: 2,
-            pa: 3,
+            // Sentinelle game-engine "pas de passe" : doit devenir null en base.
+            pa: 0,
             av: 9,
             skills: "",
           },
@@ -174,6 +175,21 @@ describe("syncRosters", () => {
           primarySkills: "G,A",
           secondarySkills: "S,P",
         }),
+      }),
+    );
+    // Frontière PA : la sentinelle 0 du game-engine est écrite null en base
+    // (pa "-" ; les valeurs numériques passent telles quelles).
+    expect(posUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          displayName: "Trois-quart Haut Elfe",
+          pa: null,
+        }),
+      }),
+    );
+    expect(posUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ displayName: "Lion Blanc", pa: 3 }),
       }),
     );
     // Relink : on vide puis recrée les liens (2 skills pour le Lion Blanc).

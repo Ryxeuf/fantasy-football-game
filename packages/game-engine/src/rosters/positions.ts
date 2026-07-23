@@ -458,7 +458,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
         ma: 6,
         st: 2,
         ag: 3,
-        pa: 6,
+        pa: 0, // pas de passe : "-" (sentinelle 0 → null en base au seed/sync)
         av: 8,
         skills: "chainsaw,secret-weapon,stunty",
       },
