@@ -231,7 +231,15 @@ export async function processMove(
 
       try {
         if (newState.casualtyResults) {
-          await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
+          // `matchId` = provenance : permet de ressusciter les joueurs si le
+          // match est annule/supprime par un admin.
+          await persistPlayerDeaths(
+            prisma as any,
+            newState,
+            teamAId,
+            teamBId,
+            matchId,
+          );
         }
       } catch (e) {
         serverLog.error("[move-processor] persistPlayerDeaths failed", e);

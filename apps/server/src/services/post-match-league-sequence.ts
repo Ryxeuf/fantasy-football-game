@@ -41,6 +41,7 @@ import {
   type RandomSkillCategoryCode,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
+import { ACTIVE_PLAYER_WHERE } from "./player-status";
 import {
   categoryCodeForSkill,
   checkSkillAccess,
@@ -237,8 +238,10 @@ export async function runPostMatchLeagueSequence(
  * eligible. La verification fine du cout par type est faite au moment
  * du choix (`applyAdvancementChoice`).
  *
- * Note : on ignore les joueurs morts (`dead=true`) et ceux qui ne
- * doivent pas jouer le prochain match (`missNextMatch=true`) -- ils
+ * Note : on ignore les joueurs sortis du roster actif -- morts
+ * (`dead=true`) ET licencies (`firedAt`) : un joueur licencie a la fin du
+ * match ne doit pas se voir proposer un level-up. Ceux qui ne doivent pas
+ * jouer le prochain match (`missNextMatch=true`) restent eligibles : ils
  * peuvent prendre une amelioration, mais ils servent leur match-out
  * separement (cf L2.B.7).
  */
@@ -246,7 +249,7 @@ async function collectPendingChoices(
   teamId: string,
 ): Promise<PendingChoice[]> {
   const players = await prisma.teamPlayer.findMany({
-    where: { teamId, dead: false },
+    where: { teamId, ...ACTIVE_PLAYER_WHERE },
     select: {
       id: true,
       name: true,

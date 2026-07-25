@@ -415,8 +415,36 @@ model TeamPlayer {
   // Licenciement (ligue physique) : firedAt = null => actif.
   firedAt DateTime?
 
+  // Statut de présence + provenance (mirror du schéma PG).
+  status         String    @default("active")
+  statusAt       DateTime?
+  statusSource   String?
+  statusSourceId String?
+
+  statusEvents TeamPlayerStatusEvent[]
+
   // Règle spéciale "Capitaine" : joueur désigné capitaine de l'équipe.
   isCaptain Boolean @default(false)
+}
+
+// Journal des morts / licenciements (mirror du schéma PG).
+model TeamPlayerStatusEvent {
+  id          String     @id @default(cuid())
+  player      TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId    String
+  teamId      String
+  kind        String
+  sourceType  String
+  sourceId    String     @default("")
+  actorUserId String?
+  reason      String?
+  revertedAt  DateTime?
+  revertedBy  String?
+  createdAt   DateTime   @default(now())
+
+  @@index([playerId, revertedAt])
+  @@index([sourceType, sourceId])
+  @@index([teamId, createdAt])
 }
 
 // Star Player recruté pour une équipe (mirror minimal du schéma Postgres

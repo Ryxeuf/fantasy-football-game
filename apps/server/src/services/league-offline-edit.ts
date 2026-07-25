@@ -18,8 +18,11 @@
  *  - un achat post-match a deja ete **consomme**.
  *
  * Une mort EST reversible : elle n'est qu'un flag `dead:true` (la ligne
- * TeamPlayer n'est pas supprimee), donc la reversion remet `dead:false` et
- * ressuscite le joueur. L'UI previent le commissaire avant de confirmer.
+ * TeamPlayer n'est pas supprimee), donc la reversion ressuscite le joueur.
+ * L'UI previent le commissaire avant de confirmer. Depuis le suivi de
+ * provenance, morts et licenciements passent par `revertPlayerStatus` :
+ * la reversion est REFUSEE si le statut courant du joueur a ete pose par
+ * une autre source (autre match, pose manuelle posterieure).
  */
 
 import { prisma } from "../prisma";
@@ -52,6 +55,7 @@ import {
 } from "./league-offline-purchases";
 import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
+import { revertPlayerStatus } from "./player-status";
 
 export type ReverseOfflineSkipReason =
   | "match-missing"
@@ -273,9 +277,9 @@ export async function reverseOfflineLeagueResult(
     return { skipped: true, reason: "playoffs-generated" };
   }
   // Note : une mort EST reversible (la mort est un simple flag `dead:true`,
-  // la ligne TeamPlayer n'est jamais supprimee). La reversion remet
-  // `dead:false` (cf. injuryReverseData). L'UI previent le commissaire que
-  // des joueurs vont etre ressuscites avant de confirmer l'invalidation.
+  // la ligne TeamPlayer n'est jamais supprimee). La reversion est deleguee a
+  // `revertPlayerStatus`, qui verifie la provenance. L'UI previent le
+  // commissaire que des joueurs vont etre ressuscites avant de confirmer.
 
   const pairing = (await prisma.leaguePairing.findUnique({
     where: { id: match.leaguePairingId },
@@ -545,7 +549,15 @@ export async function reverseOfflineLeagueResult(
       },
     ]),
   );
+  // Les morts ne sont PAS reversees ici : elles passent par
+  // `revertPlayerStatus` (apres la transaction), qui verifie que la mort
+  // courante a bien ete posee par CE match avant de ressusciter.
+  const deathsToRevert = input.injuries
+    .filter((inj) => inj.type === "dead")
+    .map((inj) => inj.teamPlayerId);
+
   for (const inj of input.injuries) {
+    if (inj.type === "dead") continue;
     const state = reverseStateById.get(inj.teamPlayerId);
     // Ligne joueur introuvable (defensif) : reversion legacy des compteurs
     // seuls, sans restauration de caracteristique.
@@ -578,16 +590,10 @@ export async function reverseOfflineLeagueResult(
     ops.push(...buildPurchaseReverseOps(away.teamId, rosterMutations.away));
   }
 
-  // 4c. Licenciements : re-activation (firedAt = null) des joueurs licencies
-  //     par ce match. TV recalculee apres la transaction.
-  if (firedApplied.length > 0) {
-    ops.push(
-      prisma.teamPlayer.updateMany({
-        where: { id: { in: firedApplied } },
-        data: { firedAt: null },
-      }),
-    );
-  }
+  // 4c. Licenciements : re-integration des joueurs licencies par ce match.
+  //     Comme les morts, la reversion passe par `revertPlayerStatus` APRES
+  //     la transaction : un licenciement dont le statut a ete re-pose par
+  //     une autre source ne doit pas etre leve en aveugle.
 
   // 5. Suppression du Match synthetique : d'abord les TeamSelection (pas de
   //    cascade), puis le Match (cascade la post-match-sequence).
@@ -614,12 +620,37 @@ export async function reverseOfflineLeagueResult(
 
   await prisma.$transaction(ops);
 
+  // Morts + licenciements : reversion VERIFIEE (la source du statut courant
+  // doit etre ce match). Un joueur re-tue/re-licencie entre-temps par une
+  // autre source reste inactif — on log le skip plutot que de corrompre.
+  const statusReverted: string[] = [];
+  for (const [kind, ids] of [
+    ["death", deathsToRevert],
+    ["firing", firedApplied],
+  ] as const) {
+    for (const playerId of ids) {
+      const out = await revertPlayerStatus({
+        playerId,
+        kind,
+        source: "match_sheet",
+        sourceId: match.id,
+      });
+      if ("reverted" in out) {
+        statusReverted.push(playerId);
+      } else if (out.reason !== "no-status-to-revert") {
+        serverLog.warn(
+          `[league-offline-edit] reversion ${kind} ignoree (${out.reason}) player=${playerId} match=${match.id}`,
+        );
+      }
+    }
+  }
+
   // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit) pour
   // les equipes dont le roster a ete mute par les achats OU les licenciements.
   const tvTeams = new Set<string>();
   if (sideHasMutation(rosterMutations.home)) tvTeams.add(home.teamId);
   if (sideHasMutation(rosterMutations.away)) tvTeams.add(away.teamId);
-  if (firedApplied.length > 0) {
+  if (statusReverted.length > 0) {
     tvTeams.add(home.teamId);
     tvTeams.add(away.teamId);
   }

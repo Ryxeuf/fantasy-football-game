@@ -1778,12 +1778,15 @@ export function InvalidateControl({
   canInvalidate,
   reasonClosed,
   deadCount = 0,
+  firedCount = 0,
   onInvalidate,
 }: {
   canInvalidate: boolean;
   reasonClosed?: string;
   /** Nb de joueurs tués dans ce match : l'invalidation les ressuscitera. */
   deadCount?: number;
+  /** Nb de joueurs licenciés par cette feuille : ils seront réintégrés. */
+  firedCount?: number;
   onInvalidate: (reason: string) => Promise<void>;
 }) {
   const [reason, setReason] = useState("");
@@ -1813,6 +1816,17 @@ export function InvalidateControl({
           mort » annulé) si vous invalidez la feuille.
         </p>
       )}
+      {firedCount > 0 && (
+        <p
+          className="rounded border border-amber-400 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"
+          data-testid="invalidate-fired-warning"
+        >
+          ⚠️ {firedCount} joueur{firedCount > 1 ? "s" : ""} licencié
+          {firedCount > 1 ? "s" : ""} par cette feuille{" "}
+          {firedCount > 1 ? "seront réintégrés" : "sera réintégré"} au roster
+          si vous invalidez la feuille.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={reason}
@@ -1825,10 +1839,16 @@ export function InvalidateControl({
           className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
           disabled={busy}
           onClick={async () => {
+            const undone = [
+              deadCount > 0 ? `${deadCount} joueur(s) tué(s) ressuscité(s)` : null,
+              firedCount > 0
+                ? `${firedCount} joueur(s) licencié(s) réintégré(s)`
+                : null,
+            ].filter(Boolean);
             if (
-              deadCount > 0 &&
+              undone.length > 0 &&
               !window.confirm(
-                `Invalider ce match ressuscitera ${deadCount} joueur(s) tué(s) (leur mort sera annulée). Confirmer ?`,
+                `Invalider ce match aura pour effet : ${undone.join(", ")}. Confirmer ?`,
               )
             ) {
               return;

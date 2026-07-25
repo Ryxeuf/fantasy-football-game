@@ -43,6 +43,35 @@ interface RosterPlayer {
     pa: number;
     av: number;
   };
+  /** Provenance du statut mort/licencié (optionnels : rétro-compat API). */
+  statusAt?: string | null;
+  statusSource?: string | null;
+}
+
+/**
+ * Origine lisible d'une mort. Sert à expliquer le ☠ : une mort issue d'une
+ * feuille de match est réversible en invalidant la feuille, une mort posée
+ * à la main ne l'est pas de la même façon.
+ */
+const STATUS_SOURCE_LABELS: Record<string, string> = {
+  match_sheet: "feuille de match",
+  online_match: "match en ligne",
+  commissioner: "décision du commissaire",
+  admin: "administration",
+  legacy: "origine inconnue",
+};
+
+function deathOriginLabel(p: RosterPlayer): string {
+  if (!p.dead) return "";
+  const source = p.statusSource
+    ? (STATUS_SOURCE_LABELS[p.statusSource] ?? p.statusSource)
+    : null;
+  const when = p.statusAt
+    ? new Date(p.statusAt).toLocaleDateString("fr-FR")
+    : null;
+  if (source && when) return `Décédé — ${source}, le ${when}`;
+  if (source) return `Décédé — ${source}`;
+  return "Décédé";
 }
 
 /** FR20 — libellé compact des blessures permanentes (BP + séquelles). */
@@ -277,7 +306,16 @@ export default function LeagueTeamRosterPage() {
                         </td>
                         <td className="px-3 py-2 font-medium text-nuffle-anthracite">
                           {p.name}
-                          {p.dead ? " ☠" : ""}
+                          {p.dead ? (
+                            <span
+                              title={deathOriginLabel(p)}
+                              data-testid={`player-death-origin-${p.id}`}
+                            >
+                              {" ☠"}
+                            </span>
+                          ) : (
+                            ""
+                          )}
                         </td>
                         <td className="px-3 py-2 text-gray-600">
                           {p.positionName ?? p.position}
@@ -333,7 +371,7 @@ export default function LeagueTeamRosterPage() {
                           data-testid={`player-availability-${p.id}`}
                         >
                           {p.dead ? (
-                            <span title="Décédé">☠</span>
+                            <span title={deathOriginLabel(p)}>☠</span>
                           ) : p.missNextMatch ? (
                             <span
                               className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700"

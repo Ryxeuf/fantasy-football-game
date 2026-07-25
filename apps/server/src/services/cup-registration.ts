@@ -19,6 +19,7 @@ import {
 } from './cup-rules';
 import { captureRosterSnapshot } from './cup-roster-snapshot';
 import { getTeamEngagement } from './team-competition-status';
+import { ACTIVE_PLAYER_WHERE } from './player-status';
 
 export type CupRegistrationErrorCode =
   | 'cup_not_found'
@@ -139,7 +140,7 @@ export async function registerTeamToCup(input: {
     if (hasPspRules) {
       pspPoolGranted = resolveCupStartingPsp(cupRules, rosterForRules);
       const players = await prisma.teamPlayer.findMany({
-        where: { teamId, firedAt: null },
+        where: { teamId, ...ACTIVE_PLAYER_WHERE },
         select: { advancements: true },
       });
       const spent = teamAdvancementsPspCost(players);

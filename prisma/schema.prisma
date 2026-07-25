@@ -494,6 +494,24 @@ model TeamPlayer {
   // mais conservé en base (historique/carrière). `firedAt = null` => actif.
   firedAt DateTime? // When the player was fired (released) from the team
 
+  // ── Statut de présence + provenance (soft delete réversible) ──
+  // `status` est DERIVE de `dead`/`firedAt` (dual-write via
+  // `services/player-status.ts`) : "active" | "dead" | "fired". Les deux
+  // colonnes historiques restent la source de vérité des filtres tant que
+  // les call-sites n'ont pas migré.
+  status         String    @default("active")
+  /// Date de pose du statut inactif courant (null si actif).
+  statusAt       DateTime?
+  /// Source du statut courant : "match_sheet" | "online_match" |
+  /// "commissioner" | "admin" | "legacy". Sert à VERIFIER qu'une
+  /// reversion (annulation de match) porte bien sur le statut qu'elle a
+  /// elle-même posé.
+  statusSource   String?
+  /// Identifiant de l'entité source (matchId le plus souvent).
+  statusSourceId String?
+
+  statusEvents TeamPlayerStatusEvent[]
+
   // Règle spéciale d'équipe "Capitaine" (Saison 3) : joueur désigné capitaine
   // à la création de la liste (ou re-désigné si le capitaine précédent est
   // mort/licencié). Le capitaine gagne la compétence Pro sans augmenter la
@@ -501,6 +519,41 @@ model TeamPlayer {
   isCaptain Boolean @default(false)
 
   @@index([teamId])
+}
+
+/// Journal append-only des morts / licenciements d'un joueur.
+///
+/// Porte l'historique complet (un joueur peut mourir, être ressuscité par
+/// l'invalidation du match, puis remourir) et surtout la PROVENANCE, qui
+/// permet de vérifier qu'une reversion porte bien sur le statut posé par
+/// la source qui l'annule (cf. `services/player-status.ts`).
+///
+/// Invariant : au plus UN événement avec `revertedAt = null` par joueur
+/// (un joueur ne peut pas être mort ET licencié).
+model TeamPlayerStatusEvent {
+  id       String     @id @default(cuid())
+  player   TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId String
+  /// Dénormalisé pour les requêtes « historique de l'équipe ».
+  teamId   String
+  /// "death" | "firing".
+  kind     String
+  /// "match_sheet" | "online_match" | "commissioner" | "admin" | "legacy".
+  sourceType  String
+  /// Id de l'entité source (matchId...). Chaîne vide si sans entité.
+  sourceId    String  @default("")
+  /// Utilisateur à l'origine (commissaire/admin), null si système.
+  actorUserId String?
+  /// Motif libre (raison d'annulation, note du commissaire).
+  reason      String?
+  /// Non-null quand le statut a été levé (résurrection / réintégration).
+  revertedAt  DateTime?
+  revertedBy  String?
+  createdAt   DateTime  @default(now())
+
+  @@index([playerId, revertedAt])
+  @@index([sourceType, sourceId])
+  @@index([teamId, createdAt])
 }
 
 model TeamStarPlayer {

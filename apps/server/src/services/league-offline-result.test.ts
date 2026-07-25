@@ -52,7 +52,18 @@ vi.mock("./spp-tracking", () => ({
   calculatePlayerSPP: vi.fn(() => 6),
 }));
 
+// Statut de presence (mort/licenciement) : service dedie, teste dans
+// player-status.test.ts. Ici on verifie seulement qu'il est appele avec la
+// bonne provenance.
+vi.mock("./player-status", () => ({
+  applyPlayerStatuses: vi.fn(async (ids: readonly string[]) => ({
+    appliedIds: [...ids],
+    teamIds: ["team-home", "team-away"],
+  })),
+}));
+
 import { prisma } from "../prisma";
+import { applyPlayerStatuses } from "./player-status";
 import { recordLeagueMatchResult } from "./league-match-result";
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import {
@@ -75,6 +86,7 @@ const m = {
   record: recordLeagueMatchResult as unknown as MockFn,
   applyPurchases: applyOfflinePurchasesForTeam as unknown as MockFn,
   updateTv: updateTeamValues as unknown as MockFn,
+  applyStatus: applyPlayerStatuses as unknown as MockFn,
 };
 
 function buildPairing(overrides: Record<string, unknown> = {}) {
@@ -553,11 +565,13 @@ describe("recordOfflineLeagueResult (option b)", () => {
         avReduction: true,
       },
     });
-    // Pose firedAt sur les 2 joueurs.
-    const firedCall = m.tpUpdateMany.mock.calls.find(
-      (c) => "firedAt" in (c[0] as { data: Record<string, unknown> }).data,
-    )?.[0] as { where: { id: { in: string[] } } };
-    expect(firedCall.where.id.in).toEqual(["p1", "p2"]);
+    // Licenciement pose via player-status, avec la provenance du match.
+    expect(m.applyStatus).toHaveBeenCalledWith(["p1", "p2"], {
+      kind: "firing",
+      source: "match_sheet",
+      sourceId: "m-1",
+      allowedTeamIds: ["team-home", "team-away"],
+    });
     // TV recalculee pour les 2 equipes.
     expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-home");
     expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-away");
@@ -604,9 +618,9 @@ describe("recordOfflineLeagueResult (option b)", () => {
       firedPlayerIds: ["cap-ok", "cap-hurt"],
     });
 
-    const firedCall = m.tpUpdateMany.mock.calls.find(
-      (c) => "firedAt" in (c[0] as { data: Record<string, unknown> }).data,
-    )?.[0] as { where: { id: { in: string[] } } };
-    expect(firedCall.where.id.in).toEqual(["cap-hurt"]);
+    expect(m.applyStatus).toHaveBeenCalledWith(
+      ["cap-hurt"],
+      expect.objectContaining({ kind: "firing" }),
+    );
   });
 });

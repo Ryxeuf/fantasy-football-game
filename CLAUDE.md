@@ -309,6 +309,33 @@ specifique). Au fil des matches completed d'un round, on appelle
 
 Evite un trigger explicite "round completed", marche par accumulation.
 
+### Soft delete trace + reversion VERIFIEE (morts/licenciements)
+Un statut qui retire une entite du perimetre actif (mort, licenciement)
+n'est jamais un DELETE : c'est un flag + la **provenance** de qui l'a
+pose. La provenance sert a verifier la reversion quand la source est
+annulee (invalidation de feuille, annulation de match).
+
+`services/player-status.ts` : `ACTIVE_PLAYER_WHERE` (le filtre canonique
+`{ dead: false, firedAt: null }`), `applyPlayerStatus(es)` (idempotent :
+skip si deja inactif) et `revertPlayerStatus` qui **refuse** si le statut
+courant vient d'une autre source (`status-superseded`). Journal
+append-only `TeamPlayerStatusEvent` (au plus 1 event `revertedAt: null`
+par joueur).
+
+```ts
+const active = await prisma.teamPlayerStatusEvent.findFirst({
+  where: { playerId, revertedAt: null }, orderBy: { createdAt: "desc" },
+});
+if (active.sourceType !== source || active.sourceId !== sourceId) {
+  return { skipped: true, reason: "status-superseded" }; // pas de resurrection
+}
+// puis update CONDITIONNEL : count !== 1 => race => refus
+```
+
+Piege associe : filtrer `dead: false` SANS `firedAt: null` (ou l'inverse)
+laisse passer la moitie des joueurs sortis. Garde CI :
+`services/player-status-filters.test.ts` (ratchet + exceptions justifiees).
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :
