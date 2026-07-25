@@ -675,6 +675,15 @@ export default function MatchSheetPage() {
     () => events.filter((e) => e.injurySeverity === "dead").length,
     [events],
   );
+  // Idem pour les licenciements de fin de match : l'invalidation réintègre
+  // les joueurs licenciés par cette feuille.
+  const firedCount = useMemo(
+    () =>
+      parseArray<unknown>(data?.sheet.firedPlayerIds).filter(
+        (s): s is string => typeof s === "string",
+      ).length,
+    [data],
+  );
   // SPP autoritaire par joueur, calculé côté serveur (calcul officiel +
   // modificateur d'équipe). Informatif : appliqué au roster à la validation.
   const computedSpp = data?.computedSpp ?? {};
@@ -1397,6 +1406,7 @@ export default function MatchSheetPage() {
             canInvalidate={canInval.ok}
             reasonClosed={canInval.reason}
             deadCount={deadCount}
+            firedCount={firedCount}
             onInvalidate={invalidate}
           />
         </section>

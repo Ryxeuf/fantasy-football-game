@@ -10,6 +10,7 @@
  */
 
 import { prisma } from '../prisma';
+import { ACTIVE_PLAYER_WHERE } from './player-status';
 
 /** Joueur figé dans le snapshot. */
 export interface SnapshotPlayer {
@@ -134,7 +135,9 @@ export async function captureRosterSnapshot(
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
-      players: { where: { firedAt: null }, orderBy: { number: 'asc' } },
+      // Roster actif uniquement : un joueur mort ou licencie ne part pas en
+      // coupe (le snapshot sert de reference anti-triche pour le tournoi).
+      players: { where: { ...ACTIVE_PLAYER_WHERE }, orderBy: { number: 'asc' } },
       starPlayers: true,
     },
   });

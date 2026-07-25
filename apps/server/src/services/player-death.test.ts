@@ -1,5 +1,21 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// Statut de presence : service dedie (teste dans player-status.test.ts).
+vi.mock("./player-status", () => ({
+  applyPlayerStatuses: vi.fn(async (ids: readonly string[]) => ({
+    appliedIds: [...ids],
+    teamIds: ["teamA"],
+  })),
+}));
+
 import { persistPlayerDeaths, type GameStateForDeaths } from "./player-death";
+import { applyPlayerStatuses } from "./player-status";
+
+const mockApplyPlayerStatuses = vi.mocked(applyPlayerStatuses);
+
+beforeEach(() => {
+  mockApplyPlayerStatuses.mockClear();
+});
 
 describe("persistPlayerDeaths", () => {
   function createMockPrisma() {
@@ -141,5 +157,69 @@ describe("persistPlayerDeaths", () => {
 
     expect(result).toBe(0);
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Provenance : quand le `matchId` est connu, la mort passe par
+ * `player-status` (statut + journal) et devient reversible si le match est
+ * annule. Sans `matchId`, on garde l'ecriture directe historique.
+ */
+describe("persistPlayerDeaths — provenance du match", () => {
+  it("delegue a player-status avec la source online_match", async () => {
+    const prisma: any = {
+      teamPlayer: {
+        findMany: vi
+          .fn()
+          .mockResolvedValueOnce([{ id: "db-a1", number: 1 }])
+          .mockResolvedValueOnce([]),
+        update: vi.fn(),
+      },
+      $transaction: vi.fn(),
+    };
+    const gameState: GameStateForDeaths = {
+      casualtyResults: { A1: "dead" },
+      players: [{ id: "A1", team: "A", number: 1 }],
+    };
+
+    const result = await persistPlayerDeaths(
+      prisma,
+      gameState,
+      "teamA",
+      "teamB",
+      "match-42",
+    );
+
+    expect(result).toBe(1);
+    expect(mockApplyPlayerStatuses).toHaveBeenCalledWith(["db-a1"], {
+      kind: "death",
+      source: "online_match",
+      sourceId: "match-42",
+      allowedTeamIds: ["teamA", "teamB"],
+    });
+    // Pas d'ecriture directe : c'est player-status qui ecrit.
+    expect(prisma.teamPlayer.update).not.toHaveBeenCalled();
+  });
+
+  it("retombe sur l'ecriture directe quand le matchId est inconnu", async () => {
+    const prisma: any = {
+      teamPlayer: {
+        findMany: vi
+          .fn()
+          .mockResolvedValueOnce([{ id: "db-a1", number: 1 }])
+          .mockResolvedValueOnce([]),
+        update: vi.fn((args: unknown) => args),
+      },
+      $transaction: vi.fn().mockResolvedValue([]),
+    };
+    const gameState: GameStateForDeaths = {
+      casualtyResults: { A1: "dead" },
+      players: [{ id: "A1", team: "A", number: 1 }],
+    };
+
+    const result = await persistPlayerDeaths(prisma, gameState, "teamA", "teamB");
+
+    expect(result).toBe(1);
+    expect(prisma.teamPlayer.update).toHaveBeenCalledOnce();
   });
 });

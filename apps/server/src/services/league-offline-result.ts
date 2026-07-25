@@ -50,6 +50,7 @@ import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 import { canFirePlayer } from "./team-captain";
+import { applyPlayerStatuses } from "./player-status";
 
 /** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
 export { OFFLINE_MATCH_MODE };
@@ -275,6 +276,7 @@ async function applyOfflineFirings(
   homeTeamId: string,
   awayTeamId: string,
   firedPlayerIds: readonly string[],
+  matchId: string,
 ): Promise<string[]> {
   if (firedPlayerIds.length === 0) return [];
   const candidates = (await prisma.teamPlayer.findMany({
@@ -312,17 +314,22 @@ async function applyOfflineFirings(
   });
   if (valid.length === 0) return [];
 
-  const ids = valid.map((p) => p.id);
-  await prisma.teamPlayer.updateMany({
-    where: { id: { in: ids } },
-    data: { firedAt: new Date() },
-  });
+  // Statut + provenance + journal : c'est ce qui rend le licenciement
+  // reversible ET verifiable a l'invalidation de la feuille.
+  const { appliedIds, teamIds } = await applyPlayerStatuses(
+    valid.map((p) => p.id),
+    {
+      kind: "firing",
+      source: "match_sheet",
+      sourceId: matchId,
+      allowedTeamIds: [homeTeamId, awayTeamId],
+    },
+  );
   // TV recompute pour les equipes touchees (les licencies quittent le roster).
-  const teamIds = new Set(valid.map((p) => p.teamId));
   for (const teamId of teamIds) {
     await updateTeamValues(prisma, teamId);
   }
-  return ids;
+  return appliedIds;
 }
 
 /**
@@ -499,6 +506,7 @@ async function applyOfflineInjuries(
   homeTeamId: string,
   awayTeamId: string,
   injuries: readonly OfflineInjuryInput[],
+  matchId: string,
 ): Promise<number> {
   const ids = injuries.map((i) => i.teamPlayerId);
   const valid = (await prisma.teamPlayer.findMany({
@@ -519,9 +527,17 @@ async function applyOfflineInjuries(
     ]),
   );
   const ops: Promise<unknown>[] = [];
+  // Les morts passent par `player-status` (statut + provenance + journal)
+  // pour rester reversibles a l'invalidation ; les autres blessures sont
+  // de simples compteurs, appliques en batch.
+  const deaths: string[] = [];
   for (const inj of injuries) {
     const stats = statsById.get(inj.teamPlayerId);
     if (!stats) continue;
+    if (inj.type === "dead") {
+      deaths.push(inj.teamPlayerId);
+      continue;
+    }
     const { data, nextStats } = buildInjuryUpdate(inj.type, stats);
     statsById.set(inj.teamPlayerId, nextStats);
     ops.push(
@@ -532,7 +548,18 @@ async function applyOfflineInjuries(
     );
   }
   if (ops.length > 0) await prisma.$transaction(ops);
-  return ops.length;
+
+  let applied = ops.length;
+  if (deaths.length > 0) {
+    const { appliedIds } = await applyPlayerStatuses(deaths, {
+      kind: "death",
+      source: "match_sheet",
+      sourceId: matchId,
+      allowedTeamIds: [homeTeamId, awayTeamId],
+    });
+    applied += appliedIds.length;
+  }
+  return applied;
 }
 
 /**
@@ -817,7 +844,12 @@ export async function recordOfflineLeagueResult(
 
   // Blessures durables saisies a la main.
   if (input.injuries && input.injuries.length > 0) {
-    await applyOfflineInjuries(home.teamId, away.teamId, input.injuries);
+    await applyOfflineInjuries(
+      home.teamId,
+      away.teamId,
+      input.injuries,
+      match.id,
+    );
   }
 
   // Achats post-match -> mutation reelle du roster (joueurs/relances/staff).
@@ -841,6 +873,7 @@ export async function recordOfflineLeagueResult(
     home.teamId,
     away.teamId,
     input.firedPlayerIds ?? [],
+    match.id,
   );
 
   if (hasAnyMutation(rosterMutations) || firedApplied.length > 0) {

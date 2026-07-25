@@ -30,6 +30,8 @@ import {
   type RecordAdminActionInput,
 } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
+import { revertPlayerStatusesBySource } from "../services/player-status";
+import { updateTeamValues } from "../utils/team-values";
 import { ENGINE_VER as GAME_ENGINE_VER } from "@bb/game-engine";
 import { ENGINE_VER as SIM_ENGINE_VER } from "@bb/sim-engine";
 
@@ -1186,6 +1188,38 @@ router.post(
 );
 
 /**
+ * Ressuscite les joueurs tues par un match en ligne qu'on annule/supprime.
+ *
+ * La reversion est VERIFIEE : seuls les joueurs dont le statut courant a ete
+ * pose par CE match sont ressuscites (cf. `services/player-status.ts`). La
+ * valeur d'equipe est recalculee pour les equipes touchees. Best-effort : un
+ * echec ne doit pas empecher l'annulation elle-meme.
+ */
+async function revertMatchDeaths(
+  matchId: string,
+  actorUserId?: string,
+): Promise<string[]> {
+  try {
+    const { revertedIds, teamIds } = await revertPlayerStatusesBySource({
+      source: "online_match",
+      sourceId: matchId,
+      kind: "death",
+      actorUserId,
+    });
+    for (const teamId of teamIds) {
+      await updateTeamValues(prisma, teamId);
+    }
+    return revertedIds;
+  } catch (e) {
+    serverLog.error(
+      `[admin] reversion des morts impossible pour le match ${matchId}`,
+      e,
+    );
+    return [];
+  }
+}
+
+/**
  * Lot P.B.4 — Annulation administrative d'un match (bug, exploit, etc.).
  *
  * Passe le match a `status="cancelled"` + trace metadata. La raison est
@@ -1241,6 +1275,14 @@ router.post(
         },
       });
 
+      // Le match n'a plus eu lieu : on ressuscite les joueurs qu'il a tues.
+      // La reversion est verifiee (provenance `online_match` + matchId), donc
+      // un joueur re-tue depuis par un autre match reste mort.
+      const revertedDeaths = await revertMatchDeaths(
+        id,
+        (req as AuthenticatedRequest).user?.id,
+      );
+
       await safeAudit(req, {
         action: "match.cancel",
         entity: "Match",
@@ -1250,10 +1292,11 @@ router.post(
           status: match.status,
           cancelledAt: match.cancelledAt,
           cancelReason: match.cancelReason,
+          revertedDeaths,
         },
       });
 
-      res.json({ match });
+      res.json({ match, revertedDeaths });
     } catch (e: any) {
       if (e.code === "P2025") {
         return res.status(404).json({ error: "Partie non trouvée" });
@@ -1278,6 +1321,13 @@ router.delete("/matches/:id", async (req, res) => {
       return res.status(404).json({ error: "Partie non trouvée" });
     }
 
+    // Le match disparait : ses morts aussi (reversion verifiee AVANT la
+    // suppression, tant que la provenance est encore lisible).
+    const revertedDeaths = await revertMatchDeaths(
+        id,
+        (req as AuthenticatedRequest).user?.id,
+      );
+
     // Supprimer dans l'ordre: turns, selections, relation joueurs, puis match
     await prisma.turn.deleteMany({ where: { matchId: id } });
     await prisma.teamSelection.deleteMany({ where: { matchId: id } });
@@ -1292,9 +1342,10 @@ router.delete("/matches/:id", async (req, res) => {
       entity: "Match",
       entityId: id,
       oldValue: match,
+      newValue: revertedDeaths.length > 0 ? { revertedDeaths } : null,
     });
 
-    res.json({ ok: true });
+    res.json({ ok: true, revertedDeaths });
   } catch (e: any) {
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Partie non trouvée" });

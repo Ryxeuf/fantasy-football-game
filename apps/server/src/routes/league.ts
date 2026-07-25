@@ -1318,6 +1318,10 @@ export async function handleGetLeagueTeamRoster(
         agReduction: true,
         paReduction: true,
         avReduction: true,
+        // Provenance du statut : permet a l'UI d'afficher « mort — feuille
+        // de match » plutot qu'un simple ☠ sans explication.
+        statusAt: true,
+        statusSource: true,
       },
     })) as Array<{
       id: string;
@@ -1333,6 +1337,8 @@ export async function handleGetLeagueTeamRoster(
       agReduction: number;
       paReduction: number;
       avReduction: number;
+      statusAt: Date | null;
+      statusSource: string | null;
     }>;
     const statsById = new Map(statsRows.map((r) => [r.id, r]));
     // Agressions par joueur, dérivées des events (tolérant : le modèle
@@ -1385,6 +1391,8 @@ export async function handleGetLeagueTeamRoster(
           pa: s?.paReduction ?? 0,
           av: s?.avReduction ?? 0,
         },
+        statusAt: s?.statusAt ?? null,
+        statusSource: s?.statusSource ?? null,
       };
     });
     const raceName =

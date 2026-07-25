@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type { CasualtyOutcome } from "@bb/game-engine";
+import { applyPlayerStatuses } from "./player-status";
 
 export interface GameStateForDeaths {
   casualtyResults: Record<string, CasualtyOutcome>;
@@ -16,10 +17,17 @@ export interface GameStateForDeaths {
  * Reads casualtyResults from the game state, identifies players with 'dead' outcome,
  * and marks the corresponding TeamPlayer records as dead.
  *
+ * La PROVENANCE (`matchId`) est enregistree quand elle est connue : c'est
+ * elle qui rend la mort reversible si le match est annule ou supprime par
+ * un admin (cf. `services/player-status.ts`). Sans `matchId`, on retombe
+ * sur l'ecriture directe historique (mort non reversible) plutot que de
+ * bloquer la fin de match.
+ *
  * @param prisma - Prisma client instance
  * @param gameState - The completed game state containing casualtyResults and players
  * @param teamAId - Database ID of team A
  * @param teamBId - Database ID of team B
+ * @param matchId - Id du match a l'origine des morts (provenance)
  * @returns Number of players marked as dead
  */
 export async function persistPlayerDeaths(
@@ -27,6 +35,7 @@ export async function persistPlayerDeaths(
   gameState: GameStateForDeaths,
   teamAId: string,
   teamBId: string,
+  matchId?: string,
 ): Promise<number> {
   const { casualtyResults, players } = gameState;
 
@@ -64,28 +73,34 @@ export async function persistPlayerDeaths(
     playerIdMap.set(`B${dbPlayer.number}`, dbPlayer.id);
   }
 
-  // Build update operations for dead players
+  const dbPlayerIds = deadPlayerIds
+    .map((gamePlayerId) => playerIdMap.get(gamePlayerId))
+    .filter((id): id is string => Boolean(id));
+
+  if (dbPlayerIds.length === 0) return 0;
+
+  // Chemin nominal : statut + provenance + journal -> mort reversible si le
+  // match est annule.
+  if (matchId) {
+    const { appliedIds } = await applyPlayerStatuses(dbPlayerIds, {
+      kind: "death",
+      source: "online_match",
+      sourceId: matchId,
+      allowedTeamIds: [teamAId, teamBId],
+    });
+    return appliedIds.length;
+  }
+
+  // Fallback sans provenance (callers legacy / tests) : ecriture directe.
   const now = new Date();
-  const updates: Promise<unknown>[] = [];
-
-  for (const gamePlayerId of deadPlayerIds) {
-    const dbPlayerId = playerIdMap.get(gamePlayerId);
-    if (!dbPlayerId) continue;
-
-    updates.push(
+  await prisma.$transaction(
+    dbPlayerIds.map((id) =>
       prisma.teamPlayer.update({
-        where: { id: dbPlayerId },
-        data: {
-          dead: true,
-          diedAt: now,
-        },
+        where: { id },
+        data: { dead: true, diedAt: now, status: "dead", statusAt: now },
       }),
-    );
-  }
+    ) as any,
+  );
 
-  if (updates.length > 0) {
-    await prisma.$transaction(updates as any);
-  }
-
-  return updates.length;
+  return dbPlayerIds.length;
 }

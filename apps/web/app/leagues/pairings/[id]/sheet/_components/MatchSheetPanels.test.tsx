@@ -5,6 +5,7 @@ import {
   PostMatchPanel,
   TeamIdentityBadges,
   TeamValueStrip,
+  InvalidateControl,
   type MatchSheetReference,
   type PreMatchValues,
   type PostMatchValues,
@@ -507,5 +508,55 @@ describe("PostMatchPanel — achats (positions lisibles + champ Nom contextuel)"
     );
     const block = screen.getByTestId("purchases-home");
     expect(within(block).getByPlaceholderText(/Libellé/)).toBeTruthy();
+  });
+});
+
+describe("InvalidateControl — avertissements morts / licenciements", () => {
+  it("annonce les joueurs ressuscites ET les licencies reintegres", () => {
+    render(
+      <InvalidateControl
+        canInvalidate
+        deadCount={2}
+        firedCount={1}
+        onInvalidate={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("invalidate-dead-warning").textContent).toContain(
+      "seront ressuscités",
+    );
+    expect(
+      screen.getByTestId("invalidate-fired-warning").textContent,
+    ).toContain("sera réintégré");
+  });
+
+  it("n'affiche aucun avertissement quand le match n'a rien pose", () => {
+    render(<InvalidateControl canInvalidate onInvalidate={vi.fn()} />);
+    expect(screen.queryByTestId("invalidate-dead-warning")).toBeNull();
+    expect(screen.queryByTestId("invalidate-fired-warning")).toBeNull();
+  });
+
+  it("demande confirmation en listant les deux effets", async () => {
+    const onInvalidate = vi.fn().mockResolvedValue(undefined);
+    const confirmSpy = vi
+      .spyOn(window, "confirm")
+      .mockReturnValue(false);
+    render(
+      <InvalidateControl
+        canInvalidate
+        deadCount={1}
+        firedCount={2}
+        onInvalidate={onInvalidate}
+      />,
+    );
+    fireEvent.click(screen.getByText("Invalider le match"));
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining("1 joueur(s) tué(s) ressuscité(s)"),
+    );
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining("2 joueur(s) licencié(s) réintégré(s)"),
+    );
+    // Refus => aucune invalidation.
+    expect(onInvalidate).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 });

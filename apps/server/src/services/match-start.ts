@@ -8,6 +8,7 @@ import { getLinemanStats } from "./journeymen";
 import { runAutomatedPreMatchSequence } from "./pre-match-automation";
 import { notifyFriendMatchStarted } from "./notify-friend-match-started";
 import { serverLog } from "../utils/server-log";
+import { ACTIVE_PLAYER_WHERE, isActivePlayer } from "./player-status";
 
 type PrismaLike = {
   match: {
@@ -133,15 +134,19 @@ export async function acceptAndMaybeStartMatch(
     return { ok: false, error: "Équipes introuvables", status: 404 } as const;
   }
 
-  // Convertir les données des joueurs (exclure les joueurs morts ou
-  // qui doivent manquer le prochain match — L2.B.7).
+  // Convertir les données des joueurs (exclure les joueurs sortis du
+  // roster actif — morts OU licenciés — et ceux qui doivent manquer le
+  // prochain match, L2.B.7).
   // Le flag `missNextMatch` est positionne par persistPermanentInjuries
   // a la fin du match precedent (lasting injury type "serious"). On
   // l'efface ensuite pour ces joueurs : ils sont *en train* de servir
   // leur suspension en etant exclus de ce match, ils peuvent rejouer
   // au suivant.
-  const isEligible = (p: { dead?: boolean; missNextMatch?: boolean }) =>
-    !p.dead && !p.missNextMatch;
+  const isEligible = (p: {
+    dead?: boolean;
+    firedAt?: Date | null;
+    missNextMatch?: boolean;
+  }) => isActivePlayer(p) && !p.missNextMatch;
   // Règle spéciale "Capitaine" : le flag n'est propagé que pour un
   // capitaine encore actif (ni mort — déjà filtré — ni licencié) pour
   // garantir au plus un capitaine par équipe côté moteur.
@@ -178,7 +183,7 @@ export async function acceptAndMaybeStartMatch(
       where: {
         teamId: { in: [teamAId, teamBId] },
         missNextMatch: true,
-        dead: false,
+        ...ACTIVE_PLAYER_WHERE,
       },
       data: { missNextMatch: false },
     });

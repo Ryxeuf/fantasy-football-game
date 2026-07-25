@@ -338,7 +338,25 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   dead: 'dead',
   diedAt: 'diedAt',
   firedAt: 'firedAt',
+  status: 'status',
+  statusAt: 'statusAt',
+  statusSource: 'statusSource',
+  statusSourceId: 'statusSourceId',
   isCaptain: 'isCaptain'
+};
+
+exports.Prisma.TeamPlayerStatusEventScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  teamId: 'teamId',
+  kind: 'kind',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  actorUserId: 'actorUserId',
+  reason: 'reason',
+  revertedAt: 'revertedAt',
+  revertedBy: 'revertedBy',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.TeamStarPlayerScalarFieldEnum = {
@@ -1257,6 +1275,7 @@ exports.Prisma.ModelName = {
   TeamSelection: 'TeamSelection',
   Team: 'Team',
   TeamPlayer: 'TeamPlayer',
+  TeamPlayerStatusEvent: 'TeamPlayerStatusEvent',
   TeamStarPlayer: 'TeamStarPlayer',
   Roster: 'Roster',
   RosterStaffConfig: 'RosterStaffConfig',

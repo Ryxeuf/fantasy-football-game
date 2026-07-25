@@ -48,8 +48,19 @@ vi.mock("./league-offline-result", async (importOriginal) => {
   return { ...actual, recordOfflineLeagueResult: vi.fn() };
 });
 
+// Reversion de statut (mort/licenciement) : service dedie, teste dans
+// player-status.test.ts. Ici on verifie la delegation + la provenance.
+vi.mock("./player-status", () => ({
+  revertPlayerStatus: vi.fn(async ({ playerId }: { playerId: string }) => ({
+    reverted: true,
+    playerId,
+    teamId: "team-home",
+  })),
+}));
+
 import { prisma } from "../prisma";
 import { recordOfflineLeagueResult } from "./league-offline-result";
+import { revertPlayerStatus } from "./player-status";
 import { updateTeamValues } from "../utils/team-values";
 import {
   reverseOfflineLeagueResult,
@@ -73,6 +84,7 @@ const m = {
   teamUpdate: prisma.team.update as MockFn,
   selDelete: prisma.teamSelection.deleteMany as MockFn,
   updateTv: updateTeamValues as unknown as MockFn,
+  revertStatus: revertPlayerStatus as unknown as MockFn,
 };
 
 function buildSnapshot(over: Record<string, unknown> = {}) {
@@ -216,10 +228,20 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     const r = await reverseOfflineLeagueResult("m-1");
     expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
 
-    const injUpd = m.tpUpdate.mock.calls.find(
-      (c) => (c[0] as { where: { id: string } }).where.id === "p1",
-    )?.[0] as { data: Record<string, unknown> };
-    expect(injUpd.data).toEqual({ dead: false, missNextMatch: false });
+    // Delegue a player-status AVEC la provenance : la resurrection est
+    // refusee si la mort courante vient d'une autre source.
+    expect(m.revertStatus).toHaveBeenCalledWith({
+      playerId: "p1",
+      kind: "death",
+      source: "match_sheet",
+      sourceId: "m-1",
+    });
+    // Aucune ecriture aveugle `dead:false` sur la ligne joueur.
+    expect(
+      m.tpUpdate.mock.calls.some(
+        (c) => "dead" in (c[0] as { data: Record<string, unknown> }).data,
+      ),
+    ).toBe(false);
   });
 
   it("A68 : reverse une Séquelle en restaurant la caractéristique perdue", async () => {
@@ -532,11 +554,16 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     const r = await reverseOfflineLeagueResult("m-1");
     expect("reversed" in r && r.reversed).toBe(true);
 
-    // Re-activation des joueurs licencies par ce match.
-    expect(m.tpUpdateMany).toHaveBeenCalledWith({
-      where: { id: { in: ["p1", "p2"] } },
-      data: { firedAt: null },
-    });
+    // Re-activation des joueurs licencies par ce match, avec verification
+    // de la provenance (pas d'`updateMany` aveugle).
+    for (const playerId of ["p1", "p2"]) {
+      expect(m.revertStatus).toHaveBeenCalledWith({
+        playerId,
+        kind: "firing",
+        source: "match_sheet",
+        sourceId: "m-1",
+      });
+    }
     // TV recalculee pour les 2 equipes (licenciements touchent home + away).
     expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-home");
     expect(m.updateTv).toHaveBeenCalledWith(expect.anything(), "team-away");

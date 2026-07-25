@@ -89,6 +89,11 @@ export type Team = $Result.DefaultSelection<Prisma.$TeamPayload>
  */
 export type TeamPlayer = $Result.DefaultSelection<Prisma.$TeamPlayerPayload>
 /**
+ * Model TeamPlayerStatusEvent
+ * 
+ */
+export type TeamPlayerStatusEvent = $Result.DefaultSelection<Prisma.$TeamPlayerStatusEventPayload>
+/**
  * Model TeamStarPlayer
  * 
  */
@@ -685,6 +690,16 @@ export class PrismaClient<
     * ```
     */
   get teamPlayer(): Prisma.TeamPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.teamPlayerStatusEvent`: Exposes CRUD operations for the **TeamPlayerStatusEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TeamPlayerStatusEvents
+    * const teamPlayerStatusEvents = await prisma.teamPlayerStatusEvent.findMany()
+    * ```
+    */
+  get teamPlayerStatusEvent(): Prisma.TeamPlayerStatusEventDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.teamStarPlayer`: Exposes CRUD operations for the **TeamStarPlayer** model.
@@ -1720,6 +1735,7 @@ export namespace Prisma {
     TeamSelection: 'TeamSelection',
     Team: 'Team',
     TeamPlayer: 'TeamPlayer',
+    TeamPlayerStatusEvent: 'TeamPlayerStatusEvent',
     TeamStarPlayer: 'TeamStarPlayer',
     Roster: 'Roster',
     RosterStaffConfig: 'RosterStaffConfig',
@@ -1796,7 +1812,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2907,6 +2923,80 @@ export namespace Prisma {
           count: {
             args: Prisma.TeamPlayerCountArgs<ExtArgs>
             result: $Utils.Optional<TeamPlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      TeamPlayerStatusEvent: {
+        payload: Prisma.$TeamPlayerStatusEventPayload<ExtArgs>
+        fields: Prisma.TeamPlayerStatusEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TeamPlayerStatusEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TeamPlayerStatusEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          findFirst: {
+            args: Prisma.TeamPlayerStatusEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TeamPlayerStatusEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          findMany: {
+            args: Prisma.TeamPlayerStatusEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>[]
+          }
+          create: {
+            args: Prisma.TeamPlayerStatusEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          createMany: {
+            args: Prisma.TeamPlayerStatusEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TeamPlayerStatusEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>[]
+          }
+          delete: {
+            args: Prisma.TeamPlayerStatusEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          update: {
+            args: Prisma.TeamPlayerStatusEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.TeamPlayerStatusEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TeamPlayerStatusEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TeamPlayerStatusEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.TeamPlayerStatusEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamPlayerStatusEventPayload>
+          }
+          aggregate: {
+            args: Prisma.TeamPlayerStatusEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeamPlayerStatusEvent>
+          }
+          groupBy: {
+            args: Prisma.TeamPlayerStatusEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeamPlayerStatusEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TeamPlayerStatusEventCountArgs<ExtArgs>
+            result: $Utils.Optional<TeamPlayerStatusEventCountAggregateOutputType> | number
           }
         }
       }
@@ -7313,6 +7403,7 @@ export namespace Prisma {
     teamSelection?: TeamSelectionOmit
     team?: TeamOmit
     teamPlayer?: TeamPlayerOmit
+    teamPlayerStatusEvent?: TeamPlayerStatusEventOmit
     teamStarPlayer?: TeamStarPlayerOmit
     roster?: RosterOmit
     rosterStaffConfig?: RosterStaffConfigOmit
@@ -7945,6 +8036,37 @@ export namespace Prisma {
    */
   export type TeamCountOutputTypeCountLeagueInvitationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LeagueInvitationWhereInput
+  }
+
+
+  /**
+   * Count Type TeamPlayerCountOutputType
+   */
+
+  export type TeamPlayerCountOutputType = {
+    statusEvents: number
+  }
+
+  export type TeamPlayerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    statusEvents?: boolean | TeamPlayerCountOutputTypeCountStatusEventsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * TeamPlayerCountOutputType without action
+   */
+  export type TeamPlayerCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerCountOutputType
+     */
+    select?: TeamPlayerCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * TeamPlayerCountOutputType without action
+   */
+  export type TeamPlayerCountOutputTypeCountStatusEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamPlayerStatusEventWhereInput
   }
 
 
@@ -26588,6 +26710,10 @@ export namespace Prisma {
     dead: boolean | null
     diedAt: Date | null
     firedAt: Date | null
+    status: string | null
+    statusAt: Date | null
+    statusSource: string | null
+    statusSourceId: string | null
     isCaptain: boolean | null
   }
 
@@ -26621,6 +26747,10 @@ export namespace Prisma {
     dead: boolean | null
     diedAt: Date | null
     firedAt: Date | null
+    status: string | null
+    statusAt: Date | null
+    statusSource: string | null
+    statusSourceId: string | null
     isCaptain: boolean | null
   }
 
@@ -26654,6 +26784,10 @@ export namespace Prisma {
     dead: number
     diedAt: number
     firedAt: number
+    status: number
+    statusAt: number
+    statusSource: number
+    statusSourceId: number
     isCaptain: number
     _all: number
   }
@@ -26733,6 +26867,10 @@ export namespace Prisma {
     dead?: true
     diedAt?: true
     firedAt?: true
+    status?: true
+    statusAt?: true
+    statusSource?: true
+    statusSourceId?: true
     isCaptain?: true
   }
 
@@ -26766,6 +26904,10 @@ export namespace Prisma {
     dead?: true
     diedAt?: true
     firedAt?: true
+    status?: true
+    statusAt?: true
+    statusSource?: true
+    statusSourceId?: true
     isCaptain?: true
   }
 
@@ -26799,6 +26941,10 @@ export namespace Prisma {
     dead?: true
     diedAt?: true
     firedAt?: true
+    status?: true
+    statusAt?: true
+    statusSource?: true
+    statusSourceId?: true
     isCaptain?: true
     _all?: true
   }
@@ -26919,6 +27065,10 @@ export namespace Prisma {
     dead: boolean
     diedAt: Date | null
     firedAt: Date | null
+    status: string
+    statusAt: Date | null
+    statusSource: string | null
+    statusSourceId: string | null
     isCaptain: boolean
     _count: TeamPlayerCountAggregateOutputType | null
     _avg: TeamPlayerAvgAggregateOutputType | null
@@ -26971,8 +27121,14 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: boolean
     firedAt?: boolean
+    status?: boolean
+    statusAt?: boolean
+    statusSource?: boolean
+    statusSourceId?: boolean
     isCaptain?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    statusEvents?: boolean | TeamPlayer$statusEventsArgs<ExtArgs>
+    _count?: boolean | TeamPlayerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["teamPlayer"]>
 
   export type TeamPlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -27005,6 +27161,10 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: boolean
     firedAt?: boolean
+    status?: boolean
+    statusAt?: boolean
+    statusSource?: boolean
+    statusSourceId?: boolean
     isCaptain?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["teamPlayer"]>
@@ -27039,6 +27199,10 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: boolean
     firedAt?: boolean
+    status?: boolean
+    statusAt?: boolean
+    statusSource?: boolean
+    statusSourceId?: boolean
     isCaptain?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["teamPlayer"]>
@@ -27073,12 +27237,18 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: boolean
     firedAt?: boolean
+    status?: boolean
+    statusAt?: boolean
+    statusSource?: boolean
+    statusSourceId?: boolean
     isCaptain?: boolean
   }
 
-  export type TeamPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "number" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "spp" | "totalTouchdowns" | "totalCasualties" | "totalCompletions" | "totalInterceptions" | "totalMvpAwards" | "matchesPlayed" | "nigglingInjuries" | "maReduction" | "stReduction" | "agReduction" | "paReduction" | "avReduction" | "missNextMatch" | "advancements" | "dead" | "diedAt" | "firedAt" | "isCaptain", ExtArgs["result"]["teamPlayer"]>
+  export type TeamPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "number" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "spp" | "totalTouchdowns" | "totalCasualties" | "totalCompletions" | "totalInterceptions" | "totalMvpAwards" | "matchesPlayed" | "nigglingInjuries" | "maReduction" | "stReduction" | "agReduction" | "paReduction" | "avReduction" | "missNextMatch" | "advancements" | "dead" | "diedAt" | "firedAt" | "status" | "statusAt" | "statusSource" | "statusSourceId" | "isCaptain", ExtArgs["result"]["teamPlayer"]>
   export type TeamPlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    statusEvents?: boolean | TeamPlayer$statusEventsArgs<ExtArgs>
+    _count?: boolean | TeamPlayerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TeamPlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -27091,6 +27261,7 @@ export namespace Prisma {
     name: "TeamPlayer"
     objects: {
       team: Prisma.$TeamPayload<ExtArgs>
+      statusEvents: Prisma.$TeamPlayerStatusEventPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -27122,6 +27293,10 @@ export namespace Prisma {
       dead: boolean
       diedAt: Date | null
       firedAt: Date | null
+      status: string
+      statusAt: Date | null
+      statusSource: string | null
+      statusSourceId: string | null
       isCaptain: boolean
     }, ExtArgs["result"]["teamPlayer"]>
     composites: {}
@@ -27518,6 +27693,7 @@ export namespace Prisma {
   export interface Prisma__TeamPlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    statusEvents<T extends TeamPlayer$statusEventsArgs<ExtArgs> = {}>(args?: Subset<T, TeamPlayer$statusEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -27576,6 +27752,10 @@ export namespace Prisma {
     readonly dead: FieldRef<"TeamPlayer", 'Boolean'>
     readonly diedAt: FieldRef<"TeamPlayer", 'DateTime'>
     readonly firedAt: FieldRef<"TeamPlayer", 'DateTime'>
+    readonly status: FieldRef<"TeamPlayer", 'String'>
+    readonly statusAt: FieldRef<"TeamPlayer", 'DateTime'>
+    readonly statusSource: FieldRef<"TeamPlayer", 'String'>
+    readonly statusSourceId: FieldRef<"TeamPlayer", 'String'>
     readonly isCaptain: FieldRef<"TeamPlayer", 'Boolean'>
   }
     
@@ -27971,6 +28151,30 @@ export namespace Prisma {
   }
 
   /**
+   * TeamPlayer.statusEvents
+   */
+  export type TeamPlayer$statusEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    where?: TeamPlayerStatusEventWhereInput
+    orderBy?: TeamPlayerStatusEventOrderByWithRelationInput | TeamPlayerStatusEventOrderByWithRelationInput[]
+    cursor?: TeamPlayerStatusEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TeamPlayerStatusEventScalarFieldEnum | TeamPlayerStatusEventScalarFieldEnum[]
+  }
+
+  /**
    * TeamPlayer without action
    */
   export type TeamPlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -27986,6 +28190,1140 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: TeamPlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TeamPlayerStatusEvent
+   */
+
+  export type AggregateTeamPlayerStatusEvent = {
+    _count: TeamPlayerStatusEventCountAggregateOutputType | null
+    _min: TeamPlayerStatusEventMinAggregateOutputType | null
+    _max: TeamPlayerStatusEventMaxAggregateOutputType | null
+  }
+
+  export type TeamPlayerStatusEventMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    teamId: string | null
+    kind: string | null
+    sourceType: string | null
+    sourceId: string | null
+    actorUserId: string | null
+    reason: string | null
+    revertedAt: Date | null
+    revertedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type TeamPlayerStatusEventMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    teamId: string | null
+    kind: string | null
+    sourceType: string | null
+    sourceId: string | null
+    actorUserId: string | null
+    reason: string | null
+    revertedAt: Date | null
+    revertedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type TeamPlayerStatusEventCountAggregateOutputType = {
+    id: number
+    playerId: number
+    teamId: number
+    kind: number
+    sourceType: number
+    sourceId: number
+    actorUserId: number
+    reason: number
+    revertedAt: number
+    revertedBy: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type TeamPlayerStatusEventMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    teamId?: true
+    kind?: true
+    sourceType?: true
+    sourceId?: true
+    actorUserId?: true
+    reason?: true
+    revertedAt?: true
+    revertedBy?: true
+    createdAt?: true
+  }
+
+  export type TeamPlayerStatusEventMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    teamId?: true
+    kind?: true
+    sourceType?: true
+    sourceId?: true
+    actorUserId?: true
+    reason?: true
+    revertedAt?: true
+    revertedBy?: true
+    createdAt?: true
+  }
+
+  export type TeamPlayerStatusEventCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    teamId?: true
+    kind?: true
+    sourceType?: true
+    sourceId?: true
+    actorUserId?: true
+    reason?: true
+    revertedAt?: true
+    revertedBy?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type TeamPlayerStatusEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamPlayerStatusEvent to aggregate.
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamPlayerStatusEvents to fetch.
+     */
+    orderBy?: TeamPlayerStatusEventOrderByWithRelationInput | TeamPlayerStatusEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TeamPlayerStatusEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamPlayerStatusEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamPlayerStatusEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TeamPlayerStatusEvents
+    **/
+    _count?: true | TeamPlayerStatusEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TeamPlayerStatusEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TeamPlayerStatusEventMaxAggregateInputType
+  }
+
+  export type GetTeamPlayerStatusEventAggregateType<T extends TeamPlayerStatusEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeamPlayerStatusEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTeamPlayerStatusEvent[P]>
+      : GetScalarType<T[P], AggregateTeamPlayerStatusEvent[P]>
+  }
+
+
+
+
+  export type TeamPlayerStatusEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamPlayerStatusEventWhereInput
+    orderBy?: TeamPlayerStatusEventOrderByWithAggregationInput | TeamPlayerStatusEventOrderByWithAggregationInput[]
+    by: TeamPlayerStatusEventScalarFieldEnum[] | TeamPlayerStatusEventScalarFieldEnum
+    having?: TeamPlayerStatusEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TeamPlayerStatusEventCountAggregateInputType | true
+    _min?: TeamPlayerStatusEventMinAggregateInputType
+    _max?: TeamPlayerStatusEventMaxAggregateInputType
+  }
+
+  export type TeamPlayerStatusEventGroupByOutputType = {
+    id: string
+    playerId: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId: string
+    actorUserId: string | null
+    reason: string | null
+    revertedAt: Date | null
+    revertedBy: string | null
+    createdAt: Date
+    _count: TeamPlayerStatusEventCountAggregateOutputType | null
+    _min: TeamPlayerStatusEventMinAggregateOutputType | null
+    _max: TeamPlayerStatusEventMaxAggregateOutputType | null
+  }
+
+  type GetTeamPlayerStatusEventGroupByPayload<T extends TeamPlayerStatusEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TeamPlayerStatusEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TeamPlayerStatusEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TeamPlayerStatusEventGroupByOutputType[P]>
+            : GetScalarType<T[P], TeamPlayerStatusEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TeamPlayerStatusEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    teamId?: boolean
+    kind?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    actorUserId?: boolean
+    reason?: boolean
+    revertedAt?: boolean
+    revertedBy?: boolean
+    createdAt?: boolean
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamPlayerStatusEvent"]>
+
+  export type TeamPlayerStatusEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    teamId?: boolean
+    kind?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    actorUserId?: boolean
+    reason?: boolean
+    revertedAt?: boolean
+    revertedBy?: boolean
+    createdAt?: boolean
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamPlayerStatusEvent"]>
+
+  export type TeamPlayerStatusEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    teamId?: boolean
+    kind?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    actorUserId?: boolean
+    reason?: boolean
+    revertedAt?: boolean
+    revertedBy?: boolean
+    createdAt?: boolean
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamPlayerStatusEvent"]>
+
+  export type TeamPlayerStatusEventSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    teamId?: boolean
+    kind?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    actorUserId?: boolean
+    reason?: boolean
+    revertedAt?: boolean
+    revertedBy?: boolean
+    createdAt?: boolean
+  }
+
+  export type TeamPlayerStatusEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "playerId" | "teamId" | "kind" | "sourceType" | "sourceId" | "actorUserId" | "reason" | "revertedAt" | "revertedBy" | "createdAt", ExtArgs["result"]["teamPlayerStatusEvent"]>
+  export type TeamPlayerStatusEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }
+  export type TeamPlayerStatusEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }
+  export type TeamPlayerStatusEventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | TeamPlayerDefaultArgs<ExtArgs>
+  }
+
+  export type $TeamPlayerStatusEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeamPlayerStatusEvent"
+    objects: {
+      player: Prisma.$TeamPlayerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      teamId: string
+      kind: string
+      sourceType: string
+      sourceId: string
+      actorUserId: string | null
+      reason: string | null
+      revertedAt: Date | null
+      revertedBy: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["teamPlayerStatusEvent"]>
+    composites: {}
+  }
+
+  type TeamPlayerStatusEventGetPayload<S extends boolean | null | undefined | TeamPlayerStatusEventDefaultArgs> = $Result.GetResult<Prisma.$TeamPlayerStatusEventPayload, S>
+
+  type TeamPlayerStatusEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeamPlayerStatusEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeamPlayerStatusEventCountAggregateInputType | true
+    }
+
+  export interface TeamPlayerStatusEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeamPlayerStatusEvent'], meta: { name: 'TeamPlayerStatusEvent' } }
+    /**
+     * Find zero or one TeamPlayerStatusEvent that matches the filter.
+     * @param {TeamPlayerStatusEventFindUniqueArgs} args - Arguments to find a TeamPlayerStatusEvent
+     * @example
+     * // Get one TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TeamPlayerStatusEventFindUniqueArgs>(args: SelectSubset<T, TeamPlayerStatusEventFindUniqueArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TeamPlayerStatusEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TeamPlayerStatusEventFindUniqueOrThrowArgs} args - Arguments to find a TeamPlayerStatusEvent
+     * @example
+     * // Get one TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TeamPlayerStatusEventFindUniqueOrThrowArgs>(args: SelectSubset<T, TeamPlayerStatusEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamPlayerStatusEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventFindFirstArgs} args - Arguments to find a TeamPlayerStatusEvent
+     * @example
+     * // Get one TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TeamPlayerStatusEventFindFirstArgs>(args?: SelectSubset<T, TeamPlayerStatusEventFindFirstArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamPlayerStatusEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventFindFirstOrThrowArgs} args - Arguments to find a TeamPlayerStatusEvent
+     * @example
+     * // Get one TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TeamPlayerStatusEventFindFirstOrThrowArgs>(args?: SelectSubset<T, TeamPlayerStatusEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TeamPlayerStatusEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TeamPlayerStatusEvents
+     * const teamPlayerStatusEvents = await prisma.teamPlayerStatusEvent.findMany()
+     * 
+     * // Get first 10 TeamPlayerStatusEvents
+     * const teamPlayerStatusEvents = await prisma.teamPlayerStatusEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const teamPlayerStatusEventWithIdOnly = await prisma.teamPlayerStatusEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TeamPlayerStatusEventFindManyArgs>(args?: SelectSubset<T, TeamPlayerStatusEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TeamPlayerStatusEvent.
+     * @param {TeamPlayerStatusEventCreateArgs} args - Arguments to create a TeamPlayerStatusEvent.
+     * @example
+     * // Create one TeamPlayerStatusEvent
+     * const TeamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.create({
+     *   data: {
+     *     // ... data to create a TeamPlayerStatusEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends TeamPlayerStatusEventCreateArgs>(args: SelectSubset<T, TeamPlayerStatusEventCreateArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TeamPlayerStatusEvents.
+     * @param {TeamPlayerStatusEventCreateManyArgs} args - Arguments to create many TeamPlayerStatusEvents.
+     * @example
+     * // Create many TeamPlayerStatusEvents
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TeamPlayerStatusEventCreateManyArgs>(args?: SelectSubset<T, TeamPlayerStatusEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TeamPlayerStatusEvents and returns the data saved in the database.
+     * @param {TeamPlayerStatusEventCreateManyAndReturnArgs} args - Arguments to create many TeamPlayerStatusEvents.
+     * @example
+     * // Create many TeamPlayerStatusEvents
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TeamPlayerStatusEvents and only return the `id`
+     * const teamPlayerStatusEventWithIdOnly = await prisma.teamPlayerStatusEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TeamPlayerStatusEventCreateManyAndReturnArgs>(args?: SelectSubset<T, TeamPlayerStatusEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TeamPlayerStatusEvent.
+     * @param {TeamPlayerStatusEventDeleteArgs} args - Arguments to delete one TeamPlayerStatusEvent.
+     * @example
+     * // Delete one TeamPlayerStatusEvent
+     * const TeamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.delete({
+     *   where: {
+     *     // ... filter to delete one TeamPlayerStatusEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TeamPlayerStatusEventDeleteArgs>(args: SelectSubset<T, TeamPlayerStatusEventDeleteArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TeamPlayerStatusEvent.
+     * @param {TeamPlayerStatusEventUpdateArgs} args - Arguments to update one TeamPlayerStatusEvent.
+     * @example
+     * // Update one TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TeamPlayerStatusEventUpdateArgs>(args: SelectSubset<T, TeamPlayerStatusEventUpdateArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TeamPlayerStatusEvents.
+     * @param {TeamPlayerStatusEventDeleteManyArgs} args - Arguments to filter TeamPlayerStatusEvents to delete.
+     * @example
+     * // Delete a few TeamPlayerStatusEvents
+     * const { count } = await prisma.teamPlayerStatusEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TeamPlayerStatusEventDeleteManyArgs>(args?: SelectSubset<T, TeamPlayerStatusEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamPlayerStatusEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TeamPlayerStatusEvents
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TeamPlayerStatusEventUpdateManyArgs>(args: SelectSubset<T, TeamPlayerStatusEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamPlayerStatusEvents and returns the data updated in the database.
+     * @param {TeamPlayerStatusEventUpdateManyAndReturnArgs} args - Arguments to update many TeamPlayerStatusEvents.
+     * @example
+     * // Update many TeamPlayerStatusEvents
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TeamPlayerStatusEvents and only return the `id`
+     * const teamPlayerStatusEventWithIdOnly = await prisma.teamPlayerStatusEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TeamPlayerStatusEventUpdateManyAndReturnArgs>(args: SelectSubset<T, TeamPlayerStatusEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TeamPlayerStatusEvent.
+     * @param {TeamPlayerStatusEventUpsertArgs} args - Arguments to update or create a TeamPlayerStatusEvent.
+     * @example
+     * // Update or create a TeamPlayerStatusEvent
+     * const teamPlayerStatusEvent = await prisma.teamPlayerStatusEvent.upsert({
+     *   create: {
+     *     // ... data to create a TeamPlayerStatusEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TeamPlayerStatusEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TeamPlayerStatusEventUpsertArgs>(args: SelectSubset<T, TeamPlayerStatusEventUpsertArgs<ExtArgs>>): Prisma__TeamPlayerStatusEventClient<$Result.GetResult<Prisma.$TeamPlayerStatusEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TeamPlayerStatusEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventCountArgs} args - Arguments to filter TeamPlayerStatusEvents to count.
+     * @example
+     * // Count the number of TeamPlayerStatusEvents
+     * const count = await prisma.teamPlayerStatusEvent.count({
+     *   where: {
+     *     // ... the filter for the TeamPlayerStatusEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends TeamPlayerStatusEventCountArgs>(
+      args?: Subset<T, TeamPlayerStatusEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TeamPlayerStatusEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TeamPlayerStatusEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TeamPlayerStatusEventAggregateArgs>(args: Subset<T, TeamPlayerStatusEventAggregateArgs>): Prisma.PrismaPromise<GetTeamPlayerStatusEventAggregateType<T>>
+
+    /**
+     * Group by TeamPlayerStatusEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamPlayerStatusEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TeamPlayerStatusEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TeamPlayerStatusEventGroupByArgs['orderBy'] }
+        : { orderBy?: TeamPlayerStatusEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TeamPlayerStatusEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeamPlayerStatusEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TeamPlayerStatusEvent model
+   */
+  readonly fields: TeamPlayerStatusEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TeamPlayerStatusEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TeamPlayerStatusEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player<T extends TeamPlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamPlayerDefaultArgs<ExtArgs>>): Prisma__TeamPlayerClient<$Result.GetResult<Prisma.$TeamPlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TeamPlayerStatusEvent model
+   */
+  interface TeamPlayerStatusEventFieldRefs {
+    readonly id: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly playerId: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly teamId: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly kind: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly sourceType: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly sourceId: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly actorUserId: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly reason: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly revertedAt: FieldRef<"TeamPlayerStatusEvent", 'DateTime'>
+    readonly revertedBy: FieldRef<"TeamPlayerStatusEvent", 'String'>
+    readonly createdAt: FieldRef<"TeamPlayerStatusEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TeamPlayerStatusEvent findUnique
+   */
+  export type TeamPlayerStatusEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamPlayerStatusEvent to fetch.
+     */
+    where: TeamPlayerStatusEventWhereUniqueInput
+  }
+
+  /**
+   * TeamPlayerStatusEvent findUniqueOrThrow
+   */
+  export type TeamPlayerStatusEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamPlayerStatusEvent to fetch.
+     */
+    where: TeamPlayerStatusEventWhereUniqueInput
+  }
+
+  /**
+   * TeamPlayerStatusEvent findFirst
+   */
+  export type TeamPlayerStatusEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamPlayerStatusEvent to fetch.
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamPlayerStatusEvents to fetch.
+     */
+    orderBy?: TeamPlayerStatusEventOrderByWithRelationInput | TeamPlayerStatusEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamPlayerStatusEvents.
+     */
+    cursor?: TeamPlayerStatusEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamPlayerStatusEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamPlayerStatusEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamPlayerStatusEvents.
+     */
+    distinct?: TeamPlayerStatusEventScalarFieldEnum | TeamPlayerStatusEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamPlayerStatusEvent findFirstOrThrow
+   */
+  export type TeamPlayerStatusEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamPlayerStatusEvent to fetch.
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamPlayerStatusEvents to fetch.
+     */
+    orderBy?: TeamPlayerStatusEventOrderByWithRelationInput | TeamPlayerStatusEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamPlayerStatusEvents.
+     */
+    cursor?: TeamPlayerStatusEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamPlayerStatusEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamPlayerStatusEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamPlayerStatusEvents.
+     */
+    distinct?: TeamPlayerStatusEventScalarFieldEnum | TeamPlayerStatusEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamPlayerStatusEvent findMany
+   */
+  export type TeamPlayerStatusEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamPlayerStatusEvents to fetch.
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamPlayerStatusEvents to fetch.
+     */
+    orderBy?: TeamPlayerStatusEventOrderByWithRelationInput | TeamPlayerStatusEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TeamPlayerStatusEvents.
+     */
+    cursor?: TeamPlayerStatusEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamPlayerStatusEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamPlayerStatusEvents.
+     */
+    skip?: number
+    distinct?: TeamPlayerStatusEventScalarFieldEnum | TeamPlayerStatusEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamPlayerStatusEvent create
+   */
+  export type TeamPlayerStatusEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TeamPlayerStatusEvent.
+     */
+    data: XOR<TeamPlayerStatusEventCreateInput, TeamPlayerStatusEventUncheckedCreateInput>
+  }
+
+  /**
+   * TeamPlayerStatusEvent createMany
+   */
+  export type TeamPlayerStatusEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TeamPlayerStatusEvents.
+     */
+    data: TeamPlayerStatusEventCreateManyInput | TeamPlayerStatusEventCreateManyInput[]
+  }
+
+  /**
+   * TeamPlayerStatusEvent createManyAndReturn
+   */
+  export type TeamPlayerStatusEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many TeamPlayerStatusEvents.
+     */
+    data: TeamPlayerStatusEventCreateManyInput | TeamPlayerStatusEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamPlayerStatusEvent update
+   */
+  export type TeamPlayerStatusEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TeamPlayerStatusEvent.
+     */
+    data: XOR<TeamPlayerStatusEventUpdateInput, TeamPlayerStatusEventUncheckedUpdateInput>
+    /**
+     * Choose, which TeamPlayerStatusEvent to update.
+     */
+    where: TeamPlayerStatusEventWhereUniqueInput
+  }
+
+  /**
+   * TeamPlayerStatusEvent updateMany
+   */
+  export type TeamPlayerStatusEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeamPlayerStatusEvents.
+     */
+    data: XOR<TeamPlayerStatusEventUpdateManyMutationInput, TeamPlayerStatusEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamPlayerStatusEvents to update
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * Limit how many TeamPlayerStatusEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamPlayerStatusEvent updateManyAndReturn
+   */
+  export type TeamPlayerStatusEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * The data used to update TeamPlayerStatusEvents.
+     */
+    data: XOR<TeamPlayerStatusEventUpdateManyMutationInput, TeamPlayerStatusEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamPlayerStatusEvents to update
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * Limit how many TeamPlayerStatusEvents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamPlayerStatusEvent upsert
+   */
+  export type TeamPlayerStatusEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TeamPlayerStatusEvent to update in case it exists.
+     */
+    where: TeamPlayerStatusEventWhereUniqueInput
+    /**
+     * In case the TeamPlayerStatusEvent found by the `where` argument doesn't exist, create a new TeamPlayerStatusEvent with this data.
+     */
+    create: XOR<TeamPlayerStatusEventCreateInput, TeamPlayerStatusEventUncheckedCreateInput>
+    /**
+     * In case the TeamPlayerStatusEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeamPlayerStatusEventUpdateInput, TeamPlayerStatusEventUncheckedUpdateInput>
+  }
+
+  /**
+   * TeamPlayerStatusEvent delete
+   */
+  export type TeamPlayerStatusEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
+    /**
+     * Filter which TeamPlayerStatusEvent to delete.
+     */
+    where: TeamPlayerStatusEventWhereUniqueInput
+  }
+
+  /**
+   * TeamPlayerStatusEvent deleteMany
+   */
+  export type TeamPlayerStatusEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamPlayerStatusEvents to delete
+     */
+    where?: TeamPlayerStatusEventWhereInput
+    /**
+     * Limit how many TeamPlayerStatusEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamPlayerStatusEvent without action
+   */
+  export type TeamPlayerStatusEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamPlayerStatusEvent
+     */
+    select?: TeamPlayerStatusEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamPlayerStatusEvent
+     */
+    omit?: TeamPlayerStatusEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamPlayerStatusEventInclude<ExtArgs> | null
   }
 
 
@@ -97662,10 +99000,31 @@ export namespace Prisma {
     dead: 'dead',
     diedAt: 'diedAt',
     firedAt: 'firedAt',
+    status: 'status',
+    statusAt: 'statusAt',
+    statusSource: 'statusSource',
+    statusSourceId: 'statusSourceId',
     isCaptain: 'isCaptain'
   };
 
   export type TeamPlayerScalarFieldEnum = (typeof TeamPlayerScalarFieldEnum)[keyof typeof TeamPlayerScalarFieldEnum]
+
+
+  export const TeamPlayerStatusEventScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    teamId: 'teamId',
+    kind: 'kind',
+    sourceType: 'sourceType',
+    sourceId: 'sourceId',
+    actorUserId: 'actorUserId',
+    reason: 'reason',
+    revertedAt: 'revertedAt',
+    revertedBy: 'revertedBy',
+    createdAt: 'createdAt'
+  };
+
+  export type TeamPlayerStatusEventScalarFieldEnum = (typeof TeamPlayerStatusEventScalarFieldEnum)[keyof typeof TeamPlayerStatusEventScalarFieldEnum]
 
 
   export const TeamStarPlayerScalarFieldEnum: {
@@ -100214,8 +101573,13 @@ export namespace Prisma {
     dead?: BoolFilter<"TeamPlayer"> | boolean
     diedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
     firedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    status?: StringFilter<"TeamPlayer"> | string
+    statusAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
+    statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    statusEvents?: TeamPlayerStatusEventListRelationFilter
   }
 
   export type TeamPlayerOrderByWithRelationInput = {
@@ -100248,8 +101612,13 @@ export namespace Prisma {
     dead?: SortOrder
     diedAt?: SortOrderInput | SortOrder
     firedAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    statusAt?: SortOrderInput | SortOrder
+    statusSource?: SortOrderInput | SortOrder
+    statusSourceId?: SortOrderInput | SortOrder
     isCaptain?: SortOrder
     team?: TeamOrderByWithRelationInput
+    statusEvents?: TeamPlayerStatusEventOrderByRelationAggregateInput
   }
 
   export type TeamPlayerWhereUniqueInput = Prisma.AtLeast<{
@@ -100285,8 +101654,13 @@ export namespace Prisma {
     dead?: BoolFilter<"TeamPlayer"> | boolean
     diedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
     firedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    status?: StringFilter<"TeamPlayer"> | string
+    statusAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
+    statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    statusEvents?: TeamPlayerStatusEventListRelationFilter
   }, "id">
 
   export type TeamPlayerOrderByWithAggregationInput = {
@@ -100319,6 +101693,10 @@ export namespace Prisma {
     dead?: SortOrder
     diedAt?: SortOrderInput | SortOrder
     firedAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    statusAt?: SortOrderInput | SortOrder
+    statusSource?: SortOrderInput | SortOrder
+    statusSourceId?: SortOrderInput | SortOrder
     isCaptain?: SortOrder
     _count?: TeamPlayerCountOrderByAggregateInput
     _avg?: TeamPlayerAvgOrderByAggregateInput
@@ -100360,7 +101738,96 @@ export namespace Prisma {
     dead?: BoolWithAggregatesFilter<"TeamPlayer"> | boolean
     diedAt?: DateTimeNullableWithAggregatesFilter<"TeamPlayer"> | Date | string | null
     firedAt?: DateTimeNullableWithAggregatesFilter<"TeamPlayer"> | Date | string | null
+    status?: StringWithAggregatesFilter<"TeamPlayer"> | string
+    statusAt?: DateTimeNullableWithAggregatesFilter<"TeamPlayer"> | Date | string | null
+    statusSource?: StringNullableWithAggregatesFilter<"TeamPlayer"> | string | null
+    statusSourceId?: StringNullableWithAggregatesFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolWithAggregatesFilter<"TeamPlayer"> | boolean
+  }
+
+  export type TeamPlayerStatusEventWhereInput = {
+    AND?: TeamPlayerStatusEventWhereInput | TeamPlayerStatusEventWhereInput[]
+    OR?: TeamPlayerStatusEventWhereInput[]
+    NOT?: TeamPlayerStatusEventWhereInput | TeamPlayerStatusEventWhereInput[]
+    id?: StringFilter<"TeamPlayerStatusEvent"> | string
+    playerId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    teamId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    kind?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceType?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    actorUserId?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    reason?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    revertedAt?: DateTimeNullableFilter<"TeamPlayerStatusEvent"> | Date | string | null
+    revertedBy?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    createdAt?: DateTimeFilter<"TeamPlayerStatusEvent"> | Date | string
+    player?: XOR<TeamPlayerScalarRelationFilter, TeamPlayerWhereInput>
+  }
+
+  export type TeamPlayerStatusEventOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    teamId?: SortOrder
+    kind?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    revertedAt?: SortOrderInput | SortOrder
+    revertedBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    player?: TeamPlayerOrderByWithRelationInput
+  }
+
+  export type TeamPlayerStatusEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TeamPlayerStatusEventWhereInput | TeamPlayerStatusEventWhereInput[]
+    OR?: TeamPlayerStatusEventWhereInput[]
+    NOT?: TeamPlayerStatusEventWhereInput | TeamPlayerStatusEventWhereInput[]
+    playerId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    teamId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    kind?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceType?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    actorUserId?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    reason?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    revertedAt?: DateTimeNullableFilter<"TeamPlayerStatusEvent"> | Date | string | null
+    revertedBy?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    createdAt?: DateTimeFilter<"TeamPlayerStatusEvent"> | Date | string
+    player?: XOR<TeamPlayerScalarRelationFilter, TeamPlayerWhereInput>
+  }, "id">
+
+  export type TeamPlayerStatusEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    teamId?: SortOrder
+    kind?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    revertedAt?: SortOrderInput | SortOrder
+    revertedBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: TeamPlayerStatusEventCountOrderByAggregateInput
+    _max?: TeamPlayerStatusEventMaxOrderByAggregateInput
+    _min?: TeamPlayerStatusEventMinOrderByAggregateInput
+  }
+
+  export type TeamPlayerStatusEventScalarWhereWithAggregatesInput = {
+    AND?: TeamPlayerStatusEventScalarWhereWithAggregatesInput | TeamPlayerStatusEventScalarWhereWithAggregatesInput[]
+    OR?: TeamPlayerStatusEventScalarWhereWithAggregatesInput[]
+    NOT?: TeamPlayerStatusEventScalarWhereWithAggregatesInput | TeamPlayerStatusEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    playerId?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    teamId?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    kind?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    sourceType?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    sourceId?: StringWithAggregatesFilter<"TeamPlayerStatusEvent"> | string
+    actorUserId?: StringNullableWithAggregatesFilter<"TeamPlayerStatusEvent"> | string | null
+    reason?: StringNullableWithAggregatesFilter<"TeamPlayerStatusEvent"> | string | null
+    revertedAt?: DateTimeNullableWithAggregatesFilter<"TeamPlayerStatusEvent"> | Date | string | null
+    revertedBy?: StringNullableWithAggregatesFilter<"TeamPlayerStatusEvent"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"TeamPlayerStatusEvent"> | Date | string
   }
 
   export type TeamStarPlayerWhereInput = {
@@ -107404,8 +108871,13 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
     team: TeamCreateNestedOneWithoutPlayersInput
+    statusEvents?: TeamPlayerStatusEventCreateNestedManyWithoutPlayerInput
   }
 
   export type TeamPlayerUncheckedCreateInput = {
@@ -107438,7 +108910,12 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
+    statusEvents?: TeamPlayerStatusEventUncheckedCreateNestedManyWithoutPlayerInput
   }
 
   export type TeamPlayerUpdateInput = {
@@ -107470,8 +108947,13 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
     team?: TeamUpdateOneRequiredWithoutPlayersNestedInput
+    statusEvents?: TeamPlayerStatusEventUpdateManyWithoutPlayerNestedInput
   }
 
   export type TeamPlayerUncheckedUpdateInput = {
@@ -107504,7 +108986,12 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    statusEvents?: TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerNestedInput
   }
 
   export type TeamPlayerCreateManyInput = {
@@ -107537,6 +109024,10 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
   }
 
@@ -107569,6 +109060,10 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -107602,7 +109097,108 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type TeamPlayerStatusEventCreateInput = {
+    id?: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+    player: TeamPlayerCreateNestedOneWithoutStatusEventsInput
+  }
+
+  export type TeamPlayerStatusEventUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TeamPlayerStatusEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    player?: TeamPlayerUpdateOneRequiredWithoutStatusEventsNestedInput
+  }
+
+  export type TeamPlayerStatusEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamPlayerStatusEventCreateManyInput = {
+    id?: string
+    playerId: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TeamPlayerStatusEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamPlayerStatusEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TeamStarPlayerCreateInput = {
@@ -115119,6 +116715,16 @@ export namespace Prisma {
     isNot?: TeamWhereInput
   }
 
+  export type TeamPlayerStatusEventListRelationFilter = {
+    every?: TeamPlayerStatusEventWhereInput
+    some?: TeamPlayerStatusEventWhereInput
+    none?: TeamPlayerStatusEventWhereInput
+  }
+
+  export type TeamPlayerStatusEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type TeamPlayerCountOrderByAggregateInput = {
     id?: SortOrder
     teamId?: SortOrder
@@ -115149,6 +116755,10 @@ export namespace Prisma {
     dead?: SortOrder
     diedAt?: SortOrder
     firedAt?: SortOrder
+    status?: SortOrder
+    statusAt?: SortOrder
+    statusSource?: SortOrder
+    statusSourceId?: SortOrder
     isCaptain?: SortOrder
   }
 
@@ -115204,6 +116814,10 @@ export namespace Prisma {
     dead?: SortOrder
     diedAt?: SortOrder
     firedAt?: SortOrder
+    status?: SortOrder
+    statusAt?: SortOrder
+    statusSource?: SortOrder
+    statusSourceId?: SortOrder
     isCaptain?: SortOrder
   }
 
@@ -115237,6 +116851,10 @@ export namespace Prisma {
     dead?: SortOrder
     diedAt?: SortOrder
     firedAt?: SortOrder
+    status?: SortOrder
+    statusAt?: SortOrder
+    statusSource?: SortOrder
+    statusSourceId?: SortOrder
     isCaptain?: SortOrder
   }
 
@@ -115276,6 +116894,53 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type TeamPlayerScalarRelationFilter = {
+    is?: TeamPlayerWhereInput
+    isNot?: TeamPlayerWhereInput
+  }
+
+  export type TeamPlayerStatusEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    teamId?: SortOrder
+    kind?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    actorUserId?: SortOrder
+    reason?: SortOrder
+    revertedAt?: SortOrder
+    revertedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TeamPlayerStatusEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    teamId?: SortOrder
+    kind?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    actorUserId?: SortOrder
+    reason?: SortOrder
+    revertedAt?: SortOrder
+    revertedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TeamPlayerStatusEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    teamId?: SortOrder
+    kind?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    actorUserId?: SortOrder
+    reason?: SortOrder
+    revertedAt?: SortOrder
+    revertedBy?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type TeamStarPlayerTeamIdStarPlayerSlugCompoundUniqueInput = {
@@ -121230,6 +122895,20 @@ export namespace Prisma {
     connect?: TeamWhereUniqueInput
   }
 
+  export type TeamPlayerStatusEventCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput> | TeamPlayerStatusEventCreateWithoutPlayerInput[] | TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput | TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput[]
+    createMany?: TeamPlayerStatusEventCreateManyPlayerInputEnvelope
+    connect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+  }
+
+  export type TeamPlayerStatusEventUncheckedCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput> | TeamPlayerStatusEventCreateWithoutPlayerInput[] | TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput | TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput[]
+    createMany?: TeamPlayerStatusEventCreateManyPlayerInputEnvelope
+    connect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+  }
+
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -121244,6 +122923,48 @@ export namespace Prisma {
     upsert?: TeamUpsertWithoutPlayersInput
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutPlayersInput, TeamUpdateWithoutPlayersInput>, TeamUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type TeamPlayerStatusEventUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput> | TeamPlayerStatusEventCreateWithoutPlayerInput[] | TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput | TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput[]
+    upsert?: TeamPlayerStatusEventUpsertWithWhereUniqueWithoutPlayerInput | TeamPlayerStatusEventUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: TeamPlayerStatusEventCreateManyPlayerInputEnvelope
+    set?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    disconnect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    delete?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    connect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    update?: TeamPlayerStatusEventUpdateWithWhereUniqueWithoutPlayerInput | TeamPlayerStatusEventUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: TeamPlayerStatusEventUpdateManyWithWhereWithoutPlayerInput | TeamPlayerStatusEventUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: TeamPlayerStatusEventScalarWhereInput | TeamPlayerStatusEventScalarWhereInput[]
+  }
+
+  export type TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput> | TeamPlayerStatusEventCreateWithoutPlayerInput[] | TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput | TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput[]
+    upsert?: TeamPlayerStatusEventUpsertWithWhereUniqueWithoutPlayerInput | TeamPlayerStatusEventUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: TeamPlayerStatusEventCreateManyPlayerInputEnvelope
+    set?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    disconnect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    delete?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    connect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
+    update?: TeamPlayerStatusEventUpdateWithWhereUniqueWithoutPlayerInput | TeamPlayerStatusEventUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: TeamPlayerStatusEventUpdateManyWithWhereWithoutPlayerInput | TeamPlayerStatusEventUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: TeamPlayerStatusEventScalarWhereInput | TeamPlayerStatusEventScalarWhereInput[]
+  }
+
+  export type TeamPlayerCreateNestedOneWithoutStatusEventsInput = {
+    create?: XOR<TeamPlayerCreateWithoutStatusEventsInput, TeamPlayerUncheckedCreateWithoutStatusEventsInput>
+    connectOrCreate?: TeamPlayerCreateOrConnectWithoutStatusEventsInput
+    connect?: TeamPlayerWhereUniqueInput
+  }
+
+  export type TeamPlayerUpdateOneRequiredWithoutStatusEventsNestedInput = {
+    create?: XOR<TeamPlayerCreateWithoutStatusEventsInput, TeamPlayerUncheckedCreateWithoutStatusEventsInput>
+    connectOrCreate?: TeamPlayerCreateOrConnectWithoutStatusEventsInput
+    upsert?: TeamPlayerUpsertWithoutStatusEventsInput
+    connect?: TeamPlayerWhereUniqueInput
+    update?: XOR<XOR<TeamPlayerUpdateToOneWithWhereWithoutStatusEventsInput, TeamPlayerUpdateWithoutStatusEventsInput>, TeamPlayerUncheckedUpdateWithoutStatusEventsInput>
   }
 
   export type TeamCreateNestedOneWithoutStarPlayersInput = {
@@ -131670,7 +133391,12 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
+    statusEvents?: TeamPlayerStatusEventCreateNestedManyWithoutPlayerInput
   }
 
   export type TeamPlayerUncheckedCreateWithoutTeamInput = {
@@ -131702,7 +133428,12 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
+    statusEvents?: TeamPlayerStatusEventUncheckedCreateNestedManyWithoutPlayerInput
   }
 
   export type TeamPlayerCreateOrConnectWithoutTeamInput = {
@@ -132269,6 +134000,10 @@ export namespace Prisma {
     dead?: BoolFilter<"TeamPlayer"> | boolean
     diedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
     firedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    status?: StringFilter<"TeamPlayer"> | string
+    statusAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
+    statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
+    statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
   }
 
@@ -132544,6 +134279,41 @@ export namespace Prisma {
     create: XOR<TeamCreateWithoutPlayersInput, TeamUncheckedCreateWithoutPlayersInput>
   }
 
+  export type TeamPlayerStatusEventCreateWithoutPlayerInput = {
+    id?: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput = {
+    id?: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput = {
+    where: TeamPlayerStatusEventWhereUniqueInput
+    create: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type TeamPlayerStatusEventCreateManyPlayerInputEnvelope = {
+    data: TeamPlayerStatusEventCreateManyPlayerInput | TeamPlayerStatusEventCreateManyPlayerInput[]
+  }
+
   export type TeamUpsertWithoutPlayersInput = {
     update: XOR<TeamUpdateWithoutPlayersInput, TeamUncheckedUpdateWithoutPlayersInput>
     create: XOR<TeamCreateWithoutPlayersInput, TeamUncheckedCreateWithoutPlayersInput>
@@ -132617,6 +134387,203 @@ export namespace Prisma {
     matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
     leagueParticipations?: LeagueParticipantUncheckedUpdateManyWithoutTeamNestedInput
     leagueInvitations?: LeagueInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
+  }
+
+  export type TeamPlayerStatusEventUpsertWithWhereUniqueWithoutPlayerInput = {
+    where: TeamPlayerStatusEventWhereUniqueInput
+    update: XOR<TeamPlayerStatusEventUpdateWithoutPlayerInput, TeamPlayerStatusEventUncheckedUpdateWithoutPlayerInput>
+    create: XOR<TeamPlayerStatusEventCreateWithoutPlayerInput, TeamPlayerStatusEventUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type TeamPlayerStatusEventUpdateWithWhereUniqueWithoutPlayerInput = {
+    where: TeamPlayerStatusEventWhereUniqueInput
+    data: XOR<TeamPlayerStatusEventUpdateWithoutPlayerInput, TeamPlayerStatusEventUncheckedUpdateWithoutPlayerInput>
+  }
+
+  export type TeamPlayerStatusEventUpdateManyWithWhereWithoutPlayerInput = {
+    where: TeamPlayerStatusEventScalarWhereInput
+    data: XOR<TeamPlayerStatusEventUpdateManyMutationInput, TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerInput>
+  }
+
+  export type TeamPlayerStatusEventScalarWhereInput = {
+    AND?: TeamPlayerStatusEventScalarWhereInput | TeamPlayerStatusEventScalarWhereInput[]
+    OR?: TeamPlayerStatusEventScalarWhereInput[]
+    NOT?: TeamPlayerStatusEventScalarWhereInput | TeamPlayerStatusEventScalarWhereInput[]
+    id?: StringFilter<"TeamPlayerStatusEvent"> | string
+    playerId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    teamId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    kind?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceType?: StringFilter<"TeamPlayerStatusEvent"> | string
+    sourceId?: StringFilter<"TeamPlayerStatusEvent"> | string
+    actorUserId?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    reason?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    revertedAt?: DateTimeNullableFilter<"TeamPlayerStatusEvent"> | Date | string | null
+    revertedBy?: StringNullableFilter<"TeamPlayerStatusEvent"> | string | null
+    createdAt?: DateTimeFilter<"TeamPlayerStatusEvent"> | Date | string
+  }
+
+  export type TeamPlayerCreateWithoutStatusEventsInput = {
+    id?: string
+    name: string
+    position: string
+    number: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    skills: string
+    spp?: number
+    totalTouchdowns?: number
+    totalCasualties?: number
+    totalCompletions?: number
+    totalInterceptions?: number
+    totalMvpAwards?: number
+    matchesPlayed?: number
+    nigglingInjuries?: number
+    maReduction?: number
+    stReduction?: number
+    agReduction?: number
+    paReduction?: number
+    avReduction?: number
+    missNextMatch?: boolean
+    advancements?: string
+    dead?: boolean
+    diedAt?: Date | string | null
+    firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
+    isCaptain?: boolean
+    team: TeamCreateNestedOneWithoutPlayersInput
+  }
+
+  export type TeamPlayerUncheckedCreateWithoutStatusEventsInput = {
+    id?: string
+    teamId: string
+    name: string
+    position: string
+    number: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    skills: string
+    spp?: number
+    totalTouchdowns?: number
+    totalCasualties?: number
+    totalCompletions?: number
+    totalInterceptions?: number
+    totalMvpAwards?: number
+    matchesPlayed?: number
+    nigglingInjuries?: number
+    maReduction?: number
+    stReduction?: number
+    agReduction?: number
+    paReduction?: number
+    avReduction?: number
+    missNextMatch?: boolean
+    advancements?: string
+    dead?: boolean
+    diedAt?: Date | string | null
+    firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
+    isCaptain?: boolean
+  }
+
+  export type TeamPlayerCreateOrConnectWithoutStatusEventsInput = {
+    where: TeamPlayerWhereUniqueInput
+    create: XOR<TeamPlayerCreateWithoutStatusEventsInput, TeamPlayerUncheckedCreateWithoutStatusEventsInput>
+  }
+
+  export type TeamPlayerUpsertWithoutStatusEventsInput = {
+    update: XOR<TeamPlayerUpdateWithoutStatusEventsInput, TeamPlayerUncheckedUpdateWithoutStatusEventsInput>
+    create: XOR<TeamPlayerCreateWithoutStatusEventsInput, TeamPlayerUncheckedCreateWithoutStatusEventsInput>
+    where?: TeamPlayerWhereInput
+  }
+
+  export type TeamPlayerUpdateToOneWithWhereWithoutStatusEventsInput = {
+    where?: TeamPlayerWhereInput
+    data: XOR<TeamPlayerUpdateWithoutStatusEventsInput, TeamPlayerUncheckedUpdateWithoutStatusEventsInput>
+  }
+
+  export type TeamPlayerUpdateWithoutStatusEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: StringFieldUpdateOperationsInput | string
+    number?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    skills?: StringFieldUpdateOperationsInput | string
+    spp?: IntFieldUpdateOperationsInput | number
+    totalTouchdowns?: IntFieldUpdateOperationsInput | number
+    totalCasualties?: IntFieldUpdateOperationsInput | number
+    totalCompletions?: IntFieldUpdateOperationsInput | number
+    totalInterceptions?: IntFieldUpdateOperationsInput | number
+    totalMvpAwards?: IntFieldUpdateOperationsInput | number
+    matchesPlayed?: IntFieldUpdateOperationsInput | number
+    nigglingInjuries?: IntFieldUpdateOperationsInput | number
+    maReduction?: IntFieldUpdateOperationsInput | number
+    stReduction?: IntFieldUpdateOperationsInput | number
+    agReduction?: IntFieldUpdateOperationsInput | number
+    paReduction?: IntFieldUpdateOperationsInput | number
+    avReduction?: IntFieldUpdateOperationsInput | number
+    missNextMatch?: BoolFieldUpdateOperationsInput | boolean
+    advancements?: StringFieldUpdateOperationsInput | string
+    dead?: BoolFieldUpdateOperationsInput | boolean
+    diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    team?: TeamUpdateOneRequiredWithoutPlayersNestedInput
+  }
+
+  export type TeamPlayerUncheckedUpdateWithoutStatusEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: StringFieldUpdateOperationsInput | string
+    number?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    skills?: StringFieldUpdateOperationsInput | string
+    spp?: IntFieldUpdateOperationsInput | number
+    totalTouchdowns?: IntFieldUpdateOperationsInput | number
+    totalCasualties?: IntFieldUpdateOperationsInput | number
+    totalCompletions?: IntFieldUpdateOperationsInput | number
+    totalInterceptions?: IntFieldUpdateOperationsInput | number
+    totalMvpAwards?: IntFieldUpdateOperationsInput | number
+    matchesPlayed?: IntFieldUpdateOperationsInput | number
+    nigglingInjuries?: IntFieldUpdateOperationsInput | number
+    maReduction?: IntFieldUpdateOperationsInput | number
+    stReduction?: IntFieldUpdateOperationsInput | number
+    agReduction?: IntFieldUpdateOperationsInput | number
+    paReduction?: IntFieldUpdateOperationsInput | number
+    avReduction?: IntFieldUpdateOperationsInput | number
+    missNextMatch?: BoolFieldUpdateOperationsInput | boolean
+    advancements?: StringFieldUpdateOperationsInput | string
+    dead?: BoolFieldUpdateOperationsInput | boolean
+    diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    isCaptain?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type TeamCreateWithoutStarPlayersInput = {
@@ -150524,6 +152491,10 @@ export namespace Prisma {
     dead?: boolean
     diedAt?: Date | string | null
     firedAt?: Date | string | null
+    status?: string
+    statusAt?: Date | string | null
+    statusSource?: string | null
+    statusSourceId?: string | null
     isCaptain?: boolean
   }
 
@@ -150690,7 +152661,12 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    statusEvents?: TeamPlayerStatusEventUpdateManyWithoutPlayerNestedInput
   }
 
   export type TeamPlayerUncheckedUpdateWithoutTeamInput = {
@@ -150722,7 +152698,12 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    statusEvents?: TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerNestedInput
   }
 
   export type TeamPlayerUncheckedUpdateManyWithoutTeamInput = {
@@ -150754,6 +152735,10 @@ export namespace Prisma {
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     firedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    statusAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statusSource?: NullableStringFieldUpdateOperationsInput | string | null
+    statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -151165,6 +153150,58 @@ export namespace Prisma {
     acceptedParticipantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamPlayerStatusEventCreateManyPlayerInput = {
+    id?: string
+    teamId: string
+    kind: string
+    sourceType: string
+    sourceId?: string
+    actorUserId?: string | null
+    reason?: string | null
+    revertedAt?: Date | string | null
+    revertedBy?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TeamPlayerStatusEventUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamPlayerStatusEventUncheckedUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    revertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revertedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionCreateManyRosterInput = {
