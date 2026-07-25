@@ -16,6 +16,10 @@ permissions:
   contents: write
   pull-requests: write
   checks: read
+  # Necessaire pour `createWorkflowDispatch` : les commits de merge crees
+  # par le GITHUB_TOKEN n'emettent PAS d'event `push`, donc on relance
+  # explicitement les workflows aval (cf. etape "Trigger downstream").
+  actions: write
 
 env:
   # Voir ci.yml — opt-in Node 24 pour les actions JS (deprecation Node 20).
@@ -35,6 +39,20 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            // Workflows normalement declenches par `push` sur main. Un
+            // merge effectue avec le GITHUB_TOKEN n'emet PAS d'event
+            // `push` (garde-fou anti-recursion de GitHub Actions), donc
+            // ils ne partiraient jamais sur les PR auto-mergees. On les
+            // relance explicitement via `workflow_dispatch`, seul type
+            // d'event que le GITHUB_TOKEN a le droit de creer.
+            // Cf. https://docs.github.com/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+            const DOWNSTREAM_WORKFLOWS = [
+              'deploy.yml',
+              'e2e.yml',
+              'semantic-release.yml',
+            ];
+            let mergedAny = false;
+
             // Récupérer les PRs ouvertes vers main
             const pulls = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -90,6 +108,7 @@ jobs:
                     commit_title: `${pr.title} (#${pr.number})`,
                   });
                   console.log(`  PR #${pr.number}: Merged successfully!`);
+                  mergedAny = true;
 
                   // Supprimer la branche source après merge
                   try {
@@ -107,5 +126,29 @@ jobs:
                 }
               } else {
                 console.log(`  PR #${pr.number}: Not mergeable (state: ${prDetail.data.mergeable_state})`);
+              }
+            }
+
+            if (!mergedAny) {
+              console.log('No PR merged — nothing to trigger downstream.');
+              return;
+            }
+
+            // Un seul dispatch par run, meme si plusieurs PR ont ete
+            // mergees : `ref: main` pointe alors sur le dernier commit,
+            // ce qui est exactement le comportement d'un push classique.
+            for (const workflow_id of DOWNSTREAM_WORKFLOWS) {
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id,
+                  ref: 'main',
+                });
+                console.log(`Downstream workflow dispatched: ${workflow_id}`);
+              } catch (e) {
+                // Non bloquant : un workflow desactive ou renomme ne doit
+                // pas faire echouer l'auto-merge deja effectue.
+                console.log(`Could not dispatch ${workflow_id}: ${e.message}`);
               }
             }

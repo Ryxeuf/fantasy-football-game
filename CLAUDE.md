@@ -464,6 +464,26 @@ quand on introduit un nouveau flag — soit le flag est coherent avec
 un comportement on/on, soit c'est un kill-switch (cf. pattern dedie
 ci-dessus) et doit etre liste dans `KILL_SWITCH_FLAGS`.
 
+### Un merge fait par le GITHUB_TOKEN n'emet pas d'event `push`
+`auto-merge.yml` merge les PR avec `secrets.GITHUB_TOKEN`. GitHub
+**n'emet volontairement aucun event** (`push`, `pull_request`…) pour les
+commits crees par ce token, pour eviter les boucles de workflows. Effet
+de bord observe (PR #933 → #935, juillet 2026) : `deploy.yml`, `e2e.yml`
+et `semantic-release.yml`, tous declenches sur `push: branches: [main]`,
+n'ont plus tourne sur les PR auto-mergees — deploy prod a du etre lance
+a la main et aucune release n'est sortie.
+
+Contournement en place : `auto-merge.yml` relance explicitement les
+workflows aval via `github.rest.actions.createWorkflowDispatch({ ref:
+'main' })` apres un merge reussi. `workflow_dispatch` et
+`repository_dispatch` sont les **seuls** events que le GITHUB_TOKEN a le
+droit de creer. Necessite `permissions: actions: write`.
+
+Consequence : tout nouveau workflow declenche par `push` sur main doit
+etre ajoute a `DOWNSTREAM_WORKFLOWS` dans `auto-merge.yml` **et** exposer
+un trigger `workflow_dispatch`, sinon il ne tournera jamais sur les PR
+auto-mergees.
+
 ### supertest n'est pas dans les deps
 Pour tester un Express handler en isolation, utiliser
 `http.createServer(express())` + `http.request` natif au lieu de
