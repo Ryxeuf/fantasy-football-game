@@ -193,4 +193,22 @@ export interface StandingRow {
    * `points`). Optionnel pour rétro-compat API pré-E2.
    */
   bonusPoints?: number;
+  /**
+   * F1 — Colonnes étendues du classement. Toutes optionnelles pour
+   * rétro-compat avec une API pré-F1 (l'UI les traite alors comme 0,
+   * sauf `casualtyDifference` qui est recalculé côté client).
+   */
+  casualtyDifference?: number;
+  /** F1 — Nombre de forfaits déclarés. */
+  forfeits?: number;
+  /** F1 — Points en retrait dus aux forfaits (colonne "For"). */
+  forfeitPoints?: number;
+  /** F1 — Passes réussies (colonne "P"). */
+  passes?: number;
+  /** F1 — Agressions commises (colonne "Agr"). */
+  aggressions?: number;
+  /** F1 — Sorties infligées par le public (colonne "SP"). */
+  crowdSurges?: number;
+  /** F1 — Expulsions subies (colonne "Exclu"). */
+  expulsions?: number;
 }

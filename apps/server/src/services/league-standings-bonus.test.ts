@@ -13,7 +13,9 @@ vi.mock("../prisma", () => ({
   prisma: {
     leagueSeason: { findUnique: vi.fn() },
     leagueParticipant: { findMany: vi.fn() },
-    leaguePairing: { groupBy: vi.fn() },
+    // `findMany` sert aux stats étendues F1 (For / P / Agr / SP / Exclu).
+    leaguePairing: { groupBy: vi.fn(), findMany: vi.fn() },
+    leagueMatchEvent: { groupBy: vi.fn() },
   },
 }));
 
@@ -60,6 +62,10 @@ function participant(over: ParticipantOverrides) {
 describe("E2 — computeSeasonStandings bonus aggregation", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // F1 — l'agrégation des stats étendues tourne systématiquement ;
+    // neutre par défaut dans les tests de bonus.
+    mockPrisma.leaguePairing.findMany.mockResolvedValue([]);
+    mockPrisma.leagueMatchEvent.groupBy.mockResolvedValue([]);
   });
 
   it("cumule les bonus home + away par participant sur StandingRow.bonusPoints", async () => {
