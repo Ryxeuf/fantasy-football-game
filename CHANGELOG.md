@@ -1,3 +1,12 @@
+## [1.219.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.218.0...v1.219.0) (2026-07-28)
+
+
+### ✨ Features
+
+* **league:** classement — colonnes étendues et vue synthétique dépliable ([#937](https://github.com/Ryxeuf/fantasy-football-game/issues/937)) ([a575d22](https://github.com/Ryxeuf/fantasy-football-game/commit/a575d22227acbe84f516c45f6ad5ef7e1d76b228))
+* **player-status:** morts et licenciements tracés et réversibles ([#935](https://github.com/Ryxeuf/fantasy-football-game/issues/935)) ([a262eac](https://github.com/Ryxeuf/fantasy-football-game/commit/a262eac72294c24e27e5dd26d0442be9ed9f9512))
+* **team:** règle spéciale Capitaine (désignation, Pro offerte, effets en match) ([#934](https://github.com/Ryxeuf/fantasy-football-game/issues/934)) ([59c646c](https://github.com/Ryxeuf/fantasy-football-game/commit/59c646c42061986237b1627655a587103998bbb2))
+
 ## [1.218.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.217.1...v1.218.0) (2026-07-22)
 
 
