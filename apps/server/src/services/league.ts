@@ -19,6 +19,12 @@ import { prisma } from "../prisma";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
 import { getTeamEngagement } from "./team-competition-status";
 import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
+import {
+  aggregateSeasonExtraStats,
+  EMPTY_EXTRA_STATS,
+  type SeasonExtraStats,
+} from "./league-standings-stats";
+import { serverLog } from "../utils/server-log";
 
 export type LeagueStatus =
   | "draft"
@@ -506,6 +512,26 @@ export interface StandingRow {
    * / `bonusPointsAway`. Optionnel pour rétro-compat API pré-E2.
    */
   bonusPoints?: number;
+  /**
+   * F1 — Différentiel de sorties (`casualtiesFor - casualtiesAgainst`),
+   * colonne "Diff Sor". Optionnel pour rétro-compat API pré-F1.
+   */
+  casualtyDifference?: number;
+  /** F1 — Nombre de forfaits déclarés par cette équipe. */
+  forfeits?: number;
+  /**
+   * F1 — Points retirés à cause des forfaits (colonne "For"), soit
+   * `forfeits × League.forfeitPoints`. Déjà inclus dans `points`.
+   */
+  forfeitPoints?: number;
+  /** F1 — Passes réussies (colonne "P"). */
+  passes?: number;
+  /** F1 — Agressions commises (colonne "Agr"). */
+  aggressions?: number;
+  /** F1 — Sorties infligées par le public (colonne "SP"). */
+  crowdSurges?: number;
+  /** F1 — Expulsions subies (colonne "Exclu"). */
+  expulsions?: number;
 }
 
 /** Lot C — Classement groupe par poule. */
@@ -532,7 +558,7 @@ export async function computeSeasonStandings(
     where: { id: seasonId },
     select: {
       id: true,
-      league: { select: { tieBreakRules: true } },
+      league: { select: { tieBreakRules: true, forfeitPoints: true } },
     },
   });
   if (!season) {
@@ -584,7 +610,15 @@ export async function computeSeasonStandings(
   const bonusByParticipantId = await aggregateBonusByParticipant(
     baseRows.map((r) => r.participantId),
   );
-  const rows = attachBonusPoints(baseRows, bonusByParticipantId);
+  const withBonus = attachBonusPoints(baseRows, bonusByParticipantId);
+
+  // F1 — colonnes For / P / Agr / SP / Exclu dérivées de la feuille de
+  // match et du statut des pairings (cf. `league-standings-stats`).
+  const extraStats = await loadSeasonExtraStatsSafely(seasonId);
+  const forfeitPointsBareme =
+    (season as { league?: { forfeitPoints?: number } | null }).league
+      ?.forfeitPoints ?? 0;
+  const rows = attachExtraStats(withBonus, extraStats, forfeitPointsBareme);
 
   const tieBreakRules = parseTieBreakRules(
     (season as { league?: { tieBreakRules?: string | null } | null }).league
@@ -643,6 +677,57 @@ export function attachBonusPoints(
     ...row,
     bonusPoints: bonusByParticipantId.get(row.participantId) ?? 0,
   }));
+}
+
+/**
+ * F1 — pur : ajoute les colonnes étendues du classement (Diff Sor, For,
+ * P, Agr, SP, Exclu). Un participant absent de la map retombe sur des
+ * compteurs à zéro. `forfeitPointsPerForfeit` est le barème
+ * `League.forfeitPoints` (généralement négatif) ; la colonne "For"
+ * expose donc les points effectivement retirés, déjà inclus dans
+ * `points`. Immutable (retourne de nouvelles lignes).
+ */
+export function attachExtraStats(
+  rows: readonly StandingRow[],
+  statsByParticipantId: ReadonlyMap<string, SeasonExtraStats>,
+  forfeitPointsPerForfeit: number,
+): StandingRow[] {
+  return rows.map((row) => {
+    const stats =
+      statsByParticipantId.get(row.participantId) ?? EMPTY_EXTRA_STATS;
+    return {
+      ...row,
+      casualtyDifference: row.casualtiesFor - row.casualtiesAgainst,
+      forfeits: stats.forfeits,
+      // `0 * -1` vaut `-0` en JS : on normalise pour ne pas exposer un
+      // "-0" dans le JSON de l'API ni dans la cellule du tableau.
+      forfeitPoints:
+        stats.forfeits === 0 ? 0 : stats.forfeits * forfeitPointsPerForfeit,
+      passes: stats.passes,
+      aggressions: stats.aggressions,
+      crowdSurges: stats.crowdSurges,
+      expulsions: stats.expulsions,
+    };
+  });
+}
+
+/**
+ * F1 — les stats étendues sont décoratives : une erreur d'agrégation ne
+ * doit jamais faire échouer le classement lui-même. On loggue et on
+ * retombe sur une map vide (toutes les colonnes à zéro).
+ */
+async function loadSeasonExtraStatsSafely(
+  seasonId: string,
+): Promise<ReadonlyMap<string, SeasonExtraStats>> {
+  try {
+    return await aggregateSeasonExtraStats(seasonId);
+  } catch (e: unknown) {
+    serverLog.error(
+      `[league] extra standings stats failed for season ${seasonId}`,
+      e,
+    );
+    return new Map<string, SeasonExtraStats>();
+  }
 }
 
 /**
