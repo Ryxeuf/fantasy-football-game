@@ -169,6 +169,23 @@ describe("LeagueTeamRosterPage", () => {
     expect(screen.getByTestId("player-injuries-pl2").textContent).toBe("1 BP");
   });
 
+  it("ouvre la page en pleine largeur pour afficher toutes les colonnes", async () => {
+    apiRequestMock.mockResolvedValue(ROSTER);
+    const { container } = render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+    );
+    // 17 colonnes (stats + blessures + dispo) : au 4xl la fin du tableau
+    // sortait du cadre. Le conteneur doit rester large.
+    const main = container.querySelector("main");
+    expect(main?.className).toContain("max-w-7xl");
+    expect(main?.className).not.toContain("max-w-4xl");
+  });
+
   it("affiche l'erreur renvoyée par l'API (ex: 403 non inscrit)", async () => {
     apiRequestMock.mockRejectedValue(
       new Error("Seuls les coachs inscrits a la ligue peuvent voir les rosters"),
