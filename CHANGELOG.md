@@ -1,3 +1,10 @@
+## [1.221.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.220.0...v1.221.0) (2026-08-17)
+
+
+### ✨ Features
+
+* **admin:** choisit les ligues d'un roster en cases à cocher ([#940](https://github.com/Ryxeuf/fantasy-football-game/issues/940)) ([c80daf0](https://github.com/Ryxeuf/fantasy-football-game/commit/c80daf05e74e140987775461e1037729d5a05fd4))
+
 ## [1.220.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.219.1...v1.220.0) (2026-08-17)
 
 
