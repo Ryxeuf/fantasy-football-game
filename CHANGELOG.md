@@ -1,3 +1,10 @@
+## [1.219.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.219.0...v1.219.1) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* **league:** note les Blessures Persistantes « N BP » et les cumule ([#938](https://github.com/Ryxeuf/fantasy-football-game/issues/938)) ([7639623](https://github.com/Ryxeuf/fantasy-football-game/commit/7639623ec47738c7ca7587c65143b837b3da9438))
+
 ## [1.219.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.218.0...v1.219.0) (2026-07-28)
 
 
