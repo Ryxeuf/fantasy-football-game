@@ -1,3 +1,10 @@
+## [1.223.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.0...v1.223.1) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* **web:** corrige les erreurs de typage des routes (typedRoutes) ([#944](https://github.com/Ryxeuf/fantasy-football-game/issues/944)) ([0e40007](https://github.com/Ryxeuf/fantasy-football-game/commit/0e40007e3659c0f94c542f6b4c0d22f3998634b7))
+
 ## [1.223.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.222.1...v1.223.0) (2026-08-17)
 
 
