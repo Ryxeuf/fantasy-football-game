@@ -1,3 +1,10 @@
+## [1.223.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.222.1...v1.223.0) (2026-08-17)
+
+
+### ✨ Features
+
+* **teams:** logo d'équipe uploadable, affiché devant le nom ([#943](https://github.com/Ryxeuf/fantasy-football-game/issues/943)) ([d6a5544](https://github.com/Ryxeuf/fantasy-football-game/commit/d6a5544eac9e4f18e08459fb1da45573de0749c7))
+
 ## [1.222.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.222.0...v1.222.1) (2026-08-17)
 
 
