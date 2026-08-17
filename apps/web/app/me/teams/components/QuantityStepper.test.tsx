@@ -116,4 +116,86 @@ describe("QuantityStepper", () => {
     const btn = screen.getByTestId("inc") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
   });
+
+  describe("mode editable (saisie libre)", () => {
+    it("accepte une valeur hors du pas de progression", () => {
+      const onChange = vi.fn();
+      render(
+        <QuantityStepper
+          value={1000}
+          step={50}
+          min={100}
+          max={2000}
+          editable
+          onChange={onChange}
+          valueInputTestId="qty-input"
+        />,
+      );
+      fireEvent.change(screen.getByTestId("qty-input"), {
+        target: { value: "1234" },
+      });
+      expect(onChange).toHaveBeenCalledWith(1234);
+    });
+
+    it("laisse saisir une valeur intermediaire sans la clamper", () => {
+      const onChange = vi.fn();
+      render(
+        <QuantityStepper
+          value={1000}
+          step={50}
+          min={100}
+          max={2000}
+          editable
+          onChange={onChange}
+          valueInputTestId="qty-input"
+        />,
+      );
+      const input = screen.getByTestId("qty-input") as HTMLInputElement;
+      // "1" est en dessous du min mais c'est un etat de frappe valide :
+      // le champ ne doit pas sauter a 100 sous les doigts.
+      fireEvent.change(input, { target: { value: "1" } });
+      expect(onChange).not.toHaveBeenCalled();
+      expect(input.value).toBe("1");
+    });
+
+    it("clampe au blur (valeur hors bornes ou champ vide)", () => {
+      const onChange = vi.fn();
+      render(
+        <QuantityStepper
+          value={1000}
+          step={50}
+          min={100}
+          max={2000}
+          editable
+          onChange={onChange}
+          valueInputTestId="qty-input"
+        />,
+      );
+      const input = screen.getByTestId("qty-input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "5000" } });
+      fireEvent.blur(input);
+      expect(onChange).toHaveBeenLastCalledWith(2000);
+      expect(input.value).toBe("2000");
+    });
+
+    it("revient a la valeur courante si la saisie est vide", () => {
+      const onChange = vi.fn();
+      render(
+        <QuantityStepper
+          value={1000}
+          step={50}
+          min={100}
+          max={2000}
+          editable
+          onChange={onChange}
+          valueInputTestId="qty-input"
+        />,
+      );
+      const input = screen.getByTestId("qty-input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "" } });
+      fireEvent.blur(input);
+      expect(input.value).toBe("1000");
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -746,23 +746,34 @@ export default function NewTeamBuilder() {
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <QuantityStepper
-                    value={teamValue}
-                    min={100}
-                    max={2000}
-                    step={50}
-                    onChange={setTeamValue}
-                    label={t.teams.teamValue}
-                    decrementAriaLabel={decLabel(t.teams.teamValue)}
-                    incrementAriaLabel={incLabel(t.teams.teamValue)}
-                    size="md"
-                  />
-                  <span className="text-base font-semibold text-gray-900 tabular-nums">
-                    {teamValue}
-                    {t.teams.kpo}
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Budget saisissable au clavier : les boutons ± sont
+                        un raccourci par tranche de 50k po, mais toute
+                        valeur entière de 100 à 2000k po est acceptée. */}
+                    <QuantityStepper
+                      value={teamValue}
+                      min={100}
+                      max={2000}
+                      step={50}
+                      onChange={setTeamValue}
+                      label={t.teams.teamValue}
+                      decrementAriaLabel={decLabel(t.teams.teamValue)}
+                      incrementAriaLabel={incLabel(t.teams.teamValue)}
+                      size="md"
+                      editable
+                      valueInputTestId="team-value-input"
+                    />
+                    <span className="text-base font-semibold text-gray-900 tabular-nums">
+                      {t.teams.kpo}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Saisis librement le budget disponible (100 à 2000
+                    {t.teams.kpo}) ; les boutons ± avancent de 50
+                    {t.teams.kpo}.
+                  </p>
+                </>
               )}
             </div>
           </div>
