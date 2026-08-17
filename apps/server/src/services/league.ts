@@ -490,6 +490,8 @@ export interface StandingRow {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploade par le coach (null => logo derive du roster cote UI). */
+  logoUrl?: string | null;
   ownerId: string;
   coachName: string | null;
   played: number;
@@ -573,6 +575,7 @@ export async function computeSeasonStandings(
           id: true,
           name: true,
           roster: true,
+          logoUrl: true,
           owner: { select: { id: true, coachName: true } },
         },
       },
@@ -585,6 +588,7 @@ export async function computeSeasonStandings(
     teamId: p.teamId,
     teamName: p.team.name,
     roster: p.team.roster,
+    logoUrl: p.team.logoUrl ?? null,
     ownerId: p.team.owner.id,
     coachName: p.team.owner.coachName ?? null,
     played: p.wins + p.draws + p.losses,
@@ -1139,6 +1143,7 @@ export async function getSeasonById(seasonId: string) {
                       id: true,
                       name: true,
                       roster: true,
+                      logoUrl: true,
                       ownerId: true,
                     },
                   },
@@ -1153,6 +1158,7 @@ export async function getSeasonById(seasonId: string) {
                       id: true,
                       name: true,
                       roster: true,
+                      logoUrl: true,
                       ownerId: true,
                     },
                   },

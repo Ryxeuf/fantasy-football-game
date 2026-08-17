@@ -5,6 +5,10 @@ import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { BLOG_PUBLIC_PATH, getBlogUploadDir } from "./utils/blog-upload";
+import {
+  TEAM_LOGO_PUBLIC_PATH,
+  getTeamLogoUploadDir,
+} from "./utils/team-logo-upload";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -163,6 +167,21 @@ app.use(
     index: false,
     // Ne jamais servir les sidecars de métadonnées (`.<image>.json`, cachés)
     // ni aucun dotfile : seuls les binaires d'images sont exposés publiquement.
+    dotfiles: "ignore",
+  }),
+);
+
+// Logos d'equipe uploades (cf. routes/team-logo-handlers.ts). Meme
+// traitement que les images du blog : servis par Express (les conteneurs
+// web/server sont separes en prod), avant le rate limiter et le mode
+// maintenance, noms de fichiers uniques => cache long immutable.
+app.use(
+  TEAM_LOGO_PUBLIC_PATH,
+  express.static(getTeamLogoUploadDir(), {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
     dotfiles: "ignore",
   }),
 );

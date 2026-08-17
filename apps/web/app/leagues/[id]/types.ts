@@ -74,6 +74,8 @@ export interface LeaguePairingTeamDetail {
     name: string;
     roster: string;
     ownerId: string;
+    /** Logo uploadé par le coach (null => logo dérivé du roster). */
+    logoUrl?: string | null;
   };
 }
 
@@ -187,6 +189,8 @@ export interface StandingRow {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
   ownerId: string;
   coachName: string | null;
   played: number;

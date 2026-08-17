@@ -28,6 +28,7 @@ import {
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import TeamLogo from "../../../../components/TeamLogo";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
 // Sections RÉSUMÉ / AVANT-MATCH / AU COURS DU MATCH / FIN DU MATCH.
@@ -763,8 +764,14 @@ export default function MatchSheetPage() {
         </h1>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 text-right">
-            <div className="truncate font-semibold text-nuffle-anthracite">
-              {home?.name ?? "Domicile"}
+            <div className="flex items-center justify-end gap-1.5 truncate font-semibold text-nuffle-anthracite">
+              <TeamLogo
+                slug={home?.roster}
+                logoUrl={home?.logoUrl ?? null}
+                size={20}
+                title={home?.name}
+              />
+              <span className="truncate">{home?.name ?? "Domicile"}</span>
             </div>
             <span
               className="ml-auto mt-1 block h-1 w-12 rounded-full"
@@ -784,8 +791,14 @@ export default function MatchSheetPage() {
             {data.summary.scoreHome} – {data.summary.scoreAway}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate font-semibold text-nuffle-anthracite">
-              {away?.name ?? "Extérieur"}
+            <div className="flex items-center gap-1.5 truncate font-semibold text-nuffle-anthracite">
+              <TeamLogo
+                slug={away?.roster}
+                logoUrl={away?.logoUrl ?? null}
+                size={20}
+                title={away?.name}
+              />
+              <span className="truncate">{away?.name ?? "Extérieur"}</span>
             </div>
             <span
               className="mt-1 block h-1 w-12 rounded-full"

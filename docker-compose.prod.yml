@@ -90,6 +90,11 @@ services:
       # URLs renvoyees absolues sur l'hote API.
       - BLOG_UPLOAD_DIR=/data/blog-images
       - BLOG_ASSET_PUBLIC_BASE=https://api.nufflearena.fr
+      # Logos d'equipe uploades par les coachs (cf. routes/team-logo-handlers.ts).
+      # Meme fonctionnement que les images de blog : volume persistant +
+      # URLs absolues sur l'hote API.
+      - TEAM_LOGO_UPLOAD_DIR=/data/team-logos
+      - TEAM_LOGO_ASSET_PUBLIC_BASE=https://api.nufflearena.fr
       # Log every HTTP request to stdout so Loki can index them. Slow calls
       # still emit at warn level; without this flag Loki has no stream to
       # surface because the server is otherwise silent in steady state.
@@ -139,6 +144,8 @@ services:
       # Persiste les images de blog uploadees entre les redeploys (l'image
       # server est immutable et rebuildee a chaque deploy).
       - blog_uploads:/data/blog-images
+      # Persiste les logos d'equipe entre les redeploys.
+      - team_logos:/data/team-logos
     depends_on:
       db:
         condition: service_healthy
@@ -157,6 +164,7 @@ services:
 volumes:
   db_data:
   blog_uploads:
+  team_logos:
 
 networks:
   traefik-network:

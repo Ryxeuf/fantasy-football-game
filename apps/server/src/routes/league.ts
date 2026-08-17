@@ -1285,6 +1285,7 @@ export async function handleGetLeagueTeamRoster(
         assistants: true,
         apothecary: true,
         dedicatedFans: true,
+        logoUrl: true,
         owner: { select: { coachName: true } },
       },
     })) as {
@@ -1295,6 +1296,7 @@ export async function handleGetLeagueTeamRoster(
       assistants: number;
       apothecary: boolean;
       dedicatedFans: number;
+      logoUrl: string | null;
       owner: { coachName: string | null } | null;
     } | null;
     // FR20 — stats par joueur + blessures durables + dispo prochain match.
@@ -1430,6 +1432,7 @@ export async function handleGetLeagueTeamRoster(
         assistants: meta?.assistants ?? 0,
         apothecary: meta?.apothecary ?? false,
         dedicatedFans: meta?.dedicatedFans ?? 0,
+        logoUrl: meta?.logoUrl ?? null,
         specialRules,
         regionalLeagues,
       },

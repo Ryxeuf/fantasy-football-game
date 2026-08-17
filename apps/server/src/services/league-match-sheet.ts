@@ -1379,6 +1379,8 @@ export interface MatchSheetTeam {
   readonly teamId: string;
   readonly name: string;
   readonly roster: string;
+  /** Logo uploade par le coach (null => logo derive du roster cote UI). */
+  readonly logoUrl: string | null;
   /** Ruleset de l'équipe (catalogue de compétences du staging). */
   readonly ruleset: string;
   /** Libelle de la race (ex: "Skavens"), resolu depuis le roster slug. */
@@ -1452,6 +1454,7 @@ async function loadSheetTeams(
       id: true,
       name: true,
       roster: true,
+      logoUrl: true,
       ruleset: true,
       teamValue: true,
       currentValue: true,
@@ -1486,6 +1489,7 @@ async function loadSheetTeams(
     id: string;
     name: string;
     roster: string;
+    logoUrl?: string | null;
     ruleset?: string | null;
     teamValue?: number | null;
     currentValue?: number | null;
@@ -1528,6 +1532,7 @@ async function loadSheetTeams(
       teamId: t.id,
       name: t.name,
       roster: t.roster,
+      logoUrl: t.logoUrl ?? null,
       ruleset: t.ruleset ?? "season_3",
       raceName: raceNameForRoster(t.roster),
       coachName: t.owner?.coachName ?? "",
