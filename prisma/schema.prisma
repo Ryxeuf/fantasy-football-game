@@ -436,6 +436,11 @@ model Team {
   // historique (aucune amélioration au build).
   startingPspPool Int @default(0)
 
+  // Logo d'équipe uploadé par le coach (URL publique servie par le
+  // serveur, cf. utils/team-logo-upload.ts). null => logo programmatique
+  // dérivé du roster (`renderTeamLogoSvg`).
+  logoUrl String?
+
   // Partage public opt-in (boucle d'acquisition). Le coach active le
   // partage -> `shareToken` généré ; lien public en lecture seule via
   // /api/public/teams/:token. Désactivé par défaut (vie privée).

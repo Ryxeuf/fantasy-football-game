@@ -61,6 +61,8 @@ export interface SheetTeam {
   teamId: string;
   name: string;
   roster: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
   /** Ruleset de l'équipe (catalogue de compétences du staging). */
   ruleset?: string;
   raceName: string;

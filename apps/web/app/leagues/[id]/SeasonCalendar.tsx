@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { MatchdayExport } from "./MatchdayExport";
 import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
+import TeamLogo from "../../components/TeamLogo";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -327,9 +328,15 @@ function TeamSpan({ team, side }: TeamSpanProps) {
   return (
     <span
       data-testid={`pairing-team-${side}`}
-      className="font-medium text-nuffle-anthracite"
+      className="inline-flex items-center gap-1.5 align-middle font-medium text-nuffle-anthracite"
     >
-      {team.team.name}
+      <TeamLogo
+        slug={team.team.roster}
+        logoUrl={team.team.logoUrl ?? null}
+        size={18}
+        title={team.team.name}
+      />
+      <span>{team.team.name}</span>
     </span>
   );
 }

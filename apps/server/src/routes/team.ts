@@ -135,6 +135,20 @@ router.patch(
   handleSetTeamShare,
 );
 
+// Logo d'équipe : upload (binaire brut) / retrait. Réservé au propriétaire.
+export {
+  handleUploadTeamLogo,
+  handleDeleteTeamLogo,
+} from './team-logo-handlers';
+import {
+  parseRawLogo,
+  handleUploadTeamLogo as handleUploadTeamLogoImpl,
+  handleDeleteTeamLogo as handleDeleteTeamLogoImpl,
+} from './team-logo-handlers';
+
+router.post("/:id/logo", authUser, parseRawLogo, handleUploadTeamLogoImpl);
+router.delete("/:id/logo", authUser, handleDeleteTeamLogoImpl);
+
 // Règle spéciale "Capitaine" : statut + désignation (création de la liste,
 // ou successeur si le capitaine est mort/licencié en ligue).
 export {

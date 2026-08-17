@@ -63,4 +63,31 @@ describe("TeamLogo", () => {
       b.querySelector("svg")!.outerHTML
     );
   });
+
+  // Logo uploade par le coach : prioritaire sur le logo programmatique.
+  it("affiche le logo uploade quand `logoUrl` est fourni", () => {
+    const { container } = render(
+      <TeamLogo
+        slug="skaven"
+        logoUrl="/images/team-logos/reavers-abc123abc123.png"
+        size={24}
+        title="Reikland Reavers"
+      />,
+    );
+    const img = container.querySelector("img");
+    expect(img?.getAttribute("src")).toBe(
+      "/images/team-logos/reavers-abc123abc123.png",
+    );
+    expect(img?.getAttribute("alt")).toBe("Reikland Reavers");
+    // Pas de double rendu : le SVG programmatique n'est pas monte.
+    expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("traite `logoUrl` null comme absent (retro-compat API)", () => {
+    const { container } = render(
+      <TeamLogo slug="orc" logoUrl={null} size={24} />,
+    );
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
 });

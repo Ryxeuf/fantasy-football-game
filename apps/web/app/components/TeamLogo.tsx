@@ -1,10 +1,13 @@
 /**
  * TeamLogo (O.8b — cosmetiques visuels).
  *
- * Composant React qui affiche le logo programmatique d'une equipe en
- * inlinant le SVG genere par `renderTeamLogoSvg` (game-engine). Pas de
- * fetch, pas d'asset a embarquer : le SVG est entierement reconstruit
- * a partir du slug + couleurs canoniques.
+ * Composant React qui affiche le logo d'une equipe :
+ *  - `logoUrl` renseigne (logo uploade par le coach) => l'image est
+ *    affichee, recadree en carre ;
+ *  - sinon, repli sur le logo programmatique inline genere par
+ *    `renderTeamLogoSvg` (game-engine) — pas de fetch, pas d'asset a
+ *    embarquer, le SVG est reconstruit a partir du slug + couleurs
+ *    canoniques.
  */
 import { renderTeamLogoSvg } from "@bb/game-engine";
 import type { TeamColors } from "@bb/game-engine";
@@ -23,6 +26,11 @@ interface TeamLogoProps {
   colorsOverride?: TeamColors;
   /** Classe CSS appliquee au span wrapper. */
   className?: string;
+  /**
+   * Logo uploade par le coach (URL publique servie par l'API). Quand il
+   * est absent (null/undefined), on retombe sur le logo programmatique.
+   */
+  logoUrl?: string | null;
 }
 
 export default function TeamLogo({
@@ -31,7 +39,28 @@ export default function TeamLogo({
   title,
   colorsOverride,
   className = "",
+  logoUrl,
 }: TeamLogoProps) {
+  if (logoUrl) {
+    return (
+      <span
+        className={`inline-flex items-center justify-center overflow-hidden rounded ${className}`.trim()}
+        style={{ width: size, height: size }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt={title ?? ""}
+          width={size}
+          height={size}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
+
   const svg = renderTeamLogoSvg(slug, {
     size,
     title,

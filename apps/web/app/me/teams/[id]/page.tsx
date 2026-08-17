@@ -22,6 +22,8 @@ import TeamShareToggle from "./TeamShareToggle";
 import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
 import RosterBadge from "../../../components/RosterBadge";
 import CaptainPanel from "./CaptainPanel";
+import TeamLogo from "../../../components/TeamLogo";
+import TeamLogoUploader from "../components/TeamLogoUploader";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -296,6 +298,18 @@ export default function TeamDetailPage() {
       ) : null}
       {leagueEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
+      {/* Logo d'equipe : upload / retrait. Le logo est repris devant le
+          nom de l'equipe dans les matchs, le classement et la feuille de
+          match ; sans logo, celui de la race sert de repli. */}
+      {id && team ? (
+        <TeamLogoUploader
+          teamId={id}
+          roster={team.roster}
+          teamName={team.name}
+          initialLogoUrl={team.logoUrl ?? null}
+          onChange={refetchTeam}
+        />
+      ) : null}
       {id && team ? (
         <TeamShareToggle
           teamId={id}
@@ -311,7 +325,15 @@ export default function TeamDetailPage() {
       ) : null}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold">{team?.name || t.teams.team}</h1>
+          <h1 className="flex items-center gap-2 text-2xl sm:text-3xl font-bold">
+            <TeamLogo
+              slug={team?.roster}
+              logoUrl={team?.logoUrl ?? null}
+              size={32}
+              title={team?.name}
+            />
+            <span>{team?.name || t.teams.team}</span>
+          </h1>
           <div className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.roster}:{" "}
             {team?.roster ? (

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { StandingRow } from "./types";
 import RosterBadge from "../../components/RosterBadge";
+import TeamLogo from "../../components/TeamLogo";
 
 /**
  * F1 — Classement de saison.
@@ -245,7 +246,15 @@ export function SeasonStandings({
                   {index + 1}
                 </td>
                 <td className="px-2 py-1 text-gray-900 font-medium">
-                  {row.teamName}
+                  <span className="inline-flex items-center gap-1.5">
+                    <TeamLogo
+                      slug={row.roster}
+                      logoUrl={row.logoUrl ?? null}
+                      size={18}
+                      title={row.teamName}
+                    />
+                    <span>{row.teamName}</span>
+                  </span>
                   <RosterBadge slug={row.roster} className="ml-2" />
                 </td>
                 {columns.map((col) => (

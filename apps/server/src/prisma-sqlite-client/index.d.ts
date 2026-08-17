@@ -25079,6 +25079,7 @@ export namespace Prisma {
     currentValue: number | null
     initialBudget: number | null
     startingPspPool: number | null
+    logoUrl: string | null
     isPublic: boolean | null
     shareToken: string | null
     deletedAt: Date | null
@@ -25102,6 +25103,7 @@ export namespace Prisma {
     currentValue: number | null
     initialBudget: number | null
     startingPspPool: number | null
+    logoUrl: string | null
     isPublic: boolean | null
     shareToken: string | null
     deletedAt: Date | null
@@ -25125,6 +25127,7 @@ export namespace Prisma {
     currentValue: number
     initialBudget: number
     startingPspPool: number
+    logoUrl: number
     isPublic: number
     shareToken: number
     deletedAt: number
@@ -25174,6 +25177,7 @@ export namespace Prisma {
     currentValue?: true
     initialBudget?: true
     startingPspPool?: true
+    logoUrl?: true
     isPublic?: true
     shareToken?: true
     deletedAt?: true
@@ -25197,6 +25201,7 @@ export namespace Prisma {
     currentValue?: true
     initialBudget?: true
     startingPspPool?: true
+    logoUrl?: true
     isPublic?: true
     shareToken?: true
     deletedAt?: true
@@ -25220,6 +25225,7 @@ export namespace Prisma {
     currentValue?: true
     initialBudget?: true
     startingPspPool?: true
+    logoUrl?: true
     isPublic?: true
     shareToken?: true
     deletedAt?: true
@@ -25330,6 +25336,7 @@ export namespace Prisma {
     currentValue: number
     initialBudget: number
     startingPspPool: number
+    logoUrl: string | null
     isPublic: boolean
     shareToken: string | null
     deletedAt: Date | null
@@ -25372,6 +25379,7 @@ export namespace Prisma {
     currentValue?: boolean
     initialBudget?: boolean
     startingPspPool?: boolean
+    logoUrl?: boolean
     isPublic?: boolean
     shareToken?: boolean
     deletedAt?: boolean
@@ -25407,6 +25415,7 @@ export namespace Prisma {
     currentValue?: boolean
     initialBudget?: boolean
     startingPspPool?: boolean
+    logoUrl?: boolean
     isPublic?: boolean
     shareToken?: boolean
     deletedAt?: boolean
@@ -25431,6 +25440,7 @@ export namespace Prisma {
     currentValue?: boolean
     initialBudget?: boolean
     startingPspPool?: boolean
+    logoUrl?: boolean
     isPublic?: boolean
     shareToken?: boolean
     deletedAt?: boolean
@@ -25455,12 +25465,13 @@ export namespace Prisma {
     currentValue?: boolean
     initialBudget?: boolean
     startingPspPool?: boolean
+    logoUrl?: boolean
     isPublic?: boolean
     shareToken?: boolean
     deletedAt?: boolean
   }
 
-  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
+  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
@@ -25515,6 +25526,7 @@ export namespace Prisma {
       currentValue: number
       initialBudget: number
       startingPspPool: number
+      logoUrl: string | null
       isPublic: boolean
       shareToken: string | null
       deletedAt: Date | null
@@ -25969,6 +25981,7 @@ export namespace Prisma {
     readonly currentValue: FieldRef<"Team", 'Int'>
     readonly initialBudget: FieldRef<"Team", 'Int'>
     readonly startingPspPool: FieldRef<"Team", 'Int'>
+    readonly logoUrl: FieldRef<"Team", 'String'>
     readonly isPublic: FieldRef<"Team", 'Boolean'>
     readonly shareToken: FieldRef<"Team", 'String'>
     readonly deletedAt: FieldRef<"Team", 'DateTime'>
@@ -98962,6 +98975,7 @@ export namespace Prisma {
     currentValue: 'currentValue',
     initialBudget: 'initialBudget',
     startingPspPool: 'startingPspPool',
+    logoUrl: 'logoUrl',
     isPublic: 'isPublic',
     shareToken: 'shareToken',
     deletedAt: 'deletedAt'
@@ -101399,6 +101413,7 @@ export namespace Prisma {
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
     startingPspPool?: IntFilter<"Team"> | number
+    logoUrl?: StringNullableFilter<"Team"> | string | null
     isPublic?: BoolFilter<"Team"> | boolean
     shareToken?: StringNullableFilter<"Team"> | string | null
     deletedAt?: DateTimeNullableFilter<"Team"> | Date | string | null
@@ -101433,6 +101448,7 @@ export namespace Prisma {
     currentValue?: SortOrder
     initialBudget?: SortOrder
     startingPspPool?: SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     isPublic?: SortOrder
     shareToken?: SortOrderInput | SortOrder
     deletedAt?: SortOrderInput | SortOrder
@@ -101471,6 +101487,7 @@ export namespace Prisma {
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
     startingPspPool?: IntFilter<"Team"> | number
+    logoUrl?: StringNullableFilter<"Team"> | string | null
     isPublic?: BoolFilter<"Team"> | boolean
     deletedAt?: DateTimeNullableFilter<"Team"> | Date | string | null
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -101504,6 +101521,7 @@ export namespace Prisma {
     currentValue?: SortOrder
     initialBudget?: SortOrder
     startingPspPool?: SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     isPublic?: SortOrder
     shareToken?: SortOrderInput | SortOrder
     deletedAt?: SortOrderInput | SortOrder
@@ -101535,6 +101553,7 @@ export namespace Prisma {
     currentValue?: IntWithAggregatesFilter<"Team"> | number
     initialBudget?: IntWithAggregatesFilter<"Team"> | number
     startingPspPool?: IntWithAggregatesFilter<"Team"> | number
+    logoUrl?: StringNullableWithAggregatesFilter<"Team"> | string | null
     isPublic?: BoolWithAggregatesFilter<"Team"> | boolean
     shareToken?: StringNullableWithAggregatesFilter<"Team"> | string | null
     deletedAt?: DateTimeNullableWithAggregatesFilter<"Team"> | Date | string | null
@@ -108659,6 +108678,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -108693,6 +108713,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -108725,6 +108746,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -108759,6 +108781,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -108792,6 +108815,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -108814,6 +108838,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -108837,6 +108862,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -116604,6 +116630,7 @@ export namespace Prisma {
     currentValue?: SortOrder
     initialBudget?: SortOrder
     startingPspPool?: SortOrder
+    logoUrl?: SortOrder
     isPublic?: SortOrder
     shareToken?: SortOrder
     deletedAt?: SortOrder
@@ -116639,6 +116666,7 @@ export namespace Prisma {
     currentValue?: SortOrder
     initialBudget?: SortOrder
     startingPspPool?: SortOrder
+    logoUrl?: SortOrder
     isPublic?: SortOrder
     shareToken?: SortOrder
     deletedAt?: SortOrder
@@ -116662,6 +116690,7 @@ export namespace Prisma {
     currentValue?: SortOrder
     initialBudget?: SortOrder
     startingPspPool?: SortOrder
+    logoUrl?: SortOrder
     isPublic?: SortOrder
     shareToken?: SortOrder
     deletedAt?: SortOrder
@@ -126800,6 +126829,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -126832,6 +126862,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -127952,6 +127983,7 @@ export namespace Prisma {
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
     startingPspPool?: IntFilter<"Team"> | number
+    logoUrl?: StringNullableFilter<"Team"> | string | null
     isPublic?: BoolFilter<"Team"> | boolean
     shareToken?: StringNullableFilter<"Team"> | string | null
     deletedAt?: DateTimeNullableFilter<"Team"> | Date | string | null
@@ -132872,6 +132904,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -132905,6 +132938,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -133172,6 +133206,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -133205,6 +133240,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -134227,6 +134263,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -134260,6 +134297,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -134342,6 +134380,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -134375,6 +134414,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -134603,6 +134643,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -134636,6 +134677,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -134683,6 +134725,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -134716,6 +134759,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -135876,6 +135920,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -135909,6 +135954,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136025,6 +136071,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -136058,6 +136105,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -136232,6 +136280,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136265,6 +136314,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136461,6 +136511,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -136494,6 +136545,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -136668,6 +136720,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136701,6 +136754,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136737,6 +136791,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -136770,6 +136825,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -137078,6 +137134,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -137111,6 +137168,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -137153,6 +137211,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -137186,6 +137245,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -138990,6 +139050,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -139023,6 +139084,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -139476,6 +139538,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -139509,6 +139572,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -139889,6 +139953,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -139922,6 +139987,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -140336,6 +140402,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -140369,6 +140436,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -140447,6 +140515,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -140480,6 +140549,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -140691,6 +140761,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -140724,6 +140795,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -150568,6 +150640,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     startingPspPool?: number
+    logoUrl?: string | null
     isPublic?: boolean
     shareToken?: string | null
     deletedAt?: Date | string | null
@@ -151102,6 +151175,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -151134,6 +151208,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -151166,6 +151241,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

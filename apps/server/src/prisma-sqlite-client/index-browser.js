@@ -303,6 +303,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   currentValue: 'currentValue',
   initialBudget: 'initialBudget',
   startingPspPool: 'startingPspPool',
+  logoUrl: 'logoUrl',
   isPublic: 'isPublic',
   shareToken: 'shareToken',
   deletedAt: 'deletedAt'

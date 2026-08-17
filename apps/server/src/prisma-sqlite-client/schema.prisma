@@ -363,6 +363,9 @@ model Team {
   // Pool de PSP alloué à la construction (miroir SQLite de schema.prisma).
   startingPspPool Int @default(0)
 
+  // Logo d'équipe uploadé (miroir SQLite de schema.prisma).
+  logoUrl String?
+
   // Partage public opt-in (miroir SQLite de schema.prisma).
   isPublic   Boolean @default(false)
   shareToken String? @unique
