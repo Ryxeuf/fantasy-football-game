@@ -6,7 +6,7 @@ import {
   RULESET_OPTIONS,
   type Ruleset,
 } from "../../../ruleset-utils";
-import { TEAM_SPECIAL_RULES } from "@bb/game-engine";
+import { TEAM_SPECIAL_RULES, REGIONAL_LEAGUES } from "@bb/game-engine";
 
 type GameFormat = "bb11" | "sevens";
 
@@ -88,6 +88,81 @@ function staffFromRows(rows: StaffConfigRow[] | undefined): Record<GameFormat, S
   return { bb11: pick("bb11"), sevens: pick("sevens") };
 }
 
+/** Option d'une grille de cases à cocher (catalogue de slugs). */
+interface SlugOption {
+  slug: string;
+  label: string;
+}
+
+/** Catalogue des règles spéciales d'équipe (source game-engine). */
+const SPECIAL_RULE_OPTIONS: SlugOption[] = TEAM_SPECIAL_RULES.map((r) => ({
+  slug: r.slug,
+  label: r.nameFr,
+}));
+
+/** Catalogue des ligues régionales (source game-engine). */
+const REGIONAL_LEAGUE_OPTIONS: SlugOption[] = REGIONAL_LEAGUES.map((l) => ({
+  slug: l.slug,
+  label: l.nameFr,
+}));
+
+/**
+ * Grille de cases à cocher sur un catalogue de slugs.
+ *
+ * Les slugs déjà en base mais absents du catalogue (données héritées,
+ * ex. `favoured_of`) sont conservés et affichés « hors catalogue » : on
+ * ne perd jamais une valeur existante à l'enregistrement.
+ */
+function SlugCheckboxGrid({
+  catalog,
+  selected,
+  onToggle,
+  testId,
+}: {
+  catalog: SlugOption[];
+  selected: string[];
+  onToggle: (slug: string) => void;
+  testId: string;
+}) {
+  const knownSlugs = catalog.map((o) => o.slug);
+  const options: SlugOption[] = [
+    ...catalog,
+    ...selected
+      .filter((s) => !knownSlugs.includes(s))
+      .map((s) => ({ slug: s, label: `${s} (hors catalogue)` })),
+  ];
+  return (
+    <div
+      data-testid={testId}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded px-3 py-3"
+    >
+      {options.map((opt) => (
+        <label
+          key={opt.slug}
+          className="flex items-center gap-2 text-sm cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            data-testid={`${testId}-${opt.slug}`}
+            checked={selected.includes(opt.slug)}
+            onChange={() => onToggle(opt.slug)}
+          />
+          <span>
+            {opt.label}{" "}
+            <span className="text-gray-400 text-xs">({opt.slug})</span>
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function toggleSlug(prev: string[], slug: string): string[] {
+  return prev.includes(slug)
+    ? prev.filter((s) => s !== slug)
+    : [...prev, slug];
+}
+
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
@@ -132,6 +207,9 @@ export default function EditRosterPage() {
   // Règles spéciales sélectionnées (slugs). Source de vérité du champ :
   // liste canonique TEAM_SPECIAL_RULES, sérialisée en CSV pour l'API.
   const [specialRules, setSpecialRules] = useState<string[]>([]);
+  // Ligues régionales du roster (slugs). Même modèle de saisie que les
+  // règles spéciales (cases à cocher) ; l'API attend un tableau.
+  const [regionalRules, setRegionalRules] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -163,6 +241,13 @@ export default function EditRosterPage() {
               .filter((s: string) => s.length > 0)
           : [],
       );
+      // L'API renvoie déjà un tableau (JSON parsé côté serveur) ; on
+      // reste tolérant si une valeur nulle ou non-tableau remonte.
+      setRegionalRules(
+        Array.isArray(data.regionalRules)
+          ? data.regionalRules.filter((s: unknown) => typeof s === "string")
+          : [],
+      );
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -177,9 +262,6 @@ export default function EditRosterPage() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     try {
-      const regionalRulesStr = formData.get("regionalRules") as string;
-      const regionalRules = regionalRulesStr ? regionalRulesStr.split(",").map(r => r.trim()).filter(r => r) : null;
-      
       const data = {
         name: formData.get("name"),
         nameEn: formData.get("nameEn"),
@@ -187,7 +269,8 @@ export default function EditRosterPage() {
         descriptionEn: formData.get("descriptionEn") || null,
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
-        regionalRules: regionalRules,
+        // Aucune case cochée = aucune ligue (null, comme avant).
+        regionalRules: regionalRules.length > 0 ? regionalRules : null,
         specialRules: specialRules.length > 0 ? specialRules.join(",") : null,
         naf: formData.get("naf") === "on",
         ruleset: formData.get("ruleset"),
@@ -343,65 +426,32 @@ export default function EditRosterPage() {
         </div>
         
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Règles régionales (séparées par des virgules)</label>
-          <input
-            type="text"
-            name="regionalRules"
-            defaultValue={roster.regionalRules?.join(", ") || ""}
-            placeholder="ex: elven_kingdoms_league, old_world_classic"
-            className="w-full border rounded px-3 py-2"
+          <label className="block text-sm font-medium mb-1">
+            Ligues régionales
+          </label>
+          <SlugCheckboxGrid
+            catalog={REGIONAL_LEAGUE_OPTIONS}
+            selected={regionalRules}
+            onToggle={(slug) =>
+              setRegionalRules((prev) => toggleSlug(prev, slug))
+            }
+            testId="roster-regional-leagues"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Exemples: elven_kingdoms_league, old_world_classic, badlands_brawl, lustrian_superleague, sylvanian_spotlight, underworld_challenge, worlds_edge_superleague, favoured_of, halfling_thimble_cup
+            Ligues auxquelles ce roster appartient. Sélection multiple ;
+            aucune case cochée = aucune ligue. Conditionne le recrutement
+            des Star Players et certains coups de pouce.
           </p>
         </div>
-        
+
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Règles spéciales</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded px-3 py-3">
-            {(() => {
-              const knownSlugs = TEAM_SPECIAL_RULES.map((r) => r.slug);
-              // Préserve un éventuel slug déjà en base mais absent du catalogue.
-              const extraSlugs = specialRules.filter(
-                (s) => !knownSlugs.includes(s),
-              );
-              const options = [
-                ...TEAM_SPECIAL_RULES.map((r) => ({
-                  slug: r.slug,
-                  label: r.nameFr,
-                })),
-                ...extraSlugs.map((s) => ({
-                  slug: s,
-                  label: `${s} (hors catalogue)`,
-                })),
-              ];
-              return options.map((opt) => {
-                const checked = specialRules.includes(opt.slug);
-                return (
-                  <label
-                    key={opt.slug}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() =>
-                        setSpecialRules((prev) =>
-                          prev.includes(opt.slug)
-                            ? prev.filter((s) => s !== opt.slug)
-                            : [...prev, opt.slug],
-                        )
-                      }
-                    />
-                    <span>
-                      {opt.label}{" "}
-                      <span className="text-gray-400 text-xs">({opt.slug})</span>
-                    </span>
-                  </label>
-                );
-              });
-            })()}
-          </div>
+          <SlugCheckboxGrid
+            catalog={SPECIAL_RULE_OPTIONS}
+            selected={specialRules}
+            onToggle={(slug) => setSpecialRules((prev) => toggleSlug(prev, slug))}
+            testId="roster-special-rules"
+          />
           <p className="text-xs text-gray-500 mt-1">
             Sélection multiple. Aucune case cochée = aucune règle spéciale.
           </p>
