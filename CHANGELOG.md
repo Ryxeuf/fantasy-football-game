@@ -1,3 +1,10 @@
+## [1.223.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.1...v1.223.2) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* **admin:** remonte les ligues effectives d'un roster dans les cases à cocher ([#945](https://github.com/Ryxeuf/fantasy-football-game/issues/945)) ([a92af81](https://github.com/Ryxeuf/fantasy-football-game/commit/a92af812aec1487db91c8840acf5267d26181b65)), closes [#940](https://github.com/Ryxeuf/fantasy-football-game/issues/940)
+
 ## [1.223.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.0...v1.223.1) (2026-08-17)
 
 
