@@ -1125,6 +1125,11 @@ export async function getSeasonById(seasonId: string) {
             orderBy: { createdAt: "asc" },
             include: {
               match: { select: { id: true, status: true, mode: true } },
+              // Feuille de match : seul le `status` est expose au
+              // calendrier, pour signaler « En attente validation »
+              // quand les coachs ont saisi mais que le commissaire n'a
+              // pas encore valide.
+              matchSheet: { select: { status: true } },
               homeParticipant: {
                 select: {
                   id: true,

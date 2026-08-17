@@ -63,6 +63,7 @@ import {
   listThemedSeasons,
   withdrawParticipant,
   isLeagueParticipant,
+  getSeasonById,
   LeagueWithdrawError,
 } from "./league";
 
@@ -950,6 +951,20 @@ describe("Rule: League service", () => {
       await expect(
         listThemedSeasons({ theme: "skaven_cup", themeYear: 0 }),
       ).rejects.toThrow(/themeYear/i);
+    });
+  });
+
+  describe("getSeasonById", () => {
+    it("remonte le statut de la feuille de match de chaque pairing", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({ id: seasonId });
+      await getSeasonById(seasonId);
+      const args = mockPrisma.leagueSeason.findUnique.mock.calls[0][0];
+      // Le calendrier a besoin du statut de la feuille pour signaler
+      // « En attente validation » (le status du pairing reste
+      // "scheduled" tant que le commissaire n'a pas valide).
+      expect(args.include.rounds.include.pairings.include.matchSheet).toEqual({
+        select: { status: true },
+      });
     });
   });
 
