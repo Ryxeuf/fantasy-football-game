@@ -175,7 +175,7 @@ describe("MatchReportBanner — Lot O.C.2", () => {
     expect(screen.queryByTestId("match-report-banner")).toBeNull();
   });
 
-  it("lien 'Voir details' pointe vers /match/[id]/details", async () => {
+  it("lien 'Voir details' pointe vers le replay du match", async () => {
     mockedApi.mockResolvedValueOnce({ matches: [makeMatch()] });
     render(<MatchReportBanner teamId={TEAM_ID} />);
     await waitFor(() => {
@@ -184,7 +184,9 @@ describe("MatchReportBanner — Lot O.C.2", () => {
     const link = screen.getByTestId(
       "match-report-details",
     ) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/match/match-1/details");
+    // `/match/[id]/details` n'existe pas dans l'app router : le detail
+    // d'un match termine, c'est `/replay/[id]`.
+    expect(link.getAttribute("href")).toBe("/replay/match-1");
   });
 
   it("erreur API silencieuse → pas de banner", async () => {

@@ -112,7 +112,7 @@ export default function AdminFeatureFlagDetailPage() {
       <div className="text-gray-500">
         Flag introuvable.{" "}
         <Link
-          href={"/admin/feature-flags" as never as string}
+          href="/admin/feature-flags"
           className="text-nuffle-bronze underline"
         >
           Retour
@@ -124,7 +124,7 @@ export default function AdminFeatureFlagDetailPage() {
     <div className="max-w-3xl">
       <div className="mb-4">
         <Link
-          href={"/admin/feature-flags" as never as string}
+          href="/admin/feature-flags"
           className="text-sm text-gray-500 hover:text-nuffle-bronze"
         >
           ← Retour aux feature flags

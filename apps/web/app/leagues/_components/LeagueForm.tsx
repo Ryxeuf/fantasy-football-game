@@ -1,4 +1,5 @@
 "use client";
+import type { Route } from "next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
@@ -63,7 +64,12 @@ interface LeagueFormProps {
   submitting: boolean;
   error: string | null;
   /** Href du lien "Annuler" (liste en create, detail en edit). */
-  cancelHref: string;
+  /**
+   * Route de retour : la liste des ligues, ou la fiche de la ligue en
+   * cours d'edition. `Route<T>` exige le motif exact d'une route
+   * dynamique, d'ou l'union plutot qu'un `/leagues${string}` trop large.
+   */
+  cancelHref: "/leagues" | Route<`/leagues/${string}`>;
   onSubmit: (values: LeagueFormValues) => void;
 }
 

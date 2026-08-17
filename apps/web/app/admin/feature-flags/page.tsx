@@ -258,9 +258,7 @@ export default function AdminFeatureFlagsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={
-                          `/admin/feature-flags/${flag.id}` as never as string
-                        }
+                        href={`/admin/feature-flags/${flag.id}`}
                         className="text-nuffle-bronze hover:underline"
                       >
                         {flag.userOverrideCount} override
