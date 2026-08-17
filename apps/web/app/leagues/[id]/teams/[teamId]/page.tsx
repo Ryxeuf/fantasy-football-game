@@ -172,7 +172,12 @@ export default function LeagueTeamRosterPage() {
   }, [leagueId, teamId]);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6">
+    // Le roster affiche 17 colonnes (stats + blessures + dispo) : sur une
+    // largeur de 4xl la fin du tableau ("Blessures", "Dispo") sortait du
+    // cadre et n'etait atteignable qu'en scrollant horizontalement. On
+    // ouvre la page au 7xl pour tout afficher d'un coup sur desktop ; le
+    // scroll horizontal reste le filet de securite en dessous.
+    <main className="mx-auto max-w-7xl px-4 py-6">
       <Link
         href={`/leagues/${leagueId}`}
         className="text-sm text-nuffle-bronze hover:underline"
@@ -273,17 +278,17 @@ export default function LeagueTeamRosterPage() {
           <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-gray-500">
+                <thead className="whitespace-nowrap bg-slate-50 text-xs uppercase tracking-wide text-gray-500">
                   <tr>
-                    <th className="px-3 py-2 text-left">N°</th>
-                    <th className="px-3 py-2 text-left">Nom</th>
-                    <th className="px-3 py-2 text-left">Poste</th>
+                    <th className="px-2 py-2 text-left">N°</th>
+                    <th className="px-2 py-2 text-left">Nom</th>
+                    <th className="px-2 py-2 text-left">Poste</th>
                     <th className="px-2 py-2 text-right">MA</th>
                     <th className="px-2 py-2 text-right">ST</th>
                     <th className="px-2 py-2 text-right">AG</th>
                     <th className="px-2 py-2 text-right">PA</th>
                     <th className="px-2 py-2 text-right">AV</th>
-                    <th className="px-3 py-2 text-left">Compétences</th>
+                    <th className="px-2 py-2 text-left">Compétences</th>
                     <th className="px-2 py-2 text-right" title="Touchdowns marqués">TD</th>
                     <th className="px-2 py-2 text-right" title="Éliminations provoquées sur Blocage">Élim.</th>
                     <th className="px-2 py-2 text-right" title="Passes complétées">Pas.</th>
@@ -291,7 +296,7 @@ export default function LeagueTeamRosterPage() {
                     <th className="px-2 py-2 text-right" title="Agressions">Agr.</th>
                     <th className="px-2 py-2 text-right" title="Points de Star Player gagnés">PSP</th>
                     <th
-                      className="px-3 py-2 text-left"
+                      className="px-2 py-2 text-left"
                       title="Blessures durables : BP = Blessure Persistante (cumulable), plus les réductions de caractéristique (Séquelles)"
                     >
                       Blessures
@@ -311,10 +316,10 @@ export default function LeagueTeamRosterPage() {
                             : "hover:bg-slate-50/60"
                         }`}
                       >
-                        <td className="px-3 py-2 tabular-nums text-gray-500">
+                        <td className="px-2 py-2 tabular-nums text-gray-500">
                           {p.number}
                         </td>
-                        <td className="px-3 py-2 font-medium text-nuffle-anthracite">
+                        <td className="px-2 py-2 font-medium text-nuffle-anthracite">
                           {p.name}
                           {p.dead ? (
                             <span
@@ -327,7 +332,7 @@ export default function LeagueTeamRosterPage() {
                             ""
                           )}
                         </td>
-                        <td className="px-3 py-2 text-gray-600">
+                        <td className="px-2 py-2 text-gray-600">
                           {p.positionName ?? p.position}
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
@@ -345,7 +350,7 @@ export default function LeagueTeamRosterPage() {
                         <td className="px-2 py-2 text-right tabular-nums">
                           {p.av}+
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 py-2">
                           <SkillTooltip
                             skillsString={p.skills}
                             position={p.position}
@@ -371,7 +376,7 @@ export default function LeagueTeamRosterPage() {
                           {p.spp}
                         </td>
                         <td
-                          className="px-3 py-2 text-xs text-red-700"
+                          className="px-2 py-2 text-xs text-red-700"
                           data-testid={`player-injuries-${p.id}`}
                         >
                           {injuries || <span className="text-gray-300">—</span>}
