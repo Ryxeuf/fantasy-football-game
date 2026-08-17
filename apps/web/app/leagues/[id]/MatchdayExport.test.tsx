@@ -48,7 +48,7 @@ const round: LeagueRoundDetail = {
 function renderExport() {
   render(
     <LanguageProvider>
-      <MatchdayExport round={round} statusLabel={(s) => s} />
+      <MatchdayExport round={round} statusLabel={(p) => p.status} />
     </LanguageProvider>,
   );
 }

@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useLanguage } from "../../contexts/LanguageContext";
-import type { LeagueRoundDetail } from "./types";
+import type { LeagueRoundDetail, LeaguePairingDetail } from "./types";
 
 // Export d'une journee (W-C). Feuille imprimable (window.print scope via
 // `.matchday-print-area` dans globals.css) + telechargement PDF structure
@@ -13,8 +13,12 @@ import type { LeagueRoundDetail } from "./types";
 interface MatchdayExportProps {
   round: LeagueRoundDetail;
   leagueName?: string;
-  /** Libelle de statut d'un pairing (memo SeasonCalendar). */
-  statusLabel: (status: string) => string;
+  /**
+   * Libelle de statut d'un pairing (memo SeasonCalendar). Recoit le
+   * pairing complet : le statut affiche depend aussi de la feuille de
+   * match (« En attente validation »), pas seulement de `status`.
+   */
+  statusLabel: (pairing: LeaguePairingDetail) => string;
 }
 
 function formatDate(iso: string | null, language: string): string | null {
@@ -80,7 +84,7 @@ export function MatchdayExport({
         p.homeParticipant.team.name,
         "vs",
         p.awayParticipant.team.name,
-        statusLabel(p.status),
+        statusLabel(p),
       ]),
       styles: { fontSize: 10 },
       headStyles: { fillColor: [40, 40, 40] },
@@ -172,7 +176,7 @@ export function MatchdayExport({
                           {p.awayParticipant.team.name}
                         </td>
                         <td className="py-1 pl-2 text-right text-gray-500">
-                          {statusLabel(p.status)}
+                          {statusLabel(p)}
                         </td>
                       </tr>
                     ))}

@@ -94,7 +94,22 @@ export interface LeaguePairingDetail {
   bonusPointsHome?: number;
   bonusPointsAway?: number;
   bonusBreakdown?: unknown;
+  /**
+   * Feuille de match associée (statut seul). Permet d'afficher « En
+   * attente validation » quand les coachs ont saisi mais que le
+   * commissaire n'a pas encore validé. Optionnel : rétro-compat API.
+   */
+  matchSheet?: { status: LeagueMatchSheetStatus | string } | null;
 }
+
+/** Workflow de la feuille de match (cf. `LeagueMatchSheet.status`). */
+export type LeagueMatchSheetStatus =
+  | "draft"
+  | "submitted_home"
+  | "submitted_away"
+  | "both_submitted"
+  | "validated"
+  | "invalidated";
 
 export interface LeagueRoundDetail {
   id: string;

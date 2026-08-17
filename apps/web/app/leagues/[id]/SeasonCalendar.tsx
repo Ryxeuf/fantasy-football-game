@@ -65,6 +65,31 @@ export function groupPairingsByPool(
   );
 }
 
+/**
+ * Feuille saisie par les coachs mais pas encore validée par le
+ * commissaire : le statut du pairing reste « Programmé » (il ne bascule
+ * qu'à la validation), ce qui ne dit rien au coach qui vient de saisir.
+ * On expose donc un libellé dédié, dérivé du `status` de la feuille.
+ *
+ * Retourne `null` quand il n'y a rien à signaler (pas de feuille,
+ * brouillon, déjà validée ou invalidée).
+ */
+export function matchSheetPendingLabel(
+  sheetStatus: string | null | undefined,
+): string | null {
+  switch (sheetStatus) {
+    case "both_submitted":
+      return "En attente validation";
+    // Un seul des deux coachs a validé sa saisie : la feuille attend
+    // toujours le commissaire, mais elle n'est pas encore complète.
+    case "submitted_home":
+    case "submitted_away":
+      return "En attente validation (1/2)";
+    default:
+      return null;
+  }
+}
+
 function formatDate(iso: string | null, locale: string): string | null {
   if (!iso) return null;
   try {
@@ -142,7 +167,10 @@ export function SeasonCalendar({
                 </span>
                 <MatchdayExport
                   round={round}
-                  statusLabel={(s) => pairingStatusBadge(s, t).label}
+                  statusLabel={(p) =>
+                    matchSheetPendingLabel(p.matchSheet?.status) ??
+                    pairingStatusBadge(p.status, t).label
+                  }
                 />
               </div>
             </div>
@@ -235,6 +263,9 @@ function PairingRow({
     pairing.status === "forfeit_away";
 
   const statusBadge = pairingStatusBadge(pairing.status, t);
+  // La feuille en attente de validation prime sur le statut du pairing
+  // (qui reste « Programmé » jusqu'à la validation du commissaire).
+  const pendingLabel = matchSheetPendingLabel(pairing.matchSheet?.status);
 
   return (
     <li
@@ -258,11 +289,21 @@ function PairingRow({
         />
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span
-          className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${statusBadge.className}`}
-        >
-          {statusBadge.label}
-        </span>
+        {pendingLabel ? (
+          <span
+            data-testid={`pairing-sheet-pending-${pairing.id}`}
+            title="Feuille de match saisie par les coachs, en attente de validation par le commissaire"
+            className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800"
+          >
+            {pendingLabel}
+          </span>
+        ) : (
+          <span
+            className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${statusBadge.className}`}
+          >
+            {statusBadge.label}
+          </span>
+        )}
         {canOpenSheet && !cancelled ? (
           <Link
             href={`/leagues/pairings/${pairing.id}/sheet`}
