@@ -347,6 +347,33 @@ describe("recordOfflineLeagueResult (option b)", () => {
     });
   });
 
+  it("deux Blessures Persistantes du même joueur dans le même match se cumulent", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", ma: 8, st: 2, ag: 3, pa: 4, av: 8 },
+    ]);
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 0,
+      scoreAway: 0,
+      casualtiesHome: 2,
+      casualtiesAway: 0,
+      injuries: [
+        { teamPlayerId: "p1", type: "niggling" },
+        { teamPlayerId: "p1", type: "niggling" },
+      ],
+    });
+    // Deux increments distincts (et non un seul set) : le compteur BP du
+    // joueur passe donc bien de N a N+2.
+    const bpUpdates = m.tpUpdate.mock.calls
+      .map((c) => (c[0] as { data: Record<string, unknown> }).data)
+      .filter((d) => "nigglingInjuries" in d);
+    expect(bpUpdates).toEqual([
+      { missNextMatch: true, nigglingInjuries: { increment: 1 } },
+      { missNextMatch: true, nigglingInjuries: { increment: 1 } },
+    ]);
+  });
+
   it("A68 : une Séquelle mute la caractéristique de base (compteur + carac)", async () => {
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([

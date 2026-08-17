@@ -248,7 +248,9 @@ export default function TeamCareerPage() {
                     <th className="py-2 pr-3">Int.</th>
                     <th className="py-2 pr-3">MVP</th>
                     <th className="py-2 pr-3">Lvl-ups</th>
-                    <th className="py-2 pr-3">Bles. graves</th>
+                    <th className="py-2 pr-3" title="Blessures Persistantes cumulées">
+                      BP
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -323,10 +325,7 @@ export default function TeamCareerPage() {
                     <CareerStatCell label="Int." value={p.totalInterceptions} />
                     <CareerStatCell label="MVP" value={p.totalMvpAwards} />
                     <CareerStatCell label="Lvl-ups" value={p.advancementsCount} />
-                    <CareerStatCell
-                      label="Bles. graves"
-                      value={p.nigglingInjuries}
-                    />
+                    <CareerStatCell label="BP" value={p.nigglingInjuries} />
                   </div>
                 </div>
               ))}

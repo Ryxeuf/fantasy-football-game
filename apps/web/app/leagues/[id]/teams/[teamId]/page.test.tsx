@@ -136,13 +136,37 @@ describe("LeagueTeamRosterPage", () => {
       screen.getByTestId("player-injuries-pl1").textContent,
     ).toContain("—");
 
-    // Boris : rate le prochain match, -1 M + 2 séquelles.
+    // Boris : rate le prochain match, -1 M + 2 Blessures Persistantes.
     expect(
       screen.getByTestId("player-availability-pl2").textContent,
     ).toContain("Absent");
     const borisInjuries = screen.getByTestId("player-injuries-pl2").textContent;
     expect(borisInjuries).toContain("-1 M");
-    expect(borisInjuries).toContain("2 séquelles");
+    // Les BP se cumulent et s'affichent avec le sigle officiel (invariable).
+    expect(borisInjuries).toContain("2 BP");
+    expect(borisInjuries).not.toContain("séquelle");
+  });
+
+  it("note une Blessure Persistante unique « 1 BP » (sigle invariable)", async () => {
+    apiRequestMock.mockResolvedValue({
+      ...ROSTER,
+      players: [
+        {
+          ...ROSTER.players[1],
+          nigglingInjuries: 1,
+          statReductions: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+        },
+      ],
+    });
+    render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+    );
+    expect(screen.getByTestId("player-injuries-pl2").textContent).toBe("1 BP");
   });
 
   it("affiche l'erreur renvoyée par l'API (ex: 403 non inscrit)", async () => {
