@@ -68,7 +68,7 @@ const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
   { value: "", label: "—" },
   { value: "badly_hurt", label: "Commotion" },
   { value: "mng", label: "Amoché" },
-  { value: "niggling", label: "Blessure Sérieuse" },
+  { value: "niggling", label: "Blessure Persistante (BP)" },
   { value: "stat_loss", label: "Séquelle" },
   { value: "dead", label: "Mort" },
 ];

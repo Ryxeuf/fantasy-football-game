@@ -74,7 +74,15 @@ function deathOriginLabel(p: RosterPlayer): string {
   return "Décédé";
 }
 
-/** FR20 — libellé compact des blessures permanentes (BP + séquelles). */
+/**
+ * FR20 — libellé compact des blessures durables d'un joueur.
+ *
+ * Les Blessures Persistantes sont notées « N BP » (abréviation officielle
+ * de la feuille d'équipe) et se **cumulent** : le compteur serveur est
+ * incrémenté à chaque nouvelle BP, on affiche donc le total tel quel
+ * (« 1 BP », « 2 BP », …) sans pluriel — « BP » est un sigle invariable.
+ * Les réductions de caractéristique (Séquelles) restent affichées à part.
+ */
 function lastingInjuriesLabel(p: RosterPlayer): string {
   const parts: string[] = [];
   const r = p.statReductions;
@@ -85,11 +93,8 @@ function lastingInjuriesLabel(p: RosterPlayer): string {
     if (r.pa > 0) parts.push(`+${r.pa} CP`);
     if (r.av > 0) parts.push(`-${r.av} AR`);
   }
-  if ((p.nigglingInjuries ?? 0) > 0) {
-    parts.push(
-      `${p.nigglingInjuries} séquelle${(p.nigglingInjuries ?? 0) > 1 ? "s" : ""}`,
-    );
-  }
+  const bp = p.nigglingInjuries ?? 0;
+  if (bp > 0) parts.push(`${bp} BP`);
   return parts.join(", ");
 }
 
@@ -285,7 +290,12 @@ export default function LeagueTeamRosterPage() {
                     <th className="px-2 py-2 text-right" title="Interceptions">Int.</th>
                     <th className="px-2 py-2 text-right" title="Agressions">Agr.</th>
                     <th className="px-2 py-2 text-right" title="Points de Star Player gagnés">PSP</th>
-                    <th className="px-3 py-2 text-left" title="Blessures permanentes (BP, séquelles)">Blessures</th>
+                    <th
+                      className="px-3 py-2 text-left"
+                      title="Blessures durables : BP = Blessure Persistante (cumulable), plus les réductions de caractéristique (Séquelles)"
+                    >
+                      Blessures
+                    </th>
                     <th className="px-2 py-2 text-center" title="Disponible pour le prochain match">Dispo</th>
                   </tr>
                 </thead>
