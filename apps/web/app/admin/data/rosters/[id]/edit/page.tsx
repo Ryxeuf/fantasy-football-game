@@ -6,7 +6,13 @@ import {
   RULESET_OPTIONS,
   type Ruleset,
 } from "../../../ruleset-utils";
-import { TEAM_SPECIAL_RULES, REGIONAL_LEAGUES } from "@bb/game-engine";
+import {
+  REGIONAL_LEAGUE_OPTIONS,
+  SPECIAL_RULE_OPTIONS,
+  SlugCheckboxGrid,
+  parseSlugList,
+  toggleSlug,
+} from "../../_components/SlugCheckboxGrid";
 
 type GameFormat = "bb11" | "sevens";
 
@@ -35,7 +41,13 @@ type Roster = {
   descriptionEn?: string | null;
   budget: number;
   tier: string;
-  regionalRules?: string[] | null;
+  regionalRules?: string[] | string | null;
+  /**
+   * Provenance des ligues renvoyees : "db" = valeur enregistree,
+   * "roster-defaults" = defaut du catalogue (rien en base). Optionnel
+   * pour retro-compat avec une API anterieure.
+   */
+  regionalRulesSource?: "db" | "roster-defaults";
   specialRules?: string | null;
   naf: boolean;
   staffConfigs?: StaffConfigRow[];
@@ -88,81 +100,6 @@ function staffFromRows(rows: StaffConfigRow[] | undefined): Record<GameFormat, S
   return { bb11: pick("bb11"), sevens: pick("sevens") };
 }
 
-/** Option d'une grille de cases à cocher (catalogue de slugs). */
-interface SlugOption {
-  slug: string;
-  label: string;
-}
-
-/** Catalogue des règles spéciales d'équipe (source game-engine). */
-const SPECIAL_RULE_OPTIONS: SlugOption[] = TEAM_SPECIAL_RULES.map((r) => ({
-  slug: r.slug,
-  label: r.nameFr,
-}));
-
-/** Catalogue des ligues régionales (source game-engine). */
-const REGIONAL_LEAGUE_OPTIONS: SlugOption[] = REGIONAL_LEAGUES.map((l) => ({
-  slug: l.slug,
-  label: l.nameFr,
-}));
-
-/**
- * Grille de cases à cocher sur un catalogue de slugs.
- *
- * Les slugs déjà en base mais absents du catalogue (données héritées,
- * ex. `favoured_of`) sont conservés et affichés « hors catalogue » : on
- * ne perd jamais une valeur existante à l'enregistrement.
- */
-function SlugCheckboxGrid({
-  catalog,
-  selected,
-  onToggle,
-  testId,
-}: {
-  catalog: SlugOption[];
-  selected: string[];
-  onToggle: (slug: string) => void;
-  testId: string;
-}) {
-  const knownSlugs = catalog.map((o) => o.slug);
-  const options: SlugOption[] = [
-    ...catalog,
-    ...selected
-      .filter((s) => !knownSlugs.includes(s))
-      .map((s) => ({ slug: s, label: `${s} (hors catalogue)` })),
-  ];
-  return (
-    <div
-      data-testid={testId}
-      className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded px-3 py-3"
-    >
-      {options.map((opt) => (
-        <label
-          key={opt.slug}
-          className="flex items-center gap-2 text-sm cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            data-testid={`${testId}-${opt.slug}`}
-            checked={selected.includes(opt.slug)}
-            onChange={() => onToggle(opt.slug)}
-          />
-          <span>
-            {opt.label}{" "}
-            <span className="text-gray-400 text-xs">({opt.slug})</span>
-          </span>
-        </label>
-      ))}
-    </div>
-  );
-}
-
-function toggleSlug(prev: string[], slug: string): string[] {
-  return prev.includes(slug)
-    ? prev.filter((s) => s !== slug)
-    : [...prev, slug];
-}
-
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
@@ -210,6 +147,10 @@ export default function EditRosterPage() {
   // Ligues régionales du roster (slugs). Même modèle de saisie que les
   // règles spéciales (cases à cocher) ; l'API attend un tableau.
   const [regionalRules, setRegionalRules] = useState<string[]>([]);
+  // Provenance des ligues cochees a l'ouverture (cf. `Roster`).
+  const [regionalRulesSource, setRegionalRulesSource] = useState<
+    "db" | "roster-defaults" | null
+  >(null);
 
   useEffect(() => {
     loadData();
@@ -243,11 +184,11 @@ export default function EditRosterPage() {
       );
       // L'API renvoie déjà un tableau (JSON parsé côté serveur) ; on
       // reste tolérant si une valeur nulle ou non-tableau remonte.
-      setRegionalRules(
-        Array.isArray(data.regionalRules)
-          ? data.regionalRules.filter((s: unknown) => typeof s === "string")
-          : [],
-      );
+      // L'API renvoie les ligues EFFECTIVES (base, sinon defaut du roster).
+      // Parse tolerant : un CSV ou un JSON serialise historique doit cocher
+      // les memes cases qu'un tableau natif.
+      setRegionalRules(parseSlugList(data.regionalRules));
+      setRegionalRulesSource(data.regionalRulesSource ?? null);
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -442,6 +383,16 @@ export default function EditRosterPage() {
             aucune case cochée = aucune ligue. Conditionne le recrutement
             des Star Players et certains coups de pouce.
           </p>
+          {regionalRulesSource === "roster-defaults" ? (
+            <p
+              data-testid="roster-regional-leagues-inherited"
+              className="text-xs text-amber-700 mt-1"
+            >
+              Ces ligues viennent du catalogue par défaut du roster (rien
+              n&apos;est encore enregistré en base). Enregistrer la fiche les
+              figera telles quelles.
+            </p>
+          ) : null}
         </div>
 
         <div className="mb-6">

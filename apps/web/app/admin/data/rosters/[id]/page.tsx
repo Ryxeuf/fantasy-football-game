@@ -9,6 +9,13 @@ import {
   type Ruleset,
 } from "../../ruleset-utils";
 import { getTeamSpecialRuleBySlug } from "@bb/game-engine";
+import {
+  REGIONAL_LEAGUE_OPTIONS,
+  SPECIAL_RULE_OPTIONS,
+  SlugCheckboxGrid,
+  parseSlugList,
+  toggleSlug,
+} from "../_components/SlugCheckboxGrid";
 
 type StaffConfig = {
   format: string;
@@ -49,7 +56,9 @@ type Roster = {
   descriptionEn?: string | null;
   budget: number;
   tier: string;
-  regionalRules?: string[] | null;
+  regionalRules?: string[] | string | null;
+  /** "db" = valeur enregistree, "roster-defaults" = defaut du catalogue. */
+  regionalRulesSource?: "db" | "roster-defaults";
   specialRules?: string | null;
   naf: boolean;
   createdAt: string;
@@ -136,6 +145,9 @@ export default function AdminRosterDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  // Ligues et regles speciales du formulaire inline (cases a cocher).
+  const [regionalRules, setRegionalRules] = useState<string[]>([]);
+  const [specialRules, setSpecialRules] = useState<string[]>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [targetRuleset, setTargetRuleset] = useState<Ruleset>("season_3");
   const [duplicating, setDuplicating] = useState(false);
@@ -161,6 +173,9 @@ export default function AdminRosterDetailPage() {
       }
       const { roster: data } = await fetchJSON(`/admin/data/rosters/${id}`);
       setRoster(data);
+      // L'API renvoie les ligues EFFECTIVES (base, sinon defaut du roster).
+      setRegionalRules(parseSlugList(data.regionalRules));
+      setSpecialRules(parseSlugList(data.specialRules));
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -173,9 +188,6 @@ export default function AdminRosterDetailPage() {
     if (!roster) return;
     const formData = new FormData(e.currentTarget);
     try {
-      const regionalRulesStr = formData.get("regionalRules") as string;
-      const regionalRules = regionalRulesStr ? regionalRulesStr.split(",").map(r => r.trim()).filter(r => r) : null;
-      
       const data = {
         name: formData.get("name"),
         nameEn: formData.get("nameEn"),
@@ -183,8 +195,8 @@ export default function AdminRosterDetailPage() {
         descriptionEn: formData.get("descriptionEn") || null,
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
-        regionalRules: regionalRules,
-        specialRules: formData.get("specialRules") || null,
+        regionalRules: regionalRules.length > 0 ? regionalRules : null,
+        specialRules: specialRules.length > 0 ? specialRules.join(",") : null,
         naf: formData.get("naf") === "on",
         ruleset: formData.get("ruleset"),
       };
@@ -415,31 +427,47 @@ export default function AdminRosterDetailPage() {
             
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Règles régionales (séparées par des virgules)
+                Ligues régionales
               </label>
-              <input
-                type="text"
-                name="regionalRules"
-                defaultValue={roster.regionalRules?.join(", ") || ""}
-                placeholder="ex: elven_kingdoms_league, old_world_classic"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              <SlugCheckboxGrid
+                catalog={REGIONAL_LEAGUE_OPTIONS}
+                selected={regionalRules}
+                onToggle={(slug) =>
+                  setRegionalRules((prev) => toggleSlug(prev, slug))
+                }
+                testId="roster-detail-regional-leagues"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Exemples: elven_kingdoms_league, old_world_classic, badlands_brawl, lustrian_superleague, sylvanian_spotlight, underworld_challenge, worlds_edge_superleague, favoured_of, halfling_thimble_cup
+                Ligues auxquelles ce roster appartient. Sélection multiple ;
+                aucune case cochée = aucune ligue.
               </p>
+              {roster.regionalRulesSource === "roster-defaults" ? (
+                <p
+                  data-testid="roster-detail-regional-leagues-inherited"
+                  className="text-xs text-amber-700 mt-1"
+                >
+                  Ces ligues viennent du catalogue par défaut du roster (rien
+                  n&apos;est encore enregistré en base). Enregistrer la fiche
+                  les figera telles quelles.
+                </p>
+              ) : null}
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Règles spéciales
               </label>
-              <input
-                type="text"
-                name="specialRules"
-                defaultValue={roster.specialRules || ""}
-                placeholder="ex: NONE"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              <SlugCheckboxGrid
+                catalog={SPECIAL_RULE_OPTIONS}
+                selected={specialRules}
+                onToggle={(slug) =>
+                  setSpecialRules((prev) => toggleSlug(prev, slug))
+                }
+                testId="roster-detail-special-rules"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Sélection multiple. Aucune case cochée = aucune règle spéciale.
+              </p>
             </div>
             
             <div className="flex gap-3">
@@ -529,11 +557,11 @@ export default function AdminRosterDetailPage() {
           </div>
         )}
         
-        {roster.regionalRules && roster.regionalRules.length > 0 && (
+        {parseSlugList(roster.regionalRules).length > 0 && (
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="text-sm font-medium text-gray-600 mb-2">Règles régionales</div>
+            <div className="text-sm font-medium text-gray-600 mb-2">Ligues régionales</div>
             <div className="flex flex-wrap gap-2">
-              {roster.regionalRules.map((rule, idx) => (
+              {parseSlugList(roster.regionalRules).map((rule, idx) => (
                 <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                   {rule}
                 </span>

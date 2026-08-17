@@ -14,7 +14,8 @@ import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
 import { toCanonicalAccessCsv } from "../services/skill-access";
 import { revalidateRosterPages } from "../services/revalidate-web";
-import { invalidateRosterCaches } from "./public-rosters";
+import { invalidateRosterCaches, parseSlugList } from "./public-rosters";
+import { getRegionalRulesForTeam } from "@bb/game-engine";
 import { validate, validateQuery } from "../middleware/validate";
 
 /**
@@ -361,6 +362,33 @@ router.delete("/skills/:id", async (req, res) => {
 // ROSTERS (Équipes)
 // =============================================================================
 
+/**
+ * Ligues regionales EFFECTIVES d'un roster, telles que le reste de l'app les
+ * applique (cf. `resolveRegionalLeagues` cote public) : la valeur en base
+ * quand elle est renseignee, sinon le defaut du catalogue game-engine pour
+ * ce couple roster/ruleset.
+ *
+ * Sans ce repli, l'admin affichait des cases vides pour la quasi-totalite
+ * des rosters : le seed n'ecrit `Roster.regionalRules` que pour les
+ * definitions qui le portent (1 seul roster en season_3), toutes les autres
+ * restant NULL alors que les pages publiques affichent bien des ligues.
+ *
+ * `source` dit d'ou vient la liste, pour que l'admin puisse signaler qu'un
+ * enregistrement va materialiser le defaut en base.
+ */
+export function effectiveRegionalRules(
+  raw: unknown,
+  rosterSlug: string,
+  ruleset: string,
+): { rules: string[]; source: "db" | "roster-defaults" } {
+  const fromDb = parseSlugList(raw);
+  if (fromDb.length > 0) return { rules: fromDb, source: "db" };
+  return {
+    rules: getRegionalRulesForTeam(rosterSlug, ruleset as Ruleset),
+    source: "roster-defaults",
+  };
+}
+
 router.get("/rosters", validateQuery(adminRostersQuerySchema), async (req, res) => {
   try {
     const { ruleset } = req.query;
@@ -397,11 +425,20 @@ router.get("/rosters", validateQuery(adminRostersQuerySchema), async (req, res) 
         { name: "asc" },
       ],
     });
-    // Parse regionalRules JSON string to array for each roster
-    const rostersWithParsedRules = rosters.map((roster: any) => ({
-      ...roster,
-      regionalRules: roster.regionalRules ? JSON.parse(roster.regionalRules) : null,
-    }));
+    // Ligues effectives (base sinon defaut du roster) + provenance. Parse
+    // tolerant : un CSV historique ne doit pas faire echouer la liste.
+    const rostersWithParsedRules = rosters.map((roster: any) => {
+      const { rules, source } = effectiveRegionalRules(
+        roster.regionalRules,
+        roster.slug,
+        roster.ruleset,
+      );
+      return {
+        ...roster,
+        regionalRules: rules,
+        regionalRulesSource: source,
+      };
+    });
     res.json({ rosters: rostersWithParsedRules });
   } catch (error: any) {
     serverLog.error("Erreur lors de la récupération des rosters:", error);
@@ -442,10 +479,16 @@ router.get("/rosters/:id", async (req, res) => {
     if (!roster) {
       return res.status(404).json({ error: "Roster non trouvé" });
     }
-    // Parse regionalRules JSON string to array
+    // Idem detail : l'admin doit cocher ce que l'app applique reellement.
+    const { rules, source } = effectiveRegionalRules(
+      roster.regionalRules,
+      roster.slug,
+      roster.ruleset,
+    );
     const rosterWithParsedRules = {
       ...roster,
-      regionalRules: roster.regionalRules ? JSON.parse(roster.regionalRules) : null,
+      regionalRules: rules,
+      regionalRulesSource: source,
     };
     res.json({ roster: rosterWithParsedRules });
   } catch (error: any) {
