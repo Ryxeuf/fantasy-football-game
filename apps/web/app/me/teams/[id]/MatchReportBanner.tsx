@@ -10,7 +10,8 @@
  *   - Score (myScore - opponentScore) colorise selon victoire/defaite/nul.
  *   - Coach + nom de l'equipe adverse.
  *   - Date relative ("il y a 2j").
- *   - Bouton "Voir details" → /match/[id]/details.
+ *   - Bouton "Voir details" → /replay/[id] (le banner ne montre que des
+ *     matchs `completed`, dont le replay est la page de detail).
  *   - Dismiss avec flag localStorage par teamId+matchId (eviter
  *     re-affichage permanent).
  *
@@ -181,7 +182,7 @@ export function MatchReportBanner({ teamId }: Props): JSX.Element | null {
         </span>
         <Link
           data-testid="match-report-details"
-          href={`/match/${match.id}/details`}
+          href={`/replay/${match.id}`}
           className="rounded border border-white/30 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
         >
           Voir détails →

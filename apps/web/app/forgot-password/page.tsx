@@ -12,6 +12,7 @@
  * prod, ce champ est toujours null cote serveur.
  */
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -65,7 +66,9 @@ export default function ForgotPasswordPage(): JSX.Element {
             <p className="mt-3 break-all">
               <span className="font-semibold">Dev link :</span>{" "}
               <Link
-                href={devLink.replace(/^https?:\/\/[^/]+/, "")}
+                // Lien de dev renvoye par l'API : chemin runtime, hors de
+                // portee des routes typees.
+                href={devLink.replace(/^https?:\/\/[^/]+/, "") as Route}
                 data-testid="forgot-dev-link"
                 className="underline"
               >

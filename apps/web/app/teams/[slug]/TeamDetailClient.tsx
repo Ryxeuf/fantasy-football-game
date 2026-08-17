@@ -1,4 +1,5 @@
 "use client";
+import type { Route } from "next";
 import {
   getFormatConstraints,
   defaultStaffConfig,
@@ -180,7 +181,10 @@ export default function TeamDetailClient({
   // omis quand c'est l'edition par defaut (URL propre, canonical season_3).
   const positionRulesetQuery =
     actualRuleset === DEFAULT_RULESET ? "" : `?ruleset=${actualRuleset}`;
-  const positionHref = (positionSlug: string) =>
+  // Route typee : `/teams/[slug]/[position]` + suffixe de query optionnel.
+  const positionHref = (
+    positionSlug: string,
+  ): Route<`/teams/${string}/${string}`> =>
     `/teams/${slug}/${stripRosterPrefix(positionSlug, slug)}${positionRulesetQuery}`;
 
   return (

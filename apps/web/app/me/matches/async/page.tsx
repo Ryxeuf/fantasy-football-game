@@ -112,7 +112,7 @@ export default function AsyncMatchesPage(): JSX.Element {
           >
             <div>
               <Link
-                href={`/play/${m.id}` as never as string}
+                href={`/play/${m.id}`}
                 className="font-mono text-sm text-slate-200 hover:underline"
               >
                 #{m.id.slice(0, 8)}

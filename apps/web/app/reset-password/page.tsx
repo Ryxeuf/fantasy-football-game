@@ -60,7 +60,7 @@ export default function ResetPasswordPage(): JSX.Element {
         newPassword: password,
       })) as ResetResponse;
       router.push(
-        "/login?message=" + encodeURIComponent("Mot de passe reinitialise — connecte-toi avec ton nouveau mot de passe."),
+        `/login?message=${encodeURIComponent("Mot de passe reinitialise — connecte-toi avec ton nouveau mot de passe.")}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur reseau");

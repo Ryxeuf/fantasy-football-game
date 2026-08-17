@@ -1,4 +1,5 @@
 "use client";
+import type { Route } from "next";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -26,7 +27,8 @@ interface PositionComparatorClientProps {
   initialSelected: string[];
 }
 
-function positionUrl(p: ListedPosition): string {
+/** Route typee `/teams/[slug]/[position]` du poste. */
+function positionUrl(p: ListedPosition): Route<`/teams/${string}/${string}`> {
   return `/teams/${p.rosterSlug}/${stripRosterPrefix(p.slug, p.rosterSlug)}`;
 }
 

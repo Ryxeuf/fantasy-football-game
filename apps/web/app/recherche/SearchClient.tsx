@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -184,7 +185,9 @@ export default function SearchClient({ records }: SearchClientProps): JSX.Elemen
                 return (
                   <li key={hit.record.id}>
                     <Link
-                      href={hit.record.url}
+                      // L'URL vient de l'index de recherche (donnee, pas
+                      // litteral) : hors de portee des routes typees.
+                      href={hit.record.url as Route}
                       className="group block rounded-xl border border-nuffle-bronze/20 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-nuffle-gold/60 hover:shadow-sm"
                     >
                       <div className="flex items-center gap-2">

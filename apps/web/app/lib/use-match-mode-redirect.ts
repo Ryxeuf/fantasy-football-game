@@ -20,6 +20,7 @@
 
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -52,12 +53,21 @@ function isLiveValid(status: string, scheduledAtMs: number, nowMs: number): bool
   return false;
 }
 
+/**
+ * Cibles possibles de la redirection. `Route` sans parametre ne couvre que
+ * les routes statiques : chaque motif dynamique passe donc son literal.
+ */
+type MatchModeRoute =
+  | Route<`/pro-league/matches/${string}`>
+  | Route<`/pro-league/matches/${string}/live`>
+  | Route<`/pro-league/matches/${string}/replay`>;
+
 function targetPathFor(
   matchId: string,
   status: string,
   scheduledAtMs: number,
   nowMs: number,
-): string | null {
+): MatchModeRoute | null {
   if (isLiveValid(status, scheduledAtMs, nowMs)) {
     return `/pro-league/matches/${matchId}/live`;
   }
