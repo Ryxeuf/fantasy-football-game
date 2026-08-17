@@ -1,3 +1,10 @@
+## [1.222.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.222.0...v1.222.1) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* **league:** élargit le roster d'équipe pour voir toutes les colonnes ([#942](https://github.com/Ryxeuf/fantasy-football-game/issues/942)) ([d326770](https://github.com/Ryxeuf/fantasy-football-game/commit/d326770e53b98e0da4195ca36f6f2ec77436243a))
+
 ## [1.222.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.221.0...v1.222.0) (2026-08-17)
 
 
