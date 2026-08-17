@@ -1,3 +1,10 @@
+## [1.220.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.219.1...v1.220.0) (2026-08-17)
+
+
+### ✨ Features
+
+* **league:** signale « En attente validation » sur la page de la journée ([#939](https://github.com/Ryxeuf/fantasy-football-game/issues/939)) ([c88c14c](https://github.com/Ryxeuf/fantasy-football-game/commit/c88c14cb253cc482e2b2dcc674a1743a0fefdb8e))
+
 ## [1.219.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.219.0...v1.219.1) (2026-08-17)
 
 
