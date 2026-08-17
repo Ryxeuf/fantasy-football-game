@@ -1,3 +1,10 @@
+## [1.222.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.221.0...v1.222.0) (2026-08-17)
+
+
+### ✨ Features
+
+* **teams:** budget saisissable librement à la création d'équipe ([#941](https://github.com/Ryxeuf/fantasy-football-game/issues/941)) ([f5ee9df](https://github.com/Ryxeuf/fantasy-football-game/commit/f5ee9df2e583a14c00206c130d05c4d507b3c546))
+
 ## [1.221.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.220.0...v1.221.0) (2026-08-17)
 
 
