@@ -27,6 +27,7 @@ const ROSTER = {
   tier: "I",
   // Une ligue du catalogue + un slug hérité hors catalogue.
   regionalRules: ["elven_kingdoms_league", "favoured_of"],
+  regionalRulesSource: "db",
   specialRules: null,
   naf: true,
   staffConfigs: [],
@@ -35,15 +36,17 @@ const ROSTER = {
 const originalFetch = global.fetch;
 
 /** Réponses successives : /auth/me puis le roster. */
-function mockFetch(): ReturnType<typeof vi.fn> {
+function mockFetch(
+  roster: Record<string, unknown> = ROSTER,
+): ReturnType<typeof vi.fn> {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (String(url).includes("/auth/me")) {
       return { ok: true, json: async () => ({ user: { roles: ["admin"] } }) };
     }
     if (init?.method === "PUT") {
-      return { ok: true, json: async () => ({ roster: ROSTER }) };
+      return { ok: true, json: async () => ({ roster }) };
     }
-    return { ok: true, json: async () => ({ roster: ROSTER }) };
+    return { ok: true, json: async () => ({ roster }) };
   });
   global.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;
@@ -106,5 +109,67 @@ describe("EditRosterPage — ligues régionales en cases à cocher", () => {
     const put = fetchMock.mock.calls.find((c) => c[1]?.method === "PUT")!;
     const body = JSON.parse(String(put[1]?.body));
     expect(body.regionalRules).toEqual(["favoured_of", "woodland_league"]);
+  });
+
+  it("coche les ligues héritées du catalogue quand rien n'est en base", async () => {
+    // Cas majoritaire en prod : le seed laisse `regionalRules` NULL et
+    // l'API renvoie donc le défaut du roster, marqué comme tel.
+    mockFetch({
+      ...ROSTER,
+      regionalRules: ["elven_kingdoms_league", "woodland_league"],
+      regionalRulesSource: "roster-defaults",
+    });
+    render(<EditRosterPage />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-regional-leagues")).toBeTruthy(),
+    );
+    expect(
+      (
+        screen.getByTestId(
+          "roster-regional-leagues-elven_kingdoms_league",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    expect(
+      (
+        screen.getByTestId(
+          "roster-regional-leagues-woodland_league",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    // L'admin est prévenu que ces valeurs ne sont pas encore en base.
+    expect(
+      screen.getByTestId("roster-regional-leagues-inherited"),
+    ).toBeTruthy();
+  });
+
+  it("ne signale rien quand les ligues viennent de la base", async () => {
+    mockFetch();
+    render(<EditRosterPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-regional-leagues")).toBeTruthy(),
+    );
+    expect(
+      screen.queryByTestId("roster-regional-leagues-inherited"),
+    ).toBeNull();
+  });
+
+  it("tolère un CSV historique renvoyé par l'API", async () => {
+    mockFetch({
+      ...ROSTER,
+      regionalRules: "elven_kingdoms_league, woodland_league",
+    });
+    render(<EditRosterPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-regional-leagues")).toBeTruthy(),
+    );
+    expect(
+      (
+        screen.getByTestId(
+          "roster-regional-leagues-woodland_league",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
   });
 });
