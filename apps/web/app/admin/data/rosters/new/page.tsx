@@ -12,7 +12,7 @@ import {
   SPECIAL_RULE_OPTIONS,
   SlugCheckboxGrid,
   toggleSlug,
-} from "../_components/SlugCheckboxGrid";
+} from "../../_components/SlugCheckboxGrid";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");

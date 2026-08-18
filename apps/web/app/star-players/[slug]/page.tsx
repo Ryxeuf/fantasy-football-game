@@ -9,6 +9,7 @@ import KeywordChips from '../../components/KeywordChips';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 import { getStarPlayerSkillSlugs } from '@bb/game-engine';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getPlaysForRosters } from './plays-for';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -143,6 +144,11 @@ export default function StarPlayerDetailPage() {
     language === 'en'
       ? starPlayer.keywordsEn ?? starPlayer.keywords
       : starPlayer.keywords ?? starPlayer.keywordsEn;
+
+  // « Joue pour » : équipes pouvant recruter ce Star Player. `hirableBy`
+  // n'expose que des critères (Ligues régionales, `all`) ; la résolution en
+  // rosters concrets vit dans le game-engine (cf. `plays-for.ts`).
+  const playsForRosters = getPlaysForRosters(starPlayer.hirableBy);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -291,9 +297,38 @@ export default function StarPlayerDetailPage() {
               );
             })()}
 
-            {/* Équipes éligibles */}
+            {/* Joue pour — équipes pouvant recruter ce Star Player */}
+            {playsForRosters.length > 0 && (
+              <div data-testid="star-player-plays-for">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 flex items-center gap-2">
+                  <span className="text-2xl">🏈</span>
+                  Joue pour
+                </h2>
+                <p className="text-sm text-gray-600 mb-3">
+                  {playsForRosters.length} équipe{playsForRosters.length > 1 ? 's' : ''} peu{playsForRosters.length > 1 ? 'vent' : 't'} recruter {starPlayer.displayName}.
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4 md:p-5">
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                    {playsForRosters.map((roster) => (
+                      <li key={roster.slug}>
+                        <a
+                          href={`/teams/${roster.slug}`}
+                          data-testid={`star-player-roster-${roster.slug}`}
+                          className="group flex items-center gap-2 bg-white text-gray-800 px-3 sm:px-4 py-2 rounded-lg font-medium border-2 border-gray-300 shadow-sm text-sm sm:text-base hover:border-blue-400 hover:shadow-md transition-all"
+                        >
+                          <span className="group-hover:text-blue-700 transition-colors">{roster.name}</span>
+                          <span className="ml-auto text-gray-400 group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Ligues et règles régionales ouvrant le recrutement */}
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900">Équipes Éligibles</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900">Ligues et Règles Régionales</h2>
               <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                 {starPlayer.hirableBy.includes('all') ? (
                   <div className="text-center">

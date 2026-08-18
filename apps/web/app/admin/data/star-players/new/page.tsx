@@ -1,18 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
-
-type Skill = {
-  slug: string;
-  nameFr: string;
-};
-
-type Roster = {
-  id: string;
-  slug: string;
-  name: string;
-};
+import {
+  DEFAULT_RULESET,
+  RULESET_OPTIONS,
+  type Ruleset,
+} from "../../ruleset-utils";
+import {
+  SkillCheckboxPicker,
+  type SkillOption,
+} from "../_components/SkillCheckboxPicker";
+import {
+  HirableByPicker,
+  type RosterOption,
+} from "../_components/HirableByPicker";
+import {
+  hirableSelectionToPayload,
+  toggleValue,
+  type HirableSelection,
+} from "../_components/star-player-options";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -45,42 +52,81 @@ async function postJSON(path: string, data: any) {
 
 export default function NewStarPlayerPage() {
   const router = useRouter();
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [rosters, setRosters] = useState<Roster[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  const [skills, setSkills] = useState<SkillOption[]>([]);
+  const [rosters, setRosters] = useState<RosterOption[]>([]);
+  const [skillSlugs, setSkillSlugs] = useState<string[]>([]);
+  const [hirable, setHirable] = useState<HirableSelection>({
+    rules: [],
+    rosterIds: [],
+  });
+  const [authChecked, setAuthChecked] = useState(false);
+  const [catalogsLoading, setCatalogsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
+  // Catalogues filtrés sur le ruleset choisi : un même slug de compétence
+  // existe sur plusieurs rulesets, sans ce filtre la liste est dédoublée
+  // (et le slug envoyé serait ambigu côté serveur).
+  const loadCatalogs = useCallback(async (target: Ruleset) => {
+    const query = `?ruleset=${encodeURIComponent(target)}`;
+    const [skillsRes, rostersRes] = await Promise.all([
+      fetchJSON(`/admin/data/skills${query}`).catch(() => ({ skills: [] })),
+      fetchJSON(`/admin/data/rosters${query}`).catch(() => ({ rosters: [] })),
+    ]);
+    setSkills(Array.isArray(skillsRes?.skills) ? skillsRes.skills : []);
+    setRosters(Array.isArray(rostersRes?.rosters) ? rostersRes.rosters : []);
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const me = await fetchJSON("/auth/me");
-      const user = me?.user;
-      const roles: string[] | undefined = Array.isArray(user?.roles)
-        ? user.roles
-        : user?.role
-          ? [user.role]
-          : undefined;
-      if (!roles || !roles.includes("admin")) {
-        router.push("/");
-        return;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await fetchJSON("/auth/me");
+        const user = me?.user;
+        const roles: string[] | undefined = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.role
+            ? [user.role]
+            : undefined;
+        if (!roles || !roles.includes("admin")) {
+          router.push("/");
+          return;
+        }
+        if (!cancelled) setAuthChecked(true);
+      } catch (e: any) {
+        if (!cancelled) setError(e.message || "Erreur");
       }
-      const [{ skills: skillsData }, { rosters: rostersData }] = await Promise.all([
-        fetchJSON("/admin/data/skills"),
-        fetchJSON("/admin/data/rosters"),
-      ]);
-      setSkills(skillsData);
-      setRosters(rostersData);
-    } catch (e: any) {
-      setError(e.message || "Erreur");
-    } finally {
-      setLoading(false);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // Le formulaire reste monte pendant le rechargement des catalogues :
+  // changer de ruleset ne doit pas vider les champs deja saisis.
+  useEffect(() => {
+    if (!authChecked) return;
+    let cancelled = false;
+    (async () => {
+      setCatalogsLoading(true);
+      try {
+        await loadCatalogs(ruleset);
+      } finally {
+        if (!cancelled) setCatalogsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authChecked, ruleset, loadCatalogs]);
+
+  const handleRulesetChange = (next: Ruleset) => {
+    // Les catalogues changent : on repart d'une sélection vide plutôt que
+    // de garder des slugs qui n'existent pas dans le nouveau ruleset.
+    setRuleset(next);
+    setSkillSlugs([]);
+    setHirable({ rules: [], rosterIds: [] });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -89,11 +135,9 @@ export default function NewStarPlayerPage() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     try {
-      const hirableByRaw = formData.get("hirableBy")?.toString() || "";
-      const hirableBy = hirableByRaw.split(",").map(s => s.trim()).filter(s => s);
-      
       const data = {
         slug: formData.get("slug"),
+        ruleset,
         displayName: formData.get("displayName"),
         cost: parseInt(formData.get("cost") as string),
         ma: parseInt(formData.get("ma") as string),
@@ -104,8 +148,8 @@ export default function NewStarPlayerPage() {
         keywords: formData.get("keywords") || null,
         specialRule: formData.get("specialRule") || null,
         imageUrl: formData.get("imageUrl") || null,
-        skillSlugs: formData.get("skillSlugs")?.toString().split(",").map(s => s.trim()).filter(s => s) || [],
-        hirableBy,
+        skillSlugs,
+        hirableBy: hirableSelectionToPayload(hirable, rosters),
       };
       await postJSON("/admin/data/star-players", data);
       router.push("/admin/data/star-players");
@@ -116,7 +160,17 @@ export default function NewStarPlayerPage() {
     }
   };
 
-  if (loading) return <div>Chargement...</div>;
+  // Un echec du controle d'acces doit rester visible : sans ca la page
+  // resterait bloquee sur « Chargement... » sans expliquer pourquoi.
+  if (!authChecked) {
+    return error ? (
+      <p className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded">
+        {error}
+      </p>
+    ) : (
+      <div>Chargement...</div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -134,6 +188,22 @@ export default function NewStarPlayerPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="grid grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Ruleset *</label>
+            <select
+              name="ruleset"
+              value={ruleset}
+              onChange={(e) => handleRulesetChange(e.target.value as Ruleset)}
+              disabled={catalogsLoading}
+              className="w-full border rounded px-3 py-2"
+            >
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Slug *</label>
             <input
@@ -237,35 +307,42 @@ export default function NewStarPlayerPage() {
               className="w-full border rounded px-3 py-2"
             />
           </div>
-          <div className="col-span-3">
-            <label className="block text-sm font-medium mb-1">
-              Compétences (slugs séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              name="skillSlugs"
-              className="w-full border rounded px-3 py-2"
-              placeholder="block,dodge,loner-4"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Compétences disponibles: {skills.slice(0, 10).map(s => s.slug).join(", ")}...
-            </p>
-          </div>
-          <div className="col-span-3">
-            <label className="block text-sm font-medium mb-1">
-              Recrutable par (règles/rosters séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              name="hirableBy"
-              className="w-full border rounded px-3 py-2"
-              placeholder="all,old_world_classic,skaven"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Exemples: "all" pour tous, "old_world_classic" pour une règle, ou slug de roster
-            </p>
-          </div>
         </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">
+            Compétences{catalogsLoading ? " (chargement…)" : ""}
+          </label>
+          <SkillCheckboxPicker
+            skills={skills}
+            selected={skillSlugs}
+            onToggle={(slug) => setSkillSlugs((prev) => toggleValue(prev, slug))}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Sélection multiple. Aucune case cochée = aucune compétence.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Recrutable par</label>
+          <HirableByPicker
+            rosters={rosters}
+            selection={hirable}
+            onToggleRule={(slug) =>
+              setHirable((prev) => ({
+                ...prev,
+                rules: toggleValue(prev.rules, slug),
+              }))
+            }
+            onToggleRoster={(rosterId) =>
+              setHirable((prev) => ({
+                ...prev,
+                rosterIds: toggleValue(prev.rosterIds, rosterId),
+              }))
+            }
+          />
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -286,4 +363,3 @@ export default function NewStarPlayerPage() {
     </div>
   );
 }
-

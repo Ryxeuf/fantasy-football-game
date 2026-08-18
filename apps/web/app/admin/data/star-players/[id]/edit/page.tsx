@@ -2,10 +2,27 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
+import { getRulesetLabel, type Ruleset } from "../../../ruleset-utils";
+import {
+  SkillCheckboxPicker,
+  type SkillOption,
+} from "../../_components/SkillCheckboxPicker";
+import {
+  HirableByPicker,
+  type RosterOption,
+} from "../../_components/HirableByPicker";
+import {
+  hirableSelectionFromApi,
+  hirableSelectionToPayload,
+  toggleValue,
+  type HirableByEntry,
+  type HirableSelection,
+} from "../../_components/star-player-options";
 
 type StarPlayer = {
   id: string;
   slug: string;
+  ruleset?: Ruleset;
   displayName: string;
   cost: number;
   ma: number;
@@ -17,12 +34,7 @@ type StarPlayer = {
   specialRule: string | null;
   imageUrl: string | null;
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
-  hirableBy: Array<{ rule: string; roster: { slug: string; name: string } | null }>;
-};
-
-type Skill = {
-  slug: string;
-  nameFr: string;
+  hirableBy: HirableByEntry[];
 };
 
 async function fetchJSON(path: string) {
@@ -58,18 +70,25 @@ export default function EditStarPlayerPage() {
   const router = useRouter();
   const params = useParams();
   const starPlayerId = params.id as string;
-  
+
   const [starPlayer, setStarPlayer] = useState<StarPlayer | null>(null);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills, setSkills] = useState<SkillOption[]>([]);
+  const [rosters, setRosters] = useState<RosterOption[]>([]);
+  const [skillSlugs, setSkillSlugs] = useState<string[]>([]);
+  const [hirable, setHirable] = useState<HirableSelection>({
+    rules: [],
+    rosterIds: [],
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
   }, [starPlayerId]);
 
-  const loadData = async () => {
+  const loadData = async (): Promise<StarPlayer | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -82,16 +101,40 @@ export default function EditStarPlayerPage() {
           : undefined;
       if (!roles || !roles.includes("admin")) {
         router.push("/");
-        return;
+        return null;
       }
-      const [{ starPlayer: spData }, { skills: skillsData }] = await Promise.all([
-        fetchJSON(`/admin/data/star-players/${starPlayerId}`),
-        fetchJSON("/admin/data/skills"),
-      ]);
+      const { starPlayer: spData } = await fetchJSON(
+        `/admin/data/star-players/${starPlayerId}`,
+      );
       setStarPlayer(spData);
-      setSkills(skillsData);
+      setSkillSlugs(
+        (spData?.skills ?? [])
+          .map((s: { skill?: { slug?: string } }) => s?.skill?.slug)
+          .filter((slug: string | undefined): slug is string => !!slug),
+      );
+      setHirable(hirableSelectionFromApi(spData?.hirableBy));
+
+      // Catalogues filtrés sur le ruleset du Star Player : un même slug de
+      // compétence existe sur plusieurs rulesets, sans ce filtre la liste
+      // est dédoublée (et le slug envoyé serait ambigu côté serveur).
+      const ruleset: string | undefined = spData?.ruleset;
+      const rulesetQuery = ruleset
+        ? `?ruleset=${encodeURIComponent(ruleset)}`
+        : "";
+      const [skillsRes, rostersRes] = await Promise.all([
+        fetchJSON(`/admin/data/skills${rulesetQuery}`).catch(() => ({
+          skills: [],
+        })),
+        fetchJSON(`/admin/data/rosters${rulesetQuery}`).catch(() => ({
+          rosters: [],
+        })),
+      ]);
+      setSkills(Array.isArray(skillsRes?.skills) ? skillsRes.skills : []);
+      setRosters(Array.isArray(rostersRes?.rosters) ? rostersRes.rosters : []);
+      return spData ?? null;
     } catch (e: any) {
       setError(e.message || "Erreur");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -102,11 +145,9 @@ export default function EditStarPlayerPage() {
     if (!starPlayer) return;
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const formData = new FormData(e.currentTarget);
     try {
-      const hirableByRaw = formData.get("hirableBy")?.toString() || "";
-      const hirableBy = hirableByRaw.split(",").map(s => s.trim()).filter(s => s);
-      
       const data = {
         displayName: formData.get("displayName"),
         cost: parseInt(formData.get("cost") as string),
@@ -118,11 +159,18 @@ export default function EditStarPlayerPage() {
         keywords: formData.get("keywords") || null,
         specialRule: formData.get("specialRule") || null,
         imageUrl: formData.get("imageUrl") || null,
-        skillSlugs: formData.get("skillSlugs")?.toString().split(",").map(s => s.trim()).filter(s => s) || [],
-        hirableBy,
+        skillSlugs,
+        hirableBy: hirableSelectionToPayload(hirable, rosters),
       };
       await putJSON(`/admin/data/star-players/${starPlayer.id}`, data);
-      router.push("/admin/data/star-players");
+      // Relecture serveur plutôt qu'une redirection à l'aveugle : l'admin
+      // voit ce qui est RÉELLEMENT enregistré (cf. édition des rosters).
+      const saved = await loadData();
+      setSuccess(
+        saved
+          ? `Star Player enregistré. Compétences : ${saved.skills?.length ?? 0} · Recrutable par : ${saved.hirableBy?.length ?? 0} règle(s).`
+          : "Star Player enregistré.",
+      );
     } catch (e: any) {
       setError(e.message || "Erreur lors de la mise à jour");
     } finally {
@@ -147,10 +195,25 @@ export default function EditStarPlayerPage() {
 
       {error && <p className="text-red-600 text-sm mb-4 p-3 bg-red-50 border border-red-200 rounded">{error}</p>}
 
+      {success && (
+        <p
+          data-testid="star-player-save-success"
+          className="text-green-700 text-sm mb-4 p-3 bg-green-50 border border-green-200 rounded"
+        >
+          {success}
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="mb-4 p-3 bg-gray-50 rounded">
           <div className="text-sm text-gray-600">
             <strong>Slug:</strong> {starPlayer.slug}
+            {starPlayer.ruleset ? (
+              <>
+                {" · "}
+                <strong>Ruleset:</strong> {getRulesetLabel(starPlayer.ruleset)}
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -259,31 +322,40 @@ export default function EditStarPlayerPage() {
               className="w-full border rounded px-3 py-2"
             />
           </div>
-          <div className="col-span-3">
-            <label className="block text-sm font-medium mb-1">
-              Compétences (slugs séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              name="skillSlugs"
-              defaultValue={starPlayer.skills?.map(s => s.skill.slug).join(",")}
-              className="w-full border rounded px-3 py-2"
-              placeholder="block,dodge,loner-4"
-            />
-          </div>
-          <div className="col-span-3">
-            <label className="block text-sm font-medium mb-1">
-              Recrutable par (règles/rosters séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              name="hirableBy"
-              defaultValue={starPlayer.hirableBy?.map(h => h.rule).join(",")}
-              className="w-full border rounded px-3 py-2"
-              placeholder="all,old_world_classic"
-            />
-          </div>
         </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Compétences</label>
+          <SkillCheckboxPicker
+            skills={skills}
+            selected={skillSlugs}
+            onToggle={(slug) => setSkillSlugs((prev) => toggleValue(prev, slug))}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Sélection multiple. Aucune case cochée = aucune compétence.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Recrutable par</label>
+          <HirableByPicker
+            rosters={rosters}
+            selection={hirable}
+            onToggleRule={(slug) =>
+              setHirable((prev) => ({
+                ...prev,
+                rules: toggleValue(prev.rules, slug),
+              }))
+            }
+            onToggleRoster={(rosterId) =>
+              setHirable((prev) => ({
+                ...prev,
+                rosterIds: toggleValue(prev.rosterIds, rosterId),
+              }))
+            }
+          />
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -304,4 +376,3 @@ export default function EditStarPlayerPage() {
     </div>
   );
 }
-
