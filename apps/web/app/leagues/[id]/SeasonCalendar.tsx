@@ -91,6 +91,27 @@ export function matchSheetPendingLabel(
   }
 }
 
+/**
+ * Resultat a afficher sur la ligne d'un pairing, une fois la feuille
+ * validee par le commissaire : le score prime sur le libelle de statut
+ * (« Joue » n'apprend rien a qui consulte la journee).
+ *
+ * Source unique : le score snapshote sur la feuille a la validation. Un
+ * pairing joue en ligne (sans feuille) n'a pas de score exploitable ici,
+ * on garde alors le badge de statut.
+ */
+export function pairingScoreLabel(
+  pairing: Pick<LeaguePairingDetail, "matchSheet">,
+): string | null {
+  const sheet = pairing.matchSheet;
+  if (!sheet || sheet.status !== "validated") return null;
+  const { scoreHome, scoreAway } = sheet;
+  if (typeof scoreHome !== "number" || typeof scoreAway !== "number") {
+    return null;
+  }
+  return `${scoreHome} – ${scoreAway}`;
+}
+
 function formatDate(iso: string | null, locale: string): string | null {
   if (!iso) return null;
   try {
@@ -169,6 +190,7 @@ export function SeasonCalendar({
                 <MatchdayExport
                   round={round}
                   statusLabel={(p) =>
+                    pairingScoreLabel(p) ??
                     matchSheetPendingLabel(p.matchSheet?.status) ??
                     pairingStatusBadge(p.status, t).label
                   }
@@ -267,6 +289,8 @@ function PairingRow({
   // La feuille en attente de validation prime sur le statut du pairing
   // (qui reste « Programmé » jusqu'à la validation du commissaire).
   const pendingLabel = matchSheetPendingLabel(pairing.matchSheet?.status);
+  // Une fois validée, c'est le score qui s'affiche, pas « Joué ».
+  const scoreLabel = pairingScoreLabel(pairing);
 
   return (
     <li
@@ -290,7 +314,15 @@ function PairingRow({
         />
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {pendingLabel ? (
+        {scoreLabel ? (
+          <span
+            data-testid={`pairing-score-${pairing.id}`}
+            title="Résultat validé par le commissaire"
+            className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-emerald-800"
+          >
+            {scoreLabel}
+          </span>
+        ) : pendingLabel ? (
           <span
             data-testid={`pairing-sheet-pending-${pairing.id}`}
             title="Feuille de match saisie par les coachs, en attente de validation par le commissaire"
