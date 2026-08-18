@@ -1,3 +1,10 @@
+## [1.224.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.1...v1.224.2) (2026-08-18)
+
+
+### 🐛 Bug Fixes
+
+* **admin:** confirme l'enregistrement d'un roster en relisant le serveur ([#948](https://github.com/Ryxeuf/fantasy-football-game/issues/948)) ([7b77940](https://github.com/Ryxeuf/fantasy-football-game/commit/7b77940c86293aacca4707bfb96620205860f2e4))
+
 ## [1.224.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.0...v1.224.1) (2026-08-18)
 
 
