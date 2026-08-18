@@ -123,6 +123,14 @@ export {
   type RegionalLeagueWithRosters,
 } from "./regional-league-rosters";
 
+// Index inverse Star Player → rosters (« Joue pour » sur la fiche publique)
+export {
+  HIRABLE_BY_ALL,
+  getRostersForHirableBy,
+  getRostersForStarPlayer,
+  getRostersForStarPlayerSlug,
+} from "./star-player-rosters";
+
 // Formats de jeu : Blood Bowl à 11 vs Blood Bowl à Sept (axe orthogonal au ruleset)
 export {
   FORMATS,
