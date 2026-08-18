@@ -13,6 +13,8 @@ export interface SkillCatalogEntry {
   readonly description: string;
   readonly descriptionEn?: string | null;
   readonly category: string;
+  /** E8 — compétence/trait passif (souligné dans le livre). Absent = actif. */
+  readonly isPassive?: boolean;
 }
 
 /** Map clé→entrée. Clés indexées par slug, nameFr et nameEn (cf. serveur). */
@@ -47,7 +49,12 @@ export function resolveFromCatalog(
   catalog: SkillsCatalog | null,
   slugOrName: string,
   language: "fr" | "en",
-): { name: string; description: string; category: string } | null {
+): {
+  name: string;
+  description: string;
+  category: string;
+  isPassive?: boolean;
+} | null {
   const entry = catalog?.[slugOrName];
   if (!entry) return null;
   return {
@@ -57,5 +64,6 @@ export function resolveFromCatalog(
         ? entry.descriptionEn
         : entry.description,
     category: entry.category,
+    isPassive: entry.isPassive ?? false,
   };
 }

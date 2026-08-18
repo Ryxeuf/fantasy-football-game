@@ -17,6 +17,8 @@ export interface SkillDescription {
   name: string;
   description: string;
   category: string;
+  /** E8 — compétence/trait passif (souligné dans le livre). Absent = actif. */
+  isPassive?: boolean;
 }
 
 interface SkillFromAPI {
@@ -27,6 +29,7 @@ interface SkillFromAPI {
   description: string;
   descriptionEn?: string | null;
   category: string;
+  isPassive?: boolean;
 }
 
 // Cache pour les compétences chargées depuis l'API
@@ -88,7 +91,8 @@ export async function getSkillDescriptionAsync(slugOrName: string, language: "fr
     return {
       name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
       description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
-      category: apiSkill.category
+      category: apiSkill.category,
+      isPassive: apiSkill.isPassive ?? false
     };
   }
   
@@ -110,7 +114,8 @@ export async function getSkillDescriptionAsync(slugOrName: string, language: "fr
   return {
     name: language === "fr" ? skill.nameFr : skill.nameEn,
     description: skill.description,
-    category: skill.category
+    category: skill.category,
+    isPassive: skill.isPassive ?? false
   };
 }
 
@@ -131,7 +136,8 @@ export function getSkillDescription(slugOrName: string, language: "fr" | "en" = 
       return {
         name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
         description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
-        category: apiSkill.category
+        category: apiSkill.category,
+        isPassive: apiSkill.isPassive ?? false
       };
     }
   }
@@ -154,7 +160,8 @@ export function getSkillDescription(slugOrName: string, language: "fr" | "en" = 
   return {
     name: language === "fr" ? skill.nameFr : skill.nameEn,
     description: skill.description,
-    category: skill.category
+    category: skill.category,
+    isPassive: skill.isPassive ?? false
   };
 }
 

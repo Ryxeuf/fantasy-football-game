@@ -10,6 +10,12 @@ import {
   resolveFromCatalog,
 } from "../skills-catalog-context";
 import { getSkillCategoryLabel } from "../../../lib/skill-category-labels";
+import {
+  getSkillActivation,
+  getSkillActivationHint,
+  getSkillActivationLabel,
+  SKILL_ACTIVATION_DARK_CLASSES,
+} from "../../../lib/skill-activation";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -36,7 +42,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     getSkillDescription(slug, language);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string } | null>(null);
+  const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string; isPassive?: boolean } | null>(null);
 
   // Précharge le cache API au montage ET force un re-render quand il est prêt,
   // pour que les noms/catégories des badges (getSkillDescription synchrone)
@@ -168,8 +174,22 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
           <div className="font-semibold text-yellow-300 mb-1">
             {skillDescription.name}
           </div>
-          <div className="text-xs text-gray-300 mb-1">
-            {getSkillCategoryLabel(skillDescription.category, language)}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs text-gray-300">
+              {getSkillCategoryLabel(skillDescription.category, language)}
+            </span>
+            {/* E8 — Actif / Passif */}
+            <span
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                SKILL_ACTIVATION_DARK_CLASSES[
+                  getSkillActivation(skillDescription.isPassive)
+                ]
+              }`}
+              title={getSkillActivationHint(skillDescription.isPassive, language)}
+              data-testid={`skill-tooltip-activation-${hoveredSkill}`}
+            >
+              {getSkillActivationLabel(skillDescription.isPassive, language)}
+            </span>
           </div>
           <div className="text-xs leading-relaxed">
             {skillDescription.description}
