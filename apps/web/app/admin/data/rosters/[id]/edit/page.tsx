@@ -12,7 +12,7 @@ import {
   SlugCheckboxGrid,
   parseSlugList,
   toggleSlug,
-} from "../../_components/SlugCheckboxGrid";
+} from "../../../_components/SlugCheckboxGrid";
 
 type GameFormat = "bb11" | "sevens";
 

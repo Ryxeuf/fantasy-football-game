@@ -37,8 +37,15 @@ export function parseSlugList(raw: unknown): string[] {
 
 /** Option d'une grille de cases à cocher (catalogue de slugs). */
 export interface SlugOption {
+  /** Valeur cochée, remontée telle quelle par `onToggle`. */
   slug: string;
   label: string;
+  /**
+   * Texte affiché entre parenthèses après le libellé. Par défaut le
+   * `slug` lui-même ; à surcharger quand la valeur cochée n'est pas
+   * lisible (ex. un id de roster : on affiche son slug à la place).
+   */
+  hint?: string;
 }
 
 /** Catalogue des règles spéciales d'équipe (source game-engine). */
@@ -96,7 +103,7 @@ export function SlugCheckboxGrid({
           />
           <span>
             {opt.label}{" "}
-            <span className="text-gray-400 text-xs">({opt.slug})</span>
+            <span className="text-gray-400 text-xs">({opt.hint ?? opt.slug})</span>
           </span>
         </label>
       ))}

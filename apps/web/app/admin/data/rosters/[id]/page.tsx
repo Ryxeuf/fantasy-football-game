@@ -15,7 +15,7 @@ import {
   SlugCheckboxGrid,
   parseSlugList,
   toggleSlug,
-} from "../_components/SlugCheckboxGrid";
+} from "../../_components/SlugCheckboxGrid";
 
 type StaffConfig = {
   format: string;
