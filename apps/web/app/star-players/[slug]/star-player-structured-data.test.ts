@@ -226,6 +226,57 @@ describe("buildStarPlayerSchema", () => {
     expect(items[2].name).toBe("Morg 'n' Thorg");
   });
 
+  it("expose les mots-cles (lignee + type) en additionalProperty", () => {
+    const schema = buildStarPlayerSchema({
+      starPlayer: {
+        ...BASE_STAR,
+        keywords: "Ogre, Gros Bras",
+        keywordsEn: "Ogre, Big Guy",
+      },
+      baseUrl: "https://nufflearena.fr",
+    });
+    const node = (schema["@graph"] as Array<Record<string, unknown>>).find(
+      (n) => Array.isArray(n["@type"]),
+    )!;
+    const props = node.additionalProperty as Array<{
+      name: string;
+      value: string | number;
+    }>;
+    expect(props.find((p) => p.name === "Keywords")?.value).toBe("Ogre, Gros Bras");
+  });
+
+  it("traduit les mots-cles quand lang=en", () => {
+    const schema = buildStarPlayerSchema({
+      starPlayer: {
+        ...BASE_STAR,
+        keywords: "Ogre, Gros Bras",
+        keywordsEn: "Ogre, Big Guy",
+      },
+      baseUrl: "https://nufflearena.fr",
+      lang: "en",
+    });
+    const node = (schema["@graph"] as Array<Record<string, unknown>>).find(
+      (n) => Array.isArray(n["@type"]),
+    )!;
+    const props = node.additionalProperty as Array<{
+      name: string;
+      value: string | number;
+    }>;
+    expect(props.find((p) => p.name === "Keywords")?.value).toBe("Ogre, Big Guy");
+  });
+
+  it("omet la propriete Keywords quand le star player n'en a pas", () => {
+    const schema = buildStarPlayerSchema({
+      starPlayer: BASE_STAR,
+      baseUrl: "https://nufflearena.fr",
+    });
+    const node = (schema["@graph"] as Array<Record<string, unknown>>).find(
+      (n) => Array.isArray(n["@type"]),
+    )!;
+    const props = node.additionalProperty as Array<{ name: string }>;
+    expect(props.find((p) => p.name === "Keywords")).toBeUndefined();
+  });
+
   it("schema serializable JSON", () => {
     const schema = buildStarPlayerSchema({
       starPlayer: BASE_STAR,

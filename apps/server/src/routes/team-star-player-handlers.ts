@@ -33,6 +33,7 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
   getStarPlayerBySlug,
+  translateKeywordsCsv,
   DEFAULT_RULESET,
   type Ruleset,
 } from '@bb/game-engine';
@@ -76,6 +77,8 @@ export async function handleListTeamStarPlayers(
         cost: sp.cost,
         hiredAt: sp.hiredAt,
         ...starPlayerData,
+        // Mots-cles traduits (le catalogue engine ne porte que le FR).
+        keywordsEn: translateKeywordsCsv(starPlayerData?.keywords ?? null, 'en'),
       };
     });
 
@@ -181,6 +184,7 @@ export async function handleListAvailableStarPlayers(
 
       return {
         ...sp,
+        keywordsEn: translateKeywordsCsv(sp.keywords ?? null, 'en'),
         isHired,
         canHire,
         needsPair,

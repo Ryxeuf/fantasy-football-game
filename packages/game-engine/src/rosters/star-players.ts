@@ -3,6 +3,7 @@
  * Les Star Players sont des mercenaires légendaires pouvant être recrutés par plusieurs équipes
  */
 import { DEFAULT_RULESET, Ruleset } from "./positions";
+import { STAR_PLAYER_KEYWORDS } from "./star-player-keywords";
 export interface StarPlayerDefinition {
   slug: string;           // Identifiant unique (ex: glart_smashrip)
   displayName: string;    // Nom d'affichage
@@ -18,6 +19,13 @@ export interface StarPlayerDefinition {
   specialRuleEn?: string; // Règle spéciale du joueur (anglais) — P2.9
   imageUrl?: string;      // URL de l'image du joueur
   isMegaStar?: boolean;    // Flag Mega Star
+  /**
+   * Mots-clés officiels (lignée + type de joueur), CSV FR — ex: "Humain, Blitzer".
+   * Même vocabulaire que les mots-clés de position (`KEYWORDS_SEASON3`).
+   * Renseigné automatiquement depuis `STAR_PLAYER_KEYWORDS` (cf. plus bas) :
+   * ne pas le poser à la main dans les définitions.
+   */
+  keywords?: string;
 }
 
 const getFallbackSpecialRule = (name: string) =>
@@ -1205,11 +1213,18 @@ export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerD
 // Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
 export const STAR_PLAYERS = STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
 
-// Appliquer les règles spéciales par défaut pour tous les rulesets
+// Appliquer les règles spéciales par défaut + les mots-clés pour tous les rulesets
 Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
   Object.values(starPlayersMap).forEach((player) => {
     if (!player.specialRule || player.specialRule.trim() === "") {
       player.specialRule = getFallbackSpecialRule(player.displayName);
+    }
+    // Mots-clés (lignée + type) : source unique `star-player-keywords.ts`,
+    // identique pour les deux rulesets (la lignée d'un mercenaire ne change
+    // pas d'une saison à l'autre). Slug inconnu ⇒ champ laissé `undefined`.
+    const keywords = STAR_PLAYER_KEYWORDS[player.slug];
+    if (keywords) {
+      player.keywords = keywords;
     }
   });
 });

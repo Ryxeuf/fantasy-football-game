@@ -23,6 +23,13 @@ export { POSITION_NAMES_EN, getPositionNameEn } from './position-names-en';
 
 // Mots-clés des positions (season_3) + traduction EN
 export { KEYWORDS_SEASON3 } from './keywords-season3';
+// Mots-clés des Star Players (lignée + type), même vocabulaire que les positions
+export {
+  STAR_PLAYER_KEYWORDS,
+  STAR_PLAYER_LINEAGE_KEYWORDS,
+  STAR_PLAYER_ROLE_KEYWORDS,
+  getStarPlayerKeywords,
+} from './star-player-keywords';
 export {
   translateKeywordsCsv,
   translateKeywordToken,

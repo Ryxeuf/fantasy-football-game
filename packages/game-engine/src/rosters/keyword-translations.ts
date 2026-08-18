@@ -51,6 +51,7 @@ const EN_BY_NORM: Record<string, string> = {
   troll: "Troll",
   vampire: "Vampire",
   yeti: "Yeti",
+  zoat: "Zoat",
   zombie: "Zombie",
   // Types de joueur
   blitzer: "Blitzer",

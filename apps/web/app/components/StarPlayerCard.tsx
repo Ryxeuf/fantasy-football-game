@@ -3,9 +3,20 @@
 import React from 'react';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 import { getStarPlayerSkillDisplayNames } from '@bb/game-engine';
+import KeywordChips from './KeywordChips';
+import { useLanguage } from '../contexts/LanguageContext';
+
+/**
+ * L'API renvoie `keywordsEn` en plus du `keywords` FR porte par la definition
+ * engine. Champ optionnel (retro-compat : un serveur pre-migration ne le
+ * renvoie pas encore).
+ */
+export type StarPlayerWithKeywords = StarPlayerDefinition & {
+  readonly keywordsEn?: string | null;
+};
 
 interface StarPlayerCardProps {
-  starPlayer: StarPlayerDefinition;
+  starPlayer: StarPlayerWithKeywords;
   onClick?: (starPlayer: StarPlayerDefinition) => void;
 }
 
@@ -13,6 +24,13 @@ interface StarPlayerCardProps {
  * Composant pour afficher une carte de Star Player
  */
 export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardProps) {
+  const { language } = useLanguage();
+  // Mots-cles (lignee + type) : EN si dispo, repli FR (cf. positions).
+  const keywords =
+    language === 'en'
+      ? starPlayer.keywordsEn ?? starPlayer.keywords
+      : starPlayer.keywords ?? starPlayer.keywordsEn;
+
   const formatCost = (cost: number) => {
     if (cost === 0) return 'Gratuit (avec Grak)';
     return `${(cost / 1000).toLocaleString()} K po`;
@@ -59,6 +77,11 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
           <span className="text-xs font-semibold text-gray-600">
             {getRarityLabel(starPlayer.cost)}
           </span>
+          <KeywordChips
+            keywords={keywords}
+            className="mt-1"
+            testId="star-player-keywords"
+          />
         </div>
         <div className="text-right">
           <div className="font-bold text-xl">{formatCost(starPlayer.cost)}</div>

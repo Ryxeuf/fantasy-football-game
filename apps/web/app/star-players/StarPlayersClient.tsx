@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import StarPlayerCard from '../components/StarPlayerCard';
+import StarPlayerCard, { type StarPlayerWithKeywords } from '../components/StarPlayerCard';
 import CopyrightFooter from '../components/CopyrightFooter';
 import {
   TEAM_REGIONAL_RULES,
   type StarPlayerDefinition,
 } from '@bb/game-engine';
 import { useLanguage } from '../contexts/LanguageContext';
+import { collectKeywordOptions, filterByKeywords } from '../lib/keyword-filter';
 import { UMAMI_EVENTS, trackUmamiEvent } from '../lib/umami-events';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
@@ -17,9 +18,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_
  * Page de listing des Star Players
  */
 export default function StarPlayersPage() {
-  const { t } = useLanguage();
-  const [starPlayers, setStarPlayers] = useState<StarPlayerDefinition[]>([]);
-  const [filteredPlayers, setFilteredPlayers] = useState<StarPlayerDefinition[]>([]);
+  const { t, language } = useLanguage();
+  const [starPlayers, setStarPlayers] = useState<StarPlayerWithKeywords[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<StarPlayerWithKeywords[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -29,6 +30,9 @@ export default function StarPlayersPage() {
   const [minCost, setMinCost] = useState<number>(0);
   const [maxCost, setMaxCost] = useState<number>(400000);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
+  // Mots-clés actifs (lignée + type). Sélection multiple = ET logique,
+  // même sémantique que le filtre des positions (`PositionKeywordBrowser`).
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [selectedRuleset, setSelectedRuleset] = useState<'season_2' | 'season_3'>('season_3');
 
   // Navigation
@@ -42,7 +46,22 @@ export default function StarPlayersPage() {
   // Appliquer les filtres
   useEffect(() => {
     applyFilters();
-  }, [starPlayers, searchQuery, selectedRoster, minCost, maxCost, selectedSkill]);
+  }, [starPlayers, searchQuery, selectedRoster, minCost, maxCost, selectedSkill, selectedKeywords, language]);
+
+  // Les mots-clés proposés se recalculent sur la liste chargée (le catalogue
+  // change avec le ruleset) et sur la langue (libellés FR ou EN).
+  const keywordOptions = React.useMemo(
+    () => collectKeywordOptions(starPlayers, language),
+    [starPlayers, language],
+  );
+
+  const toggleKeyword = (keyword: string) => {
+    setSelectedKeywords((current) =>
+      current.includes(keyword)
+        ? current.filter((k) => k !== keyword)
+        : [...current, keyword],
+    );
+  };
 
   const loadStarPlayers = async () => {
     try {
@@ -53,8 +72,8 @@ export default function StarPlayersPage() {
       if (data.success) {
         // Garde-fou : dédupliquer par slug si le serveur renvoie plusieurs rulesets.
         const uniqueBySlug = Array.from(
-          new Map<string, StarPlayerDefinition>(
-            data.data.map((p: StarPlayerDefinition) => [p.slug, p])
+          new Map<string, StarPlayerWithKeywords>(
+            data.data.map((p: StarPlayerWithKeywords) => [p.slug, p])
           ).values()
         );
         setStarPlayers(uniqueBySlug);
@@ -110,6 +129,9 @@ export default function StarPlayersPage() {
         sp.skills.toLowerCase().includes(selectedSkill.toLowerCase())
       );
     }
+
+    // Filtre par mots-clés (lignée + type) : ET logique sur la sélection.
+    filtered = filterByKeywords(filtered, selectedKeywords, language);
 
     setFilteredPlayers(filtered);
   };
@@ -252,6 +274,33 @@ export default function StarPlayersPage() {
             />
           </div>
 
+          {/* Mots-clés (lignée + type) */}
+          {keywordOptions.length > 0 && (
+            <div className="mt-4" data-testid="star-player-keyword-filter">
+              <label className="block text-sm font-medium mb-2">{t.starPlayers.keywords}</label>
+              <div className="flex flex-wrap gap-2">
+                {keywordOptions.map((keyword) => {
+                  const active = selectedKeywords.includes(keyword);
+                  return (
+                    <button
+                      key={keyword}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => toggleKeyword(keyword)}
+                      className={`px-2 py-1 rounded text-xs font-medium uppercase tracking-wide border transition-colors ${
+                        active
+                          ? 'bg-blue-600 text-white border-blue-700'
+                          : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                      }`}
+                    >
+                      {keyword}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Bouton reset */}
           <button
             onClick={() => {
@@ -260,6 +309,7 @@ export default function StarPlayersPage() {
               setMinCost(0);
               setMaxCost(400000);
               setSelectedSkill('');
+              setSelectedKeywords([]);
             }}
             className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
           >

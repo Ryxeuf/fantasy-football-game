@@ -1244,7 +1244,7 @@ router.get("/star-players/:id", async (req, res) => {
 
 router.post("/star-players", validate(createStarPlayerDataSchema), async (req, res) => {
   try {
-    const { slug, displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
+    const { slug, displayName, cost, ma, st, ag, pa, av, keywords, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
 
     const starPlayer = await prisma.starPlayer.create({
       data: {
@@ -1256,6 +1256,7 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
         ag,
         pa: pa ?? null,
         av,
+        keywords: keywords || null,
         specialRule: specialRule || null,
         imageUrl: imageUrl || null,
         skills: {
@@ -1307,7 +1308,7 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
 
 router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req, res) => {
   try {
-    const { displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
+    const { displayName, cost, ma, st, ag, pa, av, keywords, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
 
     const previous = await prisma.starPlayer.findUnique({
       where: { id: req.params.id },
@@ -1320,6 +1321,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         ag: true,
         pa: true,
         av: true,
+        keywords: true,
         specialRule: true,
       },
     });
@@ -1343,6 +1345,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         ag,
         pa: pa ?? null,
         av,
+        keywords: keywords || null,
         specialRule: specialRule || null,
         imageUrl: imageUrl || null,
         skills: {
@@ -1384,6 +1387,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         ag: starPlayer.ag,
         pa: starPlayer.pa,
         av: starPlayer.av,
+        keywords: starPlayer.keywords,
         specialRule: starPlayer.specialRule,
         skillCount: starPlayer.skills.length,
         hirableCount: starPlayer.hirableBy.length,
