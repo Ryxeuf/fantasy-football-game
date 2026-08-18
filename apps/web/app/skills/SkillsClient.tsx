@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 import { getSkillCategoryLabel } from "../lib/skill-category-labels";
+import {
+  getSkillActivation,
+  getSkillActivationHint,
+  getSkillActivationLabel,
+  SKILL_ACTIVATION_BADGE_CLASSES,
+} from "../lib/skill-activation";
 
 export interface Skill {
   id: string;
@@ -316,19 +322,14 @@ export default function SkillsClient({
                         {/* E8 — Actif / Passif */}
                         <span
                           className={`ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            skill.isPassive
-                              ? "bg-violet-100 text-violet-800"
-                              : "bg-emerald-100 text-emerald-800"
+                            SKILL_ACTIVATION_BADGE_CLASSES[
+                              getSkillActivation(skill.isPassive)
+                            ]
                           }`}
+                          title={getSkillActivationHint(skill.isPassive, language)}
                           data-testid={`skill-active-passive-${skill.slug}`}
                         >
-                          {skill.isPassive
-                            ? language === "fr"
-                              ? "Passif"
-                              : "Passive"
-                            : language === "fr"
-                              ? "Actif"
-                              : "Active"}
+                          {getSkillActivationLabel(skill.isPassive, language)}
                         </span>
                       </div>
                     </div>

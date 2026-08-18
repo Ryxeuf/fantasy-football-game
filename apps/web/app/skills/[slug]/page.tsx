@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { fetchServerJson, safeServerJson, getServerApiBase } from "../../lib/serverApi";
 import { getSkillCategoryIcon } from "../../lib/skill-category-icons";
+import {
+  getSkillActivation,
+  getSkillActivationHint,
+  getSkillActivationLabel,
+  SKILL_ACTIVATION_OUTLINED_CLASSES,
+} from "../../lib/skill-activation";
 import StructuredData from "../../components/StructuredData";
 import { buildSkillDetailSchema } from "../skill-detail-structured-data";
 import type { Skill } from "../SkillsClient";
@@ -179,12 +185,14 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
                 {/* E8 — Actif / Passif */}
                 <span
                   className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-subtitle font-semibold uppercase tracking-wide ${
-                    skill.isPassive
-                      ? "border-violet-300 bg-violet-50 text-violet-800"
-                      : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    SKILL_ACTIVATION_OUTLINED_CLASSES[
+                      getSkillActivation(skill.isPassive)
+                    ]
                   }`}
+                  title={getSkillActivationHint(skill.isPassive, "fr")}
+                  data-testid={`skill-active-passive-${skill.slug}`}
                 >
-                  {skill.isPassive ? "Passif" : "Actif"}
+                  {getSkillActivationLabel(skill.isPassive, "fr")}
                 </span>
               </div>
               <h1 className="mt-2 font-heading font-bold text-3xl sm:text-4xl text-nuffle-anthracite leading-tight">
@@ -200,6 +208,10 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
             <h2 className="font-heading font-bold text-lg text-nuffle-anthracite">Effet en jeu</h2>
             <p className="mt-2 text-nuffle-anthracite/80 font-body leading-relaxed">
               {skill.description}
+            </p>
+            {/* E8 — rappel de ce qu'implique « actif » ou « passif ». */}
+            <p className="mt-3 text-sm font-body text-nuffle-bronze/80">
+              {getSkillActivationHint(skill.isPassive, "fr")}
             </p>
             {hasEnglish && (
               <div className="mt-4 rounded-xl border border-nuffle-bronze/15 bg-white/40 p-4">

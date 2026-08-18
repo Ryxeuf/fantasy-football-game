@@ -5,6 +5,12 @@ import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
 import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
+import {
+  getSkillActivation,
+  getSkillActivationHint,
+  getSkillActivationLabel,
+  SKILL_ACTIVATION_BADGE_CLASSES,
+} from "../../../../lib/skill-activation";
 import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import { formatPlusStat } from "../../../../lib/format-stats";
@@ -1369,7 +1375,21 @@ export default function TeamEditPage() {
                                 <div className="font-bold text-lg text-purple-700 mb-2">
                                   Compétence sélectionnée :
                                 </div>
-                                <div className="text-xl font-semibold">{selectedSkill.nameFr}</div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-xl font-semibold">{selectedSkill.nameFr}</span>
+                                  {/* E8 — Actif / Passif */}
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      SKILL_ACTIVATION_BADGE_CLASSES[
+                                        getSkillActivation(selectedSkill.isPassive)
+                                      ]
+                                    }`}
+                                    title={getSkillActivationHint(selectedSkill.isPassive, 'fr')}
+                                    data-testid={`skill-activation-${selectedSkill.slug}`}
+                                  >
+                                    {getSkillActivationLabel(selectedSkill.isPassive, 'fr')}
+                                  </span>
+                                </div>
                                 <div className="text-sm text-gray-600 mt-2">{selectedSkill.description}</div>
                               </div>
                             )}

@@ -10,6 +10,12 @@ import {
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 import { getSkillCategoryLabel } from "../lib/skill-category-labels";
+import {
+  getSkillActivation,
+  getSkillActivationHint,
+  getSkillActivationLabel,
+  SKILL_ACTIVATION_DARK_CLASSES,
+} from "../lib/skill-activation";
 
 interface SkillTooltipProps {
   skillSlug: string;
@@ -164,6 +170,18 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
             <span>
               {language === "fr" ? "Catégorie" : "Category"}:{" "}
               {getSkillCategoryLabel(skillDescription.category, language)}
+            </span>
+            {/* E8 — Actif / Passif */}
+            <span
+              className={`ml-auto inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                SKILL_ACTIVATION_DARK_CLASSES[
+                  getSkillActivation(skillDescription.isPassive)
+                ]
+              }`}
+              title={getSkillActivationHint(skillDescription.isPassive, language)}
+              data-testid={`skill-tooltip-activation-${skillSlug}`}
+            >
+              {getSkillActivationLabel(skillDescription.isPassive, language)}
             </span>
           </div>
           

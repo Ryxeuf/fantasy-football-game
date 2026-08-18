@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 // État partagé mutable : simule le cache module rempli en asynchrone.
 // `vi.hoisted` car les factories `vi.mock` sont hoistées avant les imports.
@@ -100,5 +100,51 @@ describe("SkillTooltip (me/teams) — rafraîchissement du cache compétences", 
     // fallback game-engine mocké ("FB-block").
     expect(screen.getByText("Blocage")).toBeTruthy();
     expect(screen.queryByText("FB-block")).toBeNull();
+  });
+
+  it("E8 — l'infobulle indique si la compétence est passive ou active", async () => {
+    const catalog = {
+      block: {
+        slug: "block",
+        nameFr: "Blocage",
+        nameEn: "Block",
+        description: "Ignore Les Deux Plaqués.",
+        category: "General",
+        isPassive: false,
+      },
+      "thick-skull": {
+        slug: "thick-skull",
+        nameFr: "Crâne Épais",
+        nameEn: "Thick Skull",
+        description: "Sonné au lieu de K.-O.",
+        category: "Strength",
+        isPassive: true,
+      },
+    };
+    render(
+      <SkillsCatalogProvider value={catalog}>
+        <SkillTooltip skillsString="block,thick-skull" />
+      </SkillsCatalogProvider>,
+    );
+
+    // Les badges (1er rendu) : le nom réapparaît ensuite dans l'infobulle, on
+    // garde donc une référence au badge avant tout survol.
+    const blockBadge = screen.getByText("Blocage");
+    const thickSkullBadge = screen.getByText("Crâne Épais");
+
+    fireEvent.mouseEnter(blockBadge);
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("skill-tooltip-activation-block").textContent,
+      ).toBe("Actif"),
+    );
+
+    fireEvent.mouseLeave(blockBadge);
+    fireEvent.mouseEnter(thickSkullBadge);
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("skill-tooltip-activation-thick-skull").textContent,
+      ).toBe("Passif"),
+    );
   });
 });
