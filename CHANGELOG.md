@@ -1,3 +1,10 @@
+## [1.227.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.226.0...v1.227.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **league:** affiche la valeur de chaque joueur du roster ([#951](https://github.com/Ryxeuf/fantasy-football-game/issues/951)) ([5eaca15](https://github.com/Ryxeuf/fantasy-football-game/commit/5eaca15c741aa9def8fbe1dd88d5685b97cc865b))
+
 ## [1.226.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.225.0...v1.226.0) (2026-08-18)
 
 
