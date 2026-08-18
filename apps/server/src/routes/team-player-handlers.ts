@@ -43,6 +43,10 @@ import {
   isTeamRosterFrozen,
   TEAM_ENGAGED_MESSAGE,
 } from '../services/team-lock-status';
+import {
+  isActivePlayer,
+  removeInactivePlayerFromRoster,
+} from '../services/player-status';
 
 /**
  * S25.5z / S27.8.24 — `POST /team/:id/players`
@@ -99,7 +103,12 @@ export async function handleAddTeamPlayer(
       return;
     }
 
-    if (team.players.length >= 16) {
+    // Les joueurs morts / licencies ne sont plus au roster : ils ne
+    // doivent pas bloquer le recrutement d'un remplacant (meme regle que
+    // `league-offline-purchases`, qui compte les joueurs vivants).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activeCount = team.players.filter((p: any) => isActivePlayer(p)).length;
+    if (activeCount >= 16) {
       sendError(res, 'Une equipe ne peut pas avoir plus de 16 joueurs', 400);
       return;
     }
@@ -263,19 +272,44 @@ export async function handleDeleteTeamPlayer(
       return;
     }
 
-    // Anti-triche : une equipe engagee (ligue / coupe / match joue) est
-    // verrouillee, on ne retire pas un joueur de sa composition. Tant qu'elle
-    // est en brouillon, le coach peut au contraire descendre librement sous 11
-    // (le plancher BB n'est verifie qu'a la sauvegarde du roster).
-    if (await isTeamRosterFrozen(teamId)) {
-      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
-      return;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const player = team.players.find((p: any) => p.id === playerId);
     if (!player) {
       sendError(res, 'Joueur introuvable', 404);
+      return;
+    }
+
+    // Un joueur mort (ou deja licencie) n'est plus au roster actif : il
+    // doit pouvoir en sortir MEME si l'equipe est engagee, sinon il
+    // encombre la feuille et occupe une place a vie. Retrait doux (la
+    // ligne et la provenance de la mort sont conservees, cf.
+    // `removeInactivePlayerFromRoster`).
+    if (!isActivePlayer(player)) {
+      const outcome = await removeInactivePlayerFromRoster({
+        playerId,
+        allowedTeamIds: [teamId],
+      });
+      if ('skipped' in outcome) {
+        sendError(res, 'Joueur introuvable', 404);
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateTeamValues(prisma as any, teamId);
+      const afterRemoval = await prisma.team.findUnique({
+        where: { id: teamId },
+        include: { players: true },
+      });
+      sendSuccess(res, { team: afterRemoval });
+      return;
+    }
+
+    // Anti-triche : une equipe engagee (ligue / coupe / match joue) est
+    // verrouillee, on ne retire pas un joueur ACTIF de sa composition. Tant
+    // qu'elle est en brouillon, le coach peut au contraire descendre
+    // librement sous 11 (le plancher BB n'est verifie qu'a la sauvegarde du
+    // roster).
+    if (await isTeamRosterFrozen(teamId)) {
+      sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
 
