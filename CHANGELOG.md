@@ -1,3 +1,10 @@
+## [1.224.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.0...v1.224.1) (2026-08-18)
+
+
+### 🐛 Bug Fixes
+
+* **admin:** ligues à la création d'un roster + garde-fous sur l'ajout ([#947](https://github.com/Ryxeuf/fantasy-football-game/issues/947)) ([bc11024](https://github.com/Ryxeuf/fantasy-football-game/commit/bc11024e9cef6489926081dabe6a06718ccd9995))
+
 ## [1.224.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.2...v1.224.0) (2026-08-18)
 
 
