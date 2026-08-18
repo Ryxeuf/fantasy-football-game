@@ -1,3 +1,10 @@
+## [1.225.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.2...v1.225.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **team:** retire un joueur mort de la feuille d'équipe ([#949](https://github.com/Ryxeuf/fantasy-football-game/issues/949)) ([6efe7d1](https://github.com/Ryxeuf/fantasy-football-game/commit/6efe7d1b4ac1f2b7f0730b0dce9c049174ffe36a))
+
 ## [1.224.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.1...v1.224.2) (2026-08-18)
 
 
