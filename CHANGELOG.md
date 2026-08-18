@@ -1,3 +1,10 @@
+## [1.227.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.227.0...v1.227.1) (2026-08-18)
+
+
+### 🐛 Bug Fixes
+
+* **star-players:** rétablir l'accès aux pages de détail (500 → 200) ([#952](https://github.com/Ryxeuf/fantasy-football-game/issues/952)) ([67b0533](https://github.com/Ryxeuf/fantasy-football-game/commit/67b0533f16b9ff1ed2e7817924d6a613039c9eaa))
+
 ## [1.227.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.226.0...v1.227.0) (2026-08-18)
 
 
