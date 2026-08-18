@@ -90,6 +90,11 @@ const EMPTY_STAFF: StaffConfig = {
   dedicatedFanCost: 0,
 };
 
+/** Libellé lisible d'une liste de slugs pour la confirmation d'enregistrement. */
+function describeSlugs(slugs: string[]): string {
+  return slugs.length > 0 ? slugs.join(", ") : "aucune";
+}
+
 function staffFromRows(rows: StaffConfigRow[] | undefined): Record<GameFormat, StaffConfig> {
   const pick = (fmt: GameFormat): StaffConfig => {
     const row = rows?.find((r) => r.format === fmt);
@@ -151,12 +156,21 @@ export default function EditRosterPage() {
   const [regionalRulesSource, setRegionalRulesSource] = useState<
     "db" | "roster-defaults" | null
   >(null);
+  // Confirmation d'enregistrement (relue depuis le serveur).
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
   }, [rosterId]);
 
-  const loadData = async () => {
+  /**
+   * Charge la fiche et renvoie les listes effectivement en base, pour
+   * que l'appelant puisse confirmer ce qui a ete enregistre.
+   */
+  const loadData = async (): Promise<{
+    regionalRules: string[];
+    specialRules: string[];
+  } | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -169,28 +183,23 @@ export default function EditRosterPage() {
           : undefined;
       if (!roles || !roles.includes("admin")) {
         router.push("/");
-        return;
+        return null;
       }
       const { roster: data } = await fetchJSON(`/admin/data/rosters/${rosterId}`);
       setRoster(data);
       setStaff(staffFromRows(data.staffConfigs));
-      setSpecialRules(
-        data.specialRules
-          ? data.specialRules
-              .split(",")
-              .map((s: string) => s.trim())
-              .filter((s: string) => s.length > 0)
-          : [],
-      );
-      // L'API renvoie déjà un tableau (JSON parsé côté serveur) ; on
-      // reste tolérant si une valeur nulle ou non-tableau remonte.
-      // L'API renvoie les ligues EFFECTIVES (base, sinon defaut du roster).
-      // Parse tolerant : un CSV ou un JSON serialise historique doit cocher
-      // les memes cases qu'un tableau natif.
-      setRegionalRules(parseSlugList(data.regionalRules));
+      // Parse tolérant des deux listes : tableau natif, JSON sérialisé
+      // ou CSV historique cochent les mêmes cases. Les ligues renvoyées
+      // sont les EFFECTIVES (base, sinon défaut du roster).
+      const nextSpecial = parseSlugList(data.specialRules);
+      const nextRegional = parseSlugList(data.regionalRules);
+      setSpecialRules(nextSpecial);
+      setRegionalRules(nextRegional);
       setRegionalRulesSource(data.regionalRulesSource ?? null);
+      return { regionalRules: nextRegional, specialRules: nextSpecial };
     } catch (e: any) {
       setError(e.message || "Erreur");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -201,6 +210,7 @@ export default function EditRosterPage() {
     if (!roster) return;
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const formData = new FormData(e.currentTarget);
     try {
       const data = {
@@ -217,7 +227,15 @@ export default function EditRosterPage() {
         ruleset: formData.get("ruleset"),
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
-      router.push("/admin/data/rosters");
+      // Relecture serveur plutot qu'une redirection a l'aveugle : le
+      // coach voit ce qui est REELLEMENT enregistre (et un ecart
+      // eventuel saute aux yeux au lieu d'etre invisible).
+      const saved = await loadData();
+      setSuccess(
+        saved
+          ? `Roster enregistré. Ligues : ${describeSlugs(saved.regionalRules)} · Règles spéciales : ${describeSlugs(saved.specialRules)}`
+          : "Roster enregistré.",
+      );
     } catch (e: any) {
       setError(e.message || "Erreur lors de la mise à jour");
     } finally {
@@ -266,6 +284,15 @@ export default function EditRosterPage() {
       </div>
 
       {error && <p className="text-red-600 text-sm mb-4 p-3 bg-red-50 border border-red-200 rounded">{error}</p>}
+
+      {success && (
+        <p
+          data-testid="roster-save-success"
+          className="text-green-700 text-sm mb-4 p-3 bg-green-50 border border-green-200 rounded"
+        >
+          {success}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="mb-4 p-3 bg-gray-50 rounded">
