@@ -143,7 +143,12 @@ export default function AdminRosterDetailPage() {
   const id = params.id as string;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [loading, setLoading] = useState(true);
+  // Erreur de CHARGEMENT : la fiche n'existe pas / l'API est KO, on
+  // remplace la page. Erreur d'ACTION (enregistrement, duplication) :
+  // elle s'affiche a cote du formulaire, sinon un echec de sauvegarde
+  // faisait disparaitre la page ET la saisie en cours.
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   // Ligues et regles speciales du formulaire inline (cases a cocher).
   const [regionalRules, setRegionalRules] = useState<string[]>([]);
@@ -187,6 +192,7 @@ export default function AdminRosterDetailPage() {
     e.preventDefault();
     if (!roster) return;
     const formData = new FormData(e.currentTarget);
+    setActionError(null);
     try {
       const data = {
         name: formData.get("name"),
@@ -204,7 +210,7 @@ export default function AdminRosterDetailPage() {
       setEditing(false);
       loadRoster();
     } catch (e: any) {
-      setError(e.message || "Erreur lors de la mise à jour");
+      setActionError(e.message || "Erreur lors de la mise à jour");
     }
   };
 
@@ -220,7 +226,7 @@ export default function AdminRosterDetailPage() {
       alert(`Roster dupliqué avec succès vers ${getRulesetLabel(targetRuleset)}`);
       router.push("/admin/data/rosters");
     } catch (e: any) {
-      setError(e.message || "Erreur lors de la duplication");
+      setActionError(e.message || "Erreur lors de la duplication");
     } finally {
       setDuplicating(false);
     }
@@ -470,6 +476,15 @@ export default function AdminRosterDetailPage() {
               </p>
             </div>
             
+            {actionError && (
+              <div
+                data-testid="roster-detail-action-error"
+                className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+              >
+                {actionError}
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="submit"

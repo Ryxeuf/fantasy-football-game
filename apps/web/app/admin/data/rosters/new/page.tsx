@@ -7,6 +7,12 @@ import {
   DEFAULT_RULESET,
   type Ruleset,
 } from "../../ruleset-utils";
+import {
+  REGIONAL_LEAGUE_OPTIONS,
+  SPECIAL_RULE_OPTIONS,
+  SlugCheckboxGrid,
+  toggleSlug,
+} from "../_components/SlugCheckboxGrid";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -43,6 +49,10 @@ export default function NewRosterPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  // Ligues et regles speciales du nouveau roster. Sans ces champs il
+  // fallait creer le roster puis rouvrir sa fiche pour les renseigner.
+  const [regionalRules, setRegionalRules] = useState<string[]>([]);
+  const [specialRules, setSpecialRules] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -78,6 +88,9 @@ export default function NewRosterPage() {
         nameEn: formData.get("nameEn"),
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
+        // Aucune case cochee = aucune valeur (null), comme a l'edition.
+        regionalRules: regionalRules.length > 0 ? regionalRules : null,
+        specialRules: specialRules.length > 0 ? specialRules.join(",") : null,
         naf: formData.get("naf") === "on",
       };
       await postJSON("/admin/data/rosters", data);
@@ -182,6 +195,38 @@ export default function NewRosterPage() {
             </label>
           </div>
         </div>
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">
+            Ligues régionales
+          </label>
+          <SlugCheckboxGrid
+            catalog={REGIONAL_LEAGUE_OPTIONS}
+            selected={regionalRules}
+            onToggle={(slug) =>
+              setRegionalRules((prev) => toggleSlug(prev, slug))
+            }
+            testId="roster-new-regional-leagues"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Sélection multiple ; aucune case cochée = le roster héritera des
+            ligues par défaut de son slug, si le catalogue en connaît.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">
+            Règles spéciales
+          </label>
+          <SlugCheckboxGrid
+            catalog={SPECIAL_RULE_OPTIONS}
+            selected={specialRules}
+            onToggle={(slug) =>
+              setSpecialRules((prev) => toggleSlug(prev, slug))
+            }
+            testId="roster-new-special-rules"
+          />
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"
