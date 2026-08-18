@@ -1,3 +1,10 @@
+## [1.229.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.228.0...v1.229.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **admin:** saisie des Star Players en cases à cocher ([#954](https://github.com/Ryxeuf/fantasy-football-game/issues/954)) ([eb01469](https://github.com/Ryxeuf/fantasy-football-game/commit/eb014699796ed59858104d79743465ef5c6d34b3))
+
 ## [1.228.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.227.1...v1.228.0) (2026-08-18)
 
 
