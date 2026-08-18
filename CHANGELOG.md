@@ -1,3 +1,10 @@
+## [1.228.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.227.1...v1.228.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **star-players:** ajoute la rubrique « Joue pour » sur la fiche ([#953](https://github.com/Ryxeuf/fantasy-football-game/issues/953)) ([7138393](https://github.com/Ryxeuf/fantasy-football-game/commit/71383935a504a6a17b10dbbb0e491c9147f80256))
+
 ## [1.227.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.227.0...v1.227.1) (2026-08-18)
 
 
