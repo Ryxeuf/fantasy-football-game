@@ -1,3 +1,10 @@
+## [1.231.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.230.0...v1.231.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **skills:** affiche actif/passif partout où le détail d'une compétence est montré ([#956](https://github.com/Ryxeuf/fantasy-football-game/issues/956)) ([44a080e](https://github.com/Ryxeuf/fantasy-football-game/commit/44a080e03e26dab9f904251fb611536a9625907f))
+
 ## [1.230.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.229.0...v1.230.0) (2026-08-18)
 
 
