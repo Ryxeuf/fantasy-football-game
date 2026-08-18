@@ -43,6 +43,11 @@ interface RosterPlayer {
     pa: number;
     av: number;
   };
+  /**
+   * Valeur du joueur en po (coût du poste + surcoût des améliorations),
+   * même règle que la VE d'équipe. Optionnel : rétro-compat API.
+   */
+  value?: number;
   /** Provenance du statut mort/licencié (optionnels : rétro-compat API). */
   statusAt?: string | null;
   statusSource?: string | null;
@@ -296,6 +301,12 @@ export default function LeagueTeamRosterPage() {
                     <th className="px-2 py-2 text-right" title="Agressions">Agr.</th>
                     <th className="px-2 py-2 text-right" title="Points de Star Player gagnés">PSP</th>
                     <th
+                      className="px-2 py-2 text-right"
+                      title="Valeur du joueur (coût du poste + améliorations)"
+                    >
+                      Valeur
+                    </th>
+                    <th
                       className="px-2 py-2 text-left"
                       title="Blessures durables : BP = Blessure Persistante (cumulable), plus les réductions de caractéristique (Séquelles)"
                     >
@@ -374,6 +385,14 @@ export default function LeagueTeamRosterPage() {
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           {p.spp}
+                        </td>
+                        <td
+                          className="px-2 py-2 text-right tabular-nums"
+                          data-testid={`player-value-${p.id}`}
+                        >
+                          {typeof p.value === "number"
+                            ? formatGold(p.value)
+                            : "—"}
                         </td>
                         <td
                           className="px-2 py-2 text-xs text-red-700"

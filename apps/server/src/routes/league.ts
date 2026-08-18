@@ -31,7 +31,14 @@ import {
   isLeagueParticipant,
   LeagueWithdrawError,
 } from "../services/league";
-import { getPositionBySlug, TEAM_ROSTERS, type Ruleset } from "@bb/game-engine";
+import {
+  getPositionBySlug,
+  TEAM_ROSTERS,
+  getPlayerCost,
+  calculateAdvancementsSurcharge,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "@bb/game-engine";
 import {
   resolveSpecialRules,
   resolveRegionalLeagues,
@@ -1315,6 +1322,8 @@ export async function handleGetLeagueTeamRoster(
         matchesPlayed: true,
         missNextMatch: true,
         nigglingInjuries: true,
+        // Valeur du joueur = cout de base + surcout des ameliorations.
+        advancements: true,
         maReduction: true,
         stReduction: true,
         agReduction: true,
@@ -1334,6 +1343,7 @@ export async function handleGetLeagueTeamRoster(
       matchesPlayed: number;
       missNextMatch: boolean;
       nigglingInjuries: number;
+      advancements: string | null;
       maReduction: number;
       stReduction: number;
       agReduction: number;
@@ -1373,10 +1383,34 @@ export async function handleGetLeagueTeamRoster(
     } catch {
       // Modèle events indisponible : agressions non calculées.
     }
+    // Valeur d'un joueur : meme regle que la VE d'equipe
+    // (`utils/team-values`) — cout de base du poste + surcout des
+    // ameliorations achetees. Expose en po.
+    const teamRuleset = (out.team.ruleset ?? DEFAULT_RULESET) as Ruleset;
+    const playerValue = (position: string, advancementsJson: string | null) => {
+      const base = getPlayerCost(position, out.team.roster, teamRuleset);
+      let surcharge = 0;
+      try {
+        const parsed = JSON.parse(advancementsJson || "[]");
+        if (Array.isArray(parsed)) {
+          surcharge = calculateAdvancementsSurcharge(
+            parsed.map((a: { type?: string; stat?: string }) => ({
+              type: a?.type as never,
+              stat: a?.stat as never,
+            })),
+          );
+        }
+      } catch {
+        // Advancements illisibles : on s'en tient au cout de base.
+      }
+      return base + surcharge;
+    };
+
     const players = out.players.map((p: { id: string; position: string }) => {
       const s = statsById.get(p.id);
       return {
         ...p,
+        value: playerValue(p.position, s?.advancements ?? null),
         positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
         totalTouchdowns: s?.totalTouchdowns ?? 0,
         totalCasualties: s?.totalCasualties ?? 0,

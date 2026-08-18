@@ -54,6 +54,7 @@ const ROSTER = {
       missNextMatch: false,
       nigglingInjuries: 0,
       statReductions: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+      value: 105_000,
     },
     {
       id: "pl2",
@@ -124,7 +125,7 @@ describe("LeagueTeamRosterPage", () => {
     );
 
     // En-têtes des colonnes stats.
-    for (const header of ["TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Blessures", "Dispo"]) {
+    for (const header of ["TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Valeur", "Blessures", "Dispo"]) {
       expect(screen.getByText(header)).toBeTruthy();
     }
 
@@ -201,5 +202,21 @@ describe("LeagueTeamRosterPage", () => {
         screen.getByTestId("league-roster-error").textContent,
       ).toContain("coachs inscrits"),
     );
+  });
+
+
+  it("affiche la valeur de chaque joueur (et tolère une API pré-valeur)", async () => {
+    apiRequestMock.mockResolvedValue(ROSTER);
+    render(
+      <LanguageProvider>
+        <LeagueTeamRosterPage />
+      </LanguageProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+    );
+    // Griff porte une valeur, Boris n'en a pas (API antérieure).
+    expect(screen.getByTestId("player-value-pl1").textContent).toContain("105");
+    expect(screen.getByTestId("player-value-pl2").textContent).toBe("—");
   });
 });
