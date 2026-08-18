@@ -28,6 +28,10 @@ export interface StarPlayerInput {
   av: number;
   skills: string;
   hirableBy: string[];
+  /** Mots-clés FR (lignée + type), CSV — ex: "Humain, Blitzer". */
+  keywords?: string | null;
+  /** Mots-clés traduits EN — ex: "Human, Blitzer". */
+  keywordsEn?: string | null;
   specialRule?: string;
   specialRuleEn?: string;
   imageUrl?: string;
@@ -112,6 +116,17 @@ export function buildStarPlayerSchema(
       "@type": "PropertyValue",
       name: "Mega Star",
       value: "Oui",
+    });
+  }
+  const keywords =
+    (lang === "en"
+      ? starPlayer.keywordsEn ?? starPlayer.keywords
+      : starPlayer.keywords ?? starPlayer.keywordsEn) ?? null;
+  if (keywords) {
+    additionalProperty.push({
+      "@type": "PropertyValue",
+      name: "Keywords",
+      value: keywords,
     });
   }
   if (starPlayer.hirableBy.length > 0) {

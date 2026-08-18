@@ -4,6 +4,8 @@ import { prisma } from "../prisma";
 import {
   getAvailableStarPlayers,
   getRegionalRulesForTeam,
+  getStarPlayerKeywords,
+  translateKeywordsCsv,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
@@ -20,6 +22,37 @@ const router = Router();
 function getStarPlayerModel(): any | null {
   const model = (prisma as unknown as { starPlayer?: any }).starPlayer;
   return model ?? null;
+}
+
+/**
+ * Payload public d'un Star Player. Mapper unique partagé par les 4 routes
+ * (liste, recherche, détail, disponibles) : toute nouvelle colonne exposée
+ * n'est ajoutée qu'ici.
+ *
+ * `keywords` (lignée + type, ex: "Humain, Blitzer") vient de la colonne DB ;
+ * tant que le seed n'a pas tourné après la migration, on retombe sur la table
+ * du game-engine (source de vérité) pour ne pas servir un champ vide.
+ * `keywordsEn` est toujours calculé (comme pour les positions).
+ */
+function transformStarPlayer(sp: any) {
+  const keywords: string | null = sp.keywords ?? getStarPlayerKeywords(sp.slug);
+  return {
+    slug: sp.slug,
+    displayName: sp.displayName,
+    cost: sp.cost,
+    ma: sp.ma,
+    st: sp.st,
+    ag: sp.ag,
+    pa: sp.pa,
+    av: sp.av,
+    keywords,
+    keywordsEn: translateKeywordsCsv(keywords, "en"),
+    specialRule: sp.specialRule,
+    imageUrl: sp.imageUrl,
+    isMegaStar: sp.isMegaStar,
+    skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+    hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
+  };
 }
 
 /**
@@ -47,21 +80,7 @@ router.get("/", async (req, res) => {
     });
 
     // Transformer les données pour correspondre au format attendu
-    const transformedStarPlayers = starPlayers.map((sp: any) => ({
-      slug: sp.slug,
-      displayName: sp.displayName,
-      cost: sp.cost,
-      ma: sp.ma,
-      st: sp.st,
-      ag: sp.ag,
-      pa: sp.pa,
-      av: sp.av,
-      specialRule: sp.specialRule,
-      imageUrl: sp.imageUrl,
-      isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
-    }));
+    const transformedStarPlayers = starPlayers.map(transformStarPlayer);
 
     res.json({
       success: true,
@@ -146,21 +165,7 @@ router.get("/search", async (req, res) => {
     });
 
     // Transformer les données
-    const transformedStarPlayers = starPlayers.map((sp: any) => ({
-      slug: sp.slug,
-      displayName: sp.displayName,
-      cost: sp.cost,
-      ma: sp.ma,
-      st: sp.st,
-      ag: sp.ag,
-      pa: sp.pa,
-      av: sp.av,
-      specialRule: sp.specialRule,
-      imageUrl: sp.imageUrl,
-      isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
-    }));
+    const transformedStarPlayers = starPlayers.map(transformStarPlayer);
 
     res.json({
       success: true,
@@ -237,20 +242,8 @@ router.get("/:slug", async (req, res) => {
 
     // Transformer les données
     const transformedStarPlayer = {
-      slug: starPlayer.slug,
+      ...transformStarPlayer(starPlayer),
       ruleset: starPlayer.ruleset,
-      displayName: starPlayer.displayName,
-      cost: starPlayer.cost,
-      ma: starPlayer.ma,
-      st: starPlayer.st,
-      ag: starPlayer.ag,
-      pa: starPlayer.pa,
-      av: starPlayer.av,
-      specialRule: starPlayer.specialRule,
-      imageUrl: starPlayer.imageUrl,
-      isMegaStar: starPlayer.isMegaStar,
-      skills: starPlayer.skills.map((sps: any) => sps.skill.slug).join(","),
-      hirableBy: starPlayer.hirableBy.map((h: any) => h.roster?.slug || h.rule),
     };
 
     res.json({
@@ -351,21 +344,7 @@ router.get("/available/:roster", async (req, res) => {
         seenSlugs.add(sp.slug);
         return true;
       })
-      .map((sp: any) => ({
-        slug: sp.slug,
-        displayName: sp.displayName,
-        cost: sp.cost,
-        ma: sp.ma,
-        st: sp.st,
-        ag: sp.ag,
-        pa: sp.pa,
-        av: sp.av,
-        specialRule: sp.specialRule,
-        imageUrl: sp.imageUrl,
-        isMegaStar: sp.isMegaStar,
-        skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
-        hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
-      }));
+      .map(transformStarPlayer);
 
     res.json({
       success: true,

@@ -145,6 +145,7 @@ export default function NewStarPlayerPage() {
         ag: parseInt(formData.get("ag") as string),
         pa: formData.get("pa") ? parseInt(formData.get("pa") as string) : null,
         av: parseInt(formData.get("av") as string),
+        keywords: formData.get("keywords") || null,
         specialRule: formData.get("specialRule") || null,
         imageUrl: formData.get("imageUrl") || null,
         skillSlugs,
@@ -283,6 +284,20 @@ export default function NewStarPlayerPage() {
               name="imageUrl"
               className="w-full border rounded px-3 py-2"
             />
+          </div>
+          <div className="col-span-3">
+            <label className="block text-sm font-medium mb-1">
+              Mots-clés (lignée + type, séparés par des virgules)
+            </label>
+            <input
+              type="text"
+              name="keywords"
+              className="w-full border rounded px-3 py-2"
+              placeholder="ex: Humain, Blitzer"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Même vocabulaire que les mots-clés de position (ex: « Ogre, Gros Bras »).
+            </p>
           </div>
           <div className="col-span-3">
             <label className="block text-sm font-medium mb-1">Règle spéciale</label>

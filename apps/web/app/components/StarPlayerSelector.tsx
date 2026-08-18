@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../auth-client";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
+import KeywordChips from "./KeywordChips";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export interface StarPlayer {
@@ -16,6 +17,10 @@ export interface StarPlayer {
   skills: string;
   hirableBy: string[] | ["all"];
   specialRule?: string;
+  /** Mots-clés FR (lignée + type), ex: "Humain, Blitzer". */
+  keywords?: string | null;
+  /** Mots-clés traduits EN, ex: "Human, Blitzer". */
+  keywordsEn?: string | null;
 }
 
 interface StarPlayerSelectorProps {
@@ -45,7 +50,7 @@ export default function StarPlayerSelector({
   disabled = false,
   ruleset = "season_3",
 }: StarPlayerSelectorProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -261,6 +266,15 @@ export default function StarPlayerSelector({
                     </div>
                   </div>
                   
+                  <KeywordChips
+                    keywords={
+                      language === "en"
+                        ? sp.keywordsEn ?? sp.keywords
+                        : sp.keywords ?? sp.keywordsEn
+                    }
+                    className="mt-1"
+                  />
+
                   <div className="flex items-center gap-4 text-xs text-gray-600 mt-1">
                     <span>MA {sp.ma}</span>
                     <span>ST {sp.st}</span>

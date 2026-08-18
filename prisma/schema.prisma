@@ -707,6 +707,7 @@ model StarPlayer {
   ag          Int // Agility (valeur cible, ex: 3 pour 3+)
   pa          Int? // Passing (valeur cible, ex: 2 pour 2+, null pour -)
   av          Int // Armour Value (valeur cible, ex: 9 pour 9+)
+  keywords    String? // Mots-clés séparés par des virgules (lignée + type, ex: "Humain, Blitzer")
   specialRule String? // Règle spéciale du joueur
   imageUrl    String? // URL de l'image du joueur
   isMegaStar  Boolean  @default(false) // Flag Mega Star

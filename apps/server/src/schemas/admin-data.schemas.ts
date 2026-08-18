@@ -176,6 +176,8 @@ export const createStarPlayerDataSchema = z.object({
   ag: z.number({ message: "ag requis" }).int(),
   pa: z.number().int().optional().nullable(),
   av: z.number({ message: "av requis" }).int(),
+  // Mots-clés (lignée + type), CSV — ex: "Humain, Blitzer". Cf. Position.keywords.
+  keywords: z.string().optional().nullable(),
   specialRule: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   skillSlugs: z.array(z.string()).optional(),
@@ -190,6 +192,7 @@ export const updateStarPlayerDataSchema = z.object({
   ag: z.number().int().optional(),
   pa: z.number().int().optional().nullable(),
   av: z.number().int().optional(),
+  keywords: z.string().optional().nullable(),
   specialRule: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   skillSlugs: z.array(z.string()).optional(),

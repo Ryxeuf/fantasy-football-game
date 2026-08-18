@@ -445,6 +445,9 @@ async function main() {
           ag: starPlayerDef.ag,
           pa: starPlayerDef.pa ?? null,
           av: starPlayerDef.av,
+          // Mots-clés officiels (lignée + type) : source game-engine, mêmes
+          // libellés que `Position.keywords`.
+          keywords: starPlayerDef.keywords ?? null,
           specialRule: starPlayerDef.specialRule ?? null,
           imageUrl: starPlayerDef.imageUrl ?? null,
           isMegaStar: starPlayerDef.isMegaStar ?? false,

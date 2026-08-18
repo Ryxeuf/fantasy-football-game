@@ -52,6 +52,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       'Blood Bowl',
       'Mercenaire',
       'Nuffle Arena',
+      // Mots-cles officiels du joueur (lignee + type), ex: "Humain", "Blitzer".
+      ...(starPlayer.keywords ?? '')
+        .split(',')
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0),
     ],
     alternates: {
       canonical: `${BASE_URL}/star-players/${slug}`,

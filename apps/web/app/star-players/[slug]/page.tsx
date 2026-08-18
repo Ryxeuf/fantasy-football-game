@@ -5,12 +5,22 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
+import KeywordChips from '../../components/KeywordChips';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 import { getStarPlayerSkillSlugs } from '@bb/game-engine';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getPlaysForRosters } from './plays-for';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
+
+/**
+ * Payload servi par `GET /star-players/:slug`. `keywordsEn` est la traduction
+ * des mots-clés (lignée + type) ; optionnel pour rester compatible avec un
+ * serveur antérieur à la feature.
+ */
+type StarPlayerDetail = StarPlayerDefinition & {
+  readonly keywordsEn?: string | null;
+};
 
 /**
  * Page de détail d'un Star Player individuel
@@ -21,7 +31,7 @@ export default function StarPlayerDetailPage() {
   const slug = params.slug as string;
   const { language } = useLanguage();
 
-  const [starPlayer, setStarPlayer] = useState<StarPlayerDefinition | null>(null);
+  const [starPlayer, setStarPlayer] = useState<StarPlayerDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
@@ -129,6 +139,12 @@ export default function StarPlayerDetailPage() {
   // Utiliser la fonction centralisée pour parser les compétences
   const skills = getStarPlayerSkillSlugs(starPlayer);
 
+  // Mots-clés (lignée + type) : EN si disponible, repli FR.
+  const keywords =
+    language === 'en'
+      ? starPlayer.keywordsEn ?? starPlayer.keywords
+      : starPlayer.keywords ?? starPlayer.keywordsEn;
+
   // « Joue pour » : équipes pouvant recruter ce Star Player. `hirableBy`
   // n'expose que des critères (Ligues régionales, `all`) ; la résolution en
   // rosters concrets vit dans le game-engine (cf. `plays-for.ts`).
@@ -184,6 +200,14 @@ export default function StarPlayerDetailPage() {
                     </span>
                   )}
                 </div>
+                {keywords && (
+                  <div className="flex justify-center md:justify-start mb-3 sm:mb-4">
+                    <KeywordChips
+                      keywords={keywords}
+                      testId="star-player-keywords"
+                    />
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3 sm:gap-4">
                   <span className="text-xl sm:text-2xl md:text-3xl font-bold bg-yellow-400 text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg">
                     {(starPlayer.cost / 1000).toLocaleString()} K po
