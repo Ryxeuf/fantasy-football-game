@@ -1,3 +1,10 @@
+## [1.226.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.225.0...v1.226.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **league:** consulte le roster de l'adversaire depuis la feuille de match ([#950](https://github.com/Ryxeuf/fantasy-football-game/issues/950)) ([65693b2](https://github.com/Ryxeuf/fantasy-football-game/commit/65693b240b831aa7fc6946fa2c9caeb8e1cd22d2))
+
 ## [1.225.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.224.2...v1.225.0) (2026-08-18)
 
 
