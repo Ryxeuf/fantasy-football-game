@@ -1,3 +1,10 @@
+## [1.230.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.229.0...v1.230.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **star-players:** mots-clés (lignée + type) sur les Star Players ([#955](https://github.com/Ryxeuf/fantasy-football-game/issues/955)) ([214c73c](https://github.com/Ryxeuf/fantasy-football-game/commit/214c73cff475d9f7b2ec770e1a1b5e49cbf650ae))
+
 ## [1.229.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.228.0...v1.229.0) (2026-08-18)
 
 
