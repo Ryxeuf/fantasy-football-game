@@ -78,21 +78,62 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * GET /api/star-players/:slug
- * Obtenir les détails d'un star player spécifique depuis la base de données
+ * GET /api/star-players/search
+ * Rechercher des star players par nom ou compétences depuis la base de données
+ *
+ * ATTENTION ORDRE DES ROUTES : toute route littérale à UN seul segment
+ * (ex: `/search`) doit être déclarée AVANT `/:slug`, sinon Express la fait
+ * matcher le pattern paramétré et elle devient injoignable.
  */
-router.get("/:slug", async (req, res) => {
+router.get("/search", async (req, res) => {
   try {
-    const { slug } = req.params;
+    const { q, skill, minCost, maxCost } = req.query;
+    const where: any = {};
+
+    // Filtrer par nom
+    if (q && typeof q === 'string') {
+      where.OR = [
+        { displayName: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    // Filtrer par compétence
+    if (skill && typeof skill === 'string') {
+      where.skills = {
+        some: {
+          skill: {
+            OR: [
+              { slug: { contains: skill, mode: "insensitive" } },
+              { nameFr: { contains: skill, mode: "insensitive" } },
+              { nameEn: { contains: skill, mode: "insensitive" } },
+            ],
+          },
+        },
+      };
+    }
+
+    // Filtrer par coût minimum
+    if (minCost && !isNaN(Number(minCost))) {
+      where.cost = { ...where.cost, gte: Number(minCost) };
+    }
+
+    // Filtrer par coût maximum
+    if (maxCost && !isNaN(Number(maxCost))) {
+      where.cost = { ...where.cost, lte: Number(maxCost) };
+    }
+
     const starPlayerModel = getStarPlayerModel();
     if (!starPlayerModel) {
-      return res.status(404).json({
-        success: false,
-        error: "Star player not found",
+      return res.json({
+        success: true,
+        count: 0,
+        filters: { q, skill, minCost, maxCost },
+        data: [],
       });
     }
-    const starPlayer = await starPlayerModel.findUnique({
-      where: { slug },
+    const starPlayers = await starPlayerModel.findMany({
+      where,
       include: {
         skills: {
           include: { skill: true },
@@ -101,7 +142,91 @@ router.get("/:slug", async (req, res) => {
           include: { roster: true },
         },
       },
+      orderBy: { displayName: "asc" },
     });
+
+    // Transformer les données
+    const transformedStarPlayers = starPlayers.map((sp: any) => ({
+      slug: sp.slug,
+      displayName: sp.displayName,
+      cost: sp.cost,
+      ma: sp.ma,
+      st: sp.st,
+      ag: sp.ag,
+      pa: sp.pa,
+      av: sp.av,
+      specialRule: sp.specialRule,
+      imageUrl: sp.imageUrl,
+      isMegaStar: sp.isMegaStar,
+      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
+    }));
+
+    res.json({
+      success: true,
+      count: transformedStarPlayers.length,
+      filters: { q, skill, minCost, maxCost },
+      data: transformedStarPlayers
+    });
+  } catch (error) {
+    serverLog.error("Error searching star players:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to search star players"
+    });
+  }
+});
+
+/**
+ * GET /api/star-players/:slug
+ * Obtenir les détails d'un star player spécifique depuis la base de données
+ */
+router.get("/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
+    const starPlayerModel = getStarPlayerModel();
+    if (!starPlayerModel) {
+      return res.status(404).json({
+        success: false,
+        error: "Star player not found",
+      });
+    }
+
+    const include = {
+      skills: {
+        include: { skill: true },
+      },
+      hirableBy: {
+        include: { roster: true },
+      },
+    };
+
+    // `slug` seul n'est PAS un selecteur unique : le modele Prisma declare
+    // `@@unique([slug, ruleset])`. Un `findUnique({ where: { slug } })` leve
+    // donc une PrismaClientValidationError => 500 sur toutes les pages de
+    // detail. On passe par `findFirst` + resolution explicite du ruleset.
+    let starPlayer = await starPlayerModel.findFirst({
+      where: { slug, ruleset },
+      include,
+    });
+
+    // Fallback ruleset par defaut : les liens publics ne portent pas de
+    // `?ruleset=`, un star absent du ruleset demande reste consultable.
+    if (!starPlayer && ruleset !== DEFAULT_RULESET) {
+      starPlayer = await starPlayerModel.findFirst({
+        where: { slug, ruleset: DEFAULT_RULESET },
+        include,
+      });
+    }
+
+    // Dernier recours : le star n'existe que dans un autre ruleset.
+    if (!starPlayer) {
+      starPlayer = await starPlayerModel.findFirst({
+        where: { slug },
+        include,
+      });
+    }
 
     if (!starPlayer) {
       return res.status(404).json({
@@ -113,6 +238,7 @@ router.get("/:slug", async (req, res) => {
     // Transformer les données
     const transformedStarPlayer = {
       slug: starPlayer.slug,
+      ruleset: starPlayer.ruleset,
       displayName: starPlayer.displayName,
       cost: starPlayer.cost,
       ma: starPlayer.ma,
@@ -285,102 +411,6 @@ router.get("/regional-rules/:roster", (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch regional rules"
-    });
-  }
-});
-
-/**
- * GET /api/star-players/search
- * Rechercher des star players par nom ou compétences depuis la base de données
- */
-router.get("/search", async (req, res) => {
-  try {
-    const { q, skill, minCost, maxCost } = req.query;
-    const where: any = {};
-
-    // Filtrer par nom
-    if (q && typeof q === 'string') {
-      where.OR = [
-        { displayName: { contains: q, mode: "insensitive" } },
-        { slug: { contains: q, mode: "insensitive" } },
-      ];
-    }
-
-    // Filtrer par compétence
-    if (skill && typeof skill === 'string') {
-      where.skills = {
-        some: {
-          skill: {
-            OR: [
-              { slug: { contains: skill, mode: "insensitive" } },
-              { nameFr: { contains: skill, mode: "insensitive" } },
-              { nameEn: { contains: skill, mode: "insensitive" } },
-            ],
-          },
-        },
-      };
-    }
-
-    // Filtrer par coût minimum
-    if (minCost && !isNaN(Number(minCost))) {
-      where.cost = { ...where.cost, gte: Number(minCost) };
-    }
-
-    // Filtrer par coût maximum
-    if (maxCost && !isNaN(Number(maxCost))) {
-      where.cost = { ...where.cost, lte: Number(maxCost) };
-    }
-
-    const starPlayerModel = getStarPlayerModel();
-    if (!starPlayerModel) {
-      return res.json({
-        success: true,
-        count: 0,
-        filters: { q, skill, minCost, maxCost },
-        data: [],
-      });
-    }
-    const starPlayers = await starPlayerModel.findMany({
-      where,
-      include: {
-        skills: {
-          include: { skill: true },
-        },
-        hirableBy: {
-          include: { roster: true },
-        },
-      },
-      orderBy: { displayName: "asc" },
-    });
-
-    // Transformer les données
-    const transformedStarPlayers = starPlayers.map((sp: any) => ({
-      slug: sp.slug,
-      displayName: sp.displayName,
-      cost: sp.cost,
-      ma: sp.ma,
-      st: sp.st,
-      ag: sp.ag,
-      pa: sp.pa,
-      av: sp.av,
-      specialRule: sp.specialRule,
-      imageUrl: sp.imageUrl,
-      isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
-    }));
-
-    res.json({
-      success: true,
-      count: transformedStarPlayers.length,
-      filters: { q, skill, minCost, maxCost },
-      data: transformedStarPlayers
-    });
-  } catch (error) {
-    serverLog.error("Error searching star players:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to search star players"
     });
   }
 });
