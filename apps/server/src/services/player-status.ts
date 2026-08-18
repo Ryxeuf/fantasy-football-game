@@ -187,6 +187,65 @@ export async function applyPlayerStatuses(
   return { appliedIds, teamIds: [...teamIds] };
 }
 
+/**
+ * Retire du roster un joueur DEJA inactif (mort ou licencie).
+ *
+ * Cas d'usage : un joueur mort reste sur la feuille d'equipe d'une equipe
+ * engagee (le verrou anti-triche interdit toute suppression) et occupe une
+ * place. Le coach doit pouvoir l'en sortir.
+ *
+ * On pose `firedAt` — l'etat « sorti du roster » du modele — et RIEN
+ * d'autre : `dead` / `diedAt` / la provenance du statut sont laisses
+ * intacts, pour que l'invalidation d'une feuille de match puisse toujours
+ * reverter la mort (`revertPlayerStatus` ne remet pas `firedAt` a null :
+ * un joueur retire par son coach ne revient donc pas au roster tout seul,
+ * ce qui est le comportement voulu).
+ *
+ * Aucun `TeamPlayerStatusEvent` n'est ecrit : l'invariant « au plus un
+ * event non reverte par joueur » appartient a l'evenement de MORT, qui
+ * reste la cause reversible. Le retrait, lui, est une decision du coach,
+ * definitive et sans source a annuler.
+ *
+ * Idempotent : un joueur deja `firedAt` est considere comme retire.
+ */
+export async function removeInactivePlayerFromRoster(input: {
+  readonly playerId: string;
+  readonly allowedTeamIds?: readonly string[];
+}): Promise<
+  | { readonly removed: true; readonly teamId: string }
+  | {
+      readonly skipped: true;
+      readonly reason: "player-not-found" | "team-not-allowed" | "player-active";
+    }
+> {
+  const player = (await prisma.teamPlayer.findUnique({
+    where: { id: input.playerId },
+    select: { id: true, teamId: true, dead: true, firedAt: true },
+  })) as {
+    id: string;
+    teamId: string;
+    dead: boolean;
+    firedAt: Date | null;
+  } | null;
+
+  if (!player) return { skipped: true, reason: "player-not-found" };
+  if (input.allowedTeamIds && !input.allowedTeamIds.includes(player.teamId)) {
+    return { skipped: true, reason: "team-not-allowed" };
+  }
+  // Un joueur encore actif passe par le chemin de suppression normal (et
+  // son verrou d'equipe engagee) : ce retrait ne doit pas servir a vider
+  // un roster en cours de competition.
+  if (isActivePlayer(player)) return { skipped: true, reason: "player-active" };
+
+  if (player.firedAt === null) {
+    await prisma.teamPlayer.update({
+      where: { id: player.id },
+      data: { firedAt: new Date() },
+    });
+  }
+  return { removed: true, teamId: player.teamId };
+}
+
 export type RevertPlayerStatusReason =
   | "player-not-found"
   | "no-status-to-revert"

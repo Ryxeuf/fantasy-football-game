@@ -171,6 +171,37 @@ export default function TeamDetailPage() {
     }));
   };
 
+  /**
+   * Retire du roster un joueur mort ou licencié. Le serveur refuse encore
+   * ce retrait pour un joueur actif d'une équipe engagée : ici on ne
+   * l'expose que sur les joueurs inactifs.
+   */
+  const handleRemoveInactivePlayer = async (player: {
+    id: string;
+    name?: string;
+  }) => {
+    if (
+      !window.confirm(
+        `Retirer ${player.name ?? "ce joueur"} de la feuille d'équipe ? Son historique est conservé.`,
+      )
+    ) {
+      return;
+    }
+    setRemovingPlayerId(player.id);
+    try {
+      await apiRequest(`/team/${id}/players/${player.id}`, {
+        method: "DELETE",
+      });
+      await refetchTeam();
+    } catch (e: unknown) {
+      alert(
+        e instanceof Error ? e.message : "Impossible de retirer ce joueur",
+      );
+    } finally {
+      setRemovingPlayerId(null);
+    }
+  };
+
   // Règle "Capitaine" : après désignation, recharger la fiche équipe (le
   // capitaine vient de gagner la compétence Pro dans son CSV de skills).
   const refetchTeam = async () => {
@@ -245,6 +276,8 @@ export default function TeamDetailPage() {
       alert(t.teams.exportPDFError);
     }
   };
+
+  const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
   const team = data?.team;
   const match = data?.currentMatch;
@@ -669,6 +702,7 @@ export default function TeamDetailPage() {
                     <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">PA</th>
                     <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">AV</th>
                     <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tableSkills}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -724,6 +758,24 @@ export default function TeamDetailPage() {
                           secondary={skillAccessByPosition.get(p.position)?.secondary ?? null}
                         />
                       </td>
+                      <td className="p-3 sm:p-4">
+                        {p.dead || p.firedAt ? (
+                          <button
+                            type="button"
+                            data-testid={`remove-player-${p.id}`}
+                            disabled={removingPlayerId === p.id}
+                            onClick={() => void handleRemoveInactivePlayer(p)}
+                            title={
+                              p.dead
+                                ? "Retirer ce joueur mort de la feuille d'équipe"
+                                : "Retirer ce joueur licencié de la feuille d'équipe"
+                            }
+                            className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {removingPlayerId === p.id ? "…" : "Retirer"}
+                          </button>
+                        ) : null}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -768,6 +820,17 @@ export default function TeamDetailPage() {
                         <div className="font-mono text-sm font-semibold">
                           {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
                         </div>
+                        {p.dead || p.firedAt ? (
+                          <button
+                            type="button"
+                            data-testid={`remove-player-mobile-${p.id}`}
+                            disabled={removingPlayerId === p.id}
+                            onClick={() => void handleRemoveInactivePlayer(p)}
+                            className="mt-2 rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {removingPlayerId === p.id ? "…" : "Retirer"}
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                     <div className="grid grid-cols-5 gap-2 mb-3 text-xs">
