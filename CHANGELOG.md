@@ -1,3 +1,10 @@
+## [1.224.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.2...v1.224.0) (2026-08-18)
+
+
+### ✨ Features
+
+* **league:** affiche le résultat validé dans le calendrier ([#946](https://github.com/Ryxeuf/fantasy-football-game/issues/946)) ([d1ed301](https://github.com/Ryxeuf/fantasy-football-game/commit/d1ed301280a33812da903722c52ebfb28098aff9))
+
 ## [1.223.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.223.1...v1.223.2) (2026-08-17)
 
 
