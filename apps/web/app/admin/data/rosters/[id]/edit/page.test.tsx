@@ -172,4 +172,72 @@ describe("EditRosterPage — ligues régionales en cases à cocher", () => {
       ).checked,
     ).toBe(true);
   });
+
+
+  it("confirme l'enregistrement en relisant ce que le serveur a stocké", async () => {
+    // Le GET qui suit le PUT renvoie l'état réel en base : c'est LUI qui
+    // est affiché, pas la sélection locale — un écart devient visible.
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/auth/me")) {
+        return { ok: true, json: async () => ({ user: { roles: ["admin"] } }) };
+      }
+      if (init?.method === "PUT") {
+        return { ok: true, json: async () => ({ roster: ROSTER }) };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          roster: {
+            ...ROSTER,
+            regionalRules: ["elven_kingdoms_league", "woodland_league"],
+            regionalRulesSource: "db",
+          },
+        }),
+      };
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<EditRosterPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-regional-leagues")).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Mettre à jour/i }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-save-success").textContent).toContain(
+        "woodland_league",
+      ),
+    );
+    expect(screen.getByTestId("roster-save-success").textContent).toContain(
+      "Règles spéciales : aucune",
+    );
+  });
+
+  it("affiche l'échec d'enregistrement et ne confirme rien", async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/auth/me")) {
+        return { ok: true, json: async () => ({ user: { roles: ["admin"] } }) };
+      }
+      if (init?.method === "PUT") {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({ error: "budget: Expected number" }),
+        };
+      }
+      return { ok: true, json: async () => ({ roster: ROSTER }) };
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<EditRosterPage />);
+    await waitFor(() =>
+      expect(screen.getByTestId("roster-regional-leagues")).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Mettre à jour/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/budget/)).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("roster-save-success")).toBeNull();
+  });
 });

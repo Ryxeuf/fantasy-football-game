@@ -137,6 +137,11 @@ async function postJSON(path: string, data: any) {
   return res.json();
 }
 
+/** Libellé lisible d'une liste de slugs pour la confirmation d'enregistrement. */
+function describeSlugs(slugs: string[]): string {
+  return slugs.length > 0 ? slugs.join(", ") : "aucune";
+}
+
 export default function AdminRosterDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -149,6 +154,8 @@ export default function AdminRosterDetailPage() {
   // faisait disparaitre la page ET la saisie en cours.
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Confirmation d'enregistrement, relue depuis le serveur.
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   // Ligues et regles speciales du formulaire inline (cases a cocher).
   const [regionalRules, setRegionalRules] = useState<string[]>([]);
@@ -161,7 +168,11 @@ export default function AdminRosterDetailPage() {
     loadRoster();
   }, [id]);
 
-  const loadRoster = async () => {
+  /** Charge la fiche et renvoie les listes effectivement en base. */
+  const loadRoster = async (): Promise<{
+    regionalRules: string[];
+    specialRules: string[];
+  } | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -174,15 +185,19 @@ export default function AdminRosterDetailPage() {
           : undefined;
       if (!roles || !roles.includes("admin")) {
         window.location.href = "/";
-        return;
+        return null;
       }
       const { roster: data } = await fetchJSON(`/admin/data/rosters/${id}`);
       setRoster(data);
       // L'API renvoie les ligues EFFECTIVES (base, sinon defaut du roster).
-      setRegionalRules(parseSlugList(data.regionalRules));
-      setSpecialRules(parseSlugList(data.specialRules));
+      const nextRegional = parseSlugList(data.regionalRules);
+      const nextSpecial = parseSlugList(data.specialRules);
+      setRegionalRules(nextRegional);
+      setSpecialRules(nextSpecial);
+      return { regionalRules: nextRegional, specialRules: nextSpecial };
     } catch (e: any) {
       setError(e.message || "Erreur");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -193,6 +208,7 @@ export default function AdminRosterDetailPage() {
     if (!roster) return;
     const formData = new FormData(e.currentTarget);
     setActionError(null);
+    setActionSuccess(null);
     try {
       const data = {
         name: formData.get("name"),
@@ -208,7 +224,14 @@ export default function AdminRosterDetailPage() {
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
       setEditing(false);
-      loadRoster();
+      // Relecture serveur : la confirmation affiche ce qui est
+      // REELLEMENT enregistre, pas ce qu'on croit avoir envoye.
+      const saved = await loadRoster();
+      setActionSuccess(
+        saved
+          ? `Roster enregistré. Ligues : ${describeSlugs(saved.regionalRules)} · Règles spéciales : ${describeSlugs(saved.specialRules)}`
+          : "Roster enregistré.",
+      );
     } catch (e: any) {
       setActionError(e.message || "Erreur lors de la mise à jour");
     }
@@ -265,6 +288,15 @@ export default function AdminRosterDetailPage() {
 
   return (
     <div className="space-y-6">
+      {actionSuccess && (
+        <div
+          data-testid="roster-detail-action-success"
+          className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800"
+        >
+          {actionSuccess}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

@@ -163,4 +163,17 @@ describe("AdminRosterDetailPage — ligues en cases à cocher", () => {
       ).checked,
     ).toBe(true);
   });
+
+
+  it("confirme l'enregistrement avec les listes relues du serveur", async () => {
+    mockFetch({ ...ROSTER, regionalRulesSource: "db" });
+    await openEditor();
+    fireEvent.click(screen.getByText("Mettre à jour"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("roster-detail-action-success").textContent,
+      ).toContain("elven_kingdoms_league"),
+    );
+  });
 });
