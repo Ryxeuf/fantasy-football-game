@@ -125,4 +125,42 @@ describe("AdminRosterDetailPage — ligues en cases à cocher", () => {
       screen.queryByTestId("roster-detail-regional-leagues-inherited"),
     ).toBeNull();
   });
+
+  it("affiche un échec d'enregistrement à côté du formulaire, sans perdre la saisie", async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/auth/me")) {
+        return { ok: true, json: async () => ({ user: { roles: ["admin"] } }) };
+      }
+      if (init?.method === "PUT") {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({ error: "budget: Expected number" }),
+        };
+      }
+      return { ok: true, json: async () => ({ roster: ROSTER }) };
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await openEditor();
+    fireEvent.click(
+      screen.getByTestId("roster-detail-regional-leagues-badlands_brawl"),
+    );
+    fireEvent.click(screen.getByText("Mettre à jour"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("roster-detail-action-error").textContent,
+      ).toContain("budget"),
+    );
+    // Le formulaire reste ouvert avec la case fraîchement cochée : une
+    // erreur d'enregistrement ne doit pas remplacer la page.
+    expect(
+      (
+        screen.getByTestId(
+          "roster-detail-regional-leagues-badlands_brawl",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
 });
