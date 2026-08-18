@@ -1129,11 +1129,16 @@ export async function getSeasonById(seasonId: string) {
             orderBy: { createdAt: "asc" },
             include: {
               match: { select: { id: true, status: true, mode: true } },
-              // Feuille de match : seul le `status` est expose au
-              // calendrier, pour signaler « En attente validation »
-              // quand les coachs ont saisi mais que le commissaire n'a
-              // pas encore valide.
-              matchSheet: { select: { status: true } },
+              // Feuille de match : le `status` sert a signaler « En
+              // attente validation » quand les coachs ont saisi mais que
+              // le commissaire n'a pas encore valide, et le score
+              // snapshote a la validation permet d'afficher le resultat
+              // plutot qu'un simple libelle « Joue ». C'est la seule
+              // source de score d'un pairing (le modele `Match` n'a pas
+              // de colonnes de score).
+              matchSheet: {
+                select: { status: true, scoreHome: true, scoreAway: true },
+              },
               homeParticipant: {
                 select: {
                   id: true,

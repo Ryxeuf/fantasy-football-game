@@ -101,7 +101,12 @@ export interface LeaguePairingDetail {
    * attente validation » quand les coachs ont saisi mais que le
    * commissaire n'a pas encore validé. Optionnel : rétro-compat API.
    */
-  matchSheet?: { status: LeagueMatchSheetStatus | string } | null;
+  matchSheet?: {
+    status: LeagueMatchSheetStatus | string;
+    /** Score snapshoté à la validation (source unique du résultat). */
+    scoreHome?: number | null;
+    scoreAway?: number | null;
+  } | null;
 }
 
 /** Workflow de la feuille de match (cf. `LeagueMatchSheet.status`). */

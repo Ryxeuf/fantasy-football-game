@@ -963,7 +963,9 @@ describe("Rule: League service", () => {
       // « En attente validation » (le status du pairing reste
       // "scheduled" tant que le commissaire n'a pas valide).
       expect(args.include.rounds.include.pairings.include.matchSheet).toEqual({
-        select: { status: true },
+        // Le score snapshote a la validation est la seule source de
+        // resultat d'un pairing (le modele `Match` n'a pas de score).
+        select: { status: true, scoreHome: true, scoreAway: true },
       });
     });
   });
