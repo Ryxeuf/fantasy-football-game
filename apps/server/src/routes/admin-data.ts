@@ -1244,11 +1244,17 @@ router.get("/star-players/:id", async (req, res) => {
 
 router.post("/star-players", validate(createStarPlayerDataSchema), async (req, res) => {
   try {
-    const { slug, displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
+    const { slug, ruleset, displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
+
+    const resolvedRuleset = resolveRuleset(ruleset);
+    // Resout les slugs en IDs dans le ruleset du Star Player : `slug` seul
+    // est ambigu (`Skill` est unique par [slug, ruleset]).
+    const skillIds = await resolveSkillIdsForRuleset(skillSlugs, resolvedRuleset);
 
     const starPlayer = await prisma.starPlayer.create({
       data: {
         slug,
+        ruleset: resolvedRuleset,
         displayName,
         cost,
         ma,
@@ -1259,11 +1265,11 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
         specialRule: specialRule || null,
         imageUrl: imageUrl || null,
         skills: {
-          create: skillSlugs?.map((skillSlug: string) => ({
+          create: skillIds.map((skillId) => ({
             skill: {
-              connect: { slug: skillSlug }
+              connect: { id: skillId }
             }
-          })) || [],
+          })),
         },
         hirableBy: {
           create: hirableBy?.map((rule: string | { rule: string; rosterId?: string }) => {
@@ -1297,6 +1303,9 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
     });
     res.status(201).json({ starPlayer });
   } catch (error: any) {
+    if (error instanceof SkillResolutionError) {
+      return res.status(400).json({ error: error.message });
+    }
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Ce Star Player existe déjà" });
     }
@@ -1313,6 +1322,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
       where: { id: req.params.id },
       select: {
         slug: true,
+        ruleset: true,
         displayName: true,
         cost: true,
         ma: true,
@@ -1323,6 +1333,13 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         specialRule: true,
       },
     });
+    if (!previous) {
+      return res.status(404).json({ error: "Star Player non trouvé" });
+    }
+
+    // Resolution AVANT toute suppression : un slug invalide ne doit pas
+    // laisser le Star Player sans competences (cf. positions).
+    const skillIds = await resolveSkillIdsForRuleset(skillSlugs, previous.ruleset);
 
     // Supprimer les anciennes relations
     await prisma.starPlayerSkill.deleteMany({
@@ -1346,11 +1363,11 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         specialRule: specialRule || null,
         imageUrl: imageUrl || null,
         skills: {
-          create: skillSlugs?.map((skillSlug: string) => ({
+          create: skillIds.map((skillId) => ({
             skill: {
-              connect: { slug: skillSlug }
+              connect: { id: skillId }
             }
-          })) || [],
+          })),
         },
         hirableBy: {
           create: hirableBy?.map((rule: string | { rule: string; rosterId?: string }) => {
@@ -1391,6 +1408,9 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
     });
     res.json({ starPlayer });
   } catch (error: any) {
+    if (error instanceof SkillResolutionError) {
+      return res.status(400).json({ error: error.message });
+    }
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Star Player non trouvé" });
     }

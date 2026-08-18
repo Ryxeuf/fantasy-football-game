@@ -166,6 +166,9 @@ const hirableByItem = z.union([
 
 export const createStarPlayerDataSchema = z.object({
   slug: z.string().min(1, "slug requis").max(100),
+  // Ruleset cible : conditionne la resolution des slugs de competences
+  // (`Skill` est unique par [slug, ruleset]). Absent => DEFAULT_RULESET.
+  ruleset: z.string().max(50).optional(),
   displayName: z.string().min(1, "displayName requis").max(200),
   cost: z.number({ message: "cost requis" }),
   ma: z.number({ message: "ma requis" }).int(),
