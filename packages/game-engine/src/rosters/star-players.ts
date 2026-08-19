@@ -1184,6 +1184,10 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   bomber_dribblesnot: {
     cost: 80000,
   },
+  // Crumbleberry — carte GW « Star Players! (Legends) » 2025, p.5
+  crumbleberry: {
+    pa: 5,
+  },
   // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
   deeproot_strongbranch: {
     hirableBy: ["woodland_league"],
@@ -1191,17 +1195,26 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Eldril Sidewinder — carte GW « Star Players! (Legends) » 2025, p.3
   eldril_sidewinder: {
     cost: 220000,
+    pa: 3,
   },
   // Glart Smashrip — carte GW « Star Players! (Legends) » 2025, p.4
   glart_smashrip: {
     cost: 175000,
+    ma: 5,
+    pa: 6,
   },
   // Glotl Stop — carte GW « Star Players! (Legends) » 2025, p.5
   glotl_stop: {
     cost: 260000,
+    pa: 6,
+  },
+  // Grak — carte GW « Star Players! (Legends) » 2025, p.5
+  grak: {
+    pa: 4,
   },
   // Grashnak Blackhoof — carte GW « Star Players! (Legends) » 2025, p.5
   grashnak_blackhoof: {
+    pa: 6,
     hirableBy: ["chaos_clash"],
   },
   // Gretchen Wächter — carte GW « Star Players! (Legends) » 2025, p.6
@@ -1221,6 +1234,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Hakflem Skuttlespike — carte GW « Star Players! (Legends) » 2025, p.6
   hakflem_skuttlespike: {
     cost: 200000,
+    ma: 8,
   },
   // Helmut Wulf — carte GW « Star Players! (Legends) » 2025, p.7
   helmut_wulf: {
@@ -1233,6 +1247,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Ivan 'the Animal' Deathshroud — carte GW « Star Players! (Legends) » 2025, p.7
   ivan_the_animal_deathshroud: {
     cost: 210000,
+    pa: 5,
   },
   // Ivar Eriksson — carte GW « Star Players! (Legends) » 2025, p.7
   ivar_eriksson: {
@@ -1243,17 +1258,28 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     cost: 280000,
     hirableBy: ["elven_kingdoms_league", "woodland_league"],
   },
+  // Captain Karina von Riesz — carte GW « Star Players! (Legends) » 2025, p.2
+  karina_von_riesz: {
+    pa: 3,
+  },
+  // Karla von Kill — carte GW « Star Players! (Legends) » 2025, p.8
+  karla_von_kill: {
+    pa: 3,
+  },
   // Kiroth Krakeneye — carte GW « Star Players! (Legends) » 2025, p.8
   kiroth_krakeneye: {
     cost: 160000,
+    av: 8,
   },
   // Kreek Rustgouger — carte GW « Star Players! (Legends) » 2025, p.8
   kreek_rustgouger: {
     cost: 180000,
+    ma: 4,
   },
   // Lucien Swift — carte GW « Star Players! (Legends) » 2025, p.11
   lucien_swift: {
     cost: 300000,
+    st: 3,
   },
   // Maple Highgrove — carte GW « Star Players! (Legends) » 2025, p.9
   maple_highgrove: {
@@ -1265,27 +1291,36 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // The Mighty Zug — carte GW « Star Players! (Legends) » 2025, p.9
   mighty_zug: {
+    ma: 5,
     hirableBy: ["old_world_classic", "worlds_edge_superleague"],
   },
   // Rowana Forestfoot — carte GW « Star Players! (Legends) » 2025, p.10
   rowana_forestfoot: {
     hirableBy: ["woodland_league"],
   },
+  // Roxanna Darknail — carte GW « Star Players! (Legends) » 2025, p.10
+  roxanna_darknail: {
+    pa: 3,
+  },
   // Scrappa Sorehead — carte GW « Star Players! (Legends) » 2025, p.10
   scrappa_sorehead: {
     cost: 120000,
+    pa: 4,
   },
   // Scyla Anfingrimm — carte GW « Star Players! (Legends) » 2025, p.11
   scyla_anfingrimm: {
+    pa: 6,
     hirableBy: ["favoured_of_khorne"],
   },
   // Skrorg Snowpelt — carte GW « Star Players! (Legends) » 2025, p.11
   skorg_snowpelt: {
     cost: 240000,
+    pa: 6,
     hirableBy: ["old_world_classic", "worlds_edge_superleague"],
   },
   // Skrull Halfheight — carte GW « Star Players! (Legends) » 2025, p.11
   skrull_halfheight: {
+    pa: 3,
     hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"],
   },
   // Swiftvine Glimmershard — carte GW « Star Players! (Legends) » 2025, p.12
@@ -1295,6 +1330,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // The Black Gobbo — carte GW « Star Players! (Legends) » 2025, p.2
   the_black_gobbo: {
     cost: 210000,
+    av: 8,
   },
   // Thorsson Stoutmead — carte GW « Star Players! (Legends) » 2025, p.12
   thorsson_stoutmead: {
@@ -1303,14 +1339,20 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Valen Swift — carte GW « Star Players! (Legends) » 2025, p.12
   valen_swift: {
     cost: 0,
+    ma: 7,
+    pa: 2,
+    av: 9,
   },
   // Willow Rosebark — carte GW « Star Players! (Legends) » 2025, p.13
   willow_rosebark: {
     cost: 160000,
+    ma: 6,
+    pa: 5,
     hirableBy: ["woodland_league"],
   },
   // Withergrasp Doubledrool — carte GW « Star Players! (Legends) » 2025, p.13
   withergrasp_doubledrool: {
+    ag: 3,
     hirableBy: ["favoured_of_nurgle"],
   },
   // Zolcath the Zoat — carte GW « Star Players! (Legends) » 2025, p.13
