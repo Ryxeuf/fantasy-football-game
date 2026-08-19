@@ -1152,33 +1152,175 @@ const cloneStarPlayersMap = (source: Record<string, StarPlayerDefinition>): Reco
 /**
  * S3-specific overrides: only the fields that differ from S2.
  * To add a future S3 change, add an entry here with only the changed fields.
+ *
+ * Provenance des 50 fiches « Legends » : PDF gratuit GW « Blood Bowl — Star
+ * Players! (Legends) » (2025), qui regroupe les Star Players absents du livre
+ * Third Season Edition. Chaque entrée ci-dessous est alignée carte par carte
+ * (coût, MA/ST/AG/PA/AV, compétences par slug, ligues, règle spéciale) et
+ * porte en commentaire la page du PDF. La base S2 (BB2020) reste intacte :
+ * toute correction « Legends » vit ici, jamais dans SEASON_TWO_STAR_PLAYERS.
+ *
+ * A16 — les `hirableBy` de ce bloc viennent déjà du même PDF. Hakflem n'a
+ * volontairement pas d'override : le PDF 2025 le limite à Underworld
+ * Challenge, soit exactement la base S2.
+ *
+ * Les 19 Star Players du livre de règles (Griff, Morg 'n' Thorg, Varag…) ne
+ * figurent PAS dans le PDF Legends et n'ont donc rien à faire ici.
  */
 const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefinition>> = {
-  // A16 — « Plays for » alignés sur le PDF officiel GW « Star Players! »
-  // (Blood Bowl Third Season Edition, 2025). Seule la disponibilité S3
-  // change ici ; la base S2 (BB2020) reste intacte. Hakflem n'a plus
-  // d'override : le PDF 2025 le limite à Underworld Challenge (= base S2).
-  barik_farblast: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  bilerot_vomitflesh: { hirableBy: ["favoured_of_nurgle"] },
-  deeproot_strongbranch: { hirableBy: ["woodland_league"] },
-  grashnak_blackhoof: { hirableBy: ["chaos_clash"] },
-  grombrindal: { hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"] },
-  guffle_pussmaw: { hirableBy: ["favoured_of_nurgle"] },
-  helmut_wulf: { hirableBy: ["old_world_classic"] },
-  hthark_the_unstoppable: { hirableBy: ["badlands_brawl", "favoured_of_hashut"] },
-  jordell_freshbreeze: { hirableBy: ["elven_kingdoms_league", "woodland_league"] },
-  maple_highgrove: { hirableBy: ["woodland_league"] },
-  max_spleenripper: { hirableBy: ["favoured_of_khorne"] },
-  mighty_zug: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  rowana_forestfoot: { hirableBy: ["woodland_league"] },
-  scyla_anfingrimm: { hirableBy: ["favoured_of_khorne"] },
-  skorg_snowpelt: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  skrull_halfheight: { hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"] },
-  swiftvine_glimmershard: { hirableBy: ["woodland_league"] },
-  thorsson_stoutmead: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  willow_rosebark: { hirableBy: ["woodland_league"] },
-  withergrasp_doubledrool: { hirableBy: ["favoured_of_nurgle"] },
-  zzharg_madeye: { hirableBy: ["favoured_of_hashut"] },
+  // Barik Farblast — carte GW « Star Players! (Legends) » 2025, p.1
+  barik_farblast: {
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+  },
+  // Bilerot Vomitflesh — carte GW « Star Players! (Legends) » 2025, p.1
+  bilerot_vomitflesh: {
+    hirableBy: ["favoured_of_nurgle"],
+  },
+  // Boa Kon'ssstriktr — carte GW « Star Players! (Legends) » 2025, p.2
+  boa_konssstriktr: {
+    cost: 180000,
+  },
+  // Bomber Dribblesnot — carte GW « Star Players! (Legends) » 2025, p.2
+  bomber_dribblesnot: {
+    cost: 80000,
+  },
+  // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
+  deeproot_strongbranch: {
+    hirableBy: ["woodland_league"],
+  },
+  // Eldril Sidewinder — carte GW « Star Players! (Legends) » 2025, p.3
+  eldril_sidewinder: {
+    cost: 220000,
+  },
+  // Glart Smashrip — carte GW « Star Players! (Legends) » 2025, p.4
+  glart_smashrip: {
+    cost: 175000,
+  },
+  // Glotl Stop — carte GW « Star Players! (Legends) » 2025, p.5
+  glotl_stop: {
+    cost: 260000,
+  },
+  // Grashnak Blackhoof — carte GW « Star Players! (Legends) » 2025, p.5
+  grashnak_blackhoof: {
+    hirableBy: ["chaos_clash"],
+  },
+  // Gretchen Wächter — carte GW « Star Players! (Legends) » 2025, p.6
+  gretchen_wachter: {
+    cost: 180000,
+  },
+  // Grombrindal — carte GW « Star Players! (Legends) » 2025, p.6
+  grombrindal: {
+    cost: 170000,
+    hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"],
+  },
+  // Guffle Pusmaw — carte GW « Star Players! (Legends) » 2025, p.6
+  guffle_pussmaw: {
+    cost: 150000,
+    hirableBy: ["favoured_of_nurgle"],
+  },
+  // Hakflem Skuttlespike — carte GW « Star Players! (Legends) » 2025, p.6
+  hakflem_skuttlespike: {
+    cost: 200000,
+  },
+  // Helmut Wulf — carte GW « Star Players! (Legends) » 2025, p.7
+  helmut_wulf: {
+    hirableBy: ["old_world_classic"],
+  },
+  // H'Thark the Unstoppable — carte GW « Star Players! (Legends) » 2025, p.7
+  hthark_the_unstoppable: {
+    hirableBy: ["badlands_brawl", "favoured_of_hashut"],
+  },
+  // Ivan 'the Animal' Deathshroud — carte GW « Star Players! (Legends) » 2025, p.7
+  ivan_the_animal_deathshroud: {
+    cost: 210000,
+  },
+  // Ivar Eriksson — carte GW « Star Players! (Legends) » 2025, p.7
+  ivar_eriksson: {
+    cost: 215000,
+  },
+  // Jordell Freshbreeze — carte GW « Star Players! (Legends) » 2025, p.8
+  jordell_freshbreeze: {
+    cost: 280000,
+    hirableBy: ["elven_kingdoms_league", "woodland_league"],
+  },
+  // Kiroth Krakeneye — carte GW « Star Players! (Legends) » 2025, p.8
+  kiroth_krakeneye: {
+    cost: 160000,
+  },
+  // Kreek Rustgouger — carte GW « Star Players! (Legends) » 2025, p.8
+  kreek_rustgouger: {
+    cost: 180000,
+  },
+  // Lucien Swift — carte GW « Star Players! (Legends) » 2025, p.11
+  lucien_swift: {
+    cost: 300000,
+  },
+  // Maple Highgrove — carte GW « Star Players! (Legends) » 2025, p.9
+  maple_highgrove: {
+    hirableBy: ["woodland_league"],
+  },
+  // Max Spleenripper — carte GW « Star Players! (Legends) » 2025, p.9
+  max_spleenripper: {
+    hirableBy: ["favoured_of_khorne"],
+  },
+  // The Mighty Zug — carte GW « Star Players! (Legends) » 2025, p.9
+  mighty_zug: {
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+  },
+  // Rowana Forestfoot — carte GW « Star Players! (Legends) » 2025, p.10
+  rowana_forestfoot: {
+    hirableBy: ["woodland_league"],
+  },
+  // Scrappa Sorehead — carte GW « Star Players! (Legends) » 2025, p.10
+  scrappa_sorehead: {
+    cost: 120000,
+  },
+  // Scyla Anfingrimm — carte GW « Star Players! (Legends) » 2025, p.11
+  scyla_anfingrimm: {
+    hirableBy: ["favoured_of_khorne"],
+  },
+  // Skrorg Snowpelt — carte GW « Star Players! (Legends) » 2025, p.11
+  skorg_snowpelt: {
+    cost: 240000,
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+  },
+  // Skrull Halfheight — carte GW « Star Players! (Legends) » 2025, p.11
+  skrull_halfheight: {
+    hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"],
+  },
+  // Swiftvine Glimmershard — carte GW « Star Players! (Legends) » 2025, p.12
+  swiftvine_glimmershard: {
+    hirableBy: ["woodland_league"],
+  },
+  // The Black Gobbo — carte GW « Star Players! (Legends) » 2025, p.2
+  the_black_gobbo: {
+    cost: 210000,
+  },
+  // Thorsson Stoutmead — carte GW « Star Players! (Legends) » 2025, p.12
+  thorsson_stoutmead: {
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+  },
+  // Valen Swift — carte GW « Star Players! (Legends) » 2025, p.12
+  valen_swift: {
+    cost: 0,
+  },
+  // Willow Rosebark — carte GW « Star Players! (Legends) » 2025, p.13
+  willow_rosebark: {
+    cost: 160000,
+    hirableBy: ["woodland_league"],
+  },
+  // Withergrasp Doubledrool — carte GW « Star Players! (Legends) » 2025, p.13
+  withergrasp_doubledrool: {
+    hirableBy: ["favoured_of_nurgle"],
+  },
+  // Zolcath the Zoat — carte GW « Star Players! (Legends) » 2025, p.13
+  zolcath_the_zoat: {
+    cost: 220000,
+  },
+  // Zzharg Madeye — carte GW « Star Players! (Legends) » 2025, p.13
+  zzharg_madeye: {
+    hirableBy: ["favoured_of_hashut"],
+  },
 };
 
 /**
