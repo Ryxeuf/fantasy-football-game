@@ -1,5 +1,7 @@
 import {
   getRegionalRulesForTeam,
+  getStarPlayerPair,
+  getStarPlayerPairs,
   DEFAULT_RULESET,
   type Ruleset,
   type StarPlayerDefinition,
@@ -95,34 +97,29 @@ export async function validateStarPlayerHire(
 }
 
 /**
- * Valide les paires obligatoires de Star Players
- * (Grak & Crumbleberry, Lucien & Valen Swift)
+ * Valide les paires obligatoires de Star Players.
+ *
+ * Lot G — la table des paires vient du catalogue (`getStarPlayerPairs`) et non
+ * plus d'un `if` par paire : la version câblée ne couvrait que Grak &
+ * Crumbleberry et les jumeaux Swift, en oubliant Dribl & Drull, pourtant déjà
+ * déclarés dans `requiresPair`.
  */
 export function validateStarPlayerPairs(
-  starPlayerSlugs: string[]
+  starPlayerSlugs: string[],
+  ruleset: Ruleset = DEFAULT_RULESET,
 ): { valid: boolean; error?: string } {
   const slugSet = new Set(starPlayerSlugs);
+  const pairs = getStarPlayerPairs(ruleset);
 
-  // Grak & Crumbleberry doivent être recrutés ensemble
-  const hasGrak = slugSet.has("grak");
-  const hasCrumbleberry = slugSet.has("crumbleberry");
-
-  if (hasGrak !== hasCrumbleberry) {
-    return {
-      valid: false,
-      error: "Grak et Crumbleberry doivent être recrutés ensemble",
-    };
-  }
-
-  // Lucien & Valen Swift doivent être recrutés ensemble
-  const hasLucien = slugSet.has("lucien_swift");
-  const hasValen = slugSet.has("valen_swift");
-
-  if (hasLucien !== hasValen) {
-    return {
-      valid: false,
-      error: "Lucien Swift et Valen Swift doivent être recrutés ensemble",
-    };
+  for (const slug of slugSet) {
+    const pair = pairs[slug];
+    if (!pair) continue;
+    if (!slugSet.has(pair.partnerSlug)) {
+      return {
+        valid: false,
+        error: `Ce Star Player doit être recruté avec ${pair.partnerName}`,
+      };
+    }
   }
 
   return { valid: true };
@@ -160,19 +157,14 @@ export async function getTeamAvailableStarPlayers(
 }
 
 /**
- * Vérifie si un Star Player nécessite un partenaire
+ * Vérifie si un Star Player nécessite un partenaire.
+ * Lot G — source unique : le catalogue (`pairWith`), plus de table en dur.
  */
-export function requiresPair(starPlayerSlug: string): string | null {
-  const pairs: Record<string, string> = {
-    grak: "crumbleberry",
-    crumbleberry: "grak",
-    lucien_swift: "valen_swift",
-    valen_swift: "lucien_swift",
-    dribl: "drull",
-    drull: "dribl",
-  };
-
-  return pairs[starPlayerSlug] || null;
+export function requiresPair(
+  starPlayerSlug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): string | null {
+  return getStarPlayerPair(starPlayerSlug, ruleset)?.partnerSlug ?? null;
 }
 
 /**

@@ -4,6 +4,7 @@ import { API_BASE } from "../auth-client";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
 import KeywordChips from "./KeywordChips";
 import { useLanguage } from "../contexts/LanguageContext";
+import { STAR_PLAYER_PAIR_PARTNERS } from "@bb/game-engine";
 
 export interface StarPlayer {
   slug: string;
@@ -33,13 +34,11 @@ interface StarPlayerSelectorProps {
   ruleset?: string;
 }
 
-// Paires obligatoires de Star Players
-const STAR_PLAYER_PAIRS: Record<string, string> = {
-  grak: "crumbleberry",
-  crumbleberry: "grak",
-  lucien_swift: "valen_swift",
-  valen_swift: "lucien_swift",
-};
+// Paires obligatoires de Star Players — source unique : le catalogue
+// (`STAR_PLAYER_PAIR_PARTNERS`). La table cablee ici oubliait Dribl & Drull,
+// pourtant declares cote serveur : le selecteur laissait donc composer une
+// equipe que l'API rejetait.
+const STAR_PLAYER_PAIRS: Record<string, string> = STAR_PLAYER_PAIR_PARTNERS;
 
 export default function StarPlayerSelector({
   roster,

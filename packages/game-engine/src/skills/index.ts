@@ -952,6 +952,19 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     season3Only: true
   },
   {
+    // Lot A (Star Players Legends 2025) — variante paramétrée pour Ivan « the
+    // Animal » Deathshroud, dont la carte GW porte « Hatred (Dwarf) ». Même
+    // effet que `hate` / `hate-troll`, le Mot-clé cible étant fixé à « Nain ».
+    slug: "hate-dwarf",
+    isPassive: true,
+    nameFr: "Haine (Nain)*",
+    nameEn: "Hate (Dwarf)",
+    description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-clé Nain, ce joueur peut relancer un résultat Attaquant Plaqué.",
+    descriptionEn: "Whenever this player performs a Block action against a player with the Dwarf keyword, this player may re-roll an Attacker Down result.",
+    category: "Trait",
+    season3Only: true
+  },
+  {
     slug: "insignifiant",
     isPassive: true,
     nameFr: "Insignifiant*",

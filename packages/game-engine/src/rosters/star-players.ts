@@ -20,6 +20,20 @@ export interface StarPlayerDefinition {
   imageUrl?: string;      // URL de l'image du joueur
   isMegaStar?: boolean;    // Flag Mega Star
   /**
+   * Lot G — recrutement obligatoire en paire : slug du partenaire.
+   * Renseigne automatiquement depuis `STAR_PLAYER_PAIR_PARTNERS` (cf. plus
+   * bas), comme `keywords` : ne pas le poser a la main dans les definitions.
+   */
+  pairWith?: string;
+  /**
+   * Lot G — prix TOTAL de la paire, identique sur les deux fiches.
+   * Les cartes GW donnent un prix pour la paire ; le repo le porte sur le
+   * primaire (`cost`) et met le partenaire a `cost: 0`, pour que la somme des
+   * coûts d'une liste reste juste. `pairCost` porte le prix reel a afficher
+   * des deux cotes. Absent ⇒ calcule comme la somme des deux `cost`.
+   */
+  pairCost?: number;
+  /**
    * Mots-clés officiels (lignée + type de joueur), CSV FR — ex: "Humain, Blitzer".
    * Même vocabulaire que les mots-clés de position (`KEYWORDS_SEASON3`).
    * Renseigné automatiquement depuis `STAR_PLAYER_KEYWORDS` (cf. plus bas) :
@@ -1152,33 +1166,372 @@ const cloneStarPlayersMap = (source: Record<string, StarPlayerDefinition>): Reco
 /**
  * S3-specific overrides: only the fields that differ from S2.
  * To add a future S3 change, add an entry here with only the changed fields.
+ *
+ * Provenance des 50 fiches « Legends » : PDF gratuit GW « Blood Bowl — Star
+ * Players! (Legends) » (2025), qui regroupe les Star Players absents du livre
+ * Third Season Edition. Chaque entrée ci-dessous est alignée carte par carte
+ * (coût, MA/ST/AG/PA/AV, compétences par slug, ligues, règle spéciale) et
+ * porte en commentaire la page du PDF. La base S2 (BB2020) reste intacte :
+ * toute correction « Legends » vit ici, jamais dans SEASON_TWO_STAR_PLAYERS.
+ *
+ * A16 — les `hirableBy` de ce bloc viennent déjà du même PDF. Hakflem n'a
+ * volontairement pas d'override : le PDF 2025 le limite à Underworld
+ * Challenge, soit exactement la base S2.
+ *
+ * Les 19 Star Players du livre de règles (Griff, Morg 'n' Thorg, Varag…) ne
+ * figurent PAS dans le PDF Legends et n'ont donc rien à faire ici.
  */
 const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefinition>> = {
-  // A16 — « Plays for » alignés sur le PDF officiel GW « Star Players! »
-  // (Blood Bowl Third Season Edition, 2025). Seule la disponibilité S3
-  // change ici ; la base S2 (BB2020) reste intacte. Hakflem n'a plus
-  // d'override : le PDF 2025 le limite à Underworld Challenge (= base S2).
-  barik_farblast: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  bilerot_vomitflesh: { hirableBy: ["favoured_of_nurgle"] },
-  deeproot_strongbranch: { hirableBy: ["woodland_league"] },
-  grashnak_blackhoof: { hirableBy: ["chaos_clash"] },
-  grombrindal: { hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"] },
-  guffle_pussmaw: { hirableBy: ["favoured_of_nurgle"] },
-  helmut_wulf: { hirableBy: ["old_world_classic"] },
-  hthark_the_unstoppable: { hirableBy: ["badlands_brawl", "favoured_of_hashut"] },
-  jordell_freshbreeze: { hirableBy: ["elven_kingdoms_league", "woodland_league"] },
-  maple_highgrove: { hirableBy: ["woodland_league"] },
-  max_spleenripper: { hirableBy: ["favoured_of_khorne"] },
-  mighty_zug: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  rowana_forestfoot: { hirableBy: ["woodland_league"] },
-  scyla_anfingrimm: { hirableBy: ["favoured_of_khorne"] },
-  skorg_snowpelt: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  skrull_halfheight: { hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"] },
-  swiftvine_glimmershard: { hirableBy: ["woodland_league"] },
-  thorsson_stoutmead: { hirableBy: ["old_world_classic", "worlds_edge_superleague"] },
-  willow_rosebark: { hirableBy: ["woodland_league"] },
-  withergrasp_doubledrool: { hirableBy: ["favoured_of_nurgle"] },
-  zzharg_madeye: { hirableBy: ["favoured_of_hashut"] },
+  // Barik Farblast — carte GW « Star Players! (Legends) » 2025, p.1
+  barik_farblast: {
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Bombarde-les ! : À chaque fois que Barik effectue une Passe Désespérée, il peut relancer les résultats de déviation déterminant l'endroit où le ballon atterrit, et tout coéquipier tentant de réceptionner le ballon applique un modificateur de +1 à son jet.",
+    specialRuleEn: "Blast It!: Whenever Barik makes a Hail Mary Pass, he may re-roll any Scatter results for determining where the ball lands, and any team-mate attempting to catch the ball applies a +1 modifier to the roll.",
+  },
+  // Bilerot Vomitflesh — carte GW « Star Players! (Legends) » 2025, p.1
+  bilerot_vomitflesh: {
+    skills: "dirty-player-1,disturbing-presence,foul-appearance,solitary-aggressor,loner-4,regeneration,instable",
+    hirableBy: ["favoured_of_nurgle"],
+    specialRule: "Régurgitation Putride : Une fois par mi-temps, Bilerot peut utiliser l'Action Spéciale Vomi Projectile. Il peut le faire même s'il a déjà effectué une Action de Blocage durant ce tour.",
+    specialRuleEn: "Putrid Regurgitation: Once per half, Bilerot may use the Projectile Vomit Special Action. This may still be used even if Bilerot has already performed a Block Action this Turn.",
+  },
+  // Boa Kon'ssstriktr — carte GW « Star Players! (Legends) » 2025, p.2
+  boa_konssstriktr: {
+    cost: 180000,
+    skills: "dodge,fend,hypnotic-gaze,loner-4,prehensile-tail,safe-pair-of-hands,sidestep",
+    specialRule: "Regarde-moi dans les Yeux : Une fois par match, si Boa commence son activation en Marquant un joueur adverse en possession du ballon, il peut lancer un D6. Sur 1, rien ne se passe. Sur 2+, le joueur adverse perd la possession du ballon, Boa en prend immédiatement possession et l'activation de Boa prend immédiatement fin.",
+    specialRuleEn: "Look Into My Eyes: Once per game, if Boa begins his activation Marking an opposition player in possession of the ball, he may roll a D6. On a 1, nothing happens. On a 2+, the opposition player loses possession of the ball, Boa immediately gains possession of the ball, and Boa's activation immediately ends.",
+  },
+  // Bomber Dribblesnot — carte GW « Star Players! (Legends) » 2025, p.2
+  bomber_dribblesnot: {
+    cost: 80000,
+    skills: "accurate,bombardier,dodge,loner-4,right-stuff,secret-weapon,stunty",
+    specialRule: "Kaboum ! : Une fois par match, si un joueur adverse réceptionne une bombe lancée par Bomber, vous pouvez choisir de la faire exploser immédiatement plutôt que de laisser le joueur adverse tenter de la relancer.",
+    specialRuleEn: "Kaboom!: Once per game, if an opposition player catches a bomb thrown by Bomber, you can choose to have it explode rather than the opposition player immediately attempting to throw it again.",
+  },
+  // Crumbleberry — carte GW « Star Players! (Legends) » 2025, p.5
+  crumbleberry: {
+    pa: 5,
+    skills: "dodge,fatal-flight,loner-4,right-stuff,stunty,sure-hands",
+    pairCost: 250000,
+    specialRule: "Je te Porte : Grak & Crumbleberry doivent être recrutés ensemble, en paire. De plus, tant que Crumbleberry est porté par Grak, Grak gagne les compétences Esquive en Force et Esquive.",
+    specialRuleEn: "I'll Carry You: Grak & Crumbleberry must be hired as a pair. Additionally, whilst Crumbleberry is being carried by Grak, Grak gains the Break Tackle and Dodge Skills.",
+  },
+  // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
+  deeproot_strongbranch: {
+    skills: "block,bullseye,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber",
+    hirableBy: ["woodland_league"],
+    specialRule: "Fiable : Si Deeproot rate son Lancer en effectuant une Action de Lancer d'Équipier, le joueur lancé rebondit normalement mais atterrit automatiquement sans dommage.",
+    specialRuleEn: "Reliable: If Deeproot makes a Fumbled Throw when performing a Throw Team-mate Action, the player that was being thrown will Bounce as normal but will automatically land safely.",
+  },
+  // Dribl — carte GW « Star Players! (Legends) » 2025, p.3
+  dribl: {
+    skills: "dirty-player-1,dodge,loner-4,lightning-aggression,sidestep,sneaky-git,stunty",
+    pairCost: 230000,
+    specialRule: "Une Paire Sournoise : Dribl & Drull doivent être recrutés ensemble, en paire. De plus, à chaque fois que Dribl ou Drull effectue une Action d'Agression ou une Action Spéciale Poignarder contre un joueur adverse Marqué à la fois par Dribl et par Drull, ils appliquent un modificateur de +1 au jet.",
+    specialRuleEn: "A Sneaky Pair: Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
+  },
+  // Drull — carte GW « Star Players! (Legends) » 2025, p.3
+  drull: {
+    pairCost: 230000,
+    specialRule: "Une Paire Sournoise : Dribl & Drull doivent être recrutés ensemble, en paire. De plus, à chaque fois que Dribl ou Drull effectue une Action d'Agression ou une Action Spéciale Poignarder contre un joueur adverse Marqué à la fois par Dribl et par Drull, ils appliquent un modificateur de +1 au jet.",
+    specialRuleEn: "A Sneaky Pair: Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
+  },
+  // Eldril Sidewinder — carte GW « Star Players! (Legends) » 2025, p.3
+  eldril_sidewinder: {
+    cost: 220000,
+    pa: 3,
+    specialRule: "Danse Envoûtante : Une fois par mi-temps, Eldril peut relancer le dé lorsqu'il effectue une Action Spéciale Regard Hypnotique.",
+    specialRuleEn: "Mesmerising Dance: Once per half, Eldril may re-roll the dice when performing a Hypnotic Gaze Special Action.",
+  },
+  // Estelle la Veneaux — carte GW « Star Players! (Legends) » 2025, p.4
+  estelle_la_veneaux: {
+    specialRule: "Maléfice Funeste : Une fois par match, au début de l'activation d'Estelle, elle peut désigner un joueur adverse situé dans un rayon de 5 cases et lancer un D6. Sur 2+, le joueur désigné devient Distrait et ne peut pas être activé pendant le prochain tour de son équipe.",
+    specialRuleEn: "Baleful Hex: Once per game, at the beginning of Estelle's activation, she may select an opposition player within 5 squares and roll a D6. On a 2+, the selected player becomes Distracted and cannot be activated during their team's next Turn.",
+  },
+  // Fungus the Loon — carte GW « Star Players! (Legends) » 2025, p.4
+  fungus_the_loon: {
+    specialRule: "Derviche Tourneur : Une fois par activation, Fungus peut relancer le D6 déterminant la direction dans laquelle il se déplace.",
+    specialRuleEn: "Whirling Dervish: Once per Activation, Fungus may re-roll the D6 when determining which direction he moves in.",
+  },
+  // Glart Smashrip — carte GW « Star Players! (Legends) » 2025, p.4
+  glart_smashrip: {
+    cost: 175000,
+    ma: 5,
+    pa: 6,
+    specialRule: "Charge Frénétique : Une fois par mi-temps, lorsque Glart déclare une Action de Blitz, il peut gagner la compétence Frénésie jusqu'à la fin de son activation. Glart ne peut pas utiliser la compétence Projection pendant un tour où il utilise cette règle spéciale.",
+    specialRuleEn: "Frenzied Rush: Once per half, when Glart declares a Blitz Action he may gain the Frenzy Skill until the end of his activation. Glart may not use the Grab Skill during a Turn in which he uses this special rule.",
+  },
+  // Gloriel Summerbloom — carte GW « Star Players! (Legends) » 2025, p.4
+  gloriel_summerbloom: {
+    skills: "accurate,dodge,loner-3,pass,sidestep,sure-hands",
+    specialRule: "Tout ou Rien : Une fois par match, lorsque Gloriel est activée, elle peut utiliser cette règle spéciale. Si elle le fait, Gloriel gagne la compétence Passe Désespérée jusqu'à la fin de son activation.",
+    specialRuleEn: "Shot to Nothing: Once per game, when Gloriel is activated she may use this special rule. If she does, Gloriel gains the Hail Mary Pass Skill until the end of her activation.",
+  },
+  // Glotl Stop — carte GW « Star Players! (Legends) » 2025, p.5
+  glotl_stop: {
+    cost: 260000,
+    pa: 6,
+    specialRule: "Sauvagerie Primale : Une fois par match, lorsque Glotl rate un jet de Sauvagerie Animale, il peut s'en prendre à un joueur adverse plutôt qu'à un coéquipier.",
+    specialRuleEn: "Primal Savagery: Once per game, when Glotl fails an Animal Savagery roll, it may lash out at an opposition player rather than a team-mate.",
+  },
+  // Grak — carte GW « Star Players! (Legends) » 2025, p.5
+  grak: {
+    pa: 4,
+    skills: "bone-head,kick-team-mate,loner-4,mighty-blow-1,thick-skull",
+    pairCost: 250000,
+    specialRule: "Je te Porte : Grak & Crumbleberry doivent être recrutés ensemble, en paire. De plus, une fois par mi-temps, si Grak commence son activation adjacent à Crumbleberry, il peut ramasser Crumbleberry : retirez temporairement Crumbleberry du terrain. À la fin de l'activation de Grak, placez Crumbleberry sur une case libre adjacente à Grak.",
+    specialRuleEn: "I'll Carry You: Grak & Crumbleberry must be hired as a pair. Additionally, once per half, if Grak begins his activation adjacent to Crumbleberry he may pick up Crumbleberry; temporarily remove Crumbleberry from the pitch. At the end of Grak's activation, place Crumbleberry in an unoccupied square adjacent to Grak.",
+  },
+  // Grashnak Blackhoof — carte GW « Star Players! (Legends) » 2025, p.5
+  grashnak_blackhoof: {
+    pa: 6,
+    hirableBy: ["chaos_clash"],
+    specialRule: "Encorné par le Taureau : Une fois par match, lorsque Grashnak effectue une Action de Blocage dans le cadre d'une Action de Blitz, il peut lancer un dé de Blocage supplémentaire contre le joueur adverse quelle que soit sa ST, jusqu'à un maximum de trois dés de Blocage. Si Grashnak effectue une seconde Action de Blocage grâce à la compétence Frénésie, cette seconde Action de Blocage bénéficie également de cette règle.",
+    specialRuleEn: "Gored by the Bull: Once per game, when Grashnak performs a Block Action as part of a Blitz Action, he may roll one additional Block Dice against the opposition player regardless of their ST, to a maximum of three Block Dice. If Grashnak performs a second Block Action due to the Frenzy Skill, the second Block Action will also benefit from this rule.",
+  },
+  // Gretchen Wächter — carte GW « Star Players! (Legends) » 2025, p.6
+  gretchen_wachter: {
+    cost: 180000,
+    specialRule: "Incorporelle : Une fois par match, lorsque Gretchen est activée, elle peut utiliser cette règle spéciale. Jusqu'à la fin de son activation, Gretchen n'a pas besoin d'effectuer de jet d'Esquive pour quitter une case située dans la Zone de Tacle d'un joueur adverse.",
+    specialRuleEn: "Incorporeal: Once per game, when Gretchen is activated she can use this special rule. Until the end of her activation, Gretchen does not have to make Dodge rolls for leaving a square within an opposition player's Tackle Zone.",
+  },
+  // Grombrindal — carte GW « Star Players! (Legends) » 2025, p.6
+  grombrindal: {
+    cost: 170000,
+    skills: "block,break-tackle,dauntless,loner-4,mighty-blow-1,stand-firm,sure-feet,thick-skull",
+    hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Sagesse du Nain Blanc : Une fois par match, lorsque Grombrindal est activé, il peut désigner un coéquipier situé dans un rayon de 2 cases. Le coéquipier désigné gagne l'une des compétences suivantes jusqu'à la fin du tour : Esquive en Force, Intrépide, Coup Puissant, Équilibre.",
+    specialRuleEn: "Wisdom of the White Dwarf: Once per game, when Grombrindal is activated he may select one team-mate within 2 squares. The selected team-mate gains one of the following Skills until the end of turn: Break Tackle, Dauntless, Mighty Blow, Sure Feet.",
+  },
+  // Guffle Pusmaw — carte GW « Star Players! (Legends) » 2025, p.6
+  guffle_pussmaw: {
+    cost: 150000,
+    skills: "foul-appearance,loner-4,monstrous-mouth,nerves-of-steel,on-the-ball,plague-ridden",
+    hirableBy: ["favoured_of_nurgle"],
+    specialRule: "Morsure Rapide : Une fois par match, si Guffle Marque un joueur adverse qui réceptionne le ballon, il peut immédiatement effectuer un jet d'Armure contre ce joueur. Si l'Armure de la cible est percée, Guffle prend immédiatement possession du ballon. L'utilisation de cette règle spéciale ne provoque aucun Turnover.",
+    specialRuleEn: "Quick Bite: Once per game, if Guffle is Marking an opposition player who catches the ball, he may immediately make an Armour Roll against that player. If the target's Armour is broken, Guffle immediately gains possession of the ball. No Turnover is caused as a result of using this special rule.",
+  },
+  // Hakflem Skuttlespike — carte GW « Star Players! (Legends) » 2025, p.6
+  hakflem_skuttlespike: {
+    cost: 200000,
+    ma: 8,
+    specialRule: "Traître : Une fois par match, si Hakflem est adjacent à un coéquipier en possession du ballon au moment où il est activé, Hakflem peut choisir de prendre possession du ballon. S'il le fait, le coéquipier est immédiatement Mis à Terre. Cela ne provoque pas de Turnover, même si le coéquipier subit une Blessure.",
+    specialRuleEn: "Treacherous: Once per game, if Hakflem is adjacent to a team-mate who is in possession of the ball when he is activated, then Hakflem can choose to gain possession of the ball. If he does, then the team-mate will immediately be Knocked Down. This will not cause a Turnover even if the team-mate suffers a Casualty.",
+  },
+  // Helmut Wulf — carte GW « Star Players! (Legends) » 2025, p.7
+  helmut_wulf: {
+    skills: "chainsaw,loner-4,no-hands,pro,secret-weapon,stand-firm",
+    hirableBy: ["old_world_classic"],
+    specialRule: "Vieux Pro : Une fois par match, Helmut peut utiliser sa compétence Pro pour relancer un seul dé d'un jet d'Armure.",
+    specialRuleEn: "Old Pro: Once per game, Helmut may use his Pro Skill to re-roll a single dice rolled as part of an Armour Roll.",
+  },
+  // H'Thark the Unstoppable — carte GW « Star Players! (Legends) » 2025, p.7
+  hthark_the_unstoppable: {
+    skills: "block,break-tackle,defensive,juggernaut,loner-4,sprint,sure-feet,thick-skull,instable",
+    hirableBy: ["badlands_brawl", "favoured_of_hashut"],
+    specialRule: "Élan Irrésistible : À chaque fois que H'Thark effectue une Action de Blocage dans le cadre d'une Action de Blitz, il peut relancer un seul dé de Blocage.",
+    specialRuleEn: "Unstoppable Momentum: Whenever H'Thark performs a Block Action as part of a Blitz Action, he may re-roll a single Block Dice.",
+  },
+  // Ivan 'the Animal' Deathshroud — carte GW « Star Players! (Legends) » 2025, p.7
+  ivan_the_animal_deathshroud: {
+    cost: 210000,
+    pa: 5,
+    skills: "block,disturbing-presence,hate-dwarf,juggernaut,loner-4,regeneration,strip-ball,tackle",
+    specialRule: "Fléau des Nains : Une fois par match, lorsqu'un joueur adverse est Mis à Terre suite à une Action de Blocage effectuée par Ivan, vous pouvez appliquer un modificateur supplémentaire de +1 au jet d'Armure ou au jet de Blessure. S'il s'agit d'un joueur Nain, ce modificateur peut être de +2 à la place.",
+    specialRuleEn: "Dwarven Scourge: Once per game, when an opposition player is Knocked Down as a result of a Block Action performed by Ivan, you may apply an additional +1 modifier to the Armour Roll or Injury roll. If this is against a Dwarf player this may instead be a +2 modifier.",
+  },
+  // Ivar Eriksson — carte GW « Star Players! (Legends) » 2025, p.7
+  ivar_eriksson: {
+    cost: 215000,
+    specialRule: "Expédition de Pillage : Une fois par drive, lorsqu'Ivar commence son activation, il peut désigner un coéquipier Libre situé dans un rayon de 5 cases. Le joueur désigné peut immédiatement se déplacer d'une case, mais il doit terminer ce déplacement en Marquant un joueur adverse.",
+    specialRuleEn: "Raiding Party: Once per Drive, when Ivar begins his activation he may select one Open team-mate within 5 squares. The selected player may immediately move 1 square, though they must end this move Marking an opposition player.",
+  },
+  // Jordell Freshbreeze — carte GW « Star Players! (Legends) » 2025, p.8
+  jordell_freshbreeze: {
+    cost: 280000,
+    skills: "block,diving-catch,dodge,leap,loner-4,sidestep,surefoot",
+    hirableBy: ["elven_kingdoms_league", "woodland_league"],
+    specialRule: "Rapide comme la Brise : Une fois par match, Jordell peut choisir de réussir un unique test d'Esquive, de Saut ou de Foncer sur 2+, quels que soient les modificateurs.",
+    specialRuleEn: "Swift as the Breeze: Once per game, Jordell can choose to pass a single Dodge, Leap or Rush Test on a 2+, regardless of any modifiers.",
+  },
+  // Captain Karina von Riesz — carte GW « Star Players! (Legends) » 2025, p.2
+  karina_von_riesz: {
+    pa: 3,
+    skills: "bloodlust-2,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
+    specialRule: "Morceau de Choix : Une fois par match, lorsque Karina rate un jet de Soif de Sang, elle peut choisir de mordre un joueur adverse ayant une ST de 3 ou moins comme s'il s'agissait d'un coéquipier Thrall Trois-Quart. Karina ne peut pas mordre de Star Player avec cette règle spéciale.",
+    specialRuleEn: "Tasty Morsel: Once per game, when Karina fails a Bloodlust roll, she may choose to bite an opposition player with a ST of 3 or lower as if they were a Thrall Lineman team-mate. Karina may not bite Star Players with this special rule.",
+  },
+  // Karla von Kill — carte GW « Star Players! (Legends) » 2025, p.8
+  karla_von_kill: {
+    pa: 3,
+    specialRule: "Indomptable : Une fois par match, lorsque Karla réussit son jet pour utiliser sa compétence Intrépide, elle peut porter sa caractéristique de ST au double de celle de la cible de l'Action de Blocage.",
+    specialRuleEn: "Indomitable: Once per game, when Karla successfully rolls to use her Dauntless Skill, she may increase her ST characteristic to double that of the target of the Block Action.",
+  },
+  // Kiroth Krakeneye — carte GW « Star Players! (Legends) » 2025, p.8
+  kiroth_krakeneye: {
+    cost: 160000,
+    av: 8,
+    specialRule: "Encre Noire : Une fois par match, au début de l'une de ses activations, Kiroth peut désigner un joueur adverse qu'il Marque. Le joueur désigné devient Distrait jusqu'à sa prochaine activation.",
+    specialRuleEn: "Black Ink: Once per game, at the start of any of his activations, Kiroth can select an opposition player he is Marking. The selected player becomes Distracted until they are next activated.",
+  },
+  // Kreek Rustgouger — carte GW « Star Players! (Legends) » 2025, p.8
+  kreek_rustgouger: {
+    cost: 180000,
+    ma: 4,
+    specialRule: "Je Reviendrai ! : La première fois dans un match où Kreek devrait être expulsé au titre du trait Arme Secrète, il n'est pas expulsé et peut continuer à jouer. L'entraîneur de Kreek ne peut pas Contester la Décision lorsque Kreek utilise cette règle spéciale.",
+    specialRuleEn: "I'll Be Back!: The first time in a game that Kreek would be Sent-off as per the Secret Weapon Trait, he is not Sent-off and may instead continue as part of the game. Kreek's coach may not Argue the Call when Kreek uses this special rule.",
+  },
+  // Lucien Swift — carte GW « Star Players! (Legends) » 2025, p.11
+  lucien_swift: {
+    cost: 300000,
+    st: 3,
+    skills: "block,loner-4,mighty-blow-1,tackle",
+    pairCost: 300000,
+    specialRule: "Jeu en Tandem : Les Jumeaux Swift doivent être recrutés ensemble, en paire. De plus, si Lucien effectue une Action de Blocage contre un joueur adverse également Marqué par Valen, Lucien peut relancer un seul dé de Blocage.",
+    specialRuleEn: "Working in Tandem: The Swift Twins must be hired as a pair. Additionally, if Lucien performs a Block Action against an opposition player who is also Marked by Valen, Lucien may re-roll a single Block Dice.",
+  },
+  // Maple Highgrove — carte GW « Star Players! (Legends) » 2025, p.9
+  maple_highgrove: {
+    hirableBy: ["woodland_league"],
+    specialRule: "Lianes Vicieuses : Une fois par mi-temps, lorsque Maple déclare une Action de Blocage, elle peut le faire contre un joueur adverse situé à 2 cases de distance, en suivant toutes les règles normales d'une Action de Blocage, mais sans pouvoir suivre le mouvement.",
+    specialRuleEn: "Vicious Vines: Once per half, when Maple declares a Block Action he may do so against an opposition player who is 2 squares away following all the normal rules for performing a Block Action, though he may not follow-up.",
+  },
+  // Max Spleenripper — carte GW « Star Players! (Legends) » 2025, p.9
+  max_spleenripper: {
+    skills: "chainsaw,loner-4,no-hands,secret-weapon",
+    hirableBy: ["favoured_of_khorne"],
+    specialRule: "Carnage Maximum : Une fois par match, après que Max a effectué une Action Spéciale Attaque de Tronçonneuse, il peut immédiatement effectuer une autre Action Spéciale Attaque de Tronçonneuse ciblant un joueur adverse différent.",
+    specialRuleEn: "Maximum Carnage: Once per game, after Max performs a Chainsaw Attack Special Action he may immediately perform another Chainsaw Attack Special Action that targets a different opposition player.",
+  },
+  // The Mighty Zug — carte GW « Star Players! (Legends) » 2025, p.9
+  mighty_zug: {
+    ma: 5,
+    skills: "block,loner-4,mighty-blow-1,instable",
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Coup Écrasant : Une fois par match, lorsqu'un joueur adverse est Mis à Terre suite à une Action de Blocage effectuée par Zug, vous pouvez appliquer un modificateur supplémentaire de +1 au jet d'Armure. Ce modificateur peut être appliqué après que le jet d'Armure a été effectué.",
+    specialRuleEn: "Crushing Blow: Once per game, when an opposition player is Knocked Down as the result of a Block Action performed by Zug, you may apply an additional +1 modifier to the Armour Roll. This modifier may be applied after the Armour Roll has been made.",
+  },
+  // Nobbla Blackwart — carte GW « Star Players! (Legends) » 2025, p.9
+  nobbla_blackwart: {
+    skills: "block,chainsaw,dodge,loner-4,no-hands,saboteur,secret-weapon,stunty",
+    specialRule: "Frappez-les à Terre ! : Une fois par match, Nobbla peut utiliser l'Action Spéciale Attaque de Tronçonneuse contre un joueur adverse À Terre ou Sonné. Cela ne compte pas comme une Action d'Agression et Nobbla ne peut donc pas être expulsé en utilisant cette règle spéciale.",
+    specialRuleEn: "Kick 'em While They're Down!: Once per game, Nobbla may use the Chainsaw Attack Special Action against a Prone or Stunned opposition player. This does not count as a Foul Action and so Nobbla cannot be Sent-off when using this special rule.",
+  },
+  // Rashnak Backstabber — carte GW « Star Players! (Legends) » 2025, p.10
+  rashnak_backstabber: {
+    specialRule: "Connaisseur en Toxines : Une fois par match, lorsque Rashnak perce l'armure d'un joueur adverse suite à une Action Spéciale Poignarder, vous pouvez appliquer un modificateur supplémentaire de +1 au jet de Blessure. Ce modificateur peut être appliqué après que le jet a été effectué.",
+    specialRuleEn: "Toxin Connoisseur: Once per game, when Rashnak successfully breaks an opposition player's armour as a result of a Stab Special Action, you may apply an additional +1 modifier to the Injury Roll. This modifier may be applied after the roll has been made.",
+  },
+  // Rowana Forestfoot — carte GW « Star Players! (Legends) » 2025, p.10
+  rowana_forestfoot: {
+    hirableBy: ["woodland_league"],
+    specialRule: "Bond Prodigieux : Une fois par match, après avoir déclaré qu'elle va Sauter mais avant de lancer le moindre dé, Rowana peut choisir d'utiliser cette règle spéciale. Si elle le fait, Rowana ne subit aucun modificateur négatif au Test d'Agilité pour Sauter et peut choisir de relancer le résultat.",
+    specialRuleEn: "Bounding Leap: Once per game, after declaring that she will Leap but before rolling any dice, Rowana may choose to use this special rule. If she does, Rowana suffers no negative modifiers for the Agility Test to Leap and may choose to re-roll the result.",
+  },
+  // Roxanna Darknail — carte GW « Star Players! (Legends) » 2025, p.10
+  roxanna_darknail: {
+    pa: 3,
+    skills: "dodge,frenzy,jump-up,juggernaut,leap,loner-4",
+    specialRule: "Griffes Lacérantes : Une fois par mi-temps, lorsque Roxanna déclare une Action de Blitz, elle gagne la compétence Griffes jusqu'à la fin de son activation.",
+    specialRuleEn: "Slashing Nails: Once per half, when Roxanna declares a Blitz Action, she gains the Claws Skill until the end of her activation.",
+  },
+  // Scrappa Sorehead — carte GW « Star Players! (Legends) » 2025, p.10
+  scrappa_sorehead: {
+    cost: 120000,
+    pa: 4,
+    specialRule: "Chipé ! : Une fois par match, lorsque Scrappa tente d'Intercepter une Action de Passe, il peut lancer un D6. Sur 2+, Scrappa n'a pas besoin de faire de jet pour Intercepter : il Intercepte automatiquement l'Action de Passe et prend le contrôle du ballon.",
+    specialRuleEn: "Yoink!: Once per game, when Scrappa attempts to Intercept a Pass Action he may roll a D6. On a 2+, Scrappa doesn't need to roll to Intercept; instead, he will automatically Intercept the Pass Action and gains control of the ball.",
+  },
+  // Scyla Anfingrimm — carte GW « Star Players! (Legends) » 2025, p.11
+  scyla_anfingrimm: {
+    pa: 6,
+    hirableBy: ["favoured_of_khorne"],
+    specialRule: "Fureur du Dieu du Sang : Une fois par match, si Scyla obtient un 1 à son jet de Fureur Débridée après avoir déclaré une Action de Blocage, alors, au lieu d'appliquer les effets habituels de Fureur Débridée, Scyla peut effectuer deux Actions de Blocage. La première Action de Blocage doit être entièrement résolue, y compris l'utilisation de la compétence Frénésie, avant que la seconde ne soit effectuée.",
+    specialRuleEn: "Fury of the Blood God: Once per game, if Scyla rolls a 1 for his Unchannelled Fury roll after declaring a Block Action then, instead of applying the usual effects of Unchannelled Fury, Scyla may perform two Block Actions instead. The first Block Action must be fully resolved, including the use of the Frenzy Skill, before the second one is performed.",
+  },
+  // Skrorg Snowpelt — carte GW « Star Players! (Legends) » 2025, p.11
+  skorg_snowpelt: {
+    cost: 240000,
+    pa: 6,
+    skills: "block,claws,disturbing-presence,juggernaut,loner-4,mighty-blow-1",
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Chauffer la Foule : Une fois par match, lorsque Skrorg provoque la sortie d'un joueur adverse sur Blessure suite à une Action de Blocage, l'entraîneur de Skrorg gagne une Relance d'Équipe jusqu'à la fin du drive en cours. Si cette Relance d'Équipe n'a pas été utilisée à la fin du drive, elle est perdue.",
+    specialRuleEn: "Pump Up the Crowd: Once per game, when Skrorg causes an opposition player to be removed as a Casualty as the result of a Block Action, Skrorg's controlling coach gains one Team Re-roll until the end of the current Drive. If this Team Re-roll has not been used by the end of the Drive, it is lost.",
+  },
+  // Skrull Halfheight — carte GW « Star Players! (Legends) » 2025, p.11
+  skrull_halfheight: {
+    pa: 3,
+    hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"],
+    specialRule: "Jeu de Passe Puissant : Une fois par match, lorsque Skrull effectue une Action de Passe, il peut modifier le résultat du Test de Capacité de Passe de la valeur de sa caractéristique de ST, jusqu'à un maximum de 6.",
+    specialRuleEn: "Strong Passing Game: Once per game, when Skrull performs a Pass Action he may modify the result of the Passing Ability Test by the value of his ST characteristic, to a maximum of 6.",
+  },
+  // Swiftvine Glimmershard — carte GW « Star Players! (Legends) » 2025, p.12
+  swiftvine_glimmershard: {
+    hirableBy: ["woodland_league"],
+    specialRule: "Accès de Fureur : Une fois par mi-temps, tant qu'elle est Debout au début de son activation, Swiftvine peut se placer adjacente à un joueur adverse Debout situé dans un rayon de 3 cases et effectuer immédiatement une Action Spéciale Poignarder contre lui. Elle peut ensuite se placer sur une case libre située dans un rayon de 3 cases de sa nouvelle position. Son activation prend alors immédiatement fin. Cela compte comme l'Action de Blitz de l'équipe pour ce tour.",
+    specialRuleEn: "Furious Outburst: Once per half, so long as she is Standing at the start of her activation, Swiftvine can place herself adjacent to a Standing opposition player within 3 squares of her and immediately make a Stab Special Action against them. She may then place herself in an unoccupied square within 3 squares of her new position. Her activation then immediately ends. This counts as the team's Blitz Action for the turn.",
+  },
+  // The Black Gobbo — carte GW « Star Players! (Legends) » 2025, p.2
+  the_black_gobbo: {
+    cost: 210000,
+    av: 8,
+    skills: "bombardier,disturbing-presence,dodge,loner-3,sidestep,sneaky-git,stab,stunty",
+    specialRule: "Le Plus Fourbe de Tous : Si votre équipe compte le Black Gobbo, vous pouvez déclarer deux Actions d'Agression par tour au lieu d'une seule. Cependant, l'une de ces Actions d'Agression doit être déclarée par le Black Gobbo lui-même.",
+    specialRuleEn: "Sneakiest of the Lot: If your team includes the Black Gobbo, then you may declare two Foul Actions per Turn rather than the usual one. However, one of these Foul Actions must be declared by the Black Gobbo himself.",
+  },
+  // Thorsson Stoutmead — carte GW « Star Players! (Legends) » 2025, p.12
+  thorsson_stoutmead: {
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Coup de Tonneau : Une fois par drive, au début de son activation, Thorsson peut désigner un joueur adverse situé dans un rayon de trois cases et lancer un D6. Sur 3+, le joueur désigné est immédiatement Mis à Terre. Sur 2, rien ne se passe. Sur 1, Thorsson Tombe. Après avoir utilisé cette règle spéciale, l'activation de Thorsson prend immédiatement fin.",
+    specialRuleEn: "Beer Barrel Bash: Once per Drive, at the start of his activation, Thorsson may select an opposition player within three squares and roll a D6. On a 3+, the selected player is immediately Knocked Down. On a 2, nothing happens. On a 1, Thorsson Falls Over. After using this special rule, Thorsson's activation immediately ends.",
+  },
+  // Valen Swift — carte GW « Star Players! (Legends) » 2025, p.12
+  valen_swift: {
+    cost: 0,
+    ma: 7,
+    pa: 2,
+    av: 9,
+    skills: "accurate,loner-4,nerves-of-steel,pass,safe-pass,sure-hands",
+    pairCost: 300000,
+    specialRule: "Jeu en Tandem : Les Jumeaux Swift doivent être recrutés ensemble, en paire. De plus, si Valen effectue une Action de Passe ciblant une case contenant Lucien, Valen ne subit aucun modificateur au Test de PA lié à la portée de l'Action de Passe.",
+    specialRuleEn: "Working in Tandem: The Swift Twins must be hired as a pair. Additionally, if Valen performs a Pass Action that targets a square containing Lucien, then Valen suffers no modifiers to the PA Test for the range of the Pass Action.",
+  },
+  // Wilhelm Chaney — carte GW « Star Players! (Legends) » 2025, p.12
+  wilhelm_chaney: {
+    specialRule: "Mise en Pièces : Une fois par match, lorsque Wilhelm effectue un jet de Blessure contre un joueur adverse, il peut choisir de relancer le résultat.",
+    specialRuleEn: "Savage Mauling: Once per game, when Wilhelm makes an Injury Roll against an opposition player, he may choose to re-roll the result.",
+  },
+  // Willow Rosebark — carte GW « Star Players! (Legends) » 2025, p.13
+  willow_rosebark: {
+    cost: 160000,
+    ma: 6,
+    pa: 5,
+    hirableBy: ["woodland_league"],
+    specialRule: "Fureur Sylvestre : Une fois par match, lorsque Willow effectue une Action de Blocage dont le résultat la ferait Mise à Terre, elle peut choisir de relancer un seul dé de Blocage.",
+    specialRuleEn: "Woodland Fury: Once per game, when Willow performs a Block Action that would result in her being Knocked Down, she can choose to re-roll a single Block Dice.",
+  },
+  // Withergrasp Doubledrool — carte GW « Star Players! (Legends) » 2025, p.13
+  withergrasp_doubledrool: {
+    ag: 3,
+    skills: "foul-appearance,loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle",
+    hirableBy: ["favoured_of_nurgle"],
+    specialRule: "Attention ! : La première fois à chaque drive où Withergrasp est la cible d'une Action de Blocage effectuée par un joueur adverse, il est considéré comme possédant la compétence Esquive.",
+    specialRuleEn: "Watch Out!: The first time each Drive that Withergrasp is the target of a Block Action performed by an opposition player, he counts as having the Dodge Skill.",
+  },
+  // Zolcath the Zoat — carte GW « Star Players! (Legends) » 2025, p.13
+  zolcath_the_zoat: {
+    cost: 220000,
+    specialRule: "« Pardon, vous êtes un Zoat ? » : Une fois par match, lorsque Zolcath est activé, il peut désigner un joueur adverse situé dans un rayon de 3 cases. Le joueur désigné devient immédiatement Distrait.",
+    specialRuleEn: "“Excuse me, are you a Zoat?”: Once per game, when Zolcath is activated he may select an opposition player within 3 squares. The selected player immediately becomes Distracted.",
+  },
+  // Zzharg Madeye — carte GW « Star Players! (Legends) » 2025, p.13
+  zzharg_madeye: {
+    skills: "cannoneer,hail-mary-pass,loner-4,nerves-of-steel,secret-weapon,thick-skull",
+    hirableBy: ["favoured_of_hashut"],
+    specialRule: "« La Poudre Résout Tout » : Une fois par mi-temps, au début de son activation, Zzharg peut désigner un joueur adverse Debout situé dans un rayon de 3 cases et lancer un D6. Sur 3+, le joueur désigné est touché. Sur 2, l'entraîneur adverse choisit à la place un joueur (de l'une ou l'autre équipe, mais pas Zzharg) situé dans un rayon de 3 cases du joueur initialement désigné. Sur 1, c'est Zzharg qui est touché. Effectuez un jet d'Armure pour le joueur touché. L'activation de Zzharg prend alors immédiatement fin.",
+    specialRuleEn: "“Blastin' Solves Everything”: Once per half, at the start of his activation, Zzharg may select a Standing opposition player within 3 squares and roll a D6. On a 3+, the selected player is hit. On a 2, the opposing coach selects a player (from either team, but not Zzharg) within 3 squares of the originally selected player to be hit instead. On a 1, Zzharg is hit instead. Make an Armour Roll for whichever player is hit. Zzharg's activation then immediately ends.",
+  },
 };
 
 /**
@@ -1213,6 +1566,25 @@ export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerD
 // Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
 export const STAR_PLAYERS = STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
 
+/**
+ * Lot G — paires obligatoires (« must be hired as a pair »). La RELATION est
+ * une constante du livre de règles, identique en S2 et en S3 : elle vit donc
+ * ici, hors des maps par ruleset, et est appliquée aux deux (comme les
+ * mots-clés). Seul le PRIX de la paire dépend du ruleset et se corrige via
+ * `pairCost` dans les overrides S3.
+ *
+ * Avant ce lot, trois tables de paires vivaient en dur dans trois fichiers
+ * différents — dont une qui ignorait Dribl & Drull.
+ */
+export const STAR_PLAYER_PAIR_PARTNERS: Record<string, string> = {
+  grak: "crumbleberry",
+  crumbleberry: "grak",
+  dribl: "drull",
+  drull: "dribl",
+  lucien_swift: "valen_swift",
+  valen_swift: "lucien_swift",
+};
+
 // Appliquer les règles spéciales par défaut + les mots-clés pour tous les rulesets
 Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
   Object.values(starPlayersMap).forEach((player) => {
@@ -1225,6 +1597,11 @@ Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
     const keywords = STAR_PLAYER_KEYWORDS[player.slug];
     if (keywords) {
       player.keywords = keywords;
+    }
+    // Paires obligatoires : même table pour les deux rulesets (cf. supra).
+    const partner = STAR_PLAYER_PAIR_PARTNERS[player.slug];
+    if (partner) {
+      player.pairWith = partner;
     }
   });
 });
@@ -1369,6 +1746,60 @@ export function getRegionalRulesForTeam(
     TEAM_REGIONAL_RULES_BY_RULESET[ruleset] ??
     TEAM_REGIONAL_RULES_BY_RULESET[DEFAULT_RULESET];
   return map[teamRoster] ?? TEAM_REGIONAL_RULES[teamRoster] ?? [];
+}
+
+/**
+ * Lot G — description d'une paire obligatoire de Star Players.
+ * Les deux fiches partagent le même `pairCost` (prix de la paire).
+ */
+export interface StarPlayerPair {
+  /** Slug du partenaire obligatoire. */
+  readonly partnerSlug: string;
+  /** Nom d'affichage du partenaire (repli sur le slug s'il est inconnu). */
+  readonly partnerName: string;
+  /** Prix TOTAL de la paire, en po. */
+  readonly pairCost: number;
+}
+
+/**
+ * Renvoie la paire obligatoire d'un Star Player, ou `null` s'il se recrute
+ * seul. Source unique pour la validation serveur ET l'affichage : avant ce
+ * lot, trois tables de paires vivaient en dur dans trois fichiers différents
+ * (dont une qui ignorait Dribl & Drull, et un libellé « Gratuit (avec Grak) »
+ * affiché sur TOUS les partenaires — Drull compris, alors qu'il s'associe à
+ * Dribl).
+ */
+export function getStarPlayerPair(
+  slug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): StarPlayerPair | null {
+  const map =
+    STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+  const player = map[slug];
+  if (!player?.pairWith) return null;
+  const partner = map[player.pairWith];
+  return {
+    partnerSlug: player.pairWith,
+    partnerName: partner?.displayName ?? player.pairWith,
+    pairCost: player.pairCost ?? player.cost + (partner?.cost ?? 0),
+  };
+}
+
+/**
+ * Toutes les paires obligatoires d'un ruleset, indexées par slug (les deux
+ * membres sont présents).
+ */
+export function getStarPlayerPairs(
+  ruleset: Ruleset = DEFAULT_RULESET,
+): Record<string, StarPlayerPair> {
+  const map =
+    STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+  const out: Record<string, StarPlayerPair> = {};
+  for (const slug of Object.keys(map)) {
+    const pair = getStarPlayerPair(slug, ruleset);
+    if (pair) out[slug] = pair;
+  }
+  return out;
 }
 
 /**

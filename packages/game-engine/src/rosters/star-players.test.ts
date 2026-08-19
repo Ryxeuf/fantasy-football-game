@@ -9,6 +9,12 @@ import {
   type StarPlayerDefinition,
 } from './star-players';
 
+/**
+ * Partenaires de paire : le prix de la paire est porté par le primaire, le
+ * partenaire reste à 0 pour que la somme des coûts d'une liste reste juste.
+ */
+const PAIR_PARTNERS_AT_ZERO = ['crumbleberry', 'drull', 'valen_swift'];
+
 describe('Star Players', () => {
   describe('STAR_PLAYERS definition', () => {
     it('devrait contenir tous les star players avec les propriétés requises', () => {
@@ -19,9 +25,10 @@ describe('Star Players', () => {
         expect(starPlayer.slug).toBe(slug);
         expect(starPlayer.displayName).toBeTruthy();
         
-        // Crumbleberry (inclus avec Grak) et Drull (inclus avec Dribl)
-        // sont gratuits : le coût de la paire est porté par le partenaire.
-        if (slug === 'crumbleberry' || slug === 'drull') {
+        // Partenaires de paire : le prix de la paire est porté par le
+        // primaire, le partenaire est à 0 (Crumbleberry avec Grak, Drull avec
+        // Dribl, Valen avec Lucien depuis le lot G).
+        if (PAIR_PARTNERS_AT_ZERO.includes(slug)) {
           expect(starPlayer.cost).toBe(0);
         } else {
           expect(starPlayer.cost).toBeGreaterThan(0);
@@ -39,9 +46,8 @@ describe('Star Players', () => {
 
     it('devrait avoir des coûts cohérents avec les règles (entre 50,000 et 340,000 po)', () => {
       Object.values(STAR_PLAYERS).forEach(starPlayer => {
-        // Crumbleberry (inclus avec Grak) et Drull (inclus avec Dribl)
-        // sont gratuits : le coût de la paire est porté par le partenaire.
-        if (starPlayer.slug === 'crumbleberry' || starPlayer.slug === 'drull') {
+        // Partenaires de paire : coût porté par le primaire (cf. lot G).
+        if (PAIR_PARTNERS_AT_ZERO.includes(starPlayer.slug)) {
           expect(starPlayer.cost).toBe(0);
         } else {
           // Les moins chers sont Bomber & Cindy à 50k
@@ -83,7 +89,7 @@ describe('Star Players', () => {
       const glart = getStarPlayerBySlug('glart_smashrip');
       expect(glart).toBeDefined();
       expect(glart?.displayName).toBe('Glart Smashrip');
-      expect(glart?.cost).toBe(195000);
+      expect(glart?.cost).toBe(175000);
     });
 
     it('devrait retourner undefined pour un slug inexistant', () => {
@@ -96,13 +102,15 @@ describe('Star Players', () => {
     it('Glart Smashrip - devrait avoir les bonnes caractéristiques', () => {
       const glart = getStarPlayerBySlug('glart_smashrip');
       expect(glart).toBeDefined();
-      expect(glart?.ma).toBe(9);
+      // Profil de Bloqueur Skaven (carte Legends 2025, p.4) : le site le
+      // donnait à MA 9 / PA 4+, soit un coureur.
+      expect(glart?.ma).toBe(5);
       expect(glart?.st).toBe(4);
       expect(glart?.ag).toBe(4);
-      expect(glart?.pa).toBe(4);
+      expect(glart?.pa).toBe(6);
       expect(glart?.av).toBe(9);
       expect(glart?.skills).toContain('loner-4');
-      expect(glart?.cost).toBe(195000);
+      expect(glart?.cost).toBe(175000);
     });
 
     it('Morg n Thorg - devrait avoir les caractéristiques les plus élevées', () => {
@@ -165,9 +173,14 @@ describe('Star Players', () => {
       expect(lucien).toBeDefined();
       expect(valen).toBeDefined();
       
-      // Coût identique
-      expect(lucien?.cost).toBe(340000);
-      expect(valen?.cost).toBe(340000);
+      // 300 000 po POUR LA PAIRE (carte Legends 2025, p.12) : le prix est
+      // porté par Lucien, Valen est à 0 — le site facturait 340 000 chacun.
+      expect(lucien?.cost).toBe(300000);
+      expect(valen?.cost).toBe(0);
+      expect(lucien?.pairCost).toBe(300000);
+      expect(valen?.pairCost).toBe(300000);
+      expect(lucien?.pairWith).toBe('valen_swift');
+      expect(valen?.pairWith).toBe('lucien_swift');
       
       // Règles spéciales liées
       expect(lucien?.specialRule).toBeTruthy();
@@ -451,13 +464,20 @@ describe('Star Players', () => {
         ruleCounts.set(starPlayer.specialRule, existing);
       });
 
-      // Les duos (Grak/Crumbleberry, Swift Twins) peuvent partager une mention
-      // mais sinon chaque règle devrait être unique
+      // Les duos peuvent partager un texte de règle (Dribl & Drull ont
+      // littéralement la même carte) ; sinon chaque règle doit être unique.
       for (const [rule, slugs] of ruleCounts.entries()) {
         if (slugs.length > 1) {
           // Only known duos should share rules
           const isDuo = slugs.every(s =>
-            ['grak', 'crumbleberry', 'lucien_swift', 'valen_swift'].includes(s)
+            [
+              'grak',
+              'crumbleberry',
+              'lucien_swift',
+              'valen_swift',
+              'dribl',
+              'drull',
+            ].includes(s)
           );
           expect(isDuo).toBe(true);
         }
@@ -530,11 +550,13 @@ describe('Star Players', () => {
   });
 
   describe('Validation des coûts connus', () => {
+    // Les 50 fiches « Legends » sont alignées sur le PDF GW 2025 ; le contrôle
+    // exhaustif vit dans star-players-legends-2025.test.ts.
     const knownCosts: Record<string, number> = {
-      'glart_smashrip': 195000,
+      'glart_smashrip': 175000,
       'gloriel_summerbloom': 150000,
       'grak': 250000,
-      'gretchen_wachter': 260000,
+      'gretchen_wachter': 180000,
       'griff_oberwald': 280000,
       'mighty_zug': 220000,
       'morg_n_thorg': 340000,
@@ -542,19 +564,19 @@ describe('Star Players', () => {
       'rumbelow_sheepskin': 170000,
       'skrull_halfheight': 150000,
       'grim_ironjaw': 200000,
-      'hakflem_skuttlespike': 180000,
+      'hakflem_skuttlespike': 200000,
       'helmut_wulf': 140000,
       'karla_von_kill': 210000,
       'lord_borak': 260000,
-      'the_black_gobbo': 225000,
+      'the_black_gobbo': 210000,
       'deeproot_strongbranch': 280000,
-      'eldril_sidewinder': 230000,
-      'lucien_swift': 340000,
-      'valen_swift': 340000,
+      'eldril_sidewinder': 220000,
+      'lucien_swift': 300000,
+      'valen_swift': 0,
       'varag_ghoul_chewer': 280000,
-      'grombrindal': 210000,
-      'willow_rosebark': 150000,
-      'zolcath_the_zoat': 230000,
+      'grombrindal': 170000,
+      'willow_rosebark': 160000,
+      'zolcath_the_zoat': 220000,
     };
 
     it('devrait avoir les coûts corrects basés sur les images', () => {

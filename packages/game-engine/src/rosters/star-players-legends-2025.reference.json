@@ -1,0 +1,1608 @@
+{
+  "$comment": [
+    "Reference figee des 50 Star Players du PDF gratuit GW « Blood Bowl — Star Players! (Legends) » (2025),",
+    "depouille carte par carte. Sert UNIQUEMENT de reference de controle a star-players-legends-2025.test.ts :",
+    "aucun code applicatif ne lit ce fichier. Les valeurs applicables vivent dans star-players.ts.",
+    "site_slug = slug public de la fiche ; les 11 noms qui divergent de la carte ne sont volontairement pas renommes",
+    "(un realignement changerait les URLs et imposerait des redirections).",
+    "« Hatred (Dwarf) » (Ivan Deathshroud) n avait pas de slug au referentiel : cree au lot A sous hate-dwarf, sur le modele de hate-troll."
+  ],
+  "source": {
+    "title": "Blood Bowl - Star Players! (Legends)",
+    "publisher": "Games Workshop",
+    "year": 2025,
+    "ruleset": "Blood Bowl Third Season Edition",
+    "url": "https://assets.warhammer-community.com/eng_31-10_bb_starplayerslegends_2025-x9a5vmukgj-voazbjmkxq.pdf",
+    "note": "Star Players not included in the Third Season Edition Rulebook. Costs in gold pieces (GP).",
+    "language_note": "Les libellés FR proviennent intégralement du référentiel officiel du site (https://nufflearena.fr/skills, 134 entrées). Aucun nom de compétence n'a été inventé ni renommé. Utiliser skill_slugs pour l'affectation ; skills_ref documente la correspondance carte GW -> référentiel."
+  },
+  "count": 50,
+  "star_players": [
+    {
+      "name": "Barik Farblast",
+      "site_name": "Barik Farblast",
+      "site_slug": "barik_farblast",
+      "cost": 80000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "4+",
+        "PA": "3+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "cannoneer",
+        "hail-mary-pass",
+        "loner-4",
+        "pass",
+        "secret-weapon",
+        "sure-hands",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Old World Classic",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Blast It!",
+        "text": "Whenever Barik makes a Hail Mary Pass, he may re-roll any Scatter results for determining where the ball lands, and any team-mate attempting to catch the ball applies a +1 modifier to the roll.",
+        "name_fr": "Bombarde-les !",
+        "text_fr": "À chaque fois que Barik effectue une Passe Désespérée, il peut relancer les résultats de déviation déterminant l'endroit où le ballon atterrit, et tout coéquipier tentant de réceptionner le ballon applique un modificateur de +1 à son jet."
+      },
+      "source_page": 1
+    },
+    {
+      "name": "Bilerot Vomitflesh",
+      "site_name": "Bilerot Vomitflesh",
+      "site_slug": "bilerot_vomitflesh",
+      "cost": 180000,
+      "stats": {
+        "MA": 4,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "dirty-player-1",
+        "disturbing-presence",
+        "foul-appearance",
+        "solitary-aggressor",
+        "loner-4",
+        "regeneration",
+        "instable"
+      ],
+      "plays_for": [
+        "Favoured of Nurgle"
+      ],
+      "special_rule": {
+        "name": "Putrid Regurgitation",
+        "text": "Once per half, Bilerot may use the Projectile Vomit Special Action. This may still be used even if Bilerot has already performed a Block Action this Turn.",
+        "name_fr": "Régurgitation Putride",
+        "text_fr": "Une fois par mi-temps, Bilerot peut utiliser l'Action Spéciale Vomi Projectile. Il peut le faire même s'il a déjà effectué une Action de Blocage durant ce tour."
+      },
+      "source_page": 1
+    },
+    {
+      "name": "The Black Gobbo",
+      "site_name": "The Black Gobbo",
+      "site_slug": "the_black_gobbo",
+      "cost": 210000,
+      "stats": {
+        "MA": 6,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "bombardier",
+        "disturbing-presence",
+        "dodge",
+        "loner-3",
+        "sidestep",
+        "sneaky-git",
+        "stab",
+        "stunty"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Sneakiest of the Lot",
+        "text": "If your team includes the Black Gobbo, then you may declare two Foul Actions per Turn rather than the usual one. However, one of these Foul Actions must be declared by the Black Gobbo himself.",
+        "name_fr": "Le Plus Fourbe de Tous",
+        "text_fr": "Si votre équipe compte le Black Gobbo, vous pouvez déclarer deux Actions d'Agression par tour au lieu d'une seule. Cependant, l'une de ces Actions d'Agression doit être déclarée par le Black Gobbo lui-même."
+      },
+      "source_page": 2
+    },
+    {
+      "name": "Boa Kon'ssstriktr",
+      "site_name": "Boa Kon’ssstriktr",
+      "site_slug": "boa_konssstriktr",
+      "cost": 180000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "fend",
+        "hypnotic-gaze",
+        "loner-4",
+        "prehensile-tail",
+        "safe-pair-of-hands",
+        "sidestep"
+      ],
+      "plays_for": [
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "Look Into My Eyes",
+        "text": "Once per game, if Boa begins his activation Marking an opposition player in possession of the ball, he may roll a D6. On a 1, nothing happens. On a 2+, the opposition player loses possession of the ball, Boa immediately gains possession of the ball, and Boa's activation immediately ends.",
+        "name_fr": "Regarde-moi dans les Yeux",
+        "text_fr": "Une fois par match, si Boa commence son activation en Marquant un joueur adverse en possession du ballon, il peut lancer un D6. Sur 1, rien ne se passe. Sur 2+, le joueur adverse perd la possession du ballon, Boa en prend immédiatement possession et l'activation de Boa prend immédiatement fin."
+      },
+      "source_page": 2
+    },
+    {
+      "name": "Bomber Dribblesnot",
+      "site_name": "Bomber Dribblesnot",
+      "site_slug": "bomber_dribblesnot",
+      "cost": 80000,
+      "stats": {
+        "MA": 6,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "accurate",
+        "bombardier",
+        "dodge",
+        "loner-4",
+        "right-stuff",
+        "secret-weapon",
+        "stunty"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Kaboom!",
+        "text": "Once per game, if an opposition player catches a bomb thrown by Bomber, you can choose to have it explode rather than the opposition player immediately attempting to throw it again.",
+        "name_fr": "Kaboum !",
+        "text_fr": "Une fois par match, si un joueur adverse réceptionne une bombe lancée par Bomber, vous pouvez choisir de la faire exploser immédiatement plutôt que de laisser le joueur adverse tenter de la relancer."
+      },
+      "source_page": 2
+    },
+    {
+      "name": "Captain Karina von Riesz",
+      "site_name": "Karina von Riesz",
+      "site_slug": "karina_von_riesz",
+      "cost": 230000,
+      "stats": {
+        "MA": 7,
+        "ST": 4,
+        "AG": "2+",
+        "PA": "3+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "bloodlust-2",
+        "dodge",
+        "hypnotic-gaze",
+        "jump-up",
+        "loner-4",
+        "regeneration"
+      ],
+      "plays_for": [
+        "Sylvanian Spotlight"
+      ],
+      "special_rule": {
+        "name": "Tasty Morsel",
+        "text": "Once per game, when Karina fails a Bloodlust roll, she may choose to bite an opposition player with a ST of 3 or lower as if they were a Thrall Lineman team-mate. Karina may not bite Star Players with this special rule.",
+        "name_fr": "Morceau de Choix",
+        "text_fr": "Une fois par match, lorsque Karina rate un jet de Soif de Sang, elle peut choisir de mordre un joueur adverse ayant une ST de 3 ou moins comme s'il s'agissait d'un coéquipier Thrall Trois-Quart. Karina ne peut pas mordre de Star Player avec cette règle spéciale."
+      },
+      "source_page": 2
+    },
+    {
+      "name": "Deeproot Strongbranch",
+      "site_name": "Deeproot Strongbranch",
+      "site_slug": "deeproot_strongbranch",
+      "cost": 280000,
+      "stats": {
+        "MA": 2,
+        "ST": 7,
+        "AG": "5+",
+        "PA": "4+",
+        "AV": "11+"
+      },
+      "skill_slugs": [
+        "block",
+        "bullseye",
+        "loner-4",
+        "mighty-blow-1",
+        "stand-firm",
+        "strong-arm",
+        "thick-skull",
+        "throw-team-mate",
+        "timmm-ber"
+      ],
+      "plays_for": [
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Reliable",
+        "text": "If Deeproot makes a Fumbled Throw when performing a Throw Team-mate Action, the player that was being thrown will Bounce as normal but will automatically land safely.",
+        "name_fr": "Fiable",
+        "text_fr": "Si Deeproot rate son Lancer en effectuant une Action de Lancer d'Équipier, le joueur lancé rebondit normalement mais atterrit automatiquement sans dommage."
+      },
+      "source_page": 3
+    },
+    {
+      "name": "Dribl",
+      "site_name": "Dribl",
+      "site_slug": "dribl",
+      "cost": 230000,
+      "cost_note": "for both (Dribl & Drull)",
+      "stats": {
+        "MA": 8,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dirty-player-1",
+        "dodge",
+        "loner-4",
+        "lightning-aggression",
+        "sidestep",
+        "sneaky-git",
+        "stunty"
+      ],
+      "plays_for": [
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "A Sneaky Pair",
+        "text": "Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
+        "name_fr": "Une Paire Sournoise",
+        "text_fr": "Dribl & Drull doivent être recrutés ensemble, en paire. De plus, à chaque fois que Dribl ou Drull effectue une Action d'Agression ou une Action Spéciale Poignarder contre un joueur adverse Marqué à la fois par Dribl et par Drull, ils appliquent un modificateur de +1 au jet."
+      },
+      "source_page": 3
+    },
+    {
+      "name": "Drull",
+      "site_name": "Drull",
+      "site_slug": "drull",
+      "cost": 230000,
+      "cost_note": "for both (Dribl & Drull)",
+      "stats": {
+        "MA": 8,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "loner-4",
+        "sidestep",
+        "stab",
+        "stunty"
+      ],
+      "plays_for": [
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "A Sneaky Pair",
+        "text": "Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
+        "name_fr": "Une Paire Sournoise",
+        "text_fr": "Dribl & Drull doivent être recrutés ensemble, en paire. De plus, à chaque fois que Dribl ou Drull effectue une Action d'Agression ou une Action Spéciale Poignarder contre un joueur adverse Marqué à la fois par Dribl et par Drull, ils appliquent un modificateur de +1 au jet."
+      },
+      "source_page": 3
+    },
+    {
+      "name": "Eldril Sidewinder",
+      "site_name": "Eldril Sidewinder",
+      "site_slug": "eldril_sidewinder",
+      "cost": 220000,
+      "stats": {
+        "MA": 8,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "catch",
+        "dodge",
+        "hypnotic-gaze",
+        "loner-4",
+        "nerves-of-steel",
+        "on-the-ball"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Mesmerising Dance",
+        "text": "Once per half, Eldril may re-roll the dice when performing a Hypnotic Gaze Special Action.",
+        "name_fr": "Danse Envoûtante",
+        "text_fr": "Une fois par mi-temps, Eldril peut relancer le dé lorsqu'il effectue une Action Spéciale Regard Hypnotique."
+      },
+      "source_page": 3
+    },
+    {
+      "name": "Estelle la Veneaux",
+      "site_name": "Estelle la Veneaux",
+      "site_slug": "estelle_la_veneaux",
+      "cost": 190000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "disturbing-presence",
+        "dodge",
+        "guard",
+        "loner-4",
+        "sidestep"
+      ],
+      "plays_for": [
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "Baleful Hex",
+        "text": "Once per game, at the beginning of Estelle's activation, she may select an opposition player within 5 squares and roll a D6. On a 2+, the selected player becomes Distracted and cannot be activated during their team's next Turn.",
+        "name_fr": "Maléfice Funeste",
+        "text_fr": "Une fois par match, au début de l'activation d'Estelle, elle peut désigner un joueur adverse situé dans un rayon de 5 cases et lancer un D6. Sur 2+, le joueur désigné devient Distrait et ne peut pas être activé pendant le prochain tour de son équipe."
+      },
+      "source_page": 4
+    },
+    {
+      "name": "Fungus the Loon",
+      "site_name": "Fungus The Loon",
+      "site_slug": "fungus_the_loon",
+      "cost": 80000,
+      "stats": {
+        "MA": 4,
+        "ST": 7,
+        "AG": "3+",
+        "PA": "-",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "ball-and-chain",
+        "loner-4",
+        "mighty-blow-1",
+        "no-hands",
+        "secret-weapon",
+        "stunty"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Whirling Dervish",
+        "text": "Once per Activation, Fungus may re-roll the D6 when determining which direction he moves in.",
+        "name_fr": "Derviche Tourneur",
+        "text_fr": "Une fois par activation, Fungus peut relancer le D6 déterminant la direction dans laquelle il se déplace."
+      },
+      "source_page": 4
+    },
+    {
+      "name": "Glart Smashrip",
+      "site_name": "Glart Smashrip",
+      "site_slug": "glart_smashrip",
+      "cost": 175000,
+      "stats": {
+        "MA": 5,
+        "ST": 4,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "claws",
+        "grab",
+        "juggernaut",
+        "loner-4",
+        "stand-firm"
+      ],
+      "plays_for": [
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Frenzied Rush",
+        "text": "Once per half, when Glart declares a Blitz Action he may gain the Frenzy Skill until the end of his activation. Glart may not use the Grab Skill during a Turn in which he uses this special rule.",
+        "name_fr": "Charge Frénétique",
+        "text_fr": "Une fois par mi-temps, lorsque Glart déclare une Action de Blitz, il peut gagner la compétence Frénésie jusqu'à la fin de son activation. Glart ne peut pas utiliser la compétence Projection pendant un tour où il utilise cette règle spéciale."
+      },
+      "source_page": 4
+    },
+    {
+      "name": "Gloriel Summerbloom",
+      "site_name": "Gloriel Summerbloom",
+      "site_slug": "gloriel_summerbloom",
+      "cost": 150000,
+      "stats": {
+        "MA": 7,
+        "ST": 2,
+        "AG": "2+",
+        "PA": "2+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "accurate",
+        "dodge",
+        "loner-3",
+        "pass",
+        "sidestep",
+        "sure-hands"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Shot to Nothing",
+        "text": "Once per game, when Gloriel is activated she may use this special rule. If she does, Gloriel gains the Hail Mary Pass Skill until the end of her activation.",
+        "name_fr": "Tout ou Rien",
+        "text_fr": "Une fois par match, lorsque Gloriel est activée, elle peut utiliser cette règle spéciale. Si elle le fait, Gloriel gagne la compétence Passe Désespérée jusqu'à la fin de son activation."
+      },
+      "source_page": 4
+    },
+    {
+      "name": "Glotl Stop",
+      "site_name": "Glotl Stop",
+      "site_slug": "glotl_stop",
+      "cost": 260000,
+      "stats": {
+        "MA": 6,
+        "ST": 6,
+        "AG": "5+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "animal-savagery",
+        "frenzy",
+        "loner-4",
+        "mighty-blow-1",
+        "prehensile-tail",
+        "stand-firm",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "Primal Savagery",
+        "text": "Once per game, when Glotl fails an Animal Savagery roll, it may lash out at an opposition player rather than a team-mate.",
+        "name_fr": "Sauvagerie Primale",
+        "text_fr": "Une fois par match, lorsque Glotl rate un jet de Sauvagerie Animale, il peut s'en prendre à un joueur adverse plutôt qu'à un coéquipier."
+      },
+      "source_page": 5
+    },
+    {
+      "name": "Grak",
+      "site_name": "Grak",
+      "site_slug": "grak",
+      "cost": 250000,
+      "cost_note": "for both (Grak & Crumbleberry)",
+      "stats": {
+        "MA": 5,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "4+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "bone-head",
+        "kick-team-mate",
+        "loner-4",
+        "mighty-blow-1",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Any Team"
+      ],
+      "special_rule": {
+        "name": "I'll Carry You",
+        "text": "Grak & Crumbleberry must be hired as a pair. Additionally, once per half, if Grak begins his activation adjacent to Crumbleberry he may pick up Crumbleberry; temporarily remove Crumbleberry from the pitch. At the end of Grak's activation, place Crumbleberry in an unoccupied square adjacent to Grak.",
+        "name_fr": "Je te Porte",
+        "text_fr": "Grak & Crumbleberry doivent être recrutés ensemble, en paire. De plus, une fois par mi-temps, si Grak commence son activation adjacent à Crumbleberry, il peut ramasser Crumbleberry : retirez temporairement Crumbleberry du terrain. À la fin de l'activation de Grak, placez Crumbleberry sur une case libre adjacente à Grak."
+      },
+      "source_page": 5
+    },
+    {
+      "name": "Crumbleberry",
+      "site_name": "Crumbleberry",
+      "site_slug": "crumbleberry",
+      "cost": 250000,
+      "cost_note": "for both (Grak & Crumbleberry)",
+      "stats": {
+        "MA": 5,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "5+",
+        "AV": "7+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "fatal-flight",
+        "loner-4",
+        "right-stuff",
+        "stunty",
+        "sure-hands"
+      ],
+      "plays_for": [
+        "Any Team"
+      ],
+      "special_rule": {
+        "name": "I'll Carry You",
+        "text": "Grak & Crumbleberry must be hired as a pair. Additionally, whilst Crumbleberry is being carried by Grak, Grak gains the Break Tackle and Dodge Skills.",
+        "name_fr": "Je te Porte",
+        "text_fr": "Grak & Crumbleberry doivent être recrutés ensemble, en paire. De plus, tant que Crumbleberry est porté par Grak, Grak gagne les compétences Esquive en Force et Esquive."
+      },
+      "source_page": 5
+    },
+    {
+      "name": "Grashnak Blackhoof",
+      "site_name": "Grashnak Blackhoof",
+      "site_slug": "grashnak_blackhoof",
+      "cost": 240000,
+      "stats": {
+        "MA": 6,
+        "ST": 6,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "frenzy",
+        "horns",
+        "loner-4",
+        "mighty-blow-1",
+        "thick-skull",
+        "wild-animal"
+      ],
+      "plays_for": [
+        "Chaos Clash"
+      ],
+      "special_rule": {
+        "name": "Gored by the Bull",
+        "text": "Once per game, when Grashnak performs a Block Action as part of a Blitz Action, he may roll one additional Block Dice against the opposition player regardless of their ST, to a maximum of three Block Dice. If Grashnak performs a second Block Action due to the Frenzy Skill, the second Block Action will also benefit from this rule.",
+        "name_fr": "Encorné par le Taureau",
+        "text_fr": "Une fois par match, lorsque Grashnak effectue une Action de Blocage dans le cadre d'une Action de Blitz, il peut lancer un dé de Blocage supplémentaire contre le joueur adverse quelle que soit sa ST, jusqu'à un maximum de trois dés de Blocage. Si Grashnak effectue une seconde Action de Blocage grâce à la compétence Frénésie, cette seconde Action de Blocage bénéficie également de cette règle."
+      },
+      "source_page": 5
+    },
+    {
+      "name": "Gretchen Wächter",
+      "site_name": "Gretchen Wachter “The Blood Bowl Widow”",
+      "site_slug": "gretchen_wachter_the_blood_bowl_widow",
+      "cost": 180000,
+      "stats": {
+        "MA": 7,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "-",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "disturbing-presence",
+        "dodge",
+        "foul-appearance",
+        "jump-up",
+        "loner-4",
+        "no-hands",
+        "regeneration",
+        "shadowing",
+        "sidestep"
+      ],
+      "plays_for": [
+        "Sylvanian Spotlight"
+      ],
+      "special_rule": {
+        "name": "Incorporeal",
+        "text": "Once per game, when Gretchen is activated she can use this special rule. Until the end of her activation, Gretchen does not have to make Dodge rolls for leaving a square within an opposition player's Tackle Zone.",
+        "name_fr": "Incorporelle",
+        "text_fr": "Une fois par match, lorsque Gretchen est activée, elle peut utiliser cette règle spéciale. Jusqu'à la fin de son activation, Gretchen n'a pas besoin d'effectuer de jet d'Esquive pour quitter une case située dans la Zone de Tacle d'un joueur adverse."
+      },
+      "source_page": 6
+    },
+    {
+      "name": "Grombrindal",
+      "site_name": "Grombrindal, the White Dwarf",
+      "site_slug": "grombrindal_the_white_dwarf",
+      "cost": 170000,
+      "stats": {
+        "MA": 5,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "block",
+        "break-tackle",
+        "dauntless",
+        "loner-4",
+        "mighty-blow-1",
+        "stand-firm",
+        "sure-feet",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Halfling Thimble Cup",
+        "Old World Classic",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Wisdom of the White Dwarf",
+        "text": "Once per game, when Grombrindal is activated he may select one team-mate within 2 squares. The selected team-mate gains one of the following Skills until the end of turn: Break Tackle, Dauntless, Mighty Blow, Sure Feet.",
+        "name_fr": "Sagesse du Nain Blanc",
+        "text_fr": "Une fois par match, lorsque Grombrindal est activé, il peut désigner un coéquipier situé dans un rayon de 2 cases. Le coéquipier désigné gagne l'une des compétences suivantes jusqu'à la fin du tour : Esquive en Force, Intrépide, Coup Puissant, Équilibre."
+      },
+      "source_page": 6
+    },
+    {
+      "name": "Guffle Pusmaw",
+      "site_name": "Guffle Pussmaw",
+      "site_slug": "guffle_pussmaw",
+      "cost": 150000,
+      "stats": {
+        "MA": 5,
+        "ST": 4,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "foul-appearance",
+        "loner-4",
+        "monstrous-mouth",
+        "nerves-of-steel",
+        "on-the-ball",
+        "plague-ridden"
+      ],
+      "plays_for": [
+        "Favoured of Nurgle"
+      ],
+      "special_rule": {
+        "name": "Quick Bite",
+        "text": "Once per game, if Guffle is Marking an opposition player who catches the ball, he may immediately make an Armour Roll against that player. If the target's Armour is broken, Guffle immediately gains possession of the ball. No Turnover is caused as a result of using this special rule.",
+        "name_fr": "Morsure Rapide",
+        "text_fr": "Une fois par match, si Guffle Marque un joueur adverse qui réceptionne le ballon, il peut immédiatement effectuer un jet d'Armure contre ce joueur. Si l'Armure de la cible est percée, Guffle prend immédiatement possession du ballon. L'utilisation de cette règle spéciale ne provoque aucun Turnover."
+      },
+      "source_page": 6
+    },
+    {
+      "name": "Hakflem Skuttlespike",
+      "site_name": "Hakflem Skuttlespike",
+      "site_slug": "hakflem_skuttlespike",
+      "cost": 200000,
+      "stats": {
+        "MA": 8,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "extra-arms",
+        "loner-4",
+        "prehensile-tail",
+        "two-heads"
+      ],
+      "plays_for": [
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Treacherous",
+        "text": "Once per game, if Hakflem is adjacent to a team-mate who is in possession of the ball when he is activated, then Hakflem can choose to gain possession of the ball. If he does, then the team-mate will immediately be Knocked Down. This will not cause a Turnover even if the team-mate suffers a Casualty.",
+        "name_fr": "Traître",
+        "text_fr": "Une fois par match, si Hakflem est adjacent à un coéquipier en possession du ballon au moment où il est activé, Hakflem peut choisir de prendre possession du ballon. S'il le fait, le coéquipier est immédiatement Mis à Terre. Cela ne provoque pas de Turnover, même si le coéquipier subit une Blessure."
+      },
+      "source_page": 6
+    },
+    {
+      "name": "Helmut Wulf",
+      "site_name": "Helmut Wulf",
+      "site_slug": "helmut_wulf",
+      "cost": 140000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "-",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "chainsaw",
+        "loner-4",
+        "no-hands",
+        "pro",
+        "secret-weapon",
+        "stand-firm"
+      ],
+      "plays_for": [
+        "Old World Classic"
+      ],
+      "special_rule": {
+        "name": "Old Pro",
+        "text": "Once per game, Helmut may use his Pro Skill to re-roll a single dice rolled as part of an Armour Roll.",
+        "name_fr": "Vieux Pro",
+        "text_fr": "Une fois par match, Helmut peut utiliser sa compétence Pro pour relancer un seul dé d'un jet d'Armure."
+      },
+      "source_page": 7
+    },
+    {
+      "name": "H'Thark the Unstoppable",
+      "site_name": "H'thark the Unstoppable",
+      "site_slug": "hthark_the_unstoppable",
+      "cost": 300000,
+      "stats": {
+        "MA": 6,
+        "ST": 6,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "block",
+        "break-tackle",
+        "defensive",
+        "juggernaut",
+        "loner-4",
+        "sprint",
+        "sure-feet",
+        "thick-skull",
+        "instable"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Favoured of Hashut"
+      ],
+      "special_rule": {
+        "name": "Unstoppable Momentum",
+        "text": "Whenever H'Thark performs a Block Action as part of a Blitz Action, he may re-roll a single Block Dice.",
+        "name_fr": "Élan Irrésistible",
+        "text_fr": "À chaque fois que H'Thark effectue une Action de Blocage dans le cadre d'une Action de Blitz, il peut relancer un seul dé de Blocage."
+      },
+      "source_page": 7
+    },
+    {
+      "name": "Ivan 'the Animal' Deathshroud",
+      "site_name": "Ivan 'the Animal' Deathshroud",
+      "site_slug": "ivan_the_animal_deathshroud",
+      "cost": 210000,
+      "stats": {
+        "MA": 6,
+        "ST": 4,
+        "AG": "4+",
+        "PA": "5+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "disturbing-presence",
+        "hate-dwarf",
+        "juggernaut",
+        "loner-4",
+        "regeneration",
+        "strip-ball",
+        "tackle"
+      ],
+      "plays_for": [
+        "Sylvanian Spotlight"
+      ],
+      "special_rule": {
+        "name": "Dwarven Scourge",
+        "text": "Once per game, when an opposition player is Knocked Down as a result of a Block Action performed by Ivan, you may apply an additional +1 modifier to the Armour Roll or Injury roll. If this is against a Dwarf player this may instead be a +2 modifier.",
+        "name_fr": "Fléau des Nains",
+        "text_fr": "Une fois par match, lorsqu'un joueur adverse est Mis à Terre suite à une Action de Blocage effectuée par Ivan, vous pouvez appliquer un modificateur supplémentaire de +1 au jet d'Armure ou au jet de Blessure. S'il s'agit d'un joueur Nain, ce modificateur peut être de +2 à la place."
+      },
+      "source_page": 7
+    },
+    {
+      "name": "Ivar Eriksson",
+      "site_name": "Ivar Eriksson",
+      "site_slug": "ivar_eriksson",
+      "cost": 215000,
+      "stats": {
+        "MA": 6,
+        "ST": 4,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "guard",
+        "loner-4",
+        "tackle"
+      ],
+      "plays_for": [
+        "Old World Classic"
+      ],
+      "special_rule": {
+        "name": "Raiding Party",
+        "text": "Once per Drive, when Ivar begins his activation he may select one Open team-mate within 5 squares. The selected player may immediately move 1 square, though they must end this move Marking an opposition player.",
+        "name_fr": "Expédition de Pillage",
+        "text_fr": "Une fois par drive, lorsqu'Ivar commence son activation, il peut désigner un coéquipier Libre situé dans un rayon de 5 cases. Le joueur désigné peut immédiatement se déplacer d'une case, mais il doit terminer ce déplacement en Marquant un joueur adverse."
+      },
+      "source_page": 7
+    },
+    {
+      "name": "Jordell Freshbreeze",
+      "site_name": "Jordell Freshbreeze",
+      "site_slug": "jordell_freshbreeze",
+      "cost": 280000,
+      "stats": {
+        "MA": 8,
+        "ST": 3,
+        "AG": "1+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "block",
+        "diving-catch",
+        "dodge",
+        "leap",
+        "loner-4",
+        "sidestep",
+        "surefoot"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League",
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Swift as the Breeze",
+        "text": "Once per game, Jordell can choose to pass a single Dodge, Leap or Rush Test on a 2+, regardless of any modifiers.",
+        "name_fr": "Rapide comme la Brise",
+        "text_fr": "Une fois par match, Jordell peut choisir de réussir un unique test d'Esquive, de Saut ou de Foncer sur 2+, quels que soient les modificateurs."
+      },
+      "source_page": 8
+    },
+    {
+      "name": "Karla von Kill",
+      "site_name": "Karla Von Kill",
+      "site_slug": "karla_von_kill",
+      "cost": 210000,
+      "stats": {
+        "MA": 6,
+        "ST": 4,
+        "AG": "3+",
+        "PA": "3+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "dauntless",
+        "dodge",
+        "jump-up",
+        "loner-4"
+      ],
+      "plays_for": [
+        "Lustrian Superleague",
+        "Old World Classic"
+      ],
+      "special_rule": {
+        "name": "Indomitable",
+        "text": "Once per game, when Karla successfully rolls to use her Dauntless Skill, she may increase her ST characteristic to double that of the target of the Block Action.",
+        "name_fr": "Indomptable",
+        "text_fr": "Une fois par match, lorsque Karla réussit son jet pour utiliser sa compétence Intrépide, elle peut porter sa caractéristique de ST au double de celle de la cible de l'Action de Blocage."
+      },
+      "source_page": 8
+    },
+    {
+      "name": "Kiroth Krakeneye",
+      "site_name": "Kiroth Krakeneye",
+      "site_slug": "kiroth_krakeneye",
+      "cost": 160000,
+      "stats": {
+        "MA": 7,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "disturbing-presence",
+        "foul-appearance",
+        "loner-4",
+        "on-the-ball",
+        "tackle",
+        "tentacles"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Black Ink",
+        "text": "Once per game, at the start of any of his activations, Kiroth can select an opposition player he is Marking. The selected player becomes Distracted until they are next activated.",
+        "name_fr": "Encre Noire",
+        "text_fr": "Une fois par match, au début de l'une de ses activations, Kiroth peut désigner un joueur adverse qu'il Marque. Le joueur désigné devient Distrait jusqu'à sa prochaine activation."
+      },
+      "source_page": 8
+    },
+    {
+      "name": "Kreek Rustgouger",
+      "site_name": "Kreek Rustgouger",
+      "site_slug": "kreek_rustgouger",
+      "cost": 180000,
+      "stats": {
+        "MA": 4,
+        "ST": 7,
+        "AG": "4+",
+        "PA": "-",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "ball-and-chain",
+        "loner-4",
+        "mighty-blow-1",
+        "no-hands",
+        "prehensile-tail",
+        "secret-weapon"
+      ],
+      "plays_for": [
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "I'll Be Back!",
+        "text": "The first time in a game that Kreek would be Sent-off as per the Secret Weapon Trait, he is not Sent-off and may instead continue as part of the game. Kreek's coach may not Argue the Call when Kreek uses this special rule.",
+        "name_fr": "Je Reviendrai !",
+        "text_fr": "La première fois dans un match où Kreek devrait être expulsé au titre du trait Arme Secrète, il n'est pas expulsé et peut continuer à jouer. L'entraîneur de Kreek ne peut pas Contester la Décision lorsque Kreek utilise cette règle spéciale."
+      },
+      "source_page": 8
+    },
+    {
+      "name": "Maple Highgrove",
+      "site_name": "Maple Highgrove",
+      "site_slug": "maple_highgrove",
+      "cost": 210000,
+      "stats": {
+        "MA": 3,
+        "ST": 5,
+        "AG": "5+",
+        "PA": "5+",
+        "AV": "11+"
+      },
+      "skill_slugs": [
+        "brawler",
+        "grab",
+        "loner-4",
+        "mighty-blow-1",
+        "stand-firm",
+        "tentacles",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Vicious Vines",
+        "text": "Once per half, when Maple declares a Block Action he may do so against an opposition player who is 2 squares away following all the normal rules for performing a Block Action, though he may not follow-up.",
+        "name_fr": "Lianes Vicieuses",
+        "text_fr": "Une fois par mi-temps, lorsque Maple déclare une Action de Blocage, elle peut le faire contre un joueur adverse situé à 2 cases de distance, en suivant toutes les règles normales d'une Action de Blocage, mais sans pouvoir suivre le mouvement."
+      },
+      "source_page": 9
+    },
+    {
+      "name": "Max Spleenripper",
+      "site_name": "Max Spleenripper",
+      "site_slug": "max_spleenripper",
+      "cost": 130000,
+      "stats": {
+        "MA": 5,
+        "ST": 4,
+        "AG": "4+",
+        "PA": "-",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "chainsaw",
+        "loner-4",
+        "no-hands",
+        "secret-weapon"
+      ],
+      "plays_for": [
+        "Favoured of Khorne"
+      ],
+      "special_rule": {
+        "name": "Maximum Carnage",
+        "text": "Once per game, after Max performs a Chainsaw Attack Special Action he may immediately perform another Chainsaw Attack Special Action that targets a different opposition player.",
+        "name_fr": "Carnage Maximum",
+        "text_fr": "Une fois par match, après que Max a effectué une Action Spéciale Attaque de Tronçonneuse, il peut immédiatement effectuer une autre Action Spéciale Attaque de Tronçonneuse ciblant un joueur adverse différent."
+      },
+      "source_page": 9
+    },
+    {
+      "name": "The Mighty Zug",
+      "site_name": "Mighty Zug",
+      "site_slug": "mighty_zug",
+      "cost": 220000,
+      "stats": {
+        "MA": 5,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "block",
+        "loner-4",
+        "mighty-blow-1",
+        "instable"
+      ],
+      "plays_for": [
+        "Old World Classic",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Crushing Blow",
+        "text": "Once per game, when an opposition player is Knocked Down as the result of a Block Action performed by Zug, you may apply an additional +1 modifier to the Armour Roll. This modifier may be applied after the Armour Roll has been made.",
+        "name_fr": "Coup Écrasant",
+        "text_fr": "Une fois par match, lorsqu'un joueur adverse est Mis à Terre suite à une Action de Blocage effectuée par Zug, vous pouvez appliquer un modificateur supplémentaire de +1 au jet d'Armure. Ce modificateur peut être appliqué après que le jet d'Armure a été effectué."
+      },
+      "source_page": 9
+    },
+    {
+      "name": "Nobbla Blackwart",
+      "site_name": "Nobbla Blackwart",
+      "site_slug": "nobbla_blackwart",
+      "cost": 120000,
+      "stats": {
+        "MA": 6,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "-",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "block",
+        "chainsaw",
+        "dodge",
+        "loner-4",
+        "no-hands",
+        "saboteur",
+        "secret-weapon",
+        "stunty"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Kick 'em While They're Down!",
+        "text": "Once per game, Nobbla may use the Chainsaw Attack Special Action against a Prone or Stunned opposition player. This does not count as a Foul Action and so Nobbla cannot be Sent-off when using this special rule.",
+        "name_fr": "Frappez-les à Terre !",
+        "text_fr": "Une fois par match, Nobbla peut utiliser l'Action Spéciale Attaque de Tronçonneuse contre un joueur adverse À Terre ou Sonné. Cela ne compte pas comme une Action d'Agression et Nobbla ne peut donc pas être expulsé en utilisant cette règle spéciale."
+      },
+      "source_page": 9
+    },
+    {
+      "name": "Rashnak Backstabber",
+      "site_name": "Rashnak Backstabber",
+      "site_slug": "rashnak_backstabber",
+      "cost": 130000,
+      "stats": {
+        "MA": 7,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "5+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "loner-4",
+        "shadowing",
+        "sidestep",
+        "sneaky-git",
+        "stab"
+      ],
+      "plays_for": [
+        "Badlands Brawl"
+      ],
+      "special_rule": {
+        "name": "Toxin Connoisseur",
+        "text": "Once per game, when Rashnak successfully breaks an opposition player's armour as a result of a Stab Special Action, you may apply an additional +1 modifier to the Injury Roll. This modifier may be applied after the roll has been made.",
+        "name_fr": "Connaisseur en Toxines",
+        "text_fr": "Une fois par match, lorsque Rashnak perce l'armure d'un joueur adverse suite à une Action Spéciale Poignarder, vous pouvez appliquer un modificateur supplémentaire de +1 au jet de Blessure. Ce modificateur peut être appliqué après que le jet a été effectué."
+      },
+      "source_page": 10
+    },
+    {
+      "name": "Rowana Forestfoot",
+      "site_name": "Rowana ForestFoot",
+      "site_slug": "rowana_forestfoot",
+      "cost": 160000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "dump-off",
+        "guard",
+        "horns",
+        "jump-up",
+        "leap",
+        "loner-4"
+      ],
+      "plays_for": [
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Bounding Leap",
+        "text": "Once per game, after declaring that she will Leap but before rolling any dice, Rowana may choose to use this special rule. If she does, Rowana suffers no negative modifiers for the Agility Test to Leap and may choose to re-roll the result.",
+        "name_fr": "Bond Prodigieux",
+        "text_fr": "Une fois par match, après avoir déclaré qu'elle va Sauter mais avant de lancer le moindre dé, Rowana peut choisir d'utiliser cette règle spéciale. Si elle le fait, Rowana ne subit aucun modificateur négatif au Test d'Agilité pour Sauter et peut choisir de relancer le résultat."
+      },
+      "source_page": 10
+    },
+    {
+      "name": "Roxanna Darknail",
+      "site_name": "Roxanna Darknail",
+      "site_slug": "roxanna_darknail",
+      "cost": 270000,
+      "stats": {
+        "MA": 8,
+        "ST": 3,
+        "AG": "1+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dodge",
+        "frenzy",
+        "jump-up",
+        "juggernaut",
+        "leap",
+        "loner-4"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Slashing Nails",
+        "text": "Once per half, when Roxanna declares a Blitz Action, she gains the Claws Skill until the end of her activation.",
+        "name_fr": "Griffes Lacérantes",
+        "text_fr": "Une fois par mi-temps, lorsque Roxanna déclare une Action de Blitz, elle gagne la compétence Griffes jusqu'à la fin de son activation."
+      },
+      "source_page": 10
+    },
+    {
+      "name": "Scrappa Sorehead",
+      "site_name": "Scrappa Sorehead",
+      "site_slug": "scrappa_sorehead",
+      "cost": 120000,
+      "stats": {
+        "MA": 7,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "dirty-player-1",
+        "dodge",
+        "loner-4",
+        "pogo-stick",
+        "right-stuff",
+        "sprint",
+        "stunty",
+        "sure-feet"
+      ],
+      "plays_for": [
+        "Badlands Brawl",
+        "Underworld Challenge"
+      ],
+      "special_rule": {
+        "name": "Yoink!",
+        "text": "Once per game, when Scrappa attempts to Intercept a Pass Action he may roll a D6. On a 2+, Scrappa doesn't need to roll to Intercept; instead, he will automatically Intercept the Pass Action and gains control of the ball.",
+        "name_fr": "Chipé !",
+        "text_fr": "Une fois par match, lorsque Scrappa tente d'Intercepter une Action de Passe, il peut lancer un D6. Sur 2+, Scrappa n'a pas besoin de faire de jet pour Intercepter : il Intercepte automatiquement l'Action de Passe et prend le contrôle du ballon."
+      },
+      "source_page": 10
+    },
+    {
+      "name": "Scyla Anfingrimm",
+      "site_name": "Scyla Anfingrimm",
+      "site_slug": "scyla_anfingrimm",
+      "cost": 200000,
+      "stats": {
+        "MA": 5,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "claws",
+        "frenzy",
+        "loner-4",
+        "mighty-blow-1",
+        "prehensile-tail",
+        "thick-skull",
+        "wild-animal"
+      ],
+      "plays_for": [
+        "Favoured of Khorne"
+      ],
+      "special_rule": {
+        "name": "Fury of the Blood God",
+        "text": "Once per game, if Scyla rolls a 1 for his Unchannelled Fury roll after declaring a Block Action then, instead of applying the usual effects of Unchannelled Fury, Scyla may perform two Block Actions instead. The first Block Action must be fully resolved, including the use of the Frenzy Skill, before the second one is performed.",
+        "name_fr": "Fureur du Dieu du Sang",
+        "text_fr": "Une fois par match, si Scyla obtient un 1 à son jet de Fureur Débridée après avoir déclaré une Action de Blocage, alors, au lieu d'appliquer les effets habituels de Fureur Débridée, Scyla peut effectuer deux Actions de Blocage. La première Action de Blocage doit être entièrement résolue, y compris l'utilisation de la compétence Frénésie, avant que la seconde ne soit effectuée."
+      },
+      "source_page": 11
+    },
+    {
+      "name": "Skrorg Snowpelt",
+      "site_name": "Skorg Snowpelt",
+      "site_slug": "skorg_snowpelt",
+      "cost": 240000,
+      "stats": {
+        "MA": 5,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "6+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "claws",
+        "disturbing-presence",
+        "juggernaut",
+        "loner-4",
+        "mighty-blow-1"
+      ],
+      "plays_for": [
+        "Old World Classic",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Pump Up the Crowd",
+        "text": "Once per game, when Skrorg causes an opposition player to be removed as a Casualty as the result of a Block Action, Skrorg's controlling coach gains one Team Re-roll until the end of the current Drive. If this Team Re-roll has not been used by the end of the Drive, it is lost.",
+        "name_fr": "Chauffer la Foule",
+        "text_fr": "Une fois par match, lorsque Skrorg provoque la sortie d'un joueur adverse sur Blessure suite à une Action de Blocage, l'entraîneur de Skrorg gagne une Relance d'Équipe jusqu'à la fin du drive en cours. Si cette Relance d'Équipe n'a pas été utilisée à la fin du drive, elle est perdue."
+      },
+      "source_page": 11
+    },
+    {
+      "name": "Skrull Halfheight",
+      "site_name": "Skrull Halfheight",
+      "site_slug": "skrull_halfheight",
+      "cost": 150000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "4+",
+        "PA": "3+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "accurate",
+        "loner-4",
+        "nerves-of-steel",
+        "pass",
+        "regeneration",
+        "sure-hands",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Sylvanian Spotlight",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Strong Passing Game",
+        "text": "Once per game, when Skrull performs a Pass Action he may modify the result of the Passing Ability Test by the value of his ST characteristic, to a maximum of 6.",
+        "name_fr": "Jeu de Passe Puissant",
+        "text_fr": "Une fois par match, lorsque Skrull effectue une Action de Passe, il peut modifier le résultat du Test de Capacité de Passe de la valeur de sa caractéristique de ST, jusqu'à un maximum de 6."
+      },
+      "source_page": 11
+    },
+    {
+      "name": "Lucien Swift",
+      "site_name": "Lucien Swift",
+      "site_slug": "lucien_swift",
+      "cost": 300000,
+      "cost_note": "for both (Lucien & Valen Swift)",
+      "stats": {
+        "MA": 7,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "3+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "block",
+        "loner-4",
+        "mighty-blow-1",
+        "tackle"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Working in Tandem",
+        "text": "The Swift Twins must be hired as a pair. Additionally, if Lucien performs a Block Action against an opposition player who is also Marked by Valen, Lucien may re-roll a single Block Dice.",
+        "name_fr": "Jeu en Tandem",
+        "text_fr": "Les Jumeaux Swift doivent être recrutés ensemble, en paire. De plus, si Lucien effectue une Action de Blocage contre un joueur adverse également Marqué par Valen, Lucien peut relancer un seul dé de Blocage."
+      },
+      "source_page": 11
+    },
+    {
+      "name": "Valen Swift",
+      "site_name": "Valen Swift",
+      "site_slug": "valen_swift",
+      "cost": 300000,
+      "cost_note": "for both (Lucien & Valen Swift)",
+      "stats": {
+        "MA": 7,
+        "ST": 3,
+        "AG": "2+",
+        "PA": "2+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "accurate",
+        "loner-4",
+        "nerves-of-steel",
+        "pass",
+        "safe-pass",
+        "sure-hands"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League"
+      ],
+      "special_rule": {
+        "name": "Working in Tandem",
+        "text": "The Swift Twins must be hired as a pair. Additionally, if Valen performs a Pass Action that targets a square containing Lucien, then Valen suffers no modifiers to the PA Test for the range of the Pass Action.",
+        "name_fr": "Jeu en Tandem",
+        "text_fr": "Les Jumeaux Swift doivent être recrutés ensemble, en paire. De plus, si Valen effectue une Action de Passe ciblant une case contenant Lucien, Valen ne subit aucun modificateur au Test de PA lié à la portée de l'Action de Passe."
+      },
+      "source_page": 12
+    },
+    {
+      "name": "Swiftvine Glimmershard",
+      "site_name": "Swiftvine Glimmershard",
+      "site_slug": "swiftvine_glimmershard",
+      "cost": 110000,
+      "stats": {
+        "MA": 7,
+        "ST": 2,
+        "AG": "3+",
+        "PA": "5+",
+        "AV": "7+"
+      },
+      "skill_slugs": [
+        "disturbing-presence",
+        "fend",
+        "loner-4",
+        "sidestep",
+        "stab",
+        "stunty"
+      ],
+      "plays_for": [
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Furious Outburst",
+        "text": "Once per half, so long as she is Standing at the start of her activation, Swiftvine can place herself adjacent to a Standing opposition player within 3 squares of her and immediately make a Stab Special Action against them. She may then place herself in an unoccupied square within 3 squares of her new position. Her activation then immediately ends. This counts as the team's Blitz Action for the turn.",
+        "name_fr": "Accès de Fureur",
+        "text_fr": "Une fois par mi-temps, tant qu'elle est Debout au début de son activation, Swiftvine peut se placer adjacente à un joueur adverse Debout situé dans un rayon de 3 cases et effectuer immédiatement une Action Spéciale Poignarder contre lui. Elle peut ensuite se placer sur une case libre située dans un rayon de 3 cases de sa nouvelle position. Son activation prend alors immédiatement fin. Cela compte comme l'Action de Blitz de l'équipe pour ce tour."
+      },
+      "source_page": 12
+    },
+    {
+      "name": "Thorsson Stoutmead",
+      "site_name": "Thorsson Stoutmead",
+      "site_slug": "thorsson_stoutmead",
+      "cost": 170000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "4+",
+        "PA": "3+",
+        "AV": "8+"
+      },
+      "skill_slugs": [
+        "block",
+        "drunkard",
+        "loner-4",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Old World Classic",
+        "Worlds Edge Superleague"
+      ],
+      "special_rule": {
+        "name": "Beer Barrel Bash",
+        "text": "Once per Drive, at the start of his activation, Thorsson may select an opposition player within three squares and roll a D6. On a 3+, the selected player is immediately Knocked Down. On a 2, nothing happens. On a 1, Thorsson Falls Over. After using this special rule, Thorsson's activation immediately ends.",
+        "name_fr": "Coup de Tonneau",
+        "text_fr": "Une fois par drive, au début de son activation, Thorsson peut désigner un joueur adverse situé dans un rayon de trois cases et lancer un D6. Sur 3+, le joueur désigné est immédiatement Mis à Terre. Sur 2, rien ne se passe. Sur 1, Thorsson Tombe. Après avoir utilisé cette règle spéciale, l'activation de Thorsson prend immédiatement fin."
+      },
+      "source_page": 12
+    },
+    {
+      "name": "Wilhelm Chaney",
+      "site_name": "Wilhelm Chaney",
+      "site_slug": "wilhelm_chaney",
+      "cost": 220000,
+      "stats": {
+        "MA": 8,
+        "ST": 4,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "catch",
+        "claws",
+        "frenzy",
+        "loner-4",
+        "regeneration",
+        "wrestle"
+      ],
+      "plays_for": [
+        "Sylvanian Spotlight"
+      ],
+      "special_rule": {
+        "name": "Savage Mauling",
+        "text": "Once per game, when Wilhelm makes an Injury Roll against an opposition player, he may choose to re-roll the result.",
+        "name_fr": "Mise en Pièces",
+        "text_fr": "Une fois par match, lorsque Wilhelm effectue un jet de Blessure contre un joueur adverse, il peut choisir de relancer le résultat."
+      },
+      "source_page": 12
+    },
+    {
+      "name": "Willow Rosebark",
+      "site_name": "Willow Rosebark",
+      "site_slug": "willow_rosebark",
+      "cost": 160000,
+      "stats": {
+        "MA": 6,
+        "ST": 4,
+        "AG": "3+",
+        "PA": "5+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "dauntless",
+        "loner-4",
+        "sidestep",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Woodland League"
+      ],
+      "special_rule": {
+        "name": "Woodland Fury",
+        "text": "Once per game, when Willow performs a Block Action that would result in her being Knocked Down, she can choose to re-roll a single Block Dice.",
+        "name_fr": "Fureur Sylvestre",
+        "text_fr": "Une fois par match, lorsque Willow effectue une Action de Blocage dont le résultat la ferait Mise à Terre, elle peut choisir de relancer un seul dé de Blocage."
+      },
+      "source_page": 13
+    },
+    {
+      "name": "Withergrasp Doubledrool",
+      "site_name": "Withergrasp Doubledrool",
+      "site_slug": "withergrasp_doubledrool",
+      "cost": 170000,
+      "stats": {
+        "MA": 6,
+        "ST": 3,
+        "AG": "3+",
+        "PA": "4+",
+        "AV": "9+"
+      },
+      "skill_slugs": [
+        "foul-appearance",
+        "loner-4",
+        "prehensile-tail",
+        "tackle",
+        "tentacles",
+        "two-heads",
+        "wrestle"
+      ],
+      "plays_for": [
+        "Favoured of Nurgle"
+      ],
+      "special_rule": {
+        "name": "Watch Out!",
+        "text": "The first time each Drive that Withergrasp is the target of a Block Action performed by an opposition player, he counts as having the Dodge Skill.",
+        "name_fr": "Attention !",
+        "text_fr": "La première fois à chaque drive où Withergrasp est la cible d'une Action de Blocage effectuée par un joueur adverse, il est considéré comme possédant la compétence Esquive."
+      },
+      "source_page": 13
+    },
+    {
+      "name": "Zzharg Madeye",
+      "site_name": "Zzharg Madeye",
+      "site_slug": "zzharg_madeye",
+      "cost": 130000,
+      "stats": {
+        "MA": 4,
+        "ST": 4,
+        "AG": "4+",
+        "PA": "3+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "cannoneer",
+        "hail-mary-pass",
+        "loner-4",
+        "nerves-of-steel",
+        "secret-weapon",
+        "thick-skull"
+      ],
+      "plays_for": [
+        "Favoured of Hashut"
+      ],
+      "special_rule": {
+        "name": "“Blastin' Solves Everything”",
+        "text": "Once per half, at the start of his activation, Zzharg may select a Standing opposition player within 3 squares and roll a D6. On a 3+, the selected player is hit. On a 2, the opposing coach selects a player (from either team, but not Zzharg) within 3 squares of the originally selected player to be hit instead. On a 1, Zzharg is hit instead. Make an Armour Roll for whichever player is hit. Zzharg's activation then immediately ends.",
+        "name_fr": "« La Poudre Résout Tout »",
+        "text_fr": "Une fois par mi-temps, au début de son activation, Zzharg peut désigner un joueur adverse Debout situé dans un rayon de 3 cases et lancer un D6. Sur 3+, le joueur désigné est touché. Sur 2, l'entraîneur adverse choisit à la place un joueur (de l'une ou l'autre équipe, mais pas Zzharg) situé dans un rayon de 3 cases du joueur initialement désigné. Sur 1, c'est Zzharg qui est touché. Effectuez un jet d'Armure pour le joueur touché. L'activation de Zzharg prend alors immédiatement fin."
+      },
+      "source_page": 13
+    },
+    {
+      "name": "Zolcath the Zoat",
+      "site_name": "Zolcath the Zoat",
+      "site_slug": "zolcath_the_zoat",
+      "cost": 220000,
+      "stats": {
+        "MA": 5,
+        "ST": 5,
+        "AG": "4+",
+        "PA": "5+",
+        "AV": "10+"
+      },
+      "skill_slugs": [
+        "disturbing-presence",
+        "juggernaut",
+        "loner-4",
+        "mighty-blow-1",
+        "prehensile-tail",
+        "regeneration",
+        "sure-feet"
+      ],
+      "plays_for": [
+        "Elven Kingdoms League",
+        "Lustrian Superleague"
+      ],
+      "special_rule": {
+        "name": "“Excuse me, are you a Zoat?”",
+        "text": "Once per game, when Zolcath is activated he may select an opposition player within 3 squares. The selected player immediately becomes Distracted.",
+        "name_fr": "« Pardon, vous êtes un Zoat ? »",
+        "text_fr": "Une fois par match, lorsque Zolcath est activé, il peut désigner un joueur adverse situé dans un rayon de 3 cases. Le joueur désigné devient immédiatement Distrait."
+      },
+      "source_page": 13
+    }
+  ]
+}

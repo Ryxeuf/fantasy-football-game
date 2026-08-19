@@ -1408,6 +1408,19 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'hate-troll'),
 });
 
+// ─── HAINE (NAIN) (Lot A — Star Players Legends 2025) ────────────────────────
+// Variante parametree de Haine (X) pour Ivan « the Animal » Deathshroud, dont
+// la carte GW porte « Hatred (Dwarf) » : meme effet, le Mot-Cle cible etant
+// fixe a "Nain". Entree de decouverte UI + couverture de l'audit `season3Only`.
+// Pas de getModifiers (comme `hate` / `hate-troll`) : la relance ciblee est
+// portee par l'implementation, on evite le double-comptage.
+registerSkill({
+  slug: 'hate-dwarf',
+  triggers: ['on-block-attacker'],
+  description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-Cle Nain, il peut relancer un resultat Attaquant Plaque.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hate-dwarf'),
+});
+
 // ─── INSIGNIFIANT (O.1 batch 3q) ────────────────────────────────────────────
 // Insignifiant (Insignificant) est un trait Season 3 (Snotling Lineman entre
 // autres) : lors de la construction de la liste d'equipe, on ne peut pas

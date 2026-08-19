@@ -44,7 +44,11 @@ export {
   TEAM_REGIONAL_RULES,
   TEAM_REGIONAL_RULES_BY_RULESET,
   getRegionalRulesForTeam,
+  getStarPlayerPair,
+  getStarPlayerPairs,
+  STAR_PLAYER_PAIR_PARTNERS,
   type StarPlayerDefinition,
+  type StarPlayerPair,
   type RegionalRule
 } from './star-players';
 

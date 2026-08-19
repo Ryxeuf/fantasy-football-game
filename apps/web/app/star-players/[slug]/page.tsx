@@ -7,7 +7,7 @@ import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
 import KeywordChips from '../../components/KeywordChips';
 import type { StarPlayerDefinition } from '@bb/game-engine';
-import { getStarPlayerSkillSlugs } from '@bb/game-engine';
+import { getStarPlayerSkillSlugs, getStarPlayerPair } from '@bb/game-engine';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getPlaysForRosters } from './plays-for';
 
@@ -139,6 +139,13 @@ export default function StarPlayerDetailPage() {
   // Utiliser la fonction centralisée pour parser les compétences
   const skills = getStarPlayerSkillSlugs(starPlayer);
 
+  // Lot G — paire obligatoire : le prix de la carte est celui de LA PAIRE. Le
+  // catalogue le porte sur le primaire (partenaire a 0) pour que la somme des
+  // couts d'une liste reste juste ; on affiche donc le prix de la paire des
+  // deux cotes, avec le nom du partenaire.
+  const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
+  const displayedCost = pair ? pair.pairCost : starPlayer.cost;
+
   // Mots-clés (lignée + type) : EN si disponible, repli FR.
   const keywords =
     language === 'en'
@@ -209,11 +216,23 @@ export default function StarPlayerDetailPage() {
                   </div>
                 )}
                 <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3 sm:gap-4">
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold bg-yellow-400 text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg">
-                    {(starPlayer.cost / 1000).toLocaleString()} K po
+                  <span
+                    className="text-xl sm:text-2xl md:text-3xl font-bold bg-yellow-400 text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg"
+                    data-testid="star-player-cost"
+                  >
+                    {(displayedCost / 1000).toLocaleString()} K po
                   </span>
                   <span className="text-base sm:text-lg md:text-xl opacity-90">Star Player</span>
                 </div>
+                {pair && (
+                  <p
+                    className="mt-3 text-sm sm:text-base opacity-90"
+                    data-testid="star-player-pair"
+                  >
+                    Recrutement en paire obligatoire avec {pair.partnerName} —
+                    {' '}{(pair.pairCost / 1000).toLocaleString()} K po pour la paire.
+                  </p>
+                )}
               </div>
             </div>
           </div>
