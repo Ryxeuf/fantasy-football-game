@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-06-26d",
+    "version": "2026-08-19a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -35,7 +35,7 @@
           "rows": [
             [
               "2",
-              "**À mort l'arbitre !** Les deux équipes obtiennent aussitôt 1 Coup de Pouce gratuit de Pot-de-vin. Il faut le dépenser avant la fin du tour suivant, faute de quoi il est perdu."
+              "**À mort l'arbitre !** Les deux équipes obtiennent aussitôt 1 Coup de Pouce gratuit de Pot-de-vin. Il faut le dépenser avant la fin du match, faute de quoi il est perdu."
             ],
             [
               "3",
@@ -59,7 +59,7 @@
             ],
             [
               "8",
-              "**Météo capricieuse !** Refaites immédiatement un jet sur le Tableau de Météo. Si le résultat est Conditions Idéales, le ballon Dévie ; sinon il n'est pas affecté et n'a pas encore atterri."
+              "**Météo capricieuse !** Refaites immédiatement un jet sur le Tableau de Météo. Si le résultat est Conditions Idéales, le ballon Valdingue (3) dans les airs avant d'atterrir."
             ],
             [
               "9",
@@ -67,7 +67,7 @@
             ],
             [
               "10",
-              "**Charge !** Le coach qui engage prend jusqu'à D3+3 de ses joueurs Démarqués, qu'il active un par un comme à son tour pour une Action de Mouvement gratuite. Parmi eux, 1 peut faire à la place une Action de Lancer de Coéquipier gratuite et 1 une Action de Botter de Coéquipier gratuite. Si un joueur activé Chute ou est Plaqué, la Charge s'arrête et plus aucun joueur ne peut être activé."
+              "**Charge !** Le coach qui engage prend jusqu'à D3+3 de ses joueurs Démarqués, qu'il active un par un comme à son tour pour une Action de Mouvement gratuite. Parmi eux, 1 peut faire à la place une Action de Blitz, 1 une Action de Lancer de Coéquipier gratuite et 1 une Action de Botter de Coéquipier gratuite. Si un joueur activé Chute ou est Plaqué, la Charge s'arrête et plus aucun joueur ne peut être activé."
             ],
             [
               "11",
