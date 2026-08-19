@@ -97,7 +97,7 @@ import { handleBlitz } from './blitz-handler';
 // handlers respectifs (block-action, move-leap-dodge-handlers,
 // blitz-handler, pass-actions, turn-foul-actions, etc.).
 import {
-  resolveKickoffPerfectDefence,
+  resolveKickoffSolidDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
@@ -138,7 +138,7 @@ export { getLegalMoves };
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont acceptées
   if (state.pendingKickoffEvent) {
-    const kickoffMoves = ['KICKOFF_PERFECT_DEFENCE', 'KICKOFF_HIGH_KICK', 'KICKOFF_QUICK_SNAP', 'KICKOFF_BLITZ_RESOLVE'];
+    const kickoffMoves = ['KICKOFF_SOLID_DEFENCE', 'KICKOFF_HIGH_KICK', 'KICKOFF_QUICK_SNAP', 'KICKOFF_BLITZ_RESOLVE'];
     if (!kickoffMoves.includes(move.type)) return state;
   }
 
@@ -166,6 +166,20 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     (move.type === 'PASS' || move.type === 'HANDOFF' || move.type === 'FOUL')
   ) {
     return state;
+  }
+
+  // Saison 2025 — « Charge » (10) : seuls les joueurs designes par le
+  // coach (jusqu'a D3+3 Demarques) peuvent etre actives, et une Action
+  // de Blocage simple n'en fait pas partie (Mouvement, Blitz, Lancer /
+  // Botter de Coequipier uniquement).
+  if (state.kickoffBlitzTurn) {
+    if (move.type === 'BLOCK' || move.type === 'MULTI_BLOCK') {
+      return state;
+    }
+    const allowed = state.kickoffBlitzPlayerIds;
+    if (allowed && allowed.length > 0 && 'playerId' in move && move.playerId) {
+      if (!allowed.includes(move.playerId)) return state;
+    }
   }
 
   // Si c'est un turnover, on ne peut que finir le tour OU compléter la
@@ -287,14 +301,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleBombThrow(activeState, move, rng);
     case 'DUMP_OFF_CHOOSE':
       return handleDumpOffChoose(activeState, move, rng);
-    case 'KICKOFF_PERFECT_DEFENCE':
-      return resolveKickoffPerfectDefence(activeState, move.positions);
+    case 'KICKOFF_SOLID_DEFENCE':
+      return resolveKickoffSolidDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
       return resolveKickoffHighKick(activeState, move.playerId);
     case 'KICKOFF_QUICK_SNAP':
       return resolveKickoffQuickSnap(activeState, move.moves);
     case 'KICKOFF_BLITZ_RESOLVE':
-      return resolveKickoffBlitz(activeState);
+      return resolveKickoffBlitz(activeState, move.playerIds);
     case 'ON_THE_BALL_MOVE':
       return handleOnTheBallMove(activeState, move, rng);
     case 'ON_THE_BALL_DECLINE':

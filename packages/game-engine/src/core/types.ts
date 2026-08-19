@@ -106,10 +106,36 @@ export interface TeamDugout {
   };
 }
 
+/**
+ * Evenement de coup d'envoi en attente d'une decision de coach.
+ *
+ * Les `type` reprennent les identifiants de la table 2D6 de la saison
+ * 2025 (cf. `mechanics/kickoff-events.ts`) :
+ *  - `solid-defence` (4, Solide defense) : le coach qui engage retire
+ *    puis replace jusqu'a `maxPlayers` (D3+3) de ses joueurs Demarques.
+ *  - `high-kick` (5, Chandelle) : le coach qui receptionne place 1
+ *    joueur Demarque sur la case d'atterrissage du ballon.
+ *  - `quick-snap` (9, Surprise) : le coach qui receptionne deplace
+ *    jusqu'a `maxPlayers` (D3+3) de ses joueurs Demarques d'1 case.
+ *  - `blitz` (10, Charge) : le coach qui engage active jusqu'a
+ *    `maxPlayers` (D3+3) de ses joueurs Demarques.
+ */
 export interface PendingKickoffEvent {
-  type: 'perfect-defence' | 'high-kick' | 'quick-snap' | 'blitz';
+  type: 'solid-defence' | 'high-kick' | 'quick-snap' | 'blitz';
   team: TeamId;
   ballPosition?: Position; // for high-kick: where the ball will land
+  /**
+   * Nombre maximum de joueurs concernes (D3+3 sur les evenements 4, 9
+   * et 10 de la table 2025). Tire au moment ou l'evenement est applique
+   * pour que la resolution UI puisse le valider. Optionnel pour rester
+   * compatible avec les etats serialises avant la table 2025.
+   */
+  maxPlayers?: number;
+  /**
+   * Joueurs eligibles (Demarques au moment du coup d'envoi). La
+   * resolution refuse tout joueur hors de cette liste.
+   */
+  eligiblePlayerIds?: string[];
 }
 
 export interface PendingApothecary {
@@ -152,9 +178,18 @@ export interface GameState {
   pendingKickoffEvent?: PendingKickoffEvent;
   // Tour de blitz kickoff en cours (équipe qui botte joue un tour immédiat)
   kickoffBlitzTurn?: boolean;
-  // Officious Ref (kickoff event 11) : pour ce drive, tout foul declenche
-  // un check D6 supplementaire ; sur 1 = expulsion automatique (en plus
-  // du doublet armor/injury). BB2020 LRB. Reset au prochain kickoff/TD.
+  // Coup d'envoi « Charge » (10) : seuls ces joueurs (jusqu'a D3+3
+  // Demarques choisis par le coach qui engage) peuvent etre actives
+  // pendant le tour de Charge. Vide/absent = tous les joueurs de
+  // l'equipe (etats serialises anterieurs a la table 2025).
+  kickoffBlitzPlayerIds?: string[];
+  // Arbitre sous surveillance : pour ce drive, tout foul declenche un
+  // check D6 supplementaire ; sur 1 = expulsion automatique (en plus du
+  // doublet armor/injury). Reset au prochain kickoff/TD.
+  // NB saison 2025 : la table 2D6 de coup d'envoi ne contient plus
+  // « Arbitre zele » (l'evenement 11 est desormais « En-cas suspect »).
+  // Ce drapeau reste la mecanique de reference pour « Sous surveillance »
+  // (table D16, pas encore implementee) et pour les prieres a Nuffle.
   officiousRefForDrive?: boolean;
   // Zones de dugout pour chaque équipe
   dugouts: {
@@ -268,6 +303,26 @@ export interface GameState {
   // equipe avec 6 assistant coaches devrait quasi toujours gagner mais
   // gagnait 50/50. Optionnel pour back-compat ; defaut 0 par equipe.
   assistantCoaches?: { teamA: number; teamB: number };
+  // Cheerleaders par equipe, utilises au coup d'envoi « Fans en folie »
+  // (6) : chaque coach jette 1D6 + ses Cheerleaders ; le plus haut total
+  // (ou les deux en cas d'egalite) obtient un Soutien Offensif
+  // supplementaire sur sa premiere Action de Blocage du prochain Tour.
+  // Optionnel pour back-compat ; defaut 0 par equipe.
+  cheerleaders?: { teamA: number; teamB: number };
+  // Bonus « Fans en folie » en attente : consomme par la premiere Action
+  // de Blocage de l'equipe (cf. `actions/block-handler.ts`). Remis a zero
+  // en fin de drive.
+  cheeringFansAssist?: { teamA: boolean; teamB: boolean };
+  // Malus de caracteristiques limites au drive en cours (coup d'envoi
+  // « En-cas suspect » (11) : -1 MA et -1 AR). Conserve les valeurs
+  // d'origine pour pouvoir les restaurer au drive suivant via
+  // `restoreDriveStatModifiers`.
+  driveStatModifiers?: Array<{
+    playerId: string;
+    source: string;
+    ma: number; // valeur AVANT malus
+    av: number; // valeur AVANT malus
+  }>;
   // Résultats finaux (rempli en fin de match)
   matchResult?: {
     winner?: TeamId;
@@ -440,10 +495,10 @@ export type Move =
   | { type: 'BALL_AND_CHAIN'; playerId: string }
   | { type: 'BOMB_THROW'; playerId: string; target: Position }
   | { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null }
-  | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
+  | { type: 'KICKOFF_SOLID_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
   | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }
-  | { type: 'KICKOFF_BLITZ_RESOLVE' }
+  | { type: 'KICKOFF_BLITZ_RESOLVE'; playerIds?: string[] }
   | { type: 'ON_THE_BALL_MOVE'; playerId: string; to: Position }
   | { type: 'ON_THE_BALL_DECLINE' };
 

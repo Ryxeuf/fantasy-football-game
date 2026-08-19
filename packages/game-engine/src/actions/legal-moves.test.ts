@@ -102,14 +102,14 @@ describe('S27.8.11 — getLegalMoves (API surface)', () => {
     expect(moves.every(m => m.type === 'REROLL_CHOOSE')).toBe(true);
   });
 
-  it('retourne KICKOFF_PERFECT_DEFENCE pendant pendingKickoffEvent perfect-defence', () => {
+  it('retourne KICKOFF_SOLID_DEFENCE pendant pendingKickoffEvent solid-defence', () => {
     const state = makeState({
-      pendingKickoffEvent: { type: 'perfect-defence' } as GameState['pendingKickoffEvent'],
+      pendingKickoffEvent: { type: 'solid-defence' } as GameState['pendingKickoffEvent'],
     });
     const moves = getLegalMoves(state);
     expect(moves).toHaveLength(1);
     const [first] = moves;
-    expect(first?.type).toBe('KICKOFF_PERFECT_DEFENCE');
+    expect(first?.type).toBe('KICKOFF_SOLID_DEFENCE');
   });
 
   it('inclut END_TURN par defaut quand l\'equipe ne peut plus rien faire', () => {

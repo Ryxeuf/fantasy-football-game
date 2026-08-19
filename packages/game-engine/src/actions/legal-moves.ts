@@ -97,8 +97,8 @@ export function getLegalMoves(state: GameState): Move[] {
   // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont possibles
   if (state.pendingKickoffEvent) {
     switch (state.pendingKickoffEvent.type) {
-      case 'perfect-defence':
-        return [{ type: 'KICKOFF_PERFECT_DEFENCE', positions: [] } as Move];
+      case 'solid-defence':
+        return [{ type: 'KICKOFF_SOLID_DEFENCE', positions: [] } as Move];
       case 'high-kick':
         return [{ type: 'KICKOFF_HIGH_KICK', playerId: null } as Move];
       case 'quick-snap':

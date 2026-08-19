@@ -3,7 +3,7 @@
  * Produit une grille 26x15 avec l'intensité de la couverture des zones de tacle
  */
 
-import { GameState, TeamId, Position } from '../core/types';
+import { GameState, Player, TeamId, Position } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 
 /**
@@ -31,6 +31,26 @@ const DIRS = [
   { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
   { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 },
 ];
+
+/**
+ * Un joueur est « Démarqué » (open) quand aucun adversaire debout ne
+ * marque sa case. Définition partagée par les événements de coup
+ * d'envoi 2025 (Solide défense, Chandelle, Surprise, Charge), qui ne
+ * portent que sur des joueurs Démarqués.
+ */
+export function isPlayerOpen(state: GameState, player: Player): boolean {
+  return !state.players.some(
+    opp =>
+      opp.team !== player.team &&
+      opp.state === 'active' &&
+      !opp.stunned &&
+      opp.pos.x >= 0 &&
+      opp.pos.y >= 0 &&
+      Math.abs(opp.pos.x - player.pos.x) <= 1 &&
+      Math.abs(opp.pos.y - player.pos.y) <= 1 &&
+      !(opp.pos.x === player.pos.x && opp.pos.y === player.pos.y)
+  );
+}
 
 /**
  * Calcule la heatmap complète des zones de tacle

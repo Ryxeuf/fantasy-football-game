@@ -1,10 +1,18 @@
 /**
- * Résolution des événements de kickoff délégués au UI
- * Gère les 4 événements nécessitant une interaction joueur :
- * - Perfect Defence (l'équipe qui botte réorganise)
- * - High Kick (l'équipe qui reçoit place un joueur sous le ballon)
- * - Quick Snap (l'équipe qui reçoit déplace chaque joueur d'1 case)
- * - Blitz (l'équipe qui botte joue un tour immédiat)
+ * Résolution des événements de coup d'envoi délégués au UI (table 2025).
+ * Gère les 4 événements nécessitant une décision de coach :
+ * - Solide défense (4) : l'équipe qui engage replace jusqu'à D3+3 de
+ *   ses joueurs Démarqués
+ * - Chandelle (5) : l'équipe qui réceptionne place 1 joueur Démarqué
+ *   sur la case d'atterrissage du ballon
+ * - Surprise (9) : l'équipe qui réceptionne déplace jusqu'à D3+3 de ses
+ *   joueurs Démarqués d'1 case
+ * - Charge (10) : l'équipe qui engage active jusqu'à D3+3 de ses
+ *   joueurs Démarqués
+ *
+ * Le plafond D3+3 et la liste des joueurs Démarqués sont tirés au
+ * moment où l'événement est appliqué et transportés par
+ * `state.pendingKickoffEvent` (`maxPlayers`, `eligiblePlayerIds`).
  */
 
 import { GameState, Position } from '../core/types';
@@ -23,19 +31,29 @@ function isOnTeamHalf(pos: Position, team: 'A' | 'B', state: GameState): boolean
 }
 
 /**
- * Résout l'événement Perfect Defence.
- * L'équipe qui botte peut réorganiser ses joueurs sur sa moitié de terrain.
- * Les joueurs doivent respecter les limites du terrain et ne pas chevaucher.
+ * Résout l'événement « Solide défense » (4).
+ * Le coach qui engage retire jusqu'à D3+3 de ses joueurs Démarqués et
+ * les replace sur sa moitié de terrain, sans chevauchement.
  */
-export function resolveKickoffPerfectDefence(
+export function resolveKickoffSolidDefence(
   state: GameState,
   newPositions: Array<{ playerId: string; position: Position }>
 ): GameState {
-  if (!state.pendingKickoffEvent || state.pendingKickoffEvent.type !== 'perfect-defence') {
+  if (!state.pendingKickoffEvent || state.pendingKickoffEvent.type !== 'solid-defence') {
     return state;
   }
 
   const team = state.pendingKickoffEvent.team;
+
+  // Plafond D3+3 tiré à l'application de l'événement.
+  const maxPlayers = state.pendingKickoffEvent.maxPlayers;
+  if (maxPlayers !== undefined && newPositions.length > maxPlayers) return state;
+
+  // Seuls les joueurs Démarqués au moment du coup d'envoi sont éligibles.
+  const eligible = state.pendingKickoffEvent.eligiblePlayerIds;
+  if (eligible && newPositions.some(({ playerId }) => !eligible.includes(playerId))) {
+    return state;
+  }
 
   // Validate all positions
   const positionSet = new Set<string>();
@@ -68,7 +86,7 @@ export function resolveKickoffPerfectDefence(
 
   const log = createLogEntry(
     'action',
-    `Défense parfaite : l'équipe qui botte a réorganisé ses joueurs`
+    `Solide défense : ${newPositions.length} joueur(s) replacé(s) par l'équipe qui engage`
   );
 
   return {
@@ -80,9 +98,9 @@ export function resolveKickoffPerfectDefence(
 }
 
 /**
- * Résout l'événement High Kick.
- * Un joueur de l'équipe qui reçoit peut être déplacé sous le ballon,
- * à condition qu'il ne soit pas dans une zone de tacle adverse.
+ * Résout l'événement « Chandelle » (5).
+ * 1 joueur Démarqué de l'équipe qui réceptionne peut être placé sur la
+ * case où le ballon va atterrir.
  * @param playerId - ID du joueur à déplacer, ou null pour décliner
  */
 export function resolveKickoffHighKick(
@@ -98,7 +116,7 @@ export function resolveKickoffHighKick(
 
   // Decline the event
   if (playerId === null) {
-    const log = createLogEntry('action', `Coup en hauteur décliné`);
+    const log = createLogEntry('action', `Chandelle déclinée`);
     return {
       ...state,
       pendingKickoffEvent: undefined,
@@ -130,7 +148,7 @@ export function resolveKickoffHighKick(
 
   const log = createLogEntry(
     'action',
-    `Coup en hauteur : ${player.name} se place sous le ballon en (${ballPosition.x}, ${ballPosition.y})`
+    `Chandelle : ${player.name} se place sous le ballon en (${ballPosition.x}, ${ballPosition.y})`
   );
 
   return {
@@ -142,8 +160,10 @@ export function resolveKickoffHighKick(
 }
 
 /**
- * Résout l'événement Quick Snap.
- * Chaque joueur de l'équipe qui reçoit peut se déplacer d'1 case.
+ * Résout l'événement « Surprise » (9).
+ * Jusqu'à D3+3 joueurs Démarqués de l'équipe qui réceptionne se
+ * déplacent d'1 case dans n'importe quelle direction (la moitié adverse
+ * est autorisée).
  * @param moves - Array de déplacements { playerId, to } (max 1 case de distance)
  */
 export function resolveKickoffQuickSnap(
@@ -156,9 +176,17 @@ export function resolveKickoffQuickSnap(
 
   const team = state.pendingKickoffEvent.team;
 
+  const maxPlayers = state.pendingKickoffEvent.maxPlayers;
+  if (maxPlayers !== undefined && moves.length > maxPlayers) return state;
+
+  const eligible = state.pendingKickoffEvent.eligiblePlayerIds;
+  if (eligible && moves.some(({ playerId }) => !eligible.includes(playerId))) {
+    return state;
+  }
+
   // Empty moves = skip the event
   if (moves.length === 0) {
-    const log = createLogEntry('action', `Snap rapide : aucun joueur déplacé`);
+    const log = createLogEntry('action', `Surprise : aucun joueur déplacé`);
     return {
       ...state,
       pendingKickoffEvent: undefined,
@@ -208,7 +236,7 @@ export function resolveKickoffQuickSnap(
 
   const log = createLogEntry(
     'action',
-    `Snap rapide : ${moves.length} joueur(s) déplacé(s) d'une case`
+    `Surprise : ${moves.length} joueur(s) déplacé(s) d'une case`
   );
 
   return {
@@ -220,25 +248,46 @@ export function resolveKickoffQuickSnap(
 }
 
 /**
- * Résout l'événement Blitz.
- * Active un tour immédiat pour l'équipe qui botte (sans passes ni remises).
+ * Résout l'événement « Charge » (10).
+ * Le coach qui engage désigne jusqu'à D3+3 de ses joueurs Démarqués ;
+ * eux seuls peuvent ensuite être activés, un par un, pour une Action de
+ * Mouvement gratuite (1 Blitz, 1 Lancer de Coéquipier et 1 Botter de
+ * Coéquipier possibles à la place). Passes et remises restent interdites.
+ *
+ * @param selectedPlayerIds - joueurs désignés. Omis ⇒ tous les joueurs
+ *   éligibles de l'équipe, dans la limite de `maxPlayers`.
  */
-export function resolveKickoffBlitz(state: GameState): GameState {
+export function resolveKickoffBlitz(
+  state: GameState,
+  selectedPlayerIds?: string[]
+): GameState {
   if (!state.pendingKickoffEvent || state.pendingKickoffEvent.type !== 'blitz') {
     return state;
   }
 
   const team = state.pendingKickoffEvent.team;
+  const maxPlayers = state.pendingKickoffEvent.maxPlayers;
+  const eligible = state.pendingKickoffEvent.eligiblePlayerIds;
+
+  let chosen = selectedPlayerIds ?? eligible ?? [];
+  if (selectedPlayerIds) {
+    // Un joueur non Démarqué (ou d'une autre équipe) invalide le choix.
+    if (eligible && selectedPlayerIds.some(id => !eligible.includes(id))) return state;
+    if (maxPlayers !== undefined && selectedPlayerIds.length > maxPlayers) return state;
+  } else if (maxPlayers !== undefined) {
+    chosen = chosen.slice(0, maxPlayers);
+  }
 
   const log = createLogEntry(
     'action',
-    `Blitz ! L'équipe qui botte joue un tour immédiat (sans passes ni remises)`
+    `Charge ! ${chosen.length} joueur(s) de l'équipe qui engage sont activés (sans passes ni remises)`
   );
 
   return {
     ...state,
     pendingKickoffEvent: undefined,
     kickoffBlitzTurn: true,
+    kickoffBlitzPlayerIds: chosen,
     currentPlayer: team,
     playerActions: {},
     teamBlitzCount: {},

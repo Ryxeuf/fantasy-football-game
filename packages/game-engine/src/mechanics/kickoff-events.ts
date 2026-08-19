@@ -1,95 +1,152 @@
 /**
- * Table des événements de kickoff pour Blood Bowl
- * Résultat sur 2D6 déterminant un événement spécial au début de chaque drive
+ * Table des événements de coup d'envoi — Blood Bowl saison 2025.
+ *
+ * Source : livre de règles 2025, « Tableau des Événements de Coup
+ * d'Envoi » (transcription : `docs/regles-bb-2025/page-01.md`, version
+ * publiée : `apps/web/app/compendium/data/rules-bb-2025.json`, chapitre
+ * `coup-d-envoi`). Les trois représentations doivent rester cohérentes.
+ *
+ * ⚠️ Avant la saison 2025, cette table reprenait l'édition précédente
+ * (Émeute, Défense parfaite, Coup de pied en hauteur, Arbitre zélé…).
+ * Elle alimente aussi la liste déroulante de saisie des feuilles de
+ * match de ligue (`apps/web/app/leagues/pairings/[id]/sheet`), qui
+ * affichait donc des événements qui n'existent plus.
  */
 
-import { GameState, RNG, TeamId } from '../core/types';
+import { GameState, Player, RNG, TeamId } from '../core/types';
 import { cloneGameState } from '../core/clone-state';
 import { roll2D6, rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { getWeatherCondition, type WeatherType } from '../core/weather-types';
+import { isPlayerOpen } from './tackle-zones';
+import { movePlayerToDugoutZone } from './dugout';
+
+/**
+ * Identifiants stables des 11 résultats de la table 2D6 (2 → 12).
+ *
+ * Ils sont persistés dans les feuilles de match de ligue
+ * (`LeagueMatchEvent.meta.kickoffEvent`) : ne pas les renommer sans
+ * prévoir un alias de compatibilité côté affichage.
+ */
+export type KickoffEventId =
+  | 'get-the-ref'
+  | 'timeout'
+  | 'solid-defence'
+  | 'high-kick'
+  | 'cheering-fans'
+  | 'brilliant-coaching'
+  | 'changing-weather'
+  | 'quick-snap'
+  | 'blitz'
+  | 'dodgy-snack'
+  | 'pitch-invasion';
 
 export interface KickoffEvent {
-  id: string;
-  name: string;
+  id: KickoffEventId;
+  /** Nom du résultat tel qu'il figure sur la table 2025. */
   nameFr: string;
+  /** Résumé de l'effet (reformulé, cf. compendium). */
   description: string;
 }
 
 /**
- * Table des événements de kickoff (2D6)
+ * Table des événements de coup d'envoi (2D6), saison 2025.
  */
 export const KICKOFF_EVENTS: Record<number, KickoffEvent> = {
   2: {
     id: 'get-the-ref',
-    name: 'Get the Ref!',
-    nameFr: 'Corrompre l\'arbitre !',
-    description: 'Chaque équipe reçoit 1 Pot-de-vin (Bribe) supplémentaire pour le reste du match.',
+    nameFr: 'À mort l\'arbitre !',
+    description:
+      'Chaque équipe reçoit immédiatement 1 Coup de Pouce de Pot-de-vin gratuit, à dépenser avant la fin du match sous peine d\'être perdu.',
   },
   3: {
-    id: 'riot',
-    name: 'Riot!',
-    nameFr: 'Émeute !',
-    description: 'Le compteur de tours avance ou recule de 1 (D6: 1-3 recule, 4-6 avance). Si le tour est déjà au 1 ou au 8, l\'effet est inversé.',
+    id: 'timeout',
+    nameFr: 'Temps mort !',
+    description:
+      'Si le Marqueur de Tour de l\'équipe qui engage indique 6, 7 ou 8, reculez d\'une case le marqueur des deux équipes ; sinon avancez-le d\'une case pour les deux équipes.',
   },
   4: {
-    id: 'perfect-defence',
-    name: 'Perfect Defence',
-    nameFr: 'Défense parfaite',
-    description: 'L\'équipe qui botte peut réorganiser ses joueurs. Ils doivent toujours respecter les règles de placement (LOS, wide zones).',
+    id: 'solid-defence',
+    nameFr: 'Solide défense !',
+    description:
+      'Le coach qui engage retire jusqu\'à D3+3 de ses joueurs Démarqués et les replace en respectant les règles normales de placement d\'équipe.',
   },
   5: {
     id: 'high-kick',
-    name: 'High Kick',
-    nameFr: 'Coup de pied en hauteur',
-    description: 'Un joueur de l\'équipe qui reçoit peut être déplacé sous le ballon pour le récupérer (s\'il n\'est pas marqué par un adversaire).',
+    nameFr: 'Chandelle !',
+    description:
+      'L\'équipe qui réceptionne peut placer aussitôt 1 de ses joueurs Démarqués sur la case d\'atterrissage prévue du ballon.',
   },
   6: {
     id: 'cheering-fans',
-    name: 'Cheering Fans',
-    nameFr: 'Fans en folie',
-    description: 'Chaque coach lance un D3 et ajoute le nombre de Fans Dévoués de son équipe. L\'équipe avec le score le plus élevé gagne 1 relance d\'équipe supplémentaire gratuite.',
+    nameFr: 'Fans en folie !',
+    description:
+      'Chaque coach lance 1D6 et y additionne ses Cheerleaders. Le plus haut total (les deux en cas d\'égalité) obtient un Soutien Offensif supplémentaire sur sa première Action de Blocage du prochain Tour.',
   },
   7: {
     id: 'brilliant-coaching',
-    name: 'Brilliant Coaching',
-    nameFr: 'Coaching brillant',
-    description: 'Chaque coach lance un D3 et ajoute le nombre d\'Assistants de son équipe. L\'équipe avec le score le plus élevé gagne 1 relance d\'équipe supplémentaire gratuite.',
+    nameFr: 'Coaching brillant !',
+    description:
+      'Chaque coach lance 1D6 et y additionne ses Coachs Assistants. Le plus haut total (les deux en cas d\'égalité) gagne 1 Relance d\'Équipe gratuite pour la Phase à venir.',
   },
   8: {
     id: 'changing-weather',
-    name: 'Changing Weather',
-    nameFr: 'Changement de météo',
-    description: 'La météo change ! Un nouveau jet sur la table météo est effectué. Si le résultat est "Conditions parfaites", la météo reste inchangée.',
+    nameFr: 'Météo capricieuse !',
+    description:
+      'Refaites immédiatement un jet sur le Tableau de Météo. Si le résultat est Conditions Idéales, le ballon Valdingue (3) dans les airs avant d\'atterrir.',
   },
   9: {
     id: 'quick-snap',
-    name: 'Quick Snap!',
-    nameFr: 'Snap rapide !',
-    description: 'L\'équipe qui reçoit peut déplacer chacun de ses joueurs d\'une case dans n\'importe quelle direction (sans quitter le terrain).',
+    nameFr: 'Surprise !',
+    description:
+      'Le coach qui réceptionne choisit jusqu\'à D3+3 de ses joueurs Démarqués : ils avancent aussitôt d\'une case dans n\'importe quelle direction, y compris dans la moitié adverse.',
   },
   10: {
     id: 'blitz',
-    name: 'Blitz!',
-    nameFr: 'Blitz !',
-    description: 'L\'équipe qui botte peut immédiatement jouer un tour complet avant la résolution du kickoff. Aucune passe ou remise n\'est autorisée pendant ce tour.',
+    nameFr: 'Charge !',
+    description:
+      'Le coach qui engage choisit jusqu\'à D3+3 de ses joueurs Démarqués et les active un par un pour une Action de Mouvement gratuite (1 peut Blitzer, 1 Lancer un Coéquipier, 1 Botter un Coéquipier). La Charge s\'arrête dès qu\'un joueur activé Chute ou est Plaqué.',
   },
   11: {
-    id: 'officious-ref',
-    name: 'Officious Ref',
-    nameFr: 'Arbitre zélé',
-    description: 'L\'arbitre est particulièrement attentif. Toute faute commise ce drive entraîne automatiquement l\'expulsion, même sans double.',
+    id: 'dodgy-snack',
+    nameFr: 'En-cas suspect !',
+    description:
+      'Chaque coach lance 1D6. Le plus bas total (les deux en cas d\'égalité) désigne au hasard 1 de ses joueurs sur le terrain et lance 1D6 : sur 2+ il perd 1 point de Mouvement et 1 point d\'Armure pour la Phase, sur 1 il file aux latrines et rejoint la Box des Réserves.',
   },
   12: {
     id: 'pitch-invasion',
-    name: 'Pitch Invasion!',
-    nameFr: 'Invasion de terrain !',
-    description: 'Les fans envahissent le terrain. Chaque coach lance un D6 pour chaque joueur adverse sur le terrain : sur 6, le joueur est sonné (stunned).',
+    nameFr: 'Invasion du terrain !',
+    description:
+      'Chaque coach lance 1D6 et y ajoute son Facteur de Popularité. Le plus bas total (les deux en cas d\'égalité) désigne au hasard D3 de ses joueurs sur le terrain : ils sont Mis à Terre et deviennent Sonnés.',
   },
 };
 
 /**
- * Effectue le jet de kickoff et retourne l'événement
+ * Événements qui nécessitent une décision de coach (UI ou IA). Les
+ * moteurs headless (sim-engine, résolution serveur) les loggent sans
+ * les appliquer : `applyKickoffEvent` poserait un `pendingKickoffEvent`
+ * que personne ne viendrait résoudre, ce qui bloquerait le match.
+ */
+export const INTERACTIVE_KICKOFF_EVENT_IDS: ReadonlySet<string> = new Set<string>([
+  'solid-defence',
+  'high-kick',
+  'quick-snap',
+  'blitz',
+]);
+
+/**
+ * Anciens identifiants (table d'avant la saison 2025) → identifiant
+ * 2025 le plus proche. Utilisé uniquement pour ré-afficher les
+ * feuilles de match de ligue saisies avant la correction de la table.
+ */
+export const LEGACY_KICKOFF_EVENT_IDS: Readonly<Record<string, KickoffEventId>> = {
+  riot: 'timeout',
+  'perfect-defence': 'solid-defence',
+  'officious-ref': 'dodgy-snack',
+};
+
+/**
+ * Effectue le jet de coup d'envoi et retourne l'événement
  */
 export function rollKickoffEvent(rng: RNG): { total: number; event: KickoffEvent } {
   const total = roll2D6(rng);
@@ -97,8 +154,81 @@ export function rollKickoffEvent(rng: RNG): { total: number; event: KickoffEvent
   return { total, event };
 }
 
+/** Les 8 directions du dé de Déviation (D8). */
+const SCATTER_DIRECTIONS: ReadonlyArray<{ x: number; y: number }> = [
+  { x: 0, y: -1 },
+  { x: 1, y: -1 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+  { x: -1, y: 1 },
+  { x: -1, y: 0 },
+  { x: -1, y: -1 },
+];
+
 /**
- * Applique un événement de kickoff à l'état du jeu
+ * Valdingue le ballon `times` fois pendant qu'il est EN L'AIR : on ne
+ * fait que déplacer sa case (pas de réception ni de rebond au sol —
+ * c'est l'atterrissage qui s'en charge).
+ */
+function scatterInFlight(
+  state: GameState,
+  from: { x: number; y: number },
+  times: number,
+  rng: RNG
+): { x: number; y: number } {
+  let pos = { ...from };
+  for (let i = 0; i < times; i += 1) {
+    const dir = SCATTER_DIRECTIONS[Math.floor(rng() * SCATTER_DIRECTIONS.length) % 8];
+    pos = {
+      x: Math.max(0, Math.min(state.width - 1, pos.x + dir.x)),
+      y: Math.max(0, Math.min(state.height - 1, pos.y + dir.y)),
+    };
+  }
+  return pos;
+}
+
+/** D3 (1-3) à partir du RNG partagé. */
+function rollD3(rng: RNG): number {
+  return Math.floor(rng() * 3) + 1;
+}
+
+/** Joueurs d'une équipe présents sur le terrain et en état de jouer. */
+function playersOnPitch(state: GameState, team: TeamId): Player[] {
+  return state.players.filter(
+    p =>
+      p.team === team &&
+      p.state === 'active' &&
+      !p.stunned &&
+      p.pos.x >= 0 &&
+      p.pos.y >= 0
+  );
+}
+
+/** Joueurs Démarqués (sans adversaire adjacent) d'une équipe. */
+function openPlayers(state: GameState, team: TeamId): Player[] {
+  return playersOnPitch(state, team).filter(p => isPlayerOpen(state, p));
+}
+
+/** Tire `count` joueurs distincts au hasard dans `pool`. */
+function pickRandomPlayers(pool: Player[], count: number, rng: RNG): Player[] {
+  const remaining = [...pool];
+  const picked: Player[] = [];
+  while (picked.length < count && remaining.length > 0) {
+    const idx = Math.floor(rng() * remaining.length);
+    picked.push(remaining.splice(idx, 1)[0]);
+  }
+  return picked;
+}
+
+const TEAM_KEY = { A: 'teamA', B: 'teamB' } as const;
+
+function teamName(state: GameState, team: TeamId): string {
+  return state.teamNames[TEAM_KEY[team]];
+}
+
+/**
+ * Applique un événement de coup d'envoi à l'état du jeu
  */
 export function applyKickoffEvent(
   state: GameState,
@@ -111,7 +241,7 @@ export function applyKickoffEvent(
 
   const eventLog = createLogEntry(
     'info',
-    `Événement de kickoff : ${event.nameFr} — ${event.description}`,
+    `Événement de coup d'envoi : ${event.nameFr} — ${event.description}`,
     undefined,
     undefined,
     { kickoffEvent: event.id }
@@ -120,194 +250,302 @@ export function applyKickoffEvent(
 
   switch (event.id) {
     case 'get-the-ref': {
-      // BUG fix : BB2020 dit « Each team receives one additional Bribe to
-      // use during the game », pas +1 relance. Avant le fix, l'event Get
-      // the Ref! donnait des relances comme Brilliant Coaching ou Cheering
-      // Fans — c'etait redondant avec ces 2 events et ignorait la mecanique
-      // Bribe (qui annule l'expulsion sur fouls, eject sur secret weapons).
+      // 2 — À mort l'arbitre ! « Chaque équipe reçoit immédiatement 1
+      // Coup de Pouce de Pot-de-vin gratuit. » Il vaut pour tout le
+      // match : `bribesRemaining` n'a pas de portée de drive.
       const bribes = newState.bribesRemaining ?? { teamA: 0, teamB: 0 };
       newState.bribesRemaining = {
         teamA: bribes.teamA + 1,
         teamB: bribes.teamB + 1,
       };
-      const log = createLogEntry('action', 'Chaque équipe reçoit 1 Pot-de-vin (Bribe) supplémentaire');
+      const log = createLogEntry('action', 'Chaque équipe reçoit 1 Coup de Pouce de Pot-de-vin');
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
-    case 'riot': {
-      const d6 = rollD6(rng);
-      const direction = d6 <= 3 ? -1 : 1;
-      let newTurn = newState.turn + direction;
-      // Bornes : si déjà 1, on avance ; si déjà 8, on recule
-      if (newTurn < 1) newTurn = newState.turn + 1;
-      if (newTurn > 8) newTurn = newState.turn - 1;
-      newState.turn = Math.max(1, Math.min(8, newTurn));
-      const log = createLogEntry('action', `Émeute ! Le compteur de tours passe à ${newState.turn} (D6: ${d6})`);
+    case 'timeout': {
+      // 3 — Temps mort ! Déterministe (l'ancienne table tirait un D6
+      // pour « Émeute ») : sur 6/7/8 le marqueur recule d'une case,
+      // sinon il avance d'une case, pour les DEUX équipes.
+      const isLateInHalf = newState.turn >= 6;
+      const nextTurn = isLateInHalf ? newState.turn - 1 : newState.turn + 1;
+      newState.turn = Math.max(1, nextTurn);
+      const log = createLogEntry(
+        'action',
+        `Temps mort ! Le Marqueur de Tour ${isLateInHalf ? 'recule' : 'avance'} d'une case → tour ${newState.turn}`
+      );
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
-    case 'perfect-defence': {
-      newState.pendingKickoffEvent = { type: 'perfect-defence', team: kickingTeam };
-      const log = createLogEntry('action', `Défense parfaite — L'équipe qui botte peut réorganiser ses joueurs`);
+    case 'solid-defence': {
+      // 4 — Solide défense ! Jusqu'à D3+3 joueurs Démarqués de l'équipe
+      // qui engage sont retirés puis replacés.
+      const maxPlayers = rollD3(rng) + 3;
+      const eligible = openPlayers(newState, kickingTeam);
+      newState.pendingKickoffEvent = {
+        type: 'solid-defence',
+        team: kickingTeam,
+        maxPlayers,
+        eligiblePlayerIds: eligible.map(p => p.id),
+      };
+      const log = createLogEntry(
+        'action',
+        `Solide défense — ${teamName(newState, kickingTeam)} peut replacer jusqu'à ${maxPlayers} joueurs Démarqués`
+      );
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'high-kick': {
+      // 5 — Chandelle ! 1 joueur Démarqué de l'équipe qui réceptionne.
+      const eligible = openPlayers(newState, receivingTeam);
       newState.pendingKickoffEvent = {
         type: 'high-kick',
         team: receivingTeam,
         ballPosition: newState.ball,
+        maxPlayers: 1,
+        eligiblePlayerIds: eligible.map(p => p.id),
       };
-      const log = createLogEntry('action', `Coup en hauteur — L'équipe qui reçoit peut placer un joueur sous le ballon`);
+      const log = createLogEntry(
+        'action',
+        `Chandelle — ${teamName(newState, receivingTeam)} peut placer 1 joueur Démarqué sous le ballon`
+      );
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'cheering-fans': {
-      const d3A = Math.floor(rng() * 3) + 1;
-      const d3B = Math.floor(rng() * 3) + 1;
-      const dfA = newState.dedicatedFans?.teamA ?? 0;
-      const dfB = newState.dedicatedFans?.teamB ?? 0;
-      const scoreA = d3A + dfA;
-      const scoreB = d3B + dfB;
-      if (scoreA > scoreB) {
-        newState.teamRerolls = { ...newState.teamRerolls, teamA: (newState.teamRerolls?.teamA ?? 0) + 1 };
-        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamA} gagne 1 relance (D3:${d3A} + ${dfA} fans = ${scoreA} vs D3:${d3B} + ${dfB} fans = ${scoreB})`);
-        newState.gameLog = [...newState.gameLog, log];
-      } else if (scoreB > scoreA) {
-        newState.teamRerolls = { ...newState.teamRerolls, teamB: (newState.teamRerolls?.teamB ?? 0) + 1 };
-        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamB} gagne 1 relance (D3:${d3B} + ${dfB} fans = ${scoreB} vs D3:${d3A} + ${dfA} fans = ${scoreA})`);
-        newState.gameLog = [...newState.gameLog, log];
-      } else {
-        const log = createLogEntry('action', `Fans en folie : égalité (D3:${d3A} + ${dfA} fans = ${scoreA} vs D3:${d3B} + ${dfB} fans = ${scoreB}), pas de relance`);
-        newState.gameLog = [...newState.gameLog, log];
-      }
+      // 6 — Fans en folie ! 1D6 + Cheerleaders. Le gagnant (les deux en
+      // cas d'égalité) obtient un Soutien Offensif supplémentaire sur sa
+      // première Action de Blocage du prochain Tour — et non une relance
+      // comme dans l'édition précédente.
+      const d6A = rollD6(rng);
+      const d6B = rollD6(rng);
+      const clA = newState.cheerleaders?.teamA ?? 0;
+      const clB = newState.cheerleaders?.teamB ?? 0;
+      const scoreA = d6A + clA;
+      const scoreB = d6B + clB;
+      const detail = `D6:${d6A}+${clA} cheerleaders = ${scoreA} vs D6:${d6B}+${clB} cheerleaders = ${scoreB}`;
+      const winners = { teamA: scoreA >= scoreB, teamB: scoreB >= scoreA };
+      newState.cheeringFansAssist = {
+        teamA: (newState.cheeringFansAssist?.teamA ?? false) || winners.teamA,
+        teamB: (newState.cheeringFansAssist?.teamB ?? false) || winners.teamB,
+      };
+      const beneficiaries =
+        winners.teamA && winners.teamB
+          ? 'les deux équipes'
+          : winners.teamA
+            ? teamName(newState, 'A')
+            : teamName(newState, 'B');
+      const log = createLogEntry(
+        'action',
+        `Fans en folie : ${beneficiaries} — Soutien Offensif supplémentaire sur la première Action de Blocage du prochain Tour (${detail})`
+      );
+      newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'brilliant-coaching': {
-      // Audit round 10 (HIGH/regle BB3) : la regle BB3 dit
-      // "Each coach rolls a D3 and adds the number of Assistant
-      // Coaches they have. The team with the highest total gains
-      // an extra Team Re-roll." Avant ce fix, seul le D3 brut etait
-      // compare — une equipe avec 6 assistant coaches gagnait 50/50.
-      // Pattern aligne sur 'cheering-fans' qui ajoute dedicatedFans.
-      const d3A = Math.floor(rng() * 3) + 1;
-      const d3B = Math.floor(rng() * 3) + 1;
+      // 7 — Coaching brillant ! 1D6 (et non 1D3) + Coachs Assistants ;
+      // en cas d'égalité, les DEUX coachs gagnent la relance.
+      const d6A = rollD6(rng);
+      const d6B = rollD6(rng);
       const acA = newState.assistantCoaches?.teamA ?? 0;
       const acB = newState.assistantCoaches?.teamB ?? 0;
-      const scoreA = d3A + acA;
-      const scoreB = d3B + acB;
-      if (scoreA > scoreB) {
-        newState.teamRerolls = { ...newState.teamRerolls, teamA: (newState.teamRerolls?.teamA ?? 0) + 1 };
-        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamA} gagne 1 relance (D3:${d3A} + ${acA} coachs = ${scoreA} vs D3:${d3B} + ${acB} coachs = ${scoreB})`);
-        newState.gameLog = [...newState.gameLog, log];
-      } else if (scoreB > scoreA) {
-        newState.teamRerolls = { ...newState.teamRerolls, teamB: (newState.teamRerolls?.teamB ?? 0) + 1 };
-        const log = createLogEntry('action', `Coaching brillant : ${newState.teamNames.teamB} gagne 1 relance (D3:${d3B} + ${acB} coachs = ${scoreB} vs D3:${d3A} + ${acA} coachs = ${scoreA})`);
-        newState.gameLog = [...newState.gameLog, log];
-      } else {
-        const log = createLogEntry('action', `Coaching brillant : égalité (D3:${d3A} + ${acA} coachs = ${scoreA} vs D3:${d3B} + ${acB} coachs = ${scoreB}), pas de relance`);
-        newState.gameLog = [...newState.gameLog, log];
-      }
+      const scoreA = d6A + acA;
+      const scoreB = d6B + acB;
+      const detail = `D6:${d6A}+${acA} coachs = ${scoreA} vs D6:${d6B}+${acB} coachs = ${scoreB}`;
+      const gainA = scoreA >= scoreB;
+      const gainB = scoreB >= scoreA;
+      newState.teamRerolls = {
+        teamA: (newState.teamRerolls?.teamA ?? 0) + (gainA ? 1 : 0),
+        teamB: (newState.teamRerolls?.teamB ?? 0) + (gainB ? 1 : 0),
+      };
+      const beneficiaries =
+        gainA && gainB
+          ? 'les deux équipes gagnent'
+          : `${teamName(newState, gainA ? 'A' : 'B')} gagne`;
+      const log = createLogEntry(
+        'action',
+        `Coaching brillant : ${beneficiaries} 1 Relance d'Équipe gratuite (${detail})`
+      );
+      newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'changing-weather': {
-      // BUG fix audit round 5 (CRITICAL) : avant, le case ne faisait que
-      // logger "La meteo change" SANS re-roll le 2D6 ni mettre a jour
-      // state.weatherCondition. Resultat : les modificateurs (gfi, dodge,
-      // pass) etaient figes sur la meteo initiale du match alors que la
-      // regle BB dit "Roll on the weather table again. If the result is
-      // Perfect Conditions, the weather does not change."
+      // 8 — Météo capricieuse ! Le nouveau jet REMPLACE la météo (dans
+      // l'édition précédente, « Conditions parfaites » laissait la météo
+      // inchangée). Si le résultat est Conditions Idéales, le ballon
+      // Valdingue (3) dans les airs avant d'atterrir.
       const weatherType: WeatherType =
         ((newState as GameState & { preMatch?: { weatherType?: WeatherType } })
           .preMatch?.weatherType ?? 'classique') as WeatherType;
-      const dice1 = Math.floor(rng() * 6) + 1;
-      const dice2 = Math.floor(rng() * 6) + 1;
+      const dice1 = rollD6(rng);
+      const dice2 = rollD6(rng);
       const total = dice1 + dice2;
       const newWeather = getWeatherCondition(weatherType, total);
-      if (newWeather && newWeather.condition !== 'Conditions parfaites') {
-        // "Conditions parfaites" (total=6-7 selon la table) : on garde
-        // la meteo courante par regle BB. Sinon, on remplace.
+      if (newWeather) {
         newState.weatherCondition = {
           condition: newWeather.condition,
           description: newWeather.description,
         };
         const log = createLogEntry(
           'action',
-          `La meteo change ! 2D6=${total} → ${newWeather.condition} : ${newWeather.description}`,
+          `Météo capricieuse ! 2D6=${total} → ${newWeather.condition} : ${newWeather.description}`
         );
         newState.gameLog = [...newState.gameLog, log];
-      } else {
-        const log = createLogEntry(
+      }
+      // « Conditions Idéales » est le libellé 2025 des conditions
+      // parfaites : le ballon Valdingue (3) avant d'atterrir. Le ballon
+      // est encore EN L'AIR : on ne déplace que sa case, sans résoudre
+      // de réception ni de rebond au sol (ce que fera l'atterrissage).
+      if (isIdealConditions(newWeather?.condition) && newState.ball) {
+        newState.ball = scatterInFlight(newState, newState.ball, 3, rng);
+        const scatterLog = createLogEntry(
           'action',
-          `La meteo change ! 2D6=${total} → temps clement, pas de changement.`,
+          `Conditions Idéales : le ballon Valdingue (3) → (${newState.ball.x}, ${newState.ball.y})`
         );
-        newState.gameLog = [...newState.gameLog, log];
+        newState.gameLog = [...newState.gameLog, scatterLog];
       }
       break;
     }
 
     case 'quick-snap': {
-      newState.pendingKickoffEvent = { type: 'quick-snap', team: receivingTeam };
-      const log = createLogEntry('action', `Snap rapide ! ${receivingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} peut déplacer ses joueurs d'1 case`);
+      // 9 — Surprise ! Jusqu'à D3+3 joueurs Démarqués de l'équipe qui
+      // réceptionne se déplacent d'1 case.
+      const maxPlayers = rollD3(rng) + 3;
+      const eligible = openPlayers(newState, receivingTeam);
+      newState.pendingKickoffEvent = {
+        type: 'quick-snap',
+        team: receivingTeam,
+        maxPlayers,
+        eligiblePlayerIds: eligible.map(p => p.id),
+      };
+      const log = createLogEntry(
+        'action',
+        `Surprise ! ${teamName(newState, receivingTeam)} peut déplacer jusqu'à ${maxPlayers} joueurs Démarqués d'1 case`
+      );
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'blitz': {
-      newState.pendingKickoffEvent = { type: 'blitz', team: kickingTeam };
-      const log = createLogEntry('action', `Blitz ! ${kickingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} joue un tour immédiat`);
+      // 10 — Charge ! Jusqu'à D3+3 joueurs Démarqués de l'équipe qui
+      // engage, activés un par un (et non un tour complet comme dans
+      // l'édition précédente).
+      const maxPlayers = rollD3(rng) + 3;
+      const eligible = openPlayers(newState, kickingTeam);
+      newState.pendingKickoffEvent = {
+        type: 'blitz',
+        team: kickingTeam,
+        maxPlayers,
+        eligiblePlayerIds: eligible.map(p => p.id),
+      };
+      const log = createLogEntry(
+        'action',
+        `Charge ! ${teamName(newState, kickingTeam)} peut activer jusqu'à ${maxPlayers} joueurs Démarqués`
+      );
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
-    case 'officious-ref': {
-      // BB2020 : « Each Coach rolls a D6 each time their Player commits a
-      // Foul this drive. If they roll a 1, the player is Sent Off. »
-      // Avant le fix, le log etait emis mais aucun flag n'etait pose sur
-      // state ; `executeFoul` ne pouvait pas declencher ce check.
-      newState.officiousRefForDrive = true;
-      const log = createLogEntry('action', 'Arbitre zélé : toute faute peut entraîner une expulsion (D6=1) ce drive');
+    case 'dodgy-snack': {
+      // 11 — En-cas suspect ! (remplace « Arbitre zélé »). 1D6 chacun,
+      // le plus BAS total désigne au hasard 1 de ses joueurs.
+      const d6A = rollD6(rng);
+      const d6B = rollD6(rng);
+      const affected: TeamId[] =
+        d6A === d6B ? ['A', 'B'] : d6A < d6B ? ['A'] : ['B'];
+      const log = createLogEntry(
+        'action',
+        `En-cas suspect : D6 ${d6A} vs ${d6B} → ${affected.map(t => teamName(newState, t)).join(' et ')}`
+      );
       newState.gameLog = [...newState.gameLog, log];
+
+      for (const team of affected) {
+        const pool = playersOnPitch(newState, team);
+        const [victim] = pickRandomPlayers(pool, 1, rng);
+        if (!victim) continue;
+        const effectRoll = rollD6(rng);
+        if (effectRoll === 1) {
+          // Avarié : le joueur passe le reste de la Phase aux latrines.
+          const moved = movePlayerToDugoutZone(newState, victim.id, 'reserves', team);
+          const movedPlayer = moved.players.find(p => p.id === victim.id);
+          if (movedPlayer) {
+            // `movePlayerToDugoutZone` laisse les réservistes sur leur
+            // case : on les sort explicitement du terrain.
+            movedPlayer.pos = { x: -1, y: -1 };
+            movedPlayer.hasBall = false;
+          }
+          newState.players = moved.players;
+          newState.dugouts = moved.dugouts;
+          const outLog = createLogEntry(
+            'action',
+            `En-cas suspect : ${victim.name} (D6=1) est enfermé dans les latrines — Box des Réserves pour le reste de la Phase`
+          );
+          newState.gameLog = [...newState.gameLog, outLog];
+        } else {
+          const idx = newState.players.findIndex(p => p.id === victim.id);
+          if (idx === -1) continue;
+          const before = newState.players[idx];
+          newState.driveStatModifiers = [
+            ...(newState.driveStatModifiers ?? []),
+            { playerId: before.id, source: 'dodgy-snack', ma: before.ma, av: before.av },
+          ];
+          newState.players[idx] = {
+            ...before,
+            ma: Math.max(1, before.ma - 1),
+            av: Math.max(1, before.av - 1),
+            pm: Math.min(before.pm, Math.max(1, before.ma - 1)),
+          };
+          const malusLog = createLogEntry(
+            'action',
+            `En-cas suspect : ${victim.name} (D6=${effectRoll}) perd 1 MO et 1 AR pour la Phase`
+          );
+          newState.gameLog = [...newState.gameLog, malusLog];
+        }
+      }
       break;
     }
 
     case 'pitch-invasion': {
-      // BB3 S3 : « Each Coach rolls a D6 for each opposing player on the
-      // pitch ; on 6+, that player is Stunned. » BUG fix : avant, le filtre
-      // sur `p.state === 'active'` et `!p.stunned` n'excluait pas les
-      // reservistes (pos.x = -1, en dugout) — leur state peut etre
-      // 'active' s'ils n'ont pas encore joue. Resultat : joueurs en
-      // reserves stunned a tort. Maintenant on filtre aussi sur
-      // `pos.x >= 0` (sur le terrain).
-      for (const team of ['A', 'B'] as const) {
-        const opponents = newState.players.filter(
-          p =>
-            p.team === team &&
-            !p.stunned &&
-            p.state === 'active' &&
-            p.pos.x >= 0 && // exclure les reservistes en dugout
-            p.pos.y >= 0
-        );
-        let stunnedCount = 0;
-        for (const player of opponents) {
-          const d6 = rollD6(rng);
-          if (d6 === 6) {
-            const idx = newState.players.findIndex(p => p.id === player.id);
-            if (idx !== -1) {
-              newState.players[idx] = { ...newState.players[idx], stunned: true };
-              stunnedCount++;
-            }
-          }
+      // 12 — Invasion du terrain ! 1D6 + Facteur de Popularité ; le plus
+      // BAS total sonne D3 de SES PROPRES joueurs (l'édition précédente
+      // faisait jeter un D6 par joueur adverse).
+      const d6A = rollD6(rng);
+      const d6B = rollD6(rng);
+      const fansA = newState.dedicatedFans?.teamA ?? 0;
+      const fansB = newState.dedicatedFans?.teamB ?? 0;
+      const scoreA = d6A + fansA;
+      const scoreB = d6B + fansB;
+      const affected: TeamId[] =
+        scoreA === scoreB ? ['A', 'B'] : scoreA < scoreB ? ['A'] : ['B'];
+      const log = createLogEntry(
+        'action',
+        `Invasion du terrain : D6:${d6A}+${fansA} = ${scoreA} vs D6:${d6B}+${fansB} = ${scoreB} → ${affected
+          .map(t => teamName(newState, t))
+          .join(' et ')}`
+      );
+      newState.gameLog = [...newState.gameLog, log];
+
+      for (const team of affected) {
+        const count = rollD3(rng);
+        const victims = pickRandomPlayers(playersOnPitch(newState, team), count, rng);
+        for (const victim of victims) {
+          const idx = newState.players.findIndex(p => p.id === victim.id);
+          if (idx === -1) continue;
+          newState.players[idx] = { ...newState.players[idx], stunned: true };
         }
-        if (stunnedCount > 0) {
-          const log = createLogEntry('action', `Invasion de terrain : ${stunnedCount} joueur(s) de ${team === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} sonné(s)`);
-          newState.gameLog = [...newState.gameLog, log];
+        if (victims.length > 0) {
+          const stunLog = createLogEntry(
+            'action',
+            `Invasion du terrain : ${victims.length} joueur(s) de ${teamName(newState, team)} Mis à Terre et Sonnés (${victims
+              .map(v => v.name)
+              .join(', ')})`
+          );
+          newState.gameLog = [...newState.gameLog, stunLog];
         }
       }
       break;
@@ -315,4 +553,35 @@ export function applyKickoffEvent(
   }
 
   return newState;
+}
+
+/**
+ * « Conditions Idéales » (saison 2025) = « Conditions parfaites » dans
+ * les libellés historiques de `weather-types.ts`.
+ */
+function isIdealConditions(condition: string | undefined): boolean {
+  if (!condition) return false;
+  const normalized = condition
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  return normalized.includes('conditions parfaites') || normalized.includes('conditions ideales');
+}
+
+/**
+ * Restaure les caractéristiques réduites pour la durée d'une Phase
+ * (coup d'envoi « En-cas suspect »). À appeler à chaque fin de drive
+ * (touchdown, mi-temps) — cf. `core/game-state.ts`.
+ */
+export function restoreDriveStatModifiers(state: GameState): GameState {
+  if (!state.driveStatModifiers || state.driveStatModifiers.length === 0) {
+    return state;
+  }
+  const byPlayer = new Map(state.driveStatModifiers.map(m => [m.playerId, m]));
+  const players = state.players.map(p => {
+    const mod = byPlayer.get(p.id);
+    if (!mod) return p;
+    return { ...p, ma: mod.ma, av: mod.av };
+  });
+  return { ...state, players, driveStatModifiers: [] };
 }

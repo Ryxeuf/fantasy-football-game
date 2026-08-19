@@ -20,7 +20,10 @@
  *        `mechanics/dugout.ts`)
  *      * `score`, `teamRerolls`, `teamBlitzCount`, `teamFoulCount`,
  *        `apothecaryAvailable`, `bribesRemaining`, `bloodweiserKegs`,
- *        `assistantCoaches`, `dedicatedFans` (petits records)
+ *        `assistantCoaches`, `dedicatedFans`, `cheerleaders`,
+ *        `cheeringFansAssist` (petits records)
+ *      * `driveStatModifiers`, `kickoffBlitzPlayerIds` (effets de coup
+ *        d'envoi limites au drive)
  *      * tous les `pending*` (objets shallow)
  *      * arrays de strings (`hypnotizedPlayers`,
  *        `usedRunningPassThisTurn`, ...)
@@ -145,7 +148,15 @@ export function cloneGameState(state: GameState): GameState {
   if (state.teamRosters) next.teamRosters = { ...state.teamRosters };
   if (state.lastDiceResult) next.lastDiceResult = { ...state.lastDiceResult };
   if (state.pendingApothecary) next.pendingApothecary = { ...state.pendingApothecary };
-  if (state.pendingKickoffEvent) next.pendingKickoffEvent = { ...state.pendingKickoffEvent };
+  if (state.pendingKickoffEvent) {
+    next.pendingKickoffEvent = {
+      ...state.pendingKickoffEvent,
+      ballPosition: state.pendingKickoffEvent.ballPosition
+        ? { ...state.pendingKickoffEvent.ballPosition }
+        : undefined,
+      eligiblePlayerIds: state.pendingKickoffEvent.eligiblePlayerIds?.slice(),
+    };
+  }
   if (state.pendingBlock) {
     next.pendingBlock = {
       ...state.pendingBlock,
@@ -190,6 +201,14 @@ export function cloneGameState(state: GameState): GameState {
   }
   if (state.dedicatedFans) next.dedicatedFans = { ...state.dedicatedFans };
   if (state.assistantCoaches) next.assistantCoaches = { ...state.assistantCoaches };
+  if (state.cheerleaders) next.cheerleaders = { ...state.cheerleaders };
+  if (state.cheeringFansAssist) next.cheeringFansAssist = { ...state.cheeringFansAssist };
+  if (state.driveStatModifiers) {
+    next.driveStatModifiers = state.driveStatModifiers.map(m => ({ ...m }));
+  }
+  if (state.kickoffBlitzPlayerIds) {
+    next.kickoffBlitzPlayerIds = state.kickoffBlitzPlayerIds.slice();
+  }
   if (state.bloodweiserKegs) next.bloodweiserKegs = { ...state.bloodweiserKegs };
   if (state.hypnotizedPlayers) next.hypnotizedPlayers = state.hypnotizedPlayers.slice();
   if (state.usedRunningPassThisTurn) {

@@ -4,7 +4,7 @@ import { applyMove, getLegalMoves } from '../actions/actions';
 import { makeRNG } from '../utils/rng';
 import { KICKOFF_EVENTS, applyKickoffEvent } from './kickoff-events';
 import {
-  resolveKickoffPerfectDefence,
+  resolveKickoffSolidDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
@@ -29,21 +29,21 @@ function createKickoffState(overrides?: Partial<GameState>): GameState {
   };
 }
 
-describe('Regle: Kickoff Event — Perfect Defence', () => {
+describe('Regle: Coup d\'envoi — Solide defense (4)', () => {
   it('sets pendingKickoffEvent when applied', () => {
     const state = createKickoffState();
-    const event = KICKOFF_EVENTS[4]; // Perfect Defence
+    const event = KICKOFF_EVENTS[4]; // Solide defense
     const rng = makeRNG('perfect-defence-test');
     const result = applyKickoffEvent(state, event, rng, 'A');
 
     expect(result.pendingKickoffEvent).toBeDefined();
-    expect(result.pendingKickoffEvent!.type).toBe('perfect-defence');
+    expect(result.pendingKickoffEvent!.type).toBe('solid-defence');
     expect(result.pendingKickoffEvent!.team).toBe('A'); // kicking team rearranges
   });
 
   it('resolves: allows kicking team to rearrange players on their half', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
 
     // Move team A players to new valid positions on their half
@@ -51,7 +51,7 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
       { playerId: 'A1', position: { x: 5, y: 3 } },
       { playerId: 'A2', position: { x: 8, y: 10 } },
     ];
-    const result = resolveKickoffPerfectDefence(state, newPositions);
+    const result = resolveKickoffSolidDefence(state, newPositions);
 
     expect(result.pendingKickoffEvent).toBeUndefined();
     const a1 = result.players.find(p => p.id === 'A1');
@@ -62,14 +62,14 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
 
   it('resolves: rejects positions on the opponent half', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
 
     // Try to place team A player on team B half (x >= 13)
     const newPositions = [
       { playerId: 'A1', position: { x: 18, y: 7 } }, // B's half
     ];
-    const result = resolveKickoffPerfectDefence(state, newPositions);
+    const result = resolveKickoffSolidDefence(state, newPositions);
 
     // Should remain unchanged (invalid move)
     expect(result.pendingKickoffEvent).toBeDefined();
@@ -79,13 +79,13 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
 
   it('resolves: rejects positions out of bounds', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
 
     const newPositions = [
       { playerId: 'A1', position: { x: -1, y: 7 } }, // out of bounds
     ];
-    const result = resolveKickoffPerfectDefence(state, newPositions);
+    const result = resolveKickoffSolidDefence(state, newPositions);
 
     // Should remain unchanged
     expect(result.pendingKickoffEvent).toBeDefined();
@@ -93,7 +93,7 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
 
   it('resolves: rejects overlapping positions', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
 
     // Both A players on same position
@@ -101,7 +101,7 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
       { playerId: 'A1', position: { x: 5, y: 5 } },
       { playerId: 'A2', position: { x: 5, y: 5 } },
     ];
-    const result = resolveKickoffPerfectDefence(state, newPositions);
+    const result = resolveKickoffSolidDefence(state, newPositions);
 
     // Should remain unchanged
     expect(result.pendingKickoffEvent).toBeDefined();
@@ -109,24 +109,24 @@ describe('Regle: Kickoff Event — Perfect Defence', () => {
 
   it('resolves: does not move opponent players', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
 
     const b1Before = state.players.find(p => p.id === 'B1')!;
     const newPositions = [
       { playerId: 'A1', position: { x: 5, y: 3 } },
     ];
-    const result = resolveKickoffPerfectDefence(state, newPositions);
+    const result = resolveKickoffSolidDefence(state, newPositions);
 
     const b1After = result.players.find(p => p.id === 'B1')!;
     expect(b1After.pos).toEqual(b1Before.pos);
   });
 });
 
-describe('Regle: Kickoff Event — High Kick', () => {
+describe('Regle: Coup d\'envoi — Chandelle (5)', () => {
   it('sets pendingKickoffEvent when applied', () => {
     const state = createKickoffState();
-    const event = KICKOFF_EVENTS[5]; // High Kick
+    const event = KICKOFF_EVENTS[5]; // Chandelle
     const rng = makeRNG('high-kick-test');
     const result = applyKickoffEvent(state, event, rng, 'A');
 
@@ -201,10 +201,10 @@ describe('Regle: Kickoff Event — High Kick', () => {
   });
 });
 
-describe('Regle: Kickoff Event — Quick Snap', () => {
+describe('Regle: Coup d\'envoi — Surprise (9)', () => {
   it('sets pendingKickoffEvent when applied', () => {
     const state = createKickoffState();
-    const event = KICKOFF_EVENTS[9]; // Quick Snap
+    const event = KICKOFF_EVENTS[9]; // Surprise
     const rng = makeRNG('quick-snap-test');
     const result = applyKickoffEvent(state, event, rng, 'A');
 
@@ -308,10 +308,10 @@ describe('Regle: Kickoff Event — Quick Snap', () => {
   });
 });
 
-describe('Regle: Kickoff Event — Blitz', () => {
+describe('Regle: Coup d\'envoi — Charge (10)', () => {
   it('sets pendingKickoffEvent when applied', () => {
     const state = createKickoffState();
-    const event = KICKOFF_EVENTS[10]; // Blitz
+    const event = KICKOFF_EVENTS[10]; // Charge
     const rng = makeRNG('blitz-test');
     const result = applyKickoffEvent(state, event, rng, 'A');
 
@@ -333,29 +333,29 @@ describe('Regle: Kickoff Event — Blitz', () => {
     expect(result.currentPlayer).toBe('A'); // kicking team now plays
   });
 
-  it('resolves: logs the blitz activation', () => {
+  it('resolves: logs the charge activation', () => {
     const state = createKickoffState({
       pendingKickoffEvent: { type: 'blitz', team: 'A' },
     });
 
     const result = resolveKickoffBlitz(state);
 
-    const blitzLogs = result.gameLog.filter(l =>
-      l.message.toLowerCase().includes('blitz')
+    const chargeLogs = result.gameLog.filter(l =>
+      l.message.toLowerCase().includes('charge')
     );
-    expect(blitzLogs.length).toBeGreaterThan(0);
+    expect(chargeLogs.length).toBeGreaterThan(0);
   });
 });
 
 describe('Regle: Kickoff Events — Integration with applyMove', () => {
-  it('applyMove resolves perfect defence via KICKOFF_PERFECT_DEFENCE', () => {
+  it('applyMove resolves solide defense via KICKOFF_SOLID_DEFENCE', () => {
     const state = createKickoffState({
-      pendingKickoffEvent: { type: 'perfect-defence', team: 'A' },
+      pendingKickoffEvent: { type: 'solid-defence', team: 'A' },
     });
     const rng = makeRNG('integration-pd');
 
     const result = applyMove(state, {
-      type: 'KICKOFF_PERFECT_DEFENCE',
+      type: 'KICKOFF_SOLID_DEFENCE',
       positions: [
         { playerId: 'A1', position: { x: 6, y: 3 } },
         { playerId: 'A2', position: { x: 8, y: 10 } },
@@ -501,5 +501,135 @@ describe('Regle: Kickoff Events — Integration with applyMove', () => {
     const handoffMoves = moves.filter(m => m.type === 'HANDOFF');
     expect(passMoves.length).toBe(0);
     expect(handoffMoves.length).toBe(0);
+  });
+});
+
+/**
+ * Saison 2025 : les evenements 4 (Solide defense), 9 (Surprise) et 10
+ * (Charge) ne portent que sur D3+3 joueurs DEMARQUES, la ou l'edition
+ * precedente laissait replacer/deplacer toute l'equipe.
+ */
+describe('Regle: Coup d\'envoi — plafond D3+3 et joueurs Demarques', () => {
+  it('Solide defense : refuse plus de `maxPlayers` joueurs', () => {
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'solid-defence',
+        team: 'A',
+        maxPlayers: 1,
+        eligiblePlayerIds: ['A1', 'A2'],
+      },
+    });
+
+    const rejected = resolveKickoffSolidDefence(state, [
+      { playerId: 'A1', position: { x: 5, y: 3 } },
+      { playerId: 'A2', position: { x: 8, y: 10 } },
+    ]);
+    expect(rejected.pendingKickoffEvent).toBeDefined();
+
+    const accepted = resolveKickoffSolidDefence(state, [
+      { playerId: 'A1', position: { x: 5, y: 3 } },
+    ]);
+    expect(accepted.pendingKickoffEvent).toBeUndefined();
+  });
+
+  it('Solide defense : refuse un joueur non Demarque', () => {
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'solid-defence',
+        team: 'A',
+        maxPlayers: 6,
+        eligiblePlayerIds: ['A1'],
+      },
+    });
+    const result = resolveKickoffSolidDefence(state, [
+      { playerId: 'A2', position: { x: 5, y: 3 } },
+    ]);
+    expect(result.pendingKickoffEvent).toBeDefined();
+  });
+
+  it('Surprise : refuse plus de `maxPlayers` deplacements', () => {
+    // Positions explicites pour garantir des cases d'arrivee libres.
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'quick-snap',
+        team: 'B',
+        maxPlayers: 1,
+        eligiblePlayerIds: ['B1', 'B2'],
+      },
+      players: setup().players.map(p => {
+        if (p.id === 'B1') return { ...p, pos: { x: 16, y: 2 } };
+        if (p.id === 'B2') return { ...p, pos: { x: 18, y: 2 } };
+        return p;
+      }),
+    });
+
+    const rejected = resolveKickoffQuickSnap(state, [
+      { playerId: 'B1', to: { x: 16, y: 3 } },
+      { playerId: 'B2', to: { x: 18, y: 3 } },
+    ]);
+    expect(rejected.pendingKickoffEvent).toBeDefined();
+
+    const accepted = resolveKickoffQuickSnap(state, [{ playerId: 'B1', to: { x: 16, y: 3 } }]);
+    expect(accepted.pendingKickoffEvent).toBeUndefined();
+  });
+
+  it('Surprise : refuse un joueur non Demarque', () => {
+    const base = createKickoffState();
+    const b2 = base.players.find(p => p.id === 'B2')!;
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'quick-snap',
+        team: 'B',
+        maxPlayers: 6,
+        eligiblePlayerIds: ['B1'],
+      },
+    });
+    const result = resolveKickoffQuickSnap(state, [
+      { playerId: 'B2', to: { x: b2.pos.x, y: b2.pos.y + 1 } },
+    ]);
+    expect(result.pendingKickoffEvent).toBeDefined();
+  });
+
+  it('Charge : n\'active que les joueurs designes, dans la limite D3+3', () => {
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'blitz',
+        team: 'A',
+        maxPlayers: 2,
+        eligiblePlayerIds: ['A1', 'A2', 'A3'],
+      },
+    });
+
+    const result = resolveKickoffBlitz(state, ['A1', 'A2']);
+    expect(result.kickoffBlitzTurn).toBe(true);
+    expect(result.kickoffBlitzPlayerIds).toEqual(['A1', 'A2']);
+
+    // Au-dela du plafond : refus.
+    expect(
+      resolveKickoffBlitz(state, ['A1', 'A2', 'A3']).pendingKickoffEvent
+    ).toBeDefined();
+    // Joueur non Demarque : refus.
+    expect(resolveKickoffBlitz(state, ['A4']).pendingKickoffEvent).toBeDefined();
+  });
+
+  it('Charge : un joueur non designe ne peut pas etre active', () => {
+    const state = createKickoffState({
+      pendingKickoffEvent: {
+        type: 'blitz',
+        team: 'A',
+        maxPlayers: 3,
+        eligiblePlayerIds: ['A1', 'A2'],
+      },
+    });
+    const charging = resolveKickoffBlitz(state, ['A1']);
+    const a2 = charging.players.find(p => p.id === 'A2')!;
+    const rng = makeRNG('charge-non-designe');
+
+    const blocked = applyMove(
+      charging,
+      { type: 'MOVE', playerId: 'A2', to: { x: a2.pos.x + 1, y: a2.pos.y } },
+      rng
+    );
+    expect(blocked.players.find(p => p.id === 'A2')!.pos).toEqual(a2.pos);
   });
 });

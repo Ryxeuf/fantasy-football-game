@@ -287,14 +287,18 @@ export {
 // Export des événements de kickoff
 export {
   KICKOFF_EVENTS,
+  INTERACTIVE_KICKOFF_EVENT_IDS,
+  LEGACY_KICKOFF_EVENT_IDS,
   rollKickoffEvent,
   applyKickoffEvent,
+  restoreDriveStatModifiers,
   type KickoffEvent,
+  type KickoffEventId,
 } from './mechanics/kickoff-events';
 
 // Export de la résolution des événements de kickoff UI
 export {
-  resolveKickoffPerfectDefence,
+  resolveKickoffSolidDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
@@ -303,6 +307,7 @@ export {
 // Export du calcul de zones de tacle (heatmap)
 export {
   calculateTackleZoneHeatmap,
+  isPlayerOpen,
   getTeamTackleZones,
   countTackleZonesAt,
   type TackleZoneCell,
