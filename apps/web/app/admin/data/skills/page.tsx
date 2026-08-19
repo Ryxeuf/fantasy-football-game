@@ -16,6 +16,7 @@ type Skill = {
   isElite: boolean;
   isPassive: boolean;
   isModified: boolean;
+  excludedFromSelection: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -270,6 +271,9 @@ export default function AdminSkillsPage() {
                 <th className="text-center px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Elite
                 </th>
+                <th className="text-center px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Exclue
+                </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Actions
                 </th>
@@ -278,7 +282,7 @@ export default function AdminSkillsPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredSkills.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     Aucune compétence trouvée
                   </td>
                 </tr>
@@ -313,6 +317,18 @@ export default function AdminSkillsPage() {
                     {skill.isElite ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">
                         ⭐ Elite
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {skill.excludedFromSelection ? (
+                      <span
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300"
+                        title="Non sélectionnable en création/évolution de joueur (reste valide si déjà possédée)"
+                      >
+                        🚫 Exclue
                       </span>
                     ) : (
                       <span className="text-gray-400">—</span>

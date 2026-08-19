@@ -43,8 +43,8 @@ import {
 import { serverLog } from "../utils/server-log";
 import { ACTIVE_PLAYER_WHERE } from "./player-status";
 import {
-  categoryCodeForSkill,
   checkSkillAccess,
+  getSkillSelectionInfo,
   parseAccessCsv,
 } from "./skill-access";
 
@@ -321,6 +321,7 @@ export type ApplyAdvancementOutcome =
         | "max-advancements-reached"
         | "insufficient-spp"
         | "skill-not-in-pool"
+        | "skill-excluded-from-selection"
         | "missing-skill"
         | "missing-stat"
         | "missing-d8"
@@ -610,8 +611,18 @@ export async function applyAdvancementChoice(
     },
     select: { primarySkills: true, secondarySkills: true },
   });
+  const { categoryCode: skillCode, excludedFromSelection } =
+    await getSkillSelectionInfo(skillSlug, ruleset);
+
+  // Skill reservee (ex: mighty-blow-2, variante star player) : bloque toute
+  // NOUVELLE selection, quelle que soit la disponibilite de donnees de
+  // position (contrairement au check de pool ci-dessous). Reste valide si
+  // deja possedee (jamais le cas ici : on ajoute une competence absente).
+  if (excludedFromSelection && !parsePlayerSkillSlugs(player.skills).includes(skillSlug)) {
+    return { skipped: true, reason: "skill-excluded-from-selection" };
+  }
+
   if (positionAccess) {
-    const skillCode = await categoryCodeForSkill(skillSlug, ruleset);
     const check = checkSkillAccess({
       type: input.type,
       skillCode,

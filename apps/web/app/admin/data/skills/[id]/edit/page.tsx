@@ -18,6 +18,7 @@ type Skill = {
   isElite: boolean;
   isPassive: boolean;
   isModified: boolean;
+  excludedFromSelection: boolean;
 };
 
 async function fetchJSON(path: string) {
@@ -103,6 +104,7 @@ export default function EditSkillPage() {
         isElite: formData.get("isElite") === "on",
         isPassive: formData.get("isPassive") === "on",
         isModified: formData.get("isModified") === "on",
+        excludedFromSelection: formData.get("excludedFromSelection") === "on",
       };
       await putJSON(`/admin/data/skills/${skill.id}`, data);
       router.push("/admin/data/skills");
@@ -192,6 +194,20 @@ export default function EditSkillPage() {
                 className="w-5 h-5 text-purple-500 border-gray-300 rounded focus:ring-purple-500"
               />
               <span className="text-sm font-medium">Modifiée *</span>
+            </label>
+            <label
+              className="flex items-center gap-2 cursor-pointer"
+              title="Reste valide si déjà possédée, mais plus sélectionnable en création/évolution de joueur"
+            >
+              <input
+                type="checkbox"
+                name="excludedFromSelection"
+                defaultChecked={skill.excludedFromSelection}
+                className="w-5 h-5 text-red-500 border-gray-300 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium flex items-center gap-1">
+                <span className="text-red-500">🚫</span> Exclue de la sélection
+              </span>
             </label>
           </div>
           <div>

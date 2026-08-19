@@ -11,6 +11,10 @@ import type { Response } from 'express';
 vi.mock('../prisma', () => ({
   prisma: {
     team: { findFirst: vi.fn() },
+    teamSelection: { findFirst: vi.fn() },
+    // Défensif : le check excludedFromSelection (Flux B legacy) est
+    // maintenant DB-backed.
+    skill: { findMany: vi.fn() },
   },
 }));
 
@@ -24,6 +28,7 @@ import type { AuthenticatedRequest } from '../middleware/authUser';
 
 const mockPrisma = prisma as unknown as {
   team: { findFirst: ReturnType<typeof vi.fn> };
+  skill: { findMany: ReturnType<typeof vi.fn> };
 };
 
 function createRes() {
@@ -56,6 +61,30 @@ function createReq(
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+describe('handleUpdatePlayerSkills — flag excludedFromSelection (Flux B legacy)', () => {
+  it('rejette (400) une competence flaggee excludedFromSelection en DB, meme si categorie autorisee', async () => {
+    mockPrisma.team.findFirst.mockResolvedValueOnce({
+      id: 'team-1',
+      ruleset: 'season_3',
+      players: [
+        { id: 'p-1', position: 'human_lineman', skills: '', dead: false, advancements: '[]', spp: 20 },
+      ],
+    });
+    // mighty-blow existe dans SKILLS_BY_SLUG (statique) mais est flagge
+    // exclu en DB pour ce ruleset.
+    mockPrisma.skill.findMany.mockResolvedValueOnce([{ slug: 'mighty-blow' }]);
+
+    const req = createReq({
+      body: { skillSlug: 'mighty-blow', advancementType: 'primary' },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect((res.payload as { error?: string })?.error).toMatch(/disponible.*selection|selection/i);
+  });
 });
 
 describe('S27.8.30 — team-player-skills-handler exports', () => {

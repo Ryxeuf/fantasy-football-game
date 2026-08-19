@@ -17,7 +17,6 @@ import { formatPlusStat } from "../../../../lib/format-stats";
 import {
   getPlayerCost,
   getDisplayName,
-  SKILLS_DEFINITIONS,
   getNextAdvancementPspCost,
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
@@ -27,6 +26,18 @@ import {
   type AdvancementType,
   type CharacteristicKind
 } from "@bb/game-engine";
+
+// Catalogue de compétences DB-backed (remplace l'ancien import statique
+// SKILLS_DEFINITIONS) : source de vérité unique avec le flux /level-up
+// (AdvancementEditor.tsx), et respecte le flag excludedFromSelection.
+interface EditSkillCatalogItem {
+  slug: string;
+  nameFr: string;
+  category: string;
+  isPassive?: boolean;
+  description?: string;
+  excludedFromSelection?: boolean;
+}
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import RosterBadge from "../../../../components/RosterBadge";
 
@@ -87,6 +98,7 @@ export default function TeamEditPage() {
   const { language, t } = useLanguage();
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [skillsCatalog, setSkillsCatalog] = useState<EditSkillCatalogItem[]>([]);
   const [rosterName, setRosterName] = useState<string>("");
   // Méta position (compétences de base DB) pour distinguer base vs acquise
   // sans dépendre de la liste hardcodée du game-engine (encadré orange).
@@ -197,6 +209,21 @@ export default function TeamEditPage() {
         setTeamName(d.team?.name || "");
         setAvailablePositions(positionsData.availablePositions || []);
         setFrozen(positionsData.frozen ?? true);
+
+        // Catalogue de compétences DB-backed, filtré par le ruleset réel de
+        // l'équipe (season_2 et season_3 divergent par endroits). Non
+        // bloquant : en cas d'échec, la liste de sélection reste vide plutôt
+        // que de faire échouer tout le chargement de la page.
+        if (d?.team?.ruleset) {
+          try {
+            const skillsData = await apiRequest<{ skills: EditSkillCatalogItem[] }>(
+              `/api/skills?ruleset=${encodeURIComponent(d.team.ruleset)}`,
+            );
+            setSkillsCatalog(skillsData.skills ?? []);
+          } catch {
+            setSkillsCatalog([]);
+          }
+        }
 
         // Roster name fetch depends on d.team.roster, kept separate and
         // non-blocking — the main UI can render without it.
@@ -1059,11 +1086,12 @@ export default function TeamEditPage() {
               ];
 
               // Compétences disponibles filtrées
-              const availableSkills = SKILLS_DEFINITIONS
+              const availableSkills = skillsCatalog
                 .filter(s => allowedCategories.includes(s.category as any))
-                .filter(s => !selectedCategory || s.category === selectedCategory);
+                .filter(s => !selectedCategory || s.category === selectedCategory)
+                .filter(s => !s.excludedFromSelection);
 
-              const selectedSkill = selectedSkillSlug ? SKILLS_DEFINITIONS.find(s => s.slug === selectedSkillSlug) : null;
+              const selectedSkill = selectedSkillSlug ? skillsCatalog.find(s => s.slug === selectedSkillSlug) : null;
               const currentSkills = (player.skills || '').split(',').filter(Boolean);
 
               // BB2025 — amelioration de caracteristique : stats courantes du
@@ -1520,7 +1548,7 @@ export default function TeamEditPage() {
                           }
                           // Show random result to user
                           if (!charMode && isRandom && result.advancement?.skillSlug) {
-                            const rolledSkill = SKILLS_DEFINITIONS.find(s => s.slug === result.advancement.skillSlug);
+                            const rolledSkill = skillsCatalog.find(s => s.slug === result.advancement.skillSlug);
                             if (rolledSkill) {
                               alert(`Compétence aléatoire obtenue : ${rolledSkill.nameFr}`);
                             }

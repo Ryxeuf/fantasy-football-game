@@ -73,6 +73,8 @@ export interface SkillCatalogItem {
   nameEn?: string;
   description?: string;
   descriptionEn?: string;
+  /** Reste valide si déjà possédée, mais non proposée en nouvelle sélection. */
+  excludedFromSelection?: boolean;
 }
 
 /**
@@ -394,6 +396,7 @@ export function PlayerRow({
       .filter((s) => {
         const code = CATEGORY_CODE[s.category];
         if (!code || !pool.has(code)) return false;
+        if (s.excludedFromSelection) return false;
         if (seen.has(s.slug)) return false;
         seen.add(s.slug);
         return true;
