@@ -9,7 +9,7 @@ import {
   StagedAdvancementsRecap,
   type StagedAdvancementEntry,
 } from "./_components/SheetAdvancementsEditor";
-import { KICKOFF_EVENTS } from "@bb/game-engine";
+import { KICKOFF_EVENTS, LEGACY_KICKOFF_EVENT_IDS } from "@bb/game-engine";
 import {
   PreMatchPanel,
   PostMatchPanel,
@@ -104,7 +104,8 @@ const INJURY_STAT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "av", label: "AR (Armure)" },
 ];
 
-// A56 — résultats de la table de coup d'envoi (2D6), source game-engine.
+// A56 — résultats de la table de coup d'envoi (2D6), source game-engine
+// (table de la saison 2025).
 const KICKOFF_EVENT_OPTIONS: ReadonlyArray<{ value: string; label: string }> =
   Object.entries(KICKOFF_EVENTS).map(([roll, ev]) => ({
     value: ev.id,
@@ -112,7 +113,11 @@ const KICKOFF_EVENT_OPTIONS: ReadonlyArray<{ value: string; label: string }> =
   }));
 
 function kickoffEventLabel(id: string): string {
-  const found = Object.values(KICKOFF_EVENTS).find((ev) => ev.id === id);
+  // Les feuilles saisies avant la correction de la table portent les
+  // anciens identifiants : on les remappe pour éviter d'afficher un
+  // slug brut dans la timeline.
+  const resolvedId = LEGACY_KICKOFF_EVENT_IDS[id] ?? id;
+  const found = Object.values(KICKOFF_EVENTS).find((ev) => ev.id === resolvedId);
   return found?.nameFr ?? id;
 }
 
