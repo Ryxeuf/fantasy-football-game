@@ -26,7 +26,8 @@ import type { Response } from 'express';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
-import { getStarPlayerBySlug, isGameFormat } from '@bb/game-engine';
+import { isGameFormat, type Ruleset } from '@bb/game-engine';
+import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 
@@ -138,20 +139,22 @@ export async function handleGetTeamDetail(
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(
-        sp.starPlayerSlug,
-        team.ruleset,
-      );
-      return {
-        id: sp.id,
-        slug: sp.starPlayerSlug,
-        cost: sp.cost,
-        hiredAt: sp.hiredAt,
-        ...starPlayerData,
-      };
-    });
+    const enrichedStarPlayers = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      team.starPlayers.map(async (sp: any) => {
+        const starPlayerData = await getStarPlayerBySlugDb(
+          sp.starPlayerSlug,
+          team.ruleset as Ruleset,
+        );
+        return {
+          id: sp.id,
+          slug: sp.starPlayerSlug,
+          cost: sp.cost,
+          hiredAt: sp.hiredAt,
+          ...starPlayerData,
+        };
+      }),
+    );
 
     const selection = await prisma.teamSelection.findFirst({
       where: { teamId: team.id },

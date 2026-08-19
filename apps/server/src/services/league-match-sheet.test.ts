@@ -1678,22 +1678,22 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
     };
   }
 
-  it("null = tous les coups de pouce sont proposés", () => {
-    const ref = buildMatchSheetReference(
+  it("null = tous les coups de pouce sont proposés", async () => {
+    const ref = await buildMatchSheetReference(
       { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
       null,
     );
     expect(ref.inducements.home.length).toBeGreaterThan(1);
   });
 
-  it("restreint la liste aux slugs autorisés (Star Players non concernés)", () => {
-    const full = buildMatchSheetReference(
+  it("restreint la liste aux slugs autorisés (Star Players non concernés)", async () => {
+    const full = await buildMatchSheetReference(
       { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
       null,
     );
     const firstSlug = full.inducements.home[0]?.slug;
     expect(firstSlug).toBeTruthy();
-    const restricted = buildMatchSheetReference(
+    const restricted = await buildMatchSheetReference(
       { home: team("human", 1_000_000), away: team("orc", 1_000_000) },
       [firstSlug as string],
     );
@@ -1702,8 +1702,8 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
     expect(restricted.starPlayers.home).toEqual(full.starPlayers.home);
   });
 
-  it("A53 — options selon les règles spéciales de l'équipe (p.142-148)", () => {
-    const ref = buildMatchSheetReference(
+  it("A53 — options selon les règles spéciales de l'équipe (p.142-148)", async () => {
+    const ref = await buildMatchSheetReference(
       {
         home: team("goblin", 1_000_000),
         away: team("necromantic_horror", 1_000_000),

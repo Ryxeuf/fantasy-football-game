@@ -16,6 +16,9 @@ vi.mock('../prisma', () => ({
     team: { create: vi.fn(), findUnique: vi.fn() },
     teamPlayer: { createMany: vi.fn() },
     teamStarPlayer: { createMany: vi.fn() },
+    // Défensif : le calcul de coût/validation des Star Players est
+    // maintenant DB-backed (star-player-repository.ts).
+    starPlayer: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     $transaction: vi.fn(async (cb: any) =>
       cb({

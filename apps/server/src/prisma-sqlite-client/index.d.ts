@@ -114,6 +114,21 @@ export type RosterStaffConfig = $Result.DefaultSelection<Prisma.$RosterStaffConf
  */
 export type Skill = $Result.DefaultSelection<Prisma.$SkillPayload>
 /**
+ * Model StarPlayer
+ * 
+ */
+export type StarPlayer = $Result.DefaultSelection<Prisma.$StarPlayerPayload>
+/**
+ * Model StarPlayerSkill
+ * 
+ */
+export type StarPlayerSkill = $Result.DefaultSelection<Prisma.$StarPlayerSkillPayload>
+/**
+ * Model StarPlayerHirableBy
+ * 
+ */
+export type StarPlayerHirableBy = $Result.DefaultSelection<Prisma.$StarPlayerHirableByPayload>
+/**
  * Model Position
  * 
  */
@@ -740,6 +755,36 @@ export class PrismaClient<
     * ```
     */
   get skill(): Prisma.SkillDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.starPlayer`: Exposes CRUD operations for the **StarPlayer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StarPlayers
+    * const starPlayers = await prisma.starPlayer.findMany()
+    * ```
+    */
+  get starPlayer(): Prisma.StarPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.starPlayerSkill`: Exposes CRUD operations for the **StarPlayerSkill** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StarPlayerSkills
+    * const starPlayerSkills = await prisma.starPlayerSkill.findMany()
+    * ```
+    */
+  get starPlayerSkill(): Prisma.StarPlayerSkillDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.starPlayerHirableBy`: Exposes CRUD operations for the **StarPlayerHirableBy** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StarPlayerHirableBies
+    * const starPlayerHirableBies = await prisma.starPlayerHirableBy.findMany()
+    * ```
+    */
+  get starPlayerHirableBy(): Prisma.StarPlayerHirableByDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.position`: Exposes CRUD operations for the **Position** model.
@@ -1740,6 +1785,9 @@ export namespace Prisma {
     Roster: 'Roster',
     RosterStaffConfig: 'RosterStaffConfig',
     Skill: 'Skill',
+    StarPlayer: 'StarPlayer',
+    StarPlayerSkill: 'StarPlayerSkill',
+    StarPlayerHirableBy: 'StarPlayerHirableBy',
     Position: 'Position',
     PositionSkill: 'PositionSkill',
     Cup: 'Cup',
@@ -1812,7 +1860,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3293,6 +3341,228 @@ export namespace Prisma {
           count: {
             args: Prisma.SkillCountArgs<ExtArgs>
             result: $Utils.Optional<SkillCountAggregateOutputType> | number
+          }
+        }
+      }
+      StarPlayer: {
+        payload: Prisma.$StarPlayerPayload<ExtArgs>
+        fields: Prisma.StarPlayerFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StarPlayerFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StarPlayerFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          findFirst: {
+            args: Prisma.StarPlayerFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StarPlayerFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          findMany: {
+            args: Prisma.StarPlayerFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>[]
+          }
+          create: {
+            args: Prisma.StarPlayerCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          createMany: {
+            args: Prisma.StarPlayerCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StarPlayerCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>[]
+          }
+          delete: {
+            args: Prisma.StarPlayerDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          update: {
+            args: Prisma.StarPlayerUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          deleteMany: {
+            args: Prisma.StarPlayerDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StarPlayerUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StarPlayerUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>[]
+          }
+          upsert: {
+            args: Prisma.StarPlayerUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerPayload>
+          }
+          aggregate: {
+            args: Prisma.StarPlayerAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStarPlayer>
+          }
+          groupBy: {
+            args: Prisma.StarPlayerGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StarPlayerCountArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      StarPlayerSkill: {
+        payload: Prisma.$StarPlayerSkillPayload<ExtArgs>
+        fields: Prisma.StarPlayerSkillFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StarPlayerSkillFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StarPlayerSkillFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          findFirst: {
+            args: Prisma.StarPlayerSkillFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StarPlayerSkillFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          findMany: {
+            args: Prisma.StarPlayerSkillFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>[]
+          }
+          create: {
+            args: Prisma.StarPlayerSkillCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          createMany: {
+            args: Prisma.StarPlayerSkillCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StarPlayerSkillCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>[]
+          }
+          delete: {
+            args: Prisma.StarPlayerSkillDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          update: {
+            args: Prisma.StarPlayerSkillUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          deleteMany: {
+            args: Prisma.StarPlayerSkillDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StarPlayerSkillUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StarPlayerSkillUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>[]
+          }
+          upsert: {
+            args: Prisma.StarPlayerSkillUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerSkillPayload>
+          }
+          aggregate: {
+            args: Prisma.StarPlayerSkillAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStarPlayerSkill>
+          }
+          groupBy: {
+            args: Prisma.StarPlayerSkillGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerSkillGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StarPlayerSkillCountArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerSkillCountAggregateOutputType> | number
+          }
+        }
+      }
+      StarPlayerHirableBy: {
+        payload: Prisma.$StarPlayerHirableByPayload<ExtArgs>
+        fields: Prisma.StarPlayerHirableByFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StarPlayerHirableByFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StarPlayerHirableByFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          findFirst: {
+            args: Prisma.StarPlayerHirableByFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StarPlayerHirableByFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          findMany: {
+            args: Prisma.StarPlayerHirableByFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>[]
+          }
+          create: {
+            args: Prisma.StarPlayerHirableByCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          createMany: {
+            args: Prisma.StarPlayerHirableByCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StarPlayerHirableByCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>[]
+          }
+          delete: {
+            args: Prisma.StarPlayerHirableByDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          update: {
+            args: Prisma.StarPlayerHirableByUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          deleteMany: {
+            args: Prisma.StarPlayerHirableByDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StarPlayerHirableByUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StarPlayerHirableByUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>[]
+          }
+          upsert: {
+            args: Prisma.StarPlayerHirableByUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StarPlayerHirableByPayload>
+          }
+          aggregate: {
+            args: Prisma.StarPlayerHirableByAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStarPlayerHirableBy>
+          }
+          groupBy: {
+            args: Prisma.StarPlayerHirableByGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerHirableByGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StarPlayerHirableByCountArgs<ExtArgs>
+            result: $Utils.Optional<StarPlayerHirableByCountAggregateOutputType> | number
           }
         }
       }
@@ -7408,6 +7678,9 @@ export namespace Prisma {
     roster?: RosterOmit
     rosterStaffConfig?: RosterStaffConfigOmit
     skill?: SkillOmit
+    starPlayer?: StarPlayerOmit
+    starPlayerSkill?: StarPlayerSkillOmit
+    starPlayerHirableBy?: StarPlayerHirableByOmit
     position?: PositionOmit
     positionSkill?: PositionSkillOmit
     cup?: CupOmit
@@ -8077,11 +8350,13 @@ export namespace Prisma {
   export type RosterCountOutputType = {
     positions: number
     staffConfigs: number
+    starPlayerHirableBy: number
   }
 
   export type RosterCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positions?: boolean | RosterCountOutputTypeCountPositionsArgs
     staffConfigs?: boolean | RosterCountOutputTypeCountStaffConfigsArgs
+    starPlayerHirableBy?: boolean | RosterCountOutputTypeCountStarPlayerHirableByArgs
   }
 
   // Custom InputTypes
@@ -8109,6 +8384,13 @@ export namespace Prisma {
     where?: RosterStaffConfigWhereInput
   }
 
+  /**
+   * RosterCountOutputType without action
+   */
+  export type RosterCountOutputTypeCountStarPlayerHirableByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerHirableByWhereInput
+  }
+
 
   /**
    * Count Type SkillCountOutputType
@@ -8116,10 +8398,12 @@ export namespace Prisma {
 
   export type SkillCountOutputType = {
     positionSkills: number
+    starPlayerSkills: number
   }
 
   export type SkillCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positionSkills?: boolean | SkillCountOutputTypeCountPositionSkillsArgs
+    starPlayerSkills?: boolean | SkillCountOutputTypeCountStarPlayerSkillsArgs
   }
 
   // Custom InputTypes
@@ -8138,6 +8422,53 @@ export namespace Prisma {
    */
   export type SkillCountOutputTypeCountPositionSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PositionSkillWhereInput
+  }
+
+  /**
+   * SkillCountOutputType without action
+   */
+  export type SkillCountOutputTypeCountStarPlayerSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerSkillWhereInput
+  }
+
+
+  /**
+   * Count Type StarPlayerCountOutputType
+   */
+
+  export type StarPlayerCountOutputType = {
+    skills: number
+    hirableBy: number
+  }
+
+  export type StarPlayerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    skills?: boolean | StarPlayerCountOutputTypeCountSkillsArgs
+    hirableBy?: boolean | StarPlayerCountOutputTypeCountHirableByArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * StarPlayerCountOutputType without action
+   */
+  export type StarPlayerCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerCountOutputType
+     */
+    select?: StarPlayerCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * StarPlayerCountOutputType without action
+   */
+  export type StarPlayerCountOutputTypeCountSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerSkillWhereInput
+  }
+
+  /**
+   * StarPlayerCountOutputType without action
+   */
+  export type StarPlayerCountOutputTypeCountHirableByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerHirableByWhereInput
   }
 
 
@@ -30702,6 +31033,7 @@ export namespace Prisma {
     updatedAt?: boolean
     positions?: boolean | Roster$positionsArgs<ExtArgs>
     staffConfigs?: boolean | Roster$staffConfigsArgs<ExtArgs>
+    starPlayerHirableBy?: boolean | Roster$starPlayerHirableByArgs<ExtArgs>
     _count?: boolean | RosterCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["roster"]>
 
@@ -30760,6 +31092,7 @@ export namespace Prisma {
   export type RosterInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positions?: boolean | Roster$positionsArgs<ExtArgs>
     staffConfigs?: boolean | Roster$staffConfigsArgs<ExtArgs>
+    starPlayerHirableBy?: boolean | Roster$starPlayerHirableByArgs<ExtArgs>
     _count?: boolean | RosterCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type RosterIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -30770,6 +31103,7 @@ export namespace Prisma {
     objects: {
       positions: Prisma.$PositionPayload<ExtArgs>[]
       staffConfigs: Prisma.$RosterStaffConfigPayload<ExtArgs>[]
+      starPlayerHirableBy: Prisma.$StarPlayerHirableByPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -31182,6 +31516,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     positions<T extends Roster$positionsArgs<ExtArgs> = {}>(args?: Subset<T, Roster$positionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     staffConfigs<T extends Roster$staffConfigsArgs<ExtArgs> = {}>(args?: Subset<T, Roster$staffConfigsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RosterStaffConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    starPlayerHirableBy<T extends Roster$starPlayerHirableByArgs<ExtArgs> = {}>(args?: Subset<T, Roster$starPlayerHirableByArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -31656,6 +31991,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: RosterStaffConfigScalarFieldEnum | RosterStaffConfigScalarFieldEnum[]
+  }
+
+  /**
+   * Roster.starPlayerHirableBy
+   */
+  export type Roster$starPlayerHirableByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    where?: StarPlayerHirableByWhereInput
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StarPlayerHirableByScalarFieldEnum | StarPlayerHirableByScalarFieldEnum[]
   }
 
   /**
@@ -32951,6 +33310,7 @@ export namespace Prisma {
     isElite: boolean | null
     isPassive: boolean | null
     isModified: boolean | null
+    excludedFromSelection: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -32967,6 +33327,7 @@ export namespace Prisma {
     isElite: boolean | null
     isPassive: boolean | null
     isModified: boolean | null
+    excludedFromSelection: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -32983,6 +33344,7 @@ export namespace Prisma {
     isElite: number
     isPassive: number
     isModified: number
+    excludedFromSelection: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -33001,6 +33363,7 @@ export namespace Prisma {
     isElite?: true
     isPassive?: true
     isModified?: true
+    excludedFromSelection?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -33017,6 +33380,7 @@ export namespace Prisma {
     isElite?: true
     isPassive?: true
     isModified?: true
+    excludedFromSelection?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -33033,6 +33397,7 @@ export namespace Prisma {
     isElite?: true
     isPassive?: true
     isModified?: true
+    excludedFromSelection?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -33122,6 +33487,7 @@ export namespace Prisma {
     isElite: boolean
     isPassive: boolean
     isModified: boolean
+    excludedFromSelection: boolean
     createdAt: Date
     updatedAt: Date
     _count: SkillCountAggregateOutputType | null
@@ -33155,9 +33521,11 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
+    starPlayerSkills?: boolean | Skill$starPlayerSkillsArgs<ExtArgs>
     _count?: boolean | SkillCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["skill"]>
 
@@ -33173,6 +33541,7 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["skill"]>
@@ -33189,6 +33558,7 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["skill"]>
@@ -33205,13 +33575,15 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "category" | "isElite" | "isPassive" | "isModified" | "createdAt" | "updatedAt", ExtArgs["result"]["skill"]>
+  export type SkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "category" | "isElite" | "isPassive" | "isModified" | "excludedFromSelection" | "createdAt" | "updatedAt", ExtArgs["result"]["skill"]>
   export type SkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
+    starPlayerSkills?: boolean | Skill$starPlayerSkillsArgs<ExtArgs>
     _count?: boolean | SkillCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SkillIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -33221,6 +33593,7 @@ export namespace Prisma {
     name: "Skill"
     objects: {
       positionSkills: Prisma.$PositionSkillPayload<ExtArgs>[]
+      starPlayerSkills: Prisma.$StarPlayerSkillPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -33234,6 +33607,12 @@ export namespace Prisma {
       isElite: boolean
       isPassive: boolean
       isModified: boolean
+      /**
+       * Skill reserve (variante star player / regle speciale cablee en pseudo-skill,
+       * ex. mighty-blow-2) : reste valide si deja possede, mais ne doit plus etre
+       * selectionnable lors d'une nouvelle evolution/creation de joueur normal.
+       */
+      excludedFromSelection: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["skill"]>
@@ -33631,6 +34010,7 @@ export namespace Prisma {
   export interface Prisma__SkillClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     positionSkills<T extends Skill$positionSkillsArgs<ExtArgs> = {}>(args?: Subset<T, Skill$positionSkillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    starPlayerSkills<T extends Skill$starPlayerSkillsArgs<ExtArgs> = {}>(args?: Subset<T, Skill$starPlayerSkillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -33671,6 +34051,7 @@ export namespace Prisma {
     readonly isElite: FieldRef<"Skill", 'Boolean'>
     readonly isPassive: FieldRef<"Skill", 'Boolean'>
     readonly isModified: FieldRef<"Skill", 'Boolean'>
+    readonly excludedFromSelection: FieldRef<"Skill", 'Boolean'>
     readonly createdAt: FieldRef<"Skill", 'DateTime'>
     readonly updatedAt: FieldRef<"Skill", 'DateTime'>
   }
@@ -34083,6 +34464,30 @@ export namespace Prisma {
   }
 
   /**
+   * Skill.starPlayerSkills
+   */
+  export type Skill$starPlayerSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    where?: StarPlayerSkillWhereInput
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    cursor?: StarPlayerSkillWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StarPlayerSkillScalarFieldEnum | StarPlayerSkillScalarFieldEnum[]
+  }
+
+  /**
    * Skill without action
    */
   export type SkillDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -34098,6 +34503,3407 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SkillInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model StarPlayer
+   */
+
+  export type AggregateStarPlayer = {
+    _count: StarPlayerCountAggregateOutputType | null
+    _avg: StarPlayerAvgAggregateOutputType | null
+    _sum: StarPlayerSumAggregateOutputType | null
+    _min: StarPlayerMinAggregateOutputType | null
+    _max: StarPlayerMaxAggregateOutputType | null
+  }
+
+  export type StarPlayerAvgAggregateOutputType = {
+    cost: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+  }
+
+  export type StarPlayerSumAggregateOutputType = {
+    cost: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+  }
+
+  export type StarPlayerMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    displayName: string | null
+    cost: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+    keywords: string | null
+    specialRule: string | null
+    imageUrl: string | null
+    isMegaStar: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type StarPlayerMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    displayName: string | null
+    cost: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+    keywords: string | null
+    specialRule: string | null
+    imageUrl: string | null
+    isMegaStar: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type StarPlayerCountAggregateOutputType = {
+    id: number
+    slug: number
+    ruleset: number
+    displayName: number
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords: number
+    specialRule: number
+    imageUrl: number
+    isMegaStar: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type StarPlayerAvgAggregateInputType = {
+    cost?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+  }
+
+  export type StarPlayerSumAggregateInputType = {
+    cost?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+  }
+
+  export type StarPlayerMinAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    displayName?: true
+    cost?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    specialRule?: true
+    imageUrl?: true
+    isMegaStar?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type StarPlayerMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    displayName?: true
+    cost?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    specialRule?: true
+    imageUrl?: true
+    isMegaStar?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type StarPlayerCountAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    displayName?: true
+    cost?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    specialRule?: true
+    imageUrl?: true
+    isMegaStar?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type StarPlayerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayer to aggregate.
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayers to fetch.
+     */
+    orderBy?: StarPlayerOrderByWithRelationInput | StarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StarPlayers
+    **/
+    _count?: true | StarPlayerCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: StarPlayerAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: StarPlayerSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StarPlayerMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StarPlayerMaxAggregateInputType
+  }
+
+  export type GetStarPlayerAggregateType<T extends StarPlayerAggregateArgs> = {
+        [P in keyof T & keyof AggregateStarPlayer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStarPlayer[P]>
+      : GetScalarType<T[P], AggregateStarPlayer[P]>
+  }
+
+
+
+
+  export type StarPlayerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerWhereInput
+    orderBy?: StarPlayerOrderByWithAggregationInput | StarPlayerOrderByWithAggregationInput[]
+    by: StarPlayerScalarFieldEnum[] | StarPlayerScalarFieldEnum
+    having?: StarPlayerScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StarPlayerCountAggregateInputType | true
+    _avg?: StarPlayerAvgAggregateInputType
+    _sum?: StarPlayerSumAggregateInputType
+    _min?: StarPlayerMinAggregateInputType
+    _max?: StarPlayerMaxAggregateInputType
+  }
+
+  export type StarPlayerGroupByOutputType = {
+    id: string
+    slug: string
+    ruleset: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa: number | null
+    av: number
+    keywords: string | null
+    specialRule: string | null
+    imageUrl: string | null
+    isMegaStar: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: StarPlayerCountAggregateOutputType | null
+    _avg: StarPlayerAvgAggregateOutputType | null
+    _sum: StarPlayerSumAggregateOutputType | null
+    _min: StarPlayerMinAggregateOutputType | null
+    _max: StarPlayerMaxAggregateOutputType | null
+  }
+
+  type GetStarPlayerGroupByPayload<T extends StarPlayerGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StarPlayerGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StarPlayerGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StarPlayerGroupByOutputType[P]>
+            : GetScalarType<T[P], StarPlayerGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StarPlayerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    displayName?: boolean
+    cost?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    specialRule?: boolean
+    imageUrl?: boolean
+    isMegaStar?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    skills?: boolean | StarPlayer$skillsArgs<ExtArgs>
+    hirableBy?: boolean | StarPlayer$hirableByArgs<ExtArgs>
+    _count?: boolean | StarPlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayer"]>
+
+  export type StarPlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    displayName?: boolean
+    cost?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    specialRule?: boolean
+    imageUrl?: boolean
+    isMegaStar?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["starPlayer"]>
+
+  export type StarPlayerSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    displayName?: boolean
+    cost?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    specialRule?: boolean
+    imageUrl?: boolean
+    isMegaStar?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["starPlayer"]>
+
+  export type StarPlayerSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    displayName?: boolean
+    cost?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    specialRule?: boolean
+    imageUrl?: boolean
+    isMegaStar?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type StarPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "displayName" | "cost" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "specialRule" | "imageUrl" | "isMegaStar" | "createdAt" | "updatedAt", ExtArgs["result"]["starPlayer"]>
+  export type StarPlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    skills?: boolean | StarPlayer$skillsArgs<ExtArgs>
+    hirableBy?: boolean | StarPlayer$hirableByArgs<ExtArgs>
+    _count?: boolean | StarPlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type StarPlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type StarPlayerIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $StarPlayerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StarPlayer"
+    objects: {
+      skills: Prisma.$StarPlayerSkillPayload<ExtArgs>[]
+      hirableBy: Prisma.$StarPlayerHirableByPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      ruleset: $Enums.Ruleset
+      displayName: string
+      cost: number
+      ma: number
+      st: number
+      ag: number
+      pa: number | null
+      av: number
+      keywords: string | null
+      specialRule: string | null
+      imageUrl: string | null
+      isMegaStar: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["starPlayer"]>
+    composites: {}
+  }
+
+  type StarPlayerGetPayload<S extends boolean | null | undefined | StarPlayerDefaultArgs> = $Result.GetResult<Prisma.$StarPlayerPayload, S>
+
+  type StarPlayerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StarPlayerFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StarPlayerCountAggregateInputType | true
+    }
+
+  export interface StarPlayerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StarPlayer'], meta: { name: 'StarPlayer' } }
+    /**
+     * Find zero or one StarPlayer that matches the filter.
+     * @param {StarPlayerFindUniqueArgs} args - Arguments to find a StarPlayer
+     * @example
+     * // Get one StarPlayer
+     * const starPlayer = await prisma.starPlayer.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StarPlayerFindUniqueArgs>(args: SelectSubset<T, StarPlayerFindUniqueArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StarPlayer that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StarPlayerFindUniqueOrThrowArgs} args - Arguments to find a StarPlayer
+     * @example
+     * // Get one StarPlayer
+     * const starPlayer = await prisma.starPlayer.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StarPlayerFindUniqueOrThrowArgs>(args: SelectSubset<T, StarPlayerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayer that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerFindFirstArgs} args - Arguments to find a StarPlayer
+     * @example
+     * // Get one StarPlayer
+     * const starPlayer = await prisma.starPlayer.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StarPlayerFindFirstArgs>(args?: SelectSubset<T, StarPlayerFindFirstArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayer that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerFindFirstOrThrowArgs} args - Arguments to find a StarPlayer
+     * @example
+     * // Get one StarPlayer
+     * const starPlayer = await prisma.starPlayer.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StarPlayerFindFirstOrThrowArgs>(args?: SelectSubset<T, StarPlayerFindFirstOrThrowArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StarPlayers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StarPlayers
+     * const starPlayers = await prisma.starPlayer.findMany()
+     * 
+     * // Get first 10 StarPlayers
+     * const starPlayers = await prisma.starPlayer.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const starPlayerWithIdOnly = await prisma.starPlayer.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StarPlayerFindManyArgs>(args?: SelectSubset<T, StarPlayerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StarPlayer.
+     * @param {StarPlayerCreateArgs} args - Arguments to create a StarPlayer.
+     * @example
+     * // Create one StarPlayer
+     * const StarPlayer = await prisma.starPlayer.create({
+     *   data: {
+     *     // ... data to create a StarPlayer
+     *   }
+     * })
+     * 
+     */
+    create<T extends StarPlayerCreateArgs>(args: SelectSubset<T, StarPlayerCreateArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StarPlayers.
+     * @param {StarPlayerCreateManyArgs} args - Arguments to create many StarPlayers.
+     * @example
+     * // Create many StarPlayers
+     * const starPlayer = await prisma.starPlayer.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StarPlayerCreateManyArgs>(args?: SelectSubset<T, StarPlayerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StarPlayers and returns the data saved in the database.
+     * @param {StarPlayerCreateManyAndReturnArgs} args - Arguments to create many StarPlayers.
+     * @example
+     * // Create many StarPlayers
+     * const starPlayer = await prisma.starPlayer.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StarPlayers and only return the `id`
+     * const starPlayerWithIdOnly = await prisma.starPlayer.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StarPlayerCreateManyAndReturnArgs>(args?: SelectSubset<T, StarPlayerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a StarPlayer.
+     * @param {StarPlayerDeleteArgs} args - Arguments to delete one StarPlayer.
+     * @example
+     * // Delete one StarPlayer
+     * const StarPlayer = await prisma.starPlayer.delete({
+     *   where: {
+     *     // ... filter to delete one StarPlayer
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StarPlayerDeleteArgs>(args: SelectSubset<T, StarPlayerDeleteArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StarPlayer.
+     * @param {StarPlayerUpdateArgs} args - Arguments to update one StarPlayer.
+     * @example
+     * // Update one StarPlayer
+     * const starPlayer = await prisma.starPlayer.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StarPlayerUpdateArgs>(args: SelectSubset<T, StarPlayerUpdateArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StarPlayers.
+     * @param {StarPlayerDeleteManyArgs} args - Arguments to filter StarPlayers to delete.
+     * @example
+     * // Delete a few StarPlayers
+     * const { count } = await prisma.starPlayer.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StarPlayerDeleteManyArgs>(args?: SelectSubset<T, StarPlayerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StarPlayers
+     * const starPlayer = await prisma.starPlayer.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StarPlayerUpdateManyArgs>(args: SelectSubset<T, StarPlayerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayers and returns the data updated in the database.
+     * @param {StarPlayerUpdateManyAndReturnArgs} args - Arguments to update many StarPlayers.
+     * @example
+     * // Update many StarPlayers
+     * const starPlayer = await prisma.starPlayer.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StarPlayers and only return the `id`
+     * const starPlayerWithIdOnly = await prisma.starPlayer.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StarPlayerUpdateManyAndReturnArgs>(args: SelectSubset<T, StarPlayerUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one StarPlayer.
+     * @param {StarPlayerUpsertArgs} args - Arguments to update or create a StarPlayer.
+     * @example
+     * // Update or create a StarPlayer
+     * const starPlayer = await prisma.starPlayer.upsert({
+     *   create: {
+     *     // ... data to create a StarPlayer
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StarPlayer we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StarPlayerUpsertArgs>(args: SelectSubset<T, StarPlayerUpsertArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StarPlayers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerCountArgs} args - Arguments to filter StarPlayers to count.
+     * @example
+     * // Count the number of StarPlayers
+     * const count = await prisma.starPlayer.count({
+     *   where: {
+     *     // ... the filter for the StarPlayers we want to count
+     *   }
+     * })
+    **/
+    count<T extends StarPlayerCountArgs>(
+      args?: Subset<T, StarPlayerCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StarPlayerCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StarPlayer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StarPlayerAggregateArgs>(args: Subset<T, StarPlayerAggregateArgs>): Prisma.PrismaPromise<GetStarPlayerAggregateType<T>>
+
+    /**
+     * Group by StarPlayer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StarPlayerGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StarPlayerGroupByArgs['orderBy'] }
+        : { orderBy?: StarPlayerGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StarPlayerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStarPlayerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StarPlayer model
+   */
+  readonly fields: StarPlayerFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StarPlayer.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StarPlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    skills<T extends StarPlayer$skillsArgs<ExtArgs> = {}>(args?: Subset<T, StarPlayer$skillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    hirableBy<T extends StarPlayer$hirableByArgs<ExtArgs> = {}>(args?: Subset<T, StarPlayer$hirableByArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StarPlayer model
+   */
+  interface StarPlayerFieldRefs {
+    readonly id: FieldRef<"StarPlayer", 'String'>
+    readonly slug: FieldRef<"StarPlayer", 'String'>
+    readonly ruleset: FieldRef<"StarPlayer", 'Ruleset'>
+    readonly displayName: FieldRef<"StarPlayer", 'String'>
+    readonly cost: FieldRef<"StarPlayer", 'Int'>
+    readonly ma: FieldRef<"StarPlayer", 'Int'>
+    readonly st: FieldRef<"StarPlayer", 'Int'>
+    readonly ag: FieldRef<"StarPlayer", 'Int'>
+    readonly pa: FieldRef<"StarPlayer", 'Int'>
+    readonly av: FieldRef<"StarPlayer", 'Int'>
+    readonly keywords: FieldRef<"StarPlayer", 'String'>
+    readonly specialRule: FieldRef<"StarPlayer", 'String'>
+    readonly imageUrl: FieldRef<"StarPlayer", 'String'>
+    readonly isMegaStar: FieldRef<"StarPlayer", 'Boolean'>
+    readonly createdAt: FieldRef<"StarPlayer", 'DateTime'>
+    readonly updatedAt: FieldRef<"StarPlayer", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StarPlayer findUnique
+   */
+  export type StarPlayerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayer to fetch.
+     */
+    where: StarPlayerWhereUniqueInput
+  }
+
+  /**
+   * StarPlayer findUniqueOrThrow
+   */
+  export type StarPlayerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayer to fetch.
+     */
+    where: StarPlayerWhereUniqueInput
+  }
+
+  /**
+   * StarPlayer findFirst
+   */
+  export type StarPlayerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayer to fetch.
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayers to fetch.
+     */
+    orderBy?: StarPlayerOrderByWithRelationInput | StarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayers.
+     */
+    cursor?: StarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayers.
+     */
+    distinct?: StarPlayerScalarFieldEnum | StarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayer findFirstOrThrow
+   */
+  export type StarPlayerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayer to fetch.
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayers to fetch.
+     */
+    orderBy?: StarPlayerOrderByWithRelationInput | StarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayers.
+     */
+    cursor?: StarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayers.
+     */
+    distinct?: StarPlayerScalarFieldEnum | StarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayer findMany
+   */
+  export type StarPlayerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayers to fetch.
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayers to fetch.
+     */
+    orderBy?: StarPlayerOrderByWithRelationInput | StarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StarPlayers.
+     */
+    cursor?: StarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayers.
+     */
+    skip?: number
+    distinct?: StarPlayerScalarFieldEnum | StarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayer create
+   */
+  export type StarPlayerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StarPlayer.
+     */
+    data: XOR<StarPlayerCreateInput, StarPlayerUncheckedCreateInput>
+  }
+
+  /**
+   * StarPlayer createMany
+   */
+  export type StarPlayerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StarPlayers.
+     */
+    data: StarPlayerCreateManyInput | StarPlayerCreateManyInput[]
+  }
+
+  /**
+   * StarPlayer createManyAndReturn
+   */
+  export type StarPlayerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * The data used to create many StarPlayers.
+     */
+    data: StarPlayerCreateManyInput | StarPlayerCreateManyInput[]
+  }
+
+  /**
+   * StarPlayer update
+   */
+  export type StarPlayerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StarPlayer.
+     */
+    data: XOR<StarPlayerUpdateInput, StarPlayerUncheckedUpdateInput>
+    /**
+     * Choose, which StarPlayer to update.
+     */
+    where: StarPlayerWhereUniqueInput
+  }
+
+  /**
+   * StarPlayer updateMany
+   */
+  export type StarPlayerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StarPlayers.
+     */
+    data: XOR<StarPlayerUpdateManyMutationInput, StarPlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayers to update
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * Limit how many StarPlayers to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayer updateManyAndReturn
+   */
+  export type StarPlayerUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * The data used to update StarPlayers.
+     */
+    data: XOR<StarPlayerUpdateManyMutationInput, StarPlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayers to update
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * Limit how many StarPlayers to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayer upsert
+   */
+  export type StarPlayerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StarPlayer to update in case it exists.
+     */
+    where: StarPlayerWhereUniqueInput
+    /**
+     * In case the StarPlayer found by the `where` argument doesn't exist, create a new StarPlayer with this data.
+     */
+    create: XOR<StarPlayerCreateInput, StarPlayerUncheckedCreateInput>
+    /**
+     * In case the StarPlayer was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StarPlayerUpdateInput, StarPlayerUncheckedUpdateInput>
+  }
+
+  /**
+   * StarPlayer delete
+   */
+  export type StarPlayerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter which StarPlayer to delete.
+     */
+    where: StarPlayerWhereUniqueInput
+  }
+
+  /**
+   * StarPlayer deleteMany
+   */
+  export type StarPlayerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayers to delete
+     */
+    where?: StarPlayerWhereInput
+    /**
+     * Limit how many StarPlayers to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayer.skills
+   */
+  export type StarPlayer$skillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    where?: StarPlayerSkillWhereInput
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    cursor?: StarPlayerSkillWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StarPlayerSkillScalarFieldEnum | StarPlayerSkillScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayer.hirableBy
+   */
+  export type StarPlayer$hirableByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    where?: StarPlayerHirableByWhereInput
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StarPlayerHirableByScalarFieldEnum | StarPlayerHirableByScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayer without action
+   */
+  export type StarPlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayer
+     */
+    select?: StarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayer
+     */
+    omit?: StarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model StarPlayerSkill
+   */
+
+  export type AggregateStarPlayerSkill = {
+    _count: StarPlayerSkillCountAggregateOutputType | null
+    _min: StarPlayerSkillMinAggregateOutputType | null
+    _max: StarPlayerSkillMaxAggregateOutputType | null
+  }
+
+  export type StarPlayerSkillMinAggregateOutputType = {
+    id: string | null
+    starPlayerId: string | null
+    skillId: string | null
+  }
+
+  export type StarPlayerSkillMaxAggregateOutputType = {
+    id: string | null
+    starPlayerId: string | null
+    skillId: string | null
+  }
+
+  export type StarPlayerSkillCountAggregateOutputType = {
+    id: number
+    starPlayerId: number
+    skillId: number
+    _all: number
+  }
+
+
+  export type StarPlayerSkillMinAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    skillId?: true
+  }
+
+  export type StarPlayerSkillMaxAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    skillId?: true
+  }
+
+  export type StarPlayerSkillCountAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    skillId?: true
+    _all?: true
+  }
+
+  export type StarPlayerSkillAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayerSkill to aggregate.
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerSkills to fetch.
+     */
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StarPlayerSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StarPlayerSkills
+    **/
+    _count?: true | StarPlayerSkillCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StarPlayerSkillMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StarPlayerSkillMaxAggregateInputType
+  }
+
+  export type GetStarPlayerSkillAggregateType<T extends StarPlayerSkillAggregateArgs> = {
+        [P in keyof T & keyof AggregateStarPlayerSkill]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStarPlayerSkill[P]>
+      : GetScalarType<T[P], AggregateStarPlayerSkill[P]>
+  }
+
+
+
+
+  export type StarPlayerSkillGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerSkillWhereInput
+    orderBy?: StarPlayerSkillOrderByWithAggregationInput | StarPlayerSkillOrderByWithAggregationInput[]
+    by: StarPlayerSkillScalarFieldEnum[] | StarPlayerSkillScalarFieldEnum
+    having?: StarPlayerSkillScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StarPlayerSkillCountAggregateInputType | true
+    _min?: StarPlayerSkillMinAggregateInputType
+    _max?: StarPlayerSkillMaxAggregateInputType
+  }
+
+  export type StarPlayerSkillGroupByOutputType = {
+    id: string
+    starPlayerId: string
+    skillId: string
+    _count: StarPlayerSkillCountAggregateOutputType | null
+    _min: StarPlayerSkillMinAggregateOutputType | null
+    _max: StarPlayerSkillMaxAggregateOutputType | null
+  }
+
+  type GetStarPlayerSkillGroupByPayload<T extends StarPlayerSkillGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StarPlayerSkillGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StarPlayerSkillGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StarPlayerSkillGroupByOutputType[P]>
+            : GetScalarType<T[P], StarPlayerSkillGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StarPlayerSkillSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    skillId?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerSkill"]>
+
+  export type StarPlayerSkillSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    skillId?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerSkill"]>
+
+  export type StarPlayerSkillSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    skillId?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerSkill"]>
+
+  export type StarPlayerSkillSelectScalar = {
+    id?: boolean
+    starPlayerId?: boolean
+    skillId?: boolean
+  }
+
+  export type StarPlayerSkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "starPlayerId" | "skillId", ExtArgs["result"]["starPlayerSkill"]>
+  export type StarPlayerSkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+  export type StarPlayerSkillIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+  export type StarPlayerSkillIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+
+  export type $StarPlayerSkillPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StarPlayerSkill"
+    objects: {
+      starPlayer: Prisma.$StarPlayerPayload<ExtArgs>
+      skill: Prisma.$SkillPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      starPlayerId: string
+      skillId: string
+    }, ExtArgs["result"]["starPlayerSkill"]>
+    composites: {}
+  }
+
+  type StarPlayerSkillGetPayload<S extends boolean | null | undefined | StarPlayerSkillDefaultArgs> = $Result.GetResult<Prisma.$StarPlayerSkillPayload, S>
+
+  type StarPlayerSkillCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StarPlayerSkillFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StarPlayerSkillCountAggregateInputType | true
+    }
+
+  export interface StarPlayerSkillDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StarPlayerSkill'], meta: { name: 'StarPlayerSkill' } }
+    /**
+     * Find zero or one StarPlayerSkill that matches the filter.
+     * @param {StarPlayerSkillFindUniqueArgs} args - Arguments to find a StarPlayerSkill
+     * @example
+     * // Get one StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StarPlayerSkillFindUniqueArgs>(args: SelectSubset<T, StarPlayerSkillFindUniqueArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StarPlayerSkill that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StarPlayerSkillFindUniqueOrThrowArgs} args - Arguments to find a StarPlayerSkill
+     * @example
+     * // Get one StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StarPlayerSkillFindUniqueOrThrowArgs>(args: SelectSubset<T, StarPlayerSkillFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayerSkill that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillFindFirstArgs} args - Arguments to find a StarPlayerSkill
+     * @example
+     * // Get one StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StarPlayerSkillFindFirstArgs>(args?: SelectSubset<T, StarPlayerSkillFindFirstArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayerSkill that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillFindFirstOrThrowArgs} args - Arguments to find a StarPlayerSkill
+     * @example
+     * // Get one StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StarPlayerSkillFindFirstOrThrowArgs>(args?: SelectSubset<T, StarPlayerSkillFindFirstOrThrowArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StarPlayerSkills that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StarPlayerSkills
+     * const starPlayerSkills = await prisma.starPlayerSkill.findMany()
+     * 
+     * // Get first 10 StarPlayerSkills
+     * const starPlayerSkills = await prisma.starPlayerSkill.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const starPlayerSkillWithIdOnly = await prisma.starPlayerSkill.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StarPlayerSkillFindManyArgs>(args?: SelectSubset<T, StarPlayerSkillFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StarPlayerSkill.
+     * @param {StarPlayerSkillCreateArgs} args - Arguments to create a StarPlayerSkill.
+     * @example
+     * // Create one StarPlayerSkill
+     * const StarPlayerSkill = await prisma.starPlayerSkill.create({
+     *   data: {
+     *     // ... data to create a StarPlayerSkill
+     *   }
+     * })
+     * 
+     */
+    create<T extends StarPlayerSkillCreateArgs>(args: SelectSubset<T, StarPlayerSkillCreateArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StarPlayerSkills.
+     * @param {StarPlayerSkillCreateManyArgs} args - Arguments to create many StarPlayerSkills.
+     * @example
+     * // Create many StarPlayerSkills
+     * const starPlayerSkill = await prisma.starPlayerSkill.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StarPlayerSkillCreateManyArgs>(args?: SelectSubset<T, StarPlayerSkillCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StarPlayerSkills and returns the data saved in the database.
+     * @param {StarPlayerSkillCreateManyAndReturnArgs} args - Arguments to create many StarPlayerSkills.
+     * @example
+     * // Create many StarPlayerSkills
+     * const starPlayerSkill = await prisma.starPlayerSkill.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StarPlayerSkills and only return the `id`
+     * const starPlayerSkillWithIdOnly = await prisma.starPlayerSkill.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StarPlayerSkillCreateManyAndReturnArgs>(args?: SelectSubset<T, StarPlayerSkillCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a StarPlayerSkill.
+     * @param {StarPlayerSkillDeleteArgs} args - Arguments to delete one StarPlayerSkill.
+     * @example
+     * // Delete one StarPlayerSkill
+     * const StarPlayerSkill = await prisma.starPlayerSkill.delete({
+     *   where: {
+     *     // ... filter to delete one StarPlayerSkill
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StarPlayerSkillDeleteArgs>(args: SelectSubset<T, StarPlayerSkillDeleteArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StarPlayerSkill.
+     * @param {StarPlayerSkillUpdateArgs} args - Arguments to update one StarPlayerSkill.
+     * @example
+     * // Update one StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StarPlayerSkillUpdateArgs>(args: SelectSubset<T, StarPlayerSkillUpdateArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StarPlayerSkills.
+     * @param {StarPlayerSkillDeleteManyArgs} args - Arguments to filter StarPlayerSkills to delete.
+     * @example
+     * // Delete a few StarPlayerSkills
+     * const { count } = await prisma.starPlayerSkill.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StarPlayerSkillDeleteManyArgs>(args?: SelectSubset<T, StarPlayerSkillDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayerSkills.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StarPlayerSkills
+     * const starPlayerSkill = await prisma.starPlayerSkill.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StarPlayerSkillUpdateManyArgs>(args: SelectSubset<T, StarPlayerSkillUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayerSkills and returns the data updated in the database.
+     * @param {StarPlayerSkillUpdateManyAndReturnArgs} args - Arguments to update many StarPlayerSkills.
+     * @example
+     * // Update many StarPlayerSkills
+     * const starPlayerSkill = await prisma.starPlayerSkill.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StarPlayerSkills and only return the `id`
+     * const starPlayerSkillWithIdOnly = await prisma.starPlayerSkill.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StarPlayerSkillUpdateManyAndReturnArgs>(args: SelectSubset<T, StarPlayerSkillUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one StarPlayerSkill.
+     * @param {StarPlayerSkillUpsertArgs} args - Arguments to update or create a StarPlayerSkill.
+     * @example
+     * // Update or create a StarPlayerSkill
+     * const starPlayerSkill = await prisma.starPlayerSkill.upsert({
+     *   create: {
+     *     // ... data to create a StarPlayerSkill
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StarPlayerSkill we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StarPlayerSkillUpsertArgs>(args: SelectSubset<T, StarPlayerSkillUpsertArgs<ExtArgs>>): Prisma__StarPlayerSkillClient<$Result.GetResult<Prisma.$StarPlayerSkillPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StarPlayerSkills.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillCountArgs} args - Arguments to filter StarPlayerSkills to count.
+     * @example
+     * // Count the number of StarPlayerSkills
+     * const count = await prisma.starPlayerSkill.count({
+     *   where: {
+     *     // ... the filter for the StarPlayerSkills we want to count
+     *   }
+     * })
+    **/
+    count<T extends StarPlayerSkillCountArgs>(
+      args?: Subset<T, StarPlayerSkillCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StarPlayerSkillCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StarPlayerSkill.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StarPlayerSkillAggregateArgs>(args: Subset<T, StarPlayerSkillAggregateArgs>): Prisma.PrismaPromise<GetStarPlayerSkillAggregateType<T>>
+
+    /**
+     * Group by StarPlayerSkill.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerSkillGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StarPlayerSkillGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StarPlayerSkillGroupByArgs['orderBy'] }
+        : { orderBy?: StarPlayerSkillGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StarPlayerSkillGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStarPlayerSkillGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StarPlayerSkill model
+   */
+  readonly fields: StarPlayerSkillFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StarPlayerSkill.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StarPlayerSkillClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    starPlayer<T extends StarPlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StarPlayerDefaultArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    skill<T extends SkillDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SkillDefaultArgs<ExtArgs>>): Prisma__SkillClient<$Result.GetResult<Prisma.$SkillPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StarPlayerSkill model
+   */
+  interface StarPlayerSkillFieldRefs {
+    readonly id: FieldRef<"StarPlayerSkill", 'String'>
+    readonly starPlayerId: FieldRef<"StarPlayerSkill", 'String'>
+    readonly skillId: FieldRef<"StarPlayerSkill", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StarPlayerSkill findUnique
+   */
+  export type StarPlayerSkillFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerSkill to fetch.
+     */
+    where: StarPlayerSkillWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerSkill findUniqueOrThrow
+   */
+  export type StarPlayerSkillFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerSkill to fetch.
+     */
+    where: StarPlayerSkillWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerSkill findFirst
+   */
+  export type StarPlayerSkillFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerSkill to fetch.
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerSkills to fetch.
+     */
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayerSkills.
+     */
+    cursor?: StarPlayerSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayerSkills.
+     */
+    distinct?: StarPlayerSkillScalarFieldEnum | StarPlayerSkillScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerSkill findFirstOrThrow
+   */
+  export type StarPlayerSkillFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerSkill to fetch.
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerSkills to fetch.
+     */
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayerSkills.
+     */
+    cursor?: StarPlayerSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayerSkills.
+     */
+    distinct?: StarPlayerSkillScalarFieldEnum | StarPlayerSkillScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerSkill findMany
+   */
+  export type StarPlayerSkillFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerSkills to fetch.
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerSkills to fetch.
+     */
+    orderBy?: StarPlayerSkillOrderByWithRelationInput | StarPlayerSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StarPlayerSkills.
+     */
+    cursor?: StarPlayerSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerSkills.
+     */
+    skip?: number
+    distinct?: StarPlayerSkillScalarFieldEnum | StarPlayerSkillScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerSkill create
+   */
+  export type StarPlayerSkillCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StarPlayerSkill.
+     */
+    data: XOR<StarPlayerSkillCreateInput, StarPlayerSkillUncheckedCreateInput>
+  }
+
+  /**
+   * StarPlayerSkill createMany
+   */
+  export type StarPlayerSkillCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StarPlayerSkills.
+     */
+    data: StarPlayerSkillCreateManyInput | StarPlayerSkillCreateManyInput[]
+  }
+
+  /**
+   * StarPlayerSkill createManyAndReturn
+   */
+  export type StarPlayerSkillCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * The data used to create many StarPlayerSkills.
+     */
+    data: StarPlayerSkillCreateManyInput | StarPlayerSkillCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StarPlayerSkill update
+   */
+  export type StarPlayerSkillUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StarPlayerSkill.
+     */
+    data: XOR<StarPlayerSkillUpdateInput, StarPlayerSkillUncheckedUpdateInput>
+    /**
+     * Choose, which StarPlayerSkill to update.
+     */
+    where: StarPlayerSkillWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerSkill updateMany
+   */
+  export type StarPlayerSkillUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StarPlayerSkills.
+     */
+    data: XOR<StarPlayerSkillUpdateManyMutationInput, StarPlayerSkillUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayerSkills to update
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * Limit how many StarPlayerSkills to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayerSkill updateManyAndReturn
+   */
+  export type StarPlayerSkillUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * The data used to update StarPlayerSkills.
+     */
+    data: XOR<StarPlayerSkillUpdateManyMutationInput, StarPlayerSkillUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayerSkills to update
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * Limit how many StarPlayerSkills to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StarPlayerSkill upsert
+   */
+  export type StarPlayerSkillUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StarPlayerSkill to update in case it exists.
+     */
+    where: StarPlayerSkillWhereUniqueInput
+    /**
+     * In case the StarPlayerSkill found by the `where` argument doesn't exist, create a new StarPlayerSkill with this data.
+     */
+    create: XOR<StarPlayerSkillCreateInput, StarPlayerSkillUncheckedCreateInput>
+    /**
+     * In case the StarPlayerSkill was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StarPlayerSkillUpdateInput, StarPlayerSkillUncheckedUpdateInput>
+  }
+
+  /**
+   * StarPlayerSkill delete
+   */
+  export type StarPlayerSkillDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+    /**
+     * Filter which StarPlayerSkill to delete.
+     */
+    where: StarPlayerSkillWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerSkill deleteMany
+   */
+  export type StarPlayerSkillDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayerSkills to delete
+     */
+    where?: StarPlayerSkillWhereInput
+    /**
+     * Limit how many StarPlayerSkills to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayerSkill without action
+   */
+  export type StarPlayerSkillDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerSkill
+     */
+    select?: StarPlayerSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerSkill
+     */
+    omit?: StarPlayerSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerSkillInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model StarPlayerHirableBy
+   */
+
+  export type AggregateStarPlayerHirableBy = {
+    _count: StarPlayerHirableByCountAggregateOutputType | null
+    _min: StarPlayerHirableByMinAggregateOutputType | null
+    _max: StarPlayerHirableByMaxAggregateOutputType | null
+  }
+
+  export type StarPlayerHirableByMinAggregateOutputType = {
+    id: string | null
+    starPlayerId: string | null
+    rosterId: string | null
+    rule: string | null
+  }
+
+  export type StarPlayerHirableByMaxAggregateOutputType = {
+    id: string | null
+    starPlayerId: string | null
+    rosterId: string | null
+    rule: string | null
+  }
+
+  export type StarPlayerHirableByCountAggregateOutputType = {
+    id: number
+    starPlayerId: number
+    rosterId: number
+    rule: number
+    _all: number
+  }
+
+
+  export type StarPlayerHirableByMinAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    rosterId?: true
+    rule?: true
+  }
+
+  export type StarPlayerHirableByMaxAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    rosterId?: true
+    rule?: true
+  }
+
+  export type StarPlayerHirableByCountAggregateInputType = {
+    id?: true
+    starPlayerId?: true
+    rosterId?: true
+    rule?: true
+    _all?: true
+  }
+
+  export type StarPlayerHirableByAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayerHirableBy to aggregate.
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerHirableBies to fetch.
+     */
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerHirableBies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerHirableBies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StarPlayerHirableBies
+    **/
+    _count?: true | StarPlayerHirableByCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StarPlayerHirableByMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StarPlayerHirableByMaxAggregateInputType
+  }
+
+  export type GetStarPlayerHirableByAggregateType<T extends StarPlayerHirableByAggregateArgs> = {
+        [P in keyof T & keyof AggregateStarPlayerHirableBy]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStarPlayerHirableBy[P]>
+      : GetScalarType<T[P], AggregateStarPlayerHirableBy[P]>
+  }
+
+
+
+
+  export type StarPlayerHirableByGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StarPlayerHirableByWhereInput
+    orderBy?: StarPlayerHirableByOrderByWithAggregationInput | StarPlayerHirableByOrderByWithAggregationInput[]
+    by: StarPlayerHirableByScalarFieldEnum[] | StarPlayerHirableByScalarFieldEnum
+    having?: StarPlayerHirableByScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StarPlayerHirableByCountAggregateInputType | true
+    _min?: StarPlayerHirableByMinAggregateInputType
+    _max?: StarPlayerHirableByMaxAggregateInputType
+  }
+
+  export type StarPlayerHirableByGroupByOutputType = {
+    id: string
+    starPlayerId: string
+    rosterId: string | null
+    rule: string
+    _count: StarPlayerHirableByCountAggregateOutputType | null
+    _min: StarPlayerHirableByMinAggregateOutputType | null
+    _max: StarPlayerHirableByMaxAggregateOutputType | null
+  }
+
+  type GetStarPlayerHirableByGroupByPayload<T extends StarPlayerHirableByGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StarPlayerHirableByGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StarPlayerHirableByGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StarPlayerHirableByGroupByOutputType[P]>
+            : GetScalarType<T[P], StarPlayerHirableByGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StarPlayerHirableBySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    rosterId?: boolean
+    rule?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerHirableBy"]>
+
+  export type StarPlayerHirableBySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    rosterId?: boolean
+    rule?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerHirableBy"]>
+
+  export type StarPlayerHirableBySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    starPlayerId?: boolean
+    rosterId?: boolean
+    rule?: boolean
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }, ExtArgs["result"]["starPlayerHirableBy"]>
+
+  export type StarPlayerHirableBySelectScalar = {
+    id?: boolean
+    starPlayerId?: boolean
+    rosterId?: boolean
+    rule?: boolean
+  }
+
+  export type StarPlayerHirableByOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "starPlayerId" | "rosterId" | "rule", ExtArgs["result"]["starPlayerHirableBy"]>
+  export type StarPlayerHirableByInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }
+  export type StarPlayerHirableByIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }
+  export type StarPlayerHirableByIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    starPlayer?: boolean | StarPlayerDefaultArgs<ExtArgs>
+    roster?: boolean | StarPlayerHirableBy$rosterArgs<ExtArgs>
+  }
+
+  export type $StarPlayerHirableByPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StarPlayerHirableBy"
+    objects: {
+      starPlayer: Prisma.$StarPlayerPayload<ExtArgs>
+      roster: Prisma.$RosterPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      starPlayerId: string
+      rosterId: string | null
+      rule: string
+    }, ExtArgs["result"]["starPlayerHirableBy"]>
+    composites: {}
+  }
+
+  type StarPlayerHirableByGetPayload<S extends boolean | null | undefined | StarPlayerHirableByDefaultArgs> = $Result.GetResult<Prisma.$StarPlayerHirableByPayload, S>
+
+  type StarPlayerHirableByCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StarPlayerHirableByFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StarPlayerHirableByCountAggregateInputType | true
+    }
+
+  export interface StarPlayerHirableByDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StarPlayerHirableBy'], meta: { name: 'StarPlayerHirableBy' } }
+    /**
+     * Find zero or one StarPlayerHirableBy that matches the filter.
+     * @param {StarPlayerHirableByFindUniqueArgs} args - Arguments to find a StarPlayerHirableBy
+     * @example
+     * // Get one StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StarPlayerHirableByFindUniqueArgs>(args: SelectSubset<T, StarPlayerHirableByFindUniqueArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StarPlayerHirableBy that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StarPlayerHirableByFindUniqueOrThrowArgs} args - Arguments to find a StarPlayerHirableBy
+     * @example
+     * // Get one StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StarPlayerHirableByFindUniqueOrThrowArgs>(args: SelectSubset<T, StarPlayerHirableByFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayerHirableBy that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByFindFirstArgs} args - Arguments to find a StarPlayerHirableBy
+     * @example
+     * // Get one StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StarPlayerHirableByFindFirstArgs>(args?: SelectSubset<T, StarPlayerHirableByFindFirstArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StarPlayerHirableBy that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByFindFirstOrThrowArgs} args - Arguments to find a StarPlayerHirableBy
+     * @example
+     * // Get one StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StarPlayerHirableByFindFirstOrThrowArgs>(args?: SelectSubset<T, StarPlayerHirableByFindFirstOrThrowArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StarPlayerHirableBies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StarPlayerHirableBies
+     * const starPlayerHirableBies = await prisma.starPlayerHirableBy.findMany()
+     * 
+     * // Get first 10 StarPlayerHirableBies
+     * const starPlayerHirableBies = await prisma.starPlayerHirableBy.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const starPlayerHirableByWithIdOnly = await prisma.starPlayerHirableBy.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StarPlayerHirableByFindManyArgs>(args?: SelectSubset<T, StarPlayerHirableByFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StarPlayerHirableBy.
+     * @param {StarPlayerHirableByCreateArgs} args - Arguments to create a StarPlayerHirableBy.
+     * @example
+     * // Create one StarPlayerHirableBy
+     * const StarPlayerHirableBy = await prisma.starPlayerHirableBy.create({
+     *   data: {
+     *     // ... data to create a StarPlayerHirableBy
+     *   }
+     * })
+     * 
+     */
+    create<T extends StarPlayerHirableByCreateArgs>(args: SelectSubset<T, StarPlayerHirableByCreateArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StarPlayerHirableBies.
+     * @param {StarPlayerHirableByCreateManyArgs} args - Arguments to create many StarPlayerHirableBies.
+     * @example
+     * // Create many StarPlayerHirableBies
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StarPlayerHirableByCreateManyArgs>(args?: SelectSubset<T, StarPlayerHirableByCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StarPlayerHirableBies and returns the data saved in the database.
+     * @param {StarPlayerHirableByCreateManyAndReturnArgs} args - Arguments to create many StarPlayerHirableBies.
+     * @example
+     * // Create many StarPlayerHirableBies
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StarPlayerHirableBies and only return the `id`
+     * const starPlayerHirableByWithIdOnly = await prisma.starPlayerHirableBy.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StarPlayerHirableByCreateManyAndReturnArgs>(args?: SelectSubset<T, StarPlayerHirableByCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a StarPlayerHirableBy.
+     * @param {StarPlayerHirableByDeleteArgs} args - Arguments to delete one StarPlayerHirableBy.
+     * @example
+     * // Delete one StarPlayerHirableBy
+     * const StarPlayerHirableBy = await prisma.starPlayerHirableBy.delete({
+     *   where: {
+     *     // ... filter to delete one StarPlayerHirableBy
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StarPlayerHirableByDeleteArgs>(args: SelectSubset<T, StarPlayerHirableByDeleteArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StarPlayerHirableBy.
+     * @param {StarPlayerHirableByUpdateArgs} args - Arguments to update one StarPlayerHirableBy.
+     * @example
+     * // Update one StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StarPlayerHirableByUpdateArgs>(args: SelectSubset<T, StarPlayerHirableByUpdateArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StarPlayerHirableBies.
+     * @param {StarPlayerHirableByDeleteManyArgs} args - Arguments to filter StarPlayerHirableBies to delete.
+     * @example
+     * // Delete a few StarPlayerHirableBies
+     * const { count } = await prisma.starPlayerHirableBy.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StarPlayerHirableByDeleteManyArgs>(args?: SelectSubset<T, StarPlayerHirableByDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayerHirableBies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StarPlayerHirableBies
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StarPlayerHirableByUpdateManyArgs>(args: SelectSubset<T, StarPlayerHirableByUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StarPlayerHirableBies and returns the data updated in the database.
+     * @param {StarPlayerHirableByUpdateManyAndReturnArgs} args - Arguments to update many StarPlayerHirableBies.
+     * @example
+     * // Update many StarPlayerHirableBies
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StarPlayerHirableBies and only return the `id`
+     * const starPlayerHirableByWithIdOnly = await prisma.starPlayerHirableBy.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StarPlayerHirableByUpdateManyAndReturnArgs>(args: SelectSubset<T, StarPlayerHirableByUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one StarPlayerHirableBy.
+     * @param {StarPlayerHirableByUpsertArgs} args - Arguments to update or create a StarPlayerHirableBy.
+     * @example
+     * // Update or create a StarPlayerHirableBy
+     * const starPlayerHirableBy = await prisma.starPlayerHirableBy.upsert({
+     *   create: {
+     *     // ... data to create a StarPlayerHirableBy
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StarPlayerHirableBy we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StarPlayerHirableByUpsertArgs>(args: SelectSubset<T, StarPlayerHirableByUpsertArgs<ExtArgs>>): Prisma__StarPlayerHirableByClient<$Result.GetResult<Prisma.$StarPlayerHirableByPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StarPlayerHirableBies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByCountArgs} args - Arguments to filter StarPlayerHirableBies to count.
+     * @example
+     * // Count the number of StarPlayerHirableBies
+     * const count = await prisma.starPlayerHirableBy.count({
+     *   where: {
+     *     // ... the filter for the StarPlayerHirableBies we want to count
+     *   }
+     * })
+    **/
+    count<T extends StarPlayerHirableByCountArgs>(
+      args?: Subset<T, StarPlayerHirableByCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StarPlayerHirableByCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StarPlayerHirableBy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StarPlayerHirableByAggregateArgs>(args: Subset<T, StarPlayerHirableByAggregateArgs>): Prisma.PrismaPromise<GetStarPlayerHirableByAggregateType<T>>
+
+    /**
+     * Group by StarPlayerHirableBy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StarPlayerHirableByGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StarPlayerHirableByGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StarPlayerHirableByGroupByArgs['orderBy'] }
+        : { orderBy?: StarPlayerHirableByGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StarPlayerHirableByGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStarPlayerHirableByGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StarPlayerHirableBy model
+   */
+  readonly fields: StarPlayerHirableByFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StarPlayerHirableBy.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StarPlayerHirableByClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    starPlayer<T extends StarPlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StarPlayerDefaultArgs<ExtArgs>>): Prisma__StarPlayerClient<$Result.GetResult<Prisma.$StarPlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    roster<T extends StarPlayerHirableBy$rosterArgs<ExtArgs> = {}>(args?: Subset<T, StarPlayerHirableBy$rosterArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StarPlayerHirableBy model
+   */
+  interface StarPlayerHirableByFieldRefs {
+    readonly id: FieldRef<"StarPlayerHirableBy", 'String'>
+    readonly starPlayerId: FieldRef<"StarPlayerHirableBy", 'String'>
+    readonly rosterId: FieldRef<"StarPlayerHirableBy", 'String'>
+    readonly rule: FieldRef<"StarPlayerHirableBy", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StarPlayerHirableBy findUnique
+   */
+  export type StarPlayerHirableByFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerHirableBy to fetch.
+     */
+    where: StarPlayerHirableByWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerHirableBy findUniqueOrThrow
+   */
+  export type StarPlayerHirableByFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerHirableBy to fetch.
+     */
+    where: StarPlayerHirableByWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerHirableBy findFirst
+   */
+  export type StarPlayerHirableByFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerHirableBy to fetch.
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerHirableBies to fetch.
+     */
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayerHirableBies.
+     */
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerHirableBies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerHirableBies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayerHirableBies.
+     */
+    distinct?: StarPlayerHirableByScalarFieldEnum | StarPlayerHirableByScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerHirableBy findFirstOrThrow
+   */
+  export type StarPlayerHirableByFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerHirableBy to fetch.
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerHirableBies to fetch.
+     */
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StarPlayerHirableBies.
+     */
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerHirableBies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerHirableBies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StarPlayerHirableBies.
+     */
+    distinct?: StarPlayerHirableByScalarFieldEnum | StarPlayerHirableByScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerHirableBy findMany
+   */
+  export type StarPlayerHirableByFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter, which StarPlayerHirableBies to fetch.
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StarPlayerHirableBies to fetch.
+     */
+    orderBy?: StarPlayerHirableByOrderByWithRelationInput | StarPlayerHirableByOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StarPlayerHirableBies.
+     */
+    cursor?: StarPlayerHirableByWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StarPlayerHirableBies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StarPlayerHirableBies.
+     */
+    skip?: number
+    distinct?: StarPlayerHirableByScalarFieldEnum | StarPlayerHirableByScalarFieldEnum[]
+  }
+
+  /**
+   * StarPlayerHirableBy create
+   */
+  export type StarPlayerHirableByCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StarPlayerHirableBy.
+     */
+    data: XOR<StarPlayerHirableByCreateInput, StarPlayerHirableByUncheckedCreateInput>
+  }
+
+  /**
+   * StarPlayerHirableBy createMany
+   */
+  export type StarPlayerHirableByCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StarPlayerHirableBies.
+     */
+    data: StarPlayerHirableByCreateManyInput | StarPlayerHirableByCreateManyInput[]
+  }
+
+  /**
+   * StarPlayerHirableBy createManyAndReturn
+   */
+  export type StarPlayerHirableByCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * The data used to create many StarPlayerHirableBies.
+     */
+    data: StarPlayerHirableByCreateManyInput | StarPlayerHirableByCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StarPlayerHirableBy update
+   */
+  export type StarPlayerHirableByUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StarPlayerHirableBy.
+     */
+    data: XOR<StarPlayerHirableByUpdateInput, StarPlayerHirableByUncheckedUpdateInput>
+    /**
+     * Choose, which StarPlayerHirableBy to update.
+     */
+    where: StarPlayerHirableByWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerHirableBy updateMany
+   */
+  export type StarPlayerHirableByUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StarPlayerHirableBies.
+     */
+    data: XOR<StarPlayerHirableByUpdateManyMutationInput, StarPlayerHirableByUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayerHirableBies to update
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * Limit how many StarPlayerHirableBies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayerHirableBy updateManyAndReturn
+   */
+  export type StarPlayerHirableByUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * The data used to update StarPlayerHirableBies.
+     */
+    data: XOR<StarPlayerHirableByUpdateManyMutationInput, StarPlayerHirableByUncheckedUpdateManyInput>
+    /**
+     * Filter which StarPlayerHirableBies to update
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * Limit how many StarPlayerHirableBies to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StarPlayerHirableBy upsert
+   */
+  export type StarPlayerHirableByUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StarPlayerHirableBy to update in case it exists.
+     */
+    where: StarPlayerHirableByWhereUniqueInput
+    /**
+     * In case the StarPlayerHirableBy found by the `where` argument doesn't exist, create a new StarPlayerHirableBy with this data.
+     */
+    create: XOR<StarPlayerHirableByCreateInput, StarPlayerHirableByUncheckedCreateInput>
+    /**
+     * In case the StarPlayerHirableBy was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StarPlayerHirableByUpdateInput, StarPlayerHirableByUncheckedUpdateInput>
+  }
+
+  /**
+   * StarPlayerHirableBy delete
+   */
+  export type StarPlayerHirableByDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
+    /**
+     * Filter which StarPlayerHirableBy to delete.
+     */
+    where: StarPlayerHirableByWhereUniqueInput
+  }
+
+  /**
+   * StarPlayerHirableBy deleteMany
+   */
+  export type StarPlayerHirableByDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StarPlayerHirableBies to delete
+     */
+    where?: StarPlayerHirableByWhereInput
+    /**
+     * Limit how many StarPlayerHirableBies to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StarPlayerHirableBy.roster
+   */
+  export type StarPlayerHirableBy$rosterArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    where?: RosterWhereInput
+  }
+
+  /**
+   * StarPlayerHirableBy without action
+   */
+  export type StarPlayerHirableByDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StarPlayerHirableBy
+     */
+    select?: StarPlayerHirableBySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StarPlayerHirableBy
+     */
+    omit?: StarPlayerHirableByOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StarPlayerHirableByInclude<ExtArgs> | null
   }
 
 
@@ -99105,11 +102911,53 @@ export namespace Prisma {
     isElite: 'isElite',
     isPassive: 'isPassive',
     isModified: 'isModified',
+    excludedFromSelection: 'excludedFromSelection',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
 
   export type SkillScalarFieldEnum = (typeof SkillScalarFieldEnum)[keyof typeof SkillScalarFieldEnum]
+
+
+  export const StarPlayerScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    ruleset: 'ruleset',
+    displayName: 'displayName',
+    cost: 'cost',
+    ma: 'ma',
+    st: 'st',
+    ag: 'ag',
+    pa: 'pa',
+    av: 'av',
+    keywords: 'keywords',
+    specialRule: 'specialRule',
+    imageUrl: 'imageUrl',
+    isMegaStar: 'isMegaStar',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type StarPlayerScalarFieldEnum = (typeof StarPlayerScalarFieldEnum)[keyof typeof StarPlayerScalarFieldEnum]
+
+
+  export const StarPlayerSkillScalarFieldEnum: {
+    id: 'id',
+    starPlayerId: 'starPlayerId',
+    skillId: 'skillId'
+  };
+
+  export type StarPlayerSkillScalarFieldEnum = (typeof StarPlayerSkillScalarFieldEnum)[keyof typeof StarPlayerSkillScalarFieldEnum]
+
+
+  export const StarPlayerHirableByScalarFieldEnum: {
+    id: 'id',
+    starPlayerId: 'starPlayerId',
+    rosterId: 'rosterId',
+    rule: 'rule'
+  };
+
+  export type StarPlayerHirableByScalarFieldEnum = (typeof StarPlayerHirableByScalarFieldEnum)[keyof typeof StarPlayerHirableByScalarFieldEnum]
 
 
   export const PositionScalarFieldEnum: {
@@ -101927,6 +105775,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Roster"> | Date | string
     positions?: PositionListRelationFilter
     staffConfigs?: RosterStaffConfigListRelationFilter
+    starPlayerHirableBy?: StarPlayerHirableByListRelationFilter
   }
 
   export type RosterOrderByWithRelationInput = {
@@ -101946,6 +105795,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     positions?: PositionOrderByRelationAggregateInput
     staffConfigs?: RosterStaffConfigOrderByRelationAggregateInput
+    starPlayerHirableBy?: StarPlayerHirableByOrderByRelationAggregateInput
   }
 
   export type RosterWhereUniqueInput = Prisma.AtLeast<{
@@ -101969,6 +105819,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Roster"> | Date | string
     positions?: PositionListRelationFilter
     staffConfigs?: RosterStaffConfigListRelationFilter
+    starPlayerHirableBy?: StarPlayerHirableByListRelationFilter
   }, "id" | "slug_ruleset">
 
   export type RosterOrderByWithAggregationInput = {
@@ -102136,9 +105987,11 @@ export namespace Prisma {
     isElite?: BoolFilter<"Skill"> | boolean
     isPassive?: BoolFilter<"Skill"> | boolean
     isModified?: BoolFilter<"Skill"> | boolean
+    excludedFromSelection?: BoolFilter<"Skill"> | boolean
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
     positionSkills?: PositionSkillListRelationFilter
+    starPlayerSkills?: StarPlayerSkillListRelationFilter
   }
 
   export type SkillOrderByWithRelationInput = {
@@ -102153,9 +106006,11 @@ export namespace Prisma {
     isElite?: SortOrder
     isPassive?: SortOrder
     isModified?: SortOrder
+    excludedFromSelection?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     positionSkills?: PositionSkillOrderByRelationAggregateInput
+    starPlayerSkills?: StarPlayerSkillOrderByRelationAggregateInput
   }
 
   export type SkillWhereUniqueInput = Prisma.AtLeast<{
@@ -102174,9 +106029,11 @@ export namespace Prisma {
     isElite?: BoolFilter<"Skill"> | boolean
     isPassive?: BoolFilter<"Skill"> | boolean
     isModified?: BoolFilter<"Skill"> | boolean
+    excludedFromSelection?: BoolFilter<"Skill"> | boolean
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
     positionSkills?: PositionSkillListRelationFilter
+    starPlayerSkills?: StarPlayerSkillListRelationFilter
   }, "id" | "slug_ruleset">
 
   export type SkillOrderByWithAggregationInput = {
@@ -102191,6 +106048,7 @@ export namespace Prisma {
     isElite?: SortOrder
     isPassive?: SortOrder
     isModified?: SortOrder
+    excludedFromSelection?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SkillCountOrderByAggregateInput
@@ -102213,8 +106071,228 @@ export namespace Prisma {
     isElite?: BoolWithAggregatesFilter<"Skill"> | boolean
     isPassive?: BoolWithAggregatesFilter<"Skill"> | boolean
     isModified?: BoolWithAggregatesFilter<"Skill"> | boolean
+    excludedFromSelection?: BoolWithAggregatesFilter<"Skill"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Skill"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Skill"> | Date | string
+  }
+
+  export type StarPlayerWhereInput = {
+    AND?: StarPlayerWhereInput | StarPlayerWhereInput[]
+    OR?: StarPlayerWhereInput[]
+    NOT?: StarPlayerWhereInput | StarPlayerWhereInput[]
+    id?: StringFilter<"StarPlayer"> | string
+    slug?: StringFilter<"StarPlayer"> | string
+    ruleset?: EnumRulesetFilter<"StarPlayer"> | $Enums.Ruleset
+    displayName?: StringFilter<"StarPlayer"> | string
+    cost?: IntFilter<"StarPlayer"> | number
+    ma?: IntFilter<"StarPlayer"> | number
+    st?: IntFilter<"StarPlayer"> | number
+    ag?: IntFilter<"StarPlayer"> | number
+    pa?: IntNullableFilter<"StarPlayer"> | number | null
+    av?: IntFilter<"StarPlayer"> | number
+    keywords?: StringNullableFilter<"StarPlayer"> | string | null
+    specialRule?: StringNullableFilter<"StarPlayer"> | string | null
+    imageUrl?: StringNullableFilter<"StarPlayer"> | string | null
+    isMegaStar?: BoolFilter<"StarPlayer"> | boolean
+    createdAt?: DateTimeFilter<"StarPlayer"> | Date | string
+    updatedAt?: DateTimeFilter<"StarPlayer"> | Date | string
+    skills?: StarPlayerSkillListRelationFilter
+    hirableBy?: StarPlayerHirableByListRelationFilter
+  }
+
+  export type StarPlayerOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrderInput | SortOrder
+    av?: SortOrder
+    keywords?: SortOrderInput | SortOrder
+    specialRule?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    isMegaStar?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    skills?: StarPlayerSkillOrderByRelationAggregateInput
+    hirableBy?: StarPlayerHirableByOrderByRelationAggregateInput
+  }
+
+  export type StarPlayerWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug_ruleset?: StarPlayerSlugRulesetCompoundUniqueInput
+    AND?: StarPlayerWhereInput | StarPlayerWhereInput[]
+    OR?: StarPlayerWhereInput[]
+    NOT?: StarPlayerWhereInput | StarPlayerWhereInput[]
+    slug?: StringFilter<"StarPlayer"> | string
+    ruleset?: EnumRulesetFilter<"StarPlayer"> | $Enums.Ruleset
+    displayName?: StringFilter<"StarPlayer"> | string
+    cost?: IntFilter<"StarPlayer"> | number
+    ma?: IntFilter<"StarPlayer"> | number
+    st?: IntFilter<"StarPlayer"> | number
+    ag?: IntFilter<"StarPlayer"> | number
+    pa?: IntNullableFilter<"StarPlayer"> | number | null
+    av?: IntFilter<"StarPlayer"> | number
+    keywords?: StringNullableFilter<"StarPlayer"> | string | null
+    specialRule?: StringNullableFilter<"StarPlayer"> | string | null
+    imageUrl?: StringNullableFilter<"StarPlayer"> | string | null
+    isMegaStar?: BoolFilter<"StarPlayer"> | boolean
+    createdAt?: DateTimeFilter<"StarPlayer"> | Date | string
+    updatedAt?: DateTimeFilter<"StarPlayer"> | Date | string
+    skills?: StarPlayerSkillListRelationFilter
+    hirableBy?: StarPlayerHirableByListRelationFilter
+  }, "id" | "slug_ruleset">
+
+  export type StarPlayerOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrderInput | SortOrder
+    av?: SortOrder
+    keywords?: SortOrderInput | SortOrder
+    specialRule?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    isMegaStar?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: StarPlayerCountOrderByAggregateInput
+    _avg?: StarPlayerAvgOrderByAggregateInput
+    _max?: StarPlayerMaxOrderByAggregateInput
+    _min?: StarPlayerMinOrderByAggregateInput
+    _sum?: StarPlayerSumOrderByAggregateInput
+  }
+
+  export type StarPlayerScalarWhereWithAggregatesInput = {
+    AND?: StarPlayerScalarWhereWithAggregatesInput | StarPlayerScalarWhereWithAggregatesInput[]
+    OR?: StarPlayerScalarWhereWithAggregatesInput[]
+    NOT?: StarPlayerScalarWhereWithAggregatesInput | StarPlayerScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StarPlayer"> | string
+    slug?: StringWithAggregatesFilter<"StarPlayer"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"StarPlayer"> | $Enums.Ruleset
+    displayName?: StringWithAggregatesFilter<"StarPlayer"> | string
+    cost?: IntWithAggregatesFilter<"StarPlayer"> | number
+    ma?: IntWithAggregatesFilter<"StarPlayer"> | number
+    st?: IntWithAggregatesFilter<"StarPlayer"> | number
+    ag?: IntWithAggregatesFilter<"StarPlayer"> | number
+    pa?: IntNullableWithAggregatesFilter<"StarPlayer"> | number | null
+    av?: IntWithAggregatesFilter<"StarPlayer"> | number
+    keywords?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
+    specialRule?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
+    imageUrl?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
+    isMegaStar?: BoolWithAggregatesFilter<"StarPlayer"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"StarPlayer"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"StarPlayer"> | Date | string
+  }
+
+  export type StarPlayerSkillWhereInput = {
+    AND?: StarPlayerSkillWhereInput | StarPlayerSkillWhereInput[]
+    OR?: StarPlayerSkillWhereInput[]
+    NOT?: StarPlayerSkillWhereInput | StarPlayerSkillWhereInput[]
+    id?: StringFilter<"StarPlayerSkill"> | string
+    starPlayerId?: StringFilter<"StarPlayerSkill"> | string
+    skillId?: StringFilter<"StarPlayerSkill"> | string
+    starPlayer?: XOR<StarPlayerScalarRelationFilter, StarPlayerWhereInput>
+    skill?: XOR<SkillScalarRelationFilter, SkillWhereInput>
+  }
+
+  export type StarPlayerSkillOrderByWithRelationInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    skillId?: SortOrder
+    starPlayer?: StarPlayerOrderByWithRelationInput
+    skill?: SkillOrderByWithRelationInput
+  }
+
+  export type StarPlayerSkillWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    starPlayerId_skillId?: StarPlayerSkillStarPlayerIdSkillIdCompoundUniqueInput
+    AND?: StarPlayerSkillWhereInput | StarPlayerSkillWhereInput[]
+    OR?: StarPlayerSkillWhereInput[]
+    NOT?: StarPlayerSkillWhereInput | StarPlayerSkillWhereInput[]
+    starPlayerId?: StringFilter<"StarPlayerSkill"> | string
+    skillId?: StringFilter<"StarPlayerSkill"> | string
+    starPlayer?: XOR<StarPlayerScalarRelationFilter, StarPlayerWhereInput>
+    skill?: XOR<SkillScalarRelationFilter, SkillWhereInput>
+  }, "id" | "starPlayerId_skillId">
+
+  export type StarPlayerSkillOrderByWithAggregationInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    skillId?: SortOrder
+    _count?: StarPlayerSkillCountOrderByAggregateInput
+    _max?: StarPlayerSkillMaxOrderByAggregateInput
+    _min?: StarPlayerSkillMinOrderByAggregateInput
+  }
+
+  export type StarPlayerSkillScalarWhereWithAggregatesInput = {
+    AND?: StarPlayerSkillScalarWhereWithAggregatesInput | StarPlayerSkillScalarWhereWithAggregatesInput[]
+    OR?: StarPlayerSkillScalarWhereWithAggregatesInput[]
+    NOT?: StarPlayerSkillScalarWhereWithAggregatesInput | StarPlayerSkillScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StarPlayerSkill"> | string
+    starPlayerId?: StringWithAggregatesFilter<"StarPlayerSkill"> | string
+    skillId?: StringWithAggregatesFilter<"StarPlayerSkill"> | string
+  }
+
+  export type StarPlayerHirableByWhereInput = {
+    AND?: StarPlayerHirableByWhereInput | StarPlayerHirableByWhereInput[]
+    OR?: StarPlayerHirableByWhereInput[]
+    NOT?: StarPlayerHirableByWhereInput | StarPlayerHirableByWhereInput[]
+    id?: StringFilter<"StarPlayerHirableBy"> | string
+    starPlayerId?: StringFilter<"StarPlayerHirableBy"> | string
+    rosterId?: StringNullableFilter<"StarPlayerHirableBy"> | string | null
+    rule?: StringFilter<"StarPlayerHirableBy"> | string
+    starPlayer?: XOR<StarPlayerScalarRelationFilter, StarPlayerWhereInput>
+    roster?: XOR<RosterNullableScalarRelationFilter, RosterWhereInput> | null
+  }
+
+  export type StarPlayerHirableByOrderByWithRelationInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    rosterId?: SortOrderInput | SortOrder
+    rule?: SortOrder
+    starPlayer?: StarPlayerOrderByWithRelationInput
+    roster?: RosterOrderByWithRelationInput
+  }
+
+  export type StarPlayerHirableByWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    starPlayerId_rosterId_rule?: StarPlayerHirableByStarPlayerIdRosterIdRuleCompoundUniqueInput
+    AND?: StarPlayerHirableByWhereInput | StarPlayerHirableByWhereInput[]
+    OR?: StarPlayerHirableByWhereInput[]
+    NOT?: StarPlayerHirableByWhereInput | StarPlayerHirableByWhereInput[]
+    starPlayerId?: StringFilter<"StarPlayerHirableBy"> | string
+    rosterId?: StringNullableFilter<"StarPlayerHirableBy"> | string | null
+    rule?: StringFilter<"StarPlayerHirableBy"> | string
+    starPlayer?: XOR<StarPlayerScalarRelationFilter, StarPlayerWhereInput>
+    roster?: XOR<RosterNullableScalarRelationFilter, RosterWhereInput> | null
+  }, "id" | "starPlayerId_rosterId_rule">
+
+  export type StarPlayerHirableByOrderByWithAggregationInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    rosterId?: SortOrderInput | SortOrder
+    rule?: SortOrder
+    _count?: StarPlayerHirableByCountOrderByAggregateInput
+    _max?: StarPlayerHirableByMaxOrderByAggregateInput
+    _min?: StarPlayerHirableByMinOrderByAggregateInput
+  }
+
+  export type StarPlayerHirableByScalarWhereWithAggregatesInput = {
+    AND?: StarPlayerHirableByScalarWhereWithAggregatesInput | StarPlayerHirableByScalarWhereWithAggregatesInput[]
+    OR?: StarPlayerHirableByScalarWhereWithAggregatesInput[]
+    NOT?: StarPlayerHirableByScalarWhereWithAggregatesInput | StarPlayerHirableByScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StarPlayerHirableBy"> | string
+    starPlayerId?: StringWithAggregatesFilter<"StarPlayerHirableBy"> | string
+    rosterId?: StringNullableWithAggregatesFilter<"StarPlayerHirableBy"> | string | null
+    rule?: StringWithAggregatesFilter<"StarPlayerHirableBy"> | string
   }
 
   export type PositionWhereInput = {
@@ -109299,6 +113377,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     positions?: PositionCreateNestedManyWithoutRosterInput
     staffConfigs?: RosterStaffConfigCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByCreateNestedManyWithoutRosterInput
   }
 
   export type RosterUncheckedCreateInput = {
@@ -109318,6 +113397,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     positions?: PositionUncheckedCreateNestedManyWithoutRosterInput
     staffConfigs?: RosterStaffConfigUncheckedCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutRosterInput
   }
 
   export type RosterUpdateInput = {
@@ -109337,6 +113417,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positions?: PositionUpdateManyWithoutRosterNestedInput
     staffConfigs?: RosterStaffConfigUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUpdateManyWithoutRosterNestedInput
   }
 
   export type RosterUncheckedUpdateInput = {
@@ -109356,6 +113437,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positions?: PositionUncheckedUpdateManyWithoutRosterNestedInput
     staffConfigs?: RosterStaffConfigUncheckedUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutRosterNestedInput
   }
 
   export type RosterCreateManyInput = {
@@ -109546,9 +113628,11 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillCreateNestedManyWithoutSkillInput
+    starPlayerSkills?: StarPlayerSkillCreateNestedManyWithoutSkillInput
   }
 
   export type SkillUncheckedCreateInput = {
@@ -109563,9 +113647,11 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillUncheckedCreateNestedManyWithoutSkillInput
+    starPlayerSkills?: StarPlayerSkillUncheckedCreateNestedManyWithoutSkillInput
   }
 
   export type SkillUpdateInput = {
@@ -109580,9 +113666,11 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUpdateManyWithoutSkillNestedInput
+    starPlayerSkills?: StarPlayerSkillUpdateManyWithoutSkillNestedInput
   }
 
   export type SkillUncheckedUpdateInput = {
@@ -109597,9 +113685,11 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUncheckedUpdateManyWithoutSkillNestedInput
+    starPlayerSkills?: StarPlayerSkillUncheckedUpdateManyWithoutSkillNestedInput
   }
 
   export type SkillCreateManyInput = {
@@ -109614,6 +113704,7 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -109630,6 +113721,7 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -109646,8 +113738,237 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StarPlayerCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    skills?: StarPlayerSkillCreateNestedManyWithoutStarPlayerInput
+    hirableBy?: StarPlayerHirableByCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerUncheckedCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    skills?: StarPlayerSkillUncheckedCreateNestedManyWithoutStarPlayerInput
+    hirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: StarPlayerSkillUpdateManyWithoutStarPlayerNestedInput
+    hirableBy?: StarPlayerHirableByUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type StarPlayerUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerNestedInput
+    hirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type StarPlayerCreateManyInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type StarPlayerUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StarPlayerUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StarPlayerSkillCreateInput = {
+    id?: string
+    starPlayer: StarPlayerCreateNestedOneWithoutSkillsInput
+    skill: SkillCreateNestedOneWithoutStarPlayerSkillsInput
+  }
+
+  export type StarPlayerSkillUncheckedCreateInput = {
+    id?: string
+    starPlayerId: string
+    skillId: string
+  }
+
+  export type StarPlayerSkillUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayer?: StarPlayerUpdateOneRequiredWithoutSkillsNestedInput
+    skill?: SkillUpdateOneRequiredWithoutStarPlayerSkillsNestedInput
+  }
+
+  export type StarPlayerSkillUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillCreateManyInput = {
+    id?: string
+    starPlayerId: string
+    skillId: string
+  }
+
+  export type StarPlayerSkillUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByCreateInput = {
+    id?: string
+    rule: string
+    starPlayer: StarPlayerCreateNestedOneWithoutHirableByInput
+    roster?: RosterCreateNestedOneWithoutStarPlayerHirableByInput
+  }
+
+  export type StarPlayerHirableByUncheckedCreateInput = {
+    id?: string
+    starPlayerId: string
+    rosterId?: string | null
+    rule: string
+  }
+
+  export type StarPlayerHirableByUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+    starPlayer?: StarPlayerUpdateOneRequiredWithoutHirableByNestedInput
+    roster?: RosterUpdateOneWithoutStarPlayerHirableByNestedInput
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    rosterId?: NullableStringFieldUpdateOperationsInput | string | null
+    rule?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByCreateManyInput = {
+    id?: string
+    starPlayerId: string
+    rosterId?: string | null
+    rule: string
+  }
+
+  export type StarPlayerHirableByUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    rosterId?: NullableStringFieldUpdateOperationsInput | string | null
+    rule?: StringFieldUpdateOperationsInput | string
   }
 
   export type PositionCreateInput = {
@@ -117021,11 +121342,21 @@ export namespace Prisma {
     none?: RosterStaffConfigWhereInput
   }
 
+  export type StarPlayerHirableByListRelationFilter = {
+    every?: StarPlayerHirableByWhereInput
+    some?: StarPlayerHirableByWhereInput
+    none?: StarPlayerHirableByWhereInput
+  }
+
   export type PositionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type RosterStaffConfigOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type StarPlayerHirableByOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -117187,7 +121518,17 @@ export namespace Prisma {
     none?: PositionSkillWhereInput
   }
 
+  export type StarPlayerSkillListRelationFilter = {
+    every?: StarPlayerSkillWhereInput
+    some?: StarPlayerSkillWhereInput
+    none?: StarPlayerSkillWhereInput
+  }
+
   export type PositionSkillOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type StarPlayerSkillOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -117208,6 +121549,7 @@ export namespace Prisma {
     isElite?: SortOrder
     isPassive?: SortOrder
     isModified?: SortOrder
+    excludedFromSelection?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -117224,6 +121566,7 @@ export namespace Prisma {
     isElite?: SortOrder
     isPassive?: SortOrder
     isModified?: SortOrder
+    excludedFromSelection?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -117240,8 +121583,154 @@ export namespace Prisma {
     isElite?: SortOrder
     isPassive?: SortOrder
     isModified?: SortOrder
+    excludedFromSelection?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type StarPlayerSlugRulesetCompoundUniqueInput = {
+    slug: string
+    ruleset: $Enums.Ruleset
+  }
+
+  export type StarPlayerCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    specialRule?: SortOrder
+    imageUrl?: SortOrder
+    isMegaStar?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StarPlayerAvgOrderByAggregateInput = {
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+  }
+
+  export type StarPlayerMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    specialRule?: SortOrder
+    imageUrl?: SortOrder
+    isMegaStar?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StarPlayerMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    specialRule?: SortOrder
+    imageUrl?: SortOrder
+    isMegaStar?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StarPlayerSumOrderByAggregateInput = {
+    cost?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+  }
+
+  export type StarPlayerScalarRelationFilter = {
+    is?: StarPlayerWhereInput
+    isNot?: StarPlayerWhereInput
+  }
+
+  export type SkillScalarRelationFilter = {
+    is?: SkillWhereInput
+    isNot?: SkillWhereInput
+  }
+
+  export type StarPlayerSkillStarPlayerIdSkillIdCompoundUniqueInput = {
+    starPlayerId: string
+    skillId: string
+  }
+
+  export type StarPlayerSkillCountOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    skillId?: SortOrder
+  }
+
+  export type StarPlayerSkillMaxOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    skillId?: SortOrder
+  }
+
+  export type StarPlayerSkillMinOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    skillId?: SortOrder
+  }
+
+  export type RosterNullableScalarRelationFilter = {
+    is?: RosterWhereInput | null
+    isNot?: RosterWhereInput | null
+  }
+
+  export type StarPlayerHirableByStarPlayerIdRosterIdRuleCompoundUniqueInput = {
+    starPlayerId: string
+    rosterId: string
+    rule: string
+  }
+
+  export type StarPlayerHirableByCountOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    rosterId?: SortOrder
+    rule?: SortOrder
+  }
+
+  export type StarPlayerHirableByMaxOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    rosterId?: SortOrder
+    rule?: SortOrder
+  }
+
+  export type StarPlayerHirableByMinOrderByAggregateInput = {
+    id?: SortOrder
+    starPlayerId?: SortOrder
+    rosterId?: SortOrder
+    rule?: SortOrder
   }
 
   export type PositionRosterIdSlugCompoundUniqueInput = {
@@ -117334,11 +121823,6 @@ export namespace Prisma {
   export type PositionScalarRelationFilter = {
     is?: PositionWhereInput
     isNot?: PositionWhereInput
-  }
-
-  export type SkillScalarRelationFilter = {
-    is?: SkillWhereInput
-    isNot?: SkillWhereInput
   }
 
   export type PositionSkillPositionIdSkillIdCompoundUniqueInput = {
@@ -123024,6 +127508,13 @@ export namespace Prisma {
     connect?: RosterStaffConfigWhereUniqueInput | RosterStaffConfigWhereUniqueInput[]
   }
 
+  export type StarPlayerHirableByCreateNestedManyWithoutRosterInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput> | StarPlayerHirableByCreateWithoutRosterInput[] | StarPlayerHirableByUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutRosterInput | StarPlayerHirableByCreateOrConnectWithoutRosterInput[]
+    createMany?: StarPlayerHirableByCreateManyRosterInputEnvelope
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+  }
+
   export type PositionUncheckedCreateNestedManyWithoutRosterInput = {
     create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
     connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
@@ -123036,6 +127527,13 @@ export namespace Prisma {
     connectOrCreate?: RosterStaffConfigCreateOrConnectWithoutRosterInput | RosterStaffConfigCreateOrConnectWithoutRosterInput[]
     createMany?: RosterStaffConfigCreateManyRosterInputEnvelope
     connect?: RosterStaffConfigWhereUniqueInput | RosterStaffConfigWhereUniqueInput[]
+  }
+
+  export type StarPlayerHirableByUncheckedCreateNestedManyWithoutRosterInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput> | StarPlayerHirableByCreateWithoutRosterInput[] | StarPlayerHirableByUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutRosterInput | StarPlayerHirableByCreateOrConnectWithoutRosterInput[]
+    createMany?: StarPlayerHirableByCreateManyRosterInputEnvelope
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
   }
 
   export type PositionUpdateManyWithoutRosterNestedInput = {
@@ -123066,6 +127564,20 @@ export namespace Prisma {
     deleteMany?: RosterStaffConfigScalarWhereInput | RosterStaffConfigScalarWhereInput[]
   }
 
+  export type StarPlayerHirableByUpdateManyWithoutRosterNestedInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput> | StarPlayerHirableByCreateWithoutRosterInput[] | StarPlayerHirableByUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutRosterInput | StarPlayerHirableByCreateOrConnectWithoutRosterInput[]
+    upsert?: StarPlayerHirableByUpsertWithWhereUniqueWithoutRosterInput | StarPlayerHirableByUpsertWithWhereUniqueWithoutRosterInput[]
+    createMany?: StarPlayerHirableByCreateManyRosterInputEnvelope
+    set?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    disconnect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    delete?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    update?: StarPlayerHirableByUpdateWithWhereUniqueWithoutRosterInput | StarPlayerHirableByUpdateWithWhereUniqueWithoutRosterInput[]
+    updateMany?: StarPlayerHirableByUpdateManyWithWhereWithoutRosterInput | StarPlayerHirableByUpdateManyWithWhereWithoutRosterInput[]
+    deleteMany?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+  }
+
   export type PositionUncheckedUpdateManyWithoutRosterNestedInput = {
     create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
     connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
@@ -123094,6 +127606,20 @@ export namespace Prisma {
     deleteMany?: RosterStaffConfigScalarWhereInput | RosterStaffConfigScalarWhereInput[]
   }
 
+  export type StarPlayerHirableByUncheckedUpdateManyWithoutRosterNestedInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput> | StarPlayerHirableByCreateWithoutRosterInput[] | StarPlayerHirableByUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutRosterInput | StarPlayerHirableByCreateOrConnectWithoutRosterInput[]
+    upsert?: StarPlayerHirableByUpsertWithWhereUniqueWithoutRosterInput | StarPlayerHirableByUpsertWithWhereUniqueWithoutRosterInput[]
+    createMany?: StarPlayerHirableByCreateManyRosterInputEnvelope
+    set?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    disconnect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    delete?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    update?: StarPlayerHirableByUpdateWithWhereUniqueWithoutRosterInput | StarPlayerHirableByUpdateWithWhereUniqueWithoutRosterInput[]
+    updateMany?: StarPlayerHirableByUpdateManyWithWhereWithoutRosterInput | StarPlayerHirableByUpdateManyWithWhereWithoutRosterInput[]
+    deleteMany?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+  }
+
   export type RosterCreateNestedOneWithoutStaffConfigsInput = {
     create?: XOR<RosterCreateWithoutStaffConfigsInput, RosterUncheckedCreateWithoutStaffConfigsInput>
     connectOrCreate?: RosterCreateOrConnectWithoutStaffConfigsInput
@@ -123115,11 +127641,25 @@ export namespace Prisma {
     connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
   }
 
+  export type StarPlayerSkillCreateNestedManyWithoutSkillInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput> | StarPlayerSkillCreateWithoutSkillInput[] | StarPlayerSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutSkillInput | StarPlayerSkillCreateOrConnectWithoutSkillInput[]
+    createMany?: StarPlayerSkillCreateManySkillInputEnvelope
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+  }
+
   export type PositionSkillUncheckedCreateNestedManyWithoutSkillInput = {
     create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
     connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
     createMany?: PositionSkillCreateManySkillInputEnvelope
     connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+  }
+
+  export type StarPlayerSkillUncheckedCreateNestedManyWithoutSkillInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput> | StarPlayerSkillCreateWithoutSkillInput[] | StarPlayerSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutSkillInput | StarPlayerSkillCreateOrConnectWithoutSkillInput[]
+    createMany?: StarPlayerSkillCreateManySkillInputEnvelope
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
   }
 
   export type PositionSkillUpdateManyWithoutSkillNestedInput = {
@@ -123136,6 +127676,20 @@ export namespace Prisma {
     deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
   }
 
+  export type StarPlayerSkillUpdateManyWithoutSkillNestedInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput> | StarPlayerSkillCreateWithoutSkillInput[] | StarPlayerSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutSkillInput | StarPlayerSkillCreateOrConnectWithoutSkillInput[]
+    upsert?: StarPlayerSkillUpsertWithWhereUniqueWithoutSkillInput | StarPlayerSkillUpsertWithWhereUniqueWithoutSkillInput[]
+    createMany?: StarPlayerSkillCreateManySkillInputEnvelope
+    set?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    disconnect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    delete?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    update?: StarPlayerSkillUpdateWithWhereUniqueWithoutSkillInput | StarPlayerSkillUpdateWithWhereUniqueWithoutSkillInput[]
+    updateMany?: StarPlayerSkillUpdateManyWithWhereWithoutSkillInput | StarPlayerSkillUpdateManyWithWhereWithoutSkillInput[]
+    deleteMany?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+  }
+
   export type PositionSkillUncheckedUpdateManyWithoutSkillNestedInput = {
     create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
     connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
@@ -123148,6 +127702,162 @@ export namespace Prisma {
     update?: PositionSkillUpdateWithWhereUniqueWithoutSkillInput | PositionSkillUpdateWithWhereUniqueWithoutSkillInput[]
     updateMany?: PositionSkillUpdateManyWithWhereWithoutSkillInput | PositionSkillUpdateManyWithWhereWithoutSkillInput[]
     deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+  }
+
+  export type StarPlayerSkillUncheckedUpdateManyWithoutSkillNestedInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput> | StarPlayerSkillCreateWithoutSkillInput[] | StarPlayerSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutSkillInput | StarPlayerSkillCreateOrConnectWithoutSkillInput[]
+    upsert?: StarPlayerSkillUpsertWithWhereUniqueWithoutSkillInput | StarPlayerSkillUpsertWithWhereUniqueWithoutSkillInput[]
+    createMany?: StarPlayerSkillCreateManySkillInputEnvelope
+    set?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    disconnect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    delete?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    update?: StarPlayerSkillUpdateWithWhereUniqueWithoutSkillInput | StarPlayerSkillUpdateWithWhereUniqueWithoutSkillInput[]
+    updateMany?: StarPlayerSkillUpdateManyWithWhereWithoutSkillInput | StarPlayerSkillUpdateManyWithWhereWithoutSkillInput[]
+    deleteMany?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+  }
+
+  export type StarPlayerSkillCreateNestedManyWithoutStarPlayerInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput> | StarPlayerSkillCreateWithoutStarPlayerInput[] | StarPlayerSkillUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutStarPlayerInput | StarPlayerSkillCreateOrConnectWithoutStarPlayerInput[]
+    createMany?: StarPlayerSkillCreateManyStarPlayerInputEnvelope
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+  }
+
+  export type StarPlayerHirableByCreateNestedManyWithoutStarPlayerInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput> | StarPlayerHirableByCreateWithoutStarPlayerInput[] | StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput | StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput[]
+    createMany?: StarPlayerHirableByCreateManyStarPlayerInputEnvelope
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+  }
+
+  export type StarPlayerSkillUncheckedCreateNestedManyWithoutStarPlayerInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput> | StarPlayerSkillCreateWithoutStarPlayerInput[] | StarPlayerSkillUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutStarPlayerInput | StarPlayerSkillCreateOrConnectWithoutStarPlayerInput[]
+    createMany?: StarPlayerSkillCreateManyStarPlayerInputEnvelope
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+  }
+
+  export type StarPlayerHirableByUncheckedCreateNestedManyWithoutStarPlayerInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput> | StarPlayerHirableByCreateWithoutStarPlayerInput[] | StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput | StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput[]
+    createMany?: StarPlayerHirableByCreateManyStarPlayerInputEnvelope
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+  }
+
+  export type StarPlayerSkillUpdateManyWithoutStarPlayerNestedInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput> | StarPlayerSkillCreateWithoutStarPlayerInput[] | StarPlayerSkillUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutStarPlayerInput | StarPlayerSkillCreateOrConnectWithoutStarPlayerInput[]
+    upsert?: StarPlayerSkillUpsertWithWhereUniqueWithoutStarPlayerInput | StarPlayerSkillUpsertWithWhereUniqueWithoutStarPlayerInput[]
+    createMany?: StarPlayerSkillCreateManyStarPlayerInputEnvelope
+    set?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    disconnect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    delete?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    update?: StarPlayerSkillUpdateWithWhereUniqueWithoutStarPlayerInput | StarPlayerSkillUpdateWithWhereUniqueWithoutStarPlayerInput[]
+    updateMany?: StarPlayerSkillUpdateManyWithWhereWithoutStarPlayerInput | StarPlayerSkillUpdateManyWithWhereWithoutStarPlayerInput[]
+    deleteMany?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+  }
+
+  export type StarPlayerHirableByUpdateManyWithoutStarPlayerNestedInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput> | StarPlayerHirableByCreateWithoutStarPlayerInput[] | StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput | StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput[]
+    upsert?: StarPlayerHirableByUpsertWithWhereUniqueWithoutStarPlayerInput | StarPlayerHirableByUpsertWithWhereUniqueWithoutStarPlayerInput[]
+    createMany?: StarPlayerHirableByCreateManyStarPlayerInputEnvelope
+    set?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    disconnect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    delete?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    update?: StarPlayerHirableByUpdateWithWhereUniqueWithoutStarPlayerInput | StarPlayerHirableByUpdateWithWhereUniqueWithoutStarPlayerInput[]
+    updateMany?: StarPlayerHirableByUpdateManyWithWhereWithoutStarPlayerInput | StarPlayerHirableByUpdateManyWithWhereWithoutStarPlayerInput[]
+    deleteMany?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+  }
+
+  export type StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerNestedInput = {
+    create?: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput> | StarPlayerSkillCreateWithoutStarPlayerInput[] | StarPlayerSkillUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerSkillCreateOrConnectWithoutStarPlayerInput | StarPlayerSkillCreateOrConnectWithoutStarPlayerInput[]
+    upsert?: StarPlayerSkillUpsertWithWhereUniqueWithoutStarPlayerInput | StarPlayerSkillUpsertWithWhereUniqueWithoutStarPlayerInput[]
+    createMany?: StarPlayerSkillCreateManyStarPlayerInputEnvelope
+    set?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    disconnect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    delete?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    connect?: StarPlayerSkillWhereUniqueInput | StarPlayerSkillWhereUniqueInput[]
+    update?: StarPlayerSkillUpdateWithWhereUniqueWithoutStarPlayerInput | StarPlayerSkillUpdateWithWhereUniqueWithoutStarPlayerInput[]
+    updateMany?: StarPlayerSkillUpdateManyWithWhereWithoutStarPlayerInput | StarPlayerSkillUpdateManyWithWhereWithoutStarPlayerInput[]
+    deleteMany?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerNestedInput = {
+    create?: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput> | StarPlayerHirableByCreateWithoutStarPlayerInput[] | StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput[]
+    connectOrCreate?: StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput | StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput[]
+    upsert?: StarPlayerHirableByUpsertWithWhereUniqueWithoutStarPlayerInput | StarPlayerHirableByUpsertWithWhereUniqueWithoutStarPlayerInput[]
+    createMany?: StarPlayerHirableByCreateManyStarPlayerInputEnvelope
+    set?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    disconnect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    delete?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    connect?: StarPlayerHirableByWhereUniqueInput | StarPlayerHirableByWhereUniqueInput[]
+    update?: StarPlayerHirableByUpdateWithWhereUniqueWithoutStarPlayerInput | StarPlayerHirableByUpdateWithWhereUniqueWithoutStarPlayerInput[]
+    updateMany?: StarPlayerHirableByUpdateManyWithWhereWithoutStarPlayerInput | StarPlayerHirableByUpdateManyWithWhereWithoutStarPlayerInput[]
+    deleteMany?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+  }
+
+  export type StarPlayerCreateNestedOneWithoutSkillsInput = {
+    create?: XOR<StarPlayerCreateWithoutSkillsInput, StarPlayerUncheckedCreateWithoutSkillsInput>
+    connectOrCreate?: StarPlayerCreateOrConnectWithoutSkillsInput
+    connect?: StarPlayerWhereUniqueInput
+  }
+
+  export type SkillCreateNestedOneWithoutStarPlayerSkillsInput = {
+    create?: XOR<SkillCreateWithoutStarPlayerSkillsInput, SkillUncheckedCreateWithoutStarPlayerSkillsInput>
+    connectOrCreate?: SkillCreateOrConnectWithoutStarPlayerSkillsInput
+    connect?: SkillWhereUniqueInput
+  }
+
+  export type StarPlayerUpdateOneRequiredWithoutSkillsNestedInput = {
+    create?: XOR<StarPlayerCreateWithoutSkillsInput, StarPlayerUncheckedCreateWithoutSkillsInput>
+    connectOrCreate?: StarPlayerCreateOrConnectWithoutSkillsInput
+    upsert?: StarPlayerUpsertWithoutSkillsInput
+    connect?: StarPlayerWhereUniqueInput
+    update?: XOR<XOR<StarPlayerUpdateToOneWithWhereWithoutSkillsInput, StarPlayerUpdateWithoutSkillsInput>, StarPlayerUncheckedUpdateWithoutSkillsInput>
+  }
+
+  export type SkillUpdateOneRequiredWithoutStarPlayerSkillsNestedInput = {
+    create?: XOR<SkillCreateWithoutStarPlayerSkillsInput, SkillUncheckedCreateWithoutStarPlayerSkillsInput>
+    connectOrCreate?: SkillCreateOrConnectWithoutStarPlayerSkillsInput
+    upsert?: SkillUpsertWithoutStarPlayerSkillsInput
+    connect?: SkillWhereUniqueInput
+    update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutStarPlayerSkillsInput, SkillUpdateWithoutStarPlayerSkillsInput>, SkillUncheckedUpdateWithoutStarPlayerSkillsInput>
+  }
+
+  export type StarPlayerCreateNestedOneWithoutHirableByInput = {
+    create?: XOR<StarPlayerCreateWithoutHirableByInput, StarPlayerUncheckedCreateWithoutHirableByInput>
+    connectOrCreate?: StarPlayerCreateOrConnectWithoutHirableByInput
+    connect?: StarPlayerWhereUniqueInput
+  }
+
+  export type RosterCreateNestedOneWithoutStarPlayerHirableByInput = {
+    create?: XOR<RosterCreateWithoutStarPlayerHirableByInput, RosterUncheckedCreateWithoutStarPlayerHirableByInput>
+    connectOrCreate?: RosterCreateOrConnectWithoutStarPlayerHirableByInput
+    connect?: RosterWhereUniqueInput
+  }
+
+  export type StarPlayerUpdateOneRequiredWithoutHirableByNestedInput = {
+    create?: XOR<StarPlayerCreateWithoutHirableByInput, StarPlayerUncheckedCreateWithoutHirableByInput>
+    connectOrCreate?: StarPlayerCreateOrConnectWithoutHirableByInput
+    upsert?: StarPlayerUpsertWithoutHirableByInput
+    connect?: StarPlayerWhereUniqueInput
+    update?: XOR<XOR<StarPlayerUpdateToOneWithWhereWithoutHirableByInput, StarPlayerUpdateWithoutHirableByInput>, StarPlayerUncheckedUpdateWithoutHirableByInput>
+  }
+
+  export type RosterUpdateOneWithoutStarPlayerHirableByNestedInput = {
+    create?: XOR<RosterCreateWithoutStarPlayerHirableByInput, RosterUncheckedCreateWithoutStarPlayerHirableByInput>
+    connectOrCreate?: RosterCreateOrConnectWithoutStarPlayerHirableByInput
+    upsert?: RosterUpsertWithoutStarPlayerHirableByInput
+    disconnect?: RosterWhereInput | boolean
+    delete?: RosterWhereInput | boolean
+    connect?: RosterWhereUniqueInput
+    update?: XOR<XOR<RosterUpdateToOneWithWhereWithoutStarPlayerHirableByInput, RosterUpdateWithoutStarPlayerHirableByInput>, RosterUncheckedUpdateWithoutStarPlayerHirableByInput>
   }
 
   export type RosterCreateNestedOneWithoutPositionsInput = {
@@ -134866,6 +139576,27 @@ export namespace Prisma {
     data: RosterStaffConfigCreateManyRosterInput | RosterStaffConfigCreateManyRosterInput[]
   }
 
+  export type StarPlayerHirableByCreateWithoutRosterInput = {
+    id?: string
+    rule: string
+    starPlayer: StarPlayerCreateNestedOneWithoutHirableByInput
+  }
+
+  export type StarPlayerHirableByUncheckedCreateWithoutRosterInput = {
+    id?: string
+    starPlayerId: string
+    rule: string
+  }
+
+  export type StarPlayerHirableByCreateOrConnectWithoutRosterInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    create: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput>
+  }
+
+  export type StarPlayerHirableByCreateManyRosterInputEnvelope = {
+    data: StarPlayerHirableByCreateManyRosterInput | StarPlayerHirableByCreateManyRosterInput[]
+  }
+
   export type PositionUpsertWithWhereUniqueWithoutRosterInput = {
     where: PositionWhereUniqueInput
     update: XOR<PositionUpdateWithoutRosterInput, PositionUncheckedUpdateWithoutRosterInput>
@@ -134942,6 +139673,32 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"RosterStaffConfig"> | Date | string
   }
 
+  export type StarPlayerHirableByUpsertWithWhereUniqueWithoutRosterInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    update: XOR<StarPlayerHirableByUpdateWithoutRosterInput, StarPlayerHirableByUncheckedUpdateWithoutRosterInput>
+    create: XOR<StarPlayerHirableByCreateWithoutRosterInput, StarPlayerHirableByUncheckedCreateWithoutRosterInput>
+  }
+
+  export type StarPlayerHirableByUpdateWithWhereUniqueWithoutRosterInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    data: XOR<StarPlayerHirableByUpdateWithoutRosterInput, StarPlayerHirableByUncheckedUpdateWithoutRosterInput>
+  }
+
+  export type StarPlayerHirableByUpdateManyWithWhereWithoutRosterInput = {
+    where: StarPlayerHirableByScalarWhereInput
+    data: XOR<StarPlayerHirableByUpdateManyMutationInput, StarPlayerHirableByUncheckedUpdateManyWithoutRosterInput>
+  }
+
+  export type StarPlayerHirableByScalarWhereInput = {
+    AND?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+    OR?: StarPlayerHirableByScalarWhereInput[]
+    NOT?: StarPlayerHirableByScalarWhereInput | StarPlayerHirableByScalarWhereInput[]
+    id?: StringFilter<"StarPlayerHirableBy"> | string
+    starPlayerId?: StringFilter<"StarPlayerHirableBy"> | string
+    rosterId?: StringNullableFilter<"StarPlayerHirableBy"> | string | null
+    rule?: StringFilter<"StarPlayerHirableBy"> | string
+  }
+
   export type RosterCreateWithoutStaffConfigsInput = {
     id?: string
     slug: string
@@ -134958,6 +139715,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     positions?: PositionCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByCreateNestedManyWithoutRosterInput
   }
 
   export type RosterUncheckedCreateWithoutStaffConfigsInput = {
@@ -134976,6 +139734,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     positions?: PositionUncheckedCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutRosterInput
   }
 
   export type RosterCreateOrConnectWithoutStaffConfigsInput = {
@@ -135010,6 +139769,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positions?: PositionUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUpdateManyWithoutRosterNestedInput
   }
 
   export type RosterUncheckedUpdateWithoutStaffConfigsInput = {
@@ -135028,6 +139788,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positions?: PositionUncheckedUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutRosterNestedInput
   }
 
   export type PositionSkillCreateWithoutSkillInput = {
@@ -135047,6 +139808,25 @@ export namespace Prisma {
 
   export type PositionSkillCreateManySkillInputEnvelope = {
     data: PositionSkillCreateManySkillInput | PositionSkillCreateManySkillInput[]
+  }
+
+  export type StarPlayerSkillCreateWithoutSkillInput = {
+    id?: string
+    starPlayer: StarPlayerCreateNestedOneWithoutSkillsInput
+  }
+
+  export type StarPlayerSkillUncheckedCreateWithoutSkillInput = {
+    id?: string
+    starPlayerId: string
+  }
+
+  export type StarPlayerSkillCreateOrConnectWithoutSkillInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    create: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput>
+  }
+
+  export type StarPlayerSkillCreateManySkillInputEnvelope = {
+    data: StarPlayerSkillCreateManySkillInput | StarPlayerSkillCreateManySkillInput[]
   }
 
   export type PositionSkillUpsertWithWhereUniqueWithoutSkillInput = {
@@ -135074,6 +139854,475 @@ export namespace Prisma {
     skillId?: StringFilter<"PositionSkill"> | string
   }
 
+  export type StarPlayerSkillUpsertWithWhereUniqueWithoutSkillInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    update: XOR<StarPlayerSkillUpdateWithoutSkillInput, StarPlayerSkillUncheckedUpdateWithoutSkillInput>
+    create: XOR<StarPlayerSkillCreateWithoutSkillInput, StarPlayerSkillUncheckedCreateWithoutSkillInput>
+  }
+
+  export type StarPlayerSkillUpdateWithWhereUniqueWithoutSkillInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    data: XOR<StarPlayerSkillUpdateWithoutSkillInput, StarPlayerSkillUncheckedUpdateWithoutSkillInput>
+  }
+
+  export type StarPlayerSkillUpdateManyWithWhereWithoutSkillInput = {
+    where: StarPlayerSkillScalarWhereInput
+    data: XOR<StarPlayerSkillUpdateManyMutationInput, StarPlayerSkillUncheckedUpdateManyWithoutSkillInput>
+  }
+
+  export type StarPlayerSkillScalarWhereInput = {
+    AND?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+    OR?: StarPlayerSkillScalarWhereInput[]
+    NOT?: StarPlayerSkillScalarWhereInput | StarPlayerSkillScalarWhereInput[]
+    id?: StringFilter<"StarPlayerSkill"> | string
+    starPlayerId?: StringFilter<"StarPlayerSkill"> | string
+    skillId?: StringFilter<"StarPlayerSkill"> | string
+  }
+
+  export type StarPlayerSkillCreateWithoutStarPlayerInput = {
+    id?: string
+    skill: SkillCreateNestedOneWithoutStarPlayerSkillsInput
+  }
+
+  export type StarPlayerSkillUncheckedCreateWithoutStarPlayerInput = {
+    id?: string
+    skillId: string
+  }
+
+  export type StarPlayerSkillCreateOrConnectWithoutStarPlayerInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    create: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerSkillCreateManyStarPlayerInputEnvelope = {
+    data: StarPlayerSkillCreateManyStarPlayerInput | StarPlayerSkillCreateManyStarPlayerInput[]
+  }
+
+  export type StarPlayerHirableByCreateWithoutStarPlayerInput = {
+    id?: string
+    rule: string
+    roster?: RosterCreateNestedOneWithoutStarPlayerHirableByInput
+  }
+
+  export type StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput = {
+    id?: string
+    rosterId?: string | null
+    rule: string
+  }
+
+  export type StarPlayerHirableByCreateOrConnectWithoutStarPlayerInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    create: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerHirableByCreateManyStarPlayerInputEnvelope = {
+    data: StarPlayerHirableByCreateManyStarPlayerInput | StarPlayerHirableByCreateManyStarPlayerInput[]
+  }
+
+  export type StarPlayerSkillUpsertWithWhereUniqueWithoutStarPlayerInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    update: XOR<StarPlayerSkillUpdateWithoutStarPlayerInput, StarPlayerSkillUncheckedUpdateWithoutStarPlayerInput>
+    create: XOR<StarPlayerSkillCreateWithoutStarPlayerInput, StarPlayerSkillUncheckedCreateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerSkillUpdateWithWhereUniqueWithoutStarPlayerInput = {
+    where: StarPlayerSkillWhereUniqueInput
+    data: XOR<StarPlayerSkillUpdateWithoutStarPlayerInput, StarPlayerSkillUncheckedUpdateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerSkillUpdateManyWithWhereWithoutStarPlayerInput = {
+    where: StarPlayerSkillScalarWhereInput
+    data: XOR<StarPlayerSkillUpdateManyMutationInput, StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerHirableByUpsertWithWhereUniqueWithoutStarPlayerInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    update: XOR<StarPlayerHirableByUpdateWithoutStarPlayerInput, StarPlayerHirableByUncheckedUpdateWithoutStarPlayerInput>
+    create: XOR<StarPlayerHirableByCreateWithoutStarPlayerInput, StarPlayerHirableByUncheckedCreateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerHirableByUpdateWithWhereUniqueWithoutStarPlayerInput = {
+    where: StarPlayerHirableByWhereUniqueInput
+    data: XOR<StarPlayerHirableByUpdateWithoutStarPlayerInput, StarPlayerHirableByUncheckedUpdateWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerHirableByUpdateManyWithWhereWithoutStarPlayerInput = {
+    where: StarPlayerHirableByScalarWhereInput
+    data: XOR<StarPlayerHirableByUpdateManyMutationInput, StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerInput>
+  }
+
+  export type StarPlayerCreateWithoutSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hirableBy?: StarPlayerHirableByCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerUncheckedCreateWithoutSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerCreateOrConnectWithoutSkillsInput = {
+    where: StarPlayerWhereUniqueInput
+    create: XOR<StarPlayerCreateWithoutSkillsInput, StarPlayerUncheckedCreateWithoutSkillsInput>
+  }
+
+  export type SkillCreateWithoutStarPlayerSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    category: string
+    isElite?: boolean
+    isPassive?: boolean
+    isModified?: boolean
+    excludedFromSelection?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positionSkills?: PositionSkillCreateNestedManyWithoutSkillInput
+  }
+
+  export type SkillUncheckedCreateWithoutStarPlayerSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    category: string
+    isElite?: boolean
+    isPassive?: boolean
+    isModified?: boolean
+    excludedFromSelection?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positionSkills?: PositionSkillUncheckedCreateNestedManyWithoutSkillInput
+  }
+
+  export type SkillCreateOrConnectWithoutStarPlayerSkillsInput = {
+    where: SkillWhereUniqueInput
+    create: XOR<SkillCreateWithoutStarPlayerSkillsInput, SkillUncheckedCreateWithoutStarPlayerSkillsInput>
+  }
+
+  export type StarPlayerUpsertWithoutSkillsInput = {
+    update: XOR<StarPlayerUpdateWithoutSkillsInput, StarPlayerUncheckedUpdateWithoutSkillsInput>
+    create: XOR<StarPlayerCreateWithoutSkillsInput, StarPlayerUncheckedCreateWithoutSkillsInput>
+    where?: StarPlayerWhereInput
+  }
+
+  export type StarPlayerUpdateToOneWithWhereWithoutSkillsInput = {
+    where?: StarPlayerWhereInput
+    data: XOR<StarPlayerUpdateWithoutSkillsInput, StarPlayerUncheckedUpdateWithoutSkillsInput>
+  }
+
+  export type StarPlayerUpdateWithoutSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hirableBy?: StarPlayerHirableByUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type StarPlayerUncheckedUpdateWithoutSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type SkillUpsertWithoutStarPlayerSkillsInput = {
+    update: XOR<SkillUpdateWithoutStarPlayerSkillsInput, SkillUncheckedUpdateWithoutStarPlayerSkillsInput>
+    create: XOR<SkillCreateWithoutStarPlayerSkillsInput, SkillUncheckedCreateWithoutStarPlayerSkillsInput>
+    where?: SkillWhereInput
+  }
+
+  export type SkillUpdateToOneWithWhereWithoutStarPlayerSkillsInput = {
+    where?: SkillWhereInput
+    data: XOR<SkillUpdateWithoutStarPlayerSkillsInput, SkillUncheckedUpdateWithoutStarPlayerSkillsInput>
+  }
+
+  export type SkillUpdateWithoutStarPlayerSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    isElite?: BoolFieldUpdateOperationsInput | boolean
+    isPassive?: BoolFieldUpdateOperationsInput | boolean
+    isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positionSkills?: PositionSkillUpdateManyWithoutSkillNestedInput
+  }
+
+  export type SkillUncheckedUpdateWithoutStarPlayerSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    isElite?: BoolFieldUpdateOperationsInput | boolean
+    isPassive?: BoolFieldUpdateOperationsInput | boolean
+    isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positionSkills?: PositionSkillUncheckedUpdateManyWithoutSkillNestedInput
+  }
+
+  export type StarPlayerCreateWithoutHirableByInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    skills?: StarPlayerSkillCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerUncheckedCreateWithoutHirableByInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    displayName: string
+    cost: number
+    ma: number
+    st: number
+    ag: number
+    pa?: number | null
+    av: number
+    keywords?: string | null
+    specialRule?: string | null
+    imageUrl?: string | null
+    isMegaStar?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    skills?: StarPlayerSkillUncheckedCreateNestedManyWithoutStarPlayerInput
+  }
+
+  export type StarPlayerCreateOrConnectWithoutHirableByInput = {
+    where: StarPlayerWhereUniqueInput
+    create: XOR<StarPlayerCreateWithoutHirableByInput, StarPlayerUncheckedCreateWithoutHirableByInput>
+  }
+
+  export type RosterCreateWithoutStarPlayerHirableByInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positions?: PositionCreateNestedManyWithoutRosterInput
+    staffConfigs?: RosterStaffConfigCreateNestedManyWithoutRosterInput
+  }
+
+  export type RosterUncheckedCreateWithoutStarPlayerHirableByInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positions?: PositionUncheckedCreateNestedManyWithoutRosterInput
+    staffConfigs?: RosterStaffConfigUncheckedCreateNestedManyWithoutRosterInput
+  }
+
+  export type RosterCreateOrConnectWithoutStarPlayerHirableByInput = {
+    where: RosterWhereUniqueInput
+    create: XOR<RosterCreateWithoutStarPlayerHirableByInput, RosterUncheckedCreateWithoutStarPlayerHirableByInput>
+  }
+
+  export type StarPlayerUpsertWithoutHirableByInput = {
+    update: XOR<StarPlayerUpdateWithoutHirableByInput, StarPlayerUncheckedUpdateWithoutHirableByInput>
+    create: XOR<StarPlayerCreateWithoutHirableByInput, StarPlayerUncheckedCreateWithoutHirableByInput>
+    where?: StarPlayerWhereInput
+  }
+
+  export type StarPlayerUpdateToOneWithWhereWithoutHirableByInput = {
+    where?: StarPlayerWhereInput
+    data: XOR<StarPlayerUpdateWithoutHirableByInput, StarPlayerUncheckedUpdateWithoutHirableByInput>
+  }
+
+  export type StarPlayerUpdateWithoutHirableByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: StarPlayerSkillUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type StarPlayerUncheckedUpdateWithoutHirableByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: NullableIntFieldUpdateOperationsInput | number | null
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRule?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerNestedInput
+  }
+
+  export type RosterUpsertWithoutStarPlayerHirableByInput = {
+    update: XOR<RosterUpdateWithoutStarPlayerHirableByInput, RosterUncheckedUpdateWithoutStarPlayerHirableByInput>
+    create: XOR<RosterCreateWithoutStarPlayerHirableByInput, RosterUncheckedCreateWithoutStarPlayerHirableByInput>
+    where?: RosterWhereInput
+  }
+
+  export type RosterUpdateToOneWithWhereWithoutStarPlayerHirableByInput = {
+    where?: RosterWhereInput
+    data: XOR<RosterUpdateWithoutStarPlayerHirableByInput, RosterUncheckedUpdateWithoutStarPlayerHirableByInput>
+  }
+
+  export type RosterUpdateWithoutStarPlayerHirableByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positions?: PositionUpdateManyWithoutRosterNestedInput
+    staffConfigs?: RosterStaffConfigUpdateManyWithoutRosterNestedInput
+  }
+
+  export type RosterUncheckedUpdateWithoutStarPlayerHirableByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positions?: PositionUncheckedUpdateManyWithoutRosterNestedInput
+    staffConfigs?: RosterStaffConfigUncheckedUpdateManyWithoutRosterNestedInput
+  }
+
   export type RosterCreateWithoutPositionsInput = {
     id?: string
     slug: string
@@ -135090,6 +140339,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     staffConfigs?: RosterStaffConfigCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByCreateNestedManyWithoutRosterInput
   }
 
   export type RosterUncheckedCreateWithoutPositionsInput = {
@@ -135108,6 +140358,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     staffConfigs?: RosterStaffConfigUncheckedCreateNestedManyWithoutRosterInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutRosterInput
   }
 
   export type RosterCreateOrConnectWithoutPositionsInput = {
@@ -135161,6 +140412,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffConfigs?: RosterStaffConfigUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUpdateManyWithoutRosterNestedInput
   }
 
   export type RosterUncheckedUpdateWithoutPositionsInput = {
@@ -135179,6 +140431,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffConfigs?: RosterStaffConfigUncheckedUpdateManyWithoutRosterNestedInput
+    starPlayerHirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutRosterNestedInput
   }
 
   export type PositionSkillUpsertWithWhereUniqueWithoutPositionInput = {
@@ -135254,8 +140507,10 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    starPlayerSkills?: StarPlayerSkillCreateNestedManyWithoutSkillInput
   }
 
   export type SkillUncheckedCreateWithoutPositionSkillsInput = {
@@ -135270,8 +140525,10 @@ export namespace Prisma {
     isElite?: boolean
     isPassive?: boolean
     isModified?: boolean
+    excludedFromSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    starPlayerSkills?: StarPlayerSkillUncheckedCreateNestedManyWithoutSkillInput
   }
 
   export type SkillCreateOrConnectWithoutPositionSkillsInput = {
@@ -135353,8 +140610,10 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    starPlayerSkills?: StarPlayerSkillUpdateManyWithoutSkillNestedInput
   }
 
   export type SkillUncheckedUpdateWithoutPositionSkillsInput = {
@@ -135369,8 +140628,10 @@ export namespace Prisma {
     isElite?: BoolFieldUpdateOperationsInput | boolean
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
+    excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    starPlayerSkills?: StarPlayerSkillUncheckedUpdateManyWithoutSkillNestedInput
   }
 
   export type UserCreateWithoutCreatedCupsInput = {
@@ -153316,6 +158577,12 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type StarPlayerHirableByCreateManyRosterInput = {
+    id?: string
+    starPlayerId: string
+    rule: string
+  }
+
   export type PositionUpdateWithoutRosterInput = {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
@@ -153426,9 +158693,32 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type StarPlayerHirableByUpdateWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+    starPlayer?: StarPlayerUpdateOneRequiredWithoutHirableByNestedInput
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateManyWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+  }
+
   export type PositionSkillCreateManySkillInput = {
     id?: string
     positionId: string
+  }
+
+  export type StarPlayerSkillCreateManySkillInput = {
+    id?: string
+    starPlayerId: string
   }
 
   export type PositionSkillUpdateWithoutSkillInput = {
@@ -153444,6 +158734,65 @@ export namespace Prisma {
   export type PositionSkillUncheckedUpdateManyWithoutSkillInput = {
     id?: StringFieldUpdateOperationsInput | string
     positionId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillUpdateWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayer?: StarPlayerUpdateOneRequiredWithoutSkillsNestedInput
+  }
+
+  export type StarPlayerSkillUncheckedUpdateWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillUncheckedUpdateManyWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillCreateManyStarPlayerInput = {
+    id?: string
+    skillId: string
+  }
+
+  export type StarPlayerHirableByCreateManyStarPlayerInput = {
+    id?: string
+    rosterId?: string | null
+    rule: string
+  }
+
+  export type StarPlayerSkillUpdateWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skill?: SkillUpdateOneRequiredWithoutStarPlayerSkillsNestedInput
+  }
+
+  export type StarPlayerSkillUncheckedUpdateWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByUpdateWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rule?: StringFieldUpdateOperationsInput | string
+    roster?: RosterUpdateOneWithoutStarPlayerHirableByNestedInput
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: NullableStringFieldUpdateOperationsInput | string | null
+    rule?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: NullableStringFieldUpdateOperationsInput | string | null
+    rule?: StringFieldUpdateOperationsInput | string
   }
 
   export type PositionSkillCreateManyPositionInput = {

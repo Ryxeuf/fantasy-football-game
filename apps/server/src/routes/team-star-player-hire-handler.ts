@@ -24,10 +24,10 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
-  getStarPlayerBySlug,
   DEFAULT_RULESET,
   type Ruleset,
 } from '@bb/game-engine';
+import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
   validateStarPlayerHire,
   requiresPair,
@@ -97,7 +97,7 @@ export async function handleHireStarPlayer(
     const availableBudget =
       budgetInPo - currentPlayersCost - currentStarPlayersCost;
 
-    const validation = validateStarPlayerHire(
+    const validation = await validateStarPlayerHire(
       starPlayerSlug,
       team.roster,
       team.players.length,
@@ -125,7 +125,7 @@ export async function handleHireStarPlayer(
       );
 
       if (!pairAlreadyHired) {
-        const pairData = getStarPlayerBySlug(pairSlug, team.ruleset);
+        const pairData = await getStarPlayerBySlugDb(pairSlug, team.ruleset as Ruleset);
         if (!pairData) {
           sendError(
             res,
@@ -185,20 +185,22 @@ export async function handleHireStarPlayer(
       include: { players: true, starPlayers: true },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enrichedNewStarPlayers = createdStarPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(
-        sp.starPlayerSlug,
-        team.ruleset,
-      );
-      return {
-        id: sp.id,
-        slug: sp.starPlayerSlug,
-        cost: sp.cost,
-        hiredAt: sp.hiredAt,
-        ...starPlayerData,
-      };
-    });
+    const enrichedNewStarPlayers = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      createdStarPlayers.map(async (sp: any) => {
+        const starPlayerData = await getStarPlayerBySlugDb(
+          sp.starPlayerSlug,
+          team.ruleset as Ruleset,
+        );
+        return {
+          id: sp.id,
+          slug: sp.starPlayerSlug,
+          cost: sp.cost,
+          hiredAt: sp.hiredAt,
+          ...starPlayerData,
+        };
+      }),
+    );
 
     sendSuccess(
       res,

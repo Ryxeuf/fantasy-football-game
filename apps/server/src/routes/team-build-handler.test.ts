@@ -12,6 +12,9 @@ vi.mock('../prisma', () => ({
     // sur defaultStaffConfig(slug, format) = valeurs historiques bb11.
     roster: { findUnique: vi.fn() },
     rosterStaffConfig: { findUnique: vi.fn() },
+    // Défensif : le calcul de coût/validation des Star Players est
+    // maintenant DB-backed (star-player-repository.ts).
+    starPlayer: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
 

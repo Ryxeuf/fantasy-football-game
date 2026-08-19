@@ -53,12 +53,13 @@ import {
   getInducementCost,
   getInducementMaxQuantity,
   getSpecialRulesForTeam,
-  getAvailableStarPlayers,
   getRegionalRulesForTeam,
   APOTHECARY_FORBIDDEN_ROSTERS,
   getTeamColors,
   TEAM_ROSTERS,
+  type Ruleset,
 } from "@bb/game-engine";
+import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
 
 export type MatchSheetStatus =
   | "draft"
@@ -337,7 +338,7 @@ export async function updatePreMatch(input: {
         ? p.inducementsAway
         : sheetInd.inducementsAway,
     );
-    const { budget } = buildMatchSheetReference(teams, null, {
+    const { budget } = await buildMatchSheetReference(teams, null, {
       home: spentHome,
       away: spentAway,
     });
@@ -990,7 +991,7 @@ export async function validateByCommissioner(input: {
     inducementsHome?: unknown;
     inducementsAway?: unknown;
   };
-  const { budget } = buildMatchSheetReference(teamsForBudget, null, {
+  const { budget } = await buildMatchSheetReference(teamsForBudget, null, {
     home: sumGold(sheetIndForBudget.inducementsHome),
     away: sumGold(sheetIndForBudget.inducementsAway),
   });
@@ -1694,8 +1695,15 @@ function colorsFor(roster: string | undefined): MatchSheetTeamColors {
   return { primary: colorHex(c.primary), secondary: colorHex(c.secondary) };
 }
 
-function starPlayersFor(roster: string): MatchSheetStarPlayerOption[] {
-  return getAvailableStarPlayers(roster).map((s) => ({
+async function starPlayersFor(
+  roster: string,
+  ruleset: Ruleset,
+): Promise<MatchSheetStarPlayerOption[]> {
+  // Bug latent corrige : appelait auparavant sans le ruleset reel de
+  // l'equipe (toujours DEFAULT_RULESET statique).
+  const regionalRules = getRegionalRulesForTeam(roster, ruleset) ?? [];
+  const starPlayers = await getAvailableStarPlayersDb(roster, regionalRules, ruleset);
+  return starPlayers.map((s) => ({
     slug: s.slug,
     name: s.displayName,
     cost: s.cost,
@@ -1773,7 +1781,7 @@ function assertInducementsAllowed(
  */
 export const LEAGUE_UNDERDOG_INDUCEMENT_BONUS = 50000;
 
-export function buildMatchSheetReference(
+export async function buildMatchSheetReference(
   teams: {
     home: MatchSheetTeam | null;
     away: MatchSheetTeam | null;
@@ -1783,7 +1791,7 @@ export function buildMatchSheetReference(
   // A55 — dépenses de coups de pouce déjà engagées : la dépense de la plus
   // forte équipe augmente d'autant la cagnotte de l'underdog.
   spent: { home: number; away: number } = { home: 0, away: 0 },
-): MatchSheetReference {
+): Promise<MatchSheetReference> {
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
   const homeTreasury = teams.home?.treasury ?? 0;
@@ -1813,8 +1821,12 @@ export function buildMatchSheetReference(
         : [],
     },
     starPlayers: {
-      home: teams.home ? starPlayersFor(teams.home.roster) : [],
-      away: teams.away ? starPlayersFor(teams.away.roster) : [],
+      home: teams.home
+        ? await starPlayersFor(teams.home.roster, teams.home.ruleset as Ruleset)
+        : [],
+      away: teams.away
+        ? await starPlayersFor(teams.away.roster, teams.away.ruleset as Ruleset)
+        : [],
     },
     colors: {
       home: colorsFor(teams.home?.roster),
@@ -1921,7 +1933,7 @@ export async function getMatchSheet(input: {
     } as typeof sheet,
     summary,
     teams,
-    reference: buildMatchSheetReference(teams, allowedInducements),
+    reference: await buildMatchSheetReference(teams, allowedInducements),
     computedSpp,
     viewerRole: commissioner
       ? "commissioner"

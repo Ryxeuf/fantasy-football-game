@@ -483,8 +483,9 @@ model Roster {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  positions    Position[]
-  staffConfigs RosterStaffConfig[]
+  positions           Position[]
+  staffConfigs        RosterStaffConfig[]
+  starPlayerHirableBy StarPlayerHirableBy[]
 
   @@unique([slug, ruleset])
 }
@@ -517,23 +518,82 @@ model RosterStaffConfig {
 // indirectement par `/api/positions` via la relation `PositionSkill` (read-only,
 // jointure laissée vide en E2E sauf si un test seed explicitement la table).
 model Skill {
-  id            String   @id @default(cuid())
-  slug          String
-  ruleset       Ruleset  @default(season_2)
-  nameFr        String
-  nameEn        String
-  description   String
-  descriptionEn String?
-  category      String
-  isElite       Boolean  @default(false)
-  isPassive     Boolean  @default(false)
-  isModified    Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  slug                  String
+  ruleset               Ruleset  @default(season_2)
+  nameFr                String
+  nameEn                String
+  description           String
+  descriptionEn         String?
+  category              String
+  isElite               Boolean  @default(false)
+  isPassive             Boolean  @default(false)
+  isModified            Boolean  @default(false)
+  /// Skill reserve (variante star player / regle speciale cablee en pseudo-skill,
+  /// ex. mighty-blow-2) : reste valide si deja possede, mais ne doit plus etre
+  /// selectionnable lors d'une nouvelle evolution/creation de joueur normal.
+  excludedFromSelection Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  positionSkills PositionSkill[]
+  positionSkills   PositionSkill[]
+  starPlayerSkills StarPlayerSkill[]
 
   @@unique([slug, ruleset])
+}
+
+// Star Players (mercenaires recrutables) — mirror PG (prisma/schema.prisma).
+// Source de verite pour le recrutement/cout, plus seulement l'affichage.
+model StarPlayer {
+  id          String   @id @default(cuid())
+  slug        String
+  ruleset     Ruleset  @default(season_2)
+  displayName String
+  cost        Int
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  keywords    String?
+  specialRule String?
+  imageUrl    String?
+  isMegaStar  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  skills    StarPlayerSkill[]
+  hirableBy StarPlayerHirableBy[]
+
+  @@unique([slug, ruleset])
+}
+
+// Relation many-to-many entre StarPlayer et Skill (mirror PG).
+model StarPlayerSkill {
+  id           String     @id @default(cuid())
+  starPlayer   StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  starPlayerId String
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId      String
+
+  @@unique([starPlayerId, skillId])
+  @@index([starPlayerId])
+  @@index([skillId])
+}
+
+// Regles regionales/rosters pouvant recruter un StarPlayer (mirror PG).
+model StarPlayerHirableBy {
+  id           String     @id @default(cuid())
+  starPlayer   StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  starPlayerId String
+  roster       Roster?    @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId     String?
+  rule         String
+
+  @@unique([starPlayerId, rosterId, rule])
+  @@index([starPlayerId])
+  @@index([rosterId])
+  @@index([rule])
 }
 
 // Positions rattachées à un roster (Lineman, Thrower, etc.).

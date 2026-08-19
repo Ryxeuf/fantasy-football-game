@@ -423,10 +423,16 @@ async function main() {
   // =============================================================================
   // 4. SEED DES STAR PLAYERS
   // =============================================================================
-  serverLog.log("⭐ Seed des Star Players...");
+  // Bootstrap uniquement : la DB est la source de vérité pour le recrutement
+  // (cf. star-player-repository.ts) et reste éditable depuis l'admin. Un
+  // Star Player déjà présent en base n'est JAMAIS ré-écrasé par ce seed —
+  // sinon un `db-migrate.sh --seed` manuel effacerait les édits admin (cout,
+  // stats, hirableBy) en repartant du fichier statique, exactement le bug
+  // qui a cause la confusion "doublons season_2/season_3" corrigee manuellement.
+  serverLog.log("⭐ Seed des Star Players (bootstrap, sans écraser l'existant)...");
   let starPlayersCreated = 0;
   let starPlayersSkipped = 0;
-  
+
   for (const ruleset of RULESETS) {
     const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset];
     for (const [slug, starPlayerDef] of Object.entries(starPlayersMap)) {
@@ -434,6 +440,11 @@ async function main() {
         const existing = await prisma.starPlayer.findUnique({
           where: { slug_ruleset: { slug, ruleset } }
         });
+
+        if (existing) {
+          starPlayersSkipped++;
+          continue;
+        }
 
         const starPlayerData = {
           slug,
@@ -453,29 +464,15 @@ async function main() {
           isMegaStar: starPlayerDef.isMegaStar ?? false,
         };
 
-        let starPlayer;
-        if (existing) {
-          starPlayer = await prisma.starPlayer.update({
-            where: { slug_ruleset: { slug, ruleset } },
-            data: starPlayerData
-          });
-          starPlayersSkipped++;
-        } else {
-          starPlayer = await prisma.starPlayer.create({
-            data: starPlayerData
-          });
-          starPlayersCreated++;
-        }
-
-        // Supprimer les anciennes relations de compétences pour ce Star Player
-        await prisma.starPlayerSkill.deleteMany({
-          where: { starPlayerId: starPlayer.id }
+        const starPlayer = await prisma.starPlayer.create({
+          data: starPlayerData
         });
+        starPlayersCreated++;
 
-        // Créer les nouvelles relations de compétences
+        // Créer les relations de compétences (uniquement à la création)
         if (starPlayerDef.skills && starPlayerDef.skills.trim() !== '') {
           const skillSlugs = starPlayerDef.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
-          
+
           for (const skillSlug of skillSlugs) {
             const skill = await prisma.skill.findUnique({
               where: { slug_ruleset: { slug: skillSlug, ruleset } }
@@ -494,12 +491,7 @@ async function main() {
           }
         }
 
-        // Supprimer les anciennes relations hirableBy
-        await prisma.starPlayerHirableBy.deleteMany({
-          where: { starPlayerId: starPlayer.id }
-        });
-
-        // Créer les nouvelles relations hirableBy
+        // Créer les relations hirableBy (uniquement à la création)
         for (const rule of starPlayerDef.hirableBy) {
           // Si la règle est "all", on ne crée pas de relation avec un roster spécifique
           if (rule === 'all') {
@@ -542,7 +534,7 @@ async function main() {
       }
     }
   }
-  serverLog.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} mis à jour\n`);
+  serverLog.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} déjà existants (ignorés)\n`);
 
   // =============================================================================
   // 5. SEED DES UTILISATEURS ET ÉQUIPES (code existant)

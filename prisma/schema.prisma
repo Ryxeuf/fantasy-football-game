@@ -586,6 +586,10 @@ model Skill {
   isElite       Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
   isPassive     Boolean  @default(false) // Compétence passive (soulignée)
   isModified    Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
+  // Skill réservée (variante star player / règle spéciale câblée en pseudo-skill,
+  // ex. mighty-blow-2) : reste valide si déjà possédée, mais ne doit plus être
+  // sélectionnable lors d'une nouvelle évolution/création de joueur normal.
+  excludedFromSelection Boolean @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

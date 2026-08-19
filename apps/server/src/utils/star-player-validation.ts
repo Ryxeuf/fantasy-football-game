@@ -1,11 +1,10 @@
 import {
-  getStarPlayerBySlug,
-  getAvailableStarPlayers,
   getRegionalRulesForTeam,
   DEFAULT_RULESET,
   type Ruleset,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
+import { getStarPlayerBySlugDb, getAvailableStarPlayersDb } from "./star-player-repository";
 
 export interface StarPlayerValidationResult {
   valid: boolean;
@@ -21,16 +20,16 @@ export interface TeamStarPlayerData {
 /**
  * Valide si un Star Player peut être recruté par une équipe
  */
-export function validateStarPlayerHire(
+export async function validateStarPlayerHire(
   starPlayerSlug: string,
   teamRoster: string,
   currentPlayerCount: number,
   currentStarPlayers: TeamStarPlayerData[],
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
-): StarPlayerValidationResult {
+): Promise<StarPlayerValidationResult> {
   // 1. Vérifier que le Star Player existe
-  const starPlayer = getStarPlayerBySlug(starPlayerSlug, ruleset);
+  const starPlayer = await getStarPlayerBySlugDb(starPlayerSlug, ruleset);
   if (!starPlayer) {
     return {
       valid: false,
@@ -58,7 +57,7 @@ export function validateStarPlayerHire(
     };
   }
 
-  const availablePlayers = getAvailableStarPlayers(
+  const availablePlayers = await getAvailableStarPlayersDb(
     teamRoster,
     regionalRules,
     ruleset,
@@ -132,11 +131,11 @@ export function validateStarPlayerPairs(
 /**
  * Calcule le coût total des Star Players en incluant les paires
  */
-export function calculateStarPlayersCost(starPlayerSlugs: string[], ruleset: Ruleset = DEFAULT_RULESET): number {
+export async function calculateStarPlayersCost(starPlayerSlugs: string[], ruleset: Ruleset = DEFAULT_RULESET): Promise<number> {
   let totalCost = 0;
 
   for (const slug of starPlayerSlugs) {
-    const starPlayer = getStarPlayerBySlug(slug, ruleset);
+    const starPlayer = await getStarPlayerBySlugDb(slug, ruleset);
     if (starPlayer) {
       totalCost += starPlayer.cost;
     }
@@ -148,16 +147,16 @@ export function calculateStarPlayersCost(starPlayerSlugs: string[], ruleset: Rul
 /**
  * Obtient les Star Players disponibles pour une équipe donnée
  */
-export function getTeamAvailableStarPlayers(
+export async function getTeamAvailableStarPlayers(
   teamRoster: string,
   ruleset: Ruleset = DEFAULT_RULESET,
-): StarPlayerDefinition[] {
+): Promise<StarPlayerDefinition[]> {
   const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
   if (!regionalRules || regionalRules.length === 0) {
     return [];
   }
 
-  return getAvailableStarPlayers(teamRoster, regionalRules, ruleset);
+  return getAvailableStarPlayersDb(teamRoster, regionalRules, ruleset);
 }
 
 /**
@@ -179,13 +178,13 @@ export function requiresPair(starPlayerSlug: string): string | null {
 /**
  * Valide une liste complète de Star Players pour une équipe
  */
-export function validateStarPlayersForTeam(
+export async function validateStarPlayersForTeam(
   starPlayerSlugs: string[],
   teamRoster: string,
   currentPlayerCount: number,
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
-): { valid: boolean; error?: string; totalCost?: number } {
+): Promise<{ valid: boolean; error?: string; totalCost?: number }> {
   // 1. Vérifier les paires obligatoires
   const pairValidation = validateStarPlayerPairs(starPlayerSlugs);
   if (!pairValidation.valid) {
@@ -210,7 +209,7 @@ export function validateStarPlayersForTeam(
     };
   }
 
-  const availablePlayers = getAvailableStarPlayers(
+  const availablePlayers = await getAvailableStarPlayersDb(
     teamRoster,
     regionalRules,
     ruleset,
@@ -218,7 +217,7 @@ export function validateStarPlayersForTeam(
   const availableSlugs = new Set(availablePlayers.map((sp) => sp.slug));
 
   for (const slug of starPlayerSlugs) {
-    const starPlayer = getStarPlayerBySlug(slug, ruleset);
+    const starPlayer = await getStarPlayerBySlugDb(slug, ruleset);
     if (!starPlayer) {
       return {
         valid: false,
@@ -244,7 +243,7 @@ export function validateStarPlayersForTeam(
   }
 
   // 5. Vérifier le budget
-  const totalCost = calculateStarPlayersCost(starPlayerSlugs, ruleset);
+  const totalCost = await calculateStarPlayersCost(starPlayerSlugs, ruleset);
   if (totalCost > availableBudget) {
     return {
       valid: false,

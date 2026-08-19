@@ -32,11 +32,11 @@ import {
   type AllowedRoster,
   type GameFormat,
   type Ruleset,
-  getStarPlayerBySlug,
   getFormatConstraints,
   getTeamPositions,
   isGameFormat,
 } from '@bb/game-engine';
+import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
   validateStarPlayerPairs,
   validateStarPlayersForTeam,
@@ -146,7 +146,9 @@ export async function handleCreateFromRoster(
     }
 
     // Calculer le cout des Star Players
-    const starPlayersCost = calculateStarPlayersCost(starPlayersToHire);
+    // NOTE : bug preexistant (hors perimetre de cette migration) — cet appel
+    // ne passe pas `ruleset`, retombe donc toujours sur DEFAULT_RULESET.
+    const starPlayersCost = await calculateStarPlayersCost(starPlayersToHire);
     const budgetInPo = finalTeamValue * 1000;
 
     if (starPlayersCost > budgetInPo) {
@@ -156,7 +158,7 @@ export async function handleCreateFromRoster(
     }
 
     // Valider la disponibilite pour ce roster
-    const validation = validateStarPlayersForTeam(
+    const validation = await validateStarPlayersForTeam(
       starPlayersToHire,
       roster,
       playerCount,
@@ -207,10 +209,12 @@ export async function handleCreateFromRoster(
   }
   const safePlayerRows = playerRows.slice(0, 16);
 
-  const starPlayersData = starPlayersToHire.map((slug: string) => {
-    const sp = getStarPlayerBySlug(slug, ruleset);
-    return { starPlayerSlug: slug, cost: sp?.cost || 0 };
-  });
+  const starPlayersData = await Promise.all(
+    starPlayersToHire.map(async (slug: string) => {
+      const sp = await getStarPlayerBySlugDb(slug, ruleset);
+      return { starPlayerSlug: slug, cost: sp?.cost || 0 };
+    }),
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const team = await (prisma as any).$transaction(async (tx: any) => {
@@ -258,12 +262,12 @@ export async function handleCreateFromRoster(
   // Enrichir les Star Players
   const enrichedTeam = {
     ...withPlayers,
-    starPlayers:
+    starPlayers: await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      withPlayers?.starPlayers.map((sp: any) => {
-        const starPlayerData = getStarPlayerBySlug(
+      (withPlayers?.starPlayers ?? []).map(async (sp: any) => {
+        const starPlayerData = await getStarPlayerBySlugDb(
           sp.starPlayerSlug,
-          withPlayers.ruleset,
+          withPlayers!.ruleset as Ruleset,
         );
         return {
           id: sp.id,
@@ -272,7 +276,8 @@ export async function handleCreateFromRoster(
           hiredAt: sp.hiredAt,
           ...starPlayerData,
         };
-      }) || [],
+      }),
+    ),
   };
 
   res.status(201).json({ team: enrichedTeam });
