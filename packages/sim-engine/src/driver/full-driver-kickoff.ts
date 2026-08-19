@@ -14,13 +14,14 @@
  * The full driver runs headless (no UI) so we orchestrate the entire
  * sequence here, picking simple defaults for kicker target (centre of
  * receiving half) and skipping interactive kickoff events that require
- * coach decisions (perfect-defence, high-kick, blitz → no-op for now).
+ * coach decisions (solid-defence, high-kick, quick-snap, blitz → no-op
+ * for now).
  *
  * The sim-engine MVP keeps the "ball ends up with a receiver" outcome
  * realistic via `resolveKickoffBallLanding` (handles pickup roll + bounce
  * + touchback). The kickoff event roll is logged for narrative purposes
- * but only non-interactive effects (riot, cheering fans, weather change,
- * bribes, etc.) are applied.
+ * but only non-interactive effects (timeout, cheering fans, weather
+ * change, bribes, dodgy snack, pitch invasion) are applied.
  */
 
 import {
@@ -28,22 +29,10 @@ import {
   resolveKickoffBallLanding,
   rollKickoffEvent,
   applyKickoffEvent,
+  INTERACTIVE_KICKOFF_EVENT_IDS,
   createLogEntry,
 } from '@bb/game-engine';
 import type { GameState, RNG, TeamId, Position } from '@bb/game-engine';
-
-/**
- * Interactive kickoff events that require a coach decision (UI / AI).
- * In the headless sim we skip their resolution but still log the event
- * roll for narrative continuity. The non-interactive ones are applied
- * via `applyKickoffEvent` directly.
- */
-const INTERACTIVE_EVENTS = new Set<string>([
-  'perfect-defence',
-  'high-kick',
-  'blitz',
-  'quick-snap',
-]);
 
 /**
  * Pick the kicker's target square : centre of the receiving half.
@@ -146,10 +135,10 @@ export function executeHeadlessKickoff(
     ],
   };
 
-  // 3. Kickoff event 2D6. On applique uniquement les effets
-  //    non-interactifs (riot, cheering fans, weather, bribes, etc.).
-  //    Les events qui demandent une décision coach (perfect-defence,
-  //    high-kick, blitz, quick-snap) sont juste loggés.
+  // 3. Kickoff event 2D6 (table saison 2025, source unique dans
+  //    `@bb/game-engine`). On applique uniquement les effets
+  //    non-interactifs ; les events qui demandent une décision coach
+  //    (Solide défense, Chandelle, Surprise, Charge) sont juste loggés.
   const { total, event } = rollKickoffEvent(rng);
   next = {
     ...next,
@@ -161,7 +150,7 @@ export function executeHeadlessKickoff(
       ),
     ],
   };
-  if (!INTERACTIVE_EVENTS.has(event.id)) {
+  if (!INTERACTIVE_KICKOFF_EVENT_IDS.has(event.id)) {
     next = applyKickoffEvent(next, event, rng, kickingTeam);
   }
 
