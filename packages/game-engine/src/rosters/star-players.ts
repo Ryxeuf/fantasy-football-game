@@ -1174,23 +1174,31 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // Bilerot Vomitflesh — carte GW « Star Players! (Legends) » 2025, p.1
   bilerot_vomitflesh: {
+    skills: "dirty-player-1,disturbing-presence,foul-appearance,solitary-aggressor,loner-4,regeneration,instable",
     hirableBy: ["favoured_of_nurgle"],
   },
   // Boa Kon'ssstriktr — carte GW « Star Players! (Legends) » 2025, p.2
   boa_konssstriktr: {
     cost: 180000,
+    skills: "dodge,fend,hypnotic-gaze,loner-4,prehensile-tail,safe-pair-of-hands,sidestep",
   },
   // Bomber Dribblesnot — carte GW « Star Players! (Legends) » 2025, p.2
   bomber_dribblesnot: {
     cost: 80000,
+    skills: "accurate,bombardier,dodge,loner-4,right-stuff,secret-weapon,stunty",
   },
   // Crumbleberry — carte GW « Star Players! (Legends) » 2025, p.5
   crumbleberry: {
     pa: 5,
+    skills: "dodge,fatal-flight,loner-4,right-stuff,stunty,sure-hands",
   },
   // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
   deeproot_strongbranch: {
     hirableBy: ["woodland_league"],
+  },
+  // Dribl — carte GW « Star Players! (Legends) » 2025, p.3
+  dribl: {
+    skills: "dirty-player-1,dodge,loner-4,lightning-aggression,sidestep,sneaky-git,stunty",
   },
   // Eldril Sidewinder — carte GW « Star Players! (Legends) » 2025, p.3
   eldril_sidewinder: {
@@ -1203,6 +1211,10 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     ma: 5,
     pa: 6,
   },
+  // Gloriel Summerbloom — carte GW « Star Players! (Legends) » 2025, p.4
+  gloriel_summerbloom: {
+    skills: "accurate,dodge,loner-3,pass,sidestep,sure-hands",
+  },
   // Glotl Stop — carte GW « Star Players! (Legends) » 2025, p.5
   glotl_stop: {
     cost: 260000,
@@ -1211,6 +1223,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Grak — carte GW « Star Players! (Legends) » 2025, p.5
   grak: {
     pa: 4,
+    skills: "bone-head,kick-team-mate,loner-4,mighty-blow-1,thick-skull",
   },
   // Grashnak Blackhoof — carte GW « Star Players! (Legends) » 2025, p.5
   grashnak_blackhoof: {
@@ -1224,11 +1237,13 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Grombrindal — carte GW « Star Players! (Legends) » 2025, p.6
   grombrindal: {
     cost: 170000,
+    skills: "block,break-tackle,dauntless,loner-4,mighty-blow-1,stand-firm,sure-feet,thick-skull",
     hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"],
   },
   // Guffle Pusmaw — carte GW « Star Players! (Legends) » 2025, p.6
   guffle_pussmaw: {
     cost: 150000,
+    skills: "foul-appearance,loner-4,monstrous-mouth,nerves-of-steel,on-the-ball,plague-ridden",
     hirableBy: ["favoured_of_nurgle"],
   },
   // Hakflem Skuttlespike — carte GW « Star Players! (Legends) » 2025, p.6
@@ -1238,16 +1253,19 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // Helmut Wulf — carte GW « Star Players! (Legends) » 2025, p.7
   helmut_wulf: {
+    skills: "chainsaw,loner-4,no-hands,pro,secret-weapon,stand-firm",
     hirableBy: ["old_world_classic"],
   },
   // H'Thark the Unstoppable — carte GW « Star Players! (Legends) » 2025, p.7
   hthark_the_unstoppable: {
+    skills: "block,break-tackle,defensive,juggernaut,loner-4,sprint,sure-feet,thick-skull,instable",
     hirableBy: ["badlands_brawl", "favoured_of_hashut"],
   },
   // Ivan 'the Animal' Deathshroud — carte GW « Star Players! (Legends) » 2025, p.7
   ivan_the_animal_deathshroud: {
     cost: 210000,
     pa: 5,
+    skills: "block,disturbing-presence,hate-dwarf,juggernaut,loner-4,regeneration,strip-ball,tackle",
   },
   // Ivar Eriksson — carte GW « Star Players! (Legends) » 2025, p.7
   ivar_eriksson: {
@@ -1256,11 +1274,13 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Jordell Freshbreeze — carte GW « Star Players! (Legends) » 2025, p.8
   jordell_freshbreeze: {
     cost: 280000,
+    skills: "block,diving-catch,dodge,leap,loner-4,sidestep,surefoot",
     hirableBy: ["elven_kingdoms_league", "woodland_league"],
   },
   // Captain Karina von Riesz — carte GW « Star Players! (Legends) » 2025, p.2
   karina_von_riesz: {
     pa: 3,
+    skills: "bloodlust-2,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
   },
   // Karla von Kill — carte GW « Star Players! (Legends) » 2025, p.8
   karla_von_kill: {
@@ -1280,6 +1300,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   lucien_swift: {
     cost: 300000,
     st: 3,
+    skills: "block,loner-4,mighty-blow-1,tackle",
   },
   // Maple Highgrove — carte GW « Star Players! (Legends) » 2025, p.9
   maple_highgrove: {
@@ -1287,12 +1308,17 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // Max Spleenripper — carte GW « Star Players! (Legends) » 2025, p.9
   max_spleenripper: {
+    skills: "chainsaw,loner-4,no-hands,secret-weapon",
     hirableBy: ["favoured_of_khorne"],
   },
   // The Mighty Zug — carte GW « Star Players! (Legends) » 2025, p.9
   mighty_zug: {
     ma: 5,
     hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+  },
+  // Nobbla Blackwart — carte GW « Star Players! (Legends) » 2025, p.9
+  nobbla_blackwart: {
+    skills: "block,chainsaw,dodge,loner-4,no-hands,saboteur,secret-weapon,stunty",
   },
   // Rowana Forestfoot — carte GW « Star Players! (Legends) » 2025, p.10
   rowana_forestfoot: {
@@ -1316,6 +1342,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   skorg_snowpelt: {
     cost: 240000,
     pa: 6,
+    skills: "block,claws,disturbing-presence,juggernaut,loner-4,mighty-blow-1",
     hirableBy: ["old_world_classic", "worlds_edge_superleague"],
   },
   // Skrull Halfheight — carte GW « Star Players! (Legends) » 2025, p.11
@@ -1331,6 +1358,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   the_black_gobbo: {
     cost: 210000,
     av: 8,
+    skills: "bombardier,disturbing-presence,dodge,loner-3,sidestep,sneaky-git,stab,stunty",
   },
   // Thorsson Stoutmead — carte GW « Star Players! (Legends) » 2025, p.12
   thorsson_stoutmead: {
@@ -1342,6 +1370,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     ma: 7,
     pa: 2,
     av: 9,
+    skills: "accurate,loner-4,nerves-of-steel,pass,safe-pass,sure-hands",
   },
   // Willow Rosebark — carte GW « Star Players! (Legends) » 2025, p.13
   willow_rosebark: {
@@ -1353,6 +1382,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Withergrasp Doubledrool — carte GW « Star Players! (Legends) » 2025, p.13
   withergrasp_doubledrool: {
     ag: 3,
+    skills: "foul-appearance,loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle",
     hirableBy: ["favoured_of_nurgle"],
   },
   // Zolcath the Zoat — carte GW « Star Players! (Legends) » 2025, p.13
@@ -1361,6 +1391,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // Zzharg Madeye — carte GW « Star Players! (Legends) » 2025, p.13
   zzharg_madeye: {
+    skills: "cannoneer,hail-mary-pass,loner-4,nerves-of-steel,secret-weapon,thick-skull",
     hirableBy: ["favoured_of_hashut"],
   },
 };
