@@ -29,6 +29,7 @@ export const adminPositionsQuerySchema = z.object({
 
 export const adminStarPlayersQuerySchema = z.object({
   search: z.string().max(200).optional(),
+  ruleset: z.string().max(50).optional(),
 });
 
 // ── Body schemas: Skills ──

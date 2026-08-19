@@ -1190,9 +1190,13 @@ router.delete("/positions/:id", async (req, res) => {
 
 router.get("/star-players", validateQuery(adminStarPlayersQuerySchema), async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, ruleset } = req.query;
     const where: any = {};
-    
+
+    if (ruleset && ruleset !== "all") {
+      where.ruleset = resolveRuleset(ruleset as string);
+    }
+
     if (search) {
       where.OR = [
         { slug: { contains: search as string, mode: "insensitive" } },
