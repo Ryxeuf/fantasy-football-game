@@ -5,6 +5,13 @@ import {
   type PriorityTeamRoster,
 } from './priority-teams';
 import type { StarPlayerDefinition } from './star-players';
+import legendsReference from './star-players-legends-2025.reference.json';
+
+/** Slugs publics plus longs que ceux du catalogue (cf. lot Legends 2025). */
+const LEGENDS_SLUG_ALIASES: Record<string, string> = {
+  gretchen_wachter_the_blood_bowl_widow: 'gretchen_wachter',
+  grombrindal_the_white_dwarf: 'grombrindal',
+};
 
 /**
  * P2.10 — Tests unitaires sur les special rules des star players des 5 equipes
@@ -121,11 +128,24 @@ describe('P2.10 — Tests unitaires sur les special rules des star players MVP',
   });
 
   describe('Coherence S2 / S3 (meme contenu narratif)', () => {
-    it('chaque star MVP a la meme specialRule en season_2 et season_3', () => {
+    /**
+     * Depuis le lot « Legends 2025 », les 50 fiches du PDF gratuit GW ont leur
+     * regle speciale REECRITE en season_3 depuis la carte officielle, tandis
+     * que la season_2 (BB2020) reste volontairement intacte. La divergence est
+     * donc attendue — mais UNIQUEMENT pour ces fiches : toute autre divergence
+     * S2/S3 reste un bug de contenu.
+     */
+    const LEGENDS_SLUGS = new Set(
+      (legendsReference.star_players as Array<{ site_slug: string }>).map(
+        (card) => LEGENDS_SLUG_ALIASES[card.site_slug] ?? card.site_slug,
+      ),
+    );
+
+    it('hors fiches Legends 2025, la specialRule est identique en S2 et S3', () => {
       for (const slug of Object.keys(season2Stars)) {
         const s2 = season2Stars[slug];
         const s3 = season3Stars[slug];
-        if (!s3) continue;
+        if (!s3 || LEGENDS_SLUGS.has(slug)) continue;
         expect(
           s3.specialRule,
           `${slug}: divergence narrative S2/S3`,
@@ -134,6 +154,19 @@ describe('P2.10 — Tests unitaires sur les special rules des star players MVP',
           s3.specialRuleEn,
           `${slug}: divergence EN S2/S3`,
         ).toBe(s2.specialRuleEn);
+      }
+    });
+
+    it('une fiche Legends qui diverge porte bien le texte de sa carte', () => {
+      const diverging = Object.keys(season2Stars).filter((slug) => {
+        const s3 = season3Stars[slug];
+        return s3 && s3.specialRule !== season2Stars[slug].specialRule;
+      });
+      // Aucune divergence hors perimetre Legends.
+      expect(diverging.every((slug) => LEGENDS_SLUGS.has(slug))).toBe(true);
+      // Et le texte S3 reste substantiel (pas un stub qui aurait ecrase S2).
+      for (const slug of diverging) {
+        expect((season3Stars[slug].specialRule ?? '').length).toBeGreaterThanOrEqual(80);
       }
     });
 
