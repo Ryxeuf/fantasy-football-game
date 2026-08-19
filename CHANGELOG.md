@@ -1,3 +1,28 @@
+## [1.232.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.231.1...v1.232.0) (2026-08-19)
+
+
+### ✨ Features
+
+* **game-engine:** Soutien Offensif « Fans en folie » sur la premiere Action de Blocage ([73f2492](https://github.com/Ryxeuf/fantasy-football-game/commit/73f249263857e3ee41845919102ed5ca1ca6abaf))
+
+
+### 🐛 Bug Fixes
+
+* **compendium:** 3 ecarts de la table de coup d'envoi + garde-fou de coherence ([91aeaaf](https://github.com/Ryxeuf/fantasy-football-game/commit/91aeaaf36bdaadc0fdebff55382529da50376988))
+* **game-engine:** remplace la table de coup d'envoi par celle de la saison 2025 ([60faa47](https://github.com/Ryxeuf/fantasy-football-game/commit/60faa4711b04cf0d8566ba70879bcfe2cdda22d5))
+* **game-engine:** resolveKickoffEvent consomme la table partagee et applique les effets ([b3b9a9f](https://github.com/Ryxeuf/fantasy-football-game/commit/b3b9a9f97bc442a672eb8375097927da3d016b15))
+* **league:** feuille de match — table de coup d'envoi 2025 et alias des anciens ids ([b7737f6](https://github.com/Ryxeuf/fantasy-football-game/commit/b7737f6a478e1090d877e39bfffdc312f2026e9c))
+
+
+### 📝 Documentation
+
+* **claude:** coherence a 3 representations pour les regles cablees ([85f6735](https://github.com/Ryxeuf/fantasy-football-game/commit/85f6735e10d979887e84886368bd21a449035c02))
+
+
+### ♻️ Code Refactoring
+
+* **sim-engine:** reutilise INTERACTIVE_KICKOFF_EVENT_IDS du game-engine ([935196d](https://github.com/Ryxeuf/fantasy-football-game/commit/935196d1632d7b40e256e3c302ac0d57ea87296c))
+
 ## [1.231.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.231.0...v1.231.1) (2026-08-19)
 
 
