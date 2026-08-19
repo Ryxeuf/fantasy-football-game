@@ -56,6 +56,11 @@ export default function Footer() {
                 </li>
               )}
               <li>
+                <a href="/aide-de-jeu" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  Aide de jeu
+                </a>
+              </li>
+              <li>
                 <a href="/tutoriel" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.footer.tutorial}
                 </a>

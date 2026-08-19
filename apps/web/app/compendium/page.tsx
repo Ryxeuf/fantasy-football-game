@@ -86,6 +86,15 @@ export default function CompendiumIndexPage(): JSX.Element {
           {chapters.length} chapitres · règles, compétences, positions, équipes
           &amp; star players
         </p>
+
+        {/* Le compendium se lit ; l'aide de jeu se consulte en jouant. */}
+        <Link
+          href="/aide-de-jeu"
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-nuffle-gold/40 px-4 py-2.5 text-sm font-semibold text-nuffle-gold transition-colors hover:bg-nuffle-gold/10"
+        >
+          🎲 Vous jouez maintenant ? Ouvrir l&apos;aide de jeu
+          <span aria-hidden>→</span>
+        </Link>
       </header>
 
       {/* Grille des chapitres */}
