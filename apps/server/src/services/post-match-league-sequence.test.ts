@@ -40,35 +40,6 @@ vi.mock("../prisma", () => {
   };
 });
 
-// `getNextAdvancementPspCost` résout à `undefined` via le barrel
-// `@bb/game-engine` sous la transform SSR de vitest (bug préexistant
-// d'environnement — cf. team-star-player-handlers.test.ts pour le même
-// symptôme sur d'autres exports, indépendant de ce chantier). Override
-// ciblé avec la vraie table de coûts, reste réel sinon.
-vi.mock("@bb/game-engine", async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  const SPP_COST_TABLE: Record<string, readonly number[]> = {
-    primary: [0, 6, 8, 12, 16, 20, 30],
-    secondary: [0, 10, 12, 16, 20, 24, 34],
-    "random-primary": [0, 3, 4, 6, 8, 10, 15],
-    characteristic: [0, 14, 16, 20, 24, 28, 38],
-  };
-  const SURCHARGE_PER_ADVANCEMENT: Record<string, number> = {
-    primary: 20000,
-    secondary: 40000,
-    "random-primary": 20000,
-  };
-  return {
-    ...actual,
-    getNextAdvancementPspCost: (alreadyTaken: number, type: string) => {
-      const next = Math.min(Math.max(alreadyTaken + 1, 1), 6);
-      return SPP_COST_TABLE[type]?.[next] ?? 0;
-    },
-    surchargeForAdvancement: (adv: { type: string }) =>
-      SURCHARGE_PER_ADVANCEMENT[adv.type] ?? 0,
-  };
-});
-
 import { prisma } from "../prisma";
 import { rollRandomPrimaryCandidates } from "@bb/game-engine";
 import {
@@ -670,8 +641,10 @@ describe("applyAdvancementChoice", () => {
     });
     if (!("applied" in out)) throw new Error("expected applied");
     expect(out.applied).toBe(true);
-    // skill.findFirst ne doit meme pas etre interroge si pas d'acces.
-    expect(mocked.skillFind).not.toHaveBeenCalled();
+    // skill.findFirst EST interroge (check excludedFromSelection,
+    // inconditionnel) meme si la validation de pool est skippee faute
+    // de donnees de position.
+    expect(mocked.skillFind).toHaveBeenCalled();
   });
 
   it("skip la validation quand les deux colonnes d'acces sont null", async () => {

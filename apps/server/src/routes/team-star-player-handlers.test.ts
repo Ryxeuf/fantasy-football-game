@@ -30,19 +30,6 @@ vi.mock('../utils/server-log', () => ({
   serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
-// `translateKeywordsCsv` résout à `undefined` via le barrel `@bb/game-engine`
-// sous la transform SSR de vitest (bug préexistant, indépendant de cette
-// migration — probablement un souci d'ordre d'init d'un cycle d'imports dans
-// `packages/game-engine/src/rosters/*`). Override ciblé pour ne pas en
-// dépendre ici ; tout le reste du module reste réel.
-vi.mock('@bb/game-engine', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    translateKeywordsCsv: (csv: string | null) => csv ?? '',
-  };
-});
-
 import { prisma } from '../prisma';
 import {
   handleListTeamStarPlayers,
