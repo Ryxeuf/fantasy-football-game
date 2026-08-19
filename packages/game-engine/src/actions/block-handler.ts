@@ -131,11 +131,17 @@ export function handleBlock(
   const stateAfterFA = foulAppearanceCheck.newState;
 
   // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(
-    stateAfterFA,
-    attacker,
-    target,
-  );
+  // Saison 2025 — « Fans en folie » (coup d'envoi 6) : le coach gagnant
+  // obtient un Soutien Offensif supplementaire sur sa PREMIERE Action de
+  // Blocage du Tour qui suit. Le bonus ne s'applique donc pas a un Blitz
+  // (qui est une Action de Blitz) et est consomme des qu'il a servi.
+  const cheeringFansTeamKey = attacker.team === 'A' ? 'teamA' : 'teamB';
+  const cheeringFansBonus =
+    !isBlitzDuringMove && (stateAfterFA.cheeringFansAssist?.[cheeringFansTeamKey] ?? false)
+      ? 1
+      : 0;
+  const offensiveAssists =
+    calculateOffensiveAssists(stateAfterFA, attacker, target) + cheeringFansBonus;
   const defensiveAssists = calculateDefensiveAssists(
     stateAfterFA,
     attacker,
@@ -202,6 +208,18 @@ export function handleBlock(
     };
   } else {
     newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLOCK');
+  }
+
+  // Consommer le Soutien Offensif « Fans en folie » : il ne vaut que
+  // pour cette premiere Action de Blocage.
+  if (cheeringFansBonus > 0) {
+    newState = {
+      ...newState,
+      cheeringFansAssist: {
+        teamA: cheeringFansTeamKey === 'teamA' ? false : (newState.cheeringFansAssist?.teamA ?? false),
+        teamB: cheeringFansTeamKey === 'teamB' ? false : (newState.cheeringFansAssist?.teamB ?? false),
+      },
+    };
   }
 
   // Si un seul de, resoudre immediatement
