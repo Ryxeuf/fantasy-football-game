@@ -1194,6 +1194,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   },
   // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
   deeproot_strongbranch: {
+    skills: "block,bullseye,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber",
     hirableBy: ["woodland_league"],
   },
   // Dribl — carte GW « Star Players! (Legends) » 2025, p.3
@@ -1314,6 +1315,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // The Mighty Zug — carte GW « Star Players! (Legends) » 2025, p.9
   mighty_zug: {
     ma: 5,
+    skills: "block,loner-4,mighty-blow-1,instable",
     hirableBy: ["old_world_classic", "worlds_edge_superleague"],
   },
   // Nobbla Blackwart — carte GW « Star Players! (Legends) » 2025, p.9
@@ -1327,6 +1329,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Roxanna Darknail — carte GW « Star Players! (Legends) » 2025, p.10
   roxanna_darknail: {
     pa: 3,
+    skills: "dodge,frenzy,jump-up,juggernaut,leap,loner-4",
   },
   // Scrappa Sorehead — carte GW « Star Players! (Legends) » 2025, p.10
   scrappa_sorehead: {
