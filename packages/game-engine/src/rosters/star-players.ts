@@ -20,6 +20,20 @@ export interface StarPlayerDefinition {
   imageUrl?: string;      // URL de l'image du joueur
   isMegaStar?: boolean;    // Flag Mega Star
   /**
+   * Lot G — recrutement obligatoire en paire : slug du partenaire.
+   * Renseigne automatiquement depuis `STAR_PLAYER_PAIR_PARTNERS` (cf. plus
+   * bas), comme `keywords` : ne pas le poser a la main dans les definitions.
+   */
+  pairWith?: string;
+  /**
+   * Lot G — prix TOTAL de la paire, identique sur les deux fiches.
+   * Les cartes GW donnent un prix pour la paire ; le repo le porte sur le
+   * primaire (`cost`) et met le partenaire a `cost: 0`, pour que la somme des
+   * coûts d'une liste reste juste. `pairCost` porte le prix reel a afficher
+   * des deux cotes. Absent ⇒ calcule comme la somme des deux `cost`.
+   */
+  pairCost?: number;
+  /**
    * Mots-clés officiels (lignée + type de joueur), CSV FR — ex: "Humain, Blitzer".
    * Même vocabulaire que les mots-clés de position (`KEYWORDS_SEASON3`).
    * Renseigné automatiquement depuis `STAR_PLAYER_KEYWORDS` (cf. plus bas) :
@@ -1191,6 +1205,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   crumbleberry: {
     pa: 5,
     skills: "dodge,fatal-flight,loner-4,right-stuff,stunty,sure-hands",
+    pairCost: 250000,
   },
   // Deeproot Strongbranch — carte GW « Star Players! (Legends) » 2025, p.3
   deeproot_strongbranch: {
@@ -1200,6 +1215,11 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   // Dribl — carte GW « Star Players! (Legends) » 2025, p.3
   dribl: {
     skills: "dirty-player-1,dodge,loner-4,lightning-aggression,sidestep,sneaky-git,stunty",
+    pairCost: 230000,
+  },
+  // Drull — carte GW « Star Players! (Legends) » 2025, p.3
+  drull: {
+    pairCost: 230000,
   },
   // Eldril Sidewinder — carte GW « Star Players! (Legends) » 2025, p.3
   eldril_sidewinder: {
@@ -1225,6 +1245,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
   grak: {
     pa: 4,
     skills: "bone-head,kick-team-mate,loner-4,mighty-blow-1,thick-skull",
+    pairCost: 250000,
   },
   // Grashnak Blackhoof — carte GW « Star Players! (Legends) » 2025, p.5
   grashnak_blackhoof: {
@@ -1302,6 +1323,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     cost: 300000,
     st: 3,
     skills: "block,loner-4,mighty-blow-1,tackle",
+    pairCost: 300000,
   },
   // Maple Highgrove — carte GW « Star Players! (Legends) » 2025, p.9
   maple_highgrove: {
@@ -1374,6 +1396,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     pa: 2,
     av: 9,
     skills: "accurate,loner-4,nerves-of-steel,pass,safe-pass,sure-hands",
+    pairCost: 300000,
   },
   // Willow Rosebark — carte GW « Star Players! (Legends) » 2025, p.13
   willow_rosebark: {
@@ -1431,6 +1454,25 @@ export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerD
 // Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
 export const STAR_PLAYERS = STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
 
+/**
+ * Lot G — paires obligatoires (« must be hired as a pair »). La RELATION est
+ * une constante du livre de règles, identique en S2 et en S3 : elle vit donc
+ * ici, hors des maps par ruleset, et est appliquée aux deux (comme les
+ * mots-clés). Seul le PRIX de la paire dépend du ruleset et se corrige via
+ * `pairCost` dans les overrides S3.
+ *
+ * Avant ce lot, trois tables de paires vivaient en dur dans trois fichiers
+ * différents — dont une qui ignorait Dribl & Drull.
+ */
+export const STAR_PLAYER_PAIR_PARTNERS: Record<string, string> = {
+  grak: "crumbleberry",
+  crumbleberry: "grak",
+  dribl: "drull",
+  drull: "dribl",
+  lucien_swift: "valen_swift",
+  valen_swift: "lucien_swift",
+};
+
 // Appliquer les règles spéciales par défaut + les mots-clés pour tous les rulesets
 Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
   Object.values(starPlayersMap).forEach((player) => {
@@ -1443,6 +1485,11 @@ Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
     const keywords = STAR_PLAYER_KEYWORDS[player.slug];
     if (keywords) {
       player.keywords = keywords;
+    }
+    // Paires obligatoires : même table pour les deux rulesets (cf. supra).
+    const partner = STAR_PLAYER_PAIR_PARTNERS[player.slug];
+    if (partner) {
+      player.pairWith = partner;
     }
   });
 });
@@ -1587,6 +1634,60 @@ export function getRegionalRulesForTeam(
     TEAM_REGIONAL_RULES_BY_RULESET[ruleset] ??
     TEAM_REGIONAL_RULES_BY_RULESET[DEFAULT_RULESET];
   return map[teamRoster] ?? TEAM_REGIONAL_RULES[teamRoster] ?? [];
+}
+
+/**
+ * Lot G — description d'une paire obligatoire de Star Players.
+ * Les deux fiches partagent le même `pairCost` (prix de la paire).
+ */
+export interface StarPlayerPair {
+  /** Slug du partenaire obligatoire. */
+  readonly partnerSlug: string;
+  /** Nom d'affichage du partenaire (repli sur le slug s'il est inconnu). */
+  readonly partnerName: string;
+  /** Prix TOTAL de la paire, en po. */
+  readonly pairCost: number;
+}
+
+/**
+ * Renvoie la paire obligatoire d'un Star Player, ou `null` s'il se recrute
+ * seul. Source unique pour la validation serveur ET l'affichage : avant ce
+ * lot, trois tables de paires vivaient en dur dans trois fichiers différents
+ * (dont une qui ignorait Dribl & Drull, et un libellé « Gratuit (avec Grak) »
+ * affiché sur TOUS les partenaires — Drull compris, alors qu'il s'associe à
+ * Dribl).
+ */
+export function getStarPlayerPair(
+  slug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): StarPlayerPair | null {
+  const map =
+    STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+  const player = map[slug];
+  if (!player?.pairWith) return null;
+  const partner = map[player.pairWith];
+  return {
+    partnerSlug: player.pairWith,
+    partnerName: partner?.displayName ?? player.pairWith,
+    pairCost: player.pairCost ?? player.cost + (partner?.cost ?? 0),
+  };
+}
+
+/**
+ * Toutes les paires obligatoires d'un ruleset, indexées par slug (les deux
+ * membres sont présents).
+ */
+export function getStarPlayerPairs(
+  ruleset: Ruleset = DEFAULT_RULESET,
+): Record<string, StarPlayerPair> {
+  const map =
+    STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+  const out: Record<string, StarPlayerPair> = {};
+  for (const slug of Object.keys(map)) {
+    const pair = getStarPlayerPair(slug, ruleset);
+    if (pair) out[slug] = pair;
+  }
+  return out;
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { StarPlayerDefinition } from '@bb/game-engine';
-import { getStarPlayerSkillDisplayNames } from '@bb/game-engine';
+import { getStarPlayerSkillDisplayNames, getStarPlayerPair } from '@bb/game-engine';
 import KeywordChips from './KeywordChips';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -31,8 +31,15 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
       ? starPlayer.keywordsEn ?? starPlayer.keywords
       : starPlayer.keywords ?? starPlayer.keywordsEn;
 
+  // Lot G — paires obligatoires. Le prix de la carte est celui de LA PAIRE :
+  // le catalogue le porte sur le primaire et met le partenaire a 0. On affiche
+  // donc le prix de la paire des deux cotes, avec le nom du bon partenaire
+  // (l'ancien libelle disait « Gratuit (avec Grak) » pour tout partenaire a 0,
+  // Drull compris — qui s'associe a Dribl).
+  const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
+
   const formatCost = (cost: number) => {
-    if (cost === 0) return 'Gratuit (avec Grak)';
+    if (pair) return `${(pair.pairCost / 1000).toLocaleString()} K po`;
     return `${(cost / 1000).toLocaleString()} K po`;
   };
 
@@ -59,7 +66,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
     <div
       className={`
         rounded-lg border-2 p-4 cursor-pointer transition-all hover:shadow-lg hover:scale-105
-        ${getRarityColor(starPlayer.cost)}
+        ${getRarityColor(pair ? pair.pairCost : starPlayer.cost)}
       `}
       onClick={() => onClick?.(starPlayer)}
     >
@@ -75,7 +82,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
             )}
           </div>
           <span className="text-xs font-semibold text-gray-600">
-            {getRarityLabel(starPlayer.cost)}
+            {getRarityLabel(pair ? pair.pairCost : starPlayer.cost)}
           </span>
           <KeywordChips
             keywords={keywords}
@@ -85,6 +92,14 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
         </div>
         <div className="text-right">
           <div className="font-bold text-xl">{formatCost(starPlayer.cost)}</div>
+          {pair && (
+            <div
+              className="text-xs text-gray-600"
+              data-testid="star-player-card-pair"
+            >
+              paire avec {pair.partnerName}
+            </div>
+          )}
         </div>
       </div>
 
