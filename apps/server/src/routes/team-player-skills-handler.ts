@@ -249,6 +249,15 @@ export async function handleUpdatePlayerSkills(
     const allowedCategories =
       categoryAccessType === 'primary' ? access.primary : access.secondary;
 
+    // Competences reservees (ex: mighty-blow-2, variantes star player) :
+    // non selectionnables en nouveaute, meme si la categorie/position les
+    // autoriserait. Un seul aller-retour DB, reutilise par les 2 branches.
+    const excludedSkillRows: Array<{ slug: string }> = await prisma.skill.findMany({
+      where: { ruleset: team.ruleset as never, excludedFromSelection: true },
+      select: { slug: true },
+    });
+    const excludedSlugs = new Set(excludedSkillRows.map((s) => s.slug));
+
     let finalSkillSlug: string;
 
     if (isRandom) {
@@ -264,7 +273,9 @@ export async function handleUpdatePlayerSkills(
 
       const eligibleSkills = SKILLS_DEFINITIONS.filter(
         (s) => s.category === skillCategory,
-      ).filter((s) => !currentSkills.includes(s.slug));
+      )
+        .filter((s) => !currentSkills.includes(s.slug))
+        .filter((s) => !excludedSlugs.has(s.slug));
 
       if (eligibleSkills.length === 0) {
         sendError(
@@ -287,6 +298,15 @@ export async function handleUpdatePlayerSkills(
 
       if (currentSkills.includes(finalSkillSlug)) {
         sendError(res, 'Ce joueur possede deja cette competence', 400);
+        return;
+      }
+
+      if (excludedSlugs.has(finalSkillSlug)) {
+        sendError(
+          res,
+          `La competence '${skillDef.nameFr}' n'est pas disponible a la selection`,
+          400,
+        );
         return;
       }
 

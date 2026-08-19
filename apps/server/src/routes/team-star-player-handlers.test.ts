@@ -22,6 +22,7 @@ vi.mock('../prisma', () => ({
     team: {
       findFirst: vi.fn(),
     },
+    starPlayer: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
 
@@ -40,7 +41,24 @@ import type { AuthenticatedRequest } from '../middleware/authUser';
 
 const mockPrisma = prisma as unknown as {
   team: { findFirst: ReturnType<typeof vi.fn> };
+  starPlayer: {
+    findUnique: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+  };
 };
+
+// Griff Oberwald tel que remonté par Prisma (mêmes valeurs que
+// packages/game-engine/src/rosters/star-players.ts).
+function makeGriffOberwaldRow(ruleset = 'season_3') {
+  return {
+    id: 'sp-griff', slug: 'griff_oberwald', ruleset, displayName: 'Griff Oberwald',
+    cost: 280000, ma: 7, st: 4, ag: 2, pa: 3, av: 9,
+    specialRule: 'Consummate Professional', imageUrl: null, isMegaStar: true, keywords: null,
+    skills: [{ skill: { slug: 'block' } }],
+    hirableBy: [{ rule: 'old_world_classic', roster: null }],
+  };
+}
 
 function createRes() {
   const res: Partial<Response> & {
@@ -98,6 +116,24 @@ describe('handleListTeamStarPlayers — defensive gates', () => {
     const res = createRes();
     await handleListTeamStarPlayers(req, res);
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('handleListTeamStarPlayers — happy path (DB-backed, regression spread-de-Promise)', () => {
+  it('enrichit chaque Star Player recruté avec les données catalogue', async () => {
+    mockPrisma.team.findFirst.mockResolvedValueOnce({
+      id: 'team-1',
+      starPlayers: [{ id: 'tsp-1', starPlayerSlug: 'griff_oberwald', cost: 280000, hiredAt: new Date('2026-01-01') }],
+    });
+    mockPrisma.starPlayer.findUnique.mockResolvedValue(makeGriffOberwaldRow());
+
+    const req = createReq();
+    const res = createRes();
+    await handleListTeamStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as { data: { starPlayers: Array<{ displayName?: string }> } };
+    expect(payload.data.starPlayers[0]?.displayName).toBe('Griff Oberwald');
   });
 });
 

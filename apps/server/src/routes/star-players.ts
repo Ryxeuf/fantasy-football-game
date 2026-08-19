@@ -314,6 +314,9 @@ router.get("/available/:roster", async (req, res) => {
     // - hirableBy contient une règle régionale qui correspond au roster
     const starPlayers = await starPlayerModel.findMany({
       where: {
+        // Bug latent corrigé : `ruleset` était résolu (L269) mais jamais
+        // filtré ici, donc la requête mélangeait season_2 et season_3.
+        ruleset,
         OR: [
           { hirableBy: { some: { rule: "all" } } },
           { hirableBy: { some: { roster: { slug: roster } } } },

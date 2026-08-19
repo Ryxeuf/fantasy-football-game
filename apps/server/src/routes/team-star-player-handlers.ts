@@ -32,11 +32,11 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
-  getStarPlayerBySlug,
   translateKeywordsCsv,
   DEFAULT_RULESET,
   type Ruleset,
 } from '@bb/game-engine';
+import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
   getTeamAvailableStarPlayers,
   requiresPair,
@@ -68,19 +68,23 @@ export async function handleListTeamStarPlayers(
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
-      return {
-        id: sp.id,
-        slug: sp.starPlayerSlug,
-        cost: sp.cost,
-        hiredAt: sp.hiredAt,
-        ...starPlayerData,
-        // Mots-cles traduits (le catalogue engine ne porte que le FR).
-        keywordsEn: translateKeywordsCsv(starPlayerData?.keywords ?? null, 'en'),
-      };
-    });
+    const enrichedStarPlayers = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      team.starPlayers.map(async (sp: any) => {
+        // NOTE : bug preexistant (hors perimetre) — ne passe pas team.ruleset,
+        // retombe toujours sur DEFAULT_RULESET.
+        const starPlayerData = await getStarPlayerBySlugDb(sp.starPlayerSlug, DEFAULT_RULESET);
+        return {
+          id: sp.id,
+          slug: sp.starPlayerSlug,
+          cost: sp.cost,
+          hiredAt: sp.hiredAt,
+          ...starPlayerData,
+          // Mots-cles traduits (le catalogue engine ne porte que le FR).
+          keywordsEn: translateKeywordsCsv(starPlayerData?.keywords ?? null, 'en'),
+        };
+      }),
+    );
 
     sendSuccess(res, {
       starPlayers: enrichedStarPlayers,
@@ -118,7 +122,7 @@ export async function handleListAvailableStarPlayers(
     }
 
     const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-    const availableStarPlayers = getTeamAvailableStarPlayers(
+    const availableStarPlayers = await getTeamAvailableStarPlayers(
       team.roster,
       teamRuleset,
     );
@@ -152,45 +156,47 @@ export async function handleListAvailableStarPlayers(
     );
     const totalPlayers = team.players.length + team.starPlayers.length;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enrichedStarPlayers = availableStarPlayers.map((sp: any) => {
-      const isHired = hiredSlugs.has(sp.slug);
-      const canAfford = sp.cost <= availableBudget;
-      const hasRoomForOne = totalPlayers < 16;
+    const enrichedStarPlayers = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      availableStarPlayers.map(async (sp: any) => {
+        const isHired = hiredSlugs.has(sp.slug);
+        const canAfford = sp.cost <= availableBudget;
+        const hasRoomForOne = totalPlayers < 16;
 
-      const pairSlug = requiresPair(sp.slug);
-      let needsPair = false;
-      let pairStatus = null;
+        const pairSlug = requiresPair(sp.slug);
+        let needsPair = false;
+        let pairStatus = null;
 
-      if (pairSlug) {
-        needsPair = true;
-        const pairHired = hiredSlugs.has(pairSlug);
-        const pairData = getStarPlayerBySlug(pairSlug, team.ruleset);
-        pairStatus = {
-          slug: pairSlug,
-          name: pairData?.displayName,
-          hired: pairHired,
-          cost: pairData?.cost || 0,
+        if (pairSlug) {
+          needsPair = true;
+          const pairHired = hiredSlugs.has(pairSlug);
+          const pairData = await getStarPlayerBySlugDb(pairSlug, team.ruleset as Ruleset);
+          pairStatus = {
+            slug: pairSlug,
+            name: pairData?.displayName,
+            hired: pairHired,
+            cost: pairData?.cost || 0,
+          };
+        }
+
+        let canHire = !isHired && hasRoomForOne && canAfford;
+        if (needsPair && !pairStatus?.hired) {
+          const totalPairCost = sp.cost + (pairStatus?.cost || 0);
+          const hasRoomForPair = totalPlayers + 1 < 16;
+          canHire =
+            !isHired && hasRoomForPair && totalPairCost <= availableBudget;
+        }
+
+        return {
+          ...sp,
+          keywordsEn: translateKeywordsCsv(sp.keywords ?? null, 'en'),
+          isHired,
+          canHire,
+          needsPair,
+          pairStatus,
         };
-      }
-
-      let canHire = !isHired && hasRoomForOne && canAfford;
-      if (needsPair && !pairStatus?.hired) {
-        const totalPairCost = sp.cost + (pairStatus?.cost || 0);
-        const hasRoomForPair = totalPlayers + 1 < 16;
-        canHire =
-          !isHired && hasRoomForPair && totalPairCost <= availableBudget;
-      }
-
-      return {
-        ...sp,
-        keywordsEn: translateKeywordsCsv(sp.keywords ?? null, 'en'),
-        isHired,
-        canHire,
-        needsPair,
-        pairStatus,
-      };
-    });
+      }),
+    );
 
     sendSuccess(res, {
       availableStarPlayers: enrichedStarPlayers,

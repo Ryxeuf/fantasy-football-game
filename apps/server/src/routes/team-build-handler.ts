@@ -34,13 +34,13 @@ import { updateTeamValues } from '../utils/team-values';
 import {
   type AllowedRoster,
   type GameFormat,
-  getStarPlayerBySlug,
   getFormatConstraints,
   validateFormatSelection,
   isGameFormat,
   isBigGuy,
   bigGuyLimitForRoster,
 } from '@bb/game-engine';
+import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
   validateStarPlayerPairs,
   validateStarPlayersForTeam,
@@ -283,10 +283,10 @@ export async function handleBuildTeam(
       }
 
       starPlayersCost =
-        calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000;
+        (await calculateStarPlayersCost(starPlayersToHire, ruleset)) / 1000;
 
       const budgetInPo = finalTeamValue * 1000;
-      const validation = validateStarPlayersForTeam(
+      const validation = await validateStarPlayersForTeam(
         starPlayersToHire,
         roster,
         totalPlayers,
@@ -335,10 +335,12 @@ export async function handleBuildTeam(
     }
     const safePlayerRows = playerRows.slice(0, 16);
 
-    const starPlayersData = starPlayersToHire.map((slug: string) => {
-      const sp = getStarPlayerBySlug(slug, ruleset);
-      return { starPlayerSlug: slug, cost: sp?.cost || 0 };
-    });
+    const starPlayersData = await Promise.all(
+      starPlayersToHire.map(async (slug: string) => {
+        const sp = await getStarPlayerBySlugDb(slug, ruleset);
+        return { starPlayerSlug: slug, cost: sp?.cost || 0 };
+      }),
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const team = await (prisma as any).$transaction(async (tx: any) => {
@@ -452,10 +454,10 @@ export async function handleBuildTeam(
 
     const enrichedTeam = {
       ...withPlayers,
-      starPlayers:
+      starPlayers: await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        withPlayers?.starPlayers.map((sp: any) => {
-          const starPlayerData = getStarPlayerBySlug(
+        (withPlayers?.starPlayers ?? []).map(async (sp: any) => {
+          const starPlayerData = await getStarPlayerBySlugDb(
             sp.starPlayerSlug,
             ruleset,
           );
@@ -466,7 +468,8 @@ export async function handleBuildTeam(
             hiredAt: sp.hiredAt,
             ...starPlayerData,
           };
-        }) || [],
+        }),
+      ),
     };
 
     sendSuccess(

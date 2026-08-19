@@ -415,8 +415,41 @@ exports.Prisma.SkillScalarFieldEnum = {
   isElite: 'isElite',
   isPassive: 'isPassive',
   isModified: 'isModified',
+  excludedFromSelection: 'excludedFromSelection',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StarPlayerScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  displayName: 'displayName',
+  cost: 'cost',
+  ma: 'ma',
+  st: 'st',
+  ag: 'ag',
+  pa: 'pa',
+  av: 'av',
+  keywords: 'keywords',
+  specialRule: 'specialRule',
+  imageUrl: 'imageUrl',
+  isMegaStar: 'isMegaStar',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StarPlayerSkillScalarFieldEnum = {
+  id: 'id',
+  starPlayerId: 'starPlayerId',
+  skillId: 'skillId'
+};
+
+exports.Prisma.StarPlayerHirableByScalarFieldEnum = {
+  id: 'id',
+  starPlayerId: 'starPlayerId',
+  rosterId: 'rosterId',
+  rule: 'rule'
 };
 
 exports.Prisma.PositionScalarFieldEnum = {
@@ -1281,6 +1314,9 @@ exports.Prisma.ModelName = {
   Roster: 'Roster',
   RosterStaffConfig: 'RosterStaffConfig',
   Skill: 'Skill',
+  StarPlayer: 'StarPlayer',
+  StarPlayerSkill: 'StarPlayerSkill',
+  StarPlayerHirableBy: 'StarPlayerHirableBy',
   Position: 'Position',
   PositionSkill: 'PositionSkill',
   Cup: 'Cup',

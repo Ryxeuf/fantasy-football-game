@@ -800,6 +800,38 @@ if (process.env.TEST_SQLITE === "1") {
       }
       invalidateFeatureFlagsCache();
 
+      // Star Player minimal (Griff Oberwald, mêmes valeurs que le catalogue
+      // statique) pour que les tests E2E DB-backed (recrutement, coût) aient
+      // une fixture disponible. `hirableBy: "all"` (diverge du statique
+      // "old_world_classic") pour rester recrutable quel que soit le roster
+      // de test utilisé — c'est une fixture, pas une donnée de jeu réelle.
+      for (const ruleset of rulesets) {
+        const starPlayer = await prisma.starPlayer.upsert({
+          where: { slug_ruleset: { slug: "griff_oberwald", ruleset } },
+          update: { cost: 280000 },
+          create: {
+            slug: "griff_oberwald",
+            ruleset,
+            displayName: "Griff Oberwald",
+            cost: 280000,
+            ma: 7,
+            st: 4,
+            ag: 2,
+            pa: 3,
+            av: 9,
+            isMegaStar: true,
+          },
+        });
+        const existingHirableBy = await prisma.starPlayerHirableBy.findFirst({
+          where: { starPlayerId: starPlayer.id, rule: "all" },
+        });
+        if (!existingHirableBy) {
+          await prisma.starPlayerHirableBy.create({
+            data: { starPlayerId: starPlayer.id, rule: "all", rosterId: null },
+          });
+        }
+      }
+
       return res.json({
         ok: true,
         rulesets,

@@ -200,7 +200,7 @@ router.post("/skills", validate(createSkillSchema), async (req, res) => {
 
 router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
   try {
-    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified } = req.body;
+    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified, excludedFromSelection } = req.body;
 
     const data: any = {
       nameFr,
@@ -214,7 +214,7 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
       data.ruleset = resolveRuleset(rawRuleset);
     }
 
-    // Gestion des booléens (isElite, isPassive, isModified)
+    // Gestion des booléens (isElite, isPassive, isModified, excludedFromSelection)
     if (typeof isElite === "boolean") {
       data.isElite = isElite;
     }
@@ -223,6 +223,9 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
     }
     if (typeof isModified === "boolean") {
       data.isModified = isModified;
+    }
+    if (typeof excludedFromSelection === "boolean") {
+      data.excludedFromSelection = excludedFromSelection;
     }
 
     const previous = await prisma.skill.findUnique({
@@ -236,6 +239,7 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
         isElite: true,
         isPassive: true,
         isModified: true,
+        excludedFromSelection: true,
       },
     });
 
@@ -257,6 +261,7 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
         isElite: skill.isElite,
         isPassive: skill.isPassive,
         isModified: skill.isModified,
+        excludedFromSelection: skill.excludedFromSelection,
       },
     });
     res.json({ skill });
@@ -1190,9 +1195,13 @@ router.delete("/positions/:id", async (req, res) => {
 
 router.get("/star-players", validateQuery(adminStarPlayersQuerySchema), async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, ruleset } = req.query;
     const where: any = {};
-    
+
+    if (ruleset && ruleset !== "all") {
+      where.ruleset = resolveRuleset(ruleset as string);
+    }
+
     if (search) {
       where.OR = [
         { slug: { contains: search as string, mode: "insensitive" } },

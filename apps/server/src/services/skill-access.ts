@@ -163,3 +163,24 @@ export async function categoryCodeForSkill(
   });
   return dbCategoryToCode(skill?.category);
 }
+
+/**
+ * Variante de `categoryCodeForSkill` qui remonte aussi `excludedFromSelection`
+ * en un seul aller-retour DB — pour les call sites qui doivent à la fois
+ * catégoriser ET vérifier l'exclusivité (ex: level-up). Skill introuvable ⇒
+ * `excludedFromSelection: false` (le reste de la validation la rejettera déjà
+ * via `categoryCode: null`).
+ */
+export async function getSkillSelectionInfo(
+  slug: string,
+  ruleset: string,
+): Promise<{ categoryCode: SkillCategoryCode | null; excludedFromSelection: boolean }> {
+  const skill = await prisma.skill.findFirst({
+    where: { slug, ruleset: ruleset as never },
+    select: { category: true, excludedFromSelection: true },
+  });
+  return {
+    categoryCode: dbCategoryToCode(skill?.category),
+    excludedFromSelection: skill?.excludedFromSelection ?? false,
+  };
+}

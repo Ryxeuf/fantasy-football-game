@@ -548,6 +548,61 @@ describe("applyAdvancementChoice", () => {
     expect(out.addedSkill).toBe("mighty-blow");
   });
 
+  it("rejette une skill flaggee excludedFromSelection (reservee star player, ex: mighty-blow-2)", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    // Categorie Strength (dans le pool primaire) MAIS flaggee exclue.
+    mocked.skillFind.mockResolvedValue({
+      category: "Strength",
+      excludedFromSelection: true,
+    });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "mighty-blow-2",
+    });
+    expect(out).toEqual({ skipped: true, reason: "skill-excluded-from-selection" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("accepte une skill excludedFromSelection si deja possedee par le joueur", async () => {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "mighty-blow-2,block",
+      advancements: "[]",
+      dead: false,
+      position: "dwarf_blocker",
+      team: { roster: "dwarf", ruleset: "season_3" },
+    });
+    mocked.playerUpdate.mockResolvedValue({});
+    mocked.teamUpdate.mockResolvedValue({});
+    mocked.teamFind.mockResolvedValue({ currentValue: 1000000 });
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    mocked.skillFind.mockResolvedValue({
+      category: "Strength",
+      excludedFromSelection: true,
+    });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "mighty-blow-2",
+    });
+    if (!("applied" in out)) throw new Error("expected applied");
+    expect(out.applied).toBe(true);
+  });
+
   it("rejette une skill secondaire prise en primaire mais l'accepte en secondaire", async () => {
     mockEligiblePlayer();
     mocked.positionFind.mockResolvedValue({
@@ -586,8 +641,10 @@ describe("applyAdvancementChoice", () => {
     });
     if (!("applied" in out)) throw new Error("expected applied");
     expect(out.applied).toBe(true);
-    // skill.findFirst ne doit meme pas etre interroge si pas d'acces.
-    expect(mocked.skillFind).not.toHaveBeenCalled();
+    // skill.findFirst EST interroge (check excludedFromSelection,
+    // inconditionnel) meme si la validation de pool est skippee faute
+    // de donnees de position.
+    expect(mocked.skillFind).toHaveBeenCalled();
   });
 
   it("skip la validation quand les deux colonnes d'acces sont null", async () => {

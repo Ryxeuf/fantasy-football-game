@@ -10,6 +10,9 @@ vi.mock('../prisma', () => ({
   prisma: {
     team: { findFirst: vi.fn() },
     match: { findUnique: vi.fn() },
+    // Défensif : handleGetTeamDetail est maintenant DB-backed pour les Star
+    // Players (star-player-repository.ts) au lieu du catalogue statique.
+    starPlayer: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
 

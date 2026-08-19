@@ -1,12 +1,18 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
+
+const RULESET_LABELS: Record<string, string> = {
+  season_2: "Saison 2",
+  season_3: "Saison 3",
+};
 
 type StarPlayer = {
   id: string;
   slug: string;
+  ruleset: string;
   displayName: string;
   cost: number;
   ma: number;
@@ -86,7 +92,18 @@ async function deleteJSON(path: string) {
 }
 
 export default function AdminStarPlayersPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><p className="text-gray-600">Chargement...</p></div>}>
+      <AdminStarPlayersContent />
+    </Suspense>
+  );
+}
+
+function AdminStarPlayersContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlRuleset = searchParams?.get("ruleset") ?? "";
+
   const [starPlayers, setStarPlayers] = useState<StarPlayer[]>([]);
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,12 +114,23 @@ export default function AdminStarPlayersPage() {
   const [costMax, setCostMax] = useState<string>("");
   const [statsSearch, setStatsSearch] = useState<string>("");
   const [rosterFilter, setRosterFilter] = useState<string>("");
+  // Filtre saison : persisté dans l'URL (?ruleset=) pour survivre à un
+  // refresh, contrairement aux autres filtres (purement client-side).
+  const [rulesetFilter, setRulesetFilterState] = useState<string>(urlRuleset);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const setRulesetFilter = useCallback(
+    (value: string) => {
+      setRulesetFilterState(value);
+      const next = new URLSearchParams(searchParams?.toString() ?? "");
+      if (value) next.set("ruleset", value);
+      else next.delete("ruleset");
+      const qs = next.toString();
+      router.replace((qs ? `?${qs}` : "?") as never, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -117,8 +145,11 @@ export default function AdminStarPlayersPage() {
         window.location.href = "/";
         return;
       }
+      const spQuery = rulesetFilter
+        ? `?ruleset=${encodeURIComponent(rulesetFilter)}`
+        : "";
       const [{ starPlayers: spData }, { rosters: rostData }] = await Promise.all([
-        fetchJSON("/admin/data/star-players"),
+        fetchJSON(`/admin/data/star-players${spQuery}`),
         fetchJSON("/admin/data/rosters"),
       ]);
       setStarPlayers(spData);
@@ -128,7 +159,11 @@ export default function AdminStarPlayersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [rulesetFilter]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Calculate min/max cost for gauge normalization (convert from po to k)
   const costRange = useMemo(() => {
@@ -343,6 +378,20 @@ export default function AdminStarPlayersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Saison
+            </label>
+            <select
+              value={rulesetFilter}
+              onChange={(e) => setRulesetFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+            >
+              <option value="">Toutes les saisons</option>
+              <option value="season_2">Saison 2</option>
+              <option value="season_3">Saison 3</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Roster
             </label>
             <select
@@ -404,7 +453,7 @@ export default function AdminStarPlayersPage() {
             </p>
           </div>
         </div>
-        {(nameSearch || skillSearch || costMin || costMax || statsSearch || rosterFilter) && (
+        {(nameSearch || skillSearch || costMin || costMax || statsSearch || rosterFilter || rulesetFilter) && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => {
@@ -414,6 +463,7 @@ export default function AdminStarPlayersPage() {
                 setCostMax("");
                 setStatsSearch("");
                 setRosterFilter("");
+                setRulesetFilter("");
               }}
               className="text-sm text-gray-600 hover:text-gray-800 underline"
             >
@@ -432,6 +482,9 @@ export default function AdminStarPlayersPage() {
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Nom
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Saison
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Coût
@@ -453,7 +506,7 @@ export default function AdminStarPlayersPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredStarPlayers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     Aucun Star Player trouvé
                   </td>
                 </tr>
@@ -465,6 +518,11 @@ export default function AdminStarPlayersPage() {
                   >
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {sp.displayName}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                        {RULESET_LABELS[sp.ruleset] ?? sp.ruleset}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <CostGauge cost={sp.cost} />
