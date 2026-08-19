@@ -1,3 +1,10 @@
+## [1.233.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.232.0...v1.233.0) (2026-08-19)
+
+
+### ✨ Features
+
+* **web:** aide de jeu mobile-first, companion de table ([#959](https://github.com/Ryxeuf/fantasy-football-game/issues/959)) ([3a1e4f5](https://github.com/Ryxeuf/fantasy-football-game/commit/3a1e4f5bb8bb5d76644a3a050df4ec26f4662e90))
+
 ## [1.232.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.231.1...v1.232.0) (2026-08-19)
 
 
