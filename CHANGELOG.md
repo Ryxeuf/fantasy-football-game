@@ -1,3 +1,10 @@
+## [1.231.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.231.0...v1.231.1) (2026-08-19)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** seuil du micro-bench evaluatePosition trop strict pour CI ([ddc893c](https://github.com/Ryxeuf/fantasy-football-game/commit/ddc893ccfabce624b9530375b311f92cb0fabb5a))
+
 ## [1.231.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.230.0...v1.231.0) (2026-08-18)
 
 
