@@ -7,7 +7,12 @@ import { GameState, PreMatchState, TeamId, ActionType, Player, Position, RNG } f
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns, resolveKickoffBallLanding } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
-import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
+import {
+  rollKickoffEvent,
+  applyKickoffEvent,
+  restoreDriveStatModifiers,
+  INTERACTIVE_KICKOFF_EVENT_IDS,
+} from '../mechanics/kickoff-events';
 import { applyKickSkillToDeviation } from '../mechanics/kick-skill';
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import { FULL_RULES, getRulesConfig, type RulesConfig, type RulesMode } from './rules-config';
@@ -661,9 +666,13 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       // modal stale au debut de la 2e mi-temps, ou pire le pending etait
       // applique au joueur d'une autre equipe. Fix : reset explicite.
       const extState = newState as ExtendedGameState;
-      const clearedState = clearAllPendingStates(newState);
+      // Fin de Phase : les malus limites au drive (coup d'envoi
+      // « En-cas suspect ») et le bonus « Fans en folie » expirent.
+      const clearedState = restoreDriveStatModifiers(clearAllPendingStates(newState));
       const resultState: GameState = {
         ...clearedState,
+        cheeringFansAssist: undefined,
+        kickoffBlitzPlayerIds: undefined,
         gamePhase: 'halftime' as const,
         half: 2,
         turn: 1,
@@ -956,9 +965,13 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   // vers endzone (pendingPushChoice actif) ou un apothecary non resolu
   // laisse l'UI avec une modale fantome au drive suivant.
   // Cf. docs/engine-audit-2026-05-19-full.md (bug B1).
-  const clearedState = clearAllPendingStates(newState);
+  // Fin de Phase : les malus limites au drive (coup d'envoi « En-cas
+  // suspect ») et le bonus « Fans en folie » expirent.
+  const clearedState = restoreDriveStatModifiers(clearAllPendingStates(newState));
   const resultState = {
     ...clearedState,
+    cheeringFansAssist: undefined,
+    kickoffBlitzPlayerIds: undefined,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
     currentPlayer: receivingTeam,
@@ -1864,40 +1877,33 @@ export function resolveKickoffEvent(state: ExtendedGameState, rng: () => number)
     return state;
   }
 
-  const dice1 = Math.floor(rng() * 6) + 1;
-  const dice2 = Math.floor(rng() * 6) + 1;
-  const total = dice1 + dice2;
-
-  // Table des événements de kickoff (simplifiée)
-  const events: { [key: number]: { event: string; description: string } } = {
-    2: { event: 'Get the Ref', description: 'Chaque équipe gagne un Bribe gratuit' },
-    3: { event: 'Riot', description: 'Les fans envahissent le terrain - tous les joueurs sont repoussés' },
-    4: { event: 'Perfect Defense', description: 'L\'équipe qui frappe peut repositionner D3 joueurs' },
-    5: { event: 'High Kick', description: 'Le ballon est lancé haut - +1 pour attraper' },
-    6: { event: 'Cheering Fans', description: 'Les fans encouragent - +1 Fan Factor pour cette mi-temps' },
-    7: { event: 'Changing Weather', description: 'Le temps change - relancer la météo' },
-    8: { event: 'Brilliant Coaching', description: 'L\'équipe qui frappe peut utiliser une reroll gratuite' },
-    9: { event: 'Quick Snap', description: 'L\'équipe qui reçoit peut activer un joueur supplémentaire' },
-    10: { event: 'Blitz', description: 'L\'équipe qui frappe peut activer D3+3 joueurs immédiatement' },
-    11: { event: 'Officious Ref', description: 'L\'arbitre est strict - risque d\'exclusion' },
-    12: { event: 'Pitch Invasion', description: 'Invasion du terrain - D3 joueurs de chaque équipe sont sonnés' },
-  };
-
-  const eventData = events[total] || { event: 'Normal', description: 'Kickoff normal' };
+  // Table 2D6 unique : `mechanics/kickoff-events.ts` (saison 2025). Cette
+  // fonction dupliquait auparavant une table obsolete (Riot, Perfect
+  // Defense, Officious Ref…) qui n'appliquait de surcroit AUCUN effet.
+  const { total, event } = rollKickoffEvent(rng);
+  const kickingTeam: TeamId = state.preMatch.kickingTeam ?? state.kickingTeam ?? 'A';
 
   const logEntry = createLogEntry(
     'action',
-    `Événement de kickoff: ${dice1}+${dice2}=${total} - ${eventData.event}: ${eventData.description}`,
+    `Événement de coup d'envoi : 2D6=${total} — ${event.nameFr} : ${event.description}`,
     undefined,
     state.preMatch.kickingTeam
   );
 
+  // Les evenements interactifs (Solide defense, Chandelle, Surprise,
+  // Charge) posent un `pendingKickoffEvent` qu'aucune UI ne sait encore
+  // resoudre : les appliquer bloquerait le match. On les logge sans les
+  // appliquer, comme le fait le driver headless du sim-engine.
+  const applied = INTERACTIVE_KICKOFF_EVENT_IDS.has(event.id)
+    ? state
+    : (applyKickoffEvent(state, event, rng, kickingTeam) as ExtendedGameState);
+
   return {
-    ...state,
+    ...applied,
     preMatch: {
       ...state.preMatch,
-      kickoffEvent: { dice: total, event: eventData.event, description: eventData.description },
+      kickoffEvent: { dice: total, event: event.nameFr, description: event.description },
     },
-    gameLog: [...state.gameLog, logEntry],
+    gameLog: [...applied.gameLog, logEntry],
   };
 }
