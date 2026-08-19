@@ -43,6 +43,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.8,
     }),
+    sitemapEntryWithAlternates('/aide-de-jeu', {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    }),
     sitemapEntryWithAlternates('/tutoriel', {
       lastModified: now,
       changeFrequency: 'monthly',

@@ -205,6 +205,7 @@ export default function Header() {
             {openDropdown === "compendium" && (
               <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
                 {dropdownItem("/recherche", "🔍", "Rechercher")}
+                {dropdownItem("/aide-de-jeu", "🎲", "Aide de jeu")}
                 {dropdownItem("/compendium", "📜", t.nav.rules)}
                 {dropdownItem("/teams", "⚽", t.nav.teams)}
                 {dropdownItem("/ligues", "🏆", "Ligues")}
@@ -400,6 +401,13 @@ export default function Header() {
                 className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 🔍 Rechercher
+              </a>
+              <a
+                href="/aide-de-jeu"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                🎲 Aide de jeu
               </a>
               <a
                 href="/compendium"
