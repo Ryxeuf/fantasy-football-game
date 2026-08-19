@@ -614,13 +614,30 @@ au role DIFFERENT, a garder coherentes **dans le meme commit** :
   (index + `[slug]`, SSG `generateStaticParams`, ISR 3600s). Pas de DB.
   Disclaimer de non-affiliation rendu dans `layout.tsx`.
 
+- **Regles cablees dans le moteur (3e representation)** : quand une regle
+  transcrite est aussi implementee, le code est la 3e representation a
+  garder alignee. Cas connu : la table 2D6 de coup d'envoi vit dans
+  `packages/game-engine/src/mechanics/kickoff-events.ts`
+  (`KICKOFF_EVENTS`), qui alimente le moteur ET la liste deroulante de
+  saisie des feuilles de match de ligue
+  (`apps/web/app/leagues/pairings/[id]/sheet`). Le garde-fou est
+  `apps/web/app/compendium/kickoff-table-consistency.test.ts` (les 11
+  `nameFr` du moteur == les 11 lignes publiees).
+
 **Regle** : le `.json` ne recopie PAS les phrases du `.md` (sinon le risque
 PI revient). Toute evolution d'une regle (correction, nouvelle edition,
 ajout/retrait de chapitre) se repercute sur le `.md` (transcription) ET sur
-le `.json` (version reformulee), en gardant la MEME structure (chapitres,
-`sourcePages`) et le meme SENS — mais des formulations distinctes. Bumper
-`meta.version`. Apres edition du `.json`, `pnpm --filter web typecheck` +
-`pnpm --filter web vitest run app/compendium/data.test.ts` doivent passer.
+le `.json` (version reformulee) ET sur le code du moteur s'il implemente la
+regle, en gardant la MEME structure (chapitres, `sourcePages`) et le meme
+SENS — mais des formulations distinctes. Bumper `meta.version`. Apres
+edition du `.json`, `pnpm --filter web typecheck` +
+`pnpm --filter web vitest run app/compendium` doivent passer.
+
+> Piege verifie (aout 2026) : le compendium publie peut etre juste alors
+> que le moteur sert encore la table de l'edition precedente. Les
+> identifiants d'evenement etant persistes dans les feuilles de match
+> (`LeagueMatchEvent.meta.kickoffEvent`), tout renommage doit passer par
+> `LEGACY_KICKOFF_EVENT_IDS` pour que l'historique reste lisible.
 
 ## Historique sessions
 
