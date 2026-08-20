@@ -528,6 +528,8 @@ export interface StandingRow {
   forfeitPoints?: number;
   /** F1 — Passes réussies (colonne "P"). */
   passes?: number;
+  /** Interceptions réussies (classements par équipe). */
+  interceptions?: number;
   /** F1 — Agressions commises (colonne "Agr"). */
   aggressions?: number;
   /** F1 — Sorties infligées par le public (colonne "SP"). */
@@ -708,6 +710,7 @@ export function attachExtraStats(
       forfeitPoints:
         stats.forfeits === 0 ? 0 : stats.forfeits * forfeitPointsPerForfeit,
       passes: stats.passes,
+      interceptions: stats.interceptions,
       aggressions: stats.aggressions,
       crowdSurges: stats.crowdSurges,
       expulsions: stats.expulsions,

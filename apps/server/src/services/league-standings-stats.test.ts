@@ -34,11 +34,12 @@ function count(
 }
 
 describe("foldSeasonExtraStats — comptage par kind", () => {
-  it("attribue passes / agressions / sorties public / exclusions au bon côté", () => {
+  it("attribue passes / interceptions / agressions / sorties public / exclusions au bon côté", () => {
     const result = foldSeasonExtraStats(
       [pairing()],
       [
         count({ kind: "pass_complete", team: "home", count: 4 }),
+        count({ kind: "interception", team: "home", count: 2 }),
         count({ kind: "aggression", team: "home", count: 2 }),
         count({ kind: "crowd_surge", team: "away", count: 1 }),
         count({ kind: "expulsion", team: "away", count: 3 }),
@@ -48,6 +49,7 @@ describe("foldSeasonExtraStats — comptage par kind", () => {
     expect(result.get("home-1")).toEqual({
       forfeits: 0,
       passes: 4,
+      interceptions: 2,
       aggressions: 2,
       crowdSurges: 0,
       expulsions: 0,
@@ -55,6 +57,7 @@ describe("foldSeasonExtraStats — comptage par kind", () => {
     expect(result.get("away-1")).toEqual({
       forfeits: 0,
       passes: 0,
+      interceptions: 0,
       aggressions: 0,
       crowdSurges: 1,
       expulsions: 3,
@@ -185,11 +188,12 @@ describe("foldSeasonExtraStats — entrées par défaut", () => {
 });
 
 describe("TRACKED_EVENT_KINDS", () => {
-  it("liste exactement les 4 kinds exposés au classement", () => {
+  it("liste exactement les 5 kinds exposés au classement", () => {
     expect([...TRACKED_EVENT_KINDS].sort()).toEqual([
       "aggression",
       "crowd_surge",
       "expulsion",
+      "interception",
       "pass_complete",
     ]);
   });

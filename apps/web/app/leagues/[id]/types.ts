@@ -231,6 +231,8 @@ export interface StandingRow {
   forfeitPoints?: number;
   /** F1 — Passes réussies (colonne "P"). */
   passes?: number;
+  /** Interceptions réussies (tops par équipe ; pas de colonne F1). */
+  interceptions?: number;
   /** F1 — Agressions commises (colonne "Agr"). */
   aggressions?: number;
   /** F1 — Sorties infligées par le public (colonne "SP"). */

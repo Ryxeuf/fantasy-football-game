@@ -96,6 +96,10 @@ import {
   LEADERBOARD_CATEGORIES,
 } from "../services/league-player-stats";
 import {
+  computeTeamLeaderboards,
+  TEAM_LEADERBOARD_CATEGORIES,
+} from "../services/league-team-stats";
+import {
   adjustPlayerSpp,
   addPlayerSkill,
   removePlayerSkill,
@@ -2026,6 +2030,33 @@ export async function handleGetLeaderboardsByTeam(
 }
 
 /**
+ * GET /leagues/seasons/:seasonId/leaderboards/teams?topN=5
+ * Tops PAR EQUIPE (totaux de saison) : « les 5 meilleures equipes
+ * marqueuses de TD », meilleure defense, etc. Endpoint public comme
+ * les classements joueurs.
+ */
+export async function handleGetTeamLeaderboards(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const topNRaw = req.query.topN;
+  const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
+  try {
+    const catalogue = await computeTeamLeaderboards({
+      seasonId,
+      topN: Number.isFinite(topN) ? topN : undefined,
+    });
+    sendSuccess(res, {
+      ...catalogue,
+      categories: TEAM_LEADERBOARD_CATEGORIES,
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * PATCH /leagues/seasons/:seasonId/playoff-bracket/participants
  *
  * Le commissaire fournit la liste complete des seeds du bracket
@@ -2659,6 +2690,12 @@ router.get("/seasons/:seasonId/leaderboards", handleGetLeaderboards);
 router.get(
   "/seasons/:seasonId/leaderboards/by-team",
   handleGetLeaderboardsByTeam,
+);
+// Tops PAR EQUIPE (totaux de saison) — mode « Par equipe » de la page
+// classements (top 5 equipes marqueuses de TD, etc.).
+router.get(
+  "/seasons/:seasonId/leaderboards/teams",
+  handleGetTeamLeaderboards,
 );
 
 // Roster en lecture seule, visible par tout coach inscrit a la ligue.

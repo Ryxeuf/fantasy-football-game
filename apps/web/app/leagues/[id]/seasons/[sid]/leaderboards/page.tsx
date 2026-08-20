@@ -42,12 +42,34 @@ interface PlayerStatsCatalogue {
   categories: Array<{ key: keyof PlayerStatsCatalogue; label: string; description: string }>;
 }
 
-interface ByTeamResponse {
+/** Tops PAR EQUIPE (totaux de saison) — mode « Par equipe ». */
+interface TeamStatRow {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  roster: string;
+  logoUrl: string | null;
+  ownerId: string;
+  coachName: string | null;
+  value: number;
+  played: number;
+}
+
+interface TeamStatsCatalogue {
   seasonId: string;
-  teams: Array<{
-    teamId: string;
-    teamName: string;
-    catalogue: PlayerStatsCatalogue;
+  topN: number;
+  topScorers: TeamStatRow[];
+  bestDefenses: TeamStatRow[];
+  topBashers: TeamStatRow[];
+  topMartyrs: TeamStatRow[];
+  topPassers: TeamStatRow[];
+  topInterceptors: TeamStatRow[];
+  topAggressors: TeamStatRow[];
+  topCrowdSurges: TeamStatRow[];
+  categories: Array<{
+    key: keyof TeamStatsCatalogue;
+    label: string;
+    description: string;
   }>;
 }
 
@@ -68,6 +90,10 @@ const CATEGORY_STYLE: Record<
   topFutureStars: { icon: "⭐", accent: "bg-yellow-50 border-yellow-200" },
   topMvps: { icon: "🏅", accent: "bg-purple-50 border-purple-200" },
   topPunchingBags: { icon: "🩹", accent: "bg-rose-50 border-rose-200" },
+  // Catégories des tops PAR ÉQUIPE (totaux).
+  bestDefenses: { icon: "🛡️", accent: "bg-teal-50 border-teal-200" },
+  topMartyrs: { icon: "🩹", accent: "bg-rose-50 border-rose-200" },
+  topCrowdSurges: { icon: "📣", accent: "bg-fuchsia-50 border-fuchsia-200" },
 };
 
 const DEFAULT_CATEGORY_STYLE = {
@@ -109,7 +135,7 @@ export default function LeaderboardsPage() {
   const [mode, setMode] = useState<Mode>("global");
   const [topN, setTopN] = useState(5);
   const [global, setGlobal] = useState<PlayerStatsCatalogue | null>(null);
-  const [byTeam, setByTeam] = useState<ByTeamResponse | null>(null);
+  const [teams, setTeams] = useState<TeamStatsCatalogue | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,12 +149,14 @@ export default function LeaderboardsPage() {
           `/leagues/seasons/${seasonId}/leaderboards?topN=${topN}`,
         );
         setGlobal(data);
-        setByTeam(null);
+        setTeams(null);
       } else {
-        const data = await apiRequest<ByTeamResponse>(
-          `/leagues/seasons/${seasonId}/leaderboards/by-team?topN=${topN}`,
+        // « Par équipe » = tops des TOTAUX par équipe (les 5 meilleures
+        // équipes marqueuses de TD, etc.), pas le détail par joueur.
+        const data = await apiRequest<TeamStatsCatalogue>(
+          `/leagues/seasons/${seasonId}/leaderboards/teams?topN=${topN}`,
         );
-        setByTeam(data);
+        setTeams(data);
         setGlobal(null);
       }
     } catch (e: unknown) {
@@ -175,9 +203,9 @@ export default function LeaderboardsPage() {
           ) : null}
         </div>
         <p className="mt-1 text-sm text-gray-500">
-          Les meilleurs joueurs de la saison, catégorie par catégorie —
-          agrégés depuis les feuilles de match (repli sur les compteurs
-          carrière tant qu&apos;aucune feuille n&apos;est saisie).
+          {mode === "global"
+            ? "Les meilleurs joueurs de la saison, catégorie par catégorie — agrégés depuis les feuilles de match (repli sur les compteurs carrière tant qu'aucune feuille n'est saisie)."
+            : "Les meilleures équipes de la saison sur chaque total : touchdowns marqués, défense, éliminations, passes…"}
         </p>
       </div>
 
@@ -257,7 +285,9 @@ export default function LeaderboardsPage() {
       {!loading && mode === "global" && global && (
         <GlobalView catalogue={global} />
       )}
-      {!loading && mode === "by-team" && byTeam && <ByTeamView data={byTeam} />}
+      {!loading && mode === "by-team" && teams && (
+        <TeamsView catalogue={teams} />
+      )}
     </main>
   );
 }
@@ -284,36 +314,111 @@ function GlobalView({ catalogue }: { catalogue: PlayerStatsCatalogue }) {
   );
 }
 
-function ByTeamView({ data }: { data: ByTeamResponse }) {
+/**
+ * Tops par ÉQUIPE : une carte par catégorie, chaque ligne est une
+ * équipe et la valeur son TOTAL de saison (top 5 équipes marqueuses
+ * de TD, meilleure défense, etc.).
+ */
+function TeamsView({ catalogue }: { catalogue: TeamStatsCatalogue }) {
   return (
-    <div className="space-y-6" data-testid="leaderboards-byteam">
-      {data.teams.map((t) => (
-        <section
-          key={t.teamId}
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
+    <div
+      className="grid grid-cols-1 gap-4 md:grid-cols-2"
+      data-testid="leaderboards-teams"
+    >
+      {(catalogue.categories ?? []).map((cat) => {
+        const rows = (catalogue[cat.key] as unknown) as TeamStatRow[];
+        return (
+          <TeamLeaderboardCard
+            key={cat.key}
+            categoryKey={cat.key as string}
+            label={cat.label}
+            description={cat.description}
+            rows={Array.isArray(rows) ? rows : []}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function TeamLeaderboardCard({
+  categoryKey,
+  label,
+  description,
+  rows,
+}: {
+  categoryKey: string;
+  label: string;
+  description: string;
+  rows: TeamStatRow[];
+}) {
+  const style = CATEGORY_STYLE[categoryKey] ?? DEFAULT_CATEGORY_STYLE;
+  return (
+    <div
+      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      data-testid={`team-leaderboard-card-${categoryKey}`}
+    >
+      <div className="flex items-start gap-2.5">
+        <span
+          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-lg ${style.accent}`}
+          aria-hidden="true"
         >
-          <h2 className="mb-3 text-lg font-semibold text-nuffle-anthracite">
-            {t.teamName}
-          </h2>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {(t.catalogue.categories ?? []).map((cat) => {
-              const rows = (t.catalogue[cat.key] as unknown) as PlayerStatRow[];
-              return (
-                <LeaderboardCard
-                  key={`${t.teamId}-${cat.key}`}
-                  categoryKey={cat.key as string}
-                  label={cat.label}
-                  description={cat.description}
-                  rows={Array.isArray(rows) ? rows : []}
-                  compact
-                />
-              );
-            })}
-          </div>
-        </section>
-      ))}
-      {data.teams.length === 0 && (
-        <p className="text-sm italic text-gray-400">Aucune equipe inscrite.</p>
+          {style.icon}
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-semibold leading-tight text-nuffle-anthracite">
+            {label}
+          </h3>
+          <p className="text-xs text-gray-500">{description}</p>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm italic text-gray-400">
+          Pas encore de données cette saison.
+        </p>
+      ) : (
+        <ol className="mt-3 space-y-1">
+          {rows.map((r) => (
+            <li
+              key={r.teamId}
+              className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm ${
+                r.rank === 1
+                  ? "border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50"
+                  : ""
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <RankChip rank={r.rank} />
+                <span className="min-w-0">
+                  <span
+                    className={`font-semibold text-nuffle-anthracite ${
+                      r.rank === 1 ? "" : "font-medium"
+                    }`}
+                  >
+                    {r.teamName}
+                  </span>
+                  <span className="ml-1.5 inline-flex items-center gap-1 text-xs text-gray-500">
+                    <TeamDot roster={r.roster} />
+                    <span className="truncate">
+                      {r.coachName ? `${r.coachName} — ` : ""}
+                      {r.played} MJ
+                    </span>
+                  </span>
+                </span>
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-xs font-bold ${
+                  r.rank === 1
+                    ? "bg-nuffle-gold/20 text-nuffle-bronze"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {r.value}
+              </span>
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   );

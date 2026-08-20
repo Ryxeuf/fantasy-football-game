@@ -79,13 +79,48 @@ describe("LeaderboardsPage", () => {
     );
   });
 
-  it("bascule en mode par équipe via le segmented control", async () => {
+  it("bascule en mode par équipe : tops des TOTAUX par équipe", async () => {
+    // « Par équipe » = classements d'ÉQUIPES sur les totaux (les 5
+    // meilleures équipes marqueuses de TD…), pas le détail par joueur.
+    const TEAM_CATALOGUE = {
+      seasonId: "S1",
+      topN: 5,
+      topScorers: [
+        {
+          rank: 1,
+          teamId: "T1",
+          teamName: "Reavers",
+          roster: "human",
+          logoUrl: null,
+          ownerId: "u1",
+          coachName: "Sepp",
+          value: 12,
+          played: 4,
+        },
+      ],
+      bestDefenses: [],
+      topBashers: [],
+      topMartyrs: [],
+      topPassers: [],
+      topInterceptors: [],
+      topAggressors: [],
+      topCrowdSurges: [],
+      categories: [
+        {
+          key: "topScorers",
+          label: "Marqueurs de TD",
+          description: "Le plus de touchdowns marqués.",
+        },
+        {
+          key: "bestDefenses",
+          label: "Meilleure défense",
+          description: "Le moins de touchdowns encaissés.",
+        },
+      ],
+    };
     apiRequestMock.mockImplementation((path: string) =>
-      path.includes("/by-team")
-        ? Promise.resolve({
-            seasonId: "S1",
-            teams: [{ teamId: "T1", teamName: "Reavers", catalogue: CATALOGUE }],
-          })
+      path.includes("/leaderboards/teams")
+        ? Promise.resolve(TEAM_CATALOGUE)
         : Promise.resolve(CATALOGUE),
     );
     render(<LeaderboardsPage />);
@@ -95,11 +130,20 @@ describe("LeaderboardsPage", () => {
 
     fireEvent.click(screen.getByTestId("leaderboards-mode-by-team"));
     await waitFor(() =>
-      expect(screen.getByTestId("leaderboards-byteam")).toBeTruthy(),
+      expect(screen.getByTestId("leaderboards-teams")).toBeTruthy(),
     );
     expect(apiRequestMock).toHaveBeenCalledWith(
-      "/leagues/seasons/S1/leaderboards/by-team?topN=5",
+      "/leagues/seasons/S1/leaderboards/teams?topN=5",
     );
-    expect(screen.getByText("Reavers")).toBeTruthy();
+    // Carte remplie : équipe en tête avec total, coach et matchs joués.
+    const card = screen.getByTestId("team-leaderboard-card-topScorers");
+    expect(card.textContent).toContain("Reavers");
+    expect(card.textContent).toContain("12");
+    expect(card.textContent).toContain("Sepp");
+    expect(card.textContent).toContain("4 MJ");
+    // Carte vide : état explicite.
+    expect(
+      screen.getByTestId("team-leaderboard-card-bestDefenses").textContent,
+    ).toContain("Pas encore de données");
   });
 });
