@@ -1050,7 +1050,12 @@ export async function validateByCommissioner(input: {
     where: { matchSheetId: sheet.id },
     orderBy: { occurredAt: "asc" },
   })) as Array<MatchEventInput & { meta?: unknown }>;
-  const summary = summarizeMatchSheet(events);
+  // Les PSP d'une Élimination sur Action Spéciale ne vont qu'aux joueurs
+  // ayant Innovateur Violent : le summarizer a besoin de leurs ids.
+  const teamsForBudgetLive = await loadSheetTeams(input.pairingId);
+  const summary = summarizeMatchSheet(events, {
+    violentInnovators: collectViolentInnovators(teamsForBudgetLive),
+  });
 
   // Forfait declare a l'avant-match : on route vers recordForfeit (le cote
   // adverse gagne 2-0, bareme forfeit) au lieu de la saisie normale. Pas de
@@ -1082,7 +1087,6 @@ export async function validateByCommissioner(input: {
   // de l'excedent de coups de pouce au-dela du petty cash recu. A55 — la
   // cagnotte de l'underdog inclut la depense adverse. Les CTV/tresoreries
   // utilisees sont FIGEES au debut du match (snapshot 1re soumission).
-  const teamsForBudgetLive = await loadSheetTeams(input.pairingId);
   const sheetSnapForBudget = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
@@ -1740,6 +1744,32 @@ function parseFrozenTeamValues(raw: unknown): {
   };
 }
 
+/**
+ * Ids des joueurs (des 2 équipes) ayant la compétence « Innovateur
+ * Violent ». Le summarizer ne crédite les PSP d'une Élimination sur
+ * Action Spéciale (`special_elim`) qu'à ces joueurs (règle BB S3).
+ */
+function collectViolentInnovators(teams: {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}): Set<string> {
+  const out = new Set<string>();
+  for (const team of [teams.home, teams.away]) {
+    for (const p of team?.players ?? []) {
+      const slugs = (p.skills ?? "")
+        .split(",")
+        .map((sk) => sk.trim().toLowerCase());
+      if (
+        slugs.includes("violent-innovator") ||
+        slugs.includes("violent_innovator")
+      ) {
+        out.add(p.id);
+      }
+    }
+  }
+  return out;
+}
+
 /** Applique les valeurs figées du snapshot sur une équipe chargée live. */
 function withFrozenTeamValues(
   team: MatchSheetTeam | null,
@@ -2088,7 +2118,9 @@ export async function getMatchSheet(input: {
     home: withFrozenTeamValues(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
     away: withFrozenTeamValues(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
   };
-  const summary = summarizeMatchSheet(events);
+  const summary = summarizeMatchSheet(events, {
+    violentInnovators: collectViolentInnovators(teamsLive),
+  });
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).

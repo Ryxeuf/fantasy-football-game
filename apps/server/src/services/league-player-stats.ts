@@ -245,6 +245,7 @@ export async function computeLeaderboards(input: {
     "crowd_surge",
     "aggression",
     "other_elim",
+    "special_elim",
   ]);
   try {
     const events = (await (
@@ -286,9 +287,12 @@ export async function computeLeaderboards(input: {
         if (e.kind === "touchdown") bump(tdCounts, e.actorPlayerId);
         if (e.kind === "pass_complete") bump(compCounts, e.actorPlayerId);
         if (e.kind === "interception") bump(intCounts, e.actorPlayerId);
-        if (e.kind === "casualty") bump(casCounts, e.actorPlayerId);
-        if (e.kind === "casualty" && e.injurySeverity === "dead") {
-          bump(killCounts, e.actorPlayerId);
+        // `special_elim` (Action Spéciale) compte comme sortie infligée
+        // dans les classements de saison, quel que soit le porteur
+        // d'Innovateur Violent (le gating ne concerne que les PSP).
+        if (e.kind === "casualty" || e.kind === "special_elim") {
+          bump(casCounts, e.actorPlayerId);
+          if (e.injurySeverity === "dead") bump(killCounts, e.actorPlayerId);
         }
         if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
         if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);

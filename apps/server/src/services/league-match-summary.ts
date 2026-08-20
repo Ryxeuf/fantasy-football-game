@@ -26,6 +26,7 @@ export type MatchEventKind =
   | "stalling"
   | "team_throw"
   | "ttm_landing"
+  | "special_elim"
   | "other_elim";
 
 export type MatchEventTeam = "home" | "away";
@@ -106,7 +107,20 @@ const CASUALTY_BEARING = new Set<MatchEventKind>([
   "aggression",
   "other_elim",
   "crowd_surge",
+  "special_elim",
 ]);
+
+export interface MatchSummaryOptions {
+  /**
+   * Ids des joueurs ayant la compétence « Innovateur Violent »
+   * (violent-innovator). BB S3 : une Élimination infligée par une
+   * Action Spéciale ne rapporte AUCUN PSP… sauf si son auteur a cette
+   * compétence — il gagne alors les PSP d'Élimination (2, ou 3 via le
+   * modificateur Bagarreurs Brutaux appliqué en aval par
+   * calculatePlayerSPP).
+   */
+  readonly violentInnovators?: ReadonlySet<string>;
+}
 
 /**
  * Resume un journal d'evenements. Determinisme total : meme entree ->
@@ -115,6 +129,7 @@ const CASUALTY_BEARING = new Set<MatchEventKind>([
  */
 export function summarizeMatchSheet(
   events: ReadonlyArray<MatchEventInput>,
+  options: MatchSummaryOptions = {},
 ): MatchSummary {
   let scoreHome = 0;
   let scoreAway = 0;
@@ -173,6 +188,33 @@ export function summarizeMatchSheet(
         // est le joueur LANCE, qui gagne 1 PSP (cf. spp-tracking).
         if (ev.actorPlayerId && team) {
           ensureStat(ev.actorPlayerId, team).ttmLandings += 1;
+        }
+        break;
+      }
+      case "special_elim": {
+        // Élimination infligée par une Action Spéciale (tronçonneuse,
+        // bombe, botte…). BB : aucune PSP pour l'attaquant — SAUF s'il a
+        // la compétence Innovateur Violent : il gagne alors les PSP
+        // d'Élimination de son équipe (2, ou 3 en Bagarreurs Brutaux via
+        // le modificateur appliqué par calculatePlayerSPP).
+        const severity = normalizeSeverity(ev.injurySeverity);
+        if (!severity) break;
+        if (team === "home") casualtiesHome += 1;
+        else if (team === "away") casualtiesAway += 1;
+        if (
+          ev.actorPlayerId &&
+          team &&
+          options.violentInnovators?.has(ev.actorPlayerId)
+        ) {
+          ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+        }
+        if (ev.targetPlayerId) {
+          injuries.push({
+            playerId: ev.targetPlayerId,
+            severity,
+            side: team ? opposite(team) : "home",
+            cause: ev.causeDetail ?? ev.kind,
+          });
         }
         break;
       }
@@ -257,6 +299,7 @@ export const MATCH_EVENT_KINDS: ReadonlyArray<MatchEventKind> = [
   "stalling",
   "team_throw",
   "ttm_landing",
+  "special_elim",
   "other_elim",
 ];
 

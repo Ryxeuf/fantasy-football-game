@@ -50,6 +50,7 @@ type EventKind =
   | "stalling"
   | "team_throw"
   | "ttm_landing"
+  | "special_elim"
   | "other_elim";
 
 const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
@@ -64,6 +65,7 @@ const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
   { value: "stalling", label: "Temporisation" },
   { value: "team_throw", label: "Lancer de coéquipier" },
   { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
+  { value: "special_elim", label: "Élimination sur Action Spéciale" },
   { value: "other_elim", label: "Autre élimination" },
 ];
 
@@ -86,6 +88,7 @@ const TARGET_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
   "casualty",
   "aggression",
   "crowd_surge",
+  "special_elim",
 ]);
 
 // A59/A61 — types pouvant porter une blessure : élimination sur blocage,
@@ -95,6 +98,7 @@ const INJURY_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
   "aggression",
   "crowd_surge",
   "other_elim",
+  "special_elim",
 ]);
 
 // A68 — caractéristique affectée par une Séquelle (stat_loss). Codes

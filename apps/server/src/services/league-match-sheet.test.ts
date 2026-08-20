@@ -709,6 +709,86 @@ describe("Lot G — league-match-sheet", () => {
       expect(call.select.players.where).toEqual({ firedAt: null });
     });
 
+    it("Innovateur Violent : les PSP d'une Élimination sur Action Spéciale vont au porteur", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-violent",
+            targetPlayerId: "a-victim",
+            injurySeverity: "mng",
+          },
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-normal",
+            targetPlayerId: "a-victim2",
+            injurySeverity: "mng",
+          },
+        ],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          players: [
+            {
+              id: "h-violent",
+              number: 1,
+              name: "Sawyer",
+              position: "human_lineman",
+              dead: false,
+              missNextMatch: false,
+              spp: 0,
+              skills: "chainsaw,violent-innovator",
+              advancements: "[]",
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+            },
+            {
+              id: "h-normal",
+              number: 2,
+              name: "Bob",
+              position: "human_lineman",
+              dead: false,
+              missNextMatch: false,
+              spp: 0,
+              skills: "chainsaw",
+              advancements: "[]",
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+            },
+          ],
+        },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", players: [] },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // 2 PSP (valeur élimination vanilla) pour le porteur, rien pour
+      // l'autre acteur (Action Spéciale sans Innovateur Violent).
+      expect(out.computedSpp["h-violent"]).toBe(2);
+      expect(out.computedSpp["h-normal"] ?? 0).toBe(0);
+      // Les 2 éliminations comptent au score de sorties de l'équipe.
+      expect(out.summary.casualtiesHome).toBe(2);
+    });
+
     it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
