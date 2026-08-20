@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
-import SkillSelector from "../../SkillSelector";
+import { SkillMultiSelect } from "../../../_components/SkillMultiSelect";
 import SkillAccessSelector from "../../SkillAccessSelector";
 import { getRulesetLabel } from "../../../ruleset-utils";
 
@@ -330,7 +330,7 @@ export default function EditPositionPage() {
           </div>
           <div className="col-span-3">
             {skills.length > 0 ? (
-              <SkillSelector
+              <SkillMultiSelect
                 skills={skills}
                 selectedSlugs={selectedSkillSlugs}
                 onChange={setSelectedSkillSlugs}
