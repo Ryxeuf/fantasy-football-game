@@ -200,6 +200,7 @@ export function cloneGameState(state: GameState): GameState {
     };
   }
   if (state.dedicatedFans) next.dedicatedFans = { ...state.dedicatedFans };
+  if (state.fanFactors) next.fanFactors = { ...state.fanFactors };
   if (state.assistantCoaches) next.assistantCoaches = { ...state.assistantCoaches };
   if (state.cheerleaders) next.cheerleaders = { ...state.cheerleaders };
   if (state.cheeringFansAssist) next.cheeringFansAssist = { ...state.cheeringFansAssist };

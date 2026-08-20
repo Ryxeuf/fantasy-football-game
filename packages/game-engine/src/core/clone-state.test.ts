@@ -42,6 +42,9 @@ describe('cloneGameState', () => {
       hypnotizedPlayers: ['b1'],
       usedRunningPassThisTurn: ['a1'],
       score: { teamA: 1, teamB: 0 },
+      fanAttendance: 9,
+      dedicatedFans: { teamA: 2, teamB: 1 },
+      fanFactors: { teamA: 5, teamB: 4 },
       pendingApothecary: {
         playerId: 'b1',
         team: 'B',

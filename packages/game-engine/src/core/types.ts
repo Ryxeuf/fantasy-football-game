@@ -296,6 +296,11 @@ export interface GameState {
   fanAttendance?: number;
   // Dedicated fans par équipe (préservés depuis pré-match pour calcul post-match)
   dedicatedFans?: { teamA: number; teamB: number };
+  // Facteur de Popularité PAR équipe (1D3 + fans dévoués, jeté en pré-match).
+  // Préservé pour les événements de coup d'envoi qui s'y réfèrent (Invasion
+  // du terrain). Absent sur les parties sauvegardées avant son introduction :
+  // repli sur `dedicatedFans`.
+  fanFactors?: { teamA: number; teamB: number };
   // Audit round 10 (HIGH/regle BB3) : assistant coaches par equipe,
   // utilises au kickoff event 'brilliant-coaching' : chaque coach jette
   // 1D3 + son nombre d'assistant coaches ; le plus haut total gagne une

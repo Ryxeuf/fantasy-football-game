@@ -514,10 +514,15 @@ export function applyKickoffEvent(
       // 12 — Invasion du terrain ! 1D6 + Facteur de Popularité ; le plus
       // BAS total sonne D3 de SES PROPRES joueurs (l'édition précédente
       // faisait jeter un D6 par joueur adverse).
+      // Le Facteur de Popularité est le TOTAL du pré-match (1D3 + fans
+      // dévoués), pas les seuls fans dévoués. Repli sur `dedicatedFans`
+      // pour les parties sauvegardées avant l'introduction de `fanFactors`.
       const d6A = rollD6(rng);
       const d6B = rollD6(rng);
-      const fansA = newState.dedicatedFans?.teamA ?? 0;
-      const fansB = newState.dedicatedFans?.teamB ?? 0;
+      const fansA =
+        newState.fanFactors?.teamA ?? newState.dedicatedFans?.teamA ?? 0;
+      const fansB =
+        newState.fanFactors?.teamB ?? newState.dedicatedFans?.teamB ?? 0;
       const scoreA = d6A + fansA;
       const scoreB = d6B + fansB;
       const affected: TeamId[] =
