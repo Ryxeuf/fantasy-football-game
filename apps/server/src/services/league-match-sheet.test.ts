@@ -1311,7 +1311,9 @@ describe("Lot G — league-match-sheet", () => {
         userId: COMMISH,
         reason: "erreur de saisie",
       });
-      expect(mockReverse).toHaveBeenCalledWith("m1");
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map(),
+      });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data).toMatchObject({
         status: "invalidated",
@@ -1359,6 +1361,11 @@ describe("Lot G — league-match-sheet", () => {
       expect(mockReverseStaged).toHaveBeenCalledWith({
         teamId: "team-home",
         entries: applied,
+      });
+      // Le garde-fou advancement-consumed recoit le decompte des
+      // evolutions appliquees par la feuille (elles vont etre reversees).
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map([["h1", 1]]),
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.advancementsHome).toEqual(cleaned);

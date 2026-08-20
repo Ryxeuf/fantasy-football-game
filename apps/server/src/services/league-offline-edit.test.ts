@@ -335,6 +335,59 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     });
   });
 
+  it("ne bloque PAS quand l'advancement vient de la feuille elle-meme (sheetAppliedAdvancements)", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePostMatchSequence: {
+          pendingChoices: JSON.stringify([
+            { teamPlayerId: "p1", advancementsTaken: 0 },
+          ]),
+        },
+      }),
+    );
+    // p1 a 1 advancement de plus que la capture, mais il a ete applique
+    // par la feuille de match (et sera reverse juste apres) -> pas un
+    // level-up consomme par un autre chemin, la reversion procede.
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", advancements: JSON.stringify([{ skillSlug: "block" }]) },
+    ]);
+    const r = await reverseOfflineLeagueResult("m-1", {
+      sheetAppliedAdvancements: new Map([["p1", 1]]),
+    });
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+  });
+
+  it("bloque quand un advancement EXTERNE s'ajoute a ceux de la feuille", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePostMatchSequence: {
+          pendingChoices: JSON.stringify([
+            { teamPlayerId: "p1", advancementsTaken: 0 },
+          ]),
+        },
+      }),
+    );
+    // 2 advancements : 1 pose par la feuille + 1 pris via le post-match
+    // classique -> le second est bien un effet consomme, refus.
+    m.tpFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        advancements: JSON.stringify([
+          { skillSlug: "block" },
+          { skillSlug: "dodge" },
+        ]),
+      },
+    ]);
+    expect(
+      await reverseOfflineLeagueResult("m-1", {
+        sheetAppliedAdvancements: new Map([["p1", 1]]),
+      }),
+    ).toEqual({
+      skipped: true,
+      reason: "advancement-consumed",
+    });
+  });
+
   it("reverse les standings (decrement) + eco + supprime + re-ouvre", async () => {
     m.matchFind.mockResolvedValue(buildMatch());
 

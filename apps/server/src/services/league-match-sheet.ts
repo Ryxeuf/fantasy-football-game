@@ -1197,8 +1197,30 @@ export async function invalidateMatchSheet(input: {
     select: { id: true },
   })) as { id: string } | null;
 
+  const sheetAdv = sheet as {
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
+  };
+  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+
+  // Evolutions appliquees PAR CETTE FEUILLE (elles seront reversees
+  // juste apres) : le garde-fou `advancement-consumed` de la reversion
+  // les deduit du compte courant, sinon toute feuille validee avec une
+  // evolution choisie serait a jamais non-invalidable.
+  const sheetAppliedAdvancements = new Map<string, number>();
+  for (const entry of [...stagedHome, ...stagedAway]) {
+    if (entry.applied !== true) continue;
+    sheetAppliedAdvancements.set(
+      entry.playerId,
+      (sheetAppliedAdvancements.get(entry.playerId) ?? 0) + 1,
+    );
+  }
+
   if (match) {
-    const reversed = await reverseOfflineLeagueResult(match.id);
+    const reversed = await reverseOfflineLeagueResult(match.id, {
+      sheetAppliedAdvancements,
+    });
     if ("skipped" in reversed) {
       // Reversion impossible (mort, saison cloturee, playoffs...) :
       // on refuse l'invalidation pour ne pas laisser un etat incoherent.
@@ -1214,12 +1236,6 @@ export async function invalidateMatchSheet(input: {
   // `applied` pour qu'une re-validation ré-applique proprement.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const advData: any = {};
-  const sheetAdv = sheet as {
-    advancementsHome?: unknown;
-    advancementsAway?: unknown;
-  };
-  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
-  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
   if (stagedHome.length > 0 || stagedAway.length > 0) {
     const teams = await loadSheetTeams(input.pairingId);
     if (stagedHome.length > 0 && teams.home?.teamId) {

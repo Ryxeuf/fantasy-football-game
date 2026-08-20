@@ -205,12 +205,25 @@ function buildInjuryReverse(
   };
 }
 
+export interface ReverseOfflineOptions {
+  /**
+   * Nombre d'advancements appliques PAR LA FEUILLE DE MATCH elle-meme,
+   * par joueur (entrees `applied: true` de `advancementsHome/Away`).
+   * L'invalidation de la feuille les reverse juste apres ce call
+   * (`reverseAppliedAdvancements`) : le garde-fou `advancement-consumed`
+   * les soustrait donc du compte courant, sinon TOUTE feuille validee
+   * avec une evolution stagee serait a jamais non-invalidable.
+   */
+  readonly sheetAppliedAdvancements?: ReadonlyMap<string, number>;
+}
+
 /**
  * Annule tous les effets d'un resultat offline et supprime le Match
  * synthetique. Idempotent quant aux garde-fous (refus si effet consomme).
  */
 export async function reverseOfflineLeagueResult(
   matchId: string,
+  options: ReverseOfflineOptions = {},
 ): Promise<ReverseOfflineOutcome> {
   const match = (await prisma.match.findUnique({
     where: { id: matchId },
@@ -320,7 +333,13 @@ export async function reverseOfflineLeagueResult(
   const home = pairing.homeParticipant;
   const away = pairing.awayParticipant;
 
-  // Garde-fou : level-up deja consomme issu de ce match.
+  // Garde-fou : level-up deja consomme issu de ce match. Les
+  // advancements appliques par la feuille de match elle-meme (et que
+  // l'invalidation va reverser dans la foulee) sont deduits du compte —
+  // seul un advancement pris par un AUTRE chemin (post-match L2.B.3)
+  // bloque la reversion.
+  const sheetApplied =
+    options.sheetAppliedAdvancements ?? new Map<string, number>();
   const choices = parsePendingChoices(
     match.leaguePostMatchSequence?.pendingChoices,
   );
@@ -333,7 +352,10 @@ export async function reverseOfflineLeagueResult(
       players.map((p) => [p.id, advancementsCount(p.advancements)]),
     );
     const consumed = choices.some(
-      (c) => (countById.get(c.teamPlayerId) ?? 0) > c.advancementsTaken,
+      (c) =>
+        (countById.get(c.teamPlayerId) ?? 0) -
+          (sheetApplied.get(c.teamPlayerId) ?? 0) >
+        c.advancementsTaken,
     );
     if (consumed) {
       return { skipped: true, reason: "advancement-consumed" };
