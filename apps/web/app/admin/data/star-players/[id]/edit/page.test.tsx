@@ -90,17 +90,17 @@ afterEach(() => {
 const box = (testId: string) =>
   screen.getByTestId(testId) as HTMLInputElement;
 
-describe("EditStarPlayerPage — saisie en cases à cocher", () => {
-  it("coche les compétences du joueur, hors catalogue compris", async () => {
+describe("EditStarPlayerPage — saisie en chips et cases à cocher", () => {
+  it("affiche les compétences du joueur en chips, hors catalogue compris", async () => {
     mockFetch();
     render(<EditStarPlayerPage />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-block")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy(),
     );
-    expect(box("star-player-skills-block").checked).toBe(true);
-    expect(box("star-player-skills-loner-4").checked).toBe(true);
-    expect(box("star-player-skills-dodge").checked).toBe(false);
+    // Le slug hérité reste visible (et donc jamais perdu à l'enregistrement).
+    expect(screen.getByTestId("star-player-skills-chip-loner-4")).toBeTruthy();
+    expect(screen.queryByTestId("star-player-skills-chip-dodge")).toBeNull();
   });
 
   it("coche la règle globale ET le roster ciblé du joueur", async () => {
@@ -120,15 +120,16 @@ describe("EditStarPlayerPage — saisie en cases à cocher", () => {
     expect(box("star-player-hirable-rosters-roster-orc").checked).toBe(false);
   });
 
-  it("envoie la sélection cochée, avec le couple (règle, rosterId)", async () => {
+  it("envoie la sélection, avec le couple (règle, rosterId)", async () => {
     const fetchMock = mockFetch();
     render(<EditStarPlayerPage />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-dodge")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy(),
     );
 
-    fireEvent.click(box("star-player-skills-dodge"));
+    fireEvent.focus(screen.getByTestId("star-player-skills-search"));
+    fireEvent.click(screen.getByTestId("star-player-skills-option-dodge"));
     fireEvent.click(box("star-player-hirable-rules-all"));
     fireEvent.click(box("star-player-hirable-rosters-roster-orc"));
     fireEvent.click(screen.getByText("Mettre à jour"));
@@ -155,7 +156,7 @@ describe("EditStarPlayerPage — saisie en cases à cocher", () => {
     render(<EditStarPlayerPage />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-block")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy(),
     );
     expect(
       document.querySelector('input[name="skillSlugs"]'),
@@ -168,7 +169,7 @@ describe("EditStarPlayerPage — saisie en cases à cocher", () => {
     render(<EditStarPlayerPage />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-block")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy(),
     );
     const urls = fetchMock.mock.calls.map(([url]) => String(url));
     expect(

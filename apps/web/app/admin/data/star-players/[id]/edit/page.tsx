@@ -4,9 +4,9 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import { getRulesetLabel, type Ruleset } from "../../../ruleset-utils";
 import {
-  SkillCheckboxPicker,
+  SkillMultiSelect,
   type SkillOption,
-} from "../../_components/SkillCheckboxPicker";
+} from "../../../_components/SkillMultiSelect";
 import {
   HirableByPicker,
   type RosterOption,
@@ -326,10 +326,11 @@ export default function EditStarPlayerPage() {
 
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Compétences</label>
-          <SkillCheckboxPicker
+          <SkillMultiSelect
             skills={skills}
-            selected={skillSlugs}
-            onToggle={(slug) => setSkillSlugs((prev) => toggleValue(prev, slug))}
+            selectedSlugs={skillSlugs}
+            onChange={setSkillSlugs}
+            testId="star-player-skills"
           />
           <p className="text-xs text-gray-500 mt-1">
             Sélection multiple. Aucune case cochée = aucune compétence.
