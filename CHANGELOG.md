@@ -1,3 +1,10 @@
+## [1.234.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.233.0...v1.234.0) (2026-08-20)
+
+
+### ✨ Features
+
+* **admin+teams:** sélecteurs unifiés « chips + recherche » et statistiques de roster utiles ([#960](https://github.com/Ryxeuf/fantasy-football-game/issues/960)) ([2155812](https://github.com/Ryxeuf/fantasy-football-game/commit/2155812da08a29f33dd4b930156791ee2e09c356))
+
 ## [1.233.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.232.0...v1.233.0) (2026-08-19)
 
 
