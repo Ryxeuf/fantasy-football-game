@@ -1,5 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { buildRosterSnapshot, type TeamForSnapshot } from './cup-roster-snapshot';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../prisma', () => ({
+  prisma: { team: { findUnique: vi.fn() } },
+}));
+
+import { prisma } from '../prisma';
+import {
+  buildRosterSnapshot,
+  captureRosterSnapshot,
+  type TeamForSnapshot,
+} from './cup-roster-snapshot';
+
+const mockTeamFind = prisma.team.findUnique as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 const team: TeamForSnapshot = {
   roster: 'skaven',
@@ -46,5 +60,28 @@ describe('buildRosterSnapshot', () => {
   it('produit un objet JSON-sérialisable stable', () => {
     const snap = buildRosterSnapshot(team, 42);
     expect(JSON.parse(JSON.stringify(snap))).toEqual(snap);
+  });
+});
+
+describe('captureRosterSnapshot — filtre des joueurs', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTeamFind.mockResolvedValue({ ...team, players: [], starPlayers: [] });
+  });
+
+  it('exclut morts et licenciés par défaut, sans filtre missNextMatch (coupe)', async () => {
+    await captureRosterSnapshot('team-1');
+    const where = mockTeamFind.mock.calls[0][0].include.players.where;
+    expect(where).toEqual({ dead: false, firedAt: null });
+  });
+
+  it('exclut AUSSI les absents avec excludeMissNextMatch (feuille de match)', async () => {
+    await captureRosterSnapshot('team-1', { excludeMissNextMatch: true });
+    const where = mockTeamFind.mock.calls[0][0].include.players.where;
+    expect(where).toEqual({
+      dead: false,
+      firedAt: null,
+      missNextMatch: false,
+    });
   });
 });

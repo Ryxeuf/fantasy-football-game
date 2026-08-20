@@ -179,17 +179,27 @@ export function TeamValueStrip({
 }
 
 function playerLabel(p: SheetPlayer): string {
-  const flags = p.dead ? " ☠" : p.missNextMatch ? " (blessé)" : "";
+  const flags = p.dead ? " ☠" : p.missNextMatch ? " (absent)" : "";
   return `N°${p.number} ${p.name} — ${playerPositionName(p)}${flags}`;
 }
 
-/** Picker de joueur d'une equipe (dropdown). Valeur = teamPlayerId. */
+/**
+ * Picker de joueur d'une equipe (dropdown). Valeur = teamPlayerId.
+ *
+ * Par defaut, les joueurs qui ne participent PAS au match — morts (matchs
+ * precedents) et absents (missNextMatch) — sont exclus des options : ils ne
+ * peuvent ni marquer, ni blesser, ni etre MVP. La valeur deja selectionnee
+ * reste toujours visible (relecture d'une feuille validee dont un joueur
+ * est mort depuis). `includeUnavailable` reactive la liste complete
+ * (ex: licenciements de fin de match).
+ */
 export function PlayerSelect({
   team,
   value,
   onChange,
   disabled,
   allowEmpty = true,
+  includeUnavailable = false,
   testId,
 }: {
   team: SheetTeam | null;
@@ -197,8 +207,13 @@ export function PlayerSelect({
   onChange: (v: string) => void;
   disabled?: boolean;
   allowEmpty?: boolean;
+  includeUnavailable?: boolean;
   testId?: string;
 }) {
+  const options = (team?.players ?? []).filter(
+    (p) =>
+      includeUnavailable || (!p.dead && !p.missNextMatch) || p.id === value,
+  );
   return (
     <select
       value={value}
@@ -208,7 +223,7 @@ export function PlayerSelect({
       className="block w-full rounded border px-2 py-2 text-sm"
     >
       {allowEmpty && <option value="">— joueur —</option>}
-      {team?.players.map((p) => (
+      {options.map((p) => (
         <option key={p.id} value={p.id}>
           {playerLabel(p)}
         </option>
@@ -984,11 +999,14 @@ function FiredEditor({
       {ids.map((id, i) => (
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <div className="min-w-0 flex-1">
+            {/* Licenciement : un joueur absent (voire mort) peut etre
+                licencie en fin de match — liste complete. */}
             <PlayerSelect
               team={team}
               value={id}
               onChange={(v) => update(i, v)}
               disabled={disabled}
+              includeUnavailable
             />
           </div>
           {!disabled && (

@@ -587,12 +587,18 @@ export async function submitByCoach(input: {
   if (!sheetSnap.rosterSnapshotHome || !sheetSnap.rosterSnapshotAway) {
     try {
       const teams = await loadSheetTeams(input.pairingId);
+      // Les joueurs absents (missNextMatch) ne participent pas au match :
+      // ils sont exclus de la « version du match » figee.
       if (!sheetSnap.rosterSnapshotHome && teams.home?.teamId) {
-        const snap = await captureRosterSnapshot(teams.home.teamId);
+        const snap = await captureRosterSnapshot(teams.home.teamId, {
+          excludeMissNextMatch: true,
+        });
         if (snap) snapshotData.rosterSnapshotHome = JSON.stringify(snap);
       }
       if (!sheetSnap.rosterSnapshotAway && teams.away?.teamId) {
-        const snap = await captureRosterSnapshot(teams.away.teamId);
+        const snap = await captureRosterSnapshot(teams.away.teamId, {
+          excludeMissNextMatch: true,
+        });
         if (snap) snapshotData.rosterSnapshotAway = JSON.stringify(snap);
       }
     } catch (e: unknown) {

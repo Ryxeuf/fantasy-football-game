@@ -3,12 +3,14 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   PreMatchPanel,
   PostMatchPanel,
+  PlayerSelect,
   TeamIdentityBadges,
   TeamValueStrip,
   InvalidateControl,
   type MatchSheetReference,
   type PreMatchValues,
   type PostMatchValues,
+  type SheetPlayer,
   type SheetTeam,
 } from "./MatchSheetPanels";
 
@@ -91,6 +93,66 @@ const EMPTY_VALUES: PreMatchValues = {
   prayersHome: [],
   prayersAway: [],
 };
+
+function sheetPlayer(over: Partial<SheetPlayer> = {}): SheetPlayer {
+  return {
+    id: "p1",
+    number: 1,
+    name: "Boris",
+    position: "human_lineman",
+    positionName: "Trois-quarts",
+    dead: false,
+    missNextMatch: false,
+    spp: 0,
+    ...over,
+  };
+}
+
+describe("PlayerSelect — joueurs indisponibles", () => {
+  const team: SheetTeam = {
+    ...TEAM,
+    players: [
+      sheetPlayer(),
+      sheetPlayer({ id: "p2", number: 2, name: "Mort", dead: true }),
+      sheetPlayer({ id: "p3", number: 3, name: "Absent", missNextMatch: true }),
+    ],
+  };
+
+  it("exclut morts et absents des options par défaut", () => {
+    render(
+      <PlayerSelect team={team} value="" onChange={() => {}} testId="ps" />,
+    );
+    const options = within(screen.getByTestId("ps")).getAllByRole("option");
+    expect(options.map((o) => o.textContent)).toEqual([
+      "— joueur —",
+      "N°1 Boris — Trois-quarts",
+    ]);
+  });
+
+  it("garde visible la valeur déjà sélectionnée même indisponible", () => {
+    render(
+      <PlayerSelect team={team} value="p2" onChange={() => {}} testId="ps" />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toContain("N°2 Mort — Trois-quarts ☠");
+  });
+
+  it("liste tout le monde avec includeUnavailable (licenciements)", () => {
+    render(
+      <PlayerSelect
+        team={team}
+        value=""
+        onChange={() => {}}
+        includeUnavailable
+        testId="ps"
+      />,
+    );
+    const options = within(screen.getByTestId("ps")).getAllByRole("option");
+    expect(options).toHaveLength(4); // vide + 3 joueurs
+  });
+});
 
 describe("TeamIdentityBadges / TeamValueStrip", () => {
   it("affiche la race et le coach", () => {

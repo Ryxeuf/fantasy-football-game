@@ -94,6 +94,14 @@ describe("livePlayersToView", () => {
     expect(out?.map((p) => p.name)).toEqual(["Boris"]);
   });
 
+  it("exclut les joueurs absents (missNextMatch : ils ratent CE match)", () => {
+    const out = livePlayersToView([
+      livePlayer(),
+      livePlayer({ id: "p3", name: "Blessé Boris", missNextMatch: true }),
+    ]);
+    expect(out?.map((p) => p.name)).toEqual(["Boris"]);
+  });
+
   it("préfère le nom de poste lisible au slug", () => {
     expect(livePlayersToView([livePlayer()])?.[0].position).toBe("Trois-quarts");
     expect(

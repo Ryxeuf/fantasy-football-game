@@ -128,16 +128,29 @@ export function buildRosterSnapshot(
 /**
  * Charge une équipe et renvoie son snapshot sérialisable, ou `null` si
  * l'équipe est introuvable.
+ *
+ * `excludeMissNextMatch` (feuille de match de ligue) : les joueurs absents
+ * (blessure « rate le prochain match ») ne participent pas à la rencontre
+ * et ne doivent donc pas figurer dans la « version du match » figée. Les
+ * snapshots de coupe gardent le comportement historique (l'absence est un
+ * état de ligue, pas de tournoi résurrection).
  */
 export async function captureRosterSnapshot(
   teamId: string,
+  options: { readonly excludeMissNextMatch?: boolean } = {},
 ): Promise<RosterSnapshot | null> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
       // Roster actif uniquement : un joueur mort ou licencie ne part pas en
       // coupe (le snapshot sert de reference anti-triche pour le tournoi).
-      players: { where: { ...ACTIVE_PLAYER_WHERE }, orderBy: { number: 'asc' } },
+      players: {
+        where: {
+          ...ACTIVE_PLAYER_WHERE,
+          ...(options.excludeMissNextMatch ? { missNextMatch: false } : {}),
+        },
+        orderBy: { number: 'asc' },
+      },
       starPlayers: true,
     },
   });

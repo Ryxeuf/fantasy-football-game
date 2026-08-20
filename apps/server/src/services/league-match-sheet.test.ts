@@ -384,6 +384,14 @@ describe("Lot G — league-match-sheet", () => {
       expect(JSON.parse(data.rosterSnapshotAway as string)).toMatchObject({
         teamId: "team-away",
       });
+      // Les joueurs absents (missNextMatch) ne participent pas au match :
+      // la « version du match » figée les exclut.
+      expect(captureRosterSnapshot).toHaveBeenCalledWith("team-home", {
+        excludeMissNextMatch: true,
+      });
+      expect(captureRosterSnapshot).toHaveBeenCalledWith("team-away", {
+        excludeMissNextMatch: true,
+      });
     });
 
     it("E11 — ne re-capture pas si le snapshot existe déjà", async () => {

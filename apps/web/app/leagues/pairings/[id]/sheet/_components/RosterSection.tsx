@@ -45,15 +45,16 @@ export function parseRosterSnapshot(raw: unknown): {
 
 /**
  * Roster courant (tel que chargé par la feuille) ramené à la même vue que
- * le snapshot. Les joueurs sortis du roster (morts, licenciés) ne font
- * plus partie de l'équipe qui va jouer : on ne les liste pas.
+ * le snapshot. Les joueurs sortis du roster (morts, licenciés) et les
+ * absents (missNextMatch : ils ratent CE match) ne font pas partie de
+ * l'équipe qui va jouer : on ne les liste pas.
  */
 export function livePlayersToView(
   players: readonly SheetPlayer[] | undefined,
 ): SnapshotPlayerView[] | null {
   if (!players || players.length === 0) return null;
   return players
-    .filter((p) => !p.dead)
+    .filter((p) => !p.dead && !p.missNextMatch)
     .map((p) => ({
       name: p.name,
       position: p.positionName ?? p.position,
