@@ -9,12 +9,20 @@
  */
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { LanguageProvider } from "../../../../../contexts/LanguageContext";
 import {
   RosterSection,
   livePlayersToView,
   parseRosterSnapshot,
+  positionNameResolver,
 } from "./RosterSection";
 import type { SheetPlayer } from "./MatchSheetPanels";
+
+// SkillTooltip (chips de compétences traduites) requiert le contexte langue.
+function renderWithLang(ui: ReactElement) {
+  return render(<LanguageProvider>{ui}</LanguageProvider>);
+}
 
 const SNAPSHOT = {
   capturedAt: Date.UTC(2026, 4, 12),
@@ -52,7 +60,7 @@ function livePlayer(over: Partial<SheetPlayer> = {}): SheetPlayer {
 
 describe("RosterSection", () => {
   it("affiche la version du match quand le snapshot existe", () => {
-    render(
+    renderWithLang(
       <RosterSection
         label="Reikland"
         raw={JSON.stringify(SNAPSHOT)}
@@ -68,7 +76,9 @@ describe("RosterSection", () => {
   });
 
   it("retombe sur le roster courant tant que rien n'est figé", () => {
-    render(<RosterSection label="Reikland" raw={null} livePlayers={[livePlayer()]} />);
+    renderWithLang(
+      <RosterSection label="Reikland" raw={null} livePlayers={[livePlayer()]} />,
+    );
     const toggle = screen.getByTestId("snapshot-roster-toggle-Reikland");
     // Le libellé annonce que ce n'est pas la version figée.
     expect(toggle.textContent).toContain("état actuel");
@@ -78,10 +88,85 @@ describe("RosterSection", () => {
   });
 
   it("n'affiche rien sans snapshot ni roster courant", () => {
-    const { container } = render(
+    const { container } = renderWithLang(
       <RosterSection label="Reikland" raw={null} livePlayers={[]} />,
     );
     expect(container.firstChild).toBeNull();
+  });
+
+  it("traduit les slugs de compétences en français (avec infobulle) et les postes", () => {
+    renderWithLang(
+      <RosterSection
+        label="Reikland"
+        raw={JSON.stringify({
+          capturedAt: Date.UTC(2026, 7, 20),
+          roster: "orc",
+          ruleset: "season_3",
+          players: [
+            {
+              name: "Blitzer Orque 1",
+              position: "orc_blitzer_orque",
+              number: 1,
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 10,
+              // Slugs bruts tels que stockés dans le snapshot.
+              skills: "block,break-tackle,frenzy",
+              spp: 1,
+            },
+          ],
+        })}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("snapshot-roster-toggle-Reikland"));
+    // Les slugs sont rendus par leur nom français (catalogue moteur).
+    expect(screen.getByText("Blocage")).toBeTruthy();
+    expect(screen.getByText("Esquive en Force")).toBeTruthy();
+    expect(screen.getByText("Frénésie")).toBeTruthy();
+    expect(screen.queryByText("block,break-tackle,frenzy")).toBeNull();
+    // Le slug de poste est résolu en nom lisible.
+    expect(screen.queryByText("orc_blitzer_orque")).toBeNull();
+  });
+
+  it("affiche « Aucune » pour un joueur sans compétence", () => {
+    renderWithLang(
+      <RosterSection
+        label="Reikland"
+        raw={JSON.stringify({
+          players: [
+            {
+              name: "Trois-quart",
+              position: "orc_lineman",
+              number: 6,
+              ma: 5,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 10,
+              skills: "",
+              spp: 0,
+            },
+          ],
+        })}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("snapshot-roster-toggle-Reikland"));
+    expect(screen.getByText("Aucune")).toBeTruthy();
+  });
+});
+
+describe("positionNameResolver", () => {
+  it("résout un slug de position en nom d'affichage", () => {
+    const resolve = positionNameResolver("skaven", "season_3");
+    expect(resolve("skaven_blitzer_skaven")).not.toBe("skaven_blitzer_skaven");
+    expect(resolve("slug_inconnu")).toBe("slug_inconnu"); // brut si inconnu
+  });
+
+  it("roster inconnu -> valeur brute (déjà lisible pour la vue live)", () => {
+    const resolve = positionNameResolver(undefined, undefined);
+    expect(resolve("Trois-quarts")).toBe("Trois-quarts");
   });
 });
 

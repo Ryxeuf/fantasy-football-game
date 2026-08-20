@@ -1,6 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  TEAM_ROSTERS_BY_RULESET,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "@bb/game-engine";
+import SkillTooltip from "../../../../../me/teams/components/SkillTooltip";
 import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 // ---------------------------------------------------------------------------
@@ -24,6 +30,8 @@ export interface SnapshotPlayerView {
 /** Parse tolérant (JSON string PG/sqlite ou objet natif). */
 export function parseRosterSnapshot(raw: unknown): {
   capturedAt?: number;
+  roster?: string;
+  ruleset?: string;
   players: SnapshotPlayerView[];
 } | null {
   let obj: unknown = raw;
@@ -37,10 +45,38 @@ export function parseRosterSnapshot(raw: unknown): {
   if (!obj || typeof obj !== "object") return null;
   const players = (obj as { players?: unknown }).players;
   if (!Array.isArray(players)) return null;
+  const o = obj as { capturedAt?: number; roster?: unknown; ruleset?: unknown };
   return {
-    capturedAt: (obj as { capturedAt?: number }).capturedAt,
+    capturedAt: o.capturedAt,
+    roster: typeof o.roster === "string" ? o.roster : undefined,
+    ruleset: typeof o.ruleset === "string" ? o.ruleset : undefined,
     players: players as SnapshotPlayerView[],
   };
+}
+
+/**
+ * Noms de poste lisibles pour un roster/ruleset donnés (le snapshot stocke
+ * les SLUGS de position). Fallback : la valeur brute (déjà lisible pour la
+ * vue live et les journaliers).
+ */
+export function positionNameResolver(
+  roster: string | undefined,
+  ruleset: string | undefined,
+): (position: string) => string {
+  const rs = (ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const map =
+    TEAM_ROSTERS_BY_RULESET[rs] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
+  const def = roster
+    ? (
+        map as Record<
+          string,
+          { positions?: ReadonlyArray<{ slug: string; displayName: string }> }
+        >
+      )[roster]
+    : undefined;
+  const names = new Map<string, string>();
+  for (const p of def?.positions ?? []) names.set(p.slug, p.displayName);
+  return (position: string) => names.get(position) ?? position;
 }
 
 /**
@@ -117,6 +153,10 @@ export function RosterSection({
     () => (snapshot ? null : livePlayersToView(livePlayers, journeymen ?? [])),
     [snapshot, livePlayers, journeymen],
   );
+  const positionName = useMemo(
+    () => positionNameResolver(snapshot?.roster, snapshot?.ruleset),
+    [snapshot?.roster, snapshot?.ruleset],
+  );
   const players = snapshot?.players ?? live;
   if (!players || players.length === 0) return null;
 
@@ -163,7 +203,9 @@ export function RosterSection({
                   <tr key={`${p.number}-${p.name}`}>
                     <td className="px-1 py-1 font-mono">{p.number}</td>
                     <td className="px-1 py-1 font-medium">{p.name}</td>
-                    <td className="px-1 py-1 text-slate-500">{p.position}</td>
+                    <td className="px-1 py-1 text-slate-500">
+                      {positionName(p.position)}
+                    </td>
                     <td className="px-1 py-1 tabular-nums">{p.ma}</td>
                     <td className="px-1 py-1 tabular-nums">{p.st}</td>
                     <td className="px-1 py-1 tabular-nums">{p.ag}+</td>
@@ -171,7 +213,10 @@ export function RosterSection({
                       {p.pa != null ? `${p.pa}+` : "—"}
                     </td>
                     <td className="px-1 py-1 tabular-nums">{p.av}+</td>
-                    <td className="px-1 py-1 text-slate-500">{p.skills}</td>
+                    <td className="px-1 py-1">
+                      {/* Noms français + infobulle (slug brut avant). */}
+                      <SkillTooltip skillsString={p.skills} />
+                    </td>
                     <td className="px-1 py-1 tabular-nums">{p.spp}</td>
                   </tr>
                 ))}
