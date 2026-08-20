@@ -26,6 +26,7 @@ import {
   type PlayerAdvancement,
 } from "@bb/game-engine";
 import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
+import { updateTeamValues } from "../utils/team-values";
 
 export class CommissionerEditError extends Error {
   constructor(
@@ -441,10 +442,9 @@ export async function addPlayerSkill(input: AddSkillInput) {
       },
     });
     if (surcharge > 0) {
-      await tx.team.update({
-        where: { id: input.teamId },
-        data: { currentValue: { increment: surcharge } },
-      });
+      // Recalcul complet VE + VEA (et non un incrément aveugle de la
+      // seule VEA, qui faisait dériver VEA > VE).
+      await updateTeamValues(tx, input.teamId);
     }
     return p;
   });
@@ -559,10 +559,8 @@ export async function removePlayerSkill(input: RemoveSkillInput) {
       },
     });
     if (surcharge > 0) {
-      await tx.team.update({
-        where: { id: input.teamId },
-        data: { currentValue: { decrement: surcharge } },
-      });
+      // Recalcul complet VE + VEA (cohérence des deux valeurs).
+      await updateTeamValues(tx, input.teamId);
     }
     return p;
   });
@@ -859,6 +857,7 @@ export async function getTeamForEdit(input: {
       skills: true,
       spp: true,
       dead: true,
+      imageUrl: true,
     },
   });
 

@@ -144,7 +144,11 @@ export default function StarPlayerDetailPage() {
   // couts d'une liste reste juste ; on affiche donc le prix de la paire des
   // deux cotes, avec le nom du partenaire.
   const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
-  const displayedCost = pair ? pair.pairCost : starPlayer.cost;
+  // Prix de paire FRAIS depuis l'API (coûts DB) quand disponible ; le
+  // catalogue statique du moteur ne sert que de repli.
+  const displayedCost =
+    (starPlayer as { pairCost?: number | null }).pairCost ??
+    (pair ? pair.pairCost : starPlayer.cost);
 
   // Mots-clés (lignée + type) : EN si disponible, repli FR.
   const keywords =

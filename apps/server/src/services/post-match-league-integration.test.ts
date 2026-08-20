@@ -21,6 +21,18 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// Le recalcul VE/VEA complet (updateTeamValues, appele dans la transaction
+// d'applyAdvancementChoice) est mocke : sa logique est testee dans
+// utils/team-values.test.ts. Il simule ici l'effet attendu (+20k primary).
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(async (_tx: unknown, teamId: string) => {
+    const team = state.teams.find((t) => t.id === teamId);
+    const next = (team?.currentValue ?? 0) + 20000;
+    if (team) team.currentValue = next;
+    return { teamValue: next, currentValue: next };
+  }),
+}));
+
 // Shared mock state across all the services under test.
 interface PlayerRow {
   id: string;

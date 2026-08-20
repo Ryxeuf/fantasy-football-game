@@ -32,7 +32,14 @@ export async function GET(request: Request): Promise<Response> {
       { status: 400 },
     );
   }
-  return renderPlayerCardResponse(data, {
+  // Photo du joueur en URL RELATIVE (`/images/player-images/…`, déjà
+  // validée par le décodeur) : satori a besoin d'une URL absolue pour la
+  // fetch — on la résout contre l'origine de la requête (même origine,
+  // pas de SSRF nouveau).
+  const resolved = data.imageUrl?.startsWith("/")
+    ? { ...data, imageUrl: new URL(data.imageUrl, url.origin).toString() }
+    : data;
+  return renderPlayerCardResponse(resolved, {
     download: url.searchParams.get("download") === "1",
     // L'URL est adressée par le contenu : toute évolution du joueur (stats,
     // compétences, carrière) produit un payload — donc une URL — différent.

@@ -18,7 +18,16 @@ vi.mock("./post-match-league-sequence", () => ({
   applyAdvancementChoice: vi.fn(),
 }));
 
+// Le recalcul VE/VEA passe par updateTeamValues (mocke ici, teste a part).
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(async () => ({
+    teamValue: 1_000_000,
+    currentValue: 1_000_000,
+  })),
+}));
+
 import { prisma } from "../prisma";
+import { updateTeamValues } from "../utils/team-values";
 import { applyAdvancementChoice } from "./post-match-league-sequence";
 import {
   parseStagedAdvancements,
@@ -178,11 +187,9 @@ describe("reverseAppliedAdvancements", () => {
         }),
       }),
     );
-    expect(mockPrisma.team.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { currentValue: { decrement: expect.any(Number) } },
-      }),
-    );
+    // VE/VEA recalculees entierement dans la transaction (et non un
+    // decrement aveugle de la seule VEA).
+    expect(updateTeamValues).toHaveBeenCalledWith(expect.anything(), "T1");
     // Marqueurs nettoyés pour permettre une re-validation propre.
     expect(out[0].applied).toBeUndefined();
     expect(out[0].cost).toBeUndefined();

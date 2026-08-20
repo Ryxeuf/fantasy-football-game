@@ -17,6 +17,7 @@ import {
   slugifyForFileName,
   truncateAtWord,
   type PlayerCardData,
+  sanitizePlayerImageUrl,
 } from "./card-model";
 
 const BASE_STAR = {
@@ -253,6 +254,62 @@ describe("buildTeamPlayerCardData", () => {
     expect(card.infoStats?.every((s) => s.value === "0")).toBe(true);
     expect(card.stats.pa).toBeNull();
     expect(card.skills).toEqual([]);
+  });
+});
+
+describe("sanitizePlayerImageUrl (anti-SSRF)", () => {
+  it("accepte un chemin relatif de notre dossier d'upload", () => {
+    expect(
+      sanitizePlayerImageUrl("/images/player-images/boris-abc123456789.png"),
+    ).toBe("/images/player-images/boris-abc123456789.png");
+    expect(
+      sanitizePlayerImageUrl("/images/player-images/x-1.jpg"),
+    ).toBe("/images/player-images/x-1.jpg");
+  });
+
+  it("accepte une URL absolue sur une origine allowlistée (API)", () => {
+    const prev = process.env.NEXT_PUBLIC_API_BASE;
+    process.env.NEXT_PUBLIC_API_BASE = "https://api.nufflearena.fr";
+    try {
+      expect(
+        sanitizePlayerImageUrl(
+          "https://api.nufflearena.fr/images/player-images/boris-abc.png",
+        ),
+      ).toBe("https://api.nufflearena.fr/images/player-images/boris-abc.png");
+    } finally {
+      process.env.NEXT_PUBLIC_API_BASE = prev;
+    }
+  });
+
+  it("rejette une origine étrangère, un autre chemin et les schémas non-http", () => {
+    const prev = process.env.NEXT_PUBLIC_API_BASE;
+    process.env.NEXT_PUBLIC_API_BASE = "https://api.nufflearena.fr";
+    try {
+      // Origine non allowlistée : SSRF potentiel côté renderer.
+      expect(
+        sanitizePlayerImageUrl(
+          "https://evil.example/images/player-images/x.png",
+        ),
+      ).toBeUndefined();
+      // Chemin hors du dossier d'upload.
+      expect(
+        sanitizePlayerImageUrl("https://api.nufflearena.fr/internal/x.png"),
+      ).toBeUndefined();
+      expect(sanitizePlayerImageUrl("/etc/passwd")).toBeUndefined();
+      expect(
+        sanitizePlayerImageUrl("/images/player-images/../../secret.png"),
+      ).toBeUndefined();
+      // WEBP/GIF refusés (satori) ; schémas exotiques refusés.
+      expect(
+        sanitizePlayerImageUrl("/images/player-images/x.webp"),
+      ).toBeUndefined();
+      expect(
+        sanitizePlayerImageUrl("file:///etc/passwd"),
+      ).toBeUndefined();
+      expect(sanitizePlayerImageUrl(42)).toBeUndefined();
+    } finally {
+      process.env.NEXT_PUBLIC_API_BASE = prev;
+    }
   });
 });
 

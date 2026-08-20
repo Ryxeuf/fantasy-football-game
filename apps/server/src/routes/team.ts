@@ -149,6 +149,30 @@ import {
 router.post("/:id/logo", authUser, parseRawLogo, handleUploadTeamLogoImpl);
 router.delete("/:id/logo", authUser, handleDeleteTeamLogoImpl);
 
+// Image d'un joueur : upload (binaire brut) / retrait. Réservé au coach
+// propriétaire de l'équipe (ownership joueur→équipe→coach dans le service).
+export {
+  handleUploadPlayerImage,
+  handleDeletePlayerImage,
+} from './player-image-handlers';
+import {
+  parseRawPlayerImage,
+  handleUploadPlayerImage as handleUploadPlayerImageImpl,
+  handleDeletePlayerImage as handleDeletePlayerImageImpl,
+} from './player-image-handlers';
+
+router.post(
+  "/:id/players/:playerId/image",
+  authUser,
+  parseRawPlayerImage,
+  handleUploadPlayerImageImpl,
+);
+router.delete(
+  "/:id/players/:playerId/image",
+  authUser,
+  handleDeletePlayerImageImpl,
+);
+
 // Règle spéciale "Capitaine" : statut + désignation (création de la liste,
 // ou successeur si le capitaine est mort/licencié en ligue).
 export {

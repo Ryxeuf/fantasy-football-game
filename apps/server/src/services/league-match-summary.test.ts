@@ -167,6 +167,87 @@ describe("Lot G — summarizeMatchSheet", () => {
     ).toBe(1);
   });
 
+  it("ttm_landing : le coéquipier lancé (acteur) compte un atterrissage réussi", () => {
+    const events: MatchEventInput[] = [
+      { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
+      { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
+      // Le lancer lui-même (team_throw) reste sans effet sur les stats SPP.
+      { kind: "team_throw", team: "home", actorPlayerId: "h5" },
+    ];
+    const out = summarizeMatchSheet(events);
+    // Aucun impact score / casualties.
+    expect(out.scoreHome).toBe(0);
+    expect(out.casualtiesHome).toBe(0);
+    const h9 = out.playerStats.find((p) => p.playerId === "h9");
+    expect(h9?.ttmLandings).toBe(2);
+    expect(out.playerStats.find((p) => p.playerId === "h5")).toBeUndefined();
+  });
+
+  it("special_elim : PSP d'élimination réservés à Innovateur Violent", () => {
+    const events: MatchEventInput[] = [
+      // h3 a Innovateur Violent, h4 non.
+      {
+        kind: "special_elim",
+        team: "home",
+        actorPlayerId: "h3",
+        targetPlayerId: "a5",
+        injurySeverity: "mng",
+      },
+      {
+        kind: "special_elim",
+        team: "home",
+        actorPlayerId: "h4",
+        targetPlayerId: "a6",
+        injurySeverity: "badly_hurt",
+      },
+    ];
+    const out = summarizeMatchSheet(events, {
+      violentInnovators: new Set(["h3"]),
+    });
+    // Les 2 éliminations comptent pour l'équipe et blessent la cible…
+    expect(out.casualtiesHome).toBe(2);
+    expect(out.injuries.map((i) => i.playerId)).toEqual(["a5", "a6"]);
+    expect(out.injuries[0]?.side).toBe("away");
+    // …mais seule celle d'Innovateur Violent crédite des PSP.
+    expect(
+      out.playerStats.find((p) => p.playerId === "h3")?.casualtiesInflicted,
+    ).toBe(1);
+    expect(
+      out.playerStats.find((p) => p.playerId === "h4")?.casualtiesInflicted,
+    ).toBeUndefined();
+  });
+
+  it("special_elim sans option : aucun PSP crédité (défaut)", () => {
+    const out = summarizeMatchSheet([
+      {
+        kind: "special_elim",
+        team: "away",
+        actorPlayerId: "a1",
+        targetPlayerId: "h1",
+        injurySeverity: "dead",
+      },
+    ]);
+    expect(out.casualtiesAway).toBe(1);
+    expect(out.playerStats.find((p) => p.playerId === "a1")).toBeUndefined();
+  });
+
+  it("special_elim sans gravité de blessure : ignoré", () => {
+    const out = summarizeMatchSheet(
+      [
+        {
+          kind: "special_elim",
+          team: "home",
+          actorPlayerId: "h3",
+          targetPlayerId: "a5",
+        },
+      ],
+      { violentInnovators: new Set(["h3"]) },
+    );
+    expect(out.casualtiesHome).toBe(0);
+    expect(out.injuries).toHaveLength(0);
+    expect(out.playerStats).toHaveLength(0);
+  });
+
   it("ignores kickoff/expulsion/stalling for score and casualties", () => {
     const events: MatchEventInput[] = [
       { kind: "kickoff", team: "home" },
@@ -244,8 +325,8 @@ describe("Lot G — summarizeMatchSheet", () => {
 });
 
 describe("Lot G — isMatchEventKind / MATCH_EVENT_KINDS", () => {
-  it("exposes 11 kinds", () => {
-    expect(MATCH_EVENT_KINDS).toHaveLength(11);
+  it("exposes 13 kinds", () => {
+    expect(MATCH_EVENT_KINDS).toHaveLength(13);
   });
   it("validates known kinds", () => {
     expect(isMatchEventKind("touchdown")).toBe(true);
@@ -253,6 +334,8 @@ describe("Lot G — isMatchEventKind / MATCH_EVENT_KINDS", () => {
     // FR18 — La Catapulte : team_throw doit être accepté à la saisie
     // (régression : présent dans le type/Zod/UI mais absent du whitelist).
     expect(isMatchEventKind("team_throw")).toBe(true);
+    // Atterrissage réussi (coéquipier lancé) : +1 PSP.
+    expect(isMatchEventKind("ttm_landing")).toBe(true);
     expect(isMatchEventKind("nope")).toBe(false);
     expect(isMatchEventKind(42)).toBe(false);
   });

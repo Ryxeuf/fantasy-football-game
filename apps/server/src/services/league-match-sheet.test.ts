@@ -384,6 +384,14 @@ describe("Lot G — league-match-sheet", () => {
       expect(JSON.parse(data.rosterSnapshotAway as string)).toMatchObject({
         teamId: "team-away",
       });
+      // Les joueurs absents (missNextMatch) ne participent pas au match :
+      // la « version du match » figée les exclut.
+      expect(captureRosterSnapshot).toHaveBeenCalledWith("team-home", {
+        excludeMissNextMatch: true,
+      });
+      expect(captureRosterSnapshot).toHaveBeenCalledWith("team-away", {
+        excludeMissNextMatch: true,
+      });
     });
 
     it("E11 — ne re-capture pas si le snapshot existe déjà", async () => {
@@ -699,6 +707,206 @@ describe("Lot G — league-match-sheet", () => {
       // La requete des joueurs filtre les licencies (firedAt: null).
       const call = mockPrisma.team.findMany.mock.calls[0][0];
       expect(call.select.players.where).toEqual({ firedAt: null });
+    });
+
+    it("Innovateur Violent : les PSP d'une Élimination sur Action Spéciale vont au porteur", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-violent",
+            targetPlayerId: "a-victim",
+            injurySeverity: "mng",
+          },
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-normal",
+            targetPlayerId: "a-victim2",
+            injurySeverity: "mng",
+          },
+        ],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          players: [
+            {
+              id: "h-violent",
+              number: 1,
+              name: "Sawyer",
+              position: "human_lineman",
+              dead: false,
+              missNextMatch: false,
+              spp: 0,
+              skills: "chainsaw,violent-innovator",
+              advancements: "[]",
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+            },
+            {
+              id: "h-normal",
+              number: 2,
+              name: "Bob",
+              position: "human_lineman",
+              dead: false,
+              missNextMatch: false,
+              spp: 0,
+              skills: "chainsaw",
+              advancements: "[]",
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+            },
+          ],
+        },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", players: [] },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // 2 PSP (valeur élimination vanilla) pour le porteur, rien pour
+      // l'autre acteur (Action Spéciale sans Innovateur Violent).
+      expect(out.computedSpp["h-violent"]).toBe(2);
+      expect(out.computedSpp["h-normal"] ?? 0).toBe(0);
+      // Les 2 éliminations comptent au score de sorties de l'équipe.
+      expect(out.summary.casualtiesHome).toBe(2);
+    });
+
+    it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        // Snapshot fige a la 1re soumission : valeurs du DEBUT du match.
+        rosterSnapshotHome: JSON.stringify({
+          teamValue: 855_000,
+          currentValue: 875_000,
+          treasury: 35_000,
+          dedicatedFans: 2,
+          players: [],
+        }),
+        rosterSnapshotAway: JSON.stringify({
+          teamValue: 1_000_000,
+          currentValue: 1_000_000,
+          treasury: 15_000,
+          dedicatedFans: 1,
+          players: [],
+        }),
+      });
+      // Les valeurs LIVE ont bouge apres validation (gains, evolutions...).
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Big Bazard",
+          roster: "orc",
+          teamValue: 905_000,
+          currentValue: 925_000,
+          treasury: 90_000,
+          dedicatedFans: 3,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Sotek",
+          roster: "lizardmen",
+          teamValue: 1_050_000,
+          currentValue: 1_050_000,
+          treasury: 40_000,
+          dedicatedFans: 2,
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // L'en-tete sert les valeurs FIGEES, pas les valeurs live.
+      expect(out.teams.home).toMatchObject({
+        teamValue: 855_000,
+        currentValue: 875_000,
+        treasury: 35_000,
+        dedicatedFans: 2,
+      });
+      expect(out.teams.away).toMatchObject({
+        teamValue: 1_000_000,
+        currentValue: 1_000_000,
+        treasury: 15_000,
+        dedicatedFans: 1,
+      });
+    });
+
+    it("snapshot legacy sans tresorerie : retombe sur la valeur live", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        rosterSnapshotHome: JSON.stringify({
+          teamValue: 855_000,
+          currentValue: 875_000,
+          players: [],
+        }),
+        rosterSnapshotAway: null,
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Big Bazard",
+          roster: "orc",
+          teamValue: 905_000,
+          currentValue: 925_000,
+          treasury: 90_000,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Sotek",
+          roster: "lizardmen",
+          teamValue: 1_050_000,
+          currentValue: 1_050_000,
+          treasury: 40_000,
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+      expect(out.teams.home).toMatchObject({
+        teamValue: 855_000,
+        currentValue: 875_000,
+        treasury: 90_000, // pas dans le snapshot legacy -> live
+      });
+      // Pas de snapshot away -> valeurs live inchangees.
+      expect(out.teams.away).toMatchObject({
+        teamValue: 1_050_000,
+        treasury: 40_000,
+      });
     });
 
     it("expose la reference (tables meteo, catalogue, budget) + identite equipe", async () => {
@@ -1311,7 +1519,9 @@ describe("Lot G — league-match-sheet", () => {
         userId: COMMISH,
         reason: "erreur de saisie",
       });
-      expect(mockReverse).toHaveBeenCalledWith("m1");
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map(),
+      });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data).toMatchObject({
         status: "invalidated",
@@ -1359,6 +1569,11 @@ describe("Lot G — league-match-sheet", () => {
       expect(mockReverseStaged).toHaveBeenCalledWith({
         teamId: "team-home",
         entries: applied,
+      });
+      // Le garde-fou advancement-consumed recoit le decompte des
+      // evolutions appliquees par la feuille (elles vont etre reversees).
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map([["h1", 1]]),
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.advancementsHome).toEqual(cleaned);
@@ -1431,6 +1646,63 @@ describe("Lot G — league-match-sheet", () => {
           mvp: true,
         },
       ]);
+    });
+
+    it("filtre les journaliers de toute la persistance (ids synthétiques)", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          {
+            playerId: "journeyman-home-1",
+            side: "home",
+            severity: "mng",
+            cause: "block",
+          },
+          { playerId: "h2", side: "home", severity: "mng", cause: "block" },
+        ],
+        playerStats: [
+          ...baseSummary.playerStats,
+          {
+            playerId: "journeyman-home-1",
+            side: "home",
+            touchdowns: 1,
+            casualtiesInflicted: 0,
+            completions: 0,
+            interceptions: 0,
+            aggressions: 0,
+          },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        {
+          motmPlayerIds: ["journeyman-home-1"],
+          sppBonus: [
+            { playerId: "journeyman-home-1", spp: 2 },
+            { playerId: "h1", spp: 1 },
+          ],
+          firedPlayerIds: ["journeyman-home-1", "h1"],
+        },
+        [
+          {
+            id: "e1",
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "h1",
+            targetPlayerId: "h2",
+            injurySeverity: "mng",
+          } as never,
+        ],
+      );
+      // Les stats du journalier restent sur la feuille (score/summary) mais
+      // aucune écriture Prisma ne doit le viser.
+      expect(out.playerStats.map((p) => p.teamPlayerId)).toEqual(["h1"]);
+      expect(out.injuries.map((i) => i.teamPlayerId)).toEqual(["h2"]);
+      expect(out.sppBonus).toEqual([{ teamPlayerId: "h1", spp: 1 }]);
+      expect(out.firedPlayerIds).toEqual(["h1"]);
+      // Le score, lui, garde la contribution du journalier.
+      expect(out.scoreHome).toBe(2);
     });
 
     it("derive le debit treasury (coups de pouce + erreurs couteuses + achats)", () => {

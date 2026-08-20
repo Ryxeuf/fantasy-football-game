@@ -35,6 +35,7 @@ vi.mock("../services/audit-log", () => ({
 
 vi.mock("../services/revalidate-web", () => ({
   revalidateRosterPages: vi.fn(async () => {}),
+  revalidateStarPlayerPages: vi.fn(async () => {}),
 }));
 
 import express from "express";

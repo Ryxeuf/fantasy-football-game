@@ -26,11 +26,11 @@ import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
 import {
   getNextAdvancementPspCost,
-  surchargeForAdvancement,
   type AdvancementType,
   type CharacteristicKind,
   type PlayerAdvancement,
 } from "@bb/game-engine";
+import { updateTeamValues } from "../utils/team-values";
 import { applyAdvancementChoice } from "./post-match-league-sequence";
 
 /** Une évolution stagée par un coach sur la feuille de match. */
@@ -264,10 +264,6 @@ export async function reverseAppliedAdvancements(input: {
       typeof entry.cost === "number"
         ? entry.cost
         : getNextAdvancementPspCost(idx, entry.type);
-    const surcharge = surchargeForAdvancement({
-      type: entry.type,
-      stat: entry.stat ?? undefined,
-    });
     const updatedAdvancements = [...taken.slice(0, idx), ...taken.slice(idx + 1)];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -297,10 +293,10 @@ export async function reverseAppliedAdvancements(input: {
         data.skills = removeSkillOnce(player.skills, entry.skillSlug);
       }
       await tx.teamPlayer.update({ where: { id: player.id }, data });
-      await tx.team.update({
-        where: { id: input.teamId },
-        data: { currentValue: { decrement: surcharge } },
-      });
+      // Recalcul complet VE + VEA (et non un décrément aveugle de la
+      // seule VEA) : le retrait de l'avancement baisse la valeur du
+      // joueur donc les DEUX valeurs restent cohérentes.
+      await updateTeamValues(tx, input.teamId);
     });
   }
   return out;

@@ -426,15 +426,33 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
                   marginBottom: "18px",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- data URI satori */}
-                <img
-                  src={emblemUri(data, theme)}
-                  width={emblemSize}
-                  height={emblemSize}
-                  alt=""
-                  style={{ opacity: 0.96 }}
-                />
-                {monogram ? (
+                {data.imageUrl ? (
+                  // Photo du joueur (pleine résolution, URL validée par le
+                  // décodeur) : remplace l'emblème programmatique.
+                  // eslint-disable-next-line @next/next/no-img-element -- satori
+                  <img
+                    src={data.imageUrl}
+                    alt=""
+                    style={{
+                      position: "absolute",
+                      top: "0",
+                      left: "0",
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- data URI satori
+                  <img
+                    src={emblemUri(data, theme)}
+                    width={emblemSize}
+                    height={emblemSize}
+                    alt=""
+                    style={{ opacity: 0.96 }}
+                  />
+                )}
+                {monogram && !data.imageUrl ? (
                   <div
                     style={{
                       display: "flex",

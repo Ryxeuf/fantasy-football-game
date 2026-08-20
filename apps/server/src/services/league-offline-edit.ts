@@ -205,12 +205,25 @@ function buildInjuryReverse(
   };
 }
 
+export interface ReverseOfflineOptions {
+  /**
+   * Nombre d'advancements appliques PAR LA FEUILLE DE MATCH elle-meme,
+   * par joueur (entrees `applied: true` de `advancementsHome/Away`).
+   * L'invalidation de la feuille les reverse juste apres ce call
+   * (`reverseAppliedAdvancements`) : le garde-fou `advancement-consumed`
+   * les soustrait donc du compte courant, sinon TOUTE feuille validee
+   * avec une evolution stagee serait a jamais non-invalidable.
+   */
+  readonly sheetAppliedAdvancements?: ReadonlyMap<string, number>;
+}
+
 /**
  * Annule tous les effets d'un resultat offline et supprime le Match
  * synthetique. Idempotent quant aux garde-fous (refus si effet consomme).
  */
 export async function reverseOfflineLeagueResult(
   matchId: string,
+  options: ReverseOfflineOptions = {},
 ): Promise<ReverseOfflineOutcome> {
   const match = (await prisma.match.findUnique({
     where: { id: matchId },
@@ -320,7 +333,13 @@ export async function reverseOfflineLeagueResult(
   const home = pairing.homeParticipant;
   const away = pairing.awayParticipant;
 
-  // Garde-fou : level-up deja consomme issu de ce match.
+  // Garde-fou : level-up deja consomme issu de ce match. Les
+  // advancements appliques par la feuille de match elle-meme (et que
+  // l'invalidation va reverser dans la foulee) sont deduits du compte —
+  // seul un advancement pris par un AUTRE chemin (post-match L2.B.3)
+  // bloque la reversion.
+  const sheetApplied =
+    options.sheetAppliedAdvancements ?? new Map<string, number>();
   const choices = parsePendingChoices(
     match.leaguePostMatchSequence?.pendingChoices,
   );
@@ -333,7 +352,10 @@ export async function reverseOfflineLeagueResult(
       players.map((p) => [p.id, advancementsCount(p.advancements)]),
     );
     const consumed = choices.some(
-      (c) => (countById.get(c.teamPlayerId) ?? 0) > c.advancementsTaken,
+      (c) =>
+        (countById.get(c.teamPlayerId) ?? 0) -
+          (sheetApplied.get(c.teamPlayerId) ?? 0) >
+        c.advancementsTaken,
     );
     if (consumed) {
       return { skipped: true, reason: "advancement-consumed" };
@@ -388,6 +410,7 @@ export async function reverseOfflineLeagueResult(
         casualties: s.casualties ?? 0,
         completions: s.completions ?? 0,
         interceptions: s.interceptions ?? 0,
+        ttmLandings: s.ttmLandings ?? 0,
         mvp: s.mvp ?? false,
       };
       sppOps.push({
@@ -603,10 +626,18 @@ export async function reverseOfflineLeagueResult(
   );
 
   // 6. Re-ouverture du pairing + du round si la saisie l'avait clôture.
+  //    Le snapshot de points bonus (Lot E) est remis a zero : les bonus ne
+  //    sont plus comptes dans `points` mais la colonne `Bo` du classement
+  //    agrege ces snapshots — un match reverse ne doit plus y contribuer.
   ops.push(
     prisma.leaguePairing.update({
       where: { id: pairing.id },
-      data: { status: "scheduled" },
+      data: {
+        status: "scheduled",
+        bonusPointsHome: 0,
+        bonusPointsAway: 0,
+        bonusBreakdown: null,
+      },
     }),
   );
   if (match.leagueRound && match.leagueRound.status === "completed") {
@@ -645,16 +676,11 @@ export async function reverseOfflineLeagueResult(
     }
   }
 
-  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit) pour
-  // les equipes dont le roster a ete mute par les achats OU les licenciements.
-  const tvTeams = new Set<string>();
-  if (sideHasMutation(rosterMutations.home)) tvTeams.add(home.teamId);
-  if (sideHasMutation(rosterMutations.away)) tvTeams.add(away.teamId);
-  if (statusReverted.length > 0) {
-    tvTeams.add(home.teamId);
-    tvTeams.add(away.teamId);
-  }
-  for (const teamId of tvTeams) {
+  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit)
+  // pour les DEUX equipes : la reversion peut avoir mute le roster
+  // (achats, licenciements, morts) mais aussi les flags missNextMatch
+  // (blessures MNG annulees) dont depend desormais la VEA.
+  for (const teamId of [home.teamId, away.teamId]) {
     await updateTeamValues(prisma, teamId);
   }
 

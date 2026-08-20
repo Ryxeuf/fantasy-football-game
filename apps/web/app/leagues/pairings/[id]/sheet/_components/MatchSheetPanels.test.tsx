@@ -3,12 +3,15 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   PreMatchPanel,
   PostMatchPanel,
+  PlayerSelect,
+  JourneymenPanel,
   TeamIdentityBadges,
   TeamValueStrip,
   InvalidateControl,
   type MatchSheetReference,
   type PreMatchValues,
   type PostMatchValues,
+  type SheetPlayer,
   type SheetTeam,
 } from "./MatchSheetPanels";
 
@@ -91,6 +94,191 @@ const EMPTY_VALUES: PreMatchValues = {
   prayersHome: [],
   prayersAway: [],
 };
+
+function sheetPlayer(over: Partial<SheetPlayer> = {}): SheetPlayer {
+  return {
+    id: "p1",
+    number: 1,
+    name: "Boris",
+    position: "human_lineman",
+    positionName: "Trois-quarts",
+    dead: false,
+    missNextMatch: false,
+    spp: 0,
+    ...over,
+  };
+}
+
+describe("PlayerSelect — joueurs indisponibles", () => {
+  const team: SheetTeam = {
+    ...TEAM,
+    players: [
+      sheetPlayer(),
+      sheetPlayer({ id: "p2", number: 2, name: "Mort", dead: true }),
+      sheetPlayer({ id: "p3", number: 3, name: "Absent", missNextMatch: true }),
+    ],
+  };
+
+  it("exclut morts et absents des options par défaut", () => {
+    render(
+      <PlayerSelect team={team} value="" onChange={() => {}} testId="ps" />,
+    );
+    const options = within(screen.getByTestId("ps")).getAllByRole("option");
+    expect(options.map((o) => o.textContent)).toEqual([
+      "— joueur —",
+      "N°1 Boris — Trois-quarts",
+    ]);
+  });
+
+  it("garde visible la valeur déjà sélectionnée même indisponible", () => {
+    render(
+      <PlayerSelect team={team} value="p2" onChange={() => {}} testId="ps" />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toContain("N°2 Mort — Trois-quarts ☠");
+  });
+
+  it("liste tout le monde avec includeUnavailable (licenciements)", () => {
+    render(
+      <PlayerSelect
+        team={team}
+        value=""
+        onChange={() => {}}
+        includeUnavailable
+        testId="ps"
+      />,
+    );
+    const options = within(screen.getByTestId("ps")).getAllByRole("option");
+    expect(options).toHaveLength(4); // vide + 3 joueurs
+  });
+});
+
+describe("PlayerSelect — journaliers", () => {
+  const team: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    journeymen: [
+      {
+        id: "journeyman-home-1",
+        number: 12,
+        name: "Journalier 1",
+        position: "human_lineman",
+        positionName: "Journalier (Trois-quarts)",
+        stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+        skills: "loner-4",
+      },
+    ],
+  };
+
+  it("propose les journaliers après les joueurs du roster", () => {
+    render(
+      <PlayerSelect team={team} value="" onChange={() => {}} testId="ps" />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual([
+      "— joueur —",
+      "N°1 Boris — Trois-quarts",
+      "N°12 Journalier 1 — Journalier (Trois-quarts)",
+    ]);
+  });
+
+  it("les exclut avec includeJourneymen=false (roster réel)", () => {
+    render(
+      <PlayerSelect
+        team={team}
+        value=""
+        onChange={() => {}}
+        includeJourneymen={false}
+        testId="ps"
+      />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual(["— joueur —", "N°1 Boris — Trois-quarts"]);
+  });
+});
+
+describe("JourneymenPanel", () => {
+  const baseTeam: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    journeymen: [
+      {
+        id: "journeyman-home-1",
+        number: 12,
+        name: "Journalier 1",
+        position: "undead_trois_quart_squelette",
+        positionName: "Journalier (Trois-quart Squelette)",
+      },
+      {
+        id: "journeyman-home-2",
+        number: 13,
+        name: "Journalier 2",
+        position: "undead_trois_quart_squelette",
+        positionName: "Journalier (Trois-quart Squelette)",
+      },
+    ],
+    journeymenOptions: [
+      { slug: "undead_trois_quart_squelette", name: "Trois-quart Squelette" },
+      { slug: "undead_trois_quart_zombie", name: "Trois-quart Zombie" },
+    ],
+    journeymenChoice: null,
+  };
+
+  it("affiche le nombre de journaliers et le choix du poste", () => {
+    const onChoose = vi.fn();
+    render(
+      <JourneymenPanel
+        team={baseTeam}
+        side="home"
+        editable
+        onChoose={onChoose}
+      />,
+    );
+    expect(screen.getByTestId("journeymen-home").textContent).toContain(
+      "2 journaliers",
+    );
+    const select = screen.getByTestId("journeymen-position-home");
+    fireEvent.change(select, {
+      target: { value: "undead_trois_quart_zombie" },
+    });
+    expect(onChoose).toHaveBeenCalledWith("undead_trois_quart_zombie");
+  });
+
+  it("pas de sélecteur quand un seul poste de lineman", () => {
+    render(
+      <JourneymenPanel
+        team={{
+          ...baseTeam,
+          journeymenOptions: [
+            { slug: "skaven_rat_des_clans_skaven", name: "Rat des clans" },
+          ],
+        }}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(screen.queryByTestId("journeymen-position-home")).toBeNull();
+  });
+
+  it("ne rend rien quand l'équipe aligne 11 joueurs (aucun journalier)", () => {
+    const { container } = render(
+      <JourneymenPanel
+        team={{ ...baseTeam, journeymen: [] }}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+});
 
 describe("TeamIdentityBadges / TeamValueStrip", () => {
   it("affiche la race et le coach", () => {

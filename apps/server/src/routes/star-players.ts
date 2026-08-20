@@ -6,6 +6,7 @@ import {
   getRegionalRulesForTeam,
   getStarPlayerKeywords,
   translateKeywordsCsv,
+  STAR_PLAYER_PAIR_PARTNERS,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
@@ -51,8 +52,48 @@ function transformStarPlayer(sp: any) {
     imageUrl: sp.imageUrl,
     isMegaStar: sp.isMegaStar,
     skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+    // Noms de competences FRAIS depuis la DB (nameFr/nameEn) : la carte
+    // publique les prefere au catalogue statique compile dans le bundle
+    // (qui droppait silencieusement les slugs inconnus et servait des
+    // libelles perimes apres un edit admin).
+    skillDetails: sp.skills.map((sps: any) => ({
+      slug: sps.skill.slug,
+      nameFr: sps.skill.nameFr ?? null,
+      nameEn: sps.skill.nameEn ?? null,
+    })),
     hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
   };
+}
+
+/**
+ * Attache `pairWith`/`pairCost` a partir des COUTS DB (frais). La RELATION
+ * de paire est une constante du livre (`STAR_PLAYER_PAIR_PARTNERS`), mais
+ * le prix affiche doit refleter la base — pas le catalogue statique.
+ * `pairCost` est omis si le partenaire n'est pas dans le lot fourni
+ * (le front retombe alors sur son calcul historique).
+ */
+function attachPairData<T extends { slug: string; cost: number }>(
+  rows: T[],
+  extraCostBySlug?: ReadonlyMap<string, number>,
+): T[] {
+  const costBySlug = new Map<string, number>(
+    rows.map((r) => [r.slug, r.cost]),
+  );
+  for (const [slug, cost] of extraCostBySlug ?? []) {
+    if (!costBySlug.has(slug)) costBySlug.set(slug, cost);
+  }
+  return rows.map((r) => {
+    const partnerSlug = STAR_PLAYER_PAIR_PARTNERS[r.slug];
+    if (!partnerSlug) return r;
+    const partnerCost = costBySlug.get(partnerSlug);
+    return {
+      ...r,
+      pairWith: partnerSlug,
+      ...(partnerCost !== undefined
+        ? { pairCost: r.cost + partnerCost }
+        : {}),
+    };
+  });
 }
 
 /**
@@ -80,7 +121,9 @@ router.get("/", async (req, res) => {
     });
 
     // Transformer les données pour correspondre au format attendu
-    const transformedStarPlayers = starPlayers.map(transformStarPlayer);
+    const transformedStarPlayers = attachPairData(
+      starPlayers.map(transformStarPlayer),
+    );
 
     res.json({
       success: true,
@@ -165,7 +208,9 @@ router.get("/search", async (req, res) => {
     });
 
     // Transformer les données
-    const transformedStarPlayers = starPlayers.map(transformStarPlayer);
+    const transformedStarPlayers = attachPairData(
+      starPlayers.map(transformStarPlayer),
+    );
 
     res.json({
       success: true,
@@ -240,11 +285,33 @@ router.get("/:slug", async (req, res) => {
       });
     }
 
+    // Prix de paire frais : lookup du partenaire dans le meme ruleset
+    // (repli tous rulesets, comme le star lui-meme).
+    const partnerSlug = STAR_PLAYER_PAIR_PARTNERS[starPlayer.slug];
+    const extraCosts = new Map<string, number>();
+    if (partnerSlug) {
+      const partner =
+        (await starPlayerModel.findFirst({
+          where: { slug: partnerSlug, ruleset: starPlayer.ruleset },
+          select: { slug: true, cost: true },
+        })) ??
+        (await starPlayerModel.findFirst({
+          where: { slug: partnerSlug },
+          select: { slug: true, cost: true },
+        }));
+      if (partner) extraCosts.set(partner.slug, partner.cost);
+    }
+
     // Transformer les données
-    const transformedStarPlayer = {
-      ...transformStarPlayer(starPlayer),
-      ruleset: starPlayer.ruleset,
-    };
+    const [transformedStarPlayer] = attachPairData(
+      [
+        {
+          ...transformStarPlayer(starPlayer),
+          ruleset: starPlayer.ruleset,
+        },
+      ],
+      extraCosts,
+    );
 
     res.json({
       success: true,
@@ -341,13 +408,15 @@ router.get("/available/:roster", async (req, res) => {
     // roster + règles régionales). Un star éligible par PLUSIEURS critères
     // peut être remonté plusieurs fois → on garde la première occurrence.
     const seenSlugs = new Set<string>();
-    const transformedStarPlayers = starPlayers
-      .filter((sp: any) => {
-        if (seenSlugs.has(sp.slug)) return false;
-        seenSlugs.add(sp.slug);
-        return true;
-      })
-      .map(transformStarPlayer);
+    const transformedStarPlayers = attachPairData(
+      starPlayers
+        .filter((sp: any) => {
+          if (seenSlugs.has(sp.slug)) return false;
+          seenSlugs.add(sp.slug);
+          return true;
+        })
+        .map(transformStarPlayer),
+    );
 
     res.json({
       success: true,

@@ -186,6 +186,11 @@ export async function recordLeagueMatchResult(
   // Lot E — applique les regles de bonus configurees au niveau de
   // la ligue. Le cote "A" = home pour le scoring du pairing
   // (convention historique du modele).
+  //
+  // Les points bonus ne sont PAS ajoutes aux points generiques
+  // (`LeagueParticipant.points` reste le bareme win/draw/loss pur) :
+  // ils sont snapshotes sur le pairing (`bonusPointsHome/Away`) et
+  // exposes au classement dans la colonne dediee `Bo`.
   const bonusRules = parseBonusConfig(
     (bareme as { bonusPointsConfig?: unknown }).bonusPointsConfig,
   );
@@ -197,8 +202,6 @@ export async function recordLeagueMatchResult(
     winner: winner === "A" ? "home" : winner === "B" ? "away" : "draw",
   };
   const bonus = evaluateBonusRules(bonusRules, bonusCtx);
-  const pointsA = basePointsA + bonus.homeBonus;
-  const pointsB = basePointsB + bonus.awayBonus;
 
   // L.8 — ELO saisonnier : calcul des deltas en utilisant le K-factor de
   // placement (48) tant que le participant n'a pas joue 5 matchs, sinon 32.
@@ -228,7 +231,7 @@ export async function recordLeagueMatchResult(
       wins: { increment: winner === "A" ? 1 : 0 },
       draws: { increment: winner === "draw" ? 1 : 0 },
       losses: { increment: winner === "B" ? 1 : 0 },
-      points: { increment: pointsA },
+      points: { increment: basePointsA },
       touchdownsFor: { increment: input.scoreA },
       touchdownsAgainst: { increment: input.scoreB },
       casualtiesFor: { increment: input.casualtiesA },
@@ -243,7 +246,7 @@ export async function recordLeagueMatchResult(
       wins: { increment: winner === "B" ? 1 : 0 },
       draws: { increment: winner === "draw" ? 1 : 0 },
       losses: { increment: winner === "A" ? 1 : 0 },
-      points: { increment: pointsB },
+      points: { increment: basePointsB },
       touchdownsFor: { increment: input.scoreB },
       touchdownsAgainst: { increment: input.scoreA },
       casualtiesFor: { increment: input.casualtiesB },
@@ -427,7 +430,7 @@ export async function recordLeagueMatchResult(
   return {
     recorded: true,
     winner,
-    pointsDelta: { teamA: pointsA, teamB: pointsB },
+    pointsDelta: { teamA: basePointsA, teamB: basePointsB },
     roundCompleted,
     seasonCompleted,
     seasonElo: {

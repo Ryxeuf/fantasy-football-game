@@ -61,6 +61,8 @@ export interface OfflinePlayerStatInput {
   readonly casualties?: number;
   readonly completions?: number;
   readonly interceptions?: number;
+  /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
+  readonly ttmLandings?: number;
   readonly mvp?: boolean;
 }
 
@@ -598,6 +600,7 @@ async function applyOfflinePlayerSPP(
       casualties: s.casualties ?? 0,
       completions: s.completions ?? 0,
       interceptions: s.interceptions ?? 0,
+      ttmLandings: s.ttmLandings ?? 0,
       mvp: s.mvp ?? false,
     };
     const earned = calculatePlayerSPP(stats, modifier);
@@ -884,6 +887,13 @@ export async function recordOfflineLeagueResult(
       },
     });
   }
+
+  // Recalcul final VE/VEA des 2 equipes : les suspensions purgees et les
+  // nouvelles blessures MNG viennent de changer les joueurs absents, dont
+  // depend la VEA (VEA = VE - valeur des joueurs absents). Couvre aussi
+  // morts/achats/licenciements en un seul point.
+  await updateTeamValues(prisma, home.teamId);
+  await updateTeamValues(prisma, away.teamId);
 
   const winner: OfflineResultWinner =
     recorded.winner === "A" ? "home" : recorded.winner === "B" ? "away" : "draw";

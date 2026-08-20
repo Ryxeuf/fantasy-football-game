@@ -36,6 +36,14 @@ import {
 import { parsePurchases } from "./league-offline-purchases";
 import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import {
+  deriveJourneymen,
+  isJourneymanId,
+  linemanPositionsForRoster,
+  parseJourneymenChoice,
+  type JourneymanPositionOption,
+  type SheetJourneyman,
+} from "./league-sheet-journeymen";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
@@ -297,6 +305,9 @@ export interface PreMatchPayload {
   inducementsAway?: unknown;
   prayersHome?: unknown;
   prayersAway?: unknown;
+  /** Journaliers — poste de lineman choisi (slug), null = defaut. */
+  journeymenChoiceHome?: string | null;
+  journeymenChoiceAway?: string | null;
 }
 
 /** Met a jour les infos d'avant-match. */
@@ -319,9 +330,24 @@ export async function updatePreMatch(input: {
 
   // Coups de pouce : on borne la depense au budget officiel (petty cash +
   // tresorerie). Le petty cash depend des 2 CTV -> on charge les equipes et
-  // calcule le budget une seule fois si une selection est presente.
+  // calcule le budget une seule fois si une selection est presente. Les
+  // CTV/tresoreries sont figees au debut du match si le roster l'est deja.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
-    const teams = await loadSheetTeams(input.pairingId);
+    const teamsLive = await loadSheetTeams(input.pairingId);
+    const snapForBudget = sheet as {
+      rosterSnapshotHome?: unknown;
+      rosterSnapshotAway?: unknown;
+    };
+    const teams = {
+      home: withFrozenTeamValues(
+        teamsLive.home,
+        snapForBudget.rosterSnapshotHome,
+      ),
+      away: withFrozenTeamValues(
+        teamsLive.away,
+        snapForBudget.rosterSnapshotAway,
+      ),
+    };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
     // les deux sélections (payload prioritaire, sinon valeur déjà stockée).
     const sheetInd = sheet as {
@@ -408,6 +434,17 @@ export async function updatePreMatch(input: {
   if (p.inducementsAway !== undefined) data.inducementsAway = p.inducementsAway ?? undefined;
   if (p.prayersHome !== undefined) data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined) data.prayersAway = p.prayersAway ?? undefined;
+  // Journaliers : choix du poste de lineman ({ position } | null).
+  if (p.journeymenChoiceHome !== undefined) {
+    data.journeymenHome = p.journeymenChoiceHome
+      ? { position: p.journeymenChoiceHome }
+      : null;
+  }
+  if (p.journeymenChoiceAway !== undefined) {
+    data.journeymenAway = p.journeymenChoiceAway
+      ? { position: p.journeymenChoiceAway }
+      : null;
+  }
 
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -582,18 +619,65 @@ export async function submitByCoach(input: {
   const sheetSnap = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
   };
   let snapshotData: Record<string, unknown> = {};
   if (!sheetSnap.rosterSnapshotHome || !sheetSnap.rosterSnapshotAway) {
     try {
       const teams = await loadSheetTeams(input.pairingId);
-      if (!sheetSnap.rosterSnapshotHome && teams.home?.teamId) {
-        const snap = await captureRosterSnapshot(teams.home.teamId);
-        if (snap) snapshotData.rosterSnapshotHome = JSON.stringify(snap);
+      // Les joueurs absents (missNextMatch) ne participent pas au match :
+      // ils sont exclus de la « version du match » figee. Si l'equipe
+      // aligne moins de 11 joueurs, les journaliers derives completent la
+      // version du match.
+      const captureSide = async (
+        team: MatchSheetTeam | null,
+        side: "home" | "away",
+      ): Promise<string | null> => {
+        if (!team?.teamId) return null;
+        const snap = await captureRosterSnapshot(team.teamId, {
+          excludeMissNextMatch: true,
+        });
+        if (!snap) return null;
+        const journeymen = deriveJourneymen({
+          side,
+          roster: team.roster,
+          ruleset: team.ruleset,
+          players: team.players,
+          chosenPosition: parseJourneymenChoice(
+            side === "home"
+              ? sheetSnap.journeymenHome
+              : sheetSnap.journeymenAway,
+          ),
+        });
+        if (journeymen.length === 0) return JSON.stringify(snap);
+        return JSON.stringify({
+          ...snap,
+          players: [
+            ...snap.players,
+            ...journeymen.map((j) => ({
+              name: j.name,
+              position: j.positionName,
+              number: j.number,
+              ma: j.stats.ma,
+              st: j.stats.st,
+              ag: j.stats.ag,
+              pa: j.stats.pa,
+              av: j.stats.av,
+              skills: j.skills,
+              spp: 0,
+              advancements: "[]",
+            })),
+          ],
+        });
+      };
+      if (!sheetSnap.rosterSnapshotHome) {
+        const json = await captureSide(teams.home, "home");
+        if (json) snapshotData.rosterSnapshotHome = json;
       }
-      if (!sheetSnap.rosterSnapshotAway && teams.away?.teamId) {
-        const snap = await captureRosterSnapshot(teams.away.teamId);
-        if (snap) snapshotData.rosterSnapshotAway = JSON.stringify(snap);
+      if (!sheetSnap.rosterSnapshotAway) {
+        const json = await captureSide(teams.away, "away");
+        if (json) snapshotData.rosterSnapshotAway = json;
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
@@ -797,20 +881,26 @@ export function buildOfflineInputFromSummary(
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
 
-  const playerStats: OfflinePlayerStatInput[] = summary.playerStats.map(
-    (p) => ({
+  // Les journaliers sont des joueurs SYNTHETIQUES de la feuille (aucune
+  // ligne TeamPlayer) : leurs stats/blessures/bonus restent visibles sur
+  // la feuille mais ne doivent PAS partir en persistance post-match
+  // (updates Prisma sur des ids inexistants).
+  const playerStats: OfflinePlayerStatInput[] = summary.playerStats
+    .filter((p) => !isJourneymanId(p.playerId))
+    .map((p) => ({
       teamPlayerId: p.playerId,
       touchdowns: p.touchdowns,
       casualties: p.casualtiesInflicted,
       completions: p.completions,
       interceptions: p.interceptions,
+      ttmLandings: p.ttmLandings,
       mvp: motmSet.has(p.playerId),
-    }),
-  );
+    }));
 
   // Les MVP sans stat-line (joueur primé sans event) doivent quand meme
   // recevoir le flag mvp -> on les ajoute.
   for (const id of motm) {
+    if (isJourneymanId(id)) continue;
     if (!playerStats.some((p) => p.teamPlayerId === id)) {
       playerStats.push({ teamPlayerId: id, mvp: true });
     }
@@ -820,6 +910,7 @@ export function buildOfflineInputFromSummary(
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
   for (const inj of summary.injuries) {
+    if (isJourneymanId(inj.playerId)) continue;
     // A62 — la victime d'un other_elim est portee par actorPlayerId
     // (auto-elimination sans cible) : on matche acteur OU cible.
     const src = eventsForMeta.find(
@@ -864,14 +955,18 @@ export function buildOfflineInputFromSummary(
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
-    sppBonus: parseSppBonus(sheet.sppBonus),
+    sppBonus: parseSppBonus(sheet.sppBonus).filter(
+      (b) => !isJourneymanId(b.teamPlayerId),
+    ),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
     // par treasuryDebit ci-dessus : pas de double-debit).
     purchasesHome: parsePurchases(sheet.purchasesHome),
     purchasesAway: parsePurchases(sheet.purchasesAway),
     // Licenciements -> firedAt (retire du roster actif, reversible).
-    firedPlayerIds: parseStringArray(sheet.firedPlayerIds),
+    firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
+      (id) => !isJourneymanId(id),
+    ),
   };
 }
 
@@ -955,7 +1050,12 @@ export async function validateByCommissioner(input: {
     where: { matchSheetId: sheet.id },
     orderBy: { occurredAt: "asc" },
   })) as Array<MatchEventInput & { meta?: unknown }>;
-  const summary = summarizeMatchSheet(events);
+  // Les PSP d'une Élimination sur Action Spéciale ne vont qu'aux joueurs
+  // ayant Innovateur Violent : le summarizer a besoin de leurs ids.
+  const teamsForBudgetLive = await loadSheetTeams(input.pairingId);
+  const summary = summarizeMatchSheet(events, {
+    violentInnovators: collectViolentInnovators(teamsForBudgetLive),
+  });
 
   // Forfait declare a l'avant-match : on route vers recordForfeit (le cote
   // adverse gagne 2-0, bareme forfeit) au lieu de la saisie normale. Pas de
@@ -985,8 +1085,22 @@ export async function validateByCommissioner(input: {
 
   // Petty cash par equipe (regles BB) : sert a ne debiter la tresorerie que
   // de l'excedent de coups de pouce au-dela du petty cash recu. A55 — la
-  // cagnotte de l'underdog inclut la depense adverse.
-  const teamsForBudget = await loadSheetTeams(input.pairingId);
+  // cagnotte de l'underdog inclut la depense adverse. Les CTV/tresoreries
+  // utilisees sont FIGEES au debut du match (snapshot 1re soumission).
+  const sheetSnapForBudget = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  };
+  const teamsForBudget = {
+    home: withFrozenTeamValues(
+      teamsForBudgetLive.home,
+      sheetSnapForBudget.rosterSnapshotHome,
+    ),
+    away: withFrozenTeamValues(
+      teamsForBudgetLive.away,
+      sheetSnapForBudget.rosterSnapshotAway,
+    ),
+  };
   const sheetIndForBudget = sheet as {
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -1197,8 +1311,30 @@ export async function invalidateMatchSheet(input: {
     select: { id: true },
   })) as { id: string } | null;
 
+  const sheetAdv = sheet as {
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
+  };
+  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+
+  // Evolutions appliquees PAR CETTE FEUILLE (elles seront reversees
+  // juste apres) : le garde-fou `advancement-consumed` de la reversion
+  // les deduit du compte courant, sinon toute feuille validee avec une
+  // evolution choisie serait a jamais non-invalidable.
+  const sheetAppliedAdvancements = new Map<string, number>();
+  for (const entry of [...stagedHome, ...stagedAway]) {
+    if (entry.applied !== true) continue;
+    sheetAppliedAdvancements.set(
+      entry.playerId,
+      (sheetAppliedAdvancements.get(entry.playerId) ?? 0) + 1,
+    );
+  }
+
   if (match) {
-    const reversed = await reverseOfflineLeagueResult(match.id);
+    const reversed = await reverseOfflineLeagueResult(match.id, {
+      sheetAppliedAdvancements,
+    });
     if ("skipped" in reversed) {
       // Reversion impossible (mort, saison cloturee, playoffs...) :
       // on refuse l'invalidation pour ne pas laisser un etat incoherent.
@@ -1214,12 +1350,6 @@ export async function invalidateMatchSheet(input: {
   // `applied` pour qu'une re-validation ré-applique proprement.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const advData: any = {};
-  const sheetAdv = sheet as {
-    advancementsHome?: unknown;
-    advancementsAway?: unknown;
-  };
-  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
-  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
   if (stagedHome.length > 0 || stagedAway.length > 0) {
     const teams = await loadSheetTeams(input.pairingId);
     if (stagedHome.length > 0 && teams.home?.teamId) {
@@ -1374,6 +1504,8 @@ export interface MatchSheetPlayer {
     readonly pa: number | null;
     readonly av: number;
   };
+  /** Image uploadée par le coach (null => initiales côté UI). */
+  readonly imageUrl: string | null;
 }
 
 export interface MatchSheetTeam {
@@ -1401,6 +1533,16 @@ export interface MatchSheetTeam {
    */
   readonly dedicatedFans: number;
   readonly players: readonly MatchSheetPlayer[];
+  /**
+   * Journaliers derives (equipe a moins de 11 joueurs disponibles).
+   * Renseignes par getMatchSheet (necessite le choix stocke sur la
+   * feuille) ; vides sinon.
+   */
+  readonly journeymen?: readonly SheetJourneyman[];
+  /** Postes de lineman offerts au choix du coach (>= 12 max). */
+  readonly journeymenOptions?: readonly JourneymanPositionOption[];
+  /** Choix courant ({ position } sur la feuille), null = defaut. */
+  readonly journeymenChoice?: string | null;
 }
 
 /** Libelle de race depuis un roster slug (fallback : le slug brut). */
@@ -1490,6 +1632,7 @@ async function loadSheetTeams(
           ag: true,
           pa: true,
           av: true,
+          imageUrl: true,
         },
       },
     },
@@ -1519,6 +1662,7 @@ async function loadSheetTeams(
       ag: number;
       pa: number | null;
       av: number;
+      imageUrl?: string | null;
     }>;
   }>;
 
@@ -1562,12 +1706,89 @@ async function loadSheetTeams(
         advancementsTaken: countAdvancements(p.advancements),
         stats: { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
         positionName: positionNames.get(p.position) ?? p.position,
+        imageUrl: p.imageUrl ?? null,
       })),
     };
   };
   return {
     home: toTeam(pairing?.homeParticipant?.teamId),
     away: toTeam(pairing?.awayParticipant?.teamId),
+  };
+}
+
+/**
+ * Valeurs d'en-tête d'équipe FIGÉES au début du match, lues depuis le
+ * snapshot de roster (1re soumission). Une fois le snapshot posé, la
+ * feuille affiche (et budgète) les valeurs du match — les valeurs live
+ * bougent ensuite (gains, évolutions, licenciements) et ne doivent plus
+ * changer l'en-tête ni les budgets de coups de pouce.
+ */
+function parseFrozenTeamValues(raw: unknown): {
+  teamValue?: number;
+  currentValue?: number;
+  treasury?: number;
+  dedicatedFans?: number;
+} | null {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as Record<string, unknown>;
+  const num = (v: unknown): number | undefined =>
+    typeof v === "number" && Number.isFinite(v) ? v : undefined;
+  return {
+    teamValue: num(o.teamValue),
+    currentValue: num(o.currentValue),
+    treasury: num(o.treasury),
+    dedicatedFans: num(o.dedicatedFans),
+  };
+}
+
+/**
+ * Ids des joueurs (des 2 équipes) ayant la compétence « Innovateur
+ * Violent ». Le summarizer ne crédite les PSP d'une Élimination sur
+ * Action Spéciale (`special_elim`) qu'à ces joueurs (règle BB S3).
+ */
+function collectViolentInnovators(teams: {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}): Set<string> {
+  const out = new Set<string>();
+  for (const team of [teams.home, teams.away]) {
+    for (const p of team?.players ?? []) {
+      const slugs = (p.skills ?? "")
+        .split(",")
+        .map((sk) => sk.trim().toLowerCase());
+      if (
+        slugs.includes("violent-innovator") ||
+        slugs.includes("violent_innovator")
+      ) {
+        out.add(p.id);
+      }
+    }
+  }
+  return out;
+}
+
+/** Applique les valeurs figées du snapshot sur une équipe chargée live. */
+function withFrozenTeamValues(
+  team: MatchSheetTeam | null,
+  raw: unknown,
+): MatchSheetTeam | null {
+  if (!team) return null;
+  const frozen = parseFrozenTeamValues(raw);
+  if (!frozen) return team;
+  return {
+    ...team,
+    teamValue: frozen.teamValue ?? team.teamValue,
+    currentValue: frozen.currentValue ?? team.currentValue,
+    treasury: frozen.treasury ?? team.treasury,
+    dedicatedFans: frozen.dedicatedFans ?? team.dedicatedFans,
   };
 }
 
@@ -1890,8 +2111,21 @@ export async function getMatchSheet(input: {
   }
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
-  const teams = await loadSheetTeams(input.pairingId);
-  const summary = summarizeMatchSheet(events);
+  const teamsLive = await loadSheetTeams(input.pairingId);
+  // En-tête (TV/VEA/cagnotte/fans) figé au début du match dès que le
+  // roster est figé (1re soumission) : les valeurs live continuent
+  // d'évoluer après validation mais la feuille garde celles du match.
+  const sheetSnapRaw = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  };
+  const teams = {
+    home: withFrozenTeamValues(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
+    away: withFrozenTeamValues(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
+  };
+  const summary = summarizeMatchSheet(events, {
+    violentInnovators: collectViolentInnovators(teamsLive),
+  });
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
@@ -1912,6 +2146,7 @@ export async function getMatchSheet(input: {
         casualties: s.casualtiesInflicted,
         completions: s.completions,
         interceptions: s.interceptions,
+        ttmLandings: s.ttmLandings,
         mvp: motm.has(s.playerId),
       },
       modifier,
@@ -1921,6 +2156,40 @@ export async function getMatchSheet(input: {
   const allowedInducements = await loadLeagueAllowedInducements(
     input.pairingId,
   );
+
+  // Journaliers : derives du roster courant + choix de poste stocke sur
+  // la feuille. Ils alimentent les pickers d'events et le roster affiche.
+  const sheetJourneymen = sheet as {
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  };
+  const withJourneymen = (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): MatchSheetTeam | null => {
+    if (!team) return null;
+    const choice = parseJourneymenChoice(
+      side === "home"
+        ? sheetJourneymen.journeymenHome
+        : sheetJourneymen.journeymenAway,
+    );
+    return {
+      ...team,
+      journeymen: deriveJourneymen({
+        side,
+        roster: team.roster,
+        ruleset: team.ruleset,
+        players: team.players,
+        chosenPosition: choice,
+      }),
+      journeymenOptions: linemanPositionsForRoster(team.roster, team.ruleset),
+      journeymenChoice: choice,
+    };
+  };
+  const teamsWithJourneymen = {
+    home: withJourneymen(teams.home, "home"),
+    away: withJourneymen(teams.away, "away"),
+  };
 
   // A63 — expose des gains auto toujours frais : la partie TD depend des
   // events, qui peuvent changer apres le pre-match (valeur stockee stale).
@@ -1942,7 +2211,7 @@ export async function getMatchSheet(input: {
       winningsAway: autoWinnings.away,
     } as typeof sheet,
     summary,
-    teams,
+    teams: teamsWithJourneymen,
     reference: await buildMatchSheetReference(teams, allowedInducements),
     computedSpp,
     viewerRole: commissioner

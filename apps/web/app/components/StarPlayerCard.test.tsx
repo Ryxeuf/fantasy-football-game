@@ -23,6 +23,50 @@ afterEach(() => {
   localStorage.clear();
 });
 
+describe("StarPlayerCard — données fraîches de l'API", () => {
+  it("préfère les noms de compétences renvoyés par l'API au catalogue statique", () => {
+    render(
+      <LanguageProvider>
+        <StarPlayerCard
+          starPlayer={{
+            ...GRIFF,
+            skillDetails: [
+              { slug: "block", nameFr: "Blocage (édité)", nameEn: "Block" },
+              // Slug inconnu du moteur : le nom DB s'affiche quand même
+              // (le catalogue statique le droppait silencieusement).
+              { slug: "toute-nouvelle-competence", nameFr: "Toute Nouvelle" },
+            ],
+          }}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText("Blocage (édité)")).toBeTruthy();
+    expect(screen.getByText("Toute Nouvelle")).toBeTruthy();
+  });
+
+  it("préfère le prix de paire calculé sur les coûts DB (pairCost API)", () => {
+    render(
+      <LanguageProvider>
+        <StarPlayerCard
+          starPlayer={{
+            ...GRIFF,
+            slug: "grak",
+            pairWith: "crumbleberry",
+            pairCost: 280_000,
+            cost: 250_000,
+          }}
+        />
+      </LanguageProvider>,
+    );
+    // 280 000 / 1000 = « 280 K po » — le coût de PAIRE, pas l'unitaire.
+    expect(screen.getByText(/280 K po|280 K po|280 K po/)).toBeTruthy();
+    // Le nom du partenaire vient du catalogue (repli slug si inconnu).
+    expect(
+      screen.getByTestId("star-player-card-pair").textContent?.toLowerCase(),
+    ).toContain("crumbleberry");
+  });
+});
+
 describe("StarPlayerCard — mots-clés", () => {
   it("affiche une pastille par mot-clé (FR par défaut)", () => {
     render(

@@ -13,7 +13,10 @@ import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
 import { toCanonicalAccessCsv } from "../services/skill-access";
-import { revalidateRosterPages } from "../services/revalidate-web";
+import {
+  revalidateRosterPages,
+  revalidateStarPlayerPages,
+} from "../services/revalidate-web";
 import { invalidateRosterCaches, parseSlugList } from "./public-rosters";
 import { getRegionalRulesForTeam } from "@bb/game-engine";
 import { validate, validateQuery } from "../middleware/validate";
@@ -1311,6 +1314,7 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
         hirableCount: starPlayer.hirableBy.length,
       },
     });
+    void revalidateStarPlayerPages([starPlayer.slug]);
     res.status(201).json({ starPlayer });
   } catch (error: any) {
     if (error instanceof SkillResolutionError) {
@@ -1419,6 +1423,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         hirableCount: starPlayer.hirableBy.length,
       },
     });
+    void revalidateStarPlayerPages([starPlayer.slug]);
     res.json({ starPlayer });
   } catch (error: any) {
     if (error instanceof SkillResolutionError) {
@@ -1447,6 +1452,7 @@ router.delete("/star-players/:id", async (req, res) => {
       entityId: req.params.id,
       oldValue: previous,
     });
+    void revalidateStarPlayerPages(previous?.slug ? [previous.slug] : undefined);
     res.json({ success: true });
   } catch (error: any) {
     if (error.code === "P2025") {

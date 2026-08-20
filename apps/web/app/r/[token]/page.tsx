@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { fetchServerJson, safeServerJson, getServerApiBase } from "../../lib/serverApi";
 import { prettifySlug, parseSkillList } from "../../lib/roster-display";
 import ShareBar from "../../components/ShareBar";
+import PlayerAvatar from "../../components/PlayerAvatar";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr").replace(/\/$/, "");
 
@@ -22,6 +23,7 @@ interface PublicPlayer {
   av: number;
   skills: unknown;
   dead?: boolean;
+  imageUrl?: string | null;
 }
 interface PublicStarPlayer {
   id: string;
@@ -143,7 +145,12 @@ export default async function PublicRosterPage({ params }: { params: { token: st
                 .map((p) => (
                   <tr key={p.id} className="border-b border-nuffle-bronze/10 last:border-0">
                     <td className="px-4 py-2.5 font-score text-lg text-nuffle-bronze">{p.number}</td>
-                    <td className="px-4 py-2.5 font-subtitle font-semibold text-nuffle-anthracite">{p.name}</td>
+                    <td className="px-4 py-2.5 font-subtitle font-semibold text-nuffle-anthracite">
+                      <span className="inline-flex items-center gap-2">
+                        <PlayerAvatar name={p.name} imageUrl={p.imageUrl} size={24} />
+                        {p.name}
+                      </span>
+                    </td>
                     <td className="px-4 py-2.5 text-nuffle-anthracite/75">{prettifySlug(p.position)}</td>
                     <td className="px-3 py-2.5 text-center text-nuffle-anthracite/75">{p.ma}</td>
                     <td className="px-3 py-2.5 text-center text-nuffle-anthracite/75">{p.st}</td>

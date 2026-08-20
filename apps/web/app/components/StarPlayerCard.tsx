@@ -10,9 +10,21 @@ import { useLanguage } from '../contexts/LanguageContext';
  * L'API renvoie `keywordsEn` en plus du `keywords` FR porte par la definition
  * engine. Champ optionnel (retro-compat : un serveur pre-migration ne le
  * renvoie pas encore).
+ *
+ * `skillDetails` / `pairWith` / `pairCost` : donnees FRAICHES issues de la
+ * base (editables en admin). Quand presentes, elles priment sur le
+ * catalogue statique compile dans le bundle — qui, lui, n'est a jour
+ * qu'au dernier deploiement.
  */
 export type StarPlayerWithKeywords = StarPlayerDefinition & {
   readonly keywordsEn?: string | null;
+  readonly skillDetails?: ReadonlyArray<{
+    readonly slug: string;
+    readonly nameFr?: string | null;
+    readonly nameEn?: string | null;
+  }>;
+  readonly pairWith?: string | null;
+  readonly pairCost?: number | null;
 };
 
 interface StarPlayerCardProps {
@@ -33,18 +45,27 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
 
   // Lot G — paires obligatoires. Le prix de la carte est celui de LA PAIRE :
   // le catalogue le porte sur le primaire et met le partenaire a 0. On affiche
-  // donc le prix de la paire des deux cotes, avec le nom du bon partenaire
-  // (l'ancien libelle disait « Gratuit (avec Grak) » pour tout partenaire a 0,
-  // Drull compris — qui s'associe a Dribl).
+  // donc le prix de la paire des deux cotes, avec le nom du bon partenaire.
+  // Le prix de paire FRAIS vient de l'API (couts DB) quand disponible ;
+  // le catalogue statique ne sert que de repli (donnee du dernier deploy).
   const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
+  const isPaired = Boolean(starPlayer.pairWith) || Boolean(pair);
+  const displayedCost = isPaired
+    ? (starPlayer.pairCost ?? pair?.pairCost ?? starPlayer.cost)
+    : starPlayer.cost;
 
-  const formatCost = (cost: number) => {
-    if (pair) return `${(pair.pairCost / 1000).toLocaleString()} K po`;
-    return `${(cost / 1000).toLocaleString()} K po`;
-  };
+  const formatCost = () => `${(displayedCost / 1000).toLocaleString()} K po`;
 
-  // Utiliser la fonction centralisée pour obtenir les noms d'affichage
-  const skillDisplayNames = getStarPlayerSkillDisplayNames(starPlayer);
+  // Noms de competences : priorite aux libelles FRAIS renvoyes par l'API
+  // (DB editable en admin) ; repli sur le catalogue statique du moteur.
+  const skillDisplayNames =
+    starPlayer.skillDetails && starPlayer.skillDetails.length > 0
+      ? starPlayer.skillDetails.map((sk) =>
+          language === 'en'
+            ? (sk.nameEn ?? sk.nameFr ?? sk.slug)
+            : (sk.nameFr ?? sk.nameEn ?? sk.slug),
+        )
+      : getStarPlayerSkillDisplayNames(starPlayer);
 
   const getRarityColor = (cost: number) => {
     if (cost === 0) return 'bg-gray-100 border-gray-400';
@@ -66,7 +87,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
     <div
       className={`
         rounded-lg border-2 p-4 cursor-pointer transition-all hover:shadow-lg hover:scale-105
-        ${getRarityColor(pair ? pair.pairCost : starPlayer.cost)}
+        ${getRarityColor(displayedCost)}
       `}
       onClick={() => onClick?.(starPlayer)}
     >
@@ -82,7 +103,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
             )}
           </div>
           <span className="text-xs font-semibold text-gray-600">
-            {getRarityLabel(pair ? pair.pairCost : starPlayer.cost)}
+            {getRarityLabel(displayedCost)}
           </span>
           <KeywordChips
             keywords={keywords}
@@ -91,13 +112,13 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
           />
         </div>
         <div className="text-right">
-          <div className="font-bold text-xl">{formatCost(starPlayer.cost)}</div>
-          {pair && (
+          <div className="font-bold text-xl">{formatCost()}</div>
+          {isPaired && (
             <div
               className="text-xs text-gray-600"
               data-testid="star-player-card-pair"
             >
-              paire avec {pair.partnerName}
+              paire avec {pair?.partnerName ?? starPlayer.pairWith}
             </div>
           )}
         </div>

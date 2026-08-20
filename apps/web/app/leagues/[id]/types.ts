@@ -215,8 +215,8 @@ export interface StandingRow {
   /** Lot C — poule d'affectation (null si non assigné). */
   poolId?: string | null;
   /**
-   * E2 — Sous-total de points bonus de la saison (déjà inclus dans
-   * `points`). Optionnel pour rétro-compat API pré-E2.
+   * E2 — Sous-total de points bonus de la saison, compté à part (non
+   * inclus dans `points`). Optionnel pour rétro-compat API pré-E2.
    */
   bonusPoints?: number;
   /**

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../../../lib/api-client";
 import TeamLogo from "../../../../components/TeamLogo";
 import SkillTooltip from "../../../../me/teams/components/SkillTooltip";
+import PlayerAvatar from "../../../../components/PlayerAvatar";
 import SpecialRulesBadges, {
   type SpecialRuleView,
 } from "../../../../components/SpecialRulesBadges";
@@ -51,6 +52,8 @@ interface RosterPlayer {
   /** Provenance du statut mort/licencié (optionnels : rétro-compat API). */
   statusAt?: string | null;
   statusSource?: string | null;
+  /** Photo uploadée par le coach (miniature ; null => initiales). */
+  imageUrl?: string | null;
 }
 
 /**
@@ -331,17 +334,24 @@ export default function LeagueTeamRosterPage() {
                           {p.number}
                         </td>
                         <td className="px-2 py-2 font-medium text-nuffle-anthracite">
-                          {p.name}
-                          {p.dead ? (
-                            <span
-                              title={deathOriginLabel(p)}
-                              data-testid={`player-death-origin-${p.id}`}
-                            >
-                              {" ☠"}
-                            </span>
-                          ) : (
-                            ""
-                          )}
+                          <span className="inline-flex items-center gap-1.5">
+                            <PlayerAvatar
+                              name={p.name}
+                              imageUrl={p.imageUrl}
+                              size={24}
+                            />
+                            {p.name}
+                            {p.dead ? (
+                              <span
+                                title={deathOriginLabel(p)}
+                                data-testid={`player-death-origin-${p.id}`}
+                              >
+                                {" ☠"}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </span>
                         </td>
                         <td className="px-2 py-2 text-gray-600">
                           {p.positionName ?? p.position}

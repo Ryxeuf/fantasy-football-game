@@ -343,7 +343,8 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   statusAt: 'statusAt',
   statusSource: 'statusSource',
   statusSourceId: 'statusSourceId',
-  isCaptain: 'isCaptain'
+  isCaptain: 'isCaptain',
+  imageUrl: 'imageUrl'
 };
 
 exports.Prisma.TeamPlayerStatusEventScalarFieldEnum = {
@@ -767,6 +768,8 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   advancementsAway: 'advancementsAway',
   rosterSnapshotHome: 'rosterSnapshotHome',
   rosterSnapshotAway: 'rosterSnapshotAway',
+  journeymenHome: 'journeymenHome',
+  journeymenAway: 'journeymenAway',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

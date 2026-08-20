@@ -64,6 +64,13 @@ export interface PlayerCardData {
   readonly infoText?: string;
   /** Mini-stats (carrière) — exclusif avec `infoText`. */
   readonly infoStats?: readonly PlayerCardInfoStat[];
+  /**
+   * Photo du joueur (pleine résolution) affichée à la place de l'emblème
+   * programmatique. URL STRICTEMENT validée au décodage (chemin
+   * `/images/player-images/*` + origine allowlistée) : le renderer
+   * (`/api/player-card`) la fetch côté serveur — anti-SSRF.
+   */
+  readonly imageUrl?: string;
 }
 
 /** Libellés bilingues des rubriques de la carte. */
@@ -154,6 +161,55 @@ const MAX_STAT_VALUE = 15;
 const MAX_NUMBER = 99;
 
 const ROSTER_SLUG_RE = /^[a-z0-9_-]+$/;
+
+const MAX_IMAGE_URL_LENGTH = 300;
+/** Chemin d'une image de joueur servie par notre API (nom généré). */
+const PLAYER_IMAGE_PATH_RE =
+  /^\/images\/player-images\/[a-z0-9][a-z0-9-]*\.(png|jpg)$/i;
+
+/**
+ * Origines autorisées pour l'image de la carte (anti-SSRF : le payload est
+ * contrôlable par l'appelant et le renderer fetch l'URL côté serveur).
+ */
+function allowedImageOrigins(): string[] {
+  const bases = [
+    process.env.NEXT_PUBLIC_API_BASE,
+    process.env.NEXT_PUBLIC_API_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  ];
+  const origins: string[] = [];
+  for (const base of bases) {
+    if (!base) continue;
+    try {
+      origins.push(new URL(base).origin);
+    } catch {
+      // base invalide -> ignorée
+    }
+  }
+  return origins;
+}
+
+/**
+ * Valide une URL d'image de joueur : chemin relatif de notre dossier
+ * d'upload, ou URL absolue http(s) du même chemin sur une origine
+ * allowlistée. Tout le reste est rejeté (undefined).
+ */
+export function sanitizePlayerImageUrl(raw: unknown): string | undefined {
+  if (typeof raw !== "string" || raw.length === 0) return undefined;
+  if (raw.length > MAX_IMAGE_URL_LENGTH) return undefined;
+  if (raw.startsWith("/")) {
+    return PLAYER_IMAGE_PATH_RE.test(raw) ? raw : undefined;
+  }
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return undefined;
+    if (!PLAYER_IMAGE_PATH_RE.test(url.pathname)) return undefined;
+    if (!allowedImageOrigins().includes(url.origin)) return undefined;
+    return raw;
+  } catch {
+    return undefined;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Helpers purs de formatage
@@ -330,6 +386,8 @@ export interface TeamPlayerCardSource {
   readonly totalCasualties?: number;
   readonly dead?: boolean;
   readonly firedAt?: string | null;
+  /** Photo uploadée par le coach (pleine résolution sur la carte). */
+  readonly imageUrl?: string | null;
 }
 
 export interface BuildTeamCardOptions {
@@ -382,6 +440,7 @@ export function buildTeamPlayerCardData(
       { label: labels.casualties, value: String(player.totalCasualties ?? 0) },
       { label: labels.spp, value: String(player.spp ?? 0) },
     ],
+    imageUrl: sanitizePlayerImageUrl(player.imageUrl),
   };
 }
 
@@ -537,5 +596,6 @@ export function decodeCardPayload(
       CARD_LABELS[lang].career,
     infoText: infoText ? truncateAtWord(infoText, MAX_INFO_TEXT_LENGTH) : undefined,
     infoStats,
+    imageUrl: sanitizePlayerImageUrl(source.imageUrl),
   };
 }

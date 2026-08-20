@@ -646,7 +646,7 @@
     "standingsCasDiffHint": "Casualty difference (inflicted − suffered).",
     "standingsElo": "ELO",
     "standingsBonus": "Bo",
-    "standingsBonusHint": "Cumulative bonus points, already included in the total.",
+    "standingsBonusHint": "Cumulative bonus points, tracked separately (not included in Pts).",
     "standingsForfeit": "Forf",
     "standingsForfeitHint": "Points deducted for forfeits, already included in the total.",
     "standingsPasses": "P",

@@ -16,6 +16,8 @@ export const addEventSchema = z.object({
     "crowd_surge",
     "stalling",
     "team_throw",
+    "ttm_landing",
+    "special_elim",
     "other_elim",
   ]),
   team: z.enum(["home", "away"]).optional().nullable(),
@@ -84,6 +86,9 @@ export const preMatchSchema = z
     inducementsAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
     prayersHome: prayersSchema,
     prayersAway: prayersSchema,
+    /** Journaliers — poste de lineman choisi (slug), null = défaut. */
+    journeymenChoiceHome: z.string().max(64).optional().nullable(),
+    journeymenChoiceAway: z.string().max(64).optional().nullable(),
   })
   .refine(
     (v) => Object.keys(v).length > 0,
