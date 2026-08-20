@@ -34,5 +34,9 @@ export async function GET(request: Request): Promise<Response> {
   }
   return renderPlayerCardResponse(data, {
     download: url.searchParams.get("download") === "1",
+    // L'URL est adressée par le contenu : toute évolution du joueur (stats,
+    // compétences, carrière) produit un payload — donc une URL — différent.
+    // Le PNG d'une URL donnée ne change jamais : cache long + immutable.
+    cacheControl: "public, max-age=86400, immutable",
   });
 }

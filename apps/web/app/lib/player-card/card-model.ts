@@ -49,7 +49,10 @@ export interface PlayerCardData {
   readonly stats: PlayerCardStats;
   /** Noms de compétences déjà résolus dans la langue de la carte. */
   readonly skills: readonly string[];
-  /** Lignes de la rubrique "Joue pour" (équipe, roster, ligues…). */
+  /**
+   * Lignes de la rubrique "Joue pour" : le nom de l'équipe pour un joueur
+   * positionnel, les rosters recruteurs pour un Star Player.
+   */
   readonly playsFor: readonly string[];
   /** Coût/valeur en pièces d'or. null = rubrique masquée. */
   readonly cost: number | null;
@@ -136,8 +139,13 @@ const MAX_PLAYS_FOR = 8;
 const MAX_PLAYS_FOR_LENGTH = 64;
 const MAX_RIBBON_LENGTH = 24;
 const MAX_INFO_TITLE_LENGTH = 40;
-/** Coupe du texte libre (règle spéciale) pour tenir sur la carte. */
-export const MAX_INFO_TEXT_LENGTH = 340;
+/**
+ * Coupe de sécurité du texte libre (règle spéciale). Calibrée sur le corpus
+ * réel : la plus longue règle de star (Zzharg Madeye) fait 515 caractères —
+ * elle DOIT tenir en entier (police dégressive via `infoTextFontSize`),
+ * l'ellipse ne joue que sur des payloads arbitraires du renderer générique.
+ */
+export const MAX_INFO_TEXT_LENGTH = 560;
 const MAX_INFO_STATS = 5;
 const MAX_INFO_STAT_LABEL_LENGTH = 16;
 const MAX_INFO_STAT_VALUE_LENGTH = 12;
@@ -188,6 +196,29 @@ export function nameFontSize(name: string): number {
   if (len <= 24) return 56;
   if (len <= 30) return 48;
   return 40;
+}
+
+/**
+ * Taille de police des listes (compétences, « joue pour »), dégressive selon
+ * la longueur du texte joint — une star à 9-10 compétences (~130 caractères,
+ * pire cas réel : Gretchen Wachter 132) reste sur ~3 lignes.
+ */
+export function listFontSize(totalLength: number): number {
+  if (totalLength <= 90) return 23;
+  if (totalLength <= 140) return 20;
+  return 17;
+}
+
+/**
+ * Taille de police du texte libre (règle spéciale), dégressive pour que la
+ * règle la plus longue du corpus (515 caractères) tienne EN ENTIER sur la
+ * carte, l'emblème se comprimant en face (minHeight).
+ */
+export function infoTextFontSize(length: number): number {
+  if (length <= 150) return 21;
+  if (length <= 260) return 19;
+  if (length <= 400) return 17;
+  return 15;
 }
 
 /** Couleur 24 bits (game-engine `TeamColors`) → hex CSS "#rrggbb". */
@@ -306,8 +337,6 @@ export interface BuildTeamCardOptions {
   /** Nom du poste déjà résolu ("Blitzer"). */
   readonly positionName: string;
   readonly teamName: string;
-  /** Nom d'affichage du roster ("Skavens") — 2e ligne de "Joue pour". */
-  readonly rosterName?: string;
   readonly rosterSlug: string;
   /** Valeur du joueur en po (coût de la position). */
   readonly cost: number | null;
@@ -325,9 +354,6 @@ export function buildTeamPlayerCardData(
     : player.firedAt
       ? labels.released
       : undefined;
-  const playsFor = options.rosterName
-    ? [options.teamName, options.rosterName]
-    : [options.teamName];
   return {
     kind: "team",
     lang: options.lang,
@@ -343,7 +369,9 @@ export function buildTeamPlayerCardData(
       av: player.av,
     },
     skills,
-    playsFor,
+    // Joueur positionnel : « Joue pour » = le nom de l'équipe, rien d'autre
+    // (le roster est déjà porté par le thème/emblème et le poste).
+    playsFor: [options.teamName],
     cost: options.cost,
     costLabel: labels.value,
     ribbon,

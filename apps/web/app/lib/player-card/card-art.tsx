@@ -24,7 +24,9 @@ import {
   CARD_LABELS,
   formatGoldAmount,
   hexFromColorNumber,
+  infoTextFontSize,
   isLightColor,
+  listFontSize,
   nameFontSize,
   shadeHexColor,
   type PlayerCardData,
@@ -209,15 +211,22 @@ function SectionTitle({ text, theme }: { text: string; theme: CardTheme }) {
   );
 }
 
-const SECTION_TEXT_STYLE = {
-  display: "flex",
-  fontFamily: "Montserrat",
-  fontWeight: 600,
-  fontSize: "23px",
-  color: INK,
-  lineHeight: 1.35,
-  marginBottom: "15px",
-} as const;
+/**
+ * Style d'un bloc liste (compétences, « joue pour ») : la taille de police
+ * suit `listFontSize` pour que les stars très fournies (9-10 compétences)
+ * restent sur ~3 lignes.
+ */
+function sectionTextStyle(text: string) {
+  return {
+    display: "flex",
+    fontFamily: "Montserrat",
+    fontWeight: 600,
+    fontSize: `${listFontSize(text.length)}px`,
+    color: INK,
+    lineHeight: 1.35,
+    marginBottom: "15px",
+  } as const;
+}
 
 /**
  * Carte joueur complète, prête à être passée à `ImageResponse`. Fonction
@@ -228,6 +237,10 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
   const labels = CARD_LABELS[data.lang];
   const monogram = emblemMonogram(data);
   const costText = data.cost !== null ? formatGoldAmount(data.cost) : null;
+  // Une règle spéciale longue comprime l'emblème (minHeight) : l'image
+  // suit pour ne pas être rognée par le conteneur.
+  const infoLength = data.infoText?.length ?? 0;
+  const emblemSize = infoLength > 400 ? 180 : infoLength > 260 ? 220 : 270;
   return (
     <div
       style={{
@@ -401,7 +414,9 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
                   display: "flex",
                   position: "relative",
                   flexGrow: 1,
-                  minHeight: "330px",
+                  // Compressible jusqu'à 200px : c'est l'emblème qui cède la
+                  // place quand une règle spéciale très longue doit loger.
+                  minHeight: "200px",
                   borderRadius: "18px",
                   background: `radial-gradient(circle at 50% 35%, ${theme.primaryLight} 0%, ${theme.primary} 55%, ${theme.primaryDark} 100%)`,
                   border: `3px solid ${theme.navy}`,
@@ -414,8 +429,8 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
                 {/* eslint-disable-next-line @next/next/no-img-element -- data URI satori */}
                 <img
                   src={emblemUri(data, theme)}
-                  width={270}
-                  height={270}
+                  width={emblemSize}
+                  height={emblemSize}
                   alt=""
                   style={{ opacity: 0.96 }}
                 />
@@ -478,11 +493,11 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
               {/* Rubriques. */}
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <SectionTitle text={labels.skills} theme={theme} />
-                <div style={SECTION_TEXT_STYLE}>
+                <div style={sectionTextStyle(data.skills.join(", "))}>
                   {data.skills.length ? data.skills.join(", ") : "—"}
                 </div>
                 <SectionTitle text={labels.playsFor} theme={theme} />
-                <div style={SECTION_TEXT_STYLE}>
+                <div style={sectionTextStyle(data.playsFor.join(", "))}>
                   {data.playsFor.length ? data.playsFor.join(", ") : "—"}
                 </div>
                 <SectionTitle text={data.infoTitle} theme={theme} />
@@ -535,7 +550,7 @@ export function PlayerCardArt({ data }: { data: PlayerCardData }) {
                       display: "flex",
                       fontFamily: "Montserrat",
                       fontWeight: 600,
-                      fontSize: "20px",
+                      fontSize: `${infoTextFontSize(data.infoText?.length ?? 0)}px`,
                       color: "#3d4451",
                       lineHeight: 1.4,
                     }}

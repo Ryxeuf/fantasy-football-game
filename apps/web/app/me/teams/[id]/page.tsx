@@ -306,7 +306,6 @@ export default function TeamDetailPage() {
         lang: language === "en" ? "en" : "fr",
         positionName: getDisplayName(p.position),
         teamName: team.name,
-        rosterName: rosterName || undefined,
         rosterSlug: team.roster,
         cost: cost > 0 ? cost : null,
       },

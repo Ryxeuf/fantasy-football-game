@@ -15,15 +15,21 @@ roster. La carte NE DOIT PAS embarquer d'artwork Games Workshop.
 
 #### Scenario: Carte d'un joueur d'équipe
 - WHEN un coach exporte la carte d'un joueur de sa fiche d'équipe
-- THEN le PNG affiche numéro, poste, stats, compétences FR/EN, équipe +
-  roster, valeur en po et les mini-stats de carrière (matchs, TD, sorties, PSP)
+- THEN le PNG affiche numéro, poste, stats, compétences FR/EN, valeur en po
+  et les mini-stats de carrière (matchs, TD, sorties, PSP)
+- AND la rubrique « Joue pour » contient le nom de l'équipe, et lui seul
+  (le roster est porté par le thème/emblème)
 - AND l'emblème est le logo programmatique du roster avec son monogramme
 
 #### Scenario: Carte d'un Star Player
 - WHEN un visiteur ouvre `/star-players/[slug]/card`
 - THEN le PNG affiche coût (prix de la paire pour un duo obligatoire),
-  règle spéciale tronquée proprement, « Joue pour » compact (sentinelle
-  `all` → libellé unique, longues listes coupées en « + N autres équipes »)
+  « Joue pour » compact (sentinelle `all` → libellé unique, longues listes
+  coupées en « + N autres équipes »)
+- AND la règle spéciale est rendue EN ENTIER pour tout le corpus réel
+  (police dégressive + emblème compressible ; la plus longue règle fait
+  515 caractères, la coupe de sécurité à 560 ne joue que sur des payloads
+  arbitraires)
 - AND un ruban MEGA-STAR apparaît pour les méga-stars
 
 #### Scenario: Statuts particuliers
@@ -38,7 +44,9 @@ tout payload absent, malformé ou hors bornes.
 
 #### Scenario: Payload valide
 - WHEN `?d=` contient un `PlayerCardData` encodé en base64url dans les bornes
-- THEN la route répond un PNG avec `Cache-Control: public`
+- THEN la route répond un PNG `Cache-Control: public, max-age=86400,
+  immutable` — l'URL étant adressée par le contenu, toute évolution du
+  joueur produit une URL différente, jamais un rendu périmé
 - AND `?download=1` ajoute `Content-Disposition: attachment` avec un nom de
   fichier translittéré (`carte-<nom>.png` / `card-<nom>.png`)
 

@@ -59,6 +59,12 @@ function loadCardFonts(): Promise<CardFont[]> {
 export interface RenderPlayerCardOptions {
   /** Force `Content-Disposition: attachment` (téléchargement direct). */
   readonly download?: boolean;
+  /**
+   * `Cache-Control` de la réponse. Défaut 1 h ; le renderer générique passe
+   * `immutable` (l'URL est adressée par le contenu du payload — toute
+   * évolution du joueur change l'URL), la route star un max-age court.
+   */
+  readonly cacheControl?: string;
 }
 
 /** Nom de fichier proposé au téléchargement ("carte-grip-soberwall.png"). */
@@ -74,7 +80,7 @@ export async function renderPlayerCardResponse(
 ): Promise<Response> {
   const fonts = await loadCardFonts();
   const headers: Record<string, string> = {
-    "Cache-Control": "public, max-age=3600",
+    "Cache-Control": options.cacheControl ?? "public, max-age=3600",
   };
   if (options.download) {
     headers["Content-Disposition"] =

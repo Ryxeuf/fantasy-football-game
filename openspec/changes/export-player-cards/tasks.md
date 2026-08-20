@@ -39,7 +39,18 @@
       joueur skaven carrière, joueur mort roster clair / nom long).
 - [x] 5.2 `pnpm --filter web typecheck` + suites vitest ciblées vertes.
 
-## 6. Hors scope (pistes notées)
+## 6. Retours v2 (revue coach) — FAIT
+- [x] 6.1 « Joue pour » d'un joueur positionnel = nom de l'équipe seul
+      (le roster reste porté par thème/emblème/poste).
+- [x] 6.2 Règles spéciales longues : rendu intégral via polices dégressives
+      (`listFontSize`, `infoTextFontSize`) + emblème compressible
+      (minHeight 200, image proportionnelle) — calibré sur le corpus réel
+      (515 caractères max), coupe de sécurité relevée à 560.
+- [x] 6.3 Fraîcheur : `/api/player-card` passe en cache long `immutable`
+      (URL adressée par le contenu — jamais périmée) ; la carte star passe
+      à `max-age=300` + revalidate 5 min.
+
+## 7. Hors scope (pistes notées)
 - [ ] Portraits maison (pipeline webp→png) si des artworks propres au site
       sont produits un jour.
 - [ ] Bouton carte sur les joueurs Pro League / carrière.

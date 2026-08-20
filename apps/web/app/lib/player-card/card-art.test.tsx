@@ -62,6 +62,32 @@ function collectImageSrcs(node: ReactNode, out: string[] = []): string[] {
   return out;
 }
 
+/** Style du premier élément dont le texte est exactement `text`. */
+function findStyleOfText(
+  node: ReactNode,
+  text: string,
+): Record<string, unknown> | null {
+  if (!node || typeof node !== "object") return null;
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findStyleOfText(child, text);
+      if (found) return found;
+    }
+    return null;
+  }
+  const element = node as ReactElement;
+  if (typeof element.type === "function") {
+    return findStyleOfText(
+      (element.type as (props: unknown) => ReactNode)(element.props),
+      text,
+    );
+  }
+  if (element.props?.children === text) {
+    return (element.props.style as Record<string, unknown>) ?? null;
+  }
+  return findStyleOfText(element.props?.children as ReactNode, text);
+}
+
 function teamCard(overrides: Partial<PlayerCardData> = {}): PlayerCardData {
   return {
     ...buildTeamPlayerCardData(
@@ -83,7 +109,6 @@ function teamCard(overrides: Partial<PlayerCardData> = {}): PlayerCardData {
         lang: "fr",
         positionName: "Blitzer",
         teamName: "Les Rats des Égouts",
-        rosterName: "Skavens",
         rosterSlug: "skaven",
         cost: 90_000,
       },
@@ -166,6 +191,41 @@ describe("PlayerCardArt", () => {
     expect(texts.filter((t) => t === "—").length).toBeGreaterThanOrEqual(2);
     expect(texts).not.toContain("VALEUR");
     expect(texts.some((t) => t.startsWith("#"))).toBe(false);
+  });
+
+  it("réduit police et emblème pour qu'une règle spéciale longue loge en entier", () => {
+    const longRule = `${"Une règle interminable qui décrit tout. ".repeat(13).trim()}`;
+    expect(longRule.length).toBeGreaterThan(400);
+    const star = buildStarPlayerCardData(
+      {
+        displayName: "Zzharg Madeye",
+        cost: 90_000,
+        ma: 4,
+        st: 4,
+        ag: 4,
+        pa: 3,
+        av: 10,
+        skills: "block",
+        specialRule: longRule,
+      },
+      { lang: "fr", playsFor: ["Toutes les équipes"] },
+    );
+    const element = PlayerCardArt({ data: star });
+    // La règle est rendue INTÉGRALEMENT (pas d'ellipse)…
+    expect(collectText(element)).toContain(longRule);
+    // …en police réduite (l'emblème se comprime en face, cf. minHeight).
+    expect(findStyleOfText(element, longRule)?.fontSize).toBe("15px");
+  });
+
+  it("adapte la taille des listes de compétences chargées (pire cas réel 132 caractères)", () => {
+    const manySkills = Array.from({ length: 9 }, (_, i) => `Compétence${i}xx`);
+    const joined = manySkills.join(", ");
+    expect(joined.length).toBeGreaterThan(90);
+    expect(joined.length).toBeLessThanOrEqual(140);
+    const card = teamCard({ skills: manySkills });
+    expect(findStyleOfText(PlayerCardArt({ data: card }), joined)?.fontSize).toBe(
+      "20px",
+    );
   });
 
   it("expose les dimensions carte poker 300 dpi", () => {

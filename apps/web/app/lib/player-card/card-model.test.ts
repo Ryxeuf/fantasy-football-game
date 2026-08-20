@@ -7,8 +7,11 @@ import {
   encodeCardPayload,
   formatGoldAmount,
   hexFromColorNumber,
+  infoTextFontSize,
   isLightColor,
+  listFontSize,
   MAX_ENCODED_PAYLOAD_LENGTH,
+  MAX_INFO_TEXT_LENGTH,
   nameFontSize,
   shadeHexColor,
   slugifyForFileName,
@@ -50,7 +53,6 @@ function validCard(): PlayerCardData {
     lang: "fr",
     positionName: "Blitzer",
     teamName: "Les Rats des Égouts",
-    rosterName: "Skavens",
     rosterSlug: "skaven",
     cost: 90_000,
   });
@@ -99,6 +101,21 @@ describe("nameFontSize", () => {
     expect(nameFontSize("Court")).toBe(66);
     expect(nameFontSize("Grip Soberwall the Third")).toBe(56);
     expect(nameFontSize("Un Nom Vraiment Très Long De Star")).toBe(40);
+  });
+});
+
+describe("tailles dégressives des blocs texte", () => {
+  it("listFontSize couvre le pire cas réel (Gretchen Wachter, 132 caractères)", () => {
+    expect(listFontSize(60)).toBe(23);
+    expect(listFontSize(132)).toBe(20);
+    expect(listFontSize(200)).toBe(17);
+  });
+
+  it("infoTextFontSize couvre la plus longue règle du corpus (515 caractères)", () => {
+    expect(infoTextFontSize(100)).toBe(21);
+    expect(infoTextFontSize(250)).toBe(19);
+    expect(infoTextFontSize(390)).toBe(17);
+    expect(infoTextFontSize(515)).toBe(15);
   });
 });
 
@@ -155,6 +172,18 @@ describe("buildStarPlayerCardData", () => {
     expect(card.cost).toBe(380_000);
     expect(card.ribbon).toBeUndefined();
   });
+
+  it("préserve intacte une règle longue du corpus réel (515 caractères)", () => {
+    const longRule = "règle très détaillée ".repeat(27).slice(0, 515).trim();
+    const card = buildStarPlayerCardData(
+      { ...BASE_STAR, specialRule: longRule },
+      { lang: "fr", playsFor: [] },
+    );
+    // Sous la coupe de sécurité (560) : aucune ellipse, la règle loge en
+    // entier grâce à la police dégressive côté template.
+    expect(card.infoText).toBe(longRule);
+    expect(card.infoText!.endsWith("…")).toBe(false);
+  });
 });
 
 describe("buildTeamPlayerCardData", () => {
@@ -164,7 +193,8 @@ describe("buildTeamPlayerCardData", () => {
     expect(card.kindLabel).toBe("Blitzer");
     expect(card.number).toBe(4);
     expect(card.rosterSlug).toBe("skaven");
-    expect(card.playsFor).toEqual(["Les Rats des Égouts", "Skavens"]);
+    // Joueur positionnel : « Joue pour » = le nom de l'équipe uniquement.
+    expect(card.playsFor).toEqual(["Les Rats des Égouts"]);
     expect(card.costLabel).toBe(CARD_LABELS.fr.value);
     expect(card.infoStats).toEqual([
       { label: "MATCHS", value: "12" },
@@ -284,14 +314,14 @@ describe("encode / decode du payload", () => {
     expect(decoded!.name).toBe("Bad Name");
   });
 
-  it("tronque le texte libre trop long", () => {
+  it("tronque le texte libre au-delà de la coupe de sécurité", () => {
     const card = {
       ...validCard(),
       infoStats: undefined,
       infoText: "mot ".repeat(400),
     };
     const decoded = decodeCardPayload(encodeCardPayload(card));
-    expect(decoded!.infoText!.length).toBeLessThanOrEqual(340);
+    expect(decoded!.infoText!.length).toBeLessThanOrEqual(MAX_INFO_TEXT_LENGTH);
     expect(decoded!.infoText!.endsWith("…")).toBe(true);
   });
 });

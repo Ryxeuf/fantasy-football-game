@@ -62,7 +62,9 @@ async function fetchStar(slug: string): Promise<StarPayload | null> {
     success?: boolean;
     data?: StarPayload;
   }>(`${base}/star-players/${encodeURIComponent(slug)}`, {
-    next: { revalidate: 3600 },
+    // URL stable ⇒ la fraîcheur vient du revalidate : 5 min suffisent pour
+    // qu'une correction admin d'un star soit visible rapidement sur la carte.
+    next: { revalidate: 300 },
   });
   return payload?.success && payload.data ? payload.data : null;
 }
@@ -122,5 +124,8 @@ export async function GET(
   );
   return renderPlayerCardResponse(data, {
     download: url.searchParams.get("download") === "1",
+    // URL stable (non adressée par le contenu) : cache navigateur court pour
+    // suivre les corrections de données star sans re-render à chaque vue.
+    cacheControl: "public, max-age=300",
   });
 }

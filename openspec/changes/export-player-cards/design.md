@@ -26,7 +26,7 @@ générateur d'images à la volée.
 Garde-fous (le payload est de l'entrée non fiable) :
 
 - décodeur validant `decodeCardPayload` : bornes par champ (nom ≤ 80,
-  ≤ 24 compétences, texte libre ≤ 340, coût ≤ 5 M, stats 0–15…), caractères
+  ≤ 24 compétences, texte libre ≤ 560, coût ≤ 5 M, stats 0–15…), caractères
   de contrôle neutralisés, `rosterSlug` filtré par regex — tout écart → 400 ;
 - cap global `MAX_ENCODED_PAYLOAD_LENGTH` (8 Ko) avant même le décodage ;
 - aucune donnée sensible : uniquement des champs d'affichage que l'auteur
@@ -35,8 +35,18 @@ Garde-fous (le payload est de l'entrée non fiable) :
 
 Les stars restent servies par une URL canonique
 (`/star-players/[slug]/card`) : données publiques chargées côté serveur
-(`fetchServerJson`, revalidate 1 h) — partage stable, prix de paire (Lot G)
-appliqué comme sur la fiche.
+(`fetchServerJson`, revalidate 5 min) — partage stable, prix de paire
+(Lot G) appliqué comme sur la fiche.
+
+**Fraîcheur / cache** : les deux routes ont des politiques opposées, chacune
+alignée sur la nature de son URL. `/api/player-card` est adressée par le
+contenu (le payload EST l'URL) : toute évolution du joueur — stats,
+compétence gagnée, carrière, décès — produit une URL différente au clic
+suivant, donc `Cache-Control: public, max-age=86400, immutable` sans aucun
+risque de rendu périmé ; la carte est toujours aussi fraîche que la fiche
+d'où elle part. `/star-players/[slug]/card` est une URL stable : elle prend
+`max-age=300` + revalidate 5 min pour qu'une correction admin d'un star soit
+visible en quelques minutes.
 
 ## Décision 3 : emblème programmatique, pas de portrait bitmap
 
@@ -75,5 +85,16 @@ sleeves standard. Gabarit : bandeau nom incliné pleine largeur (taille de
 police dégressive selon la longueur), rail gauche MA/ST/AG/PA/AV
 (`formatPlusStat` pour AG/PA/AV, PA null → « - »), badge coût (COÛT/VALEUR +
 montant + PO/GP), zone emblème extensible (flexGrow — absorbe la hauteur
-libre), rubriques COMPÉTENCES & TRAITS / JOUE POUR / RÈGLE SPÉCIALE ou
-CARRIÈRE (chips MATCHS/TD/SORTIES/PSP), pied de carte marque + domaine.
+libre), rubriques COMPÉTENCES & TRAITS / JOUE POUR (nom de l'équipe seul
+pour un positionnel) / RÈGLE SPÉCIALE ou CARRIÈRE (chips
+MATCHS/TD/SORTIES/PSP), pied de carte marque + domaine.
+
+**Auto-ajustement des textes longs** (calibré sur le corpus réel) : la zone
+emblème est le seul élément élastique — elle grandit sur les cartes sobres
+et se comprime jusqu'à 200 px (image réduite en proportion) quand le texte
+en a besoin. Les listes (compétences, joue pour) descendent 23→20→17 px via
+`listFontSize` (pire cas réel : Gretchen Wachter, 132 caractères) ; la règle
+spéciale descend 21→19→17→15 px via `infoTextFontSize` pour que la plus
+longue règle du corpus (Zzharg Madeye, 515 caractères) tienne EN ENTIER.
+L'ellipse `truncateAtWord` à 560 ne subsiste que comme coupe de sécurité du
+renderer générique (payload arbitraire).
