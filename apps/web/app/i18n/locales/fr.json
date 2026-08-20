@@ -651,7 +651,7 @@
     "standingsCasDiffHint": "Différentiel de sorties (infligées − subies).",
     "standingsElo": "ELO",
     "standingsBonus": "Bo",
-    "standingsBonusHint": "Points bonus cumulés, déjà inclus dans le total.",
+    "standingsBonusHint": "Points bonus cumulés, comptés à part (non inclus dans les Pts).",
     "standingsForfeit": "For",
     "standingsForfeitHint": "Points en retrait dus aux forfaits, déjà inclus dans le total.",
     "standingsPasses": "P",

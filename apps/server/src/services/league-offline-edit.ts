@@ -603,10 +603,18 @@ export async function reverseOfflineLeagueResult(
   );
 
   // 6. Re-ouverture du pairing + du round si la saisie l'avait clôture.
+  //    Le snapshot de points bonus (Lot E) est remis a zero : les bonus ne
+  //    sont plus comptes dans `points` mais la colonne `Bo` du classement
+  //    agrege ces snapshots — un match reverse ne doit plus y contribuer.
   ops.push(
     prisma.leaguePairing.update({
       where: { id: pairing.id },
-      data: { status: "scheduled" },
+      data: {
+        status: "scheduled",
+        bonusPointsHome: 0,
+        bonusPointsAway: 0,
+        bonusBreakdown: null,
+      },
     }),
   );
   if (match.leagueRound && match.leagueRound.status === "completed") {

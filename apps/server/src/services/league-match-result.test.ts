@@ -562,6 +562,83 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       });
     });
 
+    it("n'ajoute PAS les points bonus aux points generiques (snapshot pairing seulement)", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(
+        baseMatch({
+          leaguePairingId: "pair-1",
+          leagueSeason: {
+            id: "season-1",
+            leagueId: "league-1",
+            league: {
+              ...LEAGUE,
+              bonusPointsConfig: [
+                {
+                  id: "r1",
+                  label: "3+ TD marques",
+                  condition: { type: "tds_scored_gte", value: 3 },
+                  points: 2,
+                  appliesTo: "both",
+                },
+              ],
+            },
+          },
+        }),
+      );
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(1); // pendingPairings
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      const result = await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 3,
+        scoreB: 1,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      // Vainqueur : 3 pts (bareme) — le bonus de 2 n'est PAS additionne.
+      expect(result).toMatchObject({
+        recorded: true,
+        winner: "A",
+        pointsDelta: { teamA: 3, teamB: 0 },
+      });
+
+      const updates = mockPrisma.leagueParticipant.update.mock.calls.map(
+        (c: Array<{ where: { id: string }; data: Record<string, unknown> }>) =>
+          c[0],
+      );
+      const aUpdate = updates.find((u) => u.where.id === "p-team-A");
+      const bUpdate = updates.find((u) => u.where.id === "p-team-B");
+      expect(aUpdate?.data.points).toEqual({ increment: 3 });
+      expect(bUpdate?.data.points).toEqual({ increment: 0 });
+
+      // Le bonus vit uniquement dans le snapshot du pairing (colonne Bo).
+      expect(mockPrisma.leaguePairing.update).toHaveBeenCalledWith({
+        where: { id: "pair-1" },
+        data: {
+          status: "played",
+          bonusPointsHome: 2,
+          bonusPointsAway: 0,
+          bonusBreakdown: [
+            { ruleId: "r1", label: "3+ TD marques", side: "home", points: 2 },
+          ],
+        },
+      });
+    });
+
     it("does not touch leaguePairing when leaguePairingId is null (legacy)", async () => {
       mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
       mockPrisma.teamSelection.findMany.mockResolvedValue([

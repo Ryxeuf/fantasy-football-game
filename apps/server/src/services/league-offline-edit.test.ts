@@ -358,11 +358,19 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     expect(homeTeam.data.dedicatedFans).toBe(1);
 
     // Suppression selections puis match ; pairing + round re-ouverts.
+    // Le snapshot de points bonus du pairing est remis a zero (les bonus
+    // ne sont plus comptes dans `points`, la colonne Bo agrege ces
+    // snapshots — un match reverse ne doit plus y contribuer).
     expect(m.selDelete).toHaveBeenCalledWith({ where: { matchId: "m-1" } });
     expect(m.matchDelete).toHaveBeenCalledWith({ where: { id: "m-1" } });
     expect(m.pairUpdate).toHaveBeenCalledWith({
       where: { id: "pair-1" },
-      data: { status: "scheduled" },
+      data: {
+        status: "scheduled",
+        bonusPointsHome: 0,
+        bonusPointsAway: 0,
+        bonusBreakdown: null,
+      },
     });
     expect(m.roundUpdate).toHaveBeenCalledWith({
       where: { id: "round-1" },

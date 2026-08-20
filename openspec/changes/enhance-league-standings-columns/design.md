@@ -61,8 +61,10 @@ isolés (Q.D.1).
 Le coach écrit « For = pts en retrait dû au forfait ». On expose donc
 `forfeitPoints = forfeits × League.forfeitPoints` (barème par défaut
 `-1`), c'est-à-dire les points effectivement encaissés au titre des
-forfaits — déjà inclus dans `points`, comme la colonne `Bo`. Le compte
-brut reste disponible dans `forfeits` pour un usage futur.
+forfaits — déjà inclus dans `points` (contrairement à la colonne `Bo`,
+comptée à part depuis le correctif « bonus séparés des points
+génériques »). Le compte brut reste disponible dans `forfeits` pour un
+usage futur.
 
 Piège : `0 * -1` vaut `-0` en JavaScript, qui sérialise en `-0` dans le
 JSON et s'affiche « -0 » dans la cellule. Le service normalise

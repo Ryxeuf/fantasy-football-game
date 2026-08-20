@@ -509,8 +509,9 @@ export interface StandingRow {
   /** Lot C — id de poule (null = pas d'affectation explicite). */
   poolId?: string | null;
   /**
-   * E2 — Sous-total de points bonus de la saison (déjà inclus dans
-   * `points`). Agrégé depuis les snapshots `LeaguePairing.bonusPointsHome`
+   * E2 — Sous-total de points bonus de la saison, compté À PART (non
+   * inclus dans `points`, qui reste le barème win/draw/loss pur).
+   * Agrégé depuis les snapshots `LeaguePairing.bonusPointsHome`
    * / `bonusPointsAway`. Optionnel pour rétro-compat API pré-E2.
    */
   bonusPoints?: number;
@@ -611,8 +612,8 @@ export async function computeSeasonStandings(
 
   // E2 — agrège les points bonus snapshotés par pairing (cumul home +
   // away) pour exposer le sous-total dans le classement. Ces points sont
-  // déjà inclus dans `points` ; la colonne sert la transparence. groupBy
-  // plutôt que N+1 (cf. CLAUDE.md).
+  // comptés À PART (non inclus dans `points`) : la colonne `Bo` est la
+  // seule matérialisation des bonus. groupBy plutôt que N+1 (cf. CLAUDE.md).
   const bonusByParticipantId = await aggregateBonusByParticipant(
     baseRows.map((r) => r.participantId),
   );
