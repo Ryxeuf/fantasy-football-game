@@ -14,7 +14,6 @@ import {
 import {
   hirableSelectionFromApi,
   hirableSelectionToPayload,
-  toggleValue,
   type HirableByEntry,
   type HirableSelection,
 } from "../../_components/star-player-options";
@@ -342,17 +341,11 @@ export default function EditStarPlayerPage() {
           <HirableByPicker
             rosters={rosters}
             selection={hirable}
-            onToggleRule={(slug) =>
-              setHirable((prev) => ({
-                ...prev,
-                rules: toggleValue(prev.rules, slug),
-              }))
+            onChangeRules={(rules) =>
+              setHirable((prev) => ({ ...prev, rules }))
             }
-            onToggleRoster={(rosterId) =>
-              setHirable((prev) => ({
-                ...prev,
-                rosterIds: toggleValue(prev.rosterIds, rosterId),
-              }))
+            onChangeRosters={(rosterIds) =>
+              setHirable((prev) => ({ ...prev, rosterIds }))
             }
           />
         </div>

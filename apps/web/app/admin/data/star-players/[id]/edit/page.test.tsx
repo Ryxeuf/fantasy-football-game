@@ -1,7 +1,7 @@
 /**
  * Admin — édition d'un Star Player : les compétences et les règles de
- * recrutement se saisissent en cases à cocher (même modèle que les
- * rosters) et non plus en texte libre séparé par des virgules.
+ * recrutement se saisissent en chips + recherche (même sélecteur que les
+ * positions) et non plus en texte libre séparé par des virgules.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -87,10 +87,7 @@ afterEach(() => {
   global.fetch = originalFetch;
 });
 
-const box = (testId: string) =>
-  screen.getByTestId(testId) as HTMLInputElement;
-
-describe("EditStarPlayerPage — saisie en chips et cases à cocher", () => {
+describe("EditStarPlayerPage — saisie en chips", () => {
   it("affiche les compétences du joueur en chips, hors catalogue compris", async () => {
     mockFetch();
     render(<EditStarPlayerPage />);
@@ -103,21 +100,22 @@ describe("EditStarPlayerPage — saisie en chips et cases à cocher", () => {
     expect(screen.queryByTestId("star-player-skills-chip-dodge")).toBeNull();
   });
 
-  it("coche la règle globale ET le roster ciblé du joueur", async () => {
+  it("affiche la règle globale ET le roster ciblé du joueur en chips", async () => {
     mockFetch();
     render(<EditStarPlayerPage />);
 
     await waitFor(() =>
       expect(
-        screen.getByTestId("star-player-hirable-rules-old_world_classic"),
+        screen.getByTestId("star-player-hirable-rules-chip-old_world_classic"),
       ).toBeTruthy(),
     );
+    expect(screen.queryByTestId("star-player-hirable-rules-chip-all")).toBeNull();
     expect(
-      box("star-player-hirable-rules-old_world_classic").checked,
-    ).toBe(true);
-    expect(box("star-player-hirable-rules-all").checked).toBe(false);
-    expect(box("star-player-hirable-rosters-roster-skaven").checked).toBe(true);
-    expect(box("star-player-hirable-rosters-roster-orc").checked).toBe(false);
+      screen.getByTestId("star-player-hirable-rosters-chip-roster-skaven"),
+    ).toBeTruthy();
+    expect(
+      screen.queryByTestId("star-player-hirable-rosters-chip-roster-orc"),
+    ).toBeNull();
   });
 
   it("envoie la sélection, avec le couple (règle, rosterId)", async () => {
@@ -130,8 +128,12 @@ describe("EditStarPlayerPage — saisie en chips et cases à cocher", () => {
 
     fireEvent.focus(screen.getByTestId("star-player-skills-search"));
     fireEvent.click(screen.getByTestId("star-player-skills-option-dodge"));
-    fireEvent.click(box("star-player-hirable-rules-all"));
-    fireEvent.click(box("star-player-hirable-rosters-roster-orc"));
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rules-search"));
+    fireEvent.click(screen.getByTestId("star-player-hirable-rules-option-all"));
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rosters-search"));
+    fireEvent.click(
+      screen.getByTestId("star-player-hirable-rosters-option-roster-orc"),
+    );
     fireEvent.click(screen.getByText("Mettre à jour"));
 
     await waitFor(() =>

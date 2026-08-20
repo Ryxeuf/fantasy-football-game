@@ -129,9 +129,12 @@ describe("NewStarPlayerPage — sélection en chips", () => {
 
     fireEvent.click(screen.getByTestId("star-player-skills-option-block"));
     expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy();
-    fireEvent.click(screen.getByTestId("star-player-hirable-rules-all"));
+
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rules-search"));
+    fireEvent.click(screen.getByTestId("star-player-hirable-rules-option-all"));
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rosters-search"));
     fireEvent.click(
-      screen.getByTestId("star-player-hirable-rosters-roster-orc"),
+      screen.getByTestId("star-player-hirable-rosters-option-roster-orc"),
     );
     fireEvent.click(screen.getByText("Créer le Star Player"));
 

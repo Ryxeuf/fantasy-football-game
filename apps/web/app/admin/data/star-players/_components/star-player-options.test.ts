@@ -8,7 +8,6 @@ import {
   HIRABLE_RULE_OPTIONS,
   hirableSelectionFromApi,
   hirableSelectionToPayload,
-  toggleValue,
 } from "./star-player-options";
 
 describe("HIRABLE_RULE_OPTIONS", () => {
@@ -108,12 +107,3 @@ describe("hirableSelectionToPayload", () => {
   });
 });
 
-describe("toggleValue", () => {
-  it("ajoute puis retire sans muter la liste d'origine", () => {
-    const initial = ["block"];
-    const added = toggleValue(initial, "dodge");
-    expect(added).toEqual(["block", "dodge"]);
-    expect(initial).toEqual(["block"]);
-    expect(toggleValue(added, "block")).toEqual(["dodge"]);
-  });
-});

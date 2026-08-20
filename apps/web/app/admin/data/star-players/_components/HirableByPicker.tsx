@@ -1,21 +1,29 @@
 "use client";
 
 /**
- * Selection des regles de recrutement d'un Star Player en cases a cocher.
+ * Sélection des règles de recrutement d'un Star Player, sur le même
+ * principe que les compétences des positions : chips + recherche avec
+ * suggestions (`ChipMultiSelect`).
  *
- * Deux listes independantes :
- *  - les regles globales (`all`, ligues regionales, « Favori de… »), qui
- *    sont enregistrees sans roster cible ;
- *  - les rosters explicitement autorises, enregistres en couple
+ * Deux listes indépendantes :
+ *  - les règles globales (`all`, ligues régionales, « Favori de… »), qui
+ *    sont enregistrées sans roster cible ;
+ *  - les rosters explicitement autorisés, enregistrés en couple
  *    `{ rule: slug, rosterId }` pour ne pas perdre le lien.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { REGIONAL_LEAGUES } from "@bb/game-engine";
 import {
-  SlugCheckboxGrid,
-  type SlugOption,
-} from "../../_components/SlugCheckboxGrid";
-import { HIRABLE_RULE_OPTIONS, type HirableSelection } from "./star-player-options";
+  ChipMultiSelect,
+  type ChipGroupStyle,
+  type ChipOption,
+} from "../../_components/ChipMultiSelect";
+import {
+  HIRABLE_RULE_ALL,
+  HIRABLE_RULE_OPTIONS,
+  type HirableSelection,
+} from "./star-player-options";
 
 export interface RosterOption {
   id: string;
@@ -23,33 +31,58 @@ export interface RosterOption {
   name: string;
 }
 
+const RULE_GROUP_STYLES: Record<string, ChipGroupStyle> = {
+  generic: {
+    label: "Générique",
+    chipClass: "bg-blue-100 text-blue-800 border-blue-300",
+  },
+  league: {
+    label: "Ligues régionales",
+    chipClass: "bg-green-100 text-green-800 border-green-300",
+  },
+  other: {
+    label: "Favoris & autres règles",
+    chipClass: "bg-purple-100 text-purple-800 border-purple-300",
+  },
+};
+
+const REGIONAL_LEAGUE_SLUGS = new Set(REGIONAL_LEAGUES.map((l) => l.slug));
+
+/** Catalogue des règles, groupé pour les filtres du sélecteur. */
+const RULE_CHIP_OPTIONS: ChipOption[] = HIRABLE_RULE_OPTIONS.map((option) => ({
+  value: option.slug,
+  label: option.label,
+  sublabel: option.slug,
+  group:
+    option.slug === HIRABLE_RULE_ALL
+      ? "generic"
+      : REGIONAL_LEAGUE_SLUGS.has(option.slug)
+        ? "league"
+        : "other",
+}));
+
 export function HirableByPicker({
   rosters,
   selection,
-  onToggleRule,
-  onToggleRoster,
+  onChangeRules,
+  onChangeRosters,
   testId = "star-player-hirable",
 }: {
   rosters: readonly RosterOption[];
   selection: HirableSelection;
-  onToggleRule: (slug: string) => void;
-  onToggleRoster: (rosterId: string) => void;
+  onChangeRules: (rules: string[]) => void;
+  onChangeRosters: (rosterIds: string[]) => void;
   testId?: string;
 }) {
-  const [query, setQuery] = useState("");
-
-  const rosterOptions: SlugOption[] = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return (Array.isArray(rosters) ? rosters : [])
-      .filter(
-        (r) =>
-          !q ||
-          r.slug.toLowerCase().includes(q) ||
-          (r.name ?? "").toLowerCase().includes(q) ||
-          selection.rosterIds.includes(r.id),
-      )
-      .map((r) => ({ slug: r.id, label: r.name || r.slug, hint: r.slug }));
-  }, [rosters, query, selection.rosterIds]);
+  const rosterOptions: ChipOption[] = useMemo(
+    () =>
+      (Array.isArray(rosters) ? rosters : []).map((roster) => ({
+        value: roster.id,
+        label: roster.name || roster.slug,
+        sublabel: roster.slug,
+      })),
+    [rosters],
+  );
 
   return (
     <div className="space-y-4">
@@ -57,15 +90,20 @@ export function HirableByPicker({
         <div className="text-xs font-semibold uppercase text-gray-500 mb-1">
           Règles et ligues
         </div>
-        <SlugCheckboxGrid
-          catalog={HIRABLE_RULE_OPTIONS}
+        <ChipMultiSelect
+          options={RULE_CHIP_OPTIONS}
           selected={selection.rules}
-          onToggle={onToggleRule}
+          onChange={onChangeRules}
+          groups={RULE_GROUP_STYLES}
+          placeholder="Rechercher une règle ou une ligue…"
+          selectedLabel="Règles sélectionnées"
+          addLabel="Ajouter une règle ou une ligue"
+          emptyLabel="Aucune règle sélectionnée"
           testId={`${testId}-rules`}
         />
         <p className="text-xs text-gray-500 mt-1">
           « Toutes les équipes » rend le Star Player recrutable partout et
-          rend les autres cases inutiles. Sélection multiple.
+          rend les autres entrées inutiles. Sélection multiple.
         </p>
       </div>
 
@@ -73,30 +111,16 @@ export function HirableByPicker({
         <div className="text-xs font-semibold uppercase text-gray-500 mb-1">
           Rosters spécifiques
         </div>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Filtrer les rosters…"
-          aria-label="Filtrer les rosters"
-          data-testid={`${testId}-rosters-search`}
-          className="border rounded px-3 py-1.5 text-sm w-full mb-2"
+        <ChipMultiSelect
+          options={rosterOptions}
+          selected={selection.rosterIds}
+          onChange={onChangeRosters}
+          placeholder="Rechercher un roster…"
+          selectedLabel="Rosters sélectionnés"
+          addLabel="Ajouter un roster"
+          emptyLabel="Aucun roster sélectionné"
+          testId={`${testId}-rosters`}
         />
-        {rosterOptions.length === 0 ? (
-          <p
-            data-testid={`${testId}-rosters-empty`}
-            className="text-sm text-gray-500 italic"
-          >
-            Aucun roster ne correspond au filtre.
-          </p>
-        ) : (
-          <SlugCheckboxGrid
-            catalog={rosterOptions}
-            selected={selection.rosterIds}
-            onToggle={onToggleRoster}
-            testId={`${testId}-rosters`}
-          />
-        )}
         <p className="text-xs text-gray-500 mt-1">
           Optionnel : autorise un roster précis en plus des règles
           ci-dessus. Seuls les rosters du même ruleset sont proposés.
