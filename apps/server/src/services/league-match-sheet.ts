@@ -1394,6 +1394,12 @@ export interface MatchSheetTeam {
   readonly currentValue: number;
   /** Tresorerie (cagnotte) en po. */
   readonly treasury: number;
+  /**
+   * Fans devoues de l'equipe (1-6). Sert a afficher la formule officielle
+   * du facteur de popularite (1D3 + fans devoues) et la regle post-match
+   * de variation des fans (D6 vs fans).
+   */
+  readonly dedicatedFans: number;
   readonly players: readonly MatchSheetPlayer[];
 }
 
@@ -1460,6 +1466,7 @@ async function loadSheetTeams(
       teamValue: true,
       currentValue: true,
       treasury: true,
+      dedicatedFans: true,
       owner: { select: { coachName: true } },
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
@@ -1495,6 +1502,7 @@ async function loadSheetTeams(
     teamValue?: number | null;
     currentValue?: number | null;
     treasury?: number | null;
+    dedicatedFans?: number | null;
     owner?: { coachName?: string | null } | null;
     players: Array<{
       id: string;
@@ -1540,6 +1548,8 @@ async function loadSheetTeams(
       teamValue: t.teamValue ?? 0,
       currentValue: t.currentValue ?? 0,
       treasury: t.treasury ?? 0,
+      // Defaut BB : toute equipe demarre avec 1 fan devoue.
+      dedicatedFans: t.dedicatedFans ?? 1,
       players: t.players.map((p) => ({
         id: p.id,
         number: p.number,
