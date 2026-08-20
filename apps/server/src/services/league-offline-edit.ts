@@ -675,16 +675,11 @@ export async function reverseOfflineLeagueResult(
     }
   }
 
-  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit) pour
-  // les equipes dont le roster a ete mute par les achats OU les licenciements.
-  const tvTeams = new Set<string>();
-  if (sideHasMutation(rosterMutations.home)) tvTeams.add(home.teamId);
-  if (sideHasMutation(rosterMutations.away)) tvTeams.add(away.teamId);
-  if (statusReverted.length > 0) {
-    tvTeams.add(home.teamId);
-    tvTeams.add(away.teamId);
-  }
-  for (const teamId of tvTeams) {
+  // Recalcul TV (apres la transaction : updateTeamValues lit puis ecrit)
+  // pour les DEUX equipes : la reversion peut avoir mute le roster
+  // (achats, licenciements, morts) mais aussi les flags missNextMatch
+  // (blessures MNG annulees) dont depend desormais la VEA.
+  for (const teamId of [home.teamId, away.teamId]) {
     await updateTeamValues(prisma, teamId);
   }
 

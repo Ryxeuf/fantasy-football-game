@@ -32,7 +32,6 @@ import {
   type AdvancementType,
   type CharacteristicKind,
   type PlayerAdvancement,
-  surchargeForAdvancement,
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
@@ -41,6 +40,7 @@ import {
   type RandomSkillCategoryCode,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
+import { updateTeamValues } from "../utils/team-values";
 import { ACTIVE_PLAYER_WHERE } from "./player-status";
 import {
   checkSkillAccess,
@@ -535,7 +535,6 @@ export async function applyAdvancementChoice(
       at: Date.now(),
     };
     const updatedAdvancements = [...taken, newAdvancement];
-    const surcharge = surchargeForAdvancement({ type: "characteristic", stat });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const team = await prisma.$transaction(async (tx: any) => {
@@ -551,14 +550,11 @@ export async function applyAdvancementChoice(
           av: improved.av,
         },
       });
-      await tx.team.update({
-        where: { id: input.teamId },
-        data: { currentValue: { increment: surcharge } },
-      });
-      return tx.team.findUnique({
-        where: { id: input.teamId },
-        select: { currentValue: true },
-      });
+      // Recalcul complet VE + VEA (et non un incrément aveugle de la
+      // seule VEA, qui faisait dériver VEA > VE) : l'avancement augmente
+      // la valeur du joueur donc les DEUX valeurs, et la VEA reste
+      // exacte pour les joueurs absents (exclus par updateTeamValues).
+      return updateTeamValues(tx, input.teamId);
     });
 
     return {
@@ -649,15 +645,14 @@ export async function applyAdvancementChoice(
   // random.
   const updatedSkills = appendSkillCsv(player.skills, skillSlug);
 
-  // Calcul du surcout en po pour la TV courante.
-  const surcharge = surchargeForAdvancement({ type: input.type });
-
   // BUG fix audit round 5 (CRITICAL) : avant, les 2 updates (player.spp
-  // + advancements + skills) et (team.currentValue increment by surcharge)
+  // + advancements + skills) et la mise a jour de la valeur d'equipe
   // etaient executes sequentiellement hors transaction. Crash entre les
   // deux → joueur a paye le SPP et appris le skill, mais TV de l'equipe
   // non incrementee → TV stale forever (impact futurs petty cash + odds).
-  // Fix : les 2 updates + le re-read final dans une seule $transaction.
+  // Fix : update joueur + recalcul TV dans une seule $transaction.
+  // Recalcul complet VE + VEA (et non un incrément aveugle de la seule
+  // VEA, qui faisait dériver VEA > VE).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const team = await prisma.$transaction(async (tx: any) => {
     await tx.teamPlayer.update({
@@ -668,18 +663,7 @@ export async function applyAdvancementChoice(
         skills: updatedSkills,
       },
     });
-    // Update Team.currentValue (additif : on ne recalcule pas tout,
-    // juste increment by surcharge — la baseline reste correcte tant
-    // que les autres composants de currentValue ne changent pas dans
-    // cette transaction).
-    await tx.team.update({
-      where: { id: input.teamId },
-      data: { currentValue: { increment: surcharge } },
-    });
-    return tx.team.findUnique({
-      where: { id: input.teamId },
-      select: { currentValue: true },
-    });
+    return updateTeamValues(tx, input.teamId);
   });
 
   return {

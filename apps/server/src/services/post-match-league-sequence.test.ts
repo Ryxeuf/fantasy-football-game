@@ -40,7 +40,18 @@ vi.mock("../prisma", () => {
   };
 });
 
+// La valeur d'equipe est recalculee entierement (VE + VEA coherentes,
+// joueurs absents exclus de la VEA) via updateTeamValues dans la
+// transaction — mock dedie, la logique de calcul est testee a part.
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(async () => ({
+    teamValue: 1020000,
+    currentValue: 1020000,
+  })),
+}));
+
 import { prisma } from "../prisma";
+import { updateTeamValues } from "../utils/team-values";
 import { rollRandomPrimaryCandidates } from "@bb/game-engine";
 import {
   runPostMatchLeagueSequence,
@@ -63,6 +74,7 @@ const mocked = {
   seqUpdate: prisma.leaguePostMatchSequence.update as MockFn,
   positionFind: prisma.position.findFirst as MockFn,
   skillFind: prisma.skill.findFirst as MockFn,
+  updateTv: updateTeamValues as unknown as MockFn,
 };
 
 beforeEach(() => {
@@ -349,11 +361,11 @@ describe("applyAdvancementChoice", () => {
     expect(advancements[0].type).toBe("primary");
     expect(advancements[0].isRandom).toBe(false);
 
-    const teamArgs = mocked.teamUpdate.mock.calls[0][0];
-    expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
+    // La VE/VEA est recalculee entierement dans la transaction.
+    expect(mocked.updateTv).toHaveBeenCalledWith(expect.anything(), "t1");
   });
 
-  it("uses surcharge=20000 for random-primary type (A6 — comme une choisie)", async () => {
+  it("recalcule la valeur d'equipe pour random-primary (A6 — comme une choisie)", async () => {
     mocked.playerFind.mockResolvedValue({
       id: "p1",
       teamId: "t1",
@@ -382,8 +394,7 @@ describe("applyAdvancementChoice", () => {
       skillSlug: candidate,
     });
 
-    const teamArgs = mocked.teamUpdate.mock.calls[0][0];
-    expect(teamArgs.data.currentValue).toEqual({ increment: 20000 });
+    expect(mocked.updateTv).toHaveBeenCalledWith(expect.anything(), "t1");
   });
 
   it("random-primary : refuse un skill hors des 2 candidats tirés (anti-triche)", async () => {
@@ -786,10 +797,9 @@ describe("applyAdvancementChoice — characteristic (BB2025)", () => {
     expect(data.skills).toBeUndefined(); // pas de skill ajoutee
     const adv = JSON.parse(data.advancements);
     expect(adv[0]).toMatchObject({ type: "characteristic", stat: "ma", d8: 3 });
-    // Surcout VE +1 MA = +20k.
-    expect(mocked.teamUpdate.mock.calls[0][0].data.currentValue).toEqual({
-      increment: 20000,
-    });
+    // La VE/VEA est recalculee entierement (le surcout carac est integre
+    // au recalcul via calculateAdvancementsSurcharge).
+    expect(mocked.updateTv).toHaveBeenCalledWith(expect.anything(), "t1");
   });
 
   it("rejects a stat not allowed by the D8 roll (ST only on a 8)", async () => {

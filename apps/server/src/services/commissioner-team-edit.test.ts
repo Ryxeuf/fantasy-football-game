@@ -21,7 +21,16 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Le recalcul VE/VEA passe par updateTeamValues (mocke ici, teste a part).
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(async () => ({
+    teamValue: 1_000_000,
+    currentValue: 1_000_000,
+  })),
+}));
+
 import { prisma } from "../prisma";
+import { updateTeamValues } from "../utils/team-values";
 import {
   adjustPlayerSpp,
   addPlayerSkill,
@@ -469,14 +478,11 @@ describe("Lot I — commissioner-team-edit", () => {
         type: "random-primary",
         isRandom: true,
       });
-      expect(mockPrisma.team.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { currentValue: { increment: 20000 } },
-        }),
-      );
+      // VE/VEA recalculees entierement dans la transaction.
+      expect(updateTeamValues).toHaveBeenCalledWith(expect.anything(), "T1");
     });
 
-    it("compétence secondaire → +40k", async () => {
+    it("compétence secondaire → recalcul VE/VEA", async () => {
       mockPrisma.leagueParticipant.count.mockResolvedValue(1);
       mockPrisma.teamPlayer.findUnique.mockResolvedValue({
         id: "P1",
@@ -497,11 +503,7 @@ describe("Lot I — commissioner-team-edit", () => {
         skill: "dodge",
         byCommissionerId: commish,
       });
-      expect(mockPrisma.team.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { currentValue: { increment: 40000 } },
-        }),
-      );
+      expect(updateTeamValues).toHaveBeenCalledWith(expect.anything(), "T1");
     });
   });
 
@@ -562,11 +564,9 @@ describe("Lot I — commissioner-team-edit", () => {
       expect(
         JSON.parse((out as { advancements: string }).advancements),
       ).toEqual([]);
-      expect(mockPrisma.team.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { currentValue: { decrement: 40000 } },
-        }),
-      );
+      // VE/VEA recalculees entierement (le retrait de l'avancement est
+      // reflete par le recalcul, pas par un decrement aveugle).
+      expect(updateTeamValues).toHaveBeenCalledWith(expect.anything(), "T1");
     });
   });
 

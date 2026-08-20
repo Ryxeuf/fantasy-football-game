@@ -35,7 +35,10 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
       } catch { /* ignore parse errors */ }
       return {
         cost: baseCost + advSurcharge,
-        available: true, // Pour l'instant, tous les joueurs vivants sont disponibles
+        // VEA = VE - valeur des joueurs absents : un joueur qui rate le
+        // prochain match (missNextMatch, blessure "Absent") compte dans
+        // la VE mais est exclu de la VEA.
+        available: !player.missNextMatch,
       };
     }),
     rerolls: team.rerolls,
