@@ -61,6 +61,8 @@ export interface OfflinePlayerStatInput {
   readonly casualties?: number;
   readonly completions?: number;
   readonly interceptions?: number;
+  /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
+  readonly ttmLandings?: number;
   readonly mvp?: boolean;
 }
 
@@ -598,6 +600,7 @@ async function applyOfflinePlayerSPP(
       casualties: s.casualties ?? 0,
       completions: s.completions ?? 0,
       interceptions: s.interceptions ?? 0,
+      ttmLandings: s.ttmLandings ?? 0,
       mvp: s.mvp ?? false,
     };
     const earned = calculatePlayerSPP(stats, modifier);

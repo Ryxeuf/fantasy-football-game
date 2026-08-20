@@ -893,6 +893,7 @@ export function buildOfflineInputFromSummary(
       casualties: p.casualtiesInflicted,
       completions: p.completions,
       interceptions: p.interceptions,
+      ttmLandings: p.ttmLandings,
       mvp: motmSet.has(p.playerId),
     }));
 
@@ -2108,6 +2109,7 @@ export async function getMatchSheet(input: {
         casualties: s.casualtiesInflicted,
         completions: s.completions,
         interceptions: s.interceptions,
+        ttmLandings: s.ttmLandings,
         mvp: motm.has(s.playerId),
       },
       modifier,

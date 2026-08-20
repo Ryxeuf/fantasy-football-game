@@ -140,6 +140,30 @@ describe("calculatePlayerSPP", () => {
     };
     expect(calculatePlayerSPP(stats)).toBe(13);
   });
+
+  it("compte 1 PSP par atterrissage réussi (lancer de coéquipier)", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 0,
+      casualties: 0,
+      completions: 0,
+      interceptions: 0,
+      ttmLandings: 2,
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(stats)).toBe(2);
+  });
+
+  it("atterrissage réussi : valeur inchangée pour Bagarreurs Brutaux", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 1, // 2 (override)
+      casualties: 0,
+      completions: 0,
+      interceptions: 0,
+      ttmLandings: 1, // 1 (pas d'override)
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(stats, { bagarreursBrutaux: true })).toBe(3);
+  });
 });
 
 describe("persistMatchSPP", () => {

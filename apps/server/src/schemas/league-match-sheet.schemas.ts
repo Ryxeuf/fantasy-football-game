@@ -16,6 +16,7 @@ export const addEventSchema = z.object({
     "crowd_surge",
     "stalling",
     "team_throw",
+    "ttm_landing",
     "other_elim",
   ]),
   team: z.enum(["home", "away"]).optional().nullable(),

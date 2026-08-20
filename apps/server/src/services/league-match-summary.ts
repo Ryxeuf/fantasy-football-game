@@ -25,6 +25,7 @@ export type MatchEventKind =
   | "crowd_surge"
   | "stalling"
   | "team_throw"
+  | "ttm_landing"
   | "other_elim";
 
 export type MatchEventTeam = "home" | "away";
@@ -62,6 +63,8 @@ export interface PlayerStatLine {
   completions: number;
   interceptions: number;
   aggressions: number;
+  /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
+  ttmLandings: number;
 }
 
 export interface MatchSummary {
@@ -134,6 +137,7 @@ export function summarizeMatchSheet(
         completions: 0,
         interceptions: 0,
         aggressions: 0,
+        ttmLandings: 0,
       };
       statsByPlayer.set(playerId, line);
     }
@@ -161,6 +165,14 @@ export function summarizeMatchSheet(
       case "interception": {
         if (ev.actorPlayerId && team) {
           ensureStat(ev.actorPlayerId, team).interceptions += 1;
+        }
+        break;
+      }
+      case "ttm_landing": {
+        // Atterrissage reussi apres un Lancer de coequipier : l'acteur
+        // est le joueur LANCE, qui gagne 1 PSP (cf. spp-tracking).
+        if (ev.actorPlayerId && team) {
+          ensureStat(ev.actorPlayerId, team).ttmLandings += 1;
         }
         break;
       }
@@ -244,6 +256,7 @@ export const MATCH_EVENT_KINDS: ReadonlyArray<MatchEventKind> = [
   "crowd_surge",
   "stalling",
   "team_throw",
+  "ttm_landing",
   "other_elim",
 ];
 

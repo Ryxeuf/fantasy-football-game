@@ -49,6 +49,7 @@ type EventKind =
   | "crowd_surge"
   | "stalling"
   | "team_throw"
+  | "ttm_landing"
   | "other_elim";
 
 const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
@@ -62,6 +63,7 @@ const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
   { value: "crowd_surge", label: "Sortie (Public)" },
   { value: "stalling", label: "Temporisation" },
   { value: "team_throw", label: "Lancer de coéquipier" },
+  { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
   { value: "other_elim", label: "Autre élimination" },
 ];
 

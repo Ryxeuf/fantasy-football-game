@@ -1544,7 +1544,7 @@ model LeagueMatchEvent {
   matchSheetId   String
   /// 'kickoff' | 'touchdown' | 'casualty' | 'pass_complete' |
   /// 'interception' | 'aggression' | 'expulsion' | 'crowd_surge' |
-  /// 'stalling' | 'other_elim'
+  /// 'stalling' | 'team_throw' | 'ttm_landing' | 'other_elim'
   kind           String
   /// 'home' | 'away' — equipe a l'origine de l'event.
   team           String?

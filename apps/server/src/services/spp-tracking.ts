@@ -6,6 +6,7 @@ import type { PrismaClient } from "@prisma/client";
  * - Casualty: 2 SPP
  * - Completion (pass): 1 SPP
  * - Interception: 2 SPP
+ * - Atterrissage reussi (lancer de coequipier) : 1 SPP
  * - MVP: 4 SPP
  */
 export const SPP_VALUES = {
@@ -13,6 +14,7 @@ export const SPP_VALUES = {
   casualty: 2,
   completion: 1,
   interception: 2,
+  ttmLanding: 1,
   mvp: 4,
 } as const;
 
@@ -32,6 +34,12 @@ export interface PlayerMatchStats {
   casualties: number;
   completions: number;
   interceptions: number;
+  /**
+   * Atterrissages reussis sur Lancer de coequipier (le joueur LANCE
+   * gagne 1 PSP par atterrissage reussi). Optionnel : absent des stats
+   * produites par le moteur online (retro-compat, traite comme 0).
+   */
+  ttmLandings?: number;
   mvp: boolean;
 }
 
@@ -46,6 +54,8 @@ export interface PlayerAggregateStats {
   casualties: number;
   completions: number;
   interceptions: number;
+  /** Atterrissages reussis (1 PSP chacun). Optionnel : retro-compat. */
+  ttmLandings?: number;
   mvps: number;
 }
 
@@ -107,6 +117,7 @@ export function calculatePlayerSPP(
     stats.casualties * casValue +
     stats.completions * SPP_VALUES.completion +
     stats.interceptions * SPP_VALUES.interception +
+    (stats.ttmLandings ?? 0) * SPP_VALUES.ttmLanding +
     (stats.mvp ? SPP_VALUES.mvp : 0)
   );
 }
@@ -165,6 +176,7 @@ export function calculateAggregateSPP(
     stats.casualties * casValue +
     stats.completions * SPP_VALUES.completion +
     stats.interceptions * SPP_VALUES.interception +
+    (stats.ttmLandings ?? 0) * SPP_VALUES.ttmLanding +
     stats.mvps * SPP_VALUES.mvp
   );
 }
