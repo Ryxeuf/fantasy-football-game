@@ -11,8 +11,8 @@ import {
 } from "./spp-tracking";
 
 describe("calculateAggregateSPP (FR18 — PSP de saison)", () => {
-  it("somme TD×3 + cas×2 + comp×1 + int×1 + mvps×4 (vanilla)", () => {
-    // 2 TD (6) + 1 cas (2) + 3 comp (3) + 1 int (1) + 2 MVP (8) = 20
+  it("somme TD×3 + cas×2 + comp×1 + int×2 + mvps×4 (vanilla)", () => {
+    // 2 TD (6) + 1 cas (2) + 3 comp (3) + 1 int (2) + 2 MVP (8) = 21
     expect(
       calculateAggregateSPP({
         touchdowns: 2,
@@ -21,7 +21,7 @@ describe("calculateAggregateSPP (FR18 — PSP de saison)", () => {
         interceptions: 1,
         mvps: 2,
       }),
-    ).toBe(20);
+    ).toBe(21);
   });
 
   it("compte plusieurs MVP (×4 chacun), pas un simple booléen", () => {
@@ -108,7 +108,7 @@ describe("calculatePlayerSPP", () => {
     expect(calculatePlayerSPP(stats)).toBe(4);
   });
 
-  it("calculates 1 SPP per interception", () => {
+  it("calculates 2 SPP per interception", () => {
     const stats: PlayerMatchStats = {
       touchdowns: 0,
       casualties: 0,
@@ -116,7 +116,7 @@ describe("calculatePlayerSPP", () => {
       interceptions: 2,
       mvp: false,
     };
-    expect(calculatePlayerSPP(stats)).toBe(2);
+    expect(calculatePlayerSPP(stats)).toBe(4);
   });
 
   it("adds 4 SPP for MVP award", () => {
@@ -135,10 +135,10 @@ describe("calculatePlayerSPP", () => {
       touchdowns: 1, // 3
       casualties: 1, // 2
       completions: 2, // 2
-      interceptions: 1, // 1
+      interceptions: 1, // 2
       mvp: true, // 4
     };
-    expect(calculatePlayerSPP(stats)).toBe(12);
+    expect(calculatePlayerSPP(stats)).toBe(13);
   });
 });
 
@@ -332,7 +332,7 @@ describe("L2.B.8 — Bagarreurs Brutaux override", () => {
       interceptions: 2,
       mvp: true,
     };
-    const expected = 5 * 1 + 2 * 1 + 4; // 11
+    const expected = 5 * 1 + 2 * 2 + 4; // 13
     expect(calculatePlayerSPP(stats)).toBe(expected);
     expect(
       calculatePlayerSPP(stats, { bagarreursBrutaux: true }),

@@ -765,7 +765,7 @@ function calculateMatchResult(state: GameState, rng: RNG): {
       playerStats.touchdowns * 3 +
       playerStats.casualties * 2 +
       playerStats.completions * 1 +
-      playerStats.interceptions * 1;
+      playerStats.interceptions * 2;
   }
 
   // Attribuer le MVP (1 joueur aléatoire par équipe, 4 SPP chacun)
