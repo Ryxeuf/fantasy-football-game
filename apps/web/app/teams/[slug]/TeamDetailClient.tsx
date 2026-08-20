@@ -19,6 +19,11 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import ShareBar from "../../components/ShareBar";
 import { stripRosterPrefix } from "../position-slug";
 import { formatPlusStat } from "../../lib/format-stats";
+import {
+  budgetHeadroom,
+  playerCostRange,
+  startingElevenCost,
+} from "./roster-stats";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -164,6 +169,11 @@ export default function TeamDetailClient({
   const positions = [...(team?.positions ?? [])].sort((a: any, b: any) =>
     a.displayName.localeCompare(b.displayName),
   );
+
+  // Statistiques dérivées du roster (coûts en kPO, cf. roster-stats.ts).
+  const costRange = playerCostRange(positions);
+  const elevenCost = startingElevenCost(positions);
+  const headroom = budgetHeadroom(positions);
 
   // A11 — règles spéciales + ligues régionales résolues par l'API. Optionnels
   // pour rétro-compat (un frontend déployé avant le serveur reçoit `undefined`).
@@ -707,31 +717,41 @@ export default function TeamDetailClient({
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-sm text-green-600 font-medium">
-                {t.teams.minCost}
+                {t.teams.costPerPlayer}
               </div>
-              <div className="text-2xl font-bold text-green-900">
-                {Math.min(...positions.map((p: any) => p.cost * p.min))}k{" "}
-                {t.teams.po}
+              <div
+                className="text-2xl font-bold text-green-900"
+                data-testid="roster-stat-cost-range"
+              >
+                {costRange ? `${costRange.min}k – ${costRange.max}k` : "—"}
               </div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-sm text-purple-600 font-medium">
-                {t.teams.maxCost}
+                {t.teams.startingEleven}
               </div>
-              <div className="text-2xl font-bold text-purple-900">
-                {positions.reduce(
-                  (sum: number, p: any) => sum + p.cost * p.max,
-                  0,
-                )}
-                k {t.teams.po}
+              <div
+                className="text-2xl font-bold text-purple-900"
+                data-testid="roster-stat-starting-eleven"
+              >
+                {elevenCost !== null ? `${elevenCost}k ${t.teams.po}` : "—"}
+              </div>
+              <div className="text-xs text-purple-600/80 mt-1">
+                {t.teams.startingElevenHint}
               </div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <div className="text-sm text-orange-600 font-medium">
-                {t.teams.maxPlayers}
+                {t.teams.budgetHeadroom}
               </div>
-              <div className="text-2xl font-bold text-orange-900">
-                {positions.reduce((sum: number, p: any) => sum + p.max, 0)}
+              <div
+                className="text-2xl font-bold text-orange-900"
+                data-testid="roster-stat-headroom"
+              >
+                {headroom !== null ? `${headroom}k ${t.teams.po}` : "—"}
+              </div>
+              <div className="text-xs text-orange-600/80 mt-1">
+                {t.teams.budgetHeadroomHint}
               </div>
             </div>
           </div>
