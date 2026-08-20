@@ -36,6 +36,14 @@ import {
 import { parsePurchases } from "./league-offline-purchases";
 import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import {
+  deriveJourneymen,
+  isJourneymanId,
+  linemanPositionsForRoster,
+  parseJourneymenChoice,
+  type JourneymanPositionOption,
+  type SheetJourneyman,
+} from "./league-sheet-journeymen";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
@@ -297,6 +305,9 @@ export interface PreMatchPayload {
   inducementsAway?: unknown;
   prayersHome?: unknown;
   prayersAway?: unknown;
+  /** Journaliers — poste de lineman choisi (slug), null = defaut. */
+  journeymenChoiceHome?: string | null;
+  journeymenChoiceAway?: string | null;
 }
 
 /** Met a jour les infos d'avant-match. */
@@ -408,6 +419,17 @@ export async function updatePreMatch(input: {
   if (p.inducementsAway !== undefined) data.inducementsAway = p.inducementsAway ?? undefined;
   if (p.prayersHome !== undefined) data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined) data.prayersAway = p.prayersAway ?? undefined;
+  // Journaliers : choix du poste de lineman ({ position } | null).
+  if (p.journeymenChoiceHome !== undefined) {
+    data.journeymenHome = p.journeymenChoiceHome
+      ? { position: p.journeymenChoiceHome }
+      : null;
+  }
+  if (p.journeymenChoiceAway !== undefined) {
+    data.journeymenAway = p.journeymenChoiceAway
+      ? { position: p.journeymenChoiceAway }
+      : null;
+  }
 
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
@@ -582,24 +604,65 @@ export async function submitByCoach(input: {
   const sheetSnap = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
   };
   let snapshotData: Record<string, unknown> = {};
   if (!sheetSnap.rosterSnapshotHome || !sheetSnap.rosterSnapshotAway) {
     try {
       const teams = await loadSheetTeams(input.pairingId);
       // Les joueurs absents (missNextMatch) ne participent pas au match :
-      // ils sont exclus de la « version du match » figee.
-      if (!sheetSnap.rosterSnapshotHome && teams.home?.teamId) {
-        const snap = await captureRosterSnapshot(teams.home.teamId, {
+      // ils sont exclus de la « version du match » figee. Si l'equipe
+      // aligne moins de 11 joueurs, les journaliers derives completent la
+      // version du match.
+      const captureSide = async (
+        team: MatchSheetTeam | null,
+        side: "home" | "away",
+      ): Promise<string | null> => {
+        if (!team?.teamId) return null;
+        const snap = await captureRosterSnapshot(team.teamId, {
           excludeMissNextMatch: true,
         });
-        if (snap) snapshotData.rosterSnapshotHome = JSON.stringify(snap);
+        if (!snap) return null;
+        const journeymen = deriveJourneymen({
+          side,
+          roster: team.roster,
+          ruleset: team.ruleset,
+          players: team.players,
+          chosenPosition: parseJourneymenChoice(
+            side === "home"
+              ? sheetSnap.journeymenHome
+              : sheetSnap.journeymenAway,
+          ),
+        });
+        if (journeymen.length === 0) return JSON.stringify(snap);
+        return JSON.stringify({
+          ...snap,
+          players: [
+            ...snap.players,
+            ...journeymen.map((j) => ({
+              name: j.name,
+              position: j.positionName,
+              number: j.number,
+              ma: j.stats.ma,
+              st: j.stats.st,
+              ag: j.stats.ag,
+              pa: j.stats.pa,
+              av: j.stats.av,
+              skills: j.skills,
+              spp: 0,
+              advancements: "[]",
+            })),
+          ],
+        });
+      };
+      if (!sheetSnap.rosterSnapshotHome) {
+        const json = await captureSide(teams.home, "home");
+        if (json) snapshotData.rosterSnapshotHome = json;
       }
-      if (!sheetSnap.rosterSnapshotAway && teams.away?.teamId) {
-        const snap = await captureRosterSnapshot(teams.away.teamId, {
-          excludeMissNextMatch: true,
-        });
-        if (snap) snapshotData.rosterSnapshotAway = JSON.stringify(snap);
+      if (!sheetSnap.rosterSnapshotAway) {
+        const json = await captureSide(teams.away, "away");
+        if (json) snapshotData.rosterSnapshotAway = json;
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
@@ -803,20 +866,25 @@ export function buildOfflineInputFromSummary(
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
 
-  const playerStats: OfflinePlayerStatInput[] = summary.playerStats.map(
-    (p) => ({
+  // Les journaliers sont des joueurs SYNTHETIQUES de la feuille (aucune
+  // ligne TeamPlayer) : leurs stats/blessures/bonus restent visibles sur
+  // la feuille mais ne doivent PAS partir en persistance post-match
+  // (updates Prisma sur des ids inexistants).
+  const playerStats: OfflinePlayerStatInput[] = summary.playerStats
+    .filter((p) => !isJourneymanId(p.playerId))
+    .map((p) => ({
       teamPlayerId: p.playerId,
       touchdowns: p.touchdowns,
       casualties: p.casualtiesInflicted,
       completions: p.completions,
       interceptions: p.interceptions,
       mvp: motmSet.has(p.playerId),
-    }),
-  );
+    }));
 
   // Les MVP sans stat-line (joueur primé sans event) doivent quand meme
   // recevoir le flag mvp -> on les ajoute.
   for (const id of motm) {
+    if (isJourneymanId(id)) continue;
     if (!playerStats.some((p) => p.teamPlayerId === id)) {
       playerStats.push({ teamPlayerId: id, mvp: true });
     }
@@ -826,6 +894,7 @@ export function buildOfflineInputFromSummary(
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
   for (const inj of summary.injuries) {
+    if (isJourneymanId(inj.playerId)) continue;
     // A62 — la victime d'un other_elim est portee par actorPlayerId
     // (auto-elimination sans cible) : on matche acteur OU cible.
     const src = eventsForMeta.find(
@@ -870,14 +939,18 @@ export function buildOfflineInputFromSummary(
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
-    sppBonus: parseSppBonus(sheet.sppBonus),
+    sppBonus: parseSppBonus(sheet.sppBonus).filter(
+      (b) => !isJourneymanId(b.teamPlayerId),
+    ),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
     // par treasuryDebit ci-dessus : pas de double-debit).
     purchasesHome: parsePurchases(sheet.purchasesHome),
     purchasesAway: parsePurchases(sheet.purchasesAway),
     // Licenciements -> firedAt (retire du roster actif, reversible).
-    firedPlayerIds: parseStringArray(sheet.firedPlayerIds),
+    firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
+      (id) => !isJourneymanId(id),
+    ),
   };
 }
 
@@ -1423,6 +1496,16 @@ export interface MatchSheetTeam {
    */
   readonly dedicatedFans: number;
   readonly players: readonly MatchSheetPlayer[];
+  /**
+   * Journaliers derives (equipe a moins de 11 joueurs disponibles).
+   * Renseignes par getMatchSheet (necessite le choix stocke sur la
+   * feuille) ; vides sinon.
+   */
+  readonly journeymen?: readonly SheetJourneyman[];
+  /** Postes de lineman offerts au choix du coach (>= 12 max). */
+  readonly journeymenOptions?: readonly JourneymanPositionOption[];
+  /** Choix courant ({ position } sur la feuille), null = defaut. */
+  readonly journeymenChoice?: string | null;
 }
 
 /** Libelle de race depuis un roster slug (fallback : le slug brut). */
@@ -1944,6 +2027,40 @@ export async function getMatchSheet(input: {
     input.pairingId,
   );
 
+  // Journaliers : derives du roster courant + choix de poste stocke sur
+  // la feuille. Ils alimentent les pickers d'events et le roster affiche.
+  const sheetJourneymen = sheet as {
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  };
+  const withJourneymen = (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): MatchSheetTeam | null => {
+    if (!team) return null;
+    const choice = parseJourneymenChoice(
+      side === "home"
+        ? sheetJourneymen.journeymenHome
+        : sheetJourneymen.journeymenAway,
+    );
+    return {
+      ...team,
+      journeymen: deriveJourneymen({
+        side,
+        roster: team.roster,
+        ruleset: team.ruleset,
+        players: team.players,
+        chosenPosition: choice,
+      }),
+      journeymenOptions: linemanPositionsForRoster(team.roster, team.ruleset),
+      journeymenChoice: choice,
+    };
+  };
+  const teamsWithJourneymen = {
+    home: withJourneymen(teams.home, "home"),
+    away: withJourneymen(teams.away, "away"),
+  };
+
   // A63 — expose des gains auto toujours frais : la partie TD depend des
   // events, qui peuvent changer apres le pre-match (valeur stockee stale).
   const sheetPopularity = sheet as {
@@ -1964,7 +2081,7 @@ export async function getMatchSheet(input: {
       winningsAway: autoWinnings.away,
     } as typeof sheet,
     summary,
-    teams,
+    teams: teamsWithJourneymen,
     reference: await buildMatchSheetReference(teams, allowedInducements),
     computedSpp,
     viewerRole: commissioner

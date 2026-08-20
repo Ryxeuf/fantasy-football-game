@@ -1520,6 +1520,13 @@ model LeagueMatchSheet {
   rosterSnapshotHome     Json?
   rosterSnapshotAway     Json?
 
+  /// Journaliers — choix du poste de lineman par coach quand l'equipe
+  /// aligne moins de 11 joueurs disponibles : { position: slug } | null
+  /// (null => lineman de base). La liste des journaliers est DERIVEE
+  /// (cf. services/league-sheet-journeymen.ts), pas persistee.
+  journeymenHome         Json?
+  journeymenAway         Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

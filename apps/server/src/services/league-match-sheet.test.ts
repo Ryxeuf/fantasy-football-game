@@ -1448,6 +1448,63 @@ describe("Lot G — league-match-sheet", () => {
       ]);
     });
 
+    it("filtre les journaliers de toute la persistance (ids synthétiques)", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          {
+            playerId: "journeyman-home-1",
+            side: "home",
+            severity: "mng",
+            cause: "block",
+          },
+          { playerId: "h2", side: "home", severity: "mng", cause: "block" },
+        ],
+        playerStats: [
+          ...baseSummary.playerStats,
+          {
+            playerId: "journeyman-home-1",
+            side: "home",
+            touchdowns: 1,
+            casualtiesInflicted: 0,
+            completions: 0,
+            interceptions: 0,
+            aggressions: 0,
+          },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        {
+          motmPlayerIds: ["journeyman-home-1"],
+          sppBonus: [
+            { playerId: "journeyman-home-1", spp: 2 },
+            { playerId: "h1", spp: 1 },
+          ],
+          firedPlayerIds: ["journeyman-home-1", "h1"],
+        },
+        [
+          {
+            id: "e1",
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "h1",
+            targetPlayerId: "h2",
+            injurySeverity: "mng",
+          } as never,
+        ],
+      );
+      // Les stats du journalier restent sur la feuille (score/summary) mais
+      // aucune écriture Prisma ne doit le viser.
+      expect(out.playerStats.map((p) => p.teamPlayerId)).toEqual(["h1"]);
+      expect(out.injuries.map((i) => i.teamPlayerId)).toEqual(["h2"]);
+      expect(out.sppBonus).toEqual([{ teamPlayerId: "h1", spp: 1 }]);
+      expect(out.firedPlayerIds).toEqual(["h1"]);
+      // Le score, lui, garde la contribution du journalier.
+      expect(out.scoreHome).toBe(2);
+    });
+
     it("derive le debit treasury (coups de pouce + erreurs couteuses + achats)", () => {
       const out = buildOfflineInputFromSummary(
         "pair-1",

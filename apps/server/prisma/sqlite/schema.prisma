@@ -1150,6 +1150,9 @@ model LeagueMatchSheet {
   /// E11 — snapshots roster figes a la premiere soumission (JSON string).
   rosterSnapshotHome     Json?
   rosterSnapshotAway     Json?
+  /// Journaliers — choix du poste de lineman par coach ({ position }).
+  journeymenHome         Json?
+  journeymenAway         Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 

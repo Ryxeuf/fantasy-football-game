@@ -57,6 +57,27 @@ function playerPositionName(p: SheetPlayer): string {
   return p.positionName ?? p.position;
 }
 
+/**
+ * Journalier dérivé côté serveur (équipe à moins de 11 joueurs
+ * disponibles). Joueur synthétique : id `journeyman-<side>-<n>`,
+ * sélectionnable dans les évènements mais jamais persisté au roster.
+ */
+export interface SheetJourneyman {
+  id: string;
+  number: number;
+  name: string;
+  position: string;
+  positionName: string;
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
+  skills?: string;
+}
+
 export interface SheetTeam {
   teamId: string;
   name: string;
@@ -73,6 +94,12 @@ export interface SheetTeam {
   /** Fans dévoués de l'équipe (1-6). Optionnel : rétro-compat API. */
   dedicatedFans?: number;
   players: SheetPlayer[];
+  /** Journaliers dérivés (optionnel : rétro-compat API). */
+  journeymen?: SheetJourneyman[];
+  /** Postes de lineman offerts au choix du coach. */
+  journeymenOptions?: { slug: string; name: string }[];
+  /** Poste choisi sur la feuille (null = défaut). */
+  journeymenChoice?: string | null;
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -200,6 +227,7 @@ export function PlayerSelect({
   disabled,
   allowEmpty = true,
   includeUnavailable = false,
+  includeJourneymen = true,
   testId,
 }: {
   team: SheetTeam | null;
@@ -208,12 +236,19 @@ export function PlayerSelect({
   disabled?: boolean;
   allowEmpty?: boolean;
   includeUnavailable?: boolean;
+  /**
+   * Les journaliers participent au match (TD, blessures, MVP…) : ils sont
+   * proposés par défaut. À désactiver pour les usages « roster réel »
+   * (licenciements, SPP bonus persistés).
+   */
+  includeJourneymen?: boolean;
   testId?: string;
 }) {
   const options = (team?.players ?? []).filter(
     (p) =>
       includeUnavailable || (!p.dead && !p.missNextMatch) || p.id === value,
   );
+  const journeymen = includeJourneymen ? (team?.journeymen ?? []) : [];
   return (
     <select
       value={value}
@@ -228,7 +263,71 @@ export function PlayerSelect({
           {playerLabel(p)}
         </option>
       ))}
+      {journeymen.map((j) => (
+        <option key={j.id} value={j.id}>
+          {`N°${j.number} ${j.name} — ${j.positionName}`}
+        </option>
+      ))}
     </select>
+  );
+}
+
+/**
+ * Bandeau « Journaliers » d'une équipe : visible quand l'équipe aligne
+ * moins de 11 joueurs disponibles. Propose le choix du poste de lineman
+ * quand le roster en offre plusieurs (défaut : lineman de base).
+ */
+export function JourneymenPanel({
+  team,
+  side,
+  editable,
+  onChoose,
+}: {
+  team: SheetTeam | null;
+  side: "home" | "away";
+  editable: boolean;
+  onChoose: (positionSlug: string) => void;
+}) {
+  const journeymen = team?.journeymen ?? [];
+  if (!team || journeymen.length === 0) return null;
+  const options = team.journeymenOptions ?? [];
+  const current =
+    team.journeymenChoice &&
+    options.some((o) => o.slug === team.journeymenChoice)
+      ? team.journeymenChoice
+      : (options[0]?.slug ?? "");
+  return (
+    <div
+      data-testid={`journeymen-${side}`}
+      className="flex flex-wrap items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+    >
+      <span aria-hidden>🧳</span>
+      <span>
+        <strong>{team.name}</strong> aligne{" "}
+        <strong>
+          {journeymen.length} journalier{journeymen.length > 1 ? "s" : ""}
+        </strong>{" "}
+        (moins de 11 joueurs disponibles).
+      </span>
+      {options.length > 1 && (
+        <label className="flex items-center gap-1">
+          Poste :
+          <select
+            value={current}
+            onChange={(e) => onChoose(e.target.value)}
+            disabled={!editable}
+            data-testid={`journeymen-position-${side}`}
+            className="rounded border px-1.5 py-1 text-xs"
+          >
+            {options.map((o) => (
+              <option key={o.slug} value={o.slug}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+    </div>
   );
 }
 
@@ -1000,13 +1099,15 @@ function FiredEditor({
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <div className="min-w-0 flex-1">
             {/* Licenciement : un joueur absent (voire mort) peut etre
-                licencie en fin de match — liste complete. */}
+                licencie en fin de match — liste complete du roster REEL
+                (pas les journaliers, qui partent seuls). */}
             <PlayerSelect
               team={team}
               value={id}
               onChange={(v) => update(i, v)}
               disabled={disabled}
               includeUnavailable
+              includeJourneymen={false}
             />
           </div>
           {!disabled && (
@@ -1055,11 +1156,13 @@ function SppBonusEditor({
       {entries.map((it, i) => (
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <div className="min-w-0 flex-1">
+            {/* SPP bonus persistes au roster : joueurs reels uniquement. */}
             <PlayerSelect
               team={team}
               value={it.playerId}
               onChange={(id) => update(i, { playerId: id })}
               disabled={disabled}
+              includeJourneymen={false}
             />
           </div>
           <input

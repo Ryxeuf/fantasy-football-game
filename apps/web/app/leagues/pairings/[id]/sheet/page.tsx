@@ -13,6 +13,7 @@ import { KICKOFF_EVENTS, LEGACY_KICKOFF_EVENT_IDS } from "@bb/game-engine";
 import {
   PreMatchPanel,
   PostMatchPanel,
+  JourneymenPanel,
   PlayerSelect,
   InvalidateControl,
   TeamIdentityBadges,
@@ -472,6 +473,19 @@ export default function MatchSheetPage() {
       }),
     );
 
+  // Journaliers : choix du poste de lineman (PATCH pre-match dedie).
+  const saveJourneymenChoice = (side: "home" | "away", slug: string) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
+        method: "PATCH",
+        body: JSON.stringify(
+          side === "home"
+            ? { journeymenChoiceHome: slug }
+            : { journeymenChoiceAway: slug },
+        ),
+      }),
+    );
+
   const savePreMatch = (v: PreMatchValues) =>
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
@@ -715,6 +729,24 @@ export default function MatchSheetPage() {
           </strong>
         </p>
 
+        {/* Journaliers : equipes a moins de 11 joueurs disponibles. Le
+            choix du poste reste editable tant que la feuille n'est pas
+            validee (il fige avec le roster a la 1re soumission). */}
+        <div className="mt-3 space-y-1.5">
+          <JourneymenPanel
+            team={home}
+            side="home"
+            editable={editable && (mySide === "home" || isCommissioner)}
+            onChoose={(slug) => saveJourneymenChoice("home", slug)}
+          />
+          <JourneymenPanel
+            team={away}
+            side="away"
+            editable={editable && (mySide === "away" || isCommissioner)}
+            onChoose={(slug) => saveJourneymenChoice("away", slug)}
+          />
+        </div>
+
         {/* E11 — rosters consultables par chaque coach, y compris celui de
             l'adversaire : « version du match » une fois figée à la 1re
             soumission, état courant avant. */}
@@ -723,11 +755,13 @@ export default function MatchSheetPage() {
             label={home?.name ?? "Domicile"}
             raw={data.sheet.rosterSnapshotHome}
             livePlayers={home?.players}
+            journeymen={home?.journeymen}
           />
           <RosterSection
             label={away?.name ?? "Extérieur"}
             raw={data.sheet.rosterSnapshotAway}
             livePlayers={away?.players}
+            journeymen={away?.journeymen}
           />
         </div>
       </section>

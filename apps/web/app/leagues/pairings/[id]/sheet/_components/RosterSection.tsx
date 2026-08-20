@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { SheetPlayer } from "./MatchSheetPanels";
+import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 // ---------------------------------------------------------------------------
 // E11 — roster « version du match » (snapshot figé à la 1re soumission).
@@ -51,22 +51,40 @@ export function parseRosterSnapshot(raw: unknown): {
  */
 export function livePlayersToView(
   players: readonly SheetPlayer[] | undefined,
+  journeymen: readonly SheetJourneyman[] = [],
 ): SnapshotPlayerView[] | null {
-  if (!players || players.length === 0) return null;
-  return players
-    .filter((p) => !p.dead && !p.missNextMatch)
-    .map((p) => ({
-      name: p.name,
-      position: p.positionName ?? p.position,
-      number: p.number,
-      ma: p.stats?.ma ?? 0,
-      st: p.stats?.st ?? 0,
-      ag: p.stats?.ag ?? 0,
-      pa: p.stats?.pa ?? null,
-      av: p.stats?.av ?? 0,
-      skills: p.skills ?? "",
-      spp: p.spp,
-    }));
+  if ((!players || players.length === 0) && journeymen.length === 0) {
+    return null;
+  }
+  return [
+    ...(players ?? [])
+      .filter((p) => !p.dead && !p.missNextMatch)
+      .map((p) => ({
+        name: p.name,
+        position: p.positionName ?? p.position,
+        number: p.number,
+        ma: p.stats?.ma ?? 0,
+        st: p.stats?.st ?? 0,
+        ag: p.stats?.ag ?? 0,
+        pa: p.stats?.pa ?? null,
+        av: p.stats?.av ?? 0,
+        skills: p.skills ?? "",
+        spp: p.spp,
+      })),
+    // Journaliers dérivés (équipe à moins de 11 joueurs disponibles).
+    ...journeymen.map((j) => ({
+      name: j.name,
+      position: j.positionName,
+      number: j.number,
+      ma: j.stats?.ma ?? 0,
+      st: j.stats?.st ?? 0,
+      ag: j.stats?.ag ?? 0,
+      pa: j.stats?.pa ?? null,
+      av: j.stats?.av ?? 0,
+      skills: j.skills ?? "",
+      spp: 0,
+    })),
+  ];
 }
 
 /**
@@ -85,16 +103,19 @@ export function RosterSection({
   label,
   raw,
   livePlayers,
+  journeymen,
 }: {
   label: string;
   raw: unknown;
   livePlayers?: readonly SheetPlayer[];
+  /** Journaliers dérivés — inclus dans la vue « état actuel ». */
+  journeymen?: readonly SheetJourneyman[];
 }) {
   const [open, setOpen] = useState(false);
   const snapshot = useMemo(() => parseRosterSnapshot(raw), [raw]);
   const live = useMemo(
-    () => (snapshot ? null : livePlayersToView(livePlayers)),
-    [snapshot, livePlayers],
+    () => (snapshot ? null : livePlayersToView(livePlayers, journeymen ?? [])),
+    [snapshot, livePlayers, journeymen],
   );
   const players = snapshot?.players ?? live;
   if (!players || players.length === 0) return null;
