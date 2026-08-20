@@ -5,14 +5,14 @@ import type { PrismaClient } from "@prisma/client";
  * - Touchdown: 3 SPP
  * - Casualty: 2 SPP
  * - Completion (pass): 1 SPP
- * - Interception: 1 SPP
+ * - Interception: 2 SPP
  * - MVP: 4 SPP
  */
 export const SPP_VALUES = {
   touchdown: 3,
   casualty: 2,
   completion: 1,
-  interception: 1,
+  interception: 2,
   mvp: 4,
 } as const;
 

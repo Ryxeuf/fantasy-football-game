@@ -32,6 +32,8 @@ export interface SeasonExtraStats {
   readonly forfeits: number;
   /** Passes reussies (`pass_complete`). */
   readonly passes: number;
+  /** Interceptions reussies (`interception`) — classements par equipe. */
+  readonly interceptions: number;
   /** Agressions commises (`aggression`). */
   readonly aggressions: number;
   /** Sorties infligees par le public (`crowd_surge`). */
@@ -43,6 +45,7 @@ export interface SeasonExtraStats {
 export const EMPTY_EXTRA_STATS: SeasonExtraStats = {
   forfeits: 0,
   passes: 0,
+  interceptions: 0,
   aggressions: 0,
   crowdSurges: 0,
   expulsions: 0,
@@ -78,6 +81,7 @@ type CountableField = Exclude<keyof SeasonExtraStats, "forfeits">;
  */
 const KIND_TO_FIELD: Readonly<Record<string, CountableField>> = {
   pass_complete: "passes",
+  interception: "interceptions",
   aggression: "aggressions",
   crowd_surge: "crowdSurges",
   expulsion: "expulsions",

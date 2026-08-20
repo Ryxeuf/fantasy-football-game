@@ -801,6 +801,8 @@ export default function MatchSheetPage() {
           }}
           homeName={home?.name ?? "Domicile"}
           awayName={away?.name ?? "Extérieur"}
+          homeFans={home?.dedicatedFans ?? null}
+          awayFans={away?.dedicatedFans ?? null}
           disabled={!editable}
           onSave={savePreMatch}
           reference={data.reference}

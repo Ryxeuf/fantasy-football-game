@@ -70,6 +70,8 @@ export interface SheetTeam {
   teamValue: number;
   currentValue: number;
   treasury: number;
+  /** Fans dévoués de l'équipe (1-6). Optionnel : rétro-compat API. */
+  dedicatedFans?: number;
   players: SheetPlayer[];
 }
 
@@ -570,6 +572,8 @@ export function PreMatchPanel({
   initial,
   homeName,
   awayName,
+  homeFans,
+  awayFans,
   disabled,
   onSave,
   reference,
@@ -577,6 +581,9 @@ export function PreMatchPanel({
   initial: PreMatchValues;
   homeName: string;
   awayName: string;
+  /** Fans dévoués de chaque équipe (1-6). Optionnels : rétro-compat API. */
+  homeFans?: number | null;
+  awayFans?: number | null;
   disabled?: boolean;
   onSave: (v: PreMatchValues) => Promise<void>;
   reference: MatchSheetReference;
@@ -660,6 +667,7 @@ export function PreMatchPanel({
     {
       side: "home" as const,
       name: homeName,
+      fans: homeFans ?? null,
       pop: popH,
       setPop: setPopH,
       winnings: winningsH,
@@ -674,6 +682,7 @@ export function PreMatchPanel({
     {
       side: "away" as const,
       name: awayName,
+      fans: awayFans ?? null,
       pop: popA,
       setPop: setPopA,
       winnings: winningsA,
@@ -837,7 +846,11 @@ export function PreMatchPanel({
               Déclarer forfait
             </label>
             <label className="block text-xs">
-              Facteur de popularité (1D3 + 5)
+              {/* Formule officielle : 1D3 + fans dévoués DE L'ÉQUIPE. */}
+              <span data-testid={`popularity-label-${c.side}`}>
+                Facteur de popularité (1D3 +{" "}
+                {c.fans !== null ? `${c.fans} fans dévoués` : "fans dévoués"})
+              </span>
               <input
                 type="number"
                 min={0}
@@ -848,6 +861,11 @@ export function PreMatchPanel({
                 data-testid={`popularity-${c.side}`}
                 className="mt-1 block w-24 rounded border px-2 py-2 text-sm"
               />
+              {c.fans !== null ? (
+                <span className="mt-0.5 block text-[11px] text-slate-500">
+                  Résultat attendu entre {c.fans + 1} et {c.fans + 3}.
+                </span>
+              ) : null}
               <span className="mt-0.5 block text-[11px] text-slate-500">
                 Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000
                 po par TD marqué)
@@ -1636,6 +1654,16 @@ export function PostMatchPanel({
                 <option value={0}>0</option>
                 <option value={1}>+1</option>
               </select>
+              {typeof c.team?.dedicatedFans === "number" ? (
+                <span
+                  data-testid={`fans-hint-${c.side}`}
+                  className="mt-0.5 block text-[11px] text-slate-500"
+                >
+                  Actuel : {c.team.dedicatedFans} — vainqueur : +1 si D6 ≥{" "}
+                  {c.team.dedicatedFans} · perdant : −1 si D6 &lt;{" "}
+                  {c.team.dedicatedFans}
+                </span>
+              ) : null}
             </label>
 
             <label className="block text-xs">

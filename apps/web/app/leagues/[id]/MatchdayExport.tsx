@@ -21,6 +21,14 @@ interface MatchdayExportProps {
   statusLabel: (pairing: LeaguePairingDetail) => string;
 }
 
+/** « Nom d'équipe (Coach) » pour le PDF — le coach si l'API le fournit. */
+function teamWithCoach(
+  participant: LeaguePairingDetail["homeParticipant"],
+): string {
+  const coach = participant.team.owner?.coachName;
+  return coach ? `${participant.team.name} (${coach})` : participant.team.name;
+}
+
 function formatDate(iso: string | null, language: string): string | null {
   if (!iso) return null;
   try {
@@ -81,9 +89,9 @@ export function MatchdayExport({
         ],
       ],
       body: pairings.map((p) => [
-        p.homeParticipant.team.name,
+        teamWithCoach(p.homeParticipant),
         "vs",
-        p.awayParticipant.team.name,
+        teamWithCoach(p.awayParticipant),
         statusLabel(p),
       ]),
       styles: { fontSize: 10 },
@@ -168,12 +176,22 @@ export function MatchdayExport({
                       >
                         <td className="py-1 pr-2 text-nuffle-anthracite">
                           {p.homeParticipant.team.name}
+                          {p.homeParticipant.team.owner?.coachName ? (
+                            <span className="block text-[11px] text-gray-500">
+                              {p.homeParticipant.team.owner.coachName}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="py-1 px-2 text-center text-gray-400">
                           vs
                         </td>
                         <td className="py-1 px-2 text-nuffle-anthracite">
                           {p.awayParticipant.team.name}
+                          {p.awayParticipant.team.owner?.coachName ? (
+                            <span className="block text-[11px] text-gray-500">
+                              {p.awayParticipant.team.owner.coachName}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="py-1 pl-2 text-right text-gray-500">
                           {statusLabel(p)}

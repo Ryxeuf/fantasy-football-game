@@ -336,6 +336,29 @@ describe('Kickoff Events', () => {
         expect(result.players.filter(p => p.team === 'A' && p.stunned).length).toBeGreaterThan(0);
         expect(result.players.filter(p => p.team === 'B' && p.stunned).length).toBeGreaterThan(0);
       });
+
+      it('utilise le Facteur de Popularité complet (D3 + fans), pas les seuls fans dévoués', () => {
+        // Fans dévoués égaux (3/3) mais FP pré-match opposés : sans
+        // `fanFactors`, l'issue dépendrait du seul D6 ; avec, teamA
+        // (FP 13 vs 3) ne peut jamais perdre le jet.
+        const state: GameState = {
+          ...setup(),
+          dedicatedFans: { teamA: 3, teamB: 3 },
+          fanFactors: { teamA: 13, teamB: 3 },
+        };
+        for (let i = 0; i < 10; i++) {
+          const result = applyKickoffEvent(state, pitchInvasionEvent, makeRNG(`pi-ff-${i}`), 'A');
+          expect(result.players.filter(p => p.team === 'A' && p.stunned).length).toBe(0);
+          expect(result.players.filter(p => p.team === 'B' && p.stunned).length).toBeGreaterThan(0);
+        }
+      });
+
+      it('replie sur les fans dévoués pour un state sauvegardé sans fanFactors', () => {
+        const state: GameState = { ...setup(), dedicatedFans: { teamA: 0, teamB: 10 } };
+        const result = applyKickoffEvent(state, pitchInvasionEvent, makeRNG('pi-legacy'), 'A');
+        expect(result.players.filter(p => p.team === 'A' && p.stunned).length).toBeGreaterThan(0);
+        expect(result.players.filter(p => p.team === 'B' && p.stunned).length).toBe(0);
+      });
     });
   });
 });

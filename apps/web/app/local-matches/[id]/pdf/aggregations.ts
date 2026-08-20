@@ -138,7 +138,7 @@ const SPP_VALUES = {
   touchdown: 3,
   casualty: 2,
   completion: 1,
-  interception: 1,
+  interception: 2,
   mvp: 4,
 } as const;
 

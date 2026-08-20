@@ -550,40 +550,9 @@ export default function LeagueDetailPage() {
                   >
                     🛠 Gerer mon equipe
                   </Link>
-                  {/* FR1 — retrait de l'équipe avant le démarrage de la saison. */}
-                  {seasonEditable ? (
-                    <button
-                      type="button"
-                      data-testid="withdraw-my-team"
-                      onClick={async () => {
-                        if (
-                          !confirm(
-                            "Retirer votre équipe de cette saison ? (possible uniquement avant le démarrage)",
-                          )
-                        )
-                          return;
-                        try {
-                          await apiRequest(
-                            `/leagues/seasons/${season.id}/leave`,
-                            {
-                              method: "POST",
-                              body: JSON.stringify({
-                                teamId: myParticipant.teamId,
-                              }),
-                            },
-                          );
-                          if (selectedSeasonId) loadSeason(selectedSeasonId);
-                        } catch (e) {
-                          alert(
-                            e instanceof Error ? e.message : "Erreur de retrait",
-                          );
-                        }
-                      }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-300 bg-white text-sm font-medium text-red-700 hover:bg-red-50"
-                    >
-                      🚪 Se retirer
-                    </button>
-                  ) : null}
+                  {/* Le retrait volontaire n'est plus proposé aux coachs :
+                      seul le commissaire retire une équipe (SeasonParticipants).
+                      La route serveur /seasons/:id/leave reste en place. */}
                   {canPlayMecene ? (
                     <MeceneButton
                       seasonId={season.id}

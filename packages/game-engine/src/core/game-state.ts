@@ -765,7 +765,7 @@ function calculateMatchResult(state: GameState, rng: RNG): {
       playerStats.touchdowns * 3 +
       playerStats.casualties * 2 +
       playerStats.completions * 1 +
-      playerStats.interceptions * 1;
+      playerStats.interceptions * 2;
   }
 
   // Attribuer le MVP (1 joueur aléatoire par équipe, 4 SPP chacun)
@@ -1628,6 +1628,13 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
         ? { teamA: fanFactor.teamA.dedicatedFans, teamB: fanFactor.teamB.dedicatedFans }
         : undefined)
     : state.dedicatedFans;
+  // Facteur de Popularité par équipe (D3 + fans dévoués) : consommé par
+  // l'événement de coup d'envoi « Invasion du terrain » (D6 + FP).
+  const fanFactors = isInitialStart
+    ? (fanFactor
+        ? { teamA: fanFactor.teamA.total, teamB: fanFactor.teamB.total }
+        : undefined)
+    : state.fanFactors;
 
   // Météo : au démarrage initial, on prend celle du pré-match ; en reprise
   // (mi-temps), on conserve la météo active (elle peut avoir changé via un
@@ -1671,6 +1678,7 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
       : state.bloodweiserKegs,
     fanAttendance,
     dedicatedFans,
+    fanFactors,
     weatherCondition,
     gameLog: [...state.gameLog, matchStartLog],
   };

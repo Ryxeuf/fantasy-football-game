@@ -134,6 +134,47 @@ describe("PreMatchPanel — météo dépendante de la table", () => {
   });
 });
 
+describe("PreMatchPanel — facteur de popularité (1D3 + fans dévoués)", () => {
+  it("affiche les fans dévoués réels de chaque équipe dans la formule", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        homeFans={4}
+        awayFans={1}
+        onSave={vi.fn()}
+        reference={REFERENCE}
+      />,
+    );
+    expect(screen.getByTestId("popularity-label-home").textContent).toBe(
+      "Facteur de popularité (1D3 + 4 fans dévoués)",
+    );
+    expect(screen.getByTestId("popularity-label-away").textContent).toBe(
+      "Facteur de popularité (1D3 + 1 fans dévoués)",
+    );
+    // Fourchette attendue du jet : fans+1 à fans+3.
+    expect(screen.getByText(/entre 5 et 7/)).toBeTruthy();
+    expect(screen.getByText(/entre 2 et 4/)).toBeTruthy();
+  });
+
+  it("reste générique quand l'API ne fournit pas les fans (rétro-compat)", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+      />,
+    );
+    expect(screen.getByTestId("popularity-label-home").textContent).toBe(
+      "Facteur de popularité (1D3 + fans dévoués)",
+    );
+    expect(screen.queryByText(/entre \d+ et \d+/)).toBeNull();
+  });
+});
+
 const EMPTY_POST: PostMatchValues = {
   winningsHomeManual: null,
   winningsAwayManual: null,
@@ -209,6 +250,35 @@ describe("PostMatchPanel — FR16 assistant Erreurs Coûteuses", () => {
     const helper = screen.getByTestId("expensive-mistake-home");
     expect(helper.textContent).toContain("90");
     expect(helper.textContent).toContain("pas de jet");
+  });
+});
+
+describe("PostMatchPanel — variation des fans dévoués", () => {
+  it("rappelle les fans actuels et la règle du D6 quand l'API les fournit", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={{ ...TEAM, dedicatedFans: 3 }}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const hint = screen.getByTestId("fans-hint-home");
+    expect(hint.textContent).toContain("Actuel : 3");
+    expect(hint.textContent).toContain("+1 si D6 ≥ 3");
+    expect(hint.textContent).toContain("−1 si D6 < 3");
+  });
+
+  it("n'affiche pas d'aide sans le champ dedicatedFans (rétro-compat)", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("fans-hint-home")).toBeNull();
   });
 });
 

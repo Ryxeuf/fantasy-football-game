@@ -256,6 +256,14 @@ export function SeasonStandings({
                     <span>{row.teamName}</span>
                   </span>
                   <RosterBadge slug={row.roster} className="ml-2" />
+                  {row.coachName ? (
+                    <span
+                      data-testid={`standings-coach-${row.participantId}`}
+                      className="block text-[11px] font-normal text-gray-500"
+                    >
+                      {row.coachName}
+                    </span>
+                  ) : null}
                 </td>
                 {columns.map((col) => (
                   <td

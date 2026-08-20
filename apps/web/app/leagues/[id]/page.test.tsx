@@ -325,7 +325,9 @@ describe("LeagueDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("league-participants")).toBeTruthy();
     });
-    expect(screen.getByText(/Coach Alice/)).toBeTruthy();
+    // Le coach apparaît dans la liste des participants ET dans le
+    // classement (standings-coach-*) : on tolère plusieurs occurrences.
+    expect(screen.getAllByText(/Coach Alice/).length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows an empty state when the league has no seasons yet", async () => {
