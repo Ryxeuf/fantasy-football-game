@@ -357,6 +357,7 @@ interface TeamSpanProps {
 }
 
 function TeamSpan({ team, side }: TeamSpanProps) {
+  const coachName = team.team.owner?.coachName ?? null;
   return (
     <span
       data-testid={`pairing-team-${side}`}
@@ -369,6 +370,14 @@ function TeamSpan({ team, side }: TeamSpanProps) {
         title={team.team.name}
       />
       <span>{team.team.name}</span>
+      {coachName ? (
+        <span
+          data-testid={`pairing-coach-${side}`}
+          className="text-xs font-normal text-gray-500"
+        >
+          ({coachName})
+        </span>
+      ) : null}
     </span>
   );
 }

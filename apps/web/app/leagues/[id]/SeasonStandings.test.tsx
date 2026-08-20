@@ -229,3 +229,19 @@ describe("SeasonStandings — état vide", () => {
     expect(screen.queryByTestId("standings-toggle-details")).toBeNull();
   });
 });
+
+describe("SeasonStandings — nom du coach", () => {
+  it("affiche le coach sous le nom d'équipe", () => {
+    renderStandings([
+      row({ participantId: "p1", coachName: "Coach Ryxeuf" }),
+    ]);
+    expect(screen.getByTestId("standings-coach-p1").textContent).toBe(
+      "Coach Ryxeuf",
+    );
+  });
+
+  it("n'affiche rien quand coachName est null", () => {
+    renderStandings([row({ participantId: "p1" })]);
+    expect(screen.queryByTestId("standings-coach-p1")).toBeNull();
+  });
+});

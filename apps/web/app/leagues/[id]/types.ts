@@ -76,6 +76,8 @@ export interface LeaguePairingTeamDetail {
     ownerId: string;
     /** Logo uploadé par le coach (null => logo dérivé du roster). */
     logoUrl?: string | null;
+    /** Coach (owner) de l'équipe. Optionnel pour rétro-compat API. */
+    owner?: { coachName: string | null };
   };
 }
 
