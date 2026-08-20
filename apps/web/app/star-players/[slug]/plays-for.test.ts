@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getPlaysForRosters } from "./plays-for";
+import { getPlaysForCardLines, getPlaysForRosters } from "./plays-for";
 
 describe("getPlaysForRosters", () => {
   it("résout une Ligue régionale en équipes, triées par nom FR", () => {
@@ -44,5 +44,35 @@ describe("getPlaysForRosters", () => {
     expect(getPlaysForRosters([], "season_3")).toEqual([]);
     expect(getPlaysForRosters(null, "season_3")).toEqual([]);
     expect(getPlaysForRosters(["inconnu"], "season_3")).toEqual([]);
+  });
+});
+
+describe("getPlaysForCardLines (carte exportable)", () => {
+  it("remplace la sentinelle all par un libellé unique bilingue", () => {
+    expect(getPlaysForCardLines(["all"], "fr")).toEqual(["Toutes les équipes"]);
+    expect(getPlaysForCardLines(["all"], "en")).toEqual(["All teams"]);
+  });
+
+  it("liste les équipes telles quelles quand elles tiennent sur la carte", () => {
+    const lines = getPlaysForCardLines(["elven_kingdoms_league"], "fr", "season_3");
+    expect(lines).toEqual([
+      "Elfes noirs",
+      "Elfes sylvains",
+      "Hauts elfes",
+      "Union elfique",
+    ]);
+  });
+
+  it("coupe les longues listes avec un « + N autres équipes »", () => {
+    const lines = getPlaysForCardLines(["old_world_classic"], "fr", "season_3");
+    const total = getPlaysForRosters(["old_world_classic"], "season_3").length;
+    expect(total).toBeGreaterThan(6);
+    expect(lines).toHaveLength(6);
+    expect(lines[5]).toBe(`+ ${total - 5} autres équipes`);
+  });
+
+  it("retourne une liste vide sans critère exploitable", () => {
+    expect(getPlaysForCardLines([], "fr")).toEqual([]);
+    expect(getPlaysForCardLines(null, "en")).toEqual([]);
   });
 });

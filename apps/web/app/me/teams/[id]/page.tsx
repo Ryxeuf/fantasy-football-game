@@ -7,6 +7,7 @@ import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
+import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
 import { formatPlusStat } from "../../../lib/format-stats";
 import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
 import { PlayerIdentityInlineEdit } from "./PlayerIdentityInlineEdit";
@@ -275,6 +276,48 @@ export default function TeamDetailPage() {
       console.error('Erreur lors de l\'export de la feuille de match:', error);
       alert(t.teams.exportPDFError);
     }
+  };
+
+  // Carte joueur PNG (change export-player-cards) : le payload est construit
+  // ici depuis les données déjà chargées, le rendu satori est délégué à
+  // `/api/player-card`. `download` force l'attachment, sinon aperçu en onglet.
+  const handleExportPlayerCard = (p: any, download: boolean) => {
+    if (!team) return;
+    trackUmamiEvent(UMAMI_EVENTS.CARD_EXPORT, { kind: "team", download });
+    const cost = getPlayerCost(p.position, team.roster);
+    const cardData = buildTeamPlayerCardData(
+      {
+        name: p.name,
+        number: p.number,
+        ma: p.ma,
+        st: p.st,
+        ag: p.ag,
+        pa: p.pa ?? null,
+        av: p.av,
+        skills: p.skills ?? "",
+        spp: p.spp,
+        matchesPlayed: p.matchesPlayed,
+        totalTouchdowns: p.totalTouchdowns,
+        totalCasualties: p.totalCasualties,
+        dead: !!p.dead,
+        firedAt: p.firedAt ?? null,
+      },
+      {
+        lang: language === "en" ? "en" : "fr",
+        positionName: getDisplayName(p.position),
+        teamName: team.name,
+        rosterSlug: team.roster,
+        cost: cost > 0 ? cost : null,
+      },
+    );
+    const url = `/api/player-card?d=${encodeCardPayload(cardData)}${download ? "&download=1" : ""}`;
+    const link = document.createElement("a");
+    link.href = url;
+    if (!download) {
+      link.target = "_blank";
+      link.rel = "noopener";
+    }
+    link.click();
   };
 
   const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
@@ -759,22 +802,42 @@ export default function TeamDetailPage() {
                         />
                       </td>
                       <td className="p-3 sm:p-4">
-                        {p.dead || p.firedAt ? (
+                        <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            data-testid={`remove-player-${p.id}`}
-                            disabled={removingPlayerId === p.id}
-                            onClick={() => void handleRemoveInactivePlayer(p)}
-                            title={
-                              p.dead
-                                ? "Retirer ce joueur mort de la feuille d'équipe"
-                                : "Retirer ce joueur licencié de la feuille d'équipe"
-                            }
-                            className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            data-testid={`player-card-${p.id}`}
+                            onClick={() => handleExportPlayerCard(p, false)}
+                            title="Voir la carte du joueur (PNG façon carte officielle)"
+                            className="whitespace-nowrap rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
                           >
-                            {removingPlayerId === p.id ? "…" : "Retirer"}
+                            🃏 Carte
                           </button>
-                        ) : null}
+                          <button
+                            type="button"
+                            data-testid={`player-card-download-${p.id}`}
+                            onClick={() => handleExportPlayerCard(p, true)}
+                            title="Télécharger la carte PNG"
+                            className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            ⬇️
+                          </button>
+                          {p.dead || p.firedAt ? (
+                            <button
+                              type="button"
+                              data-testid={`remove-player-${p.id}`}
+                              disabled={removingPlayerId === p.id}
+                              onClick={() => void handleRemoveInactivePlayer(p)}
+                              title={
+                                p.dead
+                                  ? "Retirer ce joueur mort de la feuille d'équipe"
+                                  : "Retirer ce joueur licencié de la feuille d'équipe"
+                              }
+                              className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              {removingPlayerId === p.id ? "…" : "Retirer"}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -867,6 +930,24 @@ export default function TeamDetailPage() {
                         primary={skillAccessByPosition.get(p.position)?.primary ?? null}
                         secondary={skillAccessByPosition.get(p.position)?.secondary ?? null}
                       />
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid={`player-card-mobile-${p.id}`}
+                        onClick={() => handleExportPlayerCard(p, false)}
+                        className="rounded border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        🃏 Voir la carte
+                      </button>
+                      <button
+                        type="button"
+                        data-testid={`player-card-download-mobile-${p.id}`}
+                        onClick={() => handleExportPlayerCard(p, true)}
+                        className="rounded border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        ⬇️ PNG
+                      </button>
                     </div>
                   </div>
                 ))}

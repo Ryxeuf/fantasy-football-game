@@ -233,6 +233,26 @@ export default function StarPlayerDetailPage() {
                     {' '}{(pair.pairCost / 1000).toLocaleString()} K po pour la paire.
                   </p>
                 )}
+                {/* Carte exportable (change export-player-cards) : PNG 750×1050
+                    façon carte à collectionner, rendu par /star-players/[slug]/card. */}
+                <div className="mt-4 flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-2 sm:gap-3">
+                  <a
+                    href={`/star-players/${slug}/card?lang=${language === 'en' ? 'en' : 'fr'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="star-card-preview"
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/15 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/25"
+                  >
+                    🃏 {language === 'en' ? 'View the card' : 'Voir la carte'}
+                  </a>
+                  <a
+                    href={`/star-players/${slug}/card?lang=${language === 'en' ? 'en' : 'fr'}&download=1`}
+                    data-testid="star-card-download"
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/15 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/25"
+                  >
+                    ⬇️ {language === 'en' ? 'Download the PNG card' : 'Télécharger la carte PNG'}
+                  </a>
+                </div>
               </div>
             </div>
           </div>
