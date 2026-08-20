@@ -21,6 +21,7 @@ const team: TeamForSnapshot = {
   format: 'bb11',
   teamValue: 1000,
   currentValue: 1000,
+  treasury: 35_000,
   initialBudget: 1000,
   startingPspPool: 6,
   rerolls: 2,
@@ -52,6 +53,8 @@ describe('buildRosterSnapshot', () => {
     expect(snap.capturedAt).toBe(42);
     expect(snap.roster).toBe('skaven');
     expect(snap.startingPspPool).toBe(6);
+    // Trésorerie figée (en-tête de feuille de match au début du match).
+    expect(snap.treasury).toBe(35_000);
     expect(snap.players).toHaveLength(1);
     expect(snap.players[0].advancements).toContain('block');
     expect(snap.starPlayers[0]).toEqual({ starPlayerSlug: 'hakflem', cost: 250 });

@@ -330,9 +330,24 @@ export async function updatePreMatch(input: {
 
   // Coups de pouce : on borne la depense au budget officiel (petty cash +
   // tresorerie). Le petty cash depend des 2 CTV -> on charge les equipes et
-  // calcule le budget une seule fois si une selection est presente.
+  // calcule le budget une seule fois si une selection est presente. Les
+  // CTV/tresoreries sont figees au debut du match si le roster l'est deja.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
-    const teams = await loadSheetTeams(input.pairingId);
+    const teamsLive = await loadSheetTeams(input.pairingId);
+    const snapForBudget = sheet as {
+      rosterSnapshotHome?: unknown;
+      rosterSnapshotAway?: unknown;
+    };
+    const teams = {
+      home: withFrozenTeamValues(
+        teamsLive.home,
+        snapForBudget.rosterSnapshotHome,
+      ),
+      away: withFrozenTeamValues(
+        teamsLive.away,
+        snapForBudget.rosterSnapshotAway,
+      ),
+    };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
     // les deux sélections (payload prioritaire, sinon valeur déjà stockée).
     const sheetInd = sheet as {
@@ -1064,8 +1079,23 @@ export async function validateByCommissioner(input: {
 
   // Petty cash par equipe (regles BB) : sert a ne debiter la tresorerie que
   // de l'excedent de coups de pouce au-dela du petty cash recu. A55 — la
-  // cagnotte de l'underdog inclut la depense adverse.
-  const teamsForBudget = await loadSheetTeams(input.pairingId);
+  // cagnotte de l'underdog inclut la depense adverse. Les CTV/tresoreries
+  // utilisees sont FIGEES au debut du match (snapshot 1re soumission).
+  const teamsForBudgetLive = await loadSheetTeams(input.pairingId);
+  const sheetSnapForBudget = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  };
+  const teamsForBudget = {
+    home: withFrozenTeamValues(
+      teamsForBudgetLive.home,
+      sheetSnapForBudget.rosterSnapshotHome,
+    ),
+    away: withFrozenTeamValues(
+      teamsForBudgetLive.away,
+      sheetSnapForBudget.rosterSnapshotAway,
+    ),
+  };
   const sheetIndForBudget = sheet as {
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -1676,6 +1706,56 @@ async function loadSheetTeams(
   };
 }
 
+/**
+ * Valeurs d'en-tête d'équipe FIGÉES au début du match, lues depuis le
+ * snapshot de roster (1re soumission). Une fois le snapshot posé, la
+ * feuille affiche (et budgète) les valeurs du match — les valeurs live
+ * bougent ensuite (gains, évolutions, licenciements) et ne doivent plus
+ * changer l'en-tête ni les budgets de coups de pouce.
+ */
+function parseFrozenTeamValues(raw: unknown): {
+  teamValue?: number;
+  currentValue?: number;
+  treasury?: number;
+  dedicatedFans?: number;
+} | null {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as Record<string, unknown>;
+  const num = (v: unknown): number | undefined =>
+    typeof v === "number" && Number.isFinite(v) ? v : undefined;
+  return {
+    teamValue: num(o.teamValue),
+    currentValue: num(o.currentValue),
+    treasury: num(o.treasury),
+    dedicatedFans: num(o.dedicatedFans),
+  };
+}
+
+/** Applique les valeurs figées du snapshot sur une équipe chargée live. */
+function withFrozenTeamValues(
+  team: MatchSheetTeam | null,
+  raw: unknown,
+): MatchSheetTeam | null {
+  if (!team) return null;
+  const frozen = parseFrozenTeamValues(raw);
+  if (!frozen) return team;
+  return {
+    ...team,
+    teamValue: frozen.teamValue ?? team.teamValue,
+    currentValue: frozen.currentValue ?? team.currentValue,
+    treasury: frozen.treasury ?? team.treasury,
+    dedicatedFans: frozen.dedicatedFans ?? team.dedicatedFans,
+  };
+}
+
 /** Une condition meteo d'une table (resultat 2..12). */
 export interface MatchSheetWeatherResult {
   readonly roll: number;
@@ -1995,7 +2075,18 @@ export async function getMatchSheet(input: {
   }
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
-  const teams = await loadSheetTeams(input.pairingId);
+  const teamsLive = await loadSheetTeams(input.pairingId);
+  // En-tête (TV/VEA/cagnotte/fans) figé au début du match dès que le
+  // roster est figé (1re soumission) : les valeurs live continuent
+  // d'évoluer après validation mais la feuille garde celles du match.
+  const sheetSnapRaw = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  };
+  const teams = {
+    home: withFrozenTeamValues(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
+    away: withFrozenTeamValues(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
+  };
   const summary = summarizeMatchSheet(events);
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la

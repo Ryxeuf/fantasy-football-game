@@ -709,6 +709,126 @@ describe("Lot G — league-match-sheet", () => {
       expect(call.select.players.where).toEqual({ firedAt: null });
     });
 
+    it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        // Snapshot fige a la 1re soumission : valeurs du DEBUT du match.
+        rosterSnapshotHome: JSON.stringify({
+          teamValue: 855_000,
+          currentValue: 875_000,
+          treasury: 35_000,
+          dedicatedFans: 2,
+          players: [],
+        }),
+        rosterSnapshotAway: JSON.stringify({
+          teamValue: 1_000_000,
+          currentValue: 1_000_000,
+          treasury: 15_000,
+          dedicatedFans: 1,
+          players: [],
+        }),
+      });
+      // Les valeurs LIVE ont bouge apres validation (gains, evolutions...).
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Big Bazard",
+          roster: "orc",
+          teamValue: 905_000,
+          currentValue: 925_000,
+          treasury: 90_000,
+          dedicatedFans: 3,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Sotek",
+          roster: "lizardmen",
+          teamValue: 1_050_000,
+          currentValue: 1_050_000,
+          treasury: 40_000,
+          dedicatedFans: 2,
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // L'en-tete sert les valeurs FIGEES, pas les valeurs live.
+      expect(out.teams.home).toMatchObject({
+        teamValue: 855_000,
+        currentValue: 875_000,
+        treasury: 35_000,
+        dedicatedFans: 2,
+      });
+      expect(out.teams.away).toMatchObject({
+        teamValue: 1_000_000,
+        currentValue: 1_000_000,
+        treasury: 15_000,
+        dedicatedFans: 1,
+      });
+    });
+
+    it("snapshot legacy sans tresorerie : retombe sur la valeur live", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        rosterSnapshotHome: JSON.stringify({
+          teamValue: 855_000,
+          currentValue: 875_000,
+          players: [],
+        }),
+        rosterSnapshotAway: null,
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Big Bazard",
+          roster: "orc",
+          teamValue: 905_000,
+          currentValue: 925_000,
+          treasury: 90_000,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Sotek",
+          roster: "lizardmen",
+          teamValue: 1_050_000,
+          currentValue: 1_050_000,
+          treasury: 40_000,
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+      expect(out.teams.home).toMatchObject({
+        teamValue: 855_000,
+        currentValue: 875_000,
+        treasury: 90_000, // pas dans le snapshot legacy -> live
+      });
+      // Pas de snapshot away -> valeurs live inchangees.
+      expect(out.teams.away).toMatchObject({
+        teamValue: 1_050_000,
+        treasury: 40_000,
+      });
+    });
+
     it("expose la reference (tables meteo, catalogue, budget) + identite equipe", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",

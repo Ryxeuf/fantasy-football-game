@@ -42,6 +42,12 @@ export interface RosterSnapshot {
   readonly format: string;
   readonly teamValue: number;
   readonly currentValue: number;
+  /**
+   * Trésorerie au moment de la capture. Optionnelle : absente des
+   * snapshots antérieurs à son introduction (feuille de match — valeurs
+   * d'en-tête figées au début du match).
+   */
+  readonly treasury?: number;
   readonly initialBudget: number;
   readonly startingPspPool: number;
   readonly rerolls: number;
@@ -60,6 +66,7 @@ export interface TeamForSnapshot {
   readonly format: string;
   readonly teamValue: number;
   readonly currentValue: number;
+  readonly treasury?: number;
   readonly initialBudget: number;
   readonly startingPspPool: number;
   readonly rerolls: number;
@@ -98,6 +105,7 @@ export function buildRosterSnapshot(
     format: team.format,
     teamValue: team.teamValue,
     currentValue: team.currentValue,
+    treasury: team.treasury,
     initialBudget: team.initialBudget,
     startingPspPool: team.startingPspPool,
     rerolls: team.rerolls,
