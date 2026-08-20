@@ -428,6 +428,9 @@ model TeamPlayer {
 
   // Règle spéciale "Capitaine" : joueur désigné capitaine de l'équipe.
   isCaptain Boolean @default(false)
+
+  /// Image du joueur uploadee par le coach (miroir PG).
+  imageUrl String?
 }
 
 // Journal des morts / licenciements (mirror du schéma PG).

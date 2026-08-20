@@ -523,6 +523,12 @@ model TeamPlayer {
   // valeur d'équipe (Pro est injectée dans `skills`, hors advancements).
   isCaptain Boolean @default(false)
 
+  // Image du joueur uploadée par le coach (URL publique servie par le
+  // serveur, cf. utils/player-image-upload.ts). null => initiales
+  // programmatiques côté UI. Miniature sur le site, pleine résolution
+  // dans l'export de la carte joueur.
+  imageUrl String?
+
   @@index([teamId])
 }
 

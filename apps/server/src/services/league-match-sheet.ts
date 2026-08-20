@@ -1504,6 +1504,8 @@ export interface MatchSheetPlayer {
     readonly pa: number | null;
     readonly av: number;
   };
+  /** Image uploadée par le coach (null => initiales côté UI). */
+  readonly imageUrl: string | null;
 }
 
 export interface MatchSheetTeam {
@@ -1630,6 +1632,7 @@ async function loadSheetTeams(
           ag: true,
           pa: true,
           av: true,
+          imageUrl: true,
         },
       },
     },
@@ -1659,6 +1662,7 @@ async function loadSheetTeams(
       ag: number;
       pa: number | null;
       av: number;
+      imageUrl?: string | null;
     }>;
   }>;
 
@@ -1702,6 +1706,7 @@ async function loadSheetTeams(
         advancementsTaken: countAdvancements(p.advancements),
         stats: { ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av },
         positionName: positionNames.get(p.position) ?? p.position,
+        imageUrl: p.imageUrl ?? null,
       })),
     };
   };

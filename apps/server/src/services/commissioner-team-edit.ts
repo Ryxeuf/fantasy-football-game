@@ -857,6 +857,7 @@ export async function getTeamForEdit(input: {
       skills: true,
       spp: true,
       dead: true,
+      imageUrl: true,
     },
   });
 

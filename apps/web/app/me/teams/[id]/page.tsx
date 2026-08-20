@@ -11,6 +11,7 @@ import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-
 import { formatPlusStat } from "../../../lib/format-stats";
 import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
 import { PlayerIdentityInlineEdit } from "./PlayerIdentityInlineEdit";
+import PlayerImageUploader from "./PlayerImageUploader";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
@@ -172,6 +173,23 @@ export default function TeamDetailPage() {
     }));
   };
 
+  // Photo du joueur : mutation locale après upload/retrait (l'export de
+  // carte lit `p.imageUrl` depuis ce state).
+  const handlePlayerImageChanged = (
+    playerId: string,
+    imageUrl: string | null,
+  ) => {
+    setData((prev: any) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        players: (prev.team?.players ?? []).map((pl: any) =>
+          pl.id === playerId ? { ...pl, imageUrl } : pl,
+        ),
+      },
+    }));
+  };
+
   /**
    * Retire du roster un joueur mort ou licencié. Le serveur refuse encore
    * ce retrait pour un joueur actif d'une équipe engagée : ici on ne
@@ -301,6 +319,10 @@ export default function TeamDetailPage() {
         totalCasualties: p.totalCasualties,
         dead: !!p.dead,
         firedAt: p.firedAt ?? null,
+        // Photo pleine résolution sur la carte (URL relative résolue par
+        // le renderer contre sa propre origine ; absolue validée par
+        // allowlist dans le décodeur).
+        imageUrl: p.imageUrl ?? null,
       },
       {
         lang: language === "en" ? "en" : "fr",
@@ -754,6 +776,13 @@ export default function TeamDetailPage() {
                       <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
                       <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">
                         <span className="inline-flex items-center gap-1.5">
+                          {/* Photo du joueur (clic = upload, défaut initiales). */}
+                          <PlayerImageUploader
+                            teamId={String(id)}
+                            player={p}
+                            size={32}
+                            onChange={handlePlayerImageChanged}
+                          />
                           <PlayerIdentityInlineEdit
                             teamId={String(id)}
                             player={p}
@@ -850,6 +879,12 @@ export default function TeamDetailPage() {
                   <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
+                        <PlayerImageUploader
+                          teamId={String(id)}
+                          player={p}
+                          size={40}
+                          onChange={handlePlayerImageChanged}
+                        />
                         <span className="font-mono text-xl font-bold text-gray-900">{p.number}</span>
                         <div>
                           <div className="font-semibold text-base inline-flex items-center gap-1.5">

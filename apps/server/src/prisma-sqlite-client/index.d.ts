@@ -27059,6 +27059,7 @@ export namespace Prisma {
     statusSource: string | null
     statusSourceId: string | null
     isCaptain: boolean | null
+    imageUrl: string | null
   }
 
   export type TeamPlayerMaxAggregateOutputType = {
@@ -27096,6 +27097,7 @@ export namespace Prisma {
     statusSource: string | null
     statusSourceId: string | null
     isCaptain: boolean | null
+    imageUrl: string | null
   }
 
   export type TeamPlayerCountAggregateOutputType = {
@@ -27133,6 +27135,7 @@ export namespace Prisma {
     statusSource: number
     statusSourceId: number
     isCaptain: number
+    imageUrl: number
     _all: number
   }
 
@@ -27216,6 +27219,7 @@ export namespace Prisma {
     statusSource?: true
     statusSourceId?: true
     isCaptain?: true
+    imageUrl?: true
   }
 
   export type TeamPlayerMaxAggregateInputType = {
@@ -27253,6 +27257,7 @@ export namespace Prisma {
     statusSource?: true
     statusSourceId?: true
     isCaptain?: true
+    imageUrl?: true
   }
 
   export type TeamPlayerCountAggregateInputType = {
@@ -27290,6 +27295,7 @@ export namespace Prisma {
     statusSource?: true
     statusSourceId?: true
     isCaptain?: true
+    imageUrl?: true
     _all?: true
   }
 
@@ -27414,6 +27420,7 @@ export namespace Prisma {
     statusSource: string | null
     statusSourceId: string | null
     isCaptain: boolean
+    imageUrl: string | null
     _count: TeamPlayerCountAggregateOutputType | null
     _avg: TeamPlayerAvgAggregateOutputType | null
     _sum: TeamPlayerSumAggregateOutputType | null
@@ -27470,6 +27477,7 @@ export namespace Prisma {
     statusSource?: boolean
     statusSourceId?: boolean
     isCaptain?: boolean
+    imageUrl?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
     statusEvents?: boolean | TeamPlayer$statusEventsArgs<ExtArgs>
     _count?: boolean | TeamPlayerCountOutputTypeDefaultArgs<ExtArgs>
@@ -27510,6 +27518,7 @@ export namespace Prisma {
     statusSource?: boolean
     statusSourceId?: boolean
     isCaptain?: boolean
+    imageUrl?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["teamPlayer"]>
 
@@ -27548,6 +27557,7 @@ export namespace Prisma {
     statusSource?: boolean
     statusSourceId?: boolean
     isCaptain?: boolean
+    imageUrl?: boolean
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["teamPlayer"]>
 
@@ -27586,9 +27596,10 @@ export namespace Prisma {
     statusSource?: boolean
     statusSourceId?: boolean
     isCaptain?: boolean
+    imageUrl?: boolean
   }
 
-  export type TeamPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "number" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "spp" | "totalTouchdowns" | "totalCasualties" | "totalCompletions" | "totalInterceptions" | "totalMvpAwards" | "matchesPlayed" | "nigglingInjuries" | "maReduction" | "stReduction" | "agReduction" | "paReduction" | "avReduction" | "missNextMatch" | "advancements" | "dead" | "diedAt" | "firedAt" | "status" | "statusAt" | "statusSource" | "statusSourceId" | "isCaptain", ExtArgs["result"]["teamPlayer"]>
+  export type TeamPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "number" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "spp" | "totalTouchdowns" | "totalCasualties" | "totalCompletions" | "totalInterceptions" | "totalMvpAwards" | "matchesPlayed" | "nigglingInjuries" | "maReduction" | "stReduction" | "agReduction" | "paReduction" | "avReduction" | "missNextMatch" | "advancements" | "dead" | "diedAt" | "firedAt" | "status" | "statusAt" | "statusSource" | "statusSourceId" | "isCaptain" | "imageUrl", ExtArgs["result"]["teamPlayer"]>
   export type TeamPlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team?: boolean | TeamDefaultArgs<ExtArgs>
     statusEvents?: boolean | TeamPlayer$statusEventsArgs<ExtArgs>
@@ -27642,6 +27653,10 @@ export namespace Prisma {
       statusSource: string | null
       statusSourceId: string | null
       isCaptain: boolean
+      /**
+       * Image du joueur uploadee par le coach (miroir PG).
+       */
+      imageUrl: string | null
     }, ExtArgs["result"]["teamPlayer"]>
     composites: {}
   }
@@ -28101,6 +28116,7 @@ export namespace Prisma {
     readonly statusSource: FieldRef<"TeamPlayer", 'String'>
     readonly statusSourceId: FieldRef<"TeamPlayer", 'String'>
     readonly isCaptain: FieldRef<"TeamPlayer", 'Boolean'>
+    readonly imageUrl: FieldRef<"TeamPlayer", 'String'>
   }
     
 
@@ -59118,6 +59134,8 @@ export namespace Prisma {
     advancementsAway: number
     rosterSnapshotHome: number
     rosterSnapshotAway: number
+    journeymenHome: number
+    journeymenAway: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -59258,6 +59276,8 @@ export namespace Prisma {
     advancementsAway?: true
     rosterSnapshotHome?: true
     rosterSnapshotAway?: true
+    journeymenHome?: true
+    journeymenAway?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -59391,6 +59411,8 @@ export namespace Prisma {
     advancementsAway: JsonValue | null
     rosterSnapshotHome: JsonValue | null
     rosterSnapshotAway: JsonValue | null
+    journeymenHome: JsonValue | null
+    journeymenAway: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: LeagueMatchSheetCountAggregateOutputType | null
@@ -59456,6 +59478,8 @@ export namespace Prisma {
     advancementsAway?: boolean
     rosterSnapshotHome?: boolean
     rosterSnapshotAway?: boolean
+    journeymenHome?: boolean
+    journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
@@ -59505,6 +59529,8 @@ export namespace Prisma {
     advancementsAway?: boolean
     rosterSnapshotHome?: boolean
     rosterSnapshotAway?: boolean
+    journeymenHome?: boolean
+    journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
@@ -59552,6 +59578,8 @@ export namespace Prisma {
     advancementsAway?: boolean
     rosterSnapshotHome?: boolean
     rosterSnapshotAway?: boolean
+    journeymenHome?: boolean
+    journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
@@ -59599,11 +59627,13 @@ export namespace Prisma {
     advancementsAway?: boolean
     rosterSnapshotHome?: boolean
     rosterSnapshotAway?: boolean
+    journeymenHome?: boolean
+    journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
     events?: boolean | LeagueMatchSheet$eventsArgs<ExtArgs>
@@ -59670,6 +59700,11 @@ export namespace Prisma {
        */
       rosterSnapshotHome: Prisma.JsonValue | null
       rosterSnapshotAway: Prisma.JsonValue | null
+      /**
+       * Journaliers — choix du poste de lineman par coach ({ position }).
+       */
+      journeymenHome: Prisma.JsonValue | null
+      journeymenAway: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["leagueMatchSheet"]>
@@ -60138,6 +60173,8 @@ export namespace Prisma {
     readonly advancementsAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly rosterSnapshotHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly rosterSnapshotAway: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly journeymenHome: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly journeymenAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly createdAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly updatedAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
   }
@@ -102824,7 +102861,8 @@ export namespace Prisma {
     statusAt: 'statusAt',
     statusSource: 'statusSource',
     statusSourceId: 'statusSourceId',
-    isCaptain: 'isCaptain'
+    isCaptain: 'isCaptain',
+    imageUrl: 'imageUrl'
   };
 
   export type TeamPlayerScalarFieldEnum = (typeof TeamPlayerScalarFieldEnum)[keyof typeof TeamPlayerScalarFieldEnum]
@@ -103326,6 +103364,8 @@ export namespace Prisma {
     advancementsAway: 'advancementsAway',
     rosterSnapshotHome: 'rosterSnapshotHome',
     rosterSnapshotAway: 'rosterSnapshotAway',
+    journeymenHome: 'journeymenHome',
+    journeymenAway: 'journeymenAway',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -105445,6 +105485,7 @@ export namespace Prisma {
     statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
     statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
+    imageUrl?: StringNullableFilter<"TeamPlayer"> | string | null
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     statusEvents?: TeamPlayerStatusEventListRelationFilter
   }
@@ -105484,6 +105525,7 @@ export namespace Prisma {
     statusSource?: SortOrderInput | SortOrder
     statusSourceId?: SortOrderInput | SortOrder
     isCaptain?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
     team?: TeamOrderByWithRelationInput
     statusEvents?: TeamPlayerStatusEventOrderByRelationAggregateInput
   }
@@ -105526,6 +105568,7 @@ export namespace Prisma {
     statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
     statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
+    imageUrl?: StringNullableFilter<"TeamPlayer"> | string | null
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     statusEvents?: TeamPlayerStatusEventListRelationFilter
   }, "id">
@@ -105565,6 +105608,7 @@ export namespace Prisma {
     statusSource?: SortOrderInput | SortOrder
     statusSourceId?: SortOrderInput | SortOrder
     isCaptain?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
     _count?: TeamPlayerCountOrderByAggregateInput
     _avg?: TeamPlayerAvgOrderByAggregateInput
     _max?: TeamPlayerMaxOrderByAggregateInput
@@ -105610,6 +105654,7 @@ export namespace Prisma {
     statusSource?: StringNullableWithAggregatesFilter<"TeamPlayer"> | string | null
     statusSourceId?: StringNullableWithAggregatesFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolWithAggregatesFilter<"TeamPlayer"> | boolean
+    imageUrl?: StringNullableWithAggregatesFilter<"TeamPlayer"> | string | null
   }
 
   export type TeamPlayerStatusEventWhereInput = {
@@ -108102,6 +108147,8 @@ export namespace Prisma {
     advancementsAway?: JsonNullableFilter<"LeagueMatchSheet">
     rosterSnapshotHome?: JsonNullableFilter<"LeagueMatchSheet">
     rosterSnapshotAway?: JsonNullableFilter<"LeagueMatchSheet">
+    journeymenHome?: JsonNullableFilter<"LeagueMatchSheet">
+    journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingScalarRelationFilter, LeaguePairingWhereInput>
@@ -108150,6 +108197,8 @@ export namespace Prisma {
     advancementsAway?: SortOrderInput | SortOrder
     rosterSnapshotHome?: SortOrderInput | SortOrder
     rosterSnapshotAway?: SortOrderInput | SortOrder
+    journeymenHome?: SortOrderInput | SortOrder
+    journeymenAway?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     pairing?: LeaguePairingOrderByWithRelationInput
@@ -108201,6 +108250,8 @@ export namespace Prisma {
     advancementsAway?: JsonNullableFilter<"LeagueMatchSheet">
     rosterSnapshotHome?: JsonNullableFilter<"LeagueMatchSheet">
     rosterSnapshotAway?: JsonNullableFilter<"LeagueMatchSheet">
+    journeymenHome?: JsonNullableFilter<"LeagueMatchSheet">
+    journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingScalarRelationFilter, LeaguePairingWhereInput>
@@ -108249,6 +108300,8 @@ export namespace Prisma {
     advancementsAway?: SortOrderInput | SortOrder
     rosterSnapshotHome?: SortOrderInput | SortOrder
     rosterSnapshotAway?: SortOrderInput | SortOrder
+    journeymenHome?: SortOrderInput | SortOrder
+    journeymenAway?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeagueMatchSheetCountOrderByAggregateInput
@@ -108303,6 +108356,8 @@ export namespace Prisma {
     advancementsAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     rosterSnapshotHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     rosterSnapshotAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    journeymenHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    journeymenAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     createdAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
   }
@@ -112980,6 +113035,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
     team: TeamCreateNestedOneWithoutPlayersInput
     statusEvents?: TeamPlayerStatusEventCreateNestedManyWithoutPlayerInput
   }
@@ -113019,6 +113075,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
     statusEvents?: TeamPlayerStatusEventUncheckedCreateNestedManyWithoutPlayerInput
   }
 
@@ -113056,6 +113113,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     team?: TeamUpdateOneRequiredWithoutPlayersNestedInput
     statusEvents?: TeamPlayerStatusEventUpdateManyWithoutPlayerNestedInput
   }
@@ -113095,6 +113153,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     statusEvents?: TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerNestedInput
   }
 
@@ -113133,6 +113192,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
   }
 
   export type TeamPlayerUpdateManyMutationInput = {
@@ -113169,6 +113229,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamPlayerUncheckedUpdateManyInput = {
@@ -113206,6 +113267,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamPlayerStatusEventCreateInput = {
@@ -115974,6 +116036,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -116022,6 +116086,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -116068,6 +116134,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneRequiredWithoutMatchSheetNestedInput
@@ -116116,6 +116184,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -116163,6 +116233,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -116208,6 +116280,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -116254,6 +116328,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -121110,6 +121186,7 @@ export namespace Prisma {
     statusSource?: SortOrder
     statusSourceId?: SortOrder
     isCaptain?: SortOrder
+    imageUrl?: SortOrder
   }
 
   export type TeamPlayerAvgOrderByAggregateInput = {
@@ -121169,6 +121246,7 @@ export namespace Prisma {
     statusSource?: SortOrder
     statusSourceId?: SortOrder
     isCaptain?: SortOrder
+    imageUrl?: SortOrder
   }
 
   export type TeamPlayerMinOrderByAggregateInput = {
@@ -121206,6 +121284,7 @@ export namespace Prisma {
     statusSource?: SortOrder
     statusSourceId?: SortOrder
     isCaptain?: SortOrder
+    imageUrl?: SortOrder
   }
 
   export type TeamPlayerSumOrderByAggregateInput = {
@@ -122914,6 +122993,8 @@ export namespace Prisma {
     advancementsAway?: SortOrder
     rosterSnapshotHome?: SortOrder
     rosterSnapshotAway?: SortOrder
+    journeymenHome?: SortOrder
+    journeymenAway?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -138142,6 +138223,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
     statusEvents?: TeamPlayerStatusEventCreateNestedManyWithoutPlayerInput
   }
 
@@ -138179,6 +138261,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
     statusEvents?: TeamPlayerStatusEventUncheckedCreateNestedManyWithoutPlayerInput
   }
 
@@ -138751,6 +138834,7 @@ export namespace Prisma {
     statusSource?: StringNullableFilter<"TeamPlayer"> | string | null
     statusSourceId?: StringNullableFilter<"TeamPlayer"> | string | null
     isCaptain?: BoolFilter<"TeamPlayer"> | boolean
+    imageUrl?: StringNullableFilter<"TeamPlayer"> | string | null
   }
 
   export type TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -139206,6 +139290,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
     team: TeamCreateNestedOneWithoutPlayersInput
   }
 
@@ -139244,6 +139329,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
   }
 
   export type TeamPlayerCreateOrConnectWithoutStatusEventsInput = {
@@ -139296,6 +139382,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     team?: TeamUpdateOneRequiredWithoutPlayersNestedInput
   }
 
@@ -139334,6 +139421,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamCreateWithoutStarPlayersInput = {
@@ -146699,6 +146787,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventCreateNestedManyWithoutMatchSheetInput
@@ -146745,6 +146835,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -147027,6 +147119,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUpdateManyWithoutMatchSheetNestedInput
@@ -147073,6 +147167,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -147264,6 +147360,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -147311,6 +147409,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -147372,6 +147472,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneRequiredWithoutMatchSheetNestedInput
@@ -147419,6 +147521,8 @@ export namespace Prisma {
     advancementsAway?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -157833,6 +157937,7 @@ export namespace Prisma {
     statusSource?: string | null
     statusSourceId?: string | null
     isCaptain?: boolean
+    imageUrl?: string | null
   }
 
   export type TeamStarPlayerCreateManyTeamInput = {
@@ -158003,6 +158108,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     statusEvents?: TeamPlayerStatusEventUpdateManyWithoutPlayerNestedInput
   }
 
@@ -158040,6 +158146,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     statusEvents?: TeamPlayerStatusEventUncheckedUpdateManyWithoutPlayerNestedInput
   }
 
@@ -158077,6 +158184,7 @@ export namespace Prisma {
     statusSource?: NullableStringFieldUpdateOperationsInput | string | null
     statusSourceId?: NullableStringFieldUpdateOperationsInput | string | null
     isCaptain?: BoolFieldUpdateOperationsInput | boolean
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamStarPlayerUpdateWithoutTeamInput = {

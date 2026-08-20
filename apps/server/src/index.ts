@@ -9,6 +9,10 @@ import {
   TEAM_LOGO_PUBLIC_PATH,
   getTeamLogoUploadDir,
 } from "./utils/team-logo-upload";
+import {
+  PLAYER_IMAGE_PUBLIC_PATH,
+  getPlayerImageUploadDir,
+} from "./utils/player-image-upload";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -178,6 +182,19 @@ app.use(
 app.use(
   TEAM_LOGO_PUBLIC_PATH,
   express.static(getTeamLogoUploadDir(), {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
+    dotfiles: "ignore",
+  }),
+);
+
+// Images de joueurs uploadees (cf. routes/player-image-handlers.ts) :
+// meme traitement que les logos d'equipe.
+app.use(
+  PLAYER_IMAGE_PUBLIC_PATH,
+  express.static(getPlayerImageUploadDir(), {
     maxAge: "365d",
     immutable: true,
     fallthrough: true,
