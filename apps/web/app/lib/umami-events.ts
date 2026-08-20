@@ -21,6 +21,8 @@ export const UMAMI_EVENTS = {
   STAR_PLAYER_HIRE: "star-player-hire",
   /** Export PDF (roster, skill sheet, match sheet). */
   PDF_EXPORT: "pdf-export",
+  /** Export d'une carte joueur PNG (data: { kind, download }). */
+  CARD_EXPORT: "card-export",
   /** Clic sur un CTA Ko-fi / soutien. */
   SUPPORT_CTA: "support-cta",
   /** Assistant d'onboarding affiché à un coach sans équipe. */
