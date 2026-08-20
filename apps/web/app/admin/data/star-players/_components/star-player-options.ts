@@ -135,9 +135,3 @@ export function hirableSelectionToPayload(
   return [...selection.rules, ...rosterEntries];
 }
 
-/** Bascule un élément dans une liste (ajout si absent, retrait sinon). */
-export function toggleValue(prev: readonly string[], value: string): string[] {
-  return prev.includes(value)
-    ? prev.filter((v) => v !== value)
-    : [...prev, value];
-}

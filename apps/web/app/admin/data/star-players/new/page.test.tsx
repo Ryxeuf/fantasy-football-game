@@ -62,15 +62,25 @@ afterEach(() => {
   global.fetch = originalFetch;
 });
 
-describe("NewStarPlayerPage — cases à cocher", () => {
+describe("NewStarPlayerPage — sélection en chips", () => {
   it("recharge les catalogues au changement de ruleset sans vider le formulaire", async () => {
     mockFetch();
     render(<NewStarPlayerPage />);
 
+    // Le catalogue est proposé dans les suggestions du sélecteur.
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-block")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-search")).toBeTruthy(),
     );
-    expect(screen.queryByTestId("star-player-skills-piling-on")).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-skills-search")).toBeTruthy(),
+    );
+    fireEvent.focus(screen.getByTestId("star-player-skills-search"));
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-skills-option-block")).toBeTruthy(),
+    );
+    expect(
+      screen.queryByTestId("star-player-skills-option-piling-on"),
+    ).toBeNull();
 
     const slugInput = document.querySelector(
       'input[name="slug"]',
@@ -82,7 +92,9 @@ describe("NewStarPlayerPage — cases à cocher", () => {
     });
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-piling-on")).toBeTruthy(),
+      expect(
+        screen.getByTestId("star-player-skills-option-piling-on"),
+      ).toBeTruthy(),
     );
     // Le formulaire n'a pas été démonté : la saisie en cours est intacte.
     expect(
@@ -90,12 +102,16 @@ describe("NewStarPlayerPage — cases à cocher", () => {
     ).toBe("griff_oberwald");
   });
 
-  it("envoie le ruleset et la sélection cochée", async () => {
+  it("envoie le ruleset et la sélection", async () => {
     const fetchMock = mockFetch();
     render(<NewStarPlayerPage />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("star-player-skills-block")).toBeTruthy(),
+      expect(screen.getByTestId("star-player-skills-search")).toBeTruthy(),
+    );
+    fireEvent.focus(screen.getByTestId("star-player-skills-search"));
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-skills-option-block")).toBeTruthy(),
     );
 
     const setField = (name: string, value: string) =>
@@ -111,10 +127,14 @@ describe("NewStarPlayerPage — cases à cocher", () => {
     setField("ag", "2");
     setField("av", "9");
 
-    fireEvent.click(screen.getByTestId("star-player-skills-block"));
-    fireEvent.click(screen.getByTestId("star-player-hirable-rules-all"));
+    fireEvent.click(screen.getByTestId("star-player-skills-option-block"));
+    expect(screen.getByTestId("star-player-skills-chip-block")).toBeTruthy();
+
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rules-search"));
+    fireEvent.click(screen.getByTestId("star-player-hirable-rules-option-all"));
+    fireEvent.focus(screen.getByTestId("star-player-hirable-rosters-search"));
     fireEvent.click(
-      screen.getByTestId("star-player-hirable-rosters-roster-orc"),
+      screen.getByTestId("star-player-hirable-rosters-option-roster-orc"),
     );
     fireEvent.click(screen.getByText("Créer le Star Player"));
 

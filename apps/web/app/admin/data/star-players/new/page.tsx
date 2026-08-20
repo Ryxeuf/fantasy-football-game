@@ -8,16 +8,15 @@ import {
   type Ruleset,
 } from "../../ruleset-utils";
 import {
-  SkillCheckboxPicker,
+  SkillMultiSelect,
   type SkillOption,
-} from "../_components/SkillCheckboxPicker";
+} from "../../_components/SkillMultiSelect";
 import {
   HirableByPicker,
   type RosterOption,
 } from "../_components/HirableByPicker";
 import {
   hirableSelectionToPayload,
-  toggleValue,
   type HirableSelection,
 } from "../_components/star-player-options";
 
@@ -313,13 +312,14 @@ export default function NewStarPlayerPage() {
           <label className="block text-sm font-medium mb-1">
             Compétences{catalogsLoading ? " (chargement…)" : ""}
           </label>
-          <SkillCheckboxPicker
+          <SkillMultiSelect
             skills={skills}
-            selected={skillSlugs}
-            onToggle={(slug) => setSkillSlugs((prev) => toggleValue(prev, slug))}
+            selectedSlugs={skillSlugs}
+            onChange={setSkillSlugs}
+            testId="star-player-skills"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Sélection multiple. Aucune case cochée = aucune compétence.
+            Sélection multiple. Aucune sélection = aucune compétence.
           </p>
         </div>
 
@@ -328,17 +328,11 @@ export default function NewStarPlayerPage() {
           <HirableByPicker
             rosters={rosters}
             selection={hirable}
-            onToggleRule={(slug) =>
-              setHirable((prev) => ({
-                ...prev,
-                rules: toggleValue(prev.rules, slug),
-              }))
+            onChangeRules={(rules) =>
+              setHirable((prev) => ({ ...prev, rules }))
             }
-            onToggleRoster={(rosterId) =>
-              setHirable((prev) => ({
-                ...prev,
-                rosterIds: toggleValue(prev.rosterIds, rosterId),
-              }))
+            onChangeRosters={(rosterIds) =>
+              setHirable((prev) => ({ ...prev, rosterIds }))
             }
           />
         </div>
