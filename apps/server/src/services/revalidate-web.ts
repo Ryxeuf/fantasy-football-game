@@ -68,6 +68,22 @@ export async function revalidateWeb(input: RevalidateWebInput): Promise<void> {
  * et sous-pages position). Bust le tag global `rosters` ; ajoute un tag
  * `roster:<slug>` par slug fourni pour un ciblage plus fin.
  */
+export async function revalidateStarPlayerPages(
+  slugs?: readonly string[],
+): Promise<void> {
+  // Pages ISR concernées : la liste (`/star-players`, JSON-LD + shell) et
+  // chaque fiche (`/star-players/:slug` — metadata, JSON-LD, OG image,
+  // carte PNG). Un edit admin doit être visible sans attendre la fenêtre
+  // ISR d'1 h (les fetchs star players ne sont pas taggés → paths).
+  const paths = [
+    "/star-players",
+    ...(slugs ?? [])
+      .filter(Boolean)
+      .flatMap((slug) => [`/star-players/${slug}`]),
+  ];
+  await revalidateWeb({ paths });
+}
+
 export async function revalidateRosterPages(
   slugs?: readonly string[],
 ): Promise<void> {

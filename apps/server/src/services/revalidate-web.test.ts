@@ -4,7 +4,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { revalidateWeb, revalidateRosterPages } from "./revalidate-web";
+import {
+  revalidateWeb,
+  revalidateRosterPages,
+  revalidateStarPlayerPages,
+} from "./revalidate-web";
 
 const OLD_ENV = process.env;
 
@@ -38,6 +42,20 @@ describe("revalidate-web", () => {
     expect(JSON.parse(opts.body as string)).toEqual({
       tags: ["rosters", "skills", "roster:underworld"],
       paths: [],
+    });
+  });
+
+  it("invalide la liste + les fiches star players (paths)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await revalidateStarPlayerPages(["grak"]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, opts] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(opts.body as string)).toEqual({
+      tags: [],
+      paths: ["/star-players", "/star-players/grak"],
     });
   });
 

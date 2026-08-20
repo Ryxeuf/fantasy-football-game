@@ -47,7 +47,9 @@ interface StarPlayerRow {
   specialRule: string | null;
   imageUrl: string | null;
   isMegaStar: boolean;
-  skills: Array<{ skill: { slug: string } }>;
+  skills: Array<{
+    skill: { slug: string; nameFr?: string; nameEn?: string };
+  }>;
   hirableBy: Array<{ rule: string; roster: { slug: string } | null }>;
 }
 
@@ -65,7 +67,10 @@ function makeRow(slug: string, ruleset: string): StarPlayerRow {
     specialRule: "Bombardier",
     imageUrl: "/data/Star-Players_files/bomber.png",
     isMegaStar: false,
-    skills: [{ skill: { slug: "bombardier" } }, { skill: { slug: "dodge" } }],
+    skills: [
+      { skill: { slug: "bombardier", nameFr: "Bombardier", nameEn: "Bombardier" } },
+      { skill: { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge" } },
+    ],
     hirableBy: [{ rule: "all", roster: null }],
   };
 }
@@ -125,6 +130,13 @@ interface DetailResponse {
     ruleset?: string;
     displayName: string;
     skills: string;
+    skillDetails?: Array<{
+      slug: string;
+      nameFr: string | null;
+      nameEn: string | null;
+    }>;
+    pairWith?: string;
+    pairCost?: number;
     hirableBy: string[];
   };
 }
@@ -226,6 +238,39 @@ describe("GET /star-players/:slug", () => {
     expect(status).toBe(404);
     expect(body.success).toBe(false);
     expect(body.error).toBe("Star player not found");
+  });
+
+  it("expose les noms de competences FRAIS de la base (skillDetails)", async () => {
+    seed([makeRow("bomber_dribblesnot", "season_3")]);
+
+    const { body } = await getDetail("/bomber_dribblesnot");
+
+    expect(body.data?.skillDetails).toEqual([
+      { slug: "bombardier", nameFr: "Bombardier", nameEn: "Bombardier" },
+      { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge" },
+    ]);
+  });
+
+  it("calcule le prix de PAIRE depuis les couts DB (grak + crumbleberry)", async () => {
+    const grak = { ...makeRow("grak", "season_3"), cost: 250000 };
+    const crumbleberry = { ...makeRow("crumbleberry", "season_3"), cost: 30000 };
+    seed([grak, crumbleberry]);
+
+    const { body } = await getDetail("/grak");
+
+    // Le prix de paire vient de la DB (250k + 30k), pas du catalogue
+    // statique compile — un edit admin du cout est visible immediatement.
+    expect(body.data?.pairWith).toBe("crumbleberry");
+    expect(body.data?.pairCost).toBe(280000);
+  });
+
+  it("paire sans partenaire en base : pairCost omis (repli front)", async () => {
+    seed([{ ...makeRow("grak", "season_3"), cost: 250000 }]);
+
+    const { body } = await getDetail("/grak");
+
+    expect(body.data?.pairWith).toBe("crumbleberry");
+    expect(body.data?.pairCost).toBeUndefined();
   });
 
   it("ne capture pas la route /search avec le pattern /:slug", async () => {
