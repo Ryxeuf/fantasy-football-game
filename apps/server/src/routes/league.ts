@@ -51,6 +51,8 @@ import {
   requireLeagueCreator,
 } from "../services/league-scheduler";
 import { recordForfeit } from "../services/league-forfeit";
+import { updateTeamValues } from "../utils/team-values";
+import { serverLog } from "../utils/server-log";
 import {
   recordOfflineLeagueResult,
   parseOfflineSnapshot,
@@ -1286,6 +1288,18 @@ export async function handleGetLeagueTeamRoster(
     // getTeamForEdit garde la verification "equipe ∈ ligue" + charge les
     // joueurs ; on complete avec les meta d'equipe pour une page riche.
     const out = await getTeamForEdit({ leagueId, teamId });
+    // VE/VEA fraiches a la lecture : la VEA exclut les joueurs absents
+    // (missNextMatch) et les valeurs stockees peuvent etre obsoletes
+    // (blessure appliquee avant l'introduction du recalcul). Recompute
+    // self-healing, best-effort : en cas d'echec on sert les valeurs
+    // stockees.
+    let freshValues: { teamValue: number; currentValue: number } | null = null;
+    try {
+      freshValues = await updateTeamValues(prisma, teamId);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league] refresh VE/VEA roster-view échoué: ${msg}`);
+    }
     const meta = (await prisma.team.findUnique({
       where: { id: teamId },
       select: {
@@ -1463,8 +1477,8 @@ export async function handleGetLeagueTeamRoster(
         ...out.team,
         raceName,
         coachName: meta?.owner?.coachName ?? null,
-        teamValue: meta?.teamValue ?? 0,
-        currentValue: meta?.currentValue ?? 0,
+        teamValue: freshValues?.teamValue ?? meta?.teamValue ?? 0,
+        currentValue: freshValues?.currentValue ?? meta?.currentValue ?? 0,
         rerolls: meta?.rerolls ?? 0,
         cheerleaders: meta?.cheerleaders ?? 0,
         assistants: meta?.assistants ?? 0,

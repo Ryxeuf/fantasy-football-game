@@ -56,6 +56,11 @@ export interface SheetJourneyman {
   };
   /** CSV de slugs : compétences du poste + Solitaire (4+). */
   readonly skills: string;
+  /**
+   * Valeur du journalier en po (coût du poste de lineman) : règle BB, un
+   * journalier compte dans la VEA du match (CTV pour les coups de pouce).
+   */
+  readonly cost: number;
 }
 
 interface EnginePosition {
@@ -97,6 +102,9 @@ const LONER_SLUG = "loner-4";
 
 /** Fallback quand le roster est inconnu du moteur : lineman humain. */
 const FALLBACK_STATS = { ma: 6, st: 3, ag: 3, pa: 4, av: 9 } as const;
+
+/** Fallback de valeur (po) quand le poste est inconnu : lineman à 50k. */
+const FALLBACK_COST = 50_000;
 
 export interface DeriveJourneymenInput {
   readonly side: "home" | "away";
@@ -157,6 +165,8 @@ export function deriveJourneymen(
         }
       : FALLBACK_STATS,
     skills,
+    // Coût du poste (kpo moteur -> po) : compte dans la VEA du match.
+    cost: position ? position.cost * 1000 : FALLBACK_COST,
   }));
 }
 

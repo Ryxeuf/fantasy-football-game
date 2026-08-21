@@ -40,9 +40,16 @@ vi.mock("../services/commissioner-team-edit", () => ({
   },
 }));
 
+// VE/VEA recalculées à la lecture (la VEA exclut les absents) : service
+// dédié, testé dans team-values ; ici on vérifie la priorité des valeurs.
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(),
+}));
+
 import type { Response } from "express";
 import { prisma } from "../prisma";
 import { getTeamForEdit } from "../services/commissioner-team-edit";
+import { updateTeamValues } from "../utils/team-values";
 import { handleGetLeagueTeamRoster } from "./league";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -54,6 +61,9 @@ const mockPrisma = prisma as unknown as {
   leagueMatchEvent: { findMany: ReturnType<typeof vi.fn> };
 };
 const mockGetTeamForEdit = getTeamForEdit as ReturnType<typeof vi.fn>;
+const mockUpdateTeamValues = updateTeamValues as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 function createRes() {
   const res: Partial<Response> & { statusCode?: number; payload?: unknown } =
@@ -79,6 +89,12 @@ function createReq(): AuthenticatedRequest {
 describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Recalcul VE/VEA à la lecture (self-healing) : par défaut, mêmes
+    // valeurs que la méta stockée.
+    mockUpdateTeamValues.mockResolvedValue({
+      teamValue: 1_000_000,
+      currentValue: 950_000,
+    });
     // Viewer = créateur de la ligue.
     mockPrisma.league.findUnique.mockResolvedValue({ creatorId: "creator-1" });
     // Méta d'équipe (2e findUnique du handler).
@@ -211,6 +227,38 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
         }),
       }),
     );
+  });
+
+  it("sert des VE/VEA fraîchement recalculées (la VEA exclut les absents)", async () => {
+    // La méta stockée dit 950k, mais le recalcul (2 joueurs absents pour
+    // 90k + 70k sur une VE de 1000k) donne 840k : c'est LUI qui est servi.
+    mockUpdateTeamValues.mockResolvedValue({
+      teamValue: 1_000_000,
+      currentValue: 840_000,
+    });
+    const res = createRes();
+    await handleGetLeagueTeamRoster(createReq(), res);
+
+    const payload = res.payload as {
+      data: { team: { teamValue: number; currentValue: number } };
+    };
+    expect(mockUpdateTeamValues).toHaveBeenCalledWith(prisma, "T1");
+    expect(payload.data.team.teamValue).toBe(1_000_000);
+    expect(payload.data.team.currentValue).toBe(840_000);
+  });
+
+  it("retombe sur les valeurs stockées si le recalcul échoue", async () => {
+    mockUpdateTeamValues.mockRejectedValue(new Error("db down"));
+    const res = createRes();
+    await handleGetLeagueTeamRoster(createReq(), res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: { team: { teamValue: number; currentValue: number } };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.team.teamValue).toBe(1_000_000);
+    expect(payload.data.team.currentValue).toBe(950_000);
   });
 
   it("tolère un modèle d'events absent (SQLite tests) : agressions à 0", async () => {

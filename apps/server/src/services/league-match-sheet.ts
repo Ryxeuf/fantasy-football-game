@@ -48,6 +48,7 @@ import {
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
+import { updateTeamValues } from "../utils/team-values";
 import {
   parseStagedAdvancements,
   applyStagedAdvancements,
@@ -338,15 +339,21 @@ export async function updatePreMatch(input: {
     const snapForBudget = sheet as {
       rosterSnapshotHome?: unknown;
       rosterSnapshotAway?: unknown;
+      journeymenHome?: unknown;
+      journeymenAway?: unknown;
     };
+    // CTV du match = valeurs figées (ou live) + journaliers si la feuille
+    // n'est pas encore figée (les snapshots portent déjà les journaliers).
     const teams = {
-      home: withFrozenTeamValues(
-        teamsLive.home,
-        snapForBudget.rosterSnapshotHome,
+      home: withJourneymenValue(
+        withFrozenTeamValues(teamsLive.home, snapForBudget.rosterSnapshotHome),
+        "home",
+        snapForBudget,
       ),
-      away: withFrozenTeamValues(
-        teamsLive.away,
-        snapForBudget.rosterSnapshotAway,
+      away: withJourneymenValue(
+        withFrozenTeamValues(teamsLive.away, snapForBudget.rosterSnapshotAway),
+        "away",
+        snapForBudget,
       ),
     };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
@@ -639,6 +646,18 @@ export async function submitByCoach(input: {
         side: "home" | "away",
       ): Promise<string | null> => {
         if (!team?.teamId) return null;
+        // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs
+        // absents (missNextMatch) et la valeur stockée peut être
+        // obsolète (blessure appliquée sans recalcul). Best-effort : en
+        // cas d'échec, la capture part des valeurs stockées.
+        try {
+          await updateTeamValues(prisma, team.teamId);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(
+            `[league-match-sheet] refresh VE/VEA avant capture échoué (${side}): ${msg}`,
+          );
+        }
         const snap = await captureRosterSnapshot(team.teamId, {
           excludeMissNextMatch: true,
         });
@@ -655,8 +674,13 @@ export async function submitByCoach(input: {
           ),
         });
         if (journeymen.length === 0) return JSON.stringify(snap);
+        // Règle BB : les journaliers alignés comptent dans la VEA du
+        // match (CTV des coups de pouce) — leur valeur est figée avec
+        // l'en-tête.
+        const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
         return JSON.stringify({
           ...snap,
+          currentValue: snap.currentValue + journeymenValue,
           players: [
             ...snap.players,
             ...journeymen.map((j) => ({
@@ -1095,14 +1119,28 @@ export async function validateByCommissioner(input: {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
   };
+  const sheetJourneymenForBudget = sheet as {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  };
   const teamsForBudget = {
-    home: withFrozenTeamValues(
-      teamsForBudgetLive.home,
-      sheetSnapForBudget.rosterSnapshotHome,
+    home: withJourneymenValue(
+      withFrozenTeamValues(
+        teamsForBudgetLive.home,
+        sheetSnapForBudget.rosterSnapshotHome,
+      ),
+      "home",
+      sheetJourneymenForBudget,
     ),
-    away: withFrozenTeamValues(
-      teamsForBudgetLive.away,
-      sheetSnapForBudget.rosterSnapshotAway,
+    away: withJourneymenValue(
+      withFrozenTeamValues(
+        teamsForBudgetLive.away,
+        sheetSnapForBudget.rosterSnapshotAway,
+      ),
+      "away",
+      sheetJourneymenForBudget,
     ),
   };
   const sheetIndForBudget = sheet as {
@@ -1808,6 +1846,42 @@ function withFrozenTeamValues(
   };
 }
 
+/**
+ * CTV « du match » : règle BB, les journaliers alignés comptent dans la
+ * VEA de la feuille (affichage + petty cash des coups de pouce). Quand
+ * l'en-tête est FIGÉ (rosterSnapshot présent), la valeur figée porte
+ * déjà les journaliers (bake à la capture) — on ne retouche rien. Pour
+ * une feuille encore en saisie, on ajoute la valeur des journaliers
+ * dérivés du roster live.
+ */
+function withJourneymenValue(
+  team: MatchSheetTeam | null,
+  side: "home" | "away",
+  sheet: {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  },
+): MatchSheetTeam | null {
+  if (!team) return null;
+  const frozen =
+    side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway;
+  if (frozen) return team;
+  const journeymen = deriveJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    chosenPosition: parseJourneymenChoice(
+      side === "home" ? sheet.journeymenHome : sheet.journeymenAway,
+    ),
+  });
+  if (journeymen.length === 0) return team;
+  const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
+  return { ...team, currentValue: team.currentValue + journeymenValue };
+}
+
 /** Une condition meteo d'une table (resultat 2..12). */
 export interface MatchSheetWeatherResult {
   readonly roll: number;
@@ -2134,10 +2208,47 @@ export async function getMatchSheet(input: {
   const sheetSnapRaw = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
   };
+  // Feuille pas encore figée : rafraîchit VE/VEA (la VEA exclut les
+  // joueurs absents) — la valeur stockée peut être obsolète (blessure
+  // appliquée sans recalcul). Self-healing, best-effort.
+  const refreshSide = async (
+    team: MatchSheetTeam | null,
+    frozen: unknown,
+  ): Promise<MatchSheetTeam | null> => {
+    if (!team?.teamId || frozen) return team;
+    try {
+      const fresh = await updateTeamValues(prisma, team.teamId);
+      return {
+        ...team,
+        teamValue: fresh.teamValue,
+        currentValue: fresh.currentValue,
+      };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league-match-sheet] refresh VE/VEA échoué: ${msg}`);
+      return team;
+    }
+  };
+  const teamsFresh = {
+    home: await refreshSide(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
+    away: await refreshSide(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
+  };
+  // CTV du match : + valeur des journaliers alignés (déjà comptée dans
+  // les en-têtes figés, ajoutée en live pour une feuille en saisie).
   const teams = {
-    home: withFrozenTeamValues(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
-    away: withFrozenTeamValues(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
+    home: withJourneymenValue(
+      withFrozenTeamValues(teamsFresh.home, sheetSnapRaw.rosterSnapshotHome),
+      "home",
+      sheetSnapRaw,
+    ),
+    away: withJourneymenValue(
+      withFrozenTeamValues(teamsFresh.away, sheetSnapRaw.rosterSnapshotAway),
+      "away",
+      sheetSnapRaw,
+    ),
   };
   const summary = summarizeMatchSheet(events, {
     violentInnovators: collectViolentInnovators(teamsLive),

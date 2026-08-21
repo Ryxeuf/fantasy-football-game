@@ -122,6 +122,22 @@ describe("deriveJourneymen", () => {
     expect(out).toHaveLength(1);
     expect(out[0].stats).toEqual({ ma: 6, st: 3, ag: 3, pa: 4, av: 9 });
     expect(out[0].skills).toBe("loner-4");
+    // Valeur de repli : lineman à 50k po.
+    expect(out[0].cost).toBe(50_000);
+  });
+
+  it("porte la valeur du poste en po (règle BB : le journalier compte dans la CTV)", () => {
+    const out = deriveJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(9),
+    });
+    expect(out).toHaveLength(2);
+    // Rat des clans skaven : 50 kpo -> 50 000 po chacun.
+    for (const j of out) {
+      expect(j.cost).toBe(50_000);
+    }
   });
 });
 
