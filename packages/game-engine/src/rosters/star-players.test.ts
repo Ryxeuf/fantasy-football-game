@@ -118,7 +118,8 @@ describe('Star Players', () => {
       expect(morg).toBeDefined();
       expect(morg?.st).toBe(6);
       expect(morg?.av).toBe(11);
-      expect(morg?.skills).toContain('mighty-blow-2');
+      // Correctif fiches : Châtaigne sans modificateur (plus de mighty-blow-2).
+      expect(morg?.skills).toContain('mighty-blow-1');
       expect(morg?.cost).toBe(340000);
     });
 

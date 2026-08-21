@@ -19,6 +19,7 @@ describe("S3 renames — noms FR corrigés au seed (A24/A25/A26/A14/A4/A15)", ()
     drunkard: "Ivrogne*", // A26 (ex Poivrot)
     "breathe-fire": "Souffle Ardent", // A14 (ex Cracheur de feu)
     "hit-and-run": "Frappe-et-court", // A4/A15 (ex Frappe et Cours)
+    "mighty-blow-1": "Châtaigne", // correctif fiches SP (ex Châtaigne (+1) / Coup Puissant (+1))
   };
 
   for (const [slug, nameFr] of Object.entries(expected)) {
