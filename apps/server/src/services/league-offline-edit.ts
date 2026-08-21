@@ -56,6 +56,7 @@ import {
 import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import { revertPlayerStatus } from "./player-status";
+import { removeLatestAdvancements } from "./league-sheet-advancements";
 
 export type ReverseOfflineSkipReason =
   | "match-missing"
@@ -215,6 +216,14 @@ export interface ReverseOfflineOptions {
    * avec une evolution stagee serait a jamais non-invalidable.
    */
   readonly sheetAppliedAdvancements?: ReadonlyMap<string, number>;
+  /**
+   * Au lieu de refuser (`advancement-consumed`) quand un joueur a
+   * consomme un level-up APRES ce match, RETIRE ces evolutions
+   * post-match (PSP rembourses, competence/carac retiree, VE recalculee
+   * — cf. `removeLatestAdvancements`) puis poursuit la reversion.
+   * Opt-in explicite du commissaire (l'UI le confirme avant).
+   */
+  readonly removeConsumedAdvancements?: boolean;
 }
 
 /**
@@ -351,14 +360,35 @@ export async function reverseOfflineLeagueResult(
     const countById = new Map<string, number>(
       players.map((p) => [p.id, advancementsCount(p.advancements)]),
     );
-    const consumed = choices.some(
-      (c) =>
-        (countById.get(c.teamPlayerId) ?? 0) -
-          (sheetApplied.get(c.teamPlayerId) ?? 0) >
-        c.advancementsTaken,
-    );
-    if (consumed) {
-      return { skipped: true, reason: "advancement-consumed" };
+    // Evolutions consommees APRES ce match, par joueur : au-dela de la
+    // capture `advancementsTaken` ET de ce que la feuille a applique
+    // elle-meme (reverse juste apres par l'invalidation).
+    const excess = choices
+      .map((c) => ({
+        teamPlayerId: c.teamPlayerId,
+        extra:
+          (countById.get(c.teamPlayerId) ?? 0) -
+          (sheetApplied.get(c.teamPlayerId) ?? 0) -
+          c.advancementsTaken,
+      }))
+      .filter((e) => e.extra > 0);
+    if (excess.length > 0) {
+      if (!options.removeConsumedAdvancements) {
+        return { skipped: true, reason: "advancement-consumed" };
+      }
+      // Opt-in commissaire : retire les evolutions post-match (les plus
+      // recentes) pour ramener chaque joueur a l'etat attendu par la
+      // reversion. Le SPP rembourse ici est ensuite decremente par la
+      // reversion elle-meme (retour exact a l'etat pre-match).
+      for (const e of excess) {
+        const { removed } = await removeLatestAdvancements({
+          playerId: e.teamPlayerId,
+          count: e.extra,
+        });
+        serverLog.info(
+          `[league-offline-edit] evolutions post-match retirees player=${e.teamPlayerId} (${removed}/${e.extra}) match=${match.id}`,
+        );
+      }
     }
   }
 

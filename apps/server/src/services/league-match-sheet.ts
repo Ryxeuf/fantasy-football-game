@@ -1288,6 +1288,13 @@ export async function invalidateMatchSheet(input: {
   pairingId: string;
   userId: string;
   reason?: string;
+  /**
+   * Deblocage `advancement-consumed` : retire aussi les evolutions
+   * consommees APRES ce match (PSP rembourses, competence/carac
+   * retiree) au lieu de refuser l'invalidation. Opt-in explicite du
+   * commissaire, confirme cote UI.
+   */
+  removeConsumedAdvancements?: boolean;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   if (!isCommissioner(ctx, input.userId)) {
@@ -1342,6 +1349,7 @@ export async function invalidateMatchSheet(input: {
   if (match) {
     const reversed = await reverseOfflineLeagueResult(match.id, {
       sheetAppliedAdvancements,
+      removeConsumedAdvancements: input.removeConsumedAdvancements === true,
     });
     if ("skipped" in reversed) {
       // Reversion impossible (mort, saison cloturee, playoffs...) :
