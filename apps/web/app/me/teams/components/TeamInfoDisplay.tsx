@@ -38,10 +38,11 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
     (info.apothecary ? apothecaryCost : 0) +
     Math.max(0, info.dedicatedFans - 1) * dedicatedFanCost;
 
-  // Helper pour formater les nombres en toute sécurité
-  const formatNumber = (value: number | undefined | null): string => {
-    const num = value ?? 0;
-    return num.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+  // Tous les montants de la carte s'affichent en kpo (« 50K po ») pour
+  // rester compacts — même convention que le reste de la fiche équipe.
+  const formatKpo = (value: number | undefined | null): string => {
+    const num = Math.round((value ?? 0) / 1000);
+    return `${num.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}${t.teams.kpo}`;
   };
 
   return (
@@ -56,7 +57,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm font-medium text-gray-700">{t.teams.treasury}</span>
             <span className="text-sm text-gray-900 font-mono">
-              {formatNumber(info.treasury)} {t.teams.po}
+              {formatKpo(info.treasury)}
             </span>
           </div>
 
@@ -64,7 +65,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm font-medium text-gray-700">{t.teams.teamValue}</span>
             <span className="text-sm text-gray-900 font-mono">
-              {formatNumber(info.teamValue)} {t.teams.po}
+              {formatKpo(info.teamValue)}
             </span>
           </div>
 
@@ -72,7 +73,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-sm font-medium text-gray-700">{t.teams.currentValue}</span>
             <span className="text-sm text-gray-900 font-mono">
-              {formatNumber(info.currentValue)} {t.teams.po}
+              {formatKpo(info.currentValue)}
             </span>
           </div>
 
@@ -122,29 +123,29 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <h4 className="text-sm font-semibold text-gray-700 mb-3">{t.teams.detailedCosts}</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">{t.teams.rerollsCost.replace("{count}", info.rerolls.toString()).replace("{cost}", rerollCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 }))}</span>
-              <span className="font-mono">{(info.rerolls * rerollCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="text-gray-600">{t.teams.rerollsCost.replace("{count}", info.rerolls.toString()).replace("{cost}", formatKpo(rerollCost))}</span>
+              <span className="font-mono">{formatKpo(info.rerolls * rerollCost)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.cheerleadersCost.replace("{count}", info.cheerleaders.toString())}</span>
-              <span className="font-mono">{(info.cheerleaders * cheerleaderCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono">{formatKpo(info.cheerleaders * cheerleaderCost)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.assistantsCost.replace("{count}", info.assistants.toString())}</span>
-              <span className="font-mono">{(info.assistants * assistantCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono">{formatKpo(info.assistants * assistantCost)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.apothecary}</span>
-              <span className="font-mono">{info.apothecary ? `${apothecaryCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${t.teams.po}` : `0 ${t.teams.po}`}</span>
+              <span className="font-mono">{info.apothecary ? formatKpo(apothecaryCost) : `0${t.teams.kpo}`}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.dedicatedFansCost.replace("{count}", info.dedicatedFans.toString())}</span>
-              <span className="font-mono" data-testid="dedicated-fans-cost">{(Math.max(0, info.dedicatedFans - 1) * dedicatedFanCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono" data-testid="dedicated-fans-cost">{formatKpo(Math.max(0, info.dedicatedFans - 1) * dedicatedFanCost)}</span>
             </div>
             <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold">
               <span className="text-gray-700">{t.teams.totalStaffRerolls}</span>
               <span className="font-mono">
-                {staffRerollsCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}
+                {formatKpo(staffRerollsCost)}
               </span>
             </div>
           </div>
@@ -157,13 +158,13 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
             <div className="flex justify-between">
               <span className="text-blue-700">{t.teams.teamValue}</span>
               <span className="font-mono font-semibold text-blue-900">
-                {info.teamValue ? info.teamValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) : '0'} {t.teams.po}
+                {formatKpo(info.teamValue)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-blue-700">{t.teams.currentValue}</span>
               <span className="font-mono font-semibold text-blue-900">
-                {info.currentValue ? info.currentValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) : '0'} {t.teams.po}
+                {formatKpo(info.currentValue)}
               </span>
             </div>
             <div className="mt-3 pt-2 border-t border-blue-300">
@@ -187,26 +188,26 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
                   <div className="flex justify-between">
                     <span className="text-green-700">{t.teams.playersCostLabel}</span>
                     <span className="font-mono font-semibold text-green-900">
-                      {playersCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}
+                      {formatKpo(playersCost)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-green-700">{t.teams.staffRerollsLabel}</span>
                     <span className="font-mono font-semibold text-green-900">
-                      {staffRerollsCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}
+                      {formatKpo(staffRerollsCost)}
                     </span>
                   </div>
                   <div className="border-t border-green-300 pt-2 mt-2">
                     <div className="flex justify-between font-bold">
                       <span className="text-green-800">{t.teams.veTotal}</span>
                       <span className="font-mono text-green-900">
-                        {info.teamValue ? info.teamValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) : '0'} {t.teams.po}
+                        {formatKpo(info.teamValue)}
                       </span>
                     </div>
                     <div className="flex justify-between font-bold">
                       <span className="text-green-800">{t.teams.veaTotal}</span>
                       <span className="font-mono text-green-900">
-                        {info.currentValue ? info.currentValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) : '0'} {t.teams.po}
+                        {formatKpo(info.currentValue)}
                       </span>
                     </div>
                   </div>
