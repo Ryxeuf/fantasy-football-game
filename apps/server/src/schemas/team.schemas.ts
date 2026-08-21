@@ -30,6 +30,9 @@ export const buildTeamSchema = z.object({
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
   apothecary: z.boolean().optional(),
   dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
+  // Case « Édition avancée » du builder : conditionne le recrutement de
+  // Star Players (refusé hors mode avancé / hors coupe).
+  advancedEdition: z.boolean().optional(),
   // Mode « édition avancée » : pool de PSP à dépenser en améliorations au
   // build. En jeu libre, fourni par le coach ; en construction pour une
   // coupe (`cupId`), IGNORÉ et re-résolu côté serveur (non modifiable).

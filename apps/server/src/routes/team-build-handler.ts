@@ -86,6 +86,7 @@ export async function handleBuildTeam(
       assistants: bodyAssistants,
       apothecary: bodyApothecary,
       dedicatedFans: bodyDedicatedFans,
+      advancedEdition: bodyAdvancedEdition,
       startingPspPool: bodyStartingPspPool,
       advancements: bodyAdvancements,
       cupId: bodyCupId,
@@ -102,6 +103,7 @@ export async function handleBuildTeam(
       assistants?: number;
       apothecary?: boolean;
       dedicatedFans?: number;
+      advancedEdition?: boolean;
       startingPspPool?: number;
       advancements?: Array<{
         positionSlug: string;
@@ -117,6 +119,18 @@ export async function handleBuildTeam(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!isAllowedTeamRoster(roster)) {
       sendError(res, 'Roster non autorise', 400);
+      return;
+    }
+
+    // Le recrutement de Star Players est réservé à la case « Édition
+    // avancée » du builder (la construction pour une coupe force ce mode
+    // côté client). Refus précoce et explicite sinon.
+    if ((starPlayerSlugs?.length ?? 0) > 0 && !bodyAdvancedEdition && !bodyCupId) {
+      sendError(
+        res,
+        "Le recrutement de Star Players nécessite l'Édition avancée",
+        400,
+      );
       return;
     }
 
