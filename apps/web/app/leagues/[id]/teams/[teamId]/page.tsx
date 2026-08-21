@@ -135,6 +135,14 @@ function formatGold(n: number): string {
   return `${n.toLocaleString("fr-FR")} po`;
 }
 
+/**
+ * Valeur d'un joueur en kpo (105 000 -> « 105 k po ») : la colonne
+ * « Valeur » du roster (17 colonnes) reste compacte.
+ */
+function formatKpo(n: number): string {
+  return `${Math.round(n / 1000).toLocaleString("fr-FR")} k po`;
+}
+
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
@@ -401,7 +409,7 @@ export default function LeagueTeamRosterPage() {
                           data-testid={`player-value-${p.id}`}
                         >
                           {typeof p.value === "number"
-                            ? formatGold(p.value)
+                            ? formatKpo(p.value)
                             : "—"}
                         </td>
                         <td

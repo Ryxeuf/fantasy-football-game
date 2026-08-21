@@ -205,7 +205,7 @@ describe("LeagueTeamRosterPage", () => {
   });
 
 
-  it("affiche la valeur de chaque joueur (et tolère une API pré-valeur)", async () => {
+  it("affiche la valeur de chaque joueur en kpo (et tolère une API pré-valeur)", async () => {
     apiRequestMock.mockResolvedValue(ROSTER);
     render(
       <LanguageProvider>
@@ -215,8 +215,12 @@ describe("LeagueTeamRosterPage", () => {
     await waitFor(() =>
       expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
     );
-    // Griff porte une valeur, Boris n'en a pas (API antérieure).
-    expect(screen.getByTestId("player-value-pl1").textContent).toContain("105");
+    // Griff porte une valeur, affichée en kpo pour garder la colonne
+    // compacte (105 000 po -> « 105 k po ») ; Boris n'en a pas (API
+    // antérieure).
+    expect(screen.getByTestId("player-value-pl1").textContent).toBe(
+      "105 k po",
+    );
     expect(screen.getByTestId("player-value-pl2").textContent).toBe("—");
   });
 });
