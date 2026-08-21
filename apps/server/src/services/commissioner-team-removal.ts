@@ -9,12 +9,22 @@
  * la suppression est interdite — il faut passer par la procedure de
  * forfait (`league-forfeit.ts`) qui preserve l'historique.
  *
+ * EXCEPTION joueur MORT : la mort survient forcement en cours de
+ * saison, donc la garde "aucun match joue" condamnait le cadavre a
+ * encombrer le roster (et le licenciement de feuille de match skippe
+ * les joueurs deja inactifs). Un joueur `dead` est donc retirable a
+ * tout moment — retrait DOUX via `removeInactivePlayerFromRoster`
+ * (la ligne, la provenance de la mort et l'historique sont conserves,
+ * l'invalidation de la feuille fautive reste reversible), jamais un
+ * hard delete.
+ *
  * Garde-fous :
  *   - L'autorisation (commissaire de la ligue) est verifiee cote route
  *     via `ensureLeagueCommissioner`.
  *   - On verifie que la team appartient bien a la ligue ciblee
  *     (anti-vector cross-ligue, comme dans `commissioner-team-edit`).
- *   - On refuse si l'equipe a deja participe a un match dans la ligue.
+ *   - On refuse si l'equipe a deja participe a un match dans la ligue
+ *     (sauf joueur mort, cf. ci-dessus).
  *   - Suppression d'equipe : uniquement quand la saison est `draft` ou
  *     `scheduled` (pre-demarrage). On supprime le `LeagueParticipant`
  *     (hard delete) ; aucun pairing ne le reference encore a ce stade.
@@ -28,6 +38,7 @@
 
 import { prisma } from "../prisma";
 import { appendAudit } from "./commissioner-team-edit";
+import { removeInactivePlayerFromRoster } from "./player-status";
 
 export type CommissionerRemovalErrorCode =
   | "season_not_found"
@@ -276,9 +287,15 @@ export interface RemovePlayerInput {
 }
 
 /**
- * Supprime definitivement un joueur du roster d'une equipe (hard
- * delete). Autorise uniquement si l'equipe n'a participe a aucun match
- * dans la ligue.
+ * Supprime un joueur du roster d'une equipe.
+ *
+ * - Joueur VIVANT : hard delete, uniquement si l'equipe n'a participe a
+ *   aucun match dans la ligue (correction d'inscription pre-saison).
+ * - Joueur MORT : retrait DOUX a tout moment (la mort n'arrive qu'en
+ *   cours de saison) — la ligne et la provenance sont conservees, seule
+ *   la presence au roster est levee. Sans ce chemin, le cadavre etait
+ *   condamne a rester : le licenciement de feuille skippe les joueurs
+ *   deja inactifs et la garde pre-saison bloquait la suppression.
  */
 export async function removePlayerFromTeam(input: RemovePlayerInput) {
   const inLeague = await prisma.leagueParticipant.count({
@@ -291,13 +308,6 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
     );
   }
 
-  if (await hasTeamPlayedInLeague(input.leagueId, input.teamId)) {
-    throw new CommissionerRemovalError(
-      "team_has_played",
-      "Impossible de supprimer : l'equipe a deja participe a un match",
-    );
-  }
-
   const player = (await prisma.teamPlayer.findUnique({
     where: { id: input.playerId },
     select: {
@@ -306,6 +316,7 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
       name: true,
       position: true,
       number: true,
+      dead: true,
     },
   })) as {
     id: string;
@@ -313,6 +324,7 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
     name: string;
     position: string;
     number: number;
+    dead: boolean;
   } | null;
   if (!player) {
     throw new CommissionerRemovalError(
@@ -324,6 +336,46 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
     throw new CommissionerRemovalError(
       "player_not_in_team",
       "Le joueur n'appartient pas a l'equipe specifiee",
+    );
+  }
+
+  if (player.dead) {
+    // Pas de mise a jour de TV : un joueur mort est deja exclu du calcul
+    // VE/VEA (`utils/team-values` filtre dead/firedAt).
+    const outcome = await removeInactivePlayerFromRoster({
+      playerId: input.playerId,
+      allowedTeamIds: [input.teamId],
+    });
+    if ("skipped" in outcome) {
+      throw new CommissionerRemovalError(
+        "player_not_found",
+        `Joueur introuvable: ${input.playerId}`,
+      );
+    }
+
+    await appendAudit({
+      leagueId: input.leagueId,
+      byCommissionerId: input.byCommissionerId,
+      teamId: input.teamId,
+      playerId: input.playerId,
+      action: "remove_dead_player",
+      beforeState: {
+        name: player.name,
+        position: player.position,
+        number: player.number,
+        dead: true,
+      },
+      afterState: null,
+      reason: input.reason ?? null,
+    });
+
+    return { removed: true as const, playerId: input.playerId, soft: true as const };
+  }
+
+  if (await hasTeamPlayedInLeague(input.leagueId, input.teamId)) {
+    throw new CommissionerRemovalError(
+      "team_has_played",
+      "Impossible de supprimer : l'equipe a deja participe a un match",
     );
   }
 

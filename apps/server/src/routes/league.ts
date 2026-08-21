@@ -1245,30 +1245,31 @@ export async function handleGetTeamForEdit(
 
 /**
  * Autorise la lecture des rosters de la ligue : commissaire OU coach
- * inscrit (participant d'au moins une saison). Renvoie false + reponse
- * d'erreur deja envoyee sinon.
+ * inscrit (participant d'au moins une saison). Renvoie la ligue (son
+ * `creatorId`, pour distinguer le commissaire cote reponse) quand la
+ * lecture est autorisee, `null` sinon (reponse d'erreur deja envoyee).
  */
 async function ensureLeagueViewer(
   userId: string,
   leagueId: string,
   res: Response,
-): Promise<boolean> {
-  const league = await prisma.league.findUnique({
+): Promise<{ creatorId: string } | null> {
+  const league = (await prisma.league.findUnique({
     where: { id: leagueId },
     select: { creatorId: true },
-  });
+  })) as { creatorId: string } | null;
   if (!league) {
     sendError(res, "Ligue introuvable", 404);
-    return false;
+    return null;
   }
-  if (league.creatorId === userId) return true;
-  if (await isLeagueParticipant(userId, leagueId)) return true;
+  if (league.creatorId === userId) return league;
+  if (await isLeagueParticipant(userId, leagueId)) return league;
   sendError(
     res,
     "Seuls les coachs inscrits a la ligue peuvent voir les rosters",
     403,
   );
-  return false;
+  return null;
 }
 
 /**
@@ -1283,7 +1284,8 @@ export async function handleGetLeagueTeamRoster(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const { leagueId, teamId } = req.params;
-  if (!(await ensureLeagueViewer(userId, leagueId, res))) return;
+  const league = await ensureLeagueViewer(userId, leagueId, res);
+  if (!league) return;
   try {
     // getTeamForEdit garde la verification "equipe ∈ ligue" + charge les
     // joueurs ; on complete avec les meta d'equipe pour une page riche.
@@ -1489,6 +1491,9 @@ export async function handleGetLeagueTeamRoster(
         regionalLeagues,
       },
       players,
+      // Le commissaire peut retirer un joueur MORT du roster depuis cette
+      // page (DELETE /players/:playerId, retrait doux sans licenciement).
+      viewerIsCommissioner: league.creatorId === userId,
     });
   } catch (e: unknown) {
     domainError(res, e);

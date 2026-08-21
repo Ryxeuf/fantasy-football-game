@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { LanguageProvider } from "../../../../contexts/LanguageContext";
 import LeagueTeamRosterPage from "./page";
 
@@ -222,5 +222,96 @@ describe("LeagueTeamRosterPage", () => {
       "105 k po",
     );
     expect(screen.getByTestId("player-value-pl2").textContent).toBe("—");
+  });
+
+  describe("retrait d'un joueur mort (commissaire)", () => {
+    const DEAD_PLAYER = {
+      ...ROSTER.players[1],
+      id: "pl3",
+      name: "Feu Igor",
+      number: 12,
+      dead: true,
+      statusSource: "match_sheet",
+      statusAt: "2026-08-01T10:00:00.000Z",
+    };
+    const ROSTER_WITH_DEAD = {
+      ...ROSTER,
+      players: [...ROSTER.players, DEAD_PLAYER],
+      viewerIsCommissioner: true,
+    };
+
+    it("propose « Retirer » sur les morts uniquement, et recharge après le retrait", async () => {
+      const confirmSpy = vi
+        .spyOn(window, "confirm")
+        .mockReturnValue(true);
+      apiRequestMock.mockResolvedValue(ROSTER_WITH_DEAD);
+      render(
+        <LanguageProvider>
+          <LeagueTeamRosterPage />
+        </LanguageProvider>,
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+      );
+
+      // Bouton présent sur le mort, absent sur les vivants.
+      expect(screen.getByTestId("remove-dead-player-pl3")).toBeTruthy();
+      expect(screen.queryByTestId("remove-dead-player-pl1")).toBeNull();
+      expect(screen.queryByTestId("remove-dead-player-pl2")).toBeNull();
+
+      fireEvent.click(screen.getByTestId("remove-dead-player-pl3"));
+      await waitFor(() =>
+        expect(apiRequestMock).toHaveBeenCalledWith(
+          "/leagues/L1/teams/T1/players/pl3",
+          { method: "DELETE" },
+        ),
+      );
+      expect(confirmSpy).toHaveBeenCalled();
+      // Le roster est rechargé après le retrait (2 lectures + 1 DELETE).
+      await waitFor(() => {
+        const rosterCalls = apiRequestMock.mock.calls.filter(
+          (c) => c[0] === "/leagues/L1/teams/T1/roster-view",
+        );
+        expect(rosterCalls.length).toBe(2);
+      });
+      confirmSpy.mockRestore();
+    });
+
+    it("ne retire rien quand la confirmation est refusée", async () => {
+      const confirmSpy = vi
+        .spyOn(window, "confirm")
+        .mockReturnValue(false);
+      apiRequestMock.mockResolvedValue(ROSTER_WITH_DEAD);
+      render(
+        <LanguageProvider>
+          <LeagueTeamRosterPage />
+        </LanguageProvider>,
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+      );
+
+      fireEvent.click(screen.getByTestId("remove-dead-player-pl3"));
+      expect(
+        apiRequestMock.mock.calls.filter((c) => c[1]?.method === "DELETE"),
+      ).toHaveLength(0);
+      confirmSpy.mockRestore();
+    });
+
+    it("masque la colonne d'action pour un simple coach (non-commissaire)", async () => {
+      apiRequestMock.mockResolvedValue({
+        ...ROSTER_WITH_DEAD,
+        viewerIsCommissioner: false,
+      });
+      render(
+        <LanguageProvider>
+          <LeagueTeamRosterPage />
+        </LanguageProvider>,
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("league-roster-page")).toBeTruthy(),
+      );
+      expect(screen.queryByTestId("remove-dead-player-pl3")).toBeNull();
+    });
   });
 });

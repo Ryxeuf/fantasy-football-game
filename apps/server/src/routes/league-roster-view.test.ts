@@ -13,6 +13,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     league: { findUnique: vi.fn() },
+    // isLeagueParticipant (viewer non-commissaire) compte les inscriptions.
+    leagueParticipant: { count: vi.fn() },
     team: { findUnique: vi.fn() },
     roster: { findFirst: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
@@ -55,6 +57,7 @@ import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockPrisma = prisma as unknown as {
   league: { findUnique: ReturnType<typeof vi.fn> };
+  leagueParticipant: { count: ReturnType<typeof vi.fn> };
   team: { findUnique: ReturnType<typeof vi.fn> };
   roster: { findFirst: ReturnType<typeof vi.fn> };
   teamPlayer: { findMany: ReturnType<typeof vi.fn> };
@@ -259,6 +262,34 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
     expect(payload.success).toBe(true);
     expect(payload.data.team.teamValue).toBe(1_000_000);
     expect(payload.data.team.currentValue).toBe(950_000);
+  });
+
+  it("expose viewerIsCommissioner=true pour le commissaire (retrait des morts)", async () => {
+    const res = createRes();
+    await handleGetLeagueTeamRoster(createReq(), res);
+
+    const payload = res.payload as {
+      data: { viewerIsCommissioner: boolean };
+    };
+    expect(payload.data.viewerIsCommissioner).toBe(true);
+  });
+
+  it("expose viewerIsCommissioner=false pour un coach inscrit non-commissaire", async () => {
+    // Le viewer est un coach participant, pas le créateur de la ligue.
+    mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+    const req = {
+      user: { id: "coach-2" },
+      params: { leagueId: "L1", teamId: "T1" },
+    } as unknown as AuthenticatedRequest;
+    const res = createRes();
+    await handleGetLeagueTeamRoster(req, res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: { viewerIsCommissioner: boolean };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.viewerIsCommissioner).toBe(false);
   });
 
   it("tolère un modèle d'events absent (SQLite tests) : agressions à 0", async () => {

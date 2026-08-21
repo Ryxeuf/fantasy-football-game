@@ -129,6 +129,12 @@ interface RosterTeam {
 interface RosterResponse {
   team: RosterTeam;
   players: RosterPlayer[];
+  /**
+   * Vrai quand le viewer est le commissaire de la ligue : il peut alors
+   * retirer un joueur MORT du roster (retrait doux, sans licenciement).
+   * Optionnel : rétro-compat API.
+   */
+  viewerIsCommissioner?: boolean;
 }
 
 function formatGold(n: number): string {
@@ -164,6 +170,9 @@ export default function LeagueTeamRosterPage() {
   const [data, setData] = useState<RosterResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Incrémenté après un retrait de joueur mort pour recharger le roster.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!leagueId || !teamId) return;
@@ -185,7 +194,34 @@ export default function LeagueTeamRosterPage() {
     return () => {
       cancelled = true;
     };
-  }, [leagueId, teamId]);
+  }, [leagueId, teamId, refreshKey]);
+
+  /**
+   * Retire un joueur MORT du roster (commissaire uniquement). Retrait
+   * doux côté serveur : la fiche, la provenance de la mort et
+   * l'historique sont conservés — aucun licenciement n'est enregistré.
+   */
+  const handleRemoveDeadPlayer = async (player: RosterPlayer) => {
+    if (
+      !window.confirm(
+        `Retirer ${player.name} (mort) du roster ? Sa fiche et son historique sont conservés.`,
+      )
+    ) {
+      return;
+    }
+    setRemovingPlayerId(player.id);
+    try {
+      await apiRequest(
+        `/leagues/${leagueId}/teams/${teamId}/players/${player.id}`,
+        { method: "DELETE" },
+      );
+      setRefreshKey((k) => k + 1);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Impossible de retirer ce joueur");
+    } finally {
+      setRemovingPlayerId(null);
+    }
+  };
 
   return (
     // Le roster affiche 17 colonnes (stats + blessures + dispo) : sur une
@@ -324,6 +360,14 @@ export default function LeagueTeamRosterPage() {
                       Blessures
                     </th>
                     <th className="px-2 py-2 text-center" title="Disponible pour le prochain match">Dispo</th>
+                    {data.viewerIsCommissioner ? (
+                      <th
+                        className="px-2 py-2 text-center"
+                        title="Retirer un joueur mort du roster (sans licenciement)"
+                      >
+                        {""}
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -440,6 +484,22 @@ export default function LeagueTeamRosterPage() {
                             </span>
                           )}
                         </td>
+                        {data.viewerIsCommissioner ? (
+                          <td className="px-2 py-2 text-center">
+                            {p.dead ? (
+                              <button
+                                type="button"
+                                data-testid={`remove-dead-player-${p.id}`}
+                                disabled={removingPlayerId === p.id}
+                                onClick={() => void handleRemoveDeadPlayer(p)}
+                                title="Retirer ce joueur mort du roster (fiche et historique conservés, aucun licenciement)"
+                                className="whitespace-nowrap rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 no-underline hover:bg-red-50 disabled:opacity-50"
+                              >
+                                {removingPlayerId === p.id ? "…" : "Retirer"}
+                              </button>
+                            ) : null}
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })}
