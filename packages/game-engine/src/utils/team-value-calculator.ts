@@ -89,10 +89,12 @@ function calculateStaffCost(data: TeamValueData): number {
     cost += s.apothecaryCost;
   }
 
-  // Fans Dévoués : payants au-dessus du premier (gratuit).
-  // Clamp : si `dedicatedFans` = 0 (équipe nouvelle pas encore loggée),
-  // (0 - 1) * coût = négatif → total négatif. Math.max(0) protège.
-  cost += Math.max(0, data.dedicatedFans - 1) * s.dedicatedFanCost;
+  // Fans Dévoués : CHAQUE fan compte dans la valeur d'équipe (édition
+  // 2025). Seul l'ACHAT du premier est gratuit à la création — sa VALEUR
+  // compte comme celle des suivants. L'ancien `dedicatedFans - 1`
+  // décalait la VE de -5k sur toutes les équipes (off-by-one).
+  // Math.max(0) protège d'un `dedicatedFans` négatif ou absent.
+  cost += Math.max(0, data.dedicatedFans) * s.dedicatedFanCost;
 
   return cost;
 }

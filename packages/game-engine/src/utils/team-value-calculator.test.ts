@@ -122,8 +122,8 @@ describe('Team Value Calculator', () => {
 
     it('sans config : reproduit les défauts bb11 (fans à 5k, édition 2025)', () => {
       // joueurs 100k + relances 2×50k + cheerleaders 3×10k + assistant 1×10k
-      // + apothicaire 50k + fans (3-1)×5k = 100k+100k+30k+10k+50k+10k = 300k
-      expect(calculateTeamValue({ ...base })).toBe(300000);
+      // + apothicaire 50k + fans 3×5k = 100k+100k+30k+10k+50k+15k = 305k
+      expect(calculateTeamValue({ ...base })).toBe(305000);
     });
 
     it('avec staffConfig explicite : utilise les coûts fournis', () => {
@@ -137,14 +137,41 @@ describe('Team Value Calculator', () => {
           dedicatedFanCost: 20000,
         },
       });
-      // 100k + 2×100k + 3×20k + 1×20k + 80k + 2×20k = 100k+200k+60k+20k+80k+40k = 500k
-      expect(v).toBe(500000);
+      // 100k + 2×100k + 3×20k + 1×20k + 80k + 3×20k = 100k+200k+60k+20k+80k+60k = 520k
+      expect(v).toBe(520000);
     });
 
     it('format sevens (sans config) : relance ×2 et staff à 20k', () => {
       const v = calculateTeamValue({ ...base, format: 'sevens' });
-      // 100k + 2×100k + 3×20k + 1×20k + 80k + 2×20k = 500k
-      expect(v).toBe(500000);
+      // 100k + 2×100k + 3×20k + 1×20k + 80k + 3×20k = 520k
+      expect(v).toBe(520000);
+    });
+
+    it('le fan de base compte AUSSI dans la VE (seul son achat est gratuit)', () => {
+      // Off-by-one historique : `dedicatedFans - 1` retirait 5k à toutes
+      // les équipes. Édition 2025 : chaque fan vaut 5k dans la VE.
+      const v = calculateTeamValue({
+        ...base,
+        rerolls: 0,
+        cheerleaders: 0,
+        assistants: 0,
+        apothecary: false,
+        dedicatedFans: 1,
+      });
+      // joueurs 100k + fan 1×5k = 105k
+      expect(v).toBe(105000);
+    });
+
+    it('clamp : dedicatedFans à 0 (équipe legacy) ne retire rien', () => {
+      const v = calculateTeamValue({
+        ...base,
+        rerolls: 0,
+        cheerleaders: 0,
+        assistants: 0,
+        apothecary: false,
+        dedicatedFans: 0,
+      });
+      expect(v).toBe(100000);
     });
   });
 });
