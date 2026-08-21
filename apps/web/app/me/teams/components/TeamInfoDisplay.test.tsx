@@ -46,10 +46,22 @@ describe("TeamInfoDisplay — titre de section", () => {
         <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 3 }} />
       </LanguageProvider>,
     );
-    // 2 fans payants (le 1er est gratuit) × 5 000 po = 10 000 po -> « 10K po ».
+    // Chaque fan compte dans la valeur : 3 × 5 000 po -> « 15K po »
+    // (seul l'ACHAT du 1er est gratuit à la création, pas sa valeur).
     expect(
       normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toBe("10K po");
+    ).toBe("15K po");
+  });
+
+  it("le fan de base compte aussi dans la valeur du staff (5K po)", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 1 }} />
+      </LanguageProvider>,
+    );
+    expect(
+      normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
+    ).toBe("5K po");
   });
 
   it("affiche tous les montants en kpo (aucun montant en po complets)", () => {
@@ -90,9 +102,10 @@ describe("TeamInfoDisplay — titre de section", () => {
         />
       </LanguageProvider>,
     );
+    // 2 fans × 5 000 po (config DB) = 10 000 po.
     expect(
       normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toBe("5K po");
+    ).toBe("10K po");
   });
 
   it("affiche « Team staff » en anglais", async () => {
