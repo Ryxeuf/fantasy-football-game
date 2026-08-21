@@ -352,6 +352,7 @@
     "tierBottom": "Bottom tier team",
     "createTeamWithName": "Create a team \"{name}\"",
     "teamInfo": "Team information",
+    "teamStaff": "Team staff",
     "startingBudget": "Starting budget",
     "startingBudgetDesc": "Initial budget to create this team",
     "nafStatus": "NAF Status",

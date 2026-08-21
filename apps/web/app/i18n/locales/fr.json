@@ -357,6 +357,7 @@
     "tierBottom": "Équipe de niveau inférieur",
     "createTeamWithName": "Créer une équipe \"{name}\"",
     "teamInfo": "Informations de l'équipe",
+    "teamStaff": "Staff de l'équipe",
     "startingBudget": "Budget de départ",
     "startingBudgetDesc": "Budget initial pour créer cette équipe",
     "nafStatus": "Statut NAF",

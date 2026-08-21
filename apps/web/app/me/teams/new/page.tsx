@@ -1083,7 +1083,7 @@ export default function NewTeamBuilder() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5 space-y-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              {t.teams.teamInfo ?? "Staff"}
+              {t.teams.teamStaff ?? "Staff"}
             </h2>
             <span
               className="text-sm text-gray-600 tabular-nums"

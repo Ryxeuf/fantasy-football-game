@@ -85,7 +85,7 @@ export default function TeamInfoEditor({
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="bg-gray-50 px-6 py-3 border-b">
-        <h3 className="text-lg font-semibold">Informations d'équipe</h3>
+        <h3 className="text-lg font-semibold">Staff de l&apos;équipe</h3>
         <p className="text-sm text-gray-600 mt-1">
           Configurez les ressources de votre équipe selon les règles Blood Bowl
         </p>
