@@ -507,7 +507,7 @@
     "apothecaryAbsent": "Absent",
     "dedicatedFans": "Fans Dévoués",
     "detailedCosts": "Coûts détaillés",
-    "rerollsCost": "Relances ({count} × {cost} po)",
+    "rerollsCost": "Relances ({count} × {cost})",
     "cheerleadersCost": "Cheerleaders ({count})",
     "assistantsCost": "Assistants ({count})",
     "dedicatedFansCost": "Fans Dévoués ({count})",

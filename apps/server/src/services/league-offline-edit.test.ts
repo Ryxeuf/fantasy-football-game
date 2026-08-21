@@ -58,9 +58,17 @@ vi.mock("./player-status", () => ({
   })),
 }));
 
+// Retrait des evolutions post-match (deblocage advancement-consumed) :
+// service dedie, teste dans league-sheet-advancements.test.ts. Ici on
+// verifie la delegation (qui / combien).
+vi.mock("./league-sheet-advancements", () => ({
+  removeLatestAdvancements: vi.fn(async () => ({ removed: 1 })),
+}));
+
 import { prisma } from "../prisma";
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import { revertPlayerStatus } from "./player-status";
+import { removeLatestAdvancements } from "./league-sheet-advancements";
 import { updateTeamValues } from "../utils/team-values";
 import {
   reverseOfflineLeagueResult,
@@ -386,6 +394,63 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
       skipped: true,
       reason: "advancement-consumed",
     });
+  });
+
+  it("débloque advancement-consumed en retirant les évolutions post-match (opt-in)", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePostMatchSequence: {
+          pendingChoices: JSON.stringify([
+            { teamPlayerId: "p1", advancementsTaken: 0 },
+          ]),
+        },
+      }),
+    );
+    // 3 advancements : 1 pose par la feuille + 2 pris via le post-match
+    // classique -> 2 evolutions consommees a retirer.
+    m.tpFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        advancements: JSON.stringify([
+          { skillSlug: "block" },
+          { skillSlug: "dodge" },
+          { skillSlug: "tackle" },
+        ]),
+      },
+    ]);
+
+    const r = await reverseOfflineLeagueResult("m-1", {
+      sheetAppliedAdvancements: new Map([["p1", 1]]),
+      removeConsumedAdvancements: true,
+    });
+
+    expect(removeLatestAdvancements).toHaveBeenCalledWith({
+      playerId: "p1",
+      count: 2,
+    });
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+  });
+
+  it("sans évolution consommée, l'opt-in ne retire rien", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePostMatchSequence: {
+          pendingChoices: JSON.stringify([
+            { teamPlayerId: "p1", advancementsTaken: 1 },
+          ]),
+        },
+      }),
+    );
+    m.tpFindMany.mockResolvedValue([
+      { id: "p1", advancements: JSON.stringify([{ skillSlug: "block" }]) },
+    ]);
+
+    const r = await reverseOfflineLeagueResult("m-1", {
+      removeConsumedAdvancements: true,
+    });
+
+    expect(removeLatestAdvancements).not.toHaveBeenCalled();
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
   });
 
   it("reverse les standings (decrement) + eco + supprime + re-ouvre", async () => {

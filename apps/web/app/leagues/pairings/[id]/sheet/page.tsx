@@ -34,6 +34,10 @@ import {
   TARGET_BEARING_KINDS,
   type EventKind,
 } from "./event-fields";
+import {
+  isAdvancementConsumedError,
+  REMOVE_CONSUMED_CONFIRM_MESSAGE,
+} from "./invalidate-consumed";
 import { RosterSection } from "./_components/RosterSection";
 import TeamLogo from "../../../../components/TeamLogo";
 
@@ -521,12 +525,27 @@ export default function MatchSheetPage() {
     );
 
   const invalidate = (reason: string) =>
-    run(() =>
-      apiRequest(`/leagues/pairings/${pairingId}/sheet/invalidate`, {
-        method: "POST",
-        body: JSON.stringify({ reason: reason || undefined }),
-      }),
-    );
+    run(async () => {
+      try {
+        await apiRequest(`/leagues/pairings/${pairingId}/sheet/invalidate`, {
+          method: "POST",
+          body: JSON.stringify({ reason: reason || undefined }),
+        });
+      } catch (e: unknown) {
+        // Refus « advancement-consumed » : un joueur a dépensé ses PSP
+        // après la validation. Le commissaire peut débloquer en retirant
+        // ces évolutions post-match (confirmation explicite).
+        if (!isAdvancementConsumedError(e)) throw e;
+        if (!window.confirm(REMOVE_CONSUMED_CONFIRM_MESSAGE)) throw e;
+        await apiRequest(`/leagues/pairings/${pairingId}/sheet/invalidate`, {
+          method: "POST",
+          body: JSON.stringify({
+            reason: reason || undefined,
+            removeConsumedAdvancements: true,
+          }),
+        });
+      }
+    });
 
   const [canInval, setCanInval] = useState<{ ok: boolean; reason?: string }>({
     ok: false,

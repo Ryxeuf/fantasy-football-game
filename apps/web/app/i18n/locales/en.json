@@ -502,7 +502,7 @@
     "apothecaryAbsent": "Absent",
     "dedicatedFans": "Dedicated Fans",
     "detailedCosts": "Detailed costs",
-    "rerollsCost": "Rerolls ({count} × {cost} po)",
+    "rerollsCost": "Rerolls ({count} × {cost})",
     "cheerleadersCost": "Cheerleaders ({count})",
     "assistantsCost": "Assistants ({count})",
     "dedicatedFansCost": "Dedicated Fans ({count})",

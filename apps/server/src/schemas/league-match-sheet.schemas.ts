@@ -227,5 +227,8 @@ export type PostMatchBody = z.infer<typeof postMatchSchema>;
 
 export const invalidateSheetSchema = z.object({
   reason: z.string().max(500).optional(),
+  // Deblocage « advancement-consumed » : retire aussi les evolutions
+  // consommees apres ce match (opt-in explicite, confirme cote UI).
+  removeConsumedAdvancements: z.boolean().optional(),
 });
 export type InvalidateSheetBody = z.infer<typeof invalidateSheetSchema>;

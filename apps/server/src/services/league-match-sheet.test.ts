@@ -1548,6 +1548,7 @@ describe("Lot G — league-match-sheet", () => {
       });
       expect(mockReverse).toHaveBeenCalledWith("m1", {
         sheetAppliedAdvancements: new Map(),
+        removeConsumedAdvancements: false,
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data).toMatchObject({
@@ -1601,6 +1602,7 @@ describe("Lot G — league-match-sheet", () => {
       // evolutions appliquees par la feuille (elles vont etre reversees).
       expect(mockReverse).toHaveBeenCalledWith("m1", {
         sheetAppliedAdvancements: new Map([["h1", 1]]),
+        removeConsumedAdvancements: false,
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.advancementsHome).toEqual(cleaned);
@@ -1622,6 +1624,34 @@ describe("Lot G — league-match-sheet", () => {
         invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
       ).rejects.toMatchObject({ code: "invalidation_failed" });
       expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("transmet removeConsumedAdvancements à la reversion (déblocage advancement-consumed)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0);
+      mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
+      mockReverse.mockResolvedValue({ reversed: true, matchId: "m1" });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+
+      await invalidateMatchSheet({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        reason: "correction",
+        removeConsumedAdvancements: true,
+      });
+
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map(),
+        removeConsumedAdvancements: true,
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data).toMatchObject({ status: "invalidated" });
     });
   });
 

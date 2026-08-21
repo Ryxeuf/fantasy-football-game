@@ -40,16 +40,31 @@ describe("TeamInfoDisplay — titre de section", () => {
     expect(screen.queryByText("Informations de l'équipe")).toBeNull();
   });
 
-  it("facture les fans dévoués 5 000 po pièce (défaut édition 2025)", () => {
+  it("facture les fans dévoués 5 000 po pièce (défaut édition 2025), affiché en kpo", () => {
     render(
       <LanguageProvider>
         <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 3 }} />
       </LanguageProvider>,
     );
-    // 2 fans payants (le 1er est gratuit) × 5 000 po = 10 000 po.
+    // 2 fans payants (le 1er est gratuit) × 5 000 po = 10 000 po -> « 10K po ».
     expect(
       normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toContain("10 000");
+    ).toBe("10K po");
+  });
+
+  it("affiche tous les montants en kpo (aucun montant en po complets)", () => {
+    const { container } = render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={INFO} />
+      </LanguageProvider>,
+    );
+    const text = normalizeSpaces(container.textContent);
+    // VE 1 000 000 po -> « 1 000K po » ; trésorerie 30 000 po -> « 30K po ».
+    expect(text).toContain("1 000K po");
+    expect(text).toContain("30K po");
+    // Plus aucun montant en po complets (« 1 000 000 po », « 30 000 po »…).
+    expect(text).not.toMatch(/\d{2,3} \d{3} po/);
+    expect(text).not.toContain("000 po");
   });
 
   it("respecte le coût de la config staff quand elle est fournie", () => {
@@ -77,7 +92,7 @@ describe("TeamInfoDisplay — titre de section", () => {
     );
     expect(
       normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toContain("5 000");
+    ).toBe("5K po");
   });
 
   it("affiche « Team staff » en anglais", async () => {

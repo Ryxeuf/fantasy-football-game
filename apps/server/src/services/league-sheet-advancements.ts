@@ -181,6 +181,118 @@ function parsePlayerAdvancements(raw: string | null): PlayerAdvancement[] {
 }
 
 /**
+ * Retire les `count` DERNIÈRES évolutions d'un joueur (les plus
+ * récentes) : PSP remboursés (coût du palier occupé), compétence /
+ * caractéristique retirée, VE + VEA recalculées.
+ *
+ * Sert au déblocage de l'invalidation d'une feuille : quand un joueur a
+ * consommé un level-up APRÈS la validation (garde-fou
+ * `advancement-consumed` de `reverseOfflineLeagueResult`), le
+ * commissaire peut demander explicitement le retrait des évolutions
+ * prises après ce match pour pouvoir invalider.
+ */
+export async function removeLatestAdvancements(input: {
+  playerId: string;
+  count: number;
+}): Promise<{ removed: number }> {
+  if (input.count <= 0) return { removed: 0 };
+
+  const player = (await prisma.teamPlayer.findUnique({
+    where: { id: input.playerId },
+    select: {
+      id: true,
+      teamId: true,
+      skills: true,
+      advancements: true,
+      ma: true,
+      st: true,
+      ag: true,
+      pa: true,
+      av: true,
+    },
+  })) as {
+    id: string;
+    teamId: string;
+    skills: string | null;
+    advancements: string | null;
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  } | null;
+  if (!player) {
+    serverLog.error(
+      `[league-sheet-advancements] removeLatest: joueur ${input.playerId} introuvable`,
+    );
+    return { removed: 0 };
+  }
+
+  const taken = parsePlayerAdvancements(player.advancements);
+  const removeCount = Math.min(input.count, taken.length);
+  if (removeCount === 0) return { removed: 0 };
+
+  let stats = {
+    ma: player.ma,
+    st: player.st,
+    ag: player.ag,
+    pa: player.pa,
+    av: player.av,
+  };
+  let skills = player.skills;
+  let statsTouched = false;
+  let skillsTouched = false;
+  let refund = 0;
+  for (let i = taken.length - 1; i >= taken.length - removeCount; i--) {
+    const adv = taken[i] as Partial<PlayerAdvancement> | undefined;
+    // Défensif : une entrée sans type lisible est remboursée au barème
+    // « primary » (le barème standard) plutôt que de faire échouer le
+    // déblocage de l'invalidation.
+    const advType: AdvancementType = ADVANCEMENT_TYPES.has(
+      String(adv?.type ?? ""),
+    )
+      ? (adv?.type as AdvancementType)
+      : "primary";
+    refund += getNextAdvancementPspCost(i, advType);
+    if (advType === "characteristic" && adv?.stat) {
+      stats = reverseCharacteristic(stats, adv.stat as CharacteristicKind);
+      statsTouched = true;
+    } else if (typeof adv?.skillSlug === "string" && adv.skillSlug) {
+      skills = removeSkillOnce(skills, adv.skillSlug);
+      skillsTouched = true;
+    }
+  }
+  const remaining = taken.slice(0, taken.length - removeCount);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await prisma.$transaction(async (tx: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = {
+      spp: { increment: refund },
+      advancements: JSON.stringify(remaining),
+    };
+    if (statsTouched) {
+      data.ma = stats.ma;
+      data.st = stats.st;
+      data.ag = stats.ag;
+      data.pa = stats.pa;
+      data.av = stats.av;
+    }
+    if (skillsTouched) {
+      data.skills = skills;
+    }
+    await tx.teamPlayer.update({ where: { id: player.id }, data });
+    // Recalcul complet VE + VEA : le retrait baisse la valeur du joueur.
+    await updateTeamValues(tx, player.teamId);
+  });
+
+  serverLog.info(
+    `[league-sheet-advancements] removeLatest player=${player.id}: ${removeCount} évolution(s) retirée(s), ${refund} PSP remboursés`,
+  );
+  return { removed: removeCount };
+}
+
+/**
  * Reverse les évolutions appliquées à la validation (appelé par
  * `invalidateMatchSheet` APRÈS le reverse du résultat offline).
  * Best-effort : un joueur introuvable ou une entrée sans correspondance

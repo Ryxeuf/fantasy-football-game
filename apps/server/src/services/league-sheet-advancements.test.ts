@@ -33,6 +33,7 @@ import {
   parseStagedAdvancements,
   applyStagedAdvancements,
   reverseAppliedAdvancements,
+  removeLatestAdvancements,
 } from "./league-sheet-advancements";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -235,5 +236,107 @@ describe("reverseAppliedAdvancements", () => {
     });
     expect(mockPrisma.teamPlayer.update).not.toHaveBeenCalled();
     expect(out).toHaveLength(2);
+  });
+});
+
+describe("removeLatestAdvancements (déblocage advancement-consumed)", () => {
+  const basePlayer = {
+    id: "p1",
+    teamId: "T1",
+    skills: "sure-hands,block,dodge",
+    advancements: JSON.stringify([
+      { skillSlug: "block", type: "primary", isRandom: false, at: 1 },
+      { skillSlug: "dodge", type: "secondary", isRandom: false, at: 2 },
+    ]),
+    ma: 6,
+    st: 3,
+    ag: 3,
+    pa: 4,
+    av: 9,
+  };
+
+  it("retire la DERNIÈRE évolution : PSP remboursés (palier occupé), compétence retirée, VE recalculée", async () => {
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue(basePlayer);
+    const out = await removeLatestAdvancements({ playerId: "p1", count: 1 });
+    expect(out).toEqual({ removed: 1 });
+    // 2e avancement (secondaire, rang 2) : 12 PSP remboursés.
+    expect(mockPrisma.teamPlayer.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "p1" },
+        data: expect.objectContaining({
+          spp: { increment: 12 },
+          skills: "sure-hands,block",
+          advancements: JSON.stringify([
+            { skillSlug: "block", type: "primary", isRandom: false, at: 1 },
+          ]),
+        }),
+      }),
+    );
+    expect(updateTeamValues).toHaveBeenCalledWith(expect.anything(), "T1");
+  });
+
+  it("retire plusieurs évolutions en cumulant les remboursements", async () => {
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue(basePlayer);
+    const out = await removeLatestAdvancements({ playerId: "p1", count: 2 });
+    expect(out).toEqual({ removed: 2 });
+    // Secondaire rang 2 (12) + principale rang 1 (6) = 18 PSP.
+    expect(mockPrisma.teamPlayer.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          spp: { increment: 18 },
+          skills: "sure-hands",
+          advancements: "[]",
+        }),
+      }),
+    );
+  });
+
+  it("reverse une amélioration de caractéristique (ma −1)", async () => {
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+      ...basePlayer,
+      skills: "sure-hands",
+      ma: 7, // améliorée 6 → 7 par l'avancement à retirer
+      advancements: JSON.stringify([
+        { type: "characteristic", stat: "ma", d8: 2, isRandom: false, at: 1 },
+      ]),
+    });
+    const out = await removeLatestAdvancements({ playerId: "p1", count: 1 });
+    expect(out).toEqual({ removed: 1 });
+    expect(mockPrisma.teamPlayer.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          spp: { increment: 14 }, // characteristic rang 1
+          ma: 6,
+          advancements: "[]",
+        }),
+      }),
+    );
+    // Pas de compétence retirée : le CSV n'est pas touché.
+    const data = mockPrisma.teamPlayer.update.mock.calls[0][0].data;
+    expect("skills" in data).toBe(false);
+  });
+
+  it("clampe au nombre d'évolutions réellement prises", async () => {
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue(basePlayer);
+    const out = await removeLatestAdvancements({ playerId: "p1", count: 5 });
+    expect(out).toEqual({ removed: 2 });
+  });
+
+  it("no-op pour count<=0, joueur introuvable ou sans évolution", async () => {
+    expect(await removeLatestAdvancements({ playerId: "p1", count: 0 })).toEqual(
+      { removed: 0 },
+    );
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue(null);
+    expect(await removeLatestAdvancements({ playerId: "p1", count: 1 })).toEqual(
+      { removed: 0 },
+    );
+    mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+      ...basePlayer,
+      advancements: "[]",
+    });
+    expect(await removeLatestAdvancements({ playerId: "p1", count: 1 })).toEqual(
+      { removed: 0 },
+    );
+    expect(mockPrisma.teamPlayer.update).not.toHaveBeenCalled();
   });
 });

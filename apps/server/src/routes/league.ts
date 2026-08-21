@@ -1830,6 +1830,7 @@ export async function handleInvalidateMatchSheet(
       pairingId: req.params.pairingId,
       userId,
       reason: body.reason,
+      removeConsumedAdvancements: body.removeConsumedAdvancements,
     });
     sendSuccess(res, out);
   } catch (e: unknown) {
