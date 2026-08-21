@@ -1033,9 +1033,10 @@ describe("Lot G — league-match-sheet", () => {
   });
 
   // A63 — pre-match auto-calcule les winnings : moyenne des deux
-  // popularites × 10k + 10k par TD (events).
+  // popularites × 10k + 10k par TD (events) + 10k si l'equipe n'a pas
+  // temporise (aucun event stalling).
   describe("updatePreMatch (auto winnings)", () => {
-    it("computes winningsHome/Away = (popH+popA)*10k/2 + 10k/TD", async () => {
+    it("computes winningsHome/Away = (popH+popA)*10k/2 + 10k/TD + bonus sans temporisation", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
         status: "draft",
@@ -1054,9 +1055,35 @@ describe("Lot G — league-match-sheet", () => {
         payload: { popularityHome: 3, popularityAway: 2 },
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
-      // Exemple du log QA : (3+2)*10000/2 + TD*10000 -> 45k / 35k.
+      // Exemple du log QA : (3+2)*10000/2 + TD*10000 -> 45k / 35k, +10k de
+      // bonus chacun (aucun event stalling sur la feuille).
+      expect(data.winningsHome).toBe(55_000);
+      expect(data.winningsAway).toBe(45_000);
+    });
+
+    it("l'equipe qui a temporise perd son bonus de 10k", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "touchdown", team: "home", actorPlayerId: "h1" },
+        { kind: "touchdown", team: "home", actorPlayerId: "h1" },
+        { kind: "touchdown", team: "away", actorPlayerId: "a1" },
+        { kind: "stalling", team: "home", actorPlayerId: "h2" },
+      ]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { popularityHome: 3, popularityAway: 2 },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      // Domicile a temporise : 45k sans bonus ; exterieur garde ses 35k+10k.
       expect(data.winningsHome).toBe(45_000);
-      expect(data.winningsAway).toBe(35_000);
+      expect(data.winningsAway).toBe(45_000);
     });
   });
 

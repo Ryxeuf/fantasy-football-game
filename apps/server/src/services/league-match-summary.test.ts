@@ -7,6 +7,8 @@ import {
   summarizeMatchSheet,
   isMatchEventKind,
   computeMatchWinnings,
+  computeStalledTeams,
+  NO_STALLING_BONUS,
   WINNINGS_PER_POPULARITY,
   MATCH_EVENT_KINDS,
   type MatchEventInput,
@@ -387,5 +389,69 @@ describe("A63 — computeMatchWinnings", () => {
       scoreAway: 0,
     });
     expect(w).toEqual({ home: 15_000, away: 15_000 });
+  });
+});
+
+describe("Bonus « sans temporisation » — +10k si aucun event stalling", () => {
+  it("bonifie chaque équipe qui n'a pas temporisé", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 3,
+      popularityAway: 2,
+      scoreHome: 2,
+      scoreAway: 1,
+      stalledHome: false,
+      stalledAway: false,
+    });
+    // Exemple du livre (45k / 35k) + 10k de bonus chacun.
+    expect(w).toEqual({
+      home: 45_000 + NO_STALLING_BONUS,
+      away: 35_000 + NO_STALLING_BONUS,
+    });
+  });
+
+  it("l'équipe qui a temporisé perd son bonus, pas l'autre", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 0,
+      popularityAway: 0,
+      scoreHome: 0,
+      scoreAway: 0,
+      stalledHome: true,
+      stalledAway: false,
+    });
+    expect(w).toEqual({ home: 0, away: NO_STALLING_BONUS });
+  });
+
+  it("flags omis (info inconnue) : formule historique sans bonus", () => {
+    const w = computeMatchWinnings({
+      popularityHome: 3,
+      popularityAway: 2,
+      scoreHome: 2,
+      scoreAway: 1,
+    });
+    expect(w).toEqual({ home: 45_000, away: 35_000 });
+  });
+});
+
+describe("computeStalledTeams — dérivation depuis les events", () => {
+  it("détecte la temporisation par équipe", () => {
+    const stalled = computeStalledTeams([
+      { kind: "touchdown", team: "home" },
+      { kind: "stalling", team: "home", actorPlayerId: "p1" },
+      { kind: "kickoff" },
+    ]);
+    expect(stalled).toEqual({ home: true, away: false });
+  });
+
+  it("aucun event stalling : personne n'a temporisé", () => {
+    const stalled = computeStalledTeams([
+      { kind: "touchdown", team: "away" },
+      { kind: "casualty", team: "home", injurySeverity: "mng" },
+    ]);
+    expect(stalled).toEqual({ home: false, away: false });
+  });
+
+  it("un event stalling sans team est ignoré (défensif)", () => {
+    const stalled = computeStalledTeams([{ kind: "stalling", team: null }]);
+    expect(stalled).toEqual({ home: false, away: false });
   });
 });

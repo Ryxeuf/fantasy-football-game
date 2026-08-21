@@ -318,6 +318,31 @@ export function isMatchEventKind(v: unknown): v is MatchEventKind {
  */
 export const WINNINGS_PER_POPULARITY = 10_000;
 
+/**
+ * Bonus « sans temporisation » : +10 000 po de gains pour une equipe dont
+ * AUCUN joueur n'a temporise pendant le match (aucun event `stalling`
+ * pour l'equipe sur la feuille).
+ */
+export const NO_STALLING_BONUS = 10_000;
+
+/**
+ * Derive, par equipe, la presence d'au moins un event `stalling`
+ * (temporisation). Pur — sert a alimenter le bonus de gains
+ * `NO_STALLING_BONUS` de `computeMatchWinnings`.
+ */
+export function computeStalledTeams(
+  events: ReadonlyArray<MatchEventInput>,
+): { home: boolean; away: boolean } {
+  let home = false;
+  let away = false;
+  for (const ev of events) {
+    if (ev.kind !== "stalling") continue;
+    if (ev.team === "home") home = true;
+    else if (ev.team === "away") away = true;
+  }
+  return { home, away };
+}
+
 function clampPopularity(v: number | null | undefined): number {
   if (typeof v !== "number" || !Number.isFinite(v)) return 0;
   return Math.max(0, Math.floor(v));
@@ -326,14 +351,23 @@ function clampPopularity(v: number | null | undefined): number {
 /**
  * A63 — Gains officiels BB pour CHAQUE equipe :
  *   (facteur pop domicile + facteur pop exterieur) × 10k / 2
- *   + 10k par TD marque par l'equipe.
- * Exemple du livre : pop 3 et 2, score 2-1 -> 45 000 / 35 000. Pur.
+ *   + 10k par TD marque par l'equipe
+ *   + 10k si l'equipe n'a pas temporise (cf. `NO_STALLING_BONUS`).
+ * Exemple du livre : pop 3 et 2, score 2-1 -> 45 000 / 35 000 (hors bonus).
+ * Pur.
+ *
+ * `stalledHome`/`stalledAway` sont tri-state : `false` = l'equipe n'a pas
+ * temporise -> bonus ; `true` = temporisation constatee -> pas de bonus ;
+ * omis = information inconnue -> pas de bonus (formule historique). Les
+ * appelants feuille de match derivent les flags via `computeStalledTeams`.
  */
 export function computeMatchWinnings(input: {
   popularityHome: number | null | undefined;
   popularityAway: number | null | undefined;
   scoreHome: number;
   scoreAway: number;
+  stalledHome?: boolean;
+  stalledAway?: boolean;
 }): { home: number; away: number } {
   const shared = Math.floor(
     ((clampPopularity(input.popularityHome) +
@@ -342,8 +376,14 @@ export function computeMatchWinnings(input: {
       2,
   );
   return {
-    home: shared + Math.max(0, input.scoreHome) * WINNINGS_PER_POPULARITY,
-    away: shared + Math.max(0, input.scoreAway) * WINNINGS_PER_POPULARITY,
+    home:
+      shared +
+      Math.max(0, input.scoreHome) * WINNINGS_PER_POPULARITY +
+      (input.stalledHome === false ? NO_STALLING_BONUS : 0),
+    away:
+      shared +
+      Math.max(0, input.scoreAway) * WINNINGS_PER_POPULARITY +
+      (input.stalledAway === false ? NO_STALLING_BONUS : 0),
   };
 }
 
