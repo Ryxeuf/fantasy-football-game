@@ -108,7 +108,17 @@ const CASUALTY_BEARING = new Set<MatchEventKind>([
   "other_elim",
   "crowd_surge",
   "special_elim",
+  "stalling",
 ]);
+
+/**
+ * Auto-eliminations saisies SANS cible : la victime est l'acteur, dans sa
+ * propre equipe, et personne n'« inflige » la sortie (pas de compteur
+ * equipe ni de casualtiesInflicted, donc pas de SPP). `other_elim`
+ * (esquive ratee, chute…) et `stalling` (temporisation avec blessure
+ * saisie « si necessaire », comme pour autre elimination).
+ */
+const SELF_ELIM_KINDS = new Set<MatchEventKind>(["other_elim", "stalling"]);
 
 export interface MatchSummaryOptions {
   /**
@@ -221,17 +231,19 @@ export function summarizeMatchSheet(
       case "aggression":
       case "casualty":
       case "other_elim":
+      case "stalling":
       case "crowd_surge": {
         const severity = normalizeSeverity(ev.injurySeverity);
         if (ev.kind === "aggression" && ev.actorPlayerId && team) {
           ensureStat(ev.actorPlayerId, team).aggressions += 1;
         }
         if (CASUALTY_BEARING.has(ev.kind) && severity) {
-          // A62 — other_elim est une auto-elimination (esquive ratee,
-          // chute…) saisie SANS cible : la victime est l'acteur, dans sa
-          // propre equipe. Personne n'« inflige » cette sortie : pas de
-          // compteur equipe ni de casualtiesInflicted (donc pas de SPP).
-          if (ev.kind !== "other_elim") {
+          // A62 — other_elim (esquive ratee, chute…) et stalling
+          // (temporisation) sont des auto-eliminations saisies SANS
+          // cible : la victime est l'acteur, dans sa propre equipe.
+          // Personne n'« inflige » cette sortie : pas de compteur equipe
+          // ni de casualtiesInflicted (donc pas de SPP).
+          if (!SELF_ELIM_KINDS.has(ev.kind)) {
             // L'acteur inflige une casualty (sauf crowd_surge : la foule
             // n'a pas d'acteur ; on credite l'equipe via `team` = celle
             // qui beneficie, mais pas de stat joueur).
@@ -245,13 +257,12 @@ export function summarizeMatchSheet(
           // (l'auteur), sauf auto-elimination (victime dans `team`).
           // Retro-compat : les anciens events other_elim portaient la
           // victime en targetPlayerId.
-          const victimId =
-            ev.kind === "other_elim"
-              ? (ev.actorPlayerId ?? ev.targetPlayerId)
-              : ev.targetPlayerId;
+          const victimId = SELF_ELIM_KINDS.has(ev.kind)
+            ? (ev.actorPlayerId ?? ev.targetPlayerId)
+            : ev.targetPlayerId;
           if (victimId) {
             const isSelfCause =
-              ev.kind === "other_elim" || ev.causeDetail === "self";
+              SELF_ELIM_KINDS.has(ev.kind) || ev.causeDetail === "self";
             const side = team
               ? isSelfCause
                 ? team
@@ -267,10 +278,10 @@ export function summarizeMatchSheet(
         }
         break;
       }
-      // kickoff / expulsion / stalling : pas d'impact sur score/casualty.
+      // kickoff / expulsion : pas d'impact sur score/casualty.
+      // (stalling sans blessure : gere ci-dessus, sans effet.)
       case "kickoff":
       case "expulsion":
-      case "stalling":
       default:
         break;
     }

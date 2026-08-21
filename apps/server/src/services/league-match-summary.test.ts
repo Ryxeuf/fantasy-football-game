@@ -111,6 +111,53 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(h7?.casualtiesInflicted ?? 0).toBe(0);
   });
 
+  it("stalling avec blessure : victime = acteur (auto-élimination), rien d'infligé", () => {
+    const events: MatchEventInput[] = [
+      {
+        kind: "stalling",
+        team: "home",
+        actorPlayerId: "h4",
+        injurySeverity: "mng",
+      },
+    ];
+    const out = summarizeMatchSheet(events);
+    expect(out.injuries).toEqual([
+      { playerId: "h4", severity: "mng", side: "home", cause: "stalling" },
+    ]);
+    // Comme other_elim : aucun compteur d'élimination infligée (ni équipe
+    // ni joueur — donc pas de SPP indus).
+    expect(out.casualtiesHome).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+    const h4 = out.playerStats.find((p) => p.playerId === "h4");
+    expect(h4?.casualtiesInflicted ?? 0).toBe(0);
+  });
+
+  it("stalling avec Séquelle : la blessure porte la gravité stat_loss", () => {
+    const events: MatchEventInput[] = [
+      {
+        kind: "stalling",
+        team: "away",
+        actorPlayerId: "a9",
+        injurySeverity: "stat_loss",
+      },
+    ];
+    const out = summarizeMatchSheet(events);
+    expect(out.injuries).toEqual([
+      { playerId: "a9", severity: "stat_loss", side: "away", cause: "stalling" },
+    ]);
+  });
+
+  it("stalling sans blessure : aucun impact score/casualty/blessures", () => {
+    const events: MatchEventInput[] = [
+      { kind: "stalling", team: "home", actorPlayerId: "h4" },
+    ];
+    const out = summarizeMatchSheet(events);
+    expect(out.injuries).toEqual([]);
+    expect(out.casualtiesHome).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+    expect(out.scoreHome).toBe(0);
+  });
+
   it("aggression increments aggressions and casualty when injured", () => {
     const events: MatchEventInput[] = [
       { kind: "aggression", team: "away", actorPlayerId: "a3" },
