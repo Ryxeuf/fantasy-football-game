@@ -25,6 +25,18 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
   const { t } = useLanguage();
   // Coût de relance : config DB résolue si fournie, sinon défaut historique.
   const rerollCost = info.staffConfig?.rerollCost ?? getRerollCost(info.roster || '');
+  // Coûts staff : config DB résolue si fournie, sinon défauts édition 2025
+  // (fan dévoué à 5 000 po).
+  const cheerleaderCost = info.staffConfig?.cheerleaderCost ?? 10000;
+  const assistantCost = info.staffConfig?.assistantCost ?? 10000;
+  const apothecaryCost = info.staffConfig?.apothecaryCost ?? 50000;
+  const dedicatedFanCost = info.staffConfig?.dedicatedFanCost ?? 5000;
+  const staffRerollsCost =
+    info.rerolls * rerollCost +
+    info.cheerleaders * cheerleaderCost +
+    info.assistants * assistantCost +
+    (info.apothecary ? apothecaryCost : 0) +
+    Math.max(0, info.dedicatedFans - 1) * dedicatedFanCost;
 
   // Helper pour formater les nombres en toute sécurité
   const formatNumber = (value: number | undefined | null): string => {
@@ -115,24 +127,24 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.cheerleadersCost.replace("{count}", info.cheerleaders.toString())}</span>
-              <span className="font-mono">{(info.cheerleaders * 10000).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono">{(info.cheerleaders * cheerleaderCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.assistantsCost.replace("{count}", info.assistants.toString())}</span>
-              <span className="font-mono">{(info.assistants * 10000).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono">{(info.assistants * assistantCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.apothecary}</span>
-              <span className="font-mono">{info.apothecary ? `50 000 ${t.teams.po}` : `0 ${t.teams.po}`}</span>
+              <span className="font-mono">{info.apothecary ? `${apothecaryCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${t.teams.po}` : `0 ${t.teams.po}`}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.dedicatedFansCost.replace("{count}", info.dedicatedFans.toString())}</span>
-              <span className="font-mono">{((info.dedicatedFans - 1) * 10000).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
+              <span className="font-mono" data-testid="dedicated-fans-cost">{(Math.max(0, info.dedicatedFans - 1) * dedicatedFanCost).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}</span>
             </div>
             <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold">
               <span className="text-gray-700">{t.teams.totalStaffRerolls}</span>
               <span className="font-mono">
-                {(info.rerolls * rerollCost + info.cheerleaders * 10000 + info.assistants * 10000 + (info.apothecary ? 50000 : 0) + (info.dedicatedFans - 1) * 10000).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}
+                {staffRerollsCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} {t.teams.po}
               </span>
             </div>
           </div>
@@ -168,7 +180,6 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <h4 className="text-sm font-semibold text-green-800 mb-3">{t.teams.globalCostSummary}</h4>
           <div className="space-y-2 text-sm">
             {(() => {
-              const staffRerollsCost = info.rerolls * rerollCost + info.cheerleaders * 10000 + info.assistants * 10000 + (info.apothecary ? 50000 : 0) + (info.dedicatedFans - 1) * 10000;
               const playersCost = (info.teamValue || 0) - staffRerollsCost;
               
               return (

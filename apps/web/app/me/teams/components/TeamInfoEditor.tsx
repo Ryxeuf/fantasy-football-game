@@ -50,7 +50,7 @@ export default function TeamInfoEditor({
     const assistants = (info.assistants || 0) * (staffConfig?.assistantCost ?? 10000);
     const apo = info.apothecary ? (staffConfig?.apothecaryCost ?? 50000) : 0;
     const fansCount = typeof info.dedicatedFans === 'number' ? info.dedicatedFans : 1;
-    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 10000);
+    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 5000);
     const staff = rerolls + cheer + assistants + apo + fans;
     const total = (playersCost || 0) + staff;
     const treasuryPo = (initialBudgetK || 0) * 1000 - total;

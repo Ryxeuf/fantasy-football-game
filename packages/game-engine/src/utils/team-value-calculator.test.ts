@@ -120,10 +120,10 @@ describe('Team Value Calculator', () => {
       roster: 'human',
     } as const;
 
-    it('sans config : reproduit le comportement historique (bb11 par défaut)', () => {
+    it('sans config : reproduit les défauts bb11 (fans à 5k, édition 2025)', () => {
       // joueurs 100k + relances 2×50k + cheerleaders 3×10k + assistant 1×10k
-      // + apothicaire 50k + fans (3-1)×10k = 100k+100k+30k+10k+50k+20k = 310k
-      expect(calculateTeamValue({ ...base })).toBe(310000);
+      // + apothicaire 50k + fans (3-1)×5k = 100k+100k+30k+10k+50k+10k = 300k
+      expect(calculateTeamValue({ ...base })).toBe(300000);
     });
 
     it('avec staffConfig explicite : utilise les coûts fournis', () => {

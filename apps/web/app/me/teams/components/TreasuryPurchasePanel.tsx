@@ -74,7 +74,7 @@ export default function TreasuryPurchasePanel({
   const cheerleaderCost = sc?.cheerleaderCost ?? 10000;
   const assistantCost = sc?.assistantCost ?? 10000;
   const apothecaryCost = sc?.apothecaryCost ?? 50000;
-  const dedicatedFanCost = sc?.dedicatedFanCost ?? 10000;
+  const dedicatedFanCost = sc?.dedicatedFanCost ?? 5000;
   const maxRerolls = sc?.maxRerolls ?? 8;
   const maxCheerleaders = sc?.maxCheerleaders ?? 12;
   const maxAssistants = sc?.maxAssistants ?? 6;

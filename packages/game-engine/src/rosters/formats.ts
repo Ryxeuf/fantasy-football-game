@@ -77,7 +77,8 @@ export const FORMAT_CONSTRAINTS: Record<GameFormat, FormatConstraints> = {
     maxAssistants: 6,
     assistantCost: 10,
     maxDedicatedFans: 6,
-    dedicatedFanCost: 10,
+    // Édition 2025 : un Fan dévoué s'achète 5 000 po (et non 10 000 po).
+    dedicatedFanCost: 5,
     apothecaryAllowed: true,
     apothecaryCost: 50,
     bigGuysAllowed: true,
