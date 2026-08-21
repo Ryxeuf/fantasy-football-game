@@ -67,6 +67,46 @@ describe("StarPlayerCard — données fraîches de l'API", () => {
   });
 });
 
+describe("StarPlayerCard — pouvoir exclu de la liste des compétences", () => {
+  it("filtre le pouvoir des skillDetails API (payload pré-migration)", () => {
+    render(
+      <LanguageProvider>
+        <StarPlayerCard
+          starPlayer={{
+            ...GRIFF,
+            skillDetails: [
+              { slug: "block", nameFr: "Blocage", nameEn: "Block" },
+              {
+                slug: "consummate-professional",
+                nameFr: "Professionnel Accompli",
+                nameEn: "Consummate Professional",
+              },
+            ],
+          }}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText("Blocage")).toBeTruthy();
+    expect(screen.queryByText("Professionnel Accompli")).toBeNull();
+  });
+
+  it("filtre le pouvoir sur le repli catalogue statique (skills CSV)", () => {
+    render(
+      <LanguageProvider>
+        <StarPlayerCard
+          starPlayer={{
+            ...GRIFF,
+            skills: "block,dodge,consummate-professional",
+          }}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText("Blocage")).toBeTruthy();
+    expect(screen.getByText("Esquive")).toBeTruthy();
+    expect(screen.queryByText("Professionnel Accompli")).toBeNull();
+  });
+});
+
 describe("StarPlayerCard — mots-clés", () => {
   it("affiche une pastille par mot-clé (FR par défaut)", () => {
     render(

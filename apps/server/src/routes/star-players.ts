@@ -5,6 +5,7 @@ import {
   getAvailableStarPlayers,
   getRegionalRulesForTeam,
   getStarPlayerKeywords,
+  isStarPlayerRule,
   translateKeywordsCsv,
   STAR_PLAYER_PAIR_PARTNERS,
   type StarPlayerDefinition,
@@ -51,16 +52,26 @@ function transformStarPlayer(sp: any) {
     specialRule: sp.specialRule,
     imageUrl: sp.imageUrl,
     isMegaStar: sp.isMegaStar,
-    skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+    // Le POUVOIR (règle spéciale) est exclu des listes servies au public :
+    // il possède sa section « Règle Spéciale » dédiée sur les fiches et ne
+    // doit plus apparaître dans « Compétences et Traits ». La donnée brute
+    // reste en base (le moteur de match porte le slug du pouvoir dans
+    // `player.skills`, cf. game-engine `skills/star-player-rules.ts`).
+    skills: sp.skills
+      .map((sps: any) => sps.skill.slug)
+      .filter((slug: string) => !isStarPlayerRule(slug))
+      .join(","),
     // Noms de competences FRAIS depuis la DB (nameFr/nameEn) : la carte
     // publique les prefere au catalogue statique compile dans le bundle
     // (qui droppait silencieusement les slugs inconnus et servait des
     // libelles perimes apres un edit admin).
-    skillDetails: sp.skills.map((sps: any) => ({
-      slug: sps.skill.slug,
-      nameFr: sps.skill.nameFr ?? null,
-      nameEn: sps.skill.nameEn ?? null,
-    })),
+    skillDetails: sp.skills
+      .filter((sps: any) => !isStarPlayerRule(sps.skill.slug))
+      .map((sps: any) => ({
+        slug: sps.skill.slug,
+        nameFr: sps.skill.nameFr ?? null,
+        nameEn: sps.skill.nameEn ?? null,
+      })),
     hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
   };
 }

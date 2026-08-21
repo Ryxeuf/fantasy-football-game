@@ -251,6 +251,40 @@ describe("GET /star-players/:slug", () => {
     ]);
   });
 
+  it("exclut le POUVOIR (règle spéciale) de skills et skillDetails", async () => {
+    const morg = {
+      ...makeRow("morg_n_thorg", "season_3"),
+      skills: [
+        { skill: { slug: "block", nameFr: "Blocage", nameEn: "Block" } },
+        {
+          skill: {
+            slug: "la-baliste",
+            nameFr: "La Baliste",
+            nameEn: "The Ballista",
+          },
+        },
+        {
+          skill: {
+            slug: "mighty-blow-1",
+            nameFr: "Châtaigne",
+            nameEn: "Mighty Blow (+1)",
+          },
+        },
+      ],
+    };
+    seed([morg]);
+
+    const { body } = await getDetail("/morg_n_thorg");
+
+    // Le pouvoir a sa section « Règle Spéciale » dédiée : il ne doit plus
+    // apparaître dans la liste des compétences servie au public.
+    expect(body.data?.skills).toBe("block,mighty-blow-1");
+    expect(body.data?.skillDetails).toEqual([
+      { slug: "block", nameFr: "Blocage", nameEn: "Block" },
+      { slug: "mighty-blow-1", nameFr: "Châtaigne", nameEn: "Mighty Blow (+1)" },
+    ]);
+  });
+
   it("calcule le prix de PAIRE depuis les couts DB (grak + crumbleberry)", async () => {
     const grak = { ...makeRow("grak", "season_3"), cost: 250000 };
     const crumbleberry = { ...makeRow("crumbleberry", "season_3"), cost: 30000 };

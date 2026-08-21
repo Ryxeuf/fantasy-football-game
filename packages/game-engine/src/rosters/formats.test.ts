@@ -53,6 +53,8 @@ describe("formats — config", () => {
     expect(c.maxPlayers).toBe(16);
     expect(c.maxNonLinemen).toBeNull();
     expect(c.rerollCostMultiplier).toBe(1);
+    // Édition 2025 : le Fan dévoué s'achète 5 kpo (5 000 po).
+    expect(c.dedicatedFanCost).toBe(5);
   });
 
   it("sevens = budget 600k, 7-11 joueurs, 4 non-linemen, relances ×2", () => {

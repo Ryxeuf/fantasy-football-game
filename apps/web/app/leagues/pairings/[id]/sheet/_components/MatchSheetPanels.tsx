@@ -982,7 +982,8 @@ export function PreMatchPanel({
               ) : null}
               <span className="mt-0.5 block text-[11px] text-slate-500">
                 Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000
-                po par TD marqué)
+                po par TD marqué, +10 000 po si l&apos;équipe n&apos;a pas
+                temporisé)
               </span>
             </label>
             <InducementEditor

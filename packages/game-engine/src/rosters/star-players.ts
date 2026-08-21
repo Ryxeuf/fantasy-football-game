@@ -801,7 +801,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 11,
-    skills: "loner-4,block,mighty-blow-2,thick-skull,throw-team-mate,la-baliste",
+    skills: "loner-4,block,mighty-blow-1,thick-skull,throw-team-mate,la-baliste",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
     specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6.",
@@ -1301,7 +1301,7 @@ const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefin
     cost: 170000,
     skills: "block,break-tackle,dauntless,loner-4,mighty-blow-1,stand-firm,sure-feet,thick-skull",
     hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"],
-    specialRule: "Sagesse du Nain Blanc : Une fois par match, lorsque Grombrindal est activé, il peut désigner un coéquipier situé dans un rayon de 2 cases. Le coéquipier désigné gagne l'une des compétences suivantes jusqu'à la fin du tour : Esquive en Force, Intrépide, Coup Puissant, Équilibre.",
+    specialRule: "Sagesse du Nain Blanc : Une fois par match, lorsque Grombrindal est activé, il peut désigner un coéquipier situé dans un rayon de 2 cases. Le coéquipier désigné gagne l'une des compétences suivantes jusqu'à la fin du tour : Esquive en Force, Intrépide, Châtaigne, Équilibre.",
     specialRuleEn: "Wisdom of the White Dwarf: Once per game, when Grombrindal is activated he may select one team-mate within 2 squares. The selected team-mate gains one of the following Skills until the end of turn: Break Tackle, Dauntless, Mighty Blow, Sure Feet.",
   },
   // Guffle Pusmaw — carte GW « Star Players! (Legends) » 2025, p.6

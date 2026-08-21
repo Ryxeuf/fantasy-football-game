@@ -434,7 +434,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "mighty-blow-1",
-    nameFr: "Coup Puissant (+1)",
+    nameFr: "Châtaigne",
     nameEn: "Mighty Blow (+1)",
     description: "Quand un adversaire est Renversé à la suite d'une action de Blocage effectuée par ce joueur, le jet de Blessure effectué contre lui peut être modifié de +1. Ce modificateur peut être appliqué après que le jet ait été effectué.",
     category: "Strength"

@@ -50,7 +50,7 @@ export default function TeamInfoEditor({
     const assistants = (info.assistants || 0) * (staffConfig?.assistantCost ?? 10000);
     const apo = info.apothecary ? (staffConfig?.apothecaryCost ?? 50000) : 0;
     const fansCount = typeof info.dedicatedFans === 'number' ? info.dedicatedFans : 1;
-    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 10000);
+    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 5000);
     const staff = rerolls + cheer + assistants + apo + fans;
     const total = (playersCost || 0) + staff;
     const treasuryPo = (initialBudgetK || 0) * 1000 - total;
@@ -85,7 +85,7 @@ export default function TeamInfoEditor({
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="bg-gray-50 px-6 py-3 border-b">
-        <h3 className="text-lg font-semibold">Informations d'équipe</h3>
+        <h3 className="text-lg font-semibold">Staff de l&apos;équipe</h3>
         <p className="text-sm text-gray-600 mt-1">
           Configurez les ressources de votre équipe selon les règles Blood Bowl
         </p>

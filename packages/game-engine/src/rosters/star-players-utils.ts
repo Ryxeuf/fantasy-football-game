@@ -4,6 +4,7 @@
  */
 
 import { getSkillBySlug, type SkillDefinition } from '../skills/index';
+import { isStarPlayerRule } from '../skills/star-player-rules';
 import type { StarPlayerDefinition } from './star-players';
 
 /**
@@ -41,7 +42,13 @@ function normalizeSkillSlug(slug: string): string {
 
 /**
  * Parse les compétences d'un star player (qui sont stockées comme string)
- * et retourne un tableau de slugs
+ * et retourne un tableau de slugs.
+ *
+ * ATTENTION : renvoie la liste BRUTE, pouvoir (règle spéciale) compris —
+ * le moteur de match a besoin du slug du pouvoir dans `player.skills`
+ * (cf. `skills/star-player-rules.ts`). Pour l'AFFICHAGE des fiches,
+ * utiliser `getStarPlayerSkillSlugs`/`getStarPlayerSkillDisplayNames`,
+ * qui excluent le pouvoir (il possède sa section « Règle Spéciale » dédiée).
  */
 export function parseStarPlayerSkills(skillsString: string): string[] {
   if (!skillsString || skillsString.trim() === "") {
@@ -55,12 +62,16 @@ export function parseStarPlayerSkills(skillsString: string): string[] {
 }
 
 /**
- * Obtient les définitions complètes des compétences d'un star player
+ * Obtient les définitions complètes des compétences d'un star player,
+ * SANS son pouvoir (règle spéciale) : il possède sa section dédiée sur les
+ * fiches et ne doit pas apparaître dans la liste « Compétences et Traits ».
  */
 export function getStarPlayerSkillDefinitions(starPlayer: StarPlayerDefinition): SkillDefinition[] {
-  const slugs = parseStarPlayerSkills(starPlayer.skills);
+  const slugs = parseStarPlayerSkills(starPlayer.skills).filter(
+    (slug) => !isStarPlayerRule(slug),
+  );
   const definitions: SkillDefinition[] = [];
-  
+
   for (const slug of slugs) {
     // Normaliser le slug d'abord
     const normalizedSlug = normalizeSkillSlug(slug);
@@ -91,14 +102,17 @@ export function getStarPlayerSkillDisplayNames(starPlayer: StarPlayerDefinition)
 }
 
 /**
- * Obtient les slugs des compétences d'un star player (dédupliqués et nettoyés)
+ * Obtient les slugs des compétences d'un star player (dédupliqués et nettoyés),
+ * SANS son pouvoir (règle spéciale) — réservé à l'affichage des fiches.
  */
 export function getStarPlayerSkillSlugs(starPlayer: StarPlayerDefinition): string[] {
-  return parseStarPlayerSkills(starPlayer.skills);
+  return parseStarPlayerSkills(starPlayer.skills).filter(
+    (slug) => !isStarPlayerRule(slug),
+  );
 }
 
 /**
- * Formate les compétences d'un star player pour l'affichage
+ * Formate les compétences d'un star player pour l'affichage (pouvoir exclu).
  * Retourne un objet avec les slugs et les noms d'affichage
  */
 export function formatStarPlayerSkills(starPlayer: StarPlayerDefinition): {
@@ -106,7 +120,7 @@ export function formatStarPlayerSkills(starPlayer: StarPlayerDefinition): {
   displayNames: string[];
   definitions: SkillDefinition[];
 } {
-  const slugs = parseStarPlayerSkills(starPlayer.skills);
+  const slugs = getStarPlayerSkillSlugs(starPlayer);
   const definitions = getStarPlayerSkillDefinitions(starPlayer);
   const displayNames = definitions.map(d => d.nameFr);
   

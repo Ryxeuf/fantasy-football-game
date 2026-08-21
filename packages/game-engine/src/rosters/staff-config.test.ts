@@ -15,7 +15,8 @@ describe("staff-config — defaultStaffConfig", () => {
       expect(cfg.maxAssistants).toBe(6);
       expect(cfg.assistantCost).toBe(10_000);
       expect(cfg.maxDedicatedFans).toBe(6);
-      expect(cfg.dedicatedFanCost).toBe(10_000);
+      // Édition 2025 : le Fan dévoué coûte 5 000 po.
+      expect(cfg.dedicatedFanCost).toBe(5_000);
     });
 
     it("respecte le coût de relance par roster", () => {

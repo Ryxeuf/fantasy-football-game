@@ -83,6 +83,10 @@ export const SEASON_3_RENAMED_SKILLS: Record<string, { nameEn: string; nameFr?: 
   "drunkard": { nameEn: "Drunkard", nameFr: "Ivrogne*" },              // ex « Poivrot » (A26)
   "breathe-fire": { nameEn: "Breathe Fire", nameFr: "Souffle Ardent" }, // ex « Cracheur de feu » (A14)
   "hit-and-run": { nameEn: "Hit and Run", nameFr: "Frappe-et-court" },  // ex « Frappe et Cours » (A4/A15)
+  // S3 : la compétence s'appelle « Châtaigne » SANS modificateur (fiches star
+  // players comprises). Le legacy static-skills-data.ts écrit « Châtaigne (+1) »
+  // au seed ; cet override remet le nom S3 (S2 garde l'ancien nom).
+  "mighty-blow-1": { nameEn: "Mighty Blow (+1)", nameFr: "Châtaigne" },
 };
 
 /**

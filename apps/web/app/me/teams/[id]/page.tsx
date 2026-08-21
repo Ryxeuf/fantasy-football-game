@@ -606,7 +606,7 @@ export default function TeamDetailPage() {
                   const cheer = (team.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000);
                   const assistants = (team.assistants || 0) * (sc?.assistantCost ?? 10000);
                   const apo = team.apothecary ? (sc?.apothecaryCost ?? 50000) : 0;
-                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 10000);
+                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 5000);
                   const rosterTotal = playersCost + rerolls + cheer + assistants + apo + fans;
                   const remaining = (team.initialBudget || 0) * 1000 - rosterTotal;
                   const positive = remaining >= 0;

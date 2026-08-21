@@ -23,6 +23,7 @@ import {
   summarizeMatchSheet,
   isMatchEventKind,
   computeMatchWinnings,
+  computeStalledTeams,
   type MatchEventInput,
   type MatchSummary,
   type InjurySeverity,
@@ -413,6 +414,7 @@ export async function updatePreMatch(input: {
       orderBy: { occurredAt: "asc" },
     })) ?? []) as MatchEventInput[];
     const summary = summarizeMatchSheet(events);
+    const stalled = computeStalledTeams(events);
     const winnings = computeMatchWinnings({
       popularityHome:
         p.popularityHome !== undefined
@@ -426,6 +428,8 @@ export async function updatePreMatch(input: {
             null),
       scoreHome: summary.scoreHome,
       scoreAway: summary.scoreAway,
+      stalledHome: stalled.home,
+      stalledAway: stalled.away,
     });
     data.winningsHome = winnings.home;
     data.winningsAway = winnings.away;
@@ -1110,18 +1114,22 @@ export async function validateByCommissioner(input: {
     away: sumGold(sheetIndForBudget.inducementsAway),
   });
 
-  // A63 — les gains auto dependent du score final (10k/TD) : on les
-  // recalcule a la validation avec le summary derive des events, plutot
-  // que de faire confiance a la valeur stockee au pre-match.
+  // A63 — les gains auto dependent du score final (10k/TD) et du bonus
+  // « sans temporisation » (+10k si aucun event stalling pour l'equipe) :
+  // on les recalcule a la validation avec le summary derive des events,
+  // plutot que de faire confiance a la valeur stockee au pre-match.
   const sheetPop = sheet as {
     popularityHome?: number | null;
     popularityAway?: number | null;
   };
+  const stalledAtValidation = computeStalledTeams(events);
   const autoWinnings = computeMatchWinnings({
     popularityHome: sheetPop.popularityHome ?? null,
     popularityAway: sheetPop.popularityAway ?? null,
     scoreHome: summary.scoreHome,
     scoreAway: summary.scoreAway,
+    stalledHome: stalledAtValidation.home,
+    stalledAway: stalledAtValidation.away,
   });
 
   // Applique les effets (peut throw -> on ne valide pas).
@@ -2191,17 +2199,21 @@ export async function getMatchSheet(input: {
     away: withJourneymen(teams.away, "away"),
   };
 
-  // A63 — expose des gains auto toujours frais : la partie TD depend des
-  // events, qui peuvent changer apres le pre-match (valeur stockee stale).
+  // A63 — expose des gains auto toujours frais : la partie TD et le bonus
+  // « sans temporisation » dependent des events, qui peuvent changer apres
+  // le pre-match (valeur stockee stale).
   const sheetPopularity = sheet as {
     popularityHome?: number | null;
     popularityAway?: number | null;
   };
+  const stalledForRead = computeStalledTeams(events);
   const autoWinnings = computeMatchWinnings({
     popularityHome: sheetPopularity.popularityHome ?? null,
     popularityAway: sheetPopularity.popularityAway ?? null,
     scoreHome: summary.scoreHome,
     scoreAway: summary.scoreAway,
+    stalledHome: stalledForRead.home,
+    stalledAway: stalledForRead.away,
   });
 
   return {

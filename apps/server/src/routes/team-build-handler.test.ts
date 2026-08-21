@@ -79,6 +79,72 @@ describe('handleBuildTeam — defensive gates', () => {
   });
 });
 
+describe('handleBuildTeam — Star Players réservés à l\'Édition avancée', () => {
+  it('refuse (400) des starPlayers sans advancedEdition ni cupId', async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'undead',
+        choices: [],
+        starPlayers: ['morg_n_thorg'],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+    expect(res.statusCode).toBe(400);
+    expect((res as { payload?: { error?: string } }).payload?.error).toMatch(
+      /Édition avancée/,
+    );
+  });
+
+  it('laisse passer la porte quand advancedEdition=true', async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'undead',
+        choices: [],
+        starPlayers: ['morg_n_thorg'],
+        advancedEdition: true,
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+    // La suite échouera plus loin faute de mock DB, mais jamais sur la
+    // porte « Édition avancée ».
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error ?? '',
+    ).not.toMatch(/Édition avancée/);
+  });
+
+  it('laisse passer la porte pour une construction de coupe (cupId)', async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'undead',
+        choices: [],
+        starPlayers: ['morg_n_thorg'],
+        cupId: 'cup-1',
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error ?? '',
+    ).not.toMatch(/Édition avancée/);
+  });
+
+  it('ne bloque pas un build sans star player (mode standard)', async () => {
+    const req = createReq({
+      body: { name: 'Test', roster: 'undead', choices: [], starPlayers: [] },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error ?? '',
+    ).not.toMatch(/Édition avancée/);
+  });
+});
+
 describe('handleBuildTeam — apothecary roster gating (retour A30)', () => {
   it.each(['undead', 'necromantic_horror', 'tomb_kings', 'nurgle'])(
     'refuse l\'apothicaire (422) à la création pour le roster mort-vivant %s',

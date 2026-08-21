@@ -351,11 +351,13 @@ export default function NewTeamBuilder() {
         setAssistants(team.assistants ?? 0);
         setApothecary(Boolean(team.apothecary));
         setDedicatedFans(team.dedicatedFans ?? 1);
-        setSelectedStarPlayers(
-          (team.starPlayers || [])
-            .map((s) => s.slug)
-            .filter((s): s is string => Boolean(s)),
-        );
+        const cloneStars = (team.starPlayers || [])
+          .map((s) => s.slug)
+          .filter((s): s is string => Boolean(s));
+        setSelectedStarPlayers(cloneStars);
+        // Le recrutement de Star Players est réservé à l'édition avancée :
+        // un clone qui en porte bascule le builder dans ce mode.
+        if (cloneStars.length > 0) setAdvancedMode(true);
         if (team.name) setName(`${team.name} (Coupe)`.slice(0, 100));
       })
       .catch(() => {
@@ -499,6 +501,8 @@ export default function NewTeamBuilder() {
           assistants,
           apothecary,
           dedicatedFans,
+          // Le serveur refuse les Star Players hors édition avancée / coupe.
+          advancedEdition: advancedMode,
           // Mode « édition avancée » / coupe : pool de PSP + améliorations.
           // En Flow B, le serveur ré-impose budget + pool (valeurs ignorées).
           ...(cupId ? { cupId } : {}),
@@ -807,6 +811,9 @@ export default function NewTeamBuilder() {
                     if (!e.target.checked) {
                       setStartingPspPool(0);
                       setBuildAdvancements([]);
+                      // Les Star Players ne sont recrutables qu'en édition
+                      // avancée : on purge la sélection en décochant.
+                      setSelectedStarPlayers([]);
                     }
                   }}
                   className="rounded border-gray-300 text-nuffle-gold focus:ring-nuffle-gold"
@@ -1076,7 +1083,7 @@ export default function NewTeamBuilder() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5 space-y-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              {t.teams.teamInfo ?? "Staff"}
+              {t.teams.teamStaff ?? "Staff"}
             </h2>
             <span
               className="text-sm text-gray-600 tabular-nums"
@@ -1216,16 +1223,28 @@ export default function NewTeamBuilder() {
           </div>
         </div>
 
-        {constraints.starPlayersAllowed && (
-          <StarPlayerSelector
-            roster={rosterId}
-            ruleset={ruleset}
-            selectedStarPlayers={selectedStarPlayers}
-            onSelectionChange={setSelectedStarPlayers}
-            currentPlayerCount={totalPlayers}
-            availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
-          />
-        )}
+        {/* Recrutement de Star Players : réservé au mode « Édition avancée »
+            (la coupe force ce mode). Hors mode avancé, un hint explique
+            comment débloquer la section. */}
+        {constraints.starPlayersAllowed &&
+          (advancedMode ? (
+            <StarPlayerSelector
+              roster={rosterId}
+              ruleset={ruleset}
+              selectedStarPlayers={selectedStarPlayers}
+              onSelectionChange={setSelectedStarPlayers}
+              currentPlayerCount={totalPlayers}
+              availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
+            />
+          ) : (
+            <p
+              data-testid="star-players-requires-advanced"
+              className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
+            >
+              ⭐ Le recrutement de Star Players est réservé à l&apos;Édition
+              avancée — cochez la case « Édition avancée » pour y accéder.
+            </p>
+          ))}
       </div>
     </div>
   );

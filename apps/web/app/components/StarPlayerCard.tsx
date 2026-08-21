@@ -2,7 +2,11 @@
 
 import React from 'react';
 import type { StarPlayerDefinition } from '@bb/game-engine';
-import { getStarPlayerSkillDisplayNames, getStarPlayerPair } from '@bb/game-engine';
+import {
+  getStarPlayerSkillDisplayNames,
+  getStarPlayerPair,
+  isStarPlayerRule,
+} from '@bb/game-engine';
 import KeywordChips from './KeywordChips';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -58,9 +62,15 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
 
   // Noms de competences : priorite aux libelles FRAIS renvoyes par l'API
   // (DB editable en admin) ; repli sur le catalogue statique du moteur.
+  // Le POUVOIR (regle speciale) est exclu de la liste : il a sa section
+  // dediee plus bas (filtre aussi cote API, garde ici pour les payloads
+  // pre-migration).
+  const freshSkillDetails = (starPlayer.skillDetails ?? []).filter(
+    (sk) => !isStarPlayerRule(sk.slug),
+  );
   const skillDisplayNames =
-    starPlayer.skillDetails && starPlayer.skillDetails.length > 0
-      ? starPlayer.skillDetails.map((sk) =>
+    freshSkillDetails.length > 0
+      ? freshSkillDetails.map((sk) =>
           language === 'en'
             ? (sk.nameEn ?? sk.nameFr ?? sk.slug)
             : (sk.nameFr ?? sk.nameEn ?? sk.slug),

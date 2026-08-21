@@ -29,6 +29,11 @@ import {
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import {
+  INJURY_BEARING_KINDS,
+  TARGET_BEARING_KINDS,
+  type EventKind,
+} from "./event-fields";
 import { RosterSection } from "./_components/RosterSection";
 import TeamLogo from "../../../../components/TeamLogo";
 
@@ -37,21 +42,6 @@ import TeamLogo from "../../../../components/TeamLogo";
 // Le score et les blessés sont dérivés des events côté serveur. Le flux :
 // les 2 coachs valident leur saisie -> notif commissaire -> validation
 // (applique classement + trésorerie + SPP + progression).
-
-type EventKind =
-  | "kickoff"
-  | "touchdown"
-  | "casualty"
-  | "pass_complete"
-  | "interception"
-  | "aggression"
-  | "expulsion"
-  | "crowd_surge"
-  | "stalling"
-  | "team_throw"
-  | "ttm_landing"
-  | "special_elim"
-  | "other_elim";
 
 const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
   { value: "kickoff", label: "Coup d'envoi" },
@@ -79,27 +69,6 @@ const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
   { value: "stat_loss", label: "Séquelle" },
   { value: "dead", label: "Mort" },
 ];
-
-// A62 — seuls ces types d'évènement portent une cible (joueur adverse
-// touché). Pour les autres (TD, passe, interception, lancer de
-// coéquipier, expulsion, temporisation, autre élimination), le champ
-// Cible est masqué.
-const TARGET_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
-  "casualty",
-  "aggression",
-  "crowd_surge",
-  "special_elim",
-]);
-
-// A59/A61 — types pouvant porter une blessure : élimination sur blocage,
-// agression, sortie public, autre élimination.
-const INJURY_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
-  "casualty",
-  "aggression",
-  "crowd_surge",
-  "other_elim",
-  "special_elim",
-]);
 
 // A68 — caractéristique affectée par une Séquelle (stat_loss). Codes
 // internes ma/st/ag/pa/av, abréviations FR affichées.
