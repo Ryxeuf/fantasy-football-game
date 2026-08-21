@@ -91,6 +91,8 @@ interface Props {
    * Autorise la suppression de joueurs (uniquement avant le démarrage de
    * la saison, tant qu'aucun match n'a été joué). Le backend ré-applique
    * cette garde ; ce flag ne fait que masquer le bouton côté UI.
+   * Exception : un joueur MORT reste retirable à tout moment (retrait
+   * doux sans licenciement), indépendamment de ce flag.
    */
   canRemovePlayers?: boolean;
   onClose: () => void;
@@ -215,7 +217,7 @@ export function CommissionerTeamEditor({
                   teamId={teamId}
                   player={p}
                   busy={busy}
-                  canRemove={canRemovePlayers}
+                  canRemove={canRemovePlayers || p.dead}
                   act={act}
                   access={data.accessByPosition?.[p.position]}
                   catalog={catalog}
@@ -397,7 +399,9 @@ function PlayerEditRow({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-600">SPP {player.spp}</span>
-          {/* Suppression du joueur (pré-saison, aucun match joué). */}
+          {/* Suppression du joueur : pré-saison (aucun match joué), ou à
+              tout moment pour un joueur MORT (retrait doux du roster,
+              fiche et historique conservés — sans licenciement). */}
           {canRemove ? (
             confirmRemove ? (
               <span className="inline-flex items-center gap-1">
@@ -432,9 +436,14 @@ function PlayerEditRow({
                 data-testid={`remove-player-${player.id}`}
                 disabled={busy}
                 onClick={() => setConfirmRemove(true)}
+                title={
+                  player.dead
+                    ? "Retirer ce joueur mort du roster (fiche et historique conservés, aucun licenciement)"
+                    : "Supprimer ce joueur (pré-saison, aucun match joué)"
+                }
                 className="text-xs px-1.5 py-0.5 rounded border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
               >
-                🗑 Supprimer
+                {player.dead ? "🗑 Retirer" : "🗑 Supprimer"}
               </button>
             )
           ) : null}

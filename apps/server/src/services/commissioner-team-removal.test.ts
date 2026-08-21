@@ -22,7 +22,14 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Retrait doux d'un joueur deja inactif (mort) : service dedie, teste
+// dans player-status ; ici on verifie seulement qu'il est bien appele.
+vi.mock("./player-status", () => ({
+  removeInactivePlayerFromRoster: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
+import { removeInactivePlayerFromRoster } from "./player-status";
 import {
   removeTeamFromLeague,
   removePlayerFromTeam,
@@ -33,6 +40,9 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
+const mockRemoveInactive = removeInactivePlayerFromRoster as ReturnType<
+  typeof vi.fn
+>;
 
 const commish = "commish-1";
 
@@ -43,6 +53,7 @@ describe("commissioner-team-removal", () => {
     // Par defaut, aucune participation a un match.
     mockPrisma.leaguePairing.findFirst.mockResolvedValue(null);
     mockPrisma.leagueInvitation.updateMany.mockResolvedValue({ count: 0 });
+    mockRemoveInactive.mockResolvedValue({ removed: true, teamId: "T1" });
   });
 
   describe("hasTeamPlayedInLeague", () => {
@@ -187,9 +198,17 @@ describe("commissioner-team-removal", () => {
       ).rejects.toMatchObject({ code: "team_not_in_league" });
     });
 
-    it("rejette si l'equipe a deja participe a un match", async () => {
+    it("rejette un joueur VIVANT si l'equipe a deja participe a un match", async () => {
       mockPrisma.leagueParticipant.count.mockResolvedValue(1);
       mockPrisma.leaguePairing.findFirst.mockResolvedValue({ id: "PR1" });
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        name: "Rat",
+        position: "skaven_lineman",
+        number: 1,
+        dead: false,
+      });
       await expect(
         removePlayerFromTeam({
           leagueId: "L1",
@@ -199,6 +218,7 @@ describe("commissioner-team-removal", () => {
         }),
       ).rejects.toMatchObject({ code: "team_has_played" });
       expect(mockPrisma.teamPlayer.delete).not.toHaveBeenCalled();
+      expect(mockRemoveInactive).not.toHaveBeenCalled();
     });
 
     it("rejette si le joueur est introuvable", async () => {
@@ -242,6 +262,7 @@ describe("commissioner-team-removal", () => {
         name: "Rat",
         position: "skaven_lineman",
         number: 7,
+        dead: false,
       });
       mockPrisma.teamPlayer.delete.mockResolvedValue({ id: "P1" });
 
@@ -266,6 +287,93 @@ describe("commissioner-team-removal", () => {
           }),
         }),
       );
+    });
+
+    it("retire (doux) un joueur MORT meme apres des matchs, sans licenciement", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      // L'equipe a deja joue : la garde pre-saison ne s'applique pas aux morts.
+      mockPrisma.leaguePairing.findFirst.mockResolvedValue({ id: "PR1" });
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        name: "Rat",
+        position: "skaven_lineman",
+        number: 7,
+        dead: true,
+      });
+
+      const out = await removePlayerFromTeam({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P1",
+        byCommissionerId: commish,
+        reason: "cadavre au roster",
+      });
+
+      expect(out).toEqual({ removed: true, playerId: "P1", soft: true });
+      // Retrait doux (ligne + provenance conservees), jamais de hard delete.
+      expect(mockRemoveInactive).toHaveBeenCalledWith({
+        playerId: "P1",
+        allowedTeamIds: ["T1"],
+      });
+      expect(mockPrisma.teamPlayer.delete).not.toHaveBeenCalled();
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: "league.commissioner-edit:remove_dead_player",
+            entity: "TeamPlayer",
+            entityId: "P1",
+          }),
+        }),
+      );
+    });
+
+    it("un joueur MORT passe par le retrait doux meme en pre-saison", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.leaguePairing.findFirst.mockResolvedValue(null);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P2",
+        teamId: "T1",
+        name: "Rat mort",
+        position: "skaven_lineman",
+        number: 8,
+        dead: true,
+      });
+
+      const out = await removePlayerFromTeam({
+        leagueId: "L1",
+        teamId: "T1",
+        playerId: "P2",
+        byCommissionerId: commish,
+      });
+
+      expect(out).toMatchObject({ removed: true, soft: true });
+      expect(mockPrisma.teamPlayer.delete).not.toHaveBeenCalled();
+    });
+
+    it("propage un echec du retrait doux en player_not_found", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        name: "Rat",
+        position: "skaven_lineman",
+        number: 7,
+        dead: true,
+      });
+      mockRemoveInactive.mockResolvedValue({
+        skipped: true,
+        reason: "player-not-found",
+      });
+      await expect(
+        removePlayerFromTeam({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "player_not_found" });
+      expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
     });
   });
 
