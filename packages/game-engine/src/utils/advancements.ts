@@ -66,6 +66,14 @@ const LEGACY_SURCHARGE_PER_ADVANCEMENT: Record<string, number> = {
 };
 
 /**
+ * Surcoût VE additionnel (po) d'une compétence Élite (S3) : une compétence
+ * marquée Élite augmente la valeur du joueur de 10 000 po SUPPLÉMENTAIRES
+ * (une principale Élite vaut donc 30 000 po au lieu de 20 000). Le flag
+ * `isElite` vient du référentiel de compétences (DB `Skill.isElite`).
+ */
+export const ELITE_SKILL_SURCHARGE = 10000;
+
+/**
  * Retourne le coût en SPP pour le prochain avancement donné le nombre
  * d'avancements déjà acquis.
  * @param alreadyTaken nombre d'avancements déjà pris (0..6)
@@ -82,6 +90,12 @@ export interface AdvancementSurchargeInput {
   readonly type: string;
   /** Caractéristique ciblée (uniquement pour type='characteristic'). */
   readonly stat?: CharacteristicKind;
+  /**
+   * Compétence Élite (+10 000 po de surcoût VE additionnel). À résoudre
+   * par l'appelant depuis le référentiel (`Skill.isElite`) via le
+   * `skillSlug` de l'avancement. Ignoré pour type='characteristic'.
+   */
+  readonly isElite?: boolean;
 }
 
 /** Surcoût VE (po) d'un avancement unique, tolérant aux types legacy. */
@@ -89,12 +103,16 @@ export function surchargeForAdvancement(adv: AdvancementSurchargeInput): number 
   if (adv.type === 'characteristic') {
     return adv.stat ? CHARACTERISTIC_VALUE_INCREASE[adv.stat] : 0;
   }
+  const eliteExtra = adv.isElite ? ELITE_SKILL_SURCHARGE : 0;
   if (adv.type in SURCHARGE_PER_ADVANCEMENT) {
-    return SURCHARGE_PER_ADVANCEMENT[
-      adv.type as keyof typeof SURCHARGE_PER_ADVANCEMENT
-    ];
+    return (
+      SURCHARGE_PER_ADVANCEMENT[
+        adv.type as keyof typeof SURCHARGE_PER_ADVANCEMENT
+      ] + eliteExtra
+    );
   }
-  return LEGACY_SURCHARGE_PER_ADVANCEMENT[adv.type] ?? 0;
+  const legacy = LEGACY_SURCHARGE_PER_ADVANCEMENT[adv.type];
+  return legacy !== undefined ? legacy + eliteExtra : 0;
 }
 
 /**

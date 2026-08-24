@@ -34,7 +34,7 @@ function player(overrides: Partial<FakePlayer> = {}): FakePlayer {
   };
 }
 
-function buildPrisma(players: FakePlayer[]) {
+function buildPrisma(players: FakePlayer[], eliteSlugs: string[] = ["block"]) {
   const update = vi.fn().mockResolvedValue({});
   const prisma = {
     team: {
@@ -51,6 +51,11 @@ function buildPrisma(players: FakePlayer[]) {
         dedicatedFans: 1,
       }),
       update,
+    },
+    skill: {
+      findMany: vi
+        .fn()
+        .mockResolvedValue(eliteSlugs.map((slug) => ({ slug }))),
     },
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,5 +107,36 @@ describe("updateTeamValues — VEA = VE - joueurs absents", () => {
     const out = await updateTeamValues(prisma, "team-1");
     expect(out.teamValue).toBe(120_000);
     expect(out.currentValue).toBe(50_000);
+  });
+
+  it("une compétence Élite coûte 30 000 po (20k + 10k), pas 20 000", async () => {
+    const { prisma } = buildPrisma([
+      player({
+        advancements: JSON.stringify([
+          { type: "primary", skillSlug: "block" }, // Élite -> +30k
+          { type: "primary", skillSlug: "tackle" }, // non-Élite -> +20k
+        ]),
+      }),
+    ]);
+    const out = await updateTeamValues(prisma, "team-1");
+    // 50k base + 30k (Élite) + 20k = 100k.
+    expect(out.teamValue).toBe(100_000);
+    expect(out.currentValue).toBe(100_000);
+    // Le référentiel Élite est requêté sur le ruleset de l'équipe.
+    expect(prisma.skill.findMany).toHaveBeenCalledWith({
+      where: { isElite: true, ruleset: "season_3" },
+      select: { slug: true },
+    });
+  });
+
+  it("reste tolérant si le modèle Skill est indisponible (pas de surcoût Élite)", async () => {
+    const { prisma } = buildPrisma([
+      player({
+        advancements: JSON.stringify([{ type: "primary", skillSlug: "block" }]),
+      }),
+    ]);
+    prisma.skill.findMany.mockRejectedValueOnce(new Error("no skill model"));
+    const out = await updateTeamValues(prisma, "team-1");
+    expect(out.teamValue).toBe(70_000);
   });
 });

@@ -18,6 +18,7 @@ import {
 } from "@bb/game-engine";
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { getSkillEliteHint, getSkillEliteLabel } from "../lib/skill-elite";
 
 export type AdvancementType =
   | "primary"
@@ -73,6 +74,8 @@ export interface SkillCatalogItem {
   nameEn?: string;
   description?: string;
   descriptionEn?: string;
+  /** Compétence Élite : +10 000 po de surcoût VE additionnel. */
+  isElite?: boolean;
   /** Reste valide si déjà possédée, mais non proposée en nouvelle sélection. */
   excludedFromSelection?: boolean;
 }
@@ -944,6 +947,14 @@ export function PlayerRow({
                               className={chipClass(skillSlug === s.slug)}
                             >
                               {s.nameFr}
+                              {s.isElite && (
+                                <span
+                                  aria-label={getSkillEliteLabel(language)}
+                                  title={getSkillEliteHint(language)}
+                                >
+                                  {" "}⭐
+                                </span>
+                              )}
                             </button>
                           ))}
                         </div>
