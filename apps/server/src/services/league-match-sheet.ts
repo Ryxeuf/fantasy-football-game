@@ -109,6 +109,7 @@ export type CoachSide = "home" | "away";
 interface PairingContext {
   pairingId: string;
   leagueId: string;
+  leagueName: string;
   creatorId: string;
   homeOwnerId: string;
   awayOwnerId: string;
@@ -128,7 +129,9 @@ async function loadPairingContext(
       round: {
         select: {
           season: {
-            select: { league: { select: { id: true, creatorId: true } } },
+            select: {
+              league: { select: { id: true, name: true, creatorId: true } },
+            },
           },
         },
       },
@@ -137,7 +140,9 @@ async function loadPairingContext(
     },
   })) as {
     id: string;
-    round: { season: { league: { id: string; creatorId: string } } };
+    round: {
+      season: { league: { id: string; name: string; creatorId: string } };
+    };
     homeParticipant: { team: { ownerId: string } } | null;
     awayParticipant: { team: { ownerId: string } } | null;
   } | null;
@@ -152,6 +157,7 @@ async function loadPairingContext(
   return {
     pairingId: pairing.id,
     leagueId: league.id,
+    leagueName: league.name ?? "",
     creatorId: league.creatorId,
     homeOwnerId: pairing.homeParticipant?.team.ownerId ?? "",
     awayOwnerId: pairing.awayParticipant?.team.ownerId ?? "",
@@ -2176,6 +2182,9 @@ export async function getMatchSheet(input: {
 }): Promise<{
   sheet: unknown;
   summary: MatchSummary;
+  /** Ligue du pairing : permet à l'UI un lien retour vers la page de la ligue. */
+  leagueId: string;
+  leagueName: string;
   viewerRole: "home" | "away" | "commissioner" | "none";
   /**
    * Équipe possédée par le viewer parmi les deux du match, INDÉPENDAMMENT de
@@ -2342,6 +2351,8 @@ export async function getMatchSheet(input: {
       winningsAway: autoWinnings.away,
     } as typeof sheet,
     summary,
+    leagueId: ctx.leagueId,
+    leagueName: ctx.leagueName,
     teams: teamsWithJourneymen,
     reference: await buildMatchSheetReference(teams, allowedInducements),
     computedSpp,

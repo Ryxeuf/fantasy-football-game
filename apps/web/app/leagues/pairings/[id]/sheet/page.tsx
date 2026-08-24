@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { AdvancementEditor } from "../../../../components/AdvancementEditor";
@@ -205,6 +206,9 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur pré-fix (repli sur `viewerRole`).
    */
   viewerTeamId?: string | null;
+  /** Ligue du pairing (lien retour). Optionnel : rétro-compat serveur pré-fix. */
+  leagueId?: string;
+  leagueName?: string;
   teams: { home: SheetTeam | null; away: SheetTeam | null };
   reference: MatchSheetReference;
   computedSpp: Record<string, number>;
@@ -664,6 +668,16 @@ export default function MatchSheetPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
+      {/* Retour vers la page de la ligue */}
+      {data.leagueId && (
+        <Link
+          href={`/leagues/${data.leagueId}`}
+          className="inline-block text-sm text-nuffle-bronze hover:underline"
+          data-testid="back-to-league"
+        >
+          ← Retour à la ligue{data.leagueName ? ` « ${data.leagueName} »` : ""}
+        </Link>
+      )}
       {/* RÉSUMÉ */}
       <section className="rounded-lg border bg-white p-4">
         <h1 className="mb-2 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
