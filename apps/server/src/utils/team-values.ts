@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import {
   DEFAULT_RULESET,
   defaultStaffConfig,
+  getSpecialRulesForTeam,
   isGameFormat,
+  isLineman,
   type GameFormat,
   type Ruleset,
   calculateAdvancementsSurcharge,
@@ -14,6 +16,7 @@ import {
   type TeamValueBreakdown,
   type TeamValueData,
 } from '../../../../packages/game-engine/src/utils/team-value-calculator';
+import { getPositionBySlug } from '@bb/game-engine';
 import { getEliteSkillSlugs } from '../services/elite-skills';
 
 /** Ligne `TeamPlayer` minimale nécessaire au calcul de VE/VEA. */
@@ -88,27 +91,76 @@ export async function resolveStaffCostsForTeam(
  * au tarif statique du package. Retour vide = repli sur `getPlayerCost`
  * (données compilées du game-engine).
  */
-export async function resolvePositionCostsForTeam(
+export interface PositionValueMeta {
+  /** Coût d'embauche en po. */
+  readonly cost: number;
+  /** Poste de Trois-quart (`isLineman` : plafond >= 12). */
+  readonly lineman: boolean;
+}
+
+export async function resolvePositionMetaForTeam(
   db: unknown,
   rosterSlug: string,
   ruleset: Ruleset,
-): Promise<ReadonlyMap<string, number>> {
+): Promise<ReadonlyMap<string, PositionValueMeta>> {
   try {
     const client = db as {
       position: {
         findMany: (
           args: unknown,
-        ) => Promise<Array<{ slug: string; cost: number }>>;
+        ) => Promise<Array<{ slug: string; cost: number; max: number }>>;
       };
     };
     const rows = await client.position.findMany({
       where: { roster: { slug: rosterSlug, ruleset } },
-      select: { slug: true, cost: true },
+      select: { slug: true, cost: true, max: true },
     });
     // `Position.cost` est en kpo en base, la VE se compte en po.
-    return new Map(rows.map((r) => [r.slug, r.cost * 1000]));
+    return new Map(
+      rows.map((r) => [
+        r.slug,
+        { cost: r.cost * 1000, lineman: isLineman({ max: r.max }) },
+      ]),
+    );
   } catch {
     return new Map();
+  }
+}
+
+/**
+ * Règles spéciales d'équipe : base d'abord (éditable en admin), repli sur
+ * les données statiques du game-engine. Seule
+ * `trois_quarts_a_vil_prix` change le calcul (VEA).
+ */
+export async function resolveSpecialRulesForTeam(
+  db: unknown,
+  rosterSlug: string,
+  ruleset: Ruleset,
+): Promise<readonly string[]> {
+  try {
+    const client = db as {
+      roster: {
+        findUnique: (
+          args: unknown,
+        ) => Promise<{ specialRules: string | null } | null>;
+      };
+    };
+    const row = await client.roster.findUnique({
+      where: { slug_ruleset: { slug: rosterSlug, ruleset } },
+      select: { specialRules: true },
+    });
+    const csv = row?.specialRules;
+    if (typeof csv === 'string' && csv.trim().length > 0) {
+      return csv
+        .split(',')
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+    }
+  } catch { /* repli statique ci-dessous */ }
+  try {
+    return getSpecialRulesForTeam(rosterSlug, ruleset);
+  } catch {
+    return [];
   }
 }
 
@@ -125,7 +177,8 @@ export function buildTeamValueData(
   players: readonly TeamValuePlayerRow[],
   eliteSlugs: ReadonlySet<string>,
   staffCosts: StaffCosts,
-  positionCosts: ReadonlyMap<string, number> = new Map(),
+  positionMeta: ReadonlyMap<string, PositionValueMeta> = new Map(),
+  specialRules: readonly string[] = [],
 ): TeamValueData {
   const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
   const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
@@ -136,9 +189,17 @@ export function buildTeamValueData(
 
   return {
     players: alivePlayers.map((player) => {
+      const meta = positionMeta.get(player.position);
       const baseCost =
-        positionCosts.get(player.position) ??
-        getPlayerCost(player.position, team.roster, ruleset);
+        meta?.cost ?? getPlayerCost(player.position, team.roster, ruleset);
+      // Repli hors DB : le catalogue statique porte aussi le plafond du
+      // poste, seule donnée nécessaire pour classer un Trois-quart.
+      const lineman =
+        meta?.lineman ??
+        (() => {
+          const staticPos = getPositionBySlug(player.position, ruleset);
+          return staticPos ? isLineman({ max: staticPos.max }) : false;
+        })();
       // Include advancement surcharges in player value
       let advSurcharge = 0;
       try {
@@ -162,6 +223,10 @@ export function buildTeamValueData(
         // prochain match (missNextMatch, blessure "Absent") compte dans
         // la VE mais est exclu de la VEA.
         available: !player.missNextMatch,
+        // « Trois-quarts à vil prix » n'annule QUE le coût d'embauche dans
+        // la VEA : les surcoûts d'avancement restent comptés.
+        hireCost: baseCost,
+        lineman,
       };
     }),
     rerolls: team.rerolls,
@@ -173,6 +238,7 @@ export function buildTeamValueData(
     ruleset,
     format,
     staffConfig: staffCosts,
+    specialRules,
   };
 }
 
@@ -212,13 +278,22 @@ export async function computeTeamValueBreakdownFor(
   const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
   // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
   // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
-  const [eliteSlugs, staffCosts, positionCosts] = await Promise.all([
-    getEliteSkillSlugs(db, ruleset),
-    resolveStaffCostsForTeam(db, team.roster, ruleset, format),
-    resolvePositionCostsForTeam(db, team.roster, ruleset),
-  ]);
+  const [eliteSlugs, staffCosts, positionMeta, specialRules] =
+    await Promise.all([
+      getEliteSkillSlugs(db, ruleset),
+      resolveStaffCostsForTeam(db, team.roster, ruleset, format),
+      resolvePositionMetaForTeam(db, team.roster, ruleset),
+      resolveSpecialRulesForTeam(db, team.roster, ruleset),
+    ]);
   return calculateTeamValueBreakdown(
-    buildTeamValueData(team, players, eliteSlugs, staffCosts, positionCosts),
+    buildTeamValueData(
+      team,
+      players,
+      eliteSlugs,
+      staffCosts,
+      positionMeta,
+      specialRules,
+    ),
   );
 }
 
