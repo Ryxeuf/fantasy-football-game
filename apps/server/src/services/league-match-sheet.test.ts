@@ -154,6 +154,73 @@ describe("Lot G — league-match-sheet", () => {
         createMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
       ).resolves.toBeDefined();
     });
+
+    it("fige l'en-tête (VE/VEA/trésorerie/fans) des 2 équipes au démarrage", async () => {
+      vi.mocked(updateTeamValues).mockResolvedValue({
+        teamValue: 1_000_000,
+        currentValue: 950_000,
+      });
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueMatchSheet.create.mockResolvedValue({
+        id: "ms-new",
+        status: "draft",
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", teamValue: 1, currentValue: 1, treasury: 60_000, dedicatedFans: 3, players: [] },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", teamValue: 1, currentValue: 1, treasury: 25_000, dedicatedFans: 1, players: [] },
+      ]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms-new",
+          status: "draft",
+          ...a.data,
+        }),
+      );
+
+      const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      const home = JSON.parse(data.rosterSnapshotHome as string);
+      expect(home).toMatchObject({
+        headerOnly: true,
+        // VE/VEA rafraîchies juste avant le gel.
+        teamValue: 1_000_000,
+        currentValue: 950_000,
+        // Trésorerie ET fans figés au démarrage, comme la VE/VEA.
+        treasury: 60_000,
+        dedicatedFans: 3,
+      });
+      const away = JSON.parse(data.rosterSnapshotAway as string);
+      expect(away).toMatchObject({
+        headerOnly: true,
+        treasury: 25_000,
+        dedicatedFans: 1,
+      });
+      // Le gel « en-tête seul » ne fige PAS le roster (E11 reste à la
+      // 1re soumission).
+      expect(home.players).toBeUndefined();
+      expect(
+        (out as { rosterSnapshotHome?: unknown }).rosterSnapshotHome,
+      ).toBeDefined();
+    });
+
+    it("gel d'en-tête best-effort : un échec n'empêche pas l'ouverture", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueMatchSheet.create.mockResolvedValue({
+        id: "ms-new",
+        status: "draft",
+      });
+      mockPrisma.team.findMany.mockRejectedValue(new Error("db down"));
+      const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
+      expect(out).toMatchObject({ id: "ms-new", status: "draft" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
   });
 
   describe("addEvent", () => {
@@ -490,6 +557,80 @@ describe("Lot G — league-match-sheet", () => {
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.rosterSnapshotHome).toBeUndefined();
       expect(data.rosterSnapshotAway).toBeUndefined();
+    });
+
+    it("remplace le gel d'en-tête (création) par le snapshot complet en PRÉSERVANT les valeurs figées", async () => {
+      vi.mocked(captureRosterSnapshot).mockImplementation(
+        async (teamId: string) =>
+          ({
+            capturedAt: 2,
+            roster: "human",
+            // Valeurs LIVE au moment de la soumission — elles ont bougé
+            // depuis le démarrage et ne doivent PAS écraser le gel.
+            teamValue: 1_200_000,
+            currentValue: 1_150_000,
+            treasury: 99_000,
+            dedicatedFans: 4,
+            players: [],
+            teamId,
+          }) as never,
+      );
+      const headerOnly = (treasury: number) =>
+        JSON.stringify({
+          capturedAt: 1,
+          headerOnly: true,
+          teamValue: 900_000,
+          currentValue: 850_000,
+          treasury,
+          dedicatedFans: 2,
+        });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        submittedByHomeAt: null,
+        submittedByAwayAt: null,
+        rosterSnapshotHome: headerOnly(35_000),
+        rosterSnapshotAway: headerOnly(15_000),
+      });
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const players = (count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `p${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "human_lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", currentValue: 1, treasury: 0, players: players(11) },
+        { id: "team-away", name: "Gouged Eye", roster: "human", currentValue: 1, treasury: 0, players: players(11) },
+      ]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+
+      await submitByCoach({ pairingId: "pair-1", userId: HOME });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      const home = JSON.parse(data.rosterSnapshotHome as string);
+      // Roster complet capturé (le snapshot n'est plus « en-tête seul »)…
+      expect(Array.isArray(home.players)).toBe(true);
+      expect(home.headerOnly).toBeUndefined();
+      // …mais l'en-tête garde les valeurs du DÉMARRAGE du match.
+      expect(home).toMatchObject({
+        teamValue: 900_000,
+        currentValue: 850_000,
+        treasury: 35_000,
+        dedicatedFans: 2,
+      });
+      const away = JSON.parse(data.rosterSnapshotAway as string);
+      expect(away.treasury).toBe(15_000);
     });
 
     it("does not notify when only one coach submitted", async () => {
@@ -1017,6 +1158,64 @@ describe("Lot G — league-match-sheet", () => {
         treasury: 15_000,
         dedicatedFans: 1,
       });
+    });
+
+    it("gel d'en-tête au démarrage : valeurs figées servies + journaliers live dans la CTV", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const headerOnly = (values: Record<string, number>) =>
+        JSON.stringify({ capturedAt: 1, headerOnly: true, ...values });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+        rosterSnapshotHome: headerOnly({
+          teamValue: 855_000,
+          currentValue: 800_000,
+          treasury: 35_000,
+          dedicatedFans: 2,
+        }),
+        rosterSnapshotAway: headerOnly({
+          teamValue: 1_000_000,
+          currentValue: 1_000_000,
+          treasury: 15_000,
+          dedicatedFans: 1,
+        }),
+      });
+      const players = (count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `p${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "human_lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        // 9 joueurs -> 2 journaliers lineman humain (50k chacun) en live.
+        { id: "team-home", name: "Big Bazard", roster: "human", teamValue: 905_000, currentValue: 925_000, treasury: 90_000, dedicatedFans: 3, players: players(9) },
+        { id: "team-away", name: "Sotek", roster: "human", teamValue: 1_050_000, currentValue: 1_050_000, treasury: 40_000, dedicatedFans: 2, players: players(11) },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // Trésorerie/VE/fans = valeurs figées au DÉMARRAGE, pas les live.
+      expect(out.teams.home).toMatchObject({
+        teamValue: 855_000,
+        treasury: 35_000,
+        dedicatedFans: 2,
+      });
+      expect(out.teams.away).toMatchObject({ treasury: 15_000 });
+      // CTV du match = VEA figée + journaliers dérivés live (gel « en-tête
+      // seul » : les journaliers ne sont pas bakés dedans).
+      expect(out.teams.home?.currentValue).toBe(800_000 + 2 * 50_000);
+      expect(out.teams.away?.currentValue).toBe(1_000_000);
+      // L'en-tête étant figé, pas de refresh VE/VEA à la lecture.
+      expect(updateTeamValues).not.toHaveBeenCalled();
     });
 
     it("snapshot legacy sans tresorerie : retombe sur la valeur live", async () => {

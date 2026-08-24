@@ -58,8 +58,14 @@ describe("Level-up advancement system (BB2025 / Saison 3)", () => {
       expect(SURCHARGE_PER_ADVANCEMENT.secondary).toBe(40000);
     });
 
-    it("random-primary adds 10k", () => {
-      expect(SURCHARGE_PER_ADVANCEMENT["random-primary"]).toBe(10000);
+    it("random-primary adds 20k (A6 — comme une principale choisie)", () => {
+      expect(SURCHARGE_PER_ADVANCEMENT["random-primary"]).toBe(20000);
+    });
+
+    it("une compétence Élite ajoute 10k de plus (30k pour une primaire)", () => {
+      expect(surchargeForAdvancement({ type: "primary", isElite: true })).toBe(
+        30000
+      );
     });
 
     it("characteristic surcharge depends on the stat", () => {
@@ -76,7 +82,7 @@ describe("Level-up advancement system (BB2025 / Saison 3)", () => {
         { type: "random-primary" },
       ];
       expect(calculateAdvancementsSurcharge(advancements)).toBe(
-        20000 + 40000 + 10000
+        20000 + 40000 + 20000
       );
     });
 

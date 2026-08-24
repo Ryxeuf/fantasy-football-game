@@ -496,7 +496,7 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     });
   });
 
-  it("reverse le SPP bonus Nuffle et le bonus au classement", async () => {
+  it("reverse le SPP bonus Nuffle ; le bonus au classement suit le snapshot bonus du pairing", async () => {
     m.matchFind.mockResolvedValue(
       buildMatch({
         offlineResultInput: buildSnapshot({
@@ -517,17 +517,31 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     ) as [{ data: Record<string, unknown> }] | undefined;
     expect(sppUpd![0].data.spp).toEqual({ decrement: 4 });
 
-    // Bonus classement -> decrement points (annule l'increment de la saisie).
-    const homeP = m.partUpdate.mock.calls.find(
-      (c) =>
-        (c[0] as { where: { id: string }; data: Record<string, unknown> }).where
-          .id === "ph" &&
-        "points" in
-          (c[0] as { data: Record<string, unknown> }).data &&
-        ((c[0] as { data: { points?: { decrement?: number } } }).data.points
-          ?.decrement === 2),
+    // Le bonus au classement ne touche plus les points generiques : la
+    // seule reversion de points est celle du bareme du match (ici -3 pour
+    // la victoire home), jamais celle du bonus commissaire (2 / -1). Il
+    // est annule avec la remise a zero du snapshot bonus du pairing.
+    const bonusReversal = m.partUpdate.mock.calls.find((c) => {
+      const points = (
+        c[0] as { data: { points?: { decrement?: number; increment?: number } } }
+      ).data.points;
+      return (
+        points?.decrement === 2 ||
+        points?.decrement === -1 ||
+        points?.increment === 1
+      );
+    });
+    expect(bonusReversal).toBeUndefined();
+    expect(m.pairUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "pair-1" },
+        data: expect.objectContaining({
+          bonusPointsHome: 0,
+          bonusPointsAway: 0,
+          bonusBreakdown: null,
+        }),
+      }),
     );
-    expect(homeP).toBeTruthy();
   });
 
   it("reverse le net treasury applique (gains - depenses)", async () => {

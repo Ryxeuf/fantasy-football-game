@@ -9,6 +9,11 @@ import {
   getSkillActivationLabel,
   SKILL_ACTIVATION_OUTLINED_CLASSES,
 } from "../../lib/skill-activation";
+import {
+  getSkillEliteHint,
+  getSkillEliteLabel,
+  SKILL_ELITE_OUTLINED_CLASSES,
+} from "../../lib/skill-elite";
 import StructuredData from "../../components/StructuredData";
 import { buildSkillDetailSchema } from "../skill-detail-structured-data";
 import type { Skill } from "../SkillsClient";
@@ -194,6 +199,16 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
                 >
                   {getSkillActivationLabel(skill.isPassive, "fr")}
                 </span>
+                {/* Compétence Élite (+10 000 po de valeur) */}
+                {skill.isElite && (
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-subtitle font-semibold uppercase tracking-wide ${SKILL_ELITE_OUTLINED_CLASSES}`}
+                    title={getSkillEliteHint("fr")}
+                    data-testid={`skill-elite-${skill.slug}`}
+                  >
+                    ⭐ {getSkillEliteLabel("fr")}
+                  </span>
+                )}
               </div>
               <h1 className="mt-2 font-heading font-bold text-3xl sm:text-4xl text-nuffle-anthracite leading-tight">
                 {skill.nameFr}
@@ -213,6 +228,12 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
             <p className="mt-3 text-sm font-body text-nuffle-bronze/80">
               {getSkillActivationHint(skill.isPassive, "fr")}
             </p>
+            {/* Rappel du surcoût d'une compétence Élite. */}
+            {skill.isElite && (
+              <p className="mt-2 text-sm font-body text-amber-700">
+                ⭐ {getSkillEliteHint("fr")}
+              </p>
+            )}
             {hasEnglish && (
               <div className="mt-4 rounded-xl border border-nuffle-bronze/15 bg-white/40 p-4">
                 <p className="text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-bronze/70">

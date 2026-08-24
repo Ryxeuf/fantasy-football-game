@@ -25,7 +25,6 @@ describe('Team Value Calculator - Consistency Check', () => {
       cheerleaders: 0,
       assistants: 0,
       apothecary: false,
-      dedicatedFans: 1,
       roster: 'skaven',
       ruleset,
     };
@@ -38,18 +37,14 @@ describe('Team Value Calculator - Consistency Check', () => {
     const expectedRerollsCost = 1 * 50000;
     expect(expectedRerollsCost).toBe(50000);
 
-    // Fans Dévoués : chaque fan compte dans la VE (édition 2025), y
-    // compris le fan de base — 1 × 5k.
-    const expectedFansValue = 1 * 5000;
-
-    // Total attendu : 955k (joueurs) + 50k (relances) + 5k (fan) = 1010k
-    const expectedTotal =
-      expectedPlayersCost + expectedRerollsCost + expectedFansValue;
-    expect(expectedTotal).toBe(1010000);
+    // Les Fans Dévoués ne comptent pas dans la VE.
+    // Total attendu : 955k (joueurs) + 50k (relances) = 1005k
+    const expectedTotal = expectedPlayersCost + expectedRerollsCost;
+    expect(expectedTotal).toBe(1005000);
 
     // Calcul avec la fonction
     const calculatedTotal = calculateTeamValue(skavenTeam);
-    expect(calculatedTotal).toBe(1010000);
+    expect(calculatedTotal).toBe(1005000);
   });
 
   it('should have consistent player costs between display and calculation', () => {

@@ -116,14 +116,13 @@ describe('Team Value Calculator', () => {
       cheerleaders: 3,
       assistants: 1,
       apothecary: true,
-      dedicatedFans: 3,
       roster: 'human',
     } as const;
 
-    it('sans config : reproduit les défauts bb11 (fans à 5k, édition 2025)', () => {
+    it('sans config : reproduit les défauts bb11', () => {
       // joueurs 100k + relances 2×50k + cheerleaders 3×10k + assistant 1×10k
-      // + apothicaire 50k + fans 3×5k = 100k+100k+30k+10k+50k+15k = 305k
-      expect(calculateTeamValue({ ...base })).toBe(305000);
+      // + apothicaire 50k = 100k+100k+30k+10k+50k = 290k
+      expect(calculateTeamValue({ ...base })).toBe(290000);
     });
 
     it('avec staffConfig explicite : utilise les coûts fournis', () => {
@@ -134,42 +133,28 @@ describe('Team Value Calculator', () => {
           cheerleaderCost: 20000,
           assistantCost: 20000,
           apothecaryCost: 80000,
-          dedicatedFanCost: 20000,
         },
       });
-      // 100k + 2×100k + 3×20k + 1×20k + 80k + 3×20k = 100k+200k+60k+20k+80k+60k = 520k
-      expect(v).toBe(520000);
+      // 100k + 2×100k + 3×20k + 1×20k + 80k = 100k+200k+60k+20k+80k = 460k
+      expect(v).toBe(460000);
     });
 
     it('format sevens (sans config) : relance ×2 et staff à 20k', () => {
       const v = calculateTeamValue({ ...base, format: 'sevens' });
-      // 100k + 2×100k + 3×20k + 1×20k + 80k + 3×20k = 520k
-      expect(v).toBe(520000);
+      // 100k + 2×100k + 3×20k + 1×20k + 80k = 460k
+      expect(v).toBe(460000);
     });
 
-    it('le fan de base compte AUSSI dans la VE (seul son achat est gratuit)', () => {
-      // Off-by-one historique : `dedicatedFans - 1` retirait 5k à toutes
-      // les équipes. Édition 2025 : chaque fan vaut 5k dans la VE.
+    it('les fans dévoués ne comptent ni dans la VE ni dans la VEA', () => {
+      // Le calcul ne prend plus les fans en entrée : une équipe sans staff
+      // ni relances vaut exactement le coût de ses joueurs, quel que soit
+      // son nombre de fans dévoués.
       const v = calculateTeamValue({
         ...base,
         rerolls: 0,
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
-        dedicatedFans: 1,
-      });
-      // joueurs 100k + fan 1×5k = 105k
-      expect(v).toBe(105000);
-    });
-
-    it('clamp : dedicatedFans à 0 (équipe legacy) ne retire rien', () => {
-      const v = calculateTeamValue({
-        ...base,
-        rerolls: 0,
-        cheerleaders: 0,
-        assistants: 0,
-        apothecary: false,
-        dedicatedFans: 0,
       });
       expect(v).toBe(100000);
     });

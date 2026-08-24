@@ -513,7 +513,6 @@
     "rerollsCost": "Rerolls ({count} × {cost})",
     "cheerleadersCost": "Cheerleaders ({count})",
     "assistantsCost": "Assistants ({count})",
-    "dedicatedFansCost": "Dedicated Fans ({count})",
     "totalStaffRerolls": "Total Staff + Rerolls",
     "totalTeamCost": "💰 Total team cost",
     "veShort": "TV",

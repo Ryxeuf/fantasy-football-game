@@ -411,6 +411,7 @@ export {
   surchargeForAdvancement,
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
+  ELITE_SKILL_SURCHARGE,
   isRandomAdvancement,
   getCategoryAccessType,
   applyCharacteristicImprovement,
