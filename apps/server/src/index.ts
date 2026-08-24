@@ -42,6 +42,7 @@ import teamAdvancementRoutes from "./routes/team-advancement";
 import starPlayersRoutes from "./routes/star-players";
 import publicSkillsRoutes from "./routes/public-skills";
 import publicRostersRoutes from "./routes/public-rosters";
+import publicTournamentRulesetsRoutes from "./routes/public-tournament-rulesets";
 import publicPositionsRoutes from "./routes/public-positions";
 import publicBlogRoutes from "./routes/public-blog";
 import publicStatsRoutes from "./routes/public-stats";
@@ -294,6 +295,7 @@ app.use("/star-players", starPlayersRoutes);
 // Public reference data: cache for 1h with 24h stale-while-revalidate.
 app.use("/api", publicCache(), publicSkillsRoutes);
 app.use("/api", publicCache(), publicRostersRoutes);
+app.use("/api", publicCache(), publicTournamentRulesetsRoutes);
 app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/api", publicCache(), publicBlogRoutes);
 app.use("/api", publicCache(), publicStatsRoutes);
