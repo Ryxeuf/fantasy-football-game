@@ -176,9 +176,83 @@ function isCommissioner(ctx: PairingContext, userId: string): boolean {
 }
 
 /**
+ * Fige l'en-tête (VE/VEA/trésorerie/fans) des DEUX équipes au DÉMARRAGE de
+ * la feuille (création). Stocké dans `rosterSnapshotHome/Away` sous forme
+ * « en-tête seul » (`headerOnly: true`, sans liste de joueurs) : la version
+ * complète du roster (E11) remplace ce gel à la 1re soumission en PRÉSERVANT
+ * ces valeurs. Best-effort : un échec ne bloque pas l'ouverture.
+ */
+async function captureHeaderSnapshots(
+  pairingId: string,
+): Promise<Record<string, string> | null> {
+  try {
+    const teams = await loadSheetTeams(pairingId);
+    const capture = async (
+      team: MatchSheetTeam | null,
+      side: "home" | "away",
+    ): Promise<string | null> => {
+      if (!team?.teamId) return null;
+      // VE/VEA fraîches avant gel (la VEA exclut les absents) ; en cas
+      // d'échec on fige les valeurs stockées.
+      let teamValue = team.teamValue;
+      let currentValue = team.currentValue;
+      try {
+        const fresh = await updateTeamValues(prisma, team.teamId);
+        if (fresh) {
+          teamValue = fresh.teamValue;
+          currentValue = fresh.currentValue;
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(
+          `[league-match-sheet] refresh VE/VEA avant gel d'en-tête échoué (${side}): ${msg}`,
+        );
+      }
+      return JSON.stringify({
+        capturedAt: Date.now(),
+        headerOnly: true,
+        teamValue,
+        currentValue,
+        treasury: team.treasury,
+        dedicatedFans: team.dedicatedFans,
+      });
+    };
+    const home = await capture(teams.home, "home");
+    const away = await capture(teams.away, "away");
+    const data: Record<string, string> = {};
+    if (home) data.rosterSnapshotHome = home;
+    if (away) data.rosterSnapshotAway = away;
+    return Object.keys(data).length > 0 ? data : null;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[league-match-sheet] gel d'en-tête au démarrage échoué: ${msg}`);
+    return null;
+  }
+}
+
+/**
+ * Snapshot « en-tête seul » posé au démarrage de la feuille : les valeurs
+ * (VE/VEA/trésorerie/fans) sont figées mais le roster et les journaliers
+ * ne sont PAS bakés dedans (contrairement au snapshot E11 complet).
+ */
+function isHeaderOnlySnapshot(raw: unknown): boolean {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return false;
+    }
+  }
+  if (!obj || typeof obj !== "object") return false;
+  return (obj as { headerOnly?: unknown }).headerOnly === true;
+}
+
+/**
  * Crée (ou retourne) la feuille de match d'un pairing. Idempotent :
  * si elle existe deja, on la retourne. Accessible aux 2 coachs + au
- * commissaire.
+ * commissaire. À la création, l'en-tête (VE/VEA/trésorerie/fans) des deux
+ * équipes est figé : la feuille garde les valeurs du DÉMARRAGE du match.
  */
 export async function createMatchSheet(input: {
   pairingId: string;
@@ -197,9 +271,27 @@ export async function createMatchSheet(input: {
   });
   if (existing) return existing;
 
-  return prisma.leagueMatchSheet.create({
+  const created = await prisma.leagueMatchSheet.create({
     data: { pairingId: input.pairingId, status: "draft" },
   });
+
+  // Gel de l'en-tête au démarrage (best-effort) : VE/VEA ET trésoreries
+  // sont figées dès l'ouverture de la feuille.
+  const headerSnapshots = await captureHeaderSnapshots(input.pairingId);
+  if (headerSnapshots) {
+    try {
+      return await prisma.leagueMatchSheet.update({
+        where: { id: created.id },
+        data: headerSnapshots,
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[league-match-sheet] écriture du gel d'en-tête échouée: ${msg}`,
+      );
+    }
+  }
+  return created;
 }
 
 async function loadSheetOrThrow(pairingId: string) {
@@ -632,15 +724,23 @@ export async function submitByCoach(input: {
 
   // E11 — fige le roster des DEUX equipes a la premiere soumission
   // (« version du match » consultable par l'adversaire). Best-effort :
-  // un echec de snapshot ne bloque pas la soumission.
+  // un echec de snapshot ne bloque pas la soumission. Un gel « en-tête
+  // seul » posé à la création est remplacé par la version complète en
+  // PRÉSERVANT les valeurs figées au démarrage (VE/VEA/trésorerie/fans).
   const sheetSnap = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
+  const needsFullHome =
+    !sheetSnap.rosterSnapshotHome ||
+    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotHome);
+  const needsFullAway =
+    !sheetSnap.rosterSnapshotAway ||
+    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotAway);
   let snapshotData: Record<string, unknown> = {};
-  if (!sheetSnap.rosterSnapshotHome || !sheetSnap.rosterSnapshotAway) {
+  if (needsFullHome || needsFullAway) {
     try {
       const teams = await loadSheetTeams(input.pairingId);
       // Les joueurs absents (missNextMatch) ne participent pas au match :
@@ -668,6 +768,21 @@ export async function submitByCoach(input: {
           excludeMissNextMatch: true,
         });
         if (!snap) return null;
+        // En-tête figé au démarrage (gel « header-only » de la création) :
+        // il prime sur les valeurs re-capturées, pour que VE/VEA ET
+        // trésorerie restent celles du début du match.
+        const preserved = parseFrozenTeamValues(
+          side === "home"
+            ? sheetSnap.rosterSnapshotHome
+            : sheetSnap.rosterSnapshotAway,
+        );
+        const base = {
+          ...snap,
+          teamValue: preserved?.teamValue ?? snap.teamValue,
+          currentValue: preserved?.currentValue ?? snap.currentValue,
+          treasury: preserved?.treasury ?? snap.treasury,
+          dedicatedFans: preserved?.dedicatedFans ?? snap.dedicatedFans,
+        };
         const journeymen = deriveJourneymen({
           side,
           roster: team.roster,
@@ -679,16 +794,16 @@ export async function submitByCoach(input: {
               : sheetSnap.journeymenAway,
           ),
         });
-        if (journeymen.length === 0) return JSON.stringify(snap);
+        if (journeymen.length === 0) return JSON.stringify(base);
         // Règle BB : les journaliers alignés comptent dans la VEA du
         // match (CTV des coups de pouce) — leur valeur est figée avec
         // l'en-tête.
         const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
         return JSON.stringify({
-          ...snap,
-          currentValue: snap.currentValue + journeymenValue,
+          ...base,
+          currentValue: base.currentValue + journeymenValue,
           players: [
-            ...snap.players,
+            ...base.players,
             ...journeymen.map((j) => ({
               name: j.name,
               position: j.positionName,
@@ -705,11 +820,11 @@ export async function submitByCoach(input: {
           ],
         });
       };
-      if (!sheetSnap.rosterSnapshotHome) {
+      if (needsFullHome) {
         const json = await captureSide(teams.home, "home");
         if (json) snapshotData.rosterSnapshotHome = json;
       }
-      if (!sheetSnap.rosterSnapshotAway) {
+      if (needsFullAway) {
         const json = await captureSide(teams.away, "away");
         if (json) snapshotData.rosterSnapshotAway = json;
       }
@@ -1873,7 +1988,10 @@ function withJourneymenValue(
   if (!team) return null;
   const frozen =
     side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway;
-  if (frozen) return team;
+  // Un gel « en-tête seul » (démarrage) ne bake PAS les journaliers : on
+  // les ajoute en live, comme pour une feuille non figée. Seul le snapshot
+  // E11 complet (1re soumission) les porte déjà.
+  if (frozen && !isHeaderOnlySnapshot(frozen)) return team;
   const journeymen = deriveJourneymen({
     side,
     roster: team.roster,
