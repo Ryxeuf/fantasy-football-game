@@ -140,6 +140,11 @@ export default function Header() {
             </a>
           )}
 
+          {/* Accès rapide à la gestion de mes rosters */}
+          <a href="/me/teams" className={navLinkClass} data-testid="nav-my-teams">
+            ⚽ {t.auth.myTeams}
+          </a>
+
           {/* Compétitions */}
           <div
             className="relative"
@@ -302,6 +307,15 @@ export default function Header() {
                 className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 🎮 {t.nav.offlineMatches}
+              </a>
+              {/* Accès rapide à la gestion de mes rosters */}
+              <a
+                href="/me/teams"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                data-testid="mobile-nav-my-teams"
+              >
+                ⚽ {t.auth.myTeams}
               </a>
             </nav>
 
