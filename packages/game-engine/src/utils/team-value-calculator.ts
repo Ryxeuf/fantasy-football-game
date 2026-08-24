@@ -11,7 +11,7 @@ export { getRerollCost, getAllRerollCosts, REROLL_COSTS, DEFAULT_REROLL_COST } f
 /** Sous-ensemble "coûts" de la config staff (po) utilisé pour la VE/VEA. */
 export type StaffCosts = Pick<
   RosterStaffConfig,
-  'rerollCost' | 'cheerleaderCost' | 'assistantCost' | 'apothecaryCost' | 'dedicatedFanCost'
+  'rerollCost' | 'cheerleaderCost' | 'assistantCost' | 'apothecaryCost'
 >;
 
 export interface TeamValueData {
@@ -23,7 +23,6 @@ export interface TeamValueData {
   cheerleaders: number;
   assistants: number;
   apothecary: boolean;
-  dedicatedFans: number; // Ajout des fans dévoués
   roster: string; // Ajout du roster pour calculer le coût des relances
   ruleset?: Ruleset; // Ruleset utilisé pour récupérer les données associées au roster
   /** Format de jeu (sert à résoudre la config staff par défaut). Défaut: bb11. */
@@ -77,7 +76,11 @@ export function calculateCurrentValue(data: TeamValueData): number {
 /**
  * Calcule le coût du staff de banc de touche, à partir des coûts résolus
  * (config DB ou défaut format-aware). Pour bb11 sans config explicite, les
- * coûts dérivés valent 10k/10k/50k/10k — identiques à l'historique.
+ * coûts dérivés valent 10k/10k/50k — identiques à l'historique.
+ *
+ * Les Fans Dévoués ne comptent NI dans la VE NI dans la VEA : leur achat
+ * coûte de la trésorerie mais leur valeur n'entre pas dans la valeur
+ * d'équipe.
  */
 function calculateStaffCost(data: TeamValueData): number {
   const s = resolveStaffCosts(data);
@@ -88,13 +91,6 @@ function calculateStaffCost(data: TeamValueData): number {
   if (data.apothecary) {
     cost += s.apothecaryCost;
   }
-
-  // Fans Dévoués : CHAQUE fan compte dans la valeur d'équipe (édition
-  // 2025). Seul l'ACHAT du premier est gratuit à la création — sa VALEUR
-  // compte comme celle des suivants. L'ancien `dedicatedFans - 1`
-  // décalait la VE de -5k sur toutes les équipes (off-by-one).
-  // Math.max(0) protège d'un `dedicatedFans` négatif ou absent.
-  cost += Math.max(0, data.dedicatedFans) * s.dedicatedFanCost;
 
   return cost;
 }

@@ -40,28 +40,32 @@ describe("TeamInfoDisplay — titre de section", () => {
     expect(screen.queryByText("Informations de l'équipe")).toBeNull();
   });
 
-  it("facture les fans dévoués 5 000 po pièce (défaut édition 2025), affiché en kpo", () => {
+  it("n'affiche plus de ligne de coût pour les fans dévoués", () => {
     render(
       <LanguageProvider>
         <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 3 }} />
       </LanguageProvider>,
     );
-    // Chaque fan compte dans la valeur : 3 × 5 000 po -> « 15K po »
-    // (seul l'ACHAT du 1er est gratuit à la création, pas sa valeur).
-    expect(
-      normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toBe("15K po");
+    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA : la
+    // ligne de coût a disparu du détail des coûts.
+    expect(screen.queryByTestId("dedicated-fans-cost")).toBeNull();
   });
 
-  it("le fan de base compte aussi dans la valeur du staff (5K po)", () => {
-    render(
-      <LanguageProvider>
-        <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 1 }} />
-      </LanguageProvider>,
-    );
-    expect(
-      normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toBe("5K po");
+  it("le total staff & relances ignore les fans dévoués", () => {
+    const renderWithFans = (dedicatedFans: number) => {
+      const { container, unmount } = render(
+        <LanguageProvider>
+          <TeamInfoDisplay info={{ ...INFO, dedicatedFans }} />
+        </LanguageProvider>,
+      );
+      const text = normalizeSpaces(container.textContent);
+      unmount();
+      return text;
+    };
+    // Staff : relances 2×50k + pom-pom 10k + assistant 10k + apo 50k = 170k,
+    // identique quel que soit le nombre de fans.
+    expect(renderWithFans(1)).toContain("170K po");
+    expect(renderWithFans(6)).toContain("170K po");
   });
 
   it("affiche tous les montants en kpo (aucun montant en po complets)", () => {
@@ -80,14 +84,14 @@ describe("TeamInfoDisplay — titre de section", () => {
   });
 
   it("respecte le coût de la config staff quand elle est fournie", () => {
-    render(
+    const { container } = render(
       <LanguageProvider>
         <TeamInfoDisplay
           info={{
             ...INFO,
             dedicatedFans: 2,
             staffConfig: {
-              rerollCost: 50_000,
+              rerollCost: 60_000,
               maxRerolls: 8,
               apothecaryAllowed: true,
               apothecaryCost: 50_000,
@@ -102,10 +106,11 @@ describe("TeamInfoDisplay — titre de section", () => {
         />
       </LanguageProvider>,
     );
-    // 2 fans × 5 000 po (config DB) = 10 000 po.
-    expect(
-      normalizeSpaces(screen.getByTestId("dedicated-fans-cost").textContent),
-    ).toBe("10K po");
+    // Relances 2 × 60 000 po (config DB) = 120 000 po ; total staff
+    // 120k + 10k + 10k + 50k = 190k — sans aucune part fans dévoués.
+    const text = normalizeSpaces(container.textContent);
+    expect(text).toContain("120K po");
+    expect(text).toContain("190K po");
   });
 
   it("affiche « Team staff » en anglais", async () => {

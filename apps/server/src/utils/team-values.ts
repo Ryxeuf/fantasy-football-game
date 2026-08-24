@@ -45,7 +45,7 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     cheerleaders: team.cheerleaders,
     assistants: team.assistants,
     apothecary: team.apothecary,
-    dedicatedFans: team.dedicatedFans, // Ajout des fans dévoués
+    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA.
     roster: team.roster, // Ajout du roster pour le calcul des relances
     ruleset: (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
   };

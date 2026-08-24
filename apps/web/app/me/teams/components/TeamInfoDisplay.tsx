@@ -30,16 +30,13 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
   const cheerleaderCost = info.staffConfig?.cheerleaderCost ?? 10000;
   const assistantCost = info.staffConfig?.assistantCost ?? 10000;
   const apothecaryCost = info.staffConfig?.apothecaryCost ?? 50000;
-  const dedicatedFanCost = info.staffConfig?.dedicatedFanCost ?? 5000;
-  // Fans Dévoués : chaque fan compte dans la valeur (édition 2025) — seul
-  // l'ACHAT du premier est gratuit à la création, pas sa valeur.
-  const dedicatedFansValue = Math.max(0, info.dedicatedFans) * dedicatedFanCost;
+  // Les Fans Dévoués ne comptent ni dans la VE ni dans la VEA : leur achat
+  // coûte de la trésorerie mais leur valeur n'entre pas dans le total staff.
   const staffRerollsCost =
     info.rerolls * rerollCost +
     info.cheerleaders * cheerleaderCost +
     info.assistants * assistantCost +
-    (info.apothecary ? apothecaryCost : 0) +
-    dedicatedFansValue;
+    (info.apothecary ? apothecaryCost : 0);
 
   // Tous les montants de la carte s'affichent en kpo (« 50K po ») pour
   // rester compacts — même convention que le reste de la fiche équipe.
@@ -140,10 +137,6 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.apothecary}</span>
               <span className="font-mono">{info.apothecary ? formatKpo(apothecaryCost) : `0${t.teams.kpo}`}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">{t.teams.dedicatedFansCost.replace("{count}", info.dedicatedFans.toString())}</span>
-              <span className="font-mono" data-testid="dedicated-fans-cost">{formatKpo(dedicatedFansValue)}</span>
             </div>
             <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold">
               <span className="text-gray-700">{t.teams.totalStaffRerolls}</span>

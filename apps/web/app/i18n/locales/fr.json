@@ -510,7 +510,6 @@
     "rerollsCost": "Relances ({count} × {cost})",
     "cheerleadersCost": "Cheerleaders ({count})",
     "assistantsCost": "Assistants ({count})",
-    "dedicatedFansCost": "Fans Dévoués ({count})",
     "totalStaffRerolls": "Total Staff + Relances",
     "totalTeamCost": "💰 Coût total de l'équipe",
     "veShort": "VE",

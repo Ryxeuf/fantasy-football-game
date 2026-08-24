@@ -47,8 +47,7 @@ function buildPrisma(players: FakePlayer[]) {
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
-        // Le fan de base compte 5 000 po dans la VE/VEA (édition 2025 :
-        // seul son ACHAT est gratuit, pas sa valeur).
+        // Les fans dévoués ne comptent ni dans la VE ni dans la VEA.
         dedicatedFans: 1,
       }),
       update,
@@ -65,19 +64,19 @@ describe("updateTeamValues — VEA = VE - joueurs absents", () => {
       player({ missNextMatch: true }),
     ]);
     const out = await updateTeamValues(prisma, "team-1");
-    // 2×50k joueurs + 5k fan ; VEA : l'absent (50k) en moins.
-    expect(out).toEqual({ teamValue: 105_000, currentValue: 55_000 });
+    // 2×50k joueurs (les fans ne comptent pas) ; VEA : l'absent (50k) en moins.
+    expect(out).toEqual({ teamValue: 100_000, currentValue: 50_000 });
     expect(update).toHaveBeenCalledWith({
       where: { id: "team-1" },
-      data: { teamValue: 105_000, currentValue: 55_000 },
+      data: { teamValue: 100_000, currentValue: 50_000 },
     });
   });
 
   it("VEA === VE quand aucun joueur n'est absent", async () => {
     const { prisma } = buildPrisma([player(), player()]);
     const out = await updateTeamValues(prisma, "team-1");
-    expect(out.teamValue).toBe(105_000);
-    expect(out.currentValue).toBe(105_000);
+    expect(out.teamValue).toBe(100_000);
+    expect(out.currentValue).toBe(100_000);
   });
 
   it("exclut morts et licenciés des DEUX valeurs", async () => {
@@ -87,8 +86,8 @@ describe("updateTeamValues — VEA = VE - joueurs absents", () => {
       player({ firedAt: new Date("2026-08-01") }),
     ]);
     const out = await updateTeamValues(prisma, "team-1");
-    expect(out.teamValue).toBe(55_000);
-    expect(out.currentValue).toBe(55_000);
+    expect(out.teamValue).toBe(50_000);
+    expect(out.currentValue).toBe(50_000);
   });
 
   it("le surcoût d'avancement d'un joueur absent compte dans la VE mais pas la VEA", async () => {
@@ -101,7 +100,7 @@ describe("updateTeamValues — VEA = VE - joueurs absents", () => {
       }),
     ]);
     const out = await updateTeamValues(prisma, "team-1");
-    expect(out.teamValue).toBe(125_000);
-    expect(out.currentValue).toBe(55_000);
+    expect(out.teamValue).toBe(120_000);
+    expect(out.currentValue).toBe(50_000);
   });
 });
