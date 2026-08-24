@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../../lib/api-client";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import QuantityStepper from "./QuantityStepper";
@@ -25,6 +25,12 @@ interface TeamInfoEditorProps {
   teamId: string;
   initialInfo: TeamInfo;
   onUpdate: (info: TeamInfo) => void;
+  /**
+   * Staff en cours d'edition (non encore sauvegarde). Permet au resume
+   * budgetaire de la page hote de suivre les modifications en direct plutot
+   * que d'afficher un montant qui contredit ce panneau.
+   */
+  onDraftChange?: (info: TeamInfo) => void;
   disabled?: boolean;
   roster?: string;
   /** Format de l'équipe (bb11 / sevens) — pilote le fallback de config. */
@@ -48,6 +54,7 @@ export default function TeamInfoEditor({
   teamId,
   initialInfo,
   onUpdate,
+  onDraftChange,
   disabled = false,
   roster,
   format,
@@ -61,6 +68,13 @@ export default function TeamInfoEditor({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Callback stockee dans une ref : la page hote passe une lambda inline,
+  // la mettre en dependance d'effet relancerait l'effet a chaque rendu.
+  const onDraftChangeRef = useRef(onDraftChange);
+  useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  }, [onDraftChange]);
 
   // Config staff : ligne DB résolue par le serveur (roster × format) si
   // fournie, sinon défaut dérivé du package pur pour le même couple. Plus
@@ -118,6 +132,11 @@ export default function TeamInfoEditor({
   }, [info, staff, initialBudgetK, playersCost, starPlayersCost]);
 
   const displayedPlayersCost = (playersCost || 0) + (starPlayersCost || 0);
+
+  // Remonte l'etat courant du staff a la page hote (resume budgetaire).
+  useEffect(() => {
+    onDraftChangeRef.current?.(info);
+  }, [info]);
 
   const handleSave = async () => {
     setLoading(true);

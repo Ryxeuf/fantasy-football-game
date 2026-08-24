@@ -37,7 +37,7 @@ import {
   type GameFormat,
   type RosterStaffConfig
 } from "@bb/game-engine";
-import { computeStaffSpend } from "../../staff-cost";
+import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
 import { buildImportantNotes } from "./important-notes";
 
 // Catalogue de compétences DB-backed (remplace l'ancien import statique
@@ -131,6 +131,9 @@ export default function TeamEditPage() {
   // joueurs applique. Tant qu'il est en brouillon, on peut descendre sous 11
   // pour remanier. Defaut `true` par prudence avant le 1er chargement.
   const [frozen, setFrozen] = useState<boolean>(true);
+  // Staff en cours d'edition remonte par `TeamInfoEditor` : le resume
+  // budgetaire suit les modifications avant meme leur sauvegarde.
+  const [staffDraft, setStaffDraft] = useState<StaffCounts | null>(null);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [newPlayerForm, setNewPlayerForm] = useState({
     position: '',
@@ -494,7 +497,8 @@ export default function TeamEditPage() {
   // applique au PUT /roster : joueurs + staff + Star Players <= budget
   // initial. Le staff et les Star Players étaient ignorés ici, d'où un
   // « Restant » qui contredisait le panneau staff juste en dessous.
-  const staffSpend = computeStaffSpend(team ?? {}, staffConfig).total;
+  const staffSpend = computeStaffSpend(staffDraft ?? team ?? {}, staffConfig)
+    .total;
   const starPlayersCost = (team?.starPlayers || []).reduce(
     (sum: number, sp: any) => sum + (sp?.cost ?? 0),
     0,
@@ -1694,7 +1698,8 @@ export default function TeamEditPage() {
           }}
           roster={team.roster}
           format={team.format}
-          staffConfig={team.staffConfig}
+          staffConfig={staffConfig}
+          onDraftChange={setStaffDraft}
           initialBudgetK={team.initialBudget || 0}
           // Mêmes montants que le « Résumé budgétaire » ci-dessus (état
           // local, Star Players inclus) : les deux blocs ne peuvent plus

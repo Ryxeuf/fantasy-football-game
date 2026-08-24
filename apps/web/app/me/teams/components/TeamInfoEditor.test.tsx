@@ -187,3 +187,21 @@ describe("TeamInfoEditor — budget restant", () => {
     ).toBe("40K po");
   });
 });
+
+describe("TeamInfoEditor — remontée du staff en cours d'édition", () => {
+  it("notifie la page hôte à chaque changement (résumé budgétaire live)", () => {
+    const onDraftChange = vi.fn();
+    renderEditor({ onDraftChange });
+
+    // Un premier appel au montage, avec l'état initial.
+    expect(onDraftChange).toHaveBeenCalledWith(
+      expect.objectContaining({ rerolls: 2, dedicatedFans: 3 }),
+    );
+
+    onDraftChange.mockClear();
+    fireEvent.click(screen.getByTestId("staff-rerolls-inc"));
+    expect(onDraftChange).toHaveBeenCalledWith(
+      expect.objectContaining({ rerolls: 3 }),
+    );
+  });
+});
