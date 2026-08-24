@@ -12,6 +12,7 @@ import {
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 import { serverLog } from "../utils/server-log";
+import { getRosterFromDb } from "../utils/roster-helpers";
 
 const router = Router();
 
@@ -450,11 +451,19 @@ router.get("/available/:roster", async (req, res) => {
  * GET /api/star-players/regional-rules/:roster
  * Obtenir les règles régionales d'un roster d'équipe
  */
-router.get("/regional-rules/:roster", (req, res) => {
+router.get("/regional-rules/:roster", async (req, res) => {
   try {
     const { roster } = req.params;
     const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    const regionalRules = getRegionalRulesForTeam(roster, ruleset);
+    // Ligues DÉCLARÉES par le roster (`Roster.regionalRules`, repli sur le
+    // catalogue du moteur si la colonne est vide) : même source que la fiche
+    // publique et que le choix de Ligue proposé à la création d'une équipe.
+    const declared = (await getRosterFromDb(roster, "fr", ruleset))
+      ?.regionalRules;
+    const regionalRules =
+      declared && declared.length > 0
+        ? declared
+        : getRegionalRulesForTeam(roster, ruleset);
 
     if (!regionalRules) {
       return res.status(404).json({

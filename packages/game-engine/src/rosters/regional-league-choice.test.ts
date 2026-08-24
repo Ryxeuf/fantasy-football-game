@@ -109,3 +109,100 @@ describe("resolveTeamRegionalRules", () => {
     ).toEqual(getRegionalRulesForTeam("dwarf", "season_3"));
   });
 });
+
+describe("getRegionalLeagueOptions — Ligues déclarées par le roster", () => {
+  it("se limite aux Ligues déclarées (fiche roster == choix à la création)", () => {
+    // Bug observé : la fiche Halfling n'affichait que 2 Ligues alors que la
+    // création en proposait 3 (la table canonique ajoute la Classique du
+    // Vieux Monde). Les options doivent suivre le roster.
+    const declared = ["halfling_thimble_cup", "woodland_league"];
+    expect(getRegionalLeagueOptions("halfling", "season_3", declared)).toEqual([
+      { slug: "halfling_thimble_cup", grants: [] },
+      { slug: "woodland_league", grants: [] },
+    ]);
+    expect(
+      isRegionalLeagueAllowed(
+        "halfling",
+        "old_world_classic",
+        "season_3",
+        declared,
+      ),
+    ).toBe(false);
+  });
+
+  it("ignore les alignements déclarés dans la liste des Ligues", () => {
+    const options = getRegionalLeagueOptions("chaos_dwarf", "season_3", [
+      "badlands_brawl",
+      "favoured_of_hashut",
+    ]);
+    expect(options).toEqual([
+      { slug: "badlands_brawl", grants: ["favoured_of_hashut"] },
+    ]);
+    expect(
+      getDefaultRegionalLeague("chaos_dwarf", "season_3", [
+        "badlands_brawl",
+        "favoured_of_hashut",
+      ]),
+    ).toBe("badlands_brawl");
+  });
+
+  it("garde le Clash du Chaos des Nordiques, que la table n'exprime pas", () => {
+    // `TEAM_REGIONAL_RULES` porte ["old_world_classic", "favoured_of_khorne"] :
+    // le Clash du Chaos est une règle, pas une donnée éditable.
+    expect(
+      getRegionalLeagueOptions("norse", "season_3", [
+        "old_world_classic",
+        "favoured_of_khorne",
+      ]),
+    ).toEqual([
+      { slug: "old_world_classic", grants: [] },
+      { slug: "chaos_clash", grants: ["favoured_of_khorne"] },
+    ]);
+  });
+
+  it("retombe sur la table canonique si la déclaration est vide ou absente", () => {
+    const canonical = getRegionalLeagueOptions("halfling", "season_3");
+    expect(getRegionalLeagueOptions("halfling", "season_3", [])).toEqual(
+      canonical,
+    );
+    expect(getRegionalLeagueOptions("halfling", "season_3", null)).toEqual(
+      canonical,
+    );
+    expect(canonical.map((o) => o.slug)).toContain("old_world_classic");
+  });
+
+  it("n'exige plus de choix quand le roster ne déclare qu'une Ligue", () => {
+    expect(
+      isRegionalLeagueChoiceRequired("halfling", "season_3", [
+        "halfling_thimble_cup",
+      ]),
+    ).toBe(false);
+    expect(
+      getDefaultRegionalLeague("halfling", "season_3", [
+        "halfling_thimble_cup",
+      ]),
+    ).toBe("halfling_thimble_cup");
+  });
+
+  it("resolveTeamRegionalRules suit les Ligues déclarées", () => {
+    const declared = ["halfling_thimble_cup", "woodland_league"];
+    expect(
+      resolveTeamRegionalRules(
+        "halfling",
+        "season_3",
+        "woodland_league",
+        declared,
+      ),
+    ).toEqual(["woodland_league"]);
+    // Choix hors périmètre déclaré ⇒ repli sur la déclaration, pas sur la
+    // table canonique (pas de Ligue fantôme).
+    expect(
+      resolveTeamRegionalRules(
+        "halfling",
+        "season_3",
+        "old_world_classic",
+        declared,
+      ),
+    ).toEqual(declared);
+  });
+});

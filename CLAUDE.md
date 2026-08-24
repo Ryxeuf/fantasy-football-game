@@ -336,6 +336,32 @@ Piege associe : filtrer `dead: false` SANS `firedAt: null` (ou l'inverse)
 laisse passer la moitie des joueurs sortis. Garde CI :
 `services/player-status-filters.test.ts` (ratchet + exceptions justifiees).
 
+### Ligues regionales d'un roster : UNE seule source (Roster.regionalRules)
+
+Les Ligues d'un roster existent a deux endroits : la colonne editable
+`Roster.regionalRules` (admin, servie par la fiche publique `/teams/[slug]`)
+et la table canonique `TEAM_REGIONAL_RULES_BY_RULESET` du moteur. Des qu'un
+admin edite la colonne, les deux divergent — bug observe sur les Halflings :
+la fiche annoncait 2 Ligues, le selecteur de creation d'equipe en proposait 3.
+
+Regle : `services/roster-regional-rules.effectiveRegionalRules` (base sinon
+repli sur le catalogue du moteur) est LA resolution ; tout consommateur en
+part. `getRegionalLeagueOptions(roster, ruleset, declaredRules)` accepte cette
+liste et s'y limite. `getRosterFromDb` l'expose dans
+`RosterPayload.regionalRules` pour les flux qui n'ont que le slug.
+
+```ts
+const declaredRules = effectiveRegionalRules(
+  row.regionalRules, row.slug, ruleset,
+).rules;
+getRegionalLeagueOptions(row.slug, ruleset, declaredRules);
+```
+
+Restent des REGLES (pas des donnees editables), portees par le moteur :
+les alignements conditionnes par la Ligue (`CONDITIONAL_GRANTS` — Nordiques
++ Clash du Chaos ⇒ Favori de Khorne) et les Ligues que la table ne sait pas
+exprimer (`IMPLICIT_LEAGUES` — le Clash du Chaos des Nordiques).
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :

@@ -27,6 +27,10 @@ import {
 import { memoizeAsync, invalidateMemoNamespace } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
 import { getRosterPositionStats } from "../services/position-usage-stats";
+import {
+  effectiveRegionalRules,
+  parseSlugList,
+} from "../services/roster-regional-rules";
 
 const router = Router();
 
@@ -148,35 +152,11 @@ interface RosterDetailPayload {
 }
 
 /**
- * Parse tolérant d'un champ "liste de slugs" stocké en base : tableau natif
- * (PG), chaîne JSON sérialisée (sqlite mirror), CSV libre, ou null/undefined.
- * Sert pour `Roster.specialRules` (souvent null ou texte libre tel que "NONE")
- * et `Roster.regionalRules` (JSON array de slugs de ligues régionales).
+ * Parse tolérant d'un champ "liste de slugs" stocké en base. Implémentation
+ * dans `services/roster-regional-rules` (partagée avec l'admin et les flux de
+ * création d'équipe) ; ré-exportée ici pour les appelants historiques.
  */
-export function parseSlugList(raw: unknown): string[] {
-  const fromArray = (arr: unknown[]): string[] =>
-    arr.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
-      .map((s) => s.trim());
-  if (Array.isArray(raw)) return fromArray(raw);
-  if (typeof raw === "string") {
-    const trimmed = raw.trim();
-    if (trimmed.length === 0) return [];
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed)) return fromArray(parsed);
-      if (typeof parsed === "string" && parsed.trim().length > 0) {
-        return [parsed.trim()];
-      }
-    } catch {
-      // Pas du JSON : on retombe sur un split CSV.
-    }
-    return trimmed
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-  }
-  return [];
-}
+export { parseSlugList } from "../services/roster-regional-rules";
 
 /**
  * Résout les règles spéciales d'équipe (A11). Les slugs non mappés (ex: la
@@ -232,16 +212,24 @@ export function resolveRegionalLeagues(
 
 /**
  * Options de Ligue régionale offertes au coach pour ce roster, libellés
- * localisés inclus. Source : le moteur (`getRegionalLeagueOptions`), pas la
- * colonne `Roster.regionalRules` — le choix et ses alignements conditionnels
- * sont une règle, pas une donnée éditable.
+ * localisés inclus.
+ *
+ * Les options sont bornées aux Ligues DÉCLARÉES par le roster
+ * (`declaredRules` = `Roster.regionalRules`, avec repli sur le catalogue du
+ * moteur quand la colonne est vide) : c'est la même liste que celle affichée
+ * sur la fiche publique, on ne peut donc pas proposer à la création une
+ * Ligue que le roster ne revendique pas. Le moteur garde la main sur les
+ * alignements conditionnels (« Favori de Khorne » au Clash du Chaos), qui
+ * sont une règle et non une donnée éditable.
  */
 export function resolveRegionalLeagueOptions(
   rosterSlug: string,
   ruleset: Ruleset,
   isEnglish: boolean,
+  declaredRules?: readonly string[] | null,
 ): RosterRegionalLeagueOptionView[] {
-  return getRegionalLeagueOptions(rosterSlug, ruleset).map((option) => {
+  const options = getRegionalLeagueOptions(rosterSlug, ruleset, declaredRules);
+  return options.map((option) => {
     const def = getRegionalLeagueBySlug(option.slug);
     return {
       slug: option.slug,
@@ -281,6 +269,9 @@ async function loadRosterList(
       budget: true,
       tier: true,
       naf: true,
+      // Ligues déclarées du roster : elles bornent les options de Ligue
+      // exposées ci-dessous (cf. resolveRegionalLeagueOptions).
+      regionalRules: true,
       _count: { select: { positions: true } },
       staffConfigs: true,
     },
@@ -294,27 +285,36 @@ async function loadRosterList(
   }
 
   return {
-    rosters: rosters.map((roster: any) => ({
-      slug: roster.slug,
-      name: isEnglish ? roster.nameEn : roster.name,
-      budget: roster.budget,
-      tier: roster.tier,
-      naf: roster.naf,
-      _count: roster._count,
-      staffConfigs: staffConfigsByFormat(roster),
-      // Ligue régionale à choisir à la création : exposée dès la LISTE pour
-      // que les flux de création (assistant + builder) n'aient pas à
-      // recharger le détail du roster juste pour poser la question.
-      regionalLeagueOptions: resolveRegionalLeagueOptions(
+    rosters: rosters.map((roster: any) => {
+      const declaredRules = effectiveRegionalRules(
+        roster.regionalRules,
         roster.slug,
-        ruleset as Ruleset,
-        isEnglish,
-      ),
-      regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
-        roster.slug,
-        ruleset as Ruleset,
-      ),
-    })),
+        ruleset,
+      ).rules;
+      return {
+        slug: roster.slug,
+        name: isEnglish ? roster.nameEn : roster.name,
+        budget: roster.budget,
+        tier: roster.tier,
+        naf: roster.naf,
+        _count: roster._count,
+        staffConfigs: staffConfigsByFormat(roster),
+        // Ligue régionale à choisir à la création : exposée dès la LISTE pour
+        // que les flux de création (assistant + builder) n'aient pas à
+        // recharger le détail du roster juste pour poser la question.
+        regionalLeagueOptions: resolveRegionalLeagueOptions(
+          roster.slug,
+          ruleset as Ruleset,
+          isEnglish,
+          declaredRules,
+        ),
+        regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
+          roster.slug,
+          ruleset as Ruleset,
+          declaredRules,
+        ),
+      };
+    }),
     ruleset,
     availableRulesets: RULESETS,
   };
@@ -456,6 +456,14 @@ router.get("/rosters/:slug/positions-stats", async (req, res) => {
 });
 
 function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
+  // Une seule résolution des Ligues déclarées : le catalogue affiché sur la
+  // fiche ET les options proposées à la création en partent, sinon les deux
+  // divergent dès qu'un admin édite `Roster.regionalRules`.
+  const declaredRules = effectiveRegionalRules(
+    roster.regionalRules,
+    roster.slug,
+    ruleset,
+  ).rules;
   return {
     slug: roster.slug,
     name: isEnglish ? roster.nameEn : roster.name,
@@ -491,10 +499,12 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
       roster.slug,
       ruleset,
       isEnglish,
+      declaredRules,
     ),
     regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
       roster.slug,
       ruleset,
+      declaredRules,
     ),
     staffConfigs: staffConfigsByFormat(roster),
   };

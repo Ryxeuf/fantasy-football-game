@@ -20,6 +20,7 @@ import {
   parseSlugList,
   resolveSpecialRules,
   resolveRegionalLeagues,
+  resolveRegionalLeagueOptions,
 } from "./public-rosters";
 
 describe("parseSlugList", () => {
@@ -108,5 +109,49 @@ describe("resolveRegionalLeagues", () => {
     );
     expect(out).toHaveLength(1);
     expect(out[0].slug).toBe("badlands_brawl");
+  });
+});
+
+describe("resolveRegionalLeagueOptions", () => {
+  it("propose exactement les Ligues déclarées par le roster", () => {
+    // Le catalogue affiché sur la fiche et les options du sélecteur de
+    // création doivent lister la même chose : la fiche Halfling n'annonçant
+    // que 2 Ligues, on ne peut pas en proposer 3 à la création.
+    const declared = resolveRegionalLeagues(
+      JSON.stringify(["halfling_thimble_cup", "woodland_league"]),
+      "halfling",
+      "season_3",
+      false,
+    );
+    const options = resolveRegionalLeagueOptions(
+      "halfling",
+      "season_3",
+      false,
+      declared.map((l) => l.slug),
+    );
+    expect(options.map((o) => o.slug)).toEqual(declared.map((l) => l.slug));
+    expect(options[0].name).toBe("Coupe Dé à Coudre Halfling");
+  });
+
+  it("retombe sur le catalogue du moteur sans déclaration en base", () => {
+    const options = resolveRegionalLeagueOptions("halfling", "season_3", false);
+    expect(options.map((o) => o.slug)).toEqual([
+      "halfling_thimble_cup",
+      "old_world_classic",
+      "woodland_league",
+    ]);
+  });
+
+  it("garde les alignements conditionnels des Nordiques", () => {
+    const options = resolveRegionalLeagueOptions("norse", "season_3", false, [
+      "old_world_classic",
+      "favoured_of_khorne",
+    ]);
+    expect(options.map((o) => o.slug)).toEqual([
+      "old_world_classic",
+      "chaos_clash",
+    ]);
+    expect(options[1].grants).toEqual(["favoured_of_khorne"]);
+    expect(options[1].grantLabels).toEqual(["Favori de Khorne"]);
   });
 });

@@ -50,6 +50,14 @@ export interface ResolveRegionalLeagueInput {
   readonly pack?: TournamentRulesetDefinition | null;
   /** Slug demandé par le client (undefined/null = non fourni). */
   readonly requested?: string | null;
+  /**
+   * Ligues DÉCLARÉES par le roster (`Roster.regionalRules`, repli sur le
+   * catalogue du moteur — cf. `loadDeclaredRegionalRules`). Les options
+   * possibles s'y limitent : le serveur accepte exactement ce que la fiche
+   * du roster et le sélecteur de création affichent. Absent ⇒ catalogue du
+   * moteur.
+   */
+  readonly declaredRules?: readonly string[] | null;
 }
 
 /**
@@ -62,10 +70,11 @@ export function resolveRegionalLeagueForCreation({
   ruleset,
   pack,
   requested,
+  declaredRules,
 }: ResolveRegionalLeagueInput): string | null {
   if (!allowsRegionalLeagueChoice(pack)) return null;
 
-  const options = getRegionalLeagueOptions(roster, ruleset);
+  const options = getRegionalLeagueOptions(roster, ruleset, declaredRules);
   if (options.length === 0) return null;
 
   const wanted = requested?.trim();
