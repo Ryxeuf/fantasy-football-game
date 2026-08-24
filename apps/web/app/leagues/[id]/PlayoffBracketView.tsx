@@ -47,6 +47,13 @@ interface BracketResponse {
   playoffSize: number;
   seasonStatus: string;
   rounds: BracketRound[];
+  /** Optionnels : rétro-compat avec une API pré-panneau commissaire. */
+  regularSeasonComplete?: boolean;
+  poolQualification?: {
+    totalQualified: number;
+    playoffSize: number;
+    consistent: boolean;
+  };
 }
 
 /** Participant éligible au bracket (équipe active de la saison). */
@@ -168,9 +175,20 @@ export function PlayoffBracketView({
   }
 
   if (!data || data.rounds.length === 0) {
-    // Pas encore de playoffs — soit pas configures (playoffSize=0),
-    // soit la saison reguliere n'est pas terminee.
-    return null;
+    // Pas encore de bracket. Pour le commissaire on rend un panneau
+    // d'état + de lancement ; pour les autres, rien (comportement
+    // historique).
+    if (!data || !isCommissioner) return null;
+    return (
+      <PlayoffLaunchPanel
+        seasonId={seasonId}
+        data={data}
+        onChanged={() => {
+          load();
+          onChanged?.();
+        }}
+      />
+    );
   }
 
   // FR3 — édition possible tant qu'aucun match de playoff n'est lancé/joué.
@@ -493,5 +511,157 @@ function PairingBadge({ status }: PairingBadgeProps) {
     >
       {entry.label}
     </span>
+  );
+}
+
+
+/** Messages des refus serveur de `startPlayoffs`, par `skippedReason`. */
+const START_REFUSAL_HINTS: Record<string, string> = {
+  "playoffs-disabled":
+    "Choisissez d'abord une taille de bracket (2, 4 ou 8 équipes).",
+  "playoffs-already-started": "Le bracket a déjà été généré.",
+  "insufficient-participants":
+    "Pas assez d'équipes éligibles pour remplir le bracket.",
+  "regular-season-incomplete":
+    "La phase de poule n'est pas terminée : cochez la clôture anticipée pour la clore maintenant.",
+  "pool-qualification-mismatch":
+    "Le total des qualifiés par poule ne correspond pas à la taille du bracket.",
+};
+
+interface LaunchPanelProps {
+  seasonId: string;
+  data: BracketResponse;
+  onChanged: () => void;
+}
+
+/**
+ * Panneau commissaire affiché tant qu'aucun bracket n'existe : taille
+ * du bracket, état de la phase régulière, cohérence des quotas de
+ * poule, et déclenchement manuel (avec clôture anticipée optionnelle).
+ */
+function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
+  const [size, setSize] = useState<number>(data.playoffSize);
+  const [force, setForce] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // `undefined` = API pré-panneau : on ne peut rien affirmer, on
+  // laisse le serveur trancher au clic.
+  const regularComplete = data.regularSeasonComplete;
+  const pool = data.poolQualification;
+
+  const changeSize = useCallback(
+    async (next: number) => {
+      setBusy(true);
+      setError(null);
+      try {
+        await apiRequest(`/leagues/seasons/${seasonId}/config`, {
+          method: "PATCH",
+          body: JSON.stringify({ playoffSize: next }),
+        });
+        setSize(next);
+        onChanged();
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : "Erreur lors de la modification",
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [seasonId, onChanged],
+  );
+
+  const start = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest(`/leagues/seasons/${seasonId}/playoff/start`, {
+        method: "POST",
+        body: JSON.stringify({ force }),
+      });
+      // Succès : le rechargement remplace ce panneau par le bracket.
+      onChanged();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erreur au lancement";
+      const hint = Object.entries(START_REFUSAL_HINTS).find(([reason]) =>
+        msg.includes(reason),
+      )?.[1];
+      setError(hint ? `${msg} — ${hint}` : msg);
+    } finally {
+      setBusy(false);
+    }
+  }, [seasonId, force, onChanged]);
+
+  return (
+    <section
+      data-testid="playoff-launch-panel"
+      className="bg-white border border-gray-200 rounded-lg p-4 space-y-3"
+    >
+      <h3 className="text-md font-semibold text-nuffle-anthracite">
+        Playoffs
+      </h3>
+
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        Taille du bracket
+        <select
+          data-testid="playoff-size-select"
+          className="border border-gray-300 rounded px-2 py-1 text-sm"
+          value={size}
+          disabled={busy}
+          onChange={(e) => changeSize(Number(e.target.value))}
+        >
+          <option value={0}>Aucun (pas de playoffs)</option>
+          <option value={2}>Finale seule (2)</option>
+          <option value={4}>Demi-finales (4)</option>
+          <option value={8}>Quarts de finale (8)</option>
+        </select>
+      </label>
+
+      <ul className="text-sm text-gray-600 space-y-1">
+        {regularComplete !== undefined ? (
+          <li data-testid="playoff-regular-state">
+            Phase de poule :{" "}
+            {regularComplete ? "terminée" : "encore en cours"}
+          </li>
+        ) : null}
+        {pool && pool.totalQualified > 0 ? (
+          <li data-testid="playoff-pool-state">
+            Qualifiés par poule : {pool.totalQualified} pour un bracket de{" "}
+            {pool.playoffSize} —{" "}
+            {pool.consistent ? "cohérent" : "incohérent"}
+          </li>
+        ) : null}
+      </ul>
+
+      {regularComplete === false ? (
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            data-testid="playoff-force-close"
+            checked={force}
+            disabled={busy}
+            onChange={(e) => setForce(e.target.checked)}
+          />
+          Clôturer la phase de poule en cours (annule les matchs restants)
+        </label>
+      ) : null}
+
+      <button
+        type="button"
+        data-testid="playoff-start-button"
+        className="px-3 py-1.5 text-sm rounded bg-nuffle-anthracite text-white disabled:opacity-50"
+        disabled={busy}
+        onClick={start}
+      >
+        Lancer les playoffs
+      </button>
+
+      {error ? (
+        <p data-testid="playoff-launch-error" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }

@@ -21,6 +21,7 @@ import type { StandingRow } from "./league";
 
 vi.mock("./league", () => ({
   computeSeasonStandings: vi.fn(),
+  computeSeasonStandingsByPool: vi.fn(),
 }));
 
 vi.mock("../prisma", () => ({
@@ -37,6 +38,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       count: vi.fn(),
     },
     leaguePairing: {
@@ -44,18 +46,26 @@ vi.mock("../prisma", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       count: vi.fn(),
+    },
+    auditLog: {
+      create: vi.fn(),
     },
   },
 }));
 
-import { computeSeasonStandings } from "./league";
+import {
+  computeSeasonStandings,
+  computeSeasonStandingsByPool,
+} from "./league";
 import { prisma } from "../prisma";
 import {
   generatePlayoffSeedingFor,
   nextSlotFor,
   firstRoundSlotsFor,
   winnerFromStatus,
+  selectSeedsFromPools,
   startPlayoffs,
   advancePlayoffsAfterPairingComplete,
   advancePlayoffsWithWinner,
@@ -65,6 +75,7 @@ import {
 type MockFn = ReturnType<typeof vi.fn>;
 const mocked = {
   standings: computeSeasonStandings as unknown as MockFn,
+  poolStandings: computeSeasonStandingsByPool as unknown as MockFn,
   seasonFind: prisma.leagueSeason.findUnique as MockFn,
   roundFindFirst: prisma.leagueRound.findFirst as MockFn,
   roundCreate: prisma.leagueRound.create as MockFn,
@@ -72,10 +83,16 @@ const mocked = {
   pairingFindFirst: prisma.leaguePairing.findFirst as MockFn,
   pairingCreate: prisma.leaguePairing.create as MockFn,
   pairingUpdate: prisma.leaguePairing.update as MockFn,
+  pairingUpdateMany: prisma.leaguePairing.updateMany as MockFn,
+  roundUpdateMany: prisma.leagueRound.updateMany as MockFn,
+  auditCreate: (prisma as unknown as { auditLog: { create: MockFn } })
+    .auditLog.create as MockFn,
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Par defaut : aucune poule -> chemin legacy (classement global).
+  (computeSeasonStandingsByPool as unknown as MockFn).mockResolvedValue([]);
 });
 
 function row(over: Partial<StandingRow>): StandingRow {
@@ -223,6 +240,121 @@ describe("firstRoundSlotsFor (PURE)", () => {
     expect(firstRoundSlotsFor(2)).toEqual(["final"]);
     expect(firstRoundSlotsFor(4)).toEqual(["sf1", "sf2"]);
     expect(firstRoundSlotsFor(8)).toEqual(["qf1", "qf2", "qf3", "qf4"]);
+  });
+});
+
+describe("selectSeedsFromPools (PURE)", () => {
+  function pool(
+    poolId: string,
+    poolOrder: number,
+    qualifiesForPlayoffs: number,
+    ranked: string[],
+  ) {
+    return { poolId, poolOrder, qualifiesForPlayoffs, ranked };
+  }
+
+  it("2 poules x 2 qualifies (size 4) : ordre serpentin A1,B1,A2,B2", () => {
+    const out = selectSeedsFromPools(
+      [
+        pool("A", 0, 2, ["a1", "a2", "a3"]),
+        pool("B", 1, 2, ["b1", "b2", "b3"]),
+      ],
+      4,
+    );
+    expect(out).toEqual({ ok: true, seeds: ["a1", "b1", "a2", "b2"] });
+  });
+
+  it("2 poules x 2 : aucun duel intra-poule en demi-finale", () => {
+    const out = selectSeedsFromPools(
+      [pool("A", 0, 2, ["a1", "a2"]), pool("B", 1, 2, ["b1", "b2"])],
+      4,
+    );
+    if (!out.ok) throw new Error("expected ok");
+    const pairings = generatePlayoffSeedingFor(4, out.seeds, 1);
+    // sf1 = 1v4 (a1 vs b2), sf2 = 2v3 (b1 vs a2).
+    for (const p of pairings) {
+      expect(p.homeParticipantId[0]).not.toBe(p.awayParticipantId[0]);
+    }
+  });
+
+  it("4 poules x 2 (size 8) : aucun duel intra-poule en quart", () => {
+    const out = selectSeedsFromPools(
+      [
+        pool("A", 0, 2, ["a1", "a2"]),
+        pool("B", 1, 2, ["b1", "b2"]),
+        pool("C", 2, 2, ["c1", "c2"]),
+        pool("D", 3, 2, ["d1", "d2"]),
+      ],
+      8,
+    );
+    if (!out.ok) throw new Error("expected ok");
+    expect(out.seeds).toEqual([
+      "a1", "b1", "c1", "d1", "a2", "b2", "c2", "d2",
+    ]);
+    for (const p of generatePlayoffSeedingFor(8, out.seeds, 1)) {
+      expect(p.homeParticipantId[0]).not.toBe(p.awayParticipantId[0]);
+    }
+  });
+
+  it("2 poules x 4 (size 8) : aucun duel intra-poule en quart", () => {
+    const out = selectSeedsFromPools(
+      [
+        pool("A", 0, 4, ["a1", "a2", "a3", "a4"]),
+        pool("B", 1, 4, ["b1", "b2", "b3", "b4"]),
+      ],
+      8,
+    );
+    if (!out.ok) throw new Error("expected ok");
+    expect(out.seeds).toEqual([
+      "a1", "b1", "a2", "b2", "a3", "b3", "a4", "b4",
+    ]);
+    for (const p of generatePlayoffSeedingFor(8, out.seeds, 1)) {
+      expect(p.homeParticipantId[0]).not.toBe(p.awayParticipantId[0]);
+    }
+  });
+
+  it("quotas asymetriques : seeds produits, duel intra-poule tolere", () => {
+    const out = selectSeedsFromPools(
+      [pool("A", 0, 3, ["a1", "a2", "a3"]), pool("B", 1, 1, ["b1"])],
+      4,
+    );
+    expect(out).toEqual({ ok: true, seeds: ["a1", "b1", "a2", "a3"] });
+  });
+
+  it("respecte pool.order et non l'ordre du tableau", () => {
+    const out = selectSeedsFromPools(
+      [pool("B", 1, 1, ["b1"]), pool("A", 0, 1, ["a1"])],
+      2,
+    );
+    expect(out).toEqual({ ok: true, seeds: ["a1", "b1"] });
+  });
+
+  it("refuse quand la somme des quotas != taille du bracket", () => {
+    const out = selectSeedsFromPools(
+      [pool("A", 0, 3, ["a1", "a2", "a3"]), pool("B", 1, 3, ["b1", "b2", "b3"])],
+      4,
+    );
+    expect(out).toEqual({ ok: false, reason: "pool-qualification-mismatch" });
+  });
+
+  it("refuse quand une poule est plus petite que son quota", () => {
+    const out = selectSeedsFromPools(
+      [pool("A", 0, 2, ["a1", "a2"]), pool("B", 1, 2, ["b1"])],
+      4,
+    );
+    expect(out).toEqual({ ok: false, reason: "insufficient-participants" });
+  });
+
+  it("ignore les poules a quota 0 (dont la pseudo-poule non affectee)", () => {
+    const out = selectSeedsFromPools(
+      [
+        pool("A", 0, 1, ["a1", "a2"]),
+        pool("B", 1, 1, ["b1", "b2"]),
+        pool("__unassigned__", 2, 0, ["x1", "x2"]),
+      ],
+      2,
+    );
+    expect(out).toEqual({ ok: true, seeds: ["a1", "b1"] });
   });
 });
 
@@ -375,6 +507,214 @@ describe("startPlayoffs", () => {
     const pairingArgs = mocked.pairingCreate.mock.calls[0][0];
     expect(pairingArgs.data.homeParticipantId).toBe("p2");
     expect(pairingArgs.data.awayParticipantId).toBe("p3");
+  });
+});
+
+describe("startPlayoffs — seeding par poule", () => {
+  function poolStanding(
+    poolId: string,
+    poolOrder: number,
+    qualifiesForPlayoffs: number,
+    participantIds: string[],
+    statuses: string[] = [],
+  ) {
+    return {
+      poolId,
+      poolName: poolId,
+      poolOrder,
+      qualifiesForPlayoffs,
+      standings: participantIds.map((participantId, i) =>
+        row({ participantId, status: (statuses[i] ?? "active") as "active" }),
+      ),
+    };
+  }
+
+  function seasonReady(playoffSize: number) {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "in_progress",
+      playoffSize,
+    });
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.roundFindFirst.mockResolvedValue({ roundNumber: 5 });
+    mocked.roundCreate.mockResolvedValue({ id: "r1" });
+    mocked.pairingCreate.mockResolvedValue({});
+  }
+
+  it("seede depuis les quotas de poule au lieu du classement global", async () => {
+    seasonReady(4);
+    mocked.poolStandings.mockResolvedValue([
+      poolStanding("A", 0, 2, ["a1", "a2", "a3"]),
+      poolStanding("B", 1, 2, ["b1", "b2", "b3"]),
+    ]);
+
+    const out = await startPlayoffs("s1");
+    expect(out.created).toBe(true);
+    // Le classement global ne doit pas etre consulte sur ce chemin.
+    expect(mocked.standings).not.toHaveBeenCalled();
+    // Serpentin a1,b1,a2,b2 -> sf1 = 1v4 (a1 vs b2), sf2 = 2v3 (b1 vs a2).
+    expect(mocked.pairingCreate.mock.calls[0][0].data).toMatchObject({
+      homeParticipantId: "a1",
+      awayParticipantId: "b2",
+    });
+    expect(mocked.pairingCreate.mock.calls[1][0].data).toMatchObject({
+      homeParticipantId: "b1",
+      awayParticipantId: "a2",
+    });
+  });
+
+  it("exclut les withdrawn du classement de poule", async () => {
+    seasonReady(2);
+    mocked.poolStandings.mockResolvedValue([
+      poolStanding("A", 0, 1, ["a1", "a2"], ["withdrawn", "active"]),
+      poolStanding("B", 1, 1, ["b1"]),
+    ]);
+
+    await startPlayoffs("s1");
+    expect(mocked.pairingCreate.mock.calls[0][0].data).toMatchObject({
+      homeParticipantId: "a2",
+      awayParticipantId: "b1",
+    });
+  });
+
+  it("refuse quand la somme des quotas != playoffSize", async () => {
+    seasonReady(4);
+    mocked.poolStandings.mockResolvedValue([
+      poolStanding("A", 0, 3, ["a1", "a2", "a3"]),
+      poolStanding("B", 1, 3, ["b1", "b2", "b3"]),
+    ]);
+
+    const out = await startPlayoffs("s1");
+    expect(out.skippedReason).toBe("pool-qualification-mismatch");
+    expect(mocked.roundCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuse quand une poule est plus petite que son quota", async () => {
+    seasonReady(4);
+    mocked.poolStandings.mockResolvedValue([
+      poolStanding("A", 0, 2, ["a1", "a2"]),
+      poolStanding("B", 1, 2, ["b1"]),
+    ]);
+
+    const out = await startPlayoffs("s1");
+    expect(out.skippedReason).toBe("insufficient-participants");
+    expect(mocked.roundCreate).not.toHaveBeenCalled();
+  });
+
+  it("retombe sur le classement global quand toutes les poules qualifient 0", async () => {
+    seasonReady(2);
+    mocked.poolStandings.mockResolvedValue([
+      poolStanding("A", 0, 0, ["a1", "a2"]),
+      poolStanding("B", 1, 0, ["b1", "b2"]),
+    ]);
+    mocked.standings.mockResolvedValue([
+      row({ participantId: "g1" }),
+      row({ participantId: "g2" }),
+    ]);
+
+    const out = await startPlayoffs("s1");
+    expect(out.created).toBe(true);
+    expect(mocked.pairingCreate.mock.calls[0][0].data).toMatchObject({
+      homeParticipantId: "g1",
+      awayParticipantId: "g2",
+    });
+  });
+});
+
+describe("startPlayoffs — garde de fin de phase reguliere", () => {
+  function seasonWithIncompleteRounds(incomplete: number) {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "in_progress",
+      playoffSize: 2,
+    });
+    // 1er appel : rounds playoff existants. 2e : rounds reguliers non completes.
+    mocked.roundCount.mockImplementation(async (args: unknown) => {
+      const where = (args as { where: { kind?: unknown } }).where;
+      return where.kind === "playoff" ? 0 : incomplete;
+    });
+    mocked.roundFindFirst.mockResolvedValue({ roundNumber: 5 });
+    mocked.roundCreate.mockResolvedValue({ id: "r1" });
+    mocked.pairingCreate.mockResolvedValue({});
+    mocked.standings.mockResolvedValue([
+      row({ participantId: "p1" }),
+      row({ participantId: "p2" }),
+    ]);
+  }
+
+  it("refuse quand un round regulier n'est pas completed", async () => {
+    seasonWithIncompleteRounds(2);
+    const out = await startPlayoffs("s1");
+    expect(out.skippedReason).toBe("regular-season-incomplete");
+    expect(mocked.roundCreate).not.toHaveBeenCalled();
+    expect(mocked.pairingUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("genere le bracket quand tous les rounds reguliers sont completed", async () => {
+    seasonWithIncompleteRounds(0);
+    const out = await startPlayoffs("s1");
+    expect(out.created).toBe(true);
+    expect(mocked.pairingUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("force: cloture la phase reguliere puis genere le bracket", async () => {
+    seasonWithIncompleteRounds(2);
+    mocked.pairingUpdateMany.mockResolvedValue({ count: 3 });
+    mocked.roundUpdateMany.mockResolvedValue({ count: 2 });
+
+    const out = await startPlayoffs("s1", { force: true, byUserId: "u1" });
+    expect(out.created).toBe(true);
+    expect(out.cancelledPairings).toBe(3);
+    expect(mocked.pairingUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "cancelled" } }),
+    );
+    expect(mocked.roundUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "completed" } }),
+    );
+    expect(mocked.auditCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "league.playoff:force-start",
+          entityId: "s1",
+        }),
+      }),
+    );
+  });
+
+  it("force: n'annule rien si une autre garde refuse (config incoherente)", async () => {
+    seasonWithIncompleteRounds(2);
+    mocked.poolStandings.mockResolvedValue([
+      {
+        poolId: "A",
+        poolName: "A",
+        poolOrder: 0,
+        qualifiesForPlayoffs: 4,
+        standings: [
+          row({ participantId: "a1" }),
+          row({ participantId: "a2" }),
+          row({ participantId: "a3" }),
+          row({ participantId: "a4" }),
+        ],
+      },
+    ]);
+
+    const out = await startPlayoffs("s1", { force: true, byUserId: "u1" });
+    expect(out.skippedReason).toBe("pool-qualification-mismatch");
+    expect(mocked.pairingUpdateMany).not.toHaveBeenCalled();
+    expect(mocked.roundUpdateMany).not.toHaveBeenCalled();
+    expect(mocked.roundCreate).not.toHaveBeenCalled();
+  });
+
+  it("force ne contourne pas playoffs-already-started", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "in_progress",
+      playoffSize: 2,
+    });
+    mocked.roundCount.mockResolvedValue(2);
+    const out = await startPlayoffs("s1", { force: true });
+    expect(out.skippedReason).toBe("playoffs-already-started");
+    expect(mocked.pairingUpdateMany).not.toHaveBeenCalled();
   });
 });
 

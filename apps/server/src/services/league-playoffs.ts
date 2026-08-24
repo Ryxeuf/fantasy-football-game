@@ -23,7 +23,11 @@
  */
 
 import { prisma } from "../prisma";
-import { computeSeasonStandings, type StandingRow } from "./league";
+import {
+  computeSeasonStandings,
+  computeSeasonStandingsByPool,
+  type StandingRow,
+} from "./league";
 import { serverLog } from "../utils/server-log";
 
 export type PlayoffSize = 0 | 2 | 4 | 8;
@@ -178,6 +182,86 @@ export function firstRoundSlotsFor(size: PlayoffSize): readonly string[] {
   return [];
 }
 
+/**
+ * Entree PURE de `selectSeedsFromPools` : une poule avec son quota de
+ * qualifies et son classement interne (index 0 = 1er de poule).
+ * Les participants `withdrawn` doivent deja avoir ete filtres.
+ */
+export interface PoolQualificationInput {
+  readonly poolId: string;
+  readonly poolOrder: number;
+  readonly qualifiesForPlayoffs: number;
+  readonly ranked: readonly string[];
+}
+
+export type PoolSeedOutcome =
+  | { readonly ok: true; readonly seeds: readonly string[] }
+  | {
+      readonly ok: false;
+      readonly reason:
+        | "pool-qualification-mismatch"
+        | "insufficient-participants";
+    };
+
+/**
+ * PURE — construit la liste des seeds a partir des quotas de poule.
+ *
+ * Ordre "serpentin" : tous les 1ers de poule (par `poolOrder`
+ * croissant), puis tous les 2emes, etc. Combine au seeding croise de
+ * `generatePlayoffSeedingFor` (1v8/4v5/2v7/3v6), cet ordre evite les
+ * duels intra-poule au premier tour tant que les poules ont le meme
+ * quota. En quotas asymetriques un duel intra-poule redevient
+ * possible : le commissaire dispose alors de l'editeur de seeds
+ * (`overridePlayoffParticipants`).
+ *
+ * Refus (aucun seed produit) :
+ *   - `pool-qualification-mismatch` : somme des quotas != taille du
+ *     bracket. On refuse plutot que d'ajuster, pour ne pas produire un
+ *     bracket qui contredit les quotas affiches toute la saison.
+ *   - `insufficient-participants` : une poule compte moins d'equipes
+ *     eligibles que son quota.
+ */
+export function selectSeedsFromPools(
+  pools: readonly PoolQualificationInput[],
+  size: PlayoffSize,
+): PoolSeedOutcome {
+  const totalQualified = pools.reduce(
+    (n, p) => n + Math.max(0, p.qualifiesForPlayoffs),
+    0,
+  );
+  if (totalQualified !== size) {
+    return { ok: false, reason: "pool-qualification-mismatch" };
+  }
+
+  const qualifying = pools
+    .filter((p) => p.qualifiesForPlayoffs > 0)
+    .slice()
+    .sort((a, b) =>
+      a.poolOrder !== b.poolOrder
+        ? a.poolOrder - b.poolOrder
+        : a.poolId.localeCompare(b.poolId),
+    );
+
+  for (const p of qualifying) {
+    if (p.ranked.length < p.qualifiesForPlayoffs) {
+      return { ok: false, reason: "insufficient-participants" };
+    }
+  }
+
+  const maxQuota = qualifying.reduce(
+    (n, p) => Math.max(n, p.qualifiesForPlayoffs),
+    0,
+  );
+  const seeds: string[] = [];
+  for (let rank = 0; rank < maxQuota; rank += 1) {
+    for (const p of qualifying) {
+      if (p.qualifiesForPlayoffs > rank) seeds.push(p.ranked[rank]);
+    }
+  }
+
+  return { ok: true, seeds };
+}
+
 interface PrismaWithLeague {
   leagueSeason: {
     findUnique: (args: unknown) => Promise<unknown>;
@@ -223,15 +307,35 @@ export interface StartPlayoffsOutcome {
   readonly created: boolean;
   readonly roundsCreated: number;
   readonly pairingsCreated: number;
-  readonly skippedReason?:
-    | "playoffs-disabled"
-    | "playoffs-already-started"
-    | "season-missing"
-    | "insufficient-participants";
+  readonly skippedReason?: StartPlayoffsSkippedReason;
+  /** Nombre de pairings reguliers annules par la cloture anticipee. */
+  readonly cancelledPairings?: number;
+}
+
+export type StartPlayoffsSkippedReason =
+  | "playoffs-disabled"
+  | "playoffs-already-started"
+  | "season-missing"
+  | "insufficient-participants"
+  /** Un round non-playoff n'est pas encore `completed`. */
+  | "regular-season-incomplete"
+  /** Somme des quotas de poule != playoffSize. */
+  | "pool-qualification-mismatch";
+
+export interface StartPlayoffsOptions {
+  /**
+   * Cloture anticipee de la phase reguliere : annule les pairings
+   * reguliers non joues et complete les rounds correspondants avant de
+   * generer le bracket. Ne contourne AUCUNE autre garde.
+   */
+  readonly force?: boolean;
+  /** Commissaire a l'origine de la cloture forcee (journalisation). */
+  readonly byUserId?: string;
 }
 
 export async function startPlayoffs(
   seasonId: string,
+  options: StartPlayoffsOptions = {},
 ): Promise<StartPlayoffsOutcome> {
   const client = prisma as unknown as PrismaWithLeague;
 
@@ -239,58 +343,44 @@ export async function startPlayoffs(
     where: { id: seasonId },
     select: { id: true, status: true, playoffSize: true },
   })) as SeasonRow | null;
-  if (!season) {
-    return {
-      created: false,
-      roundsCreated: 0,
-      pairingsCreated: 0,
-      skippedReason: "season-missing",
-    };
-  }
-  if (season.playoffSize === 0) {
-    return {
-      created: false,
-      roundsCreated: 0,
-      pairingsCreated: 0,
-      skippedReason: "playoffs-disabled",
-    };
-  }
+  if (!season) return skipped("season-missing");
+  if (season.playoffSize === 0) return skipped("playoffs-disabled");
+
   const size = season.playoffSize as PlayoffSize;
   if (size !== 2 && size !== 4 && size !== 8) {
-    return {
-      created: false,
-      roundsCreated: 0,
-      pairingsCreated: 0,
-      skippedReason: "playoffs-disabled",
-    };
+    return skipped("playoffs-disabled");
   }
 
   const existing = await client.leagueRound.count({
     where: { seasonId, kind: "playoff" },
   });
-  if (existing > 0) {
-    return {
-      created: false,
-      roundsCreated: 0,
-      pairingsCreated: 0,
-      skippedReason: "playoffs-already-started",
-    };
+  if (existing > 0) return skipped("playoffs-already-started");
+
+  // Garde de fin de phase reguliere. Le hook automatique ne se
+  // declenche qu'une fois tout complete ; c'est l'action manuelle du
+  // commissaire qui rend cette verification necessaire.
+  const incompleteRegular = await client.leagueRound.count({
+    where: {
+      seasonId,
+      kind: { not: "playoff" },
+      status: { not: "completed" },
+    },
+  });
+  if (incompleteRegular > 0 && !options.force) {
+    return skipped("regular-season-incomplete");
   }
 
-  const standings = await computeSeasonStandings(seasonId);
-  const eligible = standings.filter(
-    (s: StandingRow) => s.status !== "withdrawn",
-  );
-  if (eligible.length < size) {
-    return {
-      created: false,
-      roundsCreated: 0,
-      pairingsCreated: 0,
-      skippedReason: "insufficient-participants",
-    };
-  }
+  const resolved = await resolveSeeds(seasonId, size);
+  if (!resolved.ok) return skipped(resolved.reason);
+  const seeds = resolved.seeds;
 
-  const seeds = eligible.map((s: StandingRow) => s.participantId);
+  // La cloture forcee n'intervient qu'une fois toutes les autres
+  // gardes satisfaites : on n'annule jamais de pairings pour une
+  // generation qui echouerait juste apres.
+  let cancelledPairings = 0;
+  if (incompleteRegular > 0 && options.force) {
+    cancelledPairings = await closeRegularPhase(seasonId, options.byUserId);
+  }
 
   const lastRound = (await client.leagueRound.findFirst({
     where: { seasonId },
@@ -334,14 +424,132 @@ export async function startPlayoffs(
   }
 
   serverLog.info(
-    `[league-playoffs] season=${seasonId} playoffs started size=${size} rounds=${roundsCreated}`,
+    `[league-playoffs] season=${seasonId} playoffs started size=${size} rounds=${roundsCreated} seeding=${resolved.source}`,
   );
 
   return {
     created: true,
     roundsCreated,
     pairingsCreated,
+    ...(cancelledPairings > 0 ? { cancelledPairings } : {}),
   };
+}
+
+function skipped(reason: StartPlayoffsSkippedReason): StartPlayoffsOutcome {
+  return {
+    created: false,
+    roundsCreated: 0,
+    pairingsCreated: 0,
+    skippedReason: reason,
+  };
+}
+
+type ResolvedSeeds =
+  | {
+      readonly ok: true;
+      readonly seeds: readonly string[];
+      readonly source: "pools" | "global";
+    }
+  | { readonly ok: false; readonly reason: StartPlayoffsSkippedReason };
+
+/**
+ * Choisit la source des seeds : quotas de poule si la saison en
+ * configure, classement global sinon (comportement historique).
+ */
+async function resolveSeeds(
+  seasonId: string,
+  size: PlayoffSize,
+): Promise<ResolvedSeeds> {
+  const pools = await computeSeasonStandingsByPool(seasonId);
+  const totalQualified = pools.reduce(
+    (n, p) => n + Math.max(0, p.qualifiesForPlayoffs),
+    0,
+  );
+
+  if (pools.length > 0 && totalQualified > 0) {
+    const outcome = selectSeedsFromPools(
+      pools.map((p) => ({
+        poolId: p.poolId,
+        poolOrder: p.poolOrder,
+        qualifiesForPlayoffs: p.qualifiesForPlayoffs,
+        ranked: p.standings
+          .filter((s: StandingRow) => s.status !== "withdrawn")
+          .map((s: StandingRow) => s.participantId),
+      })),
+      size,
+    );
+    if (!outcome.ok) return { ok: false, reason: outcome.reason };
+    return { ok: true, seeds: outcome.seeds, source: "pools" };
+  }
+
+  const standings = await computeSeasonStandings(seasonId);
+  const eligible = standings.filter(
+    (s: StandingRow) => s.status !== "withdrawn",
+  );
+  if (eligible.length < size) {
+    return { ok: false, reason: "insufficient-participants" };
+  }
+  return {
+    ok: true,
+    seeds: eligible.map((s: StandingRow) => s.participantId),
+    source: "global",
+  };
+}
+
+/**
+ * Cloture anticipee de la phase reguliere : meme semantique que
+ * `closeSeason` (pairings non joues -> `cancelled`, rounds ->
+ * `completed`) mais restreinte aux rounds non-playoff et sans clore la
+ * saison. Journalise best-effort : l'annulation de matchs planifies
+ * doit laisser une trace, mais un echec d'audit ne doit pas empecher
+ * le bracket de se generer.
+ */
+async function closeRegularPhase(
+  seasonId: string,
+  byUserId?: string,
+): Promise<number> {
+  const cancelled = await prisma.leaguePairing.updateMany({
+    where: {
+      round: { seasonId, kind: { not: "playoff" } },
+      status: { in: ["scheduled", "in_progress"] },
+    },
+    data: { status: "cancelled" },
+  });
+  await prisma.leagueRound.updateMany({
+    where: {
+      seasonId,
+      kind: { not: "playoff" },
+      status: { not: "completed" },
+    },
+    data: { status: "completed" },
+  });
+
+  serverLog.info(
+    `[league-playoffs] season=${seasonId} regular phase force-closed cancelled=${cancelled.count}`,
+  );
+
+  if (byUserId) {
+    try {
+      await (
+        prisma as unknown as {
+          auditLog: { create: (args: unknown) => Promise<unknown> };
+        }
+      ).auditLog.create({
+        data: {
+          userId: byUserId,
+          action: "league.playoff:force-start",
+          entity: "LeagueSeason",
+          entityId: seasonId,
+          newValue: { cancelledPairings: cancelled.count },
+        },
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league-playoffs] audit force-start failed: ${msg}`);
+    }
+  }
+
+  return cancelled.count;
 }
 
 /** Lot D — Erreur typee pour les operations d'override du bracket. */
