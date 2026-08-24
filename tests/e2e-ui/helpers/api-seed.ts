@@ -113,3 +113,45 @@ export async function seedTwoCoaches(): Promise<{
     },
   };
 }
+
+/**
+ * Coûts de staff d'un roster pour un format, tels que le builder les
+ * consomme (`GET /api/rosters` → `staffConfigs`). Montants en **po**.
+ *
+ * Les specs qui vérifient le récapitulatif de coûts du builder doivent
+ * partir de cette source plutôt que d'un total codé en dur : l'édition 2025
+ * a fait passer le Fan Dévoué de 10 000 à 5 000 po (PR #964) sans que le
+ * total attendu ici ne suive, et l'E2E est resté rouge sur `main`.
+ */
+export interface E2EStaffConfig {
+  readonly rerollCost: number;
+  readonly cheerleaderCost: number;
+  readonly assistantCost: number;
+  readonly apothecaryCost: number;
+  readonly dedicatedFanCost: number;
+}
+
+export async function fetchStaffConfig(
+  rosterSlug: string,
+  format: "bb11" | "sevens" = "bb11",
+  ruleset = "season_3",
+): Promise<E2EStaffConfig> {
+  const res = await fetch(`${API_BASE}/api/rosters?ruleset=${ruleset}`);
+  if (!res.ok) {
+    throw new Error(`GET /api/rosters failed: ${res.status}`);
+  }
+  const body = (await res.json()) as {
+    rosters?: Array<{
+      slug: string;
+      staffConfigs?: Record<string, E2EStaffConfig>;
+    }>;
+  };
+  const config = body.rosters?.find((r) => r.slug === rosterSlug)
+    ?.staffConfigs?.[format];
+  if (!config) {
+    throw new Error(
+      `staffConfigs.${format} introuvable pour le roster ${rosterSlug}`,
+    );
+  }
+  return config;
+}

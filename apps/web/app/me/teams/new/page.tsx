@@ -335,12 +335,16 @@ export default function NewTeamBuilder() {
             tier?: string;
             budget?: number;
             staffConfigs?: Record<GameFormat, RosterStaffConfig>;
+            regionalLeagueOptions?: RegionalLeagueOptionView[];
           }) => ({
             slug: r.slug,
             name: r.name,
             tier: r.tier,
             budget: r.budget,
             staffConfigs: r.staffConfigs,
+            // Ligues régionales : le mapping est une liste blanche explicite,
+            // tout champ oublié ici disparaît silencieusement du builder.
+            regionalLeagueOptions: r.regionalLeagueOptions,
           }),
         );
         setRosters(rostersList);
