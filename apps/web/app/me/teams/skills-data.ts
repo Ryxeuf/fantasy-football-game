@@ -19,6 +19,8 @@ export interface SkillDescription {
   category: string;
   /** E8 — compétence/trait passif (souligné dans le livre). Absent = actif. */
   isPassive?: boolean;
+  /** Compétence Élite : +10 000 po sur la valeur du joueur. Absent = non. */
+  isElite?: boolean;
 }
 
 interface SkillFromAPI {
@@ -30,6 +32,7 @@ interface SkillFromAPI {
   descriptionEn?: string | null;
   category: string;
   isPassive?: boolean;
+  isElite?: boolean;
 }
 
 // Cache pour les compétences chargées depuis l'API
@@ -92,7 +95,8 @@ export async function getSkillDescriptionAsync(slugOrName: string, language: "fr
       name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
       description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
       category: apiSkill.category,
-      isPassive: apiSkill.isPassive ?? false
+      isPassive: apiSkill.isPassive ?? false,
+      isElite: apiSkill.isElite ?? false
     };
   }
   
@@ -115,7 +119,8 @@ export async function getSkillDescriptionAsync(slugOrName: string, language: "fr
     name: language === "fr" ? skill.nameFr : skill.nameEn,
     description: skill.description,
     category: skill.category,
-    isPassive: skill.isPassive ?? false
+    isPassive: skill.isPassive ?? false,
+    isElite: skill.isElite ?? false
   };
 }
 
@@ -137,7 +142,8 @@ export function getSkillDescription(slugOrName: string, language: "fr" | "en" = 
         name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
         description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
         category: apiSkill.category,
-        isPassive: apiSkill.isPassive ?? false
+        isPassive: apiSkill.isPassive ?? false,
+        isElite: apiSkill.isElite ?? false
       };
     }
   }
@@ -161,7 +167,8 @@ export function getSkillDescription(slugOrName: string, language: "fr" | "en" = 
     name: language === "fr" ? skill.nameFr : skill.nameEn,
     description: skill.description,
     category: skill.category,
-    isPassive: skill.isPassive ?? false
+    isPassive: skill.isPassive ?? false,
+    isElite: skill.isElite ?? false
   };
 }
 

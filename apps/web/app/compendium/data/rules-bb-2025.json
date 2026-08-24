@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-08-19a",
+    "version": "2026-08-24a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -942,7 +942,7 @@
           "type": "callout",
           "variant": "warning",
           "title": "Compétences d'Élite",
-          "text": "Une compétence marquée comme compétence d'Élite augmente la valeur du joueur de 10 000 pièces d'or supplémentaires."
+          "text": "Une compétence marquée comme compétence d'Élite augmente la valeur du joueur de 10 000 pièces d'or supplémentaires (une compétence primaire d'Élite vaut donc 30 000 po au lieu de 20 000). Les compétences d'Élite de la Saison 3 sont : Blocage, Esquive, Châtaigne (y compris +1/+2) et Garde."
         },
         {
           "type": "paragraph",
@@ -1160,7 +1160,7 @@
               "1",
               "Réception",
               "Clé de Bras",
-              "Blocage",
+              "Blocage ⭐",
               "Main Démesurée",
               "Précision",
               "Joueur Déloyal"
@@ -1188,7 +1188,7 @@
             [
               "",
               "4",
-              "Esquive",
+              "Esquive ⭐",
               "Dans le Mille",
               "Frénésie*",
               "Bras Supplémentaires",
@@ -1209,7 +1209,7 @@
               "",
               "6",
               "Frappe-et-court",
-              "Garde",
+              "Garde ⭐",
               "Pro",
               "Cornes",
               "Passe Désespérée",
@@ -1229,7 +1229,7 @@
               "",
               "2",
               "Saut",
-              "Châtaigne",
+              "Châtaigne ⭐",
               "Arracher le Ballon",
               "Grande Gueule",
               "Nerfs d'Acier",
@@ -1276,6 +1276,12 @@
               "Innovateur Violent"
             ]
           ]
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "title": "Compétences d'Élite (⭐)",
+          "text": "Les compétences marquées d'une ⭐ (Blocage, Esquive, Châtaigne, Garde) sont des compétences d'Élite : chacune augmente la valeur du joueur de 10 000 pièces d'or supplémentaires (soit 30 000 po au lieu de 20 000 pour une compétence primaire)."
         }
       ]
     },
