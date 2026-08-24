@@ -293,6 +293,9 @@ describe('handleCreateFromRoster — règlement de tournoi', () => {
       body: {
         name: 'Test',
         roster: 'goblin',
+        // Les Gobelins ont deux Ligues possibles : sans ce choix la
+        // création est refusée avant même d'atteindre la règle testée.
+        regionalLeague: 'badlands_brawl',
         starPlayers: ['ripper_bolgrot'],
         tournamentRuleset: 'naf_world_cup_2027',
       },

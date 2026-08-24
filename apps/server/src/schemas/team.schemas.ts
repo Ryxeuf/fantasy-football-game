@@ -11,6 +11,12 @@ export const createFromRosterSchema = z.object({
   // "naf_world_cup_2027"). null/absent = aucun. Validé contre le registre
   // dans le handler (parseTournamentRuleset).
   tournamentRuleset: z.string().trim().max(64).optional().nullable(),
+  // Ligue régionale choisie à la création (slug du catalogue @bb/game-engine
+  // `REGIONAL_LEAGUES`, ex : "chaos_clash"). Elle conditionne les Star
+  // Players recrutables et les Coups de Pouce accessibles. Validée contre les
+  // options du roster dans le handler ; requise dès que le roster a le choix
+  // entre plusieurs Ligues, sauf règlement de tournoi qui neutralise l'axe.
+  regionalLeague: z.string().trim().max(64).optional().nullable(),
 });
 
 export const buildTeamSchema = z.object({
@@ -34,6 +40,12 @@ export const buildTeamSchema = z.object({
   // dans le handler ; s'il est fourni, le serveur IMPOSE budget d'or et
   // pool de SPP du pack (valeurs client ignorées) et applique ses
   // restrictions de Star Players et de cumul de compétences.
+  // Ligue régionale choisie à la création (slug du catalogue @bb/game-engine
+  // `REGIONAL_LEAGUES`, ex : "chaos_clash"). Elle conditionne les Star
+  // Players recrutables et les Coups de Pouce accessibles. Validée contre les
+  // options du roster dans le handler ; requise dès que le roster a le choix
+  // entre plusieurs Ligues, sauf règlement de tournoi qui neutralise l'axe.
+  regionalLeague: z.string().trim().max(64).optional().nullable(),
   tournamentRuleset: z.string().trim().max(64).optional().nullable(),
   rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),

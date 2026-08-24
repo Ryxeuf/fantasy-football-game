@@ -63,7 +63,8 @@ import {
   getInducementCost,
   getInducementMaxQuantity,
   getSpecialRulesForTeam,
-  getRegionalRulesForTeam,
+  resolveTeamRegionalRules,
+  DEFAULT_RULESET,
   APOTHECARY_FORBIDDEN_ROSTERS,
   getTeamColors,
   TEAM_ROSTERS,
@@ -1702,6 +1703,13 @@ export interface MatchSheetTeam {
   /** Tresorerie (cagnotte) en po. */
   readonly treasury: number;
   /**
+   * Ligue regionale choisie a la creation (slug). Conditionne les Star
+   * Players recrutables et les Coups de Pouce accessibles. `null` = aucun
+   * choix enregistre (equipe anterieure a la regle) : union historique des
+   * regles regionales du roster.
+   */
+  readonly regionalLeague: string | null;
+  /**
    * Fans devoues de l'equipe (1-6). Sert a afficher la formule officielle
    * du facteur de popularite (1D3 + fans devoues) et la regle post-match
    * de variation des fans (D6 vs fans).
@@ -1784,6 +1792,7 @@ async function loadSheetTeams(
       currentValue: true,
       treasury: true,
       dedicatedFans: true,
+      regionalLeague: true,
       owner: { select: { coachName: true } },
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
@@ -1821,6 +1830,7 @@ async function loadSheetTeams(
     currentValue?: number | null;
     treasury?: number | null;
     dedicatedFans?: number | null;
+    regionalLeague?: string | null;
     owner?: { coachName?: string | null } | null;
     players: Array<{
       id: string;
@@ -1867,6 +1877,7 @@ async function loadSheetTeams(
       teamValue: t.teamValue ?? 0,
       currentValue: t.currentValue ?? 0,
       treasury: t.treasury ?? 0,
+      regionalLeague: t.regionalLeague ?? null,
       // Defaut BB : toute equipe demarre avec 1 fan devoue.
       dedicatedFans: t.dedicatedFans ?? 1,
       players: t.players.map((p) => ({
@@ -2106,10 +2117,18 @@ function inducementOptionsFor(
   // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
   // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
   allowedInducements: string[] | null = null,
+  // Ligue régionale CHOISIE par l'équipe : c'est elle (et l'alignement
+  // qu'elle apporte) qui ouvre les Coups de Pouce régionaux, pas l'union
+  // des Ligues du roster. `null` = équipe sans choix enregistré.
+  regionalLeague: string | null = null,
 ): MatchSheetInducementOption[] {
   const ctx = {
     teamId: "A" as const,
-    regionalRules: getRegionalRulesForTeam(roster),
+    regionalRules: resolveTeamRegionalRules(
+      roster,
+      DEFAULT_RULESET,
+      regionalLeague,
+    ),
     hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
     rosterSlug: roster,
     // A53 — les restrictions/remises officielles dépendent des règles
@@ -2143,10 +2162,13 @@ function colorsFor(roster: string | undefined): MatchSheetTeamColors {
 async function starPlayersFor(
   roster: string,
   ruleset: Ruleset,
+  regionalLeague: string | null = null,
 ): Promise<MatchSheetStarPlayerOption[]> {
   // Bug latent corrige : appelait auparavant sans le ruleset reel de
-  // l'equipe (toujours DEFAULT_RULESET statique).
-  const regionalRules = getRegionalRulesForTeam(roster, ruleset) ?? [];
+  // l'equipe (toujours DEFAULT_RULESET statique). Depuis le choix de Ligue
+  // regionale, l'offre suit la Ligue retenue par l'equipe.
+  const regionalRules =
+    resolveTeamRegionalRules(roster, ruleset, regionalLeague) ?? [];
   const starPlayers = await getAvailableStarPlayersDb(roster, regionalRules, ruleset);
   return starPlayers.map((s) => ({
     slug: s.slug,
@@ -2259,18 +2281,34 @@ export async function buildMatchSheetReference(
     weatherTables: buildWeatherTables(),
     inducements: {
       home: teams.home
-        ? inducementOptionsFor(teams.home.roster, allowedInducements)
+        ? inducementOptionsFor(
+            teams.home.roster,
+            allowedInducements,
+            teams.home.regionalLeague,
+          )
         : [],
       away: teams.away
-        ? inducementOptionsFor(teams.away.roster, allowedInducements)
+        ? inducementOptionsFor(
+            teams.away.roster,
+            allowedInducements,
+            teams.away.regionalLeague,
+          )
         : [],
     },
     starPlayers: {
       home: teams.home
-        ? await starPlayersFor(teams.home.roster, teams.home.ruleset as Ruleset)
+        ? await starPlayersFor(
+            teams.home.roster,
+            teams.home.ruleset as Ruleset,
+            teams.home.regionalLeague,
+          )
         : [],
       away: teams.away
-        ? await starPlayersFor(teams.away.roster, teams.away.ruleset as Ruleset)
+        ? await starPlayersFor(
+            teams.away.roster,
+            teams.away.ruleset as Ruleset,
+            teams.away.regionalLeague,
+          )
         : [],
     },
     colors: {

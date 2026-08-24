@@ -25400,6 +25400,7 @@ export namespace Prisma {
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
     tournamentRuleset: string | null
+    regionalLeague: string | null
     createdAt: Date | null
     treasury: number | null
     rerolls: number | null
@@ -25425,6 +25426,7 @@ export namespace Prisma {
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
     tournamentRuleset: string | null
+    regionalLeague: string | null
     createdAt: Date | null
     treasury: number | null
     rerolls: number | null
@@ -25450,6 +25452,7 @@ export namespace Prisma {
     ruleset: number
     format: number
     tournamentRuleset: number
+    regionalLeague: number
     createdAt: number
     treasury: number
     rerolls: number
@@ -25501,6 +25504,7 @@ export namespace Prisma {
     ruleset?: true
     format?: true
     tournamentRuleset?: true
+    regionalLeague?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25526,6 +25530,7 @@ export namespace Prisma {
     ruleset?: true
     format?: true
     tournamentRuleset?: true
+    regionalLeague?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25551,6 +25556,7 @@ export namespace Prisma {
     ruleset?: true
     format?: true
     tournamentRuleset?: true
+    regionalLeague?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25663,6 +25669,7 @@ export namespace Prisma {
     ruleset: $Enums.Ruleset
     format: $Enums.Format
     tournamentRuleset: string | null
+    regionalLeague: string | null
     createdAt: Date
     treasury: number
     rerolls: number
@@ -25707,6 +25714,7 @@ export namespace Prisma {
     ruleset?: boolean
     format?: boolean
     tournamentRuleset?: boolean
+    regionalLeague?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25744,6 +25752,7 @@ export namespace Prisma {
     ruleset?: boolean
     format?: boolean
     tournamentRuleset?: boolean
+    regionalLeague?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25770,6 +25779,7 @@ export namespace Prisma {
     ruleset?: boolean
     format?: boolean
     tournamentRuleset?: boolean
+    regionalLeague?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25796,6 +25806,7 @@ export namespace Prisma {
     ruleset?: boolean
     format?: boolean
     tournamentRuleset?: boolean
+    regionalLeague?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25813,7 +25824,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "tournamentRuleset" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
+  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "tournamentRuleset" | "regionalLeague" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
@@ -25858,6 +25869,7 @@ export namespace Prisma {
       ruleset: $Enums.Ruleset
       format: $Enums.Format
       tournamentRuleset: string | null
+      regionalLeague: string | null
       createdAt: Date
       treasury: number
       rerolls: number
@@ -26314,6 +26326,7 @@ export namespace Prisma {
     readonly ruleset: FieldRef<"Team", 'Ruleset'>
     readonly format: FieldRef<"Team", 'Format'>
     readonly tournamentRuleset: FieldRef<"Team", 'String'>
+    readonly regionalLeague: FieldRef<"Team", 'String'>
     readonly createdAt: FieldRef<"Team", 'DateTime'>
     readonly treasury: FieldRef<"Team", 'Int'>
     readonly rerolls: FieldRef<"Team", 'Int'>
@@ -102847,6 +102860,7 @@ export namespace Prisma {
     ruleset: 'ruleset',
     format: 'format',
     tournamentRuleset: 'tournamentRuleset',
+    regionalLeague: 'regionalLeague',
     createdAt: 'createdAt',
     treasury: 'treasury',
     rerolls: 'rerolls',
@@ -105333,6 +105347,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
     tournamentRuleset?: StringNullableFilter<"Team"> | string | null
+    regionalLeague?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -105369,6 +105384,7 @@ export namespace Prisma {
     ruleset?: SortOrder
     format?: SortOrder
     tournamentRuleset?: SortOrderInput | SortOrder
+    regionalLeague?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -105409,6 +105425,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
     tournamentRuleset?: StringNullableFilter<"Team"> | string | null
+    regionalLeague?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -105444,6 +105461,7 @@ export namespace Prisma {
     ruleset?: SortOrder
     format?: SortOrder
     tournamentRuleset?: SortOrderInput | SortOrder
+    regionalLeague?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -105477,6 +105495,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetWithAggregatesFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatWithAggregatesFilter<"Team"> | $Enums.Format
     tournamentRuleset?: StringNullableWithAggregatesFilter<"Team"> | string | null
+    regionalLeague?: StringNullableWithAggregatesFilter<"Team"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Team"> | Date | string
     treasury?: IntWithAggregatesFilter<"Team"> | number
     rerolls?: IntWithAggregatesFilter<"Team"> | number
@@ -112858,6 +112877,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -112894,6 +112914,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -112928,6 +112949,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -112964,6 +112986,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -112999,6 +113022,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -113023,6 +113047,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -113048,6 +113073,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -121095,6 +121121,7 @@ export namespace Prisma {
     ruleset?: SortOrder
     format?: SortOrder
     tournamentRuleset?: SortOrder
+    regionalLeague?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -121132,6 +121159,7 @@ export namespace Prisma {
     ruleset?: SortOrder
     format?: SortOrder
     tournamentRuleset?: SortOrder
+    regionalLeague?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -121157,6 +121185,7 @@ export namespace Prisma {
     ruleset?: SortOrder
     format?: SortOrder
     tournamentRuleset?: SortOrder
+    regionalLeague?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -131697,6 +131726,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -131731,6 +131761,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -132857,6 +132888,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
     tournamentRuleset?: StringNullableFilter<"Team"> | string | null
+    regionalLeague?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -137781,6 +137813,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -137816,6 +137849,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -138085,6 +138119,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -138120,6 +138155,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139147,6 +139183,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139182,6 +139219,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139266,6 +139304,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139301,6 +139340,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139535,6 +139575,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139570,6 +139611,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139619,6 +139661,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139654,6 +139697,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141369,6 +141413,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141404,6 +141449,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141524,6 +141570,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141559,6 +141606,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141735,6 +141783,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141770,6 +141819,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141968,6 +142018,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142003,6 +142054,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142179,6 +142231,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142214,6 +142267,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142252,6 +142306,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142287,6 +142342,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142599,6 +142655,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142634,6 +142691,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142678,6 +142736,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142713,6 +142772,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -144527,6 +144587,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -144562,6 +144623,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145019,6 +145081,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -145054,6 +145117,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -145438,6 +145502,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145473,6 +145538,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145891,6 +145957,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -145926,6 +145993,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -146006,6 +146074,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -146041,6 +146110,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -146254,6 +146324,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -146289,6 +146360,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156151,6 +156223,7 @@ export namespace Prisma {
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
     tournamentRuleset?: string | null
+    regionalLeague?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -156689,6 +156762,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156723,6 +156797,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156757,6 +156832,7 @@ export namespace Prisma {
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
     tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number

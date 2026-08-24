@@ -26,6 +26,7 @@ import { apiRequest } from "../../../../lib/api-client";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import { trackUmamiEvent, UMAMI_EVENTS } from "../../../../lib/umami-events";
 import { EmblemCup, EmblemTutorial, EmblemLeague } from "../../../../components/home/NuffleArt";
+import RegionalLeaguePicker from "../../../../components/RegionalLeaguePicker";
 import {
   getRecommendedRosters,
   recommendedSlugSet,
@@ -63,6 +64,14 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState(false);
+
+  // Ligue régionale : posée à la dernière étape, et seulement pour les
+  // rosters qui ont vraiment le choix (l'assistant reste « 60 secondes »).
+  const [regionalLeague, setRegionalLeague] = useState<string | null>(null);
+  const [regionalLeagueTouched, setRegionalLeagueTouched] = useState(false);
+  const regionalLeagueOptions = selected?.regionalLeagueOptions ?? [];
+  const regionalLeagueMissing =
+    regionalLeagueOptions.length > 1 && !regionalLeague;
 
   // Track l'affichage de l'assistant (taux d'activation).
   useEffect(() => {
@@ -131,6 +140,10 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
   const selectRace = (roster: OnboardingRoster) => {
     setSelected(roster);
     setNameTouched(false);
+    // Ligue imposée pour un roster mono-ligue, sinon choix à faire.
+    const leagues = roster.regionalLeagueOptions ?? [];
+    setRegionalLeague(leagues.length === 1 ? leagues[0].slug : null);
+    setRegionalLeagueTouched(false);
     trackUmamiEvent(UMAMI_EVENTS.ONBOARDING_RACE, {
       roster: roster.slug,
       recommended: recommendedSet.has(roster.slug),
@@ -149,6 +162,11 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
 
   const create = async () => {
     if (!selected || !isValidTeamName(name) || creating) return;
+    // Le serveur refuse (422) sans Ligue quand le roster en a plusieurs.
+    if (regionalLeagueMissing) {
+      setRegionalLeagueTouched(true);
+      return;
+    }
     setCreating(true);
     setCreateError(false);
     try {
@@ -161,6 +179,7 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
             roster: selected.slug,
             ruleset: RULESET,
             format: "bb11",
+            ...(regionalLeague ? { regionalLeague } : {}),
           }),
         },
       );
@@ -293,6 +312,12 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
               name={name}
               difficultyLabel={difficultyLabel}
               error={createError}
+              regionalLeague={regionalLeague}
+              onRegionalLeagueChange={(slug) => {
+                setRegionalLeague(slug);
+                setRegionalLeagueTouched(false);
+              }}
+              regionalLeagueTouched={regionalLeagueTouched}
             />
           )}
         </div>
@@ -627,10 +652,26 @@ interface ConfirmStepProps {
   readonly name: string;
   readonly difficultyLabel: (d: RosterDifficulty) => string;
   readonly error: boolean;
+  /** Ligue régionale retenue (null tant que le coach n'a pas tranché). */
+  readonly regionalLeague: string | null;
+  readonly onRegionalLeagueChange: (slug: string) => void;
+  /** Une tentative de création a-t-elle déjà buté sur le choix manquant ? */
+  readonly regionalLeagueTouched: boolean;
 }
 
-function ConfirmStep({ roster, name, difficultyLabel, error }: ConfirmStepProps) {
+function ConfirmStep({
+  roster,
+  name,
+  difficultyLabel,
+  error,
+  regionalLeague,
+  onRegionalLeagueChange,
+  regionalLeagueTouched,
+}: ConfirmStepProps) {
   const { t } = useLanguage();
+  // Une seule Ligue possible : elle est déjà posée, inutile d'alourdir
+  // l'assistant avec un rappel — le picker ne s'affiche qu'en cas de choix.
+  const options = roster.regionalLeagueOptions ?? [];
   return (
     <div className="space-y-4" data-testid="onboarding-confirm-step">
       <div className="flex items-center justify-center">
@@ -644,6 +685,14 @@ function ConfirmStep({ roster, name, difficultyLabel, error }: ConfirmStepProps)
           value={difficultyLabel(getRosterDifficulty(roster.slug))}
         />
       </dl>
+      {options.length > 1 && (
+        <RegionalLeaguePicker
+          options={options}
+          value={regionalLeague}
+          onChange={onRegionalLeagueChange}
+          showRequiredHint={regionalLeagueTouched}
+        />
+      )}
       {error && (
         <p
           data-testid="onboarding-create-error"

@@ -1097,17 +1097,44 @@ export default function TeamDetailPage() {
                 </h2>
               </div>
               <div className="p-4 sm:p-6">
+                {/* La Ligue CHOISIE à la création est celle qui compte : elle
+                    seule débloque Star Players et Coups de Pouce. Les autres
+                    Ligues du roster restent affichées, mais grisées. */}
                 <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {regionalLeagues.map((league) => (
-                    <span
-                      key={league.slug}
-                      data-testid={`roster-league-${league.slug}`}
-                      className="px-3 sm:px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-xs sm:text-sm border border-indigo-100"
-                    >
-                      {league.name}
-                    </span>
-                  ))}
+                  {regionalLeagues.map((league) => {
+                    const chosen = team.regionalLeague === league.slug;
+                    // Sans choix enregistré (équipe antérieure à la règle),
+                    // toutes les Ligues du roster restent actives.
+                    const active = !team.regionalLeague || chosen;
+                    return (
+                      <span
+                        key={league.slug}
+                        data-testid={`roster-league-${league.slug}`}
+                        aria-current={chosen ? "true" : undefined}
+                        className={`px-3 sm:px-4 py-1.5 rounded-full font-medium text-xs sm:text-sm border ${
+                          active
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                            : "bg-gray-50 text-gray-400 border-gray-200 line-through"
+                        }`}
+                      >
+                        {league.name}
+                      </span>
+                    );
+                  })}
                 </div>
+                {team.regionalLeague && (
+                  <p
+                    className="mt-3 text-xs text-gray-600"
+                    data-testid="team-regional-league"
+                  >
+                    {t.teams.regionalLeague ?? "Ligue régionale"} :{" "}
+                    <strong>
+                      {regionalLeagues.find(
+                        (l) => l.slug === team.regionalLeague,
+                      )?.name ?? team.regionalLeague}
+                    </strong>
+                  </p>
+                )}
               </div>
             </div>
           )}

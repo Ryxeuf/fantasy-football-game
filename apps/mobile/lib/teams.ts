@@ -56,6 +56,43 @@ export interface RosterSummary {
   budget: number;
   tier?: number | null;
   naf?: boolean | null;
+  /**
+   * Ligues regionales ouvertes a ce roster, a trancher a la creation :
+   * elles conditionnent Star Players et Coups de Pouce. Optionnel
+   * (retro-compat avec un serveur anterieur au choix de Ligue).
+   */
+  regionalLeagueOptions?: RegionalLeagueOption[] | null;
+}
+
+/** Option de Ligue regionale telle que renvoyee par `/api/rosters`. */
+export interface RegionalLeagueOption {
+  slug: string;
+  name: string;
+  /** Libelles des regles acquises avec cette Ligue (ex. Favori de Khorne). */
+  grantLabels?: string[] | null;
+}
+
+/**
+ * Ligue a envoyer au serveur pour ce roster :
+ *  - une seule option -> elle est imposee, on la pose d'office ;
+ *  - plusieurs -> le choix du coach, `null` tant qu'il n'a pas tranche ;
+ *  - aucune -> `null` (le roster n'appartient a aucune Ligue modelisee).
+ */
+export function resolveRegionalLeagueChoice(
+  roster: RosterSummary | undefined,
+  chosen: string | null,
+): string | null {
+  const options = roster?.regionalLeagueOptions ?? [];
+  if (options.length === 1) return options[0].slug;
+  if (options.length === 0) return null;
+  return options.some((o) => o.slug === chosen) ? chosen : null;
+}
+
+/** Le coach doit-il trancher entre plusieurs Ligues pour ce roster ? */
+export function regionalLeagueChoiceRequired(
+  roster: RosterSummary | undefined,
+): boolean {
+  return (roster?.regionalLeagueOptions ?? []).length > 1;
 }
 
 export function validateTeamName(name: string): ValidationResult {

@@ -1,7 +1,7 @@
 import {
-  getRegionalRulesForTeam,
   getStarPlayerPair,
   getStarPlayerPairs,
+  resolveTeamRegionalRules,
   DEFAULT_RULESET,
   type Ruleset,
   type StarPlayerDefinition,
@@ -29,6 +29,7 @@ export async function validateStarPlayerHire(
   currentStarPlayers: TeamStarPlayerData[],
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
+  regionalLeague?: string | null,
 ): Promise<StarPlayerValidationResult> {
   // 1. Vérifier que le Star Player existe
   const starPlayer = await getStarPlayerBySlugDb(starPlayerSlug, ruleset);
@@ -50,8 +51,14 @@ export async function validateStarPlayerHire(
     };
   }
 
-  // 3. Vérifier la disponibilité selon les règles régionales
-  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  // 3. Vérifier la disponibilité selon les règles régionales EFFECTIVES :
+  // la Ligue choisie à la création (et l'alignement qu'elle apporte), ou
+  // l'union historique du roster si l'équipe n'a pas de choix enregistré.
+  const regionalRules = resolveTeamRegionalRules(
+    teamRoster,
+    ruleset,
+    regionalLeague,
+  );
   if (!regionalRules || regionalRules.length === 0) {
     return {
       valid: false,
@@ -147,8 +154,13 @@ export async function calculateStarPlayersCost(starPlayerSlugs: string[], rulese
 export async function getTeamAvailableStarPlayers(
   teamRoster: string,
   ruleset: Ruleset = DEFAULT_RULESET,
+  regionalLeague?: string | null,
 ): Promise<StarPlayerDefinition[]> {
-  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  const regionalRules = resolveTeamRegionalRules(
+    teamRoster,
+    ruleset,
+    regionalLeague,
+  );
   if (!regionalRules || regionalRules.length === 0) {
     return [];
   }
@@ -176,6 +188,7 @@ export async function validateStarPlayersForTeam(
   currentPlayerCount: number,
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
+  regionalLeague?: string | null,
 ): Promise<{ valid: boolean; error?: string; totalCost?: number }> {
   // 1. Vérifier les paires obligatoires
   const pairValidation = validateStarPlayerPairs(starPlayerSlugs);
@@ -193,7 +206,11 @@ export async function validateStarPlayersForTeam(
   }
 
   // 3. Vérifier que tous les Star Players existent et sont disponibles
-  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  const regionalRules = resolveTeamRegionalRules(
+    teamRoster,
+    ruleset,
+    regionalLeague,
+  );
   if (!regionalRules || regionalRules.length === 0) {
     return {
       valid: false,

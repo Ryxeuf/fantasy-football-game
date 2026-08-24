@@ -33,6 +33,10 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import { creditInitialTreasury } from '../services/team-budget-summary';
 import {
+  RegionalLeagueError,
+  resolveRegionalLeagueForCreation,
+} from '../services/team-regional-league';
+import {
   type AllowedRoster,
   type GameFormat,
   getFormatConstraints,
@@ -100,6 +104,7 @@ export async function handleBuildTeam(
       advancements: bodyAdvancements,
       cupId: bodyCupId,
       tournamentRuleset: bodyTournamentRuleset,
+      regionalLeague: bodyRegionalLeague,
     }: {
       name: string;
       roster: string;
@@ -126,6 +131,7 @@ export async function handleBuildTeam(
       }>;
       cupId?: string;
       tournamentRuleset?: string | null;
+      regionalLeague?: string | null;
     } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!isAllowedTeamRoster(roster)) {
@@ -382,6 +388,26 @@ export async function handleBuildTeam(
       }
     }
 
+    // Ligue régionale de l'équipe : choix du coach (obligatoire dès que le
+    // roster a plusieurs Ligues), attribution d'office s'il n'y en a qu'une,
+    // ou aucune si le règlement de tournoi neutralise l'axe régional. Elle
+    // conditionne les Star Players validés juste après.
+    let regionalLeague: string | null = null;
+    try {
+      regionalLeague = resolveRegionalLeagueForCreation({
+        roster,
+        ruleset,
+        pack,
+        requested: bodyRegionalLeague,
+      });
+    } catch (e: unknown) {
+      if (e instanceof RegionalLeagueError) {
+        sendError(res, e.message, 422);
+        return;
+      }
+      throw e;
+    }
+
     // Coûts staff résolus (po dans `staff`) → ramenés en kpo pour rester
     // homogène avec le reste du handler (budget/positions en kpo).
     const staffCost =
@@ -415,6 +441,7 @@ export async function handleBuildTeam(
         totalPlayers,
         budgetInPo - totalCost * 1000 - staffCost * 1000,
         ruleset,
+        regionalLeague,
       );
 
       if (!validation.valid) {
@@ -496,6 +523,7 @@ export async function handleBuildTeam(
           teamValue: finalTeamValue,
           initialBudget: finalTeamValue,
           treasury: 0,
+          regionalLeague,
           rerolls,
           cheerleaders,
           assistants,

@@ -30,6 +30,10 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { updateTeamValues } from '../utils/team-values';
 import { creditInitialTreasury } from '../services/team-budget-summary';
 import {
+  RegionalLeagueError,
+  resolveRegionalLeagueForCreation,
+} from '../services/team-regional-league';
+import {
   type AllowedRoster,
   type GameFormat,
   type Ruleset,
@@ -101,6 +105,7 @@ export async function handleCreateFromRoster(
     ruleset: bodyRuleset,
     format: bodyFormat,
     tournamentRuleset: bodyTournamentRuleset,
+    regionalLeague: bodyRegionalLeague,
   }: {
     name: string;
     roster: string;
@@ -109,6 +114,7 @@ export async function handleCreateFromRoster(
     ruleset?: string;
     format?: string;
     tournamentRuleset?: string | null;
+    regionalLeague?: string | null;
   } = req.body;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!isAllowedTeamRoster(roster))
@@ -147,6 +153,24 @@ export async function handleCreateFromRoster(
       });
     }
     finalTeamValue = packRosterRules.goldBudget;
+  }
+
+  // Ligue régionale de l'équipe : choix du coach (obligatoire dès que le
+  // roster a plusieurs Ligues), attribution d'office s'il n'y en a qu'une,
+  // ou aucune si le règlement de tournoi neutralise l'axe régional.
+  let regionalLeague: string | null = null;
+  try {
+    regionalLeague = resolveRegionalLeagueForCreation({
+      roster,
+      ruleset,
+      pack,
+      requested: bodyRegionalLeague,
+    });
+  } catch (e: unknown) {
+    if (e instanceof RegionalLeagueError) {
+      return res.status(422).json({ error: e.message });
+    }
+    throw e;
   }
 
   // Composition de départ dérivée des positions réelles du roster pour le
@@ -216,6 +240,7 @@ export async function handleCreateFromRoster(
       playerCount,
       budgetInPo,
       ruleset,
+      regionalLeague,
     );
 
     if (!validation.valid) {
@@ -280,6 +305,7 @@ export async function handleCreateFromRoster(
         teamValue: finalTeamValue,
         initialBudget: finalTeamValue,
         treasury: 0,
+        regionalLeague,
         rerolls: 0,
         cheerleaders: 0,
         assistants: 0,
