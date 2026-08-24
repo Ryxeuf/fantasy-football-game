@@ -92,6 +92,11 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
         { href: "/admin/data/rosters", label: "Rosters", icon: "⚽" },
         { href: "/admin/data/positions", label: "Positions", icon: "🎯" },
         { href: "/admin/data/star-players", label: "Star players", icon: "⭐" },
+        {
+          href: "/admin/data/tournament-rulesets",
+          label: "Règlements de tournoi",
+          icon: "🏆",
+        },
       ],
     },
     {
