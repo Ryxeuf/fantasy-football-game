@@ -13,6 +13,7 @@ import RegionalLeaguePicker, {
   type RegionalLeagueOptionView,
 } from "../../../components/RegionalLeaguePicker";
 import QuantityStepper from "../components/QuantityStepper";
+import StaffRow from "../components/StaffRow";
 import BuildAdvancementAllocator, {
   type BuildAdvancement,
 } from "./BuildAdvancementAllocator";
@@ -1616,24 +1617,3 @@ function Stat({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-interface StaffRowProps {
-  label: string;
-  unitCost: string;
-  testId?: string;
-  children: React.ReactNode;
-}
-
-function StaffRow({ label, unitCost, testId, children }: StaffRowProps) {
-  return (
-    <div
-      data-testid={testId}
-      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50"
-    >
-      <div className="min-w-0">
-        <div className="font-medium text-gray-900">{label}</div>
-        <div className="text-xs text-gray-600">{unitCost}</div>
-      </div>
-      {children}
-    </div>
-  );
-}
