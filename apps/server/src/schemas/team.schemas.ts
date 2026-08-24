@@ -127,13 +127,24 @@ export const saveRosterSchema = z.object({
 });
 export type SaveRosterBody = z.infer<typeof saveRosterSchema>;
 
+/**
+ * Staff/inducements d'une equipe.
+ *
+ * Les bornes hautes ne sont PAS ecrites ici : elles dependent du couple
+ * roster x format (`RosterStaffConfig`, editable en admin — Sevens plafonne
+ * par exemple a 6 relances / 6 cheerleaders / 3 assistants). Zod ne fait
+ * qu'un garde-fou de sanite (entier, positif, majorant absolu) ; le handler
+ * `handlePutTeamInfo` applique les vrais plafonds resolus en base et rend un
+ * message d'erreur qui les cite.
+ */
 export const updateTeamInfoSchema = z.object({
-  rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
-  cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
-  assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
+  rerolls: z.number().int().min(0, "Le nombre de relances doit être positif").max(99).optional(),
+  cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être positif").max(99).optional(),
+  assistants: z.number().int().min(0, "Le nombre d'assistants doit être positif").max(99).optional(),
   apothecary: z.boolean().optional(),
-  dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
+  dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être au moins de 1").max(99).optional(),
 });
+export type UpdateTeamInfoBody = z.infer<typeof updateTeamInfoSchema>;
 
 export const purchaseSchema = z.object({
   type: z.enum([

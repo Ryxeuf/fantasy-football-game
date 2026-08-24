@@ -33,6 +33,70 @@ import {
   isTeamRosterFrozen,
   TEAM_ENGAGED_MESSAGE,
 } from '../services/team-lock-status';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import {
+  DEFAULT_RULESET,
+  isGameFormat,
+  type GameFormat,
+  type Ruleset,
+  type RosterStaffConfig,
+} from '@bb/game-engine';
+import type { UpdateTeamInfoBody } from '../schemas/team.schemas';
+
+/**
+ * Verifie le staff demande contre la config resolue du roster x format.
+ *
+ * Les plafonds vivent en base (`RosterStaffConfig`, editables en admin) et
+ * different par format : Sevens plafonne a 6 relances / 6 cheerleaders /
+ * 3 assistants, et certains rosters n'ont pas droit a l'apothicaire. Les
+ * ecrire en dur dans le schema Zod laissait passer des valeurs illegales.
+ *
+ * Retourne le message d'erreur a renvoyer, ou `null` si tout est legal.
+ */
+export function validateStaffAgainstConfig(
+  body: UpdateTeamInfoBody,
+  staff: RosterStaffConfig,
+): string | null {
+  const caps: ReadonlyArray<{
+    value: number | undefined;
+    min: number;
+    max: number;
+    label: string;
+  }> = [
+    { value: body.rerolls, min: 0, max: staff.maxRerolls, label: 'relances' },
+    {
+      value: body.cheerleaders,
+      min: 0,
+      max: staff.maxCheerleaders,
+      label: 'cheerleaders',
+    },
+    {
+      value: body.assistants,
+      min: 0,
+      max: staff.maxAssistants,
+      label: 'assistants',
+    },
+    {
+      value: body.dedicatedFans,
+      min: 1,
+      max: staff.maxDedicatedFans,
+      label: 'fans devoues',
+    },
+  ];
+
+  for (const cap of caps) {
+    if (cap.value === undefined) continue;
+    if (cap.value < cap.min || cap.value > cap.max) {
+      return `Le nombre de ${cap.label} doit etre entre ${cap.min} et ${cap.max} pour cette equipe`;
+    }
+  }
+
+  if (body.apothecary === true && !staff.apothecaryAllowed) {
+    return "Cette equipe n'a pas droit a l'apothicaire";
+  }
+
+  return null;
+}
 
 /**
  * S27.8.25 — `PUT /team/:id/info`
@@ -45,13 +109,10 @@ export async function handlePutTeamInfo(
   res: Response,
 ): Promise<void> {
   const teamId = req.params.id;
-  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans }: {
-    rerolls?: number;
-    cheerleaders?: number;
-    assistants?: number;
-    apothecary?: boolean;
-    dedicatedFans?: number;
-  } = req.body;
+  // Type pose par le schema Zod (`validate(updateTeamInfoSchema)`) : tout
+  // drift schema/handler echoue a `tsc` plutot qu'en prod.
+  const body: UpdateTeamInfoBody = req.body;
+  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans } = body;
 
   try {
     const team = await prisma.team.findFirst({
@@ -83,6 +144,21 @@ export async function handlePutTeamInfo(
     // plus via cet endpoint (page d'edition verrouillee).
     if (await isTeamRosterFrozen(teamId)) {
       sendError(res, TEAM_ENGAGED_MESSAGE, 403);
+      return;
+    }
+
+    // Plafonds/autorisations reels : ligne `RosterStaffConfig` du roster x
+    // format de l'equipe (defaut du moteur si aucune ligne). Le schema Zod ne
+    // borne que la sanite des entrees.
+    const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+    const staff = await resolveStaffConfigBySlug(
+      team.roster ?? '',
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+      format,
+    );
+    const staffError = validateStaffAgainstConfig(body, staff);
+    if (staffError) {
+      sendError(res, staffError, 400);
       return;
     }
 
