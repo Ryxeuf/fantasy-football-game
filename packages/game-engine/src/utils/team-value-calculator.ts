@@ -48,15 +48,66 @@ export interface CalculatedValues {
 }
 
 /**
+ * Détail ligne à ligne de la VE / VEA.
+ *
+ * Sert de source unique aux vues « Résumé du budget » : les consommateurs
+ * (fiche d'équipe, feuille de match, exports) affichent ces postes au lieu
+ * de les re-dériver chacun de leur côté — c'est cette re-dérivation qui
+ * faisait diverger le coût des joueurs affiché de la VE réelle (surcoûts
+ * d'avancement et ruleset ignorés côté web).
+ *
+ * Invariant : `teamValue === playersCost + staffCost + rerollsCost` et
+ * `currentValue === availablePlayersCost + staffCost + rerollsCost`.
+ */
+export interface TeamValueBreakdown {
+  /** Coût de TOUS les joueurs engagés (base + surcoûts d'avancement). */
+  readonly playersCost: number;
+  /** Idem, restreint aux joueurs disponibles pour le prochain match. */
+  readonly availablePlayersCost: number;
+  /** Cheerleaders + assistants + apothicaire (hors relances, hors fans). */
+  readonly staffCost: number;
+  /** Relances d'équipe. */
+  readonly rerollsCost: number;
+  /** VE — Valeur d'Équipe. */
+  readonly teamValue: number;
+  /** VEA — Valeur d'Équipe Actuelle. */
+  readonly currentValue: number;
+}
+
+/**
+ * Calcule le détail complet VE/VEA en un seul passage.
+ *
+ * `calculateTeamValue` / `calculateCurrentValue` en sont de simples
+ * projections : toute règle de valorisation ne s'écrit qu'ici.
+ */
+export function calculateTeamValueBreakdown(
+  data: TeamValueData,
+): TeamValueBreakdown {
+  let playersCost = 0;
+  let availablePlayersCost = 0;
+  for (const player of data.players) {
+    playersCost += player.cost;
+    if (player.available) availablePlayersCost += player.cost;
+  }
+  const staffCost = calculateStaffCost(data);
+  const rerollsCost = data.rerolls * resolveStaffCosts(data).rerollCost;
+
+  return {
+    playersCost,
+    availablePlayersCost,
+    staffCost,
+    rerollsCost,
+    teamValue: playersCost + staffCost + rerollsCost,
+    currentValue: availablePlayersCost + staffCost + rerollsCost,
+  };
+}
+
+/**
  * Calcule la VE (Valeur d'Équipe) selon les règles Blood Bowl
  * VE = Coût de tous les joueurs engagés + Coût du Staff + Relances
  */
 export function calculateTeamValue(data: TeamValueData): number {
-  const playersCost = data.players.reduce((total, player) => total + player.cost, 0);
-  const staffCost = calculateStaffCost(data);
-  const rerollsCost = data.rerolls * resolveStaffCosts(data).rerollCost;
-
-  return playersCost + staffCost + rerollsCost;
+  return calculateTeamValueBreakdown(data).teamValue;
 }
 
 /**
@@ -64,13 +115,7 @@ export function calculateTeamValue(data: TeamValueData): number {
  * VEA = Coûts des joueurs disponibles + Coût du Staff + Relances
  */
 export function calculateCurrentValue(data: TeamValueData): number {
-  const availablePlayersCost = data.players
-    .filter(player => player.available)
-    .reduce((total, player) => total + player.cost, 0);
-  const staffCost = calculateStaffCost(data);
-  const rerollsCost = data.rerolls * resolveStaffCosts(data).rerollCost;
-
-  return availablePlayersCost + staffCost + rerollsCost;
+  return calculateTeamValueBreakdown(data).currentValue;
 }
 
 /**
@@ -128,9 +173,10 @@ export function calculateTreasury(
  * Calcule toutes les valeurs d'équipe
  */
 export function calculateAllValues(data: TeamValueData): CalculatedValues {
+  const breakdown = calculateTeamValueBreakdown(data);
   return {
-    teamValue: calculateTeamValue(data),
-    currentValue: calculateCurrentValue(data),
+    teamValue: breakdown.teamValue,
+    currentValue: breakdown.currentValue,
     treasury: 0 // La trésorerie sera calculée après chaque match
   };
 }

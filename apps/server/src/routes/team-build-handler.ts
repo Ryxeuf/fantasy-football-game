@@ -31,6 +31,7 @@ import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
+import { creditInitialTreasury } from '../services/team-budget-summary';
 import {
   type AllowedRoster,
   type GameFormat,
@@ -489,6 +490,9 @@ export async function handleBuildTeam(
           roster,
           ruleset,
           format,
+          // VE recalculée juste après la création (`updateTeamValues`) :
+          // cette valeur d'amorçage n'est jamais celle affichée. La
+          // trésorerie est créditée du reliquat par `creditInitialTreasury`.
           teamValue: finalTeamValue,
           initialBudget: finalTeamValue,
           treasury: 0,
@@ -602,6 +606,9 @@ export async function handleBuildTeam(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, team.id);
+    // Règle BB : l'or non dépensé à la construction part en trésorerie.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await creditInitialTreasury(prisma as any, team.id);
 
     // Flow B — auto-inscription à la coupe + snapshot du roster (après
     // application des améliorations et recalcul de la VE).

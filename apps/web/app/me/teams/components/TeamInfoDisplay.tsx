@@ -15,6 +15,13 @@ interface TeamInfo {
   roster?: string; // Roster pour calculer le coût des relances
   /** Config staff résolue (DB par roster × format). Coûts en po. */
   staffConfig?: RosterStaffConfig;
+  /**
+   * Coût réel des joueurs engagés (po), calculé par le serveur : coûts de
+   * poste au ruleset de l'équipe + surcoûts d'avancement. Optionnel pour
+   * rétro-compat avec un serveur pré-correctif — à défaut, on retombe sur
+   * la dérivation `VE − staff` (juste seulement si la VE est fraîche).
+   */
+  playersCost?: number;
 }
 
 interface TeamInfoDisplayProps {
@@ -177,13 +184,20 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <h4 className="text-sm font-semibold text-green-800 mb-3">{t.teams.globalCostSummary}</h4>
           <div className="space-y-2 text-sm">
             {(() => {
-              const playersCost = (info.teamValue || 0) - staffRerollsCost;
-              
+              // Les Star Players sont des Coups de Pouce : payés au budget
+              // de construction mais HORS valeur d'équipe. On les garde donc
+              // en dehors de ce bloc, dont le total est la VE.
+              const playersCost =
+                info.playersCost ?? (info.teamValue || 0) - staffRerollsCost;
+
               return (
                 <>
                   <div className="flex justify-between">
                     <span className="text-green-700">{t.teams.playersCostLabel}</span>
-                    <span className="font-mono font-semibold text-green-900">
+                    <span
+                      className="font-mono font-semibold text-green-900"
+                      data-testid="staff-players-cost"
+                    >
                       {formatKpo(playersCost)}
                     </span>
                   </div>

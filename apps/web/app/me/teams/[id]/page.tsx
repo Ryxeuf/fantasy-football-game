@@ -78,6 +78,74 @@ function pspSpentForTeam(players: unknown): number {
   );
 }
 
+/**
+ * Résumé du budget tel que renvoyé par `GET /team/:id`. Tous les montants
+ * sont en pièces d'or.
+ */
+interface TeamBudgetSummary {
+  readonly initialBudget: number;
+  readonly playersCost: number;
+  readonly starPlayersCost: number;
+  readonly staffCost: number;
+  readonly rerollsCost: number;
+  readonly dedicatedFansCost: number;
+  readonly totalSpent: number;
+  readonly remaining: number;
+  readonly treasury: number;
+  readonly teamValue: number;
+  readonly currentValue: number;
+}
+
+/** Formatte un montant en po vers l'affichage compact « 1 000K po ». */
+function formatKpo(valuePo: number, suffix: string): string {
+  return `${Math.round(valuePo / 1000).toLocaleString("fr-FR")}${suffix}`;
+}
+
+/**
+ * Repli local du résumé budgétaire pour un serveur pré-correctif (le champ
+ * `budgetSummary` est optionnel). Approximation volontairement simple :
+ * coûts de poste statiques, sans surcoût d'avancement.
+ */
+function resolveBudgetSummary(team: any): TeamBudgetSummary {
+  if (team?.budgetSummary) return team.budgetSummary as TeamBudgetSummary;
+
+  const sc = team?.staffConfig;
+  const playersCost = (team?.players ?? []).reduce(
+    (total: number, player: any) =>
+      total + getPlayerCost(player.position, team?.roster),
+    0,
+  );
+  const starPlayersCost = (team?.starPlayers ?? []).reduce(
+    (total: number, sp: any) => total + (sp?.cost ?? 0),
+    0,
+  );
+  const rerollsCost =
+    (team?.rerolls || 0) * (sc?.rerollCost ?? getRerollCost(team?.roster || ""));
+  const staffCost =
+    (team?.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000) +
+    (team?.assistants || 0) * (sc?.assistantCost ?? 10000) +
+    (team?.apothecary ? (sc?.apothecaryCost ?? 50000) : 0);
+  const dedicatedFansCost =
+    Math.max(0, (team?.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 5000);
+  const initialBudget = (team?.initialBudget || 0) * 1000;
+  const totalSpent =
+    playersCost + starPlayersCost + staffCost + rerollsCost + dedicatedFansCost;
+
+  return {
+    initialBudget,
+    playersCost,
+    starPlayersCost,
+    staffCost,
+    rerollsCost,
+    dedicatedFansCost,
+    totalSpent,
+    remaining: initialBudget - totalSpent,
+    treasury: team?.treasury ?? 0,
+    teamValue: team?.teamValue ?? 0,
+    currentValue: team?.currentValue ?? 0,
+  };
+}
+
 export default function TeamDetailPage() {
   const { t, language } = useLanguage();
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
@@ -378,6 +446,19 @@ export default function TeamDetailPage() {
     ? rosterDetail.regionalLeagues
     : [];
 
+  // Résumé du budget : calculé par le serveur (`GET /team/:id`) à partir de
+  // la MÊME logique que la VE persistée — coûts de poste au ruleset de
+  // l'équipe, surcoûts d'avancement compris. Le recalcul local qui existait
+  // ici ignorait les deux et affichait donc un coût joueurs et un budget
+  // restant qui ne collaient ni à la VE, ni à la trésorerie.
+  // `??` : repli sur un calcul local pour rester lisible face à un serveur
+  // pré-correctif (cf. « Backwards-compat sur champs API ajoutes »).
+  const budget: TeamBudgetSummary = useMemo(
+    () => resolveBudgetSummary(team),
+    [team],
+  );
+  const kpo = (valuePo: number): string => formatKpo(valuePo, t.teams.kpo);
+
   if (loading) {
     return (
       <div className="w-full p-6">
@@ -599,37 +680,28 @@ export default function TeamDetailPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="text-xs sm:text-sm text-blue-600 font-medium">{t.teams.initialBudget}</div>
-                  <div className="text-xl sm:text-2xl font-bold text-blue-900">
-                    {team.initialBudget?.toLocaleString()}{t.teams.kpo}
+                  <div className="text-xl sm:text-2xl font-bold text-blue-900" data-testid="budget-initial">
+                    {kpo(budget.initialBudget)}
                   </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
                   <div className="text-xs sm:text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
-                  <div className="text-xl sm:text-2xl font-bold text-green-900">
-                    {Math.round((team.players?.reduce((total: number, player: any) => 
-                      total + getPlayerCost(player.position, team.roster), 0) || 0) / 1000)}{t.teams.kpo}
+                  <div className="text-xl sm:text-2xl font-bold text-green-900" data-testid="budget-players-cost">
+                    {kpo(budget.playersCost + budget.starPlayersCost)}
                   </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <div className="text-xs sm:text-sm text-purple-600 font-medium">{t.teams.teamValue}</div>
-                  <div className="text-xl sm:text-2xl font-bold text-purple-900">
-                    {Math.round((team.teamValue || 0) / 1000)}{t.teams.kpo}
+                  <div className="text-xl sm:text-2xl font-bold text-purple-900" data-testid="budget-team-value">
+                    {kpo(budget.teamValue)}
                   </div>
                 </div>
                 {(() => {
-                  const playersCost = (team.players?.reduce((total: number, player: any) =>
-                    total + getPlayerCost(player.position, team.roster), 0) || 0);
-                  // Coûts staff issus de la config DB (résolue par roster × format),
-                  // avec repli sur les valeurs historiques si absente.
-                  const sc = team.staffConfig;
-                  const rerolls = (team.rerolls || 0) * (sc?.rerollCost ?? getRerollCost(team.roster || ''));
-                  const cheer = (team.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000);
-                  const assistants = (team.assistants || 0) * (sc?.assistantCost ?? 10000);
-                  const apo = team.apothecary ? (sc?.apothecaryCost ?? 50000) : 0;
-                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 5000);
-                  const rosterTotal = playersCost + rerolls + cheer + assistants + apo + fans;
-                  const remaining = (team.initialBudget || 0) * 1000 - rosterTotal;
-                  const positive = remaining >= 0;
+                  // « Budget restant » = trésorerie : c'est elle qui finance les
+                  // achats d'après-création (POST /team/:id/purchase), et le
+                  // reliquat du budget de construction y est crédité. Le bloc
+                  // « Staff de l'équipe » plus bas affiche la même valeur.
+                  const positive = budget.treasury >= 0;
                   return (
                     <div className={`text-center p-3 sm:p-4 rounded-lg border ${positive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className={`text-xs sm:text-sm font-medium ${
@@ -637,8 +709,11 @@ export default function TeamDetailPage() {
                   }`}>
                     {t.teams.remainingBudget}
                   </div>
-                  <div className={`text-xl sm:text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}>
-                    {Math.round(remaining / 1000)}{t.teams.kpo}
+                  <div
+                    className={`text-xl sm:text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}
+                    data-testid="budget-remaining"
+                  >
+                    {kpo(budget.treasury)}
                   </div>
                 </div>
                   );
@@ -1111,6 +1186,7 @@ export default function TeamDetailPage() {
             currentValue: team.currentValue || 0,
             roster: team.roster,
             staffConfig: team.staffConfig,
+            playersCost: budget.playersCost,
           }}
         />
         </>

@@ -28,6 +28,7 @@ import type { Response } from 'express';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { updateTeamValues } from '../utils/team-values';
+import { creditInitialTreasury } from '../services/team-budget-summary';
 import {
   type AllowedRoster,
   type GameFormat,
@@ -302,6 +303,9 @@ export async function handleCreateFromRoster(
   // Calculer automatiquement les valeurs d'equipe
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await updateTeamValues(prisma as any, team.id);
+  // Règle BB : l'or non dépensé à la construction part en trésorerie.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await creditInitialTreasury(prisma as any, team.id);
 
   const withPlayers = await prisma.team.findUnique({
     where: { id: team.id },
