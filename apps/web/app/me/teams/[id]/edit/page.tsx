@@ -1635,7 +1635,9 @@ export default function TeamEditPage() {
             roster: team.roster,
           }}
           roster={team.roster}
+          format={team.format}
           staffConfig={team.staffConfig}
+          budgetSummary={team.budgetSummary}
           initialBudgetK={team.initialBudget || 0}
           playersCost={(team.players || []).reduce((total: number, player: any) => {
             const base = getPlayerCost(player.position, team.roster);
