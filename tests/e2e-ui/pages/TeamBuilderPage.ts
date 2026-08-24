@@ -16,6 +16,10 @@ export class TeamBuilderPage {
   readonly apothecaryCheckbox: Locator;
   readonly staffCost: Locator;
   readonly remainingBudget: Locator;
+  /** Bloc « Ligue régionale » : choix (plusieurs options)… */
+  readonly regionalLeaguePicker: Locator;
+  /** …ou rappel en lecture seule quand le roster n'a qu'une Ligue. */
+  readonly regionalLeagueImposed: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +31,13 @@ export class TeamBuilderPage {
     this.apothecaryCheckbox = page.getByTestId("staff-apothecary");
     this.staffCost = page.getByTestId("staff-cost-summary");
     this.remainingBudget = page.getByTestId("remaining-budget");
+    this.regionalLeaguePicker = page.getByTestId("regional-league-picker");
+    this.regionalLeagueImposed = page.getByTestId("regional-league-imposed");
+  }
+
+  /** Sélectionne une Ligue régionale par son slug. */
+  async selectRegionalLeague(slug: string): Promise<void> {
+    await this.page.getByTestId(`regional-league-option-${slug}`).click();
   }
 
   async goto(): Promise<void> {

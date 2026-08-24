@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { resetDb, seedUser } from "../helpers/api-seed";
+import { fetchStaffConfig, resetDb, seedUser } from "../helpers/api-seed";
 import { LoginPage } from "../pages/LoginPage";
 import { TeamBuilderPage } from "../pages/TeamBuilderPage";
 
@@ -146,16 +146,32 @@ test.describe("E2E UI — team creation", () => {
     await builder.selectRoster("skaven");
 
     // Configure du staff avant d'ajouter les joueurs pour valider l'impact budget.
-    await builder.setStaff({
+    const staffChoice = {
       rerolls: 2,
       cheerleaders: 1,
       assistants: 1,
       dedicatedFans: 2,
       apothecary: true,
-    });
+    };
+    await builder.setStaff(staffChoice);
 
-    // Staff skaven : 2*50 + 1*10 + 1*10 + 50 + (2-1)*10 = 180k
-    await expect(builder.staffCost).toHaveText(/180.*po/);
+    // Le total attendu est DÉRIVÉ des coûts que le builder consomme
+    // (`GET /api/rosters` → `staffConfigs`) au lieu d'être codé en dur : un
+    // total figé s'était déjà désynchronisé du barème (Fan Dévoué passé de
+    // 10 000 à 5 000 po en édition 2025) et laissait l'E2E rouge sur `main`.
+    // Le 1er Fan Dévoué est offert — comme dans le builder.
+    const staff = await fetchStaffConfig("skaven", "bb11");
+    const expectedStaffKpo =
+      (staffChoice.rerolls * staff.rerollCost +
+        staffChoice.cheerleaders * staff.cheerleaderCost +
+        staffChoice.assistants * staff.assistantCost +
+        (staffChoice.apothecary ? staff.apothecaryCost : 0) +
+        Math.max(0, staffChoice.dedicatedFans - 1) * staff.dedicatedFanCost) /
+      1000;
+
+    await expect(builder.staffCost).toHaveText(
+      new RegExp(`${expectedStaffKpo}.*po`),
+    );
 
     await visibleAddButtons(page)
       .first()
@@ -172,6 +188,27 @@ test.describe("E2E UI — team creation", () => {
     await expect(page.getByText(/Relance|Reroll/i).first()).toBeVisible({
       timeout: 10_000,
     });
+  });
+
+  test("la Ligue régionale imposée est rappelée pour un roster mono-ligue", async ({
+    page,
+  }) => {
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login("coach@playwright.test", "password-c");
+    await page.waitForURL(/\/(play|team|me)/, { timeout: 15_000 });
+
+    const builder = new TeamBuilderPage(page);
+    await builder.goto();
+    await expect(builder.rosterSelect).toBeVisible({ timeout: 10_000 });
+    await builder.selectRoster("skaven");
+
+    // Les Skavens ne jouent que le Défi des Bas-fonds : rien à choisir, la
+    // Ligue est posée d'office et le builder l'affiche en lecture seule.
+    await expect(builder.regionalLeagueImposed).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(builder.regionalLeaguePicker).toHaveCount(0);
   });
 
   test("l'équipe créée apparaît dans la liste /me/teams", async ({ page }) => {
