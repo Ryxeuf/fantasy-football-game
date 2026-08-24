@@ -13,6 +13,8 @@ import QuantityStepper from "../components/QuantityStepper";
 import BuildAdvancementAllocator, {
   type BuildAdvancement,
 } from "./BuildAdvancementAllocator";
+import TeamLogoPicker from "../components/TeamLogoPicker";
+import { uploadTeamLogo } from "../components/team-logo-client";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -125,6 +127,10 @@ export default function NewTeamBuilder() {
     }
     return "";
   });
+  // Le logo ne peut pas partir avec `POST /team/build` : le contrat serveur
+  // est `POST /team/:id/logo` (binaire brut), donc on garde le fichier ici et
+  // on l'envoie une fois l'équipe créée.
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const [teamValue, setTeamValue] = useState(() => {
     const defaultBudget = getFormatConstraints(format).startingBudget;
@@ -613,6 +619,19 @@ export default function NewTeamBuilder() {
             : {}),
         }),
       });
+      if (logoFile) {
+        // Non bloquant : l'équipe existe déjà, un échec d'upload ne doit pas
+        // faire échouer la création. Le coach pourra réessayer sur la fiche.
+        try {
+          await uploadTeamLogo(json.team.id, logoFile);
+        } catch (e: unknown) {
+          toast.error(
+            e instanceof Error
+              ? `Équipe créée, mais le logo n'a pas pu être envoyé : ${e.message}`
+              : "Équipe créée, mais le logo n'a pas pu être envoyé",
+          );
+        }
+      }
       toast.success(t.teams.teamCreatedToast);
       // Flow B : retour vers la coupe (équipe auto-inscrite) ; sinon fiche équipe.
       router.push(cupId ? `/cups/${cupId}` : `/me/teams/${json.team.id}`);
@@ -752,6 +771,14 @@ export default function NewTeamBuilder() {
               autoComplete="off"
             />
           </div>
+
+          <TeamLogoPicker
+            roster={rosterId}
+            teamName={name}
+            file={logoFile}
+            onChange={setLogoFile}
+            disabled={saving}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>

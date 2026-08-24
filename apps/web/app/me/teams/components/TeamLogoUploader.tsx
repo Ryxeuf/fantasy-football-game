@@ -1,16 +1,21 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { API_BASE } from "../../../auth-client";
 import TeamLogo from "../../../components/TeamLogo";
+import {
+  ACCEPTED_LOGO_TYPES,
+  MAX_LOGO_BYTES,
+  LOGO_TOO_LARGE_MESSAGE,
+  uploadTeamLogo,
+  deleteTeamLogo,
+} from "./team-logo-client";
 
 /**
- * Logo d'équipe : aperçu + upload + retrait.
+ * Logo d'équipe : aperçu + upload + retrait, depuis la fiche d'équipe.
  *
  * Le coach envoie une image (PNG/JPEG/GIF/WEBP, 2 Mo max) qui remplace le
- * logo programmatique dérivé du roster. Le binaire part tel quel dans le
- * corps de la requête (`POST /team/:id/logo`) : c'est le contrat serveur,
- * qui détecte le type réel par magic bytes et régénère le nom de fichier.
+ * logo programmatique dérivé du roster. Le transport est mutualisé dans
+ * `team-logo-client` avec le builder (`TeamLogoPicker`, upload différé).
  */
 
 interface TeamLogoUploaderProps {
@@ -21,27 +26,6 @@ interface TeamLogoUploaderProps {
   initialLogoUrl?: string | null;
   /** Notifie le parent pour rafraîchir les autres affichages du logo. */
   onChange?: (logoUrl: string | null) => void;
-}
-
-/** Types acceptés côté serveur (magic bytes). */
-const ACCEPTED = "image/png,image/jpeg,image/gif,image/webp";
-const MAX_BYTES = 2 * 1024 * 1024;
-
-function authHeaders(): Record<string, string> {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function unwrapLogo(res: Response): Promise<string | null> {
-  const body = (await res.json().catch(() => ({}))) as {
-    success?: boolean;
-    data?: { logoUrl?: string | null };
-    logoUrl?: string | null;
-    error?: string;
-  };
-  if (!res.ok) throw new Error(body.error || `Erreur ${res.status}`);
-  return body.data?.logoUrl ?? body.logoUrl ?? null;
 }
 
 export default function TeamLogoUploader({
@@ -66,21 +50,13 @@ export default function TeamLogoUploader({
     setError(null);
     // Garde-fou client : le serveur refuse aussi (413), mais autant ne pas
     // téléverser 10 Mo pour rien.
-    if (file.size > MAX_BYTES) {
-      setError("Logo trop volumineux (max 2 Mo)");
+    if (file.size > MAX_LOGO_BYTES) {
+      setError(LOGO_TOO_LARGE_MESSAGE);
       return;
     }
     setBusy(true);
     try {
-      const res = await fetch(`${API_BASE}/team/${teamId}/logo`, {
-        method: "POST",
-        headers: {
-          ...authHeaders(),
-          "Content-Type": file.type || "application/octet-stream",
-        },
-        body: file,
-      });
-      apply(await unwrapLogo(res));
+      apply(await uploadTeamLogo(teamId, file));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Échec de l'envoi du logo");
     } finally {
@@ -93,11 +69,7 @@ export default function TeamLogoUploader({
     setError(null);
     setBusy(true);
     try {
-      const res = await fetch(`${API_BASE}/team/${teamId}/logo`, {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
-      await unwrapLogo(res);
+      await deleteTeamLogo(teamId);
       apply(null);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Échec du retrait du logo");
@@ -135,7 +107,7 @@ export default function TeamLogoUploader({
         <input
           ref={fileRef}
           type="file"
-          accept={ACCEPTED}
+          accept={ACCEPTED_LOGO_TYPES}
           data-testid="team-logo-input"
           className="hidden"
           onChange={(e) => void handleFile(e.target.files?.[0])}
