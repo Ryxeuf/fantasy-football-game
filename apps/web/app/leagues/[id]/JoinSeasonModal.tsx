@@ -14,6 +14,8 @@ interface MyTeam {
   name: string;
   roster: string;
   ruleset?: string;
+  /** Règlement de tournoi de l'équipe (null/absent = aucun). */
+  tournamentRuleset?: string | null;
 }
 
 interface JoinSeasonModalProps {
@@ -22,6 +24,11 @@ interface JoinSeasonModalProps {
   onJoined: () => void;
   seasonId: string;
   ruleset: string;
+  /**
+   * Règlement de tournoi imposé par la ligue (null = aucun). Égalité
+   * stricte requise avec celui de l'équipe (même règle que le serveur).
+   */
+  tournamentRuleset?: string | null;
   allowedRosters: string[] | null;
   /**
    * teamIds deja inscrits sur la saison (active OU withdrawn). Permet
@@ -36,6 +43,7 @@ export function JoinSeasonModal({
   onJoined,
   seasonId,
   ruleset,
+  tournamentRuleset = null,
   allowedRosters,
   alreadyRegisteredTeamIds,
 }: JoinSeasonModalProps) {
@@ -75,6 +83,12 @@ export function JoinSeasonModal({
     return teams.filter((team) => {
       if (alreadyRegisteredTeamIds.includes(team.id)) return false;
       if (team.ruleset && team.ruleset !== ruleset) return false;
+      // Règlement de tournoi : égalité stricte (même règle que le serveur —
+      // une ligue à règlement n'accepte que des équipes créées avec, et une
+      // équipe à règlement ne peut rejoindre qu'une ligue au même règlement).
+      if ((team.tournamentRuleset ?? null) !== (tournamentRuleset ?? null)) {
+        return false;
+      }
       if (
         allowedRosters &&
         allowedRosters.length > 0 &&
@@ -84,7 +98,7 @@ export function JoinSeasonModal({
       }
       return true;
     });
-  }, [teams, alreadyRegisteredTeamIds, ruleset, allowedRosters]);
+  }, [teams, alreadyRegisteredTeamIds, ruleset, tournamentRuleset, allowedRosters]);
 
   // Selection automatique : si une seule equipe eligible, on la
   // pre-coche pour reduire les clics.

@@ -25399,6 +25399,7 @@ export namespace Prisma {
     roster: string | null
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
+    tournamentRuleset: string | null
     createdAt: Date | null
     treasury: number | null
     rerolls: number | null
@@ -25423,6 +25424,7 @@ export namespace Prisma {
     roster: string | null
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
+    tournamentRuleset: string | null
     createdAt: Date | null
     treasury: number | null
     rerolls: number | null
@@ -25447,6 +25449,7 @@ export namespace Prisma {
     roster: number
     ruleset: number
     format: number
+    tournamentRuleset: number
     createdAt: number
     treasury: number
     rerolls: number
@@ -25497,6 +25500,7 @@ export namespace Prisma {
     roster?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25521,6 +25525,7 @@ export namespace Prisma {
     roster?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25545,6 +25550,7 @@ export namespace Prisma {
     roster?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     createdAt?: true
     treasury?: true
     rerolls?: true
@@ -25656,6 +25662,7 @@ export namespace Prisma {
     roster: string
     ruleset: $Enums.Ruleset
     format: $Enums.Format
+    tournamentRuleset: string | null
     createdAt: Date
     treasury: number
     rerolls: number
@@ -25699,6 +25706,7 @@ export namespace Prisma {
     roster?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25735,6 +25743,7 @@ export namespace Prisma {
     roster?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25760,6 +25769,7 @@ export namespace Prisma {
     roster?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25785,6 +25795,7 @@ export namespace Prisma {
     roster?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     createdAt?: boolean
     treasury?: boolean
     rerolls?: boolean
@@ -25802,7 +25813,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
+  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "tournamentRuleset" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
@@ -25846,6 +25857,7 @@ export namespace Prisma {
       roster: string
       ruleset: $Enums.Ruleset
       format: $Enums.Format
+      tournamentRuleset: string | null
       createdAt: Date
       treasury: number
       rerolls: number
@@ -26301,6 +26313,7 @@ export namespace Prisma {
     readonly roster: FieldRef<"Team", 'String'>
     readonly ruleset: FieldRef<"Team", 'Ruleset'>
     readonly format: FieldRef<"Team", 'Format'>
+    readonly tournamentRuleset: FieldRef<"Team", 'String'>
     readonly createdAt: FieldRef<"Team", 'DateTime'>
     readonly treasury: FieldRef<"Team", 'Int'>
     readonly rerolls: FieldRef<"Team", 'Int'>
@@ -40306,6 +40319,7 @@ export namespace Prisma {
     creatorId: string | null
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
+    tournamentRuleset: string | null
     validated: boolean | null
     isPublic: boolean | null
     status: string | null
@@ -40333,6 +40347,7 @@ export namespace Prisma {
     creatorId: string | null
     ruleset: $Enums.Ruleset | null
     format: $Enums.Format | null
+    tournamentRuleset: string | null
     validated: boolean | null
     isPublic: boolean | null
     status: string | null
@@ -40360,6 +40375,7 @@ export namespace Prisma {
     creatorId: number
     ruleset: number
     format: number
+    tournamentRuleset: number
     validated: number
     isPublic: number
     status: number
@@ -40411,6 +40427,7 @@ export namespace Prisma {
     creatorId?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     validated?: true
     isPublic?: true
     status?: true
@@ -40438,6 +40455,7 @@ export namespace Prisma {
     creatorId?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     validated?: true
     isPublic?: true
     status?: true
@@ -40465,6 +40483,7 @@ export namespace Prisma {
     creatorId?: true
     ruleset?: true
     format?: true
+    tournamentRuleset?: true
     validated?: true
     isPublic?: true
     status?: true
@@ -40579,6 +40598,7 @@ export namespace Prisma {
     creatorId: string
     ruleset: $Enums.Ruleset
     format: $Enums.Format
+    tournamentRuleset: string | null
     validated: boolean
     isPublic: boolean
     status: string
@@ -40625,6 +40645,7 @@ export namespace Prisma {
     creatorId?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     validated?: boolean
     isPublic?: boolean
     status?: boolean
@@ -40657,6 +40678,7 @@ export namespace Prisma {
     creatorId?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     validated?: boolean
     isPublic?: boolean
     status?: boolean
@@ -40685,6 +40707,7 @@ export namespace Prisma {
     creatorId?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     validated?: boolean
     isPublic?: boolean
     status?: boolean
@@ -40713,6 +40736,7 @@ export namespace Prisma {
     creatorId?: boolean
     ruleset?: boolean
     format?: boolean
+    tournamentRuleset?: boolean
     validated?: boolean
     isPublic?: boolean
     status?: boolean
@@ -40733,7 +40757,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -40763,6 +40787,7 @@ export namespace Prisma {
       creatorId: string
       ruleset: $Enums.Ruleset
       format: $Enums.Format
+      tournamentRuleset: string | null
       validated: boolean
       isPublic: boolean
       status: string
@@ -41214,6 +41239,7 @@ export namespace Prisma {
     readonly creatorId: FieldRef<"Cup", 'String'>
     readonly ruleset: FieldRef<"Cup", 'Ruleset'>
     readonly format: FieldRef<"Cup", 'Format'>
+    readonly tournamentRuleset: FieldRef<"Cup", 'String'>
     readonly validated: FieldRef<"Cup", 'Boolean'>
     readonly isPublic: FieldRef<"Cup", 'Boolean'>
     readonly status: FieldRef<"Cup", 'String'>
@@ -48667,6 +48693,7 @@ export namespace Prisma {
     description: string | null
     creatorId: string | null
     ruleset: $Enums.Ruleset | null
+    tournamentRuleset: string | null
     status: string | null
     isPublic: boolean | null
     maxParticipants: number | null
@@ -48688,6 +48715,7 @@ export namespace Prisma {
     description: string | null
     creatorId: string | null
     ruleset: $Enums.Ruleset | null
+    tournamentRuleset: string | null
     status: string | null
     isPublic: boolean | null
     maxParticipants: number | null
@@ -48709,6 +48737,7 @@ export namespace Prisma {
     description: number
     creatorId: number
     ruleset: number
+    tournamentRuleset: number
     status: number
     isPublic: number
     maxParticipants: number
@@ -48748,6 +48777,7 @@ export namespace Prisma {
     description?: true
     creatorId?: true
     ruleset?: true
+    tournamentRuleset?: true
     status?: true
     isPublic?: true
     maxParticipants?: true
@@ -48769,6 +48799,7 @@ export namespace Prisma {
     description?: true
     creatorId?: true
     ruleset?: true
+    tournamentRuleset?: true
     status?: true
     isPublic?: true
     maxParticipants?: true
@@ -48790,6 +48821,7 @@ export namespace Prisma {
     description?: true
     creatorId?: true
     ruleset?: true
+    tournamentRuleset?: true
     status?: true
     isPublic?: true
     maxParticipants?: true
@@ -48898,6 +48930,7 @@ export namespace Prisma {
     description: string | null
     creatorId: string
     ruleset: $Enums.Ruleset
+    tournamentRuleset: string | null
     status: string
     isPublic: boolean
     maxParticipants: number
@@ -48938,6 +48971,7 @@ export namespace Prisma {
     description?: boolean
     creatorId?: boolean
     ruleset?: boolean
+    tournamentRuleset?: boolean
     status?: boolean
     isPublic?: boolean
     maxParticipants?: boolean
@@ -48963,6 +48997,7 @@ export namespace Prisma {
     description?: boolean
     creatorId?: boolean
     ruleset?: boolean
+    tournamentRuleset?: boolean
     status?: boolean
     isPublic?: boolean
     maxParticipants?: boolean
@@ -48985,6 +49020,7 @@ export namespace Prisma {
     description?: boolean
     creatorId?: boolean
     ruleset?: boolean
+    tournamentRuleset?: boolean
     status?: boolean
     isPublic?: boolean
     maxParticipants?: boolean
@@ -49007,6 +49043,7 @@ export namespace Prisma {
     description?: boolean
     creatorId?: boolean
     ruleset?: boolean
+    tournamentRuleset?: boolean
     status?: boolean
     isPublic?: boolean
     maxParticipants?: boolean
@@ -49022,7 +49059,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type LeagueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "status" | "isPublic" | "maxParticipants" | "allowedRosters" | "allowedInducements" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "tieBreakRules" | "bonusPointsConfig" | "createdAt" | "updatedAt", ExtArgs["result"]["league"]>
+  export type LeagueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "tournamentRuleset" | "status" | "isPublic" | "maxParticipants" | "allowedRosters" | "allowedInducements" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "tieBreakRules" | "bonusPointsConfig" | "createdAt" | "updatedAt", ExtArgs["result"]["league"]>
   export type LeagueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     seasons?: boolean | League$seasonsArgs<ExtArgs>
@@ -49049,6 +49086,7 @@ export namespace Prisma {
       description: string | null
       creatorId: string
       ruleset: $Enums.Ruleset
+      tournamentRuleset: string | null
       status: string
       isPublic: boolean
       maxParticipants: number
@@ -49496,6 +49534,7 @@ export namespace Prisma {
     readonly description: FieldRef<"League", 'String'>
     readonly creatorId: FieldRef<"League", 'String'>
     readonly ruleset: FieldRef<"League", 'Ruleset'>
+    readonly tournamentRuleset: FieldRef<"League", 'String'>
     readonly status: FieldRef<"League", 'String'>
     readonly isPublic: FieldRef<"League", 'Boolean'>
     readonly maxParticipants: FieldRef<"League", 'Int'>
@@ -102807,6 +102846,7 @@ export namespace Prisma {
     roster: 'roster',
     ruleset: 'ruleset',
     format: 'format',
+    tournamentRuleset: 'tournamentRuleset',
     createdAt: 'createdAt',
     treasury: 'treasury',
     rerolls: 'rerolls',
@@ -103037,6 +103077,7 @@ export namespace Prisma {
     creatorId: 'creatorId',
     ruleset: 'ruleset',
     format: 'format',
+    tournamentRuleset: 'tournamentRuleset',
     validated: 'validated',
     isPublic: 'isPublic',
     status: 'status',
@@ -103167,6 +103208,7 @@ export namespace Prisma {
     description: 'description',
     creatorId: 'creatorId',
     ruleset: 'ruleset',
+    tournamentRuleset: 'tournamentRuleset',
     status: 'status',
     isPublic: 'isPublic',
     maxParticipants: 'maxParticipants',
@@ -105290,6 +105332,7 @@ export namespace Prisma {
     roster?: StringFilter<"Team"> | string
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -105325,6 +105368,7 @@ export namespace Prisma {
     roster?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -105364,6 +105408,7 @@ export namespace Prisma {
     roster?: StringFilter<"Team"> | string
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -105398,6 +105443,7 @@ export namespace Prisma {
     roster?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -105430,6 +105476,7 @@ export namespace Prisma {
     roster?: StringWithAggregatesFilter<"Team"> | string
     ruleset?: EnumRulesetWithAggregatesFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatWithAggregatesFilter<"Team"> | $Enums.Format
+    tournamentRuleset?: StringNullableWithAggregatesFilter<"Team"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Team"> | Date | string
     treasury?: IntWithAggregatesFilter<"Team"> | number
     rerolls?: IntWithAggregatesFilter<"Team"> | number
@@ -106520,6 +106567,7 @@ export namespace Prisma {
     creatorId?: StringFilter<"Cup"> | string
     ruleset?: EnumRulesetFilter<"Cup"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Cup"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Cup"> | string | null
     validated?: BoolFilter<"Cup"> | boolean
     isPublic?: BoolFilter<"Cup"> | boolean
     status?: StringFilter<"Cup"> | string
@@ -106551,6 +106599,7 @@ export namespace Prisma {
     creatorId?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     validated?: SortOrder
     isPublic?: SortOrder
     status?: SortOrder
@@ -106585,6 +106634,7 @@ export namespace Prisma {
     creatorId?: StringFilter<"Cup"> | string
     ruleset?: EnumRulesetFilter<"Cup"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Cup"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Cup"> | string | null
     validated?: BoolFilter<"Cup"> | boolean
     isPublic?: BoolFilter<"Cup"> | boolean
     status?: StringFilter<"Cup"> | string
@@ -106616,6 +106666,7 @@ export namespace Prisma {
     creatorId?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     validated?: SortOrder
     isPublic?: SortOrder
     status?: SortOrder
@@ -106651,6 +106702,7 @@ export namespace Prisma {
     creatorId?: StringWithAggregatesFilter<"Cup"> | string
     ruleset?: EnumRulesetWithAggregatesFilter<"Cup"> | $Enums.Ruleset
     format?: EnumFormatWithAggregatesFilter<"Cup"> | $Enums.Format
+    tournamentRuleset?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     validated?: BoolWithAggregatesFilter<"Cup"> | boolean
     isPublic?: BoolWithAggregatesFilter<"Cup"> | boolean
     status?: StringWithAggregatesFilter<"Cup"> | string
@@ -107206,6 +107258,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"League"> | string | null
     creatorId?: StringFilter<"League"> | string
     ruleset?: EnumRulesetFilter<"League"> | $Enums.Ruleset
+    tournamentRuleset?: StringNullableFilter<"League"> | string | null
     status?: StringFilter<"League"> | string
     isPublic?: BoolFilter<"League"> | boolean
     maxParticipants?: IntFilter<"League"> | number
@@ -107230,6 +107283,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     creatorId?: SortOrder
     ruleset?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     status?: SortOrder
     isPublic?: SortOrder
     maxParticipants?: SortOrder
@@ -107257,6 +107311,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"League"> | string | null
     creatorId?: StringFilter<"League"> | string
     ruleset?: EnumRulesetFilter<"League"> | $Enums.Ruleset
+    tournamentRuleset?: StringNullableFilter<"League"> | string | null
     status?: StringFilter<"League"> | string
     isPublic?: BoolFilter<"League"> | boolean
     maxParticipants?: IntFilter<"League"> | number
@@ -107281,6 +107336,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     creatorId?: SortOrder
     ruleset?: SortOrder
+    tournamentRuleset?: SortOrderInput | SortOrder
     status?: SortOrder
     isPublic?: SortOrder
     maxParticipants?: SortOrder
@@ -107310,6 +107366,7 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"League"> | string | null
     creatorId?: StringWithAggregatesFilter<"League"> | string
     ruleset?: EnumRulesetWithAggregatesFilter<"League"> | $Enums.Ruleset
+    tournamentRuleset?: StringNullableWithAggregatesFilter<"League"> | string | null
     status?: StringWithAggregatesFilter<"League"> | string
     isPublic?: BoolWithAggregatesFilter<"League"> | boolean
     maxParticipants?: IntWithAggregatesFilter<"League"> | number
@@ -112800,6 +112857,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -112835,6 +112893,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -112868,6 +112927,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -112903,6 +112963,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -112937,6 +112998,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -112960,6 +113022,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -112984,6 +113047,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -114222,6 +114286,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -114253,6 +114318,7 @@ export namespace Prisma {
     creatorId: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -114282,6 +114348,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -114313,6 +114380,7 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -114343,6 +114411,7 @@ export namespace Prisma {
     creatorId: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -114369,6 +114438,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -114396,6 +114466,7 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -114997,6 +115068,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -115021,6 +115093,7 @@ export namespace Prisma {
     description?: string | null
     creatorId: string
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -115043,6 +115116,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -115067,6 +115141,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -115090,6 +115165,7 @@ export namespace Prisma {
     description?: string | null
     creatorId: string
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -115110,6 +115186,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -115131,6 +115208,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -121016,6 +121094,7 @@ export namespace Prisma {
     roster?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -121052,6 +121131,7 @@ export namespace Prisma {
     roster?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -121076,6 +121156,7 @@ export namespace Prisma {
     roster?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     createdAt?: SortOrder
     treasury?: SortOrder
     rerolls?: SortOrder
@@ -121934,6 +122015,7 @@ export namespace Prisma {
     creatorId?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     validated?: SortOrder
     isPublic?: SortOrder
     status?: SortOrder
@@ -121972,6 +122054,7 @@ export namespace Prisma {
     creatorId?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     validated?: SortOrder
     isPublic?: SortOrder
     status?: SortOrder
@@ -121999,6 +122082,7 @@ export namespace Prisma {
     creatorId?: SortOrder
     ruleset?: SortOrder
     format?: SortOrder
+    tournamentRuleset?: SortOrder
     validated?: SortOrder
     isPublic?: SortOrder
     status?: SortOrder
@@ -122361,6 +122445,7 @@ export namespace Prisma {
     description?: SortOrder
     creatorId?: SortOrder
     ruleset?: SortOrder
+    tournamentRuleset?: SortOrder
     status?: SortOrder
     isPublic?: SortOrder
     maxParticipants?: SortOrder
@@ -122390,6 +122475,7 @@ export namespace Prisma {
     description?: SortOrder
     creatorId?: SortOrder
     ruleset?: SortOrder
+    tournamentRuleset?: SortOrder
     status?: SortOrder
     isPublic?: SortOrder
     maxParticipants?: SortOrder
@@ -122411,6 +122497,7 @@ export namespace Prisma {
     description?: SortOrder
     creatorId?: SortOrder
     ruleset?: SortOrder
+    tournamentRuleset?: SortOrder
     status?: SortOrder
     isPublic?: SortOrder
     maxParticipants?: SortOrder
@@ -131609,6 +131696,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -131642,6 +131730,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -131709,6 +131798,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -131738,6 +131828,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -131775,6 +131866,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -131797,6 +131889,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -132763,6 +132856,7 @@ export namespace Prisma {
     roster?: StringFilter<"Team"> | string
     ruleset?: EnumRulesetFilter<"Team"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Team"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Team"> | string | null
     createdAt?: DateTimeFilter<"Team"> | Date | string
     treasury?: IntFilter<"Team"> | number
     rerolls?: IntFilter<"Team"> | number
@@ -132834,6 +132928,7 @@ export namespace Prisma {
     creatorId?: StringFilter<"Cup"> | string
     ruleset?: EnumRulesetFilter<"Cup"> | $Enums.Ruleset
     format?: EnumFormatFilter<"Cup"> | $Enums.Format
+    tournamentRuleset?: StringNullableFilter<"Cup"> | string | null
     validated?: BoolFilter<"Cup"> | boolean
     isPublic?: BoolFilter<"Cup"> | boolean
     status?: StringFilter<"Cup"> | string
@@ -132879,6 +132974,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"League"> | string | null
     creatorId?: StringFilter<"League"> | string
     ruleset?: EnumRulesetFilter<"League"> | $Enums.Ruleset
+    tournamentRuleset?: StringNullableFilter<"League"> | string | null
     status?: StringFilter<"League"> | string
     isPublic?: BoolFilter<"League"> | boolean
     maxParticipants?: IntFilter<"League"> | number
@@ -137684,6 +137780,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -137718,6 +137815,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -137986,6 +138084,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -138020,6 +138119,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139046,6 +139146,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139080,6 +139181,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139163,6 +139265,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139197,6 +139300,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139430,6 +139534,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139464,6 +139569,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -139512,6 +139618,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -139546,6 +139653,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141195,6 +141303,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -141225,6 +141334,7 @@ export namespace Prisma {
     creatorId: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -141258,6 +141368,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141292,6 +141403,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141340,6 +141452,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -141370,6 +141483,7 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -141409,6 +141523,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141443,6 +141558,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141618,6 +141734,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141652,6 +141769,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -141849,6 +141967,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -141883,6 +142002,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142058,6 +142178,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142092,6 +142213,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142129,6 +142251,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142163,6 +142286,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -142200,6 +142324,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -142230,6 +142355,7 @@ export namespace Prisma {
     creatorId: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -142472,6 +142598,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142506,6 +142633,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142549,6 +142677,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142583,6 +142712,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -142626,6 +142756,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -142656,6 +142787,7 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -143276,6 +143408,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -143299,6 +143432,7 @@ export namespace Prisma {
     description?: string | null
     creatorId: string
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -143598,6 +143732,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -143621,6 +143756,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -144005,6 +144141,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -144028,6 +144165,7 @@ export namespace Prisma {
     description?: string | null
     creatorId: string
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -144388,6 +144526,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -144422,6 +144561,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -144469,6 +144609,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -144492,6 +144633,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -144876,6 +145018,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -144910,6 +145053,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -144942,6 +145086,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -144972,6 +145117,7 @@ export namespace Prisma {
     creatorId: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -145291,6 +145437,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145325,6 +145472,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145373,6 +145521,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -145403,6 +145552,7 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -145740,6 +145890,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -145774,6 +145925,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -145853,6 +146005,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -145887,6 +146040,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -146099,6 +146253,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -146133,6 +146288,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -155994,6 +156150,7 @@ export namespace Prisma {
     roster: string
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     createdAt?: Date | string
     treasury?: number
     rerolls?: number
@@ -156025,6 +156182,7 @@ export namespace Prisma {
     description?: string | null
     ruleset?: $Enums.Ruleset
     format?: $Enums.Format
+    tournamentRuleset?: string | null
     validated?: boolean
     isPublic?: boolean
     status?: string
@@ -156050,6 +156208,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
     status?: string
     isPublic?: boolean
     maxParticipants?: number
@@ -156529,6 +156688,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156562,6 +156722,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156595,6 +156756,7 @@ export namespace Prisma {
     roster?: StringFieldUpdateOperationsInput | string
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     treasury?: IntFieldUpdateOperationsInput | number
     rerolls?: IntFieldUpdateOperationsInput | number
@@ -156642,6 +156804,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -156671,6 +156834,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -156700,6 +156864,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
     format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     validated?: BoolFieldUpdateOperationsInput | boolean
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
@@ -156725,6 +156890,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -156747,6 +156913,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number
@@ -156769,6 +156936,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     isPublic?: BoolFieldUpdateOperationsInput | boolean
     maxParticipants?: IntFieldUpdateOperationsInput | number

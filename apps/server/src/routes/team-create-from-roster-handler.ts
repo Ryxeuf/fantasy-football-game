@@ -34,6 +34,7 @@ import {
   type Ruleset,
   getFormatConstraints,
   getTeamPositions,
+  getTournamentRosterRules,
   isGameFormat,
 } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
@@ -43,6 +44,7 @@ import {
   calculateStarPlayersCost,
 } from '../utils/star-player-validation';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
@@ -97,6 +99,7 @@ export async function handleCreateFromRoster(
     starPlayers: starPlayerSlugs,
     ruleset: bodyRuleset,
     format: bodyFormat,
+    tournamentRuleset: bodyTournamentRuleset,
   }: {
     name: string;
     roster: string;
@@ -104,6 +107,7 @@ export async function handleCreateFromRoster(
     starPlayers?: string[];
     ruleset?: string;
     format?: string;
+    tournamentRuleset?: string | null;
   } = req.body;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!isAllowedTeamRoster(roster))
@@ -112,7 +116,37 @@ export async function handleCreateFromRoster(
   const ruleset = resolveRuleset(bodyRuleset) as Ruleset;
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
-  const finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
+  // Règlement de tournoi (null = aucun). Slug inconnu refusé net.
+  const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+  if (!parsedPack.ok) return res.status(400).json({ error: parsedPack.error });
+  const pack = parsedPack.def;
+
+  let finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
+
+  // Le règlement impose édition, format et budget d'or du tier du roster.
+  // Pas de pool de SPP sur ce flux simplifié (aucun achat de compétence
+  // possible ici) : conformément au pack, les SPP non dépensés à la
+  // création sont perdus — le builder complet (`/team/build`) est le flux
+  // qui permet de les dépenser.
+  const packRosterRules = pack ? getTournamentRosterRules(pack, roster) : null;
+  if (pack) {
+    if (pack.edition !== ruleset) {
+      return res.status(400).json({
+        error: `Le règlement ${pack.shortLabel} requiert l'édition ${pack.edition}`,
+      });
+    }
+    if (pack.format !== format) {
+      return res.status(400).json({
+        error: `Le règlement ${pack.shortLabel} requiert le format ${pack.format}`,
+      });
+    }
+    if (!packRosterRules) {
+      return res.status(400).json({
+        error: `Ce roster n'est pas autorisé par le règlement ${pack.shortLabel}`,
+      });
+    }
+    finalTeamValue = packRosterRules.goldBudget;
+  }
 
   // Composition de départ dérivée des positions réelles du roster pour le
   // ruleset ciblé (DB en priorité, fallback données statiques game-engine).
@@ -121,6 +155,23 @@ export async function handleCreateFromRoster(
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
   if (starPlayersToHire.length > 0) {
+    // Restrictions du règlement de tournoi : autorisation par roster + bannis.
+    if (pack && packRosterRules) {
+      if (!packRosterRules.starPlayersAllowed) {
+        return res.status(400).json({
+          error: `Le règlement ${pack.shortLabel} n'autorise pas les Star Players pour ce roster`,
+        });
+      }
+      const banned = starPlayersToHire.filter((slug) =>
+        pack.bannedStarPlayers.includes(slug),
+      );
+      if (banned.length > 0) {
+        return res.status(400).json({
+          error: `Star Player(s) interdit(s) par le règlement ${pack.shortLabel} : ${banned.join(', ')}`,
+        });
+      }
+    }
+
     // Valider les paires obligatoires
     const pairValidation = validateStarPlayerPairs(starPlayersToHire);
     if (!pairValidation.valid) {
@@ -234,6 +285,7 @@ export async function handleCreateFromRoster(
         apothecary: false,
         dedicatedFans: 1,
         currentValue: 0,
+        tournamentRuleset: pack?.slug ?? null,
       },
     });
     await tx.teamPlayer.createMany({

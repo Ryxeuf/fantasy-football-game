@@ -8,6 +8,7 @@ import {
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
 import { resolveRuleset } from "../utils/ruleset-helpers";
+import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
 import { validate, validateQuery } from "../middleware/validate";
 import {
   createCupSchema,
@@ -47,6 +48,7 @@ function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
       return 404;
     case "already_engaged":
     case "already_registered":
+    case "tournament_ruleset_mismatch":
       return 409;
     case "budget_exceeded":
     case "psp_exceeded":
@@ -234,6 +236,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      tournamentRuleset: cup.tournamentRuleset ?? null,
       isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
@@ -322,6 +325,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      tournamentRuleset: cup.tournamentRuleset ?? null,
       isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
@@ -565,6 +569,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      tournamentRuleset: cup.tournamentRuleset ?? null,
       isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,
@@ -652,6 +657,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     tierBudgets?: Record<string, number>;
     rosterBudgetOverrides?: Record<string, number>;
     tierStartingPsp?: Record<string, number>;
+    tournamentRuleset?: string | null;
   } = req.body;
 
   // S27.1i — La creation d'une cup mensuelle (avec slot canonique) est
@@ -668,6 +674,25 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
   const { name, isPublic } = body;
   const ruleset = resolveRuleset(body.ruleset);
   const format = body.format === "sevens" ? "sevens" : "bb11";
+
+  // Règlement de tournoi imposé aux équipes (null = aucun). Slug inconnu
+  // refusé net ; l'édition et le format de la coupe doivent être ceux
+  // exigés par le pack.
+  const parsedPack = parseTournamentRuleset(body.tournamentRuleset);
+  if (!parsedPack.ok) {
+    return res.status(400).json({ error: parsedPack.error });
+  }
+  const pack = parsedPack.def;
+  if (pack && pack.edition !== ruleset) {
+    return res.status(400).json({
+      error: `Le règlement ${pack.shortLabel} requiert l'édition ${pack.edition}`,
+    });
+  }
+  if (pack && pack.format !== format) {
+    return res.status(400).json({
+      error: `Le règlement ${pack.shortLabel} requiert le format ${pack.format}`,
+    });
+  }
 
   // Par défaut, la coupe est publique
   const cupIsPublic = isPublic !== undefined ? Boolean(isPublic) : true;
@@ -746,6 +771,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         ...serializeCupRulesData(body),
         // Mode résurrection : seul mode disponible actuellement en coupe.
         resurrectionMode: true,
+        tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
           ? {
@@ -774,6 +800,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       creatorId: cup.creatorId,
       ruleset: cup.ruleset,
       format: cup.format,
+      tournamentRuleset: cup.tournamentRuleset ?? null,
       isAdjusted: isCupAdjusted(cup as unknown as CupRulesConfig),
       validated: cup.validated,
       isPublic: cup.isPublic,

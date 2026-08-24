@@ -56,6 +56,10 @@ export const createLeagueSchema = z.object({
     .max(100, "Le nom de la ligue ne peut pas depasser 100 caracteres"),
   description: z.string().max(500).optional().nullable(),
   ruleset: z.enum(["season_2", "season_3"]).optional(),
+  // Règlement de tournoi imposé aux équipes participantes (slug du
+  // registre @bb/game-engine, ex : "naf_world_cup_2027"). null/absent =
+  // aucun. Validé contre le registre côté service.
+  tournamentRuleset: z.string().trim().max(64).optional().nullable(),
   isPublic: z.boolean().optional(),
   maxParticipants: z.number().int().min(2).max(128).optional(),
   allowedRosters: z.array(rosterSlug).max(64).optional().nullable(),

@@ -103,7 +103,8 @@ function mapInvitationError(res: Response, e: unknown): void {
             e.code === "invitation_already_consumed" ||
             e.code === "invitation_expired" ||
             e.code === "team_already_registered" ||
-            e.code === "league_full"
+            e.code === "league_full" ||
+            e.code === "tournament_ruleset_mismatch"
           ? 409
           : // season_choice_required → fallback 400 (l'invité doit préciser seasonId)
             e.code === "forbidden" ||

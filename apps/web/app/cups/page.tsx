@@ -5,7 +5,12 @@ import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
 import { RULESETS } from "@bb/game-engine";
 import PendingCupInvitations from "./PendingCupInvitations";
-import { getRosterName } from "@bb/game-engine";
+import {
+  getRosterName,
+  getTournamentRuleset,
+  TOURNAMENT_RULESETS,
+  TOURNAMENT_RULESET_SLUGS,
+} from "@bb/game-engine";
 
 type Cup = {
   id: string;
@@ -13,6 +18,8 @@ type Cup = {
   description?: string | null;
   ruleset: string;
   format?: string;
+  /** Règlement de tournoi imposé aux équipes (null = aucun). */
+  tournamentRuleset?: string | null;
   isAdjusted?: boolean;
   creator: {
     id: string;
@@ -99,6 +106,9 @@ export default function CupsPage() {
   const [newCupIsPublic, setNewCupIsPublic] = useState(true);
   const [newCupRuleset, setNewCupRuleset] = useState<string>("season_3");
   const [newCupFormat, setNewCupFormat] = useState<string>("bb11");
+  // Règlement de tournoi imposé aux équipes ("" = aucun).
+  const [newCupTournamentRuleset, setNewCupTournamentRuleset] =
+    useState<string>("");
   const [winPoints, setWinPoints] = useState(1000);
   const [drawPoints, setDrawPoints] = useState(400);
   const [lossPoints, setLossPoints] = useState(0);
@@ -164,6 +174,16 @@ export default function CupsPage() {
       cancelled = true;
     };
   }, [newCupRuleset]);
+
+  // Désélectionne un règlement de tournoi devenu incompatible avec le
+  // ruleset/format choisis (l'option disparaît du menu, l'état doit suivre).
+  useEffect(() => {
+    if (!newCupTournamentRuleset) return;
+    const def = TOURNAMENT_RULESETS[newCupTournamentRuleset];
+    if (!def || def.edition !== newCupRuleset || def.format !== newCupFormat) {
+      setNewCupTournamentRuleset("");
+    }
+  }, [newCupRuleset, newCupFormat, newCupTournamentRuleset]);
 
   const loadTeams = async () => {
     try {
@@ -248,6 +268,7 @@ export default function CupsPage() {
         isPublic: newCupIsPublic,
         ruleset: newCupRuleset,
         format: newCupFormat,
+        tournamentRuleset: newCupTournamentRuleset || undefined,
         scoringConfig: {
           winPoints,
           drawPoints,
@@ -278,6 +299,7 @@ export default function CupsPage() {
       setPassPoints(2);
       setNewCupDescription("");
       setNewCupFormat("bb11");
+      setNewCupTournamentRuleset("");
       setTierBudgets({ I: "", II: "", III: "", IV: "" });
       setTierStartingPsp({ I: "", II: "", III: "", IV: "" });
       setRosterOverrides([]);
@@ -425,6 +447,33 @@ export default function CupsPage() {
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Les équipes inscrites devront utiliser ce format.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Règlement de tournoi
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+                value={newCupTournamentRuleset}
+                onChange={(e) => setNewCupTournamentRuleset(e.target.value)}
+                data-testid="cup-tournament-ruleset-select"
+              >
+                <option value="">Aucun</option>
+                {TOURNAMENT_RULESET_SLUGS.filter(
+                  (slug) =>
+                    TOURNAMENT_RULESETS[slug].edition === newCupRuleset &&
+                    TOURNAMENT_RULESETS[slug].format === newCupFormat,
+                ).map((slug) => (
+                  <option key={slug} value={slug}>
+                    {TOURNAMENT_RULESETS[slug].nameFr}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Impose aux équipes d&apos;être créées avec ce règlement pour
+                s&apos;inscrire (seuls les packs compatibles avec le ruleset
+                et le format choisis sont proposés).
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
@@ -817,6 +866,13 @@ export default function CupsPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
                       {rulesetLabels[cup.ruleset] || cup.ruleset}
                     </span>
+                    {cup.tournamentRuleset && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                        🏆{" "}
+                        {getTournamentRuleset(cup.tournamentRuleset)
+                          ?.shortLabel ?? cup.tournamentRuleset}
+                      </span>
+                    )}
                     <span
                       data-testid="cup-format-badge"
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

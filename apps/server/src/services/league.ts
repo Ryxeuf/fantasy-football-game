@@ -15,7 +15,9 @@
  * - Les journees (rounds) sont numerotees a partir de 1.
  */
 
+import { getTournamentRuleset } from "@bb/game-engine";
 import { prisma } from "../prisma";
+import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
 import { getTeamEngagement } from "./team-competition-status";
 import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
@@ -52,6 +54,11 @@ export interface CreateLeagueInput {
   name: string;
   description?: string | null;
   ruleset?: "season_2" | "season_3";
+  /**
+   * Reglement de tournoi impose aux equipes participantes (slug du
+   * registre @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun.
+   */
+  tournamentRuleset?: string | null;
   isPublic?: boolean;
   maxParticipants?: number;
   allowedRosters?: string[] | null;
@@ -154,10 +161,35 @@ function ensureValidMaxParticipants(maxParticipants: number): void {
   }
 }
 
+/**
+ * Valide le reglement de tournoi d'une ligue : slug connu du registre
+ * @bb/game-engine et edition (`ruleset`) de la ligue compatible avec celle
+ * exigee par le pack. Retourne le slug a persister (null = aucun reglement).
+ */
+function ensureValidTournamentRuleset(
+  value: string | null | undefined,
+  leagueRuleset: string,
+): string | null {
+  const parsed = parseTournamentRuleset(value);
+  if (!parsed.ok) {
+    throw new Error("Reglement de tournoi inconnu");
+  }
+  if (parsed.def && parsed.def.edition !== leagueRuleset) {
+    throw new Error(
+      `Le reglement ${parsed.def.shortLabel} requiert l'edition ${parsed.def.edition}`,
+    );
+  }
+  return parsed.def?.slug ?? null;
+}
+
 export async function createLeague(input: CreateLeagueInput) {
   ensureNonEmptyName(input.name);
   const maxParticipants = input.maxParticipants ?? 16;
   ensureValidMaxParticipants(maxParticipants);
+  const tournamentRuleset = ensureValidTournamentRuleset(
+    input.tournamentRuleset,
+    input.ruleset ?? "season_3",
+  );
 
   const allowedRosters =
     input.allowedRosters && input.allowedRosters.length > 0
@@ -191,6 +223,7 @@ export async function createLeague(input: CreateLeagueInput) {
       name: input.name.trim(),
       description: input.description ?? null,
       ruleset: input.ruleset ?? "season_3",
+      tournamentRuleset,
       isPublic: input.isPublic ?? true,
       maxParticipants,
       allowedRosters,
@@ -292,7 +325,13 @@ export async function addParticipant(input: AddParticipantInput) {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: input.seasonId },
     include: {
-      league: { select: { maxParticipants: true, allowedRosters: true } },
+      league: {
+        select: {
+          maxParticipants: true,
+          allowedRosters: true,
+          tournamentRuleset: true,
+        },
+      },
     },
   });
   if (!season) {
@@ -324,6 +363,28 @@ export async function addParticipant(input: AddParticipantInput) {
   if (allowed && teamRoster && !allowed.includes(teamRoster)) {
     throw new Error(
       `Roster ${teamRoster} non autorise sur cette saison (autorises: ${allowed.join(", ")})`,
+    );
+  }
+
+  // Reglement de tournoi : une ligue avec reglement n'accepte que des
+  // equipes creees avec ce meme reglement, et une equipe creee sous un
+  // reglement (budget/SPP de tournoi) ne peut pas rejoindre une ligue
+  // standard. Egalite stricte des slugs (null = aucun reglement).
+  const leaguePackSlug =
+    (season as { league: { tournamentRuleset?: string | null } }).league
+      .tournamentRuleset ?? null;
+  const teamPackSlug =
+    (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
+  if (leaguePackSlug !== teamPackSlug) {
+    const label = (slug: string): string =>
+      getTournamentRuleset(slug)?.shortLabel ?? slug;
+    if (leaguePackSlug) {
+      throw new Error(
+        `Cette ligue impose le reglement de tournoi ${label(leaguePackSlug)} : l'equipe doit etre creee avec ce reglement`,
+      );
+    }
+    throw new Error(
+      `Cette equipe est creee avec le reglement de tournoi ${label(teamPackSlug as string)} : elle ne peut rejoindre qu'une competition avec ce reglement`,
     );
   }
 
@@ -995,6 +1056,8 @@ export interface UpdateLeagueInput {
   name?: string;
   description?: string | null;
   ruleset?: "season_2" | "season_3";
+  /** Reglement de tournoi impose (slug @bb/game-engine). null = aucun. */
+  tournamentRuleset?: string | null;
   isPublic?: boolean;
   maxParticipants?: number;
   allowedRosters?: string[] | null;
@@ -1044,6 +1107,23 @@ export async function updateLeague(
   if (input.name !== undefined) data.name = input.name.trim();
   if (input.description !== undefined) data.description = input.description;
   if (input.ruleset !== undefined) data.ruleset = input.ruleset;
+  // Reglement de tournoi : re-valide la coherence slug + edition avec l'etat
+  // resultant de la ligue (edition modifiee dans le meme PATCH ou existante).
+  if (input.tournamentRuleset !== undefined || input.ruleset !== undefined) {
+    const existing = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { ruleset: true, tournamentRuleset: true },
+    });
+    const nextRuleset = input.ruleset ?? existing?.ruleset ?? "season_3";
+    const nextSlug =
+      input.tournamentRuleset !== undefined
+        ? input.tournamentRuleset
+        : (existing?.tournamentRuleset ?? null);
+    const validated = ensureValidTournamentRuleset(nextSlug, nextRuleset);
+    if (input.tournamentRuleset !== undefined) {
+      data.tournamentRuleset = validated;
+    }
+  }
   if (input.isPublic !== undefined) data.isPublic = input.isPublic;
   if (input.maxParticipants !== undefined)
     data.maxParticipants = input.maxParticipants;

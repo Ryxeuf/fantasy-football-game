@@ -72,6 +72,7 @@ export class LeagueInvitationError extends Error {
       | "team_not_owned_by_user"
       | "team_already_registered"
       | "league_full"
+      | "tournament_ruleset_mismatch"
       | "forbidden",
     message: string,
   ) {
@@ -360,6 +361,9 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
         "league_full",
         "La saison a atteint son nombre maximum d'inscrits",
       );
+    }
+    if (/reglement de tournoi/i.test(msg)) {
+      throw new LeagueInvitationError("tournament_ruleset_mismatch", msg);
     }
     if (/draft|scheduled|in_progress|completed/i.test(msg)) {
       throw new LeagueInvitationError(

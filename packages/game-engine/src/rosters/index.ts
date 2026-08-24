@@ -161,6 +161,29 @@ export {
   type StaffLimits,
 } from "./formats";
 
+// Règlements de tournoi (NAF World Cup…) : axe orthogonal au ruleset et au format
+export {
+  NAF_WORLD_CUP_2027,
+  TOURNAMENT_RULESETS,
+  TOURNAMENT_RULESET_SLUGS,
+  isTournamentRulesetSlug,
+  getTournamentRuleset,
+  getTournamentRosterRules,
+  maxTwoSkillPlayers,
+  tournamentStarPlayerSppTax,
+  tournamentSkillCost,
+  validateTournamentSkillPlan,
+  type TournamentSkillStacking,
+  type TournamentRosterRules,
+  type TournamentSkillCosts,
+  type TournamentStarTaxBracket,
+  type TournamentInducementRule,
+  type TournamentScoring,
+  type TournamentRulesetDefinition,
+  type TournamentSkillPick,
+  type TournamentSkillPlanResult,
+} from "./tournament-rulesets";
+
 // Accès à l'apothicaire par roster (interdit pour les morts-vivants)
 export {
   APOTHECARY_FORBIDDEN_ROSTERS,

@@ -7,6 +7,10 @@ export const createFromRosterSchema = z.object({
   starPlayers: z.array(z.string()).optional(),
   ruleset: z.string().optional(),
   format: z.enum(["bb11", "sevens"]).optional(),
+  // Règlement de tournoi (slug du registre @bb/game-engine, ex :
+  // "naf_world_cup_2027"). null/absent = aucun. Validé contre le registre
+  // dans le handler (parseTournamentRuleset).
+  tournamentRuleset: z.string().trim().max(64).optional().nullable(),
 });
 
 export const buildTeamSchema = z.object({
@@ -25,6 +29,12 @@ export const buildTeamSchema = z.object({
   // les contraintes spécifiques au format (Sevens : ≤6 relances, etc.) sont
   // appliquées au runtime via validateFormatSelection (@bb/game-engine).
   format: z.enum(["bb11", "sevens"]).optional(),
+  // Règlement de tournoi (slug du registre @bb/game-engine, ex :
+  // "naf_world_cup_2027"). null/absent = aucun. Validé contre le registre
+  // dans le handler ; s'il est fourni, le serveur IMPOSE budget d'or et
+  // pool de SPP du pack (valeurs client ignorées) et applique ses
+  // restrictions de Star Players et de cumul de compétences.
+  tournamentRuleset: z.string().trim().max(64).optional().nullable(),
   rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),

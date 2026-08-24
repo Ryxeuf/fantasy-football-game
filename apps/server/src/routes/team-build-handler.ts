@@ -39,6 +39,13 @@ import {
   isGameFormat,
   isBigGuy,
   bigGuyLimitForRoster,
+  getTournamentRuleset,
+  getTournamentRosterRules,
+  tournamentStarPlayerSppTax,
+  tournamentSkillCost,
+  validateTournamentSkillPlan,
+  type TournamentRosterRules,
+  type TournamentSkillPick,
 } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
@@ -48,6 +55,7 @@ import {
 } from '../utils/star-player-validation';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
@@ -90,6 +98,7 @@ export async function handleBuildTeam(
       startingPspPool: bodyStartingPspPool,
       advancements: bodyAdvancements,
       cupId: bodyCupId,
+      tournamentRuleset: bodyTournamentRuleset,
     }: {
       name: string;
       roster: string;
@@ -115,6 +124,7 @@ export async function handleBuildTeam(
         d8?: number;
       }>;
       cupId?: string;
+      tournamentRuleset?: string | null;
     } = req.body;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!isAllowedTeamRoster(roster)) {
@@ -122,10 +132,21 @@ export async function handleBuildTeam(
       return;
     }
 
+    // Règlement de tournoi demandé par le coach (null = aucun). Un slug
+    // inconnu est refusé net : le règlement conditionne budget et
+    // restrictions, pas de fallback silencieux.
+    const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+    if (!parsedPack.ok) {
+      sendError(res, parsedPack.error, 400);
+      return;
+    }
+    let pack = parsedPack.def;
+
     // Le recrutement de Star Players est réservé à la case « Édition
     // avancée » du builder (la construction pour une coupe force ce mode
-    // côté client). Refus précoce et explicite sinon.
-    if ((starPlayerSlugs?.length ?? 0) > 0 && !bodyAdvancedEdition && !bodyCupId) {
+    // côté client, et un règlement de tournoi qui autorise les Star
+    // Players en fait autant). Refus précoce et explicite sinon.
+    if ((starPlayerSlugs?.length ?? 0) > 0 && !bodyAdvancedEdition && !bodyCupId && !pack) {
       sendError(
         res,
         "Le recrutement de Star Players nécessite l'Édition avancée",
@@ -179,6 +200,7 @@ export async function handleBuildTeam(
           rosterBudgetOverrides: true,
           tierStartingPsp: true,
           rosterStartingPspOverrides: true,
+          tournamentRuleset: true,
         },
       });
       if (!cup) {
@@ -197,10 +219,96 @@ export async function handleBuildTeam(
         sendError(res, 'Le format de l’équipe diffère de celui de la coupe', 400);
         return;
       }
+      // Cohérence règlement de tournoi équipe ↔ coupe : une coupe avec
+      // règlement l'impose (le pack de la coupe prime et pilote budget/PSP
+      // plus bas) ; une coupe sans règlement refuse une équipe construite
+      // avec un règlement (sinon le pack contournerait les budgets de la
+      // coupe résolus ci-dessous).
+      if (cup.tournamentRuleset) {
+        const cupPack = getTournamentRuleset(cup.tournamentRuleset);
+        if (!cupPack) {
+          sendError(res, 'Règlement de tournoi de la coupe inconnu', 400);
+          return;
+        }
+        if (pack && pack.slug !== cupPack.slug) {
+          sendError(
+            res,
+            'Le règlement de tournoi de l’équipe diffère de celui de la coupe',
+            400,
+          );
+          return;
+        }
+        pack = cupPack;
+      } else if (pack) {
+        sendError(
+          res,
+          'Cette coupe n’impose pas de règlement de tournoi : construis l’équipe sans règlement',
+          400,
+        );
+        return;
+      }
       const rosterForRules = { slug: roster, tier: def.tier, budget: def.budget };
       finalTeamValue = resolveCupBudget(cup, rosterForRules);
       pspPool = resolveCupStartingPsp(cup, rosterForRules);
       cupForRegister = { id: cup.id };
+    }
+
+    // Règlement de tournoi (choisi par le coach ou imposé par la coupe) :
+    // le serveur IMPOSE budget d'or et pool de SPP du tier du roster
+    // (valeurs client — et budgets/PSP de coupe — ignorés), et applique
+    // les restrictions de Star Players du pack.
+    let packRosterRules: TournamentRosterRules | null = null;
+    if (pack) {
+      if (pack.edition !== ruleset) {
+        sendError(
+          res,
+          `Le règlement ${pack.shortLabel} requiert l'édition ${pack.edition}`,
+          400,
+        );
+        return;
+      }
+      if (pack.format !== format) {
+        sendError(
+          res,
+          `Le règlement ${pack.shortLabel} requiert le format ${pack.format}`,
+          400,
+        );
+        return;
+      }
+      packRosterRules = getTournamentRosterRules(pack, roster);
+      if (!packRosterRules) {
+        sendError(
+          res,
+          `Ce roster n'est pas autorisé par le règlement ${pack.shortLabel}`,
+          400,
+        );
+        return;
+      }
+      finalTeamValue = packRosterRules.goldBudget;
+      pspPool = packRosterRules.sppBudget;
+
+      const packStarSlugs = starPlayerSlugs ?? [];
+      if (packStarSlugs.length > 0) {
+        if (!packRosterRules.starPlayersAllowed) {
+          sendError(
+            res,
+            `Le règlement ${pack.shortLabel} n'autorise pas les Star Players pour ce roster`,
+            400,
+          );
+          return;
+        }
+        const banned = packStarSlugs.filter((slug) =>
+          pack!.bannedStarPlayers.includes(slug),
+        );
+        if (banned.length > 0) {
+          sendError(
+            res,
+            `Star Player(s) interdit(s) par le règlement ${pack.shortLabel} : ${banned.join(', ')}`,
+            400,
+          );
+          return;
+        }
+      }
     }
 
     let totalPlayers = 0;
@@ -318,6 +426,22 @@ export async function handleBuildTeam(
       }
     }
 
+    // Taxe SPP du règlement de tournoi sur le coût cumulé des Star Players :
+    // déduite du pool AVANT l'achat de compétences. Refus si le tier ne
+    // couvre même pas la taxe (le pack n'offre aucun moyen de la payer).
+    if (pack && starPlayersCost > 0) {
+      const starSppTax = tournamentStarPlayerSppTax(pack, starPlayersCost);
+      if (starSppTax > pspPool) {
+        sendError(
+          res,
+          `Budget SPP insuffisant pour la taxe Star Players (${starSppTax} SPP requis, ${pspPool} au tier)`,
+          400,
+        );
+        return;
+      }
+      pspPool -= starSppTax;
+    }
+
     const totalBudgetUsed = totalCost + starPlayersCost + staffCost;
     if (totalBudgetUsed > finalTeamValue) {
       sendError(
@@ -375,6 +499,7 @@ export async function handleBuildTeam(
           dedicatedFans,
           currentValue: 0,
           startingPspPool: pspPool,
+          tournamentRuleset: pack?.slug ?? null,
         },
       });
       await tx.teamPlayer.createMany({
@@ -393,6 +518,26 @@ export async function handleBuildTeam(
     // on dépense le pool. En cas d'échec, on annule le build (suppression de
     // l'équipe) pour rester « tout ou rien ».
     const advancements = bodyAdvancements ?? [];
+
+    // Plan de compétences vs règlement de tournoi : types autorisés
+    // (choix primaire/secondaire uniquement), 2 compétences max par joueur
+    // et quota de joueurs à 2 compétences selon le cumul du roster. Validé
+    // AVANT la création pour refuser sans build à annuler. Le budget SPP
+    // (pool − taxe Star Players) est ensuite décompté à l'application via
+    // le barème du pack.
+    if (pack && packRosterRules && advancements.length > 0) {
+      const picks: TournamentSkillPick[] = advancements.map((adv) => ({
+        playerKey: `${adv.positionSlug}#${adv.ordinal}`,
+        type: adv.type,
+        skillSlug: adv.skillSlug,
+      }));
+      const plan = validateTournamentSkillPlan(pack, packRosterRules, picks);
+      if (!plan.valid) {
+        sendError(res, plan.error ?? 'Plan de compétences invalide', 400);
+        return;
+      }
+    }
+
     if (advancements.length > 0) {
       const createdPlayers = await prisma.teamPlayer.findMany({
         where: { teamId: team.id },
@@ -427,7 +572,24 @@ export async function handleBuildTeam(
         });
       }
       try {
-        await applyCupBuildAdvancements(team.id, pspPool, mapped);
+        // Avec un règlement de tournoi, le pool est décompté selon le barème
+        // du pack (1re/2e compétence × primaire/secondaire + surcoût Elite)
+        // au lieu du barème BB standard.
+        const packDef = pack;
+        await applyCupBuildAdvancements(
+          team.id,
+          pspPool,
+          mapped,
+          packDef
+            ? (taken, type, skillSlug) =>
+                tournamentSkillCost(
+                  packDef,
+                  taken,
+                  type as 'primary' | 'secondary',
+                  skillSlug,
+                )
+            : undefined,
+        );
       } catch (e) {
         await prisma.team.delete({ where: { id: team.id } }).catch(() => {});
         if (e instanceof CupBuildAdvancementError) {

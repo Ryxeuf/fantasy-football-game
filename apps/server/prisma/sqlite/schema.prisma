@@ -334,6 +334,8 @@ model Team {
   roster               String
   ruleset              Ruleset             @default(season_3)
   format               Format              @default(bb11)
+  // Règlement de tournoi (slug @bb/game-engine, miroir SQLite de schema.prisma)
+  tournamentRuleset    String?
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]
@@ -651,6 +653,8 @@ model Cup {
   creatorId   String
   ruleset   Ruleset  @default(season_2)
   format    Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
+  // Règlement de tournoi imposé aux équipes (miroir SQLite de schema.prisma)
+  tournamentRuleset String?
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
   isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
@@ -861,6 +865,8 @@ model League {
   creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
   creatorId         String
   ruleset           Ruleset  @default(season_3)
+  // Règlement de tournoi imposé aux équipes (miroir SQLite de schema.prisma)
+  tournamentRuleset String?
   status            String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
   isPublic          Boolean  @default(true)
   maxParticipants   Int      @default(16)

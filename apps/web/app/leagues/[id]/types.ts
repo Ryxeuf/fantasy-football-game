@@ -31,6 +31,12 @@ export interface LeagueDetail {
   creatorId: string;
   creator: { id: string; coachName: string | null; email: string };
   ruleset: string;
+  /**
+   * Règlement de tournoi imposé aux équipes (slug @bb/game-engine, ex :
+   * "naf_world_cup_2027"). null/absent = aucun. Optionnel pour
+   * rétro-compat avec un serveur pré-feature.
+   */
+  tournamentRuleset?: string | null;
   status: LeagueStatus | string;
   isPublic: boolean;
   maxParticipants: number;
