@@ -51,6 +51,7 @@ import {
   requireLeagueCreator,
 } from "../services/league-scheduler";
 import { recordForfeit } from "../services/league-forfeit";
+import { getEliteSkillSlugs } from "../services/elite-skills";
 import { updateTeamValues } from "../utils/team-values";
 import { serverLog } from "../utils/server-log";
 import {
@@ -1405,8 +1406,9 @@ export async function handleGetLeagueTeamRoster(
     }
     // Valeur d'un joueur : meme regle que la VE d'equipe
     // (`utils/team-values`) — cout de base du poste + surcout des
-    // ameliorations achetees. Expose en po.
+    // ameliorations achetees (dont +10k par competence Elite). Expose en po.
     const teamRuleset = (out.team.ruleset ?? DEFAULT_RULESET) as Ruleset;
+    const eliteSlugs = await getEliteSkillSlugs(prisma, teamRuleset);
     const playerValue = (position: string, advancementsJson: string | null) => {
       const base = getPlayerCost(position, out.team.roster, teamRuleset);
       let surcharge = 0;
@@ -1414,10 +1416,15 @@ export async function handleGetLeagueTeamRoster(
         const parsed = JSON.parse(advancementsJson || "[]");
         if (Array.isArray(parsed)) {
           surcharge = calculateAdvancementsSurcharge(
-            parsed.map((a: { type?: string; stat?: string }) => ({
-              type: a?.type as never,
-              stat: a?.stat as never,
-            })),
+            parsed.map(
+              (a: { type?: string; stat?: string; skillSlug?: string }) => ({
+                type: a?.type as never,
+                stat: a?.stat as never,
+                isElite:
+                  typeof a?.skillSlug === "string" &&
+                  eliteSlugs.has(a.skillSlug),
+              }),
+            ),
           );
         }
       } catch {

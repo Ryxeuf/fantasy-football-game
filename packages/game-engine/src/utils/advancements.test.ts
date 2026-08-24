@@ -79,6 +79,30 @@ describe('advancements utils (BB2025 / Saison 3)', () => {
     expect(surchargeForAdvancement({ type: 'random-secondary' })).toBe(20000);
   });
 
+  it('compétence Élite : +10 000 po de surcoût VE additionnel', () => {
+    // Une primaire Élite vaut 30 000 po (20k + 10k), pas 20 000.
+    expect(surchargeForAdvancement({ type: 'primary', isElite: true })).toBe(30000);
+    expect(surchargeForAdvancement({ type: 'random-primary', isElite: true })).toBe(30000);
+    expect(surchargeForAdvancement({ type: 'secondary', isElite: true })).toBe(50000);
+    // Legacy S2 : le surcoût Élite s'applique aussi en lecture.
+    expect(surchargeForAdvancement({ type: 'random-secondary', isElite: true })).toBe(30000);
+    // Une amélioration de caractéristique n'est jamais Élite.
+    expect(
+      surchargeForAdvancement({ type: 'characteristic', stat: 'av', isElite: true }),
+    ).toBe(10000);
+    // Type inconnu : toujours 0, Élite ou pas.
+    expect(surchargeForAdvancement({ type: 'inconnu', isElite: true })).toBe(0);
+  });
+
+  it('calculateAdvancementsSurcharge cumule le surcoût Élite', () => {
+    expect(
+      calculateAdvancementsSurcharge([
+        { type: 'primary', isElite: true },
+        { type: 'primary' },
+      ]),
+    ).toBe(30000 + 20000);
+  });
+
   it('computes player current value = base + surcharges (skills + carac)', () => {
     expect(calculatePlayerCurrentValue(85000, [])).toBe(85000);
     expect(calculatePlayerCurrentValue(85000, [{ type: 'primary' }])).toBe(105000);

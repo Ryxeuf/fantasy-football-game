@@ -67,12 +67,21 @@ async function ensureTeamOwner(
     return null;
   }
   if (team.ownerId !== userId) {
-    sendError(
-      res,
-      "Seul le proprietaire de l'equipe peut effectuer cette action",
-      403,
-    );
-    return null;
+    // Le commissaire d'une ligue ou l'equipe est engagee peut TOUT
+    // modifier, y compris les evolutions des autres equipes (saisie sur
+    // la feuille de match ou level-up post-validation).
+    const commissionerOf = await prisma.leagueParticipant.findFirst({
+      where: { teamId, season: { league: { creatorId: userId } } },
+      select: { id: true },
+    });
+    if (!commissionerOf) {
+      sendError(
+        res,
+        "Seul le proprietaire de l'equipe (ou le commissaire de sa ligue) peut effectuer cette action",
+        403,
+      );
+      return null;
+    }
   }
   return team;
 }

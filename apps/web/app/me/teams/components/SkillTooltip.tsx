@@ -16,6 +16,11 @@ import {
   getSkillActivationLabel,
   SKILL_ACTIVATION_DARK_CLASSES,
 } from "../../../lib/skill-activation";
+import {
+  getSkillEliteHint,
+  getSkillEliteLabel,
+  SKILL_ELITE_DARK_CLASSES,
+} from "../../../lib/skill-elite";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -42,7 +47,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     getSkillDescription(slug, language);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string; isPassive?: boolean } | null>(null);
+  const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string; isPassive?: boolean; isElite?: boolean } | null>(null);
 
   // Précharge le cache API au montage ET force un re-render quand il est prêt,
   // pour que les noms/catégories des badges (getSkillDescription synchrone)
@@ -137,10 +142,19 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               onMouseLeave={handleMouseLeave}
             >
               {displayName}
+              {skillInfo?.isElite && (
+                <span
+                  aria-label={getSkillEliteLabel(language)}
+                  title={getSkillEliteHint(language)}
+                  data-testid={`skill-badge-elite-${skillSlug}`}
+                >
+                  {" "}⭐
+                </span>
+              )}
             </span>
           );
         })}
-        
+
         {/* Compétences acquises */}
         {acquiredSkillSlugs.map((skillSlug, index) => {
           const skillInfo = resolveSkill(skillSlug);
@@ -156,6 +170,15 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               onMouseLeave={handleMouseLeave}
             >
               {displayName}
+              {skillInfo?.isElite && (
+                <span
+                  aria-label={getSkillEliteLabel(language)}
+                  title={getSkillEliteHint(language)}
+                  data-testid={`skill-badge-elite-${skillSlug}`}
+                >
+                  {" "}⭐
+                </span>
+              )}
             </span>
           );
         })}
@@ -190,6 +213,16 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
             >
               {getSkillActivationLabel(skillDescription.isPassive, language)}
             </span>
+            {/* Compétence Élite (+10 000 po de valeur) */}
+            {skillDescription.isElite && (
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SKILL_ELITE_DARK_CLASSES}`}
+                title={getSkillEliteHint(language)}
+                data-testid={`skill-tooltip-elite-${hoveredSkill}`}
+              >
+                ⭐ {getSkillEliteLabel(language)}
+              </span>
+            )}
           </div>
           <div className="text-xs leading-relaxed">
             {skillDescription.description}

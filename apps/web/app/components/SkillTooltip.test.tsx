@@ -24,6 +24,7 @@ const catalog = {
     description: "Ignore Les Deux Plaqués.",
     category: "General",
     isPassive: false,
+    isElite: true,
   },
   "thick-skull": {
     slug: "thick-skull",
@@ -65,5 +66,38 @@ describe("SkillTooltip (public) — E8 actif / passif", () => {
     expect(badge.textContent).toBe("Passif");
     // L'attribut `title` explique la différence (lecteurs d'écran + survol).
     expect(badge.getAttribute("title")).toContain("en permanence");
+  });
+});
+
+describe("SkillTooltip (public) — compétence Élite", () => {
+  it("marque le badge d'une compétence Élite d'une ⭐ (avec explication)", () => {
+    render(
+      <SkillsCatalogProvider value={catalog}>
+        <SkillTooltip skillSlug="block" />
+      </SkillsCatalogProvider>,
+    );
+    const star = screen.getByTestId("skill-badge-elite-block");
+    expect(star.textContent).toContain("⭐");
+    expect(star.getAttribute("title")).toContain("10 000");
+  });
+
+  it("affiche le badge « Élite » dans l'infobulle", async () => {
+    render(
+      <SkillsCatalogProvider value={catalog}>
+        <SkillTooltip skillSlug="block" />
+      </SkillsCatalogProvider>,
+    );
+    fireEvent.mouseEnter(screen.getByText("Blocage"));
+    const badge = await screen.findByTestId("skill-tooltip-elite-block");
+    expect(badge.textContent).toContain("Élite");
+  });
+
+  it("n'affiche aucune ⭐ pour une compétence non-Élite", () => {
+    render(
+      <SkillsCatalogProvider value={catalog}>
+        <SkillTooltip skillSlug="thick-skull" />
+      </SkillsCatalogProvider>,
+    );
+    expect(screen.queryByTestId("skill-badge-elite-thick-skull")).toBeNull();
   });
 });

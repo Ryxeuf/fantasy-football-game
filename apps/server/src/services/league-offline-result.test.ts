@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => {
   const prisma: any = {
-    leaguePairing: { findUnique: vi.fn() },
+    leaguePairing: { findUnique: vi.fn(), update: vi.fn() },
     match: { create: vi.fn(), update: vi.fn() },
     teamSelection: { createMany: vi.fn() },
     teamPlayer: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
@@ -83,6 +83,7 @@ const m = {
   tpUpdateMany: prisma.teamPlayer.updateMany as MockFn,
   teamUpdate: prisma.team.update as MockFn,
   partUpdate: prisma.leagueParticipant.update as MockFn,
+  pairUpdate: prisma.leaguePairing.update as MockFn,
   record: recordLeagueMatchResult as unknown as MockFn,
   applyPurchases: applyOfflinePurchasesForTeam as unknown as MockFn,
   updateTv: updateTeamValues as unknown as MockFn,
@@ -314,15 +315,29 @@ describe("recordOfflineLeagueResult (option b)", () => {
     ) as [{ data: Record<string, any> }] | undefined;
     expect(sppUpd![0].data.spp).toEqual({ increment: 4 });
 
-    // Bonus classement -> increment/decrement points des participants.
-    const homeP = m.partUpdate.mock.calls.find(
-      (c) => (c[0] as { where: { id: string } }).where.id === "ph",
+    // Bonus classement -> snapshot bonus du pairing (colonne `Bo`),
+    // PAS les points generiques des participants.
+    expect(m.partUpdate).not.toHaveBeenCalled();
+    const pairUpd = m.pairUpdate.mock.calls.find(
+      (c) => (c[0] as { where: { id: string } }).where.id === "pair-1",
     ) as [{ data: Record<string, any> }] | undefined;
-    expect(homeP![0].data.points).toEqual({ increment: 2 });
-    const awayP = m.partUpdate.mock.calls.find(
-      (c) => (c[0] as { where: { id: string } }).where.id === "pa",
-    ) as [{ data: Record<string, any> }] | undefined;
-    expect(awayP![0].data.points).toEqual({ increment: -1 });
+    expect(pairUpd![0].data.bonusPointsHome).toEqual({ increment: 2 });
+    expect(pairUpd![0].data.bonusPointsAway).toEqual({ increment: -1 });
+    const breakdown = JSON.parse(pairUpd![0].data.bonusBreakdown as string);
+    expect(breakdown).toEqual([
+      {
+        ruleId: "commissioner-ranking-bonus",
+        label: "Bonus commissaire",
+        side: "home",
+        points: 2,
+      },
+      {
+        ruleId: "commissioner-ranking-bonus",
+        label: "Bonus commissaire",
+        side: "away",
+        points: -1,
+      },
+    ]);
   });
 
   it("applique les blessures durables (validation appartenance)", async () => {

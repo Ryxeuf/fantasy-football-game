@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { DEFAULT_RULESET, type Ruleset, calculateAdvancementsSurcharge } from '@bb/game-engine';
 import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
+import { getEliteSkillSlugs } from '../services/elite-skills';
 
 /**
  * Calcule et met à jour les valeurs d'équipe selon les règles Blood Bowl
@@ -15,6 +16,11 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     throw new Error(`Équipe ${teamId} non trouvée`);
   }
 
+  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
+  // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
+  const eliteSlugs = await getEliteSkillSlugs(prisma, ruleset);
+
   // Préparer les données pour le calcul (exclure les joueurs morts ET
   // licenciés de la VE : ils ne font plus partie du roster actif).
   const alivePlayers = team.players.filter(
@@ -22,15 +28,20 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   );
   const teamValueData: TeamValueData = {
     players: alivePlayers.map(player => {
-      const baseCost = getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET);
+      const baseCost = getPlayerCost(player.position, team.roster, ruleset);
       // Include advancement surcharges in player value
       let advSurcharge = 0;
       try {
         const advancements = JSON.parse((player as any).advancements || '[]');
         // BB2025 : la caracteristique a un surcout par stat -> on passe
-        // les objets complets ({ type, stat? }) plutot que les seuls types.
+        // les objets complets ({ type, stat?, isElite }) plutot que les
+        // seuls types, pour compter le surcout des competences Elite.
         advSurcharge = calculateAdvancementsSurcharge(
-          advancements.map((a: any) => ({ type: a.type, stat: a.stat })),
+          advancements.map((a: any) => ({
+            type: a.type,
+            stat: a.stat,
+            isElite: typeof a.skillSlug === 'string' && eliteSlugs.has(a.skillSlug),
+          })),
         );
       } catch { /* ignore parse errors */ }
       return {
@@ -45,9 +56,9 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     cheerleaders: team.cheerleaders,
     assistants: team.assistants,
     apothecary: team.apothecary,
-    dedicatedFans: team.dedicatedFans, // Ajout des fans dévoués
+    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA.
     roster: team.roster, // Ajout du roster pour le calcul des relances
-    ruleset: (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    ruleset,
   };
 
   // Calculer les valeurs

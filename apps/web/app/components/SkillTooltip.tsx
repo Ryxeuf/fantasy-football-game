@@ -16,6 +16,11 @@ import {
   getSkillActivationLabel,
   SKILL_ACTIVATION_DARK_CLASSES,
 } from "../lib/skill-activation";
+import {
+  getSkillEliteHint,
+  getSkillEliteLabel,
+  SKILL_ELITE_DARK_CLASSES,
+} from "../lib/skill-elite";
 
 interface SkillTooltipProps {
   skillSlug: string;
@@ -122,6 +127,15 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
         onMouseLeave={handleMouseLeave}
       >
         {displayName}
+        {skillInfo?.isElite && (
+          <span
+            aria-label={getSkillEliteLabel(language)}
+            title={getSkillEliteHint(language)}
+            data-testid={`skill-badge-elite-${skillSlug}`}
+          >
+            {" "}⭐
+          </span>
+        )}
       </span>
 
       {/* Tooltip */}
@@ -171,9 +185,19 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
               {language === "fr" ? "Catégorie" : "Category"}:{" "}
               {getSkillCategoryLabel(skillDescription.category, language)}
             </span>
+            {/* Compétence Élite (+10 000 po de valeur) */}
+            {skillDescription.isElite && (
+              <span
+                className={`ml-auto inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SKILL_ELITE_DARK_CLASSES}`}
+                title={getSkillEliteHint(language)}
+                data-testid={`skill-tooltip-elite-${skillSlug}`}
+              >
+                ⭐ {getSkillEliteLabel(language)}
+              </span>
+            )}
             {/* E8 — Actif / Passif */}
             <span
-              className={`ml-auto inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+              className={`${skillDescription.isElite ? "" : "ml-auto "}inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                 SKILL_ACTIVATION_DARK_CLASSES[
                   getSkillActivation(skillDescription.isPassive)
                 ]

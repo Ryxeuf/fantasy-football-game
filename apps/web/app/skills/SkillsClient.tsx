@@ -11,6 +11,11 @@ import {
   getSkillActivationLabel,
   SKILL_ACTIVATION_BADGE_CLASSES,
 } from "../lib/skill-activation";
+import {
+  getSkillEliteHint,
+  getSkillEliteLabel,
+  SKILL_ELITE_BADGE_CLASSES,
+} from "../lib/skill-elite";
 
 export interface Skill {
   id: string;
@@ -23,6 +28,8 @@ export interface Skill {
   category: string;
   /** E8 — compétence/trait passif (soulignée dans le livre). */
   isPassive?: boolean;
+  /** Compétence Élite : +10 000 po sur la valeur du joueur. */
+  isElite?: boolean;
 }
 
 const RULESET_OPTIONS = [
@@ -331,6 +338,16 @@ export default function SkillsClient({
                         >
                           {getSkillActivationLabel(skill.isPassive, language)}
                         </span>
+                        {/* Compétence Élite (+10 000 po de valeur) */}
+                        {skill.isElite && (
+                          <span
+                            className={`ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SKILL_ELITE_BADGE_CLASSES}`}
+                            title={getSkillEliteHint(language)}
+                            data-testid={`skill-elite-${skill.slug}`}
+                          >
+                            ⭐ {getSkillEliteLabel(language)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
