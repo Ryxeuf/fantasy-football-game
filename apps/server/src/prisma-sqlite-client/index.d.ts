@@ -139,6 +139,11 @@ export type Position = $Result.DefaultSelection<Prisma.$PositionPayload>
  */
 export type PositionSkill = $Result.DefaultSelection<Prisma.$PositionSkillPayload>
 /**
+ * Model TournamentRuleset
+ * 
+ */
+export type TournamentRuleset = $Result.DefaultSelection<Prisma.$TournamentRulesetPayload>
+/**
  * Model Cup
  * 
  */
@@ -805,6 +810,16 @@ export class PrismaClient<
     * ```
     */
   get positionSkill(): Prisma.PositionSkillDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.tournamentRuleset`: Exposes CRUD operations for the **TournamentRuleset** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TournamentRulesets
+    * const tournamentRulesets = await prisma.tournamentRuleset.findMany()
+    * ```
+    */
+  get tournamentRuleset(): Prisma.TournamentRulesetDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.cup`: Exposes CRUD operations for the **Cup** model.
@@ -1790,6 +1805,7 @@ export namespace Prisma {
     StarPlayerHirableBy: 'StarPlayerHirableBy',
     Position: 'Position',
     PositionSkill: 'PositionSkill',
+    TournamentRuleset: 'TournamentRuleset',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
     MatchQueue: 'MatchQueue',
@@ -1860,7 +1876,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "tournamentRuleset" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3711,6 +3727,80 @@ export namespace Prisma {
           count: {
             args: Prisma.PositionSkillCountArgs<ExtArgs>
             result: $Utils.Optional<PositionSkillCountAggregateOutputType> | number
+          }
+        }
+      }
+      TournamentRuleset: {
+        payload: Prisma.$TournamentRulesetPayload<ExtArgs>
+        fields: Prisma.TournamentRulesetFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TournamentRulesetFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TournamentRulesetFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          findFirst: {
+            args: Prisma.TournamentRulesetFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TournamentRulesetFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          findMany: {
+            args: Prisma.TournamentRulesetFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>[]
+          }
+          create: {
+            args: Prisma.TournamentRulesetCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          createMany: {
+            args: Prisma.TournamentRulesetCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TournamentRulesetCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>[]
+          }
+          delete: {
+            args: Prisma.TournamentRulesetDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          update: {
+            args: Prisma.TournamentRulesetUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          deleteMany: {
+            args: Prisma.TournamentRulesetDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TournamentRulesetUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TournamentRulesetUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>[]
+          }
+          upsert: {
+            args: Prisma.TournamentRulesetUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournamentRulesetPayload>
+          }
+          aggregate: {
+            args: Prisma.TournamentRulesetAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTournamentRuleset>
+          }
+          groupBy: {
+            args: Prisma.TournamentRulesetGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TournamentRulesetGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TournamentRulesetCountArgs<ExtArgs>
+            result: $Utils.Optional<TournamentRulesetCountAggregateOutputType> | number
           }
         }
       }
@@ -7683,6 +7773,7 @@ export namespace Prisma {
     starPlayerHirableBy?: StarPlayerHirableByOmit
     position?: PositionOmit
     positionSkill?: PositionSkillOmit
+    tournamentRuleset?: TournamentRulesetOmit
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
     matchQueue?: MatchQueueOmit
@@ -40275,6 +40366,1213 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PositionSkillInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TournamentRuleset
+   */
+
+  export type AggregateTournamentRuleset = {
+    _count: TournamentRulesetCountAggregateOutputType | null
+    _avg: TournamentRulesetAvgAggregateOutputType | null
+    _sum: TournamentRulesetSumAggregateOutputType | null
+    _min: TournamentRulesetMinAggregateOutputType | null
+    _max: TournamentRulesetMaxAggregateOutputType | null
+  }
+
+  export type TournamentRulesetAvgAggregateOutputType = {
+    minRegularPlayersBeforeStars: number | null
+  }
+
+  export type TournamentRulesetSumAggregateOutputType = {
+    minRegularPlayersBeforeStars: number | null
+  }
+
+  export type TournamentRulesetMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    nameFr: string | null
+    nameEn: string | null
+    shortLabel: string | null
+    version: string | null
+    edition: $Enums.Ruleset | null
+    format: $Enums.Format | null
+    descriptionFr: string | null
+    resurrection: boolean | null
+    minRegularPlayersBeforeStars: number | null
+    archivedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TournamentRulesetMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    nameFr: string | null
+    nameEn: string | null
+    shortLabel: string | null
+    version: string | null
+    edition: $Enums.Ruleset | null
+    format: $Enums.Format | null
+    descriptionFr: string | null
+    resurrection: boolean | null
+    minRegularPlayersBeforeStars: number | null
+    archivedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TournamentRulesetCountAggregateOutputType = {
+    id: number
+    slug: number
+    nameFr: number
+    nameEn: number
+    shortLabel: number
+    version: number
+    edition: number
+    format: number
+    descriptionFr: number
+    resurrection: number
+    minRegularPlayersBeforeStars: number
+    rosterRules: number
+    skillCosts: number
+    eliteSkills: number
+    bannedStarPlayers: number
+    starPlayerSppTax: number
+    allowedInducements: number
+    scoring: number
+    archivedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TournamentRulesetAvgAggregateInputType = {
+    minRegularPlayersBeforeStars?: true
+  }
+
+  export type TournamentRulesetSumAggregateInputType = {
+    minRegularPlayersBeforeStars?: true
+  }
+
+  export type TournamentRulesetMinAggregateInputType = {
+    id?: true
+    slug?: true
+    nameFr?: true
+    nameEn?: true
+    shortLabel?: true
+    version?: true
+    edition?: true
+    format?: true
+    descriptionFr?: true
+    resurrection?: true
+    minRegularPlayersBeforeStars?: true
+    archivedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TournamentRulesetMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    nameFr?: true
+    nameEn?: true
+    shortLabel?: true
+    version?: true
+    edition?: true
+    format?: true
+    descriptionFr?: true
+    resurrection?: true
+    minRegularPlayersBeforeStars?: true
+    archivedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TournamentRulesetCountAggregateInputType = {
+    id?: true
+    slug?: true
+    nameFr?: true
+    nameEn?: true
+    shortLabel?: true
+    version?: true
+    edition?: true
+    format?: true
+    descriptionFr?: true
+    resurrection?: true
+    minRegularPlayersBeforeStars?: true
+    rosterRules?: true
+    skillCosts?: true
+    eliteSkills?: true
+    bannedStarPlayers?: true
+    starPlayerSppTax?: true
+    allowedInducements?: true
+    scoring?: true
+    archivedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TournamentRulesetAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TournamentRuleset to aggregate.
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TournamentRulesets to fetch.
+     */
+    orderBy?: TournamentRulesetOrderByWithRelationInput | TournamentRulesetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TournamentRulesetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TournamentRulesets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TournamentRulesets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TournamentRulesets
+    **/
+    _count?: true | TournamentRulesetCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TournamentRulesetAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TournamentRulesetSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TournamentRulesetMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TournamentRulesetMaxAggregateInputType
+  }
+
+  export type GetTournamentRulesetAggregateType<T extends TournamentRulesetAggregateArgs> = {
+        [P in keyof T & keyof AggregateTournamentRuleset]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTournamentRuleset[P]>
+      : GetScalarType<T[P], AggregateTournamentRuleset[P]>
+  }
+
+
+
+
+  export type TournamentRulesetGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TournamentRulesetWhereInput
+    orderBy?: TournamentRulesetOrderByWithAggregationInput | TournamentRulesetOrderByWithAggregationInput[]
+    by: TournamentRulesetScalarFieldEnum[] | TournamentRulesetScalarFieldEnum
+    having?: TournamentRulesetScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TournamentRulesetCountAggregateInputType | true
+    _avg?: TournamentRulesetAvgAggregateInputType
+    _sum?: TournamentRulesetSumAggregateInputType
+    _min?: TournamentRulesetMinAggregateInputType
+    _max?: TournamentRulesetMaxAggregateInputType
+  }
+
+  export type TournamentRulesetGroupByOutputType = {
+    id: string
+    slug: string
+    nameFr: string
+    nameEn: string
+    shortLabel: string
+    version: string
+    edition: $Enums.Ruleset
+    format: $Enums.Format
+    descriptionFr: string | null
+    resurrection: boolean
+    minRegularPlayersBeforeStars: number
+    rosterRules: JsonValue
+    skillCosts: JsonValue
+    eliteSkills: JsonValue | null
+    bannedStarPlayers: JsonValue | null
+    starPlayerSppTax: JsonValue | null
+    allowedInducements: JsonValue | null
+    scoring: JsonValue | null
+    archivedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: TournamentRulesetCountAggregateOutputType | null
+    _avg: TournamentRulesetAvgAggregateOutputType | null
+    _sum: TournamentRulesetSumAggregateOutputType | null
+    _min: TournamentRulesetMinAggregateOutputType | null
+    _max: TournamentRulesetMaxAggregateOutputType | null
+  }
+
+  type GetTournamentRulesetGroupByPayload<T extends TournamentRulesetGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TournamentRulesetGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TournamentRulesetGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TournamentRulesetGroupByOutputType[P]>
+            : GetScalarType<T[P], TournamentRulesetGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TournamentRulesetSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    shortLabel?: boolean
+    version?: boolean
+    edition?: boolean
+    format?: boolean
+    descriptionFr?: boolean
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: boolean
+    rosterRules?: boolean
+    skillCosts?: boolean
+    eliteSkills?: boolean
+    bannedStarPlayers?: boolean
+    starPlayerSppTax?: boolean
+    allowedInducements?: boolean
+    scoring?: boolean
+    archivedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["tournamentRuleset"]>
+
+  export type TournamentRulesetSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    shortLabel?: boolean
+    version?: boolean
+    edition?: boolean
+    format?: boolean
+    descriptionFr?: boolean
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: boolean
+    rosterRules?: boolean
+    skillCosts?: boolean
+    eliteSkills?: boolean
+    bannedStarPlayers?: boolean
+    starPlayerSppTax?: boolean
+    allowedInducements?: boolean
+    scoring?: boolean
+    archivedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["tournamentRuleset"]>
+
+  export type TournamentRulesetSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    shortLabel?: boolean
+    version?: boolean
+    edition?: boolean
+    format?: boolean
+    descriptionFr?: boolean
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: boolean
+    rosterRules?: boolean
+    skillCosts?: boolean
+    eliteSkills?: boolean
+    bannedStarPlayers?: boolean
+    starPlayerSppTax?: boolean
+    allowedInducements?: boolean
+    scoring?: boolean
+    archivedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["tournamentRuleset"]>
+
+  export type TournamentRulesetSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    shortLabel?: boolean
+    version?: boolean
+    edition?: boolean
+    format?: boolean
+    descriptionFr?: boolean
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: boolean
+    rosterRules?: boolean
+    skillCosts?: boolean
+    eliteSkills?: boolean
+    bannedStarPlayers?: boolean
+    starPlayerSppTax?: boolean
+    allowedInducements?: boolean
+    scoring?: boolean
+    archivedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TournamentRulesetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "nameFr" | "nameEn" | "shortLabel" | "version" | "edition" | "format" | "descriptionFr" | "resurrection" | "minRegularPlayersBeforeStars" | "rosterRules" | "skillCosts" | "eliteSkills" | "bannedStarPlayers" | "starPlayerSppTax" | "allowedInducements" | "scoring" | "archivedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["tournamentRuleset"]>
+
+  export type $TournamentRulesetPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TournamentRuleset"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      nameFr: string
+      nameEn: string
+      shortLabel: string
+      version: string
+      edition: $Enums.Ruleset
+      format: $Enums.Format
+      descriptionFr: string | null
+      resurrection: boolean
+      minRegularPlayersBeforeStars: number
+      rosterRules: Prisma.JsonValue
+      skillCosts: Prisma.JsonValue
+      eliteSkills: Prisma.JsonValue | null
+      bannedStarPlayers: Prisma.JsonValue | null
+      starPlayerSppTax: Prisma.JsonValue | null
+      allowedInducements: Prisma.JsonValue | null
+      scoring: Prisma.JsonValue | null
+      archivedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["tournamentRuleset"]>
+    composites: {}
+  }
+
+  type TournamentRulesetGetPayload<S extends boolean | null | undefined | TournamentRulesetDefaultArgs> = $Result.GetResult<Prisma.$TournamentRulesetPayload, S>
+
+  type TournamentRulesetCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TournamentRulesetFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TournamentRulesetCountAggregateInputType | true
+    }
+
+  export interface TournamentRulesetDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TournamentRuleset'], meta: { name: 'TournamentRuleset' } }
+    /**
+     * Find zero or one TournamentRuleset that matches the filter.
+     * @param {TournamentRulesetFindUniqueArgs} args - Arguments to find a TournamentRuleset
+     * @example
+     * // Get one TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TournamentRulesetFindUniqueArgs>(args: SelectSubset<T, TournamentRulesetFindUniqueArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TournamentRuleset that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TournamentRulesetFindUniqueOrThrowArgs} args - Arguments to find a TournamentRuleset
+     * @example
+     * // Get one TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TournamentRulesetFindUniqueOrThrowArgs>(args: SelectSubset<T, TournamentRulesetFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TournamentRuleset that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetFindFirstArgs} args - Arguments to find a TournamentRuleset
+     * @example
+     * // Get one TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TournamentRulesetFindFirstArgs>(args?: SelectSubset<T, TournamentRulesetFindFirstArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TournamentRuleset that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetFindFirstOrThrowArgs} args - Arguments to find a TournamentRuleset
+     * @example
+     * // Get one TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TournamentRulesetFindFirstOrThrowArgs>(args?: SelectSubset<T, TournamentRulesetFindFirstOrThrowArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TournamentRulesets that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TournamentRulesets
+     * const tournamentRulesets = await prisma.tournamentRuleset.findMany()
+     * 
+     * // Get first 10 TournamentRulesets
+     * const tournamentRulesets = await prisma.tournamentRuleset.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const tournamentRulesetWithIdOnly = await prisma.tournamentRuleset.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TournamentRulesetFindManyArgs>(args?: SelectSubset<T, TournamentRulesetFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TournamentRuleset.
+     * @param {TournamentRulesetCreateArgs} args - Arguments to create a TournamentRuleset.
+     * @example
+     * // Create one TournamentRuleset
+     * const TournamentRuleset = await prisma.tournamentRuleset.create({
+     *   data: {
+     *     // ... data to create a TournamentRuleset
+     *   }
+     * })
+     * 
+     */
+    create<T extends TournamentRulesetCreateArgs>(args: SelectSubset<T, TournamentRulesetCreateArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TournamentRulesets.
+     * @param {TournamentRulesetCreateManyArgs} args - Arguments to create many TournamentRulesets.
+     * @example
+     * // Create many TournamentRulesets
+     * const tournamentRuleset = await prisma.tournamentRuleset.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TournamentRulesetCreateManyArgs>(args?: SelectSubset<T, TournamentRulesetCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TournamentRulesets and returns the data saved in the database.
+     * @param {TournamentRulesetCreateManyAndReturnArgs} args - Arguments to create many TournamentRulesets.
+     * @example
+     * // Create many TournamentRulesets
+     * const tournamentRuleset = await prisma.tournamentRuleset.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TournamentRulesets and only return the `id`
+     * const tournamentRulesetWithIdOnly = await prisma.tournamentRuleset.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TournamentRulesetCreateManyAndReturnArgs>(args?: SelectSubset<T, TournamentRulesetCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TournamentRuleset.
+     * @param {TournamentRulesetDeleteArgs} args - Arguments to delete one TournamentRuleset.
+     * @example
+     * // Delete one TournamentRuleset
+     * const TournamentRuleset = await prisma.tournamentRuleset.delete({
+     *   where: {
+     *     // ... filter to delete one TournamentRuleset
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TournamentRulesetDeleteArgs>(args: SelectSubset<T, TournamentRulesetDeleteArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TournamentRuleset.
+     * @param {TournamentRulesetUpdateArgs} args - Arguments to update one TournamentRuleset.
+     * @example
+     * // Update one TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TournamentRulesetUpdateArgs>(args: SelectSubset<T, TournamentRulesetUpdateArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TournamentRulesets.
+     * @param {TournamentRulesetDeleteManyArgs} args - Arguments to filter TournamentRulesets to delete.
+     * @example
+     * // Delete a few TournamentRulesets
+     * const { count } = await prisma.tournamentRuleset.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TournamentRulesetDeleteManyArgs>(args?: SelectSubset<T, TournamentRulesetDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TournamentRulesets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TournamentRulesets
+     * const tournamentRuleset = await prisma.tournamentRuleset.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TournamentRulesetUpdateManyArgs>(args: SelectSubset<T, TournamentRulesetUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TournamentRulesets and returns the data updated in the database.
+     * @param {TournamentRulesetUpdateManyAndReturnArgs} args - Arguments to update many TournamentRulesets.
+     * @example
+     * // Update many TournamentRulesets
+     * const tournamentRuleset = await prisma.tournamentRuleset.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TournamentRulesets and only return the `id`
+     * const tournamentRulesetWithIdOnly = await prisma.tournamentRuleset.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TournamentRulesetUpdateManyAndReturnArgs>(args: SelectSubset<T, TournamentRulesetUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TournamentRuleset.
+     * @param {TournamentRulesetUpsertArgs} args - Arguments to update or create a TournamentRuleset.
+     * @example
+     * // Update or create a TournamentRuleset
+     * const tournamentRuleset = await prisma.tournamentRuleset.upsert({
+     *   create: {
+     *     // ... data to create a TournamentRuleset
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TournamentRuleset we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TournamentRulesetUpsertArgs>(args: SelectSubset<T, TournamentRulesetUpsertArgs<ExtArgs>>): Prisma__TournamentRulesetClient<$Result.GetResult<Prisma.$TournamentRulesetPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TournamentRulesets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetCountArgs} args - Arguments to filter TournamentRulesets to count.
+     * @example
+     * // Count the number of TournamentRulesets
+     * const count = await prisma.tournamentRuleset.count({
+     *   where: {
+     *     // ... the filter for the TournamentRulesets we want to count
+     *   }
+     * })
+    **/
+    count<T extends TournamentRulesetCountArgs>(
+      args?: Subset<T, TournamentRulesetCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TournamentRulesetCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TournamentRuleset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TournamentRulesetAggregateArgs>(args: Subset<T, TournamentRulesetAggregateArgs>): Prisma.PrismaPromise<GetTournamentRulesetAggregateType<T>>
+
+    /**
+     * Group by TournamentRuleset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournamentRulesetGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TournamentRulesetGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TournamentRulesetGroupByArgs['orderBy'] }
+        : { orderBy?: TournamentRulesetGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TournamentRulesetGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTournamentRulesetGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TournamentRuleset model
+   */
+  readonly fields: TournamentRulesetFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TournamentRuleset.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TournamentRulesetClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TournamentRuleset model
+   */
+  interface TournamentRulesetFieldRefs {
+    readonly id: FieldRef<"TournamentRuleset", 'String'>
+    readonly slug: FieldRef<"TournamentRuleset", 'String'>
+    readonly nameFr: FieldRef<"TournamentRuleset", 'String'>
+    readonly nameEn: FieldRef<"TournamentRuleset", 'String'>
+    readonly shortLabel: FieldRef<"TournamentRuleset", 'String'>
+    readonly version: FieldRef<"TournamentRuleset", 'String'>
+    readonly edition: FieldRef<"TournamentRuleset", 'Ruleset'>
+    readonly format: FieldRef<"TournamentRuleset", 'Format'>
+    readonly descriptionFr: FieldRef<"TournamentRuleset", 'String'>
+    readonly resurrection: FieldRef<"TournamentRuleset", 'Boolean'>
+    readonly minRegularPlayersBeforeStars: FieldRef<"TournamentRuleset", 'Int'>
+    readonly rosterRules: FieldRef<"TournamentRuleset", 'Json'>
+    readonly skillCosts: FieldRef<"TournamentRuleset", 'Json'>
+    readonly eliteSkills: FieldRef<"TournamentRuleset", 'Json'>
+    readonly bannedStarPlayers: FieldRef<"TournamentRuleset", 'Json'>
+    readonly starPlayerSppTax: FieldRef<"TournamentRuleset", 'Json'>
+    readonly allowedInducements: FieldRef<"TournamentRuleset", 'Json'>
+    readonly scoring: FieldRef<"TournamentRuleset", 'Json'>
+    readonly archivedAt: FieldRef<"TournamentRuleset", 'DateTime'>
+    readonly createdAt: FieldRef<"TournamentRuleset", 'DateTime'>
+    readonly updatedAt: FieldRef<"TournamentRuleset", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TournamentRuleset findUnique
+   */
+  export type TournamentRulesetFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter, which TournamentRuleset to fetch.
+     */
+    where: TournamentRulesetWhereUniqueInput
+  }
+
+  /**
+   * TournamentRuleset findUniqueOrThrow
+   */
+  export type TournamentRulesetFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter, which TournamentRuleset to fetch.
+     */
+    where: TournamentRulesetWhereUniqueInput
+  }
+
+  /**
+   * TournamentRuleset findFirst
+   */
+  export type TournamentRulesetFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter, which TournamentRuleset to fetch.
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TournamentRulesets to fetch.
+     */
+    orderBy?: TournamentRulesetOrderByWithRelationInput | TournamentRulesetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TournamentRulesets.
+     */
+    cursor?: TournamentRulesetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TournamentRulesets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TournamentRulesets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TournamentRulesets.
+     */
+    distinct?: TournamentRulesetScalarFieldEnum | TournamentRulesetScalarFieldEnum[]
+  }
+
+  /**
+   * TournamentRuleset findFirstOrThrow
+   */
+  export type TournamentRulesetFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter, which TournamentRuleset to fetch.
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TournamentRulesets to fetch.
+     */
+    orderBy?: TournamentRulesetOrderByWithRelationInput | TournamentRulesetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TournamentRulesets.
+     */
+    cursor?: TournamentRulesetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TournamentRulesets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TournamentRulesets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TournamentRulesets.
+     */
+    distinct?: TournamentRulesetScalarFieldEnum | TournamentRulesetScalarFieldEnum[]
+  }
+
+  /**
+   * TournamentRuleset findMany
+   */
+  export type TournamentRulesetFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter, which TournamentRulesets to fetch.
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TournamentRulesets to fetch.
+     */
+    orderBy?: TournamentRulesetOrderByWithRelationInput | TournamentRulesetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TournamentRulesets.
+     */
+    cursor?: TournamentRulesetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TournamentRulesets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TournamentRulesets.
+     */
+    skip?: number
+    distinct?: TournamentRulesetScalarFieldEnum | TournamentRulesetScalarFieldEnum[]
+  }
+
+  /**
+   * TournamentRuleset create
+   */
+  export type TournamentRulesetCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * The data needed to create a TournamentRuleset.
+     */
+    data: XOR<TournamentRulesetCreateInput, TournamentRulesetUncheckedCreateInput>
+  }
+
+  /**
+   * TournamentRuleset createMany
+   */
+  export type TournamentRulesetCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TournamentRulesets.
+     */
+    data: TournamentRulesetCreateManyInput | TournamentRulesetCreateManyInput[]
+  }
+
+  /**
+   * TournamentRuleset createManyAndReturn
+   */
+  export type TournamentRulesetCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * The data used to create many TournamentRulesets.
+     */
+    data: TournamentRulesetCreateManyInput | TournamentRulesetCreateManyInput[]
+  }
+
+  /**
+   * TournamentRuleset update
+   */
+  export type TournamentRulesetUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * The data needed to update a TournamentRuleset.
+     */
+    data: XOR<TournamentRulesetUpdateInput, TournamentRulesetUncheckedUpdateInput>
+    /**
+     * Choose, which TournamentRuleset to update.
+     */
+    where: TournamentRulesetWhereUniqueInput
+  }
+
+  /**
+   * TournamentRuleset updateMany
+   */
+  export type TournamentRulesetUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TournamentRulesets.
+     */
+    data: XOR<TournamentRulesetUpdateManyMutationInput, TournamentRulesetUncheckedUpdateManyInput>
+    /**
+     * Filter which TournamentRulesets to update
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * Limit how many TournamentRulesets to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TournamentRuleset updateManyAndReturn
+   */
+  export type TournamentRulesetUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * The data used to update TournamentRulesets.
+     */
+    data: XOR<TournamentRulesetUpdateManyMutationInput, TournamentRulesetUncheckedUpdateManyInput>
+    /**
+     * Filter which TournamentRulesets to update
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * Limit how many TournamentRulesets to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TournamentRuleset upsert
+   */
+  export type TournamentRulesetUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * The filter to search for the TournamentRuleset to update in case it exists.
+     */
+    where: TournamentRulesetWhereUniqueInput
+    /**
+     * In case the TournamentRuleset found by the `where` argument doesn't exist, create a new TournamentRuleset with this data.
+     */
+    create: XOR<TournamentRulesetCreateInput, TournamentRulesetUncheckedCreateInput>
+    /**
+     * In case the TournamentRuleset was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TournamentRulesetUpdateInput, TournamentRulesetUncheckedUpdateInput>
+  }
+
+  /**
+   * TournamentRuleset delete
+   */
+  export type TournamentRulesetDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
+    /**
+     * Filter which TournamentRuleset to delete.
+     */
+    where: TournamentRulesetWhereUniqueInput
+  }
+
+  /**
+   * TournamentRuleset deleteMany
+   */
+  export type TournamentRulesetDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TournamentRulesets to delete
+     */
+    where?: TournamentRulesetWhereInput
+    /**
+     * Limit how many TournamentRulesets to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TournamentRuleset without action
+   */
+  export type TournamentRulesetDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournamentRuleset
+     */
+    select?: TournamentRulesetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TournamentRuleset
+     */
+    omit?: TournamentRulesetOmit<ExtArgs> | null
   }
 
 
@@ -103070,6 +104368,33 @@ export namespace Prisma {
   export type PositionSkillScalarFieldEnum = (typeof PositionSkillScalarFieldEnum)[keyof typeof PositionSkillScalarFieldEnum]
 
 
+  export const TournamentRulesetScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    nameFr: 'nameFr',
+    nameEn: 'nameEn',
+    shortLabel: 'shortLabel',
+    version: 'version',
+    edition: 'edition',
+    format: 'format',
+    descriptionFr: 'descriptionFr',
+    resurrection: 'resurrection',
+    minRegularPlayersBeforeStars: 'minRegularPlayersBeforeStars',
+    rosterRules: 'rosterRules',
+    skillCosts: 'skillCosts',
+    eliteSkills: 'eliteSkills',
+    bannedStarPlayers: 'bannedStarPlayers',
+    starPlayerSppTax: 'starPlayerSppTax',
+    allowedInducements: 'allowedInducements',
+    scoring: 'scoring',
+    archivedAt: 'archivedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TournamentRulesetScalarFieldEnum = (typeof TournamentRulesetScalarFieldEnum)[keyof typeof TournamentRulesetScalarFieldEnum]
+
+
   export const CupScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -106555,6 +107880,140 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"PositionSkill"> | string
     positionId?: StringWithAggregatesFilter<"PositionSkill"> | string
     skillId?: StringWithAggregatesFilter<"PositionSkill"> | string
+  }
+
+  export type TournamentRulesetWhereInput = {
+    AND?: TournamentRulesetWhereInput | TournamentRulesetWhereInput[]
+    OR?: TournamentRulesetWhereInput[]
+    NOT?: TournamentRulesetWhereInput | TournamentRulesetWhereInput[]
+    id?: StringFilter<"TournamentRuleset"> | string
+    slug?: StringFilter<"TournamentRuleset"> | string
+    nameFr?: StringFilter<"TournamentRuleset"> | string
+    nameEn?: StringFilter<"TournamentRuleset"> | string
+    shortLabel?: StringFilter<"TournamentRuleset"> | string
+    version?: StringFilter<"TournamentRuleset"> | string
+    edition?: EnumRulesetFilter<"TournamentRuleset"> | $Enums.Ruleset
+    format?: EnumFormatFilter<"TournamentRuleset"> | $Enums.Format
+    descriptionFr?: StringNullableFilter<"TournamentRuleset"> | string | null
+    resurrection?: BoolFilter<"TournamentRuleset"> | boolean
+    minRegularPlayersBeforeStars?: IntFilter<"TournamentRuleset"> | number
+    rosterRules?: JsonFilter<"TournamentRuleset">
+    skillCosts?: JsonFilter<"TournamentRuleset">
+    eliteSkills?: JsonNullableFilter<"TournamentRuleset">
+    bannedStarPlayers?: JsonNullableFilter<"TournamentRuleset">
+    starPlayerSppTax?: JsonNullableFilter<"TournamentRuleset">
+    allowedInducements?: JsonNullableFilter<"TournamentRuleset">
+    scoring?: JsonNullableFilter<"TournamentRuleset">
+    archivedAt?: DateTimeNullableFilter<"TournamentRuleset"> | Date | string | null
+    createdAt?: DateTimeFilter<"TournamentRuleset"> | Date | string
+    updatedAt?: DateTimeFilter<"TournamentRuleset"> | Date | string
+  }
+
+  export type TournamentRulesetOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    shortLabel?: SortOrder
+    version?: SortOrder
+    edition?: SortOrder
+    format?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    resurrection?: SortOrder
+    minRegularPlayersBeforeStars?: SortOrder
+    rosterRules?: SortOrder
+    skillCosts?: SortOrder
+    eliteSkills?: SortOrderInput | SortOrder
+    bannedStarPlayers?: SortOrderInput | SortOrder
+    starPlayerSppTax?: SortOrderInput | SortOrder
+    allowedInducements?: SortOrderInput | SortOrder
+    scoring?: SortOrderInput | SortOrder
+    archivedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TournamentRulesetWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug?: string
+    AND?: TournamentRulesetWhereInput | TournamentRulesetWhereInput[]
+    OR?: TournamentRulesetWhereInput[]
+    NOT?: TournamentRulesetWhereInput | TournamentRulesetWhereInput[]
+    nameFr?: StringFilter<"TournamentRuleset"> | string
+    nameEn?: StringFilter<"TournamentRuleset"> | string
+    shortLabel?: StringFilter<"TournamentRuleset"> | string
+    version?: StringFilter<"TournamentRuleset"> | string
+    edition?: EnumRulesetFilter<"TournamentRuleset"> | $Enums.Ruleset
+    format?: EnumFormatFilter<"TournamentRuleset"> | $Enums.Format
+    descriptionFr?: StringNullableFilter<"TournamentRuleset"> | string | null
+    resurrection?: BoolFilter<"TournamentRuleset"> | boolean
+    minRegularPlayersBeforeStars?: IntFilter<"TournamentRuleset"> | number
+    rosterRules?: JsonFilter<"TournamentRuleset">
+    skillCosts?: JsonFilter<"TournamentRuleset">
+    eliteSkills?: JsonNullableFilter<"TournamentRuleset">
+    bannedStarPlayers?: JsonNullableFilter<"TournamentRuleset">
+    starPlayerSppTax?: JsonNullableFilter<"TournamentRuleset">
+    allowedInducements?: JsonNullableFilter<"TournamentRuleset">
+    scoring?: JsonNullableFilter<"TournamentRuleset">
+    archivedAt?: DateTimeNullableFilter<"TournamentRuleset"> | Date | string | null
+    createdAt?: DateTimeFilter<"TournamentRuleset"> | Date | string
+    updatedAt?: DateTimeFilter<"TournamentRuleset"> | Date | string
+  }, "id" | "slug">
+
+  export type TournamentRulesetOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    shortLabel?: SortOrder
+    version?: SortOrder
+    edition?: SortOrder
+    format?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    resurrection?: SortOrder
+    minRegularPlayersBeforeStars?: SortOrder
+    rosterRules?: SortOrder
+    skillCosts?: SortOrder
+    eliteSkills?: SortOrderInput | SortOrder
+    bannedStarPlayers?: SortOrderInput | SortOrder
+    starPlayerSppTax?: SortOrderInput | SortOrder
+    allowedInducements?: SortOrderInput | SortOrder
+    scoring?: SortOrderInput | SortOrder
+    archivedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TournamentRulesetCountOrderByAggregateInput
+    _avg?: TournamentRulesetAvgOrderByAggregateInput
+    _max?: TournamentRulesetMaxOrderByAggregateInput
+    _min?: TournamentRulesetMinOrderByAggregateInput
+    _sum?: TournamentRulesetSumOrderByAggregateInput
+  }
+
+  export type TournamentRulesetScalarWhereWithAggregatesInput = {
+    AND?: TournamentRulesetScalarWhereWithAggregatesInput | TournamentRulesetScalarWhereWithAggregatesInput[]
+    OR?: TournamentRulesetScalarWhereWithAggregatesInput[]
+    NOT?: TournamentRulesetScalarWhereWithAggregatesInput | TournamentRulesetScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    slug?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    nameFr?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    nameEn?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    shortLabel?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    version?: StringWithAggregatesFilter<"TournamentRuleset"> | string
+    edition?: EnumRulesetWithAggregatesFilter<"TournamentRuleset"> | $Enums.Ruleset
+    format?: EnumFormatWithAggregatesFilter<"TournamentRuleset"> | $Enums.Format
+    descriptionFr?: StringNullableWithAggregatesFilter<"TournamentRuleset"> | string | null
+    resurrection?: BoolWithAggregatesFilter<"TournamentRuleset"> | boolean
+    minRegularPlayersBeforeStars?: IntWithAggregatesFilter<"TournamentRuleset"> | number
+    rosterRules?: JsonWithAggregatesFilter<"TournamentRuleset">
+    skillCosts?: JsonWithAggregatesFilter<"TournamentRuleset">
+    eliteSkills?: JsonNullableWithAggregatesFilter<"TournamentRuleset">
+    bannedStarPlayers?: JsonNullableWithAggregatesFilter<"TournamentRuleset">
+    starPlayerSppTax?: JsonNullableWithAggregatesFilter<"TournamentRuleset">
+    allowedInducements?: JsonNullableWithAggregatesFilter<"TournamentRuleset">
+    scoring?: JsonNullableWithAggregatesFilter<"TournamentRuleset">
+    archivedAt?: DateTimeNullableWithAggregatesFilter<"TournamentRuleset"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"TournamentRuleset"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TournamentRuleset"> | Date | string
   }
 
   export type CupWhereInput = {
@@ -114278,6 +115737,174 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     positionId?: StringFieldUpdateOperationsInput | string
     skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TournamentRulesetCreateInput = {
+    id?: string
+    slug: string
+    nameFr: string
+    nameEn: string
+    shortLabel: string
+    version: string
+    edition?: $Enums.Ruleset
+    format?: $Enums.Format
+    descriptionFr?: string | null
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: number
+    rosterRules: JsonNullValueInput | InputJsonValue
+    skillCosts: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TournamentRulesetUncheckedCreateInput = {
+    id?: string
+    slug: string
+    nameFr: string
+    nameEn: string
+    shortLabel: string
+    version: string
+    edition?: $Enums.Ruleset
+    format?: $Enums.Format
+    descriptionFr?: string | null
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: number
+    rosterRules: JsonNullValueInput | InputJsonValue
+    skillCosts: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TournamentRulesetUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    shortLabel?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    edition?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    resurrection?: BoolFieldUpdateOperationsInput | boolean
+    minRegularPlayersBeforeStars?: IntFieldUpdateOperationsInput | number
+    rosterRules?: JsonNullValueInput | InputJsonValue
+    skillCosts?: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TournamentRulesetUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    shortLabel?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    edition?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    resurrection?: BoolFieldUpdateOperationsInput | boolean
+    minRegularPlayersBeforeStars?: IntFieldUpdateOperationsInput | number
+    rosterRules?: JsonNullValueInput | InputJsonValue
+    skillCosts?: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TournamentRulesetCreateManyInput = {
+    id?: string
+    slug: string
+    nameFr: string
+    nameEn: string
+    shortLabel: string
+    version: string
+    edition?: $Enums.Ruleset
+    format?: $Enums.Format
+    descriptionFr?: string | null
+    resurrection?: boolean
+    minRegularPlayersBeforeStars?: number
+    rosterRules: JsonNullValueInput | InputJsonValue
+    skillCosts: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TournamentRulesetUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    shortLabel?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    edition?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    resurrection?: BoolFieldUpdateOperationsInput | boolean
+    minRegularPlayersBeforeStars?: IntFieldUpdateOperationsInput | number
+    rosterRules?: JsonNullValueInput | InputJsonValue
+    skillCosts?: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TournamentRulesetUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    shortLabel?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    edition?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    resurrection?: BoolFieldUpdateOperationsInput | boolean
+    minRegularPlayersBeforeStars?: IntFieldUpdateOperationsInput | number
+    rosterRules?: JsonNullValueInput | InputJsonValue
+    skillCosts?: JsonNullValueInput | InputJsonValue
+    eliteSkills?: NullableJsonNullValueInput | InputJsonValue
+    bannedStarPlayers?: NullableJsonNullValueInput | InputJsonValue
+    starPlayerSppTax?: NullableJsonNullValueInput | InputJsonValue
+    allowedInducements?: NullableJsonNullValueInput | InputJsonValue
+    scoring?: NullableJsonNullValueInput | InputJsonValue
+    archivedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupCreateInput = {
@@ -122006,6 +123633,72 @@ export namespace Prisma {
     id?: SortOrder
     positionId?: SortOrder
     skillId?: SortOrder
+  }
+
+  export type TournamentRulesetCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    shortLabel?: SortOrder
+    version?: SortOrder
+    edition?: SortOrder
+    format?: SortOrder
+    descriptionFr?: SortOrder
+    resurrection?: SortOrder
+    minRegularPlayersBeforeStars?: SortOrder
+    rosterRules?: SortOrder
+    skillCosts?: SortOrder
+    eliteSkills?: SortOrder
+    bannedStarPlayers?: SortOrder
+    starPlayerSppTax?: SortOrder
+    allowedInducements?: SortOrder
+    scoring?: SortOrder
+    archivedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TournamentRulesetAvgOrderByAggregateInput = {
+    minRegularPlayersBeforeStars?: SortOrder
+  }
+
+  export type TournamentRulesetMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    shortLabel?: SortOrder
+    version?: SortOrder
+    edition?: SortOrder
+    format?: SortOrder
+    descriptionFr?: SortOrder
+    resurrection?: SortOrder
+    minRegularPlayersBeforeStars?: SortOrder
+    archivedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TournamentRulesetMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    shortLabel?: SortOrder
+    version?: SortOrder
+    edition?: SortOrder
+    format?: SortOrder
+    descriptionFr?: SortOrder
+    resurrection?: SortOrder
+    minRegularPlayersBeforeStars?: SortOrder
+    archivedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TournamentRulesetSumOrderByAggregateInput = {
+    minRegularPlayersBeforeStars?: SortOrder
   }
 
   export type CupCountOrderByAggregateInput = {

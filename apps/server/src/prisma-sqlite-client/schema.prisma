@@ -644,6 +644,35 @@ model PositionSkill {
   @@index([positionId])
 }
 
+// Règlement de tournoi éditable en admin (miroir SQLite de schema.prisma).
+// Les colonnes Json sont des strings sérialisées côté SQLite → parser
+// tolérant dans services/tournament-ruleset-repository.ts.
+model TournamentRuleset {
+  id                           String    @id @default(cuid())
+  slug                         String    @unique
+  nameFr                       String
+  nameEn                       String
+  shortLabel                   String
+  version                      String
+  edition                      Ruleset   @default(season_3)
+  format                       Format    @default(bb11)
+  descriptionFr                String?
+  resurrection                 Boolean   @default(true)
+  minRegularPlayersBeforeStars Int       @default(11)
+  rosterRules                  Json
+  skillCosts                   Json
+  eliteSkills                  Json?
+  bannedStarPlayers            Json?
+  starPlayerSppTax             Json?
+  allowedInducements           Json?
+  scoring                      Json?
+  archivedAt                   DateTime?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  @@index([archivedAt])
+}
+
 // Modèle pour les coupes (tournois)
 model Cup {
   id                String   @id @default(cuid())

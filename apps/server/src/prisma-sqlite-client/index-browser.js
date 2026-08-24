@@ -480,6 +480,30 @@ exports.Prisma.PositionSkillScalarFieldEnum = {
   skillId: 'skillId'
 };
 
+exports.Prisma.TournamentRulesetScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  shortLabel: 'shortLabel',
+  version: 'version',
+  edition: 'edition',
+  format: 'format',
+  descriptionFr: 'descriptionFr',
+  resurrection: 'resurrection',
+  minRegularPlayersBeforeStars: 'minRegularPlayersBeforeStars',
+  rosterRules: 'rosterRules',
+  skillCosts: 'skillCosts',
+  eliteSkills: 'eliteSkills',
+  bannedStarPlayers: 'bannedStarPlayers',
+  starPlayerSppTax: 'starPlayerSppTax',
+  allowedInducements: 'allowedInducements',
+  scoring: 'scoring',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.CupScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1325,6 +1349,7 @@ exports.Prisma.ModelName = {
   StarPlayerHirableBy: 'StarPlayerHirableBy',
   Position: 'Position',
   PositionSkill: 'PositionSkill',
+  TournamentRuleset: 'TournamentRuleset',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',

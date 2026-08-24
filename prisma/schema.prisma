@@ -766,6 +766,81 @@ model StarPlayerHirableBy {
   @@index([rule])
 }
 
+// Règlement de tournoi (« rules pack », ex : NAF World Cup 2027) éditable
+// en admin. Source de vérité RUNTIME des règles imposées à la création
+// d'équipe ; le registre statique @bb/game-engine (`TOURNAMENT_RULESETS`)
+// sert de source de SEED (create-only) et de FALLBACK quand un slug n'est
+// pas (encore) en base. Résolution + parsing tolérant :
+// `services/tournament-ruleset-repository.ts`.
+model TournamentRuleset {
+  id String @id @default(cuid())
+
+  /// Slug stable référencé par Team/League/Cup.tournamentRuleset (pas de
+  /// FK : références par slug). IMMUABLE après création.
+  slug String @unique
+
+  nameFr     String
+  nameEn     String
+  /// Libellé court pour les badges (fiche roster, ligues, coupes).
+  shortLabel String
+  /// Version du pack de règles (ex : "V2.1").
+  version    String
+
+  /// Édition des règles exigée des équipes de ce règlement.
+  edition Ruleset @default(season_3)
+  /// Format de jeu exigé.
+  format  Format  @default(bb11)
+
+  descriptionFr String?
+
+  /// Tournoi résurrection (aucun SPP gagné en jeu, blessures non conservées).
+  resurrection Boolean @default(true)
+
+  /// Joueurs réguliers minimum avant de recruter des Star Players.
+  minRegularPlayersBeforeStars Int @default(11)
+
+  /// Règles par roster : objet `{ "<rosterSlug>": { goldBudget, sppBudget,
+  /// skillStacking, starPlayersAllowed } }` (budgets en kpo, skillStacking
+  /// ∈ none|one_player|two_players). Un roster absent est INTERDIT par le
+  /// règlement. Objet natif (PG) ou string sérialisée (miroir SQLite) →
+  /// parser tolérant.
+  rosterRules Json
+
+  /// Barème SPP : `{ firstPrimary, firstSecondary, secondPrimary,
+  /// secondSecondary, eliteSurcharge }`.
+  skillCosts Json
+
+  /// Array de slugs de compétences Élite du pack (surcoût SPP à l'achat).
+  eliteSkills Json?
+
+  /// Array de slugs de Star Players interdits.
+  bannedStarPlayers Json?
+
+  /// Taxe SPP par tranche de coût cumulé des Star Players :
+  /// array `[{ maxTotalCostK: number|null, spp }]` — `null` = tranche
+  /// ouverte (∞ ; JSON ne sérialise pas Infinity).
+  starPlayerSppTax Json?
+
+  /// Inducements autorisés (liste fermée) :
+  /// array `[{ slug, cost, max?, noteFr? }]` (coûts en po).
+  allowedInducements Json?
+
+  /// Barème de points individuels : `{ win, draw, loss, concession }`.
+  scoring Json?
+
+  /// Soft-archive : un règlement archivé n'est plus proposé ni acceptable
+  /// pour de NOUVELLES équipes/ligues/coupes ; les entités qui le
+  /// référencent déjà restent valides (labels + règles résolus, build
+  /// Flow B d'une coupe existante inclus). Pas de hard delete (références
+  /// par slug non contraintes).
+  archivedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([archivedAt])
+}
+
 // Modèle pour les coupes (tournois)
 model Cup {
   id          String  @id @default(cuid())

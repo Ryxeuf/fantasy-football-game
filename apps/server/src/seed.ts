@@ -31,6 +31,7 @@ import {
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
 import { seedRosterStaffConfigs } from "./scripts/seed-roster-staff-config";
+import { seedTournamentRulesets } from "./scripts/seed-tournament-rulesets";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -308,6 +309,12 @@ async function main() {
   const staffRes = await seedRosterStaffConfigs();
   serverLog.log(
     `✅ Staff configs: ${staffRes.created} créées, ${staffRes.skipped} déjà présentes\n`,
+  );
+
+  // Règlements de tournoi (create-only : ne réécrit pas l'admin).
+  const packsRes = await seedTournamentRulesets();
+  serverLog.log(
+    `✅ Règlements de tournoi: ${packsRes.created} créés, ${packsRes.skipped} déjà présents\n`,
   );
 
   // =============================================================================
@@ -2176,6 +2183,7 @@ main()
     serverLog.log("   - La coupe 'Test 1' et un match local ont été créés");
     serverLog.log(`   - La ligue '${DEFAULT_LEAGUE_NAME}' est prête`);
     serverLog.log(`   - La Pro League '${OLD_WORLD_LEAGUE_NAME}' est seedée (16 équipes)`);
+    serverLog.log("   - Les règlements de tournoi (NAF World Cup 2027…) sont seedés");
   })
   .catch(async (e) => {
     serverLog.error("❌ Erreur lors du seed:", e);
