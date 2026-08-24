@@ -209,10 +209,27 @@ export const startSeasonSchema = z.object({
 export const updateSeasonConfigSchema = z
   .object({
     meceneEnabled: z.boolean().optional(),
+    // Taille du bracket de playoffs, reglable tant que le bracket
+    // n'est pas genere (le service refuse sinon).
+    playoffSize: z
+      .union([z.literal(0), z.literal(2), z.literal(4), z.literal(8)])
+      .optional(),
   })
   .refine((v) => Object.keys(v).length > 0, {
     message: "Au moins un champ de configuration doit etre fourni",
   });
+
+/**
+ * Corps du demarrage manuel des playoffs. `.default({})` : un POST
+ * sans corps doit rester valide (meme piege que
+ * `commissionerRemovalSchema` sur les DELETE sans body).
+ */
+export const startPlayoffsSchema = z
+  .object({
+    force: z.boolean().optional(),
+  })
+  .default({});
+export type StartPlayoffsBody = z.infer<typeof startPlayoffsSchema>;
 
 /**
  * L2.A.11c — Body schema pour `POST /league/pairings/:id/forfeit`.

@@ -65,6 +65,7 @@ import {
 } from "../services/league-scoring";
 import {
   startPlayoffs,
+  type StartPlayoffsSkippedReason,
   overridePlayoffParticipants,
   PlayoffOverrideError,
 } from "../services/league-playoffs";
@@ -179,6 +180,7 @@ import {
   listSeasonsByThemeQuerySchema,
   startSeasonSchema,
   updateSeasonConfigSchema,
+  startPlayoffsSchema,
   forfeitPairingSchema,
   recordOfflineResultSchema,
   type CreateLeagueBody,
@@ -190,6 +192,7 @@ import {
   type ListSeasonsByThemeQuery,
   type StartSeasonBody,
   type UpdateSeasonConfigBody,
+  type StartPlayoffsBody,
   type ForfeitPairingBody,
   type RecordOfflineResultBody,
 } from "../schemas/league.schemas";
@@ -842,10 +845,36 @@ export async function handleGetPlayoffBracket(
         },
       },
     });
+    // Etat necessaire au panneau commissaire : peut-on lancer les
+    // playoffs, et la config de poules est-elle coherente ?
+    const incompleteRegular = await prisma.leagueRound.count({
+      where: {
+        seasonId,
+        kind: { not: "playoff" },
+        status: { not: "completed" },
+      },
+    });
+    const pools = await prisma.leaguePool.findMany({
+      where: { seasonId },
+      select: { qualifiesForPlayoffs: true },
+    });
+    const totalQualified = pools.reduce(
+      (n: number, p: { qualifiesForPlayoffs: number }) =>
+        n + p.qualifiesForPlayoffs,
+      0,
+    );
     sendSuccess(res, {
       seasonId,
       playoffSize: seasonRow.playoffSize,
       seasonStatus: seasonRow.status,
+      regularSeasonComplete: incompleteRegular === 0,
+      poolQualification: {
+        totalQualified,
+        playoffSize: seasonRow.playoffSize,
+        // `consistent` n'a de sens que si des quotas sont configures.
+        consistent:
+          totalQualified === 0 || totalQualified === seasonRow.playoffSize,
+      },
       rounds,
     });
   } catch (e: unknown) {
@@ -854,12 +883,17 @@ export async function handleGetPlayoffBracket(
 }
 
 /**
- * L2.C.3 — Demarre manuellement les playoffs (admin force).
- * Reserve au createur de la ligue. Le hook automatique fire-and-
- * forget (a la cloture du dernier round regulier) doit normalement
- * suffire ; ce levier permet de redemarrer en cas de skip ou de
- * forcer manuellement quand `playoffSize=0` mais que l'admin veut
- * tout de meme un bracket adhoc.
+ * L2.C.3 — Demarre manuellement les playoffs. Reserve au createur de
+ * la ligue. Le hook automatique fire-and-forget (a la cloture du
+ * dernier round regulier) suffit dans le cas nominal ; ce levier sert
+ * a rattraper un hook qui a echoue, ou a clore la phase de poule par
+ * anticipation (`force`).
+ *
+ * `force: true` annule les pairings reguliers non joues et complete
+ * les rounds correspondants avant de generer le bracket. Il ne
+ * contourne aucune autre garde : une saison sans `playoffSize`
+ * (`playoffs-disabled`), un bracket deja genere ou une config de
+ * poules incoherente restent des refus.
  */
 export async function handleStartPlayoffs(
   req: AuthenticatedRequest,
@@ -869,20 +903,42 @@ export async function handleStartPlayoffs(
   if (!userId) return;
   const seasonId = req.params.seasonId;
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body: StartPlayoffsBody = req.body;
 
   try {
-    const result = await startPlayoffs(seasonId);
+    const result = await startPlayoffs(seasonId, {
+      force: body.force === true,
+      byUserId: userId,
+    });
     if (!result.created) {
-      sendError(
-        res,
-        `Playoffs non demarres: ${result.skippedReason ?? "raison inconnue"}`,
-        400,
-      );
+      sendError(res, startPlayoffsRefusalMessage(result.skippedReason), 400);
       return;
     }
     sendSuccess(res, result, 201);
   } catch (e: unknown) {
     domainError(res, e);
+  }
+}
+
+/** Message lisible par refus de `startPlayoffs`. */
+function startPlayoffsRefusalMessage(
+  reason: StartPlayoffsSkippedReason | undefined,
+): string {
+  switch (reason) {
+    case "playoffs-disabled":
+      return "Playoffs non demarres : aucune taille de bracket configuree pour cette saison";
+    case "playoffs-already-started":
+      return "Playoffs non demarres : le bracket a deja ete genere";
+    case "season-missing":
+      return "Playoffs non demarres : saison introuvable";
+    case "insufficient-participants":
+      return "Playoffs non demarres : pas assez d'equipes eligibles pour remplir le bracket";
+    case "regular-season-incomplete":
+      return "Playoffs non demarres : la phase reguliere n'est pas terminee (utilisez la cloture anticipee)";
+    case "pool-qualification-mismatch":
+      return "Playoffs non demarres : le total des qualifies par poule ne correspond pas a la taille du bracket";
+    default:
+      return "Playoffs non demarres : raison inconnue";
   }
 }
 
@@ -2204,9 +2260,12 @@ export async function handleCloseSeason(
 
 /**
  * L2.B.5 — Mise a jour des options de configuration d'une saison par le
- * commissaire (createur de la ligue). Pour l'instant : activation du
- * "coup de mecene" (`meceneEnabled`). Disponible quel que soit le statut
- * de la saison (le commissaire peut l'activer avant ou pendant).
+ * commissaire (createur de la ligue) : activation du "coup de mecene"
+ * (`meceneEnabled`) et taille du bracket de playoffs (`playoffSize`).
+ * `meceneEnabled` est modifiable quel que soit le statut de la saison ;
+ * `playoffSize` seulement tant que le bracket n'est pas genere et que
+ * la saison n'est pas cloturee (sinon le bracket existant ou le
+ * palmares contrediraient la nouvelle valeur).
  */
 export async function handleUpdateSeasonConfig(
   req: AuthenticatedRequest,
@@ -2218,14 +2277,42 @@ export async function handleUpdateSeasonConfig(
   if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
   const body: UpdateSeasonConfigBody = req.body;
   try {
+    if (body.playoffSize !== undefined) {
+      const current = await prisma.leagueSeason.findUnique({
+        where: { id: seasonId },
+        select: { status: true },
+      });
+      if (current?.status === "completed") {
+        sendError(
+          res,
+          "Saison cloturee : la taille du bracket n'est plus modifiable",
+          409,
+        );
+        return;
+      }
+      const playoffRounds = await prisma.leagueRound.count({
+        where: { seasonId, kind: "playoff" },
+      });
+      if (playoffRounds > 0) {
+        sendError(
+          res,
+          "Bracket deja genere : la taille des playoffs n'est plus modifiable",
+          409,
+        );
+        return;
+      }
+    }
     const season = await prisma.leagueSeason.update({
       where: { id: seasonId },
       data: {
         ...(body.meceneEnabled !== undefined
           ? { meceneEnabled: body.meceneEnabled }
           : {}),
+        ...(body.playoffSize !== undefined
+          ? { playoffSize: body.playoffSize }
+          : {}),
       },
-      select: { id: true, meceneEnabled: true },
+      select: { id: true, meceneEnabled: true, playoffSize: true },
     });
     sendSuccess(res, { season });
   } catch (e: unknown) {
@@ -2847,7 +2934,12 @@ router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
 // L2.C.3 — bracket playoffs (public, indexable).
 router.get("/seasons/:seasonId/playoff-bracket", handleGetPlayoffBracket);
 // L2.C.3 — demarrage manuel des playoffs (createur de la ligue).
-router.post("/seasons/:seasonId/playoff/start", authUser, handleStartPlayoffs);
+router.post(
+  "/seasons/:seasonId/playoff/start",
+  authUser,
+  validate(startPlayoffsSchema),
+  handleStartPlayoffs,
+);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
 
 // L2.B.5 — Coup de mecene par equipe et par saison.
