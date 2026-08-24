@@ -158,15 +158,15 @@ describe("TeamInfoEditor — apothicaire", () => {
 });
 
 describe("TeamInfoEditor — budget restant", () => {
-  it("part du résumé budgétaire serveur (joueurs + star players)", () => {
-    renderEditor({
-      staffConfig: { ...defaultStaffConfig("orc", "bb11"), rerollCost: 60_000 },
-      budgetSummary: {
-        initialBudget: 1_000_000,
-        playersCost: 820_000,
-        starPlayersCost: 0,
-      },
-    });
+  const BUDGET_PROPS = {
+    staffConfig: { ...defaultStaffConfig("orc", "bb11"), rerollCost: 60_000 },
+    initialBudgetK: 1_000,
+    playersCost: 800_000,
+    starPlayersCost: 20_000,
+  };
+
+  it("déduit les joueurs, les Star Players et le staff du budget initial", () => {
+    renderEditor(BUDGET_PROPS);
 
     expect(normalize(screen.getByTestId("staff-players-cost").textContent)).toBe(
       "820K po",
@@ -178,14 +178,7 @@ describe("TeamInfoEditor — budget restant", () => {
   });
 
   it("réagit à un changement de staff", () => {
-    renderEditor({
-      staffConfig: { ...defaultStaffConfig("orc", "bb11"), rerollCost: 60_000 },
-      budgetSummary: {
-        initialBudget: 1_000_000,
-        playersCost: 820_000,
-        starPlayersCost: 0,
-      },
-    });
+    renderEditor(BUDGET_PROPS);
 
     fireEvent.click(screen.getByTestId("staff-cheerleaders-inc"));
     // 50k - 10k = 40k

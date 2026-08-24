@@ -4,6 +4,7 @@ import { apiRequest } from "../../../lib/api-client";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import QuantityStepper from "./QuantityStepper";
 import StaffRow from "./StaffRow";
+import { computeStaffSpend } from "../staff-cost";
 import {
   defaultStaffConfig,
   isGameFormat,
@@ -20,19 +21,6 @@ interface TeamInfo {
   roster?: string; // Roster pour calculer le coût des relances
 }
 
-/**
- * Sous-ensemble du `budgetSummary` renvoyé par `GET /team/:id` dont le
- * panneau staff a besoin. Tous les montants sont en po.
- *
- * Optionnel : un serveur pré-correctif ne renvoie pas le champ, on retombe
- * alors sur `initialBudgetK` / `playersCost`.
- */
-export interface StaffBudgetBaseline {
-  readonly initialBudget: number;
-  readonly playersCost: number;
-  readonly starPlayersCost: number;
-}
-
 interface TeamInfoEditorProps {
   teamId: string;
   initialInfo: TeamInfo;
@@ -41,12 +29,14 @@ interface TeamInfoEditorProps {
   roster?: string;
   /** Format de l'équipe (bb11 / sevens) — pilote le fallback de config. */
   format?: string | null;
-  initialBudgetK?: number; // en milliers (k po)
-  playersCost?: number; // en po
+  /** Budget de construction de l'équipe, en kpo (`Team.initialBudget`). */
+  initialBudgetK?: number;
+  /** Coût des joueurs engagés, en po. */
+  playersCost?: number;
+  /** Coût des Star Players recrutés, en po. */
+  starPlayersCost?: number;
   /** Config staff résolue (DB par roster × format). Coûts en po. */
   staffConfig?: RosterStaffConfig;
-  /** Résumé budgétaire serveur (po), source du « budget restant ». */
-  budgetSummary?: StaffBudgetBaseline;
 }
 
 /** po → « 60k po » (affichage compact, aligné sur le builder de création). */
@@ -63,8 +53,8 @@ export default function TeamInfoEditor({
   format,
   initialBudgetK = 0,
   playersCost = 0,
+  starPlayersCost = 0,
   staffConfig,
-  budgetSummary,
 }: TeamInfoEditorProps) {
   const { t } = useLanguage();
   const [info, setInfo] = useState<TeamInfo>(initialInfo);
@@ -116,30 +106,18 @@ export default function TeamInfoEditor({
 
   // Calculs en temps réel (po).
   const { staffCost, remaining } = useMemo(() => {
-    const rerollsCost = (info.rerolls || 0) * staff.rerollCost;
-    const cheer = (info.cheerleaders || 0) * staff.cheerleaderCost;
-    const assistants = (info.assistants || 0) * staff.assistantCost;
-    const apo = info.apothecary ? staff.apothecaryCost : 0;
-    const fansCount =
-      typeof info.dedicatedFans === "number" ? info.dedicatedFans : 1;
-    // Le premier fan dévoué est offert à la création.
-    const fans = Math.max(0, fansCount - 1) * staff.dedicatedFanCost;
-    const total = rerollsCost + cheer + assistants + apo + fans;
+    const total = computeStaffSpend(info, staff).total;
 
-    // Base budgétaire : le résumé calculé par le serveur (mêmes coûts de
-    // poste que la VE, surcoûts d'avancement inclus) plutôt qu'une
-    // re-dérivation client. Repli sur les props historiques sinon.
-    const budget = budgetSummary?.initialBudget ?? (initialBudgetK || 0) * 1000;
-    const engaged =
-      (budgetSummary?.playersCost ?? playersCost ?? 0) +
-      (budgetSummary?.starPlayersCost ?? 0);
+    // Même base que le résumé budgétaire de la page d'édition : budget de
+    // construction moins les joueurs et Star Players engagés. C'est la règle
+    // que le serveur applique au PUT /roster.
+    const budget = (initialBudgetK || 0) * 1000;
+    const engaged = (playersCost || 0) + (starPlayersCost || 0);
 
     return { staffCost: total, remaining: budget - engaged - total };
-  }, [info, staff, budgetSummary, initialBudgetK, playersCost]);
+  }, [info, staff, initialBudgetK, playersCost, starPlayersCost]);
 
-  const displayedPlayersCost = budgetSummary
-    ? budgetSummary.playersCost + budgetSummary.starPlayersCost
-    : playersCost || 0;
+  const displayedPlayersCost = (playersCost || 0) + (starPlayersCost || 0);
 
   const handleSave = async () => {
     setLoading(true);
