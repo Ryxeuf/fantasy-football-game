@@ -1,3 +1,10 @@
+## [1.235.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.0...v1.235.1) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **teams:** aligne le choix de Ligue régionale sur les Ligues du roster ([a76d8cc](https://github.com/Ryxeuf/fantasy-football-game/commit/a76d8cc17e784e4bb7766f705ccaf9711a0fb408))
+
 ## [1.235.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.234.0...v1.235.0) (2026-08-24)
 
 
