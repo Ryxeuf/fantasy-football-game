@@ -72,6 +72,10 @@ export const createCupSchema = z
     isPublic: z.boolean().optional().default(true),
     ruleset: z.string().max(50).optional(),
     format: z.enum(["bb11", "sevens"]).optional(),
+    // Règlement de tournoi imposé aux équipes participantes (slug du
+    // registre @bb/game-engine, ex : "naf_world_cup_2027"). null/absent =
+    // aucun. Validé contre le registre dans le handler.
+    tournamentRuleset: z.string().trim().max(64).optional().nullable(),
     scoringConfig: scoringConfigSchema.optional(),
     // Flat-level scoring fields (backwards compat)
     winPoints: z.number().optional(),

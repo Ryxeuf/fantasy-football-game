@@ -9,6 +9,7 @@
  * `CupParticipant`.
  */
 
+import { getTournamentRuleset } from '@bb/game-engine';
 import { prisma } from '../prisma';
 import {
   parseNumberMap,
@@ -27,6 +28,7 @@ export type CupRegistrationErrorCode =
   | 'team_not_found'
   | 'ruleset_mismatch'
   | 'format_mismatch'
+  | 'tournament_ruleset_mismatch'
   | 'already_registered'
   | 'already_engaged'
   | 'budget_exceeded'
@@ -90,6 +92,24 @@ export async function registerTeamToCup(input: {
       'Cette équipe utilise un format différent de la coupe',
     );
   }
+  // Règlement de tournoi : égalité stricte des slugs (null = aucun). Une
+  // coupe avec règlement n'accepte que des équipes créées avec ce même
+  // règlement ; une équipe créée sous un règlement (budget/SPP de tournoi)
+  // ne peut pas rejoindre une coupe standard.
+  const cupPackSlug =
+    (cup as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
+  const teamPackSlug =
+    (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
+  if (cupPackSlug !== teamPackSlug) {
+    const slug = (cupPackSlug ?? teamPackSlug) as string;
+    const label = getTournamentRuleset(slug)?.shortLabel ?? slug;
+    throw new CupRegistrationError(
+      'tournament_ruleset_mismatch',
+      cupPackSlug
+        ? `Cette coupe impose le règlement de tournoi ${label} : l'équipe doit être créée avec ce règlement`
+        : `Cette équipe est créée avec le règlement de tournoi ${label} : elle ne peut rejoindre qu'une compétition avec ce règlement`,
+    );
+  }
   if (cup.participants.some((p: { teamId: string }) => p.teamId === teamId)) {
     throw new CupRegistrationError(
       'already_registered',
@@ -151,6 +171,14 @@ export async function registerTeamToCup(input: {
         );
       }
     }
+  }
+
+  // Coupe à règlement de tournoi : le pool accordé (trace/affichage) est
+  // celui alloué au build de l'équipe par le pack (déjà net de la taxe
+  // Star Players), pas les règles tier/PSP de la coupe.
+  if (cupPackSlug) {
+    pspPoolGranted =
+      (team as { startingPspPool?: number }).startingPspPool ?? 0;
   }
 
   const snapshot = await captureRosterSnapshot(teamId);

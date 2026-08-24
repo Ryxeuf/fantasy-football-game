@@ -1163,3 +1163,128 @@ describe("Rule: League service", () => {
     });
   });
 });
+
+describe("Rule: League tournament ruleset", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const mockedPrisma = prisma as any;
+  const seasonId = "season-tr";
+  const teamId = "team-tr";
+
+  function seasonWithLeague(tournamentRuleset: string | null) {
+    return {
+      id: seasonId,
+      status: "draft",
+      league: {
+        maxParticipants: 16,
+        allowedRosters: null,
+        tournamentRuleset,
+      },
+    };
+  }
+
+  describe("createLeague", () => {
+    it("persiste le slug d'un règlement valide", async () => {
+      mockedPrisma.league.create.mockResolvedValue({ id: "l1" });
+      await createLeague({
+        creatorId: "u1",
+        name: "WC League",
+        ruleset: "season_3",
+        tournamentRuleset: "naf_world_cup_2027",
+      });
+      expect(mockedPrisma.league.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          tournamentRuleset: "naf_world_cup_2027",
+        }),
+      });
+    });
+
+    it("refuse un slug de règlement inconnu", async () => {
+      await expect(
+        createLeague({
+          creatorId: "u1",
+          name: "WC League",
+          tournamentRuleset: "pack_inconnu",
+        }),
+      ).rejects.toThrow(/Reglement de tournoi inconnu/);
+      expect(mockedPrisma.league.create).not.toHaveBeenCalled();
+    });
+
+    it("refuse un règlement incompatible avec l'édition de la ligue", async () => {
+      await expect(
+        createLeague({
+          creatorId: "u1",
+          name: "WC League",
+          ruleset: "season_2",
+          tournamentRuleset: "naf_world_cup_2027",
+        }),
+      ).rejects.toThrow(/requiert l'edition season_3/);
+    });
+
+    it("sans règlement : persiste null", async () => {
+      mockedPrisma.league.create.mockResolvedValue({ id: "l1" });
+      await createLeague({ creatorId: "u1", name: "Ligue standard" });
+      expect(mockedPrisma.league.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ tournamentRuleset: null }),
+      });
+    });
+  });
+
+  describe("addParticipant", () => {
+    it("refuse une équipe sans règlement dans une ligue à règlement", async () => {
+      mockedPrisma.leagueSeason.findUnique.mockResolvedValue(
+        seasonWithLeague("naf_world_cup_2027"),
+      );
+      mockedPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "orc",
+        tournamentRuleset: null,
+      });
+
+      await expect(addParticipant({ seasonId, teamId })).rejects.toThrow(
+        /impose le reglement de tournoi/i,
+      );
+      expect(mockedPrisma.leagueParticipant.create).not.toHaveBeenCalled();
+    });
+
+    it("refuse une équipe à règlement dans une ligue standard", async () => {
+      mockedPrisma.leagueSeason.findUnique.mockResolvedValue(
+        seasonWithLeague(null),
+      );
+      mockedPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "orc",
+        tournamentRuleset: "naf_world_cup_2027",
+      });
+
+      await expect(addParticipant({ seasonId, teamId })).rejects.toThrow(
+        /ne peut rejoindre qu'une competition avec ce reglement/i,
+      );
+      expect(mockedPrisma.leagueParticipant.create).not.toHaveBeenCalled();
+    });
+
+    it("accepte une équipe au même règlement que la ligue", async () => {
+      mockedPrisma.leagueSeason.findUnique.mockResolvedValue(
+        seasonWithLeague("naf_world_cup_2027"),
+      );
+      mockedPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "orc",
+        tournamentRuleset: "naf_world_cup_2027",
+      });
+      mockedPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockedPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockedPrisma.leagueParticipant.create.mockResolvedValue({
+        id: "p1",
+        seasonId,
+        teamId,
+        seasonElo: 1000,
+      });
+
+      const out = await addParticipant({ seasonId, teamId });
+      expect(out.id).toBe("p1");
+    });
+  });
+});
