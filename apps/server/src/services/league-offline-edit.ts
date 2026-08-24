@@ -501,29 +501,16 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
-  // 2b. SPP bonus "Nuffle" (decrement) + bonus au classement (decrement).
+  // 2b. SPP bonus "Nuffle" (decrement). Le bonus au classement du
+  // commissaire n'a pas a etre reverse ici : il ne touche plus les points
+  // generiques (LeagueParticipant.points) — il vit dans le snapshot bonus
+  // du pairing (bonusPointsHome/Away), remis a zero plus bas.
   for (const b of input.sppBonus ?? []) {
     if (!b.spp) continue;
     ops.push(
       prisma.teamPlayer.update({
         where: { id: b.teamPlayerId },
         data: { spp: { decrement: b.spp } },
-      }),
-    );
-  }
-  if (input.rankingBonusHome) {
-    ops.push(
-      prisma.leagueParticipant.update({
-        where: { id: home.id },
-        data: { points: { decrement: input.rankingBonusHome } },
-      }),
-    );
-  }
-  if (input.rankingBonusAway) {
-    ops.push(
-      prisma.leagueParticipant.update({
-        where: { id: away.id },
-        data: { points: { decrement: input.rankingBonusAway } },
       }),
     );
   }

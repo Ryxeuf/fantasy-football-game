@@ -26,6 +26,7 @@ import {
   type PlayerAdvancement,
 } from "@bb/game-engine";
 import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
+import { getEliteSkillSlugs } from "./elite-skills";
 import { updateTeamValues } from "../utils/team-values";
 
 export class CommissionerEditError extends Error {
@@ -427,7 +428,11 @@ export async function addPlayerSkill(input: AddSkillInput) {
       ]
     : taken;
   const surcharge = advancementType
-    ? surchargeForAdvancement({ type: advancementType })
+    ? surchargeForAdvancement({
+        type: advancementType,
+        // Competence Elite : +10k po de surcout VE additionnel.
+        isElite: (await getEliteSkillSlugs(prisma, ruleset)).has(trimmedSkill),
+      })
     : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -544,7 +549,14 @@ export async function removePlayerSkill(input: RemoveSkillInput) {
   const newAdvancements =
     advIdx >= 0 ? taken.filter((_, i) => i !== advIdx) : taken;
   const surcharge = removedAdv
-    ? surchargeForAdvancement({ type: removedAdv.type, stat: removedAdv.stat })
+    ? surchargeForAdvancement({
+        type: removedAdv.type,
+        stat: removedAdv.stat,
+        // Competence Elite : son retrait rend aussi les +10k po Elite.
+        isElite: (
+          await getEliteSkillSlugs(prisma, player.team?.ruleset ?? "season_3")
+        ).has(input.skill),
+      })
     : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

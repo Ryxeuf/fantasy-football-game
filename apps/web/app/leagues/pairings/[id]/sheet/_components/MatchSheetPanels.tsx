@@ -1799,6 +1799,10 @@ export function PostMatchPanel({
                 data-testid={`ranking-bonus-${c.side}`}
                 className="mt-1 block w-full rounded border px-2 py-2 text-sm"
               />
+              <span className="mt-0.5 block text-[11px] text-slate-400">
+                Compté dans la colonne bonus (« Bo ») du classement, à part
+                des points génériques.
+              </span>
             </label>
 
             {/* SPP estimés (auto, depuis les évènements + MVP). Read-only :

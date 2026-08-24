@@ -25,6 +25,8 @@ interface SkillRow {
   category: string;
   /** E8 — compétence/trait passif (soulignée dans le livre). */
   isPassive: boolean;
+  /** Compétence Élite : +10 000 po sur la valeur du joueur qui l'acquiert. */
+  isElite: boolean;
   /** Reste valide si déjà possédée, mais non sélectionnable en nouveauté
    *  (création/évolution) — ex: variantes réservées aux star players. */
   excludedFromSelection: boolean;
@@ -49,6 +51,7 @@ async function loadSkills(
       descriptionEn: true,
       category: true,
       isPassive: true,
+      isElite: true,
       excludedFromSelection: true,
     },
   });
@@ -85,6 +88,7 @@ router.get("/skills", async (req, res) => {
           descriptionEn: true,
           category: true,
           isPassive: true,
+          isElite: true,
           excludedFromSelection: true,
         },
       });

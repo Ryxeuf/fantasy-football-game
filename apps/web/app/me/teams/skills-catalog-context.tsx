@@ -15,6 +15,8 @@ export interface SkillCatalogEntry {
   readonly category: string;
   /** E8 — compétence/trait passif (souligné dans le livre). Absent = actif. */
   readonly isPassive?: boolean;
+  /** Compétence Élite : +10 000 po sur la valeur du joueur. Absent = non. */
+  readonly isElite?: boolean;
 }
 
 /** Map clé→entrée. Clés indexées par slug, nameFr et nameEn (cf. serveur). */
@@ -54,6 +56,7 @@ export function resolveFromCatalog(
   description: string;
   category: string;
   isPassive?: boolean;
+  isElite?: boolean;
 } | null {
   const entry = catalog?.[slugOrName];
   if (!entry) return null;
@@ -65,5 +68,6 @@ export function resolveFromCatalog(
         : entry.description,
     category: entry.category,
     isPassive: entry.isPassive ?? false,
+    isElite: entry.isElite ?? false,
   };
 }

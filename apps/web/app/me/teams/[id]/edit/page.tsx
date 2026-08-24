@@ -11,6 +11,11 @@ import {
   getSkillActivationLabel,
   SKILL_ACTIVATION_BADGE_CLASSES,
 } from "../../../../lib/skill-activation";
+import {
+  getSkillEliteHint,
+  getSkillEliteLabel,
+  SKILL_ELITE_BADGE_CLASSES,
+} from "../../../../lib/skill-elite";
 import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import { formatPlusStat } from "../../../../lib/format-stats";
@@ -20,6 +25,7 @@ import {
   getNextAdvancementPspCost,
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
+  ELITE_SKILL_SURCHARGE,
   getPositionCategoryAccess,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
@@ -35,6 +41,8 @@ interface EditSkillCatalogItem {
   nameFr: string;
   category: string;
   isPassive?: boolean;
+  /** Compétence Élite : +10 000 po de surcoût VE additionnel. */
+  isElite?: boolean;
   description?: string;
   excludedFromSelection?: boolean;
 }
@@ -431,6 +439,16 @@ export default function TeamEditPage() {
     return null; // Redirection en cours (match en cours ou équipe engagée)
   }
 
+  // Compétences Élite du catalogue (/api/skills) : +10k po de surcoût VE
+  // additionnel par avancement dont le skillSlug est Élite (aligné serveur).
+  const eliteSkillSlugs = new Set(
+    skillsCatalog.filter((s) => s.isElite).map((s) => s.slug),
+  );
+  const eliteExtraPo = (x: any): number =>
+    typeof x?.skillSlug === 'string' && eliteSkillSlugs.has(x.skillSlug)
+      ? ELITE_SKILL_SURCHARGE
+      : 0;
+
   // Calculer les coûts
   const playersCost = players.reduce((total, player: any) => {
     const base = getPlayerCost(player.position, team?.roster || '');
@@ -439,7 +457,7 @@ export default function TeamEditPage() {
       const a = JSON.parse(player.advancements || '[]');
       adv = a.reduce((s: number, x: any) => {
         const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] + eliteExtraPo(x) : 0);
       }, 0);
     } catch {}
     return total + base + adv;
@@ -654,7 +672,7 @@ export default function TeamEditPage() {
                   const a = JSON.parse((player as any).advancements || '[]');
                   adv = a.reduce((s: number, x: any) => {
                     const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-                    return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                    return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] + eliteExtraPo(x) : 0);
                   }, 0);
                 } catch {}
                 const cost = Math.round((base + adv) / 1000);
@@ -753,7 +771,7 @@ export default function TeamEditPage() {
               const a = JSON.parse((player as any).advancements || '[]');
               adv = a.reduce((s: number, x: any) => {
                 const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-                return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] + eliteExtraPo(x) : 0);
               }, 0);
             } catch {}
             const cost = Math.round((base + adv) / 1000);
@@ -1057,10 +1075,17 @@ export default function TeamEditPage() {
                   : 'secondary';
 
               const psp = getNextAdvancementPspCost(advCount, actualAdvType);
-              // Surcoût VE : par stat pour une caractéristique, sinon table par type.
+              // Surcoût VE : par stat pour une caractéristique, sinon table par
+              // type + 10k si la compétence sélectionnée est Élite (→ 30k pour
+              // une primaire Élite au lieu de 20k).
+              const selectedIsElite =
+                !charMode &&
+                !!selectedSkillSlug &&
+                !!skillsCatalog.find((s) => s.slug === selectedSkillSlug)?.isElite;
               const surchargeK = charMode
                 ? (selectedStat ? CHARACTERISTIC_VALUE_INCREASE[selectedStat] / 1000 : 0)
-                : SURCHARGE_PER_ADVANCEMENT[actualAdvType as keyof typeof SURCHARGE_PER_ADVANCEMENT] / 1000;
+                : SURCHARGE_PER_ADVANCEMENT[actualAdvType as keyof typeof SURCHARGE_PER_ADVANCEMENT] / 1000 +
+                  (selectedIsElite ? ELITE_SKILL_SURCHARGE / 1000 : 0);
               const access = getPositionCategoryAccess(player.position);
               // Déterminer le type d'accès (primary ou secondary) en fonction du type d'avancement
               const categoryAccessType = (actualAdvType === 'random-primary' || actualAdvType === 'primary') ? 'primary' : 'secondary';
@@ -1417,6 +1442,15 @@ export default function TeamEditPage() {
                                   >
                                     {getSkillActivationLabel(selectedSkill.isPassive, 'fr')}
                                   </span>
+                                  {selectedSkill.isElite && (
+                                    <span
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SKILL_ELITE_BADGE_CLASSES}`}
+                                      title={getSkillEliteHint('fr')}
+                                      data-testid={`skill-elite-${selectedSkill.slug}`}
+                                    >
+                                      ⭐ {getSkillEliteLabel('fr')}
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-sm text-gray-600 mt-2">{selectedSkill.description}</div>
                               </div>
@@ -1454,7 +1488,17 @@ export default function TeamEditPage() {
                                       ✓
                                     </span>
                                   )}
-                                  <div className="font-semibold text-sm mb-1">{skill.nameFr}</div>
+                                  <div className="font-semibold text-sm mb-1">
+                                    {skill.nameFr}
+                                    {skill.isElite && (
+                                      <span
+                                        title={getSkillEliteHint('fr')}
+                                        data-testid={`skill-picker-elite-${skill.slug}`}
+                                      >
+                                        {" "}⭐
+                                      </span>
+                                    )}
+                                  </div>
                                   {isSelected && (
                                     <div className="absolute bottom-2 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
                                   )}
@@ -1597,7 +1641,7 @@ export default function TeamEditPage() {
             const base = getPlayerCost(player.position, team.roster);
             let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
               const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-              return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary));
+              return s + eliteExtraPo(x) + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary));
             }, 0); } catch {}
             return total + base + adv;
           }, 0)}

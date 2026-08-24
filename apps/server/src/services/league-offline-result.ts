@@ -653,33 +653,72 @@ async function applySppBonus(
   if (ops.length > 0) await prisma.$transaction(ops);
 }
 
+/** Parse tolerant (array natif PG ou string JSON sqlite) du breakdown bonus. */
+function parseBreakdownEntries(raw: unknown): Record<string, unknown>[] {
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  return Array.isArray(arr)
+    ? arr.filter(
+        (e): e is Record<string, unknown> =>
+          typeof e === "object" && e !== null,
+      )
+    : [];
+}
+
+/** ruleId des entrees de breakdown posees par le bonus commissaire. */
+export const COMMISSIONER_RANKING_BONUS_RULE_ID = "commissioner-ranking-bonus";
+
 /**
- * Applique le bonus au classement (points) accorde par le commissaire :
- * increment direct des points des 2 participants. Reversible (cf.
- * league-offline-edit).
+ * Applique le bonus au classement accorde par le commissaire. Les points
+ * bonus ne sont PAS ajoutes aux points generiques
+ * (`LeagueParticipant.points` reste le bareme win/draw/loss pur) : ils
+ * s'ajoutent au snapshot bonus du pairing (`bonusPointsHome/Away` +
+ * `bonusBreakdown`), exposes au classement dans la colonne dediee `Bo`.
+ * Reversible : l'invalidation remet le snapshot bonus du pairing a zero
+ * (cf. league-offline-edit).
  */
 async function applyRankingBonus(
-  homeParticipantId: string,
-  awayParticipantId: string,
+  pairingId: string,
   bonusHome: number,
   bonusAway: number,
 ): Promise<void> {
-  const ops: Promise<unknown>[] = [];
-  if (bonusHome)
-    ops.push(
-      prisma.leagueParticipant.update({
-        where: { id: homeParticipantId },
-        data: { points: { increment: bonusHome } },
-      }),
-    );
-  if (bonusAway)
-    ops.push(
-      prisma.leagueParticipant.update({
-        where: { id: awayParticipantId },
-        data: { points: { increment: bonusAway } },
-      }),
-    );
-  if (ops.length > 0) await prisma.$transaction(ops);
+  const pairing = (await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { bonusBreakdown: true },
+  })) as { bonusBreakdown?: unknown } | null;
+  const entries = parseBreakdownEntries(pairing?.bonusBreakdown);
+  if (bonusHome) {
+    entries.push({
+      ruleId: COMMISSIONER_RANKING_BONUS_RULE_ID,
+      label: "Bonus commissaire",
+      side: "home",
+      points: bonusHome,
+    });
+  }
+  if (bonusAway) {
+    entries.push({
+      ruleId: COMMISSIONER_RANKING_BONUS_RULE_ID,
+      label: "Bonus commissaire",
+      side: "away",
+      points: bonusAway,
+    });
+  }
+  await prisma.leaguePairing.update({
+    where: { id: pairingId },
+    data: {
+      ...(bonusHome ? { bonusPointsHome: { increment: bonusHome } } : {}),
+      ...(bonusAway ? { bonusPointsAway: { increment: bonusAway } } : {}),
+      // String JSON : compatible colonne Json (PG) et String (mirror
+      // sqlite) — les lecteurs sont tolerants aux deux formes.
+      bonusBreakdown: entries.length > 0 ? JSON.stringify(entries) : null,
+    },
+  });
 }
 
 /**
@@ -831,11 +870,11 @@ export async function recordOfflineLeagueResult(
     input,
   );
 
-  // Bonus au classement (points) accorde par le commissaire.
+  // Bonus au classement accorde par le commissaire : compte dans la
+  // colonne bonus (`Bo`) du classement, PAS dans les points generiques.
   if (input.rankingBonusHome || input.rankingBonusAway) {
     await applyRankingBonus(
-      home.id,
-      away.id,
+      pairing.id,
       input.rankingBonusHome ?? 0,
       input.rankingBonusAway ?? 0,
     );
