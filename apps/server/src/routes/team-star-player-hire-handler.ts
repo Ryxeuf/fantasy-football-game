@@ -104,6 +104,7 @@ export async function handleHireStarPlayer(
       team.starPlayers,
       availableBudget,
       teamRuleset,
+      (team as { regionalLeague?: string | null }).regionalLeague,
     );
 
     if (!validation.valid) {

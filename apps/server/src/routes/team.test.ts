@@ -65,6 +65,16 @@ vi.mock("../utils/roster-helpers", () => ({
 
 vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
+  // `handleGetTeamDetail` s'en sert pour le `budgetSummary` de la fiche :
+  // le mock doit declarer TOUTES les methodes utilisees (cf. CLAUDE.md).
+  computeTeamValueBreakdownFor: vi.fn().mockResolvedValue({
+    playersCost: 0,
+    availablePlayersCost: 0,
+    staffCost: 0,
+    rerollsCost: 0,
+    teamValue: 0,
+    currentValue: 0,
+  }),
 }));
 
 // Statut d'engagement de l'equipe : mocke pour piloter le verrouillage

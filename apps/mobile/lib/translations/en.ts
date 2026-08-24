@@ -156,6 +156,10 @@ export const EN_TRANSLATIONS = {
       rosterLabel: "Roster",
       rosterTier: "Tier {{tier}}",
       budgetLabel: "Budget (k gp)",
+      regionalLeagueLabel: "Regional league",
+      regionalLeagueHelp:
+        "It determines which Star Players you can hire and which Inducements you can buy. This choice is permanent.",
+      regionalLeagueGrants: "Grants: {{grants}}",
       submit: "Create the team",
       errors: {
         loadError: "Loading error",
@@ -163,6 +167,9 @@ export const EN_TRANSLATIONS = {
         invalidNameTitle: "Invalid name",
         rosterRequiredTitle: "Roster required",
         rosterRequiredMessage: "Choose a roster for your team",
+        regionalLeagueRequiredTitle: "Regional league required",
+        regionalLeagueRequiredMessage:
+          "This roster must choose its regional league at creation",
         invalidBudgetTitle: "Invalid budget",
         createErrorTitle: "Error",
         createErrorMessage: "Unable to create the team",

@@ -130,6 +130,24 @@ export interface TournamentRulesetDefinition {
    */
   readonly allowedInducements: readonly TournamentInducementRule[];
   readonly scoring: TournamentScoring;
+  /**
+   * Le coach choisit-il la Ligue régionale de son équipe à la création ?
+   *
+   * Par défaut oui (règle standard). Un règlement qui neutralise l'axe
+   * régional — liste fermée de Coups de Pouce et de Star Players — met
+   * `false` : aucune Ligue n'est alors demandée ni enregistrée.
+   */
+  readonly regionalLeagueChoice?: boolean;
+}
+
+/**
+ * Le règlement laisse-t-il le coach choisir sa Ligue régionale ?
+ * `null` (aucun règlement) = règle standard, donc oui.
+ */
+export function allowsRegionalLeagueChoice(
+  pack: TournamentRulesetDefinition | null | undefined,
+): boolean {
+  return pack?.regionalLeagueChoice ?? true;
 }
 
 /**

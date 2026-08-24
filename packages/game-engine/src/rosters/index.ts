@@ -119,6 +119,17 @@ export {
   type TeamSpecialRuleSlug,
 } from "./team-special-rules";
 
+// Choix de la Ligue régionale à la création d'une équipe
+export {
+  getDefaultRegionalLeague,
+  getRegionalLeagueOptions,
+  isRegionalLeagueAllowed,
+  isRegionalLeagueChoiceRequired,
+  isRegionalLeagueSlug,
+  resolveTeamRegionalRules,
+  type RegionalLeagueOption,
+} from "./regional-league-choice";
+
 // Ligues régionales (S3 — extraction OCR officielle)
 export {
   REGIONAL_LEAGUES,
@@ -163,6 +174,7 @@ export {
 
 // Règlements de tournoi (NAF World Cup…) : axe orthogonal au ruleset et au format
 export {
+  allowsRegionalLeagueChoice,
   NAF_WORLD_CUP_2027,
   TOURNAMENT_RULESETS,
   TOURNAMENT_RULESET_SLUGS,

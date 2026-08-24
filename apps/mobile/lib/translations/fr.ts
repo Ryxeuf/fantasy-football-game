@@ -221,6 +221,10 @@ export const FR_TRANSLATIONS = {
       rosterLabel: "Roster",
       rosterTier: "Tier {{tier}}",
       budgetLabel: "Budget (K po)",
+      regionalLeagueLabel: "Ligue regionale",
+      regionalLeagueHelp:
+        "Elle determine les Star Players recrutables et les Coups de Pouce accessibles. Ce choix est definitif.",
+      regionalLeagueGrants: "Apporte : {{grants}}",
       submit: "Creer l'equipe",
       errors: {
         loadError: "Erreur de chargement",
@@ -228,6 +232,9 @@ export const FR_TRANSLATIONS = {
         invalidNameTitle: "Nom invalide",
         rosterRequiredTitle: "Roster requis",
         rosterRequiredMessage: "Choisissez un roster pour votre equipe",
+        regionalLeagueRequiredTitle: "Ligue regionale requise",
+        regionalLeagueRequiredMessage:
+          "Ce roster doit choisir sa Ligue regionale a la creation",
         invalidBudgetTitle: "Budget invalide",
         createErrorTitle: "Erreur",
         createErrorMessage: "Impossible de creer l'equipe",

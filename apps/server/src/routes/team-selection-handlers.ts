@@ -29,6 +29,7 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { isGameFormat, type Ruleset } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import { buildTeamBudgetSummary } from '../services/team-budget-summary';
 import { serverLog } from '../utils/server-log';
 
 /**
@@ -256,11 +257,47 @@ export async function handleGetTeamDetail(
       isGameFormat(team.format) ? team.format : 'bb11',
     );
 
+    // Résumé budgétaire calculé côté serveur (VE/VEA + postes de dépense).
+    // Le web l'affiche tel quel : plus aucune re-dérivation du coût des
+    // joueurs côté client, donc plus de divergence avec la VE.
+    const budgetSummary = await buildTeamBudgetSummary(
+      prisma,
+      team,
+      team.players,
+      team.starPlayers,
+    );
+
+    // Auto-réparation : la VE/VEA stockée peut dater d'avant un changement
+    // de règle (valeur des compétences Élite, fans dévoués…). On persiste
+    // la valeur fraîche dès qu'elle diverge, pour que la fiche d'équipe, la
+    // feuille de match et le matchmaking lisent la même chose.
+    if (
+      team.teamValue !== budgetSummary.teamValue ||
+      team.currentValue !== budgetSummary.currentValue
+    ) {
+      try {
+        await prisma.team.update({
+          where: { id: team.id },
+          data: {
+            teamValue: budgetSummary.teamValue,
+            currentValue: budgetSummary.currentValue,
+          },
+        });
+      } catch (e: unknown) {
+        // Lecture avant tout : une écriture en échec ne doit pas priver le
+        // coach de sa fiche d'équipe.
+        serverLog.error('[team-detail] persistance VE/VEA fraiche', e);
+      }
+    }
+
     sendSuccess(res, {
       team: {
         ...team,
+        teamValue: budgetSummary.teamValue,
+        currentValue: budgetSummary.currentValue,
         starPlayers: enrichedStarPlayers,
         staffConfig,
+        budgetSummary,
       },
       currentMatch: selection?.match || null,
       localMatchStats,

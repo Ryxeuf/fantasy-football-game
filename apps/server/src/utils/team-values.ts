@@ -1,7 +1,301 @@
 import { PrismaClient } from '@prisma/client';
-import { DEFAULT_RULESET, type Ruleset, calculateAdvancementsSurcharge } from '@bb/game-engine';
-import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
+import {
+  DEFAULT_RULESET,
+  defaultStaffConfig,
+  getSpecialRulesForTeam,
+  isGameFormat,
+  isLineman,
+  type GameFormat,
+  type Ruleset,
+  calculateAdvancementsSurcharge,
+} from '@bb/game-engine';
+import {
+  calculateTeamValueBreakdown,
+  getPlayerCost,
+  type StaffCosts,
+  type TeamValueBreakdown,
+  type TeamValueData,
+} from '../../../../packages/game-engine/src/utils/team-value-calculator';
+import { getPositionBySlug } from '@bb/game-engine';
 import { getEliteSkillSlugs } from '../services/elite-skills';
+
+/** Ligne `TeamPlayer` minimale nécessaire au calcul de VE/VEA. */
+interface TeamValuePlayerRow {
+  position: string;
+  dead?: boolean | null;
+  firedAt?: Date | null;
+  missNextMatch?: boolean | null;
+  advancements?: string | null;
+}
+
+/** Ligne `Team` minimale nécessaire au calcul de VE/VEA. */
+interface TeamValueTeamRow {
+  roster: string;
+  ruleset?: string | null;
+  format?: string | null;
+  rerolls: number;
+  cheerleaders: number;
+  assistants: number;
+  apothecary: boolean;
+}
+
+/**
+ * Coûts staff d'une équipe : ligne `RosterStaffConfig` (roster × format)
+ * si elle existe, sinon défaut dérivé du package pur.
+ *
+ * Tolérant comme `getEliteSkillSlugs` : un client mocké étroit (tests
+ * unitaires) ou une lecture en échec retombe sur le défaut plutôt que de
+ * faire échouer le recalcul de VE.
+ */
+export async function resolveStaffCostsForTeam(
+  db: unknown,
+  rosterSlug: string,
+  ruleset: Ruleset,
+  format: GameFormat,
+): Promise<StaffCosts> {
+  const fallback = defaultStaffConfig(rosterSlug, format);
+  try {
+    const client = db as {
+      roster: { findUnique: (args: unknown) => Promise<{ id: string } | null> };
+      rosterStaffConfig: {
+        findUnique: (args: unknown) => Promise<StaffCosts | null>;
+      };
+    };
+    const roster = await client.roster.findUnique({
+      where: { slug_ruleset: { slug: rosterSlug, ruleset } },
+      select: { id: true },
+    });
+    if (!roster) return fallback;
+    const row = await client.rosterStaffConfig.findUnique({
+      where: { rosterId_format: { rosterId: roster.id, format } },
+      select: {
+        rerollCost: true,
+        cheerleaderCost: true,
+        assistantCost: true,
+        apothecaryCost: true,
+      },
+    });
+    return row ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Coûts d'embauche par slug de poste (po), lus en base pour le roster ×
+ * ruleset de l'équipe.
+ *
+ * La base est la source de vérité des coûts (éditable en admin) et c'est
+ * elle que les handlers de construction/achat débitent. La VE doit donc
+ * s'appuyer dessus, sinon une équipe achetée au tarif DB serait valorisée
+ * au tarif statique du package. Retour vide = repli sur `getPlayerCost`
+ * (données compilées du game-engine).
+ */
+export interface PositionValueMeta {
+  /** Coût d'embauche en po. */
+  readonly cost: number;
+  /** Poste de Trois-quart (`isLineman` : plafond >= 12). */
+  readonly lineman: boolean;
+}
+
+export async function resolvePositionMetaForTeam(
+  db: unknown,
+  rosterSlug: string,
+  ruleset: Ruleset,
+): Promise<ReadonlyMap<string, PositionValueMeta>> {
+  try {
+    const client = db as {
+      position: {
+        findMany: (
+          args: unknown,
+        ) => Promise<Array<{ slug: string; cost: number; max: number }>>;
+      };
+    };
+    const rows = await client.position.findMany({
+      where: { roster: { slug: rosterSlug, ruleset } },
+      select: { slug: true, cost: true, max: true },
+    });
+    // `Position.cost` est en kpo en base, la VE se compte en po.
+    return new Map(
+      rows.map((r) => [
+        r.slug,
+        { cost: r.cost * 1000, lineman: isLineman({ max: r.max }) },
+      ]),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+/**
+ * Règles spéciales d'équipe : base d'abord (éditable en admin), repli sur
+ * les données statiques du game-engine. Seule
+ * `trois_quarts_a_vil_prix` change le calcul (VEA).
+ */
+export async function resolveSpecialRulesForTeam(
+  db: unknown,
+  rosterSlug: string,
+  ruleset: Ruleset,
+): Promise<readonly string[]> {
+  try {
+    const client = db as {
+      roster: {
+        findUnique: (
+          args: unknown,
+        ) => Promise<{ specialRules: string | null } | null>;
+      };
+    };
+    const row = await client.roster.findUnique({
+      where: { slug_ruleset: { slug: rosterSlug, ruleset } },
+      select: { specialRules: true },
+    });
+    const csv = row?.specialRules;
+    if (typeof csv === 'string' && csv.trim().length > 0) {
+      return csv
+        .split(',')
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+    }
+  } catch { /* repli statique ci-dessous */ }
+  try {
+    return getSpecialRulesForTeam(rosterSlug, ruleset);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Assemble le `TeamValueData` d'une équipe : coût de poste (au ruleset de
+ * l'équipe) + surcoûts d'avancement (dont Élite), joueurs morts/licenciés
+ * exclus, absents marqués indisponibles pour la VEA.
+ *
+ * Pur (aucune I/O) : les deux lectures DB — compétences Élite et config
+ * staff — sont injectées par l'appelant.
+ */
+export function buildTeamValueData(
+  team: TeamValueTeamRow,
+  players: readonly TeamValuePlayerRow[],
+  eliteSlugs: ReadonlySet<string>,
+  staffCosts: StaffCosts,
+  positionMeta: ReadonlyMap<string, PositionValueMeta> = new Map(),
+  specialRules: readonly string[] = [],
+): TeamValueData {
+  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+
+  // Exclure les joueurs morts ET licenciés de la VE : ils ne font plus
+  // partie du roster actif.
+  const alivePlayers = players.filter((p) => !p.dead && !p.firedAt);
+
+  return {
+    players: alivePlayers.map((player) => {
+      const meta = positionMeta.get(player.position);
+      const baseCost =
+        meta?.cost ?? getPlayerCost(player.position, team.roster, ruleset);
+      // Repli hors DB : le catalogue statique porte aussi le plafond du
+      // poste, seule donnée nécessaire pour classer un Trois-quart.
+      const lineman =
+        meta?.lineman ??
+        (() => {
+          const staticPos = getPositionBySlug(player.position, ruleset);
+          return staticPos ? isLineman({ max: staticPos.max }) : false;
+        })();
+      // Include advancement surcharges in player value
+      let advSurcharge = 0;
+      try {
+        const advancements = JSON.parse(player.advancements || '[]');
+        // BB2025 : la caracteristique a un surcout par stat -> on passe
+        // les objets complets ({ type, stat?, isElite }) plutot que les
+        // seuls types, pour compter le surcout des competences Elite.
+        advSurcharge = calculateAdvancementsSurcharge(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          advancements.map((a: any) => ({
+            type: a.type,
+            stat: a.stat,
+            isElite:
+              typeof a.skillSlug === 'string' && eliteSlugs.has(a.skillSlug),
+          })),
+        );
+      } catch { /* ignore parse errors */ }
+      return {
+        cost: baseCost + advSurcharge,
+        // VEA = VE - valeur des joueurs absents : un joueur qui rate le
+        // prochain match (missNextMatch, blessure "Absent") compte dans
+        // la VE mais est exclu de la VEA.
+        available: !player.missNextMatch,
+        // « Trois-quarts à vil prix » n'annule QUE le coût d'embauche dans
+        // la VEA : les surcoûts d'avancement restent comptés.
+        hireCost: baseCost,
+        lineman,
+      };
+    }),
+    rerolls: team.rerolls,
+    cheerleaders: team.cheerleaders,
+    assistants: team.assistants,
+    apothecary: team.apothecary,
+    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA.
+    roster: team.roster, // Ajout du roster pour le calcul des relances
+    ruleset,
+    format,
+    staffConfig: staffCosts,
+    specialRules,
+  };
+}
+
+/**
+ * Recalcule le détail VE/VEA d'une équipe SANS écriture.
+ *
+ * Source unique du calcul : `updateTeamValues` le persiste, le détail
+ * budgétaire de la fiche d'équipe l'affiche. Toute vue qui a besoin du
+ * coût des joueurs doit passer par ici plutôt que de le re-dériver.
+ */
+export async function computeTeamValueBreakdown(
+  prisma: PrismaClient,
+  teamId: string,
+): Promise<TeamValueBreakdown> {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { players: true },
+  });
+
+  if (!team) {
+    throw new Error(`Équipe ${teamId} non trouvée`);
+  }
+
+  return computeTeamValueBreakdownFor(prisma, team, team.players);
+}
+
+/**
+ * Variante « équipe déjà chargée » : évite un second aller-retour quand
+ * l'appelant a déjà l'équipe et ses joueurs en main (fiche d'équipe).
+ */
+export async function computeTeamValueBreakdownFor(
+  db: unknown,
+  team: TeamValueTeamRow,
+  players: readonly TeamValuePlayerRow[],
+): Promise<TeamValueBreakdown> {
+  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+  // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
+  // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
+  const [eliteSlugs, staffCosts, positionMeta, specialRules] =
+    await Promise.all([
+      getEliteSkillSlugs(db, ruleset),
+      resolveStaffCostsForTeam(db, team.roster, ruleset, format),
+      resolvePositionMetaForTeam(db, team.roster, ruleset),
+      resolveSpecialRulesForTeam(db, team.roster, ruleset),
+    ]);
+  return calculateTeamValueBreakdown(
+    buildTeamValueData(
+      team,
+      players,
+      eliteSlugs,
+      staffCosts,
+      positionMeta,
+      specialRules,
+    ),
+  );
+}
 
 /**
  * Calcule et met à jour les valeurs d'équipe selon les règles Blood Bowl
@@ -16,54 +310,11 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     throw new Error(`Équipe ${teamId} non trouvée`);
   }
 
-  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-  // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
-  // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
-  const eliteSlugs = await getEliteSkillSlugs(prisma, ruleset);
-
-  // Préparer les données pour le calcul (exclure les joueurs morts ET
-  // licenciés de la VE : ils ne font plus partie du roster actif).
-  const alivePlayers = team.players.filter(
-    player => !player.dead && !(player as { firedAt?: Date | null }).firedAt,
+  const { teamValue, currentValue } = await computeTeamValueBreakdownFor(
+    prisma,
+    team,
+    team.players,
   );
-  const teamValueData: TeamValueData = {
-    players: alivePlayers.map(player => {
-      const baseCost = getPlayerCost(player.position, team.roster, ruleset);
-      // Include advancement surcharges in player value
-      let advSurcharge = 0;
-      try {
-        const advancements = JSON.parse((player as any).advancements || '[]');
-        // BB2025 : la caracteristique a un surcout par stat -> on passe
-        // les objets complets ({ type, stat?, isElite }) plutot que les
-        // seuls types, pour compter le surcout des competences Elite.
-        advSurcharge = calculateAdvancementsSurcharge(
-          advancements.map((a: any) => ({
-            type: a.type,
-            stat: a.stat,
-            isElite: typeof a.skillSlug === 'string' && eliteSlugs.has(a.skillSlug),
-          })),
-        );
-      } catch { /* ignore parse errors */ }
-      return {
-        cost: baseCost + advSurcharge,
-        // VEA = VE - valeur des joueurs absents : un joueur qui rate le
-        // prochain match (missNextMatch, blessure "Absent") compte dans
-        // la VE mais est exclu de la VEA.
-        available: !player.missNextMatch,
-      };
-    }),
-    rerolls: team.rerolls,
-    cheerleaders: team.cheerleaders,
-    assistants: team.assistants,
-    apothecary: team.apothecary,
-    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA.
-    roster: team.roster, // Ajout du roster pour le calcul des relances
-    ruleset,
-  };
-
-  // Calculer les valeurs
-  const teamValue = calculateTeamValue(teamValueData);
-  const currentValue = calculateCurrentValue(teamValueData);
 
   // Mettre à jour la base de données
   // teamValue = VE calculée des joueurs actuels

@@ -76,6 +76,19 @@ export interface OnboardingRoster {
   readonly slug: string;
   readonly name: string;
   readonly tier?: string | number;
+  /**
+   * Ligues régionales ouvertes à ce roster, à trancher à la création.
+   * Optionnel : rétro-compat avec un serveur antérieur au choix de Ligue.
+   */
+  readonly regionalLeagueOptions?: readonly OnboardingRegionalLeague[];
+}
+
+/** Option de Ligue régionale telle que renvoyée par `/api/rosters`. */
+export interface OnboardingRegionalLeague {
+  readonly slug: string;
+  readonly name: string;
+  readonly grants?: readonly string[];
+  readonly grantLabels?: readonly string[];
 }
 
 /**

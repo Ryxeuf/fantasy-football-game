@@ -9,7 +9,9 @@ import {
   translateKeywordsCsv,
   getTeamSpecialRuleBySlug,
   getRegionalLeagueBySlug,
+  getRegionalLeagueOptions,
   getRegionalRulesForTeam,
+  isRegionalLeagueChoiceRequired,
   defaultStaffConfig,
   FORMATS,
   type GameFormat,
@@ -62,6 +64,10 @@ interface RosterListPayload {
     _count: { positions: number };
     /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
     staffConfigs: Record<GameFormat, RosterStaffConfig>;
+    /** Options de Ligue régionale à la création (cf. détail roster). */
+    regionalLeagueOptions: RosterRegionalLeagueOptionView[];
+    /** Le coach doit-il choisir sa Ligue à la création ? */
+    regionalLeagueChoiceRequired: boolean;
   }>;
   ruleset: string;
   availableRulesets: readonly string[];
@@ -81,6 +87,22 @@ interface RosterSpecialRuleView {
 interface RosterRegionalLeagueView {
   slug: string;
   name: string;
+}
+
+/**
+ * Option de Ligue régionale proposée à la CRÉATION d'une équipe. À la
+ * différence de `regionalLeagues` (catalogue : toutes les Ligues auxquelles
+ * le roster peut prétendre), cette liste est celle entre laquelle le coach
+ * doit trancher — et dit ce que chaque Ligue apporte en plus (alignement
+ * « Favori de… » pour les Nordiques au Clash du Chaos).
+ */
+interface RosterRegionalLeagueOptionView {
+  slug: string;
+  name: string;
+  /** Slugs des règles régionales acquises en plus avec cette Ligue. */
+  grants: string[];
+  /** Libellés localisés de ces règles (pour l'UI). */
+  grantLabels: string[];
 }
 
 interface RosterDetailPayload {
@@ -111,6 +133,14 @@ interface RosterDetailPayload {
     specialRules: RosterSpecialRuleView[];
     /** A11 — ligues régionales / "type de ligue" résolues (vide si aucune). */
     regionalLeagues: RosterRegionalLeagueView[];
+    /**
+     * Options de Ligue à la création. Vide = aucune Ligue modélisée ; une
+     * seule entrée = Ligue imposée (rien à demander) ; plusieurs = le coach
+     * DOIT choisir (`regionalLeagueChoiceRequired`).
+     */
+    regionalLeagueOptions: RosterRegionalLeagueOptionView[];
+    /** Le coach doit-il choisir sa Ligue à la création de l'équipe ? */
+    regionalLeagueChoiceRequired: boolean;
     /** Config staff par format (DB ; défaut dérivé si pas de ligne). Coûts en po. */
     staffConfigs: Record<GameFormat, RosterStaffConfig>;
   };
@@ -200,6 +230,42 @@ export function resolveRegionalLeagues(
   return out;
 }
 
+/**
+ * Options de Ligue régionale offertes au coach pour ce roster, libellés
+ * localisés inclus. Source : le moteur (`getRegionalLeagueOptions`), pas la
+ * colonne `Roster.regionalRules` — le choix et ses alignements conditionnels
+ * sont une règle, pas une donnée éditable.
+ */
+export function resolveRegionalLeagueOptions(
+  rosterSlug: string,
+  ruleset: Ruleset,
+  isEnglish: boolean,
+): RosterRegionalLeagueOptionView[] {
+  return getRegionalLeagueOptions(rosterSlug, ruleset).map((option) => {
+    const def = getRegionalLeagueBySlug(option.slug);
+    return {
+      slug: option.slug,
+      name: def ? (isEnglish ? def.nameEn : def.nameFr) : option.slug,
+      grants: [...option.grants],
+      grantLabels: option.grants.map((slug) => regionalRuleLabel(slug, isEnglish)),
+    };
+  });
+}
+
+/**
+ * Libellé d'une règle régionale acquise (« Favori de Khorne »). Les
+ * alignements `favoured_of_*` n'ont pas de fiche dédiée : on dérive le
+ * libellé du suffixe.
+ */
+function regionalRuleLabel(slug: string, isEnglish: boolean): string {
+  const league = getRegionalLeagueBySlug(slug);
+  if (league) return isEnglish ? league.nameEn : league.nameFr;
+  const god = slug.replace(/^favoured_of_?/, "");
+  if (god.length === 0) return slug;
+  const name = god.charAt(0).toUpperCase() + god.slice(1);
+  return isEnglish ? `Favoured of ${name}` : `Favori de ${name}`;
+}
+
 async function loadRosterList(
   lang: string,
   ruleset: string,
@@ -236,6 +302,18 @@ async function loadRosterList(
       naf: roster.naf,
       _count: roster._count,
       staffConfigs: staffConfigsByFormat(roster),
+      // Ligue régionale à choisir à la création : exposée dès la LISTE pour
+      // que les flux de création (assistant + builder) n'aient pas à
+      // recharger le détail du roster juste pour poser la question.
+      regionalLeagueOptions: resolveRegionalLeagueOptions(
+        roster.slug,
+        ruleset as Ruleset,
+        isEnglish,
+      ),
+      regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
+        roster.slug,
+        ruleset as Ruleset,
+      ),
     })),
     ruleset,
     availableRulesets: RULESETS,
@@ -408,6 +486,15 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
       roster.slug,
       ruleset,
       isEnglish,
+    ),
+    regionalLeagueOptions: resolveRegionalLeagueOptions(
+      roster.slug,
+      ruleset,
+      isEnglish,
+    ),
+    regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
+      roster.slug,
+      ruleset,
     ),
     staffConfigs: staffConfigsByFormat(roster),
   };

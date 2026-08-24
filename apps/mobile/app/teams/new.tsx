@@ -20,6 +20,8 @@ import {
   validateTeamName,
   validateTeamValue,
   getTeamValueOptions,
+  regionalLeagueChoiceRequired,
+  resolveRegionalLeagueChoice,
 } from "../../lib/teams";
 
 export default function NewTeamScreen() {
@@ -29,6 +31,9 @@ export default function NewTeamScreen() {
   const [name, setName] = useState("");
   const [rosters, setRosters] = useState<RosterSummary[]>([]);
   const [selectedRoster, setSelectedRoster] = useState<string | null>(null);
+  // Ligue regionale : elle conditionne Star Players et Coups de Pouce, et le
+  // serveur refuse la creation sans elle quand le roster a le choix.
+  const [regionalLeague, setRegionalLeague] = useState<string | null>(null);
   const [teamValue, setTeamValue] = useState<number>(1000);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +81,15 @@ export default function NewTeamScreen() {
       Alert.alert(t("teams.new.errors.invalidBudgetTitle"), valueCheck.error);
       return;
     }
+    const rosterDef = rosters.find((r) => r.slug === selectedRoster);
+    const league = resolveRegionalLeagueChoice(rosterDef, regionalLeague);
+    if (regionalLeagueChoiceRequired(rosterDef) && !league) {
+      Alert.alert(
+        t("teams.new.errors.regionalLeagueRequiredTitle"),
+        t("teams.new.errors.regionalLeagueRequiredMessage"),
+      );
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -83,6 +97,7 @@ export default function NewTeamScreen() {
         name: name.trim(),
         roster: selectedRoster,
         teamValue,
+        ...(league ? { regionalLeague: league } : {}),
       });
       const newId = data?.team?.id;
       if (newId) {
@@ -152,7 +167,13 @@ export default function NewTeamScreen() {
             return (
               <Pressable
                 key={roster.slug}
-                onPress={() => setSelectedRoster(roster.slug)}
+                onPress={() => {
+                  setSelectedRoster(roster.slug);
+                  // Ligue imposee pour un roster mono-ligue, sinon a choisir.
+                  setRegionalLeague(
+                    resolveRegionalLeagueChoice(roster, null),
+                  );
+                }}
                 style={[
                   styles.rosterCard,
                   selected && styles.rosterCardSelected,
@@ -176,6 +197,54 @@ export default function NewTeamScreen() {
             );
           })}
         </View>
+
+        {regionalLeagueChoiceRequired(
+          rosters.find((r) => r.slug === selectedRoster),
+        ) && (
+          <>
+            <Text style={styles.label}>
+              {t("teams.new.regionalLeagueLabel")}
+            </Text>
+            <Text style={styles.helpText}>
+              {t("teams.new.regionalLeagueHelp")}
+            </Text>
+            <View style={styles.leagueList}>
+              {(
+                rosters.find((r) => r.slug === selectedRoster)
+                  ?.regionalLeagueOptions ?? []
+              ).map((option) => {
+                const selected = regionalLeague === option.slug;
+                const grants = option.grantLabels ?? [];
+                return (
+                  <Pressable
+                    key={option.slug}
+                    onPress={() => setRegionalLeague(option.slug)}
+                    style={[
+                      styles.leagueOption,
+                      selected && styles.leagueOptionSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.leagueName,
+                        selected && styles.leagueNameSelected,
+                      ]}
+                    >
+                      {option.name}
+                    </Text>
+                    {grants.length > 0 && (
+                      <Text style={styles.leagueGrants}>
+                        {t("teams.new.regionalLeagueGrants", {
+                          grants: grants.join(", "),
+                        })}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         <Text style={styles.label}>{t("teams.new.budgetLabel")}</Text>
         <View style={styles.budgetRow}>
@@ -273,6 +342,39 @@ const styles = StyleSheet.create({
   rosterMeta: {
     fontSize: 11,
     color: "#6B7280",
+    marginTop: 4,
+  },
+  helpText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  leagueList: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  leagueOption: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  leagueOptionSelected: {
+    borderColor: "#2563EB",
+    backgroundColor: "#EFF6FF",
+  },
+  leagueName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  leagueNameSelected: {
+    color: "#1D4ED8",
+  },
+  leagueGrants: {
+    fontSize: 11,
+    color: "#B45309",
     marginTop: 4,
   },
   budgetRow: {

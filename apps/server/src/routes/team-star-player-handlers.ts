@@ -122,9 +122,13 @@ export async function handleListAvailableStarPlayers(
     }
 
     const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+    // Disponibilité selon la Ligue régionale CHOISIE par l'équipe (et
+    // l'alignement qu'elle apporte), pas l'union de toutes les Ligues du
+    // roster.
     const availableStarPlayers = await getTeamAvailableStarPlayers(
       team.roster,
       teamRuleset,
+      (team as { regionalLeague?: string | null }).regionalLeague,
     );
 
     const { getPlayerCost } = await import(

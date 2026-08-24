@@ -9,6 +9,9 @@ import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import SpecialRulesBadges from "../../../components/SpecialRulesBadges";
 import KeywordChips from "../../../components/KeywordChips";
+import RegionalLeaguePicker, {
+  type RegionalLeagueOptionView,
+} from "../../../components/RegionalLeaguePicker";
 import QuantityStepper from "../components/QuantityStepper";
 import BuildAdvancementAllocator, {
   type BuildAdvancement,
@@ -78,6 +81,11 @@ type Roster = {
   budget?: number;
   /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
   staffConfigs?: Record<GameFormat, RosterStaffConfig>;
+  /**
+   * Ligues régionales ouvertes à ce roster, à trancher à la création.
+   * Optionnel : rétro-compat avec un serveur antérieur au choix de Ligue.
+   */
+  regionalLeagueOptions?: RegionalLeagueOptionView[];
 };
 
 /** Règles de composition d'une coupe (Flow B), renvoyées par GET /cup/:id. */
@@ -150,6 +158,10 @@ export default function NewTeamBuilder() {
   const [saving, setSaving] = useState(false);
   const submittingRef = useRef(false);
   const [rosters, setRosters] = useState<Roster[]>([]);
+  // Ligue régionale choisie. Réinitialisée à chaque changement de roster :
+  // les options ne sont pas les mêmes d'un roster à l'autre.
+  const [regionalLeague, setRegionalLeague] = useState<string | null>(null);
+  const [regionalLeagueTouched, setRegionalLeagueTouched] = useState(false);
   const [loadingRosters, setLoadingRosters] = useState(true);
 
   // Construction « pour une coupe » (Flow B) : budget + pool imposés.
@@ -257,6 +269,26 @@ export default function NewTeamBuilder() {
     ];
     return fromApi ?? defaultStaffConfig(rosterId, format);
   }, [rosters, rosterId, format]);
+
+  // Options de Ligue régionale du roster courant (API ; vide tant que la
+  // liste n'est pas chargée ou face à un serveur pré-feature).
+  const regionalLeagueOptions = useMemo<RegionalLeagueOptionView[]>(
+    () => rosters.find((r) => r.slug === rosterId)?.regionalLeagueOptions ?? [],
+    [rosters, rosterId],
+  );
+
+  // Ligue imposée quand le roster n'en a qu'une : on la pose d'office pour
+  // que le POST parte complet. Sinon on repart d'un choix vide à chaque
+  // changement de roster.
+  useEffect(() => {
+    setRegionalLeagueTouched(false);
+    setRegionalLeague(
+      regionalLeagueOptions.length === 1 ? regionalLeagueOptions[0].slug : null,
+    );
+  }, [regionalLeagueOptions]);
+
+  const regionalLeagueMissing =
+    regionalLeagueOptions.length > 1 && !regionalLeague;
 
   // Apothicaire disponible selon la config (par roster × format).
   const apothecaryAvailable = staff.apothecaryAllowed;
@@ -575,6 +607,12 @@ export default function NewTeamBuilder() {
 
   async function submit() {
     if (submittingRef.current) return;
+    // Le serveur refuse (422) une création sans Ligue quand le roster en a
+    // plusieurs : on le dit ici, avant de partir en requête.
+    if (regionalLeagueMissing) {
+      setRegionalLeagueTouched(true);
+      return;
+    }
     submittingRef.current = true;
     setSaving(true);
     setError(null);
@@ -591,6 +629,7 @@ export default function NewTeamBuilder() {
           name,
           roster: rosterId,
           teamValue,
+          ...(regionalLeague ? { regionalLeague } : {}),
           ruleset,
           format,
           choices: Object.entries(counts).map(([slug, count]) => ({
@@ -908,6 +947,19 @@ export default function NewTeamBuilder() {
                 )}
               </select>
             </div>
+
+            {/* Ligue régionale : ce qu'elle débloque (Star Players, Coups de
+                Pouce) dépend du roster, d'où sa place juste après. */}
+            <RegionalLeaguePicker
+              options={regionalLeagueOptions}
+              value={regionalLeague}
+              onChange={(slug) => {
+                setRegionalLeague(slug);
+                setRegionalLeagueTouched(false);
+              }}
+              showRequiredHint={regionalLeagueTouched}
+              disabled={loadingRosters}
+            />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

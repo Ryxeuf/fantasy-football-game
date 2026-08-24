@@ -336,6 +336,14 @@ model Team {
   format               Format              @default(bb11)
   // Règlement de tournoi (slug @bb/game-engine, miroir SQLite de schema.prisma)
   tournamentRuleset    String?
+  // Ligue régionale choisie à la création (slug du catalogue @bb/game-engine
+  // `REGIONAL_LEAGUES`, ex : "chaos_clash"). C'est elle qui débloque les Star
+  // Players recrutables et les Coups de Pouce accessibles. Un roster
+  // mono-ligue se la voit attribuer d'office. null = aucun choix enregistré
+  // (équipes antérieures à la règle, ou règlement de tournoi qui neutralise
+  // l'axe régional) : le moteur retombe sur l'union historique des règles
+  // régionales du roster.
+  regionalLeague       String?
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]

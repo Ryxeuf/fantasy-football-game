@@ -125,3 +125,30 @@ describe("TeamInfoDisplay — titre de section", () => {
     });
   });
 });
+
+describe("TeamInfoDisplay — coût des joueurs", () => {
+  it("affiche le coût joueurs calculé par le serveur quand il est fourni", () => {
+    render(
+      <LanguageProvider>
+        {/* VE stale (1 000k) vs coût joueurs réel (860k) : c'est le champ
+            serveur qui doit gagner, pas la dérivation « VE − staff ». */}
+        <TeamInfoDisplay info={{ ...INFO, playersCost: 860_000 }} />
+      </LanguageProvider>,
+    );
+    expect(
+      normalizeSpaces(screen.getByTestId("staff-players-cost").textContent),
+    ).toBe("860K po");
+  });
+
+  it("retombe sur « VE − staff » quand le serveur ne fournit rien", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={INFO} />
+      </LanguageProvider>,
+    );
+    // VE 1 000k − (2×50k relances + 10k + 10k + 50k apothicaire) = 830k
+    expect(
+      normalizeSpaces(screen.getByTestId("staff-players-cost").textContent),
+    ).toBe("830K po");
+  });
+});

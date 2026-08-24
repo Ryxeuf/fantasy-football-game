@@ -11,6 +11,9 @@ import {
   TEAM_NAME_MAX,
   TEAM_VALUE_MIN,
   TEAM_VALUE_MAX,
+  regionalLeagueChoiceRequired,
+  resolveRegionalLeagueChoice,
+  type RosterSummary,
   type TeamSummary,
   type TeamPlayer,
 } from "./teams";
@@ -157,5 +160,51 @@ describe("getTeamValueOptions", () => {
     expect(options[0]).toBe(TEAM_VALUE_MIN <= 1000 ? 1000 : TEAM_VALUE_MIN);
     expect(options.every((v) => v >= TEAM_VALUE_MIN && v <= TEAM_VALUE_MAX)).toBe(true);
     expect([...options].sort((a, b) => a - b)).toEqual(options);
+  });
+});
+
+/**
+ * Ligue regionale : le serveur refuse la creation sans elle quand le roster
+ * a le choix, et l'impose d'office quand il n'y en a qu'une.
+ */
+describe("resolveRegionalLeagueChoice / regionalLeagueChoiceRequired", () => {
+  const NORSE: RosterSummary = {
+    slug: "norse",
+    name: "Nordiques",
+    budget: 1000,
+    regionalLeagueOptions: [
+      { slug: "old_world_classic", name: "Classique du Vieux Monde" },
+      { slug: "chaos_clash", name: "Clash du Chaos", grantLabels: ["Favori de Khorne"] },
+    ],
+  };
+  const ORC: RosterSummary = {
+    slug: "orc",
+    name: "Orques",
+    budget: 1000,
+    regionalLeagueOptions: [
+      { slug: "badlands_brawl", name: "Bagarre des Terres Arides" },
+    ],
+  };
+  const LEGACY: RosterSummary = { slug: "human", name: "Humains", budget: 1000 };
+
+  it("impose la Ligue unique sans rien demander", () => {
+    expect(regionalLeagueChoiceRequired(ORC)).toBe(false);
+    expect(resolveRegionalLeagueChoice(ORC, null)).toBe("badlands_brawl");
+  });
+
+  it("exige un choix quand plusieurs Ligues sont ouvertes", () => {
+    expect(regionalLeagueChoiceRequired(NORSE)).toBe(true);
+    expect(resolveRegionalLeagueChoice(NORSE, null)).toBeNull();
+    expect(resolveRegionalLeagueChoice(NORSE, "chaos_clash")).toBe("chaos_clash");
+  });
+
+  it("ignore un choix etranger au roster", () => {
+    expect(resolveRegionalLeagueChoice(NORSE, "lustrian_superleague")).toBeNull();
+  });
+
+  it("n'envoie rien face a un serveur sans options de Ligue", () => {
+    expect(regionalLeagueChoiceRequired(LEGACY)).toBe(false);
+    expect(resolveRegionalLeagueChoice(LEGACY, null)).toBeNull();
+    expect(resolveRegionalLeagueChoice(undefined, null)).toBeNull();
   });
 });

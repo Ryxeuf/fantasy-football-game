@@ -181,6 +181,8 @@ describe('A36 — plafond combiné de Gros Bras', () => {
     const res = createRes();
     await handleBuildTeam(
       buildReq('ogre', {
+        // Les Ogres ont deux Ligues possibles : le choix est obligatoire.
+        regionalLeague: 'badlands_brawl',
         choices: choices({ ogre_snotling: 5, ogre_runt: 6 }),
       }),
       res,

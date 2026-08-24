@@ -293,6 +293,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   ruleset: 'ruleset',
   format: 'format',
   tournamentRuleset: 'tournamentRuleset',
+  regionalLeague: 'regionalLeague',
   createdAt: 'createdAt',
   treasury: 'treasury',
   rerolls: 'rerolls',

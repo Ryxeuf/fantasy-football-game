@@ -319,6 +319,8 @@ describe('handleBuildTeam — Star Players sous règlement', () => {
       createReq({
         name: 'T',
         roster: 'goblin',
+        // Les Gobelins ont deux Ligues possibles : le choix est obligatoire.
+        regionalLeague: 'badlands_brawl',
         choices: ELEVEN_LINEMEN,
         starPlayers: ['fungus_the_loon', 'scrappa_sorehead'],
         tournamentRuleset: 'naf_world_cup_2027',
@@ -348,6 +350,7 @@ describe('handleBuildTeam — Star Players sous règlement', () => {
       createReq({
         name: 'T',
         roster: 'goblin',
+        regionalLeague: 'badlands_brawl',
         choices: ELEVEN_LINEMEN,
         starPlayers: ['fungus_the_loon'],
         tournamentRuleset: 'naf_world_cup_2027',
