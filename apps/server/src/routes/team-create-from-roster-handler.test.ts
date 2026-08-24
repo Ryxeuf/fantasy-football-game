@@ -218,3 +218,90 @@ describe('handleCreateFromRoster — Saison 3 (pas de fuite de slug Saison 2)', 
     ).toBe(false);
   });
 });
+
+describe('handleCreateFromRoster — règlement de tournoi', () => {
+  it('refuse (400) un slug de règlement inconnu', async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'orc',
+        tournamentRuleset: 'ruleset_inconnu',
+      },
+    });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error,
+    ).toMatch(/Règlement de tournoi inconnu/);
+  });
+
+  it("impose le budget d'or du tier et persiste le slug (orc → 1080)", async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'orc',
+        teamValue: 2000,
+        tournamentRuleset: 'naf_world_cup_2027',
+      },
+    });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(201);
+    expect(txCreateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          teamValue: 1080,
+          initialBudget: 1080,
+          tournamentRuleset: 'naf_world_cup_2027',
+        }),
+      }),
+    );
+  });
+
+  it('sans règlement : tournamentRuleset null persisté', async () => {
+    const req = createReq({ body: { name: 'Test', roster: 'orc' } });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(201);
+    expect(txCreateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ tournamentRuleset: null }),
+      }),
+    );
+  });
+
+  it("refuse (400) un Star Player quand le règlement ne l'autorise pas (orc)", async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'orc',
+        starPlayers: ['varag_ghoul_chewer'],
+        tournamentRuleset: 'naf_world_cup_2027',
+      },
+    });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error,
+    ).toMatch(/n'autorise pas les Star Players/);
+  });
+
+  it('refuse (400) un Star Player banni pour un roster étoilé (goblin)', async () => {
+    const req = createReq({
+      body: {
+        name: 'Test',
+        roster: 'goblin',
+        starPlayers: ['ripper_bolgrot'],
+        tournamentRuleset: 'naf_world_cup_2027',
+      },
+    });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(
+      (res as { payload?: { error?: string } }).payload?.error,
+    ).toMatch(/interdit\(s\) par le règlement/);
+  });
+});

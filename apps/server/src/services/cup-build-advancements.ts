@@ -55,6 +55,19 @@ export interface CupBuildAdvancementsResult {
   readonly count: number;
 }
 
+/**
+ * Barème de coût d'un advancement au build : coût en PSP de la N-ième
+ * amélioration (`alreadyTaken` déjà prises) d'un joueur. Par défaut le
+ * barème BB standard (`getNextAdvancementPspCost`) ; un règlement de
+ * tournoi (ex : NAF World Cup) injecte le sien (1re/2e compétence ×
+ * primaire/secondaire + surcoût Elite selon `skillSlug`).
+ */
+export type BuildAdvancementCostFn = (
+  alreadyTaken: number,
+  type: AdvancementType,
+  skillSlug?: string,
+) => number;
+
 function countAdvancements(raw: string | null | undefined): number {
   if (!raw) return 0;
   try {
@@ -74,6 +87,7 @@ export async function applyCupBuildAdvancements(
   teamId: string,
   pool: number,
   advancements: readonly BuildAdvancementInput[],
+  costFn: BuildAdvancementCostFn = getNextAdvancementPspCost,
 ): Promise<CupBuildAdvancementsResult> {
   let remaining = pool;
   let applied = 0;
@@ -91,7 +105,7 @@ export async function applyCupBuildAdvancements(
     }
 
     const taken = countAdvancements(player.advancements);
-    const cost = getNextAdvancementPspCost(taken, adv.type);
+    const cost = costFn(taken, adv.type, adv.skillSlug);
     if (cost > remaining) {
       throw new CupBuildAdvancementError(
         'pool-exceeded',
