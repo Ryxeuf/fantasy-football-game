@@ -1221,7 +1221,40 @@ export default function MatchSheetPage() {
                 title={`Évolutions saisies — ${away?.name ?? "Extérieur"}`}
                 ruleset={away?.ruleset}
               />
-              {myTeamId ? (
+              {isCommissioner ? (
+                <div
+                  className="space-y-3"
+                  data-testid="commissioner-post-advancements"
+                >
+                  <p className="text-sm text-slate-600">
+                    Le match est validé. En tant que commissaire, tu peux
+                    encore appliquer les évolutions en attente des deux
+                    équipes.
+                  </p>
+                  {home?.teamId ? (
+                    <div className="space-y-2">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        {home?.name ?? "Domicile"}
+                      </h3>
+                      <AdvancementEditor
+                        teamId={home.teamId}
+                        emptyLabel="Aucun joueur de cette équipe n'a d'évolution en attente."
+                      />
+                    </div>
+                  ) : null}
+                  {away?.teamId ? (
+                    <div className="space-y-2">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        {away?.name ?? "Extérieur"}
+                      </h3>
+                      <AdvancementEditor
+                        teamId={away.teamId}
+                        emptyLabel="Aucun joueur de cette équipe n'a d'évolution en attente."
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : myTeamId ? (
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
                     Le match est validé. S&apos;il reste des PSP à dépenser,
@@ -1241,6 +1274,44 @@ export default function MatchSheetPage() {
                   </a>
                 </div>
               ) : null}
+            </div>
+          ) : isCommissioner ? (
+            <div className="space-y-3" data-testid="commissioner-advancements">
+              <p className="text-sm text-slate-600">
+                En tant que commissaire, tu peux saisir et corriger les
+                évolutions des <strong>deux équipes</strong> (appliquées aux
+                rosters à ta validation).
+              </p>
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {home?.name ?? "Domicile"}
+                </h3>
+                <SheetAdvancementsEditor
+                  teamId={home?.teamId ?? ""}
+                  ruleset={home?.ruleset ?? "season_3"}
+                  players={home?.players ?? []}
+                  computedSpp={computedSpp}
+                  sppBonus={sppBonusEntries}
+                  staged={stagedHome}
+                  disabled={busy}
+                  onChange={(next) => void saveAdvancements("home", next)}
+                />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {away?.name ?? "Extérieur"}
+                </h3>
+                <SheetAdvancementsEditor
+                  teamId={away?.teamId ?? ""}
+                  ruleset={away?.ruleset ?? "season_3"}
+                  players={away?.players ?? []}
+                  computedSpp={computedSpp}
+                  sppBonus={sppBonusEntries}
+                  staged={stagedAway}
+                  disabled={busy}
+                  onChange={(next) => void saveAdvancements("away", next)}
+                />
+              </div>
             </div>
           ) : myTeamId && mySide ? (
             <div className="space-y-3">
@@ -1266,30 +1337,6 @@ export default function MatchSheetPage() {
                 disabled={mySideSubmitted || busy}
                 onChange={(next) => void saveAdvancements(mySide, next)}
               />
-            </div>
-          ) : isCommissioner ? (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-600">
-                Évolutions saisies par les coachs (appliquées aux rosters à ta
-                validation) :
-              </p>
-              <StagedAdvancementsRecap
-                entries={stagedHome}
-                players={home?.players ?? []}
-                title={`${home?.name ?? "Domicile"}`}
-                ruleset={home?.ruleset}
-              />
-              <StagedAdvancementsRecap
-                entries={stagedAway}
-                players={away?.players ?? []}
-                title={`${away?.name ?? "Extérieur"}`}
-                ruleset={away?.ruleset}
-              />
-              {stagedHome.length === 0 && stagedAway.length === 0 ? (
-                <p className="text-sm italic text-slate-400">
-                  Aucune évolution saisie pour l&apos;instant.
-                </p>
-              ) : null}
             </div>
           ) : (
             <p className="text-sm text-slate-500">

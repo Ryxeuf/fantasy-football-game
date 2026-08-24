@@ -24,6 +24,9 @@ vi.mock("../prisma", () => ({
     leaguePostMatchSequence: { findMany: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
     position: { findMany: vi.fn() },
+    // Bypass commissaire : le createur d'une ligue ou l'equipe est engagee
+    // peut agir sur les evolutions de toutes les equipes.
+    leagueParticipant: { findFirst: vi.fn() },
   },
 }));
 
@@ -94,6 +97,40 @@ describe("handleListPendingAdvancements", () => {
       ruleset: "season_3",
     } as never);
     vi.mocked(prisma.position.findMany).mockResolvedValue([] as never);
+  });
+
+  it("403 pour un utilisateur ni propriétaire ni commissaire", async () => {
+    const req = {
+      user: { id: "stranger" },
+      params: { teamId: "team-1" },
+    } as unknown as AuthenticatedRequest;
+    vi.mocked(prisma.leagueParticipant.findFirst).mockResolvedValue(
+      null as never,
+    );
+    const res = makeRes();
+    await handleListPendingAdvancements(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  it("laisse passer le commissaire d'une ligue où l'équipe est engagée", async () => {
+    const req = {
+      user: { id: "commish" },
+      params: { teamId: "team-1" },
+    } as unknown as AuthenticatedRequest;
+    vi.mocked(prisma.leagueParticipant.findFirst).mockResolvedValue({
+      id: "lp1",
+    } as never);
+    vi.mocked(prisma.leaguePostMatchSequence.findMany).mockResolvedValue(
+      [] as never,
+    );
+    vi.mocked(prisma.teamPlayer.findMany).mockResolvedValue([] as never);
+    const res = makeRes();
+    await handleListPendingAdvancements(req, res as unknown as Response);
+    expect(res.status).not.toHaveBeenCalledWith(403);
+    expect(prisma.leagueParticipant.findFirst).toHaveBeenCalledWith({
+      where: { teamId: "team-1", season: { league: { creatorId: "commish" } } },
+      select: { id: true },
+    });
   });
 
   it("sert les compteurs live, pas le snapshot périmé de la séquence", async () => {
