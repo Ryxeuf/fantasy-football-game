@@ -88,6 +88,7 @@ export default function EditLeaguePage() {
             name: values.name.trim(),
             description: values.description.trim() || null,
             ruleset: values.ruleset,
+            tournamentRuleset: values.tournamentRuleset,
             isPublic: values.isPublic,
             maxParticipants: values.maxParticipants,
             allowedRosters:
@@ -168,6 +169,7 @@ export default function EditLeaguePage() {
           description: league.description ?? "",
           ruleset:
             league.ruleset === "season_2" ? "season_2" : "season_3",
+          tournamentRuleset: league.tournamentRuleset ?? null,
           isPublic: league.isPublic,
           maxParticipants: league.maxParticipants,
           allowedRosters: league.allowedRosters ?? [],

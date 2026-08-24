@@ -699,6 +699,8 @@
     "formNameLabel": "Nom",
     "formDescriptionLabel": "Description (optionnelle)",
     "formRulesetLabel": "Ruleset",
+    "formTournamentRulesetLabel": "Règlement de tournoi",
+    "formTournamentRulesetHint": "Impose aux équipes d'être créées avec ce règlement pour s'inscrire.",
     "formPublicLabel": "Visibilité",
     "formPublicYes": "Publique",
     "formPublicNo": "Privée",

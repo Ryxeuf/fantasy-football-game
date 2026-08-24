@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
+import { getTournamentRuleset } from "@bb/game-engine";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
@@ -314,6 +315,17 @@ export default function LeagueDetailPage() {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
             {rulesetLabels[league.ruleset] ?? league.ruleset}
           </span>
+          {/* Règlement de tournoi imposé aux équipes participantes. */}
+          {league.tournamentRuleset ? (
+            <span
+              data-testid="league-tournament-ruleset-badge"
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
+            >
+              🏆{" "}
+              {getTournamentRuleset(league.tournamentRuleset)?.shortLabel ??
+                league.tournamentRuleset}
+            </span>
+          ) : null}
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
             {league.isPublic
               ? t.leagues.visibilityPublic
@@ -693,6 +705,7 @@ export default function LeagueDetailPage() {
           }}
           seasonId={season.id}
           ruleset={league.ruleset}
+          tournamentRuleset={league.tournamentRuleset ?? null}
           allowedRosters={league.allowedRosters}
           alreadyRegisteredTeamIds={registeredTeamIds}
         />

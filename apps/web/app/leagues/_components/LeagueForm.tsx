@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { INDUCEMENT_CATALOGUE } from "@bb/game-engine";
+import {
+  INDUCEMENT_CATALOGUE,
+  TOURNAMENT_RULESETS,
+  TOURNAMENT_RULESET_SLUGS,
+} from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
 import type { BonusRuleValue } from "./bonus-rules";
 
@@ -24,6 +28,11 @@ export interface LeagueFormValues {
   name: string;
   description: string;
   ruleset: "season_2" | "season_3";
+  /**
+   * Règlement de tournoi imposé aux équipes participantes (slug
+   * @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun (défaut).
+   */
+  tournamentRuleset: string | null;
   isPublic: boolean;
   maxParticipants: number;
   allowedRosters: string[];
@@ -42,6 +51,7 @@ export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
   name: "",
   description: "",
   ruleset: "season_3",
+  tournamentRuleset: null,
   isPublic: true,
   maxParticipants: 16,
   allowedRosters: [],
@@ -112,6 +122,27 @@ export function LeagueForm({
     },
     [],
   );
+
+  // Un règlement de tournoi exige une édition précise (ex : NAF World Cup
+  // 2027 → season_3) : on ne propose que les packs compatibles et on
+  // désélectionne si l'édition change et rend le pack invalide.
+  const tournamentRulesetOptions = useMemo(
+    () =>
+      TOURNAMENT_RULESET_SLUGS.filter(
+        (slug) => TOURNAMENT_RULESETS[slug].edition === form.ruleset,
+      ),
+    [form.ruleset],
+  );
+  useEffect(() => {
+    setForm((prev) => {
+      if (!prev.tournamentRuleset) return prev;
+      const def = TOURNAMENT_RULESETS[prev.tournamentRuleset];
+      if (def && def.edition !== prev.ruleset) {
+        return { ...prev, tournamentRuleset: null };
+      }
+      return prev;
+    });
+  }, [form.ruleset]);
 
   const toggleRoster = useCallback((slug: string) => {
     setForm((prev) => {
@@ -205,6 +236,32 @@ export function LeagueForm({
               <option value="season_3">{t.leagues.rulesetSeason3}</option>
               <option value="season_2">{t.leagues.rulesetSeason2}</option>
             </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">
+              {t.leagues.formTournamentRulesetLabel}
+            </span>
+            <select
+              data-testid="league-form-tournament-ruleset"
+              value={form.tournamentRuleset ?? ""}
+              onChange={(e) =>
+                updateField("tournamentRuleset", e.target.value || null)
+              }
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+            >
+              <option value="">{t.teams.tournamentRulesetNone}</option>
+              {tournamentRulesetOptions.map((slug) => (
+                <option key={slug} value={slug}>
+                  {TOURNAMENT_RULESETS[slug].nameFr}
+                </option>
+              ))}
+            </select>
+            {form.tournamentRuleset ? (
+              <span className="mt-1 block text-xs text-amber-700">
+                {t.leagues.formTournamentRulesetHint}
+              </span>
+            ) : null}
           </label>
 
           <label className="block sm:col-span-2">

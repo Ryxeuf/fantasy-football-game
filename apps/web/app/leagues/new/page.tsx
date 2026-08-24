@@ -39,6 +39,7 @@ export default function NewLeaguePage() {
             name: values.name.trim(),
             description: values.description.trim() || null,
             ruleset: values.ruleset,
+            tournamentRuleset: values.tournamentRuleset,
             isPublic: values.isPublic,
             maxParticipants: values.maxParticipants,
             allowedRosters:

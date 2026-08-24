@@ -6,7 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
-import { getRosterName } from "@bb/game-engine";
+import { getRosterName, getTournamentRuleset } from "@bb/game-engine";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -72,6 +72,8 @@ type Cup = {
   name: string;
   ruleset: string;
   format?: string;
+  /** Règlement de tournoi imposé aux équipes (null = aucun). */
+  tournamentRuleset?: string | null;
   creator: {
     id: string;
     coachName: string;
@@ -133,6 +135,8 @@ type Team = {
   roster: string;
   ruleset: string;
   format?: string;
+  /** Règlement de tournoi de l'équipe (null/absent = aucun). */
+  tournamentRuleset?: string | null;
   createdAt: string;
 };
 
@@ -291,7 +295,9 @@ export default function CupDetailPage() {
   const eligibleTeams = teams.filter(
     (team: Team) =>
       team.ruleset === cup.ruleset &&
-      (team.format ?? "bb11") === (cup.format ?? "bb11"),
+      (team.format ?? "bb11") === (cup.format ?? "bb11") &&
+      // Règlement de tournoi : égalité stricte (même règle que le serveur).
+      (team.tournamentRuleset ?? null) === (cup.tournamentRuleset ?? null),
   );
   // Coupe « ajustée » = elle impose un budget/PSP par tier/roster. Si ajustée,
   // l'inscription d'une équipe existante passe forcément par une adaptation
@@ -348,6 +354,16 @@ export default function CupDetailPage() {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
               {rulesetLabels[cup.ruleset] || cup.ruleset}
             </span>
+            {cup.tournamentRuleset && (
+              <span
+                data-testid="cup-tournament-ruleset-badge"
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
+              >
+                🏆{" "}
+                {getTournamentRuleset(cup.tournamentRuleset)?.shortLabel ??
+                  cup.tournamentRuleset}
+              </span>
+            )}
             {!cup.isPublic && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                 🔒 Privée
