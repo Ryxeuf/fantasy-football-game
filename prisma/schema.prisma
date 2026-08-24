@@ -402,6 +402,13 @@ model Team {
   roster               String // 'skaven' | 'lizardmen'
   ruleset              Ruleset             @default(season_3)
   format               Format              @default(bb11) // Blood Bowl à 11 ou à Sept
+  // Règlement de tournoi choisi à la création (slug du registre
+  // @bb/game-engine `TOURNAMENT_RULESETS`, ex : "naf_world_cup_2027").
+  // Axe orthogonal au ruleset (édition) et au format. null = aucun
+  // règlement (règles standard, comportement historique). Immuable
+  // après création : il conditionne budget d'or, pool de SPP et
+  // restrictions de Star Players imposés au build.
+  tournamentRuleset    String?
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]
@@ -768,6 +775,11 @@ model Cup {
   creatorId   String
   ruleset   Ruleset  @default(season_2)
   format    Format   @default(bb11) // Format imposé aux équipes (BB11 / Sevens)
+  /// Règlement de tournoi imposé aux équipes participantes (slug du registre
+  /// @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun. Une coupe
+  /// avec règlement n'accepte que des équipes créées avec ce même règlement
+  /// et active `resurrectionMode` si le pack est un tournoi résurrection.
+  tournamentRuleset String?
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
   isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
@@ -1186,6 +1198,11 @@ model League {
   creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
   creatorId         String
   ruleset           Ruleset  @default(season_3)
+  // Règlement de tournoi imposé aux équipes participantes (slug du registre
+  // @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun. Une ligue
+  // avec règlement n'accepte à l'inscription (join direct ou invitation)
+  // que des équipes créées avec ce même règlement.
+  tournamentRuleset String?
   // "draft" | "open" | "in_progress" | "completed" | "archived"
   status            String   @default("draft")
   isPublic          Boolean  @default(true)
