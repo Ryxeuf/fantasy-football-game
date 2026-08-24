@@ -6,7 +6,8 @@ import { apiRequest } from "../../lib/api-client";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
-import { getRosterName, getTournamentRuleset } from "@bb/game-engine";
+import { getRosterName } from "@bb/game-engine";
+import { useTournamentRulesets } from "../../hooks/useTournamentRulesets";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -182,6 +183,8 @@ export default function CupDetailPage() {
     season_2: "Saison 2",
     season_3: "Saison 3",
   };
+  // Libellés des règlements de tournoi (API publique, fallback statique).
+  const { label: tournamentRulesetLabel } = useTournamentRulesets();
 
   useEffect(() => {
     if (cupId) {
@@ -360,8 +363,7 @@ export default function CupDetailPage() {
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
               >
                 🏆{" "}
-                {getTournamentRuleset(cup.tournamentRuleset)?.shortLabel ??
-                  cup.tournamentRuleset}
+                {tournamentRulesetLabel(cup.tournamentRuleset)}
               </span>
             )}
             {!cup.isPublic && (

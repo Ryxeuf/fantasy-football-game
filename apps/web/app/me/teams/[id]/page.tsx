@@ -474,7 +474,11 @@ export default function TeamDetailPage() {
                 🏆{" "}
                 {t.teams.tournamentRulesetBadge.replace(
                   "{label}",
-                  getTournamentRuleset(team.tournamentRuleset)?.shortLabel ??
+                  // Label embarqué par GET /team/:id (résolu en base, y
+                  // compris pour un règlement créé en admin) ; fallback
+                  // registre statique puis slug brut.
+                  team.tournamentRulesetLabel ??
+                    getTournamentRuleset(team.tournamentRuleset)?.shortLabel ??
                     team.tournamentRuleset,
                 )}
               </span>

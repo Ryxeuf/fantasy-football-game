@@ -5,12 +5,8 @@ import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
 import { RULESETS } from "@bb/game-engine";
 import PendingCupInvitations from "./PendingCupInvitations";
-import {
-  getRosterName,
-  getTournamentRuleset,
-  TOURNAMENT_RULESETS,
-  TOURNAMENT_RULESET_SLUGS,
-} from "@bb/game-engine";
+import { getRosterName } from "@bb/game-engine";
+import { useTournamentRulesets } from "../hooks/useTournamentRulesets";
 
 type Cup = {
   id: string;
@@ -175,15 +171,25 @@ export default function CupsPage() {
     };
   }, [newCupRuleset]);
 
-  // Désélectionne un règlement de tournoi devenu incompatible avec le
-  // ruleset/format choisis (l'option disparaît du menu, l'état doit suivre).
+  // Règlements de tournoi proposés (API publique — base éditable admin,
+  // fallback registre statique) + désélection d'un règlement devenu
+  // incompatible avec le ruleset/format choisis (l'option disparaît du
+  // menu, l'état doit suivre).
+  const { rulesets: tournamentRulesets, label: tournamentRulesetLabel } =
+    useTournamentRulesets();
   useEffect(() => {
-    if (!newCupTournamentRuleset) return;
-    const def = TOURNAMENT_RULESETS[newCupTournamentRuleset];
-    if (!def || def.edition !== newCupRuleset || def.format !== newCupFormat) {
+    if (!newCupTournamentRuleset || tournamentRulesets.length === 0) return;
+    const summary = tournamentRulesets.find(
+      (r) => r.slug === newCupTournamentRuleset,
+    );
+    if (
+      !summary ||
+      summary.edition !== newCupRuleset ||
+      summary.format !== newCupFormat
+    ) {
       setNewCupTournamentRuleset("");
     }
-  }, [newCupRuleset, newCupFormat, newCupTournamentRuleset]);
+  }, [newCupRuleset, newCupFormat, newCupTournamentRuleset, tournamentRulesets]);
 
   const loadTeams = async () => {
     try {
@@ -460,15 +466,16 @@ export default function CupsPage() {
                 data-testid="cup-tournament-ruleset-select"
               >
                 <option value="">Aucun</option>
-                {TOURNAMENT_RULESET_SLUGS.filter(
-                  (slug) =>
-                    TOURNAMENT_RULESETS[slug].edition === newCupRuleset &&
-                    TOURNAMENT_RULESETS[slug].format === newCupFormat,
-                ).map((slug) => (
-                  <option key={slug} value={slug}>
-                    {TOURNAMENT_RULESETS[slug].nameFr}
-                  </option>
-                ))}
+                {tournamentRulesets
+                  .filter(
+                    (r) =>
+                      r.edition === newCupRuleset && r.format === newCupFormat,
+                  )
+                  .map((r) => (
+                    <option key={r.slug} value={r.slug}>
+                      {r.nameFr}
+                    </option>
+                  ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Impose aux équipes d&apos;être créées avec ce règlement pour
@@ -869,8 +876,7 @@ export default function CupsPage() {
                     {cup.tournamentRuleset && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
                         🏆{" "}
-                        {getTournamentRuleset(cup.tournamentRuleset)
-                          ?.shortLabel ?? cup.tournamentRuleset}
+                        {tournamentRulesetLabel(cup.tournamentRuleset)}
                       </span>
                     )}
                     <span

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
-import { getTournamentRuleset } from "@bb/game-engine";
+import { useTournamentRulesets } from "../../hooks/useTournamentRulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
@@ -179,6 +179,9 @@ export default function LeagueDetailPage() {
     [t.leagues.rulesetSeason2, t.leagues.rulesetSeason3],
   );
 
+  // Libellés des règlements de tournoi (API publique, fallback statique).
+  const { label: tournamentRulesetLabel } = useTournamentRulesets();
+
   const statusLabels = useMemo<Record<string, string>>(
     () => ({
       draft: t.leagues.statusDraft,
@@ -322,8 +325,7 @@ export default function LeagueDetailPage() {
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
             >
               🏆{" "}
-              {getTournamentRuleset(league.tournamentRuleset)?.shortLabel ??
-                league.tournamentRuleset}
+              {tournamentRulesetLabel(league.tournamentRuleset)}
             </span>
           ) : null}
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

@@ -4,11 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
-import {
-  INDUCEMENT_CATALOGUE,
-  TOURNAMENT_RULESETS,
-  TOURNAMENT_RULESET_SLUGS,
-} from "@bb/game-engine";
+import { INDUCEMENT_CATALOGUE } from "@bb/game-engine";
+import { useTournamentRulesets } from "../../hooks/useTournamentRulesets";
 import { BonusRulesEditor } from "./BonusRulesEditor";
 import type { BonusRuleValue } from "./bonus-rules";
 
@@ -123,26 +120,27 @@ export function LeagueForm({
     [],
   );
 
-  // Un règlement de tournoi exige une édition précise (ex : NAF World Cup
-  // 2027 → season_3) : on ne propose que les packs compatibles et on
-  // désélectionne si l'édition change et rend le pack invalide.
+  // Règlements de tournoi proposés (API publique — base éditable admin,
+  // fallback registre statique). Un règlement exige une édition précise :
+  // on ne propose que les packs compatibles et on désélectionne si
+  // l'édition change et rend le pack invalide.
+  const { rulesets: tournamentRulesets } = useTournamentRulesets();
   const tournamentRulesetOptions = useMemo(
-    () =>
-      TOURNAMENT_RULESET_SLUGS.filter(
-        (slug) => TOURNAMENT_RULESETS[slug].edition === form.ruleset,
-      ),
-    [form.ruleset],
+    () => tournamentRulesets.filter((r) => r.edition === form.ruleset),
+    [tournamentRulesets, form.ruleset],
   );
   useEffect(() => {
     setForm((prev) => {
       if (!prev.tournamentRuleset) return prev;
-      const def = TOURNAMENT_RULESETS[prev.tournamentRuleset];
-      if (def && def.edition !== prev.ruleset) {
+      const summary = tournamentRulesets.find(
+        (r) => r.slug === prev.tournamentRuleset,
+      );
+      if (summary && summary.edition !== prev.ruleset) {
         return { ...prev, tournamentRuleset: null };
       }
       return prev;
     });
-  }, [form.ruleset]);
+  }, [form.ruleset, tournamentRulesets]);
 
   const toggleRoster = useCallback((slug: string) => {
     setForm((prev) => {
@@ -251,11 +249,24 @@ export function LeagueForm({
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
             >
               <option value="">{t.teams.tournamentRulesetNone}</option>
-              {tournamentRulesetOptions.map((slug) => (
-                <option key={slug} value={slug}>
-                  {TOURNAMENT_RULESETS[slug].nameFr}
+              {tournamentRulesetOptions.map((summary) => (
+                <option key={summary.slug} value={summary.slug}>
+                  {summary.nameFr}
                 </option>
               ))}
+              {/* Règlement déjà en place mais absent des options (archivé
+                  depuis, ou édition différente en cours de saisie) : option
+                  de secours pour ne pas perdre la valeur en édition. */}
+              {form.tournamentRuleset &&
+                !tournamentRulesetOptions.some(
+                  (s) => s.slug === form.tournamentRuleset,
+                ) && (
+                  <option value={form.tournamentRuleset}>
+                    {tournamentRulesets.find(
+                      (s) => s.slug === form.tournamentRuleset,
+                    )?.nameFr ?? form.tournamentRuleset}
+                  </option>
+                )}
             </select>
             {form.tournamentRuleset ? (
               <span className="mt-1 block text-xs text-amber-700">

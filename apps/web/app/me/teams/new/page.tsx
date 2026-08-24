@@ -13,6 +13,12 @@ import QuantityStepper from "../components/QuantityStepper";
 import BuildAdvancementAllocator, {
   type BuildAdvancement,
 } from "./BuildAdvancementAllocator";
+import {
+  fetchTournamentRulesetDefinition,
+  fetchTournamentRulesetList,
+  type TournamentRulesetDetail,
+  type TournamentRulesetSummary,
+} from "../../../lib/tournament-rulesets";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -30,10 +36,6 @@ import {
   validateFormatSelection,
   defaultStaffConfig,
   type RosterStaffConfig,
-  TOURNAMENT_RULESETS,
-  TOURNAMENT_RULESET_SLUGS,
-  isTournamentRulesetSlug,
-  getTournamentRuleset,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
   validateTournamentSkillPlan,
@@ -183,18 +185,53 @@ export default function NewTeamBuilder() {
   const [tournamentRuleset, setTournamentRuleset] = useState<string | null>(
     () => {
       if (typeof window !== "undefined") {
-        const value = new URLSearchParams(window.location.search).get(
+        // Slug validé plus bas par le fetch de la définition (API, source
+        // base éditable admin) : un slug inconnu est remis à null.
+        return new URLSearchParams(window.location.search).get(
           "tournamentRuleset",
         );
-        if (value && isTournamentRulesetSlug(value)) return value;
       }
       return null;
     },
   );
-  const pack = useMemo(
-    () => getTournamentRuleset(tournamentRuleset),
-    [tournamentRuleset],
-  );
+  // Règlements proposés (API publique, fallback registre statique) +
+  // définition complète du règlement sélectionné.
+  const [tournamentRulesetList, setTournamentRulesetList] = useState<
+    TournamentRulesetSummary[]
+  >([]);
+  const [pack, setPack] = useState<TournamentRulesetDetail | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchTournamentRulesetList().then((list) => {
+      if (!cancelled) setTournamentRulesetList(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tournamentRuleset) {
+      setPack(null);
+      return;
+    }
+    let cancelled = false;
+    fetchTournamentRulesetDefinition(tournamentRuleset).then((def) => {
+      if (cancelled) return;
+      if (!def) {
+        // Slug inconnu (param URL invalide, règlement supprimé…) : retour
+        // aux règles standard.
+        setTournamentRuleset(null);
+        setPack(null);
+        return;
+      }
+      setPack(def);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tournamentRuleset]);
   const packRules = useMemo(
     () => (pack ? getTournamentRosterRules(pack, rosterId) : null),
     [pack, rosterId],
@@ -370,7 +407,8 @@ export default function NewTeamBuilder() {
         // Coupe à règlement de tournoi : le pack est imposé à l'équipe.
         const ct = d.cup.tournamentRuleset;
         setTournamentRuleset(
-          ct && isTournamentRulesetSlug(ct) ? ct : null,
+          // Slug validé par le fetch de la définition (inconnu → remis à null).
+          ct ?? null,
         );
       })
       .catch(() => {
@@ -844,11 +882,22 @@ export default function NewTeamBuilder() {
                 disabled={Boolean(cupId)}
               >
                 <option value="">{t.teams.tournamentRulesetNone}</option>
-                {TOURNAMENT_RULESET_SLUGS.map((slug) => (
-                  <option key={slug} value={slug}>
-                    {TOURNAMENT_RULESETS[slug].nameFr}
+                {tournamentRulesetList.map((summary) => (
+                  <option key={summary.slug} value={summary.slug}>
+                    {summary.nameFr}
                   </option>
                 ))}
+                {/* Règlement imposé (coupe) ou seedé par l'URL mais absent de
+                    la liste chargée : option de secours pour garder la valeur
+                    visible dans le select. */}
+                {tournamentRuleset &&
+                  !tournamentRulesetList.some(
+                    (s) => s.slug === tournamentRuleset,
+                  ) && (
+                    <option value={tournamentRuleset}>
+                      {pack?.nameFr ?? tournamentRuleset}
+                    </option>
+                  )}
               </select>
               {cupId && (
                 <p className="text-xs text-amber-700 mt-1">🔒 Imposé par la coupe</p>
