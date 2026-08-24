@@ -32,6 +32,7 @@ import { resolveRuleset, isValidRuleset } from '../utils/ruleset-helpers';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { parsePagination, buildApiMeta } from '../utils/pagination';
 import { generateTeamName } from '../services/team-name-generator';
+import { getTournamentRulesetLabels } from '../services/tournament-ruleset-repository';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
 import { getTeamsEngagement } from '../services/team-competition-status';
 
@@ -95,7 +96,17 @@ export async function handleListAvailableTeams(
     },
     orderBy: { createdAt: 'desc' },
   });
-  sendSuccess(res, { teams });
+  const labels = await getTournamentRulesetLabels(
+    teams.map((t: { tournamentRuleset: string | null }) => t.tournamentRuleset),
+  );
+  sendSuccess(res, {
+    teams: teams.map((t: { tournamentRuleset: string | null }) => ({
+      ...t,
+      tournamentRulesetLabel: t.tournamentRuleset
+        ? (labels.get(t.tournamentRuleset) ?? t.tournamentRuleset)
+        : null,
+    })),
+  });
 }
 
 /**
@@ -140,13 +151,20 @@ export async function handleListMyTeams(
     prisma.team.count({ where }),
   ]);
   // Engagement compétition par équipe (badge « équipe de coupe / ligue »).
-  // Batché pour éviter le N+1 (cf. CLAUDE.md).
-  const engagement = await getTeamsEngagement(
-    teams.map((t: (typeof teams)[number]) => t.id),
-  );
+  // Batché pour éviter le N+1 (cf. CLAUDE.md). Idem pour les libellés de
+  // règlement de tournoi (DB, fallback registre statique).
+  const [engagement, packLabels] = await Promise.all([
+    getTeamsEngagement(teams.map((t: (typeof teams)[number]) => t.id)),
+    getTournamentRulesetLabels(
+      teams.map((t: (typeof teams)[number]) => t.tournamentRuleset),
+    ),
+  ]);
   const teamsWithEngagement = teams.map((t: (typeof teams)[number]) => ({
     ...t,
     competition: engagement.get(t.id) ?? null,
+    tournamentRulesetLabel: t.tournamentRuleset
+      ? (packLabels.get(t.tournamentRuleset) ?? t.tournamentRuleset)
+      : null,
   }));
   sendSuccess(res, {
     teams: teamsWithEngagement,

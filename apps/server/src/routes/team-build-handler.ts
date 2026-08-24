@@ -39,7 +39,6 @@ import {
   isGameFormat,
   isBigGuy,
   bigGuyLimitForRoster,
-  getTournamentRuleset,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
   tournamentSkillCost,
@@ -55,7 +54,10 @@ import {
 } from '../utils/star-player-validation';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
-import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
+import {
+  getTournamentRulesetRecord,
+  resolveTournamentRulesetSelection,
+} from '../services/tournament-ruleset-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
@@ -132,10 +134,13 @@ export async function handleBuildTeam(
       return;
     }
 
-    // Règlement de tournoi demandé par le coach (null = aucun). Un slug
-    // inconnu est refusé net : le règlement conditionne budget et
-    // restrictions, pas de fallback silencieux.
-    const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+    // Règlement de tournoi demandé par le coach (null = aucun). Résolu en
+    // base (éditable admin) avec fallback registre statique ; un slug
+    // inconnu OU archivé est refusé net : le règlement conditionne budget
+    // et restrictions, pas de fallback silencieux.
+    const parsedPack = await resolveTournamentRulesetSelection(
+      bodyTournamentRuleset,
+    );
     if (!parsedPack.ok) {
       sendError(res, parsedPack.error, 400);
       return;
@@ -225,7 +230,10 @@ export async function handleBuildTeam(
       // avec un règlement (sinon le pack contournerait les budgets de la
       // coupe résolus ci-dessous).
       if (cup.tournamentRuleset) {
-        const cupPack = getTournamentRuleset(cup.tournamentRuleset);
+        // Archivés inclus : une coupe créée avant archivage reste jouable.
+        const cupPack = (
+          await getTournamentRulesetRecord(cup.tournamentRuleset)
+        )?.def;
         if (!cupPack) {
           sendError(res, 'Règlement de tournoi de la coupe inconnu', 400);
           return;

@@ -29,6 +29,7 @@ import { sendError, sendSuccess } from '../utils/api-response';
 import { isGameFormat, type Ruleset } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import { getTournamentRulesetLabel } from '../services/tournament-ruleset-repository';
 import { serverLog } from '../utils/server-log';
 
 /**
@@ -256,11 +257,18 @@ export async function handleGetTeamDetail(
       isGameFormat(team.format) ? team.format : 'bb11',
     );
 
+    // Libellé du règlement de tournoi (DB, fallback registre statique) pour
+    // le badge de la fiche roster — null si l'équipe n'en a pas.
+    const tournamentRulesetLabel = team.tournamentRuleset
+      ? await getTournamentRulesetLabel(team.tournamentRuleset)
+      : null;
+
     sendSuccess(res, {
       team: {
         ...team,
         starPlayers: enrichedStarPlayers,
         staffConfig,
+        tournamentRulesetLabel,
       },
       currentMatch: selection?.match || null,
       localMatchStats,

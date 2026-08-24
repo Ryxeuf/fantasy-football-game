@@ -8,7 +8,7 @@ import {
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
 import { resolveRuleset } from "../utils/ruleset-helpers";
-import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
+import { resolveTournamentRulesetSelection } from "../services/tournament-ruleset-repository";
 import { validate, validateQuery } from "../middleware/validate";
 import {
   createCupSchema,
@@ -675,10 +675,12 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
   const ruleset = resolveRuleset(body.ruleset);
   const format = body.format === "sevens" ? "sevens" : "bb11";
 
-  // Règlement de tournoi imposé aux équipes (null = aucun). Slug inconnu
-  // refusé net ; l'édition et le format de la coupe doivent être ceux
-  // exigés par le pack.
-  const parsedPack = parseTournamentRuleset(body.tournamentRuleset);
+  // Règlement de tournoi imposé aux équipes (null = aucun), résolu en base
+  // (fallback registre statique). Slug inconnu OU archivé refusé net ;
+  // l'édition et le format de la coupe doivent être ceux exigés par le pack.
+  const parsedPack = await resolveTournamentRulesetSelection(
+    body.tournamentRuleset,
+  );
   if (!parsedPack.ok) {
     return res.status(400).json({ error: parsedPack.error });
   }

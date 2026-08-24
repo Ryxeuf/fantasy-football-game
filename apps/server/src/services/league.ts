@@ -15,9 +15,12 @@
  * - Les journees (rounds) sont numerotees a partir de 1.
  */
 
-import { getTournamentRuleset } from "@bb/game-engine";
 import { prisma } from "../prisma";
-import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
+import {
+  getTournamentRulesetLabels,
+  getTournamentRulesetRecord,
+  resolveTournamentRulesetSelection,
+} from "./tournament-ruleset-repository";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
 import { getTeamEngagement } from "./team-competition-status";
 import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
@@ -162,17 +165,18 @@ function ensureValidMaxParticipants(maxParticipants: number): void {
 }
 
 /**
- * Valide le reglement de tournoi d'une ligue : slug connu du registre
- * @bb/game-engine et edition (`ruleset`) de la ligue compatible avec celle
- * exigee par le pack. Retourne le slug a persister (null = aucun reglement).
+ * Valide le reglement de tournoi d'une ligue : slug connu (base, fallback
+ * registre statique), non archive, et edition (`ruleset`) de la ligue
+ * compatible avec celle exigee par le pack. Retourne le slug a persister
+ * (null = aucun reglement).
  */
-function ensureValidTournamentRuleset(
+async function ensureValidTournamentRuleset(
   value: string | null | undefined,
   leagueRuleset: string,
-): string | null {
-  const parsed = parseTournamentRuleset(value);
+): Promise<string | null> {
+  const parsed = await resolveTournamentRulesetSelection(value);
   if (!parsed.ok) {
-    throw new Error("Reglement de tournoi inconnu");
+    throw new Error(parsed.error);
   }
   if (parsed.def && parsed.def.edition !== leagueRuleset) {
     throw new Error(
@@ -186,7 +190,7 @@ export async function createLeague(input: CreateLeagueInput) {
   ensureNonEmptyName(input.name);
   const maxParticipants = input.maxParticipants ?? 16;
   ensureValidMaxParticipants(maxParticipants);
-  const tournamentRuleset = ensureValidTournamentRuleset(
+  const tournamentRuleset = await ensureValidTournamentRuleset(
     input.tournamentRuleset,
     input.ruleset ?? "season_3",
   );
@@ -376,8 +380,11 @@ export async function addParticipant(input: AddParticipantInput) {
   const teamPackSlug =
     (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
   if (leaguePackSlug !== teamPackSlug) {
-    const label = (slug: string): string =>
-      getTournamentRuleset(slug)?.shortLabel ?? slug;
+    const labels = await getTournamentRulesetLabels([
+      leaguePackSlug,
+      teamPackSlug,
+    ]);
+    const label = (slug: string): string => labels.get(slug) ?? slug;
     if (leaguePackSlug) {
       throw new Error(
         `Cette ligue impose le reglement de tournoi ${label(leaguePackSlug)} : l'equipe doit etre creee avec ce reglement`,
@@ -1109,6 +1116,9 @@ export async function updateLeague(
   if (input.ruleset !== undefined) data.ruleset = input.ruleset;
   // Reglement de tournoi : re-valide la coherence slug + edition avec l'etat
   // resultant de la ligue (edition modifiee dans le meme PATCH ou existante).
+  // CONSERVER le reglement deja en place reste permis meme s'il a ete
+  // archive depuis (le formulaire d'edition renvoie le champ inchange) ;
+  // seul le passage A un reglement archive/inconnu est refuse.
   if (input.tournamentRuleset !== undefined || input.ruleset !== undefined) {
     const existing = await prisma.league.findUnique({
       where: { id: leagueId },
@@ -1119,9 +1129,26 @@ export async function updateLeague(
       input.tournamentRuleset !== undefined
         ? input.tournamentRuleset
         : (existing?.tournamentRuleset ?? null);
-    const validated = ensureValidTournamentRuleset(nextSlug, nextRuleset);
-    if (input.tournamentRuleset !== undefined) {
-      data.tournamentRuleset = validated;
+    const keepsExisting =
+      (nextSlug ?? null) === (existing?.tournamentRuleset ?? null);
+    if (nextSlug && keepsExisting) {
+      const record = await getTournamentRulesetRecord(nextSlug);
+      if (record && record.def.edition !== nextRuleset) {
+        throw new Error(
+          `Le reglement ${record.def.shortLabel} requiert l'edition ${record.def.edition}`,
+        );
+      }
+      if (input.tournamentRuleset !== undefined) {
+        data.tournamentRuleset = nextSlug;
+      }
+    } else {
+      const validated = await ensureValidTournamentRuleset(
+        nextSlug,
+        nextRuleset,
+      );
+      if (input.tournamentRuleset !== undefined) {
+        data.tournamentRuleset = validated;
+      }
     }
   }
   if (input.isPublic !== undefined) data.isPublic = input.isPublic;

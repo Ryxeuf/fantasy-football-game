@@ -1208,7 +1208,7 @@ describe("Rule: League tournament ruleset", () => {
           name: "WC League",
           tournamentRuleset: "pack_inconnu",
         }),
-      ).rejects.toThrow(/Reglement de tournoi inconnu/);
+      ).rejects.toThrow(/R[eè]glement de tournoi inconnu/);
       expect(mockedPrisma.league.create).not.toHaveBeenCalled();
     });
 

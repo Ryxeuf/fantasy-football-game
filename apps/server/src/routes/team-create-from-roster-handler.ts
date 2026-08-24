@@ -44,7 +44,7 @@ import {
   calculateStarPlayersCost,
 } from '../utils/star-player-validation';
 import { resolveRuleset } from '../utils/ruleset-helpers';
-import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
+import { resolveTournamentRulesetSelection } from '../services/tournament-ruleset-repository';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
@@ -116,8 +116,11 @@ export async function handleCreateFromRoster(
   const ruleset = resolveRuleset(bodyRuleset) as Ruleset;
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
-  // Règlement de tournoi (null = aucun). Slug inconnu refusé net.
-  const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+  // Règlement de tournoi (null = aucun), résolu en base (fallback registre
+  // statique). Slug inconnu OU archivé refusé net.
+  const parsedPack = await resolveTournamentRulesetSelection(
+    bodyTournamentRuleset,
+  );
   if (!parsedPack.ok) return res.status(400).json({ error: parsedPack.error });
   const pack = parsedPack.def;
 
