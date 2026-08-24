@@ -38,6 +38,7 @@ import {
   type RosterStaffConfig
 } from "@bb/game-engine";
 import { computeStaffSpend } from "../../staff-cost";
+import { buildImportantNotes } from "./important-notes";
 
 // Catalogue de compétences DB-backed (remplace l'ancien import statique
 // SKILLS_DEFINITIONS) : source de vérité unique avec le flux /level-up
@@ -1729,27 +1730,17 @@ export default function TeamEditPage() {
           <span>ℹ️</span>
           Informations importantes
         </div>
-        <div className="text-xs sm:text-sm space-y-2">
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Les statistiques (MA, ST, AG, PA, AV) et les compétences ne peuvent pas être modifiées</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Les numéros de joueurs doivent être uniques et compris entre 1 et 99</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Tous les joueurs doivent avoir un nom</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Vous pouvez ajouter/retirer des joueurs et descendre sous 11 tant que l'équipe n'est pas engagée ; l'équipe est validée (11-16 joueurs, budget) au moment de l'enregistrement</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Chaque position a des limites min/max selon le roster</span>
-          </div>
+        <div className="text-xs sm:text-sm space-y-2" data-testid="edit-important-notes">
+          {buildImportantNotes({
+            minPlayers: constraints.minPlayers,
+            maxPlayers: constraints.maxPlayers,
+            initialBudgetK: team?.initialBudget || 0,
+          }).map((note) => (
+            <div key={note} className="flex items-start gap-2">
+              <span className="text-blue-600">•</span>
+              <span>{note}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
