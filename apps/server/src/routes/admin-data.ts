@@ -17,8 +17,8 @@ import {
   revalidateRosterPages,
   revalidateStarPlayerPages,
 } from "../services/revalidate-web";
-import { invalidateRosterCaches, parseSlugList } from "./public-rosters";
-import { getRegionalRulesForTeam } from "@bb/game-engine";
+import { invalidateRosterCaches } from "./public-rosters";
+import { effectiveRegionalRules } from "../services/roster-regional-rules";
 import { validate, validateQuery } from "../middleware/validate";
 
 /**
@@ -371,31 +371,14 @@ router.delete("/skills/:id", async (req, res) => {
 // =============================================================================
 
 /**
- * Ligues regionales EFFECTIVES d'un roster, telles que le reste de l'app les
- * applique (cf. `resolveRegionalLeagues` cote public) : la valeur en base
- * quand elle est renseignee, sinon le defaut du catalogue game-engine pour
- * ce couple roster/ruleset.
+ * Ligues regionales EFFECTIVES d'un roster (base sinon defaut du catalogue).
  *
- * Sans ce repli, l'admin affichait des cases vides pour la quasi-totalite
- * des rosters : le seed n'ecrit `Roster.regionalRules` que pour les
- * definitions qui le portent (1 seul roster en season_3), toutes les autres
- * restant NULL alors que les pages publiques affichent bien des ligues.
- *
- * `source` dit d'ou vient la liste, pour que l'admin puisse signaler qu'un
- * enregistrement va materialiser le defaut en base.
+ * Implementation partagee dans `services/roster-regional-rules` : la meme
+ * liste sert la fiche publique, la console admin et le choix de Ligue
+ * propose a la creation d'une equipe. Re-exportee ici pour les appelants
+ * historiques.
  */
-export function effectiveRegionalRules(
-  raw: unknown,
-  rosterSlug: string,
-  ruleset: string,
-): { rules: string[]; source: "db" | "roster-defaults" } {
-  const fromDb = parseSlugList(raw);
-  if (fromDb.length > 0) return { rules: fromDb, source: "db" };
-  return {
-    rules: getRegionalRulesForTeam(rosterSlug, ruleset as Ruleset),
-    source: "roster-defaults",
-  };
-}
+export { effectiveRegionalRules };
 
 router.get("/rosters", validateQuery(adminRostersQuerySchema), async (req, res) => {
   try {

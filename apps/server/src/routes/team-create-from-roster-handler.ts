@@ -50,7 +50,10 @@ import {
 } from '../utils/star-player-validation';
 import { resolveRuleset } from '../utils/ruleset-helpers';
 import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
-import { getRosterFromDb } from '../utils/roster-helpers';
+import {
+  getRosterFromDb,
+  type RosterPayload,
+} from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
 
@@ -70,11 +73,11 @@ import { isAllowedTeamRoster } from '../constants/allowed-teams';
  * par defaut errone (50k pour tous), nom = slug brut, stats Saison 2
  * et VE faussee.
  */
-async function resolveLineup(
+function resolveLineup(
   roster: AllowedRoster,
   ruleset: Ruleset,
-): Promise<LineupEntry[]> {
-  const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
+  dbRoster: RosterPayload | null,
+): LineupEntry[] {
   if (dbRoster && dbRoster.positions.length > 0) {
     return buildDefaultLineup(dbRoster.positions);
   }
@@ -155,6 +158,10 @@ export async function handleCreateFromRoster(
     finalTeamValue = packRosterRules.goldBudget;
   }
 
+  // Roster en base, lu UNE fois : il porte à la fois les positions (compo de
+  // départ) et les Ligues déclarées (choix de Ligue régionale ci-dessous).
+  const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
+
   // Ligue régionale de l'équipe : choix du coach (obligatoire dès que le
   // roster a plusieurs Ligues), attribution d'office s'il n'y en a qu'une,
   // ou aucune si le règlement de tournoi neutralise l'axe régional.
@@ -165,6 +172,9 @@ export async function handleCreateFromRoster(
       ruleset,
       pack,
       requested: bodyRegionalLeague,
+      // Ligues DÉCLARÉES par le roster : le choix accepté est exactement
+      // celui que la fiche du roster et le sélecteur affichent.
+      declaredRules: dbRoster?.regionalRules,
     });
   } catch (e: unknown) {
     if (e instanceof RegionalLeagueError) {
@@ -175,7 +185,7 @@ export async function handleCreateFromRoster(
 
   // Composition de départ dérivée des positions réelles du roster pour le
   // ruleset ciblé (DB en priorité, fallback données statiques game-engine).
-  const lineup = await resolveLineup(roster as AllowedRoster, ruleset);
+  const lineup = resolveLineup(roster as AllowedRoster, ruleset, dbRoster);
 
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];

@@ -91,6 +91,46 @@ describe("resolveRegionalLeagueForCreation", () => {
     ).toBeNull();
   });
 
+  it("borne les options aux Ligues déclarées par le roster", () => {
+    // Halflings : la table canonique ouvre 3 Ligues, mais le roster n'en
+    // déclare que 2 → la Classique du Vieux Monde doit être refusée.
+    const declaredRules = ["halfling_thimble_cup", "woodland_league"];
+    expect(
+      resolveRegionalLeagueForCreation({
+        roster: "halfling",
+        ruleset: "season_3",
+        requested: "woodland_league",
+        declaredRules,
+      }),
+    ).toBe("woodland_league");
+
+    try {
+      resolveRegionalLeagueForCreation({
+        roster: "halfling",
+        ruleset: "season_3",
+        requested: "old_world_classic",
+        declaredRules,
+      });
+      throw new Error("aurait dû lever");
+    } catch (e) {
+      expect(e).toBeInstanceOf(RegionalLeagueError);
+      expect((e as RegionalLeagueError).code).toBe("invalid_choice");
+      expect((e as RegionalLeagueError).message).not.toContain(
+        "Classique du Vieux Monde",
+      );
+    }
+  });
+
+  it("attribue d'office la Ligue quand le roster n'en déclare qu'une", () => {
+    expect(
+      resolveRegionalLeagueForCreation({
+        roster: "halfling",
+        ruleset: "season_3",
+        declaredRules: ["halfling_thimble_cup"],
+      }),
+    ).toBe("halfling_thimble_cup");
+  });
+
   it("garde le choix sous un règlement qui ne dit rien", () => {
     const pack = getTournamentRuleset("naf_world_cup_2027");
     expect(() =>

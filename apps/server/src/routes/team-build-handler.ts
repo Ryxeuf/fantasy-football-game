@@ -399,6 +399,9 @@ export async function handleBuildTeam(
         ruleset,
         pack,
         requested: bodyRegionalLeague,
+        // Ligues DÉCLARÉES par le roster : le choix accepté est exactement
+        // celui que la fiche du roster et le sélecteur affichent.
+        declaredRules: def.regionalRules,
       });
     } catch (e: unknown) {
       if (e instanceof RegionalLeagueError) {

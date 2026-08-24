@@ -9,6 +9,7 @@ import {
   type Ruleset,
 } from "@bb/game-engine";
 import { prisma } from "../prisma";
+import { effectiveRegionalRules } from "../services/roster-regional-rules";
 
 /**
  * Résout `Roster.specialRules` (CSV de slugs) en vues localisées
@@ -90,6 +91,14 @@ export interface RosterPayload {
   positions: RosterPosition[];
   /** Règles spéciales d'équipe résolues (vide si aucune). Localisées. */
   specialRules: RosterSpecialRuleView[];
+  /**
+   * Ligues régionales DÉCLARÉES par le roster (`Roster.regionalRules`, repli
+   * sur le catalogue du moteur quand la colonne est vide). Slugs bruts : ce
+   * sont elles qui bornent le choix de Ligue proposé à la création d'une
+   * équipe, pour que le sélecteur n'offre jamais une Ligue absente de la
+   * fiche du roster.
+   */
+  regionalRules: string[];
 }
 
 const singleRosterCache = new Map<string, CacheEntry<RosterPayload>>();
@@ -184,6 +193,11 @@ export async function getRosterFromDb(
       secondarySkills: position.secondarySkills ?? null,
     })),
     specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
+    regionalRules: effectiveRegionalRules(
+      roster.regionalRules,
+      roster.slug,
+      roster.ruleset,
+    ).rules,
   };
 
   cacheSet(singleRosterCache, cacheKey, result);
@@ -250,6 +264,11 @@ export async function getAllRostersFromDb(
         secondarySkills: position.secondarySkills ?? null,
       })),
       specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
+      regionalRules: effectiveRegionalRules(
+        roster.regionalRules,
+        roster.slug,
+        roster.ruleset,
+      ).rules,
     };
   }
   cacheSet(allRostersCache, cacheKey, result);
