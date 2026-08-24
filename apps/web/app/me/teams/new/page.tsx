@@ -30,6 +30,14 @@ import {
   validateFormatSelection,
   defaultStaffConfig,
   type RosterStaffConfig,
+  TOURNAMENT_RULESETS,
+  TOURNAMENT_RULESET_SLUGS,
+  isTournamentRulesetSlug,
+  getTournamentRuleset,
+  getTournamentRosterRules,
+  tournamentStarPlayerSppTax,
+  validateTournamentSkillPlan,
+  maxTwoSkillPlayers,
 } from "@bb/game-engine";
 
 type Position = {
@@ -169,6 +177,67 @@ export default function NewTeamBuilder() {
   const [apothecary, setApothecary] = useState(false);
   const [dedicatedFans, setDedicatedFans] = useState(1);
 
+  // Règlement de tournoi (slug @bb/game-engine, null = aucun — défaut).
+  // Impose édition + format + budget d'or + pool de SPP du tier du roster,
+  // et les restrictions de Star Players du pack (le serveur re-valide tout).
+  const [tournamentRuleset, setTournamentRuleset] = useState<string | null>(
+    () => {
+      if (typeof window !== "undefined") {
+        const value = new URLSearchParams(window.location.search).get(
+          "tournamentRuleset",
+        );
+        if (value && isTournamentRulesetSlug(value)) return value;
+      }
+      return null;
+    },
+  );
+  const pack = useMemo(
+    () => getTournamentRuleset(tournamentRuleset),
+    [tournamentRuleset],
+  );
+  const packRules = useMemo(
+    () => (pack ? getTournamentRosterRules(pack, rosterId) : null),
+    [pack, rosterId],
+  );
+  // Coût total (po) des Star Players sélectionnés, remonté par le sélecteur —
+  // sert à calculer la taxe SPP du règlement.
+  const [selectedStarCost, setSelectedStarCost] = useState(0);
+  const packStarTax = useMemo(
+    () => (pack ? tournamentStarPlayerSppTax(pack, selectedStarCost / 1000) : 0),
+    [pack, selectedStarCost],
+  );
+
+  // Un règlement choisi force l'édition, le format et le mode avancé
+  // (achats de compétences depuis le pool de SPP du pack). En Flow B
+  // (coupe), c'est la coupe qui pilote déjà ces valeurs.
+  useEffect(() => {
+    if (!pack || cupId) return;
+    setRuleset(pack.edition);
+    setFormat(pack.format);
+    setAdvancedMode(true);
+  }, [pack, cupId]);
+
+  // Budget d'or + pool de SPP (net de la taxe Star Players) imposés par le
+  // tier du roster dans le pack.
+  useEffect(() => {
+    if (!pack || cupId || !packRules) return;
+    setTeamValue(packRules.goldBudget);
+    setStartingPspPool(Math.max(0, packRules.sppBudget - packStarTax));
+  }, [pack, cupId, packRules, packStarTax]);
+
+  // Purge les Star Players bannis (ou tous, si le roster n'y a pas droit)
+  // quand un règlement devient actif.
+  useEffect(() => {
+    if (!pack) return;
+    setSelectedStarPlayers((prev) => {
+      if (packRules && !packRules.starPlayersAllowed) {
+        return prev.length > 0 ? [] : prev;
+      }
+      const next = prev.filter((s) => !pack.bannedStarPlayers.includes(s));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [pack, packRules]);
+
   // Contraintes du format (BB11 / Sevens) — pilote budget, nombre de joueurs,
   // non-Linemen, Big Guys, Star Players (source @bb/game-engine).
   const constraints = useMemo(() => getFormatConstraints(format), [format]);
@@ -199,9 +268,10 @@ export default function NewTeamBuilder() {
       formatMountRef.current = false;
       return;
     }
-    // En construction pour une coupe (Flow B), le budget est imposé par la
-    // coupe : ne pas le réinitialiser au budget par défaut du format.
-    if (!cupId) setTeamValue(constraints.startingBudget);
+    // En construction pour une coupe (Flow B) ou sous un règlement de
+    // tournoi, le budget est imposé : ne pas le réinitialiser au budget
+    // par défaut du format.
+    if (!cupId && !pack) setTeamValue(constraints.startingBudget);
     setRerolls((v) => Math.min(v, staff.maxRerolls));
     setCheerleaders((v) => Math.min(v, staff.maxCheerleaders));
     setAssistants((v) => Math.min(v, staff.maxAssistants));
@@ -283,7 +353,12 @@ export default function NewTeamBuilder() {
   useEffect(() => {
     if (!cupId) return;
     apiRequest<{
-      cup: { ruleset?: string; format?: string; rulesConfig?: CupRulesConfig };
+      cup: {
+        ruleset?: string;
+        format?: string;
+        tournamentRuleset?: string | null;
+        rulesConfig?: CupRulesConfig;
+      };
     }>(`/cup/${cupId}`)
       .then((d) => {
         setCupRules(d.cup.rulesConfig ?? null);
@@ -292,6 +367,11 @@ export default function NewTeamBuilder() {
         if (cr && RULESETS.includes(cr as Ruleset)) setRuleset(cr as Ruleset);
         const cf = d.cup.format;
         if (cf && FORMATS.includes(cf as GameFormat)) setFormat(cf as GameFormat);
+        // Coupe à règlement de tournoi : le pack est imposé à l'équipe.
+        const ct = d.cup.tournamentRuleset;
+        setTournamentRuleset(
+          ct && isTournamentRulesetSlug(ct) ? ct : null,
+        );
       })
       .catch(() => {
         /* la coupe reste sans config → build libre */
@@ -459,6 +539,22 @@ export default function NewTeamBuilder() {
     season_3: t.teams.rulesetSeason3 ?? "Saison 3",
   };
 
+  // Plan d'achats de compétences vis-à-vis du règlement de tournoi (quota de
+  // joueurs à 2 compétences selon le cumul du roster). Même logique pure que
+  // la validation serveur.
+  const packPlanValidation = useMemo(() => {
+    if (!pack || !packRules) return { valid: true as const, error: undefined };
+    return validateTournamentSkillPlan(
+      pack,
+      packRules,
+      buildAdvancements.map((a) => ({
+        playerKey: `${a.positionSlug}#${a.ordinal}`,
+        type: a.type,
+        skillSlug: a.skillSlug,
+      })),
+    );
+  }, [pack, packRules, buildAdvancements]);
+
   function change(slug: string, delta: number) {
     setCounts((prev) => {
       const pos = positions.find((p) => p.slug === slug);
@@ -501,6 +597,9 @@ export default function NewTeamBuilder() {
           assistants,
           apothecary,
           dedicatedFans,
+          // Règlement de tournoi : le serveur ré-impose budget + pool et
+          // applique les restrictions du pack.
+          ...(tournamentRuleset ? { tournamentRuleset } : {}),
           // Le serveur refuse les Star Players hors édition avancée / coupe.
           advancedEdition: advancedMode,
           // Mode « édition avancée » / coupe : pool de PSP + améliorations.
@@ -526,7 +625,11 @@ export default function NewTeamBuilder() {
     }
   }
 
-  const isTeamValid = formatValidation.valid && remainingBudget >= 0;
+  const isTeamValid =
+    formatValidation.valid &&
+    remainingBudget >= 0 &&
+    packPlanValidation.valid &&
+    (!pack || Boolean(packRules));
 
   const incLabel = (label: string) =>
     t.teams.increaseLabel.replace("{label}", label);
@@ -664,7 +767,7 @@ export default function NewTeamBuilder() {
                 className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-amber-50 disabled:text-amber-900 disabled:cursor-not-allowed"
                 value={format}
                 onChange={(e) => setFormat(e.target.value as GameFormat)}
-                disabled={Boolean(cupId)}
+                disabled={Boolean(cupId) || Boolean(pack)}
               >
                 {FORMATS.map((value) => (
                   <option key={value} value={value}>
@@ -676,6 +779,11 @@ export default function NewTeamBuilder() {
               </select>
               {cupId && (
                 <p className="text-xs text-amber-700 mt-1">🔒 Imposé par la coupe</p>
+              )}
+              {!cupId && pack && (
+                <p className="text-xs text-amber-700 mt-1">
+                  {t.teams.tournamentRulesetLockedHint}
+                </p>
               )}
             </div>
 
@@ -692,11 +800,53 @@ export default function NewTeamBuilder() {
                 className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-amber-50 disabled:text-amber-900 disabled:cursor-not-allowed"
                 value={ruleset}
                 onChange={(e) => setRuleset(e.target.value as Ruleset)}
-                disabled={Boolean(cupId)}
+                disabled={Boolean(cupId) || Boolean(pack)}
               >
                 {RULESETS.map((value) => (
                   <option key={value} value={value}>
                     {rulesetLabels[value]}
+                  </option>
+                ))}
+              </select>
+              {cupId && (
+                <p className="text-xs text-amber-700 mt-1">🔒 Imposé par la coupe</p>
+              )}
+              {!cupId && pack && (
+                <p className="text-xs text-amber-700 mt-1">
+                  {t.teams.tournamentRulesetLockedHint}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="tournament-ruleset"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                {t.teams.tournamentRulesetLabel}
+              </label>
+              <select
+                id="tournament-ruleset"
+                data-testid="tournament-ruleset-select"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-amber-50 disabled:text-amber-900 disabled:cursor-not-allowed"
+                value={tournamentRuleset ?? ""}
+                onChange={(e) => {
+                  const next = e.target.value || null;
+                  setTournamentRuleset(next);
+                  if (!next) {
+                    // Retour aux règles standard : budget par défaut du
+                    // format, pool remis à zéro (le mode avancé reste au
+                    // choix du coach).
+                    setTeamValue(constraints.startingBudget);
+                    setStartingPspPool(0);
+                  }
+                }}
+                disabled={Boolean(cupId)}
+              >
+                <option value="">{t.teams.tournamentRulesetNone}</option>
+                {TOURNAMENT_RULESET_SLUGS.map((slug) => (
+                  <option key={slug} value={slug}>
+                    {TOURNAMENT_RULESETS[slug].nameFr}
                   </option>
                 ))}
               </select>
@@ -736,13 +886,15 @@ export default function NewTeamBuilder() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.teams.teamValue}
               </label>
-              {cupId ? (
+              {cupId || pack ? (
                 <div
                   className="flex items-center justify-between gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
-                  data-testid="cup-locked-budget"
+                  data-testid={cupId ? "cup-locked-budget" : "pack-locked-budget"}
                 >
                   <span className="text-xs text-amber-800">
-                    🔒 Budget imposé par la coupe
+                    {cupId
+                      ? "🔒 Budget imposé par la coupe"
+                      : t.teams.tournamentRulesetLockedBudget}
                   </span>
                   <span className="text-base font-semibold text-amber-900 tabular-nums">
                     {teamValue}
@@ -798,10 +950,63 @@ export default function NewTeamBuilder() {
               : `Blood Bowl à 11 — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs`}
           </p>
 
+          {/* Règlement de tournoi : règles imposées au roster sélectionné. */}
+          {pack && (
+            <div
+              className="text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1"
+              data-testid="tournament-ruleset-info"
+            >
+              <div className="font-semibold">
+                🏆 {pack.shortLabel} ({pack.version})
+              </div>
+              {packRules ? (
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>
+                    Budget d&apos;or imposé : {packRules.goldBudget}
+                    {t.teams.kpo} · budget de compétences :{" "}
+                    {packRules.sppBudget} SPP
+                    {packStarTax > 0 && (
+                      <>
+                        {" "}
+                        (
+                        {t.teams.tournamentRulesetStarTax.replace(
+                          "{tax}",
+                          String(packStarTax),
+                        )}
+                        )
+                      </>
+                    )}
+                  </li>
+                  <li>
+                    Cumul de compétences :{" "}
+                    {packRules.skillStacking === "none"
+                      ? "1 compétence max par joueur"
+                      : `2 compétences sur ${maxTwoSkillPlayers(packRules.skillStacking)} joueur${maxTwoSkillPlayers(packRules.skillStacking) > 1 ? "s" : ""} max`}
+                  </li>
+                  <li>
+                    Star Players :{" "}
+                    {packRules.starPlayersAllowed
+                      ? "autorisés (hors bannis du règlement)"
+                      : "interdits pour ce roster"}
+                  </li>
+                  <li>
+                    Résurrection : aucun SPP gagné en jeu, blessures non
+                    conservées entre les matchs. Or et SPP non dépensés à la
+                    création perdus.
+                  </li>
+                </ul>
+              ) : (
+                <p className="text-red-700" data-testid="pack-roster-forbidden">
+                  {t.teams.tournamentRulesetRosterForbidden}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Mode « édition avancée » : pool de PSP + améliorations au build.
               Forcé et verrouillé (valeurs de la coupe) en Flow B. */}
           <div className="mt-3">
-            {!cupId && (
+            {!cupId && !pack && (
               <label className="flex items-center gap-2 cursor-pointer mb-2">
                 <input
                   type="checkbox"
@@ -829,12 +1034,23 @@ export default function NewTeamBuilder() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-700">Pool de PSP :</label>
-                  {cupId ? (
+                  {cupId || pack ? (
                     <span
                       className="text-sm font-semibold text-amber-900"
                       data-testid="builder-psp-pool-locked"
                     >
                       🔒 {startingPspPool}
+                      {pack && packStarTax > 0 && (
+                        <span className="font-normal text-amber-700">
+                          {" "}
+                          (
+                          {t.teams.tournamentRulesetStarTax.replace(
+                            "{tax}",
+                            String(packStarTax),
+                          )}
+                          )
+                        </span>
+                      )}
                     </span>
                   ) : (
                     <input
@@ -858,6 +1074,14 @@ export default function NewTeamBuilder() {
                   value={buildAdvancements}
                   onChange={setBuildAdvancements}
                 />
+                {!packPlanValidation.valid && (
+                  <p
+                    className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"
+                    data-testid="pack-skill-plan-error"
+                  >
+                    {packPlanValidation.error}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -1226,7 +1450,16 @@ export default function NewTeamBuilder() {
         {/* Recrutement de Star Players : réservé au mode « Édition avancée »
             (la coupe force ce mode). Hors mode avancé, un hint explique
             comment débloquer la section. */}
+        {pack && packRules && !packRules.starPlayersAllowed && (
+          <p
+            data-testid="pack-star-players-forbidden"
+            className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
+          >
+            {t.teams.tournamentRulesetNoStars}
+          </p>
+        )}
         {constraints.starPlayersAllowed &&
+          !(pack && packRules && !packRules.starPlayersAllowed) &&
           (advancedMode ? (
             <StarPlayerSelector
               roster={rosterId}
@@ -1235,6 +1468,8 @@ export default function NewTeamBuilder() {
               onSelectionChange={setSelectedStarPlayers}
               currentPlayerCount={totalPlayers}
               availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
+              excludedSlugs={pack?.bannedStarPlayers}
+              onSelectedCostChange={setSelectedStarCost}
             />
           ) : (
             <p

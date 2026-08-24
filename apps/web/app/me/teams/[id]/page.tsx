@@ -6,7 +6,12 @@ import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
-import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
+import {
+  getPlayerCost,
+  getDisplayName,
+  getRerollCost,
+  getTournamentRuleset,
+} from "@bb/game-engine";
 import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
 import { formatPlusStat } from "../../../lib/format-stats";
 import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
@@ -459,6 +464,21 @@ export default function TeamDetailPage() {
                 ? (t.teams.formatSevens ?? "Blood Bowl à Sept")
                 : (t.teams.formatBB11 ?? "Blood Bowl à 11")}
             </span>
+            {/* Règlement de tournoi choisi à la création (ex : NAF World
+                Cup 2027). Absent = règles standard, pas de badge. */}
+            {team?.tournamentRuleset && (
+              <span
+                data-testid="team-tournament-ruleset-badge"
+                className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5"
+              >
+                🏆{" "}
+                {t.teams.tournamentRulesetBadge.replace(
+                  "{label}",
+                  getTournamentRuleset(team.tournamentRuleset)?.shortLabel ??
+                    team.tournamentRuleset,
+                )}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">

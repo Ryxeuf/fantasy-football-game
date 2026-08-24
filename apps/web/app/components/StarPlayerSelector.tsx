@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { API_BASE } from "../auth-client";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
 import KeywordChips from "./KeywordChips";
@@ -32,6 +32,16 @@ interface StarPlayerSelectorProps {
   availableBudget: number; // En po (pas en K po)
   disabled?: boolean;
   ruleset?: string;
+  /**
+   * Star Players masqués du sélecteur (ex : bannis par un règlement de
+   * tournoi). Optionnel — sans effet si absent.
+   */
+  excludedSlugs?: readonly string[];
+  /**
+   * Remonte le coût total (po) de la sélection courante à chaque changement
+   * (ex : calcul de la taxe SPP d'un règlement de tournoi). Optionnel.
+   */
+  onSelectedCostChange?: (totalCostPo: number) => void;
 }
 
 // Paires obligatoires de Star Players — source unique : le catalogue
@@ -48,6 +58,8 @@ export default function StarPlayerSelector({
   availableBudget,
   disabled = false,
   ruleset = "season_3",
+  excludedSlugs,
+  onSelectedCostChange,
 }: StarPlayerSelectorProps) {
   const { t, language } = useLanguage();
   const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);
@@ -126,6 +138,26 @@ export default function StarPlayerSelector({
   };
 
   const totalCost = calculateTotalCost();
+
+  // Remonte le coût total de la sélection au parent (ref pour éviter une
+  // boucle d'effet si le callback change d'identité à chaque render).
+  const costCallbackRef = useRef(onSelectedCostChange);
+  costCallbackRef.current = onSelectedCostChange;
+  useEffect(() => {
+    costCallbackRef.current?.(totalCost);
+  }, [totalCost]);
+
+  // Star Players proposés à l'écran : les exclus (ex : bannis par un
+  // règlement de tournoi) sont masqués. La purge de la sélection est à la
+  // charge du parent.
+  const visibleStarPlayers = useMemo(
+    () =>
+      excludedSlugs && excludedSlugs.length > 0
+        ? availableStarPlayers.filter((sp) => !excludedSlugs.includes(sp.slug))
+        : availableStarPlayers,
+    [availableStarPlayers, excludedSlugs],
+  );
+
   const totalPlayers = currentPlayerCount + selectedStarPlayers.length;
   const budgetExceeded = totalCost > availableBudget;
   const playerLimitExceeded = totalPlayers > 16;
@@ -182,7 +214,7 @@ export default function StarPlayerSelector({
     );
   }
 
-  if (availableStarPlayers.length === 0) {
+  if (visibleStarPlayers.length === 0) {
     return (
       <div className="rounded border bg-white p-4">
         <h3 className="font-semibold mb-2">⭐ {t.starPlayers.title}</h3>
@@ -225,7 +257,7 @@ export default function StarPlayerSelector({
       </div>
 
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {availableStarPlayers.map((sp) => {
+        {visibleStarPlayers.map((sp) => {
           const isSelected = selectedStarPlayers.includes(sp.slug);
           const canSelect = canSelectMore(sp);
           const paired = isPaired(sp.slug);
