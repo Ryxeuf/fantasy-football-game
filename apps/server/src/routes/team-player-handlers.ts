@@ -35,6 +35,9 @@ import { updateTeamValues } from '../utils/team-values';
 import {
   type AllowedRoster,
   DEFAULT_RULESET,
+  getFormatConstraints,
+  isGameFormat,
+  type GameFormat,
   type Ruleset,
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
@@ -342,7 +345,8 @@ export { handleUpdatePlayerSkills } from './team-player-skills-handler';
  *
  * Liste les positions disponibles a l'ajout pour cette equipe.
  * Retourne pour chaque position du roster : `currentCount`,
- * `maxCount`, `canAdd` (slot dispo + sous le cap 16 joueurs total).
+ * `maxCount`, `canAdd` (slot dispo + sous le plafond de joueurs du
+ * FORMAT de l'equipe — BB11 16, Sevens 11).
  */
 export async function handleListAvailablePositions(
   req: AuthenticatedRequest,
@@ -371,13 +375,20 @@ export async function handleListAvailablePositions(
       return;
     }
 
+    // Plafond de joueurs du format de l'equipe (BB11 16, Sevens 11) : il
+    // etait ecrit en dur a 16, ce qui laissait le builder proposer des
+    // ajouts qu'un PUT /roster Sevens refusait ensuite.
+    const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+    const maxPlayers = getFormatConstraints(format).maxPlayers;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const availablePositions = rosterData.positions.map((position: any) => {
       const currentCount = team.players.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (p: any) => p.position === position.slug,
       ).length;
-      const canAdd = currentCount < position.max && team.players.length < 16;
+      const canAdd =
+        currentCount < position.max && team.players.length < maxPlayers;
 
       return {
         key: position.slug,
@@ -405,7 +416,7 @@ export async function handleListAvailablePositions(
     sendSuccess(res, {
       availablePositions,
       currentPlayerCount: team.players.length,
-      maxPlayers: 16,
+      maxPlayers,
       frozen,
     });
   } catch (e: unknown) {

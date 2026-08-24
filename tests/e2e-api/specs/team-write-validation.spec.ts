@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { rawPost, rawPut, resetDb } from "../helpers/api";
-import { seedAndLogin } from "../helpers/factories";
+import { createTeam, seedAndLogin } from "../helpers/factories";
 
 /**
  * Spec validations Zod sur les routes mutate de /team/* — O.4 expansion E2E.
@@ -248,14 +248,32 @@ describe("E2E API — /team/* mutate validations Zod", () => {
   });
 
   describe("PUT /team/:id/info (updateTeamInfoSchema)", () => {
-    it("rerolls = 9 -> 400", async () => {
+    // Les plafonds de staff ne sont plus figes dans le schema Zod : ils
+    // dependent du couple roster x format (`RosterStaffConfig`, editable en
+    // admin) et sont donc verifies dans le handler, une fois l'equipe lue.
+    // Zod ne garde qu'un controle de sanite (entier, positif, majorant
+    // absolu) — c'est lui qu'on couvre ici avec un teamId fictif ; le
+    // plafond reel est couvert plus bas sur une vraie equipe.
+    it("rerolls = -1 -> 400 (min 0)", async () => {
       const { token } = await seedAndLogin(
         "alice@tw.test",
         "pwd",
         "Alice",
       );
       const res = await rawPut(`/team/${TEAM_ID}/info`, token, {
-        rerolls: 9,
+        rerolls: -1,
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it("rerolls = 100 -> 400 (majorant de sanite)", async () => {
+      const { token } = await seedAndLogin(
+        "alice@tw.test",
+        "pwd",
+        "Alice",
+      );
+      const res = await rawPut(`/team/${TEAM_ID}/info`, token, {
+        rerolls: 100,
       });
       expect(res.status).toBe(400);
     });
@@ -282,6 +300,24 @@ describe("E2E API — /team/* mutate validations Zod", () => {
         apothecary: "yes",
       });
       expect(res.status).toBe(400);
+    });
+
+    it("rerolls au-dela du plafond du roster -> 400 (handler)", async () => {
+      const { token, userId } = await seedAndLogin(
+        "alice@tw.test",
+        "pwd",
+        "Alice",
+      );
+      const { teamId } = await createTeam(userId, "Les Rats", "skaven");
+
+      // Plafond BB11 = 8 relances : 9 est refuse, 8 passe.
+      const tooMany = await rawPut(`/team/${teamId}/info`, token, {
+        rerolls: 9,
+      });
+      expect(tooMany.status).toBe(400);
+
+      const ok = await rawPut(`/team/${teamId}/info`, token, { rerolls: 8 });
+      expect(ok.status).toBe(200);
     });
   });
 });

@@ -808,6 +808,59 @@ describe("Route: GET /team/:id/available-positions (S25.5s)", () => {
     expect(blitzer?.currentCount).toBe(1);
   });
 
+  it("plafonne le nombre de joueurs sur le format de l'equipe (Sevens)", async () => {
+    // Regression : `maxPlayers` etait fige a 16, donc une equipe Sevens
+    // deja pleine (11) se voyait proposer des ajouts que le PUT /roster
+    // refusait ensuite.
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      format: "sevens",
+      players: Array.from({ length: 11 }, (_, i) => ({
+        id: `p-${i}`,
+        position: "skaven_lineman",
+      })),
+    });
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 600,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_blitzer",
+          displayName: "Blitzer",
+          cost: 90,
+          min: 0,
+          max: 4,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+          skills: "block",
+        },
+      ],
+    });
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailablePositions(req, res);
+
+    const payload = res.payload as {
+      data: {
+        availablePositions: Array<{ key: string; canAdd: boolean }>;
+        maxPlayers: number;
+      };
+    };
+    expect(payload.data.maxPlayers).toBe(11);
+    // Slot libre au poste, mais l'equipe est deja au plafond du format.
+    expect(payload.data.availablePositions[0].canAdd).toBe(false);
+  });
+
   it("returns 500 ApiError when prisma throws", async () => {
     const { findFirst } = await getMocks();
     findFirst.mockRejectedValue(new Error("db down"));

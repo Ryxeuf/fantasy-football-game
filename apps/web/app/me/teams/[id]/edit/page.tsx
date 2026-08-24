@@ -29,9 +29,16 @@ import {
   getPositionCategoryAccess,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
+  defaultStaffConfig,
+  getFormatConstraints,
+  isGameFormat,
   type AdvancementType,
-  type CharacteristicKind
+  type CharacteristicKind,
+  type GameFormat,
+  type RosterStaffConfig
 } from "@bb/game-engine";
+import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
+import { buildImportantNotes } from "./important-notes";
 
 // Catalogue de compétences DB-backed (remplace l'ancien import statique
 // SKILLS_DEFINITIONS) : source de vérité unique avec le flux /level-up
@@ -124,6 +131,9 @@ export default function TeamEditPage() {
   // joueurs applique. Tant qu'il est en brouillon, on peut descendre sous 11
   // pour remanier. Defaut `true` par prudence avant le 1er chargement.
   const [frozen, setFrozen] = useState<boolean>(true);
+  // Staff en cours d'edition remonte par `TeamInfoEditor` : le resume
+  // budgetaire suit les modifications avant meme leur sauvegarde.
+  const [staffDraft, setStaffDraft] = useState<StaffCounts | null>(null);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [newPlayerForm, setNewPlayerForm] = useState({
     position: '',
@@ -449,9 +459,19 @@ export default function TeamEditPage() {
       ? ELITE_SKILL_SURCHARGE
       : 0;
 
+  // Coût d'embauche d'un poste : la valeur du roster EN BASE
+  // (`/team/:id/available-positions`, kpo, éditable en admin) fait foi —
+  // c'est elle que le serveur débite. `getPlayerCost` (données compilées du
+  // moteur) ne sert que de repli tant que la liste n'est pas chargée.
+  const dbCostByPosition = new Map<string, number>(
+    availablePositions.map((p) => [p.key, p.cost * 1000]),
+  );
+  const basePlayerCost = (position: string): number =>
+    dbCostByPosition.get(position) ?? getPlayerCost(position, team?.roster || '');
+
   // Calculer les coûts
   const playersCost = players.reduce((total, player: any) => {
-    const base = getPlayerCost(player.position, team?.roster || '');
+    const base = basePlayerCost(player.position);
     let adv = 0;
     try {
       const a = JSON.parse(player.advancements || '[]');
@@ -462,8 +482,30 @@ export default function TeamEditPage() {
     } catch {}
     return total + base + adv;
   }, 0);
+  // Contraintes du format de l'équipe (BB11 11-16 joueurs, Sevens 7-11) :
+  // le plafond de 16 était écrit en dur et mentait aux équipes Sevens.
+  const teamFormat: GameFormat = isGameFormat(team?.format) ? team.format : 'bb11';
+  const constraints = getFormatConstraints(teamFormat);
+
+  // Config staff résolue par le serveur (roster × format, éditable en admin),
+  // avec repli sur le défaut du moteur pour un serveur pré-correctif.
+  const staffConfig: RosterStaffConfig =
+    (team?.staffConfig as RosterStaffConfig | undefined) ??
+    defaultStaffConfig(team?.roster || '', teamFormat);
+
+  // « Budget dépassé » doit refléter EXACTEMENT la règle que le serveur
+  // applique au PUT /roster : joueurs + staff + Star Players <= budget
+  // initial. Le staff et les Star Players étaient ignorés ici, d'où un
+  // « Restant » qui contredisait le panneau staff juste en dessous.
+  const staffSpend = computeStaffSpend(staffDraft ?? team ?? {}, staffConfig)
+    .total;
+  const starPlayersCost = (team?.starPlayers || []).reduce(
+    (sum: number, sp: any) => sum + (sp?.cost ?? 0),
+    0,
+  );
   const budgetInPo = (team?.initialBudget || 0) * 1000;
-  const remaining = budgetInPo - playersCost;
+  const totalSpent = playersCost + staffSpend + starPlayersCost;
+  const remaining = budgetInPo - totalSpent;
   const isOverBudget = remaining < 0;
 
   // Compteurs LOCAUX par poste (à partir du state `players`) : sert à filtrer
@@ -558,8 +600,18 @@ export default function TeamEditPage() {
           </div>
           <div className="bg-white rounded-lg p-3 sm:p-4 text-center border border-purple-100">
             <div className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Coût actuel</div>
-            <div className="text-xl sm:text-2xl font-bold text-purple-900">
-              {Math.round(playersCost / 1000)}k
+            <div
+              className="text-xl sm:text-2xl font-bold text-purple-900"
+              data-testid="edit-budget-total-spent"
+            >
+              {Math.round(totalSpent / 1000)}k
+            </div>
+            <div className="text-[11px] text-gray-500 mt-1">
+              joueurs {Math.round(playersCost / 1000)}k + staff{" "}
+              {Math.round(staffSpend / 1000)}k
+              {starPlayersCost > 0
+                ? ` + stars ${Math.round(starPlayersCost / 1000)}k`
+                : ""}
             </div>
           </div>
           <div className={`bg-white rounded-lg p-3 sm:p-4 text-center border ${
@@ -570,16 +622,22 @@ export default function TeamEditPage() {
             }`}>
               Restant
             </div>
-            <div className={`text-xl sm:text-2xl font-bold ${
-              isOverBudget ? 'text-red-900' : 'text-green-900'
-            }`}>
+            <div
+              className={`text-xl sm:text-2xl font-bold ${
+                isOverBudget ? 'text-red-900' : 'text-green-900'
+              }`}
+              data-testid="edit-budget-remaining"
+            >
               {Math.round(remaining / 1000)}k
             </div>
           </div>
           <div className="bg-white rounded-lg p-3 sm:p-4 text-center border border-orange-100">
             <div className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Joueurs</div>
-            <div className="text-xl sm:text-2xl font-bold text-orange-900">
-              {players.length}/16
+            <div
+              className="text-xl sm:text-2xl font-bold text-orange-900"
+              data-testid="edit-players-count"
+            >
+              {players.length}/{constraints.maxPlayers}
             </div>
           </div>
         </div>
@@ -636,11 +694,15 @@ export default function TeamEditPage() {
                 setNewPlayerForm({ position: '', name: '', number: nextNumber });
                 setShowAddPlayerForm(true);
               }}
-              disabled={players.length >= 16}
+              disabled={players.length >= constraints.maxPlayers}
               className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
-              title={players.length >= 16 ? "Maximum 16 joueurs par équipe" : "Ajouter un nouveau joueur"}
+              title={
+                players.length >= constraints.maxPlayers
+                  ? `Maximum ${constraints.maxPlayers} joueurs par équipe`
+                  : "Ajouter un nouveau joueur"
+              }
             >
-              ➕ Ajouter un joueur ({players.length}/16)
+              ➕ Ajouter un joueur ({players.length}/{constraints.maxPlayers})
             </button>
           </div>
         </div>
@@ -666,7 +728,7 @@ export default function TeamEditPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {players.sort((a, b) => a.number - b.number).map((player, index) => {
-                const base = getPlayerCost(player.position, team?.roster || '');
+                const base = basePlayerCost(player.position);
                 let adv = 0;
                 try {
                   const a = JSON.parse((player as any).advancements || '[]');
@@ -765,7 +827,7 @@ export default function TeamEditPage() {
         {/* Version Mobile/Tablet : Cartes */}
         <div className="lg:hidden p-4 sm:p-6 space-y-4">
           {players.sort((a, b) => a.number - b.number).map((player, index) => {
-            const base = getPlayerCost(player.position, team?.roster || '');
+            const base = basePlayerCost(player.position);
             let adv = 0;
             try {
               const a = JSON.parse((player as any).advancements || '[]');
@@ -1635,16 +1697,15 @@ export default function TeamEditPage() {
             roster: team.roster,
           }}
           roster={team.roster}
-          staffConfig={team.staffConfig}
+          format={team.format}
+          staffConfig={staffConfig}
+          onDraftChange={setStaffDraft}
           initialBudgetK={team.initialBudget || 0}
-          playersCost={(team.players || []).reduce((total: number, player: any) => {
-            const base = getPlayerCost(player.position, team.roster);
-            let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
-              const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-              return s + eliteExtraPo(x) + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary));
-            }, 0); } catch {}
-            return total + base + adv;
-          }, 0)}
+          // Mêmes montants que le « Résumé budgétaire » ci-dessus (état
+          // local, Star Players inclus) : les deux blocs ne peuvent plus
+          // afficher un budget restant différent.
+          playersCost={playersCost}
+          starPlayersCost={starPlayersCost}
           onUpdate={(info) => {
             setData((prev: any) => ({
               ...prev,
@@ -1674,27 +1735,17 @@ export default function TeamEditPage() {
           <span>ℹ️</span>
           Informations importantes
         </div>
-        <div className="text-xs sm:text-sm space-y-2">
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Les statistiques (MA, ST, AG, PA, AV) et les compétences ne peuvent pas être modifiées</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Les numéros de joueurs doivent être uniques et compris entre 1 et 99</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Tous les joueurs doivent avoir un nom</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Vous pouvez ajouter/retirer des joueurs et descendre sous 11 tant que l'équipe n'est pas engagée ; l'équipe est validée (11-16 joueurs, budget) au moment de l'enregistrement</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-blue-600">•</span>
-            <span>Chaque position a des limites min/max selon le roster</span>
-          </div>
+        <div className="text-xs sm:text-sm space-y-2" data-testid="edit-important-notes">
+          {buildImportantNotes({
+            minPlayers: constraints.minPlayers,
+            maxPlayers: constraints.maxPlayers,
+            initialBudgetK: team?.initialBudget || 0,
+          }).map((note) => (
+            <div key={note} className="flex items-start gap-2">
+              <span className="text-blue-600">•</span>
+              <span>{note}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,8 +1,16 @@
 "use client";
-import { useMemo, useState } from "react";
-import { API_BASE } from "../../../auth-client";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../../lib/api-client";
-import { getRerollCost, type RosterStaffConfig } from "@bb/game-engine";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import QuantityStepper from "./QuantityStepper";
+import StaffRow from "./StaffRow";
+import { computeStaffSpend } from "../staff-cost";
+import {
+  defaultStaffConfig,
+  isGameFormat,
+  type GameFormat,
+  type RosterStaffConfig,
+} from "@bb/game-engine";
 
 interface TeamInfo {
   rerolls: number;
@@ -17,45 +25,118 @@ interface TeamInfoEditorProps {
   teamId: string;
   initialInfo: TeamInfo;
   onUpdate: (info: TeamInfo) => void;
+  /**
+   * Staff en cours d'edition (non encore sauvegarde). Permet au resume
+   * budgetaire de la page hote de suivre les modifications en direct plutot
+   * que d'afficher un montant qui contredit ce panneau.
+   */
+  onDraftChange?: (info: TeamInfo) => void;
   disabled?: boolean;
   roster?: string;
-  initialBudgetK?: number; // en milliers (k po)
-  playersCost?: number; // en po
+  /** Format de l'équipe (bb11 / sevens) — pilote le fallback de config. */
+  format?: string | null;
+  /** Budget de construction de l'équipe, en kpo (`Team.initialBudget`). */
+  initialBudgetK?: number;
+  /** Coût des joueurs engagés, en po. */
+  playersCost?: number;
+  /** Coût des Star Players recrutés, en po. */
+  starPlayersCost?: number;
   /** Config staff résolue (DB par roster × format). Coûts en po. */
   staffConfig?: RosterStaffConfig;
+}
+
+/** po → « 60k po » (affichage compact, aligné sur le builder de création). */
+function kpo(valuePo: number, suffix: string): string {
+  return `${Math.round(valuePo / 1000).toLocaleString("fr-FR")}${suffix}`;
 }
 
 export default function TeamInfoEditor({
   teamId,
   initialInfo,
   onUpdate,
+  onDraftChange,
   disabled = false,
   roster,
+  format,
   initialBudgetK = 0,
   playersCost = 0,
+  starPlayersCost = 0,
   staffConfig,
 }: TeamInfoEditorProps) {
+  const { t } = useLanguage();
   const [info, setInfo] = useState<TeamInfo>(initialInfo);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Coûts staff : config DB résolue si fournie, sinon défauts historiques.
-  const rerollCost = staffConfig?.rerollCost ?? getRerollCost((info.roster || roster || ''));
   const [success, setSuccess] = useState(false);
 
-  // Calculs en temps réel
-  const { staffCost, rerollsCost, fansCost, rosterTotal, treasury } = useMemo(() => {
-    const rerolls = (info.rerolls || 0) * rerollCost;
-    const cheer = (info.cheerleaders || 0) * (staffConfig?.cheerleaderCost ?? 10000);
-    const assistants = (info.assistants || 0) * (staffConfig?.assistantCost ?? 10000);
-    const apo = info.apothecary ? (staffConfig?.apothecaryCost ?? 50000) : 0;
-    const fansCount = typeof info.dedicatedFans === 'number' ? info.dedicatedFans : 1;
-    const fans = Math.max(0, fansCount - 1) * (staffConfig?.dedicatedFanCost ?? 5000);
-    const staff = rerolls + cheer + assistants + apo + fans;
-    const total = (playersCost || 0) + staff;
-    const treasuryPo = (initialBudgetK || 0) * 1000 - total;
-    return { staffCost: staff, rerollsCost: rerolls, fansCost: fans, rosterTotal: total, treasury: treasuryPo };
-  }, [info, rerollCost, playersCost, initialBudgetK, staffConfig]);
+  // Callback stockee dans une ref : la page hote passe une lambda inline,
+  // la mettre en dependance d'effet relancerait l'effet a chaque rendu.
+  const onDraftChangeRef = useRef(onDraftChange);
+  useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  }, [onDraftChange]);
+
+  // Config staff : ligne DB résolue par le serveur (roster × format) si
+  // fournie, sinon défaut dérivé du package pur pour le même couple. Plus
+  // aucune constante de coût ni de plafond n'est écrite en dur ici : les
+  // valeurs Sevens (relances ×2, staff 20k, apothicaire 80k) et les rosters
+  // sans apothicaire sont donc respectés comme à la création.
+  const staff = useMemo<RosterStaffConfig>(() => {
+    if (staffConfig) return staffConfig;
+    const fmt: GameFormat = isGameFormat(format) ? format : "bb11";
+    return defaultStaffConfig(info.roster || roster || "", fmt);
+  }, [staffConfig, format, info.roster, roster]);
+
+  // Réaligne les valeurs sur les plafonds de la config (roster/format changé,
+  // ou équipe historique au-delà d'un plafond depuis resserré).
+  useEffect(() => {
+    setInfo((prev) => {
+      const next: TeamInfo = {
+        ...prev,
+        rerolls: Math.min(Math.max(0, prev.rerolls || 0), staff.maxRerolls),
+        cheerleaders: Math.min(
+          Math.max(0, prev.cheerleaders || 0),
+          staff.maxCheerleaders,
+        ),
+        assistants: Math.min(
+          Math.max(0, prev.assistants || 0),
+          staff.maxAssistants,
+        ),
+        dedicatedFans: Math.min(
+          Math.max(1, prev.dedicatedFans || 1),
+          staff.maxDedicatedFans,
+        ),
+        apothecary: staff.apothecaryAllowed ? prev.apothecary : false,
+      };
+      const unchanged =
+        next.rerolls === prev.rerolls &&
+        next.cheerleaders === prev.cheerleaders &&
+        next.assistants === prev.assistants &&
+        next.dedicatedFans === prev.dedicatedFans &&
+        next.apothecary === prev.apothecary;
+      return unchanged ? prev : next;
+    });
+  }, [staff]);
+
+  // Calculs en temps réel (po).
+  const { staffCost, remaining } = useMemo(() => {
+    const total = computeStaffSpend(info, staff).total;
+
+    // Même base que le résumé budgétaire de la page d'édition : budget de
+    // construction moins les joueurs et Star Players engagés. C'est la règle
+    // que le serveur applique au PUT /roster.
+    const budget = (initialBudgetK || 0) * 1000;
+    const engaged = (playersCost || 0) + (starPlayersCost || 0);
+
+    return { staffCost: total, remaining: budget - engaged - total };
+  }, [info, staff, initialBudgetK, playersCost, starPlayersCost]);
+
+  const displayedPlayersCost = (playersCost || 0) + (starPlayersCost || 0);
+
+  // Remonte l'etat courant du staff a la page hote (resume budgetaire).
+  useEffect(() => {
+    onDraftChangeRef.current?.(info);
+  }, [info]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -71,40 +152,80 @@ export default function TeamInfoEditor({
       onUpdate(info);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (e: any) {
-      setError(e.message || "Erreur lors de la sauvegarde");
+    } catch (e: unknown) {
+      setError(
+        (e as { message?: string })?.message || "Erreur lors de la sauvegarde",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const updateInfo = (field: keyof TeamInfo, value: number | boolean) => {
-    setInfo(prev => ({ ...prev, [field]: value }));
+    setInfo((prev) => ({ ...prev, [field]: value }));
   };
+
+  const unit = t.teams.kpo;
+  const decLabel = (label: string) => `${label} −`;
+  const incLabel = (label: string) => `${label} +`;
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-      <div className="bg-gray-50 px-6 py-3 border-b">
-        <h3 className="text-lg font-semibold">Staff de l&apos;équipe</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Configurez les ressources de votre équipe selon les règles Blood Bowl
-        </p>
+      <div className="bg-gray-50 px-6 py-3 border-b flex items-baseline justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">{t.teams.teamStaff}</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Configurez les ressources de votre équipe selon les règles Blood
+            Bowl
+          </p>
+        </div>
+        <span
+          className="text-sm text-gray-600 tabular-nums whitespace-nowrap"
+          data-testid="staff-cost"
+        >
+          {t.teams.staffCost} : {kpo(staffCost, unit)}
+        </span>
       </div>
 
       <div className="p-6 space-y-6">
         {/* Récap en temps réel */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div className="text-sm text-purple-700 font-medium">Coût joueurs</div>
-            <div className="text-2xl font-bold text-purple-900">{Math.round((playersCost || 0)/1000)}k po</div>
+            <div className="text-sm text-purple-700 font-medium">
+              {t.teams.playersCost}
+            </div>
+            <div
+              className="text-2xl font-bold text-purple-900"
+              data-testid="staff-players-cost"
+            >
+              {kpo(displayedPlayersCost, unit)}
+            </div>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-sm text-blue-700 font-medium">VE (valeur d'équipe)</div>
-            <div className="text-2xl font-bold text-blue-900">{Math.round(rosterTotal/1000)}k po</div>
+            <div className="text-sm text-blue-700 font-medium">
+              {t.teams.staffCost}
+            </div>
+            <div
+              className="text-2xl font-bold text-blue-900"
+              data-testid="staff-total-cost"
+            >
+              {kpo(staffCost, unit)}
+            </div>
           </div>
-          <div className={`text-center p-4 rounded-lg border ${treasury >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}> 
-            <div className={`text-sm font-medium ${treasury >= 0 ? 'text-green-700' : 'text-red-700'}`}>Trésorerie restante</div>
-            <div className={`text-2xl font-bold ${treasury >= 0 ? 'text-green-900' : 'text-red-900'}`}>{Math.round(treasury/1000)}k po</div>
+          <div
+            className={`text-center p-4 rounded-lg border ${remaining >= 0 ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+          >
+            <div
+              className={`text-sm font-medium ${remaining >= 0 ? "text-green-700" : "text-red-700"}`}
+            >
+              {t.teams.remainingBudget}
+            </div>
+            <div
+              className={`text-2xl font-bold ${remaining >= 0 ? "text-green-900" : "text-red-900"}`}
+              data-testid="staff-remaining-budget"
+            >
+              {kpo(remaining, unit)}
+            </div>
           </div>
         </div>
 
@@ -120,104 +241,136 @@ export default function TeamInfoEditor({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Relances */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Relances (0-8)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="8"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <StaffRow
+            label={t.teams.rerolls}
+            unitCost={`${kpo(staff.rerollCost, unit)} · max ${staff.maxRerolls}`}
+            testId="staff-rerolls"
+          >
+            <QuantityStepper
               value={info.rerolls}
-              onChange={(e) => updateInfo("rerolls", parseInt(e.target.value) || 0)}
+              min={0}
+              max={staff.maxRerolls}
+              onChange={(v) => updateInfo("rerolls", v)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              label={t.teams.rerolls}
+              decrementAriaLabel={decLabel(t.teams.rerolls)}
+              incrementAriaLabel={incLabel(t.teams.rerolls)}
+              decrementTestId="staff-rerolls-dec"
+              incrementTestId="staff-rerolls-inc"
+              valueTestId="staff-rerolls-value"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Nombre de relances d'équipe disponibles
-            </p>
-          </div>
+          </StaffRow>
 
-          {/* Cheerleaders */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cheerleaders (0-12)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="12"
+          <StaffRow
+            label={t.teams.cheerleaders}
+            unitCost={`${kpo(staff.cheerleaderCost, unit)} · max ${staff.maxCheerleaders}`}
+            testId="staff-cheerleaders"
+          >
+            <QuantityStepper
               value={info.cheerleaders}
-              onChange={(e) => updateInfo("cheerleaders", parseInt(e.target.value) || 0)}
+              min={0}
+              max={staff.maxCheerleaders}
+              onChange={(v) => updateInfo("cheerleaders", v)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              label={t.teams.cheerleaders}
+              decrementAriaLabel={decLabel(t.teams.cheerleaders)}
+              incrementAriaLabel={incLabel(t.teams.cheerleaders)}
+              decrementTestId="staff-cheerleaders-dec"
+              incrementTestId="staff-cheerleaders-inc"
+              valueTestId="staff-cheerleaders-value"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              10k po chacune, max 12
-            </p>
-          </div>
+          </StaffRow>
 
-          {/* Assistants */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assistants (0-6)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="6"
+          <StaffRow
+            label={t.teams.assistants}
+            unitCost={`${kpo(staff.assistantCost, unit)} · max ${staff.maxAssistants}`}
+            testId="staff-assistants"
+          >
+            <QuantityStepper
               value={info.assistants}
-              onChange={(e) => updateInfo("assistants", parseInt(e.target.value) || 0)}
+              min={0}
+              max={staff.maxAssistants}
+              onChange={(v) => updateInfo("assistants", v)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              label={t.teams.assistants}
+              decrementAriaLabel={decLabel(t.teams.assistants)}
+              incrementAriaLabel={incLabel(t.teams.assistants)}
+              decrementTestId="staff-assistants-dec"
+              incrementTestId="staff-assistants-inc"
+              valueTestId="staff-assistants-value"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              10k po chacun, max 6
-            </p>
-          </div>
+          </StaffRow>
 
-          {/* Apothicaire */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Apothicaire
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={info.apothecary}
-                onChange={(e) => updateInfo("apothecary", e.target.checked)}
-                disabled={disabled}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:bg-gray-100"
-              />
-              <span className="text-sm text-gray-700">
-                Présent
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              50k po, max 1 par équipe
-            </p>
-          </div>
-
-          {/* Fans Dévoués */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fans Dévoués (1-6)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="6"
+          <StaffRow
+            label={t.teams.dedicatedFans}
+            unitCost={`${kpo(staff.dedicatedFanCost, unit)} · 1 à ${staff.maxDedicatedFans} (le 1er est offert)`}
+            testId="staff-dedicated-fans"
+          >
+            <QuantityStepper
               value={info.dedicatedFans}
-              onChange={(e) => updateInfo("dedicatedFans", parseInt(e.target.value) || 1)}
+              min={1}
+              max={staff.maxDedicatedFans}
+              onChange={(v) => updateInfo("dedicatedFans", v)}
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              label={t.teams.dedicatedFans}
+              decrementAriaLabel={decLabel(t.teams.dedicatedFans)}
+              incrementAriaLabel={incLabel(t.teams.dedicatedFans)}
+              decrementTestId="staff-dedicated-fans-dec"
+              incrementTestId="staff-dedicated-fans-inc"
+              valueTestId="staff-dedicated-fans-value"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              10k po chacun au-dessus du premier (gratuit)
-            </p>
-          </div>
+          </StaffRow>
+
+          <label
+            htmlFor="staff-apothecary-input"
+            className={`sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 transition-colors ${
+              staff.apothecaryAllowed && !disabled
+                ? "cursor-pointer hover:bg-gray-100"
+                : "opacity-50 cursor-not-allowed"
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="font-medium text-gray-900">
+                {t.teams.apothecary}
+              </div>
+              <div className="text-xs text-gray-600">
+                {kpo(staff.apothecaryCost, unit)} · {t.teams.apothecaryHelp}
+              </div>
+              {!staff.apothecaryAllowed && (
+                <div
+                  data-testid="apothecary-forbidden-roster"
+                  className="text-xs text-red-600 mt-1"
+                >
+                  Indisponible pour cette équipe
+                </div>
+              )}
+            </div>
+            <input
+              id="staff-apothecary-input"
+              data-testid="staff-apothecary"
+              type="checkbox"
+              role="switch"
+              aria-checked={info.apothecary}
+              aria-label={t.teams.apothecary}
+              disabled={disabled || !staff.apothecaryAllowed}
+              className="sr-only peer"
+              checked={info.apothecary}
+              onChange={(e) => updateInfo("apothecary", e.target.checked)}
+            />
+            <span
+              aria-hidden="true"
+              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 ${
+                info.apothecary ? "bg-emerald-600" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  info.apothecary ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </span>
+          </label>
         </div>
 
         {/* Bouton de sauvegarde */}
@@ -225,26 +378,43 @@ export default function TeamInfoEditor({
           <button
             onClick={handleSave}
             disabled={disabled || loading}
+            data-testid="staff-save"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? "Sauvegarde..." : "Sauvegarder"}
           </button>
         </div>
 
-        {/* Informations sur les coûts */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
+        {/* Informations sur les coûts — dérivées de la config du roster. */}
+        <div
+          className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded"
+          data-testid="staff-cost-info"
+        >
           <div className="font-semibold">ℹ️ Informations sur les coûts</div>
-          <div className="text-sm mt-1">
-            • Relances : {rerollCost.toLocaleString()} po chacune (coût variable selon l'équipe)
-            <br />
-            • Cheerleaders : 10k po chacune (max 12)
-            <br />
-            • Assistants : 10k po chacun (max 6)
-            <br />
-            • Apothicaire : 50k po (max 1)
-            <br />
-            • Fans Dévoués : 10k po chacun au-dessus du premier (gratuit)
-          </div>
+          <ul className="text-sm mt-1 space-y-0.5 list-disc list-inside">
+            <li>
+              Relances : {staff.rerollCost.toLocaleString("fr-FR")} po chacune
+              (max {staff.maxRerolls})
+            </li>
+            <li>
+              Cheerleaders : {staff.cheerleaderCost.toLocaleString("fr-FR")} po
+              chacune (max {staff.maxCheerleaders})
+            </li>
+            <li>
+              Assistants : {staff.assistantCost.toLocaleString("fr-FR")} po
+              chacun (max {staff.maxAssistants})
+            </li>
+            <li>
+              Apothicaire :{" "}
+              {staff.apothecaryAllowed
+                ? `${staff.apothecaryCost.toLocaleString("fr-FR")} po (max 1)`
+                : "indisponible pour ce roster"}
+            </li>
+            <li>
+              Fans dévoués : {staff.dedicatedFanCost.toLocaleString("fr-FR")} po
+              chacun au-dessus du premier (offert), max {staff.maxDedicatedFans}
+            </li>
+          </ul>
         </div>
       </div>
     </div>
