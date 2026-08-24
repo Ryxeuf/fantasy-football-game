@@ -1,3 +1,10 @@
+## [1.235.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.234.0...v1.235.0) (2026-08-24)
+
+
+### ✨ Features
+
+* **league:** qualification par poule et contrôle du lancement des playoffs ([#971](https://github.com/Ryxeuf/fantasy-football-game/issues/971)) ([1f2b9da](https://github.com/Ryxeuf/fantasy-football-game/commit/1f2b9da6458150adee12f4da3d04a313804d3ced))
+
 ## [1.234.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.233.0...v1.234.0) (2026-08-20)
 
 
