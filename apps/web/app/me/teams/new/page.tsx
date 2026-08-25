@@ -1156,7 +1156,7 @@ export default function NewTeamBuilder() {
 
             {(advancedMode || cupId) && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <label className="text-sm text-gray-700">Pool de PSP :</label>
                   {cupId || pack ? (
                     <span
@@ -1197,6 +1197,11 @@ export default function NewTeamBuilder() {
                   pool={startingPspPool}
                   value={buildAdvancements}
                   onChange={setBuildAdvancements}
+                  // Le règlement de tournoi impose son barème PSP (1re/2e
+                  // compétence, surcoût Élite) et son quota de joueurs
+                  // autorisés à cumuler 2 compétences.
+                  pack={pack}
+                  packRules={packRules}
                 />
                 {!packPlanValidation.valid && (
                   <p

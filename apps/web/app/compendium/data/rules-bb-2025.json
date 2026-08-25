@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-08-24a",
+    "version": "2026-08-25a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -1878,7 +1878,7 @@
     {
       "slug": "equipes-ligues-regles-speciales",
       "title": "Équipes, ligues & règles spéciales",
-      "summary": "Fiches d'équipe, liste des ligues d'équipes et règles spéciales d'équipe (Bagarreurs Brutaux, Chantage et Corruption, Favori de…).",
+      "summary": "Fiches d'équipe, liste des dix Ligues d'équipes et les sept règles spéciales d'équipe (Bagarreurs Brutaux, Capitaine, Chantage et Corruption, Déferlement, Favori de…, Maîtres de la Non-vie, Trois-quarts à vil prix).",
       "sourcePages": [
         "page-22",
         "page-23",
@@ -1930,7 +1930,7 @@
             "**Bagarre des Terres Arides** : ligue privilégiant la violence au détriment des touchdowns, accueillant surtout des équipes de Peaux-vertes et d'Ogres.",
             "**Clash du Chaos** : ligue regroupant les équipes vouées à un ou plusieurs Dieux du Chaos.",
             "**Ligue des Royaumes Elfiques** : ligue axée sur un jeu technique et un style de passe soigné.",
-            "**Coupe De À Coudre Halfling** : ligue rassemblant des équipes de Halflings et de gnomes.",
+            "**Coupe Dé à Coudre Halfling** : ligue rassemblant des équipes de Halflings et de gnomes.",
             "**Super-ligue de Lustrie** : la plus ancienne compétition connue, à l'origine réservée aux Hommes-lézards, désormais ouverte à d'autres peuples de la jungle.",
             "**Classique du Vieux Monde** : ligue structurée du Vieux Monde, parmi les plus influentes.",
             "**Spot de Sylvanie** : ligue regroupant la plupart des équipes de morts-vivants.",
@@ -1972,11 +1972,39 @@
         {
           "type": "heading",
           "level": 3,
+          "text": "Capitaine"
+        },
+        {
+          "type": "paragraph",
+          "text": "À la création de la Liste d'Équipe, une équipe dotée de cette règle désigne un de ses joueurs de départ — jamais un Gros Bras — comme **Capitaine**. Il gagne aussitôt la compétence **Pro**, sans que son coût augmente."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Tant que le Capitaine est sur le terrain, chaque Relance d'Équipe utilisée s'accompagne d'un D6 : sur un **6** naturel, la relance est rendue.",
+            "Le Capitaine doit être aligné dès que c'est possible.",
+            "Il ne peut être renvoyé qu'après une blessure ayant réduit une de ses caractéristiques.",
+            "S'il meurt, un nouveau Capitaine est désigné après le match."
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 3,
           "text": "Chantage et Corruption"
         },
         {
           "type": "paragraph",
           "text": "Une fois par match, lorsqu'une équipe disposant de cette règle obtient un **1** sur le jet pour Contester la Décision, elle peut relancer ce D6."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Déferlement"
+        },
+        {
+          "type": "paragraph",
+          "text": "Les arbitres ferment les yeux sur la règle des onze joueurs face à ces équipes pléthoriques. Pendant la Séquence de Début de Phase, une fois les deux équipes placées, une équipe dotée de cette règle ajoute sur le terrain **D3 Trois-quarts** supplémentaires venus de son Box des Réserves, en suivant les règles de placement habituelles. Elle dépasse donc le maximum ordinaire de onze joueurs sur le terrain."
         },
         {
           "type": "heading",
@@ -2000,6 +2028,28 @@
           "variant": "warning",
           "title": "Star Players liés à un dieu",
           "text": "Certains Star Players ne peuvent rejoindre qu'une équipe Favorite d'un Dieu du Chaos précis. Un Star Player réservé aux équipes Favoris de Khorne ne peut donc pas être recruté par une équipe Favorite d'un autre dieu (Nurgle, Slaanesh, etc.)."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Maîtres de la Non-vie"
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois par match, quand un joueur adverse de **Force 4 ou moins** et sans le Trait Minus obtient un résultat **Mort** au Tableau d'Élimination, l'équipe peut le relever : elle place immédiatement un Trois-quart de sa Fiche d'Équipe dans son Box des Réserves, quitte à dépasser temporairement les 16 joueurs."
+        },
+        {
+          "type": "paragraph",
+          "text": "À la Séquence d'Après-Match, ce joueur est embauché **gratuitement**, à condition que la Liste d'Équipe ne compte pas déjà 16 joueurs."
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "text": "Trois-quarts à vil prix"
+        },
+        {
+          "type": "paragraph",
+          "text": "En jeu en Ligue, une équipe dotée de cette règle compte le Coût d'Embauche de ses joueurs **Trois-quarts pour 0 pièce d'or** lorsqu'elle calcule sa Valeur d'Équipe Actuelle. Les hausses de valeur gagnées par ces joueurs (améliorations) sont, elles, comptées normalement."
         }
       ]
     }

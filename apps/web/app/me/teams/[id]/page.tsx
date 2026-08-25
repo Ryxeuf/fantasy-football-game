@@ -190,7 +190,7 @@ export default function TeamDetailPage() {
           team: { roster: string; ruleset?: string };
           currentMatch: unknown;
           localMatchStats: unknown;
-        }>(`/team/${id}`);
+        }>(`/team/${id}?lang=${language === "en" ? "en" : "fr"}`);
         if (cancelled) return;
         setData(d);
         setError(null);
@@ -434,13 +434,20 @@ export default function TeamDetailPage() {
     () => buildPositionMetaByPosition(rosterDetail?.positions),
     [rosterDetail],
   );
+  // Règles spéciales EFFECTIVES de l'équipe : le serveur y ajoute
+  // l'alignement « Favori de… » apporté par la Ligue régionale retenue
+  // (Nordiques + Clash du Chaos ⇒ Favori de Khorne). Repli sur les règles du
+  // roster tant qu'un serveur pré-correctif ne renvoie pas le champ
+  // (cf. « Backwards-compat sur champs API ajoutes »).
   const specialRules: Array<{
     slug: string;
     name: string;
     description: string;
-  }> = Array.isArray(rosterDetail?.specialRules)
-    ? rosterDetail.specialRules
-    : [];
+  }> = Array.isArray(team?.specialRules)
+    ? team.specialRules
+    : Array.isArray(rosterDetail?.specialRules)
+      ? rosterDetail.specialRules
+      : [];
   const regionalLeagues: Array<{ slug: string; name: string }> = Array.isArray(
     rosterDetail?.regionalLeagues,
   )

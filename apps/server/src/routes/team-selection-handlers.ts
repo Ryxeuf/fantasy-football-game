@@ -30,6 +30,7 @@ import { isGameFormat, type Ruleset } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { buildTeamBudgetSummary } from '../services/team-budget-summary';
+import { getTeamSpecialRules } from '../services/team-special-rules';
 import { serverLog } from '../utils/server-log';
 
 /**
@@ -257,6 +258,20 @@ export async function handleGetTeamDetail(
       isGameFormat(team.format) ? team.format : 'bb11',
     );
 
+    // Règles spéciales EFFECTIVES de l'équipe : celles du roster PLUS
+    // l'alignement « Favori de… » apporté par la Ligue régionale retenue
+    // (Nordiques + Clash du Chaos ⇒ Favori de Khorne). La fiche d'équipe
+    // ne lisait que les règles du roster et affichait donc « Aucune ».
+    const specialRules = await getTeamSpecialRules(
+      {
+        roster: team.roster,
+        ruleset: team.ruleset,
+        regionalLeague: (team as { regionalLeague?: string | null })
+          .regionalLeague,
+      },
+      req.query.lang === 'en',
+    );
+
     // Résumé budgétaire calculé côté serveur (VE/VEA + postes de dépense).
     // Le web l'affiche tel quel : plus aucune re-dérivation du coût des
     // joueurs côté client, donc plus de divergence avec la VE.
@@ -298,6 +313,7 @@ export async function handleGetTeamDetail(
         starPlayers: enrichedStarPlayers,
         staffConfig,
         budgetSummary,
+        specialRules,
       },
       currentMatch: selection?.match || null,
       localMatchStats,

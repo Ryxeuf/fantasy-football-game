@@ -11,6 +11,8 @@ import {
   getRegionalLeagueBySlug,
   getRegionalLeagueOptions,
   getRegionalRulesForTeam,
+  favouredOfLabel,
+  isFavouredOfSlug,
   isRegionalLeagueChoiceRequired,
   defaultStaffConfig,
   FORMATS,
@@ -242,16 +244,15 @@ export function resolveRegionalLeagueOptions(
 
 /**
  * Libellé d'une règle régionale acquise (« Favori de Khorne »). Les
- * alignements `favoured_of_*` n'ont pas de fiche dédiée : on dérive le
- * libellé du suffixe.
+ * alignements `favoured_of_*` n'ont pas de fiche dédiée : le libellé est
+ * dérivé du suffixe par le moteur (`favouredOfLabel`), qui sert aussi la
+ * fiche d'équipe — un seul et même intitulé partout.
  */
 function regionalRuleLabel(slug: string, isEnglish: boolean): string {
   const league = getRegionalLeagueBySlug(slug);
   if (league) return isEnglish ? league.nameEn : league.nameFr;
-  const god = slug.replace(/^favoured_of_?/, "");
-  if (god.length === 0) return slug;
-  const name = god.charAt(0).toUpperCase() + god.slice(1);
-  return isEnglish ? `Favoured of ${name}` : `Favori de ${name}`;
+  if (isFavouredOfSlug(slug)) return favouredOfLabel(slug, isEnglish);
+  return slug;
 }
 
 async function loadRosterList(
