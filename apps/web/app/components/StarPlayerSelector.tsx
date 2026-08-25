@@ -277,6 +277,8 @@ export default function StarPlayerSelector({
               <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
+                  data-testid={`star-player-${sp.slug}`}
+                  aria-label={sp.displayName}
                   checked={isSelected}
                   onChange={() => handleToggle(sp.slug)}
                   disabled={disabled || (!isSelected && !canSelect)}

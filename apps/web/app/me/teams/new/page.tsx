@@ -501,7 +501,17 @@ export default function NewTeamBuilder() {
       Math.max(0, dedicatedFans - 1) * (staff.dedicatedFanCost / 1000),
     [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans, staff],
   );
-  const remainingBudget = teamValue - total - staffCost;
+  // Coût des Star Players recrutés, en kpo (le sélecteur remonte des po).
+  // Ils sont payés sur le budget de construction : sans eux, le bandeau de
+  // résumé annonçait un budget restant qui ne bougeait pas au recrutement.
+  // `selectedStarCost` reste sur sa dernière valeur quand le sélecteur est
+  // démonté (sortie du mode avancé, format Sevens) : la sélection fait foi.
+  const starPlayersCost =
+    selectedStarPlayers.length > 0 ? selectedStarCost / 1000 : 0;
+  // Budget engagé hors Star Players : c'est celui que le sélecteur compare
+  // au coût des stars pour savoir ce qui reste recrutable.
+  const budgetBeforeStars = teamValue - total - staffCost;
+  const remainingBudget = budgetBeforeStars - starPlayersCost;
 
   // Le moteur (pur) attend pa: number avec sentinel 0 = "pas de passe".
   // La DB sert null pour "-" ; on recoalesce à la frontière moteur.
@@ -718,6 +728,15 @@ export default function NewTeamBuilder() {
                 tone="neutral"
                 className="hidden md:flex"
               />
+              {starPlayersCost > 0 && (
+                <SummaryMetric
+                  label="⭐ Stars"
+                  value={`${starPlayersCost}${t.teams.kpo}`}
+                  tone="neutral"
+                  testId="star-players-cost-summary"
+                  className="hidden sm:flex"
+                />
+              )}
             </div>
             <button
               data-testid="create-team-submit"
@@ -1213,7 +1232,7 @@ export default function NewTeamBuilder() {
           <ul className="md:hidden space-y-2" role="list">
             {positions.map((p) => {
               const count = counts[p.slug] || 0;
-              const cannotAfford = total + staffCost + p.cost > teamValue;
+              const cannotAfford = total + staffCost + starPlayersCost + p.cost > teamValue;
               const atMax = count >= (p.max || 16);
               return (
                 <li
@@ -1329,7 +1348,7 @@ export default function NewTeamBuilder() {
               <tbody>
                 {positions.map((p) => {
                   const count = counts[p.slug] || 0;
-                  const cannotAfford = total + staffCost + p.cost > teamValue;
+                  const cannotAfford = total + staffCost + starPlayersCost + p.cost > teamValue;
                   const atMax = count >= (p.max || 16);
                   return (
                     <tr
@@ -1557,7 +1576,7 @@ export default function NewTeamBuilder() {
               selectedStarPlayers={selectedStarPlayers}
               onSelectionChange={setSelectedStarPlayers}
               currentPlayerCount={totalPlayers}
-              availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
+              availableBudget={Math.max(0, budgetBeforeStars * 1000)}
               excludedSlugs={pack?.bannedStarPlayers}
               onSelectedCostChange={setSelectedStarCost}
             />
