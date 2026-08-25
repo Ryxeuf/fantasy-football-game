@@ -260,6 +260,19 @@ export default function AdminPage() {
             <div className="font-semibold text-gray-900">Données du jeu</div>
             <div className="text-xs text-gray-500 mt-1">Compétences, rosters, etc.</div>
           </button>
+          <button
+            onClick={() => router.push("/admin/data/tournament-rulesets")}
+            data-testid="admin-tournament-rulesets"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">🏆</div>
+            <div className="font-semibold text-gray-900">
+              Règlements de tournoi
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Budgets, barèmes, interdits, classement
+            </div>
+          </button>
         </div>
       </section>
 
