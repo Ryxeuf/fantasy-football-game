@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
@@ -39,6 +39,18 @@ import {
 } from "@bb/game-engine";
 import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
 import { buildImportantNotes } from "./important-notes";
+import PspPoolPanel from "./PspPoolPanel";
+import PlayerAdvancements from "./PlayerAdvancements";
+import {
+  fetchPspPool,
+  fundingFor,
+  parsePlayerAdvancements,
+  type TeamPspPoolState,
+} from "./psp-pool-client";
+import {
+  getTournamentRuleset,
+  tournamentSkillCost,
+} from "@bb/game-engine";
 
 // Catalogue de compétences DB-backed (remplace l'ancien import statique
 // SKILLS_DEFINITIONS) : source de vérité unique avec le flux /level-up
@@ -134,6 +146,9 @@ export default function TeamEditPage() {
   // Staff en cours d'edition remonte par `TeamInfoEditor` : le resume
   // budgetaire suit les modifications avant meme leur sauvegarde.
   const [staffDraft, setStaffDraft] = useState<StaffCounts | null>(null);
+  // Pool de PSP de construction : c'est lui qui finance les compétences
+  // achetées hors match (les SPP d'un joueur qui n'a pas joué valent 0).
+  const [pspPool, setPspPool] = useState<TeamPspPoolState | null>(null);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [newPlayerForm, setNewPlayerForm] = useState({
     position: '',
@@ -209,12 +224,14 @@ export default function TeamEditPage() {
       try {
         // Parallelize the three independent initial fetches instead of
         // awaiting them sequentially (previously ~3 round-trips ≈ 600ms).
-        const [me, d, positionsData] = await Promise.all([
+        const [me, d, positionsData, pool] = await Promise.all([
           fetchJSON("/auth/me"),
           apiRequest<any>(`/team/${id}`),
           apiRequest<{ availablePositions: AvailablePosition[]; frozen?: boolean }>(
             `/team/${id}/available-positions`,
           ),
+          // Non bloquant : sans le pool, l'édition retombe sur les SPP joueur.
+          fetchPspPool(id).catch(() => null),
         ]);
 
         if (!me?.user) {
@@ -227,6 +244,7 @@ export default function TeamEditPage() {
         setTeamName(d.team?.name || "");
         setAvailablePositions(positionsData.availablePositions || []);
         setFrozen(positionsData.frozen ?? true);
+        setPspPool(pool);
 
         // Catalogue de compétences DB-backed, filtré par le ruleset réel de
         // l'équipe (season_2 et season_3 divergent par endroits). Non
@@ -274,6 +292,39 @@ export default function TeamEditPage() {
 
   const team = data?.team;
   const match = data?.currentMatch;
+  // Règlement de tournoi retenu à la création : son barème PSP et ses
+  // restrictions s'appliquent aux achats sur le pool (cf. serveur).
+  const pack = getTournamentRuleset(
+    (team?.tournamentRuleset as string | null | undefined) ?? null,
+  );
+  const poolRemaining = pspPool?.remaining ?? 0;
+  const skillNames = useMemo(
+    () => new Map(skillsCatalog.map((s) => [s.slug, s.nameFr] as const)),
+    [skillsCatalog],
+  );
+
+  /** Recharge l'état du pool après un achat / une annulation. */
+  const refreshPool = useCallback(async () => {
+    try {
+      setPspPool(await fetchPspPool(id));
+    } catch {
+      // Non bloquant : l'affichage du pool peut rester en retard d'un tour.
+    }
+  }, [id]);
+
+  /**
+   * Coût PSP d'un avancement, au barème du règlement de tournoi de l'équipe
+   * quand il y en a un (il ne cote que les compétences au choix).
+   */
+  const advancementCost = useCallback(
+    (taken: number, type: AdvancementType, skillSlug?: string): number => {
+      if (pack && (type === "primary" || type === "secondary")) {
+        return tournamentSkillCost(pack, taken, type, skillSlug);
+      }
+      return getNextAdvancementPspCost(taken, type);
+    },
+    [pack],
+  );
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
 
   // Rediriger si l'équipe ne peut pas être modifiée (match en cours) OU si
@@ -650,6 +701,17 @@ export default function TeamEditPage() {
         )}
       </div>
 
+      {/* Édition avancée : pool de PSP de construction (équipe libre). */}
+      {team && pspPool && (
+        <PspPoolPanel
+          teamId={id}
+          state={pspPool}
+          onChange={setPspPool}
+          tournamentLabel={pack?.nameFr ?? null}
+          disabled={!canEdit}
+        />
+      )}
+
       {error && (
         <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg">
           <div className="font-semibold">❌ Erreur</div>
@@ -799,6 +861,30 @@ export default function TeamEditPage() {
                         position={player.position}
                         dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
                       />
+                      <PlayerAdvancements
+                        teamId={id}
+                        playerId={player.id}
+                        advancements={parsePlayerAdvancements(
+                          (player as any).advancements,
+                        )}
+                        skillNames={skillNames}
+                        disabled={!canEdit || String(player.id).startsWith("tmp_")}
+                        onRemoved={(updated) => {
+                          setPlayers((prev) =>
+                            prev.map((p) =>
+                              p.id === player.id
+                                ? {
+                                    ...p,
+                                    skills: updated.skills,
+                                    advancements: updated.advancements,
+                                    spp: updated.spp,
+                                  }
+                                : p,
+                            ),
+                          );
+                          void refreshPool();
+                        }}
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
@@ -930,6 +1016,30 @@ export default function TeamEditPage() {
                       position={player.position}
                       dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
                     />
+                    <PlayerAdvancements
+                      teamId={id}
+                      playerId={player.id}
+                      advancements={parsePlayerAdvancements(
+                        (player as any).advancements,
+                      )}
+                      skillNames={skillNames}
+                      disabled={!canEdit || String(player.id).startsWith("tmp_")}
+                      onRemoved={(updated) => {
+                        setPlayers((prev) =>
+                        prev.map((p) =>
+                          p.id === player.id
+                          ? {
+                            ...p,
+                            skills: updated.skills,
+                            advancements: updated.advancements,
+                            spp: updated.spp,
+                            }
+                          : p,
+                        ),
+                        );
+                        void refreshPool();
+                      }}
+                      />
                   </div>
                 </div>
 
@@ -1136,7 +1246,17 @@ export default function TeamEditPage() {
                   ? (isRandom ? 'random-primary' : 'primary')
                   : 'secondary';
 
-              const psp = getNextAdvancementPspCost(advCount, actualAdvType);
+              // Barème du règlement de tournoi si l'équipe en a un (il ne cote
+              // que les compétences au choix), sinon barème standard BB2025.
+              const psp = advancementCost(
+                advCount,
+                actualAdvType,
+                charMode ? undefined : selectedSkillSlug || undefined,
+              );
+              // Financement : pool d'équipe D'ABORD, SPP du joueur ensuite —
+              // miroir exact de la règle serveur.
+              const funding = fundingFor(psp, poolRemaining, player.spp ?? 0);
+              const canAfford = funding.affordable;
               // Surcoût VE : par stat pour une caractéristique, sinon table par
               // type + 10k si la compétence sélectionnée est Élite (→ 30k pour
               // une primaire Élite au lieu de 20k).
@@ -1433,12 +1553,22 @@ export default function TeamEditPage() {
                     </div>
                     )}
 
-                    {/* Informations de coût et SPP */}
+                    {/* Informations de coût et financement */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <span className="text-sm text-gray-600">SPP disponibles: </span>
-                          <span className={`text-xl font-bold ${(player.spp ?? 0) >= psp ? 'text-green-700' : 'text-red-600'}`}>
+                          <span className="text-sm text-gray-600">Pool d&apos;équipe : </span>
+                          <span
+                            data-testid="edit-skill-pool-remaining"
+                            className={`text-xl font-bold ${poolRemaining >= psp ? 'text-green-700' : 'text-gray-500'}`}
+                          >
+                            {poolRemaining}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">•</div>
+                        <div>
+                          <span className="text-sm text-gray-600">SPP du joueur : </span>
+                          <span className={`text-xl font-bold ${(player.spp ?? 0) >= psp ? 'text-green-700' : 'text-gray-500'}`}>
                             {player.spp ?? 0}
                           </span>
                         </div>
@@ -1453,9 +1583,23 @@ export default function TeamEditPage() {
                           <span className="text-xl font-bold text-indigo-700">+{surchargeK}k</span>
                         </div>
                       </div>
-                      {(player.spp ?? 0) < psp && (
-                        <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                          SPP insuffisants pour cet avancement ({player.spp ?? 0}/{psp}). Jouez des matchs pour accumuler plus de SPP.
+                      {canAfford ? (
+                        <div
+                          data-testid="edit-skill-funding"
+                          className="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"
+                        >
+                          {funding.source === 'pool'
+                            ? `Payé sur le pool de PSP de l'équipe (${psp} PSP, il en restera ${poolRemaining - psp}).`
+                            : `Pool épuisé : payé sur les SPP du joueur (${psp} PSP).`}
+                        </div>
+                      ) : (
+                        <div
+                          data-testid="edit-skill-funding"
+                          className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+                        >
+                          PSP insuffisants : {poolRemaining} au pool d&apos;équipe et {player.spp ?? 0} sur
+                          le joueur, {psp} requis. Augmente le pool en édition avancée, ou joue
+                          des matchs pour accumuler des SPP.
                         </div>
                       )}
                     </div>
@@ -1610,10 +1754,10 @@ export default function TeamEditPage() {
                     <button
                       data-testid="edit-skill-confirm"
                       disabled={charMode
-                        ? (d8Roll == null || !selectedStat || (player.spp ?? 0) < psp)
+                        ? (d8Roll == null || !selectedStat || !canAfford)
                         : isRandom
-                          ? (!selectedCategory || (player.spp ?? 0) < psp)
-                          : (!selectedSkillSlug || !selectedCategory || (player.spp ?? 0) < psp)
+                          ? (!selectedCategory || !canAfford)
+                          : (!selectedSkillSlug || !selectedCategory || !canAfford)
                       }
                       onClick={async () => {
                         try {
@@ -1652,6 +1796,9 @@ export default function TeamEditPage() {
                               spp: result.player.spp,
                             } : p));
                           }
+                          // Le pool a pu payer : on le relit pour que le reste
+                          // affiché et les prochains achats soient justes.
+                          void refreshPool();
                           // Show random result to user
                           if (!charMode && isRandom && result.advancement?.skillSlug) {
                             const rolledSkill = skillsCatalog.find(s => s.slug === result.advancement.skillSlug);
@@ -1671,8 +1818,8 @@ export default function TeamEditPage() {
                       }}
                       className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg shadow-green-500/30 disabled:shadow-none"
                     >
-                      {(player.spp ?? 0) < psp
-                        ? `SPP insuffisants (${player.spp ?? 0}/${psp})`
+                      {!canAfford
+                        ? `PSP insuffisants (${Math.max(poolRemaining, player.spp ?? 0)}/${psp})`
                         : charMode ? 'Améliorer la caractéristique'
                         : isRandom ? 'Lancer les dés (serveur)' : 'Ajouter la compétence'}
                     </button>
