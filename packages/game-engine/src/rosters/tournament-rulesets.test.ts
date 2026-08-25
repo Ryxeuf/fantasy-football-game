@@ -7,6 +7,7 @@ import {
   getTournamentRuleset,
   getTournamentRosterRules,
   maxTwoSkillPlayers,
+  resolveTournamentEliteSkills,
   tournamentStarPlayerSppTax,
   tournamentSkillCost,
   validateTournamentSkillPlan,
@@ -133,6 +134,9 @@ describe("taxe SPP sur les Star Players", () => {
   });
 });
 
+/** Compétences Elite de la Saison 3 (référentiel `Skill.isElite`). */
+const EDITION_ELITE = ["block", "dodge", "mighty-blow-1", "guard"];
+
 describe("barème d'achat de compétences", () => {
   const def = NAF_WORLD_CUP_2027;
 
@@ -153,8 +157,38 @@ describe("barème d'achat de compétences", () => {
     };
     expect(tournamentSkillCost(withElite, 0, "primary", "dodge")).toBe(8);
     expect(tournamentSkillCost(withElite, 0, "primary", "block")).toBe(6);
-    // Liste vide (état actuel du pack) : aucun surcoût.
+    // Sans liste publiée ET sans référentiel fourni : aucun surcoût.
     expect(tournamentSkillCost(def, 0, "primary", "dodge")).toBe(6);
+  });
+
+  it("surcoût Elite facturé depuis le référentiel quand le pack ne publie pas de liste", () => {
+    // Le pack facture 2 PSP par compétence Elite sans republier lesquelles :
+    // ce sont celles de l'édition (Skill.isElite).
+    const elite = resolveTournamentEliteSkills(def, EDITION_ELITE);
+    expect(tournamentSkillCost(def, 0, "primary", "dodge", elite)).toBe(8);
+    expect(tournamentSkillCost(def, 1, "secondary", "block", elite)).toBe(14);
+    expect(tournamentSkillCost(def, 0, "primary", "tackle", elite)).toBe(6);
+  });
+});
+
+describe("resolveTournamentEliteSkills", () => {
+  const def = NAF_WORLD_CUP_2027;
+
+  it("retient la liste du règlement quand il en publie une", () => {
+    const withElite = { ...def, eliteSkills: ["dodge"] };
+    const resolved = resolveTournamentEliteSkills(withElite, EDITION_ELITE);
+    expect([...resolved]).toEqual(["dodge"]);
+  });
+
+  it("retombe sur les compétences Elite de l'édition sinon", () => {
+    const resolved = resolveTournamentEliteSkills(def, EDITION_ELITE);
+    expect(resolved.has("block")).toBe(true);
+    expect(resolved.has("guard")).toBe(true);
+    expect(resolved.has("tackle")).toBe(false);
+  });
+
+  it("sans référentiel, aucune compétence n'est Elite", () => {
+    expect(resolveTournamentEliteSkills(def).size).toBe(0);
   });
 });
 

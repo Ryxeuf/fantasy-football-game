@@ -23,6 +23,7 @@ import {
   ELITE_SKILL_SURCHARGE,
   SURCHARGE_PER_ADVANCEMENT,
   maxTwoSkillPlayers,
+  resolveTournamentEliteSkills,
   tournamentSkillCost,
   type TournamentRosterRules,
   type TournamentRulesetDefinition,
@@ -125,6 +126,20 @@ export interface BuildCostContext {
   readonly pack?: TournamentRulesetDefinition | null;
   /** Règles du règlement pour CE roster (quota de cumul). */
   readonly packRules?: TournamentRosterRules | null;
+  /**
+   * Compétences Élite de l'ÉDITION (`Skill.isElite` du catalogue). Sert de
+   * repli quand le règlement facture un surcoût Élite sans republier la liste
+   * des compétences concernées — le cas du pack NAF WC 2027.
+   */
+  readonly editionEliteSkills?: readonly string[];
+}
+
+/** Compétences Élite retenues par le règlement du contexte (vide hors pack). */
+export function eliteSkillsForPack(
+  ctx: BuildCostContext = {},
+): ReadonlySet<string> {
+  if (!ctx.pack) return new Set();
+  return resolveTournamentEliteSkills(ctx.pack, ctx.editionEliteSkills ?? []);
 }
 
 /**
@@ -139,7 +154,15 @@ export function skillSppCost(
   ctx: BuildCostContext = {},
 ): number {
   const taken = Math.max(0, slot);
-  if (ctx.pack) return tournamentSkillCost(ctx.pack, taken, type, skillSlug);
+  if (ctx.pack) {
+    return tournamentSkillCost(
+      ctx.pack,
+      taken,
+      type,
+      skillSlug,
+      eliteSkillsForPack(ctx),
+    );
+  }
   return STANDARD_TIER_COSTS[type][Math.min(taken, 1)];
 }
 
@@ -154,7 +177,7 @@ export function hasPackEliteSurcharge(
   ctx: BuildCostContext = {},
 ): boolean {
   if (!ctx.pack || !skillSlug) return false;
-  return ctx.pack.eliteSkills.includes(skillSlug);
+  return eliteSkillsForPack(ctx).has(skillSlug);
 }
 
 /** Surcoût PSP Élite du règlement (0 hors règlement / hors liste). */

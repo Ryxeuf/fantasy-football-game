@@ -107,20 +107,24 @@ export default function BuildAdvancementAllocator({
     };
   }, [ruleset]);
 
-  const ctx: BuildCostContext = useMemo(
-    () => ({ pack, packRules }),
-    [pack, packRules],
-  );
-
   const catalogBySlug = useMemo(() => {
     const map = new Map<string, SkillCatalogItem>();
     for (const skill of catalog) map.set(skill.slug, skill);
     return map;
   }, [catalog]);
 
+  // Compétences Élite de l'édition (`Skill.isElite`). Elles portent le
+  // surcoût de Valeur d'Équipe (+10 000 po) et, sous un règlement qui facture
+  // l'Élite sans republier sa liste, le surcoût en PSP du règlement.
   const eliteSlugs = useMemo(
-    () => new Set(catalog.filter((s) => s.isElite).map((s) => s.slug)),
+    () => catalog.filter((s) => s.isElite).map((s) => s.slug),
     [catalog],
+  );
+  const eliteSlugSet = useMemo(() => new Set(eliteSlugs), [eliteSlugs]);
+
+  const ctx: BuildCostContext = useMemo(
+    () => ({ pack, packRules, editionEliteSkills: eliteSlugs }),
+    [pack, packRules, eliteSlugs],
   );
 
   const skillName = (slug: string) => catalogBySlug.get(slug)?.nameFr ?? slug;
@@ -138,8 +142,8 @@ export default function BuildAdvancementAllocator({
   const spent = useMemo(() => planSppTotal(value, ctx), [value, ctx]);
   const remaining = Math.max(0, pool - spent);
   const veSurcharge = useMemo(
-    () => planVeSurcharge(value, eliteSlugs),
-    [value, eliteSlugs],
+    () => planVeSurcharge(value, eliteSlugSet),
+    [value, eliteSlugSet],
   );
   const stacking = useMemo(() => stackingUsage(value, ctx), [value, ctx]);
 
@@ -355,7 +359,7 @@ export default function BuildAdvancementAllocator({
                               <span className="min-w-0">
                                 <span className="block truncate text-xs font-medium text-indigo-900">
                                   {skillName(adv.skillSlug)}
-                                  {eliteSlugs.has(adv.skillSlug) && (
+                                  {eliteSlugSet.has(adv.skillSlug) && (
                                     <span
                                       title="Compétence Élite : +10 000 po de Valeur d'Équipe."
                                       className="ml-1"

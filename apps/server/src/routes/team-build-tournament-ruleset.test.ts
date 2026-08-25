@@ -24,6 +24,7 @@ vi.mock('../prisma', () => ({
     roster: { findUnique: vi.fn() },
     rosterStaffConfig: { findUnique: vi.fn() },
     starPlayer: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
+    skill: { findMany: vi.fn() },
   },
 }));
 
@@ -436,9 +437,52 @@ describe('handleBuildTeam — plan de compétences sous règlement', () => {
     expect(pool).toBe(44);
     expect(mapped).toHaveLength(2);
     // Barème NAF WC 2027 : 1re primaire 6, 1re secondaire 10, 2e primaire 8.
+    // Référentiel de compétences indisponible ici (mock étroit) ⇒ aucune
+    // compétence n'est reconnue Elite, donc aucun surcoût.
     expect(costFn(0, 'primary', 'block')).toBe(6);
     expect(costFn(0, 'secondary', 'dodge')).toBe(10);
     expect(costFn(1, 'primary', 'block')).toBe(8);
+  });
+
+  it("facture le surcoût Elite du pack depuis le référentiel de compétences", async () => {
+    // Le pack facture 2 PSP par compétence Elite sans republier la liste :
+    // ce sont celles de l'édition (`Skill.isElite`).
+    (prisma.skill.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { slug: 'block' },
+      { slug: 'dodge' },
+      { slug: 'guard' },
+    ]);
+    (prisma.teamPlayer.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 'p1', position: 'lineman' },
+      { id: 'p2', position: 'lineman' },
+    ]);
+    const res = createRes();
+    await handleBuildTeam(
+      createReq({
+        name: 'T',
+        roster: 'orc',
+        choices: ELEVEN_LINEMEN,
+        tournamentRuleset: 'naf_world_cup_2027',
+        advancements: [
+          { positionSlug: 'lineman', ordinal: 0, type: 'primary', skillSlug: 'block' },
+          { positionSlug: 'lineman', ordinal: 1, type: 'primary', skillSlug: 'tackle' },
+        ],
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    const [, , , costFn] = (
+      applyCupBuildAdvancements as ReturnType<typeof vi.fn>
+    ).mock.calls[0];
+    // Elite : 6 + 2. Non Elite : 6.
+    expect(costFn(0, 'primary', 'block')).toBe(8);
+    expect(costFn(0, 'primary', 'dodge')).toBe(8);
+    expect(costFn(0, 'primary', 'tackle')).toBe(6);
+    // Le référentiel n'est lu qu'une fois, pour l'édition de l'équipe.
+    expect(prisma.skill.findMany).toHaveBeenCalledWith({
+      where: { isElite: true, ruleset: 'season_3' },
+      select: { slug: true },
+    });
   });
 });
 

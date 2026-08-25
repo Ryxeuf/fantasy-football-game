@@ -101,6 +101,29 @@ describe("BuildAdvancementAllocator — règlement de tournoi", () => {
     );
   });
 
+  it("facture le surcoût Élite du pack depuis le catalogue quand il ne publie pas de liste", async () => {
+    // Cas réel du NAF WC 2027 : `eliteSkills` vide, surcoût de 2 PSP. Les
+    // compétences Élite sont celles du référentiel (`isElite` au catalogue).
+    const packRules = getTournamentRosterRules(NAF_WORLD_CUP_2027, "norse");
+    render(
+      <Harness pack={NAF_WORLD_CUP_2027} packRules={packRules} pool={58} />,
+    );
+    await openPicker();
+    // Blocage est Élite au catalogue : 6 + 2.
+    expect(
+      screen.getByTestId("skill-picker-option-block").textContent,
+    ).toContain("8 PSP");
+    // Frénésie ne l'est pas.
+    expect(
+      screen.getByTestId("skill-picker-option-frenzy").textContent,
+    ).toContain("6 PSP");
+
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+    await waitFor(() =>
+      expect(screen.getByTestId("allocator-remaining").textContent).toBe("50"),
+    );
+  });
+
   it("interdit la 2e compétence quand le quota de cumul est atteint", async () => {
     const packRules = getTournamentRosterRules(NAF_WORLD_CUP_2027, "orc");
     render(<Harness pack={pack} packRules={packRules} pool={44} />);
