@@ -383,7 +383,7 @@ export default function BuildAdvancementAllocator({
                                 }
                                 aria-label={`Retirer ${skillName(adv.skillSlug)} de ${label}`}
                                 data-testid={`allocator-remove-${position.slug}-${ordinal}-${index}`}
-                                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-red-600 hover:bg-red-50"
+                                className="flex min-h-[36px] shrink-0 items-center rounded px-2 text-xs text-red-600 hover:bg-red-50"
                               >
                                 retirer
                               </button>
@@ -398,7 +398,7 @@ export default function BuildAdvancementAllocator({
                       disabled={full || tooExpensive || quotaBlocked}
                       onClick={() => setPicking({ position, ordinal })}
                       data-testid={`allocator-add-${position.slug}-${ordinal}`}
-                      className={`mt-1.5 w-full rounded-lg border border-dashed px-2 py-2 text-xs font-medium transition ${
+                      className={`mt-1.5 min-h-[40px] w-full rounded-lg border border-dashed px-2 py-2 text-xs font-medium transition ${
                         full || tooExpensive || quotaBlocked
                           ? "cursor-not-allowed border-gray-200 text-gray-300"
                           : "border-indigo-300 text-indigo-700 hover:border-indigo-500 hover:bg-indigo-50"

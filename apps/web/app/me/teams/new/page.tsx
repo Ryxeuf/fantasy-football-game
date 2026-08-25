@@ -1156,7 +1156,7 @@ export default function NewTeamBuilder() {
 
             {(advancedMode || cupId) && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <label className="text-sm text-gray-700">Pool de PSP :</label>
                   {cupId || pack ? (
                     <span

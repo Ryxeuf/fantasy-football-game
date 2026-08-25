@@ -147,9 +147,14 @@ export default function SkillPickerSheet({
         aria-modal="true"
         aria-label={`Ajouter une compétence — ${playerLabel}`}
         data-testid="skill-picker"
-        className="flex max-h-[88vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:max-h-[80vh] sm:max-w-lg sm:rounded-2xl"
+        className="flex max-h-[88vh] w-full flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] shadow-xl sm:max-h-[80vh] sm:max-w-lg sm:rounded-2xl sm:pb-0"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Poignée : affordance « je peux fermer » propre au mobile. */}
+        <div
+          aria-hidden="true"
+          className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden"
+        />
         {/* En-tête : joueur ciblé + pool restant, toujours visible. */}
         <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-4 py-3">
           <div className="min-w-0">
@@ -166,7 +171,7 @@ export default function SkillPickerSheet({
             onClick={onClose}
             data-testid="skill-picker-close"
             aria-label="Fermer"
-            className="-mr-1 rounded-full px-2 py-1 text-xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            className="-mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700"
           >
             ×
           </button>
@@ -286,7 +291,7 @@ export default function SkillPickerSheet({
                           disabled={!selectable}
                           onClick={() => onPick(type, option.skill.slug)}
                           data-testid={`skill-picker-option-${option.skill.slug}`}
-                          className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
+                          className={`flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
                             selectable
                               ? "border-gray-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/60"
                               : "cursor-not-allowed border-gray-100 bg-gray-50 opacity-70"
@@ -343,7 +348,7 @@ export default function SkillPickerSheet({
 /** Puce de filtre (catégorie). */
 function chipClass(active: boolean): string {
   const base =
-    "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition";
+    "flex min-h-[36px] shrink-0 items-center rounded-full border px-3 text-xs font-medium transition";
   return active
     ? `${base} border-indigo-500 bg-indigo-500 text-white`
     : `${base} border-gray-300 bg-white text-gray-600 hover:border-indigo-300`;
