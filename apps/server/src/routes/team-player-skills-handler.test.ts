@@ -15,7 +15,15 @@ vi.mock('../prisma', () => ({
     // Défensif : le check excludedFromSelection (Flux B legacy) est
     // maintenant DB-backed.
     skill: { findMany: vi.fn() },
+    // Comptabilité du pool de PSP de construction (édition avancée).
+    teamPlayer: { findMany: vi.fn() },
   },
+}));
+
+// Le handler interroge le gel du roster pour décider s'il peut puiser dans
+// le pool de PSP de construction. Équipe libre par défaut ici.
+vi.mock('../services/team-lock-status', () => ({
+  isTeamRosterFrozen: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock('../utils/server-log', () => ({
@@ -29,6 +37,7 @@ import type { AuthenticatedRequest } from '../middleware/authUser';
 const mockPrisma = prisma as unknown as {
   team: { findFirst: ReturnType<typeof vi.fn> };
   skill: { findMany: ReturnType<typeof vi.fn> };
+  teamPlayer: { findMany: ReturnType<typeof vi.fn> };
 };
 
 function createRes() {
@@ -61,6 +70,7 @@ function createReq(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockPrisma.teamPlayer.findMany.mockResolvedValue([]);
 });
 
 describe('handleUpdatePlayerSkills — flag excludedFromSelection (Flux B legacy)', () => {

@@ -13,6 +13,7 @@ import {
   addStarPlayerToTeamSchema,
   saveRosterSchema,
   designateCaptainSchema,
+  updateStartingPspPoolSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
@@ -239,6 +240,34 @@ router.get(
   "/:id/available-positions",
   authUser,
   handleListAvailablePositionsImpl,
+);
+
+// =============================================================================
+// EDITION AVANCEE — pool de PSP de construction + annulation d'amelioration
+// =============================================================================
+
+export {
+  handleGetTeamPspPool,
+  handleUpdateTeamPspPool,
+  handleRemovePlayerAdvancement,
+} from './team-advancement-handlers';
+import {
+  handleGetTeamPspPool as handleGetTeamPspPoolImpl,
+  handleUpdateTeamPspPool as handleUpdateTeamPspPoolImpl,
+  handleRemovePlayerAdvancement as handleRemovePlayerAdvancementImpl,
+} from './team-advancement-handlers';
+
+router.get("/:id/psp-pool", authUser, handleGetTeamPspPoolImpl);
+router.put(
+  "/:id/psp-pool",
+  authUser,
+  validate(updateStartingPspPoolSchema),
+  handleUpdateTeamPspPoolImpl,
+);
+router.delete(
+  "/:id/players/:playerId/advancements/:index",
+  authUser,
+  handleRemovePlayerAdvancementImpl,
 );
 
 // =============================================================================

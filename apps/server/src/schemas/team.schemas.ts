@@ -213,3 +213,14 @@ export const updatePlayerIdentitySchema = z
 export type UpdatePlayerIdentityBody = z.infer<
   typeof updatePlayerIdentitySchema
 >;
+
+/**
+ * Édition avancée : réglage du pool de PSP de construction d'une équipe
+ * déjà créée. Même borne haute que le builder (`MAX_STARTING_PSP_POOL`).
+ */
+export const updateStartingPspPoolSchema = z.object({
+  startingPspPool: z.number().int().min(0).max(200),
+});
+export type UpdateStartingPspPoolBody = z.infer<
+  typeof updateStartingPspPoolSchema
+>;

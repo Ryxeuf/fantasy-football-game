@@ -430,6 +430,17 @@ export {
   type AdvancementSurchargeInput
 } from './utils/advancements';
 
+// Comptabilité du pool de PSP de construction (édition avancée / coupes)
+export {
+  advancementPspCost,
+  poolSpentForPlayer,
+  poolSpentForTeam,
+  poolRemaining,
+  parseAdvancements,
+  type AdvancementFunding,
+  type PoolFundedAdvancement,
+} from './utils/build-psp-pool';
+
 // Accès de catégories par position
 export { getPositionCategoryAccess, type CategoryAccess, type SkillCategory } from './utils/skill-access';
 

@@ -10,8 +10,16 @@
  *    `skillSlug`), `random-primary` (tirage avec `skillCategory`) et
  *    `characteristic` (amelioration de caracteristique via `stat`).
  *    Valide lock match, max 6 avancements, joueur vivant, category
- *    access (competences), SPP suffisants. Decrement SPP, append
- *    advancement, recalcule TV.
+ *    access (competences), PSP suffisants. Append advancement,
+ *    recalcule TV.
+ *
+ *    FINANCEMENT — tant que l'equipe est LIBRE (roster non fige), un
+ *    avancement se paie EN PRIORITE sur le pool de PSP de construction
+ *    de l'equipe (`Team.startingPspPool`), et seulement a defaut sur
+ *    les SPP du joueur (nuls tant qu'il n'a pas joue). Le barème est
+ *    alors celui du reglement de tournoi retenu a la creation, et ses
+ *    restrictions s'appliquent. Une fois l'equipe engagee, on retombe
+ *    sur le flux historique : SPP du joueur, barème standard.
  *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
  * `updateTeamValues`, `getNextAdvancementPspCost`/
@@ -26,7 +34,6 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
-  getNextAdvancementPspCost,
   getPositionCategoryAccess,
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
@@ -38,6 +45,14 @@ import {
   type PlayerAdvancement,
 } from '@bb/game-engine';
 import { serverLog } from '../utils/server-log';
+import { isTeamRosterFrozen } from '../services/team-lock-status';
+import {
+  advancementCostFor,
+  assertTournamentAllowsAdvancement,
+  packForTeam,
+  poolSpentForTeamId,
+  TeamAdvancementError,
+} from '../services/team-advancement-editing';
 
 /**
  * S25.5ac / S27.8.30 — `PUT /team/:id/players/:playerId/skills`
@@ -156,6 +171,20 @@ export async function handleUpdatePlayerSkills(
       return;
     }
 
+    // Financement : pool de construction d'abord, SPP du joueur ensuite.
+    // Le pool n'est mobilisable que tant que l'equipe est libre — une fois
+    // engagee, les avancements se gagnent en match et se paient en SPP.
+    const teamRow = team as unknown as {
+      startingPspPool?: number;
+      tournamentRuleset?: string | null;
+    };
+    const frozen = await isTeamRosterFrozen(teamId);
+    const pack = frozen ? null : packForTeam(teamRow.tournamentRuleset ?? null);
+    const poolTotal = frozen ? 0 : (teamRow.startingPspPool ?? 0);
+    const poolLeft = poolTotal
+      ? Math.max(0, poolTotal - (await poolSpentForTeamId(teamId)))
+      : 0;
+
     // Branche caracteristique (BB2025) : on ameliore une stat, pas une
     // competence. Pas de pool/category a valider.
     if (isCharacteristic) {
@@ -188,18 +217,35 @@ export async function handleUpdatePlayerSkills(
         return;
       }
 
-      const sppCost = getNextAdvancementPspCost(
+      const sppCost = advancementCostFor(
+        pack,
         advancements.length,
         'characteristic',
       );
       const playerSpp = p.spp || 0;
-      if (playerSpp < sppCost) {
+      const fromPool = poolLeft >= sppCost;
+      if (!fromPool && playerSpp < sppCost) {
         sendError(
           res,
-          `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour une amelioration de caracteristique`,
+          `PSP insuffisants : ${playerSpp} SPP joueur + ${poolLeft} au pool, ${sppCost} requis pour une amelioration de caracteristique`,
           400,
         );
         return;
+      }
+      try {
+        await assertTournamentAllowsAdvancement({
+          teamId,
+          roster: team.roster,
+          playerId,
+          pack: fromPool ? pack : null,
+          type: 'characteristic',
+        });
+      } catch (e) {
+        if (e instanceof TeamAdvancementError) {
+          sendError(res, e.message, 400);
+          return;
+        }
+        throw e;
       }
       const improved = applyCharacteristicImprovement(stats, charStat);
       const newAdvancement: PlayerAdvancement = {
@@ -208,6 +254,8 @@ export async function handleUpdatePlayerSkills(
         d8: roll,
         isRandom: false,
         at: Date.now(),
+        pspCost: sppCost,
+        fundedBy: fromPool ? 'pool' : 'player',
       };
       const newAdvancements = [...advancements, newAdvancement];
 
@@ -220,7 +268,7 @@ export async function handleUpdatePlayerSkills(
           pa: improved.pa,
           av: improved.av,
           advancements: JSON.stringify(newAdvancements),
-          spp: { decrement: sppCost },
+          ...(fromPool ? {} : { spp: { decrement: sppCost } }),
         },
       });
 
@@ -234,6 +282,7 @@ export async function handleUpdatePlayerSkills(
       sendSuccess(res, {
         player: updatedPlayer,
         sppSpent: sppCost,
+        fundedBy: newAdvancement.fundedBy,
         advancement: newAdvancement,
       });
       return;
@@ -321,20 +370,41 @@ export async function handleUpdatePlayerSkills(
       }
     }
 
-    const sppCost = getNextAdvancementPspCost(
+    const sppCost = advancementCostFor(
+      pack,
       advancements.length,
       advancementType,
+      finalSkillSlug,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playerSpp = (player as any).spp || 0;
+    const fromPool = poolLeft >= sppCost;
 
-    if (playerSpp < sppCost) {
+    if (!fromPool && playerSpp < sppCost) {
       sendError(
         res,
-        `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour un avancement ${advancementType}`,
+        `PSP insuffisants : ${playerSpp} SPP joueur + ${poolLeft} au pool, ${sppCost} requis pour un avancement ${advancementType}`,
         400,
       );
       return;
+    }
+
+    // Le reglement de tournoi ne borne QUE les achats sur le pool : une
+    // amelioration gagnee en match suit les regles BB standard.
+    try {
+      await assertTournamentAllowsAdvancement({
+        teamId,
+        roster: team.roster,
+        playerId,
+        pack: fromPool ? pack : null,
+        type: advancementType,
+      });
+    } catch (e) {
+      if (e instanceof TeamAdvancementError) {
+        sendError(res, e.message, 400);
+        return;
+      }
+      throw e;
     }
 
     const newSkills = [...currentSkills, finalSkillSlug].join(',');
@@ -343,6 +413,8 @@ export async function handleUpdatePlayerSkills(
       type: advancementType,
       isRandom,
       at: Date.now(),
+      pspCost: sppCost,
+      fundedBy: fromPool ? 'pool' : 'player',
     };
     const newAdvancements = [...advancements, newAdvancement];
 
@@ -351,7 +423,7 @@ export async function handleUpdatePlayerSkills(
       data: {
         skills: newSkills,
         advancements: JSON.stringify(newAdvancements),
-        spp: { decrement: sppCost },
+        ...(fromPool ? {} : { spp: { decrement: sppCost } }),
       },
     });
 
@@ -365,6 +437,7 @@ export async function handleUpdatePlayerSkills(
     sendSuccess(res, {
       player: updatedPlayer,
       sppSpent: sppCost,
+      fundedBy: newAdvancement.fundedBy,
       advancement: newAdvancement,
     });
   } catch (e: unknown) {

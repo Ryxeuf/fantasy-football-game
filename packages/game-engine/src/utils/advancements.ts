@@ -148,6 +148,17 @@ export interface PlayerAdvancement {
   d8?: number;
   isRandom: boolean;            // true si c'était un tirage aléatoire
   at: number;                   // timestamp ms
+  /**
+   * Coût PSP réellement payé. Persisté depuis l'édition avancée pour ne
+   * plus avoir à le re-dériver du rang (faux sous règlement de tournoi).
+   * Absent sur les avancements enregistrés avant.
+   */
+  pspCost?: number;
+  /**
+   * Source du paiement : `pool` = pool de PSP de construction de l'équipe,
+   * `player` = SPP du joueur. Absent => pool (comportement historique).
+   */
+  fundedBy?: 'pool' | 'player';
 }
 
 /**
