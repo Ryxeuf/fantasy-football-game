@@ -15,14 +15,18 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { RegionalLeagueTab } from "./RegionalLeagueTab";
 import { RosterTab } from "./RosterTab";
+import { StaffTab } from "./StaffTab";
 import { formatGold } from "./roster-helpers";
 import { useCommissionerTeam } from "./useCommissionerTeam";
 
-type TabKey = "roster";
+type TabKey = "roster" | "staff" | "regional";
 
 const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
   { key: "roster", label: "Effectif" },
+  { key: "staff", label: "Staff & trésorerie" },
+  { key: "regional", label: "Ligue régionale" },
 ];
 
 interface Props {
@@ -198,7 +202,7 @@ export function CommissionerTeamEditor({
             <p className="text-sm text-gray-500">
               {loading ? "Chargement…" : "Aucune donnée."}
             </p>
-          ) : (
+          ) : tab === "roster" ? (
             <RosterTab
               leagueId={leagueId}
               teamId={teamId}
@@ -209,6 +213,31 @@ export function CommissionerTeamEditor({
               canRemovePlayers={canRemovePlayers}
               run={run}
             />
+          ) : settings ? (
+            tab === "staff" ? (
+              <StaffTab
+                leagueId={leagueId}
+                teamId={teamId}
+                settings={settings}
+                busy={working}
+                run={run}
+              />
+            ) : (
+              <RegionalLeagueTab
+                leagueId={leagueId}
+                teamId={teamId}
+                settings={settings}
+                busy={working}
+                run={run}
+              />
+            )
+          ) : (
+            <p
+              data-testid="settings-unavailable"
+              className="text-sm text-gray-500"
+            >
+              Réglages indisponibles pour cette équipe.
+            </p>
           )}
         </div>
 
