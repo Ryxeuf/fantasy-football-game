@@ -1,3 +1,10 @@
+## [1.235.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.1...v1.235.2) (2026-08-25)
+
+
+### 🐛 Bug Fixes
+
+* **web:** correctifs du builder d'équipe et des Star Players ([#977](https://github.com/Ryxeuf/fantasy-football-game/issues/977)) ([2e3c258](https://github.com/Ryxeuf/fantasy-football-game/commit/2e3c2585db9f7ae02b2e6096b98ef996242762fd))
+
 ## [1.235.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.0...v1.235.1) (2026-08-24)
 
 
