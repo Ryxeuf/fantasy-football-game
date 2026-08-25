@@ -1070,9 +1070,29 @@ export default function NewTeamBuilder() {
               Forcé et verrouillé (valeurs de la coupe) en Flow B. */}
           <div className="mt-3">
             {!cupId && !pack && (
-              <label className="flex items-center gap-2 cursor-pointer mb-2">
+              // Même interrupteur que l'apothicaire : la case à cocher native
+              // jurait avec le reste du builder.
+              <label
+                htmlFor="builder-advanced-toggle"
+                className="mb-2 flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium text-gray-900">
+                    Édition avancée
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    Budget personnalisé, pool de PSP et recrutement de Star
+                    Players.
+                  </div>
+                </div>
                 <input
+                  id="builder-advanced-toggle"
+                  data-testid="builder-advanced-toggle"
                   type="checkbox"
+                  role="switch"
+                  aria-checked={advancedMode}
+                  aria-label="Édition avancée"
+                  className="sr-only peer"
                   checked={advancedMode}
                   onChange={(e) => {
                     setAdvancedMode(e.target.checked);
@@ -1084,11 +1104,18 @@ export default function NewTeamBuilder() {
                       setSelectedStarPlayers([]);
                     }
                   }}
-                  className="rounded border-gray-300 text-nuffle-gold focus:ring-nuffle-gold"
-                  data-testid="builder-advanced-toggle"
                 />
-                <span className="text-sm font-medium text-gray-700">
-                  Édition avancée (budget custom + pool de PSP)
+                <span
+                  aria-hidden="true"
+                  className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 ${
+                    advancedMode ? "bg-emerald-600" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                      advancedMode ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
                 </span>
               </label>
             )}
