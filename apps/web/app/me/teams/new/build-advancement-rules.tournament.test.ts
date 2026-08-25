@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { NAF_WORLD_CUP_2027, getTournamentRosterRules } from "@bb/game-engine";
 import {
+  eliteSkillsForPack,
   hasPackEliteSurcharge,
   packEliteSurcharge,
   planSppTotal,
@@ -55,6 +56,38 @@ describe("barème du règlement de tournoi", () => {
     expect(planSppTotal(plan, { pack: PACK })).toBe(16);
     // Sans règlement : 6 + 8.
     expect(planSppTotal(plan)).toBe(14);
+  });
+});
+
+describe("compétences Élite retenues par le règlement", () => {
+  it("préfère la liste publiée par le règlement", () => {
+    expect([...eliteSkillsForPack({ pack: PACK })]).toEqual(["block"]);
+    expect([
+      ...eliteSkillsForPack({ pack: PACK, editionEliteSkills: ["dodge"] }),
+    ]).toEqual(["block"]);
+  });
+
+  it("retombe sur les compétences Élite de l'édition quand le pack n'en publie pas", () => {
+    // Cas réel du NAF WC 2027 : surcoût Élite facturé, liste non republiée.
+    const ctx = {
+      pack: NAF_WORLD_CUP_2027,
+      editionEliteSkills: ["block", "dodge", "guard"],
+    };
+    expect(eliteSkillsForPack(ctx).has("dodge")).toBe(true);
+    expect(hasPackEliteSurcharge("dodge", ctx)).toBe(true);
+    expect(hasPackEliteSurcharge("tackle", ctx)).toBe(false);
+    // 6 PSP + 2 de surcoût Élite.
+    expect(skillSppCost(0, "primary", "dodge", ctx)).toBe(
+      NAF_WORLD_CUP_2027.skillCosts.firstPrimary +
+        NAF_WORLD_CUP_2027.skillCosts.eliteSurcharge,
+    );
+  });
+
+  it("hors règlement, aucune compétence n'est Élite au sens des PSP", () => {
+    expect(eliteSkillsForPack().size).toBe(0);
+    expect(
+      eliteSkillsForPack({ editionEliteSkills: ["block"] }).size,
+    ).toBe(0);
   });
 });
 

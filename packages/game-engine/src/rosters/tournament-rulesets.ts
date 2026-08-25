@@ -107,11 +107,14 @@ export interface TournamentRulesetDefinition {
   readonly rosterRules: Readonly<Record<string, TournamentRosterRules>>;
   readonly skillCosts: TournamentSkillCosts;
   /**
-   * Compétences « Elite » (surcoût `skillCosts.eliteSurcharge`). Slugs du
-   * catalogue de compétences. Le pack NAF WC 2027 V2.1 désigne des Elite
-   * Skills sans en publier la liste dans les pages transcrites ici : liste
-   * vide tant que la liste officielle n'est pas intégrée (aucun surcoût
-   * appliqué d'ici là).
+   * Compétences « Elite » (surcoût `skillCosts.eliteSurcharge`) DÉSIGNÉES
+   * NOMMÉMENT par le règlement. Slugs du catalogue de compétences.
+   *
+   * Liste vide = le règlement ne republie pas sa propre liste et retient
+   * celles de l'édition (référentiel `Skill.isElite` : Blocage, Esquive,
+   * Châtaigne, Garde en Saison 3). C'est le cas du pack NAF WC 2027 V2.1,
+   * qui facture un surcoût Elite sans redéfinir quelles compétences le sont.
+   * Cf. `resolveTournamentEliteSkills`.
    */
   readonly eliteSkills: readonly string[];
   /** Star Players interdits (slugs du catalogue `star-players.ts`). */
@@ -223,6 +226,9 @@ export const NAF_WORLD_CUP_2027: TournamentRulesetDefinition = {
     secondSecondary: 12,
     eliteSurcharge: 2,
   },
+  // Le pack facture un surcoût Elite sans republier la liste des compétences
+  // concernées : ce sont donc celles de l'édition (cf. `eliteSkills` du type
+  // et `resolveTournamentEliteSkills`).
   eliteSkills: [],
   bannedStarPlayers: [
     "hthark_the_unstoppable",
@@ -356,8 +362,9 @@ export function validateTournamentSkillPlan(
   def: TournamentRulesetDefinition,
   rules: TournamentRosterRules,
   picks: readonly TournamentSkillPick[],
+  eliteSkills?: ReadonlySet<string>,
 ): TournamentSkillPlanResult {
-  const eliteSet = new Set(def.eliteSkills);
+  const eliteSet = eliteSkills ?? new Set(def.eliteSkills);
   const perPlayer = new Map<string, number>();
   let totalSpp = 0;
 
@@ -409,15 +416,38 @@ export function validateTournamentSkillPlan(
 }
 
 /**
+ * Compétences Elite RETENUES par le règlement : sa propre liste quand il en
+ * publie une, sinon celles de l'édition (référentiel `Skill.isElite`).
+ *
+ * Sans ce repli, un règlement qui facture un surcoût Elite sans republier la
+ * liste — le cas du pack NAF WC 2027 — ne le facturait jamais : `eliteSkills`
+ * étant vide, aucune compétence n'était reconnue comme Elite.
+ */
+export function resolveTournamentEliteSkills(
+  def: TournamentRulesetDefinition,
+  editionEliteSkills: readonly string[] = [],
+): ReadonlySet<string> {
+  return new Set(
+    def.eliteSkills.length > 0 ? def.eliteSkills : editionEliteSkills,
+  );
+}
+
+/**
  * Coût SPP de la N-ième compétence (0-based) d'un joueur selon le barème du
  * règlement. Utilisé pour dépenser le pool au build (miroir « appliqué » de
  * `validateTournamentSkillPlan`).
+ *
+ * `eliteSkills` : ensemble résolu par `resolveTournamentEliteSkills`. Omis,
+ * on retombe sur la liste publiée par le règlement — donc sur aucun surcoût
+ * quand il n'en publie pas. Les appelants qui connaissent le référentiel de
+ * compétences (serveur, builder) DOIVENT le passer.
  */
 export function tournamentSkillCost(
   def: TournamentRulesetDefinition,
   alreadyTaken: number,
   type: "primary" | "secondary",
   skillSlug?: string,
+  eliteSkills?: ReadonlySet<string>,
 ): number {
   const base =
     alreadyTaken <= 0
@@ -427,9 +457,8 @@ export function tournamentSkillCost(
       : type === "primary"
         ? def.skillCosts.secondPrimary
         : def.skillCosts.secondSecondary;
-  const elite =
-    skillSlug && def.eliteSkills.includes(skillSlug)
-      ? def.skillCosts.eliteSurcharge
-      : 0;
-  return base + elite;
+  const elite = eliteSkills ?? new Set(def.eliteSkills);
+  return base + (skillSlug && elite.has(skillSlug)
+    ? def.skillCosts.eliteSurcharge
+    : 0);
 }

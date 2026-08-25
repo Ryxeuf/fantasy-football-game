@@ -1350,6 +1350,77 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.reference.budget.home.maxBudget).toBe(200_000);
       expect(out.reference.budget.away.pettyCash).toBe(0);
     });
+
+    it("sous règlement de tournoi, sert la liste fermée et les prix du pack", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: {
+          season: {
+            league: {
+              id: "L1",
+              creatorId: COMMISH,
+              allowedInducements: null,
+              tournamentRuleset: "naf_world_cup_2027",
+            },
+          },
+        },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      const elevenPlayers = (prefix: string) =>
+        Array.from({ length: 11 }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `${prefix}${i + 1}`,
+          position: "lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          currentValue: 1_000_000,
+          treasury: 50_000,
+          owner: { coachName: "Sepp" },
+          players: elevenPlayers("h"),
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          currentValue: 1_150_000,
+          treasury: 0,
+          owner: { coachName: "Grag" },
+          players: elevenPlayers("a"),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      const homeSlugs = out.reference.inducements.home.map((i) => i.slug);
+      // Liste FERMÉE du pack : l'apothicaire itinérant n'y figure pas, même
+      // si le roster humain y aurait droit au catalogue officiel.
+      expect(homeSlugs).not.toContain("wandering_apothecary");
+      expect(homeSlugs).toContain("bribe");
+      expect(homeSlugs).toContain("team_mascot");
+      // Prix et quantité imposés par le règlement.
+      const bribe = out.reference.inducements.home.find(
+        (i) => i.slug === "bribe",
+      );
+      expect(bribe?.cost).toBe(100_000);
+      const kegs = out.reference.inducements.home.find(
+        (i) => i.slug === "bloodweiser_kegs",
+      );
+      expect(kegs?.cost).toBe(50_000);
+      expect(kegs?.maxQuantity).toBe(2);
+    });
   });
 
   // Lot H — liste des matchs a valider pour le commissaire.

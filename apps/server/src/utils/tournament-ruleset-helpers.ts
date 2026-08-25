@@ -30,3 +30,30 @@ export function parseTournamentRuleset(value: unknown): ParsedTournamentRuleset 
   }
   return { ok: true, def: getTournamentRuleset(value) };
 }
+
+/** Barème de points de RÉSULTAT imposé par un règlement (victoire/nul/…). */
+export interface TournamentResultPoints {
+  readonly winPoints: number;
+  readonly drawPoints: number;
+  readonly lossPoints: number;
+  /** Concession/forfait — négatif dans les packs officiels. */
+  readonly forfeitPoints: number;
+}
+
+/**
+ * Barème de classement du règlement, projeté sur les colonnes de points des
+ * ligues et des coupes. Un règlement définit le classement de son tournoi
+ * (NAF WC 2027 : V 5 / N 2 / D 0 / concession -5) : une ligue ou une coupe
+ * créée sous ce règlement doit compter comme lui, sinon le classement
+ * affiché n'est pas celui du tournoi joué.
+ */
+export function tournamentResultPoints(
+  def: TournamentRulesetDefinition,
+): TournamentResultPoints {
+  return {
+    winPoints: def.scoring.win,
+    drawPoints: def.scoring.draw,
+    lossPoints: def.scoring.loss,
+    forfeitPoints: def.scoring.concession,
+  };
+}

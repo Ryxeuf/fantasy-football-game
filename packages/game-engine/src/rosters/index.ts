@@ -192,6 +192,7 @@ export {
   getTournamentRuleset,
   getTournamentRosterRules,
   maxTwoSkillPlayers,
+  resolveTournamentEliteSkills,
   tournamentStarPlayerSppTax,
   tournamentSkillCost,
   validateTournamentSkillPlan,

@@ -47,6 +47,7 @@ import {
   getTournamentRuleset,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
+  resolveTournamentEliteSkills,
   tournamentSkillCost,
   validateTournamentSkillPlan,
   type TournamentRosterRules,
@@ -71,6 +72,7 @@ import {
   type BuildAdvancementInput,
 } from '../services/cup-build-advancements';
 import { captureRosterSnapshot } from '../services/cup-roster-snapshot';
+import { getEliteSkillSlugs } from '../services/elite-skills';
 
 /**
  * S27.8.27 — `POST /team/build`
@@ -344,6 +346,22 @@ export async function handleBuildTeam(
 
     const starPlayersToHire = starPlayerSlugs || [];
 
+    // Le règlement peut exiger un effectif régulier minimum AVANT tout Star
+    // Player (11 joueurs pour le NAF WC 2027). `totalPlayers` ne compte que
+    // les joueurs réguliers : les Star Players sont hors de cette boucle.
+    if (
+      pack &&
+      starPlayersToHire.length > 0 &&
+      totalPlayers < pack.minRegularPlayersBeforeStars
+    ) {
+      sendError(
+        res,
+        `Le règlement ${pack.shortLabel} exige ${pack.minRegularPlayersBeforeStars} joueurs réguliers avant de recruter un Star Player (${totalPlayers} sélectionné${totalPlayers > 1 ? 's' : ''})`,
+        400,
+      );
+      return;
+    }
+
     // Contraintes propres au format (BB11 / Sevens) : nombre de joueurs,
     // non-Linemen, Big Guys, Star Players, plafonds de staff. Source unique
     // de vérité partagée avec l'UI (@bb/game-engine).
@@ -560,13 +578,29 @@ export async function handleBuildTeam(
     // AVANT la création pour refuser sans build à annuler. Le budget SPP
     // (pool − taxe Star Players) est ensuite décompté à l'application via
     // le barème du pack.
+    // Compétences Elite retenues par le règlement : sa propre liste s'il en
+    // publie une, sinon celles de l'édition (`Skill.isElite`). Un règlement
+    // qui facture un surcoût Elite sans republier la liste — le pack NAF WC
+    // 2027 — ne le facturait jamais avant cette résolution.
+    const packEliteSkills = pack
+      ? resolveTournamentEliteSkills(pack, [
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(await getEliteSkillSlugs(prisma as any, ruleset)),
+        ])
+      : undefined;
+
     if (pack && packRosterRules && advancements.length > 0) {
       const picks: TournamentSkillPick[] = advancements.map((adv) => ({
         playerKey: `${adv.positionSlug}#${adv.ordinal}`,
         type: adv.type,
         skillSlug: adv.skillSlug,
       }));
-      const plan = validateTournamentSkillPlan(pack, packRosterRules, picks);
+      const plan = validateTournamentSkillPlan(
+        pack,
+        packRosterRules,
+        picks,
+        packEliteSkills,
+      );
       if (!plan.valid) {
         sendError(res, plan.error ?? 'Plan de compétences invalide', 400);
         return;
@@ -622,6 +656,7 @@ export async function handleBuildTeam(
                   taken,
                   type as 'primary' | 'secondary',
                   skillSlug,
+                  packEliteSkills,
                 )
             : undefined,
         );

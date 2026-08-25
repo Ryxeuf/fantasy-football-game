@@ -67,9 +67,15 @@ import {
   DEFAULT_RULESET,
   APOTHECARY_FORBIDDEN_ROSTERS,
   getTeamColors,
+  getTournamentRuleset,
   TEAM_ROSTERS,
   type Ruleset,
+  type TournamentRulesetDefinition,
 } from "@bb/game-engine";
+import {
+  applyPackInducementRules,
+  effectiveInducementAllowlist,
+} from "./tournament-inducements";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
 
 export type MatchSheetStatus =
@@ -478,9 +484,13 @@ export async function updatePreMatch(input: {
     // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
     // ligue. Les Star Players (slug "star_player") sont exemptés (ils
     // dépendent des rosters / règles régionales, pas de l'allowlist).
-    const allowlist = await loadLeagueAllowedInducements(input.pairingId);
-    assertInducementsAllowed(p.inducementsHome, allowlist, "domicile");
-    assertInducementsAllowed(p.inducementsAway, allowlist, "extérieur");
+    const { allowlist, pack } = await loadLeagueInducementRules(
+      input.pairingId,
+    );
+    // Le règlement pose une liste FERMÉE : elle borne l'allowlist de ligue.
+    const effectiveAllowlist = effectiveInducementAllowlist(allowlist, pack);
+    assertInducementsAllowed(p.inducementsHome, effectiveAllowlist, "domicile");
+    assertInducementsAllowed(p.inducementsAway, effectiveAllowlist, "extérieur");
     if (p.inducementsHome !== undefined) {
       const spent = sumGold(p.inducementsHome);
       if (spent > budget.home.maxBudget) {
@@ -2121,6 +2131,9 @@ function inducementOptionsFor(
   // qu'elle apporte) qui ouvre les Coups de Pouce régionaux, pas l'union
   // des Ligues du roster. `null` = équipe sans choix enregistré.
   regionalLeague: string | null = null,
+  // Règlement de tournoi de la ligue : liste FERMÉE de coups de pouce, avec
+  // ses prix et quantités (ils priment sur le catalogue du moteur).
+  pack: TournamentRulesetDefinition | null = null,
 ): MatchSheetInducementOption[] {
   const ctx = {
     teamId: "A" as const,
@@ -2135,8 +2148,9 @@ function inducementOptionsFor(
     // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
     specialRules: getSpecialRulesForTeam(roster),
   };
-  const allow = allowedInducements ? new Set(allowedInducements) : null;
-  return INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
+  const effective = effectiveInducementAllowlist(allowedInducements, pack);
+  const allow = effective ? new Set(effective) : null;
+  const options = INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
     .filter((d) => !d.canPurchase || d.canPurchase(ctx))
     .filter((d) => allow === null || allow.has(d.slug))
     .map((d) => ({
@@ -2147,6 +2161,8 @@ function inducementOptionsFor(
       description: d.description,
       ...(d.variableCost ? { variableCost: true } : {}),
     }));
+  // Prix, quantités et précisions du règlement priment sur le catalogue.
+  return applyPackInducementRules(options, pack) as MatchSheetInducementOption[];
 }
 
 /** Couleur 24 bits -> hex CSS (#rrggbb). */
@@ -2179,13 +2195,19 @@ async function starPlayersFor(
 }
 
 /**
- * FR17 — charge l'allowlist de coups de pouce de la ligue (via
- * pairing → round → saison → ligue). `null` = tous autorisés. Tolérant
- * (JSON invalide / absence → null).
+ * Règles de coups de pouce applicables au match (via pairing → round →
+ * saison → ligue) :
+ *  - FR17 — l'allowlist de la ligue (`null` = tous autorisés) ;
+ *  - le RÈGLEMENT DE TOURNOI de la ligue, qui pose sa propre liste fermée
+ *    avec ses prix et quantités (NAF WC 2027).
+ *
+ * Tolérant : JSON invalide, ligue absente ou lecture en échec → aucune
+ * restriction, la feuille de match reste servie.
  */
-async function loadLeagueAllowedInducements(
-  pairingId: string,
-): Promise<string[] | null> {
+async function loadLeagueInducementRules(pairingId: string): Promise<{
+  allowlist: string[] | null;
+  pack: TournamentRulesetDefinition | null;
+}> {
   try {
     const row = (await prisma.leaguePairing.findUnique({
       where: { id: pairingId },
@@ -2193,22 +2215,40 @@ async function loadLeagueAllowedInducements(
         round: {
           select: {
             season: {
-              select: { league: { select: { allowedInducements: true } } },
+              select: {
+                league: {
+                  select: {
+                    allowedInducements: true,
+                    tournamentRuleset: true,
+                  },
+                },
+              },
             },
           },
         },
       },
     })) as {
-      round?: { season?: { league?: { allowedInducements?: string | null } } };
+      round?: {
+        season?: {
+          league?: {
+            allowedInducements?: string | null;
+            tournamentRuleset?: string | null;
+          };
+        };
+      };
     } | null;
-    const raw = row?.round?.season?.league?.allowedInducements ?? null;
-    if (!raw) return null;
+    const league = row?.round?.season?.league;
+    const pack = getTournamentRuleset(league?.tournamentRuleset ?? null);
+    const raw = league?.allowedInducements ?? null;
+    if (!raw) return { allowlist: null, pack };
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
-      ? (parsed as string[])
-      : null;
+    const allowlist =
+      Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
+        ? (parsed as string[])
+        : null;
+    return { allowlist, pack };
   } catch {
-    return null;
+    return { allowlist: null, pack: null };
   }
 }
 
@@ -2258,6 +2298,8 @@ export async function buildMatchSheetReference(
   // A55 — dépenses de coups de pouce déjà engagées : la dépense de la plus
   // forte équipe augmente d'autant la cagnotte de l'underdog.
   spent: { home: number; away: number } = { home: 0, away: 0 },
+  // Règlement de tournoi de la ligue (liste fermée + prix imposés).
+  pack: TournamentRulesetDefinition | null = null,
 ): Promise<MatchSheetReference> {
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
@@ -2285,6 +2327,7 @@ export async function buildMatchSheetReference(
             teams.home.roster,
             allowedInducements,
             teams.home.regionalLeague,
+            pack,
           )
         : [],
       away: teams.away
@@ -2292,6 +2335,7 @@ export async function buildMatchSheetReference(
             teams.away.roster,
             allowedInducements,
             teams.away.regionalLeague,
+            pack,
           )
         : [],
     },
@@ -2445,9 +2489,8 @@ export async function getMatchSheet(input: {
     );
   }
 
-  const allowedInducements = await loadLeagueAllowedInducements(
-    input.pairingId,
-  );
+  const { allowlist: allowedInducements, pack: inducementPack } =
+    await loadLeagueInducementRules(input.pairingId);
 
   // Journaliers : derives du roster courant + choix de poste stocke sur
   // la feuille. Ils alimentent les pickers d'events et le roster affiche.
@@ -2510,7 +2553,12 @@ export async function getMatchSheet(input: {
     leagueId: ctx.leagueId,
     leagueName: ctx.leagueName,
     teams: teamsWithJourneymen,
-    reference: await buildMatchSheetReference(teams, allowedInducements),
+    reference: await buildMatchSheetReference(
+      teams,
+      allowedInducements,
+      { home: 0, away: 0 },
+      inducementPack,
+    ),
     computedSpp,
     viewerRole: commissioner
       ? "commissioner"
