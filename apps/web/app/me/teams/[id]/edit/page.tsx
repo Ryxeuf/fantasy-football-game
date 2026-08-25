@@ -41,6 +41,7 @@ import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
 import { buildImportantNotes } from "./important-notes";
 import PspPoolPanel from "./PspPoolPanel";
 import PlayerAdvancements from "./PlayerAdvancements";
+import TeamStarPlayersEditor from "./TeamStarPlayersEditor";
 import {
   fetchPspPool,
   fundingFor,
@@ -48,6 +49,7 @@ import {
   type TeamPspPoolState,
 } from "./psp-pool-client";
 import {
+  getTournamentRosterRules,
   getTournamentRuleset,
   tournamentSkillCost,
 } from "@bb/game-engine";
@@ -297,6 +299,10 @@ export default function TeamEditPage() {
   const pack = getTournamentRuleset(
     (team?.tournamentRuleset as string | null | undefined) ?? null,
   );
+  // Règles du règlement POUR CE ROSTER (Star Players autorisés, quota de
+  // cumul de compétences). null hors règlement.
+  const packRules =
+    pack && team?.roster ? getTournamentRosterRules(pack, team.roster) : null;
   const poolRemaining = pspPool?.remaining ?? 0;
   const skillNames = useMemo(
     () => new Map(skillsCatalog.map((s) => [s.slug, s.nameFr] as const)),
@@ -710,6 +716,34 @@ export default function TeamEditPage() {
           tournamentLabel={pack?.nameFr ?? null}
           disabled={!canEdit}
         />
+      )}
+
+      {/* Star Players : recrutables après création, comme au builder. */}
+      {team && constraints.starPlayersAllowed && (
+        packRules && !packRules.starPlayersAllowed ? (
+          <p
+            data-testid="edit-star-players-forbidden"
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          >
+            ⭐ Le règlement « {pack?.nameFr} » interdit les Star Players pour ce
+            roster.
+          </p>
+        ) : (
+          <TeamStarPlayersEditor
+            teamId={id}
+            roster={team.roster}
+            ruleset={team.ruleset}
+            regionalLeague={team.regionalLeague ?? null}
+            excludedSlugs={pack?.bannedStarPlayers}
+            disabled={!canEdit}
+            onChanged={() => {
+              // Le recrutement bouge budget et VE : on relit la fiche.
+              apiRequest<any>(`/team/${id}`)
+                .then(setData)
+                .catch(() => {});
+            }}
+          />
+        )
       )}
 
       {error && (
