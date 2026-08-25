@@ -9,6 +9,7 @@ import {
   filterPlayers,
   formatGold,
   formatGoldDelta,
+  humanizeSlug,
   parseAccessCodes,
   skillsOf,
   staffCostDelta,
@@ -163,5 +164,17 @@ describe("formatGold", () => {
   it("préfixe les différentiels positifs d'un +", () => {
     expect(formatGoldDelta(10_000).startsWith("+")).toBe(true);
     expect(formatGoldDelta(-10_000).startsWith("-")).toBe(true);
+  });
+});
+
+describe("humanizeSlug", () => {
+  it("rend un slug lisible", () => {
+    expect(humanizeSlug("griff_oberwald")).toBe("Griff Oberwald");
+    expect(humanizeSlug("grak")).toBe("Grak");
+  });
+
+  it("tolère les tirets et les séparateurs répétés", () => {
+    expect(humanizeSlug("morg-n_thorg")).toBe("Morg N Thorg");
+    expect(humanizeSlug("")).toBe("");
   });
 });

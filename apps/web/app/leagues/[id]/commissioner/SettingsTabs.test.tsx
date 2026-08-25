@@ -238,7 +238,7 @@ describe("Onglet Ligue régionale", () => {
     );
     await waitFor(() =>
       expect(screen.getByTestId("regional-orphans").textContent).toContain(
-        "grak",
+        "Grak",
       ),
     );
   });

@@ -30,6 +30,8 @@ import {
   getRegionalLeagueBySlug,
   getRegionalLeagueOptions,
   getTournamentRuleset,
+  favouredOfLabel,
+  isFavouredOfSlug,
   isGameFormat,
   resolveTeamRegionalRules,
   type GameFormat,
@@ -246,7 +248,7 @@ export interface RegionalLeagueOptionView {
   readonly slug: string;
   readonly label: string;
   readonly description: string | null;
-  /** Alignements (« Favori de… ») apportes par ce choix. */
+  /** Alignements (« Favori de… ») apportes par ce choix, en clair. */
   readonly grants: readonly string[];
 }
 
@@ -274,6 +276,15 @@ export interface TeamSettingsView {
   };
   /** Star Players deja recrutes (impactes par un changement de Ligue). */
   readonly starPlayers: readonly string[];
+}
+
+/**
+ * Libelle en clair d'un alignement apporte par une Ligue. Les slugs
+ * « favoured_of_* » ont un libelle FR dans le moteur ; les autres sont
+ * rendus tels quels plutot que d'inventer une traduction.
+ */
+function grantLabel(slug: string): string {
+  return isFavouredOfSlug(slug) ? favouredOfLabel(slug) : slug;
 }
 
 /** Star Players recrutes par l'equipe (best-effort : liste vide si modele absent). */
@@ -313,7 +324,7 @@ export async function getTeamSettings(input: {
         slug: o.slug,
         label: getRegionalLeagueBySlug(o.slug)?.nameFr ?? o.slug,
         description: getRegionalLeagueBySlug(o.slug)?.description ?? null,
-        grants: [...o.grants],
+        grants: o.grants.map(grantLabel),
       }))
     : [];
 

@@ -167,6 +167,11 @@ describe("commissioner-team-settings", () => {
       // Les Nordiques ont plusieurs Ligues, dont le Clash du Chaos implicite.
       expect(out.regionalLeague.options.length).toBeGreaterThan(1);
       expect(out.regionalLeague.options[0].label).not.toBe("");
+      // L'alignement conditionnel du Clash du Chaos est rendu en clair.
+      const clash = out.regionalLeague.options.find(
+        (o) => o.slug === "chaos_clash",
+      );
+      expect(clash?.grants).toContain("Favori de Khorne");
     });
 
     it("neutralise l'axe régional sous règlement de tournoi qui l'interdit", async () => {

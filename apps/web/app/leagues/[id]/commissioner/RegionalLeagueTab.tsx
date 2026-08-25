@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import { apiRequest } from "../../../lib/api-client";
+import { humanizeSlug } from "./roster-helpers";
 import type { RegionalLeagueUpdate, TeamSettings } from "./types";
 
 interface Props {
@@ -161,7 +162,7 @@ export function RegionalLeagueTab({
           className="text-xs text-red-800 bg-red-50 border border-red-200 rounded px-2 py-1.5"
         >
           Star Player(s) désormais inéligible(s), laissé(s) en place :{" "}
-          {orphans.join(", ")}
+          {orphans.map(humanizeSlug).join(", ")}
         </p>
       ) : null}
 

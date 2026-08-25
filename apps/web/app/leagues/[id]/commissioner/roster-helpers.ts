@@ -186,3 +186,16 @@ export function staffCostDelta(
     apothecary * config.apothecaryCost
   );
 }
+
+/**
+ * Slug technique → libelle lisible (« griff_oberwald » → « Griff
+ * Oberwald »). Repli d'affichage quand l'API ne renvoie que le slug, ex.
+ * les Star Players recrutes.
+ */
+export function humanizeSlug(slug: string): string {
+  return slug
+    .split(/[_-]+/)
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
