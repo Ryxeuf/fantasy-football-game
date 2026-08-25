@@ -42,6 +42,8 @@ import { buildImportantNotes } from "./important-notes";
 import PspPoolPanel from "./PspPoolPanel";
 import PlayerAdvancements from "./PlayerAdvancements";
 import TeamStarPlayersEditor from "./TeamStarPlayersEditor";
+import { rosterDraftSignature } from "./roster-draft";
+import { useUnsavedChanges } from "../../../../hooks/useUnsavedChanges";
 import {
   fetchPspPool,
   fundingFor,
@@ -151,6 +153,9 @@ export default function TeamEditPage() {
   // Pool de PSP de construction : c'est lui qui finance les compétences
   // achetées hors match (les SPP d'un joueur qui n'a pas joué valent 0).
   const [pspPool, setPspPool] = useState<TeamPspPoolState | null>(null);
+  // Signature du roster tel qu'il est ENREGISTRÉ. Toute divergence = des
+  // modifications que quitter la page perdrait.
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [newPlayerForm, setNewPlayerForm] = useState({
     position: '',
@@ -244,6 +249,9 @@ export default function TeamEditPage() {
         setData(d);
         setPlayers(d.team?.players || []);
         setTeamName(d.team?.name || "");
+        setSavedSignature(
+          rosterDraftSignature(d.team?.name || "", d.team?.players || []),
+        );
         setAvailablePositions(positionsData.availablePositions || []);
         setFrozen(positionsData.frozen ?? true);
         setPspPool(pool);
@@ -304,6 +312,12 @@ export default function TeamEditPage() {
   const packRules =
     pack && team?.roster ? getTournamentRosterRules(pack, team.roster) : null;
   const poolRemaining = pspPool?.remaining ?? 0;
+  // `saving` exclu : pendant l'enregistrement la redirection est voulue.
+  const hasUnsavedChanges =
+    savedSignature !== null &&
+    !saving &&
+    rosterDraftSignature(teamName, players) !== savedSignature;
+  useUnsavedChanges({ when: hasUnsavedChanges });
   const skillNames = useMemo(
     () => new Map(skillsCatalog.map((s) => [s.slug, s.nameFr] as const)),
     [skillsCatalog],
@@ -405,6 +419,9 @@ export default function TeamEditPage() {
         }),
       });
 
+      // Le brouillon vient d'être persisté : la garde « modifications non
+      // enregistrées » doit se désarmer AVANT la redirection.
+      setSavedSignature(rosterDraftSignature(teamName, players));
       toast.success(t.teams.teamSavedToast);
       router.push(`/me/teams/${id}`);
     } catch (e: any) {

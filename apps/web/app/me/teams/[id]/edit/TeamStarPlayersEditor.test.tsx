@@ -109,14 +109,14 @@ describe("TeamStarPlayersEditor", () => {
     await waitFor(() =>
       expect(
         apiRequest.mock.calls.some(
-          ([path, init]: [string, RequestInit | undefined]) =>
-            path === "/team/T1/star-players" && init?.method === "POST",
+          (call: any[]) =>
+            call[0] === "/team/T1/star-players" && call[1]?.method === "POST",
         ),
       ).toBe(true),
     );
     const [, init] = apiRequest.mock.calls.find(
-      ([path, i]: [string, RequestInit | undefined]) =>
-        path === "/team/T1/star-players" && i?.method === "POST",
+      (call: any[]) =>
+        call[0] === "/team/T1/star-players" && call[1]?.method === "POST",
     )!;
     expect(JSON.parse(String(init.body))).toEqual({
       starPlayerSlug: "griff_oberwald",
@@ -138,8 +138,9 @@ describe("TeamStarPlayersEditor", () => {
     await waitFor(() =>
       expect(
         apiRequest.mock.calls.some(
-          ([path, init]: [string, RequestInit | undefined]) =>
-            path === "/team/T1/star-players/sp-1" && init?.method === "DELETE",
+          (call: any[]) =>
+            call[0] === "/team/T1/star-players/sp-1" &&
+            call[1]?.method === "DELETE",
         ),
       ).toBe(true),
     );
