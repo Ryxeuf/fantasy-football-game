@@ -31,6 +31,7 @@ import {
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
 import { seedRosterStaffConfigs } from "./scripts/seed-roster-staff-config";
+import { syncTournamentRulesets } from "./seeders/sync-tournament-rulesets";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -308,6 +309,15 @@ async function main() {
   const staffRes = await seedRosterStaffConfigs();
   serverLog.log(
     `✅ Staff configs: ${staffRes.created} créées, ${staffRes.skipped} déjà présentes\n`,
+  );
+
+  // Règlements de tournoi : la base est la source de vérité éditable, le
+  // registre du moteur l'amorce. Une ligne déjà présente n'est PAS réécrite
+  // (une correction saisie en admin survit au déploiement suivant).
+  const packsRes = await syncTournamentRulesets({ write: true });
+  serverLog.log(
+    `✅ Règlements de tournoi: ${packsRes.created.length} créés, ` +
+      `${packsRes.skipped.length} déjà présents\n`,
   );
 
   // =============================================================================
