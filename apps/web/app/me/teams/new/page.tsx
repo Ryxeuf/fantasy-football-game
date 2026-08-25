@@ -486,6 +486,21 @@ export default function NewTeamBuilder() {
     [totalPlayers, selectedStarPlayers],
   );
 
+  // Effectif régulier minimum exigé par le règlement avant tout Star Player
+  // (11 pour le NAF WC 2027). `null` = aucune exigence en cours.
+  const starsNeedMorePlayers = useMemo(() => {
+    if (!pack || pack.minRegularPlayersBeforeStars <= 0) return null;
+    if (totalPlayers >= pack.minRegularPlayersBeforeStars) return null;
+    return pack.minRegularPlayersBeforeStars;
+  }, [pack, totalPlayers]);
+
+  // Le règlement s'applique aussi APRÈS coup : retirer des joueurs sous le
+  // minimum rendrait le build invalide, on purge donc la sélection.
+  useEffect(() => {
+    if (starsNeedMorePlayers === null) return;
+    setSelectedStarPlayers((prev) => (prev.length > 0 ? [] : prev));
+  }, [starsNeedMorePlayers]);
+
   // Coûts staff en kpo (la config DB est en po). Le coût de relance inclut
   // déjà le multiplicateur de format (Sevens ×2) côté config.
   const rerollUnitCost = useMemo(
@@ -1083,8 +1098,12 @@ export default function NewTeamBuilder() {
                   <li>
                     Star Players :{" "}
                     {packRules.starPlayersAllowed
-                      ? "autorisés (hors bannis du règlement)"
+                      ? `autorisés (hors bannis du règlement), à partir de ${pack.minRegularPlayersBeforeStars} joueurs réguliers`
                       : "interdits pour ce roster"}
+                  </li>
+                  <li>
+                    Compétences Élite : +{pack.skillCosts.eliteSurcharge} PSP
+                    par compétence Élite (Blocage, Esquive, Châtaigne, Garde).
                   </li>
                   <li>
                     Résurrection : aucun SPP gagné en jeu, blessures non
@@ -1596,6 +1615,19 @@ export default function NewTeamBuilder() {
             >
               ⭐ Le recrutement de Star Players est réservé à l&apos;Édition
               avancée — activez « Édition avancée » pour y accéder.
+            </p>
+          ) : starsNeedMorePlayers !== null ? (
+            // Le règlement exige un effectif régulier minimum avant tout
+            // Star Player : proposer la liste reviendrait à faire refuser le
+            // build par le serveur.
+            <p
+              data-testid="star-players-requires-roster-size"
+              className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2"
+            >
+              ⭐ {pack?.shortLabel} : recrute d&apos;abord{" "}
+              {starsNeedMorePlayers} joueurs réguliers ({totalPlayers}{" "}
+              sélectionné{totalPlayers > 1 ? "s" : ""}) avant de faire appel à
+              un Star Player.
             </p>
           ) : regionalLeagueMissing ? (
             // Les recrues dépendent de la Ligue : tant qu'elle n'est pas

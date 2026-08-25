@@ -409,6 +409,40 @@ describe('handleBuildTeam — plan de compétences sous règlement', () => {
     expect(errorOf(res)).toMatch(/ne peut pas cumuler/);
   });
 
+  it("refuse un Star Player sous l'effectif régulier minimum du règlement", async () => {
+    // NAF WC 2027 : 11 joueurs réguliers avant tout Star Player. Les
+    // Snotlings sont autorisés à en recruter et n'ont qu'une Ligue (pas de
+    // choix régional à trancher dans ce test).
+    const res = createRes();
+    await handleBuildTeam(
+      createReq({
+        name: 'T',
+        roster: 'snotling',
+        choices: [{ key: 'lineman', count: 10 }],
+        tournamentRuleset: 'naf_world_cup_2027',
+        starPlayers: ['morg_n_thorg_2025'],
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res)).toMatch(/11 joueurs réguliers/);
+  });
+
+  it("accepte un Star Player dès l'effectif régulier minimum atteint", async () => {
+    const res = createRes();
+    await handleBuildTeam(
+      createReq({
+        name: 'T',
+        roster: 'snotling',
+        choices: ELEVEN_LINEMEN,
+        tournamentRuleset: 'naf_world_cup_2027',
+        starPlayers: ['morg_n_thorg_2025'],
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+  });
+
   it('applique les améliorations valides avec le barème du pack', async () => {
     (prisma.teamPlayer.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
       { id: 'p1', position: 'lineman' },

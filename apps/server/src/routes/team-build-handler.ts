@@ -346,6 +346,22 @@ export async function handleBuildTeam(
 
     const starPlayersToHire = starPlayerSlugs || [];
 
+    // Le règlement peut exiger un effectif régulier minimum AVANT tout Star
+    // Player (11 joueurs pour le NAF WC 2027). `totalPlayers` ne compte que
+    // les joueurs réguliers : les Star Players sont hors de cette boucle.
+    if (
+      pack &&
+      starPlayersToHire.length > 0 &&
+      totalPlayers < pack.minRegularPlayersBeforeStars
+    ) {
+      sendError(
+        res,
+        `Le règlement ${pack.shortLabel} exige ${pack.minRegularPlayersBeforeStars} joueurs réguliers avant de recruter un Star Player (${totalPlayers} sélectionné${totalPlayers > 1 ? 's' : ''})`,
+        400,
+      );
+      return;
+    }
+
     // Contraintes propres au format (BB11 / Sevens) : nombre de joueurs,
     // non-Linemen, Big Guys, Star Players, plafonds de staff. Source unique
     // de vérité partagée avec l'UI (@bb/game-engine).
