@@ -1,84 +1,64 @@
 "use client";
 
 /**
- * Allocateur de PSP « au build » (mode édition avancée / coupe).
+ * Allocateur de PSP « au build » (mode édition avancée / coupe / tournoi).
  *
  * Permet, avant la création de l'équipe, de dépenser un pool de PSP en
  * améliorations sur les joueurs sélectionnés. Chaque joueur est identifié par
- * (positionSlug, ordinal) — le serveur crée les joueurs dans le même ordre puis
- * applique les advancements (cf. `applyCupBuildAdvancements`).
+ * (positionSlug, ordinal) — le serveur crée les joueurs dans le même ordre
+ * puis applique les advancements (cf. `applyCupBuildAdvancements`).
  *
- * E10 : jusqu'à DEUX améliorations de compétence choisies (Principale/
- * Secondaire) par joueur, piochées dans le pool d'accès de la position. Le
- * coût suit le barème BB (1er puis 2e palier). Le serveur re-valide tout
- * (coût croissant par avancement déjà pris).
+ * UI : une carte par joueur (mobile d'abord, deux colonnes dès `sm`), les
+ * compétences achetées en puces retirables, et un sélecteur en feuille
+ * (`SkillPickerSheet`) avec recherche, filtre par catégorie, badge de
+ * catégorie et d'Élite. Les règles (accès, doublons, compétences déjà
+ * possédées, barème PSP standard ou de tournoi, quota de cumul) vivent dans
+ * `build-advancement-rules.ts` — le serveur re-valide tout.
  */
 
 import { useEffect, useMemo, useState } from "react";
+import type {
+  TournamentRosterRules,
+  TournamentRulesetDefinition,
+} from "@bb/game-engine";
 import { apiRequest } from "../../../lib/api-client";
+import SkillPickerSheet from "./SkillPickerSheet";
+import {
+  CATEGORY_CODE,
+  CATEGORY_LABELS,
+  MAX_ADVANCEMENTS_PER_PLAYER,
+  advancementsFor,
+  parseSkillSlugs,
+  planSppTotal,
+  planVeSurcharge,
+  skillSppCost,
+  stackingUsage,
+  type AllocatorPosition,
+  type BuildAdvancement,
+  type BuildAdvancementType,
+  type BuildCostContext,
+  type SkillCatalogItem,
+} from "./build-advancement-rules";
 
-export interface BuildAdvancement {
-  positionSlug: string;
-  ordinal: number;
-  type: "primary" | "secondary";
-  skillSlug: string;
-}
-
-interface AllocatorPosition {
-  slug: string;
-  displayName: string;
-  primarySkills?: string | null;
-  secondarySkills?: string | null;
-}
-
-interface SkillCatalogItem {
-  slug: string;
-  nameFr: string;
-  nameEn?: string;
-  category: string;
-}
+export type { BuildAdvancement } from "./build-advancement-rules";
 
 interface SkillsResponse {
   skills: SkillCatalogItem[];
 }
 
-const CATEGORY_CODE: Record<string, string> = {
-  General: "G",
-  Agility: "A",
-  Strength: "S",
-  Passing: "P",
-  Mutation: "M",
-  "Scélérates": "K",
+const TYPE_LABELS: Record<BuildAdvancementType, string> = {
+  primary: "Principale",
+  secondary: "Secondaire",
 };
 
-// E10 — 2 améliorations max par joueur au build.
-const MAX_ADVANCEMENTS_PER_PLAYER = 2;
-
-// Coûts des 2 premiers paliers (barème BB2025), miroir de advancements.ts :
-// le coût dépend du nombre d'avancements DÉJÀ pris par le joueur.
-const TIER_COSTS: Record<BuildAdvancement["type"], [number, number]> = {
-  primary: [6, 8],
-  secondary: [10, 12],
-};
-
-function costForSlot(type: BuildAdvancement["type"], slot: number): number {
-  return TIER_COSTS[type][Math.min(Math.max(slot, 0), 1)];
-}
-
-/** Parse un CSV d'accès ("G,S" / "GS", alias F→S) en Set de codes. */
-function parseAccessCsv(raw: string | null | undefined): Set<string> {
-  const out = new Set<string>();
-  if (!raw) return out;
-  for (const token of raw.split(/[\s,]+/)) {
-    const code = token.trim().toUpperCase().replace("F", "S");
-    if (code) out.add(code);
-  }
-  return out;
+/** Formate un montant en po (« 30 000 po »). */
+function formatPo(value: number): string {
+  return `${value.toLocaleString("fr-FR")} po`;
 }
 
 export interface BuildAdvancementAllocatorProps {
   ruleset: string;
-  /** Postes du roster (avec accès compétences). */
+  /** Postes du roster (accès compétences + compétences de base). */
   positions: AllocatorPosition[];
   /** Quantités choisies par poste (slug → count). */
   counts: Record<string, number>;
@@ -86,6 +66,10 @@ export interface BuildAdvancementAllocatorProps {
   pool: number;
   value: BuildAdvancement[];
   onChange: (advancements: BuildAdvancement[]) => void;
+  /** Règlement de tournoi retenu (barème PSP + quota de cumul). */
+  pack?: TournamentRulesetDefinition | null;
+  /** Règles du règlement pour ce roster. */
+  packRules?: TournamentRosterRules | null;
 }
 
 export default function BuildAdvancementAllocator({
@@ -95,8 +79,17 @@ export default function BuildAdvancementAllocator({
   pool,
   value,
   onChange,
+  pack = null,
+  packRules = null,
 }: BuildAdvancementAllocatorProps) {
   const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
+  const [playerFilter, setPlayerFilter] = useState("");
+  const [onlyImproved, setOnlyImproved] = useState(false);
+  // Joueur dont on est en train de choisir une compétence (feuille ouverte).
+  const [picking, setPicking] = useState<{
+    position: AllocatorPosition;
+    ordinal: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,6 +107,24 @@ export default function BuildAdvancementAllocator({
     };
   }, [ruleset]);
 
+  const ctx: BuildCostContext = useMemo(
+    () => ({ pack, packRules }),
+    [pack, packRules],
+  );
+
+  const catalogBySlug = useMemo(() => {
+    const map = new Map<string, SkillCatalogItem>();
+    for (const skill of catalog) map.set(skill.slug, skill);
+    return map;
+  }, [catalog]);
+
+  const eliteSlugs = useMemo(
+    () => new Set(catalog.filter((s) => s.isElite).map((s) => s.slug)),
+    [catalog],
+  );
+
+  const skillName = (slug: string) => catalogBySlug.get(slug)?.nameFr ?? slug;
+
   // Instances de joueurs (positionSlug + ordinal) dérivées des counts.
   const instances = useMemo(() => {
     const list: Array<{ position: AllocatorPosition; ordinal: number }> = [];
@@ -124,41 +135,30 @@ export default function BuildAdvancementAllocator({
     return list;
   }, [positions, counts]);
 
-  // E10 — avancements d'une instance, dans l'ordre (slot 0 puis 1).
-  const advsFor = (slug: string, ordinal: number): BuildAdvancement[] =>
-    value.filter((a) => a.positionSlug === slug && a.ordinal === ordinal);
-
-  // Coût total : pour chaque instance, le 1er avancement coûte le palier 1,
-  // le 2e le palier 2 (le serveur applique le même barème croissant).
-  const spent = useMemo(() => {
-    let total = 0;
-    const seen = new Map<string, number>();
-    for (const a of value) {
-      const key = `${a.positionSlug}#${a.ordinal}`;
-      const slot = seen.get(key) ?? 0;
-      total += costForSlot(a.type, slot);
-      seen.set(key, slot + 1);
-    }
-    return total;
-  }, [value]);
+  const spent = useMemo(() => planSppTotal(value, ctx), [value, ctx]);
   const remaining = Math.max(0, pool - spent);
+  const veSurcharge = useMemo(
+    () => planVeSurcharge(value, eliteSlugs),
+    [value, eliteSlugs],
+  );
+  const stacking = useMemo(() => stackingUsage(value, ctx), [value, ctx]);
 
-  const skillsForType = (
-    pos: AllocatorPosition,
-    type: BuildAdvancement["type"],
-  ): SkillCatalogItem[] => {
-    const access = parseAccessCsv(
-      type === "primary" ? pos.primarySkills : pos.secondarySkills,
-    );
-    // Accès non renseigné (ex: season_2) → on autorise toutes les catégories.
-    return catalog.filter((s) => {
-      if (access.size === 0) return true;
-      const code = CATEGORY_CODE[s.category];
-      return code ? access.has(code) : false;
+  const visibleInstances = useMemo(() => {
+    const q = playerFilter.trim().toLowerCase();
+    return instances.filter(({ position, ordinal }) => {
+      if (
+        onlyImproved &&
+        advancementsFor(value, position.slug, ordinal).length === 0
+      ) {
+        return false;
+      }
+      if (!q) return true;
+      return `${position.displayName} #${ordinal + 1}`
+        .toLowerCase()
+        .includes(q);
     });
-  };
+  }, [instances, playerFilter, onlyImproved, value]);
 
-  /** Remplace les avancements d'une instance par la liste donnée. */
   const setAdvs = (
     slug: string,
     ordinal: number,
@@ -170,153 +170,282 @@ export default function BuildAdvancementAllocator({
     onChange([...others, ...advs]);
   };
 
-  const patchSlot = (
-    slug: string,
+  const addAdvancement = (
+    position: AllocatorPosition,
     ordinal: number,
-    slot: number,
-    patch: Partial<BuildAdvancement> | null,
+    type: BuildAdvancementType,
+    skillSlug: string,
   ) => {
-    const advs = advsFor(slug, ordinal);
-    if (patch === null) {
-      setAdvs(
-        slug,
-        ordinal,
-        advs.filter((_, i) => i !== slot),
-      );
-      return;
-    }
-    const existing = advs[slot];
-    const next: BuildAdvancement = {
-      positionSlug: slug,
+    const advs = advancementsFor(value, position.slug, ordinal);
+    setAdvs(position.slug, ordinal, [
+      ...advs,
+      { positionSlug: position.slug, ordinal, type, skillSlug },
+    ]);
+    setPicking(null);
+  };
+
+  const removeAdvancement = (
+    position: AllocatorPosition,
+    ordinal: number,
+    index: number,
+  ) => {
+    const advs = advancementsFor(value, position.slug, ordinal);
+    setAdvs(
+      position.slug,
       ordinal,
-      type: patch.type ?? existing?.type ?? "primary",
-      skillSlug: patch.skillSlug ?? existing?.skillSlug ?? "",
-    };
-    const copy = [...advs];
-    copy[slot] = next;
-    setAdvs(slug, ordinal, copy);
+      advs.filter((_, i) => i !== index),
+    );
   };
 
   if (pool <= 0) return null;
 
+  const usedPercent = pool > 0 ? Math.min(100, (spent / pool) * 100) : 0;
+  const quotaReached = stacking.used >= stacking.max;
+
   return (
     <div
-      className="border border-amber-200 rounded-lg p-4 bg-amber-50/40 space-y-3"
+      className="rounded-2xl border border-amber-200 bg-amber-50/50 p-3 sm:p-4"
       data-testid="build-advancement-allocator"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-amber-900">
+      {/* En-tête : pool restant + jauge, lisible sur une colonne en mobile. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="text-sm font-semibold text-amber-900 sm:text-base">
           Améliorations au build (PSP)
         </h3>
-        <div className="text-sm text-amber-900">
-          Pool : <strong data-testid="allocator-remaining">{remaining}</strong> /{" "}
-          {pool} PSP
-        </div>
+        <p className="text-sm text-amber-900">
+          <strong data-testid="allocator-remaining">{remaining}</strong>
+          <span className="text-amber-700"> / {pool} PSP restants</span>
+        </p>
       </div>
-      <p className="text-xs text-amber-800/80">
-        Jusqu'à {MAX_ADVANCEMENTS_PER_PLAYER} compétences par joueur (coût
-        croissant : 2e amélioration au palier supérieur).
+      <div
+        className="mt-2 h-2 w-full overflow-hidden rounded-full bg-amber-100"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={pool}
+        aria-valuenow={spent}
+        aria-label="PSP dépensés"
+      >
+        <div
+          className="h-full rounded-full bg-amber-500 transition-all"
+          style={{ width: `${usedPercent}%` }}
+        />
+      </div>
+
+      <p className="mt-2 text-xs leading-relaxed text-amber-800/90">
+        Jusqu&apos;à {MAX_ADVANCEMENTS_PER_PLAYER} compétences par joueur
+        (la 2e coûte un palier de plus). Une compétence déjà sur la fiche du
+        poste, ou déjà choisie pour ce joueur, n&apos;est pas reproposée.
       </p>
 
+      {/* Ce que le plan coûte en Valeur d'Équipe (Élite = +10 000 po). */}
+      {value.length > 0 && (
+        <p className="mt-1 text-xs text-amber-800/90" data-testid="allocator-ve">
+          {value.length} amélioration{value.length > 1 ? "s" : ""} ·{" "}
+          {spent} PSP dépensés · +{formatPo(veSurcharge)} de Valeur
+          d&apos;Équipe
+        </p>
+      )}
+
+      {/* Contraintes du règlement de tournoi, quand il y en a un. */}
+      {pack && packRules && (
+        <p
+          className="mt-2 rounded-lg border border-amber-300 bg-white/70 px-2.5 py-1.5 text-xs text-amber-900"
+          data-testid="allocator-pack-rules"
+        >
+          <strong>{pack.shortLabel}</strong> — barème du règlement (1re :{" "}
+          {pack.skillCosts.firstPrimary}/{pack.skillCosts.firstSecondary} PSP,
+          2e : {pack.skillCosts.secondPrimary}/{pack.skillCosts.secondSecondary}{" "}
+          PSP)
+          {pack.skillCosts.eliteSurcharge > 0 &&
+            `, +${pack.skillCosts.eliteSurcharge} PSP par compétence Élite`}
+          {" · "}
+          {stacking.max === 0
+            ? "aucun joueur ne peut cumuler 2 compétences"
+            : `${stacking.used}/${stacking.max} joueur${
+                stacking.max > 1 ? "s" : ""
+              } à 2 compétences`}
+        </p>
+      )}
+
       {instances.length === 0 ? (
-        <p className="text-xs text-gray-500">
-          Ajoutez d'abord des joueurs pour leur attribuer des PSP.
+        <p className="mt-3 text-xs text-gray-500">
+          Ajoutez d&apos;abord des joueurs pour leur attribuer des PSP.
         </p>
       ) : (
-        <div className="space-y-2 max-h-72 overflow-y-auto">
-          {instances.map(({ position, ordinal }) => {
-            const advs = advsFor(position.slug, ordinal);
-            // Lignes affichées : les avancements existants + une ligne vide
-            // s'il reste un slot (E10 : max 2).
-            const rowCount = Math.min(
-              advs.length + 1,
-              MAX_ADVANCEMENTS_PER_PLAYER,
-            );
-            return (
-              <div
-                key={`${position.slug}-${ordinal}`}
-                className="space-y-1 bg-white rounded border border-gray-200 px-2 py-1.5"
-              >
-                {Array.from({ length: rowCount }, (_, slot) => {
-                  const adv = advs[slot];
-                  const type = adv?.type ?? "primary";
-                  const options = skillsForType(position, type).filter(
-                    // La 2e compétence doit différer de la 1re (empilement,
-                    // pas doublon).
-                    (s) =>
-                      !advs.some(
-                        (a, i) => i !== slot && a.skillSlug === s.slug,
-                      ),
-                  );
-                  const cost = costForSlot(type, slot);
-                  const cannotAfford = !adv && cost > remaining;
-                  return (
-                    <div
-                      key={slot}
-                      className="flex flex-wrap items-center gap-2 text-sm"
-                    >
-                      <span className="min-w-[9rem] font-medium text-gray-700">
-                        {slot === 0
-                          ? `${position.displayName} #${ordinal + 1}`
-                          : ""}
+        <>
+          {/* Filtres de la liste de joueurs (16 joueurs tiennent mal à l'œil). */}
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="search"
+              value={playerFilter}
+              onChange={(e) => setPlayerFilter(e.target.value)}
+              placeholder="Filtrer les joueurs…"
+              aria-label="Filtrer les joueurs"
+              data-testid="allocator-player-filter"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm sm:flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => setOnlyImproved((v) => !v)}
+              aria-pressed={onlyImproved}
+              data-testid="allocator-only-improved"
+              className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-medium transition ${
+                onlyImproved
+                  ? "border-amber-500 bg-amber-500 text-white"
+                  : "border-gray-300 bg-white text-gray-600 hover:border-amber-400"
+              }`}
+            >
+              Améliorés ({improvedPlayerCount(value)})
+            </button>
+          </div>
+
+          <ul className="mt-2 grid max-h-[26rem] grid-cols-1 gap-2 overflow-y-auto sm:max-h-[30rem] sm:grid-cols-2">
+            {visibleInstances.length === 0 ? (
+              <li className="col-span-full px-1 py-4 text-center text-xs text-gray-500">
+                Aucun joueur ne correspond au filtre.
+              </li>
+            ) : (
+              visibleInstances.map(({ position, ordinal }) => {
+                const advs = advancementsFor(value, position.slug, ordinal);
+                const label = `${position.displayName} #${ordinal + 1}`;
+                const full = advs.length >= MAX_ADVANCEMENTS_PER_PLAYER;
+                // 2e compétence : le règlement peut plafonner le nombre de
+                // joueurs autorisés à cumuler (`skillStacking`).
+                const quotaBlocked = advs.length === 1 && quotaReached;
+                const nextCost = Math.min(
+                  skillSppCost(advs.length, "primary", undefined, ctx),
+                  skillSppCost(advs.length, "secondary", undefined, ctx),
+                );
+                const tooExpensive = nextCost > remaining;
+                const baseSkills = parseSkillSlugs(position.skills);
+                return (
+                  <li
+                    key={`${position.slug}-${ordinal}`}
+                    data-testid={`allocator-player-${position.slug}-${ordinal}`}
+                    className="rounded-xl border border-gray-200 bg-white p-2.5"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-gray-900">
+                        {label}
                       </span>
-                      <select
-                        value={type}
-                        onChange={(e) =>
-                          patchSlot(position.slug, ordinal, slot, {
-                            type: e.target.value as BuildAdvancement["type"],
-                            skillSlug: "",
-                          })
-                        }
-                        className="border border-gray-300 rounded px-2 py-1 text-xs"
-                        disabled={cannotAfford && !adv}
-                      >
-                        <option value="primary">
-                          Principale ({costForSlot("primary", slot)})
-                        </option>
-                        <option value="secondary">
-                          Secondaire ({costForSlot("secondary", slot)})
-                        </option>
-                      </select>
-                      <select
-                        value={adv?.skillSlug ?? ""}
-                        data-testid={`allocator-skill-${position.slug}-${ordinal}-${slot}`}
-                        onChange={(e) =>
-                          e.target.value
-                            ? patchSlot(position.slug, ordinal, slot, {
-                                skillSlug: e.target.value,
-                              })
-                            : patchSlot(position.slug, ordinal, slot, null)
-                        }
-                        className="flex-1 min-w-[10rem] border border-gray-300 rounded px-2 py-1 text-xs"
-                        disabled={cannotAfford && !adv}
-                      >
-                        <option value="">— Aucune —</option>
-                        {options.map((s) => (
-                          <option key={s.slug} value={s.slug}>
-                            {s.nameFr}
-                          </option>
-                        ))}
-                      </select>
-                      {adv && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patchSlot(position.slug, ordinal, slot, null)
-                          }
-                          className="text-red-600 hover:text-red-800 text-xs"
-                        >
-                          retirer
-                        </button>
-                      )}
+                      <span className="shrink-0 text-[11px] text-gray-400">
+                        {advs.length}/{MAX_ADVANCEMENTS_PER_PLAYER}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+                    {baseSkills.length > 0 && (
+                      <p className="mt-0.5 truncate text-[11px] text-gray-400">
+                        Base : {baseSkills.map(skillName).join(", ")}
+                      </p>
+                    )}
+
+                    {advs.length > 0 && (
+                      <ul className="mt-1.5 space-y-1">
+                        {advs.map((adv, index) => {
+                          const skill = catalogBySlug.get(adv.skillSlug);
+                          const category = skill
+                            ? (CATEGORY_LABELS[CATEGORY_CODE[skill.category]] ??
+                              skill.category)
+                            : null;
+                          return (
+                            <li
+                              key={`${adv.skillSlug}-${index}`}
+                              data-testid={`allocator-pick-${position.slug}-${ordinal}-${index}`}
+                              className="flex items-center justify-between gap-2 rounded-lg bg-indigo-50/70 px-2 py-1.5"
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate text-xs font-medium text-indigo-900">
+                                  {skillName(adv.skillSlug)}
+                                  {eliteSlugs.has(adv.skillSlug) && (
+                                    <span
+                                      title="Compétence Élite : +10 000 po de Valeur d'Équipe."
+                                      className="ml-1"
+                                    >
+                                      ⭐
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="block truncate text-[10px] text-indigo-500">
+                                  {TYPE_LABELS[adv.type]}
+                                  {category ? ` · ${category}` : ""} ·{" "}
+                                  {skillSppCost(
+                                    index,
+                                    adv.type,
+                                    adv.skillSlug,
+                                    ctx,
+                                  )}{" "}
+                                  PSP
+                                </span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeAdvancement(position, ordinal, index)
+                                }
+                                aria-label={`Retirer ${skillName(adv.skillSlug)} de ${label}`}
+                                data-testid={`allocator-remove-${position.slug}-${ordinal}-${index}`}
+                                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-red-600 hover:bg-red-50"
+                              >
+                                retirer
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={full || tooExpensive || quotaBlocked}
+                      onClick={() => setPicking({ position, ordinal })}
+                      data-testid={`allocator-add-${position.slug}-${ordinal}`}
+                      className={`mt-1.5 w-full rounded-lg border border-dashed px-2 py-2 text-xs font-medium transition ${
+                        full || tooExpensive || quotaBlocked
+                          ? "cursor-not-allowed border-gray-200 text-gray-300"
+                          : "border-indigo-300 text-indigo-700 hover:border-indigo-500 hover:bg-indigo-50"
+                      }`}
+                    >
+                      {full
+                        ? "2 compétences (maximum)"
+                        : quotaBlocked
+                          ? "Cumul interdit par le règlement"
+                          : tooExpensive
+                            ? "PSP insuffisants"
+                            : `+ Ajouter une compétence · dès ${nextCost} PSP`}
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </>
+      )}
+
+      {picking && (
+        <SkillPickerSheet
+          playerLabel={`${picking.position.displayName} #${picking.ordinal + 1}`}
+          position={picking.position}
+          slot={
+            advancementsFor(value, picking.position.slug, picking.ordinal).length
+          }
+          pickedSlugs={advancementsFor(
+            value,
+            picking.position.slug,
+            picking.ordinal,
+          ).map((a) => a.skillSlug)}
+          catalog={catalog}
+          remaining={remaining}
+          ctx={ctx}
+          onPick={(type, skillSlug) =>
+            addAdvancement(picking.position, picking.ordinal, type, skillSlug)
+          }
+          onClose={() => setPicking(null)}
+        />
       )}
     </div>
   );
+}
+
+/** Nombre de joueurs ayant au moins une amélioration. */
+function improvedPlayerCount(value: readonly BuildAdvancement[]): number {
+  return new Set(value.map((a) => `${a.positionSlug}#${a.ordinal}`)).size;
 }

@@ -1,23 +1,29 @@
 /**
- * E10 — l'allocateur d'améliorations au build permet d'empiler jusqu'à
- * DEUX compétences par joueur (coût croissant, 2e ≠ 1re).
+ * Allocateur d'améliorations au build : parcours complet du sélecteur
+ * (feuille + recherche + catégories), contraintes de sélection et barème du
+ * règlement de tournoi.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useState } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import BuildAdvancementAllocator, {
-  type BuildAdvancement,
-} from "./BuildAdvancementAllocator";
+import BuildAdvancementAllocator from "./BuildAdvancementAllocator";
+import type {
+  BuildAdvancement,
+  AllocatorPosition,
+} from "./build-advancement-rules";
 
 const apiRequest = vi.fn();
 vi.mock("../../../lib/api-client", () => ({
   apiRequest: (path: string, init?: RequestInit) => apiRequest(path, init),
 }));
 
-const POSITIONS = [
+const POSITIONS: AllocatorPosition[] = [
   {
     slug: "custom_lineman",
-    displayName: "Lineman",
+    displayName: "Trois-quart",
+    // Tacle est déjà sur la fiche du poste : il ne doit pas être proposable.
+    skills: "tackle",
     primarySkills: "G",
     secondarySkills: "A",
   },
@@ -25,75 +31,182 @@ const POSITIONS = [
 
 const CATALOG = {
   skills: [
-    { slug: "block", nameFr: "Blocage", category: "General" },
+    { slug: "block", nameFr: "Blocage", category: "General", isElite: true },
     { slug: "tackle", nameFr: "Tacle", category: "General" },
-    { slug: "dodge", nameFr: "Esquive", category: "Agility" },
+    { slug: "frenzy", nameFr: "Frénésie", category: "General" },
+    {
+      slug: "pro",
+      nameFr: "Pro",
+      category: "General",
+      excludedFromSelection: true,
+    },
+    { slug: "dodge", nameFr: "Esquive", category: "Agility", isElite: true },
   ],
 };
 
-function Harness({ initial = [] as BuildAdvancement[] }) {
-  let current = initial;
-  const Wrapper = () => {
-    const [value, setValue] = (require("react") as typeof import("react")).useState(
-      current,
-    );
-    return (
-      <BuildAdvancementAllocator
-        ruleset="season_3"
-        positions={POSITIONS}
-        counts={{ custom_lineman: 1 }}
-        pool={30}
-        value={value}
-        onChange={setValue}
-      />
-    );
-  };
-  return <Wrapper />;
+function Harness(props: { pool?: number; counts?: Record<string, number> }) {
+  const [value, setValue] = useState<BuildAdvancement[]>([]);
+  return (
+    <BuildAdvancementAllocator
+      ruleset="season_3"
+      positions={POSITIONS}
+      counts={props.counts ?? { custom_lineman: 1 }}
+      pool={props.pool ?? 30}
+      value={value}
+      onChange={setValue}
+    />
+  );
 }
 
-describe("E10 — BuildAdvancementAllocator (empilement 2 compétences)", () => {
+/** Ouvre la feuille de sélection du joueur donné. */
+async function openPicker(slug = "custom_lineman", ordinal = 0) {
+  fireEvent.click(await screen.findByTestId(`allocator-add-${slug}-${ordinal}`));
+  return screen.findByTestId("skill-picker");
+}
+
+describe("BuildAdvancementAllocator", () => {
   beforeEach(() => {
     apiRequest.mockReset();
     apiRequest.mockResolvedValue(CATALOG);
   });
 
-  it("permet une 2e compétence après la 1re, filtrée pour éviter le doublon", async () => {
+  it("achète une compétence via la feuille et décompte le pool", async () => {
     render(<Harness />);
-    // Slot 0 disponible au départ, pas de slot 1.
-    const slot0 = await screen.findByTestId(
-      "allocator-skill-custom_lineman-0-0",
-    );
-    expect(
-      screen.queryByTestId("allocator-skill-custom_lineman-0-1"),
-    ).toBeNull();
+    await openPicker();
 
-    // Choisit Blocage sur le slot 0 → le slot 1 apparaît.
+    // Principale (accès G) : Blocage proposé, Esquive (Agilité) non.
+    expect(screen.getByTestId("skill-picker-option-block")).toBeTruthy();
+    expect(screen.queryByTestId("skill-picker-option-dodge")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("allocator-remaining").textContent).toBe("24"),
+    );
+    // La feuille se referme et la compétence apparaît sur la carte du joueur.
+    expect(screen.queryByTestId("skill-picker")).toBeNull();
+    expect(
+      screen.getByTestId("allocator-pick-custom_lineman-0-0").textContent,
+    ).toContain("Blocage");
+    // Élite : le surcoût de Valeur d'Équipe est annoncé (20 000 + 10 000).
+    // `toLocaleString` sépare les milliers par une espace insécable.
+    expect(
+      screen.getByTestId("allocator-ve").textContent?.replace(/\s/g, " "),
+    ).toContain("30 000 po");
+  });
+
+  it("interdit une compétence déjà sur la fiche du poste", async () => {
+    render(<Harness />);
+    await openPicker();
+    const tackle = screen.getByTestId(
+      "skill-picker-option-tackle",
+    ) as HTMLButtonElement;
+    expect(tackle.disabled).toBe(true);
+    expect(tackle.textContent).toContain("Déjà sur la fiche du poste");
+  });
+
+  it("interdit une compétence retirée de la sélection", async () => {
+    render(<Harness />);
+    await openPicker();
+    expect(
+      (screen.getByTestId("skill-picker-option-pro") as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("interdit de reprendre la même compétence sur un joueur", async () => {
+    render(<Harness />);
+    await openPicker();
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+    await waitFor(() => expect(screen.queryByTestId("skill-picker")).toBeNull());
+
+    await openPicker();
+    const block = screen.getByTestId(
+      "skill-picker-option-block",
+    ) as HTMLButtonElement;
+    expect(block.disabled).toBe(true);
+    expect(block.textContent).toContain("Déjà choisie pour ce joueur");
+    // Le 2e palier est facturé 8 PSP (barème BB2025).
+    expect(screen.getByTestId("skill-picker-type-primary").textContent).toContain(
+      "8 PSP",
+    );
+  });
+
+  it("plafonne à 2 compétences par joueur", async () => {
+    render(<Harness />);
+    await openPicker();
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+    await waitFor(() => expect(screen.queryByTestId("skill-picker")).toBeNull());
+    await openPicker();
+    fireEvent.click(screen.getByTestId("skill-picker-option-frenzy"));
+
     await waitFor(() =>
       expect(
-        (slot0 as HTMLSelectElement).querySelectorAll("option").length,
-      ).toBeGreaterThan(1),
+        (
+          screen.getByTestId(
+            "allocator-add-custom_lineman-0",
+          ) as HTMLButtonElement
+        ).disabled,
+      ).toBe(true),
     );
-    fireEvent.change(slot0, { target: { value: "block" } });
-    const slot1 = await screen.findByTestId(
-      "allocator-skill-custom_lineman-0-1",
-    );
-
-    // Le slot 1 ne propose plus Blocage (déjà pris), mais Tacle oui.
-    const slot1Options = Array.from(
-      (slot1 as HTMLSelectElement).querySelectorAll("option"),
-    ).map((o) => o.getAttribute("value"));
-    expect(slot1Options).not.toContain("block");
-    expect(slot1Options).toContain("tackle");
-
-    // Choisit Tacle en 2e : pool 30 - 6 (palier 1) - 8 (palier 2) = 16.
-    fireEvent.change(slot1, { target: { value: "tackle" } });
-    await waitFor(() =>
-      expect(screen.getByTestId("allocator-remaining").textContent).toBe("16"),
-    );
-
-    // Pas de 3e slot (max 2).
     expect(
-      screen.queryByTestId("allocator-skill-custom_lineman-0-2"),
-    ).toBeNull();
+      screen.getByTestId("allocator-add-custom_lineman-0").textContent,
+    ).toContain("maximum");
+  });
+
+  it("filtre par recherche et par catégorie", async () => {
+    render(<Harness />);
+    await openPicker();
+
+    fireEvent.change(screen.getByTestId("skill-picker-search"), {
+      target: { value: "fré" },
+    });
+    await waitFor(() =>
+      expect(screen.queryByTestId("skill-picker-option-block")).toBeNull(),
+    );
+    expect(screen.getByTestId("skill-picker-option-frenzy")).toBeTruthy();
+
+    // Le type Secondaire n'ouvre que l'Agilité pour ce poste.
+    fireEvent.change(screen.getByTestId("skill-picker-search"), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByTestId("skill-picker-type-secondary"));
+    await waitFor(() =>
+      expect(screen.getByTestId("skill-picker-option-dodge")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("skill-picker-option-block")).toBeNull();
+    expect(screen.getByTestId("skill-picker-cat-A")).toBeTruthy();
+    expect(screen.queryByTestId("skill-picker-cat-G")).toBeNull();
+  });
+
+  it("bloque l'achat quand le pool ne suffit plus", async () => {
+    render(<Harness pool={6} />);
+    await openPicker();
+    // Secondaire (10 PSP) est hors budget : le bouton est annoncé comme tel.
+    expect(
+      screen.getByTestId("skill-picker-type-secondary").textContent,
+    ).toContain("hors budget");
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+    await waitFor(() =>
+      expect(screen.getByTestId("allocator-remaining").textContent).toBe("0"),
+    );
+    expect(
+      (
+        screen.getByTestId("allocator-add-custom_lineman-0") as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  it("retire une compétence et rend les PSP", async () => {
+    render(<Harness />);
+    await openPicker();
+    fireEvent.click(screen.getByTestId("skill-picker-option-block"));
+    await waitFor(() =>
+      expect(screen.getByTestId("allocator-remaining").textContent).toBe("24"),
+    );
+    fireEvent.click(screen.getByTestId("allocator-remove-custom_lineman-0-0"));
+    await waitFor(() =>
+      expect(screen.getByTestId("allocator-remaining").textContent).toBe("30"),
+    );
   });
 });
