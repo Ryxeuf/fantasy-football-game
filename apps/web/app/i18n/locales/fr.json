@@ -532,6 +532,8 @@
     "veaDescription": "Joueurs disponibles + Staff + Relances",
     "globalCostSummary": "📊 Résumé global des coûts",
     "playersCostLabel": "👥 Coût des joueurs",
+    "starPlayersHiredTitle": "Star Players recrutés",
+    "starPlayersCostLabel": "⭐ Coût des Star Players",
     "staffRerollsLabel": "⚙️ Staff + Relances",
     "veTotal": "VE (Total)",
     "veaTotal": "VEA (Total)",

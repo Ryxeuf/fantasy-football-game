@@ -152,3 +152,30 @@ describe("TeamInfoDisplay — coût des joueurs", () => {
     ).toBe("830K po");
   });
 });
+
+describe("TeamInfoDisplay — coût des Star Players", () => {
+  it("affiche une ligne dédiée quand l'équipe en a recruté", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{ ...INFO, playersCost: 800_000, starPlayersCost: 250_000 }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(
+      normalizeSpaces(screen.getByTestId("staff-star-players-cost").textContent),
+    ).toBe("250K po");
+    expect(screen.getByText("⭐ Coût des Star Players")).toBeTruthy();
+  });
+
+  it("masque la ligne quand aucun Star Player n'est recruté", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={{ ...INFO, playersCost: 800_000 }} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.queryByTestId("staff-star-players-cost")).toBeNull();
+  });
+});

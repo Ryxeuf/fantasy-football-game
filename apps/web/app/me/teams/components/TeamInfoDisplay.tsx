@@ -22,6 +22,12 @@ interface TeamInfo {
    * la dérivation `VE − staff` (juste seulement si la VE est fraîche).
    */
   playersCost?: number;
+  /**
+   * Coût des Star Players recrutés (po). Ils sont payés sur le budget de
+   * construction mais restent HORS valeur d'équipe (Coups de Pouce) : d'où
+   * une ligne à part dans le résumé, qui n'entre pas dans le total VE.
+   */
+  starPlayersCost?: number;
 }
 
 interface TeamInfoDisplayProps {
@@ -189,6 +195,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
               // en dehors de ce bloc, dont le total est la VE.
               const playersCost =
                 info.playersCost ?? (info.teamValue || 0) - staffRerollsCost;
+              const starPlayersCost = info.starPlayersCost ?? 0;
 
               return (
                 <>
@@ -201,6 +208,20 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
                       {formatKpo(playersCost)}
                     </span>
                   </div>
+                  {starPlayersCost > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-green-700">
+                        {t.teams.starPlayersCostLabel ??
+                          "⭐ Coût des Star Players"}
+                      </span>
+                      <span
+                        className="font-mono font-semibold text-green-900"
+                        data-testid="staff-star-players-cost"
+                      >
+                        {formatKpo(starPlayersCost)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-green-700">{t.teams.staffRerollsLabel}</span>
                     <span className="font-mono font-semibold text-green-900">

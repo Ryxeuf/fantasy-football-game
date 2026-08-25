@@ -527,6 +527,8 @@
     "veaDescription": "Available players + Staff + Rerolls",
     "globalCostSummary": "📊 Global cost summary",
     "playersCostLabel": "👥 Players cost",
+    "starPlayersHiredTitle": "Hired Star Players",
+    "starPlayersCostLabel": "⭐ Star Players cost",
     "staffRerollsLabel": "⚙️ Staff + Rerolls",
     "veTotal": "TV (Total)",
     "veaTotal": "CAV (Total)",
