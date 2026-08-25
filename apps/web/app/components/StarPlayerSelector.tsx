@@ -1,10 +1,15 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../auth-client";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
 import KeywordChips from "./KeywordChips";
 import { useLanguage } from "../contexts/LanguageContext";
 import { STAR_PLAYER_PAIR_PARTNERS } from "@bb/game-engine";
+import {
+  starPlayerBlock,
+  starPlayerBlockLabel,
+  type StarPlayerBlock,
+} from "./star-player-availability";
 
 export interface StarPlayer {
   slug: string;
@@ -48,6 +53,11 @@ interface StarPlayerSelectorProps {
    * (ex : calcul de la taxe SPP d'un règlement de tournoi). Optionnel.
    */
   onSelectedCostChange?: (totalCostPo: number) => void;
+  /**
+   * Plafond de joueurs du format (Star Players compris). Défaut 16 (BB11) ;
+   * le Sevens plafonne à 11. Sert au message « plus de place ».
+   */
+  maxTotalPlayers?: number;
 }
 
 // Paires obligatoires de Star Players — source unique : le catalogue
@@ -67,9 +77,12 @@ export default function StarPlayerSelector({
   regionalLeague = null,
   excludedSlugs,
   onSelectedCostChange,
+  maxTotalPlayers = 16,
 }: StarPlayerSelectorProps) {
   const { t, language } = useLanguage();
-  const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);
+  const [availableStarPlayers, setAvailableStarPlayers] = useState<
+    StarPlayer[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
@@ -84,10 +97,10 @@ export default function StarPlayerSelector({
 
   useEffect(() => {
     if (!roster) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     const token = localStorage.getItem("auth_token");
     const params = new URLSearchParams();
     if (ruleset) params.set("ruleset", ruleset);
@@ -138,7 +151,7 @@ export default function StarPlayerSelector({
     if (isCurrentlySelected) {
       // Déselectionner
       newSelection = newSelection.filter((s) => s !== slug);
-      
+
       // Si c'est une paire, déselectionner aussi le partenaire
       const partner = STAR_PLAYER_PAIRS[slug];
       if (partner && newSelection.includes(partner)) {
@@ -147,7 +160,7 @@ export default function StarPlayerSelector({
     } else {
       // Sélectionner
       newSelection.push(slug);
-      
+
       // Si c'est une paire, sélectionner aussi le partenaire
       const partner = STAR_PLAYER_PAIRS[slug];
       if (partner && !newSelection.includes(partner)) {
@@ -175,42 +188,29 @@ export default function StarPlayerSelector({
     costCallbackRef.current?.(totalCost);
   }, [totalCost]);
 
-  // Star Players proposés à l'écran : les exclus (ex : bannis par un
-  // règlement de tournoi) sont masqués. La purge de la sélection est à la
-  // charge du parent.
-  const visibleStarPlayers = useMemo(
-    () =>
-      excludedSlugs && excludedSlugs.length > 0
-        ? availableStarPlayers.filter((sp) => !excludedSlugs.includes(sp.slug))
-        : availableStarPlayers,
-    [availableStarPlayers, excludedSlugs],
-  );
+  // Les Star Players exclus (ex : bannis par un règlement de tournoi) restent
+  // AFFICHÉS, désactivés avec la raison : les masquer laissait le coach
+  // chercher une recrue qui n'apparaissait nulle part. Seuls ceux qui sont
+  // déjà cochés doivent être purgés de la sélection — à la charge du parent.
+  const visibleStarPlayers = availableStarPlayers;
 
   const totalPlayers = currentPlayerCount + selectedStarPlayers.length;
   const budgetExceeded = totalCost > availableBudget;
-  const playerLimitExceeded = totalPlayers > 16;
+  const playerLimitExceeded = totalPlayers > maxTotalPlayers;
 
-  const canSelectMore = (sp: StarPlayer): boolean => {
-    if (selectedStarPlayers.includes(sp.slug)) return true;
-    
-    // Vérifier la limite de joueurs
-    const partner = STAR_PLAYER_PAIRS[sp.slug];
-    const additionalPlayers = partner ? 2 : 1;
-    if (currentPlayerCount + selectedStarPlayers.length + additionalPlayers > 16) {
-      return false;
-    }
-
-    // Vérifier le budget
-    const partnerCost = partner 
-      ? availableStarPlayers.find((p) => p.slug === partner)?.cost || 0 
-      : 0;
-    const totalAdditionalCost = sp.cost + partnerCost;
-    if (totalCost + totalAdditionalCost > availableBudget) {
-      return false;
-    }
-
-    return true;
-  };
+  /** `null` = recrutable ; sinon la raison du blocage (affichée sous la ligne). */
+  const blockFor = (sp: StarPlayer): StarPlayerBlock | null =>
+    starPlayerBlock({
+      star: sp,
+      catalog: availableStarPlayers,
+      selected: selectedStarPlayers,
+      selectedCostPo: totalCost,
+      availableBudgetPo: availableBudget,
+      currentPlayerCount,
+      maxPlayers: maxTotalPlayers,
+      pairPartners: STAR_PLAYER_PAIRS,
+      bannedSlugs: excludedSlugs,
+    });
 
   const isPaired = (slug: string): boolean => {
     return slug in STAR_PLAYER_PAIRS;
@@ -219,7 +219,7 @@ export default function StarPlayerSelector({
   const getPartnerName = (slug: string): string | null => {
     const partnerSlug = STAR_PLAYER_PAIRS[slug];
     if (!partnerSlug) return null;
-    
+
     const partner = availableStarPlayers.find((p) => p.slug === partnerSlug);
     return partner?.displayName || partnerSlug;
   };
@@ -265,10 +265,22 @@ export default function StarPlayerSelector({
       {(budgetExceeded || playerLimitExceeded) && (
         <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
           {budgetExceeded && (
-            <div>⚠️ {t.teams.budgetExceeded.replace("{amount}", ((totalCost - availableBudget) / 1000).toFixed(0))}</div>
+            <div>
+              ⚠️{" "}
+              {t.teams.budgetExceeded.replace(
+                "{amount}",
+                ((totalCost - availableBudget) / 1000).toFixed(0),
+              )}
+            </div>
           )}
           {playerLimitExceeded && (
-            <div>⚠️ {t.teams.playerLimitExceeded.replace("{count}", totalPlayers.toString())}</div>
+            <div>
+              ⚠️{" "}
+              {t.teams.playerLimitExceeded.replace(
+                "{count}",
+                totalPlayers.toString(),
+              )}
+            </div>
           )}
         </div>
       )}
@@ -276,18 +288,24 @@ export default function StarPlayerSelector({
       <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
         <div className="flex justify-between">
           <span>{t.teams.totalStarPlayersCost}</span>
-          <span className="font-semibold">{(totalCost / 1000).toFixed(0)}{t.teams.kpo}</span>
+          <span className="font-semibold">
+            {(totalCost / 1000).toFixed(0)}
+            {t.teams.kpo}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>{t.teams.totalPlayersCount}</span>
-          <span className="font-semibold">{totalPlayers} / 16</span>
+          <span className="font-semibold">
+            {totalPlayers} / {maxTotalPlayers}
+          </span>
         </div>
       </div>
 
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {visibleStarPlayers.map((sp) => {
           const isSelected = selectedStarPlayers.includes(sp.slug);
-          const canSelect = canSelectMore(sp);
+          const block = blockFor(sp);
+          const canSelect = block === null;
           const paired = isPaired(sp.slug);
           const partnerName = paired ? getPartnerName(sp.slug) : null;
 
@@ -298,8 +316,8 @@ export default function StarPlayerSelector({
                 isSelected
                   ? "bg-emerald-50 border-emerald-300"
                   : canSelect
-                  ? "bg-white hover:bg-gray-50"
-                  : "bg-gray-100 border-gray-300"
+                    ? "bg-white hover:bg-gray-50"
+                    : "bg-gray-100 border-gray-300"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -318,7 +336,10 @@ export default function StarPlayerSelector({
                       <span className="font-semibold">{sp.displayName}</span>
                       {paired && (
                         <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-                          {t.teams.pairWith.replace("{partner}", partnerName || "")}
+                          {t.teams.pairWith.replace(
+                            "{partner}",
+                            partnerName || "",
+                          )}
                         </span>
                       )}
                     </div>
@@ -326,12 +347,12 @@ export default function StarPlayerSelector({
                       {(sp.cost / 1000).toFixed(0)}K po
                     </div>
                   </div>
-                  
+
                   <KeywordChips
                     keywords={
                       language === "en"
-                        ? sp.keywordsEn ?? sp.keywords
-                        : sp.keywords ?? sp.keywordsEn
+                        ? (sp.keywordsEn ?? sp.keywords)
+                        : (sp.keywords ?? sp.keywordsEn)
                     }
                     className="mt-1"
                   />
@@ -344,12 +365,22 @@ export default function StarPlayerSelector({
                     <span>AV {sp.av}+</span>
                   </div>
 
+                  {block && (
+                    <p
+                      data-testid={`star-player-blocked-${sp.slug}`}
+                      className="mt-1.5 inline-flex items-start gap-1 rounded bg-amber-50 border border-amber-200 px-2 py-1 text-xs text-amber-800"
+                    >
+                      <span aria-hidden="true">🚫</span>
+                      <span>{starPlayerBlockLabel(block)}</span>
+                    </p>
+                  )}
+
                   {expandedPlayer === sp.slug && (
                     <div className="mt-2 text-sm space-y-1">
                       <div className="text-gray-700">
                         <span className="font-medium">{t.teams.skills}</span>
                         <div className="mt-1">
-                          <SkillTooltip 
+                          <SkillTooltip
                             skillsString={sp.skills}
                             className="text-xs"
                           />
@@ -357,7 +388,9 @@ export default function StarPlayerSelector({
                       </div>
                       {sp.specialRule && (
                         <div className="text-gray-700">
-                          <span className="font-medium">{t.teams.specialRule}</span>{" "}
+                          <span className="font-medium">
+                            {t.teams.specialRule}
+                          </span>{" "}
                           {sp.specialRule}
                         </div>
                       )}
@@ -366,11 +399,15 @@ export default function StarPlayerSelector({
 
                   <button
                     onClick={() =>
-                      setExpandedPlayer(expandedPlayer === sp.slug ? null : sp.slug)
+                      setExpandedPlayer(
+                        expandedPlayer === sp.slug ? null : sp.slug,
+                      )
                     }
                     className="text-xs text-blue-600 hover:text-blue-800 mt-1"
                   >
-                    {expandedPlayer === sp.slug ? t.teams.hideDetails : t.teams.showDetails}
+                    {expandedPlayer === sp.slug
+                      ? t.teams.hideDetails
+                      : t.teams.showDetails}
                   </button>
                 </div>
               </div>
@@ -402,4 +439,3 @@ export default function StarPlayerSelector({
     </div>
   );
 }
-
