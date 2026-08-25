@@ -16,6 +16,7 @@
  */
 
 import { getTournamentRuleset } from "@bb/game-engine";
+import { tournamentResultPoints } from "../utils/tournament-ruleset-helpers";
 import { prisma } from "../prisma";
 import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
@@ -196,6 +197,9 @@ export async function createLeague(input: CreateLeagueInput) {
       ? JSON.stringify(input.allowedRosters)
       : null;
 
+  const packDef = getTournamentRuleset(tournamentRuleset);
+  const packScoring = packDef ? tournamentResultPoints(packDef) : null;
+
   // FR17 — coups de pouce autorises. [] ou absent => null (tous autorises).
   const allowedInducements =
     input.allowedInducements && input.allowedInducements.length > 0
@@ -228,10 +232,15 @@ export async function createLeague(input: CreateLeagueInput) {
       maxParticipants,
       allowedRosters,
       allowedInducements,
-      winPoints: input.winPoints ?? 3,
-      drawPoints: input.drawPoints ?? 1,
-      lossPoints: input.lossPoints ?? 0,
-      forfeitPoints: input.forfeitPoints ?? -1,
+      // Un règlement de tournoi définit le classement de son tournoi
+      // (NAF WC 2027 : V 5 / N 2 / D 0 / concession -5) : il IMPOSE son
+      // barème, comme il impose déjà budget d'or et pool de SPP aux équipes.
+      ...(packScoring ?? {
+        winPoints: input.winPoints ?? 3,
+        drawPoints: input.drawPoints ?? 1,
+        lossPoints: input.lossPoints ?? 0,
+        forfeitPoints: input.forfeitPoints ?? -1,
+      }),
       tieBreakRules,
       bonusPointsConfig: bonusPointsConfig ?? undefined,
     },

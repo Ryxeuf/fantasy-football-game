@@ -8,7 +8,10 @@ import {
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
 import { resolveRuleset } from "../utils/ruleset-helpers";
-import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
+import {
+  parseTournamentRuleset,
+  tournamentResultPoints,
+} from "../utils/tournament-ruleset-helpers";
 import { validate, validateQuery } from "../middleware/validate";
 import {
   createCupSchema,
@@ -724,7 +727,22 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     passPoints: 2,
   };
 
-  const finalScoring = {
+  // Un règlement de tournoi définit le classement de SON tournoi (NAF WC
+  // 2027 : V 5 / N 2 / D 0 / concession -5) : il impose son barème, comme il
+  // impose déjà budget d'or et pool de SPP aux équipes. Les points d'action
+  // (TD, sorties, passes) sont mis à zéro : le total d'une coupe additionne
+  // résultats + actions, un TD à 5 points pèserait autant qu'une victoire.
+  const packScoring = pack
+    ? {
+        ...tournamentResultPoints(pack),
+        touchdownPoints: 0,
+        blockCasualtyPoints: 0,
+        foulCasualtyPoints: 0,
+        passPoints: 0,
+      }
+    : null;
+
+  const finalScoring = packScoring ?? {
     winPoints: Number.isFinite(Number(scoringFromBody.winPoints))
       ? Number(scoringFromBody.winPoints)
       : defaultScoring.winPoints,

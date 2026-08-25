@@ -172,6 +172,54 @@ describe("Rule: League service", () => {
       );
     });
 
+    it("impose le barème de classement du règlement de tournoi", async () => {
+      mockPrisma.league.create.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          id: leagueId,
+          status: "draft",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        }),
+      );
+
+      const result = await createLeague({
+        creatorId,
+        name: "NAF WC",
+        tournamentRuleset: "naf_world_cup_2027",
+        // Barème maison explicitement demandé : le règlement prime.
+        winPoints: 3,
+        drawPoints: 1,
+      });
+
+      expect(result.winPoints).toBe(5);
+      expect(result.drawPoints).toBe(2);
+      expect(result.lossPoints).toBe(0);
+      expect(result.forfeitPoints).toBe(-5);
+    });
+
+    it("garde le barème maison sans règlement de tournoi", async () => {
+      mockPrisma.league.create.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          id: leagueId,
+          status: "draft",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        }),
+      );
+
+      const result = await createLeague({
+        creatorId,
+        name: "Ligue maison",
+        winPoints: 4,
+      });
+
+      expect(result.winPoints).toBe(4);
+      expect(result.drawPoints).toBe(1);
+      expect(result.forfeitPoints).toBe(-1);
+    });
+
     it("rejects empty league name", async () => {
       await expect(
         createLeague({ creatorId, name: "   " }),
