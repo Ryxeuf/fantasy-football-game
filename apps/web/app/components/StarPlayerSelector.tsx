@@ -33,6 +33,12 @@ interface StarPlayerSelectorProps {
   disabled?: boolean;
   ruleset?: string;
   /**
+   * Ligue régionale retenue pour l'équipe. Elle seule débloque les Star
+   * Players : sans elle, l'API sert l'union des Ligues du roster et le
+   * sélecteur propose des recrues que la création refuse ensuite.
+   */
+  regionalLeague?: string | null;
+  /**
    * Star Players masqués du sélecteur (ex : bannis par un règlement de
    * tournoi). Optionnel — sans effet si absent.
    */
@@ -58,6 +64,7 @@ export default function StarPlayerSelector({
   availableBudget,
   disabled = false,
   ruleset = "season_3",
+  regionalLeague = null,
   excludedSlugs,
   onSelectedCostChange,
 }: StarPlayerSelectorProps) {
@@ -67,6 +74,14 @@ export default function StarPlayerSelector({
   const [error, setError] = useState<string | null>(null);
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
 
+  // Purge d'une sélection devenue invalide (changement de roster ou de Ligue
+  // régionale) : lues par ref pour ne pas relancer le chargement à chaque
+  // clic sur une case.
+  const selectionRef = useRef(selectedStarPlayers);
+  selectionRef.current = selectedStarPlayers;
+  const selectionCallbackRef = useRef(onSelectionChange);
+  selectionCallbackRef.current = onSelectionChange;
+
   useEffect(() => {
     if (!roster) return;
     
@@ -74,7 +89,10 @@ export default function StarPlayerSelector({
     setError(null);
     
     const token = localStorage.getItem("auth_token");
-    const query = ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : "";
+    const params = new URLSearchParams();
+    if (ruleset) params.set("ruleset", ruleset);
+    if (regionalLeague) params.set("regionalLeague", regionalLeague);
+    const query = params.toString() ? `?${params.toString()}` : "";
     fetch(`${API_BASE}/star-players/available/${roster}${query}`, {
       headers: { Authorization: token ? `Bearer ${token}` : "" },
     })
@@ -94,12 +112,22 @@ export default function StarPlayerSelector({
         });
         setAvailableStarPlayers(deduped);
         setLoading(false);
+        // Un Star Player déjà coché mais absent de la nouvelle liste (Ligue
+        // changée en cours de construction) doit sortir de la sélection :
+        // sinon il partait au serveur, qui refusait toute la création.
+        const availableSlugs = new Set(deduped.map((sp) => sp.slug));
+        const kept = selectionRef.current.filter((slug) =>
+          availableSlugs.has(slug),
+        );
+        if (kept.length !== selectionRef.current.length) {
+          selectionCallbackRef.current(kept);
+        }
       })
       .catch((e) => {
         setError(e.message || t.teams.errorLoading);
         setLoading(false);
       });
-  }, [roster, ruleset, t]);
+  }, [roster, ruleset, regionalLeague, t]);
 
   const handleToggle = (slug: string) => {
     if (disabled) return;

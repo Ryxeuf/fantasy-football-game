@@ -1573,6 +1573,7 @@ export default function NewTeamBuilder() {
             <StarPlayerSelector
               roster={rosterId}
               ruleset={ruleset}
+              regionalLeague={regionalLeague}
               selectedStarPlayers={selectedStarPlayers}
               onSelectionChange={setSelectedStarPlayers}
               currentPlayerCount={totalPlayers}

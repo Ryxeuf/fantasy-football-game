@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import {
   getAvailableStarPlayers,
   getRegionalRulesForTeam,
+  resolveTeamRegionalRules,
   getStarPlayerKeywords,
   isStarPlayerRule,
   translateKeywordsCsv,
@@ -340,12 +341,23 @@ router.get("/:slug", async (req, res) => {
 
 /**
  * GET /api/star-players/available/:roster
- * Obtenir les star players disponibles pour un roster d'équipe donné depuis la base de données
+ * Obtenir les star players disponibles pour un roster d'équipe donné depuis la base de données.
+ *
+ * `?regionalLeague=<slug>` restreint la liste à la Ligue choisie. Sans lui, on
+ * sert l'union historique des règles du roster : c'est le repli des équipes
+ * créées avant le choix de Ligue, PAS ce qu'on doit proposer à la création.
+ * Le sélecteur du builder passe donc toujours la Ligue en cours de choix,
+ * sinon il affichait des Star Players que `POST /team/build` refuse ensuite
+ * (Cindy Piewhistle proposée à des Halflings en Ligue Sylvestre).
  */
 router.get("/available/:roster", async (req, res) => {
   try {
     const { roster } = req.params;
     const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
+    const requestedLeague =
+      typeof req.query.regionalLeague === "string"
+        ? req.query.regionalLeague.trim() || null
+        : null;
     
     // Vérifier que le roster existe
     const rosterExists = await prisma.roster.findFirst({
@@ -371,8 +383,19 @@ router.get("/available/:roster", async (req, res) => {
       }
     }
 
-    // Récupérer les règles régionales depuis le game-engine (pour l'instant)
-    const regionalRules = getRegionalRulesForTeam(roster, ruleset);
+    // Règles régionales EFFECTIVES : la Ligue demandée (et les alignements
+    // qu'elle apporte) quand elle est fournie et valide, sinon l'union
+    // déclarée par le roster (`Roster.regionalRules`, repli sur le catalogue
+    // du moteur) — même source que la fiche publique et que le choix proposé
+    // à la création.
+    const declaredRules = (await getRosterFromDb(roster, "fr", ruleset))
+      ?.regionalRules;
+    const regionalRules = resolveTeamRegionalRules(
+      roster,
+      ruleset,
+      requestedLeague,
+      declaredRules,
+    );
 
     const starPlayerModel = getStarPlayerModel();
     if (!starPlayerModel) {
@@ -380,6 +403,7 @@ router.get("/available/:roster", async (req, res) => {
         success: true,
         roster,
         ruleset,
+        regionalLeague: requestedLeague,
         regionalRules,
         count: 0,
         starPlayers: [],
@@ -434,6 +458,7 @@ router.get("/available/:roster", async (req, res) => {
       success: true,
       roster,
       ruleset,
+      regionalLeague: requestedLeague,
       regionalRules,
       count: transformedStarPlayers.length,
       starPlayers: transformedStarPlayers
