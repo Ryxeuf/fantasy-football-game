@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import { CommissionerTeamEditor } from "./CommissionerTeamEditor";
 import type { LeagueParticipantDetail } from "./types";
 import RosterBadge from "../../components/RosterBadge";
+import TeamLogo from "../../components/TeamLogo";
 
 interface SeasonParticipantsProps {
   participants: LeagueParticipantDetail[];
@@ -137,12 +138,25 @@ export function SeasonParticipants({
                 isWithdrawn ? "bg-gray-50 text-gray-500" : "bg-white"
               }`}
             >
-              <div className="font-medium text-nuffle-anthracite">
-                {p.team.name}
-              </div>
-              <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5">
-                <RosterBadge slug={p.team.roster} />
-                {p.team.owner.coachName ? <span>{p.team.owner.coachName}</span> : null}
+              <div className="flex items-start gap-2">
+                <TeamLogo
+                  slug={p.team.roster}
+                  logoUrl={p.team.logoUrl ?? null}
+                  title={p.team.name}
+                  size={32}
+                  className="shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="font-medium text-nuffle-anthracite">
+                    {p.team.name}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5">
+                    <RosterBadge slug={p.team.roster} />
+                    {p.team.owner.coachName ? (
+                      <span>{p.team.owner.coachName}</span>
+                    ) : null}
+                  </div>
+                </div>
               </div>
               {p.poolId && poolNamesById[p.poolId] ? (
                 <span className="inline-block mt-1 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">

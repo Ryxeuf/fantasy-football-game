@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "../../../../../lib/api-client";
 import { getTeamColors } from "@bb/game-engine";
+import TeamLogo from "../../../../../components/TeamLogo";
 
 // Lot J — Classements top-N joueurs d'une saison de ligue.
 // Endpoint public : pas de gating auth ici.
@@ -390,6 +391,13 @@ function TeamLeaderboardCard({
             >
               <span className="flex min-w-0 items-center gap-2">
                 <RankChip rank={r.rank} />
+                <TeamLogo
+                  slug={r.roster}
+                  logoUrl={r.logoUrl}
+                  title={r.teamName}
+                  size={24}
+                  className="shrink-0"
+                />
                 <span className="min-w-0">
                   <span
                     className={`font-semibold text-nuffle-anthracite ${
@@ -399,7 +407,6 @@ function TeamLeaderboardCard({
                     {r.teamName}
                   </span>
                   <span className="ml-1.5 inline-flex items-center gap-1 text-xs text-gray-500">
-                    <TeamDot roster={r.roster} />
                     <span className="truncate">
                       {r.coachName ? `${r.coachName} — ` : ""}
                       {r.played} MJ

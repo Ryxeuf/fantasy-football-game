@@ -132,6 +132,9 @@ export async function handleListMyTeams(
         tournamentRuleset: true,
         createdAt: true,
         currentValue: true,
+        // Logo uploade par le coach : la liste rend TeamLogo, qui retombe
+        // sur le logo programmatique du roster quand il vaut null.
+        logoUrl: true,
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

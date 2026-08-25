@@ -1275,6 +1275,7 @@ export async function getSeasonById(seasonId: string) {
               id: true,
               name: true,
               roster: true,
+              logoUrl: true,
               owner: { select: { id: true, coachName: true } },
             },
           },

@@ -34,6 +34,8 @@ import { updateTeamValues } from '../utils/team-values';
 import {
   translateKeywordsCsv,
   DEFAULT_RULESET,
+  getFormatConstraints,
+  isGameFormat,
   type Ruleset,
 } from '@bb/game-engine';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
@@ -159,13 +161,19 @@ export async function handleListAvailableStarPlayers(
       team.starPlayers.map((sp: any) => sp.starPlayerSlug),
     );
     const totalPlayers = team.players.length + team.starPlayers.length;
+    // Plafond du FORMAT (BB11 = 16, Sevens = 11) : le 16 code en dur
+    // annoncait de la place la ou le Sevens en refusait deja.
+    const rawFormat = (team as { format?: string | null }).format;
+    const maxPlayers = getFormatConstraints(
+      isGameFormat(rawFormat) ? rawFormat : 'bb11',
+    ).maxPlayers;
 
     const enrichedStarPlayers = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       availableStarPlayers.map(async (sp: any) => {
         const isHired = hiredSlugs.has(sp.slug);
         const canAfford = sp.cost <= availableBudget;
-        const hasRoomForOne = totalPlayers < 16;
+        const hasRoomForOne = totalPlayers < maxPlayers;
 
         const pairSlug = requiresPair(sp.slug);
         let needsPair = false;
@@ -186,7 +194,7 @@ export async function handleListAvailableStarPlayers(
         let canHire = !isHired && hasRoomForOne && canAfford;
         if (needsPair && !pairStatus?.hired) {
           const totalPairCost = sp.cost + (pairStatus?.cost || 0);
-          const hasRoomForPair = totalPlayers + 1 < 16;
+          const hasRoomForPair = totalPlayers + 1 < maxPlayers;
           canHire =
             !isHired && hasRoomForPair && totalPairCost <= availableBudget;
         }
@@ -207,7 +215,7 @@ export async function handleListAvailableStarPlayers(
       currentPlayerCount: team.players.length,
       currentStarPlayerCount: team.starPlayers.length,
       totalPlayers,
-      maxPlayers: 16,
+      maxPlayers,
       availableBudget: Math.round(availableBudget / 1000),
       totalBudget: team.initialBudget,
     });

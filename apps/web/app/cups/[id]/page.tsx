@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
+import TeamLogo from "../../components/TeamLogo";
 import { getRosterName, getTournamentRuleset } from "@bb/game-engine";
 
 type CupScoringConfig = {
@@ -19,10 +20,21 @@ type CupScoringConfig = {
   passPoints: number;
 };
 
+type CupMatchTeam = {
+  id: string;
+  name: string;
+  roster: string;
+  ruleset: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
+};
+
 type CupTeamStats = {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
   matchesPlayed: number;
   wins: number;
   draws: number;
@@ -43,6 +55,8 @@ type CupAwardEntry = {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
   value: number;
 };
 
@@ -89,6 +103,8 @@ type Cup = {
     name: string;
     roster: string;
     ruleset: string;
+    /** Logo uploadé par le coach (null => logo dérivé du roster). */
+    logoUrl?: string | null;
     owner: {
       id: string;
       coachName: string;
@@ -121,8 +137,8 @@ type Cup = {
     name: string | null;
     status: string;
     isPublic: boolean;
-    teamA: { id: string; name: string; roster: string; ruleset: string };
-    teamB: { id: string; name: string; roster: string; ruleset: string } | null;
+    teamA: CupMatchTeam;
+    teamB: CupMatchTeam | null;
     scoreTeamA: number | null;
     scoreTeamB: number | null;
     createdAt: string;
@@ -234,7 +250,9 @@ export default function CupDetailPage() {
 
   const handleUnregister = async (teamId: string) => {
     if (!cup) return;
-    if (!confirm("Êtes-vous sûr de vouloir retirer cette équipe de la coupe ?")) {
+    if (
+      !confirm("Êtes-vous sûr de vouloir retirer cette équipe de la coupe ?")
+    ) {
       return;
     }
     setError(null);
@@ -248,7 +266,11 @@ export default function CupDetailPage() {
 
   const handleValidate = async () => {
     if (!cup) return;
-    if (!confirm("Êtes-vous sûr de vouloir valider cette coupe ? Cela fermera les inscriptions.")) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir valider cette coupe ? Cela fermera les inscriptions.",
+      )
+    ) {
       return;
     }
     setError(null);
@@ -371,7 +393,8 @@ export default function CupDetailPage() {
             )}
           </div>
           <p className="text-sm text-gray-600 mt-2">
-            Créée par <span className="font-medium">{cup.creator.coachName}</span>
+            Créée par{" "}
+            <span className="font-medium">{cup.creator.coachName}</span>
             {" • "}
             {cup.participantCount} équipe{cup.participantCount > 1 ? "s" : ""}
           </p>
@@ -384,7 +407,7 @@ export default function CupDetailPage() {
                 <input
                   type="text"
                   readOnly
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/cups/${cup.id}`}
+                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/cups/${cup.id}`}
                   className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-sm font-mono"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
@@ -491,9 +514,7 @@ export default function CupDetailPage() {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          Sortie sur bloc :
-                        </span>
+                        <span className="text-gray-600">Sortie sur bloc :</span>
                         <span className="font-medium">
                           {cup.scoringConfig.blockCasualtyPoints} pts
                         </span>
@@ -517,11 +538,15 @@ export default function CupDetailPage() {
               {cup.rulesConfig &&
                 (cup.rulesConfig.resurrectionMode ||
                   Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
-                  Object.keys(cup.rulesConfig.rosterBudgetOverrides).length > 0 ||
+                  Object.keys(cup.rulesConfig.rosterBudgetOverrides).length >
+                    0 ||
                   Object.keys(cup.rulesConfig.tierStartingPsp).length > 0 ||
-                  Object.keys(cup.rulesConfig.rosterStartingPspOverrides).length >
-                    0) && (
-                  <div className="pt-2 border-t border-gray-200" data-testid="cup-rules-display">
+                  Object.keys(cup.rulesConfig.rosterStartingPspOverrides)
+                    .length > 0) && (
+                  <div
+                    className="pt-2 border-t border-gray-200"
+                    data-testid="cup-rules-display"
+                  >
                     <div className="text-sm font-semibold text-gray-700 mb-2">
                       Règles de composition
                     </div>
@@ -531,19 +556,26 @@ export default function CupDetailPage() {
                       </div>
                     )}
                     {(Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
-                      Object.keys(cup.rulesConfig.tierStartingPsp).length > 0) && (
+                      Object.keys(cup.rulesConfig.tierStartingPsp).length >
+                        0) && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                        {Object.keys(cup.rulesConfig.tierBudgets).length > 0 && (
+                        {Object.keys(cup.rulesConfig.tierBudgets).length >
+                          0 && (
                           <div className="text-xs text-gray-600">
-                            <span className="font-medium">Budgets par tier : </span>
+                            <span className="font-medium">
+                              Budgets par tier :{" "}
+                            </span>
                             {Object.entries(cup.rulesConfig.tierBudgets)
                               .map(([tier, b]) => `${tier} : ${b}k`)
                               .join(" · ")}
                           </div>
                         )}
-                        {Object.keys(cup.rulesConfig.tierStartingPsp).length > 0 && (
+                        {Object.keys(cup.rulesConfig.tierStartingPsp).length >
+                          0 && (
                           <div className="text-xs text-gray-600">
-                            <span className="font-medium">PSP de départ : </span>
+                            <span className="font-medium">
+                              PSP de départ :{" "}
+                            </span>
                             {Object.entries(cup.rulesConfig.tierStartingPsp)
                               .map(([tier, p]) => `${tier} : ${p}`)
                               .join(" · ")}
@@ -551,70 +583,100 @@ export default function CupDetailPage() {
                         )}
                       </div>
                     )}
-                    {Object.keys(cup.rulesConfig.rosterBudgetOverrides).length > 0 && (
+                    {Object.keys(cup.rulesConfig.rosterBudgetOverrides).length >
+                      0 && (
                       <div className="text-xs text-gray-600 mt-1">
-                        <span className="font-medium">Overrides budget roster : </span>
+                        <span className="font-medium">
+                          Overrides budget roster :{" "}
+                        </span>
                         {Object.entries(cup.rulesConfig.rosterBudgetOverrides)
                           .map(([slug, b]) => `${getRosterName(slug)} : ${b}k`)
                           .join(" · ")}
                       </div>
                     )}
-                    {Object.keys(cup.rulesConfig.rosterStartingPspOverrides).length >
-                      0 && (
+                    {Object.keys(cup.rulesConfig.rosterStartingPspOverrides)
+                      .length > 0 && (
                       <div className="text-xs text-gray-600 mt-1">
-                        <span className="font-medium">Overrides PSP roster : </span>
-                        {Object.entries(cup.rulesConfig.rosterStartingPspOverrides)
+                        <span className="font-medium">
+                          Overrides PSP roster :{" "}
+                        </span>
+                        {Object.entries(
+                          cup.rulesConfig.rosterStartingPspOverrides,
+                        )
                           .map(([slug, p]) => `${getRosterName(slug)} : ${p}`)
                           .join(" · ")}
                       </div>
                     )}
                   </div>
                 )}
-              {cup.isCreator && cup.status !== "archivee" && cup.status !== "ouverte" && (
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  {cup.status === "terminee" ? (
-                    <>
-                      <span className="text-gray-600">Archiver la coupe :</span>
-                      <button
-                        onClick={async () => {
-                          if (!confirm("Êtes-vous sûr de vouloir archiver cette coupe ? Cette action est irréversible.")) {
-                            return;
-                          }
-                          try {
-                            await postJSON(`/cup/${cupId}/status`, { status: "archivee" });
-                            loadCup();
-                          } catch (err: any) {
-                            setError(err.message || "Erreur lors de l'archivage");
-                          }
-                        }}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all"
-                      >
-                        Archiver
-                      </button>
-                    </>
-                  ) : cup.status === "en_cours" ? (
-                    <>
-                      <span className="text-gray-600">Terminer la coupe :</span>
-                      <button
-                        onClick={async () => {
-                          if (!confirm("Êtes-vous sûr de vouloir terminer cette coupe ?")) {
-                            return;
-                          }
-                          try {
-                            await postJSON(`/cup/${cupId}/status`, { status: "terminee" });
-                            loadCup();
-                          } catch (err: any) {
-                            setError(err.message || "Erreur lors de la mise à jour du statut");
-                          }
-                        }}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-all"
-                      >
-                        Terminer la coupe
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              )}
+              {cup.isCreator &&
+                cup.status !== "archivee" &&
+                cup.status !== "ouverte" && (
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    {cup.status === "terminee" ? (
+                      <>
+                        <span className="text-gray-600">
+                          Archiver la coupe :
+                        </span>
+                        <button
+                          onClick={async () => {
+                            if (
+                              !confirm(
+                                "Êtes-vous sûr de vouloir archiver cette coupe ? Cette action est irréversible.",
+                              )
+                            ) {
+                              return;
+                            }
+                            try {
+                              await postJSON(`/cup/${cupId}/status`, {
+                                status: "archivee",
+                              });
+                              loadCup();
+                            } catch (err: any) {
+                              setError(
+                                err.message || "Erreur lors de l'archivage",
+                              );
+                            }
+                          }}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all"
+                        >
+                          Archiver
+                        </button>
+                      </>
+                    ) : cup.status === "en_cours" ? (
+                      <>
+                        <span className="text-gray-600">
+                          Terminer la coupe :
+                        </span>
+                        <button
+                          onClick={async () => {
+                            if (
+                              !confirm(
+                                "Êtes-vous sûr de vouloir terminer cette coupe ?",
+                              )
+                            ) {
+                              return;
+                            }
+                            try {
+                              await postJSON(`/cup/${cupId}/status`, {
+                                status: "terminee",
+                              });
+                              loadCup();
+                            } catch (err: any) {
+                              setError(
+                                err.message ||
+                                  "Erreur lors de la mise à jour du statut",
+                              );
+                            }
+                          }}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-all"
+                        >
+                          Terminer la coupe
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                )}
             </div>
           </div>
 
@@ -635,30 +697,45 @@ export default function CupDetailPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {cup.participants.map((participant) => {
-                  const isMyTeam = cup.userParticipatingTeamIds?.includes(participant.id) || false;
+                  const isMyTeam =
+                    cup.userParticipatingTeamIds?.includes(participant.id) ||
+                    false;
                   return (
                     <div
                       key={participant.id}
                       className="p-3 bg-gray-50 rounded-lg border border-gray-200 relative"
                     >
-                      <div className="font-medium text-gray-900">
-                        {participant.name}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
-                        <RosterBadge slug={participant.roster} />
-                        <span>{participant.owner.coachName}</span>
+                      <div className="flex items-start gap-2">
+                        <TeamLogo
+                          slug={participant.roster}
+                          logoUrl={participant.logoUrl ?? null}
+                          title={participant.name}
+                          size={36}
+                          className="shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-900">
+                            {participant.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+                            <RosterBadge slug={participant.roster} />
+                            <span>{participant.owner.coachName}</span>
+                          </div>
+                        </div>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {participant.owner.email}
                       </div>
-                      {isMyTeam && cup.status === "ouverte" && !cup.validated && (
-                        <button
-                          onClick={() => handleUnregister(participant.id)}
-                          className="mt-2 w-full px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-all"
-                        >
-                          Retirer mon équipe
-                        </button>
-                      )}
+                      {isMyTeam &&
+                        cup.status === "ouverte" &&
+                        !cup.validated && (
+                          <button
+                            onClick={() => handleUnregister(participant.id)}
+                            className="mt-2 w-full px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-all"
+                          >
+                            Retirer mon équipe
+                          </button>
+                        )}
                     </div>
                   );
                 })}
@@ -682,15 +759,9 @@ export default function CupDetailPage() {
                       <th className="px-2 py-2 text-center font-semibold">
                         MJ
                       </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        V
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        N
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        D
-                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">V</th>
+                      <th className="px-2 py-2 text-center font-semibold">N</th>
+                      <th className="px-2 py-2 text-center font-semibold">D</th>
                       <th className="px-2 py-2 text-center font-semibold">
                         TD+
                       </th>
@@ -718,15 +789,22 @@ export default function CupDetailPage() {
                     {cup.standings.map((team, index) => (
                       <tr
                         key={team.teamId}
-                        className={
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                        }
+                        className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                       >
                         <td className="px-2 py-1 text-center text-gray-700">
                           {index + 1}
                         </td>
                         <td className="px-2 py-1 text-gray-900 font-medium">
-                          {team.teamName}
+                          <span className="inline-flex items-center gap-2">
+                            <TeamLogo
+                              slug={team.roster}
+                              logoUrl={team.logoUrl ?? null}
+                              title={team.teamName}
+                              size={22}
+                              className="shrink-0"
+                            />
+                            {team.teamName}
+                          </span>
                         </td>
                         <td className="px-2 py-1 text-center">
                           {team.matchesPlayed}
@@ -743,9 +821,7 @@ export default function CupDetailPage() {
                         <td className="px-2 py-1 text-center">
                           {team.touchdownDiff}
                         </td>
-                        <td className="px-2 py-1 text-center">
-                          {team.passes}
-                        </td>
+                        <td className="px-2 py-1 text-center">{team.passes}</td>
                         <td className="px-2 py-1 text-center">
                           {team.blockCasualties}
                         </td>
@@ -782,10 +858,26 @@ export default function CupDetailPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
+                        <TeamLogo
+                          slug={match.teamA.roster}
+                          logoUrl={match.teamA.logoUrl ?? null}
+                          title={match.teamA.name}
+                          size={24}
+                          className="shrink-0"
+                        />
                         <span className="font-medium text-gray-900">
                           {match.teamA.name}
                         </span>
                         <span className="text-xs text-gray-500">vs</span>
+                        {match.teamB ? (
+                          <TeamLogo
+                            slug={match.teamB.roster}
+                            logoUrl={match.teamB.logoUrl ?? null}
+                            title={match.teamB.name}
+                            size={24}
+                            className="shrink-0"
+                          />
+                        ) : null}
                         <span className="font-medium text-gray-900">
                           {match.teamB?.name || "??"}
                         </span>
@@ -831,156 +923,248 @@ export default function CupDetailPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Le Pichichi du TD */}
-                {cup.actionAwards.topScorers && cup.actionAwards.topScorers.length > 0 && (
-                  <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-yellow-900 mb-2">
-                      Le Pichichi du TD
-                    </h3>
-                    {cup.actionAwards.topScorers.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} TD
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.topScorers &&
+                  cup.actionAwards.topScorers.length > 0 && (
+                    <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-yellow-900 mb-2">
+                        Le Pichichi du TD
+                      </h3>
+                      {cup.actionAwards.topScorers.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} TD
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* The Wall */}
-                {cup.actionAwards.bestDefense && cup.actionAwards.bestDefense.length > 0 && (
-                  <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-blue-900 mb-2">
-                      The Wall
-                    </h3>
-                    {cup.actionAwards.bestDefense.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} TD encaissé{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.bestDefense &&
+                  cup.actionAwards.bestDefense.length > 0 && (
+                    <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-blue-900 mb-2">
+                        The Wall
+                      </h3>
+                      {cup.actionAwards.bestDefense.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} TD encaissé
+                            {entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* La BASH ! */}
-                {cup.actionAwards.bashers && cup.actionAwards.bashers.length > 0 && (
-                  <div className="bg-red-100 border border-red-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-red-900 mb-2">
-                      La BASH !
-                    </h3>
-                    {cup.actionAwards.bashers.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} élimination{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.bashers &&
+                  cup.actionAwards.bashers.length > 0 && (
+                    <div className="bg-red-100 border border-red-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-red-900 mb-2">
+                        La BASH !
+                      </h3>
+                      {cup.actionAwards.bashers.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} élimination
+                            {entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* La Honte */}
-                {cup.actionAwards.shamePassers && cup.actionAwards.shamePassers.length > 0 && (
-                  <div className="bg-purple-100 border border-purple-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-purple-900 mb-2">
-                      La Honte
-                    </h3>
-                    {cup.actionAwards.shamePassers.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} passe{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.shamePassers &&
+                  cup.actionAwards.shamePassers.length > 0 && (
+                    <div className="bg-purple-100 border border-purple-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-purple-900 mb-2">
+                        La Honte
+                      </h3>
+                      {cup.actionAwards.shamePassers.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} passe{entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* Crampons affûtés */}
-                {cup.actionAwards.foulExperts && cup.actionAwards.foulExperts.length > 0 && (
-                  <div className="bg-orange-100 border border-orange-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-orange-900 mb-2">
-                      Crampons affûtés
-                    </h3>
-                    {cup.actionAwards.foulExperts.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} agression{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.foulExperts &&
+                  cup.actionAwards.foulExperts.length > 0 && (
+                    <div className="bg-orange-100 border border-orange-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-orange-900 mb-2">
+                        Crampons affûtés
+                      </h3>
+                      {cup.actionAwards.foulExperts.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} agression{entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* Les Indestructibles */}
-                {cup.actionAwards.indestructible && cup.actionAwards.indestructible.length > 0 && (
-                  <div className="bg-emerald-100 border border-emerald-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-emerald-900 mb-2">
-                      Les Indestructibles
-                    </h3>
-                    {cup.actionAwards.indestructible.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} sortie{entry.value > 1 ? "s" : ""} subie{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.indestructible &&
+                  cup.actionAwards.indestructible.length > 0 && (
+                    <div className="bg-emerald-100 border border-emerald-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-emerald-900 mb-2">
+                        Les Indestructibles
+                      </h3>
+                      {cup.actionAwards.indestructible.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} sortie{entry.value > 1 ? "s" : ""}{" "}
+                            subie{entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* Les Martyrs */}
-                {cup.actionAwards.martyrs && cup.actionAwards.martyrs.length > 0 && (
-                  <div className="bg-rose-100 border border-rose-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-rose-900 mb-2">
-                      Les Martyrs
-                    </h3>
-                    {cup.actionAwards.martyrs.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} victime{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.martyrs &&
+                  cup.actionAwards.martyrs.length > 0 && (
+                    <div className="bg-rose-100 border border-rose-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-rose-900 mb-2">
+                        Les Martyrs
+                      </h3>
+                      {cup.actionAwards.martyrs.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} victime{entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 {/* Les Perméables */}
-                {cup.actionAwards.permeable && cup.actionAwards.permeable.length > 0 && (
-                  <div className="bg-sky-100 border border-sky-300 rounded-xl p-4 shadow-sm">
-                    <h3 className="text-sm font-bold text-sky-900 mb-2">
-                      Les Perméables
-                    </h3>
-                    {cup.actionAwards.permeable.map((entry) => (
-                      <div key={entry.teamId} className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">
-                          {entry.teamName}
-                        </span>
-                        <span className="font-semibold text-gray-800">
-                          {entry.value} TD encaissé{entry.value > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {cup.actionAwards.permeable &&
+                  cup.actionAwards.permeable.length > 0 && (
+                    <div className="bg-sky-100 border border-sky-300 rounded-xl p-4 shadow-sm">
+                      <h3 className="text-sm font-bold text-sky-900 mb-2">
+                        Les Perméables
+                      </h3>
+                      {cup.actionAwards.permeable.map((entry) => (
+                        <div
+                          key={entry.teamId}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                            <TeamLogo
+                              slug={entry.roster}
+                              logoUrl={entry.logoUrl ?? null}
+                              title={entry.teamName}
+                              size={20}
+                              className="shrink-0"
+                            />
+                            {entry.teamName}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {entry.value} TD encaissé
+                            {entry.value > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
           )}
@@ -998,8 +1182,8 @@ export default function CupDetailPage() {
               Classements individuels
             </h2>
             <p className="text-xs text-gray-500 mb-4">
-              Agrégés depuis les actions saisies. Pas de « future star » (PSP) ni
-              de « MVP » en coupe.
+              Agrégés depuis les actions saisies. Pas de « future star » (PSP)
+              ni de « MVP » en coupe.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cup.playerLeaderboardCategories.map((cat) => {
@@ -1011,7 +1195,9 @@ export default function CupDetailPage() {
                     className="border border-gray-200 rounded-lg p-4"
                     data-testid={`cup-leaderboard-${cat.key}`}
                   >
-                    <h3 className="text-sm font-bold text-gray-900">{cat.label}</h3>
+                    <h3 className="text-sm font-bold text-gray-900">
+                      {cat.label}
+                    </h3>
                     <p className="text-[11px] text-gray-500 mb-2">
                       {cat.description}
                     </p>
@@ -1022,11 +1208,16 @@ export default function CupDetailPage() {
                           className="flex items-center justify-between text-sm"
                         >
                           <span className="truncate">
-                            <span className="text-gray-400 mr-1">{row.rank}.</span>
+                            <span className="text-gray-400 mr-1">
+                              {row.rank}.
+                            </span>
                             <span className="font-medium text-gray-900">
                               {row.playerName}
                             </span>
-                            <span className="text-gray-500"> · {row.teamName}</span>
+                            <span className="text-gray-500">
+                              {" "}
+                              · {row.teamName}
+                            </span>
                           </span>
                           <span className="font-semibold text-gray-800 ml-2">
                             {row.value}
@@ -1051,66 +1242,68 @@ export default function CupDetailPage() {
             Fermer les inscriptions
           </button>
         )}
-        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length > 0 && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Choisir une équipe à inscrire
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
-              >
-                <option value="">-- Sélectionner une équipe --</option>
-                {eligibleTeams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name} ({getRosterName(team.roster)})
-                  </option>
-                ))}
-              </select>
-              {cupAdjusted ? (
-                <button
-                  onClick={() =>
-                    selectedTeamId &&
-                    router.push(
-                      `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
-                    )
-                  }
-                  disabled={!selectedTeamId}
-                  className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="cup-adapt-existing-team"
+        {!cup.hasTeamParticipating &&
+          cup.status === "ouverte" &&
+          eligibleTeams.length > 0 && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Choisir une équipe à inscrire
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
                 >
-                  Adapter à la coupe
-                </button>
-              ) : (
-                <button
-                  onClick={handleRegister}
-                  disabled={!selectedTeamId}
-                  className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="cup-register-as-is"
-                >
-                  Inscrire tel quel
-                </button>
-              )}
+                  <option value="">-- Sélectionner une équipe --</option>
+                  {eligibleTeams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name} ({getRosterName(team.roster)})
+                    </option>
+                  ))}
+                </select>
+                {cupAdjusted ? (
+                  <button
+                    onClick={() =>
+                      selectedTeamId &&
+                      router.push(
+                        `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
+                      )
+                    }
+                    disabled={!selectedTeamId}
+                    className="px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="cup-adapt-existing-team"
+                  >
+                    Adapter à la coupe
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRegister}
+                    disabled={!selectedTeamId}
+                    className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="cup-register-as-is"
+                  >
+                    Inscrire tel quel
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {cupAdjusted ? (
+                  <>
+                    Cette coupe applique des règles ajustées (budget/PSP) :
+                    l'inscription crée une <strong>copie adaptée</strong> de
+                    l'équipe choisie avec le budget et les PSP de la coupe à
+                    dépenser (l'équipe de base reste disponible).
+                  </>
+                ) : (
+                  <>
+                    Cette coupe n'applique aucun ajustement : l'équipe est
+                    inscrite <strong>telle quelle</strong>.
+                  </>
+                )}
+              </p>
             </div>
-            <p className="text-xs text-gray-500">
-              {cupAdjusted ? (
-                <>
-                  Cette coupe applique des règles ajustées (budget/PSP) :
-                  l'inscription crée une <strong>copie adaptée</strong> de l'équipe
-                  choisie avec le budget et les PSP de la coupe à dépenser (l'équipe
-                  de base reste disponible).
-                </>
-              ) : (
-                <>
-                  Cette coupe n'applique aucun ajustement : l'équipe est inscrite{" "}
-                  <strong>telle quelle</strong>.
-                </>
-              )}
-            </p>
-          </div>
-        )}
+          )}
         {!cup.hasTeamParticipating && cup.status === "ouverte" && (
           <div className="mt-3">
             <a
@@ -1121,32 +1314,40 @@ export default function CupDetailPage() {
               🛠️ Construire une équipe pour cette coupe
             </a>
             <p className="text-xs text-gray-500 mt-1">
-              Le budget et les PSP de départ seront appliqués automatiquement et non
-              modifiables ; l'équipe sera inscrite directement.
+              Le budget et les PSP de départ seront appliqués automatiquement et
+              non modifiables ; l'équipe sera inscrite directement.
             </p>
           </div>
         )}
-        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (
-          <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            Aucune équipe disponible avec le ruleset {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une ou modifiez une équipe existante.
-          </div>
-        )}
+        {!cup.hasTeamParticipating &&
+          cup.status === "ouverte" &&
+          eligibleTeams.length === 0 && (
+            <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              Aucune équipe disponible avec le ruleset{" "}
+              {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une ou
+              modifiez une équipe existante.
+            </div>
+          )}
         {cup.hasTeamParticipating && (
           <div className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
             ✓ Une de vos équipes est inscrite à cette coupe
           </div>
         )}
-        {teams.length === 0 && !cup.hasTeamParticipating && cup.status === "ouverte" && (
-          <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="mb-2">Vous devez créer une équipe pour participer à une coupe.</p>
-            <a
-              href="/me/teams/new"
-              className="text-blue-600 hover:text-blue-800 underline"
-            >
-              Créer une équipe →
-            </a>
-          </div>
-        )}
+        {teams.length === 0 &&
+          !cup.hasTeamParticipating &&
+          cup.status === "ouverte" && (
+            <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="mb-2">
+                Vous devez créer une équipe pour participer à une coupe.
+              </p>
+              <a
+                href="/me/teams/new"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                Créer une équipe →
+              </a>
+            </div>
+          )}
         {cup.status === "en_cours" && cup.participants.length >= 2 && (
           <button
             onClick={() => router.push(`/local-matches/new?cupId=${cup.id}`)}
@@ -1159,4 +1360,3 @@ export default function CupDetailPage() {
     </div>
   );
 }
-

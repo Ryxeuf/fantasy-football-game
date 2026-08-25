@@ -1651,6 +1651,7 @@ export default function NewTeamBuilder() {
               availableBudget={Math.max(0, budgetBeforeStars * 1000)}
               excludedSlugs={pack?.bannedStarPlayers}
               onSelectedCostChange={setSelectedStarCost}
+              maxTotalPlayers={constraints.maxPlayers}
             />
           ))}
       </div>

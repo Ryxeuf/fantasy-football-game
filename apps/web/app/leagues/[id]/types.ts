@@ -170,6 +170,8 @@ export interface LeagueParticipantDetail {
     id: string;
     name: string;
     roster: string;
+    /** Logo uploadé par le coach (null => logo dérivé du roster). */
+    logoUrl?: string | null;
     owner: { id: string; coachName: string | null };
   };
 }

@@ -13,6 +13,8 @@ export type CupParticipantTeam = {
   id: string;
   name: string;
   roster: string;
+  /** Logo uploade par le coach ; null => logo programmatique du roster. */
+  logoUrl?: string | null;
 };
 
 export type CupParticipantWithTeam = {
@@ -23,6 +25,8 @@ export type LocalMatchTeam = {
   id: string;
   name: string;
   roster: string;
+  /** Logo uploade par le coach ; null => logo programmatique du roster. */
+  logoUrl?: string | null;
 };
 
 export type LocalMatchActionLike = {
@@ -60,6 +64,8 @@ export type CupTeamStats = {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploade par le coach ; null => logo programmatique du roster. */
+  logoUrl?: string | null;
   matchesPlayed: number;
   wins: number;
   draws: number;
@@ -85,6 +91,8 @@ export type CupAwardEntry = {
   teamId: string;
   teamName: string;
   roster: string;
+  /** Logo uploade par le coach ; null => logo programmatique du roster. */
+  logoUrl?: string | null;
   value: number;
 };
 
@@ -110,6 +118,7 @@ function makeEmptyStats(team: CupParticipantTeam): CupTeamStats {
     teamId: team.id,
     teamName: team.name,
     roster: team.roster,
+    logoUrl: team.logoUrl ?? null,
     matchesPlayed: 0,
     wins: 0,
     draws: 0,
@@ -317,6 +326,7 @@ export function computeCupStandings(
         teamId: s.teamId,
         teamName: s.teamName,
         roster: s.roster,
+        logoUrl: s.logoUrl ?? null,
         value,
       });
     }

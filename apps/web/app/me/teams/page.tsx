@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import OnboardingModal from "./_components/OnboardingModal";
 import RosterBadge from "../../components/RosterBadge";
+import TeamLogo from "../../components/TeamLogo";
 
 type Team = {
   id: string;
@@ -14,6 +15,8 @@ type Team = {
   ruleset?: string;
   format?: string;
   createdAt: string;
+  /** Logo uploadé par le coach ; null => logo programmatique du roster. */
+  logoUrl?: string | null;
   // Engagement compétition (coupe/ligue active) — null si équipe libre.
   competition?: { kind: "cup" | "league"; name: string } | null;
 };
@@ -37,10 +40,16 @@ function TeamsSkeleton() {
   return (
     <div className="grid gap-3" aria-hidden="true">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded border p-4 bg-white animate-pulse">
-          <div className="h-5 w-2/5 bg-gray-200 rounded" />
-          <div className="h-3 w-1/4 bg-gray-200 rounded mt-3" />
-          <div className="h-5 w-20 bg-gray-200 rounded-full mt-3" />
+        <div
+          key={i}
+          className="rounded border p-4 bg-white animate-pulse flex gap-3"
+        >
+          <div className="h-12 w-12 shrink-0 bg-gray-200 rounded" />
+          <div className="flex-1">
+            <div className="h-5 w-2/5 bg-gray-200 rounded" />
+            <div className="h-3 w-1/4 bg-gray-200 rounded mt-3" />
+            <div className="h-5 w-20 bg-gray-200 rounded-full mt-3" />
+          </div>
         </div>
       ))}
     </div>
@@ -141,11 +150,9 @@ export default function MyTeamsPage() {
         if (rostersResponse && rostersResponse.ok) {
           const rostersData = await rostersResponse.json();
           const namesMap: Record<string, string> = {};
-          rostersData.rosters.forEach(
-            (r: { slug: string; name: string }) => {
-              namesMap[r.slug] = r.name;
-            },
-          );
+          rostersData.rosters.forEach((r: { slug: string; name: string }) => {
+            namesMap[r.slug] = r.name;
+          });
           setRosterNames(namesMap);
         }
       } catch (e: any) {
@@ -179,8 +186,12 @@ export default function MyTeamsPage() {
               onChange={(e) => setFormatFilter(e.target.value as FormatFilter)}
             >
               <option value="all">{t.common?.all ?? "Tous"}</option>
-              <option value="bb11">{t.teams.formatBB11 ?? "Blood Bowl à 11"}</option>
-              <option value="sevens">{t.teams.formatSevens ?? "Blood Bowl à Sept"}</option>
+              <option value="bb11">
+                {t.teams.formatBB11 ?? "Blood Bowl à 11"}
+              </option>
+              <option value="sevens">
+                {t.teams.formatSevens ?? "Blood Bowl à Sept"}
+              </option>
             </select>
           </label>
           <label className="flex items-center gap-2 text-xs text-gray-600">
@@ -211,41 +222,61 @@ export default function MyTeamsPage() {
                 className="block rounded border p-4 pr-12 bg-white hover:shadow transition-shadow active:scale-[0.98]"
                 href={`/me/teams/${team.id}`}
               >
-                <div className="font-semibold text-base sm:text-lg">{team.name}</div>
-                <div className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center gap-1.5">
-                  <span>{t.teams.roster}:</span>
-                  <RosterBadge slug={team.roster} name={rosterNames[team.roster]} />
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
-                    {t.teams.rulesetBadge.replace(
-                      "{label}",
-                      team.ruleset === "season_3" ? t.teams.rulesetSeason3 : t.teams.rulesetSeason2,
-                    )}
-                  </span>
-                  <span
-                    data-testid="team-format-badge"
-                    className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
-                      (team.format ?? "bb11") === "sevens"
-                        ? "bg-purple-50 text-purple-700"
-                        : "bg-blue-50 text-blue-700"
-                    }`}
-                  >
-                    {formatLabel(team.format)}
-                  </span>
-                  {team.competition && (
-                    <span
-                      data-testid="team-competition-badge"
-                      title={team.competition.name}
-                      className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
-                        team.competition.kind === "cup"
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-teal-50 text-teal-700"
-                      }`}
-                    >
-                      {team.competition.kind === "cup" ? "🏆 Coupe" : "🏅 Ligue"}
-                    </span>
-                  )}
+                <div className="flex items-start gap-3">
+                  <TeamLogo
+                    slug={team.roster}
+                    logoUrl={team.logoUrl ?? null}
+                    title={team.name}
+                    size={48}
+                    className="shrink-0 rounded bg-gray-50"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-base sm:text-lg">
+                      {team.name}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center gap-1.5">
+                      <span>{t.teams.roster}:</span>
+                      <RosterBadge
+                        slug={team.roster}
+                        name={rosterNames[team.roster]}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
+                        {t.teams.rulesetBadge.replace(
+                          "{label}",
+                          team.ruleset === "season_3"
+                            ? t.teams.rulesetSeason3
+                            : t.teams.rulesetSeason2,
+                        )}
+                      </span>
+                      <span
+                        data-testid="team-format-badge"
+                        className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
+                          (team.format ?? "bb11") === "sevens"
+                            ? "bg-purple-50 text-purple-700"
+                            : "bg-blue-50 text-blue-700"
+                        }`}
+                      >
+                        {formatLabel(team.format)}
+                      </span>
+                      {team.competition && (
+                        <span
+                          data-testid="team-competition-badge"
+                          title={team.competition.name}
+                          className={`inline-flex items-center gap-1 rounded-full text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 ${
+                            team.competition.kind === "cup"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-teal-50 text-teal-700"
+                          }`}
+                        >
+                          {team.competition.kind === "cup"
+                            ? "🏆 Coupe"
+                            : "🏅 Ligue"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </a>
               <button
@@ -265,7 +296,7 @@ export default function MyTeamsPage() {
           ))}
         </div>
       )}
-      
+
       {/* Modal de confirmation de suppression */}
       {pendingDelete && (
         <div
@@ -282,9 +313,7 @@ export default function MyTeamsPage() {
               {isEn ? "Delete this team?" : "Supprimer cette équipe ?"}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              {isEn
-                ? "This removes "
-                : "Cette action retire "}
+              {isEn ? "This removes " : "Cette action retire "}
               <span className="font-medium">{pendingDelete.name}</span>
               {isEn
                 ? " from your list. Its history in finished competitions is kept."
@@ -329,7 +358,9 @@ export default function MyTeamsPage() {
 
       {/* Bloc de création d'équipe */}
       <div className="rounded border p-4 sm:p-6 bg-white">
-        <p className="mb-4 text-sm sm:text-base">{t.teams.createNewTeamMessage}</p>
+        <p className="mb-4 text-sm sm:text-base">
+          {t.teams.createNewTeamMessage}
+        </p>
         <a
           className="inline-block w-full sm:w-auto px-4 py-2.5 bg-emerald-600 text-white rounded text-center hover:bg-emerald-700 transition-colors font-medium"
           href="/me/teams/new"
