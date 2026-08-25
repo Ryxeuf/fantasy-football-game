@@ -19,6 +19,8 @@ import authRefreshRoutes from "./routes/auth-refresh";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
+import adminTournamentRulesetRoutes from "./routes/admin-tournament-rulesets";
+import publicTournamentRulesetRoutes from "./routes/public-tournament-rulesets";
 import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
@@ -284,6 +286,7 @@ app.use("/auth", authRoutes);
 app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
+app.use("/admin/data/tournament-rulesets", adminTournamentRulesetRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 // L2.B.3 — routes level-up Jeu en Ligue. Mountees sur /team aussi
@@ -293,6 +296,7 @@ app.use("/team", teamAdvancementRoutes);
 app.use("/star-players", starPlayersRoutes);
 // Public reference data: cache for 1h with 24h stale-while-revalidate.
 app.use("/api", publicCache(), publicSkillsRoutes);
+app.use("/api", publicCache(), publicTournamentRulesetRoutes);
 app.use("/api", publicCache(), publicRostersRoutes);
 app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/api", publicCache(), publicBlogRoutes);
