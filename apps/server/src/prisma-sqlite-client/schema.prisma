@@ -1894,3 +1894,29 @@ model ProMatchPrediction {
   @@index([matchId, createdAt])
   @@index([userId, score])
 }
+
+/// Règlement de tournoi (« rules pack ») ÉDITABLE en base.
+///
+/// Le contenu complet du règlement — tiers (budget d'or × pool de PSP ×
+/// cumul × Star Players), barème de compétences, compétences Élite, Star
+/// Players bannis, taxe SPP, coups de pouce autorisés, barème de classement —
+/// vit dans `definition`, un JSON validé par `tournamentRulesetDefinitionSchema`
+/// À L'ÉCRITURE COMME À LA LECTURE. Un JSON invalide n'est jamais servi : le
+/// registre @bb/game-engine sert de repli, comme `Roster.regionalRules`
+/// retombe sur le catalogue du moteur.
+///
+/// Le slug est la valeur référencée par `Team`/`League`/`Cup.tournamentRuleset`.
+model TournamentRuleset {
+  id         String   @id @default(cuid())
+  /// Slug référencé par les équipes et compétitions (ex : "naf_world_cup_2027").
+  slug       String   @unique
+  /// Retiré des listes de création quand false. Les compétitions et équipes
+  /// déjà créées gardent leur règlement (on ne réécrit pas l'histoire).
+  enabled    Boolean  @default(true)
+  /// Payload complet du règlement, validé par Zod avant écriture.
+  definition Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([enabled])
+}

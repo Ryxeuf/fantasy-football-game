@@ -1261,6 +1261,15 @@ exports.Prisma.ProMatchPredictionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TournamentRulesetScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  enabled: 'enabled',
+  definition: 'definition',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1377,7 +1386,8 @@ exports.Prisma.ModelName = {
   ProPlayerCareerSnapshot: 'ProPlayerCareerSnapshot',
   ProPlayerOfMatchVote: 'ProPlayerOfMatchVote',
   ProGazetteComment: 'ProGazetteComment',
-  ProMatchPrediction: 'ProMatchPrediction'
+  ProMatchPrediction: 'ProMatchPrediction',
+  TournamentRuleset: 'TournamentRuleset'
 };
 
 /**
