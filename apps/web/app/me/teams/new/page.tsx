@@ -681,6 +681,9 @@ export default function NewTeamBuilder() {
     formatValidation.valid &&
     remainingBudget >= 0 &&
     packPlanValidation.valid &&
+    // Plusieurs Ligues ouvertes ⇒ le choix est OBLIGATOIRE : le serveur
+    // refuse (422) une création sans Ligue, autant bloquer le bouton.
+    !regionalLeagueMissing &&
     (!pack || Boolean(packRules));
 
   const incLabel = (label: string) =>
@@ -767,6 +770,18 @@ export default function NewTeamBuilder() {
                 ⚠️ {formatValidation.error}
               </span>
             )}
+            {remainingBudget >= 0 &&
+              formatValidation.valid &&
+              regionalLeagueMissing && (
+                <span
+                  className="text-red-600"
+                  data-testid="hint-regional-league"
+                >
+                  ⚠️{" "}
+                  {t.teams.regionalLeagueRequired ??
+                    "Choisis une Ligue régionale pour continuer"}
+                </span>
+              )}
             {isTeamValid && (
               <span className="text-emerald-700">
                 ✅{" "}
@@ -1569,7 +1584,26 @@ export default function NewTeamBuilder() {
         )}
         {constraints.starPlayersAllowed &&
           !(pack && packRules && !packRules.starPlayersAllowed) &&
-          (advancedMode ? (
+          (!advancedMode ? (
+            <p
+              data-testid="star-players-requires-advanced"
+              className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
+            >
+              ⭐ Le recrutement de Star Players est réservé à l&apos;Édition
+              avancée — activez « Édition avancée » pour y accéder.
+            </p>
+          ) : regionalLeagueMissing ? (
+            // Les recrues dépendent de la Ligue : tant qu'elle n'est pas
+            // tranchée, proposer une liste reviendrait à proposer l'union des
+            // Ligues du roster, donc des Star Players que la création refuse.
+            <p
+              data-testid="star-players-requires-league"
+              className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2"
+            >
+              ⭐ Choisis d&apos;abord ta Ligue régionale : c&apos;est elle qui
+              détermine les Star Players recrutables.
+            </p>
+          ) : (
             <StarPlayerSelector
               roster={rosterId}
               ruleset={ruleset}
@@ -1581,14 +1615,6 @@ export default function NewTeamBuilder() {
               excludedSlugs={pack?.bannedStarPlayers}
               onSelectedCostChange={setSelectedStarCost}
             />
-          ) : (
-            <p
-              data-testid="star-players-requires-advanced"
-              className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2"
-            >
-              ⭐ Le recrutement de Star Players est réservé à l&apos;Édition
-              avancée — cochez la case « Édition avancée » pour y accéder.
-            </p>
           ))}
       </div>
     </div>

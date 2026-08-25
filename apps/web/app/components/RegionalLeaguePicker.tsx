@@ -72,10 +72,14 @@ export default function RegionalLeaguePicker({
         missing ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"
       }`}
       data-testid="regional-league-picker"
+      aria-required="true"
       disabled={disabled}
     >
       <legend className="px-1 text-sm font-semibold text-gray-800">
-        {t.teams.regionalLeagueChoose ?? "Choisis ta Ligue régionale"}
+        {t.teams.regionalLeagueChoose ?? "Choisis ta Ligue régionale"}{" "}
+        <span aria-hidden="true" className="text-red-600">
+          *
+        </span>
       </legend>
       <p className="mb-2 text-xs text-gray-600">
         {t.teams.regionalLeagueHelp ??
@@ -116,8 +120,16 @@ export default function RegionalLeaguePicker({
           );
         })}
       </div>
-      {missing && (
-        <p className="mt-2 text-xs font-medium text-red-700" role="alert">
+      {/* Le choix est OBLIGATOIRE : on le dit tant que rien n'est coché, en
+          ambre d'abord, puis en rouge quand la création a été tentée. */}
+      {!value && (
+        <p
+          className={`mt-2 text-xs font-medium ${
+            missing ? "text-red-700" : "text-amber-700"
+          }`}
+          data-testid="regional-league-required"
+          role={missing ? "alert" : undefined}
+        >
           {t.teams.regionalLeagueRequired ??
             "Choisis une Ligue régionale pour continuer"}
         </p>
