@@ -44,8 +44,14 @@ describe("readBuilderParams", () => {
     expect(p.name).toBe("Les Gobs");
   });
 
-  it("ignore un règlement de tournoi inconnu du catalogue", () => {
-    expect(readBuilderParams("?tournamentRuleset=nope").tournamentRuleset).toBeNull();
+  it("reprend le slug de règlement tel quel (validé plus tard)", () => {
+    // Les règlements vivent en base : l'URL ne peut plus les valider ici.
+    // La page ignore un slug que l'API ne connaît pas, et le serveur refuse
+    // la création avec un règlement inconnu.
+    expect(readBuilderParams("?tournamentRuleset=nope").tournamentRuleset).toBe(
+      "nope",
+    );
+    expect(readBuilderParams("?tournamentRuleset=").tournamentRuleset).toBeNull();
   });
 
   it("expose des défauts indépendants de l'URL (rendu serveur)", () => {

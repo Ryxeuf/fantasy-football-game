@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
+import { useTournamentRulesets } from "../../../lib/tournament-rulesets";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
@@ -35,10 +36,6 @@ import {
   validateFormatSelection,
   defaultStaffConfig,
   type RosterStaffConfig,
-  TOURNAMENT_RULESETS,
-  TOURNAMENT_RULESET_SLUGS,
-  isTournamentRulesetSlug,
-  getTournamentRuleset,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
   validateTournamentSkillPlan,
@@ -164,9 +161,14 @@ export default function NewTeamBuilder() {
   const [tournamentRuleset, setTournamentRuleset] = useState<string | null>(
     null,
   );
+  // Règlements servis par l'API (édités en admin), plus par le registre du
+  // moteur : les fonctions pures ci-dessous prennent la définition en
+  // argument, seule sa provenance change.
+  const { rulesets: availableRulesets, bySlug: rulesetsBySlug } =
+    useTournamentRulesets();
   const pack = useMemo(
-    () => getTournamentRuleset(tournamentRuleset),
-    [tournamentRuleset],
+    () => (tournamentRuleset ? (rulesetsBySlug.get(tournamentRuleset) ?? null) : null),
+    [tournamentRuleset, rulesetsBySlug],
   );
   const packRules = useMemo(
     () => (pack ? getTournamentRosterRules(pack, rosterId) : null),
@@ -389,11 +391,10 @@ export default function NewTeamBuilder() {
         if (cr && RULESETS.includes(cr as Ruleset)) setRuleset(cr as Ruleset);
         const cf = d.cup.format;
         if (cf && FORMATS.includes(cf as GameFormat)) setFormat(cf as GameFormat);
-        // Coupe à règlement de tournoi : le pack est imposé à l'équipe.
-        const ct = d.cup.tournamentRuleset;
-        setTournamentRuleset(
-          ct && isTournamentRulesetSlug(ct) ? ct : null,
-        );
+        // Coupe à règlement de tournoi : le pack est imposé à l'équipe. Le
+        // slug est repris tel quel — c'est l'API des règlements qui dira
+        // s'il est connu (et le serveur qui tranchera à la création).
+        setTournamentRuleset(d.cup.tournamentRuleset ?? null);
       })
       .catch(() => {
         /* la coupe reste sans config → build libre */
@@ -943,9 +944,9 @@ export default function NewTeamBuilder() {
                 disabled={Boolean(cupId)}
               >
                 <option value="">{t.teams.tournamentRulesetNone}</option>
-                {TOURNAMENT_RULESET_SLUGS.map((slug) => (
+                {availableRulesets.map(({ slug, definition }) => (
                   <option key={slug} value={slug}>
-                    {TOURNAMENT_RULESETS[slug].nameFr}
+                    {definition.nameFr}
                   </option>
                 ))}
               </select>

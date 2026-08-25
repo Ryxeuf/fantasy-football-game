@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
-import { getTournamentRuleset } from "@bb/game-engine";
+import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
@@ -46,6 +46,10 @@ export default function LeagueDetailPage() {
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
+  // Libellé du règlement servi par l'API (les règlements sont éditables).
+  const tournamentRulesetLabel = useTournamentRulesetLabel(
+    league?.tournamentRuleset ?? null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -321,9 +325,7 @@ export default function LeagueDetailPage() {
               data-testid="league-tournament-ruleset-badge"
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
             >
-              🏆{" "}
-              {getTournamentRuleset(league.tournamentRuleset)?.shortLabel ??
-                league.tournamentRuleset}
+              🏆 {tournamentRulesetLabel ?? league.tournamentRuleset}
             </span>
           ) : null}
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

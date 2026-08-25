@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
+import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
-import { getRosterName, getTournamentRuleset } from "@bb/game-engine";
+import { getRosterName } from "@bb/game-engine";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -190,6 +191,9 @@ export default function CupDetailPage() {
   const params = useParams();
   const cupId = params.id as string;
   const [cup, setCup] = useState<Cup | null>(null);
+  const tournamentRulesetLabel = useTournamentRulesetLabel(
+    cup?.tournamentRuleset ?? null,
+  );
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -382,8 +386,7 @@ export default function CupDetailPage() {
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
               >
                 🏆{" "}
-                {getTournamentRuleset(cup.tournamentRuleset)?.shortLabel ??
-                  cup.tournamentRuleset}
+                {tournamentRulesetLabel ?? cup.tournamentRuleset}
               </span>
             )}
             {!cup.isPublic && (

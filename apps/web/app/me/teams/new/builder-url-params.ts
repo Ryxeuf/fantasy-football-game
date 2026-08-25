@@ -18,7 +18,6 @@ import {
   DEFAULT_RULESET,
   FORMATS,
   RULESETS,
-  isTournamentRulesetSlug,
   type GameFormat,
   type Ruleset,
 } from "@bb/game-engine";
@@ -83,10 +82,9 @@ export function readBuilderParams(search: string): BuilderUrlParams {
     roster: p.get("roster") || null,
     name: p.get("name") || null,
     teamValue: Number.isFinite(teamValue) ? teamValue : null,
-    tournamentRuleset:
-      tournamentRuleset && isTournamentRulesetSlug(tournamentRuleset)
-        ? tournamentRuleset
-        : null,
+    // Slug repris tel quel : les règlements vivent en base, la page ne les
+    // connaît qu'après chargement de l'API (et le serveur re-valide).
+    tournamentRuleset: tournamentRuleset || null,
     cupId: p.get("cupId") || null,
     fromTeamId: p.get("fromTeamId") || null,
   };
