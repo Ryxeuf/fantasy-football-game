@@ -1197,6 +1197,11 @@ export default function NewTeamBuilder() {
                   pool={startingPspPool}
                   value={buildAdvancements}
                   onChange={setBuildAdvancements}
+                  // Le règlement de tournoi impose son barème PSP (1re/2e
+                  // compétence, surcoût Élite) et son quota de joueurs
+                  // autorisés à cumuler 2 compétences.
+                  pack={pack}
+                  packRules={packRules}
                 />
                 {!packPlanValidation.valid && (
                   <p
