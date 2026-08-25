@@ -19,14 +19,13 @@ import BuildAdvancementAllocator, {
 } from "./BuildAdvancementAllocator";
 import TeamLogoPicker from "../components/TeamLogoPicker";
 import { uploadTeamLogo } from "../components/team-logo-client";
+import { BUILDER_DEFAULTS, readBuilderParams } from "./builder-url-params";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
-  DEFAULT_RULESET,
   RULESETS,
   type Ruleset,
   FORMATS,
-  DEFAULT_FORMAT,
   type GameFormat,
   getFormatConstraints,
   isLineman,
@@ -101,55 +100,24 @@ type CupRulesConfig = {
 export default function NewTeamBuilder() {
   const { t, language } = useLanguage();
   const router = useRouter();
-  const [ruleset, setRuleset] = useState<Ruleset>(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const value = urlParams.get("ruleset") as Ruleset | null;
-      if (value && RULESETS.includes(value)) {
-        return value;
-      }
-    }
-    return DEFAULT_RULESET;
-  });
-  const [format, setFormat] = useState<GameFormat>(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const value = urlParams.get("format") as GameFormat | null;
-      if (value && FORMATS.includes(value)) {
-        return value;
-      }
-    }
-    return DEFAULT_FORMAT;
-  });
-  const [rosterId, setRosterId] = useState(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get("roster") || "skaven";
-    }
-    return "skaven";
-  });
+  // Les valeurs de depart sont celles du rendu SERVEUR : rien ne lit `window`
+  // ici. Les parametres d'URL sont appliques dans un effet de montage (cf.
+  // `readBuilderParams`), sinon React 18 laisse les `<select>` sur la valeur
+  // rendue cote serveur — c'est le bug « le roster de la fiche n'est pas
+  // selectionne quand on arrive depuis /teams/[slug] ».
+  const [ruleset, setRuleset] = useState<Ruleset>(BUILDER_DEFAULTS.ruleset);
+  const [format, setFormat] = useState<GameFormat>(BUILDER_DEFAULTS.format);
+  const [rosterId, setRosterId] = useState<string>(BUILDER_DEFAULTS.roster);
 
-  const [name, setName] = useState(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get("name") || "";
-    }
-    return "";
-  });
+  const [name, setName] = useState("");
   // Le logo ne peut pas partir avec `POST /team/build` : le contrat serveur
   // est `POST /team/:id/logo` (binaire brut), donc on garde le fichier ici et
   // on l'envoie une fois l'équipe créée.
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  const [teamValue, setTeamValue] = useState(() => {
-    const defaultBudget = getFormatConstraints(format).startingBudget;
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const value = urlParams.get("teamValue");
-      return value ? parseInt(value) : defaultBudget;
-    }
-    return defaultBudget;
-  });
+  const [teamValue, setTeamValue] = useState(
+    () => getFormatConstraints(BUILDER_DEFAULTS.format).startingBudget,
+  );
 
   const [positions, setPositions] = useState<Position[]>([]);
   const [specialRules, setSpecialRules] = useState<RosterSpecialRule[]>([]);
@@ -166,17 +134,11 @@ export default function NewTeamBuilder() {
   const [loadingRosters, setLoadingRosters] = useState(true);
 
   // Construction « pour une coupe » (Flow B) : budget + pool imposés.
-  const cupId = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    return new URLSearchParams(window.location.search).get("cupId");
-  }, []);
+  const [cupId, setCupId] = useState<string | null>(null);
   // Clone : équipe de base à recopier (compo + staff + stars). Le budget/pool
   // viennent de la coupe (Flow B) ; les advancements de la base ne sont PAS
   // recopiés (chacun repart avec le pool de PSP de la coupe).
-  const fromTeamId = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    return new URLSearchParams(window.location.search).get("fromTeamId");
-  }, []);
+  const [fromTeamId, setFromTeamId] = useState<string | null>(null);
   // Compo de base en attente (appliquée quand les positions du roster chargent).
   const baseCountsRef = useRef<{
     roster: string;
@@ -200,15 +162,7 @@ export default function NewTeamBuilder() {
   // Impose édition + format + budget d'or + pool de SPP du tier du roster,
   // et les restrictions de Star Players du pack (le serveur re-valide tout).
   const [tournamentRuleset, setTournamentRuleset] = useState<string | null>(
-    () => {
-      if (typeof window !== "undefined") {
-        const value = new URLSearchParams(window.location.search).get(
-          "tournamentRuleset",
-        );
-        if (value && isTournamentRulesetSlug(value)) return value;
-      }
-      return null;
-    },
+    null,
   );
   const pack = useMemo(
     () => getTournamentRuleset(tournamentRuleset),
@@ -318,6 +272,31 @@ export default function NewTeamBuilder() {
     if (!staff.apothecaryAllowed) setApothecary(false);
     if (!constraints.starPlayersAllowed) setSelectedStarPlayers([]);
   }, [format, constraints, staff]);
+
+  // Parametres d'URL (`?roster=goblin&ruleset=season_3&format=bb11`) appliques
+  // APRES l'hydratation. Les lire dans les initialiseurs `useState` ne suffit
+  // pas : sur un chargement complet, le HTML serveur porte les valeurs par
+  // defaut et React 18 ne reecrit pas la `value` d'un `<select>` a
+  // l'hydratation — le formulaire restait sur « Skaven / Saison 3 ».
+  useEffect(() => {
+    const params = readBuilderParams(window.location.search);
+    if (params.ruleset) setRuleset(params.ruleset);
+    if (params.format) setFormat(params.format);
+    if (params.roster) setRosterId(params.roster);
+    if (params.name) setName(params.name);
+    if (params.tournamentRuleset) setTournamentRuleset(params.tournamentRuleset);
+    if (params.cupId) setCupId(params.cupId);
+    if (params.fromTeamId) setFromTeamId(params.fromTeamId);
+    if (params.teamValue !== null) {
+      setTeamValue(params.teamValue);
+    } else if (params.format) {
+      setTeamValue(getFormatConstraints(params.format).startingBudget);
+    }
+    // Ce basculement n'est pas un changement de format decide par le coach :
+    // on rearme le garde de montage pour que l'effet ci-dessus ne rejoue pas
+    // le budget par defaut par-dessus un `teamValue` venu de l'URL.
+    formatMountRef.current = true;
+  }, []);
 
   useEffect(() => {
     const lang = language === "en" ? "en" : "fr";
