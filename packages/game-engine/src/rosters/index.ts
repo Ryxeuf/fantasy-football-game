@@ -119,6 +119,16 @@ export {
   type TeamSpecialRuleSlug,
 } from "./team-special-rules";
 
+// Règles spéciales EFFECTIVES d'une équipe (roster + Ligue régionale choisie)
+export {
+  FAVOURED_OF_RULE_SLUG,
+  favouredOfLabel,
+  isFavouredOfSlug,
+  resolveTeamSpecialRules,
+  type ResolvedTeamSpecialRule,
+  type ResolveTeamSpecialRulesInput,
+} from "./team-special-rules-resolution";
+
 // Choix de la Ligue régionale à la création d'une équipe
 export {
   getDefaultRegionalLeague,
