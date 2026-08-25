@@ -13,11 +13,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
+import TeamLogo from "../../components/TeamLogo";
 
 interface BracketTeam {
   id: string;
   name: string;
   roster: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
   owner: { id: string; coachName: string | null };
 }
 
@@ -466,6 +469,13 @@ function SideRow({ team, side, placeholder }: SideRowProps) {
       data-testid={`bracket-side-${side}`}
       className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-gray-50"
     >
+      <TeamLogo
+        slug={team.roster}
+        logoUrl={team.logoUrl ?? null}
+        title={team.name}
+        size={24}
+        className="shrink-0"
+      />
       <div className="min-w-0 flex-1 truncate">
         <span className="font-medium text-nuffle-anthracite">{team.name}</span>
         <span className="text-xs text-gray-500 ml-1">

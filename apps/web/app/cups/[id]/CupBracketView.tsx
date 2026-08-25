@@ -11,13 +11,24 @@
  * app/cups/[id]/page.tsx, ~932l) sans toucher au monolithe.
  */
 
+import TeamLogo from "../../components/TeamLogo";
+
+interface CupBracketTeam {
+  id: string;
+  name: string;
+  roster: string;
+  ruleset: string;
+  /** Logo uploadé par le coach (null => logo dérivé du roster). */
+  logoUrl?: string | null;
+}
+
 interface CupBracketMatch {
   id: string;
   name: string | null;
   status: string;
   isPublic: boolean;
-  teamA: { id: string; name: string; roster: string; ruleset: string };
-  teamB: { id: string; name: string; roster: string; ruleset: string } | null;
+  teamA: CupBracketTeam;
+  teamB: CupBracketTeam | null;
   scoreTeamA: number | null;
   scoreTeamB: number | null;
   createdAt: string;
@@ -77,12 +88,19 @@ export default function CupBracketView({
               ) : null}
               <div className="flex items-center justify-between gap-2">
                 <span
-                  className={
+                  className={`inline-flex items-center gap-1.5 ${
                     aWins
                       ? "font-bold text-nuffle-anthracite"
                       : "text-nuffle-anthracite"
-                  }
+                  }`}
                 >
+                  <TeamLogo
+                    slug={m.teamA.roster}
+                    logoUrl={m.teamA.logoUrl ?? null}
+                    title={m.teamA.name}
+                    size={20}
+                    className="shrink-0"
+                  />
                   {m.teamA.name}
                 </span>
                 <span className="text-sm text-gray-600">
@@ -95,12 +113,21 @@ export default function CupBracketView({
                       : "vs"}
                 </span>
                 <span
-                  className={
+                  className={`inline-flex items-center gap-1.5 ${
                     bWins
                       ? "font-bold text-nuffle-anthracite"
                       : "text-nuffle-anthracite"
-                  }
+                  }`}
                 >
+                  {m.teamB ? (
+                    <TeamLogo
+                      slug={m.teamB.roster}
+                      logoUrl={m.teamB.logoUrl ?? null}
+                      title={m.teamB.name}
+                      size={20}
+                      className="shrink-0"
+                    />
+                  ) : null}
                   {m.teamB?.name ?? "—"}
                 </span>
               </div>

@@ -200,6 +200,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+                logoUrl: true,
             ruleset: true,
                 owner: {
                   select: {
@@ -301,6 +302,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+                logoUrl: true,
             ruleset: true,
                 owner: {
                   select: {
@@ -441,6 +443,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+                logoUrl: true,
             ruleset: true,
                 owner: {
                   select: {
@@ -461,6 +464,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+                logoUrl: true,
             ruleset: true,
               },
             },
@@ -469,6 +473,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+                logoUrl: true,
             ruleset: true,
               },
             },
@@ -502,6 +507,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                   owner: {
                     select: {
                       id: true,
@@ -521,6 +527,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                 },
               },
               teamB: {
@@ -528,6 +535,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                 },
               },
               actions: true,
@@ -914,6 +922,7 @@ router.post(
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                   owner: {
                     select: {
                       id: true,
@@ -1037,6 +1046,7 @@ router.post(
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                   owner: {
                     select: {
                       id: true,
@@ -1132,6 +1142,7 @@ router.post(
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                   owner: {
                     select: {
                       id: true,
@@ -1244,6 +1255,7 @@ router.post(
                   id: true,
                   name: true,
                   roster: true,
+                  logoUrl: true,
                   owner: {
                     select: {
                       id: true,
