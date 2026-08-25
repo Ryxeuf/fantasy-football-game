@@ -114,10 +114,30 @@ describe("/me/teams — logos d'équipe", () => {
       'img[src="/images/team-logos/reavers-abc123.png"]',
     );
     expect(uploaded).toBeTruthy();
-    expect(uploaded?.getAttribute("alt")).toBe("Reavers");
+    // Le nom de l'équipe est déjà écrit à côté : le logo est décoratif.
+    expect(uploaded?.getAttribute("alt")).toBe("");
 
     // La 2e équipe n'a pas de logo uploadé : SVG inline, pas de <img>.
     expect(container.querySelectorAll("img").length).toBe(1);
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
+  });
+
+  it("n'écrit le nom d'une équipe qu'UNE fois dans le texte de la page", () => {
+    // Régression : passer `title` à `TeamLogo` faisait rendre un `<title>`
+    // DANS le SVG du logo programmatique. Le nom apparaissait alors deux
+    // fois, et `page.getByText(nom)` de Playwright échouait en strict mode
+    // (« resolved to 2 elements ») sur le parcours de création d'équipe.
+    const { container } = render(<MyTeamsPage />);
+
+    const occurrences = (name: string) =>
+      Array.from(container.querySelectorAll("*")).filter(
+        (el) => el.children.length === 0 && el.textContent?.trim() === name,
+      ).length;
+
+    return waitFor(() => {
+      expect(screen.getByText("Gouge")).toBeTruthy();
+      expect(occurrences("Reavers")).toBe(1);
+      expect(occurrences("Gouge")).toBe(1);
+    });
   });
 });

@@ -709,7 +709,6 @@ export default function CupDetailPage() {
                         <TeamLogo
                           slug={participant.roster}
                           logoUrl={participant.logoUrl ?? null}
-                          title={participant.name}
                           size={36}
                           className="shrink-0"
                         />
@@ -799,7 +798,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={team.roster}
                               logoUrl={team.logoUrl ?? null}
-                              title={team.teamName}
                               size={22}
                               className="shrink-0"
                             />
@@ -861,7 +859,6 @@ export default function CupDetailPage() {
                         <TeamLogo
                           slug={match.teamA.roster}
                           logoUrl={match.teamA.logoUrl ?? null}
-                          title={match.teamA.name}
                           size={24}
                           className="shrink-0"
                         />
@@ -873,7 +870,6 @@ export default function CupDetailPage() {
                           <TeamLogo
                             slug={match.teamB.roster}
                             logoUrl={match.teamB.logoUrl ?? null}
-                            title={match.teamB.name}
                             size={24}
                             className="shrink-0"
                           />
@@ -938,7 +934,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -968,7 +963,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -999,7 +993,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -1030,7 +1023,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -1060,7 +1052,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -1090,7 +1081,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -1121,7 +1111,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
@@ -1151,7 +1140,6 @@ export default function CupDetailPage() {
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
-                              title={entry.teamName}
                               size={20}
                               className="shrink-0"
                             />
