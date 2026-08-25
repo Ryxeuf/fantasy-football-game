@@ -44,7 +44,6 @@ import {
   isGameFormat,
   isBigGuy,
   bigGuyLimitForRoster,
-  getTournamentRuleset,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
   resolveTournamentEliteSkills,
@@ -73,6 +72,7 @@ import {
 } from '../services/cup-build-advancements';
 import { captureRosterSnapshot } from '../services/cup-roster-snapshot';
 import { getEliteSkillSlugs } from '../services/elite-skills';
+import { getTournamentRulesetDefinition } from '../services/tournament-ruleset-repository';
 
 /**
  * S27.8.27 — `POST /team/build`
@@ -144,7 +144,7 @@ export async function handleBuildTeam(
     // Règlement de tournoi demandé par le coach (null = aucun). Un slug
     // inconnu est refusé net : le règlement conditionne budget et
     // restrictions, pas de fallback silencieux.
-    const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+    const parsedPack = await parseTournamentRuleset(bodyTournamentRuleset);
     if (!parsedPack.ok) {
       sendError(res, parsedPack.error, 400);
       return;
@@ -234,7 +234,9 @@ export async function handleBuildTeam(
       // avec un règlement (sinon le pack contournerait les budgets de la
       // coupe résolus ci-dessous).
       if (cup.tournamentRuleset) {
-        const cupPack = getTournamentRuleset(cup.tournamentRuleset);
+        const cupPack = await getTournamentRulesetDefinition(
+          cup.tournamentRuleset,
+        );
         if (!cupPack) {
           sendError(res, 'Règlement de tournoi de la coupe inconnu', 400);
           return;

@@ -67,7 +67,6 @@ import {
   DEFAULT_RULESET,
   APOTHECARY_FORBIDDEN_ROSTERS,
   getTeamColors,
-  getTournamentRuleset,
   TEAM_ROSTERS,
   type Ruleset,
   type TournamentRulesetDefinition,
@@ -76,6 +75,7 @@ import {
   applyPackInducementRules,
   effectiveInducementAllowlist,
 } from "./tournament-inducements";
+import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
 
 export type MatchSheetStatus =
@@ -2238,7 +2238,9 @@ async function loadLeagueInducementRules(pairingId: string): Promise<{
       };
     } | null;
     const league = row?.round?.season?.league;
-    const pack = getTournamentRuleset(league?.tournamentRuleset ?? null);
+    const pack = await getTournamentRulesetDefinition(
+      league?.tournamentRuleset ?? null,
+    );
     const raw = league?.allowedInducements ?? null;
     if (!raw) return { allowlist: null, pack };
     const parsed: unknown = JSON.parse(raw);

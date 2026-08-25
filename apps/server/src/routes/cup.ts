@@ -689,7 +689,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
   // Règlement de tournoi imposé aux équipes (null = aucun). Slug inconnu
   // refusé net ; l'édition et le format de la coupe doivent être ceux
   // exigés par le pack.
-  const parsedPack = parseTournamentRuleset(body.tournamentRuleset);
+  const parsedPack = await parseTournamentRuleset(body.tournamentRuleset);
   if (!parsedPack.ok) {
     return res.status(400).json({ error: parsedPack.error });
   }
