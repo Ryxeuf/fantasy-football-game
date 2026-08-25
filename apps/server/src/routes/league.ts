@@ -115,6 +115,12 @@ import {
   CommissionerEditError,
 } from "../services/commissioner-team-edit";
 import {
+  getTeamSettings,
+  updateTeamStaff,
+  updateTeamRegionalLeague,
+  CommissionerSettingsError,
+} from "../services/commissioner-team-settings";
+import {
   removeTeamFromLeague,
   removePlayerFromTeam,
   removeCoachFromSeason,
@@ -128,6 +134,8 @@ import {
   updatePlayerIdentitySchema,
   adjustTreasurySchema,
   commissionerRemovalSchema,
+  updateStaffSchema,
+  updateRegionalLeagueSchema,
   type AdjustSppBody,
   type AddSkillBody,
   type RemoveSkillBody,
@@ -135,6 +143,8 @@ import {
   type UpdatePlayerIdentityBody,
   type AdjustTreasuryBody,
   type CommissionerRemovalBody,
+  type UpdateStaffBody,
+  type UpdateRegionalLeagueBody,
 } from "../schemas/commissioner-team-edit.schemas";
 import {
   createPoolSchema,
@@ -299,6 +309,17 @@ function domainError(res: Response, e: unknown): void {
             e.code === "player_not_in_team" ||
             e.code === "skill_already_present" ||
             e.code === "skill_not_present"
+          ? 409
+          : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Reglages d'equipe commissaire (staff + Ligue regionale).
+  if (e instanceof CommissionerSettingsError) {
+    const status =
+      e.code === "team_not_found"
+        ? 404
+        : e.code === "no_change" || e.code === "regional_choice_unavailable"
           ? 409
           : 400;
     sendError(res, e.message, status);
@@ -1718,6 +1739,76 @@ export async function handleAdjustTreasury(
   }
 }
 
+/**
+ * GET /leagues/:leagueId/teams/:teamId/settings — staff (valeurs,
+ * plafonds, couts) et Ligue regionale (choix courant + options) d'une
+ * equipe, pour l'editeur commissaire.
+ */
+export async function handleGetTeamSettings(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  try {
+    sendSuccess(res, await getTeamSettings({ leagueId, teamId }));
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/staff (commissaire). */
+export async function handleUpdateTeamStaff(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: UpdateStaffBody = req.body;
+  const { chargeTreasury, reason, ...staff } = body;
+  try {
+    const out = await updateTeamStaff({
+      leagueId,
+      teamId,
+      staff,
+      chargeTreasury,
+      byCommissionerId: userId,
+      reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/** PATCH /leagues/:leagueId/teams/:teamId/regional-league (commissaire). */
+export async function handleUpdateTeamRegionalLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { leagueId, teamId } = req.params;
+  if (!(await ensureLeagueCommissioner(userId, leagueId, res))) return;
+  const body: UpdateRegionalLeagueBody = req.body;
+  try {
+    const out = await updateTeamRegionalLeague({
+      leagueId,
+      teamId,
+      regionalLeague: body.regionalLeague,
+      byCommissionerId: userId,
+      reason: body.reason,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** DELETE /leagues/:leagueId/seasons/:seasonId/teams/:teamId (commissaire). */
 export async function handleRemoveTeamFromLeague(
   req: AuthenticatedRequest,
@@ -2859,6 +2950,25 @@ router.patch(
   authUser,
   validate(adjustTreasurySchema),
   handleAdjustTreasury,
+);
+// Reglages d'equipe : staff (relances, cheerleaders, assistants,
+// apothicaire, fans devoues) et Ligue regionale.
+router.get(
+  "/:leagueId/teams/:teamId/settings",
+  authUser,
+  handleGetTeamSettings,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/staff",
+  authUser,
+  validate(updateStaffSchema),
+  handleUpdateTeamStaff,
+);
+router.patch(
+  "/:leagueId/teams/:teamId/regional-league",
+  authUser,
+  validate(updateRegionalLeagueSchema),
+  handleUpdateTeamRegionalLeague,
 );
 // Suppression commissaire (equipe / joueur pre-saison, tant qu'aucun
 // match n'a ete joue).

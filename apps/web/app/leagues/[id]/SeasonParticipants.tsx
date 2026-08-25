@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { apiRequest } from "../../lib/api-client";
-import { CommissionerTeamEditor } from "./CommissionerTeamEditor";
+import { CommissionerTeamEditor } from "./commissioner/CommissionerTeamEditor";
 import type { LeagueParticipantDetail } from "./types";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
