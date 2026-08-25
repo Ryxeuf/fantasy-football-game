@@ -75,3 +75,44 @@ export const commissionerRemovalSchema = z
   })
   .default({});
 export type CommissionerRemovalBody = z.infer<typeof commissionerRemovalSchema>;
+
+/**
+ * Staff d'equipe edite par le commissaire. Les bornes hautes REELLES
+ * dependent du couple roster x format (`RosterStaffConfig`) : Zod ne fait
+ * qu'un garde-fou de sanite, le service applique les plafonds resolus.
+ * Tous les champs sont optionnels (edition partielle) mais au moins un
+ * doit etre fourni.
+ */
+export const updateStaffSchema = z
+  .object({
+    rerolls: z.number().int().min(0).max(99).optional(),
+    cheerleaders: z.number().int().min(0).max(99).optional(),
+    assistants: z.number().int().min(0).max(99).optional(),
+    apothecary: z.boolean().optional(),
+    dedicatedFans: z.number().int().min(1).max(99).optional(),
+    /** Debiter (ou crediter) la tresorerie du differentiel de cout. */
+    chargeTreasury: z.boolean().optional(),
+    reason: z.string().max(500).optional(),
+  })
+  .refine(
+    (v) =>
+      v.rerolls !== undefined ||
+      v.cheerleaders !== undefined ||
+      v.assistants !== undefined ||
+      v.apothecary !== undefined ||
+      v.dedicatedFans !== undefined,
+    "Fournir au moins un élément de staff à modifier",
+  );
+export type UpdateStaffBody = z.infer<typeof updateStaffSchema>;
+
+/**
+ * Ligue regionale d'une equipe. `null` = retirer le choix enregistre
+ * (retour a l'union historique des regles regionales du roster).
+ */
+export const updateRegionalLeagueSchema = z.object({
+  regionalLeague: z.string().trim().min(1).max(64).nullable(),
+  reason: z.string().max(500).optional(),
+});
+export type UpdateRegionalLeagueBody = z.infer<
+  typeof updateRegionalLeagueSchema
+>;

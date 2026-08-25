@@ -108,8 +108,14 @@ export async function appendAudit(entry: AuditEntry): Promise<void> {
  * Verifie que la team appartient a au moins une saison de la
  * ligue ciblee. Anti-vector pour eviter qu'un commissaire de la
  * ligue X modifie une team qui n'est inscrite que dans la ligue Y.
+ *
+ * Exporte pour les services soeurs (cf. `commissioner-team-settings.ts`) :
+ * la garde de perimetre doit rester UNE seule implementation.
  */
-async function ensureTeamInLeague(input: { leagueId: string; teamId: string }) {
+export async function ensureTeamInLeague(input: {
+  leagueId: string;
+  teamId: string;
+}) {
   const count = await prisma.leagueParticipant.count({
     where: {
       teamId: input.teamId,
