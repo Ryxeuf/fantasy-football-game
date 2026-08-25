@@ -6,6 +6,7 @@ import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
+import StarPlayersPanel from "../components/StarPlayersPanel";
 import {
   getPlayerCost,
   getDisplayName,
@@ -832,6 +833,13 @@ export default function TeamDetailPage() {
               <h2 className="text-base sm:text-lg font-semibold">{t.teams.teamComposition}</h2>
               <div className="text-xs sm:text-sm text-gray-600 mt-1">
                 {team.players?.length || 0} {t.teams.players}
+                {(team.starPlayers?.length ?? 0) > 0 && (
+                  <span data-testid="team-composition-star-count">
+                    {" "}
+                    + {team.starPlayers.length} ⭐ Star Player
+                    {team.starPlayers.length > 1 ? "s" : ""}
+                  </span>
+                )}
               </div>
               <div className="text-xs text-gray-500 mt-2 hidden sm:block">
                 <span className="inline-flex items-center gap-1">
@@ -1085,6 +1093,10 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
+          {/* Star Players recrutés — ils ne sont pas des `TeamPlayer`, donc
+              absents du tableau de composition ci-dessus. */}
+          <StarPlayersPanel starPlayers={team.starPlayers ?? []} />
+
           {/* A11 — Ligues régionales ("type de ligue") du roster */}
           {regionalLeagues.length > 0 && (
             <div
@@ -1214,6 +1226,7 @@ export default function TeamDetailPage() {
             roster: team.roster,
             staffConfig: team.staffConfig,
             playersCost: budget.playersCost,
+            starPlayersCost: budget.starPlayersCost,
           }}
         />
         </>
