@@ -226,7 +226,6 @@ export default function MyTeamsPage() {
                   <TeamLogo
                     slug={team.roster}
                     logoUrl={team.logoUrl ?? null}
-                    title={team.name}
                     size={48}
                     className="shrink-0 rounded bg-gray-50"
                   />

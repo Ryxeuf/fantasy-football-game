@@ -97,7 +97,6 @@ export default function CupBracketView({
                   <TeamLogo
                     slug={m.teamA.roster}
                     logoUrl={m.teamA.logoUrl ?? null}
-                    title={m.teamA.name}
                     size={20}
                     className="shrink-0"
                   />
@@ -123,7 +122,6 @@ export default function CupBracketView({
                     <TeamLogo
                       slug={m.teamB.roster}
                       logoUrl={m.teamB.logoUrl ?? null}
-                      title={m.teamB.name}
                       size={20}
                       className="shrink-0"
                     />

@@ -142,7 +142,6 @@ export function SeasonParticipants({
                 <TeamLogo
                   slug={p.team.roster}
                   logoUrl={p.team.logoUrl ?? null}
-                  title={p.team.name}
                   size={32}
                   className="shrink-0"
                 />

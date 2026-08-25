@@ -394,7 +394,6 @@ function TeamLeaderboardCard({
                 <TeamLogo
                   slug={r.roster}
                   logoUrl={r.logoUrl}
-                  title={r.teamName}
                   size={24}
                   className="shrink-0"
                 />

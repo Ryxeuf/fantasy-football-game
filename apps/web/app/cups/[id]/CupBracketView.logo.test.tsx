@@ -42,7 +42,8 @@ describe("CupBracketView — logos", () => {
       'img[src="/images/team-logos/reavers-abc.png"]',
     );
     expect(img).toBeTruthy();
-    expect(img?.getAttribute("alt")).toBe("Reavers");
+    // Le nom de l'équipe est déjà écrit à côté : le logo est décoratif.
+    expect(img?.getAttribute("alt")).toBe("");
     // L'équipe B n'a pas de logo uploadé : SVG inline, pas de 2e <img>.
     expect(container.querySelectorAll("img").length).toBe(1);
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);

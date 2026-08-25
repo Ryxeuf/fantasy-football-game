@@ -472,7 +472,6 @@ function SideRow({ team, side, placeholder }: SideRowProps) {
       <TeamLogo
         slug={team.roster}
         logoUrl={team.logoUrl ?? null}
-        title={team.name}
         size={24}
         className="shrink-0"
       />
