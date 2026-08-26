@@ -810,7 +810,7 @@ describe("Lot G — league-match-sheet", () => {
       ).rejects.toMatchObject({ code: "already_validated" });
     });
 
-    it("applique les évolutions stagées après les PSP et réécrit les entrées enrichies", async () => {
+    it("applique les évolutions à l'étape 3 de la séquence (avant les embauches) et réécrit les entrées enrichies", async () => {
       // Pairing avec teamIds pour loadSheetTeams (budget + application).
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
@@ -830,7 +830,16 @@ describe("Lot G — league-match-sheet", () => {
         advancementsHome: staged,
       });
       mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
-      mockRecordOffline.mockResolvedValue({ recorded: true });
+      // Le hook d'évolutions est joué PAR le pipeline offline, entre les
+      // PSP/blessures et les embauches (séquence BB, étape 3 puis 4).
+      let hookReceived = false;
+      mockRecordOffline.mockImplementation(
+        async (i: { applyAdvancements?: () => Promise<void> }) => {
+          hookReceived = typeof i.applyAdvancements === "function";
+          await i.applyAdvancements?.();
+          return { recorded: true };
+        },
+      );
       const enriched = [{ ...staged[0], applied: true, cost: 6 }];
       mockApplyStaged.mockResolvedValue(enriched);
       mockPrisma.leagueMatchSheet.update.mockImplementation(
@@ -842,6 +851,7 @@ describe("Lot G — league-match-sheet", () => {
 
       await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
 
+      expect(hookReceived).toBe(true);
       expect(mockApplyStaged).toHaveBeenCalledWith({
         teamId: "team-home",
         entries: staged,

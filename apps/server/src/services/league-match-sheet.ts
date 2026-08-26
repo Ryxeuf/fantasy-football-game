@@ -1310,36 +1310,26 @@ export async function validateByCommissioner(input: {
     events,
     { home: budget.home.pettyCash, away: budget.away.pettyCash },
   );
-  const outcome = await recordOfflineLeagueResult(offlineInput);
 
-  let effects: { applied: boolean; reason?: string };
-  if ("recorded" in outcome && outcome.recorded) {
-    effects = { applied: true };
-  } else if ("skipped" in outcome) {
-    // already-scored / not-terminal-eligible : effets deja en place.
-    effects = { applied: false, reason: outcome.reason };
-    serverLog.info(
-      `[league-match-sheet] validate: offline skipped (${outcome.reason}) pairing=${input.pairingId}`,
-    );
-  } else {
-    effects = { applied: false };
-  }
-
-  // Évolutions stagées par les coachs pendant la saisie : appliquées
-  // APRÈS l'attribution des PSP (recordOfflineLeagueResult), puis
-  // réécrites enrichies ({ applied, cost } / { applied: false,
-  // skipReason }) — trace pour l'UI + support du reversal à
+  // Évolutions stagées par les coachs pendant la saisie. Séquence BB de
+  // fin de match (livre p.68) : elles s'appliquent à l'ÉTAPE 3, donc
+  // APRÈS l'attribution des PSP/blessures et AVANT les embauches de
+  // l'étape 4 — une compétence gagnée ici change le prix de recrutement
+  // d'un journalier et la VE de l'équipe au moment des achats.
+  // `recordOfflineLeagueResult` déclenche le hook au bon moment ; les
+  // entrées sont réécrites enrichies ({ applied, cost } / { applied:
+  // false, skipReason }) — trace pour l'UI + support du reversal à
   // l'invalidation. Tolérant : une entrée refusée (PSP insuffisants,
   // accès, candidats du tirage…) ne bloque pas la validation.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const advData: any = {};
-  if (effects.applied) {
-    const sheetAdv = sheet as {
-      advancementsHome?: unknown;
-      advancementsAway?: unknown;
-    };
-    const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
-    const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+  const sheetAdv = sheet as {
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
+  };
+  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+  const applyAdvancements = async (): Promise<void> => {
     if (stagedHome.length > 0 && teamsForBudget.home?.teamId) {
       advData.advancementsHome = await applyStagedAdvancements({
         teamId: teamsForBudget.home.teamId,
@@ -1352,6 +1342,26 @@ export async function validateByCommissioner(input: {
         entries: stagedAway,
       });
     }
+  };
+
+  const outcome = await recordOfflineLeagueResult({
+    ...offlineInput,
+    ...(stagedHome.length > 0 || stagedAway.length > 0
+      ? { applyAdvancements }
+      : {}),
+  });
+
+  let effects: { applied: boolean; reason?: string };
+  if ("recorded" in outcome && outcome.recorded) {
+    effects = { applied: true };
+  } else if ("skipped" in outcome) {
+    // already-scored / not-terminal-eligible : effets deja en place.
+    effects = { applied: false, reason: outcome.reason };
+    serverLog.info(
+      `[league-match-sheet] validate: offline skipped (${outcome.reason}) pairing=${input.pairingId}`,
+    );
+  } else {
+    effects = { applied: false };
   }
 
   const updated = await prisma.leagueMatchSheet.update({

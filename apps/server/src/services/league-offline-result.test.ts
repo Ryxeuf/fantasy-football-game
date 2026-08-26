@@ -561,6 +561,52 @@ describe("recordOfflineLeagueResult (option b)", () => {
     );
   });
 
+  it("séquence BB : les évolutions sont jouées AVANT les embauches, elles-mêmes avant les renvois", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    m.tpFindMany.mockResolvedValue([{ id: "p1", teamId: "team-home" }]);
+    const order: string[] = [];
+    m.applyPurchases.mockImplementation(async () => {
+      order.push("embauches");
+      return EMPTY_MUTATION_SIDE;
+    });
+    vi.mocked(applyPlayerStatuses).mockImplementation(
+      async (ids: readonly string[], opts: { kind: string }) => {
+        if (opts.kind === "firing") order.push("renvois");
+        return { appliedIds: [...ids], teamIds: ["team-home"] };
+      },
+    );
+
+    await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      purchasesHome: [{ kind: "reroll", name: "Relance", cost: 50000 }],
+      firedPlayerIds: ["p1"],
+      applyAdvancements: async () => {
+        order.push("évolutions");
+      },
+    });
+
+    expect(order).toEqual(["évolutions", "embauches", "renvois"]);
+  });
+
+  it("un échec des évolutions ne fait pas échouer l'enregistrement du résultat", async () => {
+    m.pairFind.mockResolvedValue(buildPairing());
+    const r = await recordOfflineLeagueResult({
+      pairingId: "pair-1",
+      scoreHome: 1,
+      scoreAway: 0,
+      casualtiesHome: 0,
+      casualtiesAway: 0,
+      applyAdvancements: async () => {
+        throw new Error("boom");
+      },
+    });
+    expect(r).toMatchObject({ recorded: true });
+  });
+
   it("ne touche pas au snapshot quand aucun achat ne mute le roster", async () => {
     m.pairFind.mockResolvedValue(buildPairing());
     await recordOfflineLeagueResult({
