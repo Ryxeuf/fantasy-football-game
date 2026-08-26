@@ -1092,6 +1092,76 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.summary.casualtiesHome).toBe(2);
     });
 
+    it("credite les PSP du JDM sans stat-line (palier propose AVANT validation)", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        // Le JDM n'a AUCUN evenement : pas de stat-line dans le summary.
+        motmPlayerIds: JSON.stringify(["h-mvp", "a-mvp"]),
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          players: [
+            {
+              id: "h-mvp",
+              number: 7,
+              name: "Trois-quart",
+              position: "human_lineman",
+              dead: false,
+              missNextMatch: false,
+              spp: 1,
+              skills: "",
+              advancements: "[]",
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 9,
+            },
+          ],
+        },
+        {
+          id: "team-away",
+          name: "Sotek",
+          roster: "lizardmen",
+          players: [
+            {
+              id: "a-mvp",
+              number: 3,
+              name: "Saurus",
+              position: "lizardmen_saurus_blocker",
+              dead: false,
+              missNextMatch: false,
+              spp: 1,
+              skills: "",
+              advancements: "[]",
+              ma: 6,
+              st: 4,
+              ag: 5,
+              pa: null,
+              av: 10,
+            },
+          ],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // JDM = 4 PSP (bareme officiel BB2020/S3), des deux cotes.
+      expect(out.computedSpp["h-mvp"]).toBe(4);
+      expect(out.computedSpp["a-mvp"]).toBe(4);
+    });
+
     it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",

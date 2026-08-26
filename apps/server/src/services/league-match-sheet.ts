@@ -2490,6 +2490,31 @@ export async function getMatchSheet(input: {
       modifier,
     );
   }
+  // Un JDM SANS aucune stat n'a pas de stat-line dans le summary : il
+  // manquait donc de `computedSpp` et son palier d'évolution n'était pas
+  // proposé AVANT la validation (alors que la validation lui crédite bien
+  // ses PSP de JDM — cf. buildOfflineInputFromSummary). On l'ajoute ici en
+  // résolvant son côté depuis le roster.
+  for (const id of motm) {
+    if (computedSpp[id] !== undefined) continue;
+    const side = teams.home?.players.some((p) => p.id === id)
+      ? "home"
+      : teams.away?.players.some((p) => p.id === id)
+        ? "away"
+        : null;
+    if (!side) continue;
+    computedSpp[id] = calculatePlayerSPP(
+      {
+        touchdowns: 0,
+        casualties: 0,
+        completions: 0,
+        interceptions: 0,
+        ttmLandings: 0,
+        mvp: true,
+      },
+      side === "home" ? sppContext.teamA : sppContext.teamB,
+    );
+  }
 
   const { allowlist: allowedInducements, pack: inducementPack } =
     await loadLeagueInducementRules(input.pairingId);
