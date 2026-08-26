@@ -78,6 +78,30 @@ export interface SheetJourneyman {
   skills?: string;
 }
 
+/**
+ * Star Player ENGAGÉ en coup de pouce sur cette feuille. Joueur synthétique
+ * comme le journalier (id `star-<side>-<slug>`) : il joue le match — donc
+ * sélectionnable comme acteur ou cible d'évènement — mais n'est jamais
+ * persisté au roster.
+ */
+export interface SheetStarPlayer {
+  id: string;
+  number: number;
+  name: string;
+  position: string;
+  positionName: string;
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
+  skills?: string;
+  slug?: string;
+  cost?: number;
+}
+
 export interface SheetTeam {
   teamId: string;
   name: string;
@@ -110,6 +134,8 @@ export interface SheetTeam {
   journeymenOptions?: { slug: string; name: string }[];
   /** Poste choisi sur la feuille (null = défaut). */
   journeymenChoice?: string | null;
+  /** Star Players engagés en coup de pouce (optionnel : rétro-compat API). */
+  starPlayersHired?: SheetStarPlayer[];
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -271,6 +297,9 @@ export function PlayerSelect({
       includeUnavailable || (!p.dead && !p.missNextMatch) || p.id === value,
   );
   const journeymen = includeJourneymen ? (team?.journeymen ?? []) : [];
+  // Un Star Player engagé joue le match : il peut marquer, blesser, être
+  // blessé ou être JDM. Même traitement que les journaliers (synthétiques).
+  const starPlayers = includeJourneymen ? (team?.starPlayersHired ?? []) : [];
   return (
     <select
       value={value}
@@ -288,6 +317,11 @@ export function PlayerSelect({
       {journeymen.map((j) => (
         <option key={j.id} value={j.id}>
           {`N°${j.number} ${j.name} — ${j.positionName}`}
+        </option>
+      ))}
+      {starPlayers.map((sp) => (
+        <option key={sp.id} value={sp.id}>
+          {`⭐ ${sp.name} — ${sp.positionName}`}
         </option>
       ))}
     </select>

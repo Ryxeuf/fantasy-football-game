@@ -321,7 +321,14 @@ const STATUS_LABELS: Record<string, string> = {
 function playerName(team: SheetTeam | null, id: string | null): string {
   if (!id) return "";
   const p = team?.players.find((pl) => pl.id === id);
-  return p ? `N°${p.number} ${p.name}` : id;
+  if (p) return `N°${p.number} ${p.name}`;
+  // Joueurs synthétiques de la feuille : journaliers et Star Players
+  // engagés en coup de pouce jouent le match sans exister au roster.
+  const j = team?.journeymen?.find((jm) => jm.id === id);
+  if (j) return `N°${j.number} ${j.name}`;
+  const sp = team?.starPlayersHired?.find((st) => st.id === id);
+  if (sp) return `⭐ ${sp.name}`;
+  return id;
 }
 
 export default function MatchSheetPage() {

@@ -203,6 +203,56 @@ describe("PlayerSelect — journaliers", () => {
   });
 });
 
+describe("PlayerSelect — Star Players engagés", () => {
+  const team: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    starPlayersHired: [
+      {
+        id: "star-home-griff_oberwald",
+        number: 81,
+        name: "Griff Oberwald",
+        position: "star_player",
+        positionName: "Star Player",
+        stats: { ma: 7, st: 4, ag: 2, pa: 3, av: 9 },
+        skills: "block,dodge",
+        slug: "griff_oberwald",
+        cost: 280_000,
+      },
+    ],
+  };
+
+  it("propose le Star Player engagé comme acteur/cible d'évènement", () => {
+    render(
+      <PlayerSelect team={team} value="" onChange={() => {}} testId="ps" />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual([
+      "— joueur —",
+      "N°1 Boris — Trois-quarts",
+      "⭐ Griff Oberwald — Star Player",
+    ]);
+  });
+
+  it("l'exclut des usages « roster réel » (licenciements, SPP persistés)", () => {
+    render(
+      <PlayerSelect
+        team={team}
+        value=""
+        onChange={() => {}}
+        includeJourneymen={false}
+        testId="ps"
+      />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual(["— joueur —", "N°1 Boris — Trois-quarts"]);
+  });
+});
+
 describe("JourneymenPanel", () => {
   const baseTeam: SheetTeam = {
     ...TEAM,

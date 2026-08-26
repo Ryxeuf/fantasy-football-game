@@ -39,12 +39,16 @@ import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import {
   deriveJourneymen,
-  isJourneymanId,
   linemanPositionsForRoster,
   parseJourneymenChoice,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import {
+  deriveSheetStarPlayers,
+  isSyntheticSheetPlayerId,
+  type SheetStarPlayer,
+} from "./league-sheet-star-players";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
@@ -1019,12 +1023,13 @@ export function buildOfflineInputFromSummary(
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
 
-  // Les journaliers sont des joueurs SYNTHETIQUES de la feuille (aucune
-  // ligne TeamPlayer) : leurs stats/blessures/bonus restent visibles sur
-  // la feuille mais ne doivent PAS partir en persistance post-match
-  // (updates Prisma sur des ids inexistants).
+  // Les journaliers ET les Star Players engagés sont des joueurs
+  // SYNTHETIQUES de la feuille (aucune ligne TeamPlayer) : leurs
+  // stats/blessures/bonus restent visibles sur la feuille mais ne doivent
+  // PAS partir en persistance post-match (updates Prisma sur des ids
+  // inexistants).
   const playerStats: OfflinePlayerStatInput[] = summary.playerStats
-    .filter((p) => !isJourneymanId(p.playerId))
+    .filter((p) => !isSyntheticSheetPlayerId(p.playerId))
     .map((p) => ({
       teamPlayerId: p.playerId,
       touchdowns: p.touchdowns,
@@ -1038,7 +1043,7 @@ export function buildOfflineInputFromSummary(
   // Les MVP sans stat-line (joueur primé sans event) doivent quand meme
   // recevoir le flag mvp -> on les ajoute.
   for (const id of motm) {
-    if (isJourneymanId(id)) continue;
+    if (isSyntheticSheetPlayerId(id)) continue;
     if (!playerStats.some((p) => p.teamPlayerId === id)) {
       playerStats.push({ teamPlayerId: id, mvp: true });
     }
@@ -1048,7 +1053,7 @@ export function buildOfflineInputFromSummary(
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
   for (const inj of summary.injuries) {
-    if (isJourneymanId(inj.playerId)) continue;
+    if (isSyntheticSheetPlayerId(inj.playerId)) continue;
     // A62 — la victime d'un other_elim est portee par actorPlayerId
     // (auto-elimination sans cible) : on matche acteur OU cible.
     const src = eventsForMeta.find(
@@ -1094,7 +1099,7 @@ export function buildOfflineInputFromSummary(
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
     sppBonus: parseSppBonus(sheet.sppBonus).filter(
-      (b) => !isJourneymanId(b.teamPlayerId),
+      (b) => !isSyntheticSheetPlayerId(b.teamPlayerId),
     ),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
@@ -1103,7 +1108,7 @@ export function buildOfflineInputFromSummary(
     purchasesAway: parsePurchases(sheet.purchasesAway),
     // Licenciements -> firedAt (retire du roster actif, reversible).
     firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
-      (id) => !isJourneymanId(id),
+      (id) => !isSyntheticSheetPlayerId(id),
     ),
   };
 }
@@ -1735,6 +1740,12 @@ export interface MatchSheetTeam {
   readonly journeymenOptions?: readonly JourneymanPositionOption[];
   /** Choix courant ({ position } sur la feuille), null = defaut. */
   readonly journeymenChoice?: string | null;
+  /**
+   * Star Players ENGAGÉS en coup de pouce sur cette feuille. Ils jouent le
+   * match : proposés comme acteurs / cibles d'évènement, exclus de la
+   * persistance post-match. Renseignés par getMatchSheet.
+   */
+  readonly starPlayersHired?: readonly SheetStarPlayer[];
 }
 
 /** Libelle de race depuis un roster slug (fallback : le slug brut). */
@@ -2599,9 +2610,30 @@ export async function getMatchSheet(input: {
       journeymenChoice: choice,
     };
   };
+  // Star Players engagés en coup de pouce : ils JOUENT le match, donc ils
+  // doivent apparaître dans les pickers d'acteur / de cible d'évènement.
+  const sheetInducements = sheet as {
+    inducementsHome?: unknown;
+    inducementsAway?: unknown;
+  };
+  const withStarPlayers = async (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): Promise<MatchSheetTeam | null> => {
+    if (!team) return null;
+    const starPlayersHired = await deriveSheetStarPlayers({
+      side,
+      inducements:
+        side === "home"
+          ? sheetInducements.inducementsHome
+          : sheetInducements.inducementsAway,
+      ruleset: team.ruleset,
+    });
+    return starPlayersHired.length > 0 ? { ...team, starPlayersHired } : team;
+  };
   const teamsWithJourneymen = {
-    home: withJourneymen(teams.home, "home"),
-    away: withJourneymen(teams.away, "away"),
+    home: await withStarPlayers(withJourneymen(teams.home, "home"), "home"),
+    away: await withStarPlayers(withJourneymen(teams.away, "away"), "away"),
   };
 
   // A63 — expose des gains auto toujours frais : la partie TD et le bonus
