@@ -127,7 +127,7 @@ export async function handleCreateFromRoster(
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
   // Règlement de tournoi (null = aucun). Slug inconnu refusé net.
-  const parsedPack = parseTournamentRuleset(bodyTournamentRuleset);
+  const parsedPack = await parseTournamentRuleset(bodyTournamentRuleset);
   if (!parsedPack.ok) return res.status(400).json({ error: parsedPack.error });
   const pack = parsedPack.def;
 

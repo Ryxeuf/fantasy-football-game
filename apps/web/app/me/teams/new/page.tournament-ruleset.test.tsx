@@ -20,6 +20,7 @@ vi.mock("../../../lib/api-client", () => ({
   apiRequest: (...args: unknown[]) => apiRequest(...args),
 }));
 
+import { NAF_WORLD_CUP_2027 } from "@bb/game-engine";
 import NewTeamPage from "./page";
 import { LanguageProvider } from "../../../contexts/LanguageContext";
 
@@ -51,8 +52,28 @@ const SNOTLING = {
 
 function mockApis(min: number) {
   apiRequest.mockImplementation((path: unknown) => {
-    if (String(path).includes("/api/skills")) {
-      return Promise.resolve({ skills: [] });
+    const url = String(path);
+    if (url.includes("/api/skills")) return Promise.resolve({ skills: [] });
+    // Les règlements sont servis par l'API (éditables en admin) : le pack
+    // arrive sous sa forme sérialisée, borne de taxe ouverte à `null`.
+    if (url.includes("/api/tournament-rulesets")) {
+      return Promise.resolve({
+        rulesets: [
+          {
+            slug: NAF_WORLD_CUP_2027.slug,
+            enabled: true,
+            definition: {
+              ...NAF_WORLD_CUP_2027,
+              starPlayerSppTax: NAF_WORLD_CUP_2027.starPlayerSppTax.map((b) => ({
+                maxTotalCostK: Number.isFinite(b.maxTotalCostK)
+                  ? b.maxTotalCostK
+                  : null,
+                spp: b.spp,
+              })),
+            },
+          },
+        ],
+      });
     }
     return Promise.resolve({
       roster: { positions: [lineman(min)], specialRules: [] },

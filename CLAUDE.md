@@ -336,6 +336,37 @@ Piege associe : filtrer `dead: false` SANS `firedAt: null` (ou l'inverse)
 laisse passer la moitie des joueurs sortis. Garde CI :
 `services/player-status-filters.test.ts` (ratchet + exceptions justifiees).
 
+### Reglements de tournoi : base d'abord, moteur en repli
+
+Les « rules packs » (NAF World Cup 2027…) sont EDITABLES en base
+(`TournamentRuleset` : `slug` unique + `enabled` + `definition` JSON) et
+administrables depuis `/admin/data/tournament-rulesets`. Le registre
+`@bb/game-engine` (`TOURNAMENT_RULESETS`) reste la transcription de
+reference et le REPLI — meme posture que `Roster.regionalRules` /
+`effectiveRegionalRules`.
+
+- Toute lecture passe par `services/tournament-ruleset-repository`
+  (`listTournamentRulesets`, `getTournamentRulesetDefinition`), asynchrone
+  et caché en process. Ne PAS rappeler `getTournamentRuleset` du moteur
+  dans du code applicatif : il ignore les editions admin.
+- Le JSON stocke est valide par `schemas/tournament-ruleset.schemas`
+  (`parseDefinition`) A L'ECRITURE ET A LA LECTURE. Une ligne invalide est
+  ignoree (log + repli moteur), jamais servie.
+- Deux pieges du stockage JSON, tous deux couverts par le parser :
+  `Infinity` n'existe pas en JSON (la tranche de taxe sans borne se stocke
+  `null`, cf. `serializeDefinition`), et la colonne remonte en objet natif
+  (PG) ou en chaine (miroir SQLite).
+- Le slug de la LIGNE fait foi sur celui du JSON (c'est lui que referencent
+  `Team`/`League`/`Cup.tournamentRuleset`) et il ne se renomme pas.
+- Cote web, plus aucune lecture du registre : `lib/tournament-rulesets`
+  consomme `GET /api/tournament-rulesets` et rehydrate la borne ouverte.
+- Le seed cree les lignes manquantes SANS ecraser une edition admin
+  (`syncTournamentRulesets`, `force: true` pour reinitialiser).
+
+Les fonctions PURES du moteur (bareme de competences, quota de cumul, taxe
+Star Players, `validateTournamentSkillPlan`, `resolveTournamentEliteSkills`)
+sont inchangees : elles prennent la definition en argument.
+
 ### Ligues regionales d'un roster : UNE seule source (Roster.regionalRules)
 
 Les Ligues d'un roster existent a deux endroits : la colonne editable

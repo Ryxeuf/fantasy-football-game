@@ -5,25 +5,44 @@
  * du tournoi réellement joué (V 5 / N 2 / D 0 / concession -5).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// Le parse passe par le repository : base d'abord, registre du moteur en
+// repli. Table vide ici ⇒ c'est le registre qui répond.
+vi.mock("../prisma", () => ({
+  prisma: { tournamentRuleset: { findMany: vi.fn().mockResolvedValue([]) } },
+}));
+vi.mock("../utils/server-log", () => ({
+  serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), log: vi.fn() },
+}));
+
 import { NAF_WORLD_CUP_2027 } from "@bb/game-engine";
+import { invalidateTournamentRulesetCache } from "../services/tournament-ruleset-repository";
 import {
   parseTournamentRuleset,
   tournamentResultPoints,
 } from "./tournament-ruleset-helpers";
 
+beforeEach(() => {
+  invalidateTournamentRulesetCache();
+});
+
 describe("parseTournamentRuleset", () => {
-  it("accepte l'absence de règlement", () => {
-    expect(parseTournamentRuleset(undefined)).toEqual({ ok: true, def: null });
-    expect(parseTournamentRuleset(null)).toEqual({ ok: true, def: null });
-    expect(parseTournamentRuleset("")).toEqual({ ok: true, def: null });
+  it("accepte l'absence de règlement", async () => {
+    expect(await parseTournamentRuleset(undefined)).toEqual({
+      ok: true,
+      def: null,
+    });
+    expect(await parseTournamentRuleset(null)).toEqual({ ok: true, def: null });
+    expect(await parseTournamentRuleset("")).toEqual({ ok: true, def: null });
   });
 
-  it("résout un slug connu et refuse un slug inconnu", () => {
-    const parsed = parseTournamentRuleset("naf_world_cup_2027");
+  it("résout un slug connu et refuse un slug inconnu", async () => {
+    const parsed = await parseTournamentRuleset("naf_world_cup_2027");
     expect(parsed.ok).toBe(true);
     expect(parsed.ok && parsed.def?.slug).toBe("naf_world_cup_2027");
-    expect(parseTournamentRuleset("ruleset_inconnu").ok).toBe(false);
+    expect((await parseTournamentRuleset("ruleset_inconnu")).ok).toBe(false);
+    expect((await parseTournamentRuleset(42)).ok).toBe(false);
   });
 });
 

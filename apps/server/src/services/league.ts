@@ -15,8 +15,11 @@
  * - Les journees (rounds) sont numerotees a partir de 1.
  */
 
-import { getTournamentRuleset } from "@bb/game-engine";
 import { tournamentResultPoints } from "../utils/tournament-ruleset-helpers";
+import {
+  getTournamentRulesetDefinition,
+  tournamentRulesetShortLabel,
+} from "./tournament-ruleset-repository";
 import { prisma } from "../prisma";
 import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
@@ -167,11 +170,11 @@ function ensureValidMaxParticipants(maxParticipants: number): void {
  * @bb/game-engine et edition (`ruleset`) de la ligue compatible avec celle
  * exigee par le pack. Retourne le slug a persister (null = aucun reglement).
  */
-function ensureValidTournamentRuleset(
+async function ensureValidTournamentRuleset(
   value: string | null | undefined,
   leagueRuleset: string,
-): string | null {
-  const parsed = parseTournamentRuleset(value);
+): Promise<string | null> {
+  const parsed = await parseTournamentRuleset(value);
   if (!parsed.ok) {
     throw new Error("Reglement de tournoi inconnu");
   }
@@ -187,7 +190,7 @@ export async function createLeague(input: CreateLeagueInput) {
   ensureNonEmptyName(input.name);
   const maxParticipants = input.maxParticipants ?? 16;
   ensureValidMaxParticipants(maxParticipants);
-  const tournamentRuleset = ensureValidTournamentRuleset(
+  const tournamentRuleset = await ensureValidTournamentRuleset(
     input.tournamentRuleset,
     input.ruleset ?? "season_3",
   );
@@ -197,7 +200,7 @@ export async function createLeague(input: CreateLeagueInput) {
       ? JSON.stringify(input.allowedRosters)
       : null;
 
-  const packDef = getTournamentRuleset(tournamentRuleset);
+  const packDef = await getTournamentRulesetDefinition(tournamentRuleset);
   const packScoring = packDef ? tournamentResultPoints(packDef) : null;
 
   // FR17 — coups de pouce autorises. [] ou absent => null (tous autorises).
@@ -385,15 +388,13 @@ export async function addParticipant(input: AddParticipantInput) {
   const teamPackSlug =
     (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
   if (leaguePackSlug !== teamPackSlug) {
-    const label = (slug: string): string =>
-      getTournamentRuleset(slug)?.shortLabel ?? slug;
     if (leaguePackSlug) {
       throw new Error(
-        `Cette ligue impose le reglement de tournoi ${label(leaguePackSlug)} : l'equipe doit etre creee avec ce reglement`,
+        `Cette ligue impose le reglement de tournoi ${await tournamentRulesetShortLabel(leaguePackSlug)} : l'equipe doit etre creee avec ce reglement`,
       );
     }
     throw new Error(
-      `Cette equipe est creee avec le reglement de tournoi ${label(teamPackSlug as string)} : elle ne peut rejoindre qu'une competition avec ce reglement`,
+      `Cette equipe est creee avec le reglement de tournoi ${await tournamentRulesetShortLabel(teamPackSlug)} : elle ne peut rejoindre qu'une competition avec ce reglement`,
     );
   }
 
@@ -1128,7 +1129,7 @@ export async function updateLeague(
       input.tournamentRuleset !== undefined
         ? input.tournamentRuleset
         : (existing?.tournamentRuleset ?? null);
-    const validated = ensureValidTournamentRuleset(nextSlug, nextRuleset);
+    const validated = await ensureValidTournamentRuleset(nextSlug, nextRuleset);
     if (input.tournamentRuleset !== undefined) {
       data.tournamentRuleset = validated;
     }

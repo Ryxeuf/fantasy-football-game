@@ -9,7 +9,7 @@
  * `CupParticipant`.
  */
 
-import { getTournamentRuleset } from '@bb/game-engine';
+import { tournamentRulesetShortLabel } from './tournament-ruleset-repository';
 import { prisma } from '../prisma';
 import {
   parseNumberMap,
@@ -102,7 +102,7 @@ export async function registerTeamToCup(input: {
     (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null;
   if (cupPackSlug !== teamPackSlug) {
     const slug = (cupPackSlug ?? teamPackSlug) as string;
-    const label = getTournamentRuleset(slug)?.shortLabel ?? slug;
+    const label = await tournamentRulesetShortLabel(slug);
     throw new CupRegistrationError(
       'tournament_ruleset_mismatch',
       cupPackSlug

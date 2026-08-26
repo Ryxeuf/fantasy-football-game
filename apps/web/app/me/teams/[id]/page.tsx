@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
+import { useTournamentRulesetLabel } from "../../../lib/tournament-rulesets";
 import SkillTooltip from "../components/SkillTooltip";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
@@ -11,7 +12,6 @@ import {
   getPlayerCost,
   getDisplayName,
   getRerollCost,
-  getTournamentRuleset,
 } from "@bb/game-engine";
 import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
 import { formatPlusStat } from "../../../lib/format-stats";
@@ -419,6 +419,11 @@ export default function TeamDetailPage() {
   const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
   const team = data?.team;
+  // Libellé du règlement servi par l'API (les règlements sont éditables) ;
+  // `?slug=` couvre aussi un règlement désactivé depuis la création.
+  const tournamentRulesetLabel = useTournamentRulesetLabel(
+    team?.tournamentRuleset ?? null,
+  );
   const match = data?.currentMatch;
   const localMatchStats = data?.localMatchStats;
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
@@ -563,8 +568,7 @@ export default function TeamDetailPage() {
                 🏆{" "}
                 {t.teams.tournamentRulesetBadge.replace(
                   "{label}",
-                  getTournamentRuleset(team.tournamentRuleset)?.shortLabel ??
-                    team.tournamentRuleset,
+                  tournamentRulesetLabel ?? team.tournamentRuleset,
                 )}
               </span>
             )}
