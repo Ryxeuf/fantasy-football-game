@@ -29,6 +29,7 @@ import {
   isGameFormat,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
+import { ACTIVE_PLAYER_WHERE } from "./player-status";
 
 export type OfflinePurchaseKind = "player" | "reroll" | "staff" | "other";
 export type OfflineStaffKind =
@@ -168,10 +169,11 @@ interface TeamCounters {
   roster: string;
   ruleset: string;
   format: string;
-  players: Array<{ number: number; dead: boolean }>;
+  /** Roster ACTIF uniquement (ni mort, ni licencie) — cf. ACTIVE_PLAYER_WHERE. */
+  players: Array<{ number: number }>;
 }
 
-/** Plus petit numero de maillot libre (1..16) parmi les joueurs vivants. */
+/** Plus petit numero de maillot libre (1..16) au roster ACTIF. */
 function nextFreeNumber(
   used: ReadonlySet<number>,
   forced: number | null,
@@ -209,7 +211,10 @@ export async function applyOfflinePurchasesForTeam(
       roster: true,
       ruleset: true,
       format: true,
-      players: { select: { number: true, dead: true } },
+      // Regle BB : un joueur MORT (retire des la fin du match, avant toute
+      // autre action d'apres-match) ou LICENCIE ne compte plus dans les 16
+      // — sa place est libre pour un recrutement, et son numero aussi.
+      players: { where: ACTIVE_PLAYER_WHERE, select: { number: true } },
     },
   })) as TeamCounters | null;
   if (!team) return EMPTY_MUTATION_SIDE;
@@ -227,10 +232,8 @@ export async function applyOfflinePurchasesForTeam(
   let apothecary = team.apothecary;
   let apothecaryAdded = false;
 
-  const usedNumbers = new Set<number>(
-    team.players.filter((p) => !p.dead).map((p) => p.number),
-  );
-  let aliveCount = team.players.filter((p) => !p.dead).length;
+  const usedNumbers = new Set<number>(team.players.map((p) => p.number));
+  let aliveCount = team.players.length;
 
   const rosterData = await getRosterFromDb(
     team.roster as AllowedRoster,
@@ -274,7 +277,7 @@ export async function applyOfflinePurchasesForTeam(
         }
         if (aliveCount >= 16) {
           serverLog.warn(
-            `[league-offline-purchases] 16 joueurs vivants atteints team=${teamId} — joueur "${p.name}" non cree`,
+            `[league-offline-purchases] 16 joueurs au roster actif team=${teamId} — joueur "${p.name}" non cree`,
           );
           break;
         }

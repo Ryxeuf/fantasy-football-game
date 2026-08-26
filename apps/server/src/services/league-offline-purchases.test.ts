@@ -254,10 +254,9 @@ describe("applyOfflinePurchasesForTeam", () => {
     expect(m.teamUpdate).not.toHaveBeenCalled();
   });
 
-  it("plafonne a 16 joueurs vivants", async () => {
+  it("plafonne a 16 joueurs au roster actif", async () => {
     const players = Array.from({ length: 16 }, (_, i) => ({
       number: i + 1,
-      dead: false,
     }));
     m.teamFind.mockResolvedValue(teamRow({ players }));
     const out = await applyOfflinePurchasesForTeam("t1", [
@@ -265,6 +264,29 @@ describe("applyOfflinePurchasesForTeam", () => {
     ]);
     expect(m.tpCreate).not.toHaveBeenCalled();
     expect(out.createdPlayerIds).toEqual([]);
+  });
+
+  it("ne compte que le roster ACTIF : un mort ou un licencie libere sa place", async () => {
+    // 15 joueurs actifs : la place du 16e (mort ou licencie ce match) est
+    // libre — le filtre Prisma les exclut deja de `players`.
+    const players = Array.from({ length: 15 }, (_, i) => ({
+      number: i + 1,
+    }));
+    m.teamFind.mockResolvedValue(teamRow({ players }));
+    m.tpCreate.mockResolvedValue({ id: "np-1" });
+
+    const out = await applyOfflinePurchasesForTeam("t1", [
+      { kind: "player", name: "Remplacant", cost: 50000, position: "lineman" },
+    ]);
+
+    // Le `where` du chargement exclut morts ET licencies (ACTIVE_PLAYER_WHERE).
+    expect(m.teamFind.mock.calls[0][0].select.players.where).toMatchObject({
+      dead: false,
+      firedAt: null,
+    });
+    expect(out.createdPlayerIds).toEqual(["np-1"]);
+    // Le numero du sortant est reutilisable (16 est le 1er libre ici).
+    expect(m.tpCreate.mock.calls[0][0].data.number).toBe(16);
   });
 });
 
