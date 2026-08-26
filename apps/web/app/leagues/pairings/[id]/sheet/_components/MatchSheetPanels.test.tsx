@@ -491,6 +491,40 @@ describe("PostMatchPanel — FR16 assistant Erreurs Coûteuses", () => {
   });
 });
 
+describe("PostMatchPanel — trésorerie disponible pour les achats", () => {
+  it("affiche la cagnotte figée + les gains du match", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={{ ...TEAM, treasury: 100_000 }}
+        away={null}
+        onSave={vi.fn()}
+        autoWinnings={{ home: 50_000, away: 0 }}
+      />,
+    );
+    const hint = screen.getByTestId("purchases-home-treasury");
+    expect(hint.textContent).toContain("Trésorerie disponible");
+    expect(hint.textContent).toContain("150");
+  });
+
+  it("décompte les achats et alerte sur un dépassement", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "reroll", name: "", cost: 200_000 }],
+        }}
+        home={{ ...TEAM, treasury: 100_000 }}
+        away={null}
+        onSave={vi.fn()}
+        autoWinnings={{ home: 50_000, away: 0 }}
+      />,
+    );
+    const hint = screen.getByTestId("purchases-home-treasury");
+    expect(hint.textContent).toContain("dépassement de trésorerie");
+  });
+});
+
 describe("PostMatchPanel — variation des fans dévoués", () => {
   it("rappelle les fans actuels et la règle du D6 quand l'API les fournit", () => {
     render(

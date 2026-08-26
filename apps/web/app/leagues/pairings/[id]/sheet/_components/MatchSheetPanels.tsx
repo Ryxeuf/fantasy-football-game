@@ -1509,18 +1509,44 @@ function PurchaseEditor({
   disabled,
   testId,
   team,
+  treasuryBefore,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
   disabled?: boolean;
   testId?: string;
   team: SheetTeam | null;
+  /**
+   * Trésorerie disponible AVANT achats à cette étape de la séquence
+   * (cagnotte figée au début du match + gains du match). Sert à afficher
+   * ce qu'il reste et à alerter sur un dépassement.
+   */
+  treasuryBefore: number;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   const positions = teamPositions(team);
+  const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
+  const remaining = treasuryBefore - spent;
   return (
     <div data-testid={testId} className="space-y-1.5">
+      <p
+        data-testid={testId ? `${testId}-treasury` : undefined}
+        className={`text-[11px] ${
+          remaining < 0 ? "font-semibold text-red-600" : "text-slate-500"
+        }`}
+      >
+        Trésorerie disponible :{" "}
+        <strong>{formatGold(treasuryBefore)}</strong>
+        {spent > 0 ? (
+          <>
+            {" "}
+            − {formatGold(spent)} d&apos;achats ={" "}
+            <strong>{formatGold(remaining)}</strong>
+          </>
+        ) : null}
+        {remaining < 0 ? " — dépassement de trésorerie !" : null}
+      </p>
       {list.map((it, i) => (
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <select
@@ -1723,11 +1749,30 @@ export function PostMatchPanel({
     }
   };
 
+  /**
+   * Trésorerie disponible à l'étape 4 de la séquence de fin de match
+   * (EMBAUCHES) : cagnotte FIGÉE au début du match + gains consignés à
+   * l'étape 1. Les coups de pouce de l'avant-match sont déjà payés (petty
+   * cash / trésorerie) et les erreurs coûteuses viennent APRÈS (étape 5).
+   */
+  const treasuryBefore = (
+    team: SheetTeam | null,
+    manualWinnings: string,
+    auto: number,
+  ): number =>
+    (team?.treasury ?? 0) +
+    (manualWinnings !== "" ? Number(manualWinnings) || 0 : auto);
+
   const sides = [
     {
       side: "home" as const,
       team: home,
       name: home?.name ?? "Domicile",
+      treasuryBeforePurchases: treasuryBefore(
+        home,
+        winH,
+        autoWinnings?.home ?? 0,
+      ),
       win: winH,
       setWin: setWinH,
       fans: fansH,
@@ -1748,6 +1793,11 @@ export function PostMatchPanel({
       side: "away" as const,
       team: away,
       name: away?.name ?? "Extérieur",
+      treasuryBeforePurchases: treasuryBefore(
+        away,
+        winA,
+        autoWinnings?.away ?? 0,
+      ),
       win: winA,
       setWin: setWinA,
       fans: fansA,
@@ -1920,6 +1970,7 @@ export function PostMatchPanel({
                 disabled={disabled}
                 testId={`purchases-${c.side}`}
                 team={c.team}
+                treasuryBefore={c.treasuryBeforePurchases}
               />
               <p className="mt-1 text-[10px] text-slate-500">
                 « Dépense diverse » débite seulement la trésorerie (aucun
@@ -1933,12 +1984,7 @@ export function PostMatchPanel({
               </div>
               <ExpensiveMistakeHelper
                 treasuryAtStep={
-                  (c.team?.treasury ?? 0) +
-                  (c.win !== ""
-                    ? Number(c.win) || 0
-                    : ((c.side === "home"
-                        ? autoWinnings?.home
-                        : autoWinnings?.away) ?? 0)) -
+                  c.treasuryBeforePurchases -
                   c.buy.reduce((sum, p) => sum + (p.cost || 0), 0)
                 }
                 onAdd={(entry) => c.setCe([...c.ce, entry])}
