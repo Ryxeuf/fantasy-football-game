@@ -581,7 +581,63 @@ describe("applyAdvancementChoice", () => {
     expect(mocked.playerUpdate).not.toHaveBeenCalled();
   });
 
-  it("accepte une skill excludedFromSelection si deja possedee par le joueur", async () => {
+  it("rejette une competence deja possedee (choix libre primaire)", async () => {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "block,tackle",
+      advancements: "[]",
+      dead: false,
+      position: "dwarf_blocker",
+      team: { roster: "dwarf", ruleset: "season_3" },
+    });
+    mocked.playerUpdate.mockResolvedValue({});
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    mocked.skillFind.mockResolvedValue({ category: "General" });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "block",
+    });
+    expect(out).toEqual({ skipped: true, reason: "skill-already-owned" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejette une competence deja possedee (choix libre secondaire)", async () => {
+    mocked.playerFind.mockResolvedValue({
+      id: "p1",
+      teamId: "t1",
+      spp: 20,
+      skills: "dodge",
+      advancements: "[]",
+      dead: false,
+      position: "dwarf_blocker",
+      team: { roster: "dwarf", ruleset: "season_3" },
+    });
+    mocked.playerUpdate.mockResolvedValue({});
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    mocked.skillFind.mockResolvedValue({ category: "Agility" });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "secondary",
+      skillSlug: "dodge",
+    });
+    expect(out).toEqual({ skipped: true, reason: "skill-already-owned" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejette une skill excludedFromSelection meme deja possedee par le joueur", async () => {
     mocked.playerFind.mockResolvedValue({
       id: "p1",
       teamId: "t1",
@@ -593,8 +649,6 @@ describe("applyAdvancementChoice", () => {
       team: { roster: "dwarf", ruleset: "season_3" },
     });
     mocked.playerUpdate.mockResolvedValue({});
-    mocked.teamUpdate.mockResolvedValue({});
-    mocked.teamFind.mockResolvedValue({ currentValue: 1000000 });
     mocked.positionFind.mockResolvedValue({
       primarySkills: "G,S",
       secondarySkills: "A",
@@ -610,8 +664,8 @@ describe("applyAdvancementChoice", () => {
       type: "primary",
       skillSlug: "mighty-blow-2",
     });
-    if (!("applied" in out)) throw new Error("expected applied");
-    expect(out.applied).toBe(true);
+    expect(out).toEqual({ skipped: true, reason: "skill-already-owned" });
+    expect(mocked.playerUpdate).not.toHaveBeenCalled();
   });
 
   it("rejette une skill secondaire prise en primaire mais l'accepte en secondaire", async () => {

@@ -356,6 +356,44 @@ describe("AdvancementEditor", () => {
     expect(sheet.textContent).toContain("Esquive");
   });
 
+  it("ne propose pas une compétence déjà possédée par le joueur", async () => {
+    const PENDING_OWNED = {
+      teamId: "team-1",
+      ruleset: "season_3",
+      items: [
+        {
+          ...PENDING.items[0],
+          teamPlayerId: "own1",
+          playerName: "Déjà Blocage",
+          primarySkills: "G",
+          secondarySkills: "A",
+          skills: "block",
+        },
+      ],
+    };
+    apiRequest.mockReset();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/pending-advancements"))
+        return Promise.resolve(PENDING_OWNED);
+      if (path.includes("/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "block", nameFr: "Blocage", category: "General" },
+            { slug: "tackle", nameFr: "Tacle", category: "General" },
+          ],
+        });
+      return Promise.resolve({});
+    });
+    setup();
+    await screen.findByText("Déjà Blocage");
+    fireEvent.click(await screen.findByTestId("level-up-type-primary-own1"));
+
+    // La compétence non possédée reste proposée…
+    await screen.findByTestId("level-up-skill-tackle-own1");
+    // …mais celle déjà possédée disparaît du pool sélectionnable.
+    expect(screen.queryByTestId("level-up-skill-block-own1")).toBeNull();
+  });
+
   it("affiche un état vide quand aucun joueur n'est en attente", async () => {
     apiRequest.mockImplementation((path: string) => {
       if (path.includes("/pending-advancements"))

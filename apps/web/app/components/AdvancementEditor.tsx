@@ -394,18 +394,29 @@ export function PlayerRow({
     const pool = parseAccess(
       isPrimary ? item.primarySkills : item.secondarySkills,
     );
+    // Une competence deja possedee n'est pas re-selectionnable (le serveur
+    // la refuse : `skill-already-owned`) — on ne la propose donc pas.
+    const owned = new Set(playerSkillSlugs);
     const seen = new Set<string>();
     return catalog
       .filter((s) => {
         const code = CATEGORY_CODE[s.category];
         if (!code || !pool.has(code)) return false;
         if (s.excludedFromSelection) return false;
+        if (owned.has(s.slug)) return false;
         if (seen.has(s.slug)) return false;
         seen.add(s.slug);
         return true;
       })
       .sort((a, b) => a.nameFr.localeCompare(b.nameFr));
-  }, [hasAccess, catalog, type, item.primarySkills, item.secondarySkills]);
+  }, [
+    hasAccess,
+    catalog,
+    type,
+    item.primarySkills,
+    item.secondarySkills,
+    playerSkillSlugs,
+  ]);
 
   const filteredSkills = useMemo(() => {
     const q = skillSearch.trim().toLowerCase();
