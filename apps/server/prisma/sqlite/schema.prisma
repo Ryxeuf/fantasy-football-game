@@ -496,8 +496,8 @@ model Roster {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  positions    Position[]
-  staffConfigs RosterStaffConfig[]
+  positions           Position[]
+  staffConfigs        RosterStaffConfig[]
   starPlayerHirableBy StarPlayerHirableBy[]
 
   @@unique([slug, ruleset])
@@ -531,23 +531,23 @@ model RosterStaffConfig {
 // indirectement par `/api/positions` via la relation `PositionSkill` (read-only,
 // jointure laissée vide en E2E sauf si un test seed explicitement la table).
 model Skill {
-  id            String   @id @default(cuid())
-  slug          String
-  ruleset       Ruleset  @default(season_2)
-  nameFr        String
-  nameEn        String
-  description   String
-  descriptionEn String?
-  category      String
-  isElite       Boolean  @default(false)
-  isPassive     Boolean  @default(false)
-  isModified    Boolean  @default(false)
+  id                    String   @id @default(cuid())
+  slug                  String
+  ruleset               Ruleset  @default(season_2)
+  nameFr                String
+  nameEn                String
+  description           String
+  descriptionEn         String?
+  category              String
+  isElite               Boolean  @default(false)
+  isPassive             Boolean  @default(false)
+  isModified            Boolean  @default(false)
   /// Skill reserve (variante star player / regle speciale cablee en pseudo-skill,
   /// ex. mighty-blow-2) : reste valide si deja possede, mais ne doit plus etre
   /// selectionnable lors d'une nouvelle evolution/creation de joueur normal.
-  excludedFromSelection Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  excludedFromSelection Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   positionSkills   PositionSkill[]
   starPlayerSkills StarPlayerSkill[]
@@ -654,20 +654,20 @@ model PositionSkill {
 
 // Modèle pour les coupes (tournois)
 model Cup {
-  id          String  @id @default(cuid())
-  name        String // Nom de la coupe (obligatoire)
-  description String? // Description optionnelle (miroir SQLite)
-  creator     User    @relation("CupCreator", fields: [creatorId], references: [id])
-  creatorId   String
-  ruleset   Ruleset  @default(season_2)
-  format    Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
+  id                String   @id @default(cuid())
+  name              String // Nom de la coupe (obligatoire)
+  description       String? // Description optionnelle (miroir SQLite)
+  creator           User     @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  ruleset           Ruleset  @default(season_2)
+  format            Format   @default(bb11) // Format imposé (miroir SQLite de schema.prisma)
   // Règlement de tournoi imposé aux équipes (miroir SQLite de schema.prisma)
   tournamentRuleset String?
-  validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
-  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
-  status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  validated         Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
+  isPublic          Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
+  status            String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Configuration des points (cf. schema Postgres). Necessaire pour
   // que `POST /cup` ne crashe pas en E2E (le route fait un create avec
@@ -867,31 +867,31 @@ model LocalMatchAction {
 
 // L.1 — Modeles de ligue (Sprint 17). Mirror SQLite du schema Postgres.
 model League {
-  id                String   @id @default(cuid())
-  name              String
-  description       String?
-  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId         String
-  ruleset           Ruleset  @default(season_3)
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  creator            User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId          String
+  ruleset            Ruleset  @default(season_3)
   // Règlement de tournoi imposé aux équipes (miroir SQLite de schema.prisma)
-  tournamentRuleset String?
-  status            String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
-  isPublic          Boolean  @default(true)
-  maxParticipants   Int      @default(16)
-  allowedRosters    String? // JSON array des rosters autorises (null = tous)
+  tournamentRuleset  String?
+  status             String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  isPublic           Boolean  @default(true)
+  maxParticipants    Int      @default(16)
+  allowedRosters     String? // JSON array des rosters autorises (null = tous)
   // FR17 — JSON array des coups de pouce (inducements) autorises (null = tous). Miroir PG.
   allowedInducements String? // JSON array des inducements autorises (null = tous)
-  winPoints         Int      @default(3)
-  drawPoints        Int      @default(1)
-  lossPoints        Int      @default(0)
-  forfeitPoints     Int      @default(-1)
+  winPoints          Int      @default(3)
+  drawPoints         Int      @default(1)
+  lossPoints         Int      @default(0)
+  forfeitPoints      Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
   // miroir PG).
-  tieBreakRules     String?
+  tieBreakRules      String?
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
-  bonusPointsConfig String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  bonusPointsConfig  String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue (mirror PG).
@@ -903,23 +903,25 @@ model League {
 }
 
 model LeagueSeason {
-  id            String    @id @default(cuid())
-  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId      String
-  seasonNumber  Int
-  name          String
-  status        String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
-  startDate     DateTime?
-  endDate       DateTime?
+  id                  String    @id @default(cuid())
+  league              League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId            String
+  seasonNumber        Int
+  name                String
+  status              String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
+  startDate           DateTime?
+  endDate             DateTime?
   // S26.6 — themes saisonniers (cf. services/league-themes.ts).
-  theme         String?
-  themeYear     Int?
+  theme               String?
+  themeYear           Int?
   // L2.C.3 — taille bracket playoffs (0 = disabled).
-  playoffSize   Int       @default(0)
+  playoffSize         Int       @default(0)
+  // Publication des playoffs par le commissaire (mirror PG). null = non publie.
+  playoffsPublishedAt DateTime?
   // L2.B.5 — "Coup de mecene" activable par le commissaire (mirror PG).
-  meceneEnabled Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  meceneEnabled       Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
@@ -1920,4 +1922,3 @@ model TournamentRuleset {
 
   @@index([enabled])
 }
-

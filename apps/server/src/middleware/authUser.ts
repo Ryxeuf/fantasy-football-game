@@ -51,3 +51,41 @@ export function authUser(
   }
 }
 
+
+/**
+ * Variante NON bloquante d'`authUser` : renseigne `req.user` quand un token
+ * valide est présent, et laisse simplement passer sinon (pas de 401).
+ *
+ * Sert aux endpoints PUBLICS dont la RÉPONSE dépend du rôle du lecteur —
+ * typiquement le bracket de playoffs, visible de tous une fois publié mais
+ * réservé au commissaire tant qu'il ne l'est pas.
+ */
+export function optionalAuthUser(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction,
+) {
+  const header = req.headers.authorization || "";
+  const [, token] = header.split(" ");
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    const roles = normalizeRoles(
+      (payload && (payload.roles as string[] | string | undefined)) ??
+        (payload && (payload.role as string | undefined)),
+    );
+    const impersonatorId =
+      payload && typeof payload.act === "string" && payload.act
+        ? (payload.act as string)
+        : undefined;
+    req.user = {
+      id: payload.sub,
+      role: roles[0],
+      roles,
+      ...(impersonatorId ? { impersonatorId } : {}),
+    };
+  } catch {
+    // Token invalide/expiré : on sert la vue publique plutôt que de rejeter.
+  }
+  return next();
+}

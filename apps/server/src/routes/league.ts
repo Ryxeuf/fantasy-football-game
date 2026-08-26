@@ -9,7 +9,11 @@
 
 import { Router } from "express";
 import type { Response } from "express";
-import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import {
+  authUser,
+  optionalAuthUser,
+  type AuthenticatedRequest,
+} from "../middleware/authUser";
 import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
@@ -68,6 +72,7 @@ import {
   startPlayoffs,
   type StartPlayoffsSkippedReason,
   overridePlayoffParticipants,
+  setPlayoffsPublished,
   PlayoffOverrideError,
 } from "../services/league-playoffs";
 import {
@@ -526,7 +531,12 @@ export async function handleGetSeason(
     return;
   }
   const raw = season as unknown as Record<string, unknown> & {
-    league?: { allowedRosters?: string | null } & Record<string, unknown>;
+    league?: { allowedRosters?: string | null; creatorId?: string } & Record<
+      string,
+      unknown
+    >;
+    rounds?: Array<{ kind?: string | null }>;
+    playoffsPublishedAt?: Date | null;
   };
   const league = raw.league;
   const serializedLeague = league
@@ -535,9 +545,21 @@ export async function handleGetSeason(
         allowedRosters: parseAllowedRosters(league.allowedRosters ?? null),
       }
     : league;
+  // Playoffs non publiés : le bracket est généré automatiquement à la
+  // clôture de la phase régulière, mais reste invisible aux coachs tant que
+  // le commissaire ne l'a pas publié (il corrige d'abord les seeds). Les
+  // rounds de playoff sont donc retirés du calendrier servi.
+  const isCommissioner =
+    !!req.user?.id && req.user.id === league?.creatorId;
+  const rounds =
+    raw.playoffsPublishedAt || isCommissioner
+      ? raw.rounds
+      : (raw.rounds ?? []).filter((r) => r.kind !== "playoff");
   sendSuccess(res, {
     season: {
       ...raw,
+      ...(rounds !== undefined ? { rounds } : {}),
+      playoffsPublished: Boolean(raw.playoffsPublishedAt),
       league: serializedLeague,
     },
   });
@@ -813,7 +835,12 @@ export async function handleGetStandings(
  *
  * Renvoie tous les rounds avec `kind="playoff"` ordonnes par
  * roundNumber, avec leurs pairings + participants. Format pret a
- * etre rendu par PlayoffBracketView. Endpoint public (pas d'auth).
+ * etre rendu par PlayoffBracketView.
+ *
+ * Endpoint public, mais la reponse depend du lecteur (`optionalAuthUser`) :
+ * tant que le commissaire n'a pas PUBLIE le bracket, lui seul le voit. Le
+ * bracket etant genere automatiquement a la cloture de la phase reguliere,
+ * il a besoin de corriger les seeds avant que la ligue le decouvre.
  */
 export async function handleGetPlayoffBracket(
   req: AuthenticatedRequest,
@@ -821,12 +848,39 @@ export async function handleGetPlayoffBracket(
 ): Promise<void> {
   const seasonId = req.params.seasonId;
   try {
-    const seasonRow = await prisma.leagueSeason.findUnique({
+    const seasonRow = (await prisma.leagueSeason.findUnique({
       where: { id: seasonId },
-      select: { id: true, playoffSize: true, status: true },
-    });
+      select: {
+        id: true,
+        playoffSize: true,
+        status: true,
+        playoffsPublishedAt: true,
+        league: { select: { creatorId: true } },
+      },
+    })) as {
+      id: string;
+      playoffSize: number;
+      status: string;
+      playoffsPublishedAt: Date | null;
+      league?: { creatorId: string } | null;
+    } | null;
     if (!seasonRow) {
       sendError(res, "Saison introuvable", 404);
+      return;
+    }
+    const playoffsPublished = Boolean(seasonRow.playoffsPublishedAt);
+    const isCommissioner =
+      !!req.user?.id && req.user.id === seasonRow.league?.creatorId;
+    if (!playoffsPublished && !isCommissioner) {
+      // Rien a montrer : la vue coach est identique a « pas encore de
+      // bracket » (le composant ne rend rien).
+      sendSuccess(res, {
+        seasonId,
+        playoffSize: seasonRow.playoffSize,
+        seasonStatus: seasonRow.status,
+        playoffsPublished: false,
+        rounds: [],
+      });
       return;
     }
     const rounds = await prisma.leagueRound.findMany({
@@ -899,6 +953,7 @@ export async function handleGetPlayoffBracket(
         consistent:
           totalQualified === 0 || totalQualified === seasonRow.playoffSize,
       },
+      playoffsPublished,
       rounds,
     });
   } catch (e: unknown) {
@@ -2268,6 +2323,45 @@ export async function handleOverridePlayoffParticipants(
 }
 
 /**
+ * PATCH /leagues/seasons/:seasonId/playoff-bracket/publish
+ *
+ * Publie (ou dépublie) le bracket de playoffs. Réservé au commissaire.
+ * Le bracket est généré automatiquement à la clôture de la phase
+ * régulière : cette action est ce qui le rend visible aux coachs, une
+ * fois les seeds vérifiés.
+ */
+export async function handlePublishPlayoffBracket(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body: { published?: unknown } = req.body ?? {};
+  if (typeof body.published !== "boolean") {
+    sendError(res, "published (boolean) requis", 400);
+    return;
+  }
+  try {
+    const out = await setPlayoffsPublished(seasonId, body.published);
+    if (!out.ok) {
+      sendError(
+        res,
+        out.reason === "season-missing"
+          ? "Saison introuvable"
+          : "Aucun bracket de playoffs à publier pour cette saison",
+        out.reason === "season-missing" ? 404 : 400,
+      );
+      return;
+    }
+    sendSuccess(res, { seasonId, playoffsPublished: out.published });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * L2.A.3 — Ouvre une saison aux inscriptions (`draft -> scheduled`).
  * Reserve au createur de la ligue. No-op si deja `scheduled`.
  */
@@ -2831,6 +2925,13 @@ router.patch(
   authUser,
   handleOverridePlayoffParticipants,
 );
+// Publication du bracket : tant qu'elle n'a pas eu lieu, seuls les
+// commissaires voient les playoffs (bracket ET rounds du calendrier).
+router.patch(
+  "/seasons/:seasonId/playoff-bracket/publish",
+  authUser,
+  handlePublishPlayoffBracket,
+);
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
 router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
@@ -3051,7 +3152,11 @@ router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // Pas d'auth : la page recap doit etre indexable / partageable.
 router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
 // L2.C.3 — bracket playoffs (public, indexable).
-router.get("/seasons/:seasonId/playoff-bracket", handleGetPlayoffBracket);
+router.get(
+  "/seasons/:seasonId/playoff-bracket",
+  optionalAuthUser,
+  handleGetPlayoffBracket,
+);
 // L2.C.3 — demarrage manuel des playoffs (createur de la ligue).
 router.post(
   "/seasons/:seasonId/playoff/start",

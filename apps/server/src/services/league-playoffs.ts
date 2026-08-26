@@ -1043,3 +1043,60 @@ export async function advancePlayoffsWithWinner(
 
   return { advanced: true, nextSlot: next.nextSlot };
 }
+
+// ───────────────────────── Publication du bracket ─────────────────────────
+//
+// Le bracket est GÉNÉRÉ automatiquement à la clôture de la phase régulière
+// (`startPlayoffs`), mais il ne doit pas apparaître aux coachs tant que le
+// commissaire ne l'a pas PUBLIÉ : il a d'abord besoin de corriger les seeds
+// (saisie en retard, désistement, override de participants) sans que la
+// ligue voie un bracket provisoire.
+
+/** Vrai si le commissaire a publié le bracket de cette saison. */
+export async function arePlayoffsPublished(seasonId: string): Promise<boolean> {
+  const row = (await (
+    prisma as unknown as PrismaWithLeague
+  ).leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { playoffsPublishedAt: true },
+  })) as { playoffsPublishedAt: Date | null } | null;
+  return Boolean(row?.playoffsPublishedAt);
+}
+
+export type SetPlayoffsPublishedOutcome =
+  | { readonly ok: true; readonly published: boolean }
+  | { readonly ok: false; readonly reason: "season-missing" | "no-bracket" };
+
+/**
+ * Publie (ou dépublie) le bracket de playoffs d'une saison. Publier exige
+ * qu'un bracket EXISTE : sinon il n'y a rien à montrer et le flag
+ * masquerait un état incohérent. Dépublier reste toujours possible (retour
+ * arrière du commissaire).
+ */
+export async function setPlayoffsPublished(
+  seasonId: string,
+  published: boolean,
+): Promise<SetPlayoffsPublishedOutcome> {
+  const client = prisma as unknown as PrismaWithLeague;
+  const season = (await client.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { id: true },
+  })) as { id: string } | null;
+  if (!season) return { ok: false, reason: "season-missing" };
+
+  if (published) {
+    const rounds = await client.leagueRound.count({
+      where: { seasonId, kind: "playoff" },
+    });
+    if (rounds === 0) return { ok: false, reason: "no-bracket" };
+  }
+
+  await client.leagueSeason.update({
+    where: { id: seasonId },
+    data: { playoffsPublishedAt: published ? new Date() : null },
+  });
+  serverLog.info(
+    `[league-playoffs] season=${seasonId} bracket ${published ? "publié" : "dépublié"}`,
+  );
+  return { ok: true, published };
+}

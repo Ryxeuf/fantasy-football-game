@@ -50,6 +50,13 @@ interface BracketResponse {
   playoffSize: number;
   seasonStatus: string;
   rounds: BracketRound[];
+  /**
+   * Bracket PUBLIÉ par le commissaire. Tant qu'il ne l'est pas, l'API sert
+   * `rounds: []` aux coachs : le bracket est généré automatiquement à la
+   * clôture de la phase régulière, mais le commissaire vérifie d'abord les
+   * seeds. Optionnel : rétro-compat avec une API antérieure (= publié).
+   */
+  playoffsPublished?: boolean;
   /** Optionnels : rétro-compat avec une API pré-panneau commissaire. */
   regularSeasonComplete?: boolean;
   poolQualification?: {
@@ -201,6 +208,8 @@ export function PlayoffBracketView({
     data.rounds.every((r) =>
       r.pairings.every((p) => p.status === "scheduled" && !p.match),
     );
+  // `undefined` = API antérieure à la publication : bracket servi = visible.
+  const published = data.playoffsPublished !== false;
 
   return (
     <section
@@ -210,6 +219,16 @@ export function PlayoffBracketView({
       <h3 className="text-md font-semibold text-nuffle-anthracite">
         Bracket des playoffs
       </h3>
+      {isCommissioner ? (
+        <PlayoffPublishToggle
+          seasonId={seasonId}
+          published={published}
+          onChanged={() => {
+            load();
+            onChanged?.();
+          }}
+        />
+      ) : null}
       {canEditSeeds ? (
         <PlayoffParticipantsEditor
           seasonId={seasonId}
@@ -239,6 +258,76 @@ export function PlayoffBracketView({
         ))}
       </div>
     </section>
+  );
+}
+
+/**
+ * Publication du bracket par le commissaire. Le bracket est généré
+ * automatiquement à la clôture de la phase régulière, mais reste invisible
+ * aux coachs tant qu'il n'est pas publié : le commissaire peut d'abord
+ * corriger les seeds (saisie en retard, désistement) sans que la ligue
+ * découvre un bracket provisoire.
+ */
+function PlayoffPublishToggle({
+  seasonId,
+  published,
+  onChanged,
+}: {
+  seasonId: string;
+  published: boolean;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const toggle = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest(
+        `/leagues/seasons/${seasonId}/playoff-bracket/publish`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ published: !published }),
+        },
+      );
+      onChanged();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  }, [seasonId, published, onChanged]);
+
+  return (
+    <div
+      data-testid="playoff-publish"
+      className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+        published
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          : "border-amber-300 bg-amber-50 text-amber-900"
+      }`}
+    >
+      <span data-testid="playoff-publish-state">
+        {published
+          ? "Bracket publié — visible par tous les coachs."
+          : "Bracket non publié — visible de toi seul pour l'instant."}
+      </span>
+      <button
+        type="button"
+        data-testid="playoff-publish-toggle"
+        onClick={toggle}
+        disabled={busy}
+        className="rounded-md border border-nuffle-gold bg-white px-3 py-1 text-sm font-medium text-nuffle-bronze hover:bg-nuffle-gold/10 disabled:opacity-50"
+      >
+        {published ? "Dépublier" : "Publier les playoffs"}
+      </button>
+      {error ? (
+        <span data-testid="playoff-publish-error" className="text-red-600">
+          {error}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

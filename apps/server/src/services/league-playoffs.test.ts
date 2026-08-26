@@ -69,6 +69,8 @@ import {
   startPlayoffs,
   advancePlayoffsAfterPairingComplete,
   advancePlayoffsWithWinner,
+  arePlayoffsPublished,
+  setPlayoffsPublished,
   type PlayoffSize,
 } from "./league-playoffs";
 
@@ -87,6 +89,7 @@ const mocked = {
   roundUpdateMany: prisma.leagueRound.updateMany as MockFn,
   auditCreate: (prisma as unknown as { auditLog: { create: MockFn } })
     .auditLog.create as MockFn,
+  seasonUpdate: prisma.leagueSeason.update as MockFn,
 };
 
 beforeEach(() => {
@@ -896,5 +899,53 @@ describe("advancePlayoffsWithWinner (explicit winner side)", () => {
     expect(out).toEqual({ advanced: true, nextSlot: "final" });
     const updateArgs = mocked.pairingUpdate.mock.calls[0][0];
     expect(updateArgs.data.awayParticipantId).toBe("winner-away");
+  });
+});
+
+describe("publication du bracket de playoffs", () => {
+  it("arePlayoffsPublished suit la colonne playoffsPublishedAt", async () => {
+    mocked.seasonFind.mockResolvedValueOnce({ playoffsPublishedAt: null });
+    expect(await arePlayoffsPublished("s1")).toBe(false);
+    mocked.seasonFind.mockResolvedValueOnce({
+      playoffsPublishedAt: new Date(),
+    });
+    expect(await arePlayoffsPublished("s1")).toBe(true);
+    mocked.seasonFind.mockResolvedValueOnce(null);
+    expect(await arePlayoffsPublished("nope")).toBe(false);
+  });
+
+  it("publie quand un bracket existe", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1" });
+    mocked.roundCount.mockResolvedValue(3);
+    const out = await setPlayoffsPublished("s1", true);
+    expect(out).toEqual({ ok: true, published: true });
+    const data = mocked.seasonUpdate.mock.calls[0][0].data;
+    expect(data.playoffsPublishedAt).toBeInstanceOf(Date);
+  });
+
+  it("refuse de publier sans bracket genere", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1" });
+    mocked.roundCount.mockResolvedValue(0);
+    const out = await setPlayoffsPublished("s1", true);
+    expect(out).toEqual({ ok: false, reason: "no-bracket" });
+    expect(mocked.seasonUpdate).not.toHaveBeenCalled();
+  });
+
+  it("depublie sans exiger de bracket (retour arriere)", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1" });
+    const out = await setPlayoffsPublished("s1", false);
+    expect(out).toEqual({ ok: true, published: false });
+    expect(mocked.roundCount).not.toHaveBeenCalled();
+    expect(mocked.seasonUpdate.mock.calls[0][0].data).toEqual({
+      playoffsPublishedAt: null,
+    });
+  });
+
+  it("saison inconnue : refus explicite", async () => {
+    mocked.seasonFind.mockResolvedValue(null);
+    expect(await setPlayoffsPublished("nope", true)).toEqual({
+      ok: false,
+      reason: "season-missing",
+    });
   });
 });
