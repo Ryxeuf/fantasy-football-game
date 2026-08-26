@@ -1,3 +1,24 @@
+## [1.236.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.2...v1.236.0) (2026-08-26)
+
+
+### ✨ Features
+
+* **admin:** éditeur complet des règlements de tournoi ([c6fc961](https://github.com/Ryxeuf/fantasy-football-game/commit/c6fc961f26868b4c802c4cb0f5cbea0dcfd677c8))
+* **api:** CRUD admin et lecture publique des règlements de tournoi ([07bc55e](https://github.com/Ryxeuf/fantasy-football-game/commit/07bc55ec13163fdb4cd74ff8e14bdd9b4a831682))
+* **db:** table TournamentRuleset + parser Zod de la définition ([0e3243c](https://github.com/Ryxeuf/fantasy-football-game/commit/0e3243c2ac25512eef64e073ecd94a28aa7afa6b))
+* **server:** repository des règlements de tournoi, base d'abord ([3a6ab83](https://github.com/Ryxeuf/fantasy-football-game/commit/3a6ab830846fabe6300f26f05a35f63e604962cd))
+* **web:** le web consomme les règlements servis par l'API ([a4435ec](https://github.com/Ryxeuf/fantasy-football-game/commit/a4435ec014ee959ad4dd6fb1e21f0f37768c2278))
+
+
+### 📝 Documentation
+
+* mémoire et changeset des règlements éditables en base ([6d940c9](https://github.com/Ryxeuf/fantasy-football-game/commit/6d940c9d605bb0dcbe2d012484a0798bf34f4dd4))
+
+
+### ♻️ Code Refactoring
+
+* **server:** les consommateurs lisent les règlements en base ([c6562b9](https://github.com/Ryxeuf/fantasy-football-game/commit/c6562b9226f9bddf18df393f5f486d769a500881))
+
 ## [1.235.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.1...v1.235.2) (2026-08-25)
 
 
