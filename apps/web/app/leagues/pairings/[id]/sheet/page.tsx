@@ -10,7 +10,11 @@ import {
   StagedAdvancementsRecap,
   type StagedAdvancementEntry,
 } from "./_components/SheetAdvancementsEditor";
-import { KICKOFF_EVENTS, LEGACY_KICKOFF_EVENT_IDS } from "@bb/game-engine";
+import {
+  KICKOFF_EVENTS,
+  LEGACY_KICKOFF_EVENT_IDS,
+  surchargeForAdvancement,
+} from "@bb/game-engine";
 import {
   PreMatchPanel,
   PostMatchPanel,
@@ -633,6 +637,29 @@ export default function MatchSheetPage() {
   const stagedAway = parseStagedAdvancements(data?.sheet.advancementsAway);
   const myStaged = mySide === "home" ? stagedHome : stagedAway;
   const sppBonusEntries = parseSppBonus(data?.sheet.sppBonus);
+  /**
+   * Prix de recrutement d'un journalier ayant joué le match (séquence BB,
+   * étape EMBAUCHES) : coût de son poste + surcoût de VALEUR de l'évolution
+   * qu'il a prise à l'étape 3 (AMÉLIORATION DE JOUEURS). Le serveur
+   * recalcule tout à la validation — ceci n'est qu'un pré-remplissage.
+   */
+  const journeymanHireCost = (journeymanId: string): number | null => {
+    const side = journeymanId.includes("-home-") ? "home" : "away";
+    const team = side === "home" ? home : away;
+    const j = team?.journeymen?.find((jm) => jm.id === journeymanId);
+    if (!j) return null;
+    const staged = (side === "home" ? stagedHome : stagedAway).find(
+      (e) => e.playerId === journeymanId,
+    );
+    if (!staged) return j.cost ?? 0;
+    return (
+      (j.cost ?? 0) +
+      surchargeForAdvancement({
+        type: staged.type,
+        stat: staged.stat ?? undefined,
+      })
+    );
+  };
   // Ma saisie est verrouillée dès que MON côté a validé (l'ensemble du
   // match — fin de match ET évolutions — est alors figé jusqu'à reprise).
   const mySideSubmitted =
@@ -1183,6 +1210,7 @@ export default function MatchSheetPage() {
             home: data.sheet.winningsHome ?? 0,
             away: data.sheet.winningsAway ?? 0,
           }}
+          journeymanHireCost={journeymanHireCost}
         />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
@@ -1297,6 +1325,7 @@ export default function MatchSheetPage() {
                   teamId={home?.teamId ?? ""}
                   ruleset={home?.ruleset ?? "season_3"}
                   players={home?.players ?? []}
+                  journeymen={home?.journeymen ?? []}
                   computedSpp={computedSpp}
                   sppBonus={sppBonusEntries}
                   staged={stagedHome}
@@ -1312,6 +1341,7 @@ export default function MatchSheetPage() {
                   teamId={away?.teamId ?? ""}
                   ruleset={away?.ruleset ?? "season_3"}
                   players={away?.players ?? []}
+                  journeymen={away?.journeymen ?? []}
                   computedSpp={computedSpp}
                   sppBonus={sppBonusEntries}
                   staged={stagedAway}
@@ -1337,6 +1367,10 @@ export default function MatchSheetPage() {
                 }
                 players={
                   (mySide === "home" ? home?.players : away?.players) ?? []
+                }
+                journeymen={
+                  (mySide === "home" ? home?.journeymen : away?.journeymen) ??
+                  []
                 }
                 computedSpp={computedSpp}
                 sppBonus={sppBonusEntries}

@@ -34,10 +34,14 @@ import {
   type OfflineInjuryInput,
   type OfflineInjuryType,
 } from "./league-offline-result";
-import { parsePurchases } from "./league-offline-purchases";
+import {
+  parsePurchases,
+  type OfflinePurchaseInput,
+} from "./league-offline-purchases";
 import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import {
+  buildJourneymanHire,
   deriveJourneymen,
   linemanPositionsForRoster,
   parseJourneymenChoice,
@@ -63,6 +67,8 @@ import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
+  getNextAdvancementPspCost,
+  surchargeForAdvancement,
   calculatePettyCash,
   getInducementCost,
   getInducementMaxQuantity,
@@ -1169,6 +1175,82 @@ function parseStringArray(raw: unknown): string[] {
  * `both_submitted` et l'erreur est propagee — pas de validation
  * partielle.
  */
+/**
+ * Étape 4 de la séquence BB (EMBAUCHES) — matérialise les recrutements de
+ * journaliers saisis sur la feuille.
+ *
+ * La saisie du coach ne porte que l'id synthétique du journalier : le
+ * serveur redérive le journalier (poste, compétences, stats), ses PSP
+ * officiels du match et l'évolution stagée pour lui à l'étape 3, puis
+ * calcule le prix (coût du poste + surcoût de l'évolution) et l'état du
+ * TeamPlayer à créer. Un id inconnu, un journalier absent ou un doublon
+ * sont ignorés (l'achat retombe en « dépense diverse » : la trésorerie est
+ * débitée, aucun joueur créé).
+ */
+function enrichJourneymanPurchases(input: {
+  purchases: readonly OfflinePurchaseInput[];
+  side: "home" | "away";
+  team: MatchSheetTeam | null;
+  choiceRaw: unknown;
+  staged: readonly StagedAdvancement[];
+  computedSpp: Record<string, number>;
+}): OfflinePurchaseInput[] {
+  const { purchases, side, team, staged, computedSpp } = input;
+  if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
+  const journeymen = team
+    ? deriveJourneymen({
+        side,
+        roster: team.roster,
+        ruleset: team.ruleset,
+        players: team.players,
+        chosenPosition: parseJourneymenChoice(input.choiceRaw),
+      })
+    : [];
+  const byId = new Map(journeymen.map((j) => [j.id, j]));
+  const hired = new Set<string>();
+
+  return purchases.map((p) => {
+    if (p.kind !== "journeyman") return p;
+    const journeyman = p.journeymanId ? byId.get(p.journeymanId) : undefined;
+    if (!journeyman || hired.has(journeyman.id)) {
+      serverLog.warn(
+        `[league-match-sheet] recrutement de journalier ignoré (${side}) : id="${p.journeymanId ?? ""}"`,
+      );
+      return { ...p, kind: "other" as const };
+    }
+    hired.add(journeyman.id);
+    const entry = staged.find((e) => e.playerId === journeyman.id);
+    const hire = buildJourneymanHire({
+      journeyman,
+      earnedSpp: computedSpp[journeyman.id] ?? 0,
+      advancement: entry
+        ? {
+            type: entry.type,
+            skillSlug: entry.skillSlug,
+            stat: entry.stat,
+            d8: entry.d8,
+            // Un journalier n'a jamais d'avancement : 1er palier.
+            pspCost: getNextAdvancementPspCost(0, entry.type),
+            valueSurcharge: surchargeForAdvancement({
+              type: entry.type,
+              stat: entry.stat ?? undefined,
+            }),
+          }
+        : null,
+    });
+    return {
+      ...p,
+      cost: hire.cost,
+      position: journeyman.position,
+      name: p.name || journeyman.name,
+      spp: hire.spp,
+      skills: hire.skills,
+      advancements: hire.advancements,
+      stats: hire.stats,
+    };
+  });
+}
+
 export async function validateByCommissioner(input: {
   pairingId: string;
   userId: string;
@@ -1334,24 +1416,67 @@ export async function validateByCommissioner(input: {
   };
   const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
   const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+  // Un JOURNALIER n'a pas de ligne TeamPlayer : son évolution ne peut pas
+  // passer par `applyStagedAdvancements`. Elle est matérialisée à l'étape 4
+  // s'il est RECRUTÉ (cf. `enrichJourneymanPurchases`), sinon perdue avec
+  // lui — il quitte l'équipe à la fin du match.
+  const rosterStaged = (entries: readonly StagedAdvancement[]) =>
+    entries.filter((e) => !isSyntheticSheetPlayerId(e.playerId));
   const applyAdvancements = async (): Promise<void> => {
-    if (stagedHome.length > 0 && teamsForBudget.home?.teamId) {
+    const rosterHome = rosterStaged(stagedHome);
+    const rosterAway = rosterStaged(stagedAway);
+    if (rosterHome.length > 0 && teamsForBudget.home?.teamId) {
       advData.advancementsHome = await applyStagedAdvancements({
         teamId: teamsForBudget.home.teamId,
-        entries: stagedHome,
+        entries: rosterHome,
       });
     }
-    if (stagedAway.length > 0 && teamsForBudget.away?.teamId) {
+    if (rosterAway.length > 0 && teamsForBudget.away?.teamId) {
       advData.advancementsAway = await applyStagedAdvancements({
         teamId: teamsForBudget.away.teamId,
-        entries: stagedAway,
+        entries: rosterAway,
       });
     }
   };
 
+  // Étape 4 — EMBAUCHES : un journalier recruté est matérialisé avec ce
+  // qu'il a gagné au match (PSP + évolution de l'étape 3, qui renchérit son
+  // prix). Le serveur redérive tout (PSP officiels, coût du poste) : la
+  // saisie du coach ne porte que l'id du journalier.
+  const computedSppForHire = await computeSheetSpp({
+    summary,
+    motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
+    teams: teamsForBudget,
+  });
+  const sheetJourneymenChoice = sheet as {
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  };
+  const enrichedPurchases = {
+    home: enrichJourneymanPurchases({
+      purchases: offlineInput.purchasesHome,
+      side: "home",
+      team: teamsForBudget.home,
+      choiceRaw: sheetJourneymenChoice.journeymenHome,
+      staged: stagedHome,
+      computedSpp: computedSppForHire,
+    }),
+    away: enrichJourneymanPurchases({
+      purchases: offlineInput.purchasesAway,
+      side: "away",
+      team: teamsForBudget.away,
+      choiceRaw: sheetJourneymenChoice.journeymenAway,
+      staged: stagedAway,
+      computedSpp: computedSppForHire,
+    }),
+  };
+
   const outcome = await recordOfflineLeagueResult({
     ...offlineInput,
-    ...(stagedHome.length > 0 || stagedAway.length > 0
+    purchasesHome: enrichedPurchases.home,
+    purchasesAway: enrichedPurchases.away,
+    ...(rosterStaged(stagedHome).length > 0 ||
+    rosterStaged(stagedAway).length > 0
       ? { applyAdvancements }
       : {}),
   });
@@ -2416,6 +2541,65 @@ export async function buildMatchSheetReference(
   };
 }
 
+/**
+ * PSP gagnes sur CE match, par joueur (roster, journaliers et Star Players
+ * engages compris). Meme calcul cote lecture et cote validation : bareme
+ * officiel + modificateur d'equipe (Bagarreurs Brutaux) selon le roster.
+ *
+ * Les Joueurs du Match SANS aucune stat n'ont pas de stat-line dans le
+ * summary : ils sont ajoutes explicitement (leur cote est resolu depuis le
+ * roster) pour que leur palier d'evolution soit propose DES la saisie.
+ */
+async function computeSheetSpp(input: {
+  summary: MatchSummary;
+  motmPlayerIds: unknown;
+  teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+}): Promise<Record<string, number>> {
+  const { summary, teams } = input;
+  const motm = new Set(parseStringArray(input.motmPlayerIds));
+  const sppContext = await loadLeagueSPPContext(prisma, {
+    isLeagueMatch: true,
+    teamARoster: teams.home?.roster ?? "",
+    teamBRoster: teams.away?.roster ?? "",
+  });
+  const out: Record<string, number> = {};
+  for (const s of summary.playerStats) {
+    const modifier = s.side === "home" ? sppContext.teamA : sppContext.teamB;
+    out[s.playerId] = calculatePlayerSPP(
+      {
+        touchdowns: s.touchdowns,
+        casualties: s.casualtiesInflicted,
+        completions: s.completions,
+        interceptions: s.interceptions,
+        ttmLandings: s.ttmLandings,
+        mvp: motm.has(s.playerId),
+      },
+      modifier,
+    );
+  }
+  for (const id of motm) {
+    if (out[id] !== undefined) continue;
+    const side = teams.home?.players.some((p) => p.id === id)
+      ? "home"
+      : teams.away?.players.some((p) => p.id === id)
+        ? "away"
+        : null;
+    if (!side) continue;
+    out[id] = calculatePlayerSPP(
+      {
+        touchdowns: 0,
+        casualties: 0,
+        completions: 0,
+        interceptions: 0,
+        ttmLandings: 0,
+        mvp: true,
+      },
+      side === "home" ? sppContext.teamA : sppContext.teamB,
+    );
+  }
+  return out;
+}
+
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
@@ -2529,54 +2713,11 @@ export async function getMatchSheet(input: {
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
-  const motm = new Set(
-    parseStringArray((sheet as { motmPlayerIds?: unknown }).motmPlayerIds),
-  );
-  const sppContext = await loadLeagueSPPContext(prisma, {
-    isLeagueMatch: true,
-    teamARoster: teams.home?.roster ?? "",
-    teamBRoster: teams.away?.roster ?? "",
+  const computedSpp = await computeSheetSpp({
+    summary,
+    motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
+    teams,
   });
-  const computedSpp: Record<string, number> = {};
-  for (const s of summary.playerStats) {
-    const modifier = s.side === "home" ? sppContext.teamA : sppContext.teamB;
-    computedSpp[s.playerId] = calculatePlayerSPP(
-      {
-        touchdowns: s.touchdowns,
-        casualties: s.casualtiesInflicted,
-        completions: s.completions,
-        interceptions: s.interceptions,
-        ttmLandings: s.ttmLandings,
-        mvp: motm.has(s.playerId),
-      },
-      modifier,
-    );
-  }
-  // Un JDM SANS aucune stat n'a pas de stat-line dans le summary : il
-  // manquait donc de `computedSpp` et son palier d'évolution n'était pas
-  // proposé AVANT la validation (alors que la validation lui crédite bien
-  // ses PSP de JDM — cf. buildOfflineInputFromSummary). On l'ajoute ici en
-  // résolvant son côté depuis le roster.
-  for (const id of motm) {
-    if (computedSpp[id] !== undefined) continue;
-    const side = teams.home?.players.some((p) => p.id === id)
-      ? "home"
-      : teams.away?.players.some((p) => p.id === id)
-        ? "away"
-        : null;
-    if (!side) continue;
-    computedSpp[id] = calculatePlayerSPP(
-      {
-        touchdowns: 0,
-        casualties: 0,
-        completions: 0,
-        interceptions: 0,
-        ttmLandings: 0,
-        mvp: true,
-      },
-      side === "home" ? sppContext.teamA : sppContext.teamB,
-    );
-  }
 
   const { allowlist: allowedInducements, pack: inducementPack } =
     await loadLeagueInducementRules(input.pairingId);

@@ -311,6 +311,12 @@ export interface PlayerRowProps {
     onUnstage: () => void;
     disabled?: boolean;
   };
+  /**
+   * Restreint les types d'amélioration proposés. Sert aux JOURNALIERS de
+   * feuille de match : sans ligne `TeamPlayer`, le tirage `random-primary`
+   * (autoritaire côté serveur) ne peut pas être joué pour eux.
+   */
+  allowedTypes?: readonly AdvancementType[];
 }
 
 export function PlayerRow({
@@ -319,9 +325,19 @@ export function PlayerRow({
   catalog,
   onApplied,
   stage,
+  allowedTypes,
 }: PlayerRowProps) {
   const { t, language } = useLanguage();
-  const [type, setType] = useState<AdvancementType>("random-primary");
+  const typeOptions = useMemo(
+    () =>
+      allowedTypes
+        ? TYPE_META.filter((tm) => allowedTypes.includes(tm.value))
+        : TYPE_META,
+    [allowedTypes],
+  );
+  const [type, setType] = useState<AdvancementType>(
+    () => typeOptions[0]?.value ?? "random-primary",
+  );
   const [skillSlug, setSkillSlug] = useState("");
   const [stat, setStat] = useState<CharacteristicKind | "">("");
   const [d8Roll, setD8Roll] = useState<number | null>(null);
@@ -707,7 +723,7 @@ export function PlayerRow({
             role="group"
             aria-label={t.teams.levelUpTypeLabel ?? "Type d'amélioration"}
           >
-            {TYPE_META.map((tm) => {
+            {typeOptions.map((tm) => {
               const c = costFor(tm.value, item.advancementsTaken);
               const afford = item.spp >= c;
               const active = type === tm.value;

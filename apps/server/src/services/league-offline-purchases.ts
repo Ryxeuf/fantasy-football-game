@@ -31,7 +31,12 @@ import {
 import { serverLog } from "../utils/server-log";
 import { ACTIVE_PLAYER_WHERE } from "./player-status";
 
-export type OfflinePurchaseKind = "player" | "reroll" | "staff" | "other";
+export type OfflinePurchaseKind =
+  | "player"
+  | "reroll"
+  | "staff"
+  | "other"
+  | "journeyman";
 export type OfflineStaffKind =
   | "assistant"
   | "cheerleader"
@@ -48,6 +53,31 @@ export interface OfflinePurchaseInput {
   readonly staff?: OfflineStaffKind | null;
   /** Numero de maillot force (sinon plus petit numero libre). */
   readonly number?: number | null;
+  /**
+   * `kind: 'journeyman'` — recrutement d'un journalier ayant joue CE match.
+   * Regle BB : il perd Solitaire (il n'est plus journalier) et conserve ce
+   * qu'il a gagne pendant la rencontre. Ces champs sont resolus par la
+   * feuille de match (PSP du match, evolution stagee a l'etape 3) et
+   * materialises tels quels a la creation du TeamPlayer.
+   */
+  readonly journeymanId?: string | null;
+  /** PSP restants apres l'evolution eventuellement prise a l'etape 3. */
+  readonly spp?: number | null;
+  /** CSV de competences a la creation (poste + evolution, sans Solitaire). */
+  readonly skills?: string | null;
+  /** JSON des avancements deja pris (evolution de l'etape 3). */
+  readonly advancements?: string | null;
+  /**
+   * Caracteristiques finales (poste + amelioration de carac eventuelle).
+   * Absent => celles du poste.
+   */
+  readonly stats?: {
+    readonly ma: number;
+    readonly st: number;
+    readonly ag: number;
+    readonly pa: number | null;
+    readonly av: number;
+  } | null;
 }
 
 /**
@@ -109,7 +139,7 @@ export function parsePurchases(raw: unknown): OfflinePurchaseInput[] {
     }
   }
   if (!Array.isArray(arr)) return [];
-  const KINDS = new Set(["player", "reroll", "staff", "other"]);
+  const KINDS = new Set(["player", "reroll", "staff", "other", "journeyman"]);
   const STAFF = new Set([
     "assistant",
     "cheerleader",
@@ -145,9 +175,52 @@ export function parsePurchases(raw: unknown): OfflinePurchaseInput[] {
       position,
       staff,
       number,
+      journeymanId:
+        typeof o.journeymanId === "string" && o.journeymanId.length > 0
+          ? o.journeymanId
+          : null,
+      spp:
+        typeof o.spp === "number" && Number.isFinite(o.spp)
+          ? Math.max(0, Math.floor(o.spp))
+          : null,
+      skills: typeof o.skills === "string" ? o.skills : null,
+      advancements:
+        typeof o.advancements === "string" ? o.advancements : null,
+      stats: parsePurchaseStats(o.stats),
     });
   }
   return out;
+}
+
+/**
+ * Slugs de la competence Solitaire (variantes de seuil selon les rosters).
+ * Un journalier RECRUTE ne l'est plus : la regle BB la lui retire.
+ */
+const LONER_SLUG_PREFIX = "loner";
+
+/** Retire toute variante de Solitaire d'un CSV de competences. */
+export function stripLoner(csv: string | null | undefined): string {
+  return (csv ?? "")
+    .split(",")
+    .map((sk) => sk.trim())
+    .filter((sk) => sk.length > 0 && !sk.toLowerCase().startsWith(LONER_SLUG_PREFIX))
+    .join(",");
+}
+
+/** Parse tolerant des caracteristiques finales d'un journalier recrute. */
+function parsePurchaseStats(
+  raw: unknown,
+): OfflinePurchaseInput["stats"] | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const num = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : null;
+  const ma = num(o.ma);
+  const st = num(o.st);
+  const ag = num(o.ag);
+  const av = num(o.av);
+  if (ma === null || st === null || ag === null || av === null) return null;
+  return { ma, st, ag, pa: num(o.pa), av };
 }
 
 /** Devine le sous-type de staff a partir du libelle saisi (fallback). */
@@ -268,7 +341,8 @@ export async function applyOfflinePurchasesForTeam(
         }
         break;
       }
-      case "player": {
+      case "player":
+      case "journeyman": {
         if (!rosterData) {
           serverLog.warn(
             `[league-offline-purchases] roster introuvable (${team.roster}) — joueur non cree`,
@@ -290,18 +364,33 @@ export async function applyOfflinePurchasesForTeam(
         }
         const number = nextFreeNumber(usedNumbers, p.number ?? null);
         usedNumbers.add(number);
+        // Un journalier recrute garde ce qu'il a gagne pendant le match
+        // (PSP, evolution de l'etape 3) et PERD Solitaire : il n'est plus
+        // journalier. Les competences fournies par la feuille font foi ;
+        // a defaut on retombe sur celles du poste.
+        const isJourneymanHire = p.kind === "journeyman";
+        const skills = isJourneymanHire
+          ? stripLoner(p.skills ?? position.skills)
+          : position.skills;
         const created = await prisma.teamPlayer.create({
           data: {
             teamId,
             name: (p.name || position.displayName).trim().slice(0, 120),
             position: position.slug,
             number,
-            ma: position.ma,
-            st: position.st,
-            ag: position.ag,
-            pa: position.pa,
-            av: position.av,
-            skills: position.skills,
+            ma: p.stats?.ma ?? position.ma,
+            st: p.stats?.st ?? position.st,
+            ag: p.stats?.ag ?? position.ag,
+            pa: p.stats?.pa ?? position.pa,
+            av: p.stats?.av ?? position.av,
+            skills,
+            ...(isJourneymanHire
+              ? {
+                  spp: p.spp ?? 0,
+                  advancements: p.advancements ?? "[]",
+                  matchesPlayed: 1,
+                }
+              : {}),
           },
           select: { id: true },
         });

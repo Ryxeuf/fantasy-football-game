@@ -28,7 +28,7 @@ import {
   type SkillCatalogItem,
   type StagedAdvancementChoice,
 } from "../../../../../components/AdvancementEditor";
-import type { SheetPlayer } from "./MatchSheetPanels";
+import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 /** Entrée stagée telle que stockée sur la feuille (choix + playerId). */
 export interface StagedAdvancementEntry extends StagedAdvancementChoice {
@@ -60,6 +60,12 @@ export interface SheetAdvancementsEditorProps {
   readonly teamId: string;
   readonly ruleset: string;
   readonly players: readonly SheetPlayer[];
+  /**
+   * Journaliers ayant joué le match. Règle BB : ils gagnent des PSP et
+   * peuvent prendre une évolution à l'étape 3 — qui ne leur reste que s'ils
+   * sont RECRUTÉS à l'étape 4 (sinon ils quittent l'équipe avec).
+   */
+  readonly journeymen?: readonly SheetJourneyman[];
   /** PSP gagnés dans CE match (calcul serveur), par playerId. */
   readonly computedSpp: Record<string, number>;
   /** PSP bonus « Nuffle » saisis en fin de match, par playerId. */
@@ -78,6 +84,7 @@ export function SheetAdvancementsEditor({
   teamId,
   ruleset,
   players,
+  journeymen = [],
   computedSpp,
   sppBonus,
   staged,
@@ -131,8 +138,39 @@ export function SheetAdvancementsEditor({
         skills: p.skills ?? null,
       });
     }
+    // Journaliers : jamais d'avancement pris (ils débarquent pour ce match).
+    // Leur évolution n'est matérialisée que s'ils sont recrutés à l'étape
+    // EMBAUCHES — elle renchérit alors leur prix de recrutement.
+    const cheapestFirst = getNextAdvancementPspCost(0, "random-primary");
+    for (const j of journeymen) {
+      const projected =
+        (computedSpp[j.id] ?? 0) + (bonusByPlayer.get(j.id) ?? 0);
+      if (projected < cheapestFirst && !stagedByPlayer.has(j.id)) continue;
+      const access = SKILL_ACCESS_SEASON3[j.position];
+      out.push({
+        sequenceId: "",
+        matchId: "",
+        seasonId: "",
+        teamPlayerId: j.id,
+        playerName: `N°${j.number} ${j.name} (journalier)`,
+        spp: projected,
+        advancementsTaken: 0,
+        nextAdvancementCost: cheapestFirst,
+        createdAt: "",
+        position: j.position,
+        primarySkills: access?.primary ?? null,
+        secondarySkills: access?.secondary ?? null,
+        stats: j.stats,
+        skills: j.skills ?? null,
+      });
+    }
     return out;
-  }, [players, computedSpp, bonusByPlayer, stagedByPlayer]);
+  }, [players, journeymen, computedSpp, bonusByPlayer, stagedByPlayer]);
+
+  const journeymanIds = useMemo(
+    () => new Set(journeymen.map((j) => j.id)),
+    [journeymen],
+  );
 
   if (items.length === 0) {
     return (
@@ -152,6 +190,9 @@ export function SheetAdvancementsEditor({
         PSP projetés = PSP actuels + PSP gagnés sur ce match. Les choix
         ci-dessous font partie de ta saisie : ils seront appliqués aux
         rosters à la validation du commissaire (qui re-vérifie tout).
+        L&apos;évolution d&apos;un <strong>journalier</strong> ne lui reste
+        que s&apos;il est recruté en fin de match — elle renchérit alors son
+        prix de recrutement.
       </p>
       <div
         className="grid grid-cols-1 gap-4 sm:grid-cols-2"
@@ -159,6 +200,10 @@ export function SheetAdvancementsEditor({
       >
         {items.map((it) => {
           const entry = stagedByPlayer.get(it.teamPlayerId) ?? null;
+          // Un journalier n'a pas de ligne TeamPlayer : le tirage
+          // `random-primary` (autoritaire côté serveur) ne peut pas être
+          // joué pour lui — seuls les choix libres restent proposés.
+          const isJourneyman = journeymanIds.has(it.teamPlayerId);
           return (
             <PlayerRow
               key={it.teamPlayerId}
@@ -166,6 +211,11 @@ export function SheetAdvancementsEditor({
               teamId={teamId}
               catalog={catalog}
               onApplied={() => undefined}
+              allowedTypes={
+                isJourneyman
+                  ? (["primary", "secondary", "characteristic"] as const)
+                  : undefined
+              }
               stage={{
                 staged: entry,
                 disabled,

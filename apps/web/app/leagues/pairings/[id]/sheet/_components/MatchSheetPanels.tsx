@@ -76,6 +76,11 @@ export interface SheetJourneyman {
     av: number;
   };
   skills?: string;
+  /**
+   * Valeur du journalier en po (coût de son poste) : compte dans la VEA du
+   * match, et sert de base au prix de recrutement en fin de match.
+   */
+  cost?: number;
 }
 
 /**
@@ -1096,13 +1101,19 @@ export type StaffKind =
   | "dedicated_fan";
 
 export interface Purchase {
-  kind: "player" | "reroll" | "staff" | "other";
+  kind: "player" | "reroll" | "staff" | "other" | "journeyman";
   name: string;
   cost: number;
   /** Pour `kind:'player'` : slug de position (sinon resolu par cout serveur). */
   position?: string;
   /** Pour `kind:'staff'` : sous-type de staff materialise. */
   staff?: StaffKind;
+  /**
+   * Pour `kind:'journeyman'` : id synthétique du journalier recruté. Le
+   * serveur redérive tout le reste (poste, PSP du match, évolution prise à
+   * l'étape 3) — la saisie ne porte que l'identité du journalier.
+   */
+  journeymanId?: string;
 }
 
 const STAFF_KINDS: ReadonlyArray<{ value: StaffKind; label: string }> = [
@@ -1261,6 +1272,7 @@ const PURCHASE_KINDS: ReadonlyArray<{
   label: string;
 }> = [
   { value: "player", label: "Joueur" },
+  { value: "journeyman", label: "Journalier du match" },
   { value: "reroll", label: "Relance" },
   { value: "staff", label: "Staff" },
   { value: "other", label: "Dépense diverse" },
@@ -1510,6 +1522,7 @@ function PurchaseEditor({
   testId,
   team,
   treasuryBefore,
+  journeymanHireCost,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
@@ -1522,10 +1535,14 @@ function PurchaseEditor({
    * ce qu'il reste et à alerter sur un dépassement.
    */
   treasuryBefore: number;
+  /** Prix de recrutement d'un journalier (poste + évolution de l'étape 3). */
+  journeymanHireCost: (journeymanId: string) => number | null;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   const positions = teamPositions(team);
+  // Journaliers ayant joué CE match : recrutables à l'étape EMBAUCHES.
+  const journeymen = team?.journeymen ?? [];
   const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
   const remaining = treasuryBefore - spent;
   return (
@@ -1578,6 +1595,34 @@ function PurchaseEditor({
               {positions.map((pos) => (
                 <option key={pos.slug} value={pos.slug}>
                   {pos.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {/* Journalier du match : recrutement (règle BB, étape EMBAUCHES).
+              Le prix est pré-rempli (coût du poste + surcoût de l'évolution
+              prise à l'étape 3) ; le serveur le recalcule à la validation. */}
+          {it.kind === "journeyman" && (
+            <select
+              value={it.journeymanId ?? ""}
+              onChange={(e) => {
+                const id = e.target.value || undefined;
+                const j = journeymen.find((jm) => jm.id === id);
+                update(i, {
+                  journeymanId: id,
+                  name: j?.name ?? "",
+                  cost: id ? (journeymanHireCost(id) ?? it.cost) : it.cost,
+                });
+              }}
+              disabled={disabled}
+              aria-label="journalier"
+              data-testid={testId ? `${testId}-journeyman-${i}` : undefined}
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">journalier…</option>
+              {journeymen.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {`N°${j.number} ${j.name} — ${j.positionName}`}
                 </option>
               ))}
             </select>
@@ -1660,6 +1705,7 @@ export function PostMatchPanel({
   onSave,
   computedSpp = {},
   autoWinnings,
+  journeymanHireCost,
 }: {
   initial: PostMatchValues;
   home: SheetTeam | null;
@@ -1670,6 +1716,13 @@ export function PostMatchPanel({
   computedSpp?: Record<string, number>;
   /** Gains auto-calculés (depuis la popularité) par côté, en po. */
   autoWinnings?: { home: number; away: number };
+  /**
+   * Prix de recrutement d'un journalier ayant joué le match : coût de son
+   * poste + surcoût de l'évolution qu'il a prise à l'étape 3. Résolu par la
+   * page (qui connaît les évolutions stagées) ; le serveur le recalcule à
+   * la validation.
+   */
+  journeymanHireCost?: (journeymanId: string) => number | null;
 }) {
   const [winH, setWinH] = useState<string>(
     initial.winningsHomeManual?.toString() ?? "",
@@ -1971,6 +2024,9 @@ export function PostMatchPanel({
                 testId={`purchases-${c.side}`}
                 team={c.team}
                 treasuryBefore={c.treasuryBeforePurchases}
+                journeymanHireCost={
+                  journeymanHireCost ?? (() => null)
+                }
               />
               <p className="mt-1 text-[10px] text-slate-500">
                 « Dépense diverse » débite seulement la trésorerie (aucun

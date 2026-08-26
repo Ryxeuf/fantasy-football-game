@@ -184,3 +184,110 @@ export function parseJourneymenChoice(raw: unknown): string | null {
   const position = (obj as { position?: unknown }).position;
   return typeof position === "string" && position.length > 0 ? position : null;
 }
+
+/**
+ * Recrutement d'un journalier à la fin du match (séquence BB, étape 4 —
+ * EMBAUCHES). Règle : le journalier engagé rejoint l'équipe au coût de son
+ * poste, PERD Solitaire, et conserve ce qu'il a gagné pendant la rencontre
+ * (PSP + évolution prise à l'étape 3, qui renchérit d'autant son prix).
+ *
+ * 100 % pur : la feuille de match fournit le journalier dérivé, ses PSP du
+ * match et l'évolution éventuellement stagée pour lui.
+ */
+export interface JourneymanHireInput {
+  readonly journeyman: SheetJourneyman;
+  /** PSP gagnés sur ce match par ce journalier. */
+  readonly earnedSpp: number;
+  /**
+   * Évolution stagée pour ce journalier à l'étape 3 (compétence ou
+   * caractéristique). `null` = aucune.
+   */
+  readonly advancement?: {
+    readonly type: string;
+    readonly skillSlug?: string | null;
+    readonly stat?: "ma" | "st" | "ag" | "pa" | "av" | null;
+    readonly d8?: number | null;
+    /** Coût PSP du 1er palier pour ce type. */
+    readonly pspCost: number;
+    /** Surcoût de VALEUR (po) de l'évolution — renchérit le recrutement. */
+    readonly valueSurcharge: number;
+  } | null;
+}
+
+export interface JourneymanHire {
+  /** Coût de recrutement (po) : poste + surcoût de l'évolution prise. */
+  readonly cost: number;
+  /** PSP restants après paiement de l'évolution. */
+  readonly spp: number;
+  /** CSV de compétences à la création (Solitaire retiré côté matérialisation). */
+  readonly skills: string;
+  /** JSON des avancements pris (vide si aucune évolution). */
+  readonly advancements: string;
+  /** Caractéristiques finales (amélioration de carac appliquée). */
+  readonly stats: SheetJourneyman["stats"];
+}
+
+/** Effet d'une amélioration de caractéristique BB (ag/pa : la cible baisse). */
+function improveStat(
+  stats: SheetJourneyman["stats"],
+  stat: "ma" | "st" | "ag" | "pa" | "av",
+): SheetJourneyman["stats"] {
+  switch (stat) {
+    case "ma":
+      return { ...stats, ma: stats.ma + 1 };
+    case "st":
+      return { ...stats, st: stats.st + 1 };
+    case "av":
+      return { ...stats, av: stats.av + 1 };
+    case "ag":
+      return { ...stats, ag: stats.ag - 1 };
+    case "pa":
+      return stats.pa === null ? stats : { ...stats, pa: stats.pa - 1 };
+  }
+}
+
+/**
+ * Calcule (pur) le recrutement d'un journalier : prix, PSP restants,
+ * compétences, avancements et caractéristiques finales.
+ */
+export function buildJourneymanHire(
+  input: JourneymanHireInput,
+): JourneymanHire {
+  const { journeyman, earnedSpp } = input;
+  const adv = input.advancement ?? null;
+  // Évolution non payable (PSP insuffisants) : elle n'est pas prise.
+  const takesAdvancement = adv !== null && earnedSpp >= adv.pspCost;
+  if (!takesAdvancement) {
+    return {
+      cost: journeyman.cost,
+      spp: Math.max(0, earnedSpp),
+      skills: journeyman.skills,
+      advancements: "[]",
+      stats: journeyman.stats,
+    };
+  }
+  const isCharacteristic = adv.type === "characteristic" && !!adv.stat;
+  const skills =
+    !isCharacteristic && adv.skillSlug
+      ? [journeyman.skills, adv.skillSlug].filter((v) => v.length > 0).join(",")
+      : journeyman.skills;
+  return {
+    cost: journeyman.cost + adv.valueSurcharge,
+    spp: Math.max(0, earnedSpp - adv.pspCost),
+    skills,
+    advancements: JSON.stringify([
+      {
+        ...(isCharacteristic
+          ? { stat: adv.stat, d8: adv.d8 ?? undefined }
+          : { skillSlug: adv.skillSlug }),
+        type: adv.type,
+        isRandom: adv.type === "random-primary",
+        at: 0,
+      },
+    ]),
+    stats:
+      isCharacteristic && adv.stat
+        ? improveStat(journeyman.stats, adv.stat)
+        : journeyman.stats,
+  };
+}

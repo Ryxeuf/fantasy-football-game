@@ -525,6 +525,51 @@ describe("PostMatchPanel — trésorerie disponible pour les achats", () => {
   });
 });
 
+describe("PostMatchPanel — recrutement d'un journalier", () => {
+  const teamWithJourneyman: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    journeymen: [
+      {
+        id: "journeyman-home-1",
+        number: 12,
+        name: "Journalier 1",
+        position: "human_lineman",
+        positionName: "Journalier (Trois-quarts)",
+        stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+        skills: "loner-4",
+        cost: 50_000,
+      },
+    ],
+  };
+
+  it("propose les journaliers du match et pré-remplit leur prix", () => {
+    const onSave = vi.fn();
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "journeyman", name: "", cost: 0 }],
+        }}
+        home={teamWithJourneyman}
+        away={null}
+        onSave={onSave}
+        journeymanHireCost={() => 70_000}
+      />,
+    );
+    const picker = screen.getByTestId("purchases-home-journeyman-0");
+    expect(
+      within(picker)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["journalier…", "N°12 Journalier 1 — Journalier (Trois-quarts)"]);
+
+    fireEvent.change(picker, { target: { value: "journeyman-home-1" } });
+    // Prix pré-rempli = poste + surcoût de l'évolution de l'étape 3.
+    expect(screen.getByDisplayValue("70000")).toBeTruthy();
+  });
+});
+
 describe("PostMatchPanel — variation des fans dévoués", () => {
   it("rappelle les fans actuels et la règle du D6 quand l'API les fournit", () => {
     render(

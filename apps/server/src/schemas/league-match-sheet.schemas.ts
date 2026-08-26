@@ -107,7 +107,9 @@ const MAX_GOLD = 10_000_000;
  * serveur tente de resoudre par cout (joueur) ou par libelle (staff).
  */
 const purchaseSchema = z.object({
-  kind: z.enum(["player", "reroll", "staff", "other"]),
+  // `journeyman` = recrutement d'un journalier ayant joué CE match (règle
+  // BB : il perd Solitaire, garde ses PSP et l'évolution prise à l'étape 3).
+  kind: z.enum(["player", "reroll", "staff", "other", "journeyman"]),
   name: z.string().max(120),
   cost: z.number().int().min(0).max(MAX_GOLD),
   position: z.string().max(64).optional().nullable(),
@@ -116,6 +118,12 @@ const purchaseSchema = z.object({
     .optional()
     .nullable(),
   number: z.number().int().min(1).max(99).optional().nullable(),
+  /**
+   * `kind: "journeyman"` — id synthétique du journalier recruté
+   * (`journeyman-<side>-<n>`). Sert à retrouver ses PSP du match et
+   * l'évolution stagée pour lui, et à empêcher un double recrutement.
+   */
+  journeymanId: z.string().max(64).optional().nullable(),
 });
 
 // Évolutions saisies pendant la feuille de match (staging) : appliquées

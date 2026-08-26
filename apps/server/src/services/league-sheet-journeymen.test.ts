@@ -9,11 +9,13 @@
 
 import { describe, it, expect } from "vitest";
 import {
+  buildJourneymanHire,
   deriveJourneymen,
   isJourneymanId,
   linemanPositionsForRoster,
   parseJourneymenChoice,
   JOURNEYMAN_ID_PREFIX,
+  type SheetJourneyman,
 } from "./league-sheet-journeymen";
 
 function players(
@@ -149,5 +151,82 @@ describe("parseJourneymenChoice", () => {
     expect(parseJourneymenChoice(undefined)).toBeNull();
     expect(parseJourneymenChoice("not-json")).toBeNull();
     expect(parseJourneymenChoice({ position: "" })).toBeNull();
+  });
+});
+
+describe("buildJourneymanHire", () => {
+  const journeyman: SheetJourneyman = {
+    id: "journeyman-home-1",
+    number: 12,
+    name: "Journalier 1",
+    position: "human_lineman",
+    positionName: "Journalier (Trois-quarts)",
+    stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+    skills: "loner-4",
+    cost: 50_000,
+  };
+
+  it("sans évolution : prix du poste, PSP du match conservés", () => {
+    const hire = buildJourneymanHire({ journeyman, earnedSpp: 3 });
+    expect(hire).toEqual({
+      cost: 50_000,
+      spp: 3,
+      skills: "loner-4",
+      advancements: "[]",
+      stats: journeyman.stats,
+    });
+  });
+
+  it("avec une compétence : prix renchéri du surcoût, PSP débités", () => {
+    const hire = buildJourneymanHire({
+      journeyman,
+      earnedSpp: 6,
+      advancement: {
+        type: "primary",
+        skillSlug: "block",
+        pspCost: 6,
+        valueSurcharge: 20_000,
+      },
+    });
+    expect(hire.cost).toBe(70_000);
+    expect(hire.spp).toBe(0);
+    expect(hire.skills).toBe("loner-4,block");
+    expect(JSON.parse(hire.advancements)).toEqual([
+      { skillSlug: "block", type: "primary", isRandom: false, at: 0 },
+    ]);
+  });
+
+  it("PSP insuffisants : l'évolution n'est pas prise (prix du poste)", () => {
+    const hire = buildJourneymanHire({
+      journeyman,
+      earnedSpp: 3,
+      advancement: {
+        type: "primary",
+        skillSlug: "block",
+        pspCost: 6,
+        valueSurcharge: 20_000,
+      },
+    });
+    expect(hire.cost).toBe(50_000);
+    expect(hire.spp).toBe(3);
+    expect(hire.advancements).toBe("[]");
+  });
+
+  it("amélioration de caractéristique : stats finales + surcoût", () => {
+    const hire = buildJourneymanHire({
+      journeyman,
+      earnedSpp: 14,
+      advancement: {
+        type: "characteristic",
+        stat: "ag",
+        d8: 5,
+        pspCost: 14,
+        valueSurcharge: 40_000,
+      },
+    });
+    expect(hire.cost).toBe(90_000);
+    // AG est une valeur cible : l'amélioration la fait BAISSER (3+ -> 2+).
+    expect(hire.stats).toMatchObject({ ag: 2 });
+    expect(hire.skills).toBe("loner-4");
   });
 });
