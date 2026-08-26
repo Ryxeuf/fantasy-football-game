@@ -10,7 +10,9 @@ import SkillTooltip from "../../../../../me/teams/components/SkillTooltip";
 import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 // ---------------------------------------------------------------------------
-// E11 — roster « version du match » (snapshot figé à la 1re soumission).
+// Roster « version du match » : snapshot figé au DÉMARRAGE de la feuille
+// (roster, staff, VE/VEA, trésorerie, fans). Le repli « état actuel » ne
+// sert plus que le temps que le gel soit posé (capture best-effort).
 // ---------------------------------------------------------------------------
 
 export interface SnapshotPlayerView {
@@ -128,8 +130,8 @@ export function livePlayersToView(
  * (et le commissaire) — y compris celui de l'adversaire.
  *
  * Deux états possibles :
- *  - la « version du match » quand le snapshot existe (figé à la 1re
- *    soumission, cf. E11) : c'est la référence pour ce match ;
+ *  - la « version du match » quand le snapshot existe (figé au démarrage
+ *    de la feuille) : c'est la référence pour ce match ;
  *  - à défaut, le roster COURANT de l'équipe, explicitement annoncé comme
  *    non figé. Sans ce repli, l'adversaire ne pouvait rien consulter tant
  *    que personne n'avait soumis, c'est-à-dire pendant toute la
@@ -166,7 +168,7 @@ export function RosterSection({
           ? ` (figé le ${new Date(snapshot.capturedAt).toLocaleDateString("fr-FR")})`
           : ""
       }`
-    : `Roster de ${label} — état actuel (figé à la 1re soumission)`;
+    : `Roster de ${label} — état actuel (gel en cours)`;
 
   return (
     <div className="rounded border border-slate-200">

@@ -322,6 +322,7 @@ export type ApplyAdvancementOutcome =
         | "insufficient-spp"
         | "skill-not-in-pool"
         | "skill-excluded-from-selection"
+        | "skill-already-owned"
         | "missing-skill"
         | "missing-stat"
         | "missing-d8"
@@ -574,6 +575,15 @@ export async function applyAdvancementChoice(
   }
   const skillSlug = input.skillSlug;
 
+  // Une competence deja possedee n'apporte rien et n'est pas selectionnable
+  // (regle BB : on relance / on choisit autre chose). Le tirage random
+  // exclut deja les competences possedees ; ce garde-fou couvre AUSSI les
+  // choix libres (primary/secondary), ou l'UI pouvait proposer un doublon.
+  const ownedSlugs = parsePlayerSkillSlugs(player.skills);
+  if (ownedSlugs.includes(skillSlug)) {
+    return { skipped: true, reason: "skill-already-owned" };
+  }
+
   // Anti-triche `random-primary` : le tirage est autoritaire cote serveur.
   // On re-derive les 2 candidats (memes seed + owned que l'endpoint roll) et
   // on exige que `skillSlug` soit l'un d'eux — sinon un coach pourrait
@@ -587,7 +597,7 @@ export async function applyAdvancementChoice(
     }
     const candidates = rollRandomPrimaryCandidates({
       category: input.category as RandomSkillCategoryCode,
-      ownedSlugs: parsePlayerSkillSlugs(player.skills),
+      ownedSlugs,
       seed: randomPrimarySeed(player.id, taken.length, input.category),
     });
     if (!candidates.includes(skillSlug)) {
@@ -614,7 +624,7 @@ export async function applyAdvancementChoice(
   // NOUVELLE selection, quelle que soit la disponibilite de donnees de
   // position (contrairement au check de pool ci-dessous). Reste valide si
   // deja possedee (jamais le cas ici : on ajoute une competence absente).
-  if (excludedFromSelection && !parsePlayerSkillSlugs(player.skills).includes(skillSlug)) {
+  if (excludedFromSelection) {
     return { skipped: true, reason: "skill-excluded-from-selection" };
   }
 
@@ -639,10 +649,8 @@ export async function applyAdvancementChoice(
   };
   const updatedAdvancements = [...taken, newAdvancement];
 
-  // Concatene la skill au champ skills (CSV). Si la skill est deja
-  // presente, on l'ajoute quand meme — c'est au caller (handler) de
-  // verifier la duplication et de tirer au sort proprement pour les
-  // random.
+  // Concatene la skill au champ skills (CSV). Le doublon est deja rejete
+  // plus haut (`skill-already-owned`), donc le CSV reste sans repetition.
   const updatedSkills = appendSkillCsv(player.skills, skillSlug);
 
   // BUG fix audit round 5 (CRITICAL) : avant, les 2 updates (player.spp

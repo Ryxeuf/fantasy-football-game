@@ -311,6 +311,12 @@ export interface PlayerRowProps {
     onUnstage: () => void;
     disabled?: boolean;
   };
+  /**
+   * Restreint les types d'amélioration proposés. Sert aux JOURNALIERS de
+   * feuille de match : sans ligne `TeamPlayer`, le tirage `random-primary`
+   * (autoritaire côté serveur) ne peut pas être joué pour eux.
+   */
+  allowedTypes?: readonly AdvancementType[];
 }
 
 export function PlayerRow({
@@ -319,9 +325,19 @@ export function PlayerRow({
   catalog,
   onApplied,
   stage,
+  allowedTypes,
 }: PlayerRowProps) {
   const { t, language } = useLanguage();
-  const [type, setType] = useState<AdvancementType>("random-primary");
+  const typeOptions = useMemo(
+    () =>
+      allowedTypes
+        ? TYPE_META.filter((tm) => allowedTypes.includes(tm.value))
+        : TYPE_META,
+    [allowedTypes],
+  );
+  const [type, setType] = useState<AdvancementType>(
+    () => typeOptions[0]?.value ?? "random-primary",
+  );
   const [skillSlug, setSkillSlug] = useState("");
   const [stat, setStat] = useState<CharacteristicKind | "">("");
   const [d8Roll, setD8Roll] = useState<number | null>(null);
@@ -394,18 +410,29 @@ export function PlayerRow({
     const pool = parseAccess(
       isPrimary ? item.primarySkills : item.secondarySkills,
     );
+    // Une competence deja possedee n'est pas re-selectionnable (le serveur
+    // la refuse : `skill-already-owned`) — on ne la propose donc pas.
+    const owned = new Set(playerSkillSlugs);
     const seen = new Set<string>();
     return catalog
       .filter((s) => {
         const code = CATEGORY_CODE[s.category];
         if (!code || !pool.has(code)) return false;
         if (s.excludedFromSelection) return false;
+        if (owned.has(s.slug)) return false;
         if (seen.has(s.slug)) return false;
         seen.add(s.slug);
         return true;
       })
       .sort((a, b) => a.nameFr.localeCompare(b.nameFr));
-  }, [hasAccess, catalog, type, item.primarySkills, item.secondarySkills]);
+  }, [
+    hasAccess,
+    catalog,
+    type,
+    item.primarySkills,
+    item.secondarySkills,
+    playerSkillSlugs,
+  ]);
 
   const filteredSkills = useMemo(() => {
     const q = skillSearch.trim().toLowerCase();
@@ -696,7 +723,7 @@ export function PlayerRow({
             role="group"
             aria-label={t.teams.levelUpTypeLabel ?? "Type d'amélioration"}
           >
-            {TYPE_META.map((tm) => {
+            {typeOptions.map((tm) => {
               const c = costFor(tm.value, item.advancementsTaken);
               const afford = item.spp >= c;
               const active = type === tm.value;

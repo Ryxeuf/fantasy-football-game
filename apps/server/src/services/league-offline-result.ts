@@ -133,6 +133,20 @@ export interface RecordOfflineResultInput {
    * (historique) et reversibles a l'invalidation.
    */
   readonly firedPlayerIds?: readonly string[];
+  /**
+   * Séquence de fin de match BB (livre p.68) :
+   *   1. consigner résultats et gains — 2. fans dévoués —
+   *   3. AMÉLIORATION DE JOUEURS — 4. EMBAUCHES puis RENVOIS —
+   *   5. erreurs coûteuses.
+   *
+   * L'étape 3 n'est pas connue de ce service (elle vit sur la feuille de
+   * match) : le caller l'injecte ici et elle est jouée APRÈS l'attribution
+   * des PSP/blessures et AVANT les achats. L'ordre compte — une compétence
+   * gagnée par un journalier change son prix de recrutement, et une place
+   * libérée par un mort doit l'être avant d'acheter. Best-effort : une
+   * erreur est loggée sans faire échouer l'enregistrement du résultat.
+   */
+  readonly applyAdvancements?: () => Promise<void>;
 }
 
 export interface OfflineSppBonusInput {
@@ -894,6 +908,22 @@ export async function recordOfflineLeagueResult(
     );
   }
 
+  // Etape 3 de la sequence BB — AMELIORATION DE JOUEURS. Jouee APRES les
+  // PSP/blessures (le joueur doit avoir ses PSP du match) et AVANT les
+  // embauches : une competence gagnee ici change le prix de recrutement
+  // d'un journalier, et la VE de l'equipe au moment des achats.
+  if (input.applyAdvancements) {
+    try {
+      await input.applyAdvancements();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[league-offline-result] applyAdvancements failed match=${match.id}: ${msg}`,
+      );
+    }
+  }
+
+  // Etape 4 de la sequence BB — EMBAUCHES puis RENVOIS.
   // Achats post-match -> mutation reelle du roster (joueurs/relances/staff).
   // Le debit de tresorerie est deja porte par treasuryDebit (pas de
   // double-debit). On memorise la trace EXACTE des mutations dans le snapshot

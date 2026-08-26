@@ -423,6 +423,22 @@ export async function startPlayoffs(
     pairingsCreated += 1;
   }
 
+  // Le bracket est généré, mais PAS publié : les coachs ne le voient pas
+  // tant que le commissaire n'a pas vérifié les seeds. C'est ce `false`
+  // explicite qui distingue un bracket neuf d'une saison antérieure à la
+  // publication différée (`null`, restée visible).
+  try {
+    await client.leagueSeason.update({
+      where: { id: seasonId },
+      data: { playoffsPublished: false },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-playoffs] marquage « non publié » échoué season=${seasonId}: ${msg}`,
+    );
+  }
+
   serverLog.info(
     `[league-playoffs] season=${seasonId} playoffs started size=${size} rounds=${roundsCreated} seeding=${resolved.source}`,
   );
@@ -1042,4 +1058,79 @@ export async function advancePlayoffsWithWinner(
   );
 
   return { advanced: true, nextSlot: next.nextSlot };
+}
+
+// ───────────────────────── Publication du bracket ─────────────────────────
+//
+// Le bracket est GÉNÉRÉ automatiquement à la clôture de la phase régulière
+// (`startPlayoffs`), mais il ne doit pas apparaître aux coachs tant que le
+// commissaire ne l'a pas PUBLIÉ : il a d'abord besoin de corriger les seeds
+// (saisie en retard, désistement, override de participants) sans que la
+// ligue voie un bracket provisoire.
+
+/**
+ * Le bracket est-il VISIBLE des coachs ?
+ *
+ * `playoffsPublished` est un booléen NULLABLE à trois états, parce que le
+ * schéma est appliqué par `db push` (pas de migration, donc pas de
+ * backfill) : `null` = saison antérieure à la publication différée, dont
+ * le bracket est déjà consulté par la ligue et ne doit pas disparaître.
+ * Seul un `false` explicite — posé par `startPlayoffs` à la génération —
+ * masque le bracket.
+ */
+export function isPlayoffBracketVisible(
+  playoffsPublished: boolean | null | undefined,
+): boolean {
+  return playoffsPublished !== false;
+}
+
+/** Lit l'état de publication du bracket d'une saison (tri-état). */
+export async function getPlayoffsPublishedState(
+  seasonId: string,
+): Promise<boolean | null> {
+  const row = (await (
+    prisma as unknown as PrismaWithLeague
+  ).leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { playoffsPublished: true },
+  })) as { playoffsPublished: boolean | null } | null;
+  return row ? (row.playoffsPublished ?? null) : null;
+}
+
+export type SetPlayoffsPublishedOutcome =
+  | { readonly ok: true; readonly published: boolean }
+  | { readonly ok: false; readonly reason: "season-missing" | "no-bracket" };
+
+/**
+ * Publie (ou dépublie) le bracket de playoffs d'une saison. Publier exige
+ * qu'un bracket EXISTE : sinon il n'y a rien à montrer et le flag
+ * masquerait un état incohérent. Dépublier reste toujours possible (retour
+ * arrière du commissaire).
+ */
+export async function setPlayoffsPublished(
+  seasonId: string,
+  published: boolean,
+): Promise<SetPlayoffsPublishedOutcome> {
+  const client = prisma as unknown as PrismaWithLeague;
+  const season = (await client.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { id: true },
+  })) as { id: string } | null;
+  if (!season) return { ok: false, reason: "season-missing" };
+
+  if (published) {
+    const rounds = await client.leagueRound.count({
+      where: { seasonId, kind: "playoff" },
+    });
+    if (rounds === 0) return { ok: false, reason: "no-bracket" };
+  }
+
+  await client.leagueSeason.update({
+    where: { id: seasonId },
+    data: { playoffsPublished: published },
+  });
+  serverLog.info(
+    `[league-playoffs] season=${seasonId} bracket ${published ? "publié" : "dépublié"}`,
+  );
+  return { ok: true, published };
 }

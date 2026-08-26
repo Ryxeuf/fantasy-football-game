@@ -76,6 +76,35 @@ export interface SheetJourneyman {
     av: number;
   };
   skills?: string;
+  /**
+   * Valeur du journalier en po (coût de son poste) : compte dans la VEA du
+   * match, et sert de base au prix de recrutement en fin de match.
+   */
+  cost?: number;
+}
+
+/**
+ * Star Player ENGAGÉ en coup de pouce sur cette feuille. Joueur synthétique
+ * comme le journalier (id `star-<side>-<slug>`) : il joue le match — donc
+ * sélectionnable comme acteur ou cible d'évènement — mais n'est jamais
+ * persisté au roster.
+ */
+export interface SheetStarPlayer {
+  id: string;
+  number: number;
+  name: string;
+  position: string;
+  positionName: string;
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
+  skills?: string;
+  slug?: string;
+  cost?: number;
 }
 
 export interface SheetTeam {
@@ -93,6 +122,16 @@ export interface SheetTeam {
   treasury: number;
   /** Fans dévoués de l'équipe (1-6). Optionnel : rétro-compat API. */
   dedicatedFans?: number;
+  /**
+   * Staff FIGÉ au début du match (relances, pom-pom girls, assistants,
+   * apothicaire). Optionnel : rétro-compat API pré-gel complet.
+   */
+  staff?: {
+    rerolls: number;
+    cheerleaders: number;
+    assistants: number;
+    apothecary: boolean;
+  };
   players: SheetPlayer[];
   /** Journaliers dérivés (optionnel : rétro-compat API). */
   journeymen?: SheetJourneyman[];
@@ -100,6 +139,8 @@ export interface SheetTeam {
   journeymenOptions?: { slug: string; name: string }[];
   /** Poste choisi sur la feuille (null = défaut). */
   journeymenChoice?: string | null;
+  /** Star Players engagés en coup de pouce (optionnel : rétro-compat API). */
+  starPlayersHired?: SheetStarPlayer[];
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -201,6 +242,18 @@ export function TeamValueStrip({
         Cagnotte{" "}
         <strong className="text-slate-700">{formatGold(team.treasury)}</strong>
       </span>
+      {team.staff ? (
+        <span
+          title="Staff figé au début du match (relances · pom-pom girls · assistants · apothicaire)"
+          data-testid="team-staff-strip"
+        >
+          Staff{" "}
+          <strong className="text-slate-700">
+            {team.staff.rerolls} RR · {team.staff.cheerleaders} 📣 ·{" "}
+            {team.staff.assistants} 🧑‍🏫{team.staff.apothecary ? " · ⚕️" : ""}
+          </strong>
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -249,6 +302,9 @@ export function PlayerSelect({
       includeUnavailable || (!p.dead && !p.missNextMatch) || p.id === value,
   );
   const journeymen = includeJourneymen ? (team?.journeymen ?? []) : [];
+  // Un Star Player engagé joue le match : il peut marquer, blesser, être
+  // blessé ou être JDM. Même traitement que les journaliers (synthétiques).
+  const starPlayers = includeJourneymen ? (team?.starPlayersHired ?? []) : [];
   return (
     <select
       value={value}
@@ -266,6 +322,11 @@ export function PlayerSelect({
       {journeymen.map((j) => (
         <option key={j.id} value={j.id}>
           {`N°${j.number} ${j.name} — ${j.positionName}`}
+        </option>
+      ))}
+      {starPlayers.map((sp) => (
+        <option key={sp.id} value={sp.id}>
+          {`⭐ ${sp.name} — ${sp.positionName}`}
         </option>
       ))}
     </select>
@@ -1040,13 +1101,19 @@ export type StaffKind =
   | "dedicated_fan";
 
 export interface Purchase {
-  kind: "player" | "reroll" | "staff" | "other";
+  kind: "player" | "reroll" | "staff" | "other" | "journeyman";
   name: string;
   cost: number;
   /** Pour `kind:'player'` : slug de position (sinon resolu par cout serveur). */
   position?: string;
   /** Pour `kind:'staff'` : sous-type de staff materialise. */
   staff?: StaffKind;
+  /**
+   * Pour `kind:'journeyman'` : id synthétique du journalier recruté. Le
+   * serveur redérive tout le reste (poste, PSP du match, évolution prise à
+   * l'étape 3) — la saisie ne porte que l'identité du journalier.
+   */
+  journeymanId?: string;
 }
 
 const STAFF_KINDS: ReadonlyArray<{ value: StaffKind; label: string }> = [
@@ -1205,6 +1272,7 @@ const PURCHASE_KINDS: ReadonlyArray<{
   label: string;
 }> = [
   { value: "player", label: "Joueur" },
+  { value: "journeyman", label: "Journalier du match" },
   { value: "reroll", label: "Relance" },
   { value: "staff", label: "Staff" },
   { value: "other", label: "Dépense diverse" },
@@ -1453,18 +1521,49 @@ function PurchaseEditor({
   disabled,
   testId,
   team,
+  treasuryBefore,
+  journeymanHireCost,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
   disabled?: boolean;
   testId?: string;
   team: SheetTeam | null;
+  /**
+   * Trésorerie disponible AVANT achats à cette étape de la séquence
+   * (cagnotte figée au début du match + gains du match). Sert à afficher
+   * ce qu'il reste et à alerter sur un dépassement.
+   */
+  treasuryBefore: number;
+  /** Prix de recrutement d'un journalier (poste + évolution de l'étape 3). */
+  journeymanHireCost: (journeymanId: string) => number | null;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   const positions = teamPositions(team);
+  // Journaliers ayant joué CE match : recrutables à l'étape EMBAUCHES.
+  const journeymen = team?.journeymen ?? [];
+  const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
+  const remaining = treasuryBefore - spent;
   return (
     <div data-testid={testId} className="space-y-1.5">
+      <p
+        data-testid={testId ? `${testId}-treasury` : undefined}
+        className={`text-[11px] ${
+          remaining < 0 ? "font-semibold text-red-600" : "text-slate-500"
+        }`}
+      >
+        Trésorerie disponible :{" "}
+        <strong>{formatGold(treasuryBefore)}</strong>
+        {spent > 0 ? (
+          <>
+            {" "}
+            − {formatGold(spent)} d&apos;achats ={" "}
+            <strong>{formatGold(remaining)}</strong>
+          </>
+        ) : null}
+        {remaining < 0 ? " — dépassement de trésorerie !" : null}
+      </p>
       {list.map((it, i) => (
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <select
@@ -1496,6 +1595,34 @@ function PurchaseEditor({
               {positions.map((pos) => (
                 <option key={pos.slug} value={pos.slug}>
                   {pos.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {/* Journalier du match : recrutement (règle BB, étape EMBAUCHES).
+              Le prix est pré-rempli (coût du poste + surcoût de l'évolution
+              prise à l'étape 3) ; le serveur le recalcule à la validation. */}
+          {it.kind === "journeyman" && (
+            <select
+              value={it.journeymanId ?? ""}
+              onChange={(e) => {
+                const id = e.target.value || undefined;
+                const j = journeymen.find((jm) => jm.id === id);
+                update(i, {
+                  journeymanId: id,
+                  name: j?.name ?? "",
+                  cost: id ? (journeymanHireCost(id) ?? it.cost) : it.cost,
+                });
+              }}
+              disabled={disabled}
+              aria-label="journalier"
+              data-testid={testId ? `${testId}-journeyman-${i}` : undefined}
+              className="rounded border px-1.5 py-1 text-sm"
+            >
+              <option value="">journalier…</option>
+              {journeymen.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {`N°${j.number} ${j.name} — ${j.positionName}`}
                 </option>
               ))}
             </select>
@@ -1578,6 +1705,7 @@ export function PostMatchPanel({
   onSave,
   computedSpp = {},
   autoWinnings,
+  journeymanHireCost,
 }: {
   initial: PostMatchValues;
   home: SheetTeam | null;
@@ -1588,6 +1716,13 @@ export function PostMatchPanel({
   computedSpp?: Record<string, number>;
   /** Gains auto-calculés (depuis la popularité) par côté, en po. */
   autoWinnings?: { home: number; away: number };
+  /**
+   * Prix de recrutement d'un journalier ayant joué le match : coût de son
+   * poste + surcoût de l'évolution qu'il a prise à l'étape 3. Résolu par la
+   * page (qui connaît les évolutions stagées) ; le serveur le recalcule à
+   * la validation.
+   */
+  journeymanHireCost?: (journeymanId: string) => number | null;
 }) {
   const [winH, setWinH] = useState<string>(
     initial.winningsHomeManual?.toString() ?? "",
@@ -1667,11 +1802,30 @@ export function PostMatchPanel({
     }
   };
 
+  /**
+   * Trésorerie disponible à l'étape 4 de la séquence de fin de match
+   * (EMBAUCHES) : cagnotte FIGÉE au début du match + gains consignés à
+   * l'étape 1. Les coups de pouce de l'avant-match sont déjà payés (petty
+   * cash / trésorerie) et les erreurs coûteuses viennent APRÈS (étape 5).
+   */
+  const treasuryBefore = (
+    team: SheetTeam | null,
+    manualWinnings: string,
+    auto: number,
+  ): number =>
+    (team?.treasury ?? 0) +
+    (manualWinnings !== "" ? Number(manualWinnings) || 0 : auto);
+
   const sides = [
     {
       side: "home" as const,
       team: home,
       name: home?.name ?? "Domicile",
+      treasuryBeforePurchases: treasuryBefore(
+        home,
+        winH,
+        autoWinnings?.home ?? 0,
+      ),
       win: winH,
       setWin: setWinH,
       fans: fansH,
@@ -1692,6 +1846,11 @@ export function PostMatchPanel({
       side: "away" as const,
       team: away,
       name: away?.name ?? "Extérieur",
+      treasuryBeforePurchases: treasuryBefore(
+        away,
+        winA,
+        autoWinnings?.away ?? 0,
+      ),
       win: winA,
       setWin: setWinA,
       fans: fansA,
@@ -1864,6 +2023,10 @@ export function PostMatchPanel({
                 disabled={disabled}
                 testId={`purchases-${c.side}`}
                 team={c.team}
+                treasuryBefore={c.treasuryBeforePurchases}
+                journeymanHireCost={
+                  journeymanHireCost ?? (() => null)
+                }
               />
               <p className="mt-1 text-[10px] text-slate-500">
                 « Dépense diverse » débite seulement la trésorerie (aucun
@@ -1877,12 +2040,7 @@ export function PostMatchPanel({
               </div>
               <ExpensiveMistakeHelper
                 treasuryAtStep={
-                  (c.team?.treasury ?? 0) +
-                  (c.win !== ""
-                    ? Number(c.win) || 0
-                    : ((c.side === "home"
-                        ? autoWinnings?.home
-                        : autoWinnings?.away) ?? 0)) -
+                  c.treasuryBeforePurchases -
                   c.buy.reduce((sum, p) => sum + (p.cost || 0), 0)
                 }
                 onAdd={(entry) => c.setCe([...c.ce, entry])}

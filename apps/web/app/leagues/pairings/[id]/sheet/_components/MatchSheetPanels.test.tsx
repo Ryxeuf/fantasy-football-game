@@ -203,6 +203,56 @@ describe("PlayerSelect — journaliers", () => {
   });
 });
 
+describe("PlayerSelect — Star Players engagés", () => {
+  const team: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    starPlayersHired: [
+      {
+        id: "star-home-griff_oberwald",
+        number: 81,
+        name: "Griff Oberwald",
+        position: "star_player",
+        positionName: "Star Player",
+        stats: { ma: 7, st: 4, ag: 2, pa: 3, av: 9 },
+        skills: "block,dodge",
+        slug: "griff_oberwald",
+        cost: 280_000,
+      },
+    ],
+  };
+
+  it("propose le Star Player engagé comme acteur/cible d'évènement", () => {
+    render(
+      <PlayerSelect team={team} value="" onChange={() => {}} testId="ps" />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual([
+      "— joueur —",
+      "N°1 Boris — Trois-quarts",
+      "⭐ Griff Oberwald — Star Player",
+    ]);
+  });
+
+  it("l'exclut des usages « roster réel » (licenciements, SPP persistés)", () => {
+    render(
+      <PlayerSelect
+        team={team}
+        value=""
+        onChange={() => {}}
+        includeJourneymen={false}
+        testId="ps"
+      />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toEqual(["— joueur —", "N°1 Boris — Trois-quarts"]);
+  });
+});
+
 describe("JourneymenPanel", () => {
   const baseTeam: SheetTeam = {
     ...TEAM,
@@ -438,6 +488,85 @@ describe("PostMatchPanel — FR16 assistant Erreurs Coûteuses", () => {
     const helper = screen.getByTestId("expensive-mistake-home");
     expect(helper.textContent).toContain("90");
     expect(helper.textContent).toContain("pas de jet");
+  });
+});
+
+describe("PostMatchPanel — trésorerie disponible pour les achats", () => {
+  it("affiche la cagnotte figée + les gains du match", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={{ ...TEAM, treasury: 100_000 }}
+        away={null}
+        onSave={vi.fn()}
+        autoWinnings={{ home: 50_000, away: 0 }}
+      />,
+    );
+    const hint = screen.getByTestId("purchases-home-treasury");
+    expect(hint.textContent).toContain("Trésorerie disponible");
+    expect(hint.textContent).toContain("150");
+  });
+
+  it("décompte les achats et alerte sur un dépassement", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "reroll", name: "", cost: 200_000 }],
+        }}
+        home={{ ...TEAM, treasury: 100_000 }}
+        away={null}
+        onSave={vi.fn()}
+        autoWinnings={{ home: 50_000, away: 0 }}
+      />,
+    );
+    const hint = screen.getByTestId("purchases-home-treasury");
+    expect(hint.textContent).toContain("dépassement de trésorerie");
+  });
+});
+
+describe("PostMatchPanel — recrutement d'un journalier", () => {
+  const teamWithJourneyman: SheetTeam = {
+    ...TEAM,
+    players: [sheetPlayer()],
+    journeymen: [
+      {
+        id: "journeyman-home-1",
+        number: 12,
+        name: "Journalier 1",
+        position: "human_lineman",
+        positionName: "Journalier (Trois-quarts)",
+        stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+        skills: "loner-4",
+        cost: 50_000,
+      },
+    ],
+  };
+
+  it("propose les journaliers du match et pré-remplit leur prix", () => {
+    const onSave = vi.fn();
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "journeyman", name: "", cost: 0 }],
+        }}
+        home={teamWithJourneyman}
+        away={null}
+        onSave={onSave}
+        journeymanHireCost={() => 70_000}
+      />,
+    );
+    const picker = screen.getByTestId("purchases-home-journeyman-0");
+    expect(
+      within(picker)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["journalier…", "N°12 Journalier 1 — Journalier (Trois-quarts)"]);
+
+    fireEvent.change(picker, { target: { value: "journeyman-home-1" } });
+    // Prix pré-rempli = poste + surcoût de l'évolution de l'étape 3.
+    expect(screen.getByDisplayValue("70000")).toBeTruthy();
   });
 });
 

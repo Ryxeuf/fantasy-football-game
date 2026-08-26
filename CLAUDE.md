@@ -309,6 +309,98 @@ specifique). Au fil des matches completed d'un round, on appelle
 
 Evite un trigger explicite "round completed", marche par accumulation.
 
+### Séquence de fin de match BB : l'ORDRE des étapes est une règle
+
+Livre p.68 : 1/ consigner résultats et gains — 2/ fans dévoués —
+3/ **AMÉLIORATION DE JOUEURS** — 4/ **EMBAUCHES puis RENVOIS** —
+5/ erreurs coûteuses. Ce n'est pas cosmétique :
+
+- une compétence gagnée à l'étape 3 **change le prix de recrutement** d'un
+  journalier (et la VE de l'équipe au moment des achats) ;
+- les embauches précèdent les renvois : s'il n'y a pas la place pour un
+  positionnel, il faut attendre le match suivant ;
+- un joueur **mort** est retiré AVANT toute autre action d'après-match : sa
+  place (et son numéro) sont libres pour un recrutement.
+
+`recordOfflineLeagueResult` joue l'étape 3 via un hook injecté
+(`applyAdvancements`) plutôt qu'après coup — c'est le seul point où la
+feuille de match peut s'insérer au bon endroit de la séquence.
+
+```ts
+const outcome = await recordOfflineLeagueResult({
+  ...offlineInput,
+  applyAdvancements, // joué entre PSP/blessures et achats
+});
+```
+
+Piège associé : compter les joueurs « vivants » en JS (`!p.dead`) sans
+filtrer `firedAt` laisse un licencié occuper un des 16 emplacements. Le
+filtre canonique `ACTIVE_PLAYER_WHERE` s'applique aussi aux caps de roster.
+
+### Joueurs SYNTHÉTIQUES de feuille de match (journaliers, Star Players)
+
+Deux familles de joueurs jouent le match sans exister au roster :
+journaliers (`journeyman-<side>-<n>`) et Star Players engagés en coup de
+pouce (`star-<side>-<slug>`). Ils sont **dérivés** à la lecture de la
+feuille (jamais persistés), acceptés par `LeagueMatchEvent` (pas de FK sur
+`actorPlayerId`/`targetPlayerId`) et exclus de toute persistance post-match
+via `isSyntheticSheetPlayerId` — SPP, blessures, SPP bonus, licenciements.
+
+Corollaire : tout nouveau flux « roster réel » doit filtrer par cette
+fonction, et tout nouveau picker d'évènement doit les PROPOSER (sinon on ne
+peut pas leur attribuer un TD ou le titre de Joueur du Match).
+
+Un journalier peut être **recruté** en fin de match (`kind: "journeyman"`) :
+il perd Solitaire, garde ses PSP et l'évolution de l'étape 3. La saisie ne
+porte que l'id du journalier — le serveur redérive prix, poste, PSP
+officiels et évolution (`enrichJourneymanPurchases` + `buildJourneymanHire`).
+
+### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
+
+Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre
+pendant laquelle les valeurs live bougent — bug observé : TV et cagnotte
+différentes entre le brouillon et la feuille validée. `captureMatchSnapshots`
+fige l'ÉTAT COMPLET (joueurs, staff, VE/VEA, trésorerie, fans, journaliers)
+à `createMatchSheet`, et rattrape les feuilles antérieures **à la lecture**
+en PRÉSERVANT les valeurs déjà figées (`parseFrozenTeamValues`).
+
+### `computedSpp` doit couvrir les joueurs SANS stat-line
+
+Le summarizer ne produit une stat-line que pour les joueurs ayant un
+évènement. Un **Joueur du Match** sans TD/sortie/passe n'en a donc pas, et
+son palier d'évolution n'était pas proposé avant la validation — alors que
+la validation lui créditait bien ses PSP. Toute dérivation de PSP doit
+ajouter explicitement les JDM (`computeSheetSpp`, partagé entre la lecture
+et la validation pour que les deux ne divergent jamais).
+
+### Contenu généré automatiquement ⇒ publication explicite
+
+Le bracket de playoffs est généré par un hook à la clôture de la phase
+régulière : les coachs découvraient un bracket provisoire avant que le
+commissaire ait corrigé les seeds. Pattern : un flag de publication + un
+endpoint de bascule commissaire, et **les deux** lectures concernées gatées
+(le bracket ET les rounds `kind=playoff` du calendrier).
+
+Piège de rétro-compat : `prisma/migrations/` est **gitignoré** ici, le
+schéma est appliqué en prod par `prisma db push` (cf. `scripts/db-migrate.sh`)
+— donc **aucun backfill de migration n'est possible**. Un flag booléen
+simple masquerait d'un coup tous les brackets déjà consultés par les
+ligues. D'où le **booléen NULLABLE à trois états** :
+
+```prisma
+/// null = saison antérieure (VISIBLE), false = généré non publié, true = publié
+playoffsPublished Boolean?
+```
+
+`db push` pose `null` sur l'existant (donc visible), et c'est
+`startPlayoffs` qui écrit le `false` explicite sur les brackets neufs.
+Règle générale : toute colonne de gating ajoutée à ce repo doit être
+lisible **sans** backfill.
+
+Pour un endpoint public dont la réponse dépend du rôle, utiliser
+`optionalAuthUser` (renseigne `req.user` si un token valide est présent,
+ne rejette jamais) plutôt que de dupliquer la route.
+
 ### Soft delete trace + reversion VERIFIEE (morts/licenciements)
 Un statut qui retire une entite du perimetre actif (mort, licenciement)
 n'est jamais un DELETE : c'est un flag + la **provenance** de qui l'a
@@ -488,6 +580,14 @@ qui passe des poids tactiques tombera sur le slow path. La majorite
 des tests et de gameplay direct ne passe pas de weights -> hot cache.
 
 ## Pieges connus
+
+### Une compétence déjà possédée n'est refusée nulle part par défaut
+
+`applyAdvancementChoice` concaténait un doublon dans le CSV `skills` (le
+commentaire renvoyait la vérification « au caller », qui ne la faisait pas)
+et le pool de l'éditeur proposait les compétences déjà apprises. Seul le
+tirage `random-primary` les excluait. Garde en place : refus serveur
+`skill-already-owned`, vérifié AVANT tout le reste de la branche compétence.
 
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)
 La fonction retourne le premier seuil **au-dessus** de `spp`. Donc

@@ -34,17 +34,25 @@ import {
   type OfflineInjuryInput,
   type OfflineInjuryType,
 } from "./league-offline-result";
-import { parsePurchases } from "./league-offline-purchases";
+import {
+  parsePurchases,
+  type OfflinePurchaseInput,
+} from "./league-offline-purchases";
 import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { reverseOfflineLeagueResult } from "./league-offline-edit";
 import {
+  buildJourneymanHire,
   deriveJourneymen,
-  isJourneymanId,
   linemanPositionsForRoster,
   parseJourneymenChoice,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import {
+  deriveSheetStarPlayers,
+  isSyntheticSheetPlayerId,
+  type SheetStarPlayer,
+} from "./league-sheet-star-players";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
@@ -59,6 +67,8 @@ import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
+  getNextAdvancementPspCost,
+  surchargeForAdvancement,
   calculatePettyCash,
   getInducementCost,
   getInducementMaxQuantity,
@@ -183,64 +193,140 @@ function isCommissioner(ctx: PairingContext, userId: string): boolean {
 }
 
 /**
- * Fige l'en-tête (VE/VEA/trésorerie/fans) des DEUX équipes au DÉMARRAGE de
- * la feuille (création). Stocké dans `rosterSnapshotHome/Away` sous forme
- * « en-tête seul » (`headerOnly: true`, sans liste de joueurs) : la version
- * complète du roster (E11) remplace ce gel à la 1re soumission en PRÉSERVANT
- * ces valeurs. Best-effort : un échec ne bloque pas l'ouverture.
+ * Fige l'ÉTAT COMPLET des DEUX équipes au DÉMARRAGE de la feuille : joueurs
+ * (avec compétences, caractéristiques et PSP), staff (relances, pom-pom
+ * girls, assistants, apothicaire), VE/VEA, trésorerie et fans dévoués — plus
+ * les journaliers alignés. C'est la « version du match » : tout ce qui suit
+ * (gains, évolutions, achats, licenciements) fait bouger le roster live mais
+ * ne doit JAMAIS rétro-modifier la feuille.
+ *
+ * Stocké dans `rosterSnapshotHome/Away` (RosterSnapshot sérialisé, cf.
+ * `cup-roster-snapshot`). Best-effort : un échec ne bloque pas l'ouverture,
+ * et le gel est alors rattrapé à la première lecture ou soumission.
  */
-async function captureHeaderSnapshots(
-  pairingId: string,
-): Promise<Record<string, string> | null> {
+async function captureSideSnapshot(
+  team: MatchSheetTeam | null,
+  side: "home" | "away",
+  journeymenChoiceRaw: unknown,
+  /** Valeurs déjà figées à préserver (regel d'une feuille legacy). */
+  preserved: ReturnType<typeof parseFrozenTeamValues> = null,
+): Promise<string | null> {
+  if (!team?.teamId) return null;
+  // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs absents
+  // (missNextMatch) et la valeur stockée peut être obsolète (blessure
+  // appliquée sans recalcul). Best-effort : en cas d'échec, la capture
+  // part des valeurs stockées.
   try {
-    const teams = await loadSheetTeams(pairingId);
-    const capture = async (
-      team: MatchSheetTeam | null,
-      side: "home" | "away",
-    ): Promise<string | null> => {
-      if (!team?.teamId) return null;
-      // VE/VEA fraîches avant gel (la VEA exclut les absents) ; en cas
-      // d'échec on fige les valeurs stockées.
-      let teamValue = team.teamValue;
-      let currentValue = team.currentValue;
-      try {
-        const fresh = await updateTeamValues(prisma, team.teamId);
-        if (fresh) {
-          teamValue = fresh.teamValue;
-          currentValue = fresh.currentValue;
-        }
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "unknown";
-        serverLog.error(
-          `[league-match-sheet] refresh VE/VEA avant gel d'en-tête échoué (${side}): ${msg}`,
-        );
-      }
-      return JSON.stringify({
-        capturedAt: Date.now(),
-        headerOnly: true,
-        teamValue,
-        currentValue,
-        treasury: team.treasury,
-        dedicatedFans: team.dedicatedFans,
-      });
-    };
-    const home = await capture(teams.home, "home");
-    const away = await capture(teams.away, "away");
-    const data: Record<string, string> = {};
-    if (home) data.rosterSnapshotHome = home;
-    if (away) data.rosterSnapshotAway = away;
-    return Object.keys(data).length > 0 ? data : null;
+    await updateTeamValues(prisma, team.teamId);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
-    serverLog.error(`[league-match-sheet] gel d'en-tête au démarrage échoué: ${msg}`);
-    return null;
+    serverLog.error(
+      `[league-match-sheet] refresh VE/VEA avant capture échoué (${side}): ${msg}`,
+    );
   }
+  // Les joueurs absents (missNextMatch) ne participent pas au match : ils
+  // sont exclus de la « version du match » figée.
+  const snap = await captureRosterSnapshot(team.teamId, {
+    excludeMissNextMatch: true,
+  });
+  if (!snap) return null;
+  const base = {
+    ...snap,
+    teamValue: preserved?.teamValue ?? snap.teamValue,
+    currentValue: preserved?.currentValue ?? snap.currentValue,
+    treasury: preserved?.treasury ?? snap.treasury,
+    dedicatedFans: preserved?.dedicatedFans ?? snap.dedicatedFans,
+    rerolls: preserved?.rerolls ?? snap.rerolls,
+    cheerleaders: preserved?.cheerleaders ?? snap.cheerleaders,
+    assistants: preserved?.assistants ?? snap.assistants,
+    apothecary: preserved?.apothecary ?? snap.apothecary,
+  };
+  const journeymen = deriveJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+  });
+  if (journeymen.length === 0) return JSON.stringify(base);
+  // Règle BB : les journaliers alignés comptent dans la VEA du match
+  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête.
+  const journeymenValue = journeymen.reduce((sum, j) => sum + j.cost, 0);
+  return JSON.stringify({
+    ...base,
+    currentValue: base.currentValue + journeymenValue,
+    players: [
+      ...base.players,
+      ...journeymen.map((j) => ({
+        name: j.name,
+        position: j.positionName,
+        number: j.number,
+        ma: j.stats.ma,
+        st: j.stats.st,
+        ag: j.stats.ag,
+        pa: j.stats.pa,
+        av: j.stats.av,
+        skills: j.skills,
+        spp: 0,
+        advancements: "[]",
+      })),
+    ],
+  });
 }
 
 /**
- * Snapshot « en-tête seul » posé au démarrage de la feuille : les valeurs
- * (VE/VEA/trésorerie/fans) sont figées mais le roster et les journaliers
- * ne sont PAS bakés dedans (contrairement au snapshot E11 complet).
+ * Gèle les deux côtés d'une feuille. `sheet` porte l'état déjà figé : un
+ * côté déjà gelé COMPLET est laissé tel quel ; un gel « en-tête seul »
+ * (feuilles antérieures) est complété en préservant ses valeurs.
+ * Retourne les colonnes à écrire (vide = rien à faire).
+ */
+async function captureMatchSnapshots(
+  pairingId: string,
+  sheet: {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  },
+): Promise<Record<string, string>> {
+  const data: Record<string, string> = {};
+  try {
+    const needs = (raw: unknown): boolean => !raw || isHeaderOnlySnapshot(raw);
+    const needsHome = needs(sheet.rosterSnapshotHome);
+    const needsAway = needs(sheet.rosterSnapshotAway);
+    if (!needsHome && !needsAway) return data;
+    const teams = await loadSheetTeams(pairingId);
+    if (needsHome) {
+      const json = await captureSideSnapshot(
+        teams.home,
+        "home",
+        sheet.journeymenHome,
+        parseFrozenTeamValues(sheet.rosterSnapshotHome),
+      );
+      if (json) data.rosterSnapshotHome = json;
+    }
+    if (needsAway) {
+      const json = await captureSideSnapshot(
+        teams.away,
+        "away",
+        sheet.journeymenAway,
+        parseFrozenTeamValues(sheet.rosterSnapshotAway),
+      );
+      if (json) data.rosterSnapshotAway = json;
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[league-match-sheet] gel de la feuille échoué: ${msg}`);
+    return {};
+  }
+  return data;
+}
+
+/**
+ * Snapshot « en-tête seul » posé au démarrage des feuilles ANTÉRIEURES au
+ * gel complet : les valeurs (VE/VEA/trésorerie/fans) sont figées mais le
+ * roster et les journaliers ne sont PAS bakés dedans. Il est complété (en
+ * préservant ses valeurs) à la première occasion.
  */
 function isHeaderOnlySnapshot(raw: unknown): boolean {
   let obj: unknown = raw;
@@ -258,8 +344,9 @@ function isHeaderOnlySnapshot(raw: unknown): boolean {
 /**
  * Crée (ou retourne) la feuille de match d'un pairing. Idempotent :
  * si elle existe deja, on la retourne. Accessible aux 2 coachs + au
- * commissaire. À la création, l'en-tête (VE/VEA/trésorerie/fans) des deux
- * équipes est figé : la feuille garde les valeurs du DÉMARRAGE du match.
+ * commissaire. À la création, l'ÉTAT COMPLET des deux équipes est figé
+ * (joueurs, staff, VE/VEA, trésorerie, fans) : la feuille garde la
+ * « version du match » du DÉMARRAGE de la rencontre.
  */
 export async function createMatchSheet(input: {
   pairingId: string;
@@ -282,19 +369,19 @@ export async function createMatchSheet(input: {
     data: { pairingId: input.pairingId, status: "draft" },
   });
 
-  // Gel de l'en-tête au démarrage (best-effort) : VE/VEA ET trésoreries
-  // sont figées dès l'ouverture de la feuille.
-  const headerSnapshots = await captureHeaderSnapshots(input.pairingId);
-  if (headerSnapshots) {
+  // Gel complet au démarrage (best-effort) : roster, staff, VE/VEA,
+  // trésoreries et fans sont figés dès l'ouverture de la feuille.
+  const snapshots = await captureMatchSnapshots(input.pairingId, created);
+  if (Object.keys(snapshots).length > 0) {
     try {
       return await prisma.leagueMatchSheet.update({
         where: { id: created.id },
-        data: headerSnapshots,
+        data: snapshots,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
       serverLog.error(
-        `[league-match-sheet] écriture du gel d'en-tête échouée: ${msg}`,
+        `[league-match-sheet] écriture du gel de démarrage échouée: ${msg}`,
       );
     }
   }
@@ -733,118 +820,19 @@ export async function submitByCoach(input: {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
 
-  // E11 — fige le roster des DEUX equipes a la premiere soumission
-  // (« version du match » consultable par l'adversaire). Best-effort :
-  // un echec de snapshot ne bloque pas la soumission. Un gel « en-tête
-  // seul » posé à la création est remplacé par la version complète en
-  // PRÉSERVANT les valeurs figées au démarrage (VE/VEA/trésorerie/fans).
-  const sheetSnap = sheet as {
-    rosterSnapshotHome?: unknown;
-    rosterSnapshotAway?: unknown;
-    journeymenHome?: unknown;
-    journeymenAway?: unknown;
-  };
-  const needsFullHome =
-    !sheetSnap.rosterSnapshotHome ||
-    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotHome);
-  const needsFullAway =
-    !sheetSnap.rosterSnapshotAway ||
-    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotAway);
-  let snapshotData: Record<string, unknown> = {};
-  if (needsFullHome || needsFullAway) {
-    try {
-      const teams = await loadSheetTeams(input.pairingId);
-      // Les joueurs absents (missNextMatch) ne participent pas au match :
-      // ils sont exclus de la « version du match » figee. Si l'equipe
-      // aligne moins de 11 joueurs, les journaliers derives completent la
-      // version du match.
-      const captureSide = async (
-        team: MatchSheetTeam | null,
-        side: "home" | "away",
-      ): Promise<string | null> => {
-        if (!team?.teamId) return null;
-        // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs
-        // absents (missNextMatch) et la valeur stockée peut être
-        // obsolète (blessure appliquée sans recalcul). Best-effort : en
-        // cas d'échec, la capture part des valeurs stockées.
-        try {
-          await updateTeamValues(prisma, team.teamId);
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : "unknown";
-          serverLog.error(
-            `[league-match-sheet] refresh VE/VEA avant capture échoué (${side}): ${msg}`,
-          );
-        }
-        const snap = await captureRosterSnapshot(team.teamId, {
-          excludeMissNextMatch: true,
-        });
-        if (!snap) return null;
-        // En-tête figé au démarrage (gel « header-only » de la création) :
-        // il prime sur les valeurs re-capturées, pour que VE/VEA ET
-        // trésorerie restent celles du début du match.
-        const preserved = parseFrozenTeamValues(
-          side === "home"
-            ? sheetSnap.rosterSnapshotHome
-            : sheetSnap.rosterSnapshotAway,
-        );
-        const base = {
-          ...snap,
-          teamValue: preserved?.teamValue ?? snap.teamValue,
-          currentValue: preserved?.currentValue ?? snap.currentValue,
-          treasury: preserved?.treasury ?? snap.treasury,
-          dedicatedFans: preserved?.dedicatedFans ?? snap.dedicatedFans,
-        };
-        const journeymen = deriveJourneymen({
-          side,
-          roster: team.roster,
-          ruleset: team.ruleset,
-          players: team.players,
-          chosenPosition: parseJourneymenChoice(
-            side === "home"
-              ? sheetSnap.journeymenHome
-              : sheetSnap.journeymenAway,
-          ),
-        });
-        if (journeymen.length === 0) return JSON.stringify(base);
-        // Règle BB : les journaliers alignés comptent dans la VEA du
-        // match (CTV des coups de pouce) — leur valeur est figée avec
-        // l'en-tête.
-        const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
-        return JSON.stringify({
-          ...base,
-          currentValue: base.currentValue + journeymenValue,
-          players: [
-            ...base.players,
-            ...journeymen.map((j) => ({
-              name: j.name,
-              position: j.positionName,
-              number: j.number,
-              ma: j.stats.ma,
-              st: j.stats.st,
-              ag: j.stats.ag,
-              pa: j.stats.pa,
-              av: j.stats.av,
-              skills: j.skills,
-              spp: 0,
-              advancements: "[]",
-            })),
-          ],
-        });
-      };
-      if (needsFullHome) {
-        const json = await captureSide(teams.home, "home");
-        if (json) snapshotData.rosterSnapshotHome = json;
-      }
-      if (needsFullAway) {
-        const json = await captureSide(teams.away, "away");
-        if (json) snapshotData.rosterSnapshotAway = json;
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "unknown";
-      serverLog.error(`[league-match-sheet] roster snapshot failed: ${msg}`);
-      snapshotData = {};
-    }
-  }
+  // Filet de sécurité : le gel complet est normalement posé à la CRÉATION
+  // de la feuille. Une feuille antérieure au gel complet (ou dont la
+  // capture avait échoué) est rattrapée ici, en préservant les valeurs
+  // déjà figées. Best-effort : un échec ne bloque pas la soumission.
+  const snapshotData = await captureMatchSnapshots(
+    input.pairingId,
+    sheet as {
+      rosterSnapshotHome?: unknown;
+      rosterSnapshotAway?: unknown;
+      journeymenHome?: unknown;
+      journeymenAway?: unknown;
+    },
+  );
 
   const next = nextStatusOnSubmit(sheet.status, side);
   const updated = await prisma.leagueMatchSheet.update({
@@ -1041,12 +1029,13 @@ export function buildOfflineInputFromSummary(
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
 
-  // Les journaliers sont des joueurs SYNTHETIQUES de la feuille (aucune
-  // ligne TeamPlayer) : leurs stats/blessures/bonus restent visibles sur
-  // la feuille mais ne doivent PAS partir en persistance post-match
-  // (updates Prisma sur des ids inexistants).
+  // Les journaliers ET les Star Players engagés sont des joueurs
+  // SYNTHETIQUES de la feuille (aucune ligne TeamPlayer) : leurs
+  // stats/blessures/bonus restent visibles sur la feuille mais ne doivent
+  // PAS partir en persistance post-match (updates Prisma sur des ids
+  // inexistants).
   const playerStats: OfflinePlayerStatInput[] = summary.playerStats
-    .filter((p) => !isJourneymanId(p.playerId))
+    .filter((p) => !isSyntheticSheetPlayerId(p.playerId))
     .map((p) => ({
       teamPlayerId: p.playerId,
       touchdowns: p.touchdowns,
@@ -1060,7 +1049,7 @@ export function buildOfflineInputFromSummary(
   // Les MVP sans stat-line (joueur primé sans event) doivent quand meme
   // recevoir le flag mvp -> on les ajoute.
   for (const id of motm) {
-    if (isJourneymanId(id)) continue;
+    if (isSyntheticSheetPlayerId(id)) continue;
     if (!playerStats.some((p) => p.teamPlayerId === id)) {
       playerStats.push({ teamPlayerId: id, mvp: true });
     }
@@ -1070,7 +1059,7 @@ export function buildOfflineInputFromSummary(
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
   for (const inj of summary.injuries) {
-    if (isJourneymanId(inj.playerId)) continue;
+    if (isSyntheticSheetPlayerId(inj.playerId)) continue;
     // A62 — la victime d'un other_elim est portee par actorPlayerId
     // (auto-elimination sans cible) : on matche acteur OU cible.
     const src = eventsForMeta.find(
@@ -1116,7 +1105,7 @@ export function buildOfflineInputFromSummary(
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
     sppBonus: parseSppBonus(sheet.sppBonus).filter(
-      (b) => !isJourneymanId(b.teamPlayerId),
+      (b) => !isSyntheticSheetPlayerId(b.teamPlayerId),
     ),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
@@ -1125,7 +1114,7 @@ export function buildOfflineInputFromSummary(
     purchasesAway: parsePurchases(sheet.purchasesAway),
     // Licenciements -> firedAt (retire du roster actif, reversible).
     firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
-      (id) => !isJourneymanId(id),
+      (id) => !isSyntheticSheetPlayerId(id),
     ),
   };
 }
@@ -1186,6 +1175,82 @@ function parseStringArray(raw: unknown): string[] {
  * `both_submitted` et l'erreur est propagee — pas de validation
  * partielle.
  */
+/**
+ * Étape 4 de la séquence BB (EMBAUCHES) — matérialise les recrutements de
+ * journaliers saisis sur la feuille.
+ *
+ * La saisie du coach ne porte que l'id synthétique du journalier : le
+ * serveur redérive le journalier (poste, compétences, stats), ses PSP
+ * officiels du match et l'évolution stagée pour lui à l'étape 3, puis
+ * calcule le prix (coût du poste + surcoût de l'évolution) et l'état du
+ * TeamPlayer à créer. Un id inconnu, un journalier absent ou un doublon
+ * sont ignorés (l'achat retombe en « dépense diverse » : la trésorerie est
+ * débitée, aucun joueur créé).
+ */
+function enrichJourneymanPurchases(input: {
+  purchases: readonly OfflinePurchaseInput[];
+  side: "home" | "away";
+  team: MatchSheetTeam | null;
+  choiceRaw: unknown;
+  staged: readonly StagedAdvancement[];
+  computedSpp: Record<string, number>;
+}): OfflinePurchaseInput[] {
+  const { purchases, side, team, staged, computedSpp } = input;
+  if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
+  const journeymen = team
+    ? deriveJourneymen({
+        side,
+        roster: team.roster,
+        ruleset: team.ruleset,
+        players: team.players,
+        chosenPosition: parseJourneymenChoice(input.choiceRaw),
+      })
+    : [];
+  const byId = new Map(journeymen.map((j) => [j.id, j]));
+  const hired = new Set<string>();
+
+  return purchases.map((p) => {
+    if (p.kind !== "journeyman") return p;
+    const journeyman = p.journeymanId ? byId.get(p.journeymanId) : undefined;
+    if (!journeyman || hired.has(journeyman.id)) {
+      serverLog.warn(
+        `[league-match-sheet] recrutement de journalier ignoré (${side}) : id="${p.journeymanId ?? ""}"`,
+      );
+      return { ...p, kind: "other" as const };
+    }
+    hired.add(journeyman.id);
+    const entry = staged.find((e) => e.playerId === journeyman.id);
+    const hire = buildJourneymanHire({
+      journeyman,
+      earnedSpp: computedSpp[journeyman.id] ?? 0,
+      advancement: entry
+        ? {
+            type: entry.type,
+            skillSlug: entry.skillSlug,
+            stat: entry.stat,
+            d8: entry.d8,
+            // Un journalier n'a jamais d'avancement : 1er palier.
+            pspCost: getNextAdvancementPspCost(0, entry.type),
+            valueSurcharge: surchargeForAdvancement({
+              type: entry.type,
+              stat: entry.stat ?? undefined,
+            }),
+          }
+        : null,
+    });
+    return {
+      ...p,
+      cost: hire.cost,
+      position: journeyman.position,
+      name: p.name || journeyman.name,
+      spp: hire.spp,
+      skills: hire.skills,
+      advancements: hire.advancements,
+      stats: hire.stats,
+    };
+  });
+}
+
 export async function validateByCommissioner(input: {
   pairingId: string;
   userId: string;
@@ -1332,7 +1397,89 @@ export async function validateByCommissioner(input: {
     events,
     { home: budget.home.pettyCash, away: budget.away.pettyCash },
   );
-  const outcome = await recordOfflineLeagueResult(offlineInput);
+
+  // Évolutions stagées par les coachs pendant la saisie. Séquence BB de
+  // fin de match (livre p.68) : elles s'appliquent à l'ÉTAPE 3, donc
+  // APRÈS l'attribution des PSP/blessures et AVANT les embauches de
+  // l'étape 4 — une compétence gagnée ici change le prix de recrutement
+  // d'un journalier et la VE de l'équipe au moment des achats.
+  // `recordOfflineLeagueResult` déclenche le hook au bon moment ; les
+  // entrées sont réécrites enrichies ({ applied, cost } / { applied:
+  // false, skipReason }) — trace pour l'UI + support du reversal à
+  // l'invalidation. Tolérant : une entrée refusée (PSP insuffisants,
+  // accès, candidats du tirage…) ne bloque pas la validation.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const advData: any = {};
+  const sheetAdv = sheet as {
+    advancementsHome?: unknown;
+    advancementsAway?: unknown;
+  };
+  const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
+  const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
+  // Un JOURNALIER n'a pas de ligne TeamPlayer : son évolution ne peut pas
+  // passer par `applyStagedAdvancements`. Elle est matérialisée à l'étape 4
+  // s'il est RECRUTÉ (cf. `enrichJourneymanPurchases`), sinon perdue avec
+  // lui — il quitte l'équipe à la fin du match.
+  const rosterStaged = (entries: readonly StagedAdvancement[]) =>
+    entries.filter((e) => !isSyntheticSheetPlayerId(e.playerId));
+  const applyAdvancements = async (): Promise<void> => {
+    const rosterHome = rosterStaged(stagedHome);
+    const rosterAway = rosterStaged(stagedAway);
+    if (rosterHome.length > 0 && teamsForBudget.home?.teamId) {
+      advData.advancementsHome = await applyStagedAdvancements({
+        teamId: teamsForBudget.home.teamId,
+        entries: rosterHome,
+      });
+    }
+    if (rosterAway.length > 0 && teamsForBudget.away?.teamId) {
+      advData.advancementsAway = await applyStagedAdvancements({
+        teamId: teamsForBudget.away.teamId,
+        entries: rosterAway,
+      });
+    }
+  };
+
+  // Étape 4 — EMBAUCHES : un journalier recruté est matérialisé avec ce
+  // qu'il a gagné au match (PSP + évolution de l'étape 3, qui renchérit son
+  // prix). Le serveur redérive tout (PSP officiels, coût du poste) : la
+  // saisie du coach ne porte que l'id du journalier.
+  const computedSppForHire = await computeSheetSpp({
+    summary,
+    motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
+    teams: teamsForBudget,
+  });
+  const sheetJourneymenChoice = sheet as {
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  };
+  const enrichedPurchases = {
+    home: enrichJourneymanPurchases({
+      purchases: offlineInput.purchasesHome,
+      side: "home",
+      team: teamsForBudget.home,
+      choiceRaw: sheetJourneymenChoice.journeymenHome,
+      staged: stagedHome,
+      computedSpp: computedSppForHire,
+    }),
+    away: enrichJourneymanPurchases({
+      purchases: offlineInput.purchasesAway,
+      side: "away",
+      team: teamsForBudget.away,
+      choiceRaw: sheetJourneymenChoice.journeymenAway,
+      staged: stagedAway,
+      computedSpp: computedSppForHire,
+    }),
+  };
+
+  const outcome = await recordOfflineLeagueResult({
+    ...offlineInput,
+    purchasesHome: enrichedPurchases.home,
+    purchasesAway: enrichedPurchases.away,
+    ...(rosterStaged(stagedHome).length > 0 ||
+    rosterStaged(stagedAway).length > 0
+      ? { applyAdvancements }
+      : {}),
+  });
 
   let effects: { applied: boolean; reason?: string };
   if ("recorded" in outcome && outcome.recorded) {
@@ -1345,35 +1492,6 @@ export async function validateByCommissioner(input: {
     );
   } else {
     effects = { applied: false };
-  }
-
-  // Évolutions stagées par les coachs pendant la saisie : appliquées
-  // APRÈS l'attribution des PSP (recordOfflineLeagueResult), puis
-  // réécrites enrichies ({ applied, cost } / { applied: false,
-  // skipReason }) — trace pour l'UI + support du reversal à
-  // l'invalidation. Tolérant : une entrée refusée (PSP insuffisants,
-  // accès, candidats du tirage…) ne bloque pas la validation.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const advData: any = {};
-  if (effects.applied) {
-    const sheetAdv = sheet as {
-      advancementsHome?: unknown;
-      advancementsAway?: unknown;
-    };
-    const stagedHome = parseStagedAdvancements(sheetAdv.advancementsHome);
-    const stagedAway = parseStagedAdvancements(sheetAdv.advancementsAway);
-    if (stagedHome.length > 0 && teamsForBudget.home?.teamId) {
-      advData.advancementsHome = await applyStagedAdvancements({
-        teamId: teamsForBudget.home.teamId,
-        entries: stagedHome,
-      });
-    }
-    if (stagedAway.length > 0 && teamsForBudget.away?.teamId) {
-      advData.advancementsAway = await applyStagedAdvancements({
-        teamId: teamsForBudget.away.teamId,
-        entries: stagedAway,
-      });
-    }
   }
 
   const updated = await prisma.leagueMatchSheet.update({
@@ -1725,6 +1843,17 @@ export interface MatchSheetTeam {
    * de variation des fans (D6 vs fans).
    */
   readonly dedicatedFans: number;
+  /**
+   * Staff de l'équipe FIGÉ au début du match (relances, pom-pom girls,
+   * assistants, apothicaire). Comme la VE/VEA et la trésorerie, il est lu
+   * dans le snapshot de la feuille dès qu'il existe.
+   */
+  readonly staff: {
+    readonly rerolls: number;
+    readonly cheerleaders: number;
+    readonly assistants: number;
+    readonly apothecary: boolean;
+  };
   readonly players: readonly MatchSheetPlayer[];
   /**
    * Journaliers derives (equipe a moins de 11 joueurs disponibles).
@@ -1736,6 +1865,12 @@ export interface MatchSheetTeam {
   readonly journeymenOptions?: readonly JourneymanPositionOption[];
   /** Choix courant ({ position } sur la feuille), null = defaut. */
   readonly journeymenChoice?: string | null;
+  /**
+   * Star Players ENGAGÉS en coup de pouce sur cette feuille. Ils jouent le
+   * match : proposés comme acteurs / cibles d'évènement, exclus de la
+   * persistance post-match. Renseignés par getMatchSheet.
+   */
+  readonly starPlayersHired?: readonly SheetStarPlayer[];
 }
 
 /** Libelle de race depuis un roster slug (fallback : le slug brut). */
@@ -1803,6 +1938,10 @@ async function loadSheetTeams(
       treasury: true,
       dedicatedFans: true,
       regionalLeague: true,
+      rerolls: true,
+      cheerleaders: true,
+      assistants: true,
+      apothecary: true,
       owner: { select: { coachName: true } },
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
@@ -1841,6 +1980,10 @@ async function loadSheetTeams(
     treasury?: number | null;
     dedicatedFans?: number | null;
     regionalLeague?: string | null;
+    rerolls?: number | null;
+    cheerleaders?: number | null;
+    assistants?: number | null;
+    apothecary?: boolean | null;
     owner?: { coachName?: string | null } | null;
     players: Array<{
       id: string;
@@ -1890,6 +2033,12 @@ async function loadSheetTeams(
       regionalLeague: t.regionalLeague ?? null,
       // Defaut BB : toute equipe demarre avec 1 fan devoue.
       dedicatedFans: t.dedicatedFans ?? 1,
+      staff: {
+        rerolls: t.rerolls ?? 0,
+        cheerleaders: t.cheerleaders ?? 0,
+        assistants: t.assistants ?? 0,
+        apothecary: t.apothecary ?? false,
+      },
       players: t.players.map((p) => ({
         id: p.id,
         number: p.number,
@@ -1924,6 +2073,10 @@ function parseFrozenTeamValues(raw: unknown): {
   currentValue?: number;
   treasury?: number;
   dedicatedFans?: number;
+  rerolls?: number;
+  cheerleaders?: number;
+  assistants?: number;
+  apothecary?: boolean;
 } | null {
   let obj: unknown = raw;
   if (typeof raw === "string") {
@@ -1942,6 +2095,10 @@ function parseFrozenTeamValues(raw: unknown): {
     currentValue: num(o.currentValue),
     treasury: num(o.treasury),
     dedicatedFans: num(o.dedicatedFans),
+    rerolls: num(o.rerolls),
+    cheerleaders: num(o.cheerleaders),
+    assistants: num(o.assistants),
+    apothecary: typeof o.apothecary === "boolean" ? o.apothecary : undefined,
   };
 }
 
@@ -1985,6 +2142,12 @@ function withFrozenTeamValues(
     currentValue: frozen.currentValue ?? team.currentValue,
     treasury: frozen.treasury ?? team.treasury,
     dedicatedFans: frozen.dedicatedFans ?? team.dedicatedFans,
+    staff: {
+      rerolls: frozen.rerolls ?? team.staff.rerolls,
+      cheerleaders: frozen.cheerleaders ?? team.staff.cheerleaders,
+      assistants: frozen.assistants ?? team.staff.assistants,
+      apothecary: frozen.apothecary ?? team.staff.apothecary,
+    },
   };
 }
 
@@ -2378,6 +2541,65 @@ export async function buildMatchSheetReference(
   };
 }
 
+/**
+ * PSP gagnes sur CE match, par joueur (roster, journaliers et Star Players
+ * engages compris). Meme calcul cote lecture et cote validation : bareme
+ * officiel + modificateur d'equipe (Bagarreurs Brutaux) selon le roster.
+ *
+ * Les Joueurs du Match SANS aucune stat n'ont pas de stat-line dans le
+ * summary : ils sont ajoutes explicitement (leur cote est resolu depuis le
+ * roster) pour que leur palier d'evolution soit propose DES la saisie.
+ */
+async function computeSheetSpp(input: {
+  summary: MatchSummary;
+  motmPlayerIds: unknown;
+  teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+}): Promise<Record<string, number>> {
+  const { summary, teams } = input;
+  const motm = new Set(parseStringArray(input.motmPlayerIds));
+  const sppContext = await loadLeagueSPPContext(prisma, {
+    isLeagueMatch: true,
+    teamARoster: teams.home?.roster ?? "",
+    teamBRoster: teams.away?.roster ?? "",
+  });
+  const out: Record<string, number> = {};
+  for (const s of summary.playerStats) {
+    const modifier = s.side === "home" ? sppContext.teamA : sppContext.teamB;
+    out[s.playerId] = calculatePlayerSPP(
+      {
+        touchdowns: s.touchdowns,
+        casualties: s.casualtiesInflicted,
+        completions: s.completions,
+        interceptions: s.interceptions,
+        ttmLandings: s.ttmLandings,
+        mvp: motm.has(s.playerId),
+      },
+      modifier,
+    );
+  }
+  for (const id of motm) {
+    if (out[id] !== undefined) continue;
+    const side = teams.home?.players.some((p) => p.id === id)
+      ? "home"
+      : teams.away?.players.some((p) => p.id === id)
+        ? "away"
+        : null;
+    if (!side) continue;
+    out[id] = calculatePlayerSPP(
+      {
+        touchdowns: 0,
+        casualties: 0,
+        completions: 0,
+        interceptions: 0,
+        ttmLandings: 0,
+        mvp: true,
+      },
+      side === "home" ? sppContext.teamA : sppContext.teamB,
+    );
+  }
+  return out;
+}
+
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
@@ -2412,16 +2634,40 @@ export async function getMatchSheet(input: {
   }
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
-  const teamsLive = await loadSheetTeams(input.pairingId);
-  // En-tête (TV/VEA/cagnotte/fans) figé au début du match dès que le
-  // roster est figé (1re soumission) : les valeurs live continuent
-  // d'évoluer après validation mais la feuille garde celles du match.
   const sheetSnapRaw = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
+  // Filet de sécurité (feuilles antérieures au gel de démarrage, ou dont
+  // la capture avait échoué) : on gèle à la PREMIÈRE lecture plutôt que
+  // d'attendre la 1re soumission — sinon la feuille afficherait des
+  // valeurs live qui bougent d'une consultation à l'autre.
+  if (
+    sheet.status !== "validated" &&
+    (!sheetSnapRaw.rosterSnapshotHome ||
+      isHeaderOnlySnapshot(sheetSnapRaw.rosterSnapshotHome) ||
+      !sheetSnapRaw.rosterSnapshotAway ||
+      isHeaderOnlySnapshot(sheetSnapRaw.rosterSnapshotAway))
+  ) {
+    const backfill = await captureMatchSnapshots(input.pairingId, sheetSnapRaw);
+    if (Object.keys(backfill).length > 0) {
+      try {
+        await prisma.leagueMatchSheet.update({
+          where: { id: sheet.id },
+          data: backfill,
+        });
+        Object.assign(sheetSnapRaw, backfill);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(
+          `[league-match-sheet] rattrapage du gel à la lecture échoué: ${msg}`,
+        );
+      }
+    }
+  }
+  const teamsLive = await loadSheetTeams(input.pairingId);
   // Feuille pas encore figée : rafraîchit VE/VEA (la VEA exclut les
   // joueurs absents) — la valeur stockée peut être obsolète (blessure
   // appliquée sans recalcul). Self-healing, best-effort.
@@ -2467,29 +2713,11 @@ export async function getMatchSheet(input: {
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
-  const motm = new Set(
-    parseStringArray((sheet as { motmPlayerIds?: unknown }).motmPlayerIds),
-  );
-  const sppContext = await loadLeagueSPPContext(prisma, {
-    isLeagueMatch: true,
-    teamARoster: teams.home?.roster ?? "",
-    teamBRoster: teams.away?.roster ?? "",
+  const computedSpp = await computeSheetSpp({
+    summary,
+    motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
+    teams,
   });
-  const computedSpp: Record<string, number> = {};
-  for (const s of summary.playerStats) {
-    const modifier = s.side === "home" ? sppContext.teamA : sppContext.teamB;
-    computedSpp[s.playerId] = calculatePlayerSPP(
-      {
-        touchdowns: s.touchdowns,
-        casualties: s.casualtiesInflicted,
-        completions: s.completions,
-        interceptions: s.interceptions,
-        ttmLandings: s.ttmLandings,
-        mvp: motm.has(s.playerId),
-      },
-      modifier,
-    );
-  }
 
   const { allowlist: allowedInducements, pack: inducementPack } =
     await loadLeagueInducementRules(input.pairingId);
@@ -2523,9 +2751,30 @@ export async function getMatchSheet(input: {
       journeymenChoice: choice,
     };
   };
+  // Star Players engagés en coup de pouce : ils JOUENT le match, donc ils
+  // doivent apparaître dans les pickers d'acteur / de cible d'évènement.
+  const sheetInducements = sheet as {
+    inducementsHome?: unknown;
+    inducementsAway?: unknown;
+  };
+  const withStarPlayers = async (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): Promise<MatchSheetTeam | null> => {
+    if (!team) return null;
+    const starPlayersHired = await deriveSheetStarPlayers({
+      side,
+      inducements:
+        side === "home"
+          ? sheetInducements.inducementsHome
+          : sheetInducements.inducementsAway,
+      ruleset: team.ruleset,
+    });
+    return starPlayersHired.length > 0 ? { ...team, starPlayersHired } : team;
+  };
   const teamsWithJourneymen = {
-    home: withJourneymen(teams.home, "home"),
-    away: withJourneymen(teams.away, "away"),
+    home: await withStarPlayers(withJourneymen(teams.home, "home"), "home"),
+    away: await withStarPlayers(withJourneymen(teams.away, "away"), "away"),
   };
 
   // A63 — expose des gains auto toujours frais : la partie TD et le bonus

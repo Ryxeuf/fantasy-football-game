@@ -142,8 +142,29 @@ describe("parsePurchases", () => {
         position: null,
         staff: null,
         number: null,
+        journeymanId: null,
+        spp: null,
+        skills: null,
+        advancements: null,
+        stats: null,
       },
     ]);
+  });
+
+  it("parse un recrutement de journalier (kind + journeymanId)", () => {
+    const parsed = parsePurchases([
+      {
+        kind: "journeyman",
+        name: "Journalier 1",
+        cost: 50000,
+        journeymanId: "journeyman-home-1",
+      },
+    ]);
+    expect(parsed[0]).toMatchObject({
+      kind: "journeyman",
+      journeymanId: "journeyman-home-1",
+      cost: 50000,
+    });
   });
 
   it("ignore les entrees illisibles / kinds inconnus / JSON casse", () => {
@@ -254,10 +275,9 @@ describe("applyOfflinePurchasesForTeam", () => {
     expect(m.teamUpdate).not.toHaveBeenCalled();
   });
 
-  it("plafonne a 16 joueurs vivants", async () => {
+  it("plafonne a 16 joueurs au roster actif", async () => {
     const players = Array.from({ length: 16 }, (_, i) => ({
       number: i + 1,
-      dead: false,
     }));
     m.teamFind.mockResolvedValue(teamRow({ players }));
     const out = await applyOfflinePurchasesForTeam("t1", [
@@ -265,6 +285,58 @@ describe("applyOfflinePurchasesForTeam", () => {
     ]);
     expect(m.tpCreate).not.toHaveBeenCalled();
     expect(out.createdPlayerIds).toEqual([]);
+  });
+
+  it("recrute un journalier : perd Solitaire, garde PSP et evolution", async () => {
+    m.teamFind.mockResolvedValue(teamRow({ players: [] }));
+    m.tpCreate.mockResolvedValue({ id: "jm-1" });
+
+    const out = await applyOfflinePurchasesForTeam("t1", [
+      {
+        kind: "journeyman",
+        name: "Journalier 1",
+        cost: 70000,
+        position: "lineman",
+        journeymanId: "journeyman-home-1",
+        spp: 0,
+        skills: "loner-4,block",
+        advancements: JSON.stringify([
+          { skillSlug: "block", type: "primary", isRandom: false, at: 0 },
+        ]),
+        stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+      },
+    ]);
+
+    expect(out.createdPlayerIds).toEqual(["jm-1"]);
+    const data = m.tpCreate.mock.calls[0][0].data;
+    // Solitaire retire (il n'est plus journalier), competence gagnee gardee.
+    expect(data.skills).toBe("block");
+    expect(data.spp).toBe(0);
+    expect(JSON.parse(data.advancements)).toHaveLength(1);
+    expect(data.matchesPlayed).toBe(1);
+  });
+
+  it("ne compte que le roster ACTIF : un mort ou un licencie libere sa place", async () => {
+    // 15 joueurs actifs : la place du 16e (mort ou licencie ce match) est
+    // libre — le filtre Prisma les exclut deja de `players`.
+    const players = Array.from({ length: 15 }, (_, i) => ({
+      number: i + 1,
+    }));
+    m.teamFind.mockResolvedValue(teamRow({ players }));
+    m.tpCreate.mockResolvedValue({ id: "np-1" });
+
+    const out = await applyOfflinePurchasesForTeam("t1", [
+      { kind: "player", name: "Remplacant", cost: 50000, position: "lineman" },
+    ]);
+
+    // Le `where` du chargement exclut morts ET licencies (ACTIVE_PLAYER_WHERE).
+    expect(m.teamFind.mock.calls[0][0].select.players.where).toMatchObject({
+      dead: false,
+      firedAt: null,
+    });
+    expect(out.createdPlayerIds).toEqual(["np-1"]);
+    // Le numero du sortant est reutilisable (16 est le 1er libre ici).
+    expect(m.tpCreate.mock.calls[0][0].data.number).toBe(16);
   });
 });
 
