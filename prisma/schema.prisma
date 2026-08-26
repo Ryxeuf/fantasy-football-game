@@ -557,17 +557,17 @@ model TeamPlayer {
 /// Invariant : au plus UN événement avec `revertedAt = null` par joueur
 /// (un joueur ne peut pas être mort ET licencié).
 model TeamPlayerStatusEvent {
-  id          String     @id @default(cuid())
-  player      TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId    String
+  id       String     @id @default(cuid())
+  player   TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId String
   /// Dénormalisé pour les requêtes « historique de l'équipe ».
-  teamId      String
+  teamId   String
   /// "death" | "firing".
-  kind        String
+  kind     String
   /// "match_sheet" | "online_match" | "commissioner" | "admin" | "legacy".
   sourceType  String
   /// Id de l'entité source (matchId...). Chaîne vide si sans entité.
-  sourceId    String     @default("")
+  sourceId    String  @default("")
   /// Utilisateur à l'origine (commissaire/admin), null si système.
   actorUserId String?
   /// Motif libre (raison d'annulation, note du commissaire).
@@ -575,7 +575,7 @@ model TeamPlayerStatusEvent {
   /// Non-null quand le statut a été levé (résurrection / réintégration).
   revertedAt  DateTime?
   revertedBy  String?
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([playerId, revertedAt])
   @@index([sourceType, sourceId])
@@ -596,23 +596,23 @@ model TeamStarPlayer {
 
 // Modèle pour les compétences (skills)
 model Skill {
-  id                    String   @id @default(cuid())
-  slug                  String // Identifiant unique (ex: "block", "dodge")
-  ruleset               Ruleset  @default(season_2) // Ruleset de la compétence
-  nameFr                String // Nom français (ex: "Blocage")
-  nameEn                String // Nom anglais (ex: "Block")
-  description           String // Description française de la compétence
-  descriptionEn         String? // Description anglaise de la compétence (optionnelle pour compatibilité)
-  category              String // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates"
-  isElite               Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
-  isPassive             Boolean  @default(false) // Compétence passive (soulignée)
-  isModified            Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
+  id            String   @id @default(cuid())
+  slug          String // Identifiant unique (ex: "block", "dodge")
+  ruleset       Ruleset  @default(season_2) // Ruleset de la compétence
+  nameFr        String // Nom français (ex: "Blocage")
+  nameEn        String // Nom anglais (ex: "Block")
+  description   String // Description française de la compétence
+  descriptionEn String? // Description anglaise de la compétence (optionnelle pour compatibilité)
+  category      String // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates"
+  isElite       Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
+  isPassive     Boolean  @default(false) // Compétence passive (soulignée)
+  isModified    Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
   // Skill réservée (variante star player / règle spéciale câblée en pseudo-skill,
   // ex. mighty-blow-2) : reste valide si déjà possédée, mais ne doit plus être
   // sélectionnable lors d'une nouvelle évolution/création de joueur normal.
-  excludedFromSelection Boolean  @default(false)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  excludedFromSelection Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   positionSkills   PositionSkill[]
@@ -802,23 +802,23 @@ model TournamentRuleset {
 
 // Modèle pour les coupes (tournois)
 model Cup {
-  id                String   @id @default(cuid())
-  name              String // Nom de la coupe (obligatoire)
-  description       String? // Description optionnelle affichée dans la liste des coupes
-  creator           User     @relation("CupCreator", fields: [creatorId], references: [id])
-  creatorId         String
-  ruleset           Ruleset  @default(season_2)
-  format            Format   @default(bb11) // Format imposé aux équipes (BB11 / Sevens)
+  id          String  @id @default(cuid())
+  name        String // Nom de la coupe (obligatoire)
+  description String? // Description optionnelle affichée dans la liste des coupes
+  creator     User    @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId   String
+  ruleset   Ruleset  @default(season_2)
+  format    Format   @default(bb11) // Format imposé aux équipes (BB11 / Sevens)
   /// Règlement de tournoi imposé aux équipes participantes (slug du registre
   /// @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun. Une coupe
   /// avec règlement n'accepte que des équipes créées avec ce même règlement
   /// et active `resurrectionMode` si le pack est un tournoi résurrection.
   tournamentRuleset String?
-  validated         Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
-  isPublic          Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
-  status            String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
+  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
+  status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   /// Configuration des points pour cette coupe
   /// Ces valeurs sont utilisées pour calculer le classement, mais
@@ -1226,33 +1226,33 @@ model LeagueInvitation {
 }
 
 model League {
-  id                 String   @id @default(cuid())
-  name               String
-  description        String?
-  creator            User     @relation("LeagueCreator", fields: [creatorId], references: [id])
-  creatorId          String
-  ruleset            Ruleset  @default(season_3)
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  creator           User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  ruleset           Ruleset  @default(season_3)
   // Règlement de tournoi imposé aux équipes participantes (slug du registre
   // @bb/game-engine, ex : "naf_world_cup_2027"). null = aucun. Une ligue
   // avec règlement n'accepte à l'inscription (join direct ou invitation)
   // que des équipes créées avec ce même règlement.
-  tournamentRuleset  String?
+  tournamentRuleset String?
   // "draft" | "open" | "in_progress" | "completed" | "archived"
-  status             String   @default("draft")
-  isPublic           Boolean  @default(true)
-  maxParticipants    Int      @default(16)
+  status            String   @default("draft")
+  isPublic          Boolean  @default(true)
+  maxParticipants   Int      @default(16)
   // JSON array de slugs de rosters autorises. null = tous rosters autorises.
   // Ex: ["skaven","gnomes","lizardmen","dwarf","imperial_nobility"]
   // pour la ligue L.9 "Open 5 Teams".
-  allowedRosters     String?
+  allowedRosters    String?
   // FR17 — JSON array de slugs de coups de pouce (inducements) autorises pour
   // la ligue. null = tous autorises (defaut). Les Star Players ne sont PAS
   // filtres par ce champ (ils dependent des rosters / regles regionales).
   allowedInducements String?
-  winPoints          Int      @default(3)
-  drawPoints         Int      @default(1)
-  lossPoints         Int      @default(0)
-  forfeitPoints      Int      @default(-1)
+  winPoints         Int      @default(3)
+  drawPoints        Int      @default(1)
+  lossPoints        Int      @default(0)
+  forfeitPoints     Int      @default(-1)
   // L2.C.5 — Ordre de departage configurable. JSON array de slugs
   // parmi : "points" / "td_diff" / "td_for" / "td_against" /
   // "cas_diff" / "cas_for" / "season_elo" / "wins" / "name".
@@ -1262,13 +1262,13 @@ model League {
   // important). Tous les slugs sauf "name" supportent reverse
   // (false = DESC, default ; pas exprimable dans le JSON pour
   // l'instant — toujours DESC sauf "name" qui est ASC).
-  tieBreakRules      String?
+  tieBreakRules     String?
   /// Lot E — Points bonus configurables (JSON array de regles, cf.
   /// `services/league-bonus-points.ts`). null = pas de bonus applique
   /// au scoring. Modifiable tant qu'aucun match n'a ete score.
-  bonusPointsConfig  Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  bonusPointsConfig Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue.
@@ -1284,27 +1284,27 @@ model League {
 // S26.6 — `theme` + `themeYear` : ligues thematiques saisonnieres
 // (Skaven Cup mars, Nordic Challenge avril, Underworld Open mai).
 model LeagueSeason {
-  id                  String    @id @default(cuid())
-  league              League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId            String
-  seasonNumber        Int
-  name                String
+  id            String    @id @default(cuid())
+  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId      String
+  seasonNumber  Int
+  name          String
   // "draft" | "scheduled" | "in_progress" | "completed"
-  status              String    @default("draft")
-  startDate           DateTime?
-  endDate             DateTime?
+  status        String    @default("draft")
+  startDate     DateTime?
+  endDate       DateTime?
   // S26.6 — slug du theme saisonnier (cf. services/league-themes.ts).
   // null si la saison n'est pas thematique (mode classique).
-  theme               String?
+  theme         String?
   // S26.6 — annee canonique du theme (4 chiffres). Toujours present si
   // `theme` est present (couple atomique enforce par le service).
-  themeYear           Int?
+  themeYear     Int?
   // L2.C.3 — taille du bracket de playoffs (top N qualifies pour
   // l'elimination directe en fin de saison reguliere). 0 = pas de
   // playoff (mode classique : champion = 1er du round-robin).
   // Valeurs supportees : 0, 2 (final seulement), 4 (SF + final),
   // 8 (QF + SF + final). 16+ : non supporte pour l'instant.
-  playoffSize         Int       @default(0)
+  playoffSize   Int       @default(0)
   // Publication des playoffs : le bracket est GÉNÉRÉ automatiquement à la
   // fin de la phase régulière, mais reste invisible aux coachs tant que le
   // commissaire ne l'a pas publié (il peut d'abord corriger les seeds, une
@@ -1313,9 +1313,9 @@ model LeagueSeason {
   // L2.B.5 — "Coup de mecene" : option activable par le commissaire.
   // false par defaut => le bonus +100k po n'est PAS disponible pour les
   // coachs. Le commissaire l'active explicitement par saison.
-  meceneEnabled       Boolean   @default(false)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  meceneEnabled Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
@@ -1579,15 +1579,15 @@ model LeagueMatchSheet {
   /// soumission de la feuille (« version du match », consultable par
   /// l'adversaire). String JSON d'un RosterSnapshot
   /// (cf. cup-roster-snapshot.ts).
-  rosterSnapshotHome Json?
-  rosterSnapshotAway Json?
+  rosterSnapshotHome     Json?
+  rosterSnapshotAway     Json?
 
   /// Journaliers — choix du poste de lineman par coach quand l'equipe
   /// aligne moins de 11 joueurs disponibles : { position: slug } | null
   /// (null => lineman de base). La liste des journaliers est DERIVEE
   /// (cf. services/league-sheet-journeymen.ts), pas persistee.
-  journeymenHome Json?
-  journeymenAway Json?
+  journeymenHome         Json?
+  journeymenAway         Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
