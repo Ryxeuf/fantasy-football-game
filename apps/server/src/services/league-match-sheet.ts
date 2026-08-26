@@ -183,64 +183,140 @@ function isCommissioner(ctx: PairingContext, userId: string): boolean {
 }
 
 /**
- * Fige l'en-tête (VE/VEA/trésorerie/fans) des DEUX équipes au DÉMARRAGE de
- * la feuille (création). Stocké dans `rosterSnapshotHome/Away` sous forme
- * « en-tête seul » (`headerOnly: true`, sans liste de joueurs) : la version
- * complète du roster (E11) remplace ce gel à la 1re soumission en PRÉSERVANT
- * ces valeurs. Best-effort : un échec ne bloque pas l'ouverture.
+ * Fige l'ÉTAT COMPLET des DEUX équipes au DÉMARRAGE de la feuille : joueurs
+ * (avec compétences, caractéristiques et PSP), staff (relances, pom-pom
+ * girls, assistants, apothicaire), VE/VEA, trésorerie et fans dévoués — plus
+ * les journaliers alignés. C'est la « version du match » : tout ce qui suit
+ * (gains, évolutions, achats, licenciements) fait bouger le roster live mais
+ * ne doit JAMAIS rétro-modifier la feuille.
+ *
+ * Stocké dans `rosterSnapshotHome/Away` (RosterSnapshot sérialisé, cf.
+ * `cup-roster-snapshot`). Best-effort : un échec ne bloque pas l'ouverture,
+ * et le gel est alors rattrapé à la première lecture ou soumission.
  */
-async function captureHeaderSnapshots(
-  pairingId: string,
-): Promise<Record<string, string> | null> {
+async function captureSideSnapshot(
+  team: MatchSheetTeam | null,
+  side: "home" | "away",
+  journeymenChoiceRaw: unknown,
+  /** Valeurs déjà figées à préserver (regel d'une feuille legacy). */
+  preserved: ReturnType<typeof parseFrozenTeamValues> = null,
+): Promise<string | null> {
+  if (!team?.teamId) return null;
+  // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs absents
+  // (missNextMatch) et la valeur stockée peut être obsolète (blessure
+  // appliquée sans recalcul). Best-effort : en cas d'échec, la capture
+  // part des valeurs stockées.
   try {
-    const teams = await loadSheetTeams(pairingId);
-    const capture = async (
-      team: MatchSheetTeam | null,
-      side: "home" | "away",
-    ): Promise<string | null> => {
-      if (!team?.teamId) return null;
-      // VE/VEA fraîches avant gel (la VEA exclut les absents) ; en cas
-      // d'échec on fige les valeurs stockées.
-      let teamValue = team.teamValue;
-      let currentValue = team.currentValue;
-      try {
-        const fresh = await updateTeamValues(prisma, team.teamId);
-        if (fresh) {
-          teamValue = fresh.teamValue;
-          currentValue = fresh.currentValue;
-        }
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "unknown";
-        serverLog.error(
-          `[league-match-sheet] refresh VE/VEA avant gel d'en-tête échoué (${side}): ${msg}`,
-        );
-      }
-      return JSON.stringify({
-        capturedAt: Date.now(),
-        headerOnly: true,
-        teamValue,
-        currentValue,
-        treasury: team.treasury,
-        dedicatedFans: team.dedicatedFans,
-      });
-    };
-    const home = await capture(teams.home, "home");
-    const away = await capture(teams.away, "away");
-    const data: Record<string, string> = {};
-    if (home) data.rosterSnapshotHome = home;
-    if (away) data.rosterSnapshotAway = away;
-    return Object.keys(data).length > 0 ? data : null;
+    await updateTeamValues(prisma, team.teamId);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
-    serverLog.error(`[league-match-sheet] gel d'en-tête au démarrage échoué: ${msg}`);
-    return null;
+    serverLog.error(
+      `[league-match-sheet] refresh VE/VEA avant capture échoué (${side}): ${msg}`,
+    );
   }
+  // Les joueurs absents (missNextMatch) ne participent pas au match : ils
+  // sont exclus de la « version du match » figée.
+  const snap = await captureRosterSnapshot(team.teamId, {
+    excludeMissNextMatch: true,
+  });
+  if (!snap) return null;
+  const base = {
+    ...snap,
+    teamValue: preserved?.teamValue ?? snap.teamValue,
+    currentValue: preserved?.currentValue ?? snap.currentValue,
+    treasury: preserved?.treasury ?? snap.treasury,
+    dedicatedFans: preserved?.dedicatedFans ?? snap.dedicatedFans,
+    rerolls: preserved?.rerolls ?? snap.rerolls,
+    cheerleaders: preserved?.cheerleaders ?? snap.cheerleaders,
+    assistants: preserved?.assistants ?? snap.assistants,
+    apothecary: preserved?.apothecary ?? snap.apothecary,
+  };
+  const journeymen = deriveJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+  });
+  if (journeymen.length === 0) return JSON.stringify(base);
+  // Règle BB : les journaliers alignés comptent dans la VEA du match
+  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête.
+  const journeymenValue = journeymen.reduce((sum, j) => sum + j.cost, 0);
+  return JSON.stringify({
+    ...base,
+    currentValue: base.currentValue + journeymenValue,
+    players: [
+      ...base.players,
+      ...journeymen.map((j) => ({
+        name: j.name,
+        position: j.positionName,
+        number: j.number,
+        ma: j.stats.ma,
+        st: j.stats.st,
+        ag: j.stats.ag,
+        pa: j.stats.pa,
+        av: j.stats.av,
+        skills: j.skills,
+        spp: 0,
+        advancements: "[]",
+      })),
+    ],
+  });
 }
 
 /**
- * Snapshot « en-tête seul » posé au démarrage de la feuille : les valeurs
- * (VE/VEA/trésorerie/fans) sont figées mais le roster et les journaliers
- * ne sont PAS bakés dedans (contrairement au snapshot E11 complet).
+ * Gèle les deux côtés d'une feuille. `sheet` porte l'état déjà figé : un
+ * côté déjà gelé COMPLET est laissé tel quel ; un gel « en-tête seul »
+ * (feuilles antérieures) est complété en préservant ses valeurs.
+ * Retourne les colonnes à écrire (vide = rien à faire).
+ */
+async function captureMatchSnapshots(
+  pairingId: string,
+  sheet: {
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+    journeymenHome?: unknown;
+    journeymenAway?: unknown;
+  },
+): Promise<Record<string, string>> {
+  const data: Record<string, string> = {};
+  try {
+    const needs = (raw: unknown): boolean => !raw || isHeaderOnlySnapshot(raw);
+    const needsHome = needs(sheet.rosterSnapshotHome);
+    const needsAway = needs(sheet.rosterSnapshotAway);
+    if (!needsHome && !needsAway) return data;
+    const teams = await loadSheetTeams(pairingId);
+    if (needsHome) {
+      const json = await captureSideSnapshot(
+        teams.home,
+        "home",
+        sheet.journeymenHome,
+        parseFrozenTeamValues(sheet.rosterSnapshotHome),
+      );
+      if (json) data.rosterSnapshotHome = json;
+    }
+    if (needsAway) {
+      const json = await captureSideSnapshot(
+        teams.away,
+        "away",
+        sheet.journeymenAway,
+        parseFrozenTeamValues(sheet.rosterSnapshotAway),
+      );
+      if (json) data.rosterSnapshotAway = json;
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[league-match-sheet] gel de la feuille échoué: ${msg}`);
+    return {};
+  }
+  return data;
+}
+
+/**
+ * Snapshot « en-tête seul » posé au démarrage des feuilles ANTÉRIEURES au
+ * gel complet : les valeurs (VE/VEA/trésorerie/fans) sont figées mais le
+ * roster et les journaliers ne sont PAS bakés dedans. Il est complété (en
+ * préservant ses valeurs) à la première occasion.
  */
 function isHeaderOnlySnapshot(raw: unknown): boolean {
   let obj: unknown = raw;
@@ -258,8 +334,9 @@ function isHeaderOnlySnapshot(raw: unknown): boolean {
 /**
  * Crée (ou retourne) la feuille de match d'un pairing. Idempotent :
  * si elle existe deja, on la retourne. Accessible aux 2 coachs + au
- * commissaire. À la création, l'en-tête (VE/VEA/trésorerie/fans) des deux
- * équipes est figé : la feuille garde les valeurs du DÉMARRAGE du match.
+ * commissaire. À la création, l'ÉTAT COMPLET des deux équipes est figé
+ * (joueurs, staff, VE/VEA, trésorerie, fans) : la feuille garde la
+ * « version du match » du DÉMARRAGE de la rencontre.
  */
 export async function createMatchSheet(input: {
   pairingId: string;
@@ -282,19 +359,19 @@ export async function createMatchSheet(input: {
     data: { pairingId: input.pairingId, status: "draft" },
   });
 
-  // Gel de l'en-tête au démarrage (best-effort) : VE/VEA ET trésoreries
-  // sont figées dès l'ouverture de la feuille.
-  const headerSnapshots = await captureHeaderSnapshots(input.pairingId);
-  if (headerSnapshots) {
+  // Gel complet au démarrage (best-effort) : roster, staff, VE/VEA,
+  // trésoreries et fans sont figés dès l'ouverture de la feuille.
+  const snapshots = await captureMatchSnapshots(input.pairingId, created);
+  if (Object.keys(snapshots).length > 0) {
     try {
       return await prisma.leagueMatchSheet.update({
         where: { id: created.id },
-        data: headerSnapshots,
+        data: snapshots,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
       serverLog.error(
-        `[league-match-sheet] écriture du gel d'en-tête échouée: ${msg}`,
+        `[league-match-sheet] écriture du gel de démarrage échouée: ${msg}`,
       );
     }
   }
@@ -733,118 +810,19 @@ export async function submitByCoach(input: {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
 
-  // E11 — fige le roster des DEUX equipes a la premiere soumission
-  // (« version du match » consultable par l'adversaire). Best-effort :
-  // un echec de snapshot ne bloque pas la soumission. Un gel « en-tête
-  // seul » posé à la création est remplacé par la version complète en
-  // PRÉSERVANT les valeurs figées au démarrage (VE/VEA/trésorerie/fans).
-  const sheetSnap = sheet as {
-    rosterSnapshotHome?: unknown;
-    rosterSnapshotAway?: unknown;
-    journeymenHome?: unknown;
-    journeymenAway?: unknown;
-  };
-  const needsFullHome =
-    !sheetSnap.rosterSnapshotHome ||
-    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotHome);
-  const needsFullAway =
-    !sheetSnap.rosterSnapshotAway ||
-    isHeaderOnlySnapshot(sheetSnap.rosterSnapshotAway);
-  let snapshotData: Record<string, unknown> = {};
-  if (needsFullHome || needsFullAway) {
-    try {
-      const teams = await loadSheetTeams(input.pairingId);
-      // Les joueurs absents (missNextMatch) ne participent pas au match :
-      // ils sont exclus de la « version du match » figee. Si l'equipe
-      // aligne moins de 11 joueurs, les journaliers derives completent la
-      // version du match.
-      const captureSide = async (
-        team: MatchSheetTeam | null,
-        side: "home" | "away",
-      ): Promise<string | null> => {
-        if (!team?.teamId) return null;
-        // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs
-        // absents (missNextMatch) et la valeur stockée peut être
-        // obsolète (blessure appliquée sans recalcul). Best-effort : en
-        // cas d'échec, la capture part des valeurs stockées.
-        try {
-          await updateTeamValues(prisma, team.teamId);
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : "unknown";
-          serverLog.error(
-            `[league-match-sheet] refresh VE/VEA avant capture échoué (${side}): ${msg}`,
-          );
-        }
-        const snap = await captureRosterSnapshot(team.teamId, {
-          excludeMissNextMatch: true,
-        });
-        if (!snap) return null;
-        // En-tête figé au démarrage (gel « header-only » de la création) :
-        // il prime sur les valeurs re-capturées, pour que VE/VEA ET
-        // trésorerie restent celles du début du match.
-        const preserved = parseFrozenTeamValues(
-          side === "home"
-            ? sheetSnap.rosterSnapshotHome
-            : sheetSnap.rosterSnapshotAway,
-        );
-        const base = {
-          ...snap,
-          teamValue: preserved?.teamValue ?? snap.teamValue,
-          currentValue: preserved?.currentValue ?? snap.currentValue,
-          treasury: preserved?.treasury ?? snap.treasury,
-          dedicatedFans: preserved?.dedicatedFans ?? snap.dedicatedFans,
-        };
-        const journeymen = deriveJourneymen({
-          side,
-          roster: team.roster,
-          ruleset: team.ruleset,
-          players: team.players,
-          chosenPosition: parseJourneymenChoice(
-            side === "home"
-              ? sheetSnap.journeymenHome
-              : sheetSnap.journeymenAway,
-          ),
-        });
-        if (journeymen.length === 0) return JSON.stringify(base);
-        // Règle BB : les journaliers alignés comptent dans la VEA du
-        // match (CTV des coups de pouce) — leur valeur est figée avec
-        // l'en-tête.
-        const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
-        return JSON.stringify({
-          ...base,
-          currentValue: base.currentValue + journeymenValue,
-          players: [
-            ...base.players,
-            ...journeymen.map((j) => ({
-              name: j.name,
-              position: j.positionName,
-              number: j.number,
-              ma: j.stats.ma,
-              st: j.stats.st,
-              ag: j.stats.ag,
-              pa: j.stats.pa,
-              av: j.stats.av,
-              skills: j.skills,
-              spp: 0,
-              advancements: "[]",
-            })),
-          ],
-        });
-      };
-      if (needsFullHome) {
-        const json = await captureSide(teams.home, "home");
-        if (json) snapshotData.rosterSnapshotHome = json;
-      }
-      if (needsFullAway) {
-        const json = await captureSide(teams.away, "away");
-        if (json) snapshotData.rosterSnapshotAway = json;
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "unknown";
-      serverLog.error(`[league-match-sheet] roster snapshot failed: ${msg}`);
-      snapshotData = {};
-    }
-  }
+  // Filet de sécurité : le gel complet est normalement posé à la CRÉATION
+  // de la feuille. Une feuille antérieure au gel complet (ou dont la
+  // capture avait échoué) est rattrapée ici, en préservant les valeurs
+  // déjà figées. Best-effort : un échec ne bloque pas la soumission.
+  const snapshotData = await captureMatchSnapshots(
+    input.pairingId,
+    sheet as {
+      rosterSnapshotHome?: unknown;
+      rosterSnapshotAway?: unknown;
+      journeymenHome?: unknown;
+      journeymenAway?: unknown;
+    },
+  );
 
   const next = nextStatusOnSubmit(sheet.status, side);
   const updated = await prisma.leagueMatchSheet.update({
@@ -1725,6 +1703,17 @@ export interface MatchSheetTeam {
    * de variation des fans (D6 vs fans).
    */
   readonly dedicatedFans: number;
+  /**
+   * Staff de l'équipe FIGÉ au début du match (relances, pom-pom girls,
+   * assistants, apothicaire). Comme la VE/VEA et la trésorerie, il est lu
+   * dans le snapshot de la feuille dès qu'il existe.
+   */
+  readonly staff: {
+    readonly rerolls: number;
+    readonly cheerleaders: number;
+    readonly assistants: number;
+    readonly apothecary: boolean;
+  };
   readonly players: readonly MatchSheetPlayer[];
   /**
    * Journaliers derives (equipe a moins de 11 joueurs disponibles).
@@ -1803,6 +1792,10 @@ async function loadSheetTeams(
       treasury: true,
       dedicatedFans: true,
       regionalLeague: true,
+      rerolls: true,
+      cheerleaders: true,
+      assistants: true,
+      apothecary: true,
       owner: { select: { coachName: true } },
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
@@ -1841,6 +1834,10 @@ async function loadSheetTeams(
     treasury?: number | null;
     dedicatedFans?: number | null;
     regionalLeague?: string | null;
+    rerolls?: number | null;
+    cheerleaders?: number | null;
+    assistants?: number | null;
+    apothecary?: boolean | null;
     owner?: { coachName?: string | null } | null;
     players: Array<{
       id: string;
@@ -1890,6 +1887,12 @@ async function loadSheetTeams(
       regionalLeague: t.regionalLeague ?? null,
       // Defaut BB : toute equipe demarre avec 1 fan devoue.
       dedicatedFans: t.dedicatedFans ?? 1,
+      staff: {
+        rerolls: t.rerolls ?? 0,
+        cheerleaders: t.cheerleaders ?? 0,
+        assistants: t.assistants ?? 0,
+        apothecary: t.apothecary ?? false,
+      },
       players: t.players.map((p) => ({
         id: p.id,
         number: p.number,
@@ -1924,6 +1927,10 @@ function parseFrozenTeamValues(raw: unknown): {
   currentValue?: number;
   treasury?: number;
   dedicatedFans?: number;
+  rerolls?: number;
+  cheerleaders?: number;
+  assistants?: number;
+  apothecary?: boolean;
 } | null {
   let obj: unknown = raw;
   if (typeof raw === "string") {
@@ -1942,6 +1949,10 @@ function parseFrozenTeamValues(raw: unknown): {
     currentValue: num(o.currentValue),
     treasury: num(o.treasury),
     dedicatedFans: num(o.dedicatedFans),
+    rerolls: num(o.rerolls),
+    cheerleaders: num(o.cheerleaders),
+    assistants: num(o.assistants),
+    apothecary: typeof o.apothecary === "boolean" ? o.apothecary : undefined,
   };
 }
 
@@ -1985,6 +1996,12 @@ function withFrozenTeamValues(
     currentValue: frozen.currentValue ?? team.currentValue,
     treasury: frozen.treasury ?? team.treasury,
     dedicatedFans: frozen.dedicatedFans ?? team.dedicatedFans,
+    staff: {
+      rerolls: frozen.rerolls ?? team.staff.rerolls,
+      cheerleaders: frozen.cheerleaders ?? team.staff.cheerleaders,
+      assistants: frozen.assistants ?? team.staff.assistants,
+      apothecary: frozen.apothecary ?? team.staff.apothecary,
+    },
   };
 }
 
@@ -2412,16 +2429,40 @@ export async function getMatchSheet(input: {
   }
   const events = ((sheet as { events?: MatchEventInput[] }).events ??
     []) as MatchEventInput[];
-  const teamsLive = await loadSheetTeams(input.pairingId);
-  // En-tête (TV/VEA/cagnotte/fans) figé au début du match dès que le
-  // roster est figé (1re soumission) : les valeurs live continuent
-  // d'évoluer après validation mais la feuille garde celles du match.
   const sheetSnapRaw = sheet as {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
+  // Filet de sécurité (feuilles antérieures au gel de démarrage, ou dont
+  // la capture avait échoué) : on gèle à la PREMIÈRE lecture plutôt que
+  // d'attendre la 1re soumission — sinon la feuille afficherait des
+  // valeurs live qui bougent d'une consultation à l'autre.
+  if (
+    sheet.status !== "validated" &&
+    (!sheetSnapRaw.rosterSnapshotHome ||
+      isHeaderOnlySnapshot(sheetSnapRaw.rosterSnapshotHome) ||
+      !sheetSnapRaw.rosterSnapshotAway ||
+      isHeaderOnlySnapshot(sheetSnapRaw.rosterSnapshotAway))
+  ) {
+    const backfill = await captureMatchSnapshots(input.pairingId, sheetSnapRaw);
+    if (Object.keys(backfill).length > 0) {
+      try {
+        await prisma.leagueMatchSheet.update({
+          where: { id: sheet.id },
+          data: backfill,
+        });
+        Object.assign(sheetSnapRaw, backfill);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(
+          `[league-match-sheet] rattrapage du gel à la lecture échoué: ${msg}`,
+        );
+      }
+    }
+  }
+  const teamsLive = await loadSheetTeams(input.pairingId);
   // Feuille pas encore figée : rafraîchit VE/VEA (la VEA exclut les
   // joueurs absents) — la valeur stockée peut être obsolète (blessure
   // appliquée sans recalcul). Self-healing, best-effort.

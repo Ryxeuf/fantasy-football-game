@@ -93,6 +93,16 @@ export interface SheetTeam {
   treasury: number;
   /** Fans dévoués de l'équipe (1-6). Optionnel : rétro-compat API. */
   dedicatedFans?: number;
+  /**
+   * Staff FIGÉ au début du match (relances, pom-pom girls, assistants,
+   * apothicaire). Optionnel : rétro-compat API pré-gel complet.
+   */
+  staff?: {
+    rerolls: number;
+    cheerleaders: number;
+    assistants: number;
+    apothecary: boolean;
+  };
   players: SheetPlayer[];
   /** Journaliers dérivés (optionnel : rétro-compat API). */
   journeymen?: SheetJourneyman[];
@@ -201,6 +211,18 @@ export function TeamValueStrip({
         Cagnotte{" "}
         <strong className="text-slate-700">{formatGold(team.treasury)}</strong>
       </span>
+      {team.staff ? (
+        <span
+          title="Staff figé au début du match (relances · pom-pom girls · assistants · apothicaire)"
+          data-testid="team-staff-strip"
+        >
+          Staff{" "}
+          <strong className="text-slate-700">
+            {team.staff.rerolls} RR · {team.staff.cheerleaders} 📣 ·{" "}
+            {team.staff.assistants} 🧑‍🏫{team.staff.apothecary ? " · ⚕️" : ""}
+          </strong>
+        </span>
+      ) : null}
     </div>
   );
 }
