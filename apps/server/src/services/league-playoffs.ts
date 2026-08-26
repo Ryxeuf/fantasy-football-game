@@ -423,6 +423,22 @@ export async function startPlayoffs(
     pairingsCreated += 1;
   }
 
+  // Le bracket est généré, mais PAS publié : les coachs ne le voient pas
+  // tant que le commissaire n'a pas vérifié les seeds. C'est ce `false`
+  // explicite qui distingue un bracket neuf d'une saison antérieure à la
+  // publication différée (`null`, restée visible).
+  try {
+    await client.leagueSeason.update({
+      where: { id: seasonId },
+      data: { playoffsPublished: false },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-playoffs] marquage « non publié » échoué season=${seasonId}: ${msg}`,
+    );
+  }
+
   serverLog.info(
     `[league-playoffs] season=${seasonId} playoffs started size=${size} rounds=${roundsCreated} seeding=${resolved.source}`,
   );
@@ -1052,15 +1068,33 @@ export async function advancePlayoffsWithWinner(
 // (saisie en retard, désistement, override de participants) sans que la
 // ligue voie un bracket provisoire.
 
-/** Vrai si le commissaire a publié le bracket de cette saison. */
-export async function arePlayoffsPublished(seasonId: string): Promise<boolean> {
+/**
+ * Le bracket est-il VISIBLE des coachs ?
+ *
+ * `playoffsPublished` est un booléen NULLABLE à trois états, parce que le
+ * schéma est appliqué par `db push` (pas de migration, donc pas de
+ * backfill) : `null` = saison antérieure à la publication différée, dont
+ * le bracket est déjà consulté par la ligue et ne doit pas disparaître.
+ * Seul un `false` explicite — posé par `startPlayoffs` à la génération —
+ * masque le bracket.
+ */
+export function isPlayoffBracketVisible(
+  playoffsPublished: boolean | null | undefined,
+): boolean {
+  return playoffsPublished !== false;
+}
+
+/** Lit l'état de publication du bracket d'une saison (tri-état). */
+export async function getPlayoffsPublishedState(
+  seasonId: string,
+): Promise<boolean | null> {
   const row = (await (
     prisma as unknown as PrismaWithLeague
   ).leagueSeason.findUnique({
     where: { id: seasonId },
-    select: { playoffsPublishedAt: true },
-  })) as { playoffsPublishedAt: Date | null } | null;
-  return Boolean(row?.playoffsPublishedAt);
+    select: { playoffsPublished: true },
+  })) as { playoffsPublished: boolean | null } | null;
+  return row ? (row.playoffsPublished ?? null) : null;
 }
 
 export type SetPlayoffsPublishedOutcome =
@@ -1093,7 +1127,7 @@ export async function setPlayoffsPublished(
 
   await client.leagueSeason.update({
     where: { id: seasonId },
-    data: { playoffsPublishedAt: published ? new Date() : null },
+    data: { playoffsPublished: published },
   });
   serverLog.info(
     `[league-playoffs] season=${seasonId} bracket ${published ? "publié" : "dépublié"}`,

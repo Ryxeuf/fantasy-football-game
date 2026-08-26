@@ -377,11 +377,25 @@ et la validation pour que les deux ne divergent jamais).
 
 Le bracket de playoffs est généré par un hook à la clôture de la phase
 régulière : les coachs découvraient un bracket provisoire avant que le
-commissaire ait corrigé les seeds. Pattern : une colonne `…PublishedAt`
-(null = non publié) + un endpoint de bascule commissaire, et **les deux**
-lectures concernées gatées (le bracket ET les rounds `kind=playoff` du
-calendrier). La migration considère l'existant comme publié — on ne masque
-pas ce que la ligue consulte déjà.
+commissaire ait corrigé les seeds. Pattern : un flag de publication + un
+endpoint de bascule commissaire, et **les deux** lectures concernées gatées
+(le bracket ET les rounds `kind=playoff` du calendrier).
+
+Piège de rétro-compat : `prisma/migrations/` est **gitignoré** ici, le
+schéma est appliqué en prod par `prisma db push` (cf. `scripts/db-migrate.sh`)
+— donc **aucun backfill de migration n'est possible**. Un flag booléen
+simple masquerait d'un coup tous les brackets déjà consultés par les
+ligues. D'où le **booléen NULLABLE à trois états** :
+
+```prisma
+/// null = saison antérieure (VISIBLE), false = généré non publié, true = publié
+playoffsPublished Boolean?
+```
+
+`db push` pose `null` sur l'existant (donc visible), et c'est
+`startPlayoffs` qui écrit le `false` explicite sur les brackets neufs.
+Règle générale : toute colonne de gating ajoutée à ce repo doit être
+lisible **sans** backfill.
 
 Pour un endpoint public dont la réponse dépend du rôle, utiliser
 `optionalAuthUser` (renseigne `req.user` si un token valide est présent,

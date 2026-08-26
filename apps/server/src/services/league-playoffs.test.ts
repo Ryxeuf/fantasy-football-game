@@ -69,7 +69,8 @@ import {
   startPlayoffs,
   advancePlayoffsAfterPairingComplete,
   advancePlayoffsWithWinner,
-  arePlayoffsPublished,
+  getPlayoffsPublishedState,
+  isPlayoffBracketVisible,
   setPlayoffsPublished,
   type PlayoffSize,
 } from "./league-playoffs";
@@ -903,15 +904,49 @@ describe("advancePlayoffsWithWinner (explicit winner side)", () => {
 });
 
 describe("publication du bracket de playoffs", () => {
-  it("arePlayoffsPublished suit la colonne playoffsPublishedAt", async () => {
-    mocked.seasonFind.mockResolvedValueOnce({ playoffsPublishedAt: null });
-    expect(await arePlayoffsPublished("s1")).toBe(false);
-    mocked.seasonFind.mockResolvedValueOnce({
-      playoffsPublishedAt: new Date(),
+  it("startPlayoffs marque le bracket neuf comme NON publie", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      status: "in_progress",
+      playoffSize: 2,
     });
-    expect(await arePlayoffsPublished("s1")).toBe(true);
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.standings.mockResolvedValue([
+      row({ participantId: "p1" }),
+      row({ participantId: "p2" }),
+    ]);
+    mocked.roundFindFirst.mockResolvedValue({ roundNumber: 5 });
+    mocked.roundCreate.mockResolvedValue({ id: "r1" });
+    mocked.pairingCreate.mockResolvedValue({ id: "pp1" });
+
+    const out = await startPlayoffs("s1");
+    expect(out).toMatchObject({ created: true });
+    // C'est ce `false` explicite qui distingue un bracket neuf d'une saison
+    // anterieure a la publication differee (null, restee visible).
+    expect(mocked.seasonUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { playoffsPublished: false } }),
+    );
+  });
+
+  it("isPlayoffBracketVisible : seul un false explicite masque le bracket", () => {
+    // null = saison anterieure a la publication differee. Le schema est
+    // applique par `db push` (pas de backfill possible) : son bracket est
+    // deja consulte par la ligue et doit le rester.
+    expect(isPlayoffBracketVisible(null)).toBe(true);
+    expect(isPlayoffBracketVisible(undefined)).toBe(true);
+    expect(isPlayoffBracketVisible(true)).toBe(true);
+    expect(isPlayoffBracketVisible(false)).toBe(false);
+  });
+
+  it("getPlayoffsPublishedState remonte le tri-etat", async () => {
+    mocked.seasonFind.mockResolvedValueOnce({ playoffsPublished: null });
+    expect(await getPlayoffsPublishedState("s1")).toBeNull();
+    mocked.seasonFind.mockResolvedValueOnce({ playoffsPublished: false });
+    expect(await getPlayoffsPublishedState("s1")).toBe(false);
+    mocked.seasonFind.mockResolvedValueOnce({ playoffsPublished: true });
+    expect(await getPlayoffsPublishedState("s1")).toBe(true);
     mocked.seasonFind.mockResolvedValueOnce(null);
-    expect(await arePlayoffsPublished("nope")).toBe(false);
+    expect(await getPlayoffsPublishedState("nope")).toBeNull();
   });
 
   it("publie quand un bracket existe", async () => {
@@ -919,8 +954,9 @@ describe("publication du bracket de playoffs", () => {
     mocked.roundCount.mockResolvedValue(3);
     const out = await setPlayoffsPublished("s1", true);
     expect(out).toEqual({ ok: true, published: true });
-    const data = mocked.seasonUpdate.mock.calls[0][0].data;
-    expect(data.playoffsPublishedAt).toBeInstanceOf(Date);
+    expect(mocked.seasonUpdate.mock.calls[0][0].data).toEqual({
+      playoffsPublished: true,
+    });
   });
 
   it("refuse de publier sans bracket genere", async () => {
@@ -937,7 +973,7 @@ describe("publication du bracket de playoffs", () => {
     expect(out).toEqual({ ok: true, published: false });
     expect(mocked.roundCount).not.toHaveBeenCalled();
     expect(mocked.seasonUpdate.mock.calls[0][0].data).toEqual({
-      playoffsPublishedAt: null,
+      playoffsPublished: false,
     });
   });
 

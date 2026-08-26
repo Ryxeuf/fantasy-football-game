@@ -15,6 +15,9 @@ vi.mock("../services/league-playoffs", () => ({
   startPlayoffs: vi.fn(),
   overridePlayoffParticipants: vi.fn(),
   setPlayoffsPublished: vi.fn(),
+  // Fonction PURE (tri-etat de publication) : on garde la vraie logique,
+  // c'est elle que le handler doit appliquer.
+  isPlayoffBracketVisible: (v: boolean | null | undefined) => v !== false,
   // Class d'erreur DANS la factory (cf. CLAUDE.md).
   PlayoffOverrideError: class PlayoffOverrideError extends Error {
     constructor(
@@ -253,7 +256,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
-      playoffsPublishedAt: null,
+      playoffsPublished: false,
       league: { creatorId: "user-1" },
     });
     mocked.roundFindMany.mockResolvedValue([]);
@@ -286,7 +289,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
-      playoffsPublishedAt: new Date(),
+      playoffsPublished: true,
       league: { creatorId: "user-1" },
     });
     mocked.roundFindMany.mockResolvedValue([]);
@@ -313,7 +316,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
-      playoffsPublishedAt: null,
+      playoffsPublished: false,
       league: { creatorId: "commish" },
     });
 
@@ -336,7 +339,35 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
-      playoffsPublishedAt: new Date(),
+      playoffsPublished: true,
+      league: { creatorId: "commish" },
+    });
+    mocked.roundFindMany.mockResolvedValue([
+      { id: "r1", roundNumber: 1, bracketSlot: "final", pairings: [] },
+    ]);
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.poolFindMany.mockResolvedValue([]);
+
+    const req = createReq({
+      params: { seasonId: "s1" } as never,
+      user: { id: "coach-1", roles: ["user"] } as never,
+    });
+    const res = createRes();
+    await handleGetPlayoffBracket(req, res);
+
+    expect(res.payload).toMatchObject({
+      data: { playoffsPublished: true, rounds: [{ id: "r1" }] },
+    });
+  });
+
+  it("saison anterieure (null) : bracket VISIBLE des coachs", async () => {
+    // `db push` pose la colonne a NULL sur l'existant : un bracket deja
+    // consulte par la ligue ne doit pas disparaitre.
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      playoffSize: 4,
+      status: "in_progress",
+      playoffsPublished: null,
       league: { creatorId: "commish" },
     });
     mocked.roundFindMany.mockResolvedValue([
@@ -362,7 +393,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
-      playoffsPublishedAt: null,
+      playoffsPublished: false,
       league: { creatorId: "user-1" },
     });
     mocked.roundFindMany.mockResolvedValue([

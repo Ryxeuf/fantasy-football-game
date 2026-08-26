@@ -73,6 +73,7 @@ import {
   type StartPlayoffsSkippedReason,
   overridePlayoffParticipants,
   setPlayoffsPublished,
+  isPlayoffBracketVisible,
   PlayoffOverrideError,
 } from "../services/league-playoffs";
 import {
@@ -536,7 +537,7 @@ export async function handleGetSeason(
       unknown
     >;
     rounds?: Array<{ kind?: string | null }>;
-    playoffsPublishedAt?: Date | null;
+    playoffsPublished?: boolean | null;
   };
   const league = raw.league;
   const serializedLeague = league
@@ -551,15 +552,16 @@ export async function handleGetSeason(
   // rounds de playoff sont donc retirés du calendrier servi.
   const isCommissioner =
     !!req.user?.id && req.user.id === league?.creatorId;
+  const playoffsVisible = isPlayoffBracketVisible(raw.playoffsPublished);
   const rounds =
-    raw.playoffsPublishedAt || isCommissioner
+    playoffsVisible || isCommissioner
       ? raw.rounds
       : (raw.rounds ?? []).filter((r) => r.kind !== "playoff");
   sendSuccess(res, {
     season: {
       ...raw,
       ...(rounds !== undefined ? { rounds } : {}),
-      playoffsPublished: Boolean(raw.playoffsPublishedAt),
+      playoffsPublished: playoffsVisible,
       league: serializedLeague,
     },
   });
@@ -854,21 +856,23 @@ export async function handleGetPlayoffBracket(
         id: true,
         playoffSize: true,
         status: true,
-        playoffsPublishedAt: true,
+        playoffsPublished: true,
         league: { select: { creatorId: true } },
       },
     })) as {
       id: string;
       playoffSize: number;
       status: string;
-      playoffsPublishedAt: Date | null;
+      playoffsPublished: boolean | null;
       league?: { creatorId: string } | null;
     } | null;
     if (!seasonRow) {
       sendError(res, "Saison introuvable", 404);
       return;
     }
-    const playoffsPublished = Boolean(seasonRow.playoffsPublishedAt);
+    const playoffsPublished = isPlayoffBracketVisible(
+      seasonRow.playoffsPublished,
+    );
     const isCommissioner =
       !!req.user?.id && req.user.id === seasonRow.league?.creatorId;
     if (!playoffsPublished && !isCommissioner) {

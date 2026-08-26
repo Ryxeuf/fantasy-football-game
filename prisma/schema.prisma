@@ -1305,11 +1305,17 @@ model LeagueSeason {
   // Valeurs supportees : 0, 2 (final seulement), 4 (SF + final),
   // 8 (QF + SF + final). 16+ : non supporte pour l'instant.
   playoffSize   Int       @default(0)
-  // Publication des playoffs : le bracket est GÉNÉRÉ automatiquement à la
-  // fin de la phase régulière, mais reste invisible aux coachs tant que le
-  // commissaire ne l'a pas publié (il peut d'abord corriger les seeds, une
-  // saisie en retard, un désistement). null = non publié.
-  playoffsPublishedAt DateTime?
+  // Publication des playoffs. Le bracket est GÉNÉRÉ automatiquement à la fin
+  // de la phase régulière, mais reste invisible aux coachs tant que le
+  // commissaire ne l'a pas publié (il corrige d'abord les seeds : saisie en
+  // retard, désistement). TROIS états, d'où le Boolean NULLABLE :
+  //   null  = saison antérieure à la publication différée -> bracket VISIBLE
+  //           (le schéma est appliqué par `db push`, pas par une migration :
+  //           il n'y a pas de backfill, et on ne masque pas un bracket que la
+  //           ligue consulte déjà) ;
+  //   false = bracket généré, en attente de publication (posé par startPlayoffs) ;
+  //   true  = publié par le commissaire.
+  playoffsPublished Boolean?
   // L2.B.5 — "Coup de mecene" : option activable par le commissaire.
   // false par defaut => le bonus +100k po n'est PAS disponible pour les
   // coachs. Le commissaire l'active explicitement par saison.

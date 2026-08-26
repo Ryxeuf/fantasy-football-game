@@ -15,4 +15,4 @@ Feuille de match & séquence de fin de match : lot de 8 correctifs/évolutions.
 
 **Confort de saisie.** La trésorerie disponible (cagnotte figée + gains du match) est rappelée dans les achats, avec le reste après dépenses et une alerte en cas de dépassement.
 
-**Playoffs.** Le bracket, généré automatiquement à la clôture de la phase régulière, reste invisible des coachs tant que le commissaire ne l'a pas PUBLIÉ — le temps de vérifier les seeds. Nouvelle bascule « Publier les playoffs » côté commissaire.
+**Playoffs.** Le bracket, généré automatiquement à la clôture de la phase régulière, reste invisible des coachs tant que le commissaire ne l'a pas PUBLIÉ — le temps de vérifier les seeds. Nouvelle bascule « Publier les playoffs » côté commissaire. Les saisons dont le bracket est déjà consulté par la ligue restent visibles (le schéma est appliqué par `db push`, sans backfill : `LeagueSeason.playoffsPublished` est un booléen nullable où `null` vaut « saison antérieure, visible »).
