@@ -42,6 +42,10 @@ import { appendAudit, ensureTeamInLeague } from "./commissioner-team-edit";
 import { effectiveRegionalRules } from "./roster-regional-rules";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import { updateTeamValues } from "../utils/team-values";
+import {
+  captureTeamState,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { serverLog } from "../utils/server-log";
 
 export class CommissionerSettingsError extends Error {
@@ -412,6 +416,10 @@ export async function updateTeamStaff(
     );
   }
 
+  const beforeSnapshot = await captureTeamState(
+    prisma as unknown as TeamAuditPrismaLike,
+    input.teamId,
+  );
   await prisma.team.update({
     where: { id: input.teamId },
     data: { ...after, treasury },
@@ -429,6 +437,7 @@ export async function updateTeamStaff(
     leagueId: input.leagueId,
     byCommissionerId: input.byCommissionerId,
     teamId: input.teamId,
+    beforeSnapshot,
     action: "update_staff",
     beforeState: { ...before, treasury: team.treasury },
     afterState: { ...after, treasury, charged },
@@ -493,6 +502,10 @@ export async function updateTeamRegionalLeague(
     );
   }
 
+  const regionalBeforeSnapshot = await captureTeamState(
+    prisma as unknown as TeamAuditPrismaLike,
+    input.teamId,
+  );
   await prisma.team.update({
     where: { id: input.teamId },
     data: { regionalLeague: wanted },
@@ -502,6 +515,7 @@ export async function updateTeamRegionalLeague(
     leagueId: input.leagueId,
     byCommissionerId: input.byCommissionerId,
     teamId: input.teamId,
+    beforeSnapshot: regionalBeforeSnapshot,
     action: "update_regional_league",
     beforeState: { regionalLeague: team.regionalLeague },
     afterState: { regionalLeague: wanted },

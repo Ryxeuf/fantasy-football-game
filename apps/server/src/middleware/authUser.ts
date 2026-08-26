@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { normalizeRoles } from "../utils/roles";
+import { setAuditActor } from "../utils/audit-context";
 import { JWT_SECRET } from "../config";
 
 export interface AuthenticatedUser {
@@ -45,6 +46,14 @@ export function authUser(
       roles,
       ...(impersonatorId ? { impersonatorId } : {}),
     };
+    // Journal d'équipe : l'acteur n'est connu qu'ici (l'auth est par
+    // route, le contexte d'audit est ouvert bien avant). No-op hors
+    // contexte.
+    setAuditActor({
+      userId: payload.sub ?? null,
+      roles,
+      impersonatorId: impersonatorId ?? null,
+    });
     return next();
   } catch {
     return res.status(401).json({ error: "Token invalide" });
@@ -84,6 +93,11 @@ export function optionalAuthUser(
       roles,
       ...(impersonatorId ? { impersonatorId } : {}),
     };
+    setAuditActor({
+      userId: payload.sub ?? null,
+      roles,
+      impersonatorId: impersonatorId ?? null,
+    });
   } catch {
     // Token invalide/expiré : on sert la vue publique plutôt que de rejeter.
   }

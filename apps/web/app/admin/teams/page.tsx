@@ -392,15 +392,30 @@ export default function AdminTeamsPage() {
                     })}
                   </td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => handleDelete(team.id, team.name)}
-                      disabled={actionLoading === team.id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-xs font-medium"
-                      title="Supprimer"
-                    >
-                      <span>{actionLoading === team.id ? "⏳" : "🗑️"}</span>
-                      <span>Supprimer</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Journal d'équipe : la frise complète des mutations
+                          (trésorerie, VE, roster) avec l'auteur de chacune.
+                          L'endpoint autorise les admins sur n'importe quelle
+                          équipe. */}
+                      <a
+                        data-testid="admin-team-journal-link"
+                        href={`/me/teams/${team.id}/journal`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors text-xs font-medium"
+                        title="Journal des modifications"
+                      >
+                        <span>📜</span>
+                        <span>Journal</span>
+                      </a>
+                      <button
+                        onClick={() => handleDelete(team.id, team.name)}
+                        disabled={actionLoading === team.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-xs font-medium"
+                        title="Supprimer"
+                      >
+                        <span>{actionLoading === team.id ? "⏳" : "🗑️"}</span>
+                        <span>Supprimer</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

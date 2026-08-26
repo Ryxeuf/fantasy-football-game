@@ -625,6 +625,7 @@ exports.Prisma.LeagueSeasonScalarFieldEnum = {
   theme: 'theme',
   themeYear: 'themeYear',
   playoffSize: 'playoffSize',
+  playoffsPublished: 'playoffsPublished',
   meceneEnabled: 'meceneEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1141,6 +1142,35 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.TeamAuditEventScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  createdAt: 'createdAt',
+  correlationId: 'correlationId',
+  step: 'step',
+  action: 'action',
+  entity: 'entity',
+  entityId: 'entityId',
+  actorUserId: 'actorUserId',
+  actorRole: 'actorRole',
+  actorLabel: 'actorLabel',
+  impersonatorId: 'impersonatorId',
+  source: 'source',
+  route: 'route',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  changes: 'changes',
+  before: 'before',
+  after: 'after',
+  details: 'details',
+  treasury: 'treasury',
+  teamValue: 'teamValue',
+  currentValue: 'currentValue',
+  treasuryDelta: 'treasuryDelta',
+  teamValueDelta: 'teamValueDelta',
+  note: 'note'
+};
+
 exports.Prisma.EngineComparisonScalarFieldEnum = {
   id: 'id',
   engineVer: 'engineVer',
@@ -1378,6 +1408,7 @@ exports.Prisma.ModelName = {
   ProTournament: 'ProTournament',
   ProTournamentEntry: 'ProTournamentEntry',
   AuditLog: 'AuditLog',
+  TeamAuditEvent: 'TeamAuditEvent',
   EngineComparison: 'EngineComparison',
   ProPredictionLeague: 'ProPredictionLeague',
   ProPredictionLeagueMember: 'ProPredictionLeagueMember',

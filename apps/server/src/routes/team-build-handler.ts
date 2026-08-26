@@ -63,6 +63,7 @@ import { resolveRuleset } from '../utils/ruleset-helpers';
 import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
+import { safeRecordTeamAudit, type TeamAuditPrismaLike } from '../services/team-audit';
 import { isAllowedTeamRoster } from '../constants/allowed-teams';
 import { resolveCupBudget, resolveCupStartingPsp } from '../services/cup-rules';
 import {
@@ -671,6 +672,28 @@ export async function handleBuildTeam(
         throw e;
       }
     }
+
+    // Journal d'équipe : la création est l'étape 1 de la corrélation (pas
+    // d'état « avant »). Les étapes suivantes — recalcul de VE puis crédit
+    // du reliquat de budget — journalisent chacune la leur, si bien que le
+    // journal montre d'où sortent la VE et la trésorerie initiales.
+    await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+      teamId: team.id,
+      action: 'team.create',
+      before: null,
+      details: {
+        mode: 'build',
+        roster,
+        ruleset,
+        format,
+        initialBudget: finalTeamValue,
+        pspPool,
+        players: safePlayerRows.length,
+        starPlayers: starPlayersData.length,
+        tournamentRuleset: pack?.slug ?? null,
+        regionalLeague,
+      },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, team.id);

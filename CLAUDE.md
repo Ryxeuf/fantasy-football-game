@@ -401,6 +401,62 @@ Pour un endpoint public dont la réponse dépend du rôle, utiliser
 `optionalAuthUser` (renseigne `req.user` si un token valide est présent,
 ne rejette jamais) plutôt que de dupliquer la route.
 
+### Journal d'équipe : chaque étape stocke son RÉSULTAT
+
+`AuditLog` ne trace que l'admin, `appendAudit` (commissaire) est indexé par
+admin et par action, `TeamPlayerStatusEvent` ne couvre que morts/licenciements
+— et AUCUN ne stocke l'état obtenu. D'où des écarts de trésorerie et de VE
+irreconstituables. `TeamAuditEvent` (modèle append-only, jamais d'UPDATE ni de
+DELETE) répond aux trois questions : **qui** (`actorUserId` + `actorRole` +
+`actorLabel` figé + `impersonatorId`), **quoi** (`action` dot-case, `details`,
+`changes`), **quel résultat** (`after` + colonnes dénormalisées `treasury` /
+`teamValue` / `currentValue` + deltas).
+
+Le point clé : **une opération = plusieurs étapes**. Un achat de joueur débite
+la trésorerie PUIS `updateTeamValues` réécrit la VE. `correlationId`
+(= requestId HTTP) les regroupe, `step` les ordonne, et chacune porte son état
+résultant — sinon un chiffre faux est indiscernable d'un chiffre juste calculé
+sur un état intermédiaire faux.
+
+```ts
+// Capturer AVANT, publier APRÈS le commit : une lecture depuis le client
+// global À L'INTÉRIEUR d'une transaction interactive ne verrait pas les
+// écritures non committées. Envelopper `$transaction`, jamais son intérieur.
+const before = await captureTeamState(auditDb, teamId);
+await prisma.$transaction(ops);
+await safeRecordTeamAudit(auditDb, { teamId, action: "team.roster.save", before });
+```
+
+Toujours `safeRecordTeamAudit` / `withTeamAudit` dans le code métier : l'échec
+du journal ne doit jamais faire échouer une mutation déjà committée (même
+posture que `safeRecordAdminActionFromRequest`). `recordTeamAudit`, qui lève,
+est réservé aux tests. `withTeamAudit` écrit en plus une étape `<action>.failed`
+avant de propager, puis relance : une mutation qui a planté au milieu est
+justement le cas qu'on cherche à reconstituer.
+
+Garde CI `services/team-audit-coverage.test.ts` (ratchet) : tout module de
+`services/`/`routes/` qui écrit sur `Team`/`TeamPlayer`/`TeamStarPlayer` sans
+journaliser fait échouer les tests, sauf exemption justifiée. Un journal ne
+vaut que s'il est exhaustif. Piège associé : le capture d'audit ne doit pas
+s'intercaler devant les lectures métier (des tests assertent l'ordre des
+appels Prisma — cf. `league-offline-purchases`). Doc :
+[`docs/team-audit-journal.md`](./docs/team-audit-journal.md).
+
+### Contexte ambiant AsyncLocalStorage pour l'identité de l'appelant
+
+Threader `{ userId, ip, requestId }` sur les signatures aurait touché des
+dizaines de fonctions sans rapport avec l'audit (route → service → service pur
+→ prisma), et n'aurait rien donné pour les jobs. `utils/audit-context.ts` pose
+un `AsyncLocalStorage` via `middleware/auditContext.ts`, monté juste APRÈS
+`requestContext()` (dont il réutilise le requestId comme corrélation) et
+AVANT les routes. L'auth étant par route, `authUser`/`optionalAuthUser`
+complètent l'acteur a posteriori (`setAuditActor`) — le store est donc mutable
+sur l'acteur et le compteur d'étape, immutable sur le reste.
+
+Hors contexte (script, test unitaire), tout dégrade sans lever : `step` = 1,
+corrélation neuve. Pour un job, ouvrir le contexte explicitement :
+`runAsAuditJob("league.postmatch.sequence", () => settle(matchId))`.
+
 ### Soft delete trace + reversion VERIFIEE (morts/licenciements)
 Un statut qui retire une entite du perimetre actif (mort, licenciement)
 n'est jamais un DELETE : c'est un flag + la **provenance** de qui l'a

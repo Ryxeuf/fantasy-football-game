@@ -26,6 +26,7 @@ import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
 import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import adminWalletRoutes from "./routes/admin-wallet";
+import adminTeamJournalRoutes from "./routes/admin-team-journal";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
 import adminProTestSeasonRoutes from "./routes/admin-pro-test-season";
@@ -104,6 +105,7 @@ import { serverLog, setServerLogImpl } from "./utils/server-log";
 import { runOnceAtATime } from "./utils/cron-overlap-guard";
 import { pinoServerLogImpl } from "./utils/pino-logger";
 import { requestContext } from "./middleware/requestContext";
+import { auditContext } from "./middleware/auditContext";
 import { liveness, readiness } from "./utils/healthcheck";
 import { appMetrics, metricsExposition } from "./utils/metrics";
 
@@ -154,6 +156,10 @@ app.use(compression());
 // S25.1 — Correlation ID + per-request pino child logger. Mounted before
 // requestTiming so the requestId is visible in slow-call warnings.
 app.use(requestContext());
+// Journal d'équipe : ouvre le contexte d'audit ambiant (corrélation =
+// requestId). Monté juste après requestContext pour que TOUTE mutation
+// d'équipe, quelle que soit la route, sache qui l'a déclenchée.
+app.use(auditContext());
 // Warn on any request that took >=500ms. Set REQUEST_LOG=1 to see every
 // request (useful locally; stays off in prod to avoid log spam).
 app.use(requestTiming(500));
@@ -284,6 +290,11 @@ app.use("/auth", authRefreshRoutes);
 app.use("/auth", authPrivacyRoutes);
 app.use("/auth", authRoutes);
 app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
+// Recherche transversale du journal d'equipe (toutes equipes confondues).
+// Monte AVANT `/admin` : sinon le routeur admin generique capte le prefixe,
+// rejoue `authUser`+`adminOnly` puis retombe ici par `next()` — meme
+// resultat, mais deux passes d'authentification pour rien.
+app.use("/admin/team-journal", adminTeamJournalRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
 app.use("/admin/data/tournament-rulesets", adminTournamentRulesetRoutes);

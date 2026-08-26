@@ -15,6 +15,12 @@
 
 import type { PrismaClient } from "@prisma/client";
 
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
+
 export const MECENE_BONUS = 100_000;
 
 export class LeaguePatronError extends Error {
@@ -129,6 +135,8 @@ export async function playMecene(
 
   const playedAt = new Date();
   const newTreasury = team.treasury + MECENE_BONUS;
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = await captureTeamState(auditDb, teamId);
 
   await prisma.$transaction([
     prisma.team.update({
@@ -143,6 +151,18 @@ export async function playMecene(
       },
     }),
   ]);
+
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: "league.patron.bonus",
+    before: auditBefore,
+    details: {
+      seasonId,
+      participantId: participant.id,
+      bonus: MECENE_BONUS,
+      newTreasury,
+    },
+  });
 
   return {
     participantId: participant.id,

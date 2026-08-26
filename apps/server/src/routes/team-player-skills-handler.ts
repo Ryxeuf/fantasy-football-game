@@ -34,6 +34,11 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
+import {
   getPositionCategoryAccess,
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
@@ -259,6 +264,9 @@ export async function handleUpdatePlayerSkills(
       };
       const newAdvancements = [...advancements, newAdvancement];
 
+      const charAuditDb = prisma as unknown as TeamAuditPrismaLike;
+      const charAuditBefore = await captureTeamState(charAuditDb, teamId);
+
       await prisma.teamPlayer.update({
         where: { id: playerId },
         data: {
@@ -270,6 +278,17 @@ export async function handleUpdatePlayerSkills(
           advancements: JSON.stringify(newAdvancements),
           ...(fromPool ? {} : { spp: { decrement: sppCost } }),
         },
+      });
+
+      // Une amélioration change la VE du joueur (surcoût d'avancement) :
+      // journalisée pour que le saut de VE qui suit soit explicable.
+      await safeRecordTeamAudit(charAuditDb, {
+        teamId,
+        action: 'team.player.advancement.add',
+        entity: 'TeamPlayer',
+        entityId: playerId,
+        before: charAuditBefore,
+        details: { advancement: newAdvancement, sppCost, fromPool },
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -418,6 +437,9 @@ export async function handleUpdatePlayerSkills(
     };
     const newAdvancements = [...advancements, newAdvancement];
 
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     await prisma.teamPlayer.update({
       where: { id: playerId },
       data: {
@@ -425,6 +447,15 @@ export async function handleUpdatePlayerSkills(
         advancements: JSON.stringify(newAdvancements),
         ...(fromPool ? {} : { spp: { decrement: sppCost } }),
       },
+    });
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.player.advancement.add',
+      entity: 'TeamPlayer',
+      entityId: playerId,
+      before: auditBefore,
+      details: { advancement: newAdvancement, sppCost, fromPool, newSkills },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

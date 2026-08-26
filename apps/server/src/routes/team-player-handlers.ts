@@ -33,6 +33,11 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
+import {
   type AllowedRoster,
   DEFAULT_RULESET,
   getFormatConstraints,
@@ -197,6 +202,9 @@ export async function handleAddTeamPlayer(
       return;
     }
 
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     const newPlayer = await prisma.teamPlayer.create({
       data: {
         teamId: teamId,
@@ -209,6 +217,21 @@ export async function handleAddTeamPlayer(
         pa: positionData.pa,
         av: positionData.av,
         skills: positionData.skills,
+      },
+    });
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.player.add',
+      entity: 'TeamPlayer',
+      entityId: newPlayer.id,
+      before: auditBefore,
+      details: {
+        name: name.trim(),
+        position,
+        number,
+        costPo: positionData.cost * 1000,
+        budget: { currentTotalCost, newTotalCost, budgetInPo },
       },
     });
 
@@ -288,6 +311,10 @@ export async function handleDeleteTeamPlayer(
     // ligne et la provenance de la mort sont conservees, cf.
     // `removeInactivePlayerFromRoster`).
     if (!isActivePlayer(player)) {
+      const inactiveRemovalBefore = await captureTeamState(
+        prisma as unknown as TeamAuditPrismaLike,
+        teamId,
+      );
       const outcome = await removeInactivePlayerFromRoster({
         playerId,
         allowedTeamIds: [teamId],
@@ -296,6 +323,21 @@ export async function handleDeleteTeamPlayer(
         sendError(res, 'Joueur introuvable', 404);
         return;
       }
+      await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+        teamId,
+        action: 'team.player.delete',
+        entity: 'TeamPlayer',
+        entityId: playerId,
+        before: inactiveRemovalBefore,
+        details: {
+          mode: 'inactive-removal',
+          name: player.name,
+          position: player.position,
+          number: player.number,
+          dead: player.dead === true,
+          fired: player.firedAt != null,
+        },
+      });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await updateTeamValues(prisma as any, teamId);
       const afterRemoval = await prisma.team.findUnique({
@@ -316,7 +358,24 @@ export async function handleDeleteTeamPlayer(
       return;
     }
 
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     await prisma.teamPlayer.delete({ where: { id: playerId } });
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.player.delete',
+      entity: 'TeamPlayer',
+      entityId: playerId,
+      before: auditBefore,
+      details: {
+        mode: 'hard-delete',
+        name: player.name,
+        position: player.position,
+        number: player.number,
+      },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);
@@ -487,6 +546,13 @@ export async function handleUpdatePlayerIdentity(
         ...(number !== undefined ? { number } : {}),
       },
       select: { id: true, name: true, number: true },
+    });
+    await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+      teamId,
+      action: 'team.player.identity.update',
+      entity: 'TeamPlayer',
+      entityId: playerId,
+      details: { name, number },
     });
     sendSuccess(res, { player: updated });
   } catch (e: unknown) {

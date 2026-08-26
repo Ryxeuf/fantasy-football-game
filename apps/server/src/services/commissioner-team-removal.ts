@@ -38,6 +38,10 @@
 
 import { prisma } from "../prisma";
 import { appendAudit } from "./commissioner-team-edit";
+import {
+  captureTeamState,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { removeInactivePlayerFromRoster } from "./player-status";
 
 export type CommissionerRemovalErrorCode =
@@ -379,6 +383,10 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
     );
   }
 
+  const beforeSnapshot = await captureTeamState(
+    prisma as unknown as TeamAuditPrismaLike,
+    input.teamId,
+  );
   await prisma.teamPlayer.delete({ where: { id: input.playerId } });
 
   await appendAudit({
@@ -386,6 +394,7 @@ export async function removePlayerFromTeam(input: RemovePlayerInput) {
     byCommissionerId: input.byCommissionerId,
     teamId: input.teamId,
     playerId: input.playerId,
+    beforeSnapshot,
     action: "remove_player",
     beforeState: {
       name: player.name,

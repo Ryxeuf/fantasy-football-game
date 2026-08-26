@@ -18,6 +18,11 @@ import {
 } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 import { getPositionBySlug } from '@bb/game-engine';
 import { getEliteSkillSlugs } from '../services/elite-skills';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
 
 /** Ligne `TeamPlayer` minimale nécessaire au calcul de VE/VEA. */
 interface TeamValuePlayerRow {
@@ -298,7 +303,14 @@ export async function computeTeamValueBreakdownFor(
 }
 
 /**
- * Calcule et met à jour les valeurs d'équipe selon les règles Blood Bowl
+ * Calcule et met à jour les valeurs d'équipe selon les règles Blood Bowl.
+ *
+ * Journalisé (`team.values.recompute`) : c'est le seul endroit qui écrit
+ * `teamValue`/`currentValue`, et il est appelé en cascade derrière presque
+ * toutes les mutations de roster. Une VE qui saute sans raison se
+ * reconstitue donc en lisant les étapes de la corrélation : on voit quel
+ * roster a produit quel chiffre. L'étape n'est écrite que si l'une des
+ * deux valeurs a réellement bougé, pour ne pas noyer le journal.
  */
 export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   const team = await prisma.team.findUnique({
@@ -316,6 +328,13 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     team.players,
   );
 
+  const unchanged =
+    team.teamValue === teamValue && team.currentValue === currentValue;
+
+  const before = unchanged
+    ? null
+    : await captureTeamState(prisma as unknown as TeamAuditPrismaLike, teamId);
+
   // Mettre à jour la base de données
   // teamValue = VE calculée des joueurs actuels
   // initialBudget reste inchangé (budget saisi par l'utilisateur)
@@ -326,6 +345,18 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
       currentValue
     }
   });
+
+  if (!unchanged) {
+    await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+      teamId,
+      action: 'team.values.recompute',
+      before,
+      details: {
+        previous: { teamValue: team.teamValue, currentValue: team.currentValue },
+        computed: { teamValue, currentValue },
+      },
+    });
+  }
 
   return { teamValue, currentValue };
 }
@@ -364,11 +395,22 @@ export async function updateTreasuryAfterMatch(
     throw new Error(`Équipe ${teamId} non trouvée`);
   }
 
+  const before = await captureTeamState(
+    prisma as unknown as TeamAuditPrismaLike,
+    teamId,
+  );
   const newTreasury = team.treasury + winnings - expenses;
 
   await prisma.team.update({
     where: { id: teamId },
     data: { treasury: newTreasury }
+  });
+
+  await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+    teamId,
+    action: 'team.treasury.match',
+    before,
+    details: { winnings, expenses, newTreasury },
   });
 
   return newTreasury;

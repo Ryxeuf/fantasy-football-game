@@ -2496,6 +2496,92 @@ model AuditLog {
   @@index([createdAt])
 }
 
+/// Journal d'équipe — trace append-only de TOUTE mutation touchant une
+/// équipe, son roster, son staff, sa trésorerie ou ses valeurs (VE/VEA).
+///
+/// Motivation : les écarts de trésorerie et de VE observés en ligue
+/// n'étaient reconstituables par aucune source. `AuditLog` ne couvre que
+/// les actions *admin* ; ici on trace aussi le coach, le commissaire et
+/// les jobs système (séquence d'après-match, mécène, recalcul de VE).
+///
+/// Une opération métier = plusieurs LIGNES corrélées :
+/// `correlationId` (= `requestId` HTTP quand il y en a un) les regroupe,
+/// `step` les ordonne. Chaque ligne porte l'état RÉSULTANT de l'équipe
+/// après l'étape (`result` + colonnes dénormalisées `treasury`,
+/// `teamValue`, `currentValue`) : on relit le journal d'une requête et on
+/// voit la trésorerie bouger étape par étape.
+///
+/// Jamais de UPDATE ni de DELETE sur cette table : elle est immuable.
+model TeamAuditEvent {
+  id            String   @id @default(cuid())
+  /// Équipe concernée. Pas de relation Prisma : le journal doit survivre
+  /// à la suppression (même soft) de l'équipe.
+  teamId        String
+  createdAt     DateTime @default(now())
+
+  /// Regroupe les étapes d'une même opération métier (requestId HTTP,
+  /// sinon id généré par le job).
+  correlationId String
+  /// Rang de l'étape dans la corrélation (1, 2, 3…).
+  step          Int      @default(1)
+
+  /// Slug métier stable, en dot-case : "team.create", "team.purchase.player",
+  /// "team.values.recompute", "league.postmatch.winnings"…
+  action        String
+  /// Type d'entité ciblée ("Team", "TeamPlayer", "TeamStarPlayer").
+  entity        String   @default("Team")
+  /// Id de l'entité ciblée quand l'action porte sur une sous-entité.
+  entityId      String?
+
+  /// Auteur de la mutation. null = job système / script.
+  actorUserId   String?
+  /// Rôle sous lequel l'action a été faite : "owner" | "admin" |
+  /// "commissioner" | "system" | "anonymous".
+  actorRole     String   @default("system")
+  /// Libellé lisible figé au moment de l'action (nom de coach ou email),
+  /// pour que le journal reste lisible si le compte change ou disparaît.
+  actorLabel    String?
+  /// Admin à l'origine d'une session d'impersonation (claim `act`).
+  impersonatorId String?
+
+  /// Origine : "http" | "job" | "script" | "test".
+  source        String   @default("http")
+  /// Route HTTP ("POST /team/:id/purchase") quand `source = http`.
+  route         String?
+  ipAddress     String?
+  userAgent     String?
+
+  /// Diff champ par champ de l'état d'équipe : { champ: { from, to } }.
+  changes       Json?
+  /// Snapshot de l'équipe AVANT l'étape (null si création).
+  before        Json?
+  /// Snapshot de l'équipe APRÈS l'étape — « le résultat » (null si
+  /// suppression définitive).
+  after         Json?
+  /// Charge utile métier de l'étape (type d'achat, coût, joueur visé,
+  /// motif, payload de la feuille de match…).
+  details       Json?
+
+  /// Colonnes dénormalisées depuis `after`, pour tracer une courbe ou
+  /// détecter un saut sans désérialiser le JSON.
+  treasury      Int?
+  teamValue     Int?
+  currentValue  Int?
+  /// Variation de trésorerie apportée par l'étape (after - before).
+  treasuryDelta Int?
+  /// Variation de VE apportée par l'étape.
+  teamValueDelta Int?
+
+  /// Note libre facultative (motif commissaire, message d'erreur…).
+  note          String?
+
+  @@index([teamId, createdAt])
+  @@index([correlationId, step])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}
+
 /// Lot 3.B.2 — Snapshot d'une comparaison hybrid vs full driver.
 ///
 /// Une entree par exécution du comparator (script CLI ou route admin

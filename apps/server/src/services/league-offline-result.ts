@@ -47,6 +47,11 @@ import {
   type OfflineRosterMutations,
 } from "./league-offline-purchases";
 import { updateTeamValues } from "../utils/team-values";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 import { canFirePlayer } from "./team-captain";
@@ -394,7 +399,16 @@ async function applyOfflineEconomy(
       fansDelta: input.dedicatedFansDeltaAway,
     },
   ];
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
   const ops: Promise<unknown>[] = [];
+  // Étapes journalisées côte à côte (une par équipe) : c'est ici que se
+  // matérialisent gains, dépenses de coups de pouce et erreurs coûteuses,
+  // la source la plus fréquente d'un écart de trésorerie inexpliqué.
+  const audited: Array<{
+    teamId: string;
+    before: Awaited<ReturnType<typeof captureTeamState>>;
+    details: Record<string, unknown>;
+  }> = [];
   for (const s of sides) {
     const data: Record<string, unknown> = {};
     if (s.treasuryDelta > 0) {
@@ -407,10 +421,36 @@ async function applyOfflineEconomy(
       if (next !== s.fans) data.dedicatedFans = next;
     }
     if (Object.keys(data).length > 0) {
+      audited.push({
+        teamId: s.teamId,
+        before: await captureTeamState(auditDb, s.teamId),
+        details: {
+          side: s.teamId === home.teamId ? "home" : "away",
+          winnings:
+            s.teamId === home.teamId
+              ? (input.winningsHome ?? 0)
+              : (input.winningsAway ?? 0),
+          treasuryDebit:
+            s.teamId === home.teamId
+              ? (input.treasuryDebitHome ?? 0)
+              : (input.treasuryDebitAway ?? 0),
+          netTreasuryDelta: s.treasuryDelta,
+          dedicatedFansDelta: s.fansDelta ?? 0,
+        },
+      });
       ops.push(prisma.team.update({ where: { id: s.teamId }, data }));
     }
   }
   if (ops.length > 0) await prisma.$transaction(ops);
+
+  for (const entry of audited) {
+    await safeRecordTeamAudit(auditDb, {
+      teamId: entry.teamId,
+      action: "league.postmatch.economy",
+      before: entry.before,
+      details: entry.details,
+    });
+  }
 }
 
 /** Types de blessure qui reduisent une caracteristique (Séquelle). */

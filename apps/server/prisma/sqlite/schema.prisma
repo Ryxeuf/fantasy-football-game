@@ -1722,6 +1722,44 @@ model AuditLog {
   @@index([createdAt])
 }
 
+// Journal d'équipe (mirror sqlite). Voir prisma/schema.prisma (postgres)
+// pour la doc complète. Les colonnes Json y sont ici des String (sqlite
+// n'a pas de type JSON natif) : parser tolérant obligatoire côté lecture.
+model TeamAuditEvent {
+  id             String   @id @default(cuid())
+  teamId         String
+  createdAt      DateTime @default(now())
+  correlationId  String
+  step           Int      @default(1)
+  action         String
+  entity         String   @default("Team")
+  entityId       String?
+  actorUserId    String?
+  actorRole      String   @default("system")
+  actorLabel     String?
+  impersonatorId String?
+  source         String   @default("http")
+  route          String?
+  ipAddress      String?
+  userAgent      String?
+  changes        String?
+  before         String?
+  after          String?
+  details        String?
+  treasury       Int?
+  teamValue      Int?
+  currentValue   Int?
+  treasuryDelta  Int?
+  teamValueDelta Int?
+  note           String?
+
+  @@index([teamId, createdAt])
+  @@index([correlationId, step])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}
+
 // Lot 3.B.2 — Snapshot d'une comparaison hybrid vs full driver.
 // Voir prisma/schema.prisma (postgres) pour la doc complete.
 model EngineComparison {

@@ -37,6 +37,11 @@ import {
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
 import { serverLog } from '../utils/server-log';
 
 type PurchaseType =
@@ -76,6 +81,14 @@ export async function handlePurchase(
       sendError(res, 'Equipe introuvable', 404);
       return;
     }
+
+    // Journal d'équipe : état AVANT l'achat, capturé une fois pour toute
+    // la requête. Chaque branche du switch débite la trésorerie de façon
+    // atomique ; on relit l'état après pour publier le résultat réel.
+    const auditBefore = await captureTeamState(
+      prisma as unknown as TeamAuditPrismaLike,
+      teamId,
+    );
 
     const activeSelection = await prisma.teamSelection.findFirst({
       where: {
@@ -382,6 +395,16 @@ export async function handlePurchase(
         break;
       }
     }
+
+    // Étape « achat » d'abord (elle porte le débit de trésorerie), puis
+    // le recalcul de VE qui journalise sa propre étape : le journal se lit
+    // dans l'ordre où les choses se sont passées.
+    await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+      teamId,
+      action: `team.purchase.${type}`,
+      before: auditBefore,
+      details: { type, cost, description, position, name, number },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);

@@ -37,6 +37,11 @@ import {
   TEAM_ENGAGED_MESSAGE,
 } from '../services/team-lock-status';
 import { serverLog } from '../utils/server-log';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
 import type { SaveRosterBody } from '../schemas/team.schemas';
 
 export async function handleSaveRoster(
@@ -201,9 +206,42 @@ export async function handleSaveRoster(
         }),
       );
     }
+    // Journal : capturé AVANT la transaction, publié après le commit —
+    // une lecture faite depuis le client global à l'intérieur d'une
+    // transaction ne verrait pas les écritures non committées.
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     if (operations.length > 0) {
       await prisma.$transaction(operations);
     }
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.roster.save',
+      before: auditBefore,
+      details: {
+        renamedTo: name !== undefined ? name.trim() : undefined,
+        deleted: toDelete,
+        updated: toUpdate.map((p) => ({
+          id: p.id,
+          name: p.name.trim(),
+          number: p.number,
+        })),
+        created: toCreate.map((p) => ({
+          name: p.name.trim(),
+          position: p.position,
+          number: p.number,
+        })),
+        budget: {
+          initialBudgetPo: budgetPo,
+          playersCostPo,
+          staffCostPo,
+          starCostPo,
+          totalPo,
+        },
+      },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);

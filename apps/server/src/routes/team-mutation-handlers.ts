@@ -27,6 +27,11 @@ import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
 import { serverLog } from '../utils/server-log';
 import { deleteTeam, TeamDeleteError } from '../services/team-delete';
 import {
@@ -162,6 +167,9 @@ export async function handlePutTeamInfo(
       return;
     }
 
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     await prisma.team.update({
       where: { id: teamId },
       data: {
@@ -172,6 +180,16 @@ export async function handlePutTeamInfo(
         ...(dedicatedFans !== undefined && { dedicatedFans }),
       },
       include: { players: true },
+    });
+
+    // Le staff pèse dans la VE : sans cette trace, un coach qui règle ses
+    // relances puis constate une VE différente n'avait aucun moyen de
+    // relier les deux.
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.info.update',
+      before: auditBefore,
+      details: { rerolls, cheerleaders, assistants, apothecary, dedicatedFans },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -370,9 +388,26 @@ export async function handleUpdateTeam(
         }),
       );
     }
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     if (operations.length > 0) {
       await prisma.$transaction(operations);
     }
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.update',
+      before: auditBefore,
+      details: {
+        renamedTo: name !== undefined ? name.trim() : undefined,
+        players: players.map((p) => ({
+          id: p.id,
+          name: p.name.trim(),
+          number: p.number,
+        })),
+      },
+    });
 
     const updates = new Map(
       players.map((p) => [

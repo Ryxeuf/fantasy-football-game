@@ -14,6 +14,11 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 
 export type TeamDeleteErrorCode =
   | "not_found"
@@ -87,8 +92,16 @@ export async function deleteTeam(input: {
   }
 
   // Soft delete : préserve l'historique des compétitions terminées.
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const before = await captureTeamState(auditDb, teamId);
   await prisma.team.update({
     where: { id: teamId },
     data: { deletedAt: new Date() },
+  });
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: "team.delete",
+    before,
+    details: { userId: input.userId },
   });
 }
