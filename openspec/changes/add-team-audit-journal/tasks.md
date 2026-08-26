@@ -44,3 +44,14 @@
 ## 8. Doc
 - [x] 8.1 `docs/team-audit-journal.md` (mode d'emploi debug + ajout d'un nouveau flux).
 - [x] 8.2 Mémoire `CLAUDE.md` : pattern du journal + contexte ambiant.
+
+## 9. Recherche transversale admin
+- [x] 9.1 `services/team-audit-search.ts` : `buildAdminAuditWhere` / `buildAdminAuditOrderBy` (purs), capacités provider INJECTÉES (`mode: insensitive` PG-only, `string_contains` vs `contains` sur les colonnes JSON).
+- [x] 9.2 `resolveTeamIdFilter` (nom d'équipe / propriétaire → ids, borné) et `attachTeamContext` (jointure équipe+coach en UN aller-retour, contexte `null` si l'équipe est purgée).
+- [x] 9.3 `summarizeAuditActivity` : agrégats `groupBy` par action / rôle / équipe, avec les nets de trésorerie et de VE.
+- [x] 9.4 Exports purs `toCsv` (RFC 4180, BOM ajouté par la route, garde anti-formule sur les CHAÎNES seulement) et `toNdjson`.
+- [x] 9.5 `schemas/admin-team-journal.schemas.ts` : coercition et bornes ; les handlers ne recastent jamais `req.query`.
+- [x] 9.6 `routes/admin-team-journal.ts` : `/`, `/stats`, `/export`, `/facets` ; monté AVANT `/admin` pour éviter une double passe d'authentification.
+- [x] 9.7 Client web `lib/teamJournal.ts` : `buildJournalQuery` pur (omission des filtres vides, borne de fin étendue à la journée, seuils kpo → po), téléchargement par Blob (l'endpoint exige un Bearer).
+- [x] 9.8 Page `/admin/team-journal` : formulaire brouillon/appliqué, tableau parcourable, détail dépliable, rebond sur la corrélation, panneau d'agrégats à la demande, exports.
+- [x] 9.9 Entrée de navigation « Journal des équipes » dans le layout admin.

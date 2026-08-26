@@ -64,14 +64,22 @@ chiffre juste calculé sur un état intermédiaire faux.
   fiche d'équipe (coach) et depuis `/admin/teams` (admin).
 - **Coupe-circuit** d'exploitation `TEAM_AUDIT_DISABLED=1` (le journal ajoute
   une lecture d'état par mutation ; il doit pouvoir être coupé sans déploiement).
+- **Recherche transversale admin** (`services/team-audit-search.ts` +
+  `/admin/team-journal`) : mêmes filtres pour trois sorties — page enrichie
+  (équipe + coach, jointe en un aller-retour), agrégats `groupBy` (par action,
+  rôle, équipe) et export **CSV / NDJSON** plafonné. Filtres : texte libre
+  (étendable aux charges utiles), équipe, propriétaire, auteur, action exacte
+  ou par préfixe, rôle, source, entité, corrélation, fenêtre temporelle,
+  seuils de variation **en valeur absolue**, échecs seuls, impersonation
+  seule ; tris par date ou par impact. Les listes de valeurs viennent d'un
+  endpoint `/facets` alimenté par la base, pour ne pas diverger du code.
+  Page admin `/admin/team-journal` avec repli sur la frise d'une équipe.
 
 ## Out of scope (suivi)
 
 - **Rétention / purge** du journal : la table croît sans plafond. À cadrer une
   fois le volume réel observé (candidat : purge des étapes non économiques
   au-delà de N mois).
-- **Vue transversale admin** (« toutes les équipes, filtré par action ») :
-  aujourd'hui l'entrée admin se fait équipe par équipe depuis `/admin/teams`.
 - **Détection automatique d'anomalie** (alerte sur un saut de trésorerie sans
   étape correspondante) : les colonnes dénormalisées la rendent possible, elle
   n'est pas implémentée.
@@ -88,4 +96,5 @@ chiffre juste calculé sur un état intermédiaire faux.
   couvre le cas contraire.
 - **Tests** : `team-audit` (18), `team-audit-read` (13), `audit-context` (8),
   `team-audit-handlers` (13), `team-audit-coverage` (3, ratchet),
-  `journal-format` web (15).
+  `team-audit-search` (43), `admin-team-journal` (19), `journal-format` web
+  (15), `teamJournal` web (14).

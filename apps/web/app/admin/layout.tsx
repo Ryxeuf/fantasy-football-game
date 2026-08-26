@@ -101,6 +101,11 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
       items: [
         { href: "/admin/feature-flags", label: "Feature flags", icon: "🚩" },
         { href: "/admin/audit-log", label: "Journal d'audit", icon: "📜" },
+        {
+          href: "/admin/team-journal",
+          label: "Journal des équipes",
+          icon: "🧾",
+        },
         { href: "/admin/routes", label: "Routes", icon: "📋" },
         { href: "/admin/utilities", label: "Utilitaires", icon: "🛠️" },
       ],

@@ -98,3 +98,35 @@ supplémentaire ne DOIT être effectuée.
 - WHEN `TEAM_AUDIT_DISABLED=1`
 - THEN aucune entrée ne DOIT être écrite
 - AND aucune capture d'état ne DOIT être effectuée (pas de coût résiduel)
+
+### Requirement: Recherche transversale et export
+Un admin DOIT pouvoir chercher dans le journal de TOUTES les équipes à la
+fois, selon l'équipe, le coach, l'auteur, l'action, le rôle, la source,
+l'entité, l'opération, une fenêtre temporelle, et un seuil de variation. Le
+même jeu de filtres DOIT piloter la consultation, les agrégats et l'export,
+afin que l'export corresponde exactement à ce qui est affiché.
+
+#### Scenario: Chasse aux mouvements aberrants
+- WHEN un admin demande les étapes dont la variation de trésorerie dépasse un seuil
+- THEN les variations DOIVENT être retenues dans LES DEUX SENS (un crédit anormal compte autant qu'un débit)
+- AND un tri par impact DOIT permettre de faire remonter les plus gros mouvements
+
+#### Scenario: Recherche dans les charges utiles
+- WHEN la recherche profonde est demandée
+- THEN le texte DOIT aussi être cherché dans les charges utiles et les diffs
+- AND l'opérateur employé DOIT être celui du provider de la base
+
+#### Scenario: Export exploitable par une machine
+- WHEN un admin exporte le périmètre filtré
+- THEN il DOIT obtenir un CSV lisible par un tableur ou un NDJSON dont chaque ligne se parse indépendamment
+- AND les montants DOIVENT être exportés en unité brute, sans arrondi d'affichage
+- AND un texte issu d'une saisie utilisateur NE DOIT PAS pouvoir être interprété comme une formule par un tableur
+
+#### Scenario: Export trop large
+- WHEN le périmètre filtré dépasse le plafond d'export
+- THEN la réponse DOIT indiquer le total réel et le nombre de lignes servies
+- AND une demande de taille supérieure au plafond DOIT être refusée plutôt que tronquée en silence
+
+#### Scenario: Étape d'une équipe supprimée
+- WHEN une étape porte sur une équipe qui n'existe plus
+- THEN l'étape DOIT rester servie, avec un contexte d'équipe vide plutôt que d'être masquée

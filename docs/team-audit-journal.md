@@ -27,6 +27,59 @@ L'UI groupe les étapes par **opération** (une requête = une carte dépliable)
 C'est la vue utile : un achat de joueur apparaît comme une opération de deux
 étapes — le débit, puis le recalcul de VE — chacune avec son résultat.
 
+## Chercher à travers TOUTES les équipes (admin)
+
+`/admin/team-journal` — l'outil d'enquête quand on ne sait pas encore quelle
+équipe est en cause. Les mêmes filtres pilotent les trois vues : on affine à
+l'écran, on lit les agrégats, on exporte ce qu'on voit.
+
+| Filtre | Sert à |
+| --- | --- |
+| Recherche libre (`q`) | action, coach, note, route, id d'entité, corrélation |
+| « aussi dans les charges utiles » (`deep`) | étend `q` à `details` / `changes` — retrouve un poste acheté, un motif commissaire, un montant |
+| Équipe (nom) / propriétaire | restreindre à une écurie ou à un coach |
+| Action, rôle, source, entité | listes alimentées par les valeurs RÉELLEMENT présentes (`/facets`) |
+| Δ trésorerie ≥ N kpo | ne garder que les gros mouvements, **dans les deux sens** — un crédit de 200k est aussi suspect qu'un débit |
+| Échecs uniquement | les étapes `<action>.failed` |
+| En impersonation | ce qu'un admin a fait « en tant que » un coach |
+| Du / Au | fenêtre temporelle (la borne de fin inclut la journée entière) |
+
+Tri disponible : plus récent, plus ancien, **impact trésorerie**, **impact VE**
+— les deux derniers font remonter les sauts aberrants sans les chercher.
+
+Cliquer une ligne déplie sa charge utile ; « Voir toute l'opération » rebascule
+la recherche sur le `correlationId` et affiche les étapes sœurs.
+
+### Export machine
+
+Deux formats, mêmes filtres, plafonnés à 10 000 lignes (au-delà : resserrer ou
+paginer — le serveur refuse plutôt que de tronquer en silence) :
+
+- **CSV** — pour un tableur. BOM UTF-8 (sans lui Excel lit « Trésorerie » en
+  Latin-1), montants en **po bruts** (un export sert à calculer, pas à lire),
+  colonnes texte protégées contre l'injection de formule.
+- **NDJSON** — une ligne JSON complète par étape, snapshots inclus. Se lit en
+  streaming, se rejoue dans n'importe quel outil :
+
+```bash
+# Les 10 plus gros mouvements de trésorerie du fichier exporté
+jq -s 'sort_by(.treasuryDelta) | .[0:10] | .[] | {action, treasuryDelta, team: .team.teamName}' export.ndjson
+```
+
+Les en-têtes `X-Total-Count` / `X-Returned-Count` disent si l'export est
+complet.
+
+### API
+
+Trois endpoints admin partagent le même jeu de filtres :
+
+```
+GET /admin/team-journal          # page enrichie (équipe + coach)
+GET /admin/team-journal/stats    # agrégats par action / rôle / équipe
+GET /admin/team-journal/export   # CSV ou NDJSON (?format=)
+GET /admin/team-journal/facets   # valeurs de filtre réellement présentes
+```
+
 ## Débugger un écart de trésorerie ou de VE
 
 1. Ouvrir le journal de l'équipe, cocher **« Uniquement l'or et la VE »** :
@@ -99,6 +152,23 @@ sont attribuées à `system` avec une corrélation par étape :
 ```ts
 await runAsAuditJob("league.postmatch.sequence", () => settleMatch(matchId));
 ```
+
+## Pièges de portabilité (recherche)
+
+Deux différences Postgres / miroir sqlite sont traitées dans
+`services/team-audit-search.ts`, via des capacités **injectées** plutôt que
+déduites au fond du code (le constructeur de requête reste pur et testable
+dans les deux configurations) :
+
+- `mode: "insensitive"` n'existe **que** sur Postgres ; le passer à sqlite
+  fait échouer la requête.
+- `details` / `changes` sont `Json` en PG et `String` en sqlite. Comme
+  `recordTeamAudit` y écrit toujours une **chaîne** JSON, la recherche
+  profonde utilise `string_contains` (PG) ou `contains` (sqlite).
+
+Toute nouvelle clause qui touche ces colonnes doit passer par
+`ProviderCapabilities`, sinon elle marchera dans les tests et cassera en prod
+(ou l'inverse).
 
 ## Exploitation
 
