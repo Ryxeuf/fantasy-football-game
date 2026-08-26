@@ -28,6 +28,12 @@ import {
 import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
 import { getEliteSkillSlugs } from "./elite-skills";
 import { updateTeamValues } from "../utils/team-values";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+  type TeamStateSnapshot,
+} from "./team-audit";
 
 export class CommissionerEditError extends Error {
   constructor(
@@ -63,6 +69,13 @@ export interface AuditEntry {
   readonly beforeState?: Record<string, unknown> | null;
   readonly afterState?: Record<string, unknown> | null;
   readonly reason?: string | null;
+  /**
+   * État complet de l'équipe AVANT la mutation, capturé par l'appelant
+   * (`captureTeamState`) pour que le journal d'équipe puisse calculer le
+   * diff et les deltas. Facultatif : sans lui, la ligne porte quand même
+   * l'état résultant.
+   */
+  readonly beforeSnapshot?: TeamStateSnapshot | null;
 }
 
 /**
@@ -102,6 +115,28 @@ export async function appendAudit(entry: AuditEntry): Promise<void> {
     // Si AuditLog n'existe pas dans cette DB (tests SQLite legacy),
     // on ne propage pas — le service de mutation reste fonctionnel.
   }
+
+  // Miroir dans le JOURNAL D'ÉQUIPE : `AuditLog` est indexé par admin et
+  // par action, pas par équipe. Une correction commissaire qui déplace la
+  // trésorerie ou la VE doit apparaître dans la frise de l'équipe, à côté
+  // des achats du coach et de l'économie d'après-match — sinon il manque
+  // toujours une moitié de l'histoire. Une seule greffe ici couvre TOUTES
+  // les mutations commissaire (PSP, identité, compétences, caractéristique,
+  // trésorerie).
+  await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+    teamId: entry.teamId,
+    action: `commissioner.team.${entry.action}`,
+    entity: entry.playerId ? "TeamPlayer" : "Team",
+    entityId: entry.playerId ?? entry.teamId,
+    before: entry.beforeSnapshot ?? null,
+    actor: { userId: entry.byCommissionerId, role: "commissioner" },
+    note: entry.reason ?? null,
+    details: {
+      leagueId: entry.leagueId,
+      beforeState: entry.beforeState ?? null,
+      afterState: entry.afterState ?? null,
+    },
+  });
 }
 
 /**
@@ -764,6 +799,10 @@ export async function adjustTreasury(input: AdjustTreasuryInput) {
       "La tresorerie ne peut pas devenir negative",
     );
   }
+  const beforeSnapshot = await captureTeamState(
+    prisma as unknown as TeamAuditPrismaLike,
+    input.teamId,
+  );
   const updated = await prisma.team.update({
     where: { id: input.teamId },
     data: { treasury: newTreasury },
@@ -772,6 +811,7 @@ export async function adjustTreasury(input: AdjustTreasuryInput) {
     leagueId: input.leagueId,
     byCommissionerId: input.byCommissionerId,
     teamId: input.teamId,
+    beforeSnapshot,
     action: "adjust_treasury",
     beforeState: { treasury: team.treasury },
     afterState: { treasury: newTreasury },

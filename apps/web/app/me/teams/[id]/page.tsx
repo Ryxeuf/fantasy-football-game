@@ -608,6 +608,16 @@ export default function TeamDetailPage() {
           >
             {t.teams.treasuryTitle ?? "Tresorerie"}
           </a>
+          {/* Journal : qui a modifie quoi, et quel a ete le resultat. Le
+              premier reflexe quand la tresorerie ou la VE affichee ne colle
+              pas a ce que le coach attend. */}
+          <a
+            data-testid="team-journal-link"
+            href={`/me/teams/${id}/journal`}
+            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors text-center"
+          >
+            Journal
+          </a>
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}

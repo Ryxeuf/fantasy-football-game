@@ -22,6 +22,11 @@ import {
 } from '@bb/game-engine';
 import { DEFAULT_RULESET } from '@bb/game-engine';
 import { computeTeamValueBreakdownFor } from '../utils/team-values';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from './team-audit';
 
 export interface TeamBudgetSummary {
   /** Budget de construction, en po (`Team.initialBudget` × 1000). */
@@ -206,7 +211,23 @@ export async function creditInitialTreasury(
   const treasury = Math.max(0, summary.remaining);
   if (treasury === 0) return 0;
 
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const before = await captureTeamState(auditDb, teamId);
   await prisma.team.update({ where: { id: teamId }, data: { treasury } });
+  // Journal : c'est ici que naît la trésorerie d'une équipe neuve. Sans
+  // trace, un reliquat mal calculé était indiscernable d'un crédit
+  // fantôme plus tard dans la vie de l'équipe.
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: 'team.treasury.credit-initial',
+    before,
+    details: {
+      initialBudget: summary.initialBudget,
+      totalSpent: summary.totalSpent,
+      remaining: summary.remaining,
+      credited: treasury,
+    },
+  });
   return treasury;
 }
 

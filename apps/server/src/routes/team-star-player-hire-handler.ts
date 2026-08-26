@@ -24,6 +24,11 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
+import {
   DEFAULT_RULESET,
   type Ruleset,
 } from '@bb/game-engine';
@@ -166,6 +171,9 @@ export async function handleHireStarPlayer(
     // constraint, partner deja hire par une autre team), le 1er
     // persiste et la team est laissee avec un demi-pairing illegal.
     // Fix : `prisma.$transaction([...creates])` pour all-or-nothing.
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     const createdStarPlayers = await prisma.$transaction(
       starPlayersToHire.map((sp) =>
         prisma.teamStarPlayer.create({
@@ -177,6 +185,19 @@ export async function handleHireStarPlayer(
         }),
       ),
     );
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.star-player.hire',
+      entity: 'TeamStarPlayer',
+      before: auditBefore,
+      details: {
+        hired: starPlayersToHire.map((sp) => ({
+          slug: sp.slug,
+          cost: sp.cost,
+        })),
+      },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);

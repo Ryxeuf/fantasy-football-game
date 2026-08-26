@@ -364,6 +364,11 @@ export type ProTournamentEntry = $Result.DefaultSelection<Prisma.$ProTournamentE
  */
 export type AuditLog = $Result.DefaultSelection<Prisma.$AuditLogPayload>
 /**
+ * Model TeamAuditEvent
+ * 
+ */
+export type TeamAuditEvent = $Result.DefaultSelection<Prisma.$TeamAuditEventPayload>
+/**
  * Model EngineComparison
  * 
  */
@@ -1252,6 +1257,16 @@ export class PrismaClient<
   get auditLog(): Prisma.AuditLogDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.teamAuditEvent`: Exposes CRUD operations for the **TeamAuditEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TeamAuditEvents
+    * const teamAuditEvents = await prisma.teamAuditEvent.findMany()
+    * ```
+    */
+  get teamAuditEvent(): Prisma.TeamAuditEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.engineComparison`: Exposes CRUD operations for the **EngineComparison** model.
     * Example usage:
     * ```ts
@@ -1858,6 +1873,7 @@ export namespace Prisma {
     ProTournament: 'ProTournament',
     ProTournamentEntry: 'ProTournamentEntry',
     AuditLog: 'AuditLog',
+    TeamAuditEvent: 'TeamAuditEvent',
     EngineComparison: 'EngineComparison',
     ProPredictionLeague: 'ProPredictionLeague',
     ProPredictionLeagueMember: 'ProPredictionLeagueMember',
@@ -1886,7 +1902,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -6922,6 +6938,80 @@ export namespace Prisma {
           }
         }
       }
+      TeamAuditEvent: {
+        payload: Prisma.$TeamAuditEventPayload<ExtArgs>
+        fields: Prisma.TeamAuditEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TeamAuditEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TeamAuditEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          findFirst: {
+            args: Prisma.TeamAuditEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TeamAuditEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          findMany: {
+            args: Prisma.TeamAuditEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>[]
+          }
+          create: {
+            args: Prisma.TeamAuditEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          createMany: {
+            args: Prisma.TeamAuditEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TeamAuditEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>[]
+          }
+          delete: {
+            args: Prisma.TeamAuditEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          update: {
+            args: Prisma.TeamAuditEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.TeamAuditEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TeamAuditEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TeamAuditEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.TeamAuditEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamAuditEventPayload>
+          }
+          aggregate: {
+            args: Prisma.TeamAuditEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeamAuditEvent>
+          }
+          groupBy: {
+            args: Prisma.TeamAuditEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeamAuditEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TeamAuditEventCountArgs<ExtArgs>
+            result: $Utils.Optional<TeamAuditEventCountAggregateOutputType> | number
+          }
+        }
+      }
       EngineComparison: {
         payload: Prisma.$EngineComparisonPayload<ExtArgs>
         fields: Prisma.EngineComparisonFieldRefs
@@ -7826,6 +7916,7 @@ export namespace Prisma {
     proTournament?: ProTournamentOmit
     proTournamentEntry?: ProTournamentEntryOmit
     auditLog?: AuditLogOmit
+    teamAuditEvent?: TeamAuditEventOmit
     engineComparison?: EngineComparisonOmit
     proPredictionLeague?: ProPredictionLeagueOmit
     proPredictionLeagueMember?: ProPredictionLeagueMemberOmit
@@ -50157,6 +50248,7 @@ export namespace Prisma {
     theme: string | null
     themeYear: number | null
     playoffSize: number | null
+    playoffsPublished: boolean | null
     meceneEnabled: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -50173,6 +50265,7 @@ export namespace Prisma {
     theme: string | null
     themeYear: number | null
     playoffSize: number | null
+    playoffsPublished: boolean | null
     meceneEnabled: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -50189,6 +50282,7 @@ export namespace Prisma {
     theme: number
     themeYear: number
     playoffSize: number
+    playoffsPublished: number
     meceneEnabled: number
     createdAt: number
     updatedAt: number
@@ -50219,6 +50313,7 @@ export namespace Prisma {
     theme?: true
     themeYear?: true
     playoffSize?: true
+    playoffsPublished?: true
     meceneEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -50235,6 +50330,7 @@ export namespace Prisma {
     theme?: true
     themeYear?: true
     playoffSize?: true
+    playoffsPublished?: true
     meceneEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -50251,6 +50347,7 @@ export namespace Prisma {
     theme?: true
     themeYear?: true
     playoffSize?: true
+    playoffsPublished?: true
     meceneEnabled?: true
     createdAt?: true
     updatedAt?: true
@@ -50354,6 +50451,7 @@ export namespace Prisma {
     theme: string | null
     themeYear: number | null
     playoffSize: number
+    playoffsPublished: boolean | null
     meceneEnabled: boolean
     createdAt: Date
     updatedAt: Date
@@ -50389,6 +50487,7 @@ export namespace Prisma {
     theme?: boolean
     themeYear?: boolean
     playoffSize?: boolean
+    playoffsPublished?: boolean
     meceneEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -50413,6 +50512,7 @@ export namespace Prisma {
     theme?: boolean
     themeYear?: boolean
     playoffSize?: boolean
+    playoffsPublished?: boolean
     meceneEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -50430,6 +50530,7 @@ export namespace Prisma {
     theme?: boolean
     themeYear?: boolean
     playoffSize?: boolean
+    playoffsPublished?: boolean
     meceneEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -50447,12 +50548,13 @@ export namespace Prisma {
     theme?: boolean
     themeYear?: boolean
     playoffSize?: boolean
+    playoffsPublished?: boolean
     meceneEnabled?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "seasonNumber" | "name" | "status" | "startDate" | "endDate" | "theme" | "themeYear" | "playoffSize" | "meceneEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueSeason"]>
+  export type LeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "seasonNumber" | "name" | "status" | "startDate" | "endDate" | "theme" | "themeYear" | "playoffSize" | "playoffsPublished" | "meceneEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueSeason"]>
   export type LeagueSeasonInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     league?: boolean | LeagueDefaultArgs<ExtArgs>
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
@@ -50492,6 +50594,7 @@ export namespace Prisma {
       theme: string | null
       themeYear: number | null
       playoffSize: number
+      playoffsPublished: boolean | null
       meceneEnabled: boolean
       createdAt: Date
       updatedAt: Date
@@ -50935,6 +51038,7 @@ export namespace Prisma {
     readonly theme: FieldRef<"LeagueSeason", 'String'>
     readonly themeYear: FieldRef<"LeagueSeason", 'Int'>
     readonly playoffSize: FieldRef<"LeagueSeason", 'Int'>
+    readonly playoffsPublished: FieldRef<"LeagueSeason", 'Boolean'>
     readonly meceneEnabled: FieldRef<"LeagueSeason", 'Boolean'>
     readonly createdAt: FieldRef<"LeagueSeason", 'DateTime'>
     readonly updatedAt: FieldRef<"LeagueSeason", 'DateTime'>
@@ -92367,6 +92471,1326 @@ export namespace Prisma {
 
 
   /**
+   * Model TeamAuditEvent
+   */
+
+  export type AggregateTeamAuditEvent = {
+    _count: TeamAuditEventCountAggregateOutputType | null
+    _avg: TeamAuditEventAvgAggregateOutputType | null
+    _sum: TeamAuditEventSumAggregateOutputType | null
+    _min: TeamAuditEventMinAggregateOutputType | null
+    _max: TeamAuditEventMaxAggregateOutputType | null
+  }
+
+  export type TeamAuditEventAvgAggregateOutputType = {
+    step: number | null
+    treasury: number | null
+    teamValue: number | null
+    currentValue: number | null
+    treasuryDelta: number | null
+    teamValueDelta: number | null
+  }
+
+  export type TeamAuditEventSumAggregateOutputType = {
+    step: number | null
+    treasury: number | null
+    teamValue: number | null
+    currentValue: number | null
+    treasuryDelta: number | null
+    teamValueDelta: number | null
+  }
+
+  export type TeamAuditEventMinAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    createdAt: Date | null
+    correlationId: string | null
+    step: number | null
+    action: string | null
+    entity: string | null
+    entityId: string | null
+    actorUserId: string | null
+    actorRole: string | null
+    actorLabel: string | null
+    impersonatorId: string | null
+    source: string | null
+    route: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    changes: string | null
+    before: string | null
+    after: string | null
+    details: string | null
+    treasury: number | null
+    teamValue: number | null
+    currentValue: number | null
+    treasuryDelta: number | null
+    teamValueDelta: number | null
+    note: string | null
+  }
+
+  export type TeamAuditEventMaxAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    createdAt: Date | null
+    correlationId: string | null
+    step: number | null
+    action: string | null
+    entity: string | null
+    entityId: string | null
+    actorUserId: string | null
+    actorRole: string | null
+    actorLabel: string | null
+    impersonatorId: string | null
+    source: string | null
+    route: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    changes: string | null
+    before: string | null
+    after: string | null
+    details: string | null
+    treasury: number | null
+    teamValue: number | null
+    currentValue: number | null
+    treasuryDelta: number | null
+    teamValueDelta: number | null
+    note: string | null
+  }
+
+  export type TeamAuditEventCountAggregateOutputType = {
+    id: number
+    teamId: number
+    createdAt: number
+    correlationId: number
+    step: number
+    action: number
+    entity: number
+    entityId: number
+    actorUserId: number
+    actorRole: number
+    actorLabel: number
+    impersonatorId: number
+    source: number
+    route: number
+    ipAddress: number
+    userAgent: number
+    changes: number
+    before: number
+    after: number
+    details: number
+    treasury: number
+    teamValue: number
+    currentValue: number
+    treasuryDelta: number
+    teamValueDelta: number
+    note: number
+    _all: number
+  }
+
+
+  export type TeamAuditEventAvgAggregateInputType = {
+    step?: true
+    treasury?: true
+    teamValue?: true
+    currentValue?: true
+    treasuryDelta?: true
+    teamValueDelta?: true
+  }
+
+  export type TeamAuditEventSumAggregateInputType = {
+    step?: true
+    treasury?: true
+    teamValue?: true
+    currentValue?: true
+    treasuryDelta?: true
+    teamValueDelta?: true
+  }
+
+  export type TeamAuditEventMinAggregateInputType = {
+    id?: true
+    teamId?: true
+    createdAt?: true
+    correlationId?: true
+    step?: true
+    action?: true
+    entity?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorLabel?: true
+    impersonatorId?: true
+    source?: true
+    route?: true
+    ipAddress?: true
+    userAgent?: true
+    changes?: true
+    before?: true
+    after?: true
+    details?: true
+    treasury?: true
+    teamValue?: true
+    currentValue?: true
+    treasuryDelta?: true
+    teamValueDelta?: true
+    note?: true
+  }
+
+  export type TeamAuditEventMaxAggregateInputType = {
+    id?: true
+    teamId?: true
+    createdAt?: true
+    correlationId?: true
+    step?: true
+    action?: true
+    entity?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorLabel?: true
+    impersonatorId?: true
+    source?: true
+    route?: true
+    ipAddress?: true
+    userAgent?: true
+    changes?: true
+    before?: true
+    after?: true
+    details?: true
+    treasury?: true
+    teamValue?: true
+    currentValue?: true
+    treasuryDelta?: true
+    teamValueDelta?: true
+    note?: true
+  }
+
+  export type TeamAuditEventCountAggregateInputType = {
+    id?: true
+    teamId?: true
+    createdAt?: true
+    correlationId?: true
+    step?: true
+    action?: true
+    entity?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorLabel?: true
+    impersonatorId?: true
+    source?: true
+    route?: true
+    ipAddress?: true
+    userAgent?: true
+    changes?: true
+    before?: true
+    after?: true
+    details?: true
+    treasury?: true
+    teamValue?: true
+    currentValue?: true
+    treasuryDelta?: true
+    teamValueDelta?: true
+    note?: true
+    _all?: true
+  }
+
+  export type TeamAuditEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamAuditEvent to aggregate.
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamAuditEvents to fetch.
+     */
+    orderBy?: TeamAuditEventOrderByWithRelationInput | TeamAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TeamAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TeamAuditEvents
+    **/
+    _count?: true | TeamAuditEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TeamAuditEventAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TeamAuditEventSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TeamAuditEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TeamAuditEventMaxAggregateInputType
+  }
+
+  export type GetTeamAuditEventAggregateType<T extends TeamAuditEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeamAuditEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTeamAuditEvent[P]>
+      : GetScalarType<T[P], AggregateTeamAuditEvent[P]>
+  }
+
+
+
+
+  export type TeamAuditEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamAuditEventWhereInput
+    orderBy?: TeamAuditEventOrderByWithAggregationInput | TeamAuditEventOrderByWithAggregationInput[]
+    by: TeamAuditEventScalarFieldEnum[] | TeamAuditEventScalarFieldEnum
+    having?: TeamAuditEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TeamAuditEventCountAggregateInputType | true
+    _avg?: TeamAuditEventAvgAggregateInputType
+    _sum?: TeamAuditEventSumAggregateInputType
+    _min?: TeamAuditEventMinAggregateInputType
+    _max?: TeamAuditEventMaxAggregateInputType
+  }
+
+  export type TeamAuditEventGroupByOutputType = {
+    id: string
+    teamId: string
+    createdAt: Date
+    correlationId: string
+    step: number
+    action: string
+    entity: string
+    entityId: string | null
+    actorUserId: string | null
+    actorRole: string
+    actorLabel: string | null
+    impersonatorId: string | null
+    source: string
+    route: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    changes: string | null
+    before: string | null
+    after: string | null
+    details: string | null
+    treasury: number | null
+    teamValue: number | null
+    currentValue: number | null
+    treasuryDelta: number | null
+    teamValueDelta: number | null
+    note: string | null
+    _count: TeamAuditEventCountAggregateOutputType | null
+    _avg: TeamAuditEventAvgAggregateOutputType | null
+    _sum: TeamAuditEventSumAggregateOutputType | null
+    _min: TeamAuditEventMinAggregateOutputType | null
+    _max: TeamAuditEventMaxAggregateOutputType | null
+  }
+
+  type GetTeamAuditEventGroupByPayload<T extends TeamAuditEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TeamAuditEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TeamAuditEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TeamAuditEventGroupByOutputType[P]>
+            : GetScalarType<T[P], TeamAuditEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TeamAuditEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    correlationId?: boolean
+    step?: boolean
+    action?: boolean
+    entity?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorLabel?: boolean
+    impersonatorId?: boolean
+    source?: boolean
+    route?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    changes?: boolean
+    before?: boolean
+    after?: boolean
+    details?: boolean
+    treasury?: boolean
+    teamValue?: boolean
+    currentValue?: boolean
+    treasuryDelta?: boolean
+    teamValueDelta?: boolean
+    note?: boolean
+  }, ExtArgs["result"]["teamAuditEvent"]>
+
+  export type TeamAuditEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    correlationId?: boolean
+    step?: boolean
+    action?: boolean
+    entity?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorLabel?: boolean
+    impersonatorId?: boolean
+    source?: boolean
+    route?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    changes?: boolean
+    before?: boolean
+    after?: boolean
+    details?: boolean
+    treasury?: boolean
+    teamValue?: boolean
+    currentValue?: boolean
+    treasuryDelta?: boolean
+    teamValueDelta?: boolean
+    note?: boolean
+  }, ExtArgs["result"]["teamAuditEvent"]>
+
+  export type TeamAuditEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    correlationId?: boolean
+    step?: boolean
+    action?: boolean
+    entity?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorLabel?: boolean
+    impersonatorId?: boolean
+    source?: boolean
+    route?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    changes?: boolean
+    before?: boolean
+    after?: boolean
+    details?: boolean
+    treasury?: boolean
+    teamValue?: boolean
+    currentValue?: boolean
+    treasuryDelta?: boolean
+    teamValueDelta?: boolean
+    note?: boolean
+  }, ExtArgs["result"]["teamAuditEvent"]>
+
+  export type TeamAuditEventSelectScalar = {
+    id?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    correlationId?: boolean
+    step?: boolean
+    action?: boolean
+    entity?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorLabel?: boolean
+    impersonatorId?: boolean
+    source?: boolean
+    route?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    changes?: boolean
+    before?: boolean
+    after?: boolean
+    details?: boolean
+    treasury?: boolean
+    teamValue?: boolean
+    currentValue?: boolean
+    treasuryDelta?: boolean
+    teamValueDelta?: boolean
+    note?: boolean
+  }
+
+  export type TeamAuditEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "createdAt" | "correlationId" | "step" | "action" | "entity" | "entityId" | "actorUserId" | "actorRole" | "actorLabel" | "impersonatorId" | "source" | "route" | "ipAddress" | "userAgent" | "changes" | "before" | "after" | "details" | "treasury" | "teamValue" | "currentValue" | "treasuryDelta" | "teamValueDelta" | "note", ExtArgs["result"]["teamAuditEvent"]>
+
+  export type $TeamAuditEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeamAuditEvent"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      teamId: string
+      createdAt: Date
+      correlationId: string
+      step: number
+      action: string
+      entity: string
+      entityId: string | null
+      actorUserId: string | null
+      actorRole: string
+      actorLabel: string | null
+      impersonatorId: string | null
+      source: string
+      route: string | null
+      ipAddress: string | null
+      userAgent: string | null
+      changes: string | null
+      before: string | null
+      after: string | null
+      details: string | null
+      treasury: number | null
+      teamValue: number | null
+      currentValue: number | null
+      treasuryDelta: number | null
+      teamValueDelta: number | null
+      note: string | null
+    }, ExtArgs["result"]["teamAuditEvent"]>
+    composites: {}
+  }
+
+  type TeamAuditEventGetPayload<S extends boolean | null | undefined | TeamAuditEventDefaultArgs> = $Result.GetResult<Prisma.$TeamAuditEventPayload, S>
+
+  type TeamAuditEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeamAuditEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeamAuditEventCountAggregateInputType | true
+    }
+
+  export interface TeamAuditEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeamAuditEvent'], meta: { name: 'TeamAuditEvent' } }
+    /**
+     * Find zero or one TeamAuditEvent that matches the filter.
+     * @param {TeamAuditEventFindUniqueArgs} args - Arguments to find a TeamAuditEvent
+     * @example
+     * // Get one TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TeamAuditEventFindUniqueArgs>(args: SelectSubset<T, TeamAuditEventFindUniqueArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TeamAuditEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TeamAuditEventFindUniqueOrThrowArgs} args - Arguments to find a TeamAuditEvent
+     * @example
+     * // Get one TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TeamAuditEventFindUniqueOrThrowArgs>(args: SelectSubset<T, TeamAuditEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamAuditEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventFindFirstArgs} args - Arguments to find a TeamAuditEvent
+     * @example
+     * // Get one TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TeamAuditEventFindFirstArgs>(args?: SelectSubset<T, TeamAuditEventFindFirstArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamAuditEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventFindFirstOrThrowArgs} args - Arguments to find a TeamAuditEvent
+     * @example
+     * // Get one TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TeamAuditEventFindFirstOrThrowArgs>(args?: SelectSubset<T, TeamAuditEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TeamAuditEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TeamAuditEvents
+     * const teamAuditEvents = await prisma.teamAuditEvent.findMany()
+     * 
+     * // Get first 10 TeamAuditEvents
+     * const teamAuditEvents = await prisma.teamAuditEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const teamAuditEventWithIdOnly = await prisma.teamAuditEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TeamAuditEventFindManyArgs>(args?: SelectSubset<T, TeamAuditEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TeamAuditEvent.
+     * @param {TeamAuditEventCreateArgs} args - Arguments to create a TeamAuditEvent.
+     * @example
+     * // Create one TeamAuditEvent
+     * const TeamAuditEvent = await prisma.teamAuditEvent.create({
+     *   data: {
+     *     // ... data to create a TeamAuditEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends TeamAuditEventCreateArgs>(args: SelectSubset<T, TeamAuditEventCreateArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TeamAuditEvents.
+     * @param {TeamAuditEventCreateManyArgs} args - Arguments to create many TeamAuditEvents.
+     * @example
+     * // Create many TeamAuditEvents
+     * const teamAuditEvent = await prisma.teamAuditEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TeamAuditEventCreateManyArgs>(args?: SelectSubset<T, TeamAuditEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TeamAuditEvents and returns the data saved in the database.
+     * @param {TeamAuditEventCreateManyAndReturnArgs} args - Arguments to create many TeamAuditEvents.
+     * @example
+     * // Create many TeamAuditEvents
+     * const teamAuditEvent = await prisma.teamAuditEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TeamAuditEvents and only return the `id`
+     * const teamAuditEventWithIdOnly = await prisma.teamAuditEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TeamAuditEventCreateManyAndReturnArgs>(args?: SelectSubset<T, TeamAuditEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TeamAuditEvent.
+     * @param {TeamAuditEventDeleteArgs} args - Arguments to delete one TeamAuditEvent.
+     * @example
+     * // Delete one TeamAuditEvent
+     * const TeamAuditEvent = await prisma.teamAuditEvent.delete({
+     *   where: {
+     *     // ... filter to delete one TeamAuditEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TeamAuditEventDeleteArgs>(args: SelectSubset<T, TeamAuditEventDeleteArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TeamAuditEvent.
+     * @param {TeamAuditEventUpdateArgs} args - Arguments to update one TeamAuditEvent.
+     * @example
+     * // Update one TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TeamAuditEventUpdateArgs>(args: SelectSubset<T, TeamAuditEventUpdateArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TeamAuditEvents.
+     * @param {TeamAuditEventDeleteManyArgs} args - Arguments to filter TeamAuditEvents to delete.
+     * @example
+     * // Delete a few TeamAuditEvents
+     * const { count } = await prisma.teamAuditEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TeamAuditEventDeleteManyArgs>(args?: SelectSubset<T, TeamAuditEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamAuditEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TeamAuditEvents
+     * const teamAuditEvent = await prisma.teamAuditEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TeamAuditEventUpdateManyArgs>(args: SelectSubset<T, TeamAuditEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamAuditEvents and returns the data updated in the database.
+     * @param {TeamAuditEventUpdateManyAndReturnArgs} args - Arguments to update many TeamAuditEvents.
+     * @example
+     * // Update many TeamAuditEvents
+     * const teamAuditEvent = await prisma.teamAuditEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TeamAuditEvents and only return the `id`
+     * const teamAuditEventWithIdOnly = await prisma.teamAuditEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TeamAuditEventUpdateManyAndReturnArgs>(args: SelectSubset<T, TeamAuditEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TeamAuditEvent.
+     * @param {TeamAuditEventUpsertArgs} args - Arguments to update or create a TeamAuditEvent.
+     * @example
+     * // Update or create a TeamAuditEvent
+     * const teamAuditEvent = await prisma.teamAuditEvent.upsert({
+     *   create: {
+     *     // ... data to create a TeamAuditEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TeamAuditEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TeamAuditEventUpsertArgs>(args: SelectSubset<T, TeamAuditEventUpsertArgs<ExtArgs>>): Prisma__TeamAuditEventClient<$Result.GetResult<Prisma.$TeamAuditEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TeamAuditEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventCountArgs} args - Arguments to filter TeamAuditEvents to count.
+     * @example
+     * // Count the number of TeamAuditEvents
+     * const count = await prisma.teamAuditEvent.count({
+     *   where: {
+     *     // ... the filter for the TeamAuditEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends TeamAuditEventCountArgs>(
+      args?: Subset<T, TeamAuditEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TeamAuditEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TeamAuditEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TeamAuditEventAggregateArgs>(args: Subset<T, TeamAuditEventAggregateArgs>): Prisma.PrismaPromise<GetTeamAuditEventAggregateType<T>>
+
+    /**
+     * Group by TeamAuditEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamAuditEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TeamAuditEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TeamAuditEventGroupByArgs['orderBy'] }
+        : { orderBy?: TeamAuditEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TeamAuditEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeamAuditEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TeamAuditEvent model
+   */
+  readonly fields: TeamAuditEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TeamAuditEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TeamAuditEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TeamAuditEvent model
+   */
+  interface TeamAuditEventFieldRefs {
+    readonly id: FieldRef<"TeamAuditEvent", 'String'>
+    readonly teamId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly createdAt: FieldRef<"TeamAuditEvent", 'DateTime'>
+    readonly correlationId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly step: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly action: FieldRef<"TeamAuditEvent", 'String'>
+    readonly entity: FieldRef<"TeamAuditEvent", 'String'>
+    readonly entityId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly actorUserId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly actorRole: FieldRef<"TeamAuditEvent", 'String'>
+    readonly actorLabel: FieldRef<"TeamAuditEvent", 'String'>
+    readonly impersonatorId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly source: FieldRef<"TeamAuditEvent", 'String'>
+    readonly route: FieldRef<"TeamAuditEvent", 'String'>
+    readonly ipAddress: FieldRef<"TeamAuditEvent", 'String'>
+    readonly userAgent: FieldRef<"TeamAuditEvent", 'String'>
+    readonly changes: FieldRef<"TeamAuditEvent", 'String'>
+    readonly before: FieldRef<"TeamAuditEvent", 'String'>
+    readonly after: FieldRef<"TeamAuditEvent", 'String'>
+    readonly details: FieldRef<"TeamAuditEvent", 'String'>
+    readonly treasury: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly teamValue: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly currentValue: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly treasuryDelta: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly teamValueDelta: FieldRef<"TeamAuditEvent", 'Int'>
+    readonly note: FieldRef<"TeamAuditEvent", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TeamAuditEvent findUnique
+   */
+  export type TeamAuditEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamAuditEvent to fetch.
+     */
+    where: TeamAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TeamAuditEvent findUniqueOrThrow
+   */
+  export type TeamAuditEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamAuditEvent to fetch.
+     */
+    where: TeamAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TeamAuditEvent findFirst
+   */
+  export type TeamAuditEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamAuditEvent to fetch.
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamAuditEvents to fetch.
+     */
+    orderBy?: TeamAuditEventOrderByWithRelationInput | TeamAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamAuditEvents.
+     */
+    cursor?: TeamAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamAuditEvents.
+     */
+    distinct?: TeamAuditEventScalarFieldEnum | TeamAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamAuditEvent findFirstOrThrow
+   */
+  export type TeamAuditEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamAuditEvent to fetch.
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamAuditEvents to fetch.
+     */
+    orderBy?: TeamAuditEventOrderByWithRelationInput | TeamAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamAuditEvents.
+     */
+    cursor?: TeamAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamAuditEvents.
+     */
+    distinct?: TeamAuditEventScalarFieldEnum | TeamAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamAuditEvent findMany
+   */
+  export type TeamAuditEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamAuditEvents to fetch.
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamAuditEvents to fetch.
+     */
+    orderBy?: TeamAuditEventOrderByWithRelationInput | TeamAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TeamAuditEvents.
+     */
+    cursor?: TeamAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamAuditEvents.
+     */
+    skip?: number
+    distinct?: TeamAuditEventScalarFieldEnum | TeamAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TeamAuditEvent create
+   */
+  export type TeamAuditEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * The data needed to create a TeamAuditEvent.
+     */
+    data: XOR<TeamAuditEventCreateInput, TeamAuditEventUncheckedCreateInput>
+  }
+
+  /**
+   * TeamAuditEvent createMany
+   */
+  export type TeamAuditEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TeamAuditEvents.
+     */
+    data: TeamAuditEventCreateManyInput | TeamAuditEventCreateManyInput[]
+  }
+
+  /**
+   * TeamAuditEvent createManyAndReturn
+   */
+  export type TeamAuditEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many TeamAuditEvents.
+     */
+    data: TeamAuditEventCreateManyInput | TeamAuditEventCreateManyInput[]
+  }
+
+  /**
+   * TeamAuditEvent update
+   */
+  export type TeamAuditEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * The data needed to update a TeamAuditEvent.
+     */
+    data: XOR<TeamAuditEventUpdateInput, TeamAuditEventUncheckedUpdateInput>
+    /**
+     * Choose, which TeamAuditEvent to update.
+     */
+    where: TeamAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TeamAuditEvent updateMany
+   */
+  export type TeamAuditEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeamAuditEvents.
+     */
+    data: XOR<TeamAuditEventUpdateManyMutationInput, TeamAuditEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamAuditEvents to update
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * Limit how many TeamAuditEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamAuditEvent updateManyAndReturn
+   */
+  export type TeamAuditEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * The data used to update TeamAuditEvents.
+     */
+    data: XOR<TeamAuditEventUpdateManyMutationInput, TeamAuditEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamAuditEvents to update
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * Limit how many TeamAuditEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamAuditEvent upsert
+   */
+  export type TeamAuditEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * The filter to search for the TeamAuditEvent to update in case it exists.
+     */
+    where: TeamAuditEventWhereUniqueInput
+    /**
+     * In case the TeamAuditEvent found by the `where` argument doesn't exist, create a new TeamAuditEvent with this data.
+     */
+    create: XOR<TeamAuditEventCreateInput, TeamAuditEventUncheckedCreateInput>
+    /**
+     * In case the TeamAuditEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeamAuditEventUpdateInput, TeamAuditEventUncheckedUpdateInput>
+  }
+
+  /**
+   * TeamAuditEvent delete
+   */
+  export type TeamAuditEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+    /**
+     * Filter which TeamAuditEvent to delete.
+     */
+    where: TeamAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TeamAuditEvent deleteMany
+   */
+  export type TeamAuditEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamAuditEvents to delete
+     */
+    where?: TeamAuditEventWhereInput
+    /**
+     * Limit how many TeamAuditEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamAuditEvent without action
+   */
+  export type TeamAuditEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamAuditEvent
+     */
+    select?: TeamAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamAuditEvent
+     */
+    omit?: TeamAuditEventOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model EngineComparison
    */
 
@@ -104365,6 +105789,7 @@ export namespace Prisma {
     theme: 'theme',
     themeYear: 'themeYear',
     playoffSize: 'playoffSize',
+    playoffsPublished: 'playoffsPublished',
     meceneEnabled: 'meceneEnabled',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -104984,6 +106409,38 @@ export namespace Prisma {
   };
 
   export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+  export const TeamAuditEventScalarFieldEnum: {
+    id: 'id',
+    teamId: 'teamId',
+    createdAt: 'createdAt',
+    correlationId: 'correlationId',
+    step: 'step',
+    action: 'action',
+    entity: 'entity',
+    entityId: 'entityId',
+    actorUserId: 'actorUserId',
+    actorRole: 'actorRole',
+    actorLabel: 'actorLabel',
+    impersonatorId: 'impersonatorId',
+    source: 'source',
+    route: 'route',
+    ipAddress: 'ipAddress',
+    userAgent: 'userAgent',
+    changes: 'changes',
+    before: 'before',
+    after: 'after',
+    details: 'details',
+    treasury: 'treasury',
+    teamValue: 'teamValue',
+    currentValue: 'currentValue',
+    treasuryDelta: 'treasuryDelta',
+    teamValueDelta: 'teamValueDelta',
+    note: 'note'
+  };
+
+  export type TeamAuditEventScalarFieldEnum = (typeof TeamAuditEventScalarFieldEnum)[keyof typeof TeamAuditEventScalarFieldEnum]
 
 
   export const EngineComparisonScalarFieldEnum: {
@@ -108540,6 +109997,7 @@ export namespace Prisma {
     theme?: StringNullableFilter<"LeagueSeason"> | string | null
     themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     playoffSize?: IntFilter<"LeagueSeason"> | number
+    playoffsPublished?: BoolNullableFilter<"LeagueSeason"> | boolean | null
     meceneEnabled?: BoolFilter<"LeagueSeason"> | boolean
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
@@ -108563,6 +110021,7 @@ export namespace Prisma {
     theme?: SortOrderInput | SortOrder
     themeYear?: SortOrderInput | SortOrder
     playoffSize?: SortOrder
+    playoffsPublished?: SortOrderInput | SortOrder
     meceneEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -108590,6 +110049,7 @@ export namespace Prisma {
     theme?: StringNullableFilter<"LeagueSeason"> | string | null
     themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     playoffSize?: IntFilter<"LeagueSeason"> | number
+    playoffsPublished?: BoolNullableFilter<"LeagueSeason"> | boolean | null
     meceneEnabled?: BoolFilter<"LeagueSeason"> | boolean
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
@@ -108613,6 +110073,7 @@ export namespace Prisma {
     theme?: SortOrderInput | SortOrder
     themeYear?: SortOrderInput | SortOrder
     playoffSize?: SortOrder
+    playoffsPublished?: SortOrderInput | SortOrder
     meceneEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -108637,6 +110098,7 @@ export namespace Prisma {
     theme?: StringNullableWithAggregatesFilter<"LeagueSeason"> | string | null
     themeYear?: IntNullableWithAggregatesFilter<"LeagueSeason"> | number | null
     playoffSize?: IntWithAggregatesFilter<"LeagueSeason"> | number
+    playoffsPublished?: BoolNullableWithAggregatesFilter<"LeagueSeason"> | boolean | null
     meceneEnabled?: BoolWithAggregatesFilter<"LeagueSeason"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueSeason"> | Date | string
@@ -111899,6 +113361,165 @@ export namespace Prisma {
     ipAddress?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     userAgent?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
+  }
+
+  export type TeamAuditEventWhereInput = {
+    AND?: TeamAuditEventWhereInput | TeamAuditEventWhereInput[]
+    OR?: TeamAuditEventWhereInput[]
+    NOT?: TeamAuditEventWhereInput | TeamAuditEventWhereInput[]
+    id?: StringFilter<"TeamAuditEvent"> | string
+    teamId?: StringFilter<"TeamAuditEvent"> | string
+    createdAt?: DateTimeFilter<"TeamAuditEvent"> | Date | string
+    correlationId?: StringFilter<"TeamAuditEvent"> | string
+    step?: IntFilter<"TeamAuditEvent"> | number
+    action?: StringFilter<"TeamAuditEvent"> | string
+    entity?: StringFilter<"TeamAuditEvent"> | string
+    entityId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    actorUserId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    actorRole?: StringFilter<"TeamAuditEvent"> | string
+    actorLabel?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    impersonatorId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    source?: StringFilter<"TeamAuditEvent"> | string
+    route?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    ipAddress?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    userAgent?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    changes?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    before?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    after?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    details?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    treasury?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    teamValue?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    currentValue?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    treasuryDelta?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    teamValueDelta?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    note?: StringNullableFilter<"TeamAuditEvent"> | string | null
+  }
+
+  export type TeamAuditEventOrderByWithRelationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    correlationId?: SortOrder
+    step?: SortOrder
+    action?: SortOrder
+    entity?: SortOrder
+    entityId?: SortOrderInput | SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    actorRole?: SortOrder
+    actorLabel?: SortOrderInput | SortOrder
+    impersonatorId?: SortOrderInput | SortOrder
+    source?: SortOrder
+    route?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    changes?: SortOrderInput | SortOrder
+    before?: SortOrderInput | SortOrder
+    after?: SortOrderInput | SortOrder
+    details?: SortOrderInput | SortOrder
+    treasury?: SortOrderInput | SortOrder
+    teamValue?: SortOrderInput | SortOrder
+    currentValue?: SortOrderInput | SortOrder
+    treasuryDelta?: SortOrderInput | SortOrder
+    teamValueDelta?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+  }
+
+  export type TeamAuditEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TeamAuditEventWhereInput | TeamAuditEventWhereInput[]
+    OR?: TeamAuditEventWhereInput[]
+    NOT?: TeamAuditEventWhereInput | TeamAuditEventWhereInput[]
+    teamId?: StringFilter<"TeamAuditEvent"> | string
+    createdAt?: DateTimeFilter<"TeamAuditEvent"> | Date | string
+    correlationId?: StringFilter<"TeamAuditEvent"> | string
+    step?: IntFilter<"TeamAuditEvent"> | number
+    action?: StringFilter<"TeamAuditEvent"> | string
+    entity?: StringFilter<"TeamAuditEvent"> | string
+    entityId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    actorUserId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    actorRole?: StringFilter<"TeamAuditEvent"> | string
+    actorLabel?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    impersonatorId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    source?: StringFilter<"TeamAuditEvent"> | string
+    route?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    ipAddress?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    userAgent?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    changes?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    before?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    after?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    details?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    treasury?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    teamValue?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    currentValue?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    treasuryDelta?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    teamValueDelta?: IntNullableFilter<"TeamAuditEvent"> | number | null
+    note?: StringNullableFilter<"TeamAuditEvent"> | string | null
+  }, "id">
+
+  export type TeamAuditEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    correlationId?: SortOrder
+    step?: SortOrder
+    action?: SortOrder
+    entity?: SortOrder
+    entityId?: SortOrderInput | SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    actorRole?: SortOrder
+    actorLabel?: SortOrderInput | SortOrder
+    impersonatorId?: SortOrderInput | SortOrder
+    source?: SortOrder
+    route?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    changes?: SortOrderInput | SortOrder
+    before?: SortOrderInput | SortOrder
+    after?: SortOrderInput | SortOrder
+    details?: SortOrderInput | SortOrder
+    treasury?: SortOrderInput | SortOrder
+    teamValue?: SortOrderInput | SortOrder
+    currentValue?: SortOrderInput | SortOrder
+    treasuryDelta?: SortOrderInput | SortOrder
+    teamValueDelta?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    _count?: TeamAuditEventCountOrderByAggregateInput
+    _avg?: TeamAuditEventAvgOrderByAggregateInput
+    _max?: TeamAuditEventMaxOrderByAggregateInput
+    _min?: TeamAuditEventMinOrderByAggregateInput
+    _sum?: TeamAuditEventSumOrderByAggregateInput
+  }
+
+  export type TeamAuditEventScalarWhereWithAggregatesInput = {
+    AND?: TeamAuditEventScalarWhereWithAggregatesInput | TeamAuditEventScalarWhereWithAggregatesInput[]
+    OR?: TeamAuditEventScalarWhereWithAggregatesInput[]
+    NOT?: TeamAuditEventScalarWhereWithAggregatesInput | TeamAuditEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    teamId?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"TeamAuditEvent"> | Date | string
+    correlationId?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    step?: IntWithAggregatesFilter<"TeamAuditEvent"> | number
+    action?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    entity?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    entityId?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    actorUserId?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    actorRole?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    actorLabel?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    impersonatorId?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    source?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
+    route?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    ipAddress?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    userAgent?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    changes?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    before?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    after?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    details?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    treasury?: IntNullableWithAggregatesFilter<"TeamAuditEvent"> | number | null
+    teamValue?: IntNullableWithAggregatesFilter<"TeamAuditEvent"> | number | null
+    currentValue?: IntNullableWithAggregatesFilter<"TeamAuditEvent"> | number | null
+    treasuryDelta?: IntNullableWithAggregatesFilter<"TeamAuditEvent"> | number | null
+    teamValueDelta?: IntNullableWithAggregatesFilter<"TeamAuditEvent"> | number | null
+    note?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
   }
 
   export type EngineComparisonWhereInput = {
@@ -116442,6 +118063,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116465,6 +118087,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116486,6 +118109,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116509,6 +118133,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116531,6 +118156,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116546,6 +118172,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116562,6 +118189,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -120239,6 +121867,209 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TeamAuditEventCreateInput = {
+    id?: string
+    teamId: string
+    createdAt?: Date | string
+    correlationId: string
+    step?: number
+    action: string
+    entity?: string
+    entityId?: string | null
+    actorUserId?: string | null
+    actorRole?: string
+    actorLabel?: string | null
+    impersonatorId?: string | null
+    source?: string
+    route?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
+    changes?: string | null
+    before?: string | null
+    after?: string | null
+    details?: string | null
+    treasury?: number | null
+    teamValue?: number | null
+    currentValue?: number | null
+    treasuryDelta?: number | null
+    teamValueDelta?: number | null
+    note?: string | null
+  }
+
+  export type TeamAuditEventUncheckedCreateInput = {
+    id?: string
+    teamId: string
+    createdAt?: Date | string
+    correlationId: string
+    step?: number
+    action: string
+    entity?: string
+    entityId?: string | null
+    actorUserId?: string | null
+    actorRole?: string
+    actorLabel?: string | null
+    impersonatorId?: string | null
+    source?: string
+    route?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
+    changes?: string | null
+    before?: string | null
+    after?: string | null
+    details?: string | null
+    treasury?: number | null
+    teamValue?: number | null
+    currentValue?: number | null
+    treasuryDelta?: number | null
+    teamValueDelta?: number | null
+    note?: string | null
+  }
+
+  export type TeamAuditEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    step?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entity?: StringFieldUpdateOperationsInput | string
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorRole?: StringFieldUpdateOperationsInput | string
+    actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    route?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    changes?: NullableStringFieldUpdateOperationsInput | string | null
+    before?: NullableStringFieldUpdateOperationsInput | string | null
+    after?: NullableStringFieldUpdateOperationsInput | string | null
+    details?: NullableStringFieldUpdateOperationsInput | string | null
+    treasury?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValue?: NullableIntFieldUpdateOperationsInput | number | null
+    currentValue?: NullableIntFieldUpdateOperationsInput | number | null
+    treasuryDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValueDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TeamAuditEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    step?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entity?: StringFieldUpdateOperationsInput | string
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorRole?: StringFieldUpdateOperationsInput | string
+    actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    route?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    changes?: NullableStringFieldUpdateOperationsInput | string | null
+    before?: NullableStringFieldUpdateOperationsInput | string | null
+    after?: NullableStringFieldUpdateOperationsInput | string | null
+    details?: NullableStringFieldUpdateOperationsInput | string | null
+    treasury?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValue?: NullableIntFieldUpdateOperationsInput | number | null
+    currentValue?: NullableIntFieldUpdateOperationsInput | number | null
+    treasuryDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValueDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TeamAuditEventCreateManyInput = {
+    id?: string
+    teamId: string
+    createdAt?: Date | string
+    correlationId: string
+    step?: number
+    action: string
+    entity?: string
+    entityId?: string | null
+    actorUserId?: string | null
+    actorRole?: string
+    actorLabel?: string | null
+    impersonatorId?: string | null
+    source?: string
+    route?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
+    changes?: string | null
+    before?: string | null
+    after?: string | null
+    details?: string | null
+    treasury?: number | null
+    teamValue?: number | null
+    currentValue?: number | null
+    treasuryDelta?: number | null
+    teamValueDelta?: number | null
+    note?: string | null
+  }
+
+  export type TeamAuditEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    step?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entity?: StringFieldUpdateOperationsInput | string
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorRole?: StringFieldUpdateOperationsInput | string
+    actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    route?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    changes?: NullableStringFieldUpdateOperationsInput | string | null
+    before?: NullableStringFieldUpdateOperationsInput | string | null
+    after?: NullableStringFieldUpdateOperationsInput | string | null
+    details?: NullableStringFieldUpdateOperationsInput | string | null
+    treasury?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValue?: NullableIntFieldUpdateOperationsInput | number | null
+    currentValue?: NullableIntFieldUpdateOperationsInput | number | null
+    treasuryDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValueDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TeamAuditEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    step?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entity?: StringFieldUpdateOperationsInput | string
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorRole?: StringFieldUpdateOperationsInput | string
+    actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    route?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    changes?: NullableStringFieldUpdateOperationsInput | string | null
+    before?: NullableStringFieldUpdateOperationsInput | string | null
+    after?: NullableStringFieldUpdateOperationsInput | string | null
+    details?: NullableStringFieldUpdateOperationsInput | string | null
+    treasury?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValue?: NullableIntFieldUpdateOperationsInput | number | null
+    currentValue?: NullableIntFieldUpdateOperationsInput | number | null
+    treasuryDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    teamValueDelta?: NullableIntFieldUpdateOperationsInput | number | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type EngineComparisonCreateInput = {
     id?: string
     engineVer: string
@@ -123795,6 +125626,11 @@ export namespace Prisma {
     forfeitPoints?: SortOrder
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type LeagueScalarRelationFilter = {
     is?: LeagueWhereInput
     isNot?: LeagueWhereInput
@@ -123841,6 +125677,7 @@ export namespace Prisma {
     theme?: SortOrder
     themeYear?: SortOrder
     playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     meceneEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -123863,6 +125700,7 @@ export namespace Prisma {
     theme?: SortOrder
     themeYear?: SortOrder
     playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     meceneEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -123879,6 +125717,7 @@ export namespace Prisma {
     theme?: SortOrder
     themeYear?: SortOrder
     playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     meceneEnabled?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -123888,6 +125727,14 @@ export namespace Prisma {
     seasonNumber?: SortOrder
     themeYear?: SortOrder
     playoffSize?: SortOrder
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type LeagueSeasonScalarRelationFilter = {
@@ -126033,6 +127880,111 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type TeamAuditEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    correlationId?: SortOrder
+    step?: SortOrder
+    action?: SortOrder
+    entity?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorLabel?: SortOrder
+    impersonatorId?: SortOrder
+    source?: SortOrder
+    route?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    changes?: SortOrder
+    before?: SortOrder
+    after?: SortOrder
+    details?: SortOrder
+    treasury?: SortOrder
+    teamValue?: SortOrder
+    currentValue?: SortOrder
+    treasuryDelta?: SortOrder
+    teamValueDelta?: SortOrder
+    note?: SortOrder
+  }
+
+  export type TeamAuditEventAvgOrderByAggregateInput = {
+    step?: SortOrder
+    treasury?: SortOrder
+    teamValue?: SortOrder
+    currentValue?: SortOrder
+    treasuryDelta?: SortOrder
+    teamValueDelta?: SortOrder
+  }
+
+  export type TeamAuditEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    correlationId?: SortOrder
+    step?: SortOrder
+    action?: SortOrder
+    entity?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorLabel?: SortOrder
+    impersonatorId?: SortOrder
+    source?: SortOrder
+    route?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    changes?: SortOrder
+    before?: SortOrder
+    after?: SortOrder
+    details?: SortOrder
+    treasury?: SortOrder
+    teamValue?: SortOrder
+    currentValue?: SortOrder
+    treasuryDelta?: SortOrder
+    teamValueDelta?: SortOrder
+    note?: SortOrder
+  }
+
+  export type TeamAuditEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    correlationId?: SortOrder
+    step?: SortOrder
+    action?: SortOrder
+    entity?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorLabel?: SortOrder
+    impersonatorId?: SortOrder
+    source?: SortOrder
+    route?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    changes?: SortOrder
+    before?: SortOrder
+    after?: SortOrder
+    details?: SortOrder
+    treasury?: SortOrder
+    teamValue?: SortOrder
+    currentValue?: SortOrder
+    treasuryDelta?: SortOrder
+    teamValueDelta?: SortOrder
+    note?: SortOrder
+  }
+
+  export type TeamAuditEventSumOrderByAggregateInput = {
+    step?: SortOrder
+    treasury?: SortOrder
+    teamValue?: SortOrder
+    currentValue?: SortOrder
+    treasuryDelta?: SortOrder
+    teamValueDelta?: SortOrder
+  }
+
   export type EngineComparisonCountOrderByAggregateInput = {
     id?: SortOrder
     engineVer?: SortOrder
@@ -126177,11 +128129,6 @@ export namespace Prisma {
     joinedAt?: SortOrder
   }
 
-  export type BoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
   export type ProPredictionPickLeagueIdUserIdMatchIdCompoundUniqueInput = {
     leagueId: string
     userId: string
@@ -126222,14 +128169,6 @@ export namespace Prisma {
     correct?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type ProSurvivorEntrySeasonIdUserIdRoundIdCompoundUniqueInput = {
@@ -129909,6 +131848,10 @@ export namespace Prisma {
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type LeagueUpdateOneRequiredWithoutSeasonsNestedInput = {
     create?: XOR<LeagueCreateWithoutSeasonsInput, LeagueUncheckedCreateWithoutSeasonsInput>
     connectOrCreate?: LeagueCreateOrConnectWithoutSeasonsInput
@@ -132315,10 +134258,6 @@ export namespace Prisma {
     connect?: ProLeagueMatchWhereUniqueInput
   }
 
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
-  }
-
   export type ProPredictionLeagueUpdateOneRequiredWithoutPicksNestedInput = {
     create?: XOR<ProPredictionLeagueCreateWithoutPicksInput, ProPredictionLeagueUncheckedCreateWithoutPicksInput>
     connectOrCreate?: ProPredictionLeagueCreateOrConnectWithoutPicksInput
@@ -132782,6 +134721,19 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type NestedBigIntNullableFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel> | null
     in?: bigint[] | number[] | null
@@ -132840,19 +134792,6 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
-  }
-
-  export type NestedBoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
-  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type MatchCreateWithoutPlayersInput = {
@@ -138155,6 +140094,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -138177,6 +140117,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -138571,6 +140512,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -138593,6 +140535,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -144445,6 +146388,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -144466,6 +146410,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -144712,6 +146657,7 @@ export namespace Prisma {
     theme?: StringNullableFilter<"LeagueSeason"> | string | null
     themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     playoffSize?: IntFilter<"LeagueSeason"> | number
+    playoffsPublished?: BoolNullableFilter<"LeagueSeason"> | boolean | null
     meceneEnabled?: BoolFilter<"LeagueSeason"> | boolean
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
@@ -145252,6 +147198,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -145274,6 +147221,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -145402,6 +147350,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -145424,6 +147373,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -145527,6 +147477,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -145549,6 +147500,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -146003,6 +147955,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -146025,6 +147978,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -147300,6 +149254,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -147322,6 +149277,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -147544,6 +149500,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -147566,6 +149523,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -147752,6 +149710,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -147774,6 +149733,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -147949,6 +149909,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -147971,6 +149932,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -149171,6 +151133,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -149193,6 +151156,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -149229,6 +151193,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -149251,6 +151216,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -160725,6 +162691,7 @@ export namespace Prisma {
     theme?: string | null
     themeYear?: number | null
     playoffSize?: number
+    playoffsPublished?: boolean | null
     meceneEnabled?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -160759,6 +162726,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -160780,6 +162748,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -160801,6 +162770,7 @@ export namespace Prisma {
     theme?: NullableStringFieldUpdateOperationsInput | string | null
     themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

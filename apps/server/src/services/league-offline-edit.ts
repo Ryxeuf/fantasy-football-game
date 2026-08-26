@@ -54,6 +54,11 @@ import {
   type OfflineRosterMutations,
 } from "./league-offline-purchases";
 import { updateTeamValues } from "../utils/team-values";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { serverLog } from "../utils/server-log";
 import { revertPlayerStatus } from "./player-status";
 import { removeLatestAdvancements } from "./league-sheet-advancements";
@@ -666,7 +671,44 @@ export async function reverseOfflineLeagueResult(
     );
   }
 
+  // Journal : capturé avant le commit, publié après — l'annulation d'une
+  // saisie de ligue défait gains, dépenses, fans, PSP et blessures d'un
+  // seul coup ; c'est l'opération la plus difficile à reconstituer après.
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = new Map(
+    await Promise.all(
+      [home.teamId, away.teamId].map(
+        async (teamId) =>
+          [teamId, await captureTeamState(auditDb, teamId)] as const,
+      ),
+    ),
+  );
+
   await prisma.$transaction(ops);
+
+  for (const [teamId, side] of [
+    [home.teamId, "home"],
+    [away.teamId, "away"],
+  ] as const) {
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: "league.postmatch.edit",
+      before: auditBefore.get(teamId) ?? null,
+      details: {
+        side,
+        matchId: match.id,
+        reversedWinnings: side === "home" ? input.winningsHome : input.winningsAway,
+        reversedTreasuryDebit:
+          side === "home"
+            ? (input.treasuryDebitHome ?? 0)
+            : (input.treasuryDebitAway ?? 0),
+        restoredDedicatedFans:
+          side === "home"
+            ? snapshot.dedicatedFansBefore.home
+            : snapshot.dedicatedFansBefore.away,
+      },
+    });
+  }
 
   // Morts + licenciements : reversion VERIFIEE (la source du statut courant
   // doit etre ce match). Un joueur re-tue/re-licencie entre-temps par une

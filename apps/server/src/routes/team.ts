@@ -324,4 +324,13 @@ router.post(
   handlePurchaseImpl,
 );
 
+// =============================================================================
+// JOURNAL D'ÉQUIPE — qui a changé quoi, et quel a été le résultat
+// =============================================================================
+
+export { handleGetTeamJournal } from './team-audit-handlers';
+import { handleGetTeamJournal as handleGetTeamJournalImpl } from './team-audit-handlers';
+
+router.get("/:id/journal", authUser, handleGetTeamJournalImpl);
+
 export default router;

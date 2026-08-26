@@ -18,6 +18,11 @@
 
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "../prisma";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { getRosterFromDb } from "../utils/roster-helpers";
 import { updateTeamValues } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
@@ -292,6 +297,12 @@ export async function applyOfflinePurchasesForTeam(
   })) as TeamCounters | null;
   if (!team) return EMPTY_MUTATION_SIDE;
 
+  // Snapshot d'audit capturé APRÈS le chargement métier : le journal ne
+  // doit pas s'intercaler devant les lectures du service (l'ordre des
+  // requêtes fait partie du contrat testé ici).
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = await captureTeamState(auditDb, teamId);
+
   const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
   const format: GameFormat = isGameFormat(team.format) ? team.format : "bb11";
   const staff = await resolveStaffConfigBySlug(team.roster, ruleset, format);
@@ -436,6 +447,16 @@ export async function applyOfflinePurchasesForTeam(
     apothecaryAdded,
     dedicatedFansAdded,
   };
+
+  // Le DÉBIT de trésorerie de ces achats est porté par `treasuryDebit*`
+  // dans `applyOfflineEconomy` (pas de double débit) : cette étape trace
+  // la MATÉRIALISATION du roster, l'étape économie trace l'or.
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: "league.postmatch.purchases",
+    before: auditBefore,
+    details: { purchases, mutation },
+  });
 
   if (sideHasMutation(mutation)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

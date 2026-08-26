@@ -24,6 +24,11 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from "./team-audit";
 import { serverLog } from "../utils/server-log";
 
 /** Nature du statut inactif. */
@@ -140,6 +145,9 @@ export async function applyPlayerStatus(
       ? { dead: true, diedAt: now }
       : { firedAt: now };
 
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = await captureTeamState(auditDb, player.teamId);
+
   await prisma.$transaction([
     prisma.teamPlayer.update({
       where: { id: player.id },
@@ -163,6 +171,23 @@ export async function applyPlayerStatus(
       },
     }),
   ]);
+
+  // Un mort ou un licencié sort de la VE : sans cette trace, la baisse de
+  // VE recalculée juste après par le caller n'a aucune cause visible.
+  await safeRecordTeamAudit(auditDb, {
+    teamId: player.teamId,
+    action: "team.player.status.apply",
+    entity: "TeamPlayer",
+    entityId: player.id,
+    before: auditBefore,
+    ...(input.actorUserId ? { actor: { userId: input.actorUserId } } : {}),
+    note: input.reason ?? null,
+    details: {
+      kind: input.kind,
+      source: input.source,
+      sourceId: input.sourceId ?? null,
+    },
+  });
 
   return { applied: true, playerId: player.id, teamId: player.teamId };
 }
@@ -341,6 +366,9 @@ export async function revertPlayerStatus(
       ? { dead: false, diedAt: null }
       : { firedAt: null };
 
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = await captureTeamState(auditDb, player.teamId);
+
   // Update conditionne sur l'etat courant (et sur la provenance quand elle
   // est connue) : count !== 1 => quelqu'un est passe entre-temps.
   const { count } = await prisma.teamPlayer.updateMany({
@@ -371,6 +399,20 @@ export async function revertPlayerStatus(
       data: { revertedAt: now, revertedBy: input.actorUserId ?? null },
     });
   }
+
+  await safeRecordTeamAudit(auditDb, {
+    teamId: player.teamId,
+    action: "team.player.status.revert",
+    entity: "TeamPlayer",
+    entityId: player.id,
+    before: auditBefore,
+    ...(input.actorUserId ? { actor: { userId: input.actorUserId } } : {}),
+    details: {
+      kind: input.kind,
+      source: input.source,
+      sourceId: input.sourceId ?? null,
+    },
+  });
 
   return { reverted: true, playerId: player.id, teamId: player.teamId };
 }

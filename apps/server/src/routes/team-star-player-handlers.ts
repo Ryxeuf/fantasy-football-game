@@ -32,6 +32,11 @@ import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
 import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from '../services/team-audit';
+import {
   translateKeywordsCsv,
   DEFAULT_RULESET,
   getFormatConstraints,
@@ -297,8 +302,24 @@ export async function handleDeleteTeamStarPlayer(
       }
     }
 
+    const auditDb = prisma as unknown as TeamAuditPrismaLike;
+    const auditBefore = await captureTeamState(auditDb, teamId);
+
     await prisma.teamStarPlayer.deleteMany({
       where: { id: { in: starPlayersToRemove } },
+    });
+
+    await safeRecordTeamAudit(auditDb, {
+      teamId,
+      action: 'team.star-player.release',
+      entity: 'TeamStarPlayer',
+      entityId: starPlayerId,
+      before: auditBefore,
+      details: {
+        slug: starPlayer.starPlayerSlug,
+        pairSlug: pairSlug ?? null,
+        removedIds: starPlayersToRemove,
+      },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

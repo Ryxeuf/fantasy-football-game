@@ -36,6 +36,11 @@ import {
 } from '@bb/game-engine';
 import { isTeamRosterFrozen } from './team-lock-status';
 import { updateTeamValues } from '../utils/team-values';
+import {
+  captureTeamState,
+  safeRecordTeamAudit,
+  type TeamAuditPrismaLike,
+} from './team-audit';
 
 /** Borne haute du pool réglable à la main (miroir du builder). */
 export const MAX_STARTING_PSP_POOL = 200;
@@ -174,9 +179,19 @@ export async function setStartingPspPool(
     );
   }
 
+  const poolAuditDb = prisma as unknown as TeamAuditPrismaLike;
+  const poolAuditBefore = await captureTeamState(poolAuditDb, teamId);
+
   await prisma.team.update({
     where: { id: teamId },
     data: { startingPspPool: pool },
+  });
+
+  await safeRecordTeamAudit(poolAuditDb, {
+    teamId,
+    action: 'team.psp-pool.update',
+    before: poolAuditBefore,
+    details: { pool, spent, remaining: pool - spent },
   });
 
   return {
@@ -373,7 +388,20 @@ export async function removePlayerAdvancement(params: {
     data.spp = { increment: refunded };
   }
 
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const auditBefore = await captureTeamState(auditDb, teamId);
+
   await prisma.teamPlayer.update({ where: { id: playerId }, data });
+
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: 'team.player.advancement.remove',
+    entity: 'TeamPlayer',
+    entityId: playerId,
+    before: auditBefore,
+    details: { removed, index, refunded, refundedTo },
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await updateTeamValues(prisma as any, teamId);
 

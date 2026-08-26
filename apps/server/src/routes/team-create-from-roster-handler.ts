@@ -29,6 +29,7 @@ import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { updateTeamValues } from '../utils/team-values';
 import { creditInitialTreasury } from '../services/team-budget-summary';
+import { safeRecordTeamAudit, type TeamAuditPrismaLike } from '../services/team-audit';
 import {
   RegionalLeagueError,
   resolveRegionalLeagueForCreation,
@@ -334,6 +335,24 @@ export async function handleCreateFromRoster(
       });
     }
     return newTeam;
+  });
+
+  // Journal d'équipe : étape 1 de la corrélation (création).
+  await safeRecordTeamAudit(prisma as unknown as TeamAuditPrismaLike, {
+    teamId: team.id,
+    action: 'team.create.from-roster',
+    before: null,
+    details: {
+      mode: 'from-roster',
+      roster,
+      ruleset,
+      format,
+      initialBudget: finalTeamValue,
+      players: safePlayerRows.length,
+      starPlayers: starPlayersData.length,
+      tournamentRuleset: pack?.slug ?? null,
+      regionalLeague,
+    },
   });
 
   // Calculer automatiquement les valeurs d'equipe
