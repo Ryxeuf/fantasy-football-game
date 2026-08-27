@@ -47,6 +47,7 @@ import {
   resolveSpecialRules,
   resolveRegionalLeagues,
 } from "./public-rosters";
+import { loadTeamRulesCatalogue } from "../services/team-rules-catalogue";
 import {
   startSeason,
   regenerateSchedule,
@@ -1640,15 +1641,20 @@ export async function handleGetLeagueTeamRoster(
       where: { slug: out.team.roster, ruleset: ruleset as never },
       select: { specialRules: true, regionalRules: true },
     })) as { specialRules: unknown; regionalRules: unknown } | null;
+    // Lot 6.5 — libellés servis par la base (`TeamSpecialRule`,
+    // `RegionalLeague`), repli sur le catalogue compilé.
+    const rulesCatalogue = await loadTeamRulesCatalogue(ruleset);
     const specialRules = resolveSpecialRules(
       rosterRow?.specialRules ?? null,
       false,
+      rulesCatalogue,
     );
     const regionalLeagues = resolveRegionalLeagues(
       rosterRow?.regionalRules ?? null,
       out.team.roster,
       ruleset,
       false,
+      rulesCatalogue,
     );
 
     sendSuccess(res, {

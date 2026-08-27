@@ -20,6 +20,10 @@ import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
 import adminTournamentRulesetRoutes from "./routes/admin-tournament-rulesets";
+import {
+  adminRegionalLeaguesRouter,
+  adminSpecialRulesRouter,
+} from "./routes/admin-team-rules";
 import publicTournamentRulesetRoutes from "./routes/public-tournament-rulesets";
 import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
@@ -298,6 +302,10 @@ app.use("/admin/team-journal", adminTeamJournalRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
 app.use("/admin/data/tournament-rulesets", adminTournamentRulesetRoutes);
+// Lot 6.5 — catalogues de règles spéciales et de Ligues régionales, servis
+// par la base et éditables en admin.
+app.use("/admin/data/special-rules", adminSpecialRulesRouter);
+app.use("/admin/data/regional-leagues", adminRegionalLeaguesRouter);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 // L2.B.3 — routes level-up Jeu en Ligue. Mountees sur /team aussi

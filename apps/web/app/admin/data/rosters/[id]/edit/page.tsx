@@ -7,12 +7,11 @@ import {
   type Ruleset,
 } from "../../../ruleset-utils";
 import {
-  REGIONAL_LEAGUE_OPTIONS,
-  SPECIAL_RULE_OPTIONS,
   SlugCheckboxGrid,
   parseSlugList,
   toggleSlug,
 } from "../../../_components/SlugCheckboxGrid";
+import { useTeamRuleCatalogues } from "../../../_components/useTeamRuleCatalogues";
 
 type GameFormat = "bb11" | "sevens";
 
@@ -140,6 +139,10 @@ export default function EditRosterPage() {
   const rosterId = params.id as string;
   
   const [roster, setRoster] = useState<Roster | null>(null);
+  // Lot 6.5 — catalogues servis par la base (repli compilé au chargement).
+  const { specialRuleOptions, regionalLeagueOptions } = useTeamRuleCatalogues(
+    roster?.ruleset,
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -398,7 +401,7 @@ export default function EditRosterPage() {
             Ligues régionales
           </label>
           <SlugCheckboxGrid
-            catalog={REGIONAL_LEAGUE_OPTIONS}
+            catalog={regionalLeagueOptions}
             selected={regionalRules}
             onToggle={(slug) =>
               setRegionalRules((prev) => toggleSlug(prev, slug))
@@ -425,7 +428,7 @@ export default function EditRosterPage() {
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Règles spéciales</label>
           <SlugCheckboxGrid
-            catalog={SPECIAL_RULE_OPTIONS}
+            catalog={specialRuleOptions}
             selected={specialRules}
             onToggle={(slug) => setSpecialRules((prev) => toggleSlug(prev, slug))}
             testId="roster-special-rules"

@@ -35,6 +35,7 @@ import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
 import { seedRosterStaffConfigs } from "./scripts/seed-roster-staff-config";
 import { syncTournamentRulesets } from "./seeders/sync-tournament-rulesets";
 import { syncCatalogueColumns } from "./seeders/sync-catalogue-columns";
+import { syncTeamRules } from "./seeders/sync-team-rules";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -319,6 +320,17 @@ async function main() {
     }
   }
   serverLog.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
+
+  // Catalogues de règles spéciales et de Ligues régionales : les deux tables
+  // existaient mais restaient vides, le produit servait les libellés
+  // compilés. Create-only : une description corrigée en admin survit.
+  const rulesRes = await syncTeamRules({ write: true });
+  serverLog.log(
+    `✅ Règles spéciales: ${rulesRes.specialRules.created} créées, ` +
+      `${rulesRes.specialRules.skipped} déjà présentes — ` +
+      `Ligues régionales: ${rulesRes.regionalLeagues.created} créées, ` +
+      `${rulesRes.regionalLeagues.skipped} déjà présentes\n`,
+  );
 
   // Config staff par roster × format (create-only : ne réécrit pas l'admin).
   const staffRes = await seedRosterStaffConfigs();

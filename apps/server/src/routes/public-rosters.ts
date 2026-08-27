@@ -7,8 +7,6 @@ import { Router } from "express";
 import {
   getPositionNameEn,
   translateKeywordsCsv,
-  getTeamSpecialRuleBySlug,
-  getRegionalLeagueBySlug,
   getRegionalLeagueOptions,
   getRegionalRulesForTeam,
   favouredOfLabel,
@@ -35,6 +33,12 @@ import {
   parseSlugList,
 } from "../services/roster-regional-rules";
 import { invalidateRosterCatalogueCache } from "../services/roster-catalogue";
+import {
+  ENGINE_TEAM_RULES_CATALOGUE,
+  invalidateTeamRulesCatalogueCache,
+  loadTeamRulesCatalogue,
+  type TeamRulesCatalogue,
+} from "../services/team-rules-catalogue";
 
 const router = Router();
 
@@ -63,6 +67,8 @@ export function invalidateRosterCaches(): void {
   // roster créé/supprimé en admin doit être accepté/refusé tout de suite par
   // le builder, sans attendre le TTL.
   invalidateRosterCatalogueCache();
+  // Lot 6.5 — idem pour les libellés de règles spéciales / Ligues.
+  invalidateTeamRulesCatalogueCache();
 }
 
 interface RosterListPayload {
@@ -182,10 +188,11 @@ export { parseSlugList } from "../services/roster-regional-rules";
 export function resolveSpecialRules(
   raw: unknown,
   isEnglish: boolean,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
 ): RosterSpecialRuleView[] {
   const out: RosterSpecialRuleView[] = [];
   for (const slug of parseSlugList(raw)) {
-    const def = getTeamSpecialRuleBySlug(slug);
+    const def = catalogue.specialRule(slug);
     if (!def) continue;
     out.push({
       slug: def.slug,
@@ -209,6 +216,7 @@ export function resolveRegionalLeagues(
   rosterSlug: string,
   ruleset: Ruleset,
   isEnglish: boolean,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
 ): RosterRegionalLeagueView[] {
   let slugs = parseSlugList(raw);
   if (slugs.length === 0) {
@@ -218,7 +226,7 @@ export function resolveRegionalLeagues(
   const seen = new Set<string>();
   for (const slug of slugs) {
     if (seen.has(slug)) continue;
-    const def = getRegionalLeagueBySlug(slug);
+    const def = catalogue.regionalLeague(slug);
     if (!def) continue;
     seen.add(slug);
     out.push({ slug: def.slug, name: isEnglish ? def.nameEn : def.nameFr });
@@ -243,15 +251,18 @@ export function resolveRegionalLeagueOptions(
   ruleset: Ruleset,
   isEnglish: boolean,
   declaredRules?: readonly string[] | null,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
 ): RosterRegionalLeagueOptionView[] {
   const options = getRegionalLeagueOptions(rosterSlug, ruleset, declaredRules);
   return options.map((option) => {
-    const def = getRegionalLeagueBySlug(option.slug);
+    const def = catalogue.regionalLeague(option.slug);
     return {
       slug: option.slug,
       name: def ? (isEnglish ? def.nameEn : def.nameFr) : option.slug,
       grants: [...option.grants],
-      grantLabels: option.grants.map((slug) => regionalRuleLabel(slug, isEnglish)),
+      grantLabels: option.grants.map((slug) =>
+        regionalRuleLabel(slug, isEnglish, catalogue),
+      ),
     };
   });
 }
@@ -262,8 +273,12 @@ export function resolveRegionalLeagueOptions(
  * dérivé du suffixe par le moteur (`favouredOfLabel`), qui sert aussi la
  * fiche d'équipe — un seul et même intitulé partout.
  */
-function regionalRuleLabel(slug: string, isEnglish: boolean): string {
-  const league = getRegionalLeagueBySlug(slug);
+function regionalRuleLabel(
+  slug: string,
+  isEnglish: boolean,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
+): string {
+  const league = catalogue.regionalLeague(slug);
   if (league) return isEnglish ? league.nameEn : league.nameFr;
   if (isFavouredOfSlug(slug)) return favouredOfLabel(slug, isEnglish);
   return slug;
@@ -274,6 +289,8 @@ async function loadRosterList(
   ruleset: string,
 ): Promise<RosterListPayload> {
   const isEnglish = lang === "en";
+  // Lot 6.5 — libellés des Ligues servis par la base (repli catalogue).
+  const catalogue = await loadTeamRulesCatalogue(ruleset as Ruleset);
   const rosters = await prisma.roster.findMany({
     where: { ruleset },
     orderBy: { name: "asc" },
@@ -325,6 +342,7 @@ async function loadRosterList(
           ruleset as Ruleset,
           isEnglish,
           declaredRules,
+          catalogue,
         ),
         regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
           roster.slug,
@@ -344,6 +362,7 @@ async function loadRosterDetail(
   ruleset: string,
 ): Promise<RosterDetailPayload | null> {
   const isEnglish = lang === "en";
+  const catalogue = await loadTeamRulesCatalogue(ruleset as Ruleset);
   const roster = await prisma.roster.findFirst({
     where: { slug, ruleset },
     include: {
@@ -359,7 +378,7 @@ async function loadRosterDetail(
 
   if (roster) {
     return {
-      roster: transformRoster(roster, isEnglish, ruleset as Ruleset),
+      roster: transformRoster(roster, isEnglish, ruleset as Ruleset, catalogue),
       ruleset,
     };
   }
@@ -381,6 +400,7 @@ async function loadRosterDetail(
           fallback,
           isEnglish,
           DEFAULT_RULESET as Ruleset,
+          await loadTeamRulesCatalogue(DEFAULT_RULESET as Ruleset),
         ),
         ruleset: DEFAULT_RULESET,
       };
@@ -473,7 +493,12 @@ router.get("/rosters/:slug/positions-stats", async (req, res) => {
   }
 });
 
-function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
+function transformRoster(
+  roster: any,
+  isEnglish: boolean,
+  ruleset: Ruleset,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
+) {
   // Une seule résolution des Ligues déclarées : le catalogue affiché sur la
   // fiche ET les options proposées à la création en partent, sinon les deux
   // divergent dès qu'un admin édite `Roster.regionalRules`.
@@ -512,18 +537,24 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
       // le même helper que `/api/positions` pour ne pas diverger.
       ...resolvePositionContent(position, isEnglish),
     })),
-    specialRules: resolveSpecialRules(roster.specialRules, isEnglish),
+    specialRules: resolveSpecialRules(
+      roster.specialRules,
+      isEnglish,
+      catalogue,
+    ),
     regionalLeagues: resolveRegionalLeagues(
       roster.regionalRules,
       roster.slug,
       ruleset,
       isEnglish,
+      catalogue,
     ),
     regionalLeagueOptions: resolveRegionalLeagueOptions(
       roster.slug,
       ruleset,
       isEnglish,
       declaredRules,
+      catalogue,
     ),
     regionalLeagueChoiceRequired: isRegionalLeagueChoiceRequired(
       roster.slug,

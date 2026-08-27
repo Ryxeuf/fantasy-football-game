@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 import Link from "next/link";
@@ -10,12 +10,11 @@ import {
 } from "../../ruleset-utils";
 import { getTeamSpecialRuleBySlug } from "@bb/game-engine";
 import {
-  REGIONAL_LEAGUE_OPTIONS,
-  SPECIAL_RULE_OPTIONS,
   SlugCheckboxGrid,
   parseSlugList,
   toggleSlug,
 } from "../../_components/SlugCheckboxGrid";
+import { useTeamRuleCatalogues } from "../../_components/useTeamRuleCatalogues";
 
 type StaffConfig = {
   format: string;
@@ -67,16 +66,27 @@ type Roster = {
   staffConfigs?: StaffConfig[];
 };
 
-/** Résout un CSV de slugs de règles spéciales en {slug, nom FR, description}. */
+/**
+ * Résout un CSV de slugs de règles spéciales en {slug, nom FR, description}.
+ *
+ * Lot 6.5 — `labels` vient des catalogues servis par la base ; le catalogue
+ * compilé reste le repli tant que la réponse n'est pas arrivée, et pour les
+ * slugs hérités absents des deux.
+ */
 function resolveSpecialRules(
   raw: string | null | undefined,
+  labels: ReadonlyMap<string, string> = new Map(),
 ): Array<{ slug: string; name: string; description: string }> {
   return (raw ?? "")
     .split(/[,\s]+/g)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
     .map((slug) => {
+      const fromDb = labels.get(slug);
       const def = getTeamSpecialRuleBySlug(slug);
+      if (fromDb) {
+        return { slug, name: fromDb, description: def?.description ?? "" };
+      }
       return def
         ? { slug: def.slug, name: def.nameFr, description: def.description }
         : { slug, name: slug, description: "" };
@@ -147,6 +157,14 @@ export default function AdminRosterDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [roster, setRoster] = useState<Roster | null>(null);
+  // Lot 6.5 — catalogues servis par la base (repli compilé au chargement).
+  const { specialRuleOptions, regionalLeagueOptions } = useTeamRuleCatalogues(
+    roster?.ruleset,
+  );
+  const specialRuleLabels = useMemo(
+    () => new Map(specialRuleOptions.map((o) => [o.slug, o.label])),
+    [specialRuleOptions],
+  );
   const [loading, setLoading] = useState(true);
   // Erreur de CHARGEMENT : la fiche n'existe pas / l'API est KO, on
   // remplace la page. Erreur d'ACTION (enregistrement, duplication) :
@@ -468,7 +486,7 @@ export default function AdminRosterDetailPage() {
                 Ligues régionales
               </label>
               <SlugCheckboxGrid
-                catalog={REGIONAL_LEAGUE_OPTIONS}
+                catalog={regionalLeagueOptions}
                 selected={regionalRules}
                 onToggle={(slug) =>
                   setRegionalRules((prev) => toggleSlug(prev, slug))
@@ -496,7 +514,7 @@ export default function AdminRosterDetailPage() {
                 Règles spéciales
               </label>
               <SlugCheckboxGrid
-                catalog={SPECIAL_RULE_OPTIONS}
+                catalog={specialRuleOptions}
                 selected={specialRules}
                 onToggle={(slug) =>
                   setSpecialRules((prev) => toggleSlug(prev, slug))
@@ -619,9 +637,9 @@ export default function AdminRosterDetailPage() {
         
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="text-sm font-medium text-gray-600 mb-2">Règles spéciales</div>
-          {resolveSpecialRules(roster.specialRules).length > 0 ? (
+          {resolveSpecialRules(roster.specialRules, specialRuleLabels).length > 0 ? (
             <div className="space-y-2">
-              {resolveSpecialRules(roster.specialRules).map((rule) => (
+              {resolveSpecialRules(roster.specialRules, specialRuleLabels).map((rule) => (
                 <div
                   key={rule.slug}
                   className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2"

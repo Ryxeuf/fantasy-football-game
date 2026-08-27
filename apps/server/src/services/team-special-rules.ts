@@ -15,7 +15,6 @@
 import {
   DEFAULT_RULESET,
   favouredOfLabel,
-  getTeamSpecialRuleBySlug,
   resolveTeamSpecialRules,
   type Ruleset,
 } from "@bb/game-engine";
@@ -23,10 +22,11 @@ import { prisma } from "../prisma";
 import { effectiveRegionalRules } from "./roster-regional-rules";
 import { parseSlugList } from "./roster-regional-rules";
 import { serverLog } from "../utils/server-log";
+import { loadTeamRulesCatalogue } from "./team-rules-catalogue";
 
 /** Règle spéciale résolue et localisée, prête pour l'UI. */
 export interface TeamSpecialRuleView {
-  /** Slug du catalogue `TEAM_SPECIAL_RULES`. */
+  /** Slug du catalogue `TeamSpecialRule` (repli `TEAM_SPECIAL_RULES`). */
   slug: string;
   /** Libellé localisé (« Favori de Khorne » pour un alignement résolu). */
   name: string;
@@ -80,9 +80,12 @@ export async function getTeamSpecialRules(
     declaredRegionalRules,
   });
 
+  // Lot 6.5 — libellés servis par `TeamSpecialRule` (repli catalogue compilé).
+  const catalogue = await loadTeamRulesCatalogue(ruleset);
+
   const out: TeamSpecialRuleView[] = [];
   for (const rule of resolved) {
-    const def = getTeamSpecialRuleBySlug(rule.slug);
+    const def = catalogue.specialRule(rule.slug);
     if (!def) continue;
     out.push({
       slug: def.slug,

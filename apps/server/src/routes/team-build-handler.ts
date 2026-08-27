@@ -61,6 +61,7 @@ import {
 } from '../utils/star-player-validation';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { loadTeamRulesCatalogue } from '../services/team-rules-catalogue';
 import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
@@ -433,6 +434,8 @@ export async function handleBuildTeam(
         // Ligues DÉCLARÉES par le roster : le choix accepté est exactement
         // celui que la fiche du roster et le sélecteur affichent.
         declaredRules: def.regionalRules,
+        // Lot 6.5 — les Ligues sont nommées comme sur la fiche du roster.
+        rulesCatalogue: await loadTeamRulesCatalogue(ruleset),
       });
     } catch (e: unknown) {
       if (e instanceof RegionalLeagueError) {

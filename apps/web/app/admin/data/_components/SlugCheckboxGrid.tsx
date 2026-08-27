@@ -48,17 +48,27 @@ export interface SlugOption {
   hint?: string;
 }
 
-/** Catalogue des règles spéciales d'équipe (source game-engine). */
-export const SPECIAL_RULE_OPTIONS: SlugOption[] = TEAM_SPECIAL_RULES.map((r) => ({
-  slug: r.slug,
-  label: r.nameFr,
-}));
+/**
+ * Catalogue COMPILÉ des règles spéciales d'équipe (source game-engine).
+ *
+ * Lot 6.5 — ce n'est plus que le REPLI : les formulaires lisent les tables
+ * `TeamSpecialRule` / `RegionalLeague` via `useTeamRuleCatalogues`, sinon une
+ * règle créée en admin n'apparaîtrait jamais dans l'écran qui sert à
+ * l'attribuer à un roster.
+ */
+export const ENGINE_SPECIAL_RULE_OPTIONS: SlugOption[] = TEAM_SPECIAL_RULES.map(
+  (r) => ({ slug: r.slug, label: r.nameFr }),
+);
 
-/** Catalogue des ligues régionales (source game-engine). */
-export const REGIONAL_LEAGUE_OPTIONS: SlugOption[] = REGIONAL_LEAGUES.map((l) => ({
-  slug: l.slug,
-  label: l.nameFr,
-}));
+/** Catalogue COMPILÉ des ligues régionales (repli, cf. ci-dessus). */
+export const ENGINE_REGIONAL_LEAGUE_OPTIONS: SlugOption[] =
+  REGIONAL_LEAGUES.map((l) => ({ slug: l.slug, label: l.nameFr }));
+
+/** @deprecated Repli compilé — préférer `useTeamRuleCatalogues`. */
+export const SPECIAL_RULE_OPTIONS = ENGINE_SPECIAL_RULE_OPTIONS;
+
+/** @deprecated Repli compilé — préférer `useTeamRuleCatalogues`. */
+export const REGIONAL_LEAGUE_OPTIONS = ENGINE_REGIONAL_LEAGUE_OPTIONS;
 
 /**
  * Grille de cases à cocher sur un catalogue de slugs.

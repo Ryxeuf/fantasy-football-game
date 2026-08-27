@@ -57,6 +57,7 @@ import {
 } from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 import { isAllowedTeamRoster } from '../services/roster-catalogue';
+import { loadTeamRulesCatalogue } from '../services/team-rules-catalogue';
 
 /**
  * Resout la composition de depart d'un roster a partir des positions
@@ -136,6 +137,7 @@ export async function handleCreateFromRoster(
   // les positions (compo de départ) et les Ligues déclarées (choix de Ligue
   // régionale plus bas).
   const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
+  const rulesCatalogue = await loadTeamRulesCatalogue(ruleset);
 
   // Lot 6.7 — budget de construction : valeur du coach si fournie, sinon
   // `Roster.budget` (base) et non plus le plafond compilé du format.
@@ -180,6 +182,8 @@ export async function handleCreateFromRoster(
       // Ligues DÉCLARÉES par le roster : le choix accepté est exactement
       // celui que la fiche du roster et le sélecteur affichent.
       declaredRules: dbRoster?.regionalRules,
+      // Lot 6.5 — les Ligues sont nommées comme sur la fiche du roster.
+      rulesCatalogue: rulesCatalogue,
     });
   } catch (e: unknown) {
     if (e instanceof RegionalLeagueError) {
