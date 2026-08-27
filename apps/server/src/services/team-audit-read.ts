@@ -68,6 +68,7 @@ const ACTION_LABELS: Readonly<Record<string, string>> = {
   "team.create.from-roster": "Création de l'équipe depuis un roster",
   "team.delete": "Suppression de l'équipe",
   "team.update": "Modification de l'équipe",
+  "team.rename": "Renommage de l'équipe",
   "team.info.update": "Modification des informations d'équipe",
   "team.roster.save": "Sauvegarde du roster",
   "team.values.recompute": "Recalcul de la VE / VEA",

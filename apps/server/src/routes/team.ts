@@ -14,6 +14,7 @@ import {
   saveRosterSchema,
   designateCaptainSchema,
   updateStartingPspPoolSchema,
+  renameTeamSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
@@ -127,6 +128,19 @@ router.put(
   handleSaveRosterImpl,
 );
 router.delete("/:id", authUser, handleDeleteTeamImpl);
+
+// Renommage seul. Route dediee (et non `PUT /:id`, qui exige le roster
+// complet) et volontairement HORS verrou anti-triche : le nom est
+// cosmetique, une equipe engagee reste renommable par son coach.
+export { handleRenameTeam } from './team-rename-handler';
+import { handleRenameTeam as handleRenameTeamImpl } from './team-rename-handler';
+
+router.patch(
+  "/:id/name",
+  authUser,
+  validate(renameTeamSchema),
+  handleRenameTeamImpl,
+);
 
 // #3 — Partage public opt-in du roster (boucle d'acquisition).
 router.patch(

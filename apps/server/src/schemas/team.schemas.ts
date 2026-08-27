@@ -215,6 +215,23 @@ export type UpdatePlayerIdentityBody = z.infer<
 >;
 
 /**
+ * Renommage d'une équipe déjà créée (`PATCH /team/:id/name`).
+ *
+ * Mêmes bornes qu'à la création (`createFromRosterSchema.name`) : le nom
+ * reste un champ cosmétique, aucune contrainte d'unicité n'existe en base.
+ * Le `.trim()` normalise ici pour que le service n'ait jamais à arbitrer
+ * entre « nom blanc » et « nom vide ».
+ */
+export const renameTeamSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Le nom de l'équipe ne peut pas être vide")
+    .max(100, "Le nom de l'équipe ne peut pas dépasser 100 caractères"),
+});
+export type RenameTeamBody = z.infer<typeof renameTeamSchema>;
+
+/**
  * Édition avancée : réglage du pool de PSP de construction d'une équipe
  * déjà créée. Même borne haute que le builder (`MAX_STARTING_PSP_POOL`).
  */

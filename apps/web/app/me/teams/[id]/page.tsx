@@ -21,6 +21,7 @@ import {
   makePositionResolvers,
 } from "./roster-skill-access";
 import { PlayerIdentityInlineEdit } from "./PlayerIdentityInlineEdit";
+import { TeamNameInlineEdit } from "./TeamNameInlineEdit";
 import PlayerImageUploader from "./PlayerImageUploader";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -233,6 +234,12 @@ export default function TeamDetailPage() {
       cancelled = true;
     };
   }, [id, t, language]);
+
+  // Renommage inline : mutation locale du state (le titre, l'export PDF et
+  // l'uploader de logo lisent tous `data.team.name`).
+  const handleTeamRenamed = (name: string) => {
+    setData((prev: any) => ({ ...prev, team: { ...prev.team, name } }));
+  };
 
   // E12 — après édition inline du nom/numéro, mutation locale du state.
   const handleIdentitySaved = (
@@ -556,7 +563,17 @@ export default function TeamDetailPage() {
               size={32}
               title={team?.name}
             />
-            <span>{team?.name || t.teams.team}</span>
+            {/* Renommage inline : disponible meme quand l'edition du roster
+                est verrouillee (equipe engagee) — le nom est cosmetique. */}
+            {id && team?.name ? (
+              <TeamNameInlineEdit
+                teamId={id}
+                name={team.name}
+                onRenamed={handleTeamRenamed}
+              />
+            ) : (
+              <span>{team?.name || t.teams.team}</span>
+            )}
           </h1>
           <div className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.roster}:{" "}
