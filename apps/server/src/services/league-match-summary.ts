@@ -54,6 +54,13 @@ export interface InjuredPlayer {
   readonly side: MatchEventTeam;
   /** Cause de l'elimination (block, failed_dodge, crowd, ...). */
   readonly cause: string | null;
+  /**
+   * Joueur ADVERSE qui a inflige la sortie, quand il y en a un. `null`
+   * pour une auto-elimination (esquive ratee) ou une sortie sans auteur
+   * (foule). Alimente l'acquisition du trait Haine (X) : X est un
+   * Mot-cle de ce joueur-la.
+   */
+  readonly causedByPlayerId: string | null;
 }
 
 export interface PlayerStatLine {
@@ -224,6 +231,7 @@ export function summarizeMatchSheet(
             severity,
             side: team ? opposite(team) : "home",
             cause: ev.causeDetail ?? ev.kind,
+            causedByPlayerId: ev.actorPlayerId ?? null,
           });
         }
         break;
@@ -273,6 +281,9 @@ export function summarizeMatchSheet(
               severity,
               side,
               cause: ev.causeDetail ?? ev.kind,
+              // Auto-elimination ou foule : personne n'a inflige la
+              // sortie, il n'y a donc personne a hair.
+              causedByPlayerId: isSelfCause ? null : (ev.actorPlayerId ?? null),
             });
           }
         }

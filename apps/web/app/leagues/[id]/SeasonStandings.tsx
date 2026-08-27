@@ -4,6 +4,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import type { StandingRow } from "./types";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
+import TeamRosterLink from "./TeamRosterLink";
 
 /**
  * F1 — Classement de saison.
@@ -23,6 +24,10 @@ interface SeasonStandingsProps {
   showSeasonElo?: boolean;
   /** Ouvre le tableau deja deplie (utile pour les pages recap / export). */
   defaultExpanded?: boolean;
+  /** Ligue de consultation : rend les noms d'equipe cliquables (roster). */
+  leagueId?: string | null;
+  /** Consultation des rosters autorisee (commissaire ou coach inscrit). */
+  canViewRosters?: boolean;
 }
 
 interface StandingsColumn {
@@ -175,6 +180,8 @@ export function SeasonStandings({
   rows,
   showSeasonElo = false,
   defaultExpanded = false,
+  leagueId = null,
+  canViewRosters = false,
 }: SeasonStandingsProps) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -246,7 +253,15 @@ export function SeasonStandings({
                   {index + 1}
                 </td>
                 <td className="px-2 py-1 text-gray-900 font-medium">
-                  <span className="inline-flex items-center gap-1.5">
+                  {/* Le nom mene au roster : meme page que le bouton
+                      « Voir le roster » de la liste des participants. */}
+                  <TeamRosterLink
+                    leagueId={leagueId}
+                    teamId={row.teamId}
+                    canViewRoster={canViewRosters}
+                    testIdSuffix={`standings-${row.participantId}`}
+                    className="inline-flex items-center gap-1.5"
+                  >
                     <TeamLogo
                       slug={row.roster}
                       logoUrl={row.logoUrl ?? null}
@@ -254,7 +269,7 @@ export function SeasonStandings({
                       title={row.teamName}
                     />
                     <span>{row.teamName}</span>
-                  </span>
+                  </TeamRosterLink>
                   <RosterBadge slug={row.roster} className="ml-2" />
                   {row.coachName ? (
                     <span

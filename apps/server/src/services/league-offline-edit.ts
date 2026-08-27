@@ -61,7 +61,12 @@ import {
 } from "./team-audit";
 import { serverLog } from "../utils/server-log";
 import { revertPlayerStatus } from "./player-status";
+import { parseHateGrants, revertHateTraitGrants } from "./league-hate-trait";
 import { removeLatestAdvancements } from "./league-sheet-advancements";
+import {
+  playoffAdvancementState,
+  unadvancePlayoffsForSlot,
+} from "./league-playoffs";
 
 export type ReverseOfflineSkipReason =
   | "match-missing"
@@ -71,6 +76,7 @@ export type ReverseOfflineSkipReason =
   | "pairing-missing"
   | "season-completed"
   | "playoffs-generated"
+  | "playoff-round-advanced"
   | "advancement-consumed"
   | "purchase-consumed";
 
@@ -262,7 +268,9 @@ export async function reverseOfflineLeagueResult(
           },
         },
       },
-      leagueRound: { select: { id: true, status: true } },
+      leagueRound: {
+        select: { id: true, status: true, kind: true, bracketSlot: true },
+      },
     },
   })) as {
     id: string;
@@ -277,7 +285,12 @@ export async function reverseOfflineLeagueResult(
       status: string;
       league: { winPoints: number; drawPoints: number; lossPoints: number };
     } | null;
-    leagueRound: { id: string; status: string } | null;
+    leagueRound: {
+      id: string;
+      status: string;
+      kind: string | null;
+      bracketSlot: string | null;
+    } | null;
   } | null;
 
   if (!match) return { skipped: true, reason: "match-missing" };
@@ -297,11 +310,29 @@ export async function reverseOfflineLeagueResult(
     return { skipped: true, reason: "season-completed" };
   }
   // Garde-fou : playoffs generes.
-  const playoffRounds = await prisma.leagueRound.count({
-    where: { seasonId: match.leagueSeasonId, kind: "playoff" },
-  });
-  if (playoffRounds > 0) {
-    return { skipped: true, reason: "playoffs-generated" };
+  //
+  // Le classement de la phase reguliere est fige des que le bracket est
+  // genere : invalider un match REGULIER re-ouvrirait des seeds deja
+  // consommes. Un match DE PLAYOFF, lui, ne touche pas ce classement — le
+  // refuser rendait toute erreur de saisie en playoff definitive. On le
+  // laisse donc passer tant que le tour suivant n'a pas demarre (sinon un
+  // match serait deja joue par une equipe qu'on s'apprete a dequalifier).
+  const isPlayoffMatch = match.leagueRound?.kind === "playoff";
+  if (!isPlayoffMatch) {
+    const playoffRounds = await prisma.leagueRound.count({
+      where: { seasonId: match.leagueSeasonId, kind: "playoff" },
+    });
+    if (playoffRounds > 0) {
+      return { skipped: true, reason: "playoffs-generated" };
+    }
+  } else if (match.leagueRound?.bracketSlot) {
+    const state = await playoffAdvancementState(
+      match.leagueSeasonId,
+      match.leagueRound.bracketSlot,
+    );
+    if (state === "started") {
+      return { skipped: true, reason: "playoff-round-advanced" };
+    }
   }
   // Note : une mort EST reversible (la mort est un simple flag `dead:true`,
   // la ligne TeamPlayer n'est jamais supprimee). La reversion est deleguee a
@@ -412,6 +443,12 @@ export async function reverseOfflineLeagueResult(
   const firedApplied: string[] = Array.isArray(snapshot.firedApplied)
     ? snapshot.firedApplied.filter((s): s is string => typeof s === "string")
     : [];
+
+  // Traits « Haine (X) » gagnes sur ce match : le trait recompense une
+  // sortie qu'on s'apprete a annuler, il part avec elle.
+  const hateGranted = parseHateGrants(
+    (snapshot as { hateGranted?: unknown }).hateGranted,
+  );
 
   // --- Reversion ---
   const { input } = snapshot;
@@ -732,6 +769,34 @@ export async function reverseOfflineLeagueResult(
           `[league-offline-edit] reversion ${kind} ignoree (${out.reason}) player=${playerId} match=${match.id}`,
         );
       }
+    }
+  }
+
+  // Haine (X) : retire les traits gagnes sur les blessures qu'on vient
+  // d'annuler. Hors transaction (best-effort) comme les statuts : un echec
+  // ne doit pas re-annuler une reversion deja committee.
+  if (hateGranted.length > 0) {
+    const removed = await revertHateTraitGrants(hateGranted);
+    serverLog.info(
+      `[league-offline-edit] traits Haine retires ${removed}/${hateGranted.length} match=${match.id}`,
+    );
+  }
+
+  // Bracket : retire la qualification issue de ce match (miroir exact de
+  // `advancePlayoffsAfterPairingComplete`, joue a la saisie). Sans ca, le
+  // tour suivant garderait un qualifie issu d'un resultat annule.
+  if (isPlayoffMatch && match.leagueRound?.bracketSlot) {
+    const winnerParticipantId =
+      winner === "home" ? home.id : winner === "away" ? away.id : null;
+    const out = await unadvancePlayoffsForSlot({
+      seasonId: match.leagueSeasonId,
+      slot: match.leagueRound.bracketSlot,
+      winnerParticipantId,
+    });
+    if (!out.unadvanced && out.reason && out.reason !== "no-next-round") {
+      serverLog.warn(
+        `[league-offline-edit] desavancement bracket ignore (${out.reason}) match=${match.id} slot=${match.leagueRound.bracketSlot}`,
+      );
     }
   }
 

@@ -19,6 +19,13 @@ export interface SkillDefinition {
   isPassive?: boolean;     // Compétence passive (soulignée)
   isModified?: boolean;    // Compétence modifiée ou nouveau nom (astérisque)
   season3Only?: boolean;  // Compétence qui n'existe qu'en Saison 3 (pas en Saison 2)
+  /**
+   * Compétence non proposée à l'évolution : elle reste valide si le joueur
+   * la possède, mais ne peut pas être choisie (variante réservée aux Star
+   * Players, ou trait qui s'obtient uniquement en jeu comme Haine (X)).
+   * Recopiée en base sur `Skill.excludedFromSelection` au seed.
+   */
+  excludedFromSelection?: boolean;
 }
 
 // Définition de toutes les compétences avec leurs slugs
@@ -933,6 +940,9 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   {
     slug: "hate",
     isPassive: true,
+    // Haine (X) ne se choisit jamais a l'evolution : elle s'obtient en
+    // etant mis sur la touche (cf. `skills/hate-trait.ts`).
+    excludedFromSelection: true,
     nameFr: "Haine (X)*",
     nameEn: "Hate (X)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
@@ -944,6 +954,9 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     // A20 — variante paramétrée pour le Tueur de Trolls (Haine du Mot-clé Troll).
     slug: "hate-troll",
     isPassive: true,
+    // Haine (X) ne se choisit jamais a l'evolution : elle s'obtient en
+    // etant mis sur la touche (cf. `skills/hate-trait.ts`).
+    excludedFromSelection: true,
     nameFr: "Haine (Troll)",
     nameEn: "Hate (Troll)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-clé Troll, ce joueur peut relancer un résultat Attaquant Plaqué.",
@@ -957,6 +970,9 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     // effet que `hate` / `hate-troll`, le Mot-clé cible étant fixé à « Nain ».
     slug: "hate-dwarf",
     isPassive: true,
+    // Haine (X) ne se choisit jamais a l'evolution : elle s'obtient en
+    // etant mis sur la touche (cf. `skills/hate-trait.ts`).
+    excludedFromSelection: true,
     nameFr: "Haine (Nain)*",
     nameEn: "Hate (Dwarf)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le Mot-clé Nain, ce joueur peut relancer un résultat Attaquant Plaqué.",

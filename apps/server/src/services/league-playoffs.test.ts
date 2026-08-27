@@ -40,6 +40,7 @@ vi.mock("../prisma", () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
       count: vi.fn(),
+      delete: vi.fn(),
     },
     leaguePairing: {
       findMany: vi.fn(),
@@ -72,6 +73,8 @@ import {
   getPlayoffsPublishedState,
   isPlayoffBracketVisible,
   setPlayoffsPublished,
+  playoffAdvancementState,
+  unadvancePlayoffsForSlot,
   type PlayoffSize,
 } from "./league-playoffs";
 
@@ -88,6 +91,7 @@ const mocked = {
   pairingUpdate: prisma.leaguePairing.update as MockFn,
   pairingUpdateMany: prisma.leaguePairing.updateMany as MockFn,
   roundUpdateMany: prisma.leagueRound.updateMany as MockFn,
+  roundDelete: prisma.leagueRound.delete as MockFn,
   auditCreate: (prisma as unknown as { auditLog: { create: MockFn } })
     .auditLog.create as MockFn,
   seasonUpdate: prisma.leagueSeason.update as MockFn,
@@ -983,5 +987,153 @@ describe("publication du bracket de playoffs", () => {
       ok: false,
       reason: "season-missing",
     });
+  });
+});
+
+/**
+ * Invalidation d'un match de playoff : miroir de l'avancement du bracket.
+ * Le refus « playoffs-generated » rendait toute erreur de saisie en
+ * playoff definitive — on la defait desormais, tant que le tour suivant
+ * n'a pas demarre.
+ */
+describe("playoffAdvancementState / unadvancePlayoffsForSlot", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("la finale n'alimente aucun tour : rien a defaire", async () => {
+    expect(await playoffAdvancementState("s1", "final")).toBe("none");
+    expect(mocked.roundFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("tour suivant non genere : rien a defaire", async () => {
+    mocked.roundFindFirst.mockResolvedValue(null);
+    expect(await playoffAdvancementState("s1", "sf1")).toBe("none");
+  });
+
+  it("tour suivant genere mais pas joue : desavancement possible", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A",
+      awayParticipantId: "A",
+      status: "scheduled",
+      match: null,
+    });
+    expect(await playoffAdvancementState("s1", "sf1")).toBe("pending");
+  });
+
+  it("tour suivant deja lance (match cree) : refus", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A",
+      awayParticipantId: "B",
+      status: "scheduled",
+      match: { id: "m-final" },
+    });
+    expect(await playoffAdvancementState("s1", "sf1")).toBe("started");
+  });
+
+  it("tour suivant deja joue : refus", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A",
+      awayParticipantId: "B",
+      status: "played",
+      match: null,
+    });
+    expect(await playoffAdvancementState("s1", "sf1")).toBe("started");
+  });
+
+  it("supprime le tour suivant quand ce resultat l'avait cree seul", async () => {
+    // Convention placeholder de l'avancement : home === away tant que le
+    // sibling n'a pas termine.
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A",
+      awayParticipantId: "A",
+      status: "scheduled",
+      match: null,
+    });
+
+    const out = await unadvancePlayoffsForSlot({
+      seasonId: "s1",
+      slot: "sf1",
+      winnerParticipantId: "A",
+    });
+
+    expect(out).toEqual({ unadvanced: true });
+    expect(mocked.roundDelete).toHaveBeenCalledWith({ where: { id: "r-final" } });
+    expect(mocked.pairingUpdate).not.toHaveBeenCalled();
+  });
+
+  it("remet le cote concerne en placeholder quand l'autre demi est deja la", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A", // issu de sf1
+      awayParticipantId: "B", // issu de sf2
+      status: "scheduled",
+      match: null,
+    });
+
+    const out = await unadvancePlayoffsForSlot({
+      seasonId: "s1",
+      slot: "sf1",
+      winnerParticipantId: "A",
+    });
+
+    expect(out).toEqual({ unadvanced: true });
+    expect(mocked.roundDelete).not.toHaveBeenCalled();
+    expect(mocked.pairingUpdate).toHaveBeenCalledWith({
+      where: { id: "p-final" },
+      data: { homeParticipantId: "B" },
+    });
+  });
+
+  it("ne touche a rien si le cote a ete reecrit par une autre source", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "C", // plus le qualifie de ce match
+      awayParticipantId: "B",
+      status: "scheduled",
+      match: null,
+    });
+
+    const out = await unadvancePlayoffsForSlot({
+      seasonId: "s1",
+      slot: "sf1",
+      winnerParticipantId: "A",
+    });
+
+    expect(out).toEqual({
+      unadvanced: false,
+      reason: "advancement-superseded",
+    });
+    expect(mocked.pairingUpdate).not.toHaveBeenCalled();
+    expect(mocked.roundDelete).not.toHaveBeenCalled();
+  });
+
+  it("refuse de defaire un tour suivant deja lance", async () => {
+    mocked.roundFindFirst.mockResolvedValue({ id: "r-final" });
+    mocked.pairingFindFirst.mockResolvedValue({
+      id: "p-final",
+      homeParticipantId: "A",
+      awayParticipantId: "B",
+      status: "played",
+      match: null,
+    });
+
+    expect(
+      await unadvancePlayoffsForSlot({
+        seasonId: "s1",
+        slot: "sf1",
+        winnerParticipantId: "A",
+      }),
+    ).toEqual({ unadvanced: false, reason: "next-round-started" });
   });
 });

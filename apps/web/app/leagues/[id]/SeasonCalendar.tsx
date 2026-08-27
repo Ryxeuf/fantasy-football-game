@@ -4,6 +4,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { MatchdayExport } from "./MatchdayExport";
 import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import TeamLogo from "../../components/TeamLogo";
+import TeamRosterLink from "./TeamRosterLink";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -26,6 +27,10 @@ interface SeasonCalendarProps {
   poolNamesById?: Record<string, string>;
   /** FR5 — poule d'un participant par id (pour grouper les pairings). */
   poolIdByParticipantId?: Record<string, string | null>;
+  /** Ligue de consultation : rend les noms d'equipe cliquables (roster). */
+  leagueId?: string | null;
+  /** Consultation des rosters autorisee (commissaire ou coach inscrit). */
+  canViewRosters?: boolean;
 }
 
 interface PoolGroup {
@@ -133,6 +138,8 @@ export function SeasonCalendar({
   canRecordResult,
   poolNamesById = {},
   poolIdByParticipantId = {},
+  leagueId = null,
+  canViewRosters = false,
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
@@ -221,6 +228,8 @@ export function SeasonCalendar({
                           pairing={pairing}
                           currentUserId={currentUserId}
                           canRecordResult={canRecordResult}
+                          leagueId={leagueId}
+                          canViewRosters={canViewRosters}
                         />
                       ))}
                     </ul>
@@ -243,6 +252,8 @@ export function SeasonCalendar({
                               pairing={pairing}
                               currentUserId={currentUserId}
                               canRecordResult={canRecordResult}
+                              leagueId={leagueId}
+                              canViewRosters={canViewRosters}
                             />
                           ))}
                         </ul>
@@ -263,12 +274,16 @@ interface PairingRowProps {
   pairing: LeaguePairingDetail;
   currentUserId: string | null;
   canRecordResult?: boolean;
+  leagueId?: string | null;
+  canViewRosters?: boolean;
 }
 
 function PairingRow({
   pairing,
   currentUserId,
   canRecordResult,
+  leagueId,
+  canViewRosters,
 }: PairingRowProps) {
   const { t } = useLanguage();
 
@@ -299,9 +314,19 @@ function PairingRow({
     >
       <div className="flex-1 min-w-0">
         <div className="truncate">
-          <TeamSpan team={pairing.homeParticipant} side="home" />
+          <TeamSpan
+            team={pairing.homeParticipant}
+            side="home"
+            leagueId={leagueId}
+            canViewRosters={canViewRosters}
+          />
           <span className="mx-2 text-gray-400">vs</span>
-          <TeamSpan team={pairing.awayParticipant} side="away" />
+          <TeamSpan
+            team={pairing.awayParticipant}
+            side="away"
+            leagueId={leagueId}
+            canViewRosters={canViewRosters}
+          />
         </div>
         <PairingBonusBreakdown
           pairingId={pairing.id}
@@ -354,22 +379,34 @@ function PairingRow({
 interface TeamSpanProps {
   team: LeaguePairingTeamDetail;
   side: "home" | "away";
+  leagueId?: string | null;
+  canViewRosters?: boolean;
 }
 
-function TeamSpan({ team, side }: TeamSpanProps) {
+function TeamSpan({ team, side, leagueId, canViewRosters }: TeamSpanProps) {
   const coachName = team.team.owner?.coachName ?? null;
   return (
     <span
       data-testid={`pairing-team-${side}`}
       className="inline-flex items-center gap-1.5 align-middle font-medium text-nuffle-anthracite"
     >
-      <TeamLogo
-        slug={team.team.roster}
-        logoUrl={team.team.logoUrl ?? null}
-        size={18}
-        title={team.team.name}
-      />
-      <span>{team.team.name}</span>
+      {/* Le nom mene au roster : meme page que le bouton « Voir le
+          roster » de la liste des participants. */}
+      <TeamRosterLink
+        leagueId={leagueId}
+        teamId={team.teamId}
+        canViewRoster={canViewRosters}
+        testIdSuffix={`pairing-${side}-${team.teamId}`}
+        className="inline-flex items-center gap-1.5"
+      >
+        <TeamLogo
+          slug={team.team.roster}
+          logoUrl={team.team.logoUrl ?? null}
+          size={18}
+          title={team.team.name}
+        />
+        <span>{team.team.name}</span>
+      </TeamRosterLink>
       {coachName ? (
         <span
           data-testid={`pairing-coach-${side}`}

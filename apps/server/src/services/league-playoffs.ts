@@ -1134,3 +1134,146 @@ export async function setPlayoffsPublished(
   );
   return { ok: true, published };
 }
+
+/**
+ * Etat du round suivant d'un slot de bracket, du point de vue de
+ * l'INVALIDATION du match qui l'a alimenté.
+ *
+ *  - `none`      : aucun round suivant généré (rien à défaire) ;
+ *  - `pending`   : round suivant généré mais pas encore joué — la
+ *                  qualification peut être retirée ;
+ *  - `started`   : un match y est déjà lancé ou joué — on refuse.
+ */
+export type PlayoffAdvancementState = "none" | "pending" | "started";
+
+interface NextRoundPairing {
+  readonly roundId: string;
+  readonly pairingId: string;
+  readonly homeParticipantId: string;
+  readonly awayParticipantId: string;
+  readonly status: string;
+  readonly matchId: string | null;
+}
+
+async function loadNextRoundPairing(
+  seasonId: string,
+  slot: string,
+): Promise<{ next: NextRoundPairing | null; side: "home" | "away" } | null> {
+  const client = prisma as unknown as PrismaWithLeague;
+  const next = nextSlotFor(slot);
+  if (!next) return null; // la finale n'alimente aucun round.
+  const round = (await client.leagueRound.findFirst({
+    where: { seasonId, bracketSlot: next.nextSlot },
+    select: { id: true },
+  })) as { id: string } | null;
+  if (!round) return { next: null, side: next.side };
+  const pairing = (await client.leaguePairing.findFirst({
+    where: { roundId: round.id },
+    select: {
+      id: true,
+      homeParticipantId: true,
+      awayParticipantId: true,
+      status: true,
+      match: { select: { id: true } },
+    },
+  })) as {
+    id: string;
+    homeParticipantId: string;
+    awayParticipantId: string;
+    status: string;
+    match: { id: string } | null;
+  } | null;
+  if (!pairing) return { next: null, side: next.side };
+  return {
+    next: {
+      roundId: round.id,
+      pairingId: pairing.id,
+      homeParticipantId: pairing.homeParticipantId,
+      awayParticipantId: pairing.awayParticipantId,
+      status: pairing.status,
+      matchId: pairing.match?.id ?? null,
+    },
+    side: next.side,
+  };
+}
+
+/**
+ * L'invalidation d'un match de playoff est-elle encore possible ?
+ *
+ * Elle l'est tant que le round suivant du bracket n'a pas démarré : une
+ * fois le tour d'après joué, retirer le qualifié laisserait un bracket
+ * incohérent (un match joué par une équipe qui n'est plus qualifiée).
+ */
+export async function playoffAdvancementState(
+  seasonId: string,
+  slot: string,
+): Promise<PlayoffAdvancementState> {
+  const loaded = await loadNextRoundPairing(seasonId, slot);
+  if (!loaded || !loaded.next) return "none";
+  const { next } = loaded;
+  if (next.matchId !== null || next.status !== "scheduled") return "started";
+  return "pending";
+}
+
+/**
+ * Inverse `advancePlayoffsAfterPairingComplete` : retire du round suivant
+ * la qualification issue de `slot`.
+ *
+ * Deux formes selon ce que l'avancement avait produit :
+ *  - le round suivant n'existait pas encore et a été créé par ce seul
+ *    résultat (convention placeholder `home === away`) : on le supprime,
+ *    son pairing part en cascade ;
+ *  - le round suivant portait déjà l'autre demi-finaliste : on remet le
+ *    côté concerné sur le placeholder (= l'autre participant), état exact
+ *    d'avant l'avancement.
+ *
+ * Idempotent : sans round suivant, ou si un match y a démarré, ne fait
+ * rien et le signale (`unadvanced: false`).
+ */
+export async function unadvancePlayoffsForSlot(input: {
+  readonly seasonId: string;
+  readonly slot: string;
+  /** Participant qualifié par ce match (celui à retirer). */
+  readonly winnerParticipantId: string | null;
+}): Promise<{ readonly unadvanced: boolean; readonly reason?: string }> {
+  const client = prisma as unknown as PrismaWithLeague;
+  const loaded = await loadNextRoundPairing(input.seasonId, input.slot);
+  if (!loaded) return { unadvanced: false, reason: "no-next-round" };
+  const { next, side } = loaded;
+  if (!next) return { unadvanced: false, reason: "next-round-missing" };
+  if (next.matchId !== null || next.status !== "scheduled") {
+    return { unadvanced: false, reason: "next-round-started" };
+  }
+
+  const current =
+    side === "home" ? next.homeParticipantId : next.awayParticipantId;
+  const other =
+    side === "home" ? next.awayParticipantId : next.homeParticipantId;
+
+  // Le côté a déjà été réécrit par une autre source : on n'y touche pas
+  // (même posture que `revertPlayerStatus` sur un statut supplanté).
+  if (input.winnerParticipantId && current !== input.winnerParticipantId) {
+    return { unadvanced: false, reason: "advancement-superseded" };
+  }
+
+  if (current === other) {
+    // Placeholder : ce résultat est le seul à avoir alimenté le round.
+    await client.leagueRound.delete({ where: { id: next.roundId } });
+    serverLog.info(
+      `[league-playoffs] season=${input.seasonId} unadvanced ${input.slot} -> round suivant supprimé`,
+    );
+    return { unadvanced: true };
+  }
+
+  await client.leaguePairing.update({
+    where: { id: next.pairingId },
+    data:
+      side === "home"
+        ? { homeParticipantId: other }
+        : { awayParticipantId: other },
+  });
+  serverLog.info(
+    `[league-playoffs] season=${input.seasonId} unadvanced ${input.slot} -> côté ${side} remis en attente`,
+  );
+  return { unadvanced: true };
+}

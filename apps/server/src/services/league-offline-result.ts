@@ -56,6 +56,11 @@ import { serverLog } from "../utils/server-log";
 import { OFFLINE_MATCH_MODE } from "./match-modes";
 import { canFirePlayer } from "./team-captain";
 import { applyPlayerStatuses } from "./player-status";
+import {
+  applyHateTraitAcquisitions,
+  type HateCandidate,
+  type HateGrant,
+} from "./league-hate-trait";
 
 /** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
 export { OFFLINE_MATCH_MODE };
@@ -138,6 +143,13 @@ export interface RecordOfflineResultInput {
    * (historique) et reversibles a l'invalidation.
    */
   readonly firedPlayerIds?: readonly string[];
+  /**
+   * Haine (X) — candidats au jet d'acquisition du trait, derives de la
+   * feuille de match (victime sortie pour >= 1 match + Mot-cle du joueur
+   * qui l'a eliminee). Le D6 est jete ici, apres l'application des
+   * blessures : c'est le meme moment que la regle (fin de match).
+   */
+  readonly hateCandidates?: readonly HateCandidate[];
   /**
    * Séquence de fin de match BB (livre p.68) :
    *   1. consigner résultats et gains — 2. fans dévoués —
@@ -251,6 +263,11 @@ export interface OfflineResultSnapshot {
    * Renseigne APRES coup ; reversion exacte = ces ids seulement.
    */
   readonly firedApplied?: readonly string[];
+  /**
+   * Traits « Haine (X) » REELLEMENT accordes par ce match (le jet a reussi).
+   * Renseigne APRES coup ; l'invalidation les retire exactement.
+   */
+  readonly hateGranted?: readonly HateGrant[];
 }
 
 function buildOfflineSnapshot(
@@ -948,6 +965,27 @@ export async function recordOfflineLeagueResult(
     );
   }
 
+  // Haine (X) : jet 1D6 des joueurs sortis pour au moins un match. Joue
+  // APRES les blessures (le trait recompense la sortie qui vient d'etre
+  // appliquee) et AVANT l'etape 3 — une competence de plus ne change ni
+  // les PSP ni la VE (le trait ne vit pas dans `advancements`), mais la
+  // fiche du joueur doit etre a jour quand le coach choisit son evolution.
+  let hateGranted: readonly HateGrant[] = [];
+  if (input.hateCandidates && input.hateCandidates.length > 0) {
+    try {
+      const out = await applyHateTraitAcquisitions({
+        candidates: input.hateCandidates,
+        allowedTeamIds: [home.teamId, away.teamId],
+      });
+      hateGranted = out.granted;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[league-offline-result] acquisition Haine echouee match=${match.id}: ${msg}`,
+      );
+    }
+  }
+
   // Etape 3 de la sequence BB — AMELIORATION DE JOUEURS. Jouee APRES les
   // PSP/blessures (le joueur doit avoir ses PSP du match) et AVANT les
   // embauches : une competence gagnee ici change le prix de recrutement
@@ -988,11 +1026,20 @@ export async function recordOfflineLeagueResult(
     match.id,
   );
 
-  if (hasAnyMutation(rosterMutations) || firedApplied.length > 0) {
+  if (
+    hasAnyMutation(rosterMutations) ||
+    firedApplied.length > 0 ||
+    hateGranted.length > 0
+  ) {
     await prisma.match.update({
       where: { id: match.id },
       data: {
-        offlineResultInput: { ...offlineSnapshot, rosterMutations, firedApplied },
+        offlineResultInput: {
+          ...offlineSnapshot,
+          rosterMutations,
+          firedApplied,
+          hateGranted,
+        },
       },
     });
   }
