@@ -1,3 +1,12 @@
+## [1.236.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.236.0...v1.236.1) (2026-08-27)
+
+
+### 🐛 Bug Fixes
+
+* **team:** PUT /:id/info contrôle le budget et resynchronise la trésorerie ([ffd1d71](https://github.com/Ryxeuf/fantasy-football-game/commit/ffd1d71c9d42be4ac99812fde4bfe525ac2093e1))
+* **team:** PUT /:id/roster resynchronise la trésorerie du brouillon ([566ecd9](https://github.com/Ryxeuf/fantasy-football-game/commit/566ecd9797f153d660adb3b9b482a7a24d437f8f))
+* **team:** syncDraftTreasury — la trésorerie d'un brouillon suit le reliquat du budget ([55ebb06](https://github.com/Ryxeuf/fantasy-football-game/commit/55ebb06b4ed5049b5f1cf3cdfe0991019a55c091))
+
 ## [1.236.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.235.2...v1.236.0) (2026-08-26)
 
 
