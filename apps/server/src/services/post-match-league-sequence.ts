@@ -27,7 +27,10 @@
  */
 
 import { prisma } from "../prisma";
-import { loadAdvancementSchedule } from "./advancement-schedule-repository";
+import {
+  loadAdvancementSchedule,
+  loadScheduleForTeam,
+} from "./advancement-schedule-repository";
 import {
   getNextAdvancementPspCost,
   type AdvancementSchedule,
@@ -271,13 +274,7 @@ async function collectPendingChoices(
 
   // Lot 6.2 — barème de l'ÉDITION de l'équipe : le seuil affiché au coach
   // était celui de la Saison 3, même pour une équipe Saison 2.
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    select: { ruleset: true },
-  });
-  const schedule = await loadAdvancementSchedule(
-    (team?.ruleset as Ruleset) ?? undefined,
-  );
+  const schedule = await loadScheduleForTeam(teamId);
 
   const choices: PendingChoice[] = [];
   for (const player of players) {
