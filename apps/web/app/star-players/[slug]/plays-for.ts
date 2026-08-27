@@ -34,6 +34,18 @@ export function getPlaysForRosters(
     .sort((a, b) => a.name.localeCompare(b.name, "fr"));
 }
 
+/**
+ * Même mise en forme à partir des slugs déjà résolus par l'API (`playsFor`,
+ * calculé depuis les rosters en base du ruleset du Star Player). À préférer
+ * au calcul local dès que le serveur le fournit : le catalogue statique
+ * mélange des Ligues Saison 2 dans sa table Saison 3.
+ */
+export function toPlaysForRosters(slugs: readonly string[]): PlaysForRoster[] {
+  return Array.from(new Set(slugs))
+    .map((slug) => ({ slug, name: getRosterName(slug) }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+
 /** Nombre max de noms d'équipes listés sur la carte exportable. */
 const CARD_MAX_TEAMS = 5;
 

@@ -1,5 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { getPlaysForCardLines, getPlaysForRosters } from "./plays-for";
+import {
+  getPlaysForCardLines,
+  getPlaysForRosters,
+  toPlaysForRosters,
+} from "./plays-for";
+
+describe("toPlaysForRosters", () => {
+  it("met en forme les slugs servis par l'API (nom FR, tri, dédup)", () => {
+    const rosters = toPlaysForRosters(["norse", "dwarf", "norse"]);
+    expect(rosters.map((r) => r.slug)).toEqual(["dwarf", "norse"]);
+    expect(rosters.map((r) => r.name)).toEqual(["Nains", "Nordiques"]);
+  });
+});
 
 describe("getPlaysForRosters", () => {
   it("résout une Ligue régionale en équipes, triées par nom FR", () => {

@@ -7,9 +7,36 @@ import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
 import KeywordChips from '../../components/KeywordChips';
 import type { StarPlayerDefinition } from '@bb/game-engine';
-import { getStarPlayerSkillSlugs, getStarPlayerPair } from '@bb/game-engine';
+import {
+  DEFAULT_RULESET,
+  getStarPlayerSkillSlugs,
+  getStarPlayerPair,
+  type Ruleset,
+} from '@bb/game-engine';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { getPlaysForRosters } from './plays-for';
+import { getPlaysForRosters, toPlaysForRosters } from './plays-for';
+
+/** Libellés des éditions (badge + lien de bascule). */
+const RULESET_LABELS: Record<string, { fr: string; en: string }> = {
+  season_2: { fr: 'Saison 2', en: 'Season 2' },
+  season_3: { fr: 'Saison 3', en: 'Season 3' },
+};
+
+function rulesetLabel(ruleset: string, language: string): string {
+  const entry = RULESET_LABELS[ruleset];
+  if (!entry) return ruleset;
+  return language === 'en' ? entry.en : entry.fr;
+}
+
+/**
+ * Édition demandée dans l'URL (`?ruleset=season_2`). Lue côté client
+ * uniquement : la page est déjà 100 % client (données chargées au montage).
+ */
+function readRequestedRuleset(): string | null {
+  if (typeof window === 'undefined') return null;
+  const value = new URLSearchParams(window.location.search).get('ruleset');
+  return value && value in RULESET_LABELS ? value : null;
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -20,6 +47,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_
  */
 type StarPlayerDetail = StarPlayerDefinition & {
   readonly keywordsEn?: string | null;
+  /** Édition servie (le même slug existe en Saison 2 ET Saison 3). */
+  readonly ruleset?: string;
+  /** Rosters pouvant recruter, résolus par le serveur depuis la base. */
+  readonly playsFor?: readonly string[];
+  /** Éditions dans lesquelles ce slug existe. */
+  readonly availableRulesets?: readonly string[];
 };
 
 /**
@@ -45,7 +78,10 @@ export default function StarPlayerDetailPage() {
   const loadStarPlayer = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/star-players/${slug}`);
+      const requested = readRequestedRuleset();
+      const response = await fetch(
+        `${API_URL}/star-players/${slug}${requested ? `?ruleset=${requested}` : ''}`,
+      );
       const data = await response.json();
       
       if (data.success) {
@@ -143,7 +179,8 @@ export default function StarPlayerDetailPage() {
   // catalogue le porte sur le primaire (partenaire a 0) pour que la somme des
   // couts d'une liste reste juste ; on affiche donc le prix de la paire des
   // deux cotes, avec le nom du partenaire.
-  const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
+  const ruleset: Ruleset = (starPlayer.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const pair = getStarPlayerPair(starPlayer.slug, ruleset);
   // Prix de paire FRAIS depuis l'API (coûts DB) quand disponible ; le
   // catalogue statique du moteur ne sert que de repli.
   const displayedCost =
@@ -156,10 +193,16 @@ export default function StarPlayerDetailPage() {
       ? starPlayer.keywordsEn ?? starPlayer.keywords
       : starPlayer.keywords ?? starPlayer.keywordsEn;
 
-  // « Joue pour » : équipes pouvant recruter ce Star Player. `hirableBy`
-  // n'expose que des critères (Ligues régionales, `all`) ; la résolution en
-  // rosters concrets vit dans le game-engine (cf. `plays-for.ts`).
-  const playsForRosters = getPlaysForRosters(starPlayer.hirableBy);
+  // « Joue pour » : équipes pouvant recruter ce Star Player. Le serveur
+  // résout `playsFor` depuis les rosters EN BASE de l'édition du Star Player
+  // (source de vérité) ; le calcul local sur le catalogue statique n'est
+  // qu'un repli pour un serveur antérieur à la feature.
+  const playsForRosters = starPlayer.playsFor
+    ? toPlaysForRosters(starPlayer.playsFor)
+    : getPlaysForRosters(starPlayer.hirableBy, ruleset);
+  const otherRulesets = (starPlayer.availableRulesets ?? []).filter(
+    (r) => r !== ruleset,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -205,6 +248,13 @@ export default function StarPlayerDetailPage() {
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">{starPlayer.displayName}</h1>
+                  <span
+                    data-testid="star-player-ruleset-badge"
+                    title={language === 'en' ? 'Rules edition of this card' : 'Édition des règles de cette fiche'}
+                    className="bg-white/20 border border-white/60 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap"
+                  >
+                    {rulesetLabel(ruleset, language)}
+                  </span>
                   {starPlayer.isMegaStar && (
                     <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black text-xs sm:text-sm md:text-base font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-yellow-700 whitespace-nowrap">
                       ⭐ MEGA STAR
@@ -228,6 +278,21 @@ export default function StarPlayerDetailPage() {
                   </span>
                   <span className="text-base sm:text-lg md:text-xl opacity-90">Star Player</span>
                 </div>
+                {otherRulesets.length > 0 && (
+                  <p className="mt-3 text-sm opacity-90" data-testid="star-player-ruleset-switch">
+                    {otherRulesets.map((other) => (
+                      <a
+                        key={other}
+                        href={`/star-players/${starPlayer.slug}${other === DEFAULT_RULESET ? '' : `?ruleset=${other}`}`}
+                        className="underline hover:no-underline mr-3"
+                      >
+                        {language === 'en'
+                          ? `View the ${rulesetLabel(other, language)} version`
+                          : `Voir la version ${rulesetLabel(other, language)}`}
+                      </a>
+                    ))}
+                  </p>
+                )}
                 {pair && (
                   <p
                     className="mt-3 text-sm sm:text-base opacity-90"

@@ -141,7 +141,11 @@ export default function StarPlayersPage() {
       slug: player.slug,
       cost: player.cost,
     });
-    router.push(`/star-players/${player.slug}`);
+    // Le même slug existe en Saison 2 et Saison 3 : la fiche doit ouvrir
+    // l'édition consultée (le serveur sert la Saison 3 par défaut).
+    router.push(
+      `/star-players/${player.slug}${selectedRuleset === 'season_3' ? '' : `?ruleset=${selectedRuleset}`}`,
+    );
   };
 
   if (loading) {
