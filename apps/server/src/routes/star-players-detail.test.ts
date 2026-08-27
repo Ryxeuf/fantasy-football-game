@@ -21,7 +21,7 @@ vi.mock("../prisma", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
-    roster: { findFirst: vi.fn() },
+    roster: { findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
 
@@ -81,6 +81,7 @@ const mockedPrisma = prisma as unknown as {
     findFirst: ReturnType<typeof vi.fn>;
     findMany: ReturnType<typeof vi.fn>;
   };
+  roster: { findMany: ReturnType<typeof vi.fn> };
 };
 
 /**
@@ -108,6 +109,17 @@ function seed(rows: StarPlayerRow[]): void {
         rows.find((r) => r.slug === slug && r.ruleset === ruleset) ?? null,
       );
     },
+  );
+
+  mockedPrisma.starPlayer.findMany.mockImplementation(
+    ({ where }: { where: { slug?: string; ruleset?: string } }) =>
+      Promise.resolve(
+        rows.filter(
+          (r) =>
+            (where?.slug === undefined || r.slug === where.slug) &&
+            (where?.ruleset === undefined || r.ruleset === where.ruleset),
+        ),
+      ),
   );
 
   mockedPrisma.starPlayer.findFirst.mockImplementation(
@@ -138,6 +150,8 @@ interface DetailResponse {
     pairWith?: string;
     pairCost?: number;
     hirableBy: string[];
+    playsFor?: string[];
+    availableRulesets?: string[];
   };
 }
 
@@ -315,5 +329,92 @@ describe("GET /star-players/:slug", () => {
 
     expect(status).toBe(200);
     expect(body.success).toBe(true);
+  });
+});
+
+describe("GET /star-players/:slug — « joue pour » par édition", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  // Rosters EN BASE par édition : en Saison 3, Halflings et Nains du Chaos
+  // n'ont plus Old World Classic / Worlds Edge (contrairement au catalogue
+  // statique du moteur). Thorsson S3 = Old World Classic + Worlds Edge.
+  function seedRosters() {
+    mockedPrisma.roster.findMany.mockImplementation(
+      ({ where }: { where: { ruleset: string } }) =>
+        Promise.resolve(
+          where.ruleset === "season_3"
+            ? [
+                { slug: "dwarf", regionalRules: '["worlds_edge_superleague"]' },
+                { slug: "halfling", regionalRules: '["halfling_thimble_cup","woodland_league"]' },
+                { slug: "chaos_dwarf", regionalRules: '["badlands_brawl","favoured_of_hashut","chaos_clash"]' },
+                { slug: "norse", regionalRules: '["old_world_classic","chaos_clash"]' },
+              ]
+            : [
+                { slug: "dwarf", regionalRules: '["old_world_classic","worlds_edge_superleague"]' },
+                { slug: "halfling", regionalRules: '["halfling_thimble_cup","old_world_classic"]' },
+                { slug: "chaos_dwarf", regionalRules: '["badlands_brawl","worlds_edge_superleague","favoured_of"]' },
+                { slug: "norse", regionalRules: '["old_world_classic","favoured_of"]' },
+              ],
+        ),
+    );
+  }
+
+  function thorsson(ruleset: string, rules: string[]): StarPlayerRow {
+    return {
+      ...makeRow("thorsson_stoutmead", ruleset),
+      displayName: "Thorsson Stoutmead",
+      hirableBy: rules.map((rule) => ({ rule, roster: null })),
+    };
+  }
+
+  it("résout playsFor depuis les rosters en base du MÊME ruleset (S3)", async () => {
+    seedRosters();
+    seed([
+      thorsson("season_2", ["old_world_classic"]),
+      thorsson("season_3", ["old_world_classic", "worlds_edge_superleague"]),
+    ]);
+
+    const { body } = await getDetail("/thorsson_stoutmead");
+
+    expect(body.data?.ruleset).toBe("season_3");
+    expect(body.data?.playsFor).toEqual(["dwarf", "norse"]);
+    expect(body.data?.playsFor).not.toContain("halfling");
+    expect(body.data?.playsFor).not.toContain("chaos_dwarf");
+  });
+
+  it("la version Saison 2 du même slug a son propre « joue pour »", async () => {
+    seedRosters();
+    seed([
+      thorsson("season_2", ["old_world_classic"]),
+      thorsson("season_3", ["old_world_classic", "worlds_edge_superleague"]),
+    ]);
+
+    const { body } = await getDetail("/thorsson_stoutmead?ruleset=season_2");
+
+    expect(body.data?.ruleset).toBe("season_2");
+    expect(body.data?.playsFor).toEqual(["dwarf", "halfling", "norse"]);
+  });
+
+  it("expose les éditions disponibles pour ce slug", async () => {
+    seedRosters();
+    seed([
+      thorsson("season_2", ["old_world_classic"]),
+      thorsson("season_3", ["old_world_classic"]),
+    ]);
+
+    const { body } = await getDetail("/thorsson_stoutmead");
+
+    expect(body.data?.availableRulesets).toEqual(["season_2", "season_3"]);
+  });
+
+  it("retombe sur le catalogue du moteur sans rosters en base", async () => {
+    mockedPrisma.roster.findMany.mockResolvedValue([]);
+    seed([thorsson("season_3", ["elven_kingdoms_league"])]);
+
+    const { body } = await getDetail("/thorsson_stoutmead");
+
+    expect(body.data?.playsFor).toContain("wood_elf");
   });
 });

@@ -12,6 +12,10 @@ import {
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
+import {
+  loadRosterRegionalRules,
+  playsForWithFallback,
+} from "../services/star-player-plays-for";
 import { serverLog } from "../utils/server-log";
 import { getRosterFromDb } from "../utils/roster-helpers";
 
@@ -110,6 +114,29 @@ function attachPairData<T extends { slug: string; cost: number }>(
 }
 
 /**
+ * Attache `playsFor` (rosters concrets pouvant recruter, slugs triés) et
+ * `ruleset` à chaque star. Résolu depuis les rosters EN BASE du ruleset —
+ * la fiche publique ne doit plus dériver cette liste du catalogue statique,
+ * qui mélange des Ligues Saison 2 dans la table Saison 3 (cf.
+ * `services/star-player-plays-for.ts`).
+ */
+async function attachPlaysFor<T extends { slug: string }>(
+  rows: T[],
+  ruleset: string,
+): Promise<Array<T & { ruleset: string; playsFor: string[] }>> {
+  const rosters = await loadRosterRegionalRules(prisma, ruleset as any);
+  return rows.map((r) => ({
+    ...r,
+    ruleset,
+    playsFor: playsForWithFallback(
+      (r as { hirableBy?: string[] }).hirableBy ?? [],
+      rosters,
+      ruleset as any,
+    ),
+  }));
+}
+
+/**
  * GET /api/star-players
  * Obtenir la liste complète des star players depuis la base de données
  */
@@ -134,8 +161,9 @@ router.get("/", async (req, res) => {
     });
 
     // Transformer les données pour correspondre au format attendu
-    const transformedStarPlayers = attachPairData(
-      starPlayers.map(transformStarPlayer),
+    const transformedStarPlayers = await attachPlaysFor(
+      attachPairData(starPlayers.map(transformStarPlayer)),
+      ruleset,
     );
 
     res.json({
@@ -315,20 +343,27 @@ router.get("/:slug", async (req, res) => {
       if (partner) extraCosts.set(partner.slug, partner.cost);
     }
 
+    // Éditions dans lesquelles ce slug existe : la fiche propose le passage
+    // d'une version à l'autre (même slug en Saison 2 et Saison 3, données
+    // distinctes). Tolérant à un client sans `findMany` (mocks étroits).
+    const rulesetRows: Array<{ ruleset: string }> =
+      (await starPlayerModel.findMany?.({
+        where: { slug: starPlayer.slug },
+        select: { ruleset: true },
+      })) ?? [];
+    const availableRulesets = Array.from(
+      new Set([starPlayer.ruleset, ...rulesetRows.map((r) => r.ruleset)]),
+    ).sort();
+
     // Transformer les données
-    const [transformedStarPlayer] = attachPairData(
-      [
-        {
-          ...transformStarPlayer(starPlayer),
-          ruleset: starPlayer.ruleset,
-        },
-      ],
-      extraCosts,
+    const [transformedStarPlayer] = await attachPlaysFor(
+      attachPairData([transformStarPlayer(starPlayer)], extraCosts),
+      starPlayer.ruleset,
     );
 
     res.json({
       success: true,
-      data: transformedStarPlayer
+      data: { ...transformedStarPlayer, availableRulesets },
     });
   } catch (error) {
     serverLog.error("Error fetching star player:", error);
