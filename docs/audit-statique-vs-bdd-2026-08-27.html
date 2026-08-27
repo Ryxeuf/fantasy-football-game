@@ -1,0 +1,258 @@
+<title>Audit Statique vs Base — Nuffle Arena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --surface:#FFFFFF; --ink:#1B2430; --ink-2:#4A5560; --line:#D5DBE1;
+  --accent:#2F6B3A; --accent-soft:#E3EFE5;
+  --crit:#B3261E; --crit-soft:#F8E4E2; --warn:#B26A00; --warn-soft:#F8EBD3; --low:#4C6A8A; --low-soft:#E1E8EF; --ok:#2F6B3A;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121820; --surface:#1A222C; --ink:#E6EAEE; --ink-2:#A7B1BC; --line:#2E3A47;
+    --accent:#7DBE8A; --accent-soft:#1F3326;
+    --crit:#F08A84; --crit-soft:#3A1F1E; --warn:#E8B45C; --warn-soft:#3A2D14; --low:#8FB0CF; --low-soft:#1E2B38; --ok:#7DBE8A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121820; --surface:#1A222C; --ink:#E6EAEE; --ink-2:#A7B1BC; --line:#2E3A47;
+  --accent:#7DBE8A; --accent-soft:#1F3326;
+  --crit:#F08A84; --crit-soft:#3A1F1E; --warn:#E8B45C; --warn-soft:#3A2D14; --low:#8FB0CF; --low-soft:#1E2B38; --ok:#7DBE8A;
+}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+main{max-width:76rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.05;margin:0}
+h1{font-size:3rem;font-weight:700;letter-spacing:.01em}
+h2{font-size:2rem;font-weight:700;margin-top:3rem;padding-top:1.25rem;border-top:2px solid var(--line)}
+h3{font-size:1.35rem;font-weight:600;margin-top:1.75rem;color:var(--ink)}
+p{max-width:72ch;margin:.75rem 0}
+.eyebrow{font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:.85rem;color:var(--accent);font-weight:600}
+.lede{font-size:1.15rem;color:var(--ink-2);max-width:72ch}
+.meta{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;color:var(--ink-2);font-size:.95rem;margin-top:1rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem;margin:1.75rem 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.9rem 1rem}
+.kpi b{display:block;font-family:var(--display);font-size:2.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--ink-2);font-size:.9rem}
+.kpi.crit b{color:var(--crit)} .kpi.warn b{color:var(--warn)} .kpi.low b{color:var(--low)} .kpi.ok b{color:var(--ok)}
+nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1rem 1.25rem;margin:1.5rem 0}
+nav.toc ol{margin:.25rem 0 0;padding-left:1.25rem;columns:2;column-gap:2rem}
+nav.toc li{margin:.15rem 0;break-inside:avoid}
+a{color:var(--accent)} a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono);font-size:.84em;background:var(--low-soft);padding:.05em .35em;border-radius:3px;color:var(--ink)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface);margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--ink-2);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.id{white-space:nowrap;font-family:var(--mono);font-size:.8rem;color:var(--ink-2)}
+td.file code{white-space:nowrap}
+.chip{display:inline-block;font-family:var(--display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:.75rem;padding:.15rem .5rem;border-radius:999px;white-space:nowrap}
+.chip.crit{background:var(--crit-soft);color:var(--crit)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.low{background:var(--low-soft);color:var(--low)} .chip.ok{background:var(--accent-soft);color:var(--ok)}
+.cause{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--crit);border-radius:6px;padding:1rem 1.25rem;margin:1rem 0}
+.cause.warn{border-left-color:var(--warn)} .cause.ok{border-left-color:var(--ok)}
+.cause h3{margin-top:0}
+.cause p{max-width:none}
+ul{padding-left:1.25rem} li{margin:.3rem 0}
+.plan{display:grid;gap:.75rem;margin:1rem 0}
+.lot{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.9rem 1.1rem;display:grid;grid-template-columns:5.5rem 1fr;gap:1rem;align-items:start}
+.lot .n{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--accent);line-height:1}
+.lot .n small{display:block;font-size:.75rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;margin-top:.25rem}
+.lot p{margin:.25rem 0}
+.note{border:1px dashed var(--line);border-radius:6px;padding:.75rem 1rem;color:var(--ink-2);font-size:.95rem;max-width:72ch}
+@media (max-width:640px){h1{font-size:2.2rem} nav.toc ol{columns:1} .lot{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){a{transition:color .15s}}
+</style>
+
+<main>
+<div class="eyebrow">Nuffle Arena · audit du 27 août 2026</div>
+<h1>Où le jeu lit encore le code au lieu de la base</h1>
+<p class="lede">Objectif : que tout le moteur (construction, achats, VE, progression, feuilles de match, match en ligne, fiches publiques) s'appuie sur les tables Prisma éditées en admin, et non sur le catalogue statique compilé dans <code>@bb/game-engine</code>. Quatre passes d'audit (rosters/positions, star players &amp; ligues, compétences &amp; moteur de match, front web/mobile), consolidées et dédoublonnées ici.</p>
+<div class="meta"><span>Périmètre : <code>apps/server/src</code>, <code>packages/game-engine/src</code>, <code>apps/web/app</code>, <code>apps/mobile</code></span><span>Hors tests, hors pages admin</span><span>Lecture seule, aucune modification</span></div>
+
+<div class="kpis">
+  <div class="kpi crit"><b>11</b><span>causes structurelles (serveur / moteur)</span></div>
+  <div class="kpi warn"><b>19</b><span>points « haute » côté front web</span></div>
+  <div class="kpi low"><b>5</b><span>tables ou colonnes à créer</span></div>
+  <div class="kpi low"><b>2</b><span>tables existantes jamais lues</span></div>
+  <div class="kpi ok"><b>0</b><span>usage statique de données sur mobile</span></div>
+</div>
+
+<nav class="toc"><strong>Sommaire</strong>
+<ol>
+<li><a href="#verdict">Verdict</a></li>
+<li><a href="#causes">Les 11 causes structurelles</a></li>
+<li><a href="#serveur">Détail serveur — sévérité haute</a></li>
+<li><a href="#serveur-moy">Détail serveur — sévérité moyenne</a></li>
+<li><a href="#front">Détail front web</a></li>
+<li><a href="#manquant">Ce qui n'existe pas en base</a></li>
+<li><a href="#bugs">Bugs connexes trouvés en chemin</a></li>
+<li><a href="#ok">Ce qui est déjà « base d'abord »</a></li>
+<li><a href="#plan">Plan de correction proposé</a></li>
+</ol></nav>
+
+<h2 id="verdict">1. Verdict</h2>
+<p>Le socle est sain : la VE/VEA, les coûts de staff, le catalogue Star Players côté serveur, les journaliers du match en ligne, les rosters du builder et les règlements de tournoi ont tous un résolveur « base d'abord, catalogue en repli » — et le cœur du moteur de match ne lit <em>aucun</em> catalogue : il travaille sur le snapshot <code>TeamPlayer</code>.</p>
+<p>Les fuites sont donc des <strong>call sites qui n'empruntent pas ces résolveurs</strong>, concentrées sur cinq chemins : la progression « équipe libre », les feuilles de match de ligue (journaliers, coups de pouce, remises), les validations de budget qui mélangent tarif base et tarif code, le contexte de coups de pouce du match en ligne (vide), et le front web qui recalcule coûts et éligibilités depuis le catalogue alors que l'API sert déjà la donnée.</p>
+<p>Deux familles de données n'ont <strong>pas de table du tout</strong> (coups de pouce, barème d'avancement) et deux tables existent sans être lues (<code>TeamSpecialRule</code>, <code>RegionalLeague</code>). Enfin, trois seeders « sync » déclarent le code source de vérité et <strong>écrasent les corrections admin</strong> — c'est le mécanisme par lequel la divergence se referme dans le mauvais sens.</p>
+
+<h2 id="causes">2. Les 11 causes structurelles</h2>
+<p>Chaque cause regroupe plusieurs symptômes ; corriger la cause corrige tous les sites listés.</p>
+
+<div class="cause"><h3>C1 · <code>resolveTeamRegionalRules</code> appelé sans son 4ᵉ paramètre <code>declaredRules</code></h3>
+<p>Le paramètre optionnel bascule silencieusement sur <code>TEAM_REGIONAL_RULES_BY_RULESET</code> compilé au lieu de <code>Roster.regionalRules</code>. Sites : <code>utils/star-player-validation.ts:57,159,209</code> (embauche, liste recrutable, création d'équipe), <code>services/league-match-sheet.ts:2415</code> (remises de coups de pouce — avec en plus <code>DEFAULT_RULESET</code> forcé) et <code>:2462</code> (stars de la feuille). Effet : une Ligue retirée/ajoutée en admin ne change ni l'embauche ni la feuille de match ; l'UI propose, le POST refuse (ou l'inverse). Le pattern correct existe déjà dans <code>routes/star-players.ts:428</code>, <code>team-build-handler.ts:424</code>, <code>commissioner-team-settings.ts:551</code>.</p></div>
+
+<div class="cause"><h3>C2 · Progression « équipe libre » 100 % statique</h3>
+<p><code>routes/team-player-skills-handler.ts</code> : accès primaire/secondaire via <code>getPositionCategoryAccess</code> (table de 12 positions Saison 2, sinon <em>toutes</em> les catégories — <code>:316</code>), catégorie et existence de la compétence via <code>SKILLS_BY_SLUG</code> (<code>:361,382</code>), pool de tirage aléatoire via <code>SKILLS_DEFINITIONS</code> sans filtre ruleset (<code>:342</code>), règlement de tournoi via <code>getTournamentRuleset</code> statique (<code>services/team-advancement-editing.ts:229</code>). Effet : ~95 % des postes n'ont aucune restriction d'accès (Mutation sur un Saurus, compétence en primaire à prix réduit → VE gonflée), une compétence créée en admin est refusée, une recatégorisation ignorée. Le chemin <em>ligue</em> (<code>post-match-league-sequence.ts:609-639</code>) lit la base pour les mêmes règles : deux vérités dans le même produit.</p></div>
+
+<div class="cause"><h3>C3 · <code>getTournamentRuleset</code> du moteur appelé dans du code applicatif</h3>
+<p>Contredit la consigne de <code>CLAUDE.md</code>. Sites : <code>services/team-advancement-editing.ts:229</code>, <code>services/commissioner-team-settings.ts:318,478</code>. Effet : barème PSP, taxe Élite, quota de cumul, rosters autorisés, choix de Ligue régionale arbitrés sur l'ancienne version du règlement. Le repository DB (<code>services/tournament-ruleset-repository.ts</code>) existe et est utilisé partout ailleurs.</p></div>
+
+<div class="cause"><h3>C4 · Journaliers de la feuille de match de ligue au catalogue</h3>
+<p><code>services/league-sheet-journeymen.ts:81-170</code> lit <code>TEAM_ROSTERS_BY_RULESET</code> (poste, stats, compétences <strong>et coût</strong>, repli 50 000 po). Consommé par la VEA de match (cagnotte de coups de pouce), le recrutement post-match (débit de trésorerie, <code>league-match-sheet.ts:1254-1301</code>) et <code>league-offline-purchases.ts:484</code> (« position non résolue → joueur non créé » si un slug diffère). Le match en ligne, lui, lit la base (<code>services/journeymen.ts</code>). Bug annexe : <code>league-match-sheet.ts:1287</code> appelle <code>surchargeForAdvancement</code> sans <code>isElite</code> (+10 k oubliés).</p></div>
+
+<div class="cause"><h3>C5 · <code>getPlayerCost</code> statique dans les validations de budget</h3>
+<p><code>routes/team-player-handlers.ts:181-190</code> (total existant au tarif code, joueur ajouté au tarif base → contrôle de budget mixte), <code>routes/team-star-player-hire-handler.ts:81-90</code> et <code>routes/team-star-player-handlers.ts:141-150</code> (budget disponible pour un Star Player), <code>routes/league.ts:1551</code> (valeur affichée ≠ VE). Le résolveur DB existe : <code>resolvePositionMetaForTeam</code> / <code>computeTeamValueBreakdownFor</code> (<code>utils/team-values.ts</code>). Attention au double repli de <code>getPlayerCost</code> (<code>team-value-calculator.ts:225-260</code>) : poste inconnu → 0 po, jamais d'erreur.</p></div>
+
+<div class="cause"><h3>C6 · Contexte de coups de pouce vide en match en ligne et local</h3>
+<p><code>services/inducement-processor.ts:125-136</code>, <code>routes/local-match.ts:576-587,706-712</code> : <code>regionalRules: []</code>, pas de <code>specialRules</code>. Effet : toutes les remises officielles perdues (Pots-de-vin 100 k au lieu de 50 k, Chef Cuistot 300 k au lieu de 100 k chez les Halflings…), plafonds majorés ignorés, coups de pouce conditionnels (<code>mortuary_assistant</code>, <code>plague_doctor</code>, <code>riotous_rookies</code>) refusés à tout le monde. Et <code>core/inducements.ts:420-423</code> tarifie/valide les Star Players en inducement depuis le catalogue compilé, sans ruleset (toujours S3) : c'est la seule fuite de donnée statique dans le runtime du moteur.</p></div>
+
+<div class="cause"><h3>C7 · Règles spéciales et apothicaire lus en direct dans la feuille de ligue</h3>
+<p><code>services/league-match-sheet.ts:2420-2424</code> : <code>APOTHECARY_FORBIDDEN_ROSTERS</code> et <code>getSpecialRulesForTeam(roster)</code> sans ruleset, alors que <code>RosterStaffConfig.apothecaryAllowed</code> et <code>resolveSpecialRulesForTeam</code> (<code>utils/team-values.ts:140</code>) existent. Effet : prix, quantités et disponibilité des coups de pouce faux → débit de trésorerie post-match faux.</p></div>
+
+<div class="cause"><h3>C8 · Liste de rosters autorisés figée (<code>ALLOWED_TEAMS</code>)</h3>
+<p><code>constants/allowed-teams.ts:9-15</code> dérive de <code>TEAM_ROSTERS</code> (S3 compilé) et garde <code>/team/build</code>, <code>/team/create-from-roster</code>, <code>/team/rosters/:id</code>. Un roster créé/activé uniquement en base apparaît dans <code>/api/rosters</code> (DB) mais est refusé à la création (400).</p></div>
+
+<div class="cause warn"><h3>C9 · Front web : coûts, budgets et éligibilités recalculés depuis le catalogue</h3>
+<p>Alors que l'API sert déjà <code>positions[].cost</code>, <code>Roster.budget</code>, <code>staffConfig</code>, <code>budgetSummary</code>, <code>playsFor</code>, <code>pairCost</code>, <code>primarySkills/secondarySkills</code>, <code>regionalLeagueOptions</code>. 19 points « haute » détaillés en §5 — souvent la donnée est <em>déjà chargée</em> dans le composant et non utilisée (ex. <code>me/teams/[id]/page.tsx</code> charge <code>rosterDetail</code> puis affiche <code>getPlayerCost</code>). Le bon modèle existe : <code>edit/page.tsx:553-557</code> (<code>dbCostByPosition</code>).</p></div>
+
+<div class="cause warn"><h3>C10 · Deux tables jamais lues, cinq données sans table</h3>
+<p><code>TeamSpecialRule</code> et <code>RegionalLeague</code> sont peuplées (<code>scripts/update-skills-and-rules-from-ocr.ts</code>) et lues par personne : libellés/descriptions viennent toujours de <code>TEAM_SPECIAL_RULES</code> / <code>REGIONAL_LEAGUES</code>. Sans table : catalogue des coups de pouce, barème d'avancement (PSP + surcoûts VE), paires obligatoires de Star Players, plafond de Gros Bras par roster, nom anglais des postes, couleurs d'équipe. Détail en §6.</p></div>
+
+<div class="cause"><h3>C11 · Les seeders « sync » écrasent la base depuis le code</h3>
+<p><code>seeders/sync-rosters.ts</code> (en-tête : « Source de vérité : <code>packages/game-engine/src/rosters/*</code> »), <code>seeders/season3-skill-access.ts</code>, <code>seeders/sync-star-players.ts</code> (<code>syncOne</code> met à jour cost, stats, keywords, specialRule, skills, hirableBy). Exposés via <code>POST /admin/utilities/sync-rosters</code> et <code>/reimport-season3-access</code>. Une correction admin est effaçable par un clic admin. Aggravant : <code>utils/roster-helpers.ts:57</code> cache les rosters 5 min en prod — vérifier que <code>invalidateRosterCache()</code> est bien appelé par les routes d'écriture admin.</p></div>
+
+<h2 id="serveur">3. Détail serveur — sévérité haute</h2>
+<p>Trésorerie, VE, validation ou résultat de match affectés.</p>
+<div class="tbl"><table>
+<thead><tr><th>#</th><th>Fichier</th><th>Statique utilisé</th><th>Équivalent base</th><th>Impact si divergence</th><th>Cause</th></tr></thead>
+<tbody>
+<tr><td class="id">S1</td><td class="file"><code>routes/team-player-skills-handler.ts:316</code></td><td><code>getPositionCategoryAccess</code> (12 slugs S2, sinon toutes catégories)</td><td><code>Position.primarySkills/secondarySkills</code> + <code>services/skill-access.ts</code></td><td>Aucune restriction d'accès sur ~95 % des postes ; compétence en primaire à prix réduit, VE gonflée</td><td>C2</td></tr>
+<tr><td class="id">S2</td><td class="file"><code>routes/team-player-skills-handler.ts:342,361,382</code></td><td><code>SKILLS_DEFINITIONS</code>, <code>SKILLS_BY_SLUG</code></td><td><code>Skill</code> (slug, ruleset, category)</td><td>Tirage aléatoire hors ruleset ; compétence créée en admin refusée ; recatégorisation ignorée</td><td>C2</td></tr>
+<tr><td class="id">S3</td><td class="file"><code>services/team-advancement-editing.ts:229</code>, <code>services/commissioner-team-settings.ts:318,478</code></td><td><code>getTournamentRuleset</code> (registre compilé)</td><td><code>TournamentRuleset</code> via le repository</td><td>Règlement édité en admin ignoré pour PSP, Élite, quotas, Ligue régionale</td><td>C3</td></tr>
+<tr><td class="id">S4</td><td class="file"><code>services/league-sheet-journeymen.ts:81-170</code></td><td><code>TEAM_ROSTERS_BY_RULESET</code> (poste, stats, skills, coût)</td><td><code>Position</code> + <code>PositionSkill</code></td><td>Journalier au mauvais prix/stats dans la VEA et le recrutement post-match ; slug renommé → « joueur non créé » mais payé</td><td>C4</td></tr>
+<tr><td class="id">S5</td><td class="file"><code>routes/team-player-handlers.ts:181-190</code></td><td><code>getPlayerCost</code> (existant) vs DB (ajouté)</td><td><code>Position.cost</code></td><td>Contrôle de budget mixte : dépassement possible ou refus à tort</td><td>C5</td></tr>
+<tr><td class="id">S6</td><td class="file"><code>routes/team-star-player-hire-handler.ts:81-90</code>, <code>routes/team-star-player-handlers.ts:141-150</code></td><td><code>getPlayerCost</code></td><td><code>Position.cost</code></td><td>Star recruté au-delà du budget, ou refusé à tort</td><td>C5</td></tr>
+<tr><td class="id">S7</td><td class="file"><code>utils/star-player-validation.ts:57,159,209</code></td><td><code>resolveTeamRegionalRules</code> sans <code>declaredRules</code></td><td><code>Roster.regionalRules</code></td><td>Stars recrutables bornées par le catalogue ; roster DB-only → « Roster non reconnu »</td><td>C1</td></tr>
+<tr><td class="id">S8</td><td class="file"><code>services/league-match-sheet.ts:2415,2462</code></td><td>idem + <code>DEFAULT_RULESET</code> forcé</td><td><code>Roster.regionalRules</code>, <code>Team.ruleset</code></td><td>Remises régionales et offre de stars de la feuille fausses, quelle que soit l'édition de la ligue</td><td>C1</td></tr>
+<tr><td class="id">S9</td><td class="file"><code>services/league-match-sheet.ts:2420-2424</code></td><td><code>APOTHECARY_FORBIDDEN_ROSTERS</code>, <code>getSpecialRulesForTeam</code></td><td><code>RosterStaffConfig.apothecaryAllowed</code>, <code>Roster.specialRules</code></td><td>Prix/plafonds de coups de pouce faux → trésorerie post-match fausse</td><td>C7</td></tr>
+<tr><td class="id">S10</td><td class="file"><code>services/inducement-processor.ts:125-136</code>, <code>routes/local-match.ts:576-587,706-712</code></td><td><code>regionalRules: []</code> en dur</td><td><code>Roster.regionalRules</code>, <code>Team.regionalLeague</code>, <code>Roster.specialRules</code></td><td>Remises perdues, plafonds ignorés, coups de pouce conditionnels refusés à tous</td><td>C6</td></tr>
+<tr><td class="id">S11</td><td class="file"><code>packages/game-engine/src/core/inducements.ts:420-423</code></td><td><code>getStarPlayerBySlug</code>, <code>getAvailableStarPlayers</code> sans ruleset</td><td><code>StarPlayer</code> via <code>getAvailableStarPlayersDb</code></td><td>Star en inducement facturé/validé au catalogue compilé, toujours S3</td><td>C6</td></tr>
+<tr><td class="id">S12</td><td class="file"><code>routes/team-create-from-roster-handler.ts:238</code></td><td><code>calculateStarPlayersCost</code> sans ruleset</td><td><code>StarPlayer</code> (slug_ruleset)</td><td>Équipe S2 : slug absent en S3 → coût 0 → <strong>Star Player gratuit</strong></td><td>—</td></tr>
+<tr><td class="id">S13</td><td class="file"><code>utils/star-player-validation.ts:114-133,194</code> ; <code>team-build-handler.ts:448</code> ; <code>team-star-player-hire-handler.ts:122</code> ; <code>team-star-player-handlers.ts:292</code></td><td><code>STAR_PLAYER_PAIR_PARTNERS</code>, <code>requiresPair</code>/<code>validateStarPlayerPairs</code> sans ruleset</td><td>Aucun (pas de <code>pairWith</code> en base)</td><td>Paires S3 appliquées aux équipes S2 ; demi-paire achetée ou laissée seule</td><td>C10</td></tr>
+<tr><td class="id">S14</td><td class="file"><code>constants/allowed-teams.ts:9-15</code> (3 routes)</td><td><code>Object.keys(TEAM_ROSTERS)</code></td><td><code>Roster.slug WHERE ruleset</code></td><td>Roster DB-only refusé à la création</td><td>C8</td></tr>
+<tr><td class="id">S15</td><td class="file"><code>routes/team-build-handler.ts:185</code></td><td><code>FORMAT_CONSTRAINTS.startingBudget</code> (valeur client sinon)</td><td><code>Roster.budget</code> (utilisé seulement pour les coupes)</td><td>Budget de construction en jeu libre = valeur client ; <code>Roster.budget</code> sans effet</td><td>—</td></tr>
+<tr><td class="id">S16</td><td class="file"><code>services/league-hate-trait.ts:108</code></td><td><code>getStarPlayerKeywords</code></td><td><code>StarPlayer.keywords</code></td><td>Trait Haine post-match attribué sur des mots-clés périmés</td><td>—</td></tr>
+<tr><td class="id">S17</td><td class="file"><code>services/post-match-league-sequence.ts:437,598</code></td><td><code>RANDOM_PRIMARY_SKILL_TABLE_2025</code></td><td>Dérivable de <code>Skill.category</code> + ruleset</td><td>Tirage hors pool ou anti-triche qui refuse un choix légal après recatégorisation</td><td>C2</td></tr>
+<tr><td class="id">S18</td><td class="file"><code>seeders/sync-rosters.ts</code>, <code>season3-skill-access.ts</code>, <code>sync-star-players.ts</code></td><td>Le code écrase <code>Position</code>, <code>Roster.specialRules</code>, <code>StarPlayer</code></td><td>—</td><td>Corrections admin effacées par un bouton admin</td><td>C11</td></tr>
+</tbody></table></div>
+
+<h2 id="serveur-moy">4. Détail serveur — sévérité moyenne</h2>
+<div class="tbl"><table>
+<thead><tr><th>#</th><th>Fichier</th><th>Statique utilisé</th><th>Équivalent base</th><th>Impact</th></tr></thead>
+<tbody>
+<tr><td class="id">M1</td><td class="file"><code>routes/league.ts:1551,1579,1600</code></td><td><code>getPlayerCost</code>, <code>getPositionBySlug</code>, <code>TEAM_ROSTERS[].name</code></td><td><code>Position.cost/displayName</code>, <code>Roster.name</code></td><td>Fiche roster de ligue : valeur joueur ≠ VE, noms périmés ou slugs bruts</td></tr>
+<tr><td class="id">M2</td><td class="file"><code>services/league-match-sheet.ts:1990,2002</code>, <code>services/league-player-stats.ts:46,52</code></td><td><code>TEAM_ROSTERS</code></td><td><code>Roster.name</code>, <code>Position.displayName</code></td><td>Pickers de feuille de match et classements avec libellés figés</td></tr>
+<tr><td class="id">M3</td><td class="file"><code>routes/team-star-player-handlers.ts:83</code> (+ spreads dans 5 handlers)</td><td><code>DEFAULT_RULESET</code> en dur ; <code>{...sp, ...starPlayerData}</code></td><td><code>StarPlayer</code> du ruleset de l'équipe ; <code>TeamStarPlayer.cost</code></td><td>Équipe S2 : stats S3 ou carte vide ; le coût <em>payé</em> est écrasé par le coût catalogue courant</td></tr>
+<tr><td class="id">M4</td><td class="file"><code>routes/star-players.ts:103,331</code></td><td><code>STAR_PLAYER_PAIR_PARTNERS</code></td><td>Aucun</td><td><code>pairWith/pairCost</code> jamais dérivés d'une star créée en admin</td></tr>
+<tr><td class="id">M5</td><td class="file"><code>routes/star-players.ts:68,75</code>, <code>services/…</code></td><td><code>STAR_PLAYER_RULE_SLUGS</code> (10 slugs)</td><td>Flag/catégorie sur <code>Skill</code></td><td>Pouvoir ajouté en base affiché en double</td></tr>
+<tr><td class="id">M6</td><td class="file"><code>utils/roster-helpers.ts:35</code>, <code>services/team-special-rules.ts:85</code>, <code>routes/public-rosters.ts:174</code></td><td><code>TEAM_SPECIAL_RULES</code></td><td><code>TeamSpecialRule</code> (peuplée, jamais lue)</td><td>Libellé/description corrigés en base invisibles</td></tr>
+<tr><td class="id">M7</td><td class="file"><code>services/team-regional-league.ts:43</code>, <code>commissioner-team-settings.ts:329-528</code>, <code>routes/public-rosters.ts:207-252</code></td><td><code>getRegionalLeagueBySlug</code></td><td><code>RegionalLeague</code> (peuplée, jamais lue)</td><td>Idem</td></tr>
+<tr><td class="id">M8</td><td class="file"><code>services/nfl-bb-derivation.ts:129-172</code></td><td><code>TEAM_ROSTERS_BY_RULESET.season_3</code> (cache process)</td><td><code>Position</code></td><td>Ingestion NFL Fantasy figée ; cache jamais invalidé</td></tr>
+<tr><td class="id">M9</td><td class="file"><code>services/league-match-sheet.ts:560-607</code></td><td>— (coût du star engagé envoyé par le client)</td><td><code>StarPlayer.cost</code></td><td>Un client peut sous-évaluer un star à la soumission de feuille</td></tr>
+<tr><td class="id">M10</td><td class="file"><code>routes/team-create-from-roster-handler.ts:285-296</code>, <code>services/ai-practice.ts:141-153</code></td><td>Padding <code>position: 'Lineman'</code> 6/3/3/4/9</td><td><code>Position</code></td><td>Slug inexistant → coût 0 en VE, bloque <code>PUT /roster</code></td></tr>
+<tr><td class="id">M11</td><td class="file"><code>routes/local-match.ts:1649</code>, <code>services/practice-match.ts:89-100</code>, <code>team-name-generator.ts:407</code></td><td>Whitelist IA, familles de noms</td><td>Aucun</td><td>Roster ajouté en base : pas d'adversaire IA, noms génériques (configuration acceptable en code)</td></tr>
+</tbody></table></div>
+
+<h2 id="front">5. Détail front web</h2>
+<p>Mobile : aucun import de donnée statique — tout vient de l'API (seule remarque : <code>lib/player-details.ts:14</code> duplique la table de coûts PSP, une règle, pas une donnée base).</p>
+<h3>Haute — budget, coût ou éligibilité présentés au coach</h3>
+<div class="tbl"><table>
+<thead><tr><th>#</th><th>Fichier</th><th>Statique utilisé</th><th>Donnée API disponible</th><th>Impact</th></tr></thead>
+<tbody>
+<tr><td class="id">W1</td><td class="file"><code>me/teams/[id]/page.tsx:938,1043,379</code>, <code>utils/exportPDF.ts:137-176</code></td><td><code>getPlayerCost</code></td><td><code>rosterDetail.positions[].cost</code> — déjà chargé ligne 203</td><td>Colonne « Coût », carte PNG et PDF avec un prix ≠ VE serveur</td></tr>
+<tr><td class="id">W2</td><td class="file"><code>me/teams/new/page.tsx:116,218,269,295</code></td><td><code>getFormatConstraints().startingBudget</code></td><td><code>rosters[].budget</code> — déjà chargé ligne 325</td><td>Budget initial et « Restant » faux, divergence avec <code>POST /team/build</code></td></tr>
+<tr><td class="id">W3</td><td class="file"><code>teams/[slug]/TeamDetailClient.tsx:127,176</code>, <code>roster-stats.ts:19</code></td><td><code>startingBudget</code>, <code>STANDARD_BUDGET_K = 1000</code></td><td><code>roster.budget</code></td><td>Fiche publique du roster : budget et marge périmés</td></tr>
+<tr><td class="id">W4</td><td class="file"><code>me/teams/[id]/edit/page.tsx:1347</code>, <code>leagues/pairings/[id]/sheet/_components/SheetAdvancementsEditor.tsx:123,149</code></td><td><code>getPositionCategoryAccess</code>, <code>SKILL_ACCESS_SEASON3</code></td><td><code>Position.primarySkills/secondarySkills</code> (<code>/api/rosters/:slug</code>)</td><td>Catégories proposées en montée de niveau que le serveur refuse ensuite</td></tr>
+<tr><td class="id">W5</td><td class="file"><code>me/teams/base-skills-data.ts:12-16</code> → <code>SkillTooltip.tsx:81</code></td><td><code>getPositionBySlug</code> (compétences de base)</td><td><code>roster.positions[].skills</code></td><td>Compétences de base affichées comme acquises, ou l'inverse</td></tr>
+<tr><td class="id">W6</td><td class="file"><code>star-players/StarPlayersClient.tsx:114,228-232</code></td><td><code>TEAM_REGIONAL_RULES</code> + 5 rosters en dur</td><td><code>playsFor</code>, <code>/api/rosters</code></td><td>Filtre « équipe » faux et limité à 5 rosters</td></tr>
+<tr><td class="id">W7</td><td class="file"><code>star-players/[slug]/page.tsx:296-302</code>, <code>components/StarPlayerCard.tsx:55</code>, <code>[slug]/card/route.ts:104,120</code></td><td><code>getStarPlayerPair(..., 'season_3')</code>, <code>getPlaysForCardLines</code></td><td><code>pairWith/pairCost</code>, <code>playsFor</code> (déjà dans le payload)</td><td>Deux prix de paire sur la même fiche ; carte PNG « joue pour » et paire au statique, ruleset en dur</td></tr>
+<tr><td class="id">W8</td><td class="file"><code>ligues/page.tsx:37</code>, <code>ligues/[slug]/page.tsx:26-61</code></td><td><code>getRegionalLeaguesWithRosters</code>, <code>getRostersForRegionalLeague(…,"season_3")</code></td><td><code>regionalLeagueOptions</code> de <code>/api/rosters</code></td><td>Pages publiques « Ligues » : équipes éligibles fausses ; Ligue ajoutée en base → 404</td></tr>
+<tr><td class="id">W9</td><td class="file"><code>me/teams/new/page.tsx:552</code></td><td><code>bigGuyLimitForRoster</code></td><td>Aucune (colonne manquante)</td><td>Boutons Gros Bras bloqués/débloqués selon le code</td></tr>
+</tbody></table></div>
+<h3>Moyenne — libellés et descriptions</h3>
+<div class="tbl"><table>
+<thead><tr><th>#</th><th>Fichiers</th><th>Statique utilisé</th><th>Donnée API</th><th>Impact</th></tr></thead>
+<tbody>
+<tr><td class="id">W10</td><td class="file"><code>components/RosterBadge.tsx:37</code> (8 appels primaires), <code>leagues/…</code>, <code>cups/…</code> (10 fichiers), <code>plays-for.ts:33</code></td><td><code>getRosterName</code></td><td><code>/api/rosters?lang</code> (<code>name</code>, localisé)</td><td>Nom de roster périmé, FR seulement</td></tr>
+<tr><td class="id">W11</td><td class="file"><code>me/teams/[id]/page.tsx</code>, <code>edit/page.tsx</code>, <code>career/page.tsx</code>, <code>exportPDF.ts</code> (11 appels)</td><td><code>getDisplayName(positionSlug)</code></td><td><code>positions[].displayName</code>, <code>availablePositions[].name</code> — déjà chargés</td><td>Nom de poste périmé, non localisé</td></tr>
+<tr><td class="id">W12</td><td class="file"><code>utils/exportPDF.ts:23-67,158</code>, <code>lib/player-card/card-model.ts:347,409</code></td><td><code>ROSTER_DISPLAY_NAMES</code> en dur, <code>getDisplayNames(skills)</code></td><td><code>/api/rosters?lang=en</code>, <code>/api/skills</code></td><td>PDF et cartes : noms périmés, slug inconnu droppé en silence</td></tr>
+<tr><td class="id">W13</td><td class="file"><code>me/teams/skills-data.ts:64,131</code></td><td><code>/api/skills</code> sans <code>?ruleset</code> ; repli statique synchrone au 1ᵉʳ rendu</td><td><code>/api/skills?ruleset=</code></td><td>Équipe S2 servie en S3 ; flash de libellés périmés</td></tr>
+<tr><td class="id">W14</td><td class="file"><code>a-propos/page.tsx:20-40</code>, <code>skills/opengraph-image.tsx:17</code></td><td>Comptages sur les catalogues compilés</td><td><code>count</code> des endpoints</td><td>Pages indexées (SEO) avec des chiffres faux</td></tr>
+<tr><td class="id">W15</td><td class="file"><code>leagues/pairings/[id]/sheet/_components/RosterSection.tsx:70</code></td><td><code>TEAM_ROSTERS_BY_RULESET</code></td><td><code>/api/rosters/:slug</code></td><td>Postes du snapshot en slug ou libellé périmé</td></tr>
+</tbody></table></div>
+
+<h2 id="manquant">6. Ce qui n'existe pas (ou pas assez) en base</h2>
+<div class="tbl"><table>
+<thead><tr><th>Donnée</th><th>Où elle vit aujourd'hui</th><th>Consommée par</th><th>À créer</th></tr></thead>
+<tbody>
+<tr><td>Catalogue des coups de pouce (prix, plafonds, remises, conditions)</td><td class="file"><code>core/inducements.ts:147-330</code></td><td>Match en ligne, local, feuille de ligue, schémas de packs</td><td>Table <code>Inducement</code> (slug, ruleset, nameFr/En, baseCost, maxQuantity, discountRule/Cost/Roster, ruleMaxQuantity, condition)</td></tr>
+<tr><td>Barème d'avancement (coût PSP par palier, surcoûts VE, +caractéristique, Élite)</td><td class="file"><code>utils/advancements.ts:28-74</code></td><td>Post-match ligue, feuille, édition d'avancements, coupes, VE</td><td>Table <code>AdvancementCost</code> (type × palier → PSP, surcoût VE)</td></tr>
+<tr><td>Paires obligatoires de Star Players</td><td class="file"><code>rosters/star-players.ts:1579</code></td><td>Validation d'embauche, suppression, fiches</td><td>Colonnes <code>StarPlayer.pairWith</code> + <code>pairCost</code></td></tr>
+<tr><td>Plafond combiné de Gros Bras par roster</td><td class="file"><code>rosters/big-guy-limits.ts:30</code></td><td>Builder (serveur + web)</td><td>Colonne <code>Roster.maxBigGuys</code></td></tr>
+<tr><td>Nom anglais des postes, couleurs d'équipe, pouvoirs de Star Player</td><td class="file"><code>position-names-en.ts</code>, <code>team-colors.ts</code>, <code>skills/star-player-rules.ts</code></td><td>API publique, feuille de match, fiches</td><td><code>Position.displayNameEn</code>, <code>Roster.primaryColor/secondaryColor</code>, catégorie <code>star_player_rule</code> sur <code>Skill</code></td></tr>
+<tr><td>Libellés des règles spéciales et des Ligues régionales</td><td class="file"><code>team-special-rules.ts</code>, <code>regional-leagues.ts</code></td><td>Rosters publics, commissaire, création</td><td><strong>Existent déjà</strong> (<code>TeamSpecialRule</code>, <code>RegionalLeague</code>) — à brancher</td></tr>
+</tbody></table></div>
+<p class="note">Nuance de frontière : <code>Skill.slug</code> et <code>Position.slug</code> sont de facto un contrat de code — le moteur de match ne connaît que le slug (<code>skill-registry.ts</code>), et l'admin ne peut pas modifier un slug (création seule). Corollaire : une compétence créée en admin avec un slug inconnu du registre est un pur libellé — elle augmente la VE mais n'a aucun effet en match. À documenter côté admin.</p>
+
+<h2 id="bugs">7. Bugs connexes trouvés en chemin</h2>
+<ul>
+<li><span class="chip crit">Critique</span> <code>team-create-from-roster-handler.ts:238</code> — <code>calculateStarPlayersCost</code> sans ruleset : Star Player à 0 po pour une équipe Saison 2 dont la star n'existe pas en S3 (S12).</li>
+<li><span class="chip crit">Critique</span> <code>routes/local-match.ts:714-720,828-833</code> — lit <code>p.value</code>, champ inexistant sur <code>TeamPlayer</code> → CTV = 0 → <strong>cagnotte toujours nulle en match local</strong>. Utiliser <code>Team.currentValue</code>.</li>
+<li><span class="chip warn">Élevé</span> <code>league-match-sheet.ts:1287</code> — <code>surchargeForAdvancement</code> sans <code>isElite</code> : +10 000 po oubliés sur un journalier Élite recruté.</li>
+<li><span class="chip warn">Élevé</span> <code>team-star-player-handlers.ts:83</code> — <code>DEFAULT_RULESET</code> en dur + spread qui écrase <code>TeamStarPlayer.cost</code> (coût payé) par le coût catalogue courant (M3).</li>
+<li><span class="chip warn">Élevé</span> <code>league-match-sheet.ts:560-607</code> — le coût du star engagé en coup de pouce est celui envoyé par le client (M9).</li>
+<li><span class="chip low">Moyen</span> Filtre de joueurs incohérent entre <code>services/match-start.ts:145-149</code> (<code>dead + firedAt + missNextMatch</code>) et <code>routes/match-state-handler.ts:172,176</code> (<code>!p.dead</code> seul).</li>
+<li><span class="chip low">Moyen</span> <code>utils/roster-helpers.ts:57</code> — cache rosters 5 min en prod : une correction de <code>Position.cost</code> met jusqu'à 5 min à atteindre le builder si <code>invalidateRosterCache()</code> n'est pas appelé par l'admin.</li>
+<li><span class="chip low">Moyen</span> Replis incohérents sur le fan dévoué côté web : <code>exportPDF.ts:145</code> retombe sur 10 000, <code>TeamInfoDisplay</code>/<code>TreasuryPurchasePanel</code> sur 5 000.</li>
+<li><span class="chip low">Faible</span> Import mort <code>getDisplayName</code> dans <code>TreasuryPurchasePanel.tsx:5</code> ; <code>base-skills-data.ts:81</code> (<code>getTeamPositionsForRoster</code>) sans appelant — à supprimer plutôt qu'à migrer.</li>
+</ul>
+
+<h2 id="ok">8. Ce qui est déjà « base d'abord » — patterns de référence</h2>
+<div class="cause ok"><h3>À réutiliser plutôt que dupliquer</h3>
+<ul>
+<li><code>utils/roster-helpers.ts:137</code> <code>getRosterFromDb</code> — rosters, positions, coûts, skills, Ligues effectives.</li>
+<li><code>services/roster-staff-config.ts:72</code> <code>resolveStaffConfigBySlug</code> — relances, apothicaire, cheerleaders, assistants, fans (consommé par build, achat, info, offline, commissaire).</li>
+<li><code>services/roster-regional-rules.ts:68</code> <code>effectiveRegionalRules</code> — la résolution canonique des Ligues.</li>
+<li><code>utils/team-values.ts</code> <code>resolvePositionMetaForTeam</code>, <code>resolveSpecialRulesForTeam</code>, <code>computeTeamValueBreakdownFor</code> — coût des joueurs, règles spéciales, VE.</li>
+<li><code>utils/star-player-repository.ts</code> <code>getStarPlayerBySlugDb</code>, <code>getAvailableStarPlayersDb</code> ; <code>services/star-player-plays-for.ts</code> (ajouté ce jour).</li>
+<li><code>services/tournament-ruleset-repository.ts</code> — règlements de tournoi, validés Zod, repli moteur journalisé.</li>
+<li><code>services/journeymen.ts</code> — journaliers du match en ligne ; <code>services/skill-access.ts</code> + <code>post-match-league-sequence.ts:609-639</code> — accès aux compétences côté ligue ; <code>services/elite-skills.ts</code>.</li>
+<li>Web : <code>edit/page.tsx:553-557</code> (<code>dbCostByPosition</code>), <code>leagues/_components/LeagueForm.tsx:105</code> (noms de rosters via API), <code>app/lib/tournament-rulesets.ts</code> (cache API).</li>
+</ul>
+<p>Le moteur de match lui-même (<code>mechanics/</code>, <code>actions/</code>, <code>skills/skill-registry.ts</code>) est du comportement indexé par slug : il ne doit pas migrer en base et suit automatiquement les éditions de libellés/descriptions.</p></div>
+
+<h2 id="plan">9. Plan de correction proposé</h2>
+<p>Ordonné par rapport effort/impact. Chaque lot est livrable seul, avec tests.</p>
+<div class="plan">
+<div class="lot"><div class="n">Lot 1<small>≈ ½ jour</small></div><div><p><strong>Propager <code>declaredRules</code> et le repository de règlements.</strong> 5 appels <code>resolveTeamRegionalRules</code> (S7, S8), 3 appels <code>getTournamentRuleset</code> (S3), <code>calculateStarPlayersCost(…, ruleset)</code> (S12), <code>requiresPair/validateStarPlayerPairs(…, ruleset)</code> (S13), <code>team-star-player-handlers.ts:83</code> (M3). Corrige la majorité des incohérences UI-propose / serveur-refuse.</p></div></div>
+<div class="lot"><div class="n">Lot 2<small>≈ 1 jour</small></div><div><p><strong>Aligner la progression « équipe libre » sur le chemin ligue</strong> (S1, S2, S17) : <code>Position.primarySkills/secondarySkills</code> + <code>services/skill-access.ts</code> + pool de tirage dérivé de <code>Skill.category</code> filtré par ruleset.</p></div></div>
+<div class="lot"><div class="n">Lot 3<small>≈ 1 jour</small></div><div><p><strong>Unifier le coût des joueurs</strong> (S5, S6, M1) via <code>resolvePositionMetaForTeam</code> ; <strong>journaliers de feuille de ligue → <code>Position</code></strong> (S4, + <code>isElite</code>) ; <strong>feuille de ligue → résolveurs DB</strong> pour règles spéciales et apothicaire (S9).</p></div></div>
+<div class="lot"><div class="n">Lot 4<small>≈ 1–2 jours</small></div><div><p><strong>Contexte de coups de pouce réel</strong> (S10, S11) : <code>regionalRules</code> + <code>specialRules</code> depuis la base dans <code>inducement-processor.ts</code> et <code>local-match.ts</code> ; injecter un catalogue de stars DB dans <code>getInducementCost</code> (ou pré-tarifer côté serveur). Corriger <code>p.value</code> (cagnotte nulle) au passage.</p></div></div>
+<div class="lot"><div class="n">Lot 5<small>≈ 1 jour</small></div><div><p><strong>Front web, données déjà chargées</strong> (W1–W5, W7) : coûts, budgets, accès compétences, paires, « joue pour » depuis l'API ; puis W6/W8 (ligues) ; puis un résolveur <code>slug → nom</code> unique alimenté par <code>/api/rosters</code> (W10–W12).</p></div></div>
+<div class="lot"><div class="n">Lot 6<small>≈ 2 jours</small></div><div><p><strong>Modèle de données</strong> : brancher <code>TeamSpecialRule</code> et <code>RegionalLeague</code> (M6, M7) ; créer <code>Inducement</code> et <code>AdvancementCost</code> avec admin et seed « create-if-missing » ; colonnes <code>StarPlayer.pairWith/pairCost</code>, <code>Roster.maxBigGuys</code>, <code>Position.displayNameEn</code>. <code>ALLOWED_TEAMS</code> → requête <code>Roster</code> (S14) ; <code>Roster.budget</code> comme budget de construction (S15).</p></div></div>
+<div class="lot"><div class="n">Lot 7<small>≈ ½ jour</small></div><div><p><strong>Gouvernance</strong> (S18) : inverser la doctrine des seeders <code>sync-*</code> — diff-report par défaut, application champ par champ explicite, jamais d'écrasement silencieux des colonnes éditables ; vérifier l'invalidation du cache rosters sur les écritures admin.</p></div></div>
+</div>
+<p class="note">Une fois les lots 1–4 livrés, le catalogue statique ne sert plus que de repli (seed initial + environnement sans base). Le lot 6 est celui qui décide ce qui doit devenir administrable, et mérite un arbitrage produit avant code.</p>
+</main>
