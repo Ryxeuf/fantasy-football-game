@@ -8,6 +8,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildSkillAccessByPosition,
   buildPositionMetaByPosition,
+  makePositionResolvers,
 } from "./roster-skill-access";
 
 describe("buildSkillAccessByPosition", () => {
@@ -86,5 +87,60 @@ describe("buildPositionMetaByPosition", () => {
       buildPositionMetaByPosition([{ skills: "block" } as { skills: string }])
         .size,
     ).toBe(0);
+  });
+});
+
+/**
+ * Audit statique vs base — lot 5 (W1, W11) : le coût d'embauche et le libellé
+ * d'un poste viennent de `Position.cost` / `Position.displayName` (base). Le
+ * catalogue compilé du moteur ne sert plus que de repli, sinon la colonne
+ * « Coût », la carte PNG et le PDF divergent de la VE servie par l'API.
+ */
+describe("makePositionResolvers", () => {
+  const meta = buildPositionMetaByPosition([
+    {
+      slug: "human_lineman",
+      displayName: "Trois-quarts (corrigé)",
+      // `Position.cost` est en kpo en base, la VE se compte en po.
+      cost: 60,
+      skills: "",
+    },
+    // Poste sans coût ni libellé côté API (payload partiel).
+    { slug: "human_blitzer", skills: "block" },
+  ]);
+  const fallback = {
+    cost: () => 999_000,
+    displayName: (slug: string) => `FB-${slug}`,
+  };
+
+  it("sert le coût de la base, converti en po", () => {
+    const r = makePositionResolvers(meta, fallback);
+    expect(r.costPo("human_lineman", "human")).toBe(60_000);
+  });
+
+  it("sert le libellé de la base", () => {
+    const r = makePositionResolvers(meta, fallback);
+    expect(r.displayName("human_lineman")).toBe("Trois-quarts (corrigé)");
+  });
+
+  it("retombe sur le catalogue quand la base ne porte pas la valeur", () => {
+    const r = makePositionResolvers(meta, fallback);
+    expect(r.costPo("human_blitzer", "human")).toBe(999_000);
+    expect(r.displayName("human_blitzer")).toBe("FB-human_blitzer");
+  });
+
+  it("retombe sur le catalogue pour un poste absent de la carte", () => {
+    const r = makePositionResolvers(meta, fallback);
+    expect(r.costPo("inconnu", "human")).toBe(999_000);
+    expect(r.displayName("inconnu")).toBe("FB-inconnu");
+  });
+
+  it("un coût de 0 en base est une valeur, pas une absence", () => {
+    const zero = buildPositionMetaByPosition([
+      { slug: "journeyman", displayName: "Journalier", cost: 0, skills: "" },
+    ]);
+    expect(makePositionResolvers(zero, fallback).costPo("journeyman", "x")).toBe(
+      0,
+    );
   });
 });

@@ -1,7 +1,13 @@
 "use client";
 import { useState } from "react";
 import { parseSkillSlugs } from "@bb/game-engine";
-import { getSkillDescription, getSkillDescriptionAsync, parseSkills, slugsToDisplayNames } from "../skills-data";
+import {
+  DEFAULT_SKILLS_RULESET,
+  getSkillDescription,
+  getSkillDescriptionAsync,
+  parseSkills,
+  slugsToDisplayNames,
+} from "../skills-data";
 import { separateSkills } from "../base-skills-data";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useSkillsCacheReady } from "../use-skills-cache";
@@ -34,9 +40,15 @@ interface SkillTooltipProps {
   // hardcodée du game-engine pour distinguer base vs acquise : évite que des
   // compétences par défaut soient affichées par erreur en encadré orange.
   dbBaseSkills?: readonly string[];
+  /**
+   * Édition de l'équipe (`Team.ruleset`). Le catalogue de compétences en
+   * dépend : sans elle, une équipe Saison 2 se voyait servir les libellés et
+   * catégories de la Saison 3 (W13 de l'audit).
+   */
+  ruleset?: string;
 }
 
-export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false, dbBaseSkills }: SkillTooltipProps) {
+export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false, dbBaseSkills, ruleset = DEFAULT_SKILLS_RULESET }: SkillTooltipProps) {
   const { language } = useLanguage();
   // Catalogue résolu côté serveur (si fourni par la page) : prioritaire sur le
   // cache client async → noms corrects dès le 1er rendu, aucun flash.
@@ -44,7 +56,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   // Résolution unifiée : catalogue SSR d'abord, puis fallback cache/game-engine.
   const resolveSkill = (slug: string) =>
     resolveFromCatalog(catalog, slug, language) ??
-    getSkillDescription(slug, language);
+    getSkillDescription(slug, language, ruleset);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string; isPassive?: boolean; isElite?: boolean } | null>(null);
@@ -53,7 +65,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   // pour que les noms/catégories des badges (getSkillDescription synchrone)
   // reflètent l'API au lieu du fallback game-engine — sinon ils ne se mettaient
   // à jour qu'au premier survol. Voir use-skills-cache.ts.
-  useSkillsCacheReady(language);
+  useSkillsCacheReady(language, ruleset);
 
   // Parser les slugs de compétences
   // Si useDirectParsing est true, on utilise parseSkillSlugs directement (pour les positions du roster)
@@ -102,7 +114,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     // Catalogue SSR d'abord (synchrone) ; sinon API async pour la bonne langue.
     const desc =
       resolveFromCatalog(catalog, skillSlug, language) ??
-      (await getSkillDescriptionAsync(skillSlug, language));
+      (await getSkillDescriptionAsync(skillSlug, language, ruleset));
     setSkillDescription(desc);
   };
 

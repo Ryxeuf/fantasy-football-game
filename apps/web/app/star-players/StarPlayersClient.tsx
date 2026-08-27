@@ -154,9 +154,20 @@ export default function StarPlayersPage() {
     // n'existent pas en saison 2). C'est le meme referentiel que la rubrique
     // « Joue pour » des fiches, donc les deux ne peuvent pas diverger.
     if (selectedRoster !== ALL_TEAMS_OPTION) {
-      filtered = filtered.filter((sp) =>
-        isStarPlayerHirableByRoster(sp.hirableBy, selectedRoster, selectedRuleset),
-      );
+      filtered = filtered.filter((sp) => {
+        // `playsFor` est resolu par le SERVEUR depuis les rosters EN BASE de
+        // l'edition : c'est la meme liste que la rubrique « Joue pour » des
+        // fiches. Le predicat du moteur (table `TEAM_REGIONAL_RULES`
+        // compilee) ne sert que de repli pour un serveur anterieur a la
+        // feature (W6 de l'audit).
+        const playsFor = (sp as { playsFor?: readonly string[] }).playsFor;
+        if (playsFor) return playsFor.includes(selectedRoster);
+        return isStarPlayerHirableByRoster(
+          sp.hirableBy,
+          selectedRoster,
+          selectedRuleset,
+        );
+      });
     }
 
     // Filtre par coût

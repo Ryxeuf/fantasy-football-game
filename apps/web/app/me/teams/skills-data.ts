@@ -35,16 +35,32 @@ interface SkillFromAPI {
   isElite?: boolean;
 }
 
-// Cache pour les compétences chargées depuis l'API
-let skillsCache: SkillFromAPI[] | null = null;
-let skillsCachePromise: Promise<SkillFromAPI[]> | null = null;
+/**
+ * Cache des compétences chargées depuis l'API, INDEXÉ PAR ÉDITION.
+ *
+ * Audit statique vs base — lot 5 (W13) : `/api/skills` était appelé sans
+ * `?ruleset`, donc une équipe Saison 2 se voyait servir les libellés, les
+ * catégories et les descriptions de la Saison 3 (une compétence
+ * recatégorisée en S3 s'affichait avec la mauvaise couleur, une compétence
+ * S3-only apparaissait sur une fiche S2).
+ */
+export const DEFAULT_SKILLS_RULESET = "season_3";
+
+const skillsCacheByRuleset = new Map<string, SkillFromAPI[]>();
+const skillsPromiseByRuleset = new Map<string, Promise<SkillFromAPI[]>>();
 
 /**
- * Réinitialise le cache (utile pour forcer un rechargement)
+ * Réinitialise le cache (utile pour forcer un rechargement). Sans argument,
+ * vide toutes les éditions.
  */
-export function clearSkillsCache() {
-  skillsCache = null;
-  skillsCachePromise = null;
+export function clearSkillsCache(ruleset?: string) {
+  if (ruleset) {
+    skillsCacheByRuleset.delete(ruleset);
+    skillsPromiseByRuleset.delete(ruleset);
+    return;
+  }
+  skillsCacheByRuleset.clear();
+  skillsPromiseByRuleset.clear();
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
@@ -52,36 +68,48 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API
 /**
  * Charge les compétences depuis l'API et les met en cache
  */
-async function loadSkillsFromAPI(): Promise<SkillFromAPI[]> {
-  if (skillsCache) {
-    return skillsCache;
+async function loadSkillsFromAPI(
+  ruleset: string = DEFAULT_SKILLS_RULESET,
+): Promise<SkillFromAPI[]> {
+  const cached = skillsCacheByRuleset.get(ruleset);
+  if (cached) {
+    return cached;
   }
-  
-  if (skillsCachePromise) {
-    return skillsCachePromise;
+
+  const pending = skillsPromiseByRuleset.get(ruleset);
+  if (pending) {
+    return pending;
   }
-  
-  skillsCachePromise = fetch(`${API_BASE}/api/skills`)
+
+  const request = fetch(
+    `${API_BASE}/api/skills?ruleset=${encodeURIComponent(ruleset)}`,
+  )
     .then(res => res.json())
     .then(data => {
-      skillsCache = data.skills || [];
-      return skillsCache!;
+      const skills: SkillFromAPI[] = data.skills || [];
+      skillsCacheByRuleset.set(ruleset, skills);
+      return skills;
     })
     .catch(err => {
       console.error("Erreur lors du chargement des compétences depuis l'API:", err);
-      skillsCachePromise = null;
+      skillsPromiseByRuleset.delete(ruleset);
       return [] as SkillFromAPI[];
     });
 
-  return skillsCachePromise;
+  skillsPromiseByRuleset.set(ruleset, request);
+  return request;
 }
 
 /**
  * Obtient la description d'une compétence par son slug
  */
-export async function getSkillDescriptionAsync(slugOrName: string, language: "fr" | "en" = "fr"): Promise<SkillDescription | null> {
+export async function getSkillDescriptionAsync(
+  slugOrName: string,
+  language: "fr" | "en" = "fr",
+  ruleset: string = DEFAULT_SKILLS_RULESET,
+): Promise<SkillDescription | null> {
   // Charger les compétences depuis l'API si nécessaire
-  const apiSkills = await loadSkillsFromAPI();
+  const apiSkills = await loadSkillsFromAPI(ruleset);
   
   // Chercher dans l'API d'abord (pour avoir les descriptions EN)
   const apiSkill = apiSkills.find(s => 
@@ -128,8 +156,13 @@ export async function getSkillDescriptionAsync(slugOrName: string, language: "fr
  * Obtient la description d'une compétence par son slug (version synchrone avec cache)
  * Utilise le cache si disponible, sinon fait un appel API asynchrone
  */
-export function getSkillDescription(slugOrName: string, language: "fr" | "en" = "fr"): SkillDescription | null {
+export function getSkillDescription(
+  slugOrName: string,
+  language: "fr" | "en" = "fr",
+  ruleset: string = DEFAULT_SKILLS_RULESET,
+): SkillDescription | null {
   // Si on a le cache et qu'on trouve la compétence dedans, l'utiliser
+  const skillsCache = skillsCacheByRuleset.get(ruleset);
   if (skillsCache) {
     const apiSkill = skillsCache.find(s => 
       s.slug === slugOrName || 

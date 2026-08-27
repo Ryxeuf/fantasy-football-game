@@ -70,3 +70,30 @@ export function getPlaysForCardLines(
     lang === "en" ? `+ ${extra} more teams` : `+ ${extra} autres équipes`;
   return [...names.slice(0, CARD_MAX_TEAMS), more];
 }
+
+/**
+ * Variante carte à partir des slugs DÉJÀ résolus par l'API (`playsFor`), avec
+ * les noms de rosters servis par la base quand `namesBySlug` est fourni.
+ *
+ * Audit statique vs base — lot 5 (W7) : la carte PNG dérivait « Joue pour »
+ * de `hirableBy` via le catalogue compilé, au ruleset Saison 3 codé en dur —
+ * une équipe Saison 2 y voyait donc la liste de la Saison 3, et un roster créé
+ * en admin n'y apparaissait pas.
+ */
+export function toPlaysForCardLines(
+  slugs: readonly string[],
+  lang: "fr" | "en" = "fr",
+  namesBySlug?: ReadonlyMap<string, string>,
+): string[] {
+  if (slugs.includes("all")) {
+    return [lang === "en" ? "All teams" : "Toutes les équipes"];
+  }
+  const names = Array.from(new Set(slugs))
+    .map((slug) => namesBySlug?.get(slug) || getRosterName(slug) || slug)
+    .sort((a, b) => a.localeCompare(b, "fr"));
+  if (names.length <= CARD_MAX_TEAMS + 1) return names;
+  const extra = names.length - CARD_MAX_TEAMS;
+  const more =
+    lang === "en" ? `+ ${extra} more teams` : `+ ${extra} autres équipes`;
+  return [...names.slice(0, CARD_MAX_TEAMS), more];
+}

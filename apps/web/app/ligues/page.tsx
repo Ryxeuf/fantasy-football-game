@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getRegionalLeaguesWithRosters } from "@bb/game-engine";
 import StructuredData from "../components/StructuredData";
 import { buildLeaguesListSchema } from "./ligues-structured-data";
-import { fetchRosterMap, resolveRosters } from "./data";
+import { fetchLeagueRosterIndex, fetchRosterMap, resolveRosters } from "./data";
 
 const BASE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -34,8 +34,32 @@ export const metadata: Metadata = {
 };
 
 export default async function LiguesIndexPage() {
-  const leagues = getRegionalLeaguesWithRosters();
-  const rosterMap = await fetchRosterMap("season_3");
+  // Le RÉFÉRENTIEL des Ligues (nom FR/EN, description) vient du moteur ; les
+  // ÉQUIPES ÉLIGIBLES viennent de la base (`Roster.regionalRules`, servi par
+  // `/api/rosters`). Une Ligue déclarée en base mais absente du catalogue est
+  // ajoutée à la liste plutôt que perdue (W8 de l'audit).
+  const [rosterMap, leagueIndex] = await Promise.all([
+    fetchRosterMap("season_3"),
+    fetchLeagueRosterIndex("season_3"),
+  ]);
+  const fromEngine = getRegionalLeaguesWithRosters();
+  const known = new Set(fromEngine.map((l) => l.slug));
+  const leagues = [
+    ...fromEngine.map((l) => ({
+      ...l,
+      rosterSlugs: leagueIndex.get(l.slug)?.rosterSlugs ?? l.rosterSlugs,
+    })),
+    ...[...leagueIndex.values()]
+      .filter((entry) => !known.has(entry.slug))
+      .map((entry) => ({
+        slug: entry.slug,
+        nameFr: entry.name,
+        nameEn: entry.name,
+        description:
+          "Ligue régionale déclarée par ces équipes. Elle détermine leurs Star Players recrutables et leurs Coups de Pouce accessibles.",
+        rosterSlugs: entry.rosterSlugs,
+      })),
+  ];
 
   return (
     <>

@@ -15,6 +15,9 @@ export interface PositionSkillAccess {
 
 export interface RosterPositionLike {
   readonly slug?: string | null;
+  readonly displayName?: string | null;
+  /** Coût d'embauche en kpo (`Position.cost`). */
+  readonly cost?: number | null;
   readonly primarySkills?: string | null;
   readonly secondarySkills?: string | null;
   readonly skills?: string | null;
@@ -23,6 +26,19 @@ export interface RosterPositionLike {
 }
 
 export interface PositionMeta {
+  /**
+   * Libellé du poste servi par l'API (`Position.displayName`, localisé).
+   * `null` si l'API ne le porte pas : l'appelant retombe alors sur le
+   * catalogue compilé.
+   */
+  readonly displayName: string | null;
+  /**
+   * Coût d'embauche EN PO (`Position.cost` × 1000). `null` si absent.
+   * C'est ce tarif que le serveur débite et qui alimente la VE : afficher
+   * celui du catalogue compilé faisait diverger la colonne « Coût », la
+   * carte PNG et le PDF de la VE servie par l'API.
+   */
+  readonly costPo: number | null;
   /** Slugs des compétences par défaut de la position (source DB). */
   readonly baseSkills: readonly string[];
   /** Mots-clés FR (CSV). */
@@ -49,6 +65,8 @@ export function buildPositionMetaByPosition(
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     map.set(pos.slug, {
+      displayName: pos.displayName ?? null,
+      costPo: typeof pos.cost === "number" ? pos.cost * 1000 : null,
       baseSkills,
       keywords: pos.keywords ?? null,
       keywordsEn: pos.keywordsEn ?? null,
@@ -76,4 +94,27 @@ export function buildSkillAccessByPosition(
     });
   }
   return map;
+}
+
+/**
+ * Résolveurs « base d'abord, catalogue en repli » dérivés d'une carte de
+ * méta-postes. Les deux repli sur `@bb/game-engine` tant que le détail du
+ * roster n'est pas chargé — jamais de case vide ni de slug brut à l'écran.
+ */
+export function makePositionResolvers(
+  meta: ReadonlyMap<string, PositionMeta>,
+  fallback: {
+    readonly cost: (position: string, roster: string) => number;
+    readonly displayName: (position: string) => string;
+  },
+): {
+  readonly costPo: (position: string, roster: string) => number;
+  readonly displayName: (position: string) => string;
+} {
+  return {
+    costPo: (position, roster) =>
+      meta.get(position)?.costPo ?? fallback.cost(position, roster),
+    displayName: (position) =>
+      meta.get(position)?.displayName || fallback.displayName(position),
+  };
 }

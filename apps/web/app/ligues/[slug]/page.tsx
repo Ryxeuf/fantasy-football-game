@@ -6,7 +6,7 @@ import {
 } from "@bb/game-engine";
 import StructuredData from "../../components/StructuredData";
 import { buildLeagueDetailSchema } from "../ligues-structured-data";
-import { fetchRosterMap, resolveRosters } from "../data";
+import { fetchLeagueRosterIndex, fetchRosterMap, resolveRosters } from "../data";
 
 const BASE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -20,14 +20,33 @@ interface LeaguePageProps {
   params: { slug: string };
 }
 
+/**
+ * Description de repli pour une Ligue déclarée en base que le référentiel du
+ * moteur ne décrit pas encore (cf. C10 de l'audit : la table `RegionalLeague`
+ * existe mais n'est lue par personne).
+ */
+const DEFAULT_LEAGUE_DESCRIPTION =
+  "Ligue régionale de Blood Bowl. Elle détermine les Star Players recrutables et les Coups de Pouce accessibles aux équipes qui s'y rattachent.";
+
 export async function generateMetadata({
   params,
 }: LeaguePageProps): Promise<Metadata> {
-  const league = getRegionalLeagueBySlug(params.slug);
+  const definition = getRegionalLeagueBySlug(params.slug);
   const url = `${BASE_URL}/ligues/${params.slug}`;
-  if (!league) {
+  // Ligue déclarée uniquement en base : le catalogue ne la connaît pas, mais
+  // la page existe — on lui sert donc de vraies métadonnées plutôt qu'un
+  // « introuvable » noindex (W8 de l'audit).
+  const fromDb = definition
+    ? null
+    : (await fetchLeagueRosterIndex("season_3")).get(params.slug);
+  if (!definition && !fromDb) {
     return { title: "Ligue introuvable", robots: { index: false, follow: true } };
   }
+  const league = definition ?? {
+    nameFr: fromDb!.name,
+    nameEn: fromDb!.name,
+    description: DEFAULT_LEAGUE_DESCRIPTION,
+  };
   const title = `${league.nameFr} (${league.nameEn}) — Ligue régionale Blood Bowl`;
   const description = league.description.slice(0, 300);
   return {
@@ -53,13 +72,29 @@ export async function generateMetadata({
 }
 
 export default async function LeagueDetailPage({ params }: LeaguePageProps) {
-  const league = getRegionalLeagueBySlug(params.slug);
-  if (!league) {
+  const definition = getRegionalLeagueBySlug(params.slug);
+  const [rosterMap, leagueIndex] = await Promise.all([
+    fetchRosterMap("season_3"),
+    fetchLeagueRosterIndex("season_3"),
+  ]);
+  const fromDb = leagueIndex.get(params.slug);
+  // Une Ligue que seule la base déclare (ajoutée en admin) ne doit plus
+  // sortir en 404 : le catalogue du moteur n'est que le référentiel de
+  // libellés (W8 de l'audit).
+  if (!definition && !fromDb) {
     notFound();
   }
+  const league = definition ?? {
+    slug: params.slug,
+    nameFr: fromDb!.name,
+    nameEn: fromDb!.name,
+    description: DEFAULT_LEAGUE_DESCRIPTION,
+  };
 
-  const rosterSlugs = getRostersForRegionalLeague(league.slug, "season_3");
-  const rosterMap = await fetchRosterMap("season_3");
+  // Équipes éligibles : la base d'abord (`Roster.regionalRules`), le
+  // catalogue compilé en repli quand l'API n'a rien rendu.
+  const rosterSlugs =
+    fromDb?.rosterSlugs ?? getRostersForRegionalLeague(league.slug, "season_3");
   const rosters = resolveRosters(rosterSlugs, rosterMap).sort((a, b) =>
     a.name.localeCompare(b.name, "fr"),
   );

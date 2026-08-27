@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getSkillDescriptionAsync } from "./skills-data";
+import {
+  DEFAULT_SKILLS_RULESET,
+  getSkillDescriptionAsync,
+} from "./skills-data";
 
 /**
  * Précharge le cache des compétences (API `/api/skills`) au montage et force
@@ -17,14 +20,17 @@ import { getSkillDescriptionAsync } from "./skills-data";
  * La valeur de retour change à chaque chargement ; l'appelant n'a pas besoin de
  * l'utiliser — le simple changement d'état suffit à re-rendre.
  */
-export function useSkillsCacheReady(language: "fr" | "en"): number {
+export function useSkillsCacheReady(
+  language: "fr" | "en",
+  ruleset: string = DEFAULT_SKILLS_RULESET,
+): number {
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    // Charge tout le référentiel de compétences (le warm sur un slug quelconque
-    // remplit le cache complet), puis force un re-render.
-    getSkillDescriptionAsync("block", language)
+    // Charge tout le référentiel de compétences DE CETTE ÉDITION (le warm sur
+    // un slug quelconque remplit le cache complet), puis force un re-render.
+    getSkillDescriptionAsync("block", language, ruleset)
       .then(() => {
         if (!cancelled) setVersion((v) => v + 1);
       })
@@ -34,7 +40,7 @@ export function useSkillsCacheReady(language: "fr" | "en"): number {
     return () => {
       cancelled = true;
     };
-  }, [language]);
+  }, [language, ruleset]);
 
   return version;
 }

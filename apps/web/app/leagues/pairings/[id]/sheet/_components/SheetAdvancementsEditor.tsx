@@ -30,6 +30,66 @@ import {
 } from "../../../../../components/AdvancementEditor";
 import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
+/**
+ * Accès Principale/Secondaire des postes du roster, lu EN BASE
+ * (`/api/rosters/:slug` → `Position.primarySkills`/`secondarySkills`).
+ *
+ * `SKILL_ACCESS_SEASON3` (table compilée) ne sert plus que de repli : elle
+ * ignore toute correction admin et ne couvre pas les postes créés en base, si
+ * bien que l'éditeur proposait des catégories que la validation refuse
+ * ensuite (W4 de l'audit).
+ */
+function usePositionAccess(
+  roster: string | null | undefined,
+  ruleset: string,
+): Map<string, { primary: string | null; secondary: string | null }> {
+  const [access, setAccess] = useState<
+    Map<string, { primary: string | null; secondary: string | null }>
+  >(new Map());
+  useEffect(() => {
+    if (!roster) {
+      setAccess(new Map());
+      return;
+    }
+    let cancelled = false;
+    apiRequest<{
+      roster?: {
+        positions?: Array<{
+          slug?: string | null;
+          primarySkills?: string | null;
+          secondarySkills?: string | null;
+        }>;
+      };
+    }>(
+      `/api/rosters/${encodeURIComponent(roster)}?ruleset=${encodeURIComponent(
+        ruleset || "season_3",
+      )}`,
+    )
+      .then((r) => {
+        if (cancelled) return;
+        const m = new Map<
+          string,
+          { primary: string | null; secondary: string | null }
+        >();
+        for (const pos of r.roster?.positions ?? []) {
+          if (!pos?.slug) continue;
+          m.set(pos.slug, {
+            primary: pos.primarySkills ?? null,
+            secondary: pos.secondarySkills ?? null,
+          });
+        }
+        setAccess(m);
+      })
+      .catch(() => {
+        if (!cancelled) setAccess(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [roster, ruleset]);
+  return access;
+}
+
 /** Entrée stagée telle que stockée sur la feuille (choix + playerId). */
 export interface StagedAdvancementEntry extends StagedAdvancementChoice {
   playerId: string;
@@ -59,6 +119,11 @@ function useSkillCatalog(ruleset: string): SkillCatalogItem[] {
 export interface SheetAdvancementsEditorProps {
   readonly teamId: string;
   readonly ruleset: string;
+  /**
+   * Slug du roster de l'équipe : sert à lire l'accès compétences des postes
+   * en base. Optionnel pour rétro-compat — absent ⇒ repli catalogue.
+   */
+  readonly roster?: string | null;
   readonly players: readonly SheetPlayer[];
   /**
    * Journaliers ayant joué le match. Règle BB : ils gagnent des PSP et
@@ -83,6 +148,7 @@ export interface SheetAdvancementsEditorProps {
 export function SheetAdvancementsEditor({
   teamId,
   ruleset,
+  roster,
   players,
   journeymen = [],
   computedSpp,
@@ -92,6 +158,22 @@ export function SheetAdvancementsEditor({
   disabled,
 }: SheetAdvancementsEditorProps): JSX.Element {
   const catalog = useSkillCatalog(ruleset);
+  const positionAccess = usePositionAccess(roster, ruleset);
+  // Base d'abord, table compilée en repli tant qu'elle n'est pas chargée ou
+  // pour un poste que la base ne porte pas.
+  const accessFor = (
+    position: string,
+  ): { primary: string | null; secondary: string | null } => {
+    const fromDb = positionAccess.get(position);
+    if (fromDb && (fromDb.primary != null || fromDb.secondary != null)) {
+      return fromDb;
+    }
+    const compiled = SKILL_ACCESS_SEASON3[position];
+    return {
+      primary: compiled?.primary ?? null,
+      secondary: compiled?.secondary ?? null,
+    };
+  };
 
   const bonusByPlayer = useMemo(() => {
     const m = new Map<string, number>();
@@ -120,7 +202,7 @@ export function SheetAdvancementsEditor({
         p.spp + (computedSpp[p.id] ?? 0) + (bonusByPlayer.get(p.id) ?? 0);
       const cheapest = getNextAdvancementPspCost(taken, "random-primary");
       if (projected < cheapest && !stagedByPlayer.has(p.id)) continue;
-      const access = SKILL_ACCESS_SEASON3[p.position];
+      const access = accessFor(p.position);
       out.push({
         sequenceId: "",
         matchId: "",
@@ -132,8 +214,8 @@ export function SheetAdvancementsEditor({
         nextAdvancementCost: cheapest,
         createdAt: "",
         position: p.position,
-        primarySkills: access?.primary ?? null,
-        secondarySkills: access?.secondary ?? null,
+        primarySkills: access.primary,
+        secondarySkills: access.secondary,
         stats: p.stats,
         skills: p.skills ?? null,
       });
@@ -146,7 +228,7 @@ export function SheetAdvancementsEditor({
       const projected =
         (computedSpp[j.id] ?? 0) + (bonusByPlayer.get(j.id) ?? 0);
       if (projected < cheapestFirst && !stagedByPlayer.has(j.id)) continue;
-      const access = SKILL_ACCESS_SEASON3[j.position];
+      const access = accessFor(j.position);
       out.push({
         sequenceId: "",
         matchId: "",
@@ -158,14 +240,15 @@ export function SheetAdvancementsEditor({
         nextAdvancementCost: cheapestFirst,
         createdAt: "",
         position: j.position,
-        primarySkills: access?.primary ?? null,
-        secondarySkills: access?.secondary ?? null,
+        primarySkills: access.primary,
+        secondarySkills: access.secondary,
         stats: j.stats,
         skills: j.skills ?? null,
       });
     }
     return out;
-  }, [players, journeymen, computedSpp, bonusByPlayer, stagedByPlayer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [players, journeymen, computedSpp, bonusByPlayer, stagedByPlayer, positionAccess]);
 
   const journeymanIds = useMemo(
     () => new Set(journeymen.map((j) => j.id)),

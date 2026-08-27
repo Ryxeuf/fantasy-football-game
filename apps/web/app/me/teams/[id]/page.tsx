@@ -15,7 +15,11 @@ import {
 } from "@bb/game-engine";
 import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
 import { formatPlusStat } from "../../../lib/format-stats";
-import { buildSkillAccessByPosition, buildPositionMetaByPosition } from "./roster-skill-access";
+import {
+  buildSkillAccessByPosition,
+  buildPositionMetaByPosition,
+  makePositionResolvers,
+} from "./roster-skill-access";
 import { PlayerIdentityInlineEdit } from "./PlayerIdentityInlineEdit";
 import PlayerImageUploader from "./PlayerImageUploader";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
@@ -338,7 +342,13 @@ export default function TeamDetailPage() {
     if (!team) return;
     try {
       trackUmamiEvent(UMAMI_EVENTS.PDF_EXPORT, { kind: "roster" });
-      await exportTeamToPDF(team, getPlayerCost, userName, language);
+      await exportTeamToPDF(
+        team,
+        positionResolvers.costPo,
+        userName,
+        language,
+        { positionName: positionResolvers.displayName, rosterName },
+      );
       setExportMenuOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'export PDF:', error);
@@ -350,7 +360,10 @@ export default function TeamDetailPage() {
     if (!team) return;
     try {
       trackUmamiEvent(UMAMI_EVENTS.PDF_EXPORT, { kind: "skills" });
-      await exportSkillsSheet(team, language);
+      await exportSkillsSheet(team, language, {
+        positionName: positionResolvers.displayName,
+        rosterName,
+      });
       setExportMenuOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'export des compétences:', error);
@@ -376,7 +389,7 @@ export default function TeamDetailPage() {
   const handleExportPlayerCard = (p: any, download: boolean) => {
     if (!team) return;
     trackUmamiEvent(UMAMI_EVENTS.CARD_EXPORT, { kind: "team", download });
-    const cost = getPlayerCost(p.position, team.roster);
+    const cost = positionResolvers.costPo(p.position, team.roster);
     const cardData = buildTeamPlayerCardData(
       {
         name: p.name,
@@ -400,7 +413,7 @@ export default function TeamDetailPage() {
       },
       {
         lang: language === "en" ? "en" : "fr",
-        positionName: getDisplayName(p.position),
+        positionName: positionResolvers.displayName(p.position),
         teamName: team.name,
         rosterSlug: team.roster,
         cost: cost > 0 ? cost : null,
@@ -435,9 +448,21 @@ export default function TeamDetailPage() {
     [rosterDetail],
   );
   // Méta position (compétences de base DB + mots-clés), indexée par slug.
+  // Coût d'embauche et libellé de poste : la BASE d'abord
+  // (`/api/rosters/:slug`, déjà chargé ci-dessus), le catalogue compilé du
+  // moteur en repli. Sans ça, la colonne « Coût », la carte PNG et le PDF
+  // affichaient un tarif et des libellés que le serveur n'utilise plus.
   const positionMetaByPosition = useMemo(
     () => buildPositionMetaByPosition(rosterDetail?.positions),
     [rosterDetail],
+  );
+  const positionResolvers = useMemo(
+    () =>
+      makePositionResolvers(positionMetaByPosition, {
+        cost: getPlayerCost,
+        displayName: getDisplayName,
+      }),
+    [positionMetaByPosition],
   );
   // Règles spéciales EFFECTIVES de l'équipe : le serveur y ajoute
   // l'alignement « Favori de… » apporté par la Ligue régionale retenue
@@ -924,7 +949,7 @@ export default function TeamDetailPage() {
                         </span>
                       </td>
                       <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">
-                        <div>{getDisplayName(p.position)}</div>
+                        <div>{positionResolvers.displayName(p.position)}</div>
                         <KeywordChips
                           keywords={
                             language === "fr"
@@ -935,7 +960,7 @@ export default function TeamDetailPage() {
                         />
                       </td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">
-                        {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
+                        {Math.round(positionResolvers.costPo(p.position, team.roster) / 1000)}{t.teams.kpo}
                       </td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ma}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.st}</td>
@@ -944,6 +969,7 @@ export default function TeamDetailPage() {
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{formatPlusStat(p.av)}</td>
                       <td className="p-3 sm:p-4">
                         <SkillTooltip
+                          ruleset={team?.ruleset}
                           skillsString={p.skills}
                           teamName={team.roster}
                           position={p.position}
@@ -1026,7 +1052,7 @@ export default function TeamDetailPage() {
                               </span>
                             ) : null}
                           </div>
-                          <div className="text-xs text-gray-600">{getDisplayName(p.position)}</div>
+                          <div className="text-xs text-gray-600">{positionResolvers.displayName(p.position)}</div>
                           <KeywordChips
                             keywords={
                               language === "fr"
@@ -1040,7 +1066,7 @@ export default function TeamDetailPage() {
                       <div className="text-right">
                         <div className="text-xs text-gray-500">{t.teams.tableCost}</div>
                         <div className="font-mono text-sm font-semibold">
-                          {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
+                          {Math.round(positionResolvers.costPo(p.position, team.roster) / 1000)}{t.teams.kpo}
                         </div>
                         {p.dead || p.firedAt ? (
                           <button
@@ -1080,6 +1106,7 @@ export default function TeamDetailPage() {
                     <div>
                       <div className="text-xs text-gray-500 mb-1">{t.teams.tableSkills}</div>
                       <SkillTooltip
+                        ruleset={team?.ruleset}
                         skillsString={p.skills}
                         teamName={team.roster}
                         position={p.position}

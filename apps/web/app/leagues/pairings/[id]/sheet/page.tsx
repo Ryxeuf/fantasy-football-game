@@ -798,12 +798,16 @@ export default function MatchSheetPage() {
             raw={data.sheet.rosterSnapshotHome}
             livePlayers={home?.players}
             journeymen={home?.journeymen}
+            roster={home?.roster}
+            ruleset={home?.ruleset}
           />
           <RosterSection
             label={away?.name ?? "Extérieur"}
             raw={data.sheet.rosterSnapshotAway}
             livePlayers={away?.players}
             journeymen={away?.journeymen}
+            roster={away?.roster}
+            ruleset={away?.ruleset}
           />
         </div>
       </section>
@@ -1324,6 +1328,7 @@ export default function MatchSheetPage() {
                 <SheetAdvancementsEditor
                   teamId={home?.teamId ?? ""}
                   ruleset={home?.ruleset ?? "season_3"}
+                  roster={home?.roster}
                   players={home?.players ?? []}
                   journeymen={home?.journeymen ?? []}
                   computedSpp={computedSpp}
@@ -1340,6 +1345,7 @@ export default function MatchSheetPage() {
                 <SheetAdvancementsEditor
                   teamId={away?.teamId ?? ""}
                   ruleset={away?.ruleset ?? "season_3"}
+                  roster={away?.roster}
                   players={away?.players ?? []}
                   journeymen={away?.journeymen ?? []}
                   computedSpp={computedSpp}
@@ -1365,6 +1371,7 @@ export default function MatchSheetPage() {
                   (mySide === "home" ? home?.ruleset : away?.ruleset) ??
                   "season_3"
                 }
+                roster={mySide === "home" ? home?.roster : away?.roster}
                 players={
                   (mySide === "home" ? home?.players : away?.players) ?? []
                 }

@@ -453,6 +453,13 @@ export async function handleListAvailablePositions(
         currentCount,
         maxCount: position.max,
         canAdd,
+        // Acces Principale/Secondaire declare EN BASE
+        // (`Position.primarySkills`/`secondarySkills`, CSV de codes
+        // G/A/S/P/M/K). Sans lui, l'editeur d'avancements proposait les
+        // categories de `ACCESS_BY_POSITION` (12 postes Saison 2, sinon
+        // TOUTES les categories) que le serveur refuse ensuite.
+        primarySkills: position.primarySkills ?? null,
+        secondarySkills: position.secondarySkills ?? null,
         stats: {
           ma: position.ma,
           st: position.st,
