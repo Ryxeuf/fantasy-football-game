@@ -18,6 +18,13 @@ Arbitré avec le propriétaire le 2026-08-27.
 
 Principes transverses (valables pour tout le lot) :
 
+- **Pas de migration versionnée** : `prisma/migrations/` est gitignoré, le schéma est appliqué en
+  prod par `prisma db push` (`scripts/db-migrate.sh`) — donc **aucun backfill possible**. Toute
+  colonne ajoutée est nullable ou porte un défaut lisible sans backfill ; toute nouvelle table est
+  peuplée par le seed « create-if-missing » au déploiement (`--seed`).
+- **Un change OpenSpec par sous-lot** (`/opsx:propose`), livré sur une branche `claude/lot6<x>-…`
+  avec PR, conformément au workflow du repo.
+
 - **La base fait foi, le code est un repli.** Chaque référentiel a un service `services/<x>-repository.ts`
   sur le modèle de `tournament-ruleset-repository.ts` : lecture DB validée (Zod), repli sur le
   catalogue compilé **journalisé** (`serverLog.warn`) si la table est vide, cache mémoire court
@@ -146,10 +153,10 @@ cocher) au lieu du catalogue compilé.
 
 | Sous-lot | Contenu | Effort |
 |---|---|---|
-| 6a | Colonnes simples + migration : `pairWithSlug`, `maxBigGuys`, `displayNameEn`, catégorie `StarPlayerRule` ; seed create-if-missing ; call sites serveur + web ; `ALLOWED_TEAMS` → `Roster` ; budget par défaut `Roster.budget` | ~1 j |
+| 6a | Colonnes simples (db push) : `pairWithSlug`, `maxBigGuys`, `displayNameEn`, catégorie `StarPlayerRule` ; seed create-if-missing ; call sites serveur + web ; `ALLOWED_TEAMS` → `Roster` ; budget par défaut `Roster.budget` | ~1 j |
 | 6b | `TeamSpecialRule` / `RegionalLeague` : seed, repositories DB-first, call sites, admin CRUD, sélecteurs roster | ~1 j |
-| 6c | `Inducement` : migration, seed, repository, refactor moteur (`InducementCatalogue` en paramètre, `canPurchaseInducement` pur), branchement `inducement-processor.ts`, `local-match.ts`, `league-match-sheet.ts` (en même temps que le lot 4 : contexte `regionalRules`/`specialRules` réel), admin CRUD | ~1,5–2 j |
-| 6d | `AdvancementCost` / `CharacteristicValue` / `RulesetConfig` : migration, seed S2+S3 (valeurs S2 à valider), repository, `AdvancementSchedule` en paramètre du moteur, 8 consommateurs, admin grille | ~1 j |
+| 6c | `Inducement` : table (db push), seed, repository, refactor moteur (`InducementCatalogue` en paramètre, `canPurchaseInducement` pur), branchement `inducement-processor.ts`, `local-match.ts`, `league-match-sheet.ts` (en même temps que le lot 4 : contexte `regionalRules`/`specialRules` réel), admin CRUD | ~1,5–2 j |
+| 6d | `AdvancementCost` / `CharacteristicValue` / `RulesetConfig` : tables (db push), seed S2+S3 (valeurs S2 à valider), repository, `AdvancementSchedule` en paramètre du moteur, 8 consommateurs, admin grille | ~1 j |
 
 Prérequis : lot 1 (propagation `declaredRules`, repository de règlements) — indépendant mais à
 livrer avant 6c pour que les contextes de coups de pouce soient justes.
