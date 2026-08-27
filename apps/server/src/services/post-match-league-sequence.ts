@@ -47,6 +47,7 @@ import {
   getSkillSelectionInfo,
   parseAccessCsv,
 } from "./skill-access";
+import { resolveRandomPrimaryPool } from "./random-primary-pool";
 
 /**
  * Seed déterministe du tirage random-primary d'un joueur : stable entre le
@@ -438,6 +439,10 @@ export async function rollRandomPrimarySkill(input: {
     category,
     ownedSlugs: parsePlayerSkillSlugs(player.skills),
     seed: randomPrimarySeed(player.id, taken.length, category),
+    // Pool FILTRE en base : une competence recategorisee ou retiree de la
+    // selection en admin ne doit plus etre tiree, sinon l'anti-triche
+    // ci-dessous refuse ensuite un choix pourtant legal (S17).
+    pool: await resolveRandomPrimaryPool(category, ruleset),
   });
   if (candidates.length === 0) {
     return { skipped: true, reason: "no-candidates" };
@@ -599,6 +604,12 @@ export async function applyAdvancementChoice(
       category: input.category as RandomSkillCategoryCode,
       ownedSlugs,
       seed: randomPrimarySeed(player.id, taken.length, input.category),
+      // MEME pool que l'endpoint de tirage : les deux doivent partir de la
+      // meme liste, sinon un candidat propose est refuse a la validation.
+      pool: await resolveRandomPrimaryPool(
+        input.category as RandomSkillCategoryCode,
+        player.team?.ruleset ?? "season_3",
+      ),
     });
     if (!candidates.includes(skillSlug)) {
       return { skipped: true, reason: "random-not-in-candidates" };

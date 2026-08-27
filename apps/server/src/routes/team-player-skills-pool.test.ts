@@ -13,7 +13,10 @@ vi.mock('../prisma', () => ({
   prisma: {
     team: { findFirst: vi.fn() },
     teamSelection: { findFirst: vi.fn() },
-    skill: { findMany: vi.fn() },
+    // Base = source de verite pour l'acces de position et le catalogue de
+    // competences (audit statique vs base — lot 2).
+    skill: { findFirst: vi.fn(), findMany: vi.fn() },
+    position: { findFirst: vi.fn() },
     teamPlayer: { findMany: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
   },
 }));
@@ -38,7 +41,11 @@ import type { AuthenticatedRequest } from '../middleware/authUser';
 const p = prisma as unknown as {
   team: { findFirst: ReturnType<typeof vi.fn> };
   teamSelection: { findFirst: ReturnType<typeof vi.fn> };
-  skill: { findMany: ReturnType<typeof vi.fn> };
+  skill: {
+    findFirst: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  position: { findFirst: ReturnType<typeof vi.fn> };
   teamPlayer: {
     findMany: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
@@ -100,6 +107,16 @@ beforeEach(() => {
   frozen.mockResolvedValue(false);
   p.teamSelection.findFirst.mockResolvedValue(null);
   p.skill.findMany.mockResolvedValue([]);
+  // `block` : Generale, selectionnable, dans le pool Principal du lineman.
+  p.skill.findFirst.mockResolvedValue({
+    nameFr: 'Blocage',
+    category: 'General',
+    excludedFromSelection: false,
+  });
+  p.position.findFirst.mockResolvedValue({
+    primarySkills: 'G,S',
+    secondarySkills: 'A,P',
+  });
   p.teamPlayer.findMany.mockResolvedValue([{ advancements: '[]' }]);
   p.teamPlayer.update.mockResolvedValue({});
   p.teamPlayer.findUnique.mockResolvedValue({ id: 'p-1' });
