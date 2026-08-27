@@ -71,6 +71,40 @@ export function getRostersForHirableBy(
     .sort();
 }
 
+/**
+ * Univers des rosters d'une édition (slugs triés). C'est la liste des équipes
+ * qui existent pour ce ruleset — donc le référentiel d'un filtre « équipe »
+ * côté UI, qui doit suivre la saison sélectionnée.
+ */
+export function getRosterSlugsForRuleset(
+  ruleset: Ruleset = DEFAULT_RULESET,
+): string[] {
+  return [...getRosterUniverse(ruleset)].sort();
+}
+
+/**
+ * Ce roster peut-il recruter ce Star Player ?
+ *
+ * Prédicat direct, strictement équivalent à
+ * `getRostersForHirableBy(hirableBy, ruleset).includes(rosterSlug)` mais sans
+ * matérialiser l'index inverse — le cas d'usage est le filtrage d'une liste
+ * (un appel par Star Player affiché).
+ */
+export function isStarPlayerHirableByRoster(
+  hirableBy: readonly string[] | null | undefined,
+  rosterSlug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): boolean {
+  if (!hirableBy || hirableBy.length === 0) return false;
+  // Un roster absent de l'édition ne recrute rien, pas même un mercenaire
+  // universel (ex: les Bretonniens n'existent pas en saison 2).
+  if (!getRosterUniverse(ruleset).includes(rosterSlug)) return false;
+  if (hirableBy.includes(HIRABLE_BY_ALL)) return true;
+  if (hirableBy.includes(rosterSlug)) return true;
+  const rules = getRegionalRulesMap(ruleset)[rosterSlug] ?? [];
+  return hirableBy.some((criterion) => rules.includes(criterion));
+}
+
 /** Idem, à partir de la définition (ou de l'objet API) d'un Star Player. */
 export function getRostersForStarPlayer(
   starPlayer:
