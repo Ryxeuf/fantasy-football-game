@@ -1267,6 +1267,78 @@ describe("Lot G — league-match-sheet", () => {
       });
     });
 
+    it("VE, VEA, trésorerie et staff sont figés ENSEMBLE : aucun ne suit le live", async () => {
+      // Garde-fou d'invariant : le staff était bien figé, la question
+      // portait sur la TV et la trésorerie. Les quatre valeurs sont
+      // servies par le MÊME snapshot — ce test échoue si l'une d'elles
+      // repasse un jour en lecture live.
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        rosterSnapshotHome: JSON.stringify({
+          teamValue: 1_000_000,
+          currentValue: 950_000,
+          treasury: 60_000,
+          dedicatedFans: 3,
+          rerolls: 3,
+          cheerleaders: 2,
+          assistants: 1,
+          apothecary: true,
+          players: [],
+        }),
+        rosterSnapshotAway: null,
+      });
+      // État live d'APRÈS le match : tout a bougé (gains, achats de staff,
+      // évolutions) — l'en-tête de la feuille ne doit rien en voir.
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          teamValue: 1_120_000,
+          currentValue: 1_120_000,
+          treasury: 210_000,
+          dedicatedFans: 5,
+          rerolls: 5,
+          cheerleaders: 4,
+          assistants: 3,
+          apothecary: false,
+          players: [],
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          teamValue: 1,
+          currentValue: 1,
+          treasury: 1,
+          players: [],
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.teams.home).toMatchObject({
+        teamValue: 1_000_000,
+        currentValue: 950_000,
+        treasury: 60_000,
+        dedicatedFans: 3,
+        staff: {
+          rerolls: 3,
+          cheerleaders: 2,
+          assistants: 1,
+          apothecary: true,
+        },
+      });
+    });
+
     it("gel « en-tête seul » (legacy) : complété à la lecture en préservant les valeurs figées", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
