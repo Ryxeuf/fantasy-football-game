@@ -1,3 +1,10 @@
+## [1.238.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.1...v1.238.2) (2026-08-27)
+
+
+### 🐛 Bug Fixes
+
+* audit statique vs base de données — lots 1 à 5 ([#990](https://github.com/Ryxeuf/fantasy-football-game/issues/990)) ([00a619b](https://github.com/Ryxeuf/fantasy-football-game/commit/00a619b62d58705be3ad6df24c1dc68ce5747d55))
+
 ## [1.238.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.0...v1.238.1) (2026-08-27)
 
 
