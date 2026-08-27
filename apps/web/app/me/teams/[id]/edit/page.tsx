@@ -41,6 +41,7 @@ import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
 import { buildImportantNotes } from "./important-notes";
 import PspPoolPanel from "./PspPoolPanel";
 import PlayerAdvancements from "./PlayerAdvancements";
+import PlayerStatusTags from "./PlayerStatusTags";
 import TeamStarPlayersEditor from "./TeamStarPlayersEditor";
 import { rosterDraftSignature } from "./roster-draft";
 import { useUnsavedChanges } from "../../../../hooks/useUnsavedChanges";
@@ -106,6 +107,18 @@ interface Player {
   skills: string;
   spp: number;
   advancements: string; // JSON string of PlayerAdvancement[]
+  /**
+   * Etat du joueur (servi par `GET /team/:id`). Optionnels : un joueur
+   * ajoute localement (id `tmp_`) n'en a pas encore.
+   */
+  dead?: boolean;
+  missNextMatch?: boolean;
+  nigglingInjuries?: number;
+  maReduction?: number;
+  stReduction?: number;
+  agReduction?: number;
+  paReduction?: number;
+  avReduction?: number;
 }
 
 interface AvailablePosition {
@@ -881,6 +894,13 @@ export default function TeamEditPage() {
                         }`}
                         placeholder="Nom du joueur"
                       />
+                      {/* Mort / Absent / BP / Séquelles : sans ces tags, on
+                          préparait son équipe sans voir qui est disponible. */}
+                      <PlayerStatusTags
+                        player={player}
+                        playerId={String(player.id)}
+                        className="mt-1"
+                      />
                       {validationErrors[`name_${index}`] && (
                         <div className="text-xs text-red-600 mt-1">
                           {validationErrors[`name_${index}`]}
@@ -1006,6 +1026,11 @@ export default function TeamEditPage() {
                         placeholder="Nom du joueur"
                       />
                       <div className="text-xs text-gray-600 mt-1">{getDisplayName(player.position)}</div>
+                      <PlayerStatusTags
+                        player={player}
+                        playerId={`m-${player.id}`}
+                        className="mt-1"
+                      />
                     </div>
                   </div>
                   <div className="flex-shrink-0 ml-3">
