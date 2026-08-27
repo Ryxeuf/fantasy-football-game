@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 
 type Team = {
@@ -27,27 +29,6 @@ type Team = {
     players: number;
     starPlayers: number;
   };
-};
-
-type TeamDetails = Team & {
-  players: Array<{
-    id: string;
-    name: string;
-    position: string;
-    number: number;
-    ma: number;
-    st: number;
-    ag: number;
-    pa: number;
-    av: number;
-    skills: string;
-  }>;
-  starPlayers: Array<{
-    id: string;
-    starPlayerSlug: string;
-    cost: number;
-    hiredAt: string;
-  }>;
 };
 
 type Pagination = {
@@ -86,9 +67,8 @@ export default function AdminTeamsPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [teamDetails, setTeamDetails] = useState<TeamDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const router = useRouter();
 
   const loadTeams = useCallback(async () => {
     setLoading(true);
@@ -111,7 +91,17 @@ export default function AdminTeamsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, sortBy, sortOrder, search, rosterFilter, ownerFilter]);
+  }, [
+    currentPage,
+    sortBy,
+    sortOrder,
+    search,
+    rosterFilter,
+    ownerFilter,
+    // `rulesetFilter` est lu dans la query : sans lui ici, `loadTeams` n'est
+    // pas recree et le select « Tous les rulesets » ne relance aucun fetch.
+    rulesetFilter,
+  ]);
 
   useEffect(() => {
     loadTeams();
@@ -146,25 +136,10 @@ export default function AdminTeamsPage() {
         method: "DELETE",
       });
       await loadTeams();
-      if (selectedTeam === teamId) {
-        setSelectedTeam(null);
-        setTeamDetails(null);
-      }
     } catch (e: any) {
       alert(e.message || "Erreur lors de la suppression");
     } finally {
       setActionLoading(null);
-    }
-  };
-
-  const loadTeamDetails = async (teamId: string) => {
-    setSelectedTeam(teamId);
-    try {
-      const data = await fetchJSON(`/admin/teams/${teamId}`);
-      setTeamDetails(data.team);
-    } catch (e: any) {
-      alert(e.message || "Erreur lors du chargement des détails");
-      setSelectedTeam(null);
     }
   };
 
@@ -340,8 +315,9 @@ export default function AdminTeamsPage() {
               {teams.map((team) => (
                 <tr
                   key={team.id}
+                  data-testid={`admin-team-row-${team.id}`}
                   className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                  onClick={() => loadTeamDetails(team.id)}
+                  onClick={() => router.push(`/admin/teams/${team.id}`)}
                 >
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {team.name}
@@ -393,6 +369,19 @@ export default function AdminTeamsPage() {
                   </td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
+                      {/* La fiche complète est une PAGE (`/admin/teams/[id]`)
+                          et non une modale : elle se partage par URL, se
+                          recharge, et a la place d'afficher un roster entier
+                          avec positions et compétences lisibles. */}
+                      <Link
+                        data-testid={`admin-team-open-${team.id}`}
+                        href={`/admin/teams/${team.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
+                        title="Voir la fiche complète"
+                      >
+                        <span>👁️</span>
+                        <span>Voir</span>
+                      </Link>
                       {/* Journal d'équipe : la frise complète des mutations
                           (trésorerie, VE, roster) avec l'auteur de chacune.
                           L'endpoint autorise les admins sur n'importe quelle
@@ -446,176 +435,6 @@ export default function AdminTeamsPage() {
             >
               Suivant
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de détails */}
-      {selectedTeam && teamDetails && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50"
-          onClick={() => {
-            setSelectedTeam(null);
-            setTeamDetails(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto w-full sm:mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-heading font-bold text-nuffle-anthracite">
-                ⚽ Détails de l'équipe
-              </h2>
-              <button
-                onClick={() => {
-                  setSelectedTeam(null);
-                  setTeamDetails(null);
-                }}
-                className="text-gray-500 hover:text-gray-700 text-2xl leading-none transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Informations générales</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Nom:</span>{" "}
-                    <span className="font-medium">{teamDetails.name}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Roster:</span>{" "}
-                    <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">
-                      {teamDetails.roster}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Propriétaire:</span>{" "}
-                    <span className="font-medium">
-                      {teamDetails.owner.coachName || teamDetails.owner.name || teamDetails.owner.email}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Email:</span>{" "}
-                    <span className="font-mono text-xs">{teamDetails.owner.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Valeur d'équipe:</span>{" "}
-                    <span className="font-medium">{formatCurrency(teamDetails.teamValue || teamDetails.currentValue || 0)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Trésor:</span>{" "}
-                    <span className="font-medium">{formatCurrency(teamDetails.treasury)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Budget initial:</span>{" "}
-                    <span className="font-medium">{formatCurrency(teamDetails.initialBudget)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Créée le:</span>{" "}
-                    {new Date(teamDetails.createdAt).toLocaleString("fr-FR")}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Équipement</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                  <div className="bg-blue-50 p-3 rounded">
-                    <div className="text-gray-600">Relances</div>
-                    <div className="text-2xl font-bold">{teamDetails.rerolls}</div>
-                  </div>
-                  <div className="bg-green-50 p-3 rounded">
-                    <div className="text-gray-600">Pom-pom girls</div>
-                    <div className="text-2xl font-bold">{teamDetails.cheerleaders}</div>
-                  </div>
-                  <div className="bg-yellow-50 p-3 rounded">
-                    <div className="text-gray-600">Assistants</div>
-                    <div className="text-2xl font-bold">{teamDetails.assistants}</div>
-                  </div>
-                  <div className="bg-purple-50 p-3 rounded">
-                    <div className="text-gray-600">Fans dévoués</div>
-                    <div className="text-2xl font-bold">{teamDetails.dedicatedFans}</div>
-                  </div>
-                </div>
-                {teamDetails.apothecary && (
-                  <div className="mt-2 text-sm text-green-700 font-medium">
-                    ✓ Apothicaire disponible
-                  </div>
-                )}
-              </div>
-
-              {teamDetails.players.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">Joueurs ({teamDetails.players.length})</h3>
-                  <div className="border rounded overflow-hidden max-h-96 overflow-y-auto">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
-                        <tr>
-                          <th className="text-left p-2">#</th>
-                          <th className="text-left p-2">Nom</th>
-                          <th className="text-left p-2">Position</th>
-                          <th className="text-left p-2">MA</th>
-                          <th className="text-left p-2">ST</th>
-                          <th className="text-left p-2">AG</th>
-                          <th className="text-left p-2">PA</th>
-                          <th className="text-left p-2">AV</th>
-                          <th className="text-left p-2">Compétences</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {teamDetails.players.map((player) => (
-                          <tr key={player.id} className="odd:bg-white even:bg-gray-50">
-                            <td className="p-2 font-medium">{player.number}</td>
-                            <td className="p-2">{player.name}</td>
-                            <td className="p-2 text-xs text-gray-600">{player.position}</td>
-                            <td className="p-2">{player.ma}</td>
-                            <td className="p-2">{player.st}</td>
-                            <td className="p-2">{player.ag}</td>
-                            <td className="p-2">{player.pa ?? "-"}</td>
-                            <td className="p-2">{player.av}</td>
-                            <td className="p-2 text-xs text-gray-600">
-                              {player.skills || "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {teamDetails.starPlayers.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">Star Players ({teamDetails.starPlayers.length})</h3>
-                  <div className="border rounded overflow-hidden">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="text-left p-2">Slug</th>
-                          <th className="text-left p-2">Coût</th>
-                          <th className="text-left p-2">Recruté le</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {teamDetails.starPlayers.map((sp) => (
-                          <tr key={sp.id} className="odd:bg-white even:bg-gray-50">
-                            <td className="p-2 font-mono text-xs">{sp.starPlayerSlug}</td>
-                            <td className="p-2">{formatCurrency(sp.cost)}</td>
-                            <td className="p-2 text-xs text-gray-600">
-                              {new Date(sp.hiredAt).toLocaleDateString("fr-FR")}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}

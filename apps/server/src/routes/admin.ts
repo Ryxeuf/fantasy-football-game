@@ -31,8 +31,12 @@ import {
 } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 import { revertPlayerStatusesBySource } from "../services/player-status";
+import {
+  enrichTeamStarPlayers,
+  listOwnerTeams,
+} from "../services/admin-team-detail";
 import { updateTeamValues } from "../utils/team-values";
-import { ENGINE_VER as GAME_ENGINE_VER } from "@bb/game-engine";
+import { ENGINE_VER as GAME_ENGINE_VER, type Ruleset } from "@bb/game-engine";
 import { ENGINE_VER as SIM_ENGINE_VER } from "@bb/sim-engine";
 
 const router = Router();
@@ -1589,6 +1593,11 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
 });
 
 // Route pour obtenir les détails complets d'une équipe
+//
+// La fiche admin rend les mêmes informations que la fiche coach : on renvoie
+// donc les Star Players ENRICHIS par le catalogue (nom affichable, carac,
+// compétences) plutôt que leur seul slug, ainsi que les autres équipes du
+// propriétaire pour la navigation latérale.
 router.get("/teams/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -1614,7 +1623,12 @@ router.get("/teams/:id", async (req, res) => {
       return res.status(404).json({ error: "Équipe non trouvée" });
     }
 
-    res.json({ team });
+    const [starPlayers, ownerTeams] = await Promise.all([
+      enrichTeamStarPlayers(team.starPlayers, team.ruleset as Ruleset),
+      listOwnerTeams(team.ownerId),
+    ]);
+
+    res.json({ team: { ...team, starPlayers }, ownerTeams });
   } catch (e) {
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'équipe" });
