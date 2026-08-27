@@ -32,7 +32,16 @@ vi.mock("../services/team-lock-status", () => ({
   TEAM_ENGAGED_MESSAGE: "engagee",
 }));
 
+vi.mock("../services/team-budget-summary", () => ({
+  buildTeamBudgetSummary: vi.fn(),
+  syncDraftTreasury: vi.fn(),
+}));
+
 import { defaultStaffConfig } from "@bb/game-engine";
+import {
+  buildTeamBudgetSummary,
+  syncDraftTreasury,
+} from "../services/team-budget-summary";
 import {
   handlePutTeamInfo,
   validateStaffAgainstConfig,
@@ -120,8 +129,16 @@ function createRes(): Response & { statusCode: number; payload: unknown } {
   return res as unknown as Response & { statusCode: number; payload: unknown };
 }
 
+const mockBudget = buildTeamBudgetSummary as ReturnType<typeof vi.fn>;
+const mockSyncTreasury = syncDraftTreasury as ReturnType<typeof vi.fn>;
+
 describe("handlePutTeamInfo — plafonds resolus en base", () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => {
+    vi.resetAllMocks();
+    // Par defaut : budget exactement consomme (reliquat 0).
+    mockBudget.mockResolvedValue({ remaining: 0, totalSpent: 1_000_000 });
+    mockSyncTreasury.mockResolvedValue(0);
+  });
 
   async function mocks() {
     const { prisma } = vi.mocked(await import("../prisma"));
@@ -195,6 +212,95 @@ describe("handlePutTeamInfo — plafonds resolus en base", () => {
     expect(res.statusCode).toBe(200);
     expect(prisma.team.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { rerolls: 4, dedicatedFans: 3 } }),
+    );
+  });
+});
+
+describe("handlePutTeamInfo — budget et tresorerie du brouillon", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockSyncTreasury.mockResolvedValue(0);
+  });
+
+  async function draftTeam() {
+    const { prisma } = vi.mocked(await import("../prisma"));
+    const p = prisma as unknown as {
+      team: { findFirst: ReturnType<typeof vi.fn>; findUnique: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+      teamSelection: { findFirst: ReturnType<typeof vi.fn> };
+      roster: { findUnique: ReturnType<typeof vi.fn> };
+    };
+    p.team.findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "orc",
+      ruleset: "season_3",
+      format: "bb11",
+      initialBudget: 1000,
+      treasury: 70_000,
+      rerolls: 2,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 1,
+      players: [{ position: "orc_trois_quart_orque" }],
+      starPlayers: [],
+    });
+    p.teamSelection.findFirst.mockResolvedValue(null);
+    p.roster.findUnique.mockResolvedValue(null);
+    p.team.update.mockResolvedValue({ id: "team-1", players: [] });
+    p.team.findUnique.mockResolvedValue({ id: "team-1", players: [] });
+    return p;
+  }
+
+  it("refuse un staff qui depasse le budget initial (meme regle que PUT /roster)", async () => {
+    const prisma = await draftTeam();
+    mockBudget.mockResolvedValue({ remaining: -60_000, totalSpent: 1_060_000 });
+
+    const res = createRes();
+    await handlePutTeamInfo(createReq({ rerolls: 3 }), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      error: expect.stringContaining("Budget depasse"),
+    });
+    expect(prisma.team.update).not.toHaveBeenCalled();
+    expect(mockSyncTreasury).not.toHaveBeenCalled();
+  });
+
+  it("evalue le budget avec le staff CIBLE fusionne sur l'equipe", async () => {
+    await draftTeam();
+    mockBudget.mockResolvedValue({ remaining: 0, totalSpent: 1_000_000 });
+
+    await handlePutTeamInfo(createReq({ rerolls: 3, assistants: 1 }), createRes());
+
+    expect(mockBudget).toHaveBeenCalledWith(
+      expect.anything(),
+      // Champs absents du body : valeurs courantes de l'equipe.
+      expect.objectContaining({
+        rerolls: 3,
+        assistants: 1,
+        cheerleaders: 0,
+        dedicatedFans: 1,
+        initialBudget: 1000,
+      }),
+      [{ position: "orc_trois_quart_orque" }],
+      [],
+    );
+  });
+
+  it("resynchronise la tresorerie du brouillon apres la mise a jour", async () => {
+    const prisma = await draftTeam();
+    mockBudget.mockResolvedValue({ remaining: 0, totalSpent: 1_000_000 });
+
+    const res = createRes();
+    await handlePutTeamInfo(createReq({ rerolls: 3 }), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(mockSyncTreasury).toHaveBeenCalledTimes(1);
+    expect(mockSyncTreasury).toHaveBeenCalledWith(prisma, "team-1");
+    // Le sync vient APRES l'ecriture du staff (il lit l'etat en base).
+    expect(mockSyncTreasury.mock.invocationCallOrder[0]).toBeGreaterThan(
+      prisma.team.update.mock.invocationCallOrder[0]!,
     );
   });
 });

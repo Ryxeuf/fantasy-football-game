@@ -40,6 +40,10 @@ import {
 } from '../services/team-lock-status';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import {
+  buildTeamBudgetSummary,
+  syncDraftTreasury,
+} from '../services/team-budget-summary';
+import {
   DEFAULT_RULESET,
   isGameFormat,
   type GameFormat,
@@ -122,6 +126,7 @@ export async function handlePutTeamInfo(
   try {
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true, starPlayers: true },
     });
 
     if (!team) {
@@ -167,6 +172,32 @@ export async function handlePutTeamInfo(
       return;
     }
 
+    // Budget « comme à la création » : joueurs + Star Players + staff cible
+    // <= budget initial — la règle que `PUT /:id/roster` applique déjà.
+    // Sans ce garde, le staff s'ajoutait librement au-delà du budget d'un
+    // brouillon (VE > budget, trésorerie 0).
+    const summary = await buildTeamBudgetSummary(
+      prisma,
+      {
+        ...team,
+        rerolls: rerolls ?? team.rerolls,
+        cheerleaders: cheerleaders ?? team.cheerleaders,
+        assistants: assistants ?? team.assistants,
+        apothecary: apothecary ?? team.apothecary,
+        dedicatedFans: dedicatedFans ?? team.dedicatedFans,
+      },
+      team.players ?? [],
+      team.starPlayers ?? [],
+    );
+    if (summary.remaining < 0) {
+      sendError(
+        res,
+        `Budget depasse: ${Math.round(summary.totalSpent / 1000)}k / ${team.initialBudget}k po`,
+        400,
+      );
+      return;
+    }
+
     const auditDb = prisma as unknown as TeamAuditPrismaLike;
     const auditBefore = await captureTeamState(auditDb, teamId);
 
@@ -194,6 +225,10 @@ export async function handlePutTeamInfo(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);
+    // Brouillon libre : le staff se paie sur le budget initial, la
+    // trésorerie doit donc suivre le reliquat (cf. `syncDraftTreasury`).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await syncDraftTreasury(prisma as any, teamId);
 
     const finalTeam = await prisma.team.findUnique({
       where: { id: teamId },
