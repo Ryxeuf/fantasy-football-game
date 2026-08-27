@@ -697,6 +697,15 @@ model Position {
   // accès primaire). Source : data/saison3/team/*.md (F=Force normalisé en S).
   primarySkills   String? // Catégories accessibles en primaire (ex: "G,S")
   secondarySkills String? // Catégories accessibles en secondaire (ex: "A")
+  // Contenu éditorial du positionnel (édité en admin, servi par
+  // `/api/positions` et `/api/rosters/:slug`). Toutes ces colonnes sont
+  // NULLABLES : `prisma db push` les pose sans backfill (cf. CLAUDE.md,
+  // `prisma/migrations/` est gitignoré).
+  imageUrl        String? // Illustration du poste (visuel de profil)
+  descriptionFr   String? // Description de jeu (rôle, usage) — FR
+  descriptionEn   String? // Description de jeu (rôle, usage) — EN
+  fluffFr         String? // Fluff / lore du poste — FR
+  fluffEn         String? // Fluff / lore du poste — EN
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

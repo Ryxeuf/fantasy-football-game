@@ -117,6 +117,13 @@ export type UpdateRosterStaffConfigBody = z.infer<
 
 // ── Body schemas: Positions ──
 
+
+// Contenu éditorial d'un positionnel (image / description / fluff).
+// `""` est accepté et normalisé en `null` côté route : le formulaire admin
+// renvoie une chaîne vide quand le champ est effacé.
+const positionImageUrl = z.string().max(500).optional().nullable();
+const positionRichText = z.string().max(4000).optional().nullable();
+
 export const createPositionSchema = z.object({
   rosterId: z.string().min(1, "rosterId requis"),
   slug: z.string().min(1, "slug requis").max(100),
@@ -135,6 +142,11 @@ export const createPositionSchema = z.object({
   // normalisé en S côté lecture). "" = pool vide renseigné, null = non géré.
   primarySkills: skillAccessCsv,
   secondarySkills: skillAccessCsv,
+  imageUrl: positionImageUrl,
+  descriptionFr: positionRichText,
+  descriptionEn: positionRichText,
+  fluffFr: positionRichText,
+  fluffEn: positionRichText,
   skillSlugs: z.array(z.string()).optional(),
 });
 
@@ -152,6 +164,11 @@ export const updatePositionSchema = z.object({
   keywords: z.string().optional().nullable(),
   primarySkills: skillAccessCsv,
   secondarySkills: skillAccessCsv,
+  imageUrl: positionImageUrl,
+  descriptionFr: positionRichText,
+  descriptionEn: positionRichText,
+  fluffFr: positionRichText,
+  fluffEn: positionRichText,
   skillSlugs: z.array(z.string()).optional(),
 });
 
