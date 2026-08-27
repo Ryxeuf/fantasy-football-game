@@ -91,7 +91,17 @@ export default function AdminTeamsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, sortBy, sortOrder, search, rosterFilter, ownerFilter]);
+  }, [
+    currentPage,
+    sortBy,
+    sortOrder,
+    search,
+    rosterFilter,
+    ownerFilter,
+    // `rulesetFilter` est lu dans la query : sans lui ici, `loadTeams` n'est
+    // pas recree et le select « Tous les rulesets » ne relance aucun fetch.
+    rulesetFilter,
+  ]);
 
   useEffect(() => {
     loadTeams();

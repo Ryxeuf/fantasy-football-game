@@ -87,3 +87,20 @@ describe("AdminTeamsPage", () => {
     expect(link.getAttribute("href")).toBe("/me/teams/team-1/journal");
   });
 });
+
+describe("AdminTeamsPage — filtre ruleset", () => {
+  it("relance la recherche quand le ruleset change", async () => {
+    render(<AdminTeamsPage />);
+    await screen.findByTestId("admin-team-row-team-1");
+
+    const select = screen.getByDisplayValue("Tous les rulesets");
+    fireEvent.change(select, { target: { value: "season_3" } });
+
+    await screen.findByTestId("admin-team-row-team-1");
+    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock
+      .calls;
+    expect(
+      calls.some(([url]) => String(url).includes("ruleset=season_3")),
+    ).toBe(true);
+  });
+});
