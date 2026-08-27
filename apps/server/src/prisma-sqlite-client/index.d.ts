@@ -38191,6 +38191,11 @@ export namespace Prisma {
     keywords: string | null
     primarySkills: string | null
     secondarySkills: string | null
+    imageUrl: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    fluffFr: string | null
+    fluffEn: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -38211,6 +38216,11 @@ export namespace Prisma {
     keywords: string | null
     primarySkills: string | null
     secondarySkills: string | null
+    imageUrl: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    fluffFr: string | null
+    fluffEn: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -38231,6 +38241,11 @@ export namespace Prisma {
     keywords: number
     primarySkills: number
     secondarySkills: number
+    imageUrl: number
+    descriptionFr: number
+    descriptionEn: number
+    fluffFr: number
+    fluffEn: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -38275,6 +38290,11 @@ export namespace Prisma {
     keywords?: true
     primarySkills?: true
     secondarySkills?: true
+    imageUrl?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    fluffFr?: true
+    fluffEn?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -38295,6 +38315,11 @@ export namespace Prisma {
     keywords?: true
     primarySkills?: true
     secondarySkills?: true
+    imageUrl?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    fluffFr?: true
+    fluffEn?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -38315,6 +38340,11 @@ export namespace Prisma {
     keywords?: true
     primarySkills?: true
     secondarySkills?: true
+    imageUrl?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    fluffFr?: true
+    fluffEn?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -38422,6 +38452,11 @@ export namespace Prisma {
     keywords: string | null
     primarySkills: string | null
     secondarySkills: string | null
+    imageUrl: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    fluffFr: string | null
+    fluffEn: string | null
     createdAt: Date
     updatedAt: Date
     _count: PositionCountAggregateOutputType | null
@@ -38461,6 +38496,11 @@ export namespace Prisma {
     keywords?: boolean
     primarySkills?: boolean
     secondarySkills?: boolean
+    imageUrl?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    fluffFr?: boolean
+    fluffEn?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     roster?: boolean | RosterDefaultArgs<ExtArgs>
@@ -38484,6 +38524,11 @@ export namespace Prisma {
     keywords?: boolean
     primarySkills?: boolean
     secondarySkills?: boolean
+    imageUrl?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    fluffFr?: boolean
+    fluffEn?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     roster?: boolean | RosterDefaultArgs<ExtArgs>
@@ -38505,6 +38550,11 @@ export namespace Prisma {
     keywords?: boolean
     primarySkills?: boolean
     secondarySkills?: boolean
+    imageUrl?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    fluffFr?: boolean
+    fluffEn?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     roster?: boolean | RosterDefaultArgs<ExtArgs>
@@ -38526,11 +38576,16 @@ export namespace Prisma {
     keywords?: boolean
     primarySkills?: boolean
     secondarySkills?: boolean
+    imageUrl?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    fluffFr?: boolean
+    fluffEn?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "primarySkills" | "secondarySkills" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
+  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "primarySkills" | "secondarySkills" | "imageUrl" | "descriptionFr" | "descriptionEn" | "fluffFr" | "fluffEn" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
   export type PositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     roster?: boolean | RosterDefaultArgs<ExtArgs>
     skills?: boolean | Position$skillsArgs<ExtArgs>
@@ -38565,6 +38620,11 @@ export namespace Prisma {
       keywords: string | null
       primarySkills: string | null
       secondarySkills: string | null
+      imageUrl: string | null
+      descriptionFr: string | null
+      descriptionEn: string | null
+      fluffFr: string | null
+      fluffEn: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["position"]>
@@ -39007,6 +39067,11 @@ export namespace Prisma {
     readonly keywords: FieldRef<"Position", 'String'>
     readonly primarySkills: FieldRef<"Position", 'String'>
     readonly secondarySkills: FieldRef<"Position", 'String'>
+    readonly imageUrl: FieldRef<"Position", 'String'>
+    readonly descriptionFr: FieldRef<"Position", 'String'>
+    readonly descriptionEn: FieldRef<"Position", 'String'>
+    readonly fluffFr: FieldRef<"Position", 'String'>
+    readonly fluffEn: FieldRef<"Position", 'String'>
     readonly createdAt: FieldRef<"Position", 'DateTime'>
     readonly updatedAt: FieldRef<"Position", 'DateTime'>
   }
@@ -105605,6 +105670,11 @@ export namespace Prisma {
     keywords: 'keywords',
     primarySkills: 'primarySkills',
     secondarySkills: 'secondarySkills',
+    imageUrl: 'imageUrl',
+    descriptionFr: 'descriptionFr',
+    descriptionEn: 'descriptionEn',
+    fluffFr: 'fluffFr',
+    fluffEn: 'fluffEn',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -109007,6 +109077,11 @@ export namespace Prisma {
     keywords?: StringNullableFilter<"Position"> | string | null
     primarySkills?: StringNullableFilter<"Position"> | string | null
     secondarySkills?: StringNullableFilter<"Position"> | string | null
+    imageUrl?: StringNullableFilter<"Position"> | string | null
+    descriptionFr?: StringNullableFilter<"Position"> | string | null
+    descriptionEn?: StringNullableFilter<"Position"> | string | null
+    fluffFr?: StringNullableFilter<"Position"> | string | null
+    fluffEn?: StringNullableFilter<"Position"> | string | null
     createdAt?: DateTimeFilter<"Position"> | Date | string
     updatedAt?: DateTimeFilter<"Position"> | Date | string
     roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
@@ -109029,6 +109104,11 @@ export namespace Prisma {
     keywords?: SortOrderInput | SortOrder
     primarySkills?: SortOrderInput | SortOrder
     secondarySkills?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    fluffFr?: SortOrderInput | SortOrder
+    fluffEn?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     roster?: RosterOrderByWithRelationInput
@@ -109055,6 +109135,11 @@ export namespace Prisma {
     keywords?: StringNullableFilter<"Position"> | string | null
     primarySkills?: StringNullableFilter<"Position"> | string | null
     secondarySkills?: StringNullableFilter<"Position"> | string | null
+    imageUrl?: StringNullableFilter<"Position"> | string | null
+    descriptionFr?: StringNullableFilter<"Position"> | string | null
+    descriptionEn?: StringNullableFilter<"Position"> | string | null
+    fluffFr?: StringNullableFilter<"Position"> | string | null
+    fluffEn?: StringNullableFilter<"Position"> | string | null
     createdAt?: DateTimeFilter<"Position"> | Date | string
     updatedAt?: DateTimeFilter<"Position"> | Date | string
     roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
@@ -109077,6 +109162,11 @@ export namespace Prisma {
     keywords?: SortOrderInput | SortOrder
     primarySkills?: SortOrderInput | SortOrder
     secondarySkills?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    fluffFr?: SortOrderInput | SortOrder
+    fluffEn?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: PositionCountOrderByAggregateInput
@@ -109105,6 +109195,11 @@ export namespace Prisma {
     keywords?: StringNullableWithAggregatesFilter<"Position"> | string | null
     primarySkills?: StringNullableWithAggregatesFilter<"Position"> | string | null
     secondarySkills?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    imageUrl?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    descriptionFr?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    descriptionEn?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    fluffFr?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    fluffEn?: StringNullableWithAggregatesFilter<"Position"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
   }
@@ -116941,6 +117036,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     roster: RosterCreateNestedOneWithoutPositionsInput
@@ -116963,6 +117063,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: PositionSkillUncheckedCreateNestedManyWithoutPositionInput
@@ -116983,6 +117088,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     roster?: RosterUpdateOneRequiredWithoutPositionsNestedInput
@@ -117005,6 +117115,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: PositionSkillUncheckedUpdateManyWithoutPositionNestedInput
@@ -117026,6 +117141,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -117045,6 +117165,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -117065,6 +117190,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -125019,6 +125149,11 @@ export namespace Prisma {
     keywords?: SortOrder
     primarySkills?: SortOrder
     secondarySkills?: SortOrder
+    imageUrl?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    fluffFr?: SortOrder
+    fluffEn?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -125050,6 +125185,11 @@ export namespace Prisma {
     keywords?: SortOrder
     primarySkills?: SortOrder
     secondarySkills?: SortOrder
+    imageUrl?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    fluffFr?: SortOrder
+    fluffEn?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -125070,6 +125210,11 @@ export namespace Prisma {
     keywords?: SortOrder
     primarySkills?: SortOrder
     secondarySkills?: SortOrder
+    imageUrl?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    fluffFr?: SortOrder
+    fluffEn?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -142952,6 +143097,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: PositionSkillCreateNestedManyWithoutPositionInput
@@ -142972,6 +143122,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: PositionSkillUncheckedCreateNestedManyWithoutPositionInput
@@ -143085,6 +143240,11 @@ export namespace Prisma {
     keywords?: StringNullableFilter<"Position"> | string | null
     primarySkills?: StringNullableFilter<"Position"> | string | null
     secondarySkills?: StringNullableFilter<"Position"> | string | null
+    imageUrl?: StringNullableFilter<"Position"> | string | null
+    descriptionFr?: StringNullableFilter<"Position"> | string | null
+    descriptionEn?: StringNullableFilter<"Position"> | string | null
+    fluffFr?: StringNullableFilter<"Position"> | string | null
+    fluffEn?: StringNullableFilter<"Position"> | string | null
     createdAt?: DateTimeFilter<"Position"> | Date | string
     updatedAt?: DateTimeFilter<"Position"> | Date | string
   }
@@ -143918,6 +144078,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     roster: RosterCreateNestedOneWithoutPositionsInput
@@ -143939,6 +144104,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -144015,6 +144185,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     roster?: RosterUpdateOneRequiredWithoutPositionsNestedInput
@@ -144036,6 +144211,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -162144,6 +162324,11 @@ export namespace Prisma {
     keywords?: string | null
     primarySkills?: string | null
     secondarySkills?: string | null
+    imageUrl?: string | null
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    fluffFr?: string | null
+    fluffEn?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -162186,6 +162371,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: PositionSkillUpdateManyWithoutPositionNestedInput
@@ -162206,6 +162396,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: PositionSkillUncheckedUpdateManyWithoutPositionNestedInput
@@ -162226,6 +162421,11 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     primarySkills?: NullableStringFieldUpdateOperationsInput | string | null
     secondarySkills?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffFr?: NullableStringFieldUpdateOperationsInput | string | null
+    fluffEn?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

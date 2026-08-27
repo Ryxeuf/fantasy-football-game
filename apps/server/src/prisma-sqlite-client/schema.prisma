@@ -629,6 +629,12 @@ model Position {
   keywords        String?
   primarySkills   String?
   secondarySkills String?
+  // Contenu éditorial (miroir SQLite de schema.prisma)
+  imageUrl        String?
+  descriptionFr   String?
+  descriptionEn   String?
+  fluffFr         String?
+  fluffEn         String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
