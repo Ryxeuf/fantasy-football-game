@@ -304,6 +304,37 @@ describe('Règle: Coût des inducements', () => {
     const ctx = makeCtx();
     expect(getInducementCost('star_player', ctx, 'nonexistent_slug')).toBe(0);
   });
+
+  /**
+   * Le catalogue de Star Players du contexte est fourni par l'appelant (table
+   * `StarPlayer` côté serveur) : c'était la dernière donnée de catalogue lue
+   * en dur dans le runtime du moteur, donc un coût corrigé en admin ne
+   * changeait pas le match en ligne.
+   */
+  describe('catalogue de Star Players injecté', () => {
+    it('tarifie depuis le catalogue fourni', () => {
+      const ctx = makeCtx({
+        starPlayers: [{ slug: 'morg_n_thorg', cost: 999_000 }],
+      });
+      expect(getInducementCost('star_player', ctx, 'morg_n_thorg')).toBe(
+        999_000,
+      );
+    });
+
+    it('slug absent du catalogue fourni = non engageable', () => {
+      const ctx = makeCtx({
+        starPlayers: [{ slug: 'morg_n_thorg', cost: 999_000 }],
+      });
+      expect(getInducementCost('star_player', ctx, 'griff_oberwald')).toBe(0);
+    });
+
+    it('sans catalogue fourni, repli sur la table compilée', () => {
+      const ctx = makeCtx({ regionalRules: ['old_world_classic'] });
+      expect(
+        getInducementCost('star_player', ctx, 'griff_oberwald'),
+      ).toBeGreaterThan(0);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
