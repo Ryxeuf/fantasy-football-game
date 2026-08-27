@@ -17,6 +17,7 @@ import {
   validatePlayerPlacement,
   startKickoffSequence,
   INDUCEMENT_CATALOGUE,
+  canPurchaseInducement,
   getInducementCost,
   getInducementMaxQuantity,
   type InducementContext,
@@ -849,7 +850,8 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
 
     const pettyCash = calculatePettyCash(pettyCashInput);
 
-    // Catalogue vu par CHAQUE equipe : acces conditionnel (`canPurchase`),
+    // Catalogue vu par CHAQUE equipe : acces conditionnel
+    // (`canPurchaseInducement`),
     // prix remise et plafond majore dependent des regles regionales et
     // speciales de l'equipe. Le catalogue brut annoncait a l'UI des coups de
     // pouce que le POST refusait ensuite, et au tarif plein.
@@ -869,11 +871,12 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
         hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
       }),
     ]);
+    // Lot 6.1 — catalogue servi par la base (`Inducement`), repli compilé.
     const catalogueFor = (ctx: InducementContext) =>
-      INDUCEMENT_CATALOGUE
+      (ctx.catalogue ?? INDUCEMENT_CATALOGUE)
         // Les Star Players sont geres a part dans l'UI.
         .filter((ind) => ind.slug !== "star_player")
-        .filter((ind) => !ind.canPurchase || ind.canPurchase(ctx))
+        .filter((ind) => canPurchaseInducement(ind, ctx))
         .map((ind) => ({
           ...ind,
           cost: getInducementCost(ind.slug, ctx),

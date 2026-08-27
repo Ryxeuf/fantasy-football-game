@@ -5,6 +5,8 @@ import {
   getInducementCost,
   getInducementDefinition,
   getInducementMaxQuantity,
+  canPurchaseInducement,
+  isWiredInducementSlug,
   applyInducementEffects,
   processInducementsWithSelection,
   INDUCEMENT_CATALOGUE,
@@ -274,30 +276,105 @@ describe('Règle: Coût des inducements', () => {
     expect(getInducementCost('halfling_master_chef', makeCtx())).toBe(300_000);
   });
 
+  // Lot 6.1 — les conditions sont des DONNÉES (`requiresAnyRule`,
+  // `requiresRoster`, `requiresApothecary`) évaluées par une fonction pure,
+  // et non plus une closure par coup de pouce : c'est ce qui permet à la
+  // table `Inducement` de porter le catalogue complet.
   it('A53 — restrictions par règle spéciale (Assistant Funéraire, Médecin de la Peste, Débutants Déchaînés)', () => {
     const mortuary = getInducementDefinition('mortuary_assistant')!;
-    expect(mortuary.canPurchase!(makeCtx())).toBe(false);
+    expect(canPurchaseInducement(mortuary, makeCtx())).toBe(false);
     expect(
-      mortuary.canPurchase!(
+      canPurchaseInducement(
+        mortuary,
         makeCtx({ specialRules: ['maitres_de_la_non_vie'] }),
       ),
     ).toBe(true);
 
     const plague = getInducementDefinition('plague_doctor')!;
-    expect(plague.canPurchase!(makeCtx())).toBe(false);
+    expect(canPurchaseInducement(plague, makeCtx())).toBe(false);
+    // Les deux conditions sont requises : la règle SEULE ne suffit pas.
     expect(
-      plague.canPurchase!(
+      canPurchaseInducement(plague, makeCtx({ specialRules: ['favori_de'] })),
+    ).toBe(false);
+    expect(
+      canPurchaseInducement(
+        plague,
         makeCtx({ rosterSlug: 'nurgle', specialRules: ['favori_de'] }),
       ),
     ).toBe(true);
 
     const rookies = getInducementDefinition('riotous_rookies')!;
-    expect(rookies.canPurchase!(makeCtx())).toBe(false);
+    expect(canPurchaseInducement(rookies, makeCtx())).toBe(false);
     expect(
-      rookies.canPurchase!(
+      canPurchaseInducement(
+        rookies,
         makeCtx({ specialRules: ['trois_quarts_a_vil_prix'] }),
       ),
     ).toBe(true);
+
+    const apo = getInducementDefinition('wandering_apothecary')!;
+    expect(
+      canPurchaseInducement(apo, makeCtx({ hasApothecary: false })),
+    ).toBe(false);
+    expect(canPurchaseInducement(apo, makeCtx({ hasApothecary: true }))).toBe(
+      true,
+    );
+  });
+
+  describe('catalogue de Coups de Pouce injecté (lot 6.1)', () => {
+    const CUSTOM = [
+      {
+        slug: 'bribe',
+        displayName: 'Bribes',
+        displayNameFr: 'Pots-de-vin',
+        baseCost: 70_000,
+        maxQuantity: 2,
+        discountRule: 'chantage_et_corruption',
+        discountCost: 35_000,
+        ruleMaxQuantity: { rule: 'chantage_et_corruption', max: 4 },
+        description: 'Prix corrigé en admin.',
+      },
+    ];
+
+    it('tarifie et plafonne depuis le catalogue fourni', () => {
+      const ctx = makeCtx({ catalogue: CUSTOM });
+      expect(getInducementCost('bribe', ctx)).toBe(70_000);
+      expect(getInducementMaxQuantity('bribe', ctx)).toBe(2);
+
+      const corrupt = makeCtx({
+        catalogue: CUSTOM,
+        specialRules: ['chantage_et_corruption'],
+      });
+      expect(getInducementCost('bribe', corrupt)).toBe(35_000);
+      expect(getInducementMaxQuantity('bribe', corrupt)).toBe(4);
+    });
+
+    it("refuse un slug absent du catalogue fourni", () => {
+      const ctx = makeCtx({ catalogue: CUSTOM });
+      const result = validateInducementSelection(
+        { items: [{ slug: 'wizard', quantity: 1 }] },
+        ctx,
+        1_000_000,
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errors[0]).toContain('wizard');
+    });
+
+    it('valide un achat au prix de la base', () => {
+      const ctx = makeCtx({ catalogue: CUSTOM });
+      const result = validateInducementSelection(
+        { items: [{ slug: 'bribe', quantity: 2 }] },
+        ctx,
+        1_000_000,
+      );
+      expect(result.valid).toBe(true);
+      expect(result.totalCost).toBe(140_000);
+    });
+
+    it("signale les slugs dont le comportement n'est PAS câblé", () => {
+      expect(isWiredInducementSlug('bribe')).toBe(true);
+      expect(isWiredInducementSlug('coup_de_pouce_maison')).toBe(false);
+    });
   });
 
   it('devrait retourner 0 pour un star player inconnu', () => {

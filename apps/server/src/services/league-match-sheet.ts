@@ -71,6 +71,7 @@ import {
 } from "../utils/team-values";
 import { getEliteSkillSlugs } from "./elite-skills";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
+import { loadInducementCatalogue } from "./inducement-repository";
 import {
   parseStagedAdvancements,
   applyStagedAdvancements,
@@ -81,6 +82,8 @@ import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
+  canPurchaseInducement,
+  type InducementContext,
   getNextAdvancementPspCost,
   surchargeForAdvancement,
   calculatePettyCash,
@@ -2513,14 +2516,17 @@ async function inducementOptionsFor(
   // donc le debit de tresorerie post-match (S9 de l'audit). Les tables
   // compilees `APOTHECARY_FORBIDDEN_ROSTERS` / `getSpecialRulesForTeam` ne
   // sont plus que le repli, porte par les resolveurs eux-memes.
-  const [declaredRules, staffConfig, specialRules] = await Promise.all([
-    getDeclaredRegionalRules(roster, ruleset),
-    // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
-    // couple roster x format et la feuille de ligue n'a pas d'autre format.
-    resolveStaffConfigBySlug(roster, ruleset, "bb11"),
-    resolveSpecialRulesForTeam(prisma, roster, ruleset),
-  ]);
-  const ctx = {
+  const [declaredRules, staffConfig, specialRules, catalogue] =
+    await Promise.all([
+      getDeclaredRegionalRules(roster, ruleset),
+      // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
+      // couple roster x format et la feuille de ligue n'a pas d'autre format.
+      resolveStaffConfigBySlug(roster, ruleset, "bb11"),
+      resolveSpecialRulesForTeam(prisma, roster, ruleset),
+      // Lot 6.1 — prix, plafonds et conditions servis par la base.
+      loadInducementCatalogue(ruleset),
+    ]);
+  const ctx: InducementContext = {
     teamId: "A" as const,
     regionalRules: resolveTeamRegionalRules(
       roster,
@@ -2536,11 +2542,15 @@ async function inducementOptionsFor(
     // A53 — les restrictions/remises officielles dépendent des règles
     // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
     specialRules: [...specialRules],
+    ruleset,
+    catalogue,
   };
   const effective = effectiveInducementAllowlist(allowedInducements, pack);
   const allow = effective ? new Set(effective) : null;
-  const options = INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
-    .filter((d) => !d.canPurchase || d.canPurchase(ctx))
+  // Lot 6.1 — catalogue servi par la base (`Inducement`), repli compilé.
+  const options = (ctx.catalogue ?? INDUCEMENT_CATALOGUE)
+    .filter((d) => d.slug !== "star_player")
+    .filter((d) => canPurchaseInducement(d, ctx))
     .filter((d) => allow === null || allow.has(d.slug))
     .map((d) => ({
       slug: d.slug,

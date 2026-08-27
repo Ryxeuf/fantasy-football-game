@@ -664,6 +664,35 @@ model PositionSkill {
   @@index([positionId])
 }
 
+/// Catalogue des Coups de Pouce (miroir PG, lot 6.1).
+model Inducement {
+  id                 String   @id @default(cuid())
+  slug               String
+  ruleset            Ruleset  @default(season_3)
+  nameFr             String
+  nameEn             String
+  descriptionFr      String
+  descriptionEn      String?
+  baseCost           Int
+  maxQuantity        Int
+  discountRule       String?
+  discountRoster     String?
+  discountCost       Int?
+  ruleMaxRule        String?
+  ruleMaxQuantity    Int?
+  requiresAnyRule    String?
+  requiresRoster     String?
+  requiresApothecary Boolean  @default(false)
+  variableCost       Boolean  @default(false)
+  enabled            Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+  @@index([ruleset, enabled])
+}
+
 // Modèle pour les coupes (tournois)
 model Cup {
   id          String  @id @default(cuid())

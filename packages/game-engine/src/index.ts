@@ -86,6 +86,8 @@ export type { JourneymanStats } from './core/pre-match-sequence';
 // Export du système d'inducements
 export {
   INDUCEMENT_CATALOGUE,
+  canPurchaseInducement,
+  isWiredInducementSlug,
   getInducementDefinition,
   getInducementMaxQuantity,
   calculatePettyCash,
@@ -97,6 +99,7 @@ export {
 export type {
   InducementSlug,
   InducementDefinition,
+  InducementCatalogue,
   InducementContext,
   PurchasedInducement,
   InducementSelection,
