@@ -48,6 +48,7 @@ import {
   resolveRegionalLeagues,
 } from "./public-rosters";
 import { loadTeamRulesCatalogue } from "../services/team-rules-catalogue";
+import { loadAdvancementSchedule } from "../services/advancement-schedule-repository";
 import {
   startSeason,
   regenerateSchedule,
@@ -1561,6 +1562,8 @@ export async function handleGetLeagueTeamRoster(
       out.team.roster,
       teamRuleset,
     );
+    // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+    const advancementSchedule = await loadAdvancementSchedule(teamRuleset);
     const playerValue = (position: string, advancementsJson: string | null) => {
       const base =
         positionMeta.get(position)?.cost ??
@@ -1579,6 +1582,8 @@ export async function handleGetLeagueTeamRoster(
                   eliteSlugs.has(a.skillSlug),
               }),
             ),
+            // Lot 6.2 — surcoûts au barème de l'édition de l'équipe.
+            advancementSchedule,
           );
         }
       } catch {

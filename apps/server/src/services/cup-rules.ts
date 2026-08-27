@@ -11,7 +11,11 @@
  * sqlite »).
  */
 
-import { getNextAdvancementPspCost, type AdvancementType } from '@bb/game-engine';
+import {
+  getNextAdvancementPspCost,
+  type AdvancementSchedule,
+  type AdvancementType,
+} from '@bb/game-engine';
 
 /** Tiers de roster reconnus (Blood Bowl 2025). */
 export const CUP_TIERS = ['I', 'II', 'III', 'IV'] as const;
@@ -108,6 +112,8 @@ export function resolveCupStartingPsp(
  */
 export function advancementsPspCost(
   advancements: ReadonlyArray<{ type?: unknown }>,
+  // Lot 6.2 — barème de l'édition de l'équipe. Absent ⇒ barème compilé.
+  schedule?: AdvancementSchedule,
 ): number {
   let total = 0;
   advancements.forEach((adv, index) => {
@@ -118,7 +124,11 @@ export function advancementsPspCost(
       type === 'random-primary' ||
       type === 'characteristic'
     ) {
-      total += getNextAdvancementPspCost(index, type as AdvancementType);
+      total += getNextAdvancementPspCost(
+        index,
+        type as AdvancementType,
+        schedule,
+      );
     }
   });
   return total;
@@ -131,6 +141,7 @@ export function advancementsPspCost(
  */
 export function teamAdvancementsPspCost(
   players: ReadonlyArray<{ advancements?: string | null }>,
+  schedule?: AdvancementSchedule,
 ): number {
   return players.reduce((sum, p) => {
     let parsed: unknown = [];
@@ -141,6 +152,8 @@ export function teamAdvancementsPspCost(
         parsed = [];
       }
     }
-    return sum + (Array.isArray(parsed) ? advancementsPspCost(parsed) : 0);
+    return (
+      sum + (Array.isArray(parsed) ? advancementsPspCost(parsed, schedule) : 0)
+    );
   }, 0);
 }

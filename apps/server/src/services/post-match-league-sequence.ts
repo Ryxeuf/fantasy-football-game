@@ -27,8 +27,11 @@
  */
 
 import { prisma } from "../prisma";
+import { loadAdvancementSchedule } from "./advancement-schedule-repository";
 import {
   getNextAdvancementPspCost,
+  type AdvancementSchedule,
+  type Ruleset,
   type AdvancementType,
   type CharacteristicKind,
   type PlayerAdvancement,
@@ -77,8 +80,15 @@ function parsePlayerSkillSlugs(csv: string | null | undefined): string[] {
  * Cout SPP du prochain avancement le moins cher (random-primary @ N+1)
  * pour un joueur ayant deja pris N avancements.
  */
-function cheapestNextAdvancementCost(advancementsTaken: number): number {
-  return getNextAdvancementPspCost(advancementsTaken, "random-primary");
+function cheapestNextAdvancementCost(
+  advancementsTaken: number,
+  schedule?: AdvancementSchedule,
+): number {
+  return getNextAdvancementPspCost(
+    advancementsTaken,
+    "random-primary",
+    schedule,
+  );
 }
 
 export interface PendingChoice {
@@ -259,6 +269,16 @@ async function collectPendingChoices(
     },
   });
 
+  // Lot 6.2 — barème de l'ÉDITION de l'équipe : le seuil affiché au coach
+  // était celui de la Saison 3, même pour une équipe Saison 2.
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { ruleset: true },
+  });
+  const schedule = await loadAdvancementSchedule(
+    (team?.ruleset as Ruleset) ?? undefined,
+  );
+
   const choices: PendingChoice[] = [];
   for (const player of players) {
     const advancementsTaken = countAdvancements(player.advancements);
@@ -266,7 +286,7 @@ async function collectPendingChoices(
       // Cap BB : 6 advancements max.
       continue;
     }
-    const cheapest = cheapestNextAdvancementCost(advancementsTaken);
+    const cheapest = cheapestNextAdvancementCost(advancementsTaken, schedule);
     if (player.spp >= cheapest) {
       choices.push({
         teamPlayerId: player.id,
@@ -493,7 +513,14 @@ export async function applyAdvancementChoice(
     return { skipped: true, reason: "max-advancements-reached" };
   }
 
-  const cost = getNextAdvancementPspCost(taken.length, input.type);
+  // Lot 6.2 — coût PSP au barème de l'édition de l'équipe.
+  const cost = getNextAdvancementPspCost(
+    taken.length,
+    input.type,
+    await loadAdvancementSchedule(
+      (player.team?.ruleset as Ruleset) ?? undefined,
+    ),
+  );
   if (player.spp < cost) {
     return {
       skipped: true,

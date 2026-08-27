@@ -87,7 +87,12 @@ export async function applyCupBuildAdvancements(
   teamId: string,
   pool: number,
   advancements: readonly BuildAdvancementInput[],
-  costFn: BuildAdvancementCostFn = getNextAdvancementPspCost,
+  // Lot 6.2 — le barème BB par défaut prend maintenant un `AdvancementSchedule`
+  // en 3e argument, là où cette signature attend un `skillSlug` : on
+  // n'adapte pas, on ignore explicitement l'argument surnuméraire. Le
+  // caller qui veut le barème d'une édition passe son propre `costFn`.
+  costFn: BuildAdvancementCostFn = (alreadyTaken, type) =>
+    getNextAdvancementPspCost(alreadyTaken, type),
 ): Promise<CupBuildAdvancementsResult> {
   let remaining = pool;
   let applied = 0;

@@ -35,6 +35,10 @@ Deux familles de données n'ont **pas de table du tout** (coups de pouce, barèm
 deux tables existent sans être lues (`TeamSpecialRule`, `RegionalLeague` — vides en prod), et
 trois seeders « sync » déclarent le code source de vérité et **écrasent les corrections admin**.
 
+> **Mise à jour (lot 6 livré)** : les deux familles manquantes ont désormais leur table
+> (`Inducement` ; `AdvancementCost` + `CharacteristicValue` + `RulesetConfig`) et les deux
+> tables dormantes sont lues. Reste le lot 7 (gouvernance des seeders `sync-*`).
+
 Chiffres : 11 causes structurelles (serveur/moteur), 18 points « haute » serveur, 19 points
 « haute » front web, 5 tables/colonnes à créer, 2 tables à brancher, 0 usage statique de
 données sur mobile.
@@ -307,7 +311,7 @@ comportement indexé par slug : il ne doit pas migrer en base.
 | 3 | ≈ 1 j | Coût des joueurs unifié (S5, S6, M1) ; journaliers de feuille → `Position` + `isElite` (S4) ; feuille de ligue → résolveurs DB règles spéciales/apothicaire (S9). |
 | 4 | ≈ 1–2 j | Contexte de coups de pouce réel (S10, S11) ; catalogue de stars DB dans `getInducementCost` ; `p.value` (cagnotte nulle). |
 | 5 | ≈ 1 j | Front web : W1–W5, W7 (données déjà chargées) ; W6/W8 ; résolveur `slug → nom` unique (W10–W12). |
-| 6 | ≈ 4–5 j | **Arbitré le 2026-08-27 → [lot6-modele-de-donnees-2026-08-27.md](./lot6-modele-de-donnees-2026-08-27.md).** Modèle de données : brancher `TeamSpecialRule`/`RegionalLeague` ; créer `Inducement`, `AdvancementCost` ; colonnes `pairWith/pairCost`, `maxBigGuys`, `displayNameEn` ; `ALLOWED_TEAMS` → `Roster` (S14) ; `Roster.budget` (S15). |
+| 6 | ≈ 4–5 j | **Arbitré le 2026-08-27, LIVRÉ → [lot6-modele-de-donnees-2026-08-27.md](./lot6-modele-de-donnees-2026-08-27.md).** Modèle de données : `TeamSpecialRule`/`RegionalLeague` branchées ; `Inducement`, `AdvancementCost`/`CharacteristicValue`/`RulesetConfig` créées ; colonnes `pairWithSlug`, `maxBigGuys`, `displayNameEn`, catégorie `StarPlayerRule` ; `ALLOWED_TEAMS` → `Roster` (S14) ; `Roster.budget` (S15). |
 | 7 | ≈ ½ j | Gouvernance : seeders `sync-*` en diff-report, application champ par champ ; invalidation du cache rosters sur écriture admin. |
 
 Après les lots 1–4, le catalogue statique ne sert plus que de repli (seed initial +

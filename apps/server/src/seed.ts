@@ -37,6 +37,7 @@ import { syncTournamentRulesets } from "./seeders/sync-tournament-rulesets";
 import { syncCatalogueColumns } from "./seeders/sync-catalogue-columns";
 import { syncTeamRules } from "./seeders/sync-team-rules";
 import { syncInducements } from "./seeders/sync-inducements";
+import { syncAdvancementCosts } from "./seeders/sync-advancement-costs";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -339,6 +340,16 @@ async function main() {
   serverLog.log(
     `✅ Coups de pouce: ${inducementsRes.created.length} créés, ` +
       `${inducementsRes.skipped.length} déjà présents\n`,
+  );
+
+  // Barème d'avancement par édition (create-only). Saison 3 seulement : les
+  // valeurs Saison 2 attendent leur validation (cf. sync-advancement-costs),
+  // et sans ligne le barème compilé s'applique — comportement inchangé.
+  const advancementRes = await syncAdvancementCosts({ write: true });
+  serverLog.log(
+    `✅ Barème d'avancement: ${advancementRes.costsCreated} paliers créés, ` +
+      `${advancementRes.characteristicsCreated} caractéristiques, ` +
+      `${advancementRes.configsCreated} config(s) d'édition\n`,
   );
 
   // Config staff par roster × format (create-only : ne réécrit pas l'admin).

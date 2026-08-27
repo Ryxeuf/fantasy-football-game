@@ -13,6 +13,8 @@ import {
   canImproveCharacteristic,
   isAtCharacteristicLimit,
   MAX_CHARACTERISTIC_IMPROVEMENTS,
+  DEFAULT_ADVANCEMENT_SCHEDULE,
+  type AdvancementSchedule,
   type PlayerStats,
 } from './advancements';
 
@@ -247,5 +249,76 @@ describe('advancements utils (BB2025 / Saison 3)', () => {
       const reducedAg = applyCharacteristicReduction(fresh, 'ag');
       expect(applyCharacteristicImprovement(reducedAg, 'ag')).toEqual(fresh);
     });
+  });
+});
+
+
+/**
+ * Lot 6.2 — le barème devient une DONNÉE d'édition passée au moteur. Les
+ * tables compilées (Saison 3) restent le défaut : sans barème fourni, le
+ * comportement est exactement celui d'avant.
+ */
+describe('AdvancementSchedule injecté', () => {
+  const SEASON_2: AdvancementSchedule = {
+    sppCost: {
+      ...DEFAULT_ADVANCEMENT_SCHEDULE.sppCost,
+      secondary: [0, 12, 14, 18, 22, 26, 40],
+      characteristic: [0, 18, 20, 24, 28, 32, 40],
+    },
+    surcharge: {
+      ...DEFAULT_ADVANCEMENT_SCHEDULE.surcharge,
+      'random-primary': 10000,
+    },
+    characteristicSurcharge: {
+      ...DEFAULT_ADVANCEMENT_SCHEDULE.characteristicSurcharge,
+      st: 80000,
+    },
+    eliteSkillSurcharge: 0,
+  };
+
+  it('applique les coûts PSP de l’édition fournie', () => {
+    expect(getNextAdvancementPspCost(0, 'secondary', SEASON_2)).toBe(12);
+    expect(getNextAdvancementPspCost(0, 'characteristic', SEASON_2)).toBe(18);
+    // Sans barème : les valeurs Saison 3.
+    expect(getNextAdvancementPspCost(0, 'secondary')).toBe(10);
+    expect(getNextAdvancementPspCost(0, 'characteristic')).toBe(14);
+  });
+
+  it('applique les surcoûts de VE de l’édition fournie', () => {
+    expect(surchargeForAdvancement({ type: 'random-primary' }, SEASON_2)).toBe(
+      10000,
+    );
+    expect(
+      surchargeForAdvancement({ type: 'characteristic', stat: 'st' }, SEASON_2),
+    ).toBe(80000);
+  });
+
+  it('applique la taxe Élite de l’édition fournie', () => {
+    expect(
+      surchargeForAdvancement({ type: 'primary', isElite: true }, SEASON_2),
+    ).toBe(20000);
+    expect(surchargeForAdvancement({ type: 'primary', isElite: true })).toBe(
+      30000,
+    );
+  });
+
+  it('retombe sur la table compilée pour un type absent du barème', () => {
+    const partial: AdvancementSchedule = {
+      sppCost: {},
+      surcharge: {},
+      characteristicSurcharge:
+        DEFAULT_ADVANCEMENT_SCHEDULE.characteristicSurcharge,
+      eliteSkillSurcharge: 10000,
+    };
+    expect(getNextAdvancementPspCost(0, 'primary', partial)).toBe(6);
+    expect(surchargeForAdvancement({ type: 'primary' }, partial)).toBe(20000);
+  });
+
+  it('propage le barème au total et à la valeur du joueur', () => {
+    const advancements = [{ type: 'random-primary' as const }];
+    expect(calculateAdvancementsSurcharge(advancements, SEASON_2)).toBe(10000);
+    expect(calculatePlayerCurrentValue(50000, advancements, SEASON_2)).toBe(
+      60000,
+    );
   });
 });

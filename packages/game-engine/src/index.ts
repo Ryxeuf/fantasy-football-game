@@ -430,6 +430,7 @@ export {
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
   ELITE_SKILL_SURCHARGE,
+  DEFAULT_ADVANCEMENT_SCHEDULE,
   isRandomAdvancement,
   getCategoryAccessType,
   applyCharacteristicImprovement,
@@ -445,7 +446,8 @@ export {
   type CharacteristicKind,
   type PlayerAdvancement,
   type PlayerStats,
-  type AdvancementSurchargeInput
+  type AdvancementSurchargeInput,
+  type AdvancementSchedule
 } from './utils/advancements';
 
 // Comptabilité du pool de PSP de construction (édition avancée / coupes)

@@ -21,7 +21,12 @@
 
 import { Router } from "express";
 import type { Response } from "express";
-import { getNextAdvancementPspCost } from "@bb/game-engine";
+import {
+  getNextAdvancementPspCost,
+  type AdvancementSchedule,
+  type Ruleset,
+} from "@bb/game-engine";
+import { loadAdvancementSchedule } from "../services/advancement-schedule-repository";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
 import { prisma } from "../prisma";
@@ -103,7 +108,11 @@ export interface LiveAdvancementState {
  * Retourne null si le joueur n'est plus éligible (mort, cap 6 atteint,
  * PSP < prochain palier le moins cher).
  */
-export function liveAdvancementItem(player: LiveAdvancementState): {
+export function liveAdvancementItem(
+  player: LiveAdvancementState,
+  // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+  schedule?: AdvancementSchedule,
+): {
   spp: number;
   advancementsTaken: number;
   nextAdvancementCost: number;
@@ -117,7 +126,11 @@ export function liveAdvancementItem(player: LiveAdvancementState): {
     advancementsTaken = 0;
   }
   if (advancementsTaken >= 6) return null;
-  const cheapest = getNextAdvancementPspCost(advancementsTaken, "random-primary");
+  const cheapest = getNextAdvancementPspCost(
+    advancementsTaken,
+    "random-primary",
+    schedule,
+  );
   if (player.spp < cheapest) return null;
   return { spp: player.spp, advancementsTaken, nextAdvancementCost: cheapest };
 }
@@ -140,6 +153,13 @@ export async function handleListPendingAdvancements(
   const teamId = req.params.teamId;
   const team = await ensureTeamOwner(userId, teamId, res);
   if (!team) return;
+
+  // Lot 6.2 — barème de l'édition de l'équipe : le seuil « prochaine
+  // amélioration » affiché au coach était celui de la Saison 3, même pour
+  // une équipe Saison 2.
+  const schedule = await loadAdvancementSchedule(
+    (team.ruleset as Ruleset) ?? undefined,
+  );
 
   // On lit les sequences ouvertes liees aux matchs ou cette equipe a
   // joue (via TeamSelection), puis on extrait les pendingChoices
@@ -255,7 +275,7 @@ export async function handleListPendingAdvancements(
       if (!player) continue;
       // État live (le snapshot de la séquence peut être périmé : évolutions
       // stagées appliquées à la validation, avancement pris ailleurs…).
-      const live = liveAdvancementItem(player);
+      const live = liveAdvancementItem(player, schedule);
       if (!live) continue;
       const positionSlug = player.position ?? null;
       const access = positionSlug ? accessBySlug.get(positionSlug) : undefined;

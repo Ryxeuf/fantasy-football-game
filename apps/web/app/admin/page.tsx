@@ -287,6 +287,19 @@ export default function AdminPage() {
             </div>
           </button>
           <button
+            onClick={() => router.push("/admin/data/advancement-costs")}
+            data-testid="admin-advancement-costs-link"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">📈</div>
+            <div className="font-semibold text-gray-900">
+              Barème d'avancement
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Coûts PSP et surcoûts de VE, par édition
+            </div>
+          </button>
+          <button
             onClick={() => router.push("/admin/data/inducements")}
             data-testid="admin-inducements-link"
             className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"

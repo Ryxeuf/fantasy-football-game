@@ -693,6 +693,51 @@ model Inducement {
   @@index([ruleset, enabled])
 }
 
+/// Type d'amélioration d'un joueur (miroir PG, lot 6.2).
+enum AdvancementKind {
+  primary
+  secondary
+  random_primary
+  random_secondary
+  characteristic
+}
+
+/// Barème d'avancement par édition (miroir PG, lot 6.2).
+model AdvancementCost {
+  id                 String          @id @default(cuid())
+  ruleset            Ruleset
+  kind               AdvancementKind
+  step               Int
+  sppCost            Int
+  teamValueSurcharge Int
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([ruleset, kind, step])
+  @@index([ruleset])
+}
+
+/// Surcoût de VE d'une amélioration de caractéristique (miroir PG).
+model CharacteristicValue {
+  id        String   @id @default(cuid())
+  ruleset   Ruleset
+  stat      String
+  surcharge Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ruleset, stat])
+}
+
+/// Réglages d'édition (miroir PG, lot 6.2).
+model RulesetConfig {
+  id                  String   @id @default(cuid())
+  ruleset             Ruleset  @unique
+  eliteSkillSurcharge Int      @default(10000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 // Modèle pour les coupes (tournois)
 model Cup {
   id          String  @id @default(cuid())

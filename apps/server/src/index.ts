@@ -25,6 +25,7 @@ import {
   adminSpecialRulesRouter,
 } from "./routes/admin-team-rules";
 import adminInducementRoutes from "./routes/admin-inducements";
+import adminAdvancementCostRoutes from "./routes/admin-advancement-costs";
 import publicTournamentRulesetRoutes from "./routes/public-tournament-rulesets";
 import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
@@ -309,6 +310,8 @@ app.use("/admin/data/special-rules", adminSpecialRulesRouter);
 app.use("/admin/data/regional-leagues", adminRegionalLeaguesRouter);
 // Lot 6.1 — catalogue des Coups de Pouce (prix, plafonds, remises, conditions).
 app.use("/admin/data/inducements", adminInducementRoutes);
+// Lot 6.2 — barème d'avancement par édition (coûts PSP + surcoûts de VE).
+app.use("/admin/data/advancement-costs", adminAdvancementCostRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 // L2.B.3 — routes level-up Jeu en Ligue. Mountees sur /team aussi

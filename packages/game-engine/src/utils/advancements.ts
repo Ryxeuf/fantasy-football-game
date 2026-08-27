@@ -74,14 +74,61 @@ const LEGACY_SURCHARGE_PER_ADVANCEMENT: Record<string, number> = {
 export const ELITE_SKILL_SURCHARGE = 10000;
 
 /**
+ * Barème d'avancement d'une ÉDITION — lot 6.2.
+ *
+ * Les tables ci-dessus décrivent la Saison 3 : elles étaient appliquées à
+ * toutes les équipes, Saison 2 comprise (coûts PSP ET surcoûts de VE). Le
+ * barème devient donc une donnée que l'appelant résout (table
+ * `AdvancementCost` côté serveur) et passe au moteur, qui reste pur.
+ *
+ * Les tables compilées restent le DÉFAUT : sans barème fourni, le
+ * comportement est exactement celui d'avant le lot.
+ */
+export interface AdvancementSchedule {
+  /**
+   * Coût en PSP par type et par palier. Index 1..6 (l'index 0 est ignoré,
+   * comme dans `SPP_COST_TABLE`).
+   */
+  readonly sppCost: Readonly<Record<string, readonly number[]>>;
+  /** Surcoût de VE (po) par type d'avancement de compétence. */
+  readonly surcharge: Readonly<Record<string, number>>;
+  /** Surcoût de VE (po) par caractéristique améliorée. */
+  readonly characteristicSurcharge: Readonly<
+    Record<CharacteristicKind, number>
+  >;
+  /** Surcoût de VE additionnel d'une compétence Élite. */
+  readonly eliteSkillSurcharge: number;
+}
+
+/** Barème compilé (Saison 3) : défaut et repli. */
+export const DEFAULT_ADVANCEMENT_SCHEDULE: AdvancementSchedule = {
+  sppCost: SPP_COST_TABLE,
+  surcharge: {
+    ...SURCHARGE_PER_ADVANCEMENT,
+    ...LEGACY_SURCHARGE_PER_ADVANCEMENT,
+  },
+  characteristicSurcharge: CHARACTERISTIC_VALUE_INCREASE,
+  eliteSkillSurcharge: ELITE_SKILL_SURCHARGE,
+};
+
+/**
  * Retourne le coût en SPP pour le prochain avancement donné le nombre
  * d'avancements déjà acquis.
  * @param alreadyTaken nombre d'avancements déjà pris (0..6)
  * @param type type d'avancement
+ * @param schedule barème de l'édition (défaut : barème compilé Saison 3)
  */
-export function getNextAdvancementPspCost(alreadyTaken: number, type: AdvancementType): number {
+export function getNextAdvancementPspCost(
+  alreadyTaken: number,
+  type: AdvancementType,
+  schedule: AdvancementSchedule = DEFAULT_ADVANCEMENT_SCHEDULE,
+): number {
   const next = Math.min(Math.max(alreadyTaken + 1, 1), 6);
-  return SPP_COST_TABLE[type][next];
+  // Un type absent du barème servi (édition incomplète) retombe sur la
+  // table compilée : mieux vaut un coût de la mauvaise édition qu'un
+  // avancement gratuit.
+  const table = schedule.sppCost[type] ?? SPP_COST_TABLE[type];
+  return table[next] ?? SPP_COST_TABLE[type][next];
 }
 
 /** Forme minimale d'un avancement nécessaire au calcul de son surcoût VE. */
@@ -98,12 +145,24 @@ export interface AdvancementSurchargeInput {
   readonly isElite?: boolean;
 }
 
-/** Surcoût VE (po) d'un avancement unique, tolérant aux types legacy. */
-export function surchargeForAdvancement(adv: AdvancementSurchargeInput): number {
+/**
+ * Surcoût VE (po) d'un avancement unique, tolérant aux types legacy.
+ * @param schedule barème de l'édition (défaut : barème compilé Saison 3)
+ */
+export function surchargeForAdvancement(
+  adv: AdvancementSurchargeInput,
+  schedule: AdvancementSchedule = DEFAULT_ADVANCEMENT_SCHEDULE,
+): number {
   if (adv.type === 'characteristic') {
-    return adv.stat ? CHARACTERISTIC_VALUE_INCREASE[adv.stat] : 0;
+    if (!adv.stat) return 0;
+    return (
+      schedule.characteristicSurcharge[adv.stat] ??
+      CHARACTERISTIC_VALUE_INCREASE[adv.stat]
+    );
   }
-  const eliteExtra = adv.isElite ? ELITE_SKILL_SURCHARGE : 0;
+  const eliteExtra = adv.isElite ? schedule.eliteSkillSurcharge : 0;
+  const fromSchedule = schedule.surcharge[adv.type];
+  if (fromSchedule !== undefined) return fromSchedule + eliteExtra;
   if (adv.type in SURCHARGE_PER_ADVANCEMENT) {
     return (
       SURCHARGE_PER_ADVANCEMENT[
@@ -122,8 +181,12 @@ export function surchargeForAdvancement(adv: AdvancementSurchargeInput): number 
  */
 export function calculateAdvancementsSurcharge(
   advancements: ReadonlyArray<AdvancementSurchargeInput>,
+  schedule: AdvancementSchedule = DEFAULT_ADVANCEMENT_SCHEDULE,
 ): number {
-  return advancements.reduce((sum, a) => sum + surchargeForAdvancement(a), 0);
+  return advancements.reduce(
+    (sum, a) => sum + surchargeForAdvancement(a, schedule),
+    0,
+  );
 }
 
 /**
@@ -134,8 +197,9 @@ export function calculateAdvancementsSurcharge(
 export function calculatePlayerCurrentValue(
   baseCostPo: number,
   advancements: ReadonlyArray<AdvancementSurchargeInput>,
+  schedule: AdvancementSchedule = DEFAULT_ADVANCEMENT_SCHEDULE,
 ): number {
-  return baseCostPo + calculateAdvancementsSurcharge(advancements);
+  return baseCostPo + calculateAdvancementsSurcharge(advancements, schedule);
 }
 
 export interface PlayerAdvancement {

@@ -876,6 +876,65 @@ model Inducement {
   @@index([ruleset, enabled])
 }
 
+/// Type d'amélioration d'un joueur (lot 6.2). `random_secondary` n'existe
+/// plus en Saison 3 mais reste lisible pour les joueurs qui en portent une.
+enum AdvancementKind {
+  primary
+  secondary
+  random_primary
+  random_secondary
+  characteristic
+}
+
+/// Barème d'avancement PAR ÉDITION (lot 6.2).
+///
+/// La table vivait dans `utils/advancements.ts`, en dur et pour la seule
+/// Saison 3 : une équipe Saison 2 se voyait donc appliquer les coûts et les
+/// surcoûts de la Saison 3. Le barème est ici une donnée par édition, servie
+/// au moteur sous forme d'`AdvancementSchedule` résolu (le moteur ne lit pas
+/// Prisma). Sans ligne, le barème compilé s'applique — aucun backfill
+/// nécessaire (`prisma/migrations/` est gitignoré, cf. CLAUDE.md).
+model AdvancementCost {
+  id                 String          @id @default(cuid())
+  ruleset            Ruleset
+  kind               AdvancementKind
+  /// n-ième amélioration du joueur (1..6).
+  step               Int
+  sppCost            Int
+  /// po ajoutés à la VE. Pour `characteristic`, le surcoût dépend de la
+  /// caractéristique améliorée : il vit dans `CharacteristicValue`.
+  teamValueSurcharge Int
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([ruleset, kind, step])
+  @@index([ruleset])
+}
+
+/// Surcoût de VE (po) d'une amélioration de caractéristique, par édition.
+model CharacteristicValue {
+  id        String   @id @default(cuid())
+  ruleset   Ruleset
+  /// ma | st | ag | pa | av
+  stat      String
+  surcharge Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ruleset, stat])
+}
+
+/// Réglages d'édition qui ne rentrent dans aucune autre table (lot 6.2).
+/// Une ligne par édition, extensible par colonne.
+model RulesetConfig {
+  id                  String   @id @default(cuid())
+  ruleset             Ruleset  @unique
+  /// po ajoutés à la VE par une compétence marquée Élite (`Skill.isElite`).
+  eliteSkillSurcharge Int      @default(10000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 // Modèle pour les coupes (tournois)
 model Cup {
   id          String  @id @default(cuid())
