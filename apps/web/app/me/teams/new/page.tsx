@@ -236,12 +236,21 @@ export default function NewTeamBuilder() {
 
   // Ligue imposée quand le roster n'en a qu'une : on la pose d'office pour
   // que le POST parte complet. Sinon on repart d'un choix vide à chaque
-  // changement de roster.
+  // changement de roster — mais on CONSERVE un choix encore valide : la
+  // liste des rosters peut être rechargée (langue, ruleset, flush tardif
+  // des effets sous charge) sans que les options changent, et écraser
+  // aveuglément le choix du coach faisait perdre sa Ligue juste après le
+  // clic (test flaky en CI).
   useEffect(() => {
     setRegionalLeagueTouched(false);
-    setRegionalLeague(
-      regionalLeagueOptions.length === 1 ? regionalLeagueOptions[0].slug : null,
-    );
+    setRegionalLeague((prev) => {
+      if (regionalLeagueOptions.length === 1) {
+        return regionalLeagueOptions[0].slug;
+      }
+      return prev && regionalLeagueOptions.some((o) => o.slug === prev)
+        ? prev
+        : null;
+    });
   }, [regionalLeagueOptions]);
 
   const regionalLeagueMissing =
