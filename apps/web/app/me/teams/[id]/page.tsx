@@ -395,8 +395,10 @@ export default function TeamDetailPage() {
         firedAt: p.firedAt ?? null,
         // Photo pleine résolution sur la carte (URL relative résolue par
         // le renderer contre sa propre origine ; absolue validée par
-        // allowlist dans le décodeur).
-        imageUrl: p.imageUrl ?? null,
+        // allowlist dans le décodeur). Sans photo de coach, on retombe sur
+        // l'illustration du positionnel plutôt que sur l'emblème.
+        imageUrl:
+          p.imageUrl ?? positionMetaByPosition.get(p.position)?.imageUrl ?? null,
       },
       {
         lang: language === "en" ? "en" : "fr",

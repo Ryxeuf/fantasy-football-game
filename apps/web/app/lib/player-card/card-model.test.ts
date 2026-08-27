@@ -267,6 +267,17 @@ describe("sanitizePlayerImageUrl (anti-SSRF)", () => {
     ).toBe("/images/player-images/x-1.jpg");
   });
 
+  it("accepte les visuels de catalogue (positions, Star Players)", () => {
+    expect(sanitizePlayerImageUrl("/images/positions/amazon_aigle.png")).toBe(
+      "/images/positions/amazon_aigle.png",
+    );
+    // Le `.webp` du catalogue star est accepté ICI : c'est le renderer qui
+    // le transcode en PNG (satori ne sait pas le décoder) ou l'écarte.
+    expect(
+      sanitizePlayerImageUrl("/images/star-players/Grombrindal.webp"),
+    ).toBe("/images/star-players/Grombrindal.webp");
+  });
+
   it("accepte une URL absolue sur une origine allowlistée (API)", () => {
     const prev = process.env.NEXT_PUBLIC_API_BASE;
     process.env.NEXT_PUBLIC_API_BASE = "https://api.nufflearena.fr";
@@ -299,9 +310,12 @@ describe("sanitizePlayerImageUrl (anti-SSRF)", () => {
       expect(
         sanitizePlayerImageUrl("/images/player-images/../../secret.png"),
       ).toBeUndefined();
-      // WEBP/GIF refusés (satori) ; schémas exotiques refusés.
+      // Dossier hors allowlist, extension non image, schéma exotique.
       expect(
-        sanitizePlayerImageUrl("/images/player-images/x.webp"),
+        sanitizePlayerImageUrl("/images/team-logos/x.png"),
+      ).toBeUndefined();
+      expect(
+        sanitizePlayerImageUrl("/images/player-images/x.exe"),
       ).toBeUndefined();
       expect(
         sanitizePlayerImageUrl("file:///etc/passwd"),
