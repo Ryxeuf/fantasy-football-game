@@ -265,6 +265,13 @@ export default function LeagueDetailPage() {
     );
   }, [season, currentUserId]);
 
+  /**
+   * Consultation des rosters : commissaire ou coach inscrit. Meme porte que
+   * le bouton « Voir le roster » de la liste des participants — le nom
+   * d'equipe du calendrier et du classement y mene desormais aussi.
+   */
+  const canViewRosters = isCreator || !!myParticipant;
+
   const canPlayMecene = useMemo(() => {
     if (!myParticipant || !season) return false;
     // L2.B.5 — le coup de mecene n'est propose que si le commissaire l'a
@@ -603,6 +610,8 @@ export default function LeagueDetailPage() {
                   canRecordResult={leagueEnabled && isCreator}
                   poolNamesById={poolNamesById}
                   poolIdByParticipantId={poolIdByParticipantId}
+                  leagueId={leagueId}
+                  canViewRosters={canViewRosters}
                 />
               </div>
 
@@ -628,12 +637,19 @@ export default function LeagueDetailPage() {
                         <SeasonStandings
                           rows={pool.standings}
                           showSeasonElo={showSeasonElo}
+                          leagueId={leagueId}
+                          canViewRosters={canViewRosters}
                         />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <SeasonStandings rows={standings} showSeasonElo={showSeasonElo} />
+                  <SeasonStandings
+                    rows={standings}
+                    showSeasonElo={showSeasonElo}
+                    leagueId={leagueId}
+                    canViewRosters={canViewRosters}
+                  />
                 )}
               </div>
 
@@ -661,7 +677,7 @@ export default function LeagueDetailPage() {
                   showSeasonElo={showSeasonElo}
                   poolNamesById={poolNamesById}
                   leagueId={league.id}
-                  canViewRosters={isCreator || !!myParticipant}
+                  canViewRosters={canViewRosters}
                   commissionerLeagueId={
                     leagueEnabled && isCreator ? league.id : undefined
                   }

@@ -32,7 +32,12 @@ function row(over: Partial<StandingRow> & { participantId: string }): StandingRo
 
 function renderStandings(
   rows: StandingRow[],
-  props: { showSeasonElo?: boolean; defaultExpanded?: boolean } = {},
+  props: {
+    showSeasonElo?: boolean;
+    defaultExpanded?: boolean;
+    leagueId?: string | null;
+    canViewRosters?: boolean;
+  } = {},
 ) {
   render(
     <LanguageProvider>
@@ -243,5 +248,32 @@ describe("SeasonStandings — nom du coach", () => {
   it("n'affiche rien quand coachName est null", () => {
     renderStandings([row({ participantId: "p1" })]);
     expect(screen.queryByTestId("standings-coach-p1")).toBeNull();
+  });
+});
+
+describe("SeasonStandings — acces au roster depuis le nom d'equipe", () => {
+  it("rend le nom cliquable vers la fiche de roster de la ligue", () => {
+    renderStandings([row({ participantId: "p1", teamId: "team-1" })], {
+      leagueId: "L1",
+      canViewRosters: true,
+    });
+    const link = screen.getByTestId("team-roster-link-standings-p1");
+    expect(link.getAttribute("href")).toBe("/leagues/L1/teams/team-1");
+  });
+
+  it("laisse le nom en texte quand la consultation n'est pas autorisee", () => {
+    renderStandings([row({ participantId: "p1", teamId: "team-1" })], {
+      leagueId: "L1",
+      canViewRosters: false,
+    });
+    expect(screen.queryByTestId("team-roster-link-standings-p1")).toBeNull();
+    expect(screen.getByTestId("standings-row-p1").textContent).toContain("p1");
+  });
+
+  it("laisse le nom en texte hors contexte de ligue (page recap)", () => {
+    renderStandings([row({ participantId: "p1", teamId: "team-1" })], {
+      canViewRosters: true,
+    });
+    expect(screen.queryByTestId("team-roster-link-standings-p1")).toBeNull();
   });
 });
