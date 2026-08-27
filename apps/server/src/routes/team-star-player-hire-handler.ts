@@ -119,7 +119,7 @@ export async function handleHireStarPlayer(
 
     const starPlayer = validation.starPlayer!;
 
-    const pairSlug = requiresPair(starPlayerSlug);
+    const pairSlug = requiresPair(starPlayerSlug, teamRuleset);
     const starPlayersToHire: Array<{ slug: string; cost: number }> = [
       { slug: starPlayerSlug, cost: starPlayer.cost },
     ];

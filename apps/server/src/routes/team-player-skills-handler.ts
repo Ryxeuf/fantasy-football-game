@@ -184,7 +184,9 @@ export async function handleUpdatePlayerSkills(
       tournamentRuleset?: string | null;
     };
     const frozen = await isTeamRosterFrozen(teamId);
-    const pack = frozen ? null : packForTeam(teamRow.tournamentRuleset ?? null);
+    const pack = frozen
+      ? null
+      : await packForTeam(teamRow.tournamentRuleset ?? null);
     const poolTotal = frozen ? 0 : (teamRow.startingPspPool ?? 0);
     const poolLeft = poolTotal
       ? Math.max(0, poolTotal - (await poolSpentForTeamId(teamId)))

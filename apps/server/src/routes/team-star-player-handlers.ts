@@ -75,18 +75,27 @@ export async function handleListTeamStarPlayers(
       return;
     }
 
+    // Ruleset REEL de l'equipe : une equipe Saison 2 se voyait servir la
+    // fiche Saison 3 de sa star, ou une carte vide quand le slug n'existe
+    // pas en Saison 3 (M3 de l'audit).
+    const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
     const enrichedStarPlayers = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       team.starPlayers.map(async (sp: any) => {
-        // NOTE : bug preexistant (hors perimetre) — ne passe pas team.ruleset,
-        // retombe toujours sur DEFAULT_RULESET.
-        const starPlayerData = await getStarPlayerBySlugDb(sp.starPlayerSlug, DEFAULT_RULESET);
+        const starPlayerData = await getStarPlayerBySlugDb(
+          sp.starPlayerSlug,
+          teamRuleset,
+        );
         return {
+          ...starPlayerData,
+          // Le spread du catalogue vient EN PREMIER : `cost` doit rester le
+          // coût effectivement PAYÉ (`TeamStarPlayer.cost`), pas le tarif
+          // courant du catalogue, sinon la VE affichée dérive du montant
+          // débité à l'embauche.
           id: sp.id,
           slug: sp.starPlayerSlug,
           cost: sp.cost,
           hiredAt: sp.hiredAt,
-          ...starPlayerData,
           // Mots-cles traduits (le catalogue engine ne porte que le FR).
           keywordsEn: translateKeywordsCsv(starPlayerData?.keywords ?? null, 'en'),
         };
@@ -180,7 +189,7 @@ export async function handleListAvailableStarPlayers(
         const canAfford = sp.cost <= availableBudget;
         const hasRoomForOne = totalPlayers < maxPlayers;
 
-        const pairSlug = requiresPair(sp.slug);
+        const pairSlug = requiresPair(sp.slug, teamRuleset);
         let needsPair = false;
         let pairStatus = null;
 
@@ -289,7 +298,10 @@ export async function handleDeleteTeamStarPlayer(
       return;
     }
 
-    const pairSlug = requiresPair(starPlayer.starPlayerSlug);
+    const pairSlug = requiresPair(
+      starPlayer.starPlayerSlug,
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    );
     const starPlayersToRemove: string[] = [starPlayerId];
 
     if (pairSlug) {

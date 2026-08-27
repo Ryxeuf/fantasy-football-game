@@ -445,7 +445,12 @@ export async function handleBuildTeam(
     let starPlayersCost = 0;
 
     if (starPlayersToHire.length > 0) {
-      const pairValidation = validateStarPlayerPairs(starPlayersToHire);
+      // Paires au ruleset de l'équipe (les paires Saison 3 ne s'appliquent
+      // pas à une équipe Saison 2).
+      const pairValidation = validateStarPlayerPairs(
+        starPlayersToHire,
+        ruleset,
+      );
       if (!pairValidation.valid) {
         sendError(
           res,
@@ -466,6 +471,7 @@ export async function handleBuildTeam(
         budgetInPo - totalCost * 1000 - staffCost * 1000,
         ruleset,
         regionalLeague,
+        def.regionalRules,
       );
 
       if (!validation.valid) {

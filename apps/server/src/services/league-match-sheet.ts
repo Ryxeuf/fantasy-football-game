@@ -95,6 +95,7 @@ import {
 } from "./tournament-inducements";
 import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
+import { getDeclaredRegionalRules } from "../utils/roster-helpers";
 
 export type MatchSheetStatus =
   | "draft"
@@ -2397,8 +2398,12 @@ function buildWeatherTables(): MatchSheetWeatherTable[] {
  * roster) et on resout le cout effectif (rabais regional). `star_player`
  * est traite a part. Suit les regles officielles d'acces par equipe.
  */
-function inducementOptionsFor(
+async function inducementOptionsFor(
   roster: string,
+  // Ruleset REEL de l'équipe : `DEFAULT_RULESET` était forcé ici, donc les
+  // Ligues et remises d'une équipe Saison 2 étaient arbitrées sur la table
+  // Saison 3 (S8 de l'audit).
+  ruleset: Ruleset,
   // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
   // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
   allowedInducements: string[] | null = null,
@@ -2409,13 +2414,17 @@ function inducementOptionsFor(
   // Règlement de tournoi de la ligue : liste FERMÉE de coups de pouce, avec
   // ses prix et quantités (ils priment sur le catalogue du moteur).
   pack: TournamentRulesetDefinition | null = null,
-): MatchSheetInducementOption[] {
+): Promise<MatchSheetInducementOption[]> {
   const ctx = {
     teamId: "A" as const,
     regionalRules: resolveTeamRegionalRules(
       roster,
-      DEFAULT_RULESET,
+      ruleset,
       regionalLeague,
+      // Ligues DÉCLARÉES par le roster (`Roster.regionalRules`) : sans elles
+      // la résolution retombe sur la table compilée et une Ligue éditée en
+      // admin ne changeait ni les remises ni l'offre de stars.
+      await getDeclaredRegionalRules(roster, ruleset),
     ),
     hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
     rosterSlug: roster,
@@ -2459,7 +2468,12 @@ async function starPlayersFor(
   // l'equipe (toujours DEFAULT_RULESET statique). Depuis le choix de Ligue
   // regionale, l'offre suit la Ligue retenue par l'equipe.
   const regionalRules =
-    resolveTeamRegionalRules(roster, ruleset, regionalLeague) ?? [];
+    resolveTeamRegionalRules(
+      roster,
+      ruleset,
+      regionalLeague,
+      await getDeclaredRegionalRules(roster, ruleset),
+    ) ?? [];
   const starPlayers = await getAvailableStarPlayersDb(roster, regionalRules, ruleset);
   return starPlayers.map((s) => ({
     slug: s.slug,
@@ -2600,16 +2614,18 @@ export async function buildMatchSheetReference(
     weatherTables: buildWeatherTables(),
     inducements: {
       home: teams.home
-        ? inducementOptionsFor(
+        ? await inducementOptionsFor(
             teams.home.roster,
+            (teams.home.ruleset as Ruleset) ?? DEFAULT_RULESET,
             allowedInducements,
             teams.home.regionalLeague,
             pack,
           )
         : [],
       away: teams.away
-        ? inducementOptionsFor(
+        ? await inducementOptionsFor(
             teams.away.roster,
+            (teams.away.ruleset as Ruleset) ?? DEFAULT_RULESET,
             allowedInducements,
             teams.away.regionalLeague,
             pack,

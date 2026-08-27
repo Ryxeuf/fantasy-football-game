@@ -122,6 +122,31 @@ function cacheSet<T>(
   store.set(key, { value, expiresAt: Date.now() + ROSTER_TTL_MS });
 }
 
+/**
+ * Ligues DÉCLARÉES par un roster (`Roster.regionalRules`, repli catalogue via
+ * `effectiveRegionalRules`), à passer en 4ᵉ argument de
+ * `resolveTeamRegionalRules`.
+ *
+ * Sans elle, cette résolution retombe silencieusement sur la table compilée
+ * `TEAM_REGIONAL_RULES_BY_RULESET` : une Ligue retirée ou ajoutée en admin ne
+ * changeait ni l'embauche de Star Players, ni l'offre de la feuille de match,
+ * ni les remises de coups de pouce, et un roster créé uniquement en base était
+ * refusé (« Roster 'X' non reconnu »).
+ *
+ * Tolérante : base injoignable (miroir sqlite de test) ⇒ `null`, donc repli
+ * catalogue, jamais d'exception qui ferait tomber une feuille de match.
+ */
+export async function getDeclaredRegionalRules(
+  rosterSlug: string,
+  ruleset: Ruleset,
+): Promise<readonly string[] | null> {
+  try {
+    return (await getRosterFromDb(rosterSlug, "fr", ruleset))?.regionalRules ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Invalidate every cached roster entry — call after admin-driven reseeds. */
 export function invalidateRosterCache(): void {
   singleRosterCache.clear();
