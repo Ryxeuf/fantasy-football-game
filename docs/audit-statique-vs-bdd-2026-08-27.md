@@ -307,7 +307,7 @@ comportement indexé par slug : il ne doit pas migrer en base.
 | 3 | ≈ 1 j | Coût des joueurs unifié (S5, S6, M1) ; journaliers de feuille → `Position` + `isElite` (S4) ; feuille de ligue → résolveurs DB règles spéciales/apothicaire (S9). |
 | 4 | ≈ 1–2 j | Contexte de coups de pouce réel (S10, S11) ; catalogue de stars DB dans `getInducementCost` ; `p.value` (cagnotte nulle). |
 | 5 | ≈ 1 j | Front web : W1–W5, W7 (données déjà chargées) ; W6/W8 ; résolveur `slug → nom` unique (W10–W12). |
-| 6 | ≈ 2 j | Modèle de données : brancher `TeamSpecialRule`/`RegionalLeague` ; créer `Inducement`, `AdvancementCost` ; colonnes `pairWith/pairCost`, `maxBigGuys`, `displayNameEn` ; `ALLOWED_TEAMS` → `Roster` (S14) ; `Roster.budget` (S15). |
+| 6 | ≈ 4–5 j | **Arbitré le 2026-08-27 → [lot6-modele-de-donnees-2026-08-27.md](./lot6-modele-de-donnees-2026-08-27.md).** Modèle de données : brancher `TeamSpecialRule`/`RegionalLeague` ; créer `Inducement`, `AdvancementCost` ; colonnes `pairWith/pairCost`, `maxBigGuys`, `displayNameEn` ; `ALLOWED_TEAMS` → `Roster` (S14) ; `Roster.budget` (S15). |
 | 7 | ≈ ½ j | Gouvernance : seeders `sync-*` en diff-report, application champ par champ ; invalidation du cache rosters sur écriture admin. |
 
 Après les lots 1–4, le catalogue statique ne sert plus que de repli (seed initial +
