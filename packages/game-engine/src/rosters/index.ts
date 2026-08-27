@@ -161,6 +161,8 @@ export {
   getRostersForHirableBy,
   getRostersForStarPlayer,
   getRostersForStarPlayerSlug,
+  getRosterSlugsForRuleset,
+  isStarPlayerHirableByRoster,
 } from "./star-player-rosters";
 
 // Formats de jeu : Blood Bowl à 11 vs Blood Bowl à Sept (axe orthogonal au ruleset)
