@@ -29,7 +29,19 @@ vi.mock('../utils/team-values', () => ({
   updateTeamValues: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../services/team-lock-status', () => ({
+  // Par defaut : equipe engagee (comportement historique des achats).
+  isTeamRosterFrozen: vi.fn().mockResolvedValue(true),
+  TEAM_ENGAGED_MESSAGE: 'ENGAGEE',
+}));
+
+vi.mock('../services/team-budget-summary', () => ({
+  syncDraftTreasury: vi.fn().mockResolvedValue(0),
+}));
+
 import { prisma } from '../prisma';
+import { isTeamRosterFrozen } from '../services/team-lock-status';
+import { syncDraftTreasury } from '../services/team-budget-summary';
 import { handlePurchase } from './team-purchase-handler';
 import type { AuthenticatedRequest } from '../middleware/authUser';
 
@@ -70,8 +82,13 @@ function createReq(
   } as AuthenticatedRequest;
 }
 
+const mockFrozen = isTeamRosterFrozen as ReturnType<typeof vi.fn>;
+const mockSyncTreasury = syncDraftTreasury as ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mockFrozen.mockResolvedValue(true);
+  mockSyncTreasury.mockResolvedValue(0);
 });
 
 describe('S27.8.28 — team-purchase-handler exports', () => {
@@ -170,5 +187,75 @@ describe('handlePurchase — apothecary roster gating (retour A30)', () => {
     expect(res.statusCode).toBe(200);
     // Le débit atomique conditionnel a bien été déclenché.
     expect(mockPrisma.team.updateMany).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handlePurchase — brouillon (equipe non engagee)', () => {
+  function mockTeam() {
+    mockPrisma.team.findFirst.mockResolvedValueOnce({
+      id: 'team-1',
+      players: [],
+      treasury: 200000,
+      rerolls: 0,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 1,
+      roster: 'orc',
+      ruleset: 'season_3',
+      format: 'bb11',
+    });
+    mockPrisma.teamSelection.findFirst.mockResolvedValueOnce(null);
+    mockPrisma.team.updateMany.mockResolvedValueOnce({ count: 1 });
+    mockPrisma.team.findUnique.mockResolvedValue({ id: 'team-1', players: [] });
+  }
+
+  it('facture la relance au prix de construction et resynchronise la tresorerie', async () => {
+    mockFrozen.mockResolvedValue(false);
+    mockTeam();
+    const res = createRes();
+    await handlePurchase(createReq({ body: { type: 'reroll' } }), res);
+
+    expect(res.statusCode).toBe(200);
+    // orc bb11 : 60k (defaultStaffConfig) — pas de doublement sur un brouillon.
+    expect(mockPrisma.team.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ treasury: { gte: 60000 } }),
+        data: expect.objectContaining({ treasury: { decrement: 60000 } }),
+      }),
+    );
+    expect(mockSyncTreasury).toHaveBeenCalledWith(prisma, 'team-1');
+    expect((res as { payload?: { data?: { purchase?: { draft?: boolean } } } }).payload?.data?.purchase?.draft).toBe(true);
+  });
+
+  it('facture la relance au double sur une equipe engagee, sans resync', async () => {
+    mockFrozen.mockResolvedValue(true);
+    mockTeam();
+    const res = createRes();
+    await handlePurchase(createReq({ body: { type: 'reroll' } }), res);
+
+    expect(mockPrisma.team.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ treasury: { decrement: 120000 } }),
+      }),
+    );
+    expect(mockSyncTreasury).not.toHaveBeenCalled();
+  });
+
+  it('facture le fan devoue au cout de la config (et non 10k en dur)', async () => {
+    mockTeam();
+    const res = createRes();
+    await handlePurchase(createReq({ body: { type: 'dedicated_fan' } }), res);
+
+    // defaultStaffConfig('orc','bb11').dedicatedFanCost = 5 000 po, max 6.
+    expect(mockPrisma.team.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          treasury: { gte: 5000 },
+          dedicatedFans: { lt: 6 },
+        }),
+        data: expect.objectContaining({ treasury: { decrement: 5000 } }),
+      }),
+    );
   });
 });

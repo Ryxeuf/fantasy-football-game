@@ -81,6 +81,14 @@ vi.mock("../utils/team-values", () => ({
 // (engagee => 403) sans dependre des tables match/ligue/coupe. Defaut = non
 // engagee (false) ; les tests qui veulent l'etat engage utilisent
 // `mockResolvedValueOnce(true)` (clearAllMocks ne reinitialise pas le default).
+// Resync de la tresorerie d'un brouillon (achats / edition libre) : isolee,
+// elle a ses propres tests (team-budget-summary.test.ts). Le reste du module
+// (creditInitialTreasury...) reste reel.
+vi.mock("../services/team-budget-summary", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../services/team-budget-summary")>()),
+  syncDraftTreasury: vi.fn().mockResolvedValue(0),
+}));
+
 vi.mock("../services/team-lock-status", () => ({
   isTeamRosterFrozen: vi.fn().mockResolvedValue(false),
   TEAM_ENGAGED_MESSAGE:

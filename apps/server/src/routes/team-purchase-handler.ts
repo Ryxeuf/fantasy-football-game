@@ -7,12 +7,13 @@
  *  - `POST /team/:id/purchase` — `handlePurchase` : achat avec
  *    tresorerie entre les matchs. 6 types pris en charge :
  *    - `player` (cout = position.cost*1000, validations slot+numero)
- *    - `reroll` (cout double = 2 * getRerollCost(roster), max 8)
- *    - `cheerleader` (cout 10k, max 12)
- *    - `assistant` (cout 10k, max 6)
- *    - `apothecary` (cout 50k, unique)
- *    - `dedicated_fan` (cout 10k, max 6)
- *    Lock match en cours. Update tresorerie + recalcule TV.
+ *    - `reroll` (cout double apres engagement ; prix de construction
+ *      tant que l'equipe est un brouillon non engage)
+ *    - `cheerleader` / `assistant` / `apothecary` / `dedicated_fan`
+ *      (couts et plafonds de `RosterStaffConfig`, roster x format)
+ *    Lock match en cours. Update tresorerie + recalcule TV. Sur un
+ *    brouillon, la tresorerie est ensuite resynchronisee sur le reliquat
+ *    du budget de construction (`syncDraftTreasury`).
  *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
  * `updateTeamValues`, `AllowedRoster`/`Ruleset`/`DEFAULT_RULESET`/
@@ -37,6 +38,8 @@ import {
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import { isTeamRosterFrozen } from '../services/team-lock-status';
+import { syncDraftTreasury } from '../services/team-budget-summary';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -101,6 +104,12 @@ export async function handlePurchase(
       sendError(res, "Impossible d'acheter pendant un match en cours", 400);
       return;
     }
+
+    // Brouillon = équipe jamais engagée (ni match, ni ligue, ni coupe) :
+    // elle est encore « en construction ». Ses achats se font au prix de
+    // construction (pas de relance double) et sa trésorerie est ensuite
+    // resynchronisée sur le reliquat du budget, comme pour l'édition libre.
+    const draft = !(await isTeamRosterFrozen(teamId));
 
     // Config staff résolue (DB par roster × format, sinon défaut dérivé).
     // Source des coûts, plafonds et autorisation apothicaire (po).
@@ -237,7 +246,9 @@ export async function handlePurchase(
         // rerolls < 8, avec decrement/increment atomiques. Si
         // count===0, soit budget insuffisant soit limite atteinte.
         // Achat post-création : coût DOUBLE du coût de relance (règle BB).
-        cost = staff.rerollCost * 2;
+        // Tant que l'équipe est un brouillon, on est encore « à la
+        // création » : prix simple.
+        cost = draft ? staff.rerollCost : staff.rerollCost * 2;
         const updateResult = await prisma.team.updateMany({
           where: {
             id: teamId,
@@ -265,7 +276,9 @@ export async function handlePurchase(
           }
           return;
         }
-        description = `Relance achetee (cout double: ${Math.round(cost / 1000)}k po)`;
+        description = draft
+          ? `Relance achetee (${Math.round(cost / 1000)}k po)`
+          : `Relance achetee (cout double: ${Math.round(cost / 1000)}k po)`;
         break;
       }
 
@@ -367,12 +380,14 @@ export async function handlePurchase(
       }
 
       case 'dedicated_fan': {
-        cost = 10000;
+        // Coût et plafond de la config (Saison 3 BB11 : 5k, max 3) — les
+        // constantes 10k / 6 écrites en dur surfacturaient les fans.
+        cost = staff.dedicatedFanCost;
         const updateResult = await prisma.team.updateMany({
           where: {
             id: teamId,
             treasury: { gte: cost },
-            dedicatedFans: { lt: 6 },
+            dedicatedFans: { lt: staff.maxDedicatedFans },
           },
           data: {
             dedicatedFans: { increment: 1 },
@@ -384,10 +399,10 @@ export async function handlePurchase(
             where: { id: teamId },
             select: { dedicatedFans: true },
           });
-          if (fresh && fresh.dedicatedFans >= 6) {
-            sendError(res, 'Maximum 6 fans devoues', 400);
+          if (fresh && fresh.dedicatedFans >= staff.maxDedicatedFans) {
+            sendError(res, `Maximum ${staff.maxDedicatedFans} fans devoues`, 400);
           } else {
-            sendError(res, 'Tresorerie insuffisante. Cout: 10k po', 400);
+            sendError(res, `Tresorerie insuffisante. Cout: ${Math.round(cost / 1000)}k po`, 400);
           }
           return;
         }
@@ -408,6 +423,10 @@ export async function handlePurchase(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);
+    if (draft) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await syncDraftTreasury(prisma as any, teamId);
+    }
 
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
@@ -416,7 +435,7 @@ export async function handlePurchase(
 
     sendSuccess(res, {
       team: updatedTeam,
-      purchase: { type, cost, description },
+      purchase: { type, cost, description, draft },
     });
   } catch (e: unknown) {
     serverLog.error("Erreur lors de l'achat:", e);

@@ -52,6 +52,9 @@ export default function TeamTreasuryPage() {
   const { t } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [availablePositions, setAvailablePositions] = useState<AvailablePosition[]>([]);
+  // Brouillon = équipe jamais engagée : achats au prix de construction
+  // (pas de relance double). `true` par défaut = comportement prudent.
+  const [frozen, setFrozen] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -80,6 +83,7 @@ export default function TeamTreasuryPage() {
 
         setData(d);
         setAvailablePositions(positionsData.availablePositions || []);
+        setFrozen(positionsData.frozen ?? true);
       } catch (e: any) {
         setError(e?.message || (t.teams.error ?? "Erreur"));
       } finally {
@@ -96,6 +100,7 @@ export default function TeamTreasuryPage() {
       frozen?: boolean;
     }>(`/team/${id}/available-positions`);
     setAvailablePositions(positionsData.availablePositions || []);
+    setFrozen(positionsData.frozen ?? true);
   };
 
   const team = data?.team;
@@ -154,6 +159,7 @@ export default function TeamTreasuryPage() {
             })),
           }}
           availablePositions={availablePositions}
+          draft={!frozen}
           onPurchaseComplete={refetch}
         />
       ) : (

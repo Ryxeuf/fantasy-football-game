@@ -39,6 +39,12 @@ interface TeamData {
 interface TreasuryPurchasePanelProps {
   team: TeamData;
   availablePositions: AvailablePosition[];
+  /**
+   * Équipe jamais engagée (brouillon) : le serveur facture la relance au
+   * prix de construction (pas de doublement) et resynchronise la
+   * trésorerie sur le reliquat du budget. Défaut `false` = engagée.
+   */
+  draft?: boolean;
   onPurchaseComplete: () => void;
 }
 
@@ -58,6 +64,7 @@ async function postPurchase(teamId: string, body: Record<string, unknown>) {
 export default function TreasuryPurchasePanel({
   team,
   availablePositions,
+  draft = false,
   onPurchaseComplete,
 }: TreasuryPurchasePanelProps) {
   const [loading, setLoading] = useState(false);
@@ -70,7 +77,9 @@ export default function TreasuryPurchasePanel({
   // Coûts/plafonds staff : config DB résolue (par roster × format) si fournie,
   // sinon repli sur les défauts historiques.
   const sc = team.staffConfig;
-  const rerollCostDouble = (sc?.rerollCost ?? getRerollCost(team.roster)) * 2;
+  const rerollBaseCost = sc?.rerollCost ?? getRerollCost(team.roster);
+  // Même règle que le serveur : double après engagement, simple sur un brouillon.
+  const rerollCost = draft ? rerollBaseCost : rerollBaseCost * 2;
   const cheerleaderCost = sc?.cheerleaderCost ?? 10000;
   const assistantCost = sc?.assistantCost ?? 10000;
   const apothecaryCost = sc?.apothecaryCost ?? 50000;
@@ -128,10 +137,10 @@ export default function TreasuryPurchasePanel({
     {
       type: "reroll",
       label: "Relance",
-      cost: rerollCostDouble,
+      cost: rerollCost,
       current: team.rerolls,
       max: maxRerolls,
-      disabled: team.rerolls >= maxRerolls || treasury < rerollCostDouble,
+      disabled: team.rerolls >= maxRerolls || treasury < rerollCost,
     },
     {
       type: "cheerleader",
@@ -317,7 +326,7 @@ export default function TreasuryPurchasePanel({
                       : `${item.current}/${item.max}`}
                     {" — "}
                     {Math.round(item.cost / 1000)}k po
-                    {item.type === "reroll" && (
+                    {item.type === "reroll" && !draft && (
                       <span className="text-amber-600 ml-1">(cout double apres creation)</span>
                     )}
                   </div>
@@ -347,7 +356,14 @@ export default function TreasuryPurchasePanel({
         <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded text-sm">
           <div className="font-semibold mb-1">Regles d'achat entre matchs</div>
           <ul className="text-xs space-y-1 list-disc list-inside">
-            <li>Les relances coutent le double apres la creation de l'equipe</li>
+            {draft ? (
+              <li data-testid="treasury-draft-notice">
+                Equipe non engagee : achats au prix de construction, la tresorerie
+                reste le reliquat de votre budget initial
+              </li>
+            ) : (
+              <li>Les relances coutent le double apres la creation de l'equipe</li>
+            )}
             <li>La tresorerie provient des gains de match</li>
             <li>Maximum 16 joueurs vivants par equipe</li>
           </ul>
