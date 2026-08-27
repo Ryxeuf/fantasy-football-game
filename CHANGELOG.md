@@ -1,3 +1,15 @@
+## [1.237.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.236.1...v1.237.0) (2026-08-27)
+
+
+### ✨ Features
+
+* **star-players:** badge de saison, bascule S2/S3 et « joue pour » servi par l'API ([32307a2](https://github.com/Ryxeuf/fantasy-football-game/commit/32307a2f0191562634dcd298d2df168aceb1cc95))
+
+
+### 🐛 Bug Fixes
+
+* **star-players:** « joue pour » résolu depuis les rosters en base du même ruleset ([7f8c208](https://github.com/Ryxeuf/fantasy-football-game/commit/7f8c2084a8254de2c7787b391f0823118a42e806))
+
 ## [1.236.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.236.0...v1.236.1) (2026-08-27)
 
 
