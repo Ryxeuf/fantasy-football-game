@@ -39,7 +39,10 @@ import {
   type OfflinePurchaseInput,
 } from "./league-offline-purchases";
 import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
-import { reverseOfflineLeagueResult } from "./league-offline-edit";
+import {
+  reverseOfflineLeagueResult,
+  type ReverseOfflineSkipReason,
+} from "./league-offline-edit";
 import {
   buildJourneymanHire,
   deriveJourneymen,
@@ -1572,6 +1575,32 @@ export async function canInvalidateMatchSheet(input: {
  * puis repasse la feuille en `invalidated` pour permettre une
  * correction. Respecte la fenetre `canInvalidateMatchSheet`.
  */
+/**
+ * Explication lisible d'un refus de reversion. Le commissaire voyait un
+ * code brut (« Reversion impossible: playoffs-generated ») sans savoir ce
+ * qu'il pouvait y faire.
+ */
+function reversionRefusalMessage(reason: ReverseOfflineSkipReason): string {
+  switch (reason) {
+    case "season-completed":
+      return "la saison est cloturee, son classement final est fige";
+    case "playoffs-generated":
+      return "les playoffs sont generes : le classement de la phase reguliere est fige (un match DE playoff, lui, reste invalidable)";
+    case "playoff-round-advanced":
+      return "le tour suivant du bracket a deja demarre : invalidez-le d'abord";
+    case "advancement-consumed":
+      return "un joueur a deja depense les PSP de ce match";
+    case "purchase-consumed":
+      return "un joueur achete apres ce match a deja joue ou progresse";
+    case "match-missing":
+    case "not-offline-match":
+    case "not-scored":
+    case "snapshot-missing":
+    case "pairing-missing":
+      return "le resultat enregistre est introuvable ou incomplet";
+  }
+}
+
 export async function invalidateMatchSheet(input: {
   pairingId: string;
   userId: string;
@@ -1642,9 +1671,11 @@ export async function invalidateMatchSheet(input: {
     if ("skipped" in reversed) {
       // Reversion impossible (mort, saison cloturee, playoffs...) :
       // on refuse l'invalidation pour ne pas laisser un etat incoherent.
+      // Le code brut reste dans le message : l'UI s'en sert pour proposer
+      // le deblocage `advancement-consumed` (cf. invalidate-consumed.ts).
       throw new MatchSheetError(
         "invalidation_failed",
-        `Reversion impossible: ${reversed.reason}`,
+        `Reversion impossible: ${reversed.reason} — ${reversionRefusalMessage(reversed.reason)}`,
       );
     }
   }

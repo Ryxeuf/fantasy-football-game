@@ -65,10 +65,22 @@ vi.mock("./league-sheet-advancements", () => ({
   removeLatestAdvancements: vi.fn(async () => ({ removed: 1 })),
 }));
 
+// Bracket de playoffs : service dedie (teste dans league-playoffs.test.ts).
+// Ici on verifie la delegation — quand on interroge l'etat du tour suivant,
+// et avec quoi on le desavance.
+vi.mock("./league-playoffs", () => ({
+  playoffAdvancementState: vi.fn(async () => "none"),
+  unadvancePlayoffsForSlot: vi.fn(async () => ({ unadvanced: true })),
+}));
+
 import { prisma } from "../prisma";
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import { revertPlayerStatus } from "./player-status";
 import { removeLatestAdvancements } from "./league-sheet-advancements";
+import {
+  playoffAdvancementState,
+  unadvancePlayoffsForSlot,
+} from "./league-playoffs";
 import { updateTeamValues } from "../utils/team-values";
 import {
   reverseOfflineLeagueResult,
@@ -93,6 +105,8 @@ const m = {
   selDelete: prisma.teamSelection.deleteMany as MockFn,
   updateTv: updateTeamValues as unknown as MockFn,
   revertStatus: revertPlayerStatus as unknown as MockFn,
+  poState: playoffAdvancementState as unknown as MockFn,
+  poUnadvance: unadvancePlayoffsForSlot as unknown as MockFn,
 };
 
 function buildSnapshot(over: Record<string, unknown> = {}) {
@@ -128,7 +142,12 @@ function buildMatch(over: Record<string, unknown> = {}) {
       status: "in_progress",
       league: { winPoints: 3, drawPoints: 1, lossPoints: 0 },
     },
-    leagueRound: { id: "round-1", status: "completed" },
+    leagueRound: {
+      id: "round-1",
+      status: "completed",
+      kind: "regular",
+      bracketSlot: null,
+    },
     ...over,
   };
 }
@@ -153,6 +172,8 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     m.roundCount.mockResolvedValue(0);
+    m.poState.mockResolvedValue("none");
+    m.poUnadvance.mockResolvedValue({ unadvanced: true });
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([]);
     m.partUpdate.mockResolvedValue({});
@@ -220,6 +241,63 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
       skipped: true,
       reason: "playoffs-generated",
     });
+  });
+
+  // Un match DE playoff ne fige aucun classement de phase reguliere :
+  // le refus « playoffs-generated » le rendait pourtant ineditable.
+  const playoffMatch = (slot = "sf1") =>
+    buildMatch({
+      leagueRound: {
+        id: "round-po",
+        status: "completed",
+        kind: "playoff",
+        bracketSlot: slot,
+      },
+    });
+
+  it("invalide un match DE playoff sans buter sur « playoffs-generated »", async () => {
+    m.matchFind.mockResolvedValue(playoffMatch());
+    m.roundCount.mockResolvedValue(4); // le bracket existe : sans effet ici.
+
+    const r = await reverseOfflineLeagueResult("m-1");
+
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+    // Le comptage global des rounds playoff n'est meme plus interroge.
+    expect(m.roundCount).not.toHaveBeenCalled();
+    expect(m.poState).toHaveBeenCalledWith("season-1", "sf1");
+  });
+
+  it("refuse si le tour suivant du bracket a deja demarre", async () => {
+    m.matchFind.mockResolvedValue(playoffMatch());
+    m.poState.mockResolvedValue("started");
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      skipped: true,
+      reason: "playoff-round-advanced",
+    });
+    // Refus AVANT toute ecriture.
+    expect(m.matchDelete).not.toHaveBeenCalled();
+  });
+
+  it("retire du bracket la qualification issue du match invalide", async () => {
+    // Snapshot 2-1 -> l'equipe a domicile (participant "ph") etait qualifiee.
+    m.matchFind.mockResolvedValue(playoffMatch("qf2"));
+
+    await reverseOfflineLeagueResult("m-1");
+
+    expect(m.poUnadvance).toHaveBeenCalledWith({
+      seasonId: "season-1",
+      slot: "qf2",
+      winnerParticipantId: "ph",
+    });
+  });
+
+  it("ne touche pas au bracket pour un match de phase reguliere", async () => {
+    m.matchFind.mockResolvedValue(buildMatch());
+
+    await reverseOfflineLeagueResult("m-1");
+
+    expect(m.poUnadvance).not.toHaveBeenCalled();
   });
 
   it("ressuscite un joueur tue : reverse une blessure 'dead' (dead:false)", async () => {
@@ -716,6 +794,8 @@ describe("editOfflineLeagueResult (W-B3)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     m.roundCount.mockResolvedValue(0);
+    m.poState.mockResolvedValue("none");
+    m.poUnadvance.mockResolvedValue({ unadvanced: true });
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([]);
     m.partUpdate.mockResolvedValue({});
