@@ -14,6 +14,7 @@ import {
   type CardLang,
 } from "../../../lib/player-card/card-model";
 import { renderPlayerCardResponse } from "../../../lib/player-card/render";
+import { resolveCardImageUrl } from "../../../lib/player-card/portrait";
 import { getPlaysForCardLines, toPlaysForCardLines } from "../plays-for";
 
 export const runtime = "nodejs";
@@ -33,6 +34,7 @@ interface StarPayload {
   isMegaStar?: boolean;
   specialRule?: string;
   specialRuleEn?: string;
+  imageUrl?: string | null;
   /** Édition réellement servie pour ce slug (pas toujours la Saison 3). */
   ruleset?: string;
   /** Rosters pouvant recruter, résolus par le serveur DEPUIS LA BASE. */
@@ -138,7 +140,13 @@ export async function GET(
       cost: pairCost ?? star.cost,
     },
   );
-  return renderPlayerCardResponse(data, {
+  // Portrait du catalogue : la carte montre LE MÊME visuel que la fiche
+  // (`/star-players/:slug`). Les images du catalogue sont en `.webp`, que
+  // satori ne sait pas décoder — `resolveCardImageUrl` les lit sur disque et
+  // les transcode en PNG ; sans visuel exploitable, l'emblème programmatique
+  // reprend sa place.
+  const portrait = await resolveCardImageUrl(star.imageUrl, url.origin);
+  return renderPlayerCardResponse(portrait ? { ...data, imageUrl: portrait } : data, {
     download: url.searchParams.get("download") === "1",
     // URL stable (non adressée par le contenu) : cache navigateur court pour
     // suivre les corrections de données star sans re-render à chaque vue.

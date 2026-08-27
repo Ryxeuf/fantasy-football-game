@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 import { SkillMultiSelect } from "../../_components/SkillMultiSelect";
 import SkillAccessSelector from "../SkillAccessSelector";
+import PositionContentFields, {
+  readPositionContentFields,
+} from "../PositionContentFields";
 import {
   RULESET_OPTIONS,
   DEFAULT_RULESET,
@@ -138,6 +141,7 @@ export default function NewPositionPage() {
         keywords: formData.get("keywords") as string || null,
         primarySkills,
         secondarySkills,
+        ...readPositionContentFields(formData),
         skillSlugs: selectedSkillSlugs,
       };
       await postJSON("/admin/data/positions", data);
@@ -302,6 +306,7 @@ export default function NewPositionPage() {
               Mots-clés pour cette position (ex: elite, passive, etc.)
             </p>
           </div>
+          <PositionContentFields />
           <div className="col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 border rounded bg-gray-50">
             <SkillAccessSelector
               label="Accès primaire"

@@ -22,7 +22,25 @@ vi.mock("../../../lib/api-client", () => ({
 }));
 
 import NewTeamPage from "./page";
-import { LanguageProvider } from "../../../contexts/LanguageContext";
+import {
+  LanguageProvider,
+  useLanguage,
+} from "../../../contexts/LanguageContext";
+
+/** Bascule la langue depuis l'intérieur du provider (force un rechargement
+ *  de la liste des rosters, comme le ferait le sélecteur de langue). */
+function SwitchToEnglish() {
+  const { setLanguage } = useLanguage();
+  return (
+    <button
+      type="button"
+      data-testid="switch-en"
+      onClick={() => setLanguage("en")}
+    >
+      en
+    </button>
+  );
+}
 
 const LINEMAN = {
   slug: "lineman",
@@ -60,14 +78,25 @@ function mockRosters(rosters: unknown[]) {
     "fetch",
     vi.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
+      // Réponse distinguable en anglais pour pouvoir attendre le re-render
+      // consécutif à un rechargement de la liste.
       const payload = url.includes("builder-rosters")
-        ? { rosters }
+        ? {
+            rosters: url.includes("lang=en")
+              ? (rosters as Array<{ name: string }>).map((r) => ({
+                  ...r,
+                  name: `${r.name} EN`,
+                }))
+              : rosters,
+          }
         : url.includes("star-players")
           ? { starPlayers: [] }
           : {};
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(payload),
+        // Nouvelles références à chaque appel, comme un vrai parse JSON :
+        // un rechargement produit un nouveau tableau d'options.
+        json: () => Promise.resolve(structuredClone(payload)),
       } as Response);
     }),
   );
@@ -87,6 +116,7 @@ beforeEach(() => {
 function renderPage() {
   return render(
     <LanguageProvider>
+      <SwitchToEnglish />
       <NewTeamPage />
     </LanguageProvider>,
   );
@@ -108,15 +138,49 @@ describe("Builder — Ligue régionale obligatoire", () => {
     ).toBe(true);
 
     fireEvent.click(
-      screen.getByTestId("regional-league-option-woodland_league")
+      screen
+        .getByTestId("regional-league-option-woodland_league")
         .querySelector("input") as HTMLInputElement,
     );
 
     await waitFor(() =>
       expect(
-        (screen.getByTestId("create-team-submit") as HTMLButtonElement).disabled,
+        (screen.getByTestId("create-team-submit") as HTMLButtonElement)
+          .disabled,
       ).toBe(false),
     );
+    expect(screen.queryByTestId("hint-regional-league")).toBeNull();
+  });
+
+  it("conserve la Ligue choisie quand la liste des rosters est rechargée", async () => {
+    mockRosters([MULTI]);
+    window.history.replaceState({}, "", "/me/teams/new?roster=halfling");
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("regional-league-picker")).toBeTruthy(),
+    );
+    const radio = () =>
+      screen
+        .getByTestId("regional-league-option-woodland_league")
+        .querySelector("input") as HTMLInputElement;
+    fireEvent.click(radio());
+    await waitFor(() =>
+      expect(
+        (screen.getByTestId("create-team-submit") as HTMLButtonElement)
+          .disabled,
+      ).toBe(false),
+    );
+
+    // Rechargement des rosters (nouveau tableau, mêmes options) : le choix
+    // du coach ne doit pas être écrasé.
+    fireEvent.click(screen.getByTestId("switch-en"));
+    await waitFor(() => expect(screen.getByText("Halflings EN")).toBeTruthy());
+
+    expect(radio().checked).toBe(true);
+    expect(
+      (screen.getByTestId("create-team-submit") as HTMLButtonElement).disabled,
+    ).toBe(false);
     expect(screen.queryByTestId("hint-regional-league")).toBeNull();
   });
 
@@ -130,7 +194,8 @@ describe("Builder — Ligue régionale obligatoire", () => {
     expect(screen.queryByTestId("hint-regional-league")).toBeNull();
     await waitFor(() =>
       expect(
-        (screen.getByTestId("create-team-submit") as HTMLButtonElement).disabled,
+        (screen.getByTestId("create-team-submit") as HTMLButtonElement)
+          .disabled,
       ).toBe(false),
     );
   });
@@ -150,7 +215,8 @@ describe("Builder — Ligue régionale obligatoire", () => {
     );
 
     fireEvent.click(
-      screen.getByTestId("regional-league-option-woodland_league")
+      screen
+        .getByTestId("regional-league-option-woodland_league")
         .querySelector("input") as HTMLInputElement,
     );
 

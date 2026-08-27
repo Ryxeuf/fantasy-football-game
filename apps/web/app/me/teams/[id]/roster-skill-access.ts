@@ -23,6 +23,7 @@ export interface RosterPositionLike {
   readonly skills?: string | null;
   readonly keywords?: string | null;
   readonly keywordsEn?: string | null;
+  readonly imageUrl?: string | null;
 }
 
 export interface PositionMeta {
@@ -45,6 +46,8 @@ export interface PositionMeta {
   readonly keywords: string | null;
   /** Mots-clés EN (CSV). */
   readonly keywordsEn: string | null;
+  /** Illustration du poste — portrait par défaut d'un joueur sans photo. */
+  readonly imageUrl: string | null;
 }
 
 /**
@@ -70,6 +73,7 @@ export function buildPositionMetaByPosition(
       baseSkills,
       keywords: pos.keywords ?? null,
       keywordsEn: pos.keywordsEn ?? null,
+      imageUrl: pos.imageUrl ?? null,
     });
   }
   return map;

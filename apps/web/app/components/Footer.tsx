@@ -44,6 +44,26 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/teams/comparer" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.nav.compareTeams}
+                </a>
+              </li>
+              <li>
+                <a href="/teams/positions" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.nav.positionsStudy}
+                </a>
+              </li>
+              <li>
+                <a href="/teams/positions/comparer" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.nav.comparePositions}
+                </a>
+              </li>
+              <li>
+                <a href="/teams/tier-list" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.nav.tierList}
+                </a>
+              </li>
+              <li>
                 <a href="/skills" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.footer.skills ?? "Compétences"}
                 </a>

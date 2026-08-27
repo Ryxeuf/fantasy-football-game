@@ -29,6 +29,7 @@ import {
 import { memoizeAsync, invalidateMemoNamespace } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
 import { getRosterPositionStats } from "../services/position-usage-stats";
+import { resolvePositionContent } from "../services/position-content";
 import {
   effectiveRegionalRules,
   parseSlugList,
@@ -134,6 +135,12 @@ interface RosterDetailPayload {
       keywordsEn: string | null;
       primarySkills: string | null;
       secondarySkills: string | null;
+      /** Illustration du poste (null si non renseignée). */
+      imageUrl: string | null;
+      /** Description de jeu, localisée (repli FR). */
+      description: string | null;
+      /** Fluff / lore, localisé (repli FR). */
+      fluff: string | null;
     }>;
     /** A11 — règles spéciales d'équipe résolues (vide si aucune). */
     specialRules: RosterSpecialRuleView[];
@@ -488,6 +495,9 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
       keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
+      // Contenu éditorial du poste (image / description / fluff), résolu par
+      // le même helper que `/api/positions` pour ne pas diverger.
+      ...resolvePositionContent(position, isEnglish),
     })),
     specialRules: resolveSpecialRules(roster.specialRules, isEnglish),
     regionalLeagues: resolveRegionalLeagues(

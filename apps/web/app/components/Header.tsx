@@ -14,9 +14,25 @@ import {
 type DropdownId =
   | "competitions"
   | "compendium"
+  | "tools"
   | "play"
   | "nuffle-coach"
   | null;
+
+/**
+ * Outils d'analyse du catalogue. Ils vivaient uniquement au fond de
+ * `/teams` — ce menu dedie (et son pendant mobile) est leur point d'entree.
+ */
+const TOOL_LINKS: ReadonlyArray<{
+  href: string;
+  icon: string;
+  labelKey: "compareTeams" | "positionsStudy" | "comparePositions" | "tierList";
+}> = [
+  { href: "/teams/comparer", icon: "⚔️", labelKey: "compareTeams" },
+  { href: "/teams/positions", icon: "📊", labelKey: "positionsStudy" },
+  { href: "/teams/positions/comparer", icon: "🔬", labelKey: "comparePositions" },
+  { href: "/teams/tier-list", icon: "🏅", labelKey: "tierList" },
+];
 
 export default function Header() {
   const { t } = useLanguage();
@@ -216,6 +232,28 @@ export default function Header() {
                 {dropdownItem("/ligues", "🏆", "Ligues")}
                 {dropdownItem("/skills", "📚", t.nav.skills)}
                 {dropdownItem("/star-players", "⭐", t.nav.starPlayers)}
+              </div>
+            )}
+          </div>
+
+          {/* Outils d'analyse (comparateurs, etudes, tier list) */}
+          <div
+            className="relative"
+            ref={(el) => { dropdownRefs.current["tools"] = el; }}
+          >
+            <button
+              onClick={() => toggleDropdown("tools")}
+              className={dropdownTriggerClass("tools")}
+              data-testid="nav-tools"
+            >
+              🧰 {t.nav.tools}
+              {chevron("tools")}
+            </button>
+            {openDropdown === "tools" && (
+              <div className="absolute left-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                {TOOL_LINKS.map((tool) =>
+                  dropdownItem(tool.href, tool.icon, t.nav[tool.labelKey]),
+                )}
               </div>
             )}
           </div>
@@ -458,6 +496,23 @@ export default function Header() {
               >
                 ⭐ {t.nav.starPlayers}
               </a>
+            </nav>
+
+            {/* Outils d'analyse */}
+            <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+              <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                🧰 {t.nav.tools}
+              </p>
+              {TOOL_LINKS.map((tool) => (
+                <a
+                  key={tool.href}
+                  href={tool.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  {tool.icon} {t.nav[tool.labelKey]}
+                </a>
+              ))}
             </nav>
 
             {/* Blog */}

@@ -1,6 +1,11 @@
 {
   "nav": {
     "teams": "Teams",
+    "tools": "Tools",
+    "compareTeams": "Compare rosters",
+    "positionsStudy": "Position studies",
+    "comparePositions": "Compare positions",
+    "tierList": "Roster tier list",
     "skills": "Skills",
     "starPlayers": "Star Players",
     "play": "Play",

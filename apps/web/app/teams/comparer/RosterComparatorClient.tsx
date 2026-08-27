@@ -13,6 +13,7 @@ import {
 } from "../roster-meta";
 import { canonicalMatchup } from "../matchup";
 import { COMPARATOR_I18N } from "./comparator-i18n";
+import CatalogToolsBar from "../CatalogToolsBar";
 
 const API_BASE_PUBLIC =
   process.env.NEXT_PUBLIC_API_BASE ||
@@ -320,6 +321,7 @@ export default function RosterComparatorClient({
             {tr.backToTeams}
           </Link>
         </div>
+        <CatalogToolsBar current="compare-teams" className="mt-4" />
       </header>
 
       {/* Sélecteur d'équipes */}

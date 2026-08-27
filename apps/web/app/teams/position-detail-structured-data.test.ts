@@ -61,6 +61,33 @@ describe("buildPositionDetailSchema", () => {
     expect(description).not.toContain("PA 0");
   });
 
+  it("place la description editoriale devant la phrase de stats", () => {
+    const withText = buildPositionDetailSchema({
+      position: { ...POSITION, description: "Le coureur des egouts." },
+      baseUrl: BASE,
+    });
+    const term = (withText["@graph"] as Array<Record<string, unknown>>)[0];
+    expect(String(term.description)).toMatch(/^Le coureur des egouts\. /);
+    // Les stats restent citables derriere le texte editorial.
+    expect(String(term.description)).toContain("MA 9");
+  });
+
+  it("expose l'illustration du poste quand elle existe", () => {
+    const withImage = buildPositionDetailSchema({
+      position: {
+        ...POSITION,
+        imageUrl: `${BASE}/images/positions/skaven_gutter_runner.png`,
+      },
+      baseUrl: BASE,
+    });
+    const term = (withImage["@graph"] as Array<Record<string, unknown>>)[0];
+    expect(term.image).toBe(
+      `${BASE}/images/positions/skaven_gutter_runner.png`,
+    );
+    // Sans image, la cle est absente (pas de `null` dans le JSON-LD).
+    expect(graph[0]).not.toHaveProperty("image");
+  });
+
   it("construit un fil d'Ariane a 4 niveaux", () => {
     const items = graph[1].itemListElement as Array<Record<string, unknown>>;
     expect(items).toHaveLength(4);

@@ -18,6 +18,7 @@ import SkillAccessBadges from "../../me/teams/components/SkillAccessBadges";
 import { useLanguage } from "../../contexts/LanguageContext";
 import ShareBar from "../../components/ShareBar";
 import { stripRosterPrefix } from "../position-slug";
+import CatalogToolsBar from "../CatalogToolsBar";
 import { formatPlusStat } from "../../lib/format-stats";
 import {
   budgetHeadroom,
@@ -253,6 +254,7 @@ export default function TeamDetailClient({
               ⚔️ {language === "en" ? "Compare this team" : "Comparer cette équipe"}
             </Link>
           </div>
+          <CatalogToolsBar current="teams" className="mt-4 max-w-3xl" />
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex rounded-lg border border-gray-200 overflow-hidden shadow-sm">

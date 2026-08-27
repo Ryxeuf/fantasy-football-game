@@ -81,6 +81,20 @@ describe("buildPositionMetaByPosition", () => {
     expect(map.get("skaven_lineman")?.keywords).toBeNull();
   });
 
+  it("indexe l'illustration du poste (portrait par défaut des cartes)", () => {
+    const map = buildPositionMetaByPosition([
+      {
+        slug: "amazon_guerriere_aigle",
+        imageUrl: "/images/positions/amazon_guerriere_aigle.png",
+      },
+      { slug: "skaven_lineman" },
+    ]);
+    expect(map.get("amazon_guerriere_aigle")?.imageUrl).toBe(
+      "/images/positions/amazon_guerriere_aigle.png",
+    );
+    expect(map.get("skaven_lineman")?.imageUrl).toBeNull();
+  });
+
   it("ignore les entrées sans slug et tolère null/undefined", () => {
     expect(buildPositionMetaByPosition(null).size).toBe(0);
     expect(

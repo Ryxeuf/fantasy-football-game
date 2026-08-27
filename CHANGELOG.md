@@ -1,3 +1,17 @@
+## [1.238.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.0...v1.238.1) (2026-08-27)
+
+
+### 🐛 Bug Fixes
+
+* **web:** ne pas écraser la Ligue régionale choisie au rechargement des rosters ([6b56874](https://github.com/Ryxeuf/fantasy-football-game/commit/6b5687430f1e4a90154466319572e47267a0a244)), closes [#33074618839](https://github.com/Ryxeuf/fantasy-football-game/issues/33074618839)
+
+
+### 📝 Documentation
+
+* audit statique vs base de données (2026-08-27) ([95fe3b7](https://github.com/Ryxeuf/fantasy-football-game/commit/95fe3b78c9190f9fd9852de478d869e4f61f736b))
+* lot 6 — arbitrages et spécification du modèle de données « base d'abord » ([910f502](https://github.com/Ryxeuf/fantasy-football-game/commit/910f502c854d922f1e24bdfc79a75b24ebfa8a92))
+* **lot6:** db push sans backfill, un change OpenSpec par sous-lot ([18303d6](https://github.com/Ryxeuf/fantasy-football-game/commit/18303d67802eb590c76bf6dd82c6a1242a6f42d2))
+
 ## [1.238.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.237.1...v1.238.0) (2026-08-27)
 
 

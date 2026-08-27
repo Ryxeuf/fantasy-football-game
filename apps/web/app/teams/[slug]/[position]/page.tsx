@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import {
   fetchServerJson,
@@ -8,6 +9,7 @@ import {
   getServerApiBase,
 } from "../../../lib/serverApi";
 import StructuredData from "../../../components/StructuredData";
+import CatalogToolsBar from "../../CatalogToolsBar";
 import { buildPositionDetailSchema } from "../../position-detail-structured-data";
 import {
   resolvePosition,
@@ -19,6 +21,17 @@ import {
 } from "../../position-slug";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
+
+/**
+ * Editions de regles servies par le catalogue. Une position est propre a une
+ * edition (le meme slug peut exister dans les deux avec des stats
+ * differentes) : la page AFFICHE celle qu'elle sert et laisse basculer.
+ */
+const RULESET_LABELS: Record<Ruleset, string> = {
+  season_2: "Saison 2",
+  season_3: "Saison 3",
+};
+const RULESET_ORDER: readonly Ruleset[] = ["season_3", "season_2"];
 
 // ISR — les positions sont des donnees de reference qui changent rarement.
 // Pas de generateStaticParams : rendu a la demande puis cache (comme /skills).
@@ -45,6 +58,12 @@ interface ApiPosition {
   keywords?: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
+  /** Illustration du poste (contenu editorial admin). */
+  imageUrl?: string | null;
+  /** Description de jeu, deja localisee par l'API. */
+  description?: string | null;
+  /** Fluff / lore, deja localise par l'API. */
+  fluff?: string | null;
 }
 
 interface ApiRoster {
@@ -98,6 +117,21 @@ const STAT_BOXES: ReadonlyArray<{
   { key: "pa", label: "PA", classes: "bg-purple-50 text-purple-900" },
   { key: "av", label: "AV", classes: "bg-orange-50 text-orange-900" },
 ];
+
+/**
+ * Source d'affichage de l'illustration du poste. Un chemin relatif passe par
+ * l'optimiseur Next ; une URL absolue est servie telle quelle (son hote n'est
+ * pas declare dans `next.config.js`, l'optimiseur la refuserait).
+ */
+function resolveIllustration(
+  raw: string | null | undefined,
+): { src: string; unoptimized: boolean } | null {
+  const src = raw?.trim();
+  if (!src) return null;
+  if (src.startsWith("/")) return { src, unoptimized: false };
+  if (/^https?:\/\//i.test(src)) return { src, unoptimized: true };
+  return null;
+}
 
 function resolveRuleset(raw: string | undefined): Ruleset {
   if (raw === "season_2") return "season_2";
@@ -180,8 +214,21 @@ export async function generateMetadata({
   const { name } = cleanDisplayName(position.displayName);
   const segment = stripRosterPrefix(position.slug, roster.slug);
   const url = `${BASE_URL}/teams/${roster.slug}/${segment}`;
-  const title = `${name} — ${roster.name} | Position Blood Bowl`;
-  const description = `${name} du roster ${roster.name} (Blood Bowl) : MA ${position.ma}, ST ${position.st}, AG ${position.ag}+, PA ${position.pa != null ? `${position.pa}+` : "-"}, AV ${position.av}+, cout ${position.cost}k po. Competences de depart, acces et positions liees.`;
+  const editionLabel = RULESET_LABELS[bundle.ruleset];
+  const title = `${name} — ${roster.name} (${editionLabel}) | Position Blood Bowl`;
+  const statsSentence = `MA ${position.ma}, ST ${position.st}, AG ${position.ag}+, PA ${position.pa != null ? `${position.pa}+` : "-"}, AV ${position.av}+, cout ${position.cost}k po`;
+  // La description editoriale, quand elle existe, ouvre la meta : elle est
+  // plus parlante qu'une enumeration de stats en resultat de recherche.
+  const editorial = position.description?.trim();
+  const description = editorial
+    ? `${editorial} (${statsSentence}).`
+    : `${name} du roster ${roster.name} (Blood Bowl, ${editionLabel}) : ${statsSentence}. Competences de depart, acces et positions liees.`;
+  const illustration = resolveIllustration(position.imageUrl);
+  const ogImage = illustration
+    ? illustration.unoptimized
+      ? illustration.src
+      : `${BASE_URL}${illustration.src}`
+    : `${BASE_URL}/images/logo.png`;
   return {
     title,
     description,
@@ -205,14 +252,7 @@ export async function generateMetadata({
       type: "article",
       url,
       siteName: "Nuffle Arena",
-      images: [
-        {
-          url: `${BASE_URL}/images/logo.png`,
-          width: 1200,
-          height: 630,
-          alt: `${name} — ${roster.name}`,
-        },
-      ],
+      images: [{ url: ogImage, alt: `${name} — ${roster.name}` }],
     },
     twitter: { card: "summary_large_image", title, description },
   };
@@ -230,7 +270,14 @@ export default async function PositionDetailPage({
   const { roster, position, skillNameBySlug } = bundle;
   const { name, isBigGuy } = cleanDisplayName(position.displayName);
   const segment = stripRosterPrefix(position.slug, roster.slug);
-  const rulesetQuery = ruleset === DEFAULT_RULESET ? "" : `?ruleset=${ruleset}`;
+  // Edition REELLEMENT servie : `loadBundle` retombe sur l'edition par defaut
+  // quand le slug n'existe pas dans celle demandee. C'est elle qu'on affiche.
+  const servedRuleset = bundle.ruleset;
+  const rulesetQuery =
+    servedRuleset === DEFAULT_RULESET ? "" : `?ruleset=${servedRuleset}`;
+  const illustration = resolveIllustration(position.imageUrl);
+  const description = position.description?.trim() || null;
+  const fluff = position.fluff?.trim() || null;
 
   const { usage, totalPlayers } = await fetchPositionUsage(
     getServerApiBase(),
@@ -263,6 +310,12 @@ export default async function PositionDetailPage({
       ag: position.ag,
       pa: position.pa,
       av: position.av,
+      description,
+      imageUrl: illustration
+        ? illustration.unoptimized
+          ? illustration.src
+          : `${BASE_URL}${illustration.src}`
+        : null,
     },
     baseUrl: BASE_URL,
   });
@@ -313,52 +366,104 @@ export default async function PositionDetailPage({
 
         {/* En-tete */}
         <header className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/teams/${roster.slug}${rulesetQuery}`}
-              className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition-colors"
-            >
-              {roster.name}
-            </Link>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
-              Tier {roster.tier}
-            </span>
-            {isBigGuy && (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
-                Big Guy
-              </span>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+            {illustration && (
+              <div
+                data-testid="position-illustration"
+                className="mx-auto w-40 shrink-0 sm:mx-0 sm:w-48"
+              >
+                <Image
+                  src={illustration.src}
+                  alt={`${name} — ${roster.name}`}
+                  width={192}
+                  height={216}
+                  // Une URL saisie hors du site ne peut pas passer par
+                  // l'optimiseur (hote non declare dans next.config) : on la
+                  // sert telle quelle.
+                  unoptimized={illustration.unoptimized}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 object-cover shadow-sm"
+                />
+              </div>
             )}
-          </div>
-          <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
-            {name}
-          </h1>
-          {position.displayNameEn && position.displayNameEn !== name && (
-            <p className="mt-1 font-medium text-gray-500">
-              {position.displayNameEn}
-            </p>
-          )}
-          {keywordTags.length > 0 && (
-            <div
-              data-testid="position-keywords"
-              className="mt-3 flex flex-wrap gap-1.5"
-            >
-              {keywordTags.map((kw) => (
-                <span
-                  key={kw}
-                  className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs font-medium"
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/teams/${roster.slug}${rulesetQuery}`}
+                  className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition-colors"
                 >
-                  {kw}
+                  {roster.name}
+                </Link>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                  Tier {roster.tier}
                 </span>
-              ))}
+                {isBigGuy && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+                    Big Guy
+                  </span>
+                )}
+                {/* Edition de regles REELLEMENT servie : les stats d'un meme
+                    poste changent d'une saison a l'autre. */}
+                <span
+                  data-testid="position-ruleset"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold"
+                  title="Edition de regles affichee"
+                >
+                  📘 {RULESET_LABELS[servedRuleset]}
+                </span>
+              </div>
+              <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+                {name}
+              </h1>
+              {position.displayNameEn && position.displayNameEn !== name && (
+                <p className="mt-1 font-medium text-gray-500">
+                  {position.displayNameEn}
+                </p>
+              )}
+              {keywordTags.length > 0 && (
+                <div
+                  data-testid="position-keywords"
+                  className="mt-3 flex flex-wrap gap-1.5"
+                >
+                  {keywordTags.map((kw) => (
+                    <span
+                      key={kw}
+                      className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs font-medium"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
+                  {position.cost}k po
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
+                  {position.min}-{position.max} joueurs
+                </span>
+              </div>
+              {/* Bascule d'edition : meme poste, autres regles. */}
+              <div
+                className="mt-4 flex flex-wrap items-center gap-2 text-xs"
+                data-testid="position-ruleset-switch"
+              >
+                <span className="text-gray-500">Edition :</span>
+                {RULESET_ORDER.map((rs) => (
+                  <Link
+                    key={rs}
+                    href={`/teams/${roster.slug}/${segment}?ruleset=${rs}`}
+                    aria-current={rs === servedRuleset ? "page" : undefined}
+                    className={`rounded-full px-2.5 py-1 font-medium transition-colors ${
+                      rs === servedRuleset
+                        ? "bg-sky-600 text-white"
+                        : "bg-white text-gray-600 border border-gray-300 hover:border-sky-400 hover:text-sky-700"
+                    }`}
+                  >
+                    {RULESET_LABELS[rs]}
+                  </Link>
+                ))}
+              </div>
             </div>
-          )}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
-              {position.cost}k po
-            </span>
-            <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
-              {position.min}-{position.max} joueurs
-            </span>
           </div>
 
           {/* Stats */}
@@ -384,6 +489,29 @@ export default async function PositionDetailPage({
             </div>
           </div>
         </header>
+
+        {/* Contenu editorial du poste (saisi en admin) */}
+        {description && (
+          <section className="mt-8" data-testid="position-description">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Rôle sur le terrain
+            </h2>
+            <p className="mt-2 whitespace-pre-line text-gray-700 leading-relaxed">
+              {description}
+            </p>
+          </section>
+        )}
+
+        {fluff && (
+          <section className="mt-8" data-testid="position-fluff">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Dans l&apos;univers
+            </h2>
+            <blockquote className="mt-2 rounded-xl border-l-4 border-amber-300 bg-amber-50/60 px-4 py-3 italic whitespace-pre-line text-gray-700 leading-relaxed">
+              {fluff}
+            </blockquote>
+          </section>
+        )}
 
         {/* Stats d'usage joueurs (données réelles des coachs) */}
         {usage && usage.count > 0 && (
@@ -529,7 +657,7 @@ export default async function PositionDetailPage({
           </section>
         )}
 
-        {/* Retour */}
+        {/* Retour + outils du catalogue */}
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={`/teams/${roster.slug}${rulesetQuery}`}
@@ -538,18 +666,13 @@ export default async function PositionDetailPage({
             <span aria-hidden="true">←</span> Roster {roster.name}
           </Link>
           <Link
-            href="/teams/positions"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-sm transition-all"
-          >
-            📊 Études des positions
-          </Link>
-          <Link
-            href={`/me/teams/new?roster=${roster.slug}&ruleset=${ruleset}`}
+            href={`/me/teams/new?roster=${roster.slug}&ruleset=${servedRuleset}`}
             className="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-medium text-sm transition-colors"
           >
             Créer une équipe {roster.name}
           </Link>
         </div>
+        <CatalogToolsBar className="mt-4" />
       </div>
     </>
   );

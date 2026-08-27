@@ -65,10 +65,11 @@ export interface PlayerCardData {
   /** Mini-stats (carrière) — exclusif avec `infoText`. */
   readonly infoStats?: readonly PlayerCardInfoStat[];
   /**
-   * Photo du joueur (pleine résolution) affichée à la place de l'emblème
-   * programmatique. URL STRICTEMENT validée au décodage (chemin
-   * `/images/player-images/*` + origine allowlistée) : le renderer
-   * (`/api/player-card`) la fetch côté serveur — anti-SSRF.
+   * Portrait affiché à la place de l'emblème programmatique : photo du
+   * coach, illustration du positionnel ou visuel de Star Player. URL
+   * STRICTEMENT validée au décodage (dossier allowlisté de `/images/` +
+   * origine allowlistée) : le renderer la lit sur disque quand c'est un
+   * asset local, sinon la fetch côté serveur — anti-SSRF.
    */
   readonly imageUrl?: string;
 }
@@ -163,9 +164,17 @@ const MAX_NUMBER = 99;
 const ROSTER_SLUG_RE = /^[a-z0-9_-]+$/;
 
 const MAX_IMAGE_URL_LENGTH = 300;
-/** Chemin d'une image de joueur servie par notre API (nom généré). */
+/**
+ * Chemin d'une image affichable sur une carte, servie par nous :
+ *  - `player-images` : photo uploadée par le coach (nom généré) ;
+ *  - `positions` : illustration d'un positionnel de roster (saisie admin) ;
+ *  - `star-players` : visuel de catalogue d'un Star Player.
+ *
+ * Un seul niveau de dossier, pas de segment relatif : le nom de fichier doit
+ * commencer par un caractère alphanumérique, ce qui exclut `..`.
+ */
 const PLAYER_IMAGE_PATH_RE =
-  /^\/images\/player-images\/[a-z0-9][a-z0-9-]*\.(png|jpg)$/i;
+  /^\/images\/(player-images|positions|star-players)\/[a-z0-9][a-z0-9 '._-]*\.(png|jpe?g|gif|svg|webp|avif)$/i;
 
 /**
  * Origines autorisées pour l'image de la carte (anti-SSRF : le payload est
