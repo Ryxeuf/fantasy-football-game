@@ -46,12 +46,18 @@ vi.mock("../services/commissioner-team-edit", () => ({
 // dédié, testé dans team-values ; ici on vérifie la priorité des valeurs.
 vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
+  // Coût de base des joueurs servi par `Position.cost` (base) : la fiche
+  // doit annoncer la même valeur que la VE persistée (M1 de l'audit).
+  resolvePositionMetaForTeam: vi.fn(() => Promise.resolve(new Map())),
 }));
 
 import type { Response } from "express";
 import { prisma } from "../prisma";
 import { getTeamForEdit } from "../services/commissioner-team-edit";
-import { updateTeamValues } from "../utils/team-values";
+import {
+  resolvePositionMetaForTeam,
+  updateTeamValues,
+} from "../utils/team-values";
 import { handleGetLeagueTeamRoster } from "./league";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -67,6 +73,8 @@ const mockGetTeamForEdit = getTeamForEdit as ReturnType<typeof vi.fn>;
 const mockUpdateTeamValues = updateTeamValues as unknown as ReturnType<
   typeof vi.fn
 >;
+const mockResolvePositionMeta =
+  resolvePositionMetaForTeam as unknown as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & { statusCode?: number; payload?: unknown } =
@@ -92,6 +100,9 @@ function createReq(): AuthenticatedRequest {
 describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // `resetAllMocks` vide aussi les implémentations : on repose le défaut
+    // (aucun poste en base ⇒ repli catalogue pour le coût de base).
+    mockResolvePositionMeta.mockResolvedValue(new Map());
     // Recalcul VE/VEA à la lecture (self-healing) : par défaut, mêmes
     // valeurs que la méta stockée.
     mockUpdateTeamValues.mockResolvedValue({

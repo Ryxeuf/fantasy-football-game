@@ -18,6 +18,15 @@
  * poste via la feuille (`LeagueMatchSheet.journeymenHome/Away`,
  * `{ position: slug }`). Par défaut : le lineman « de base » (max le
  * plus élevé, puis coût le plus bas).
+ *
+ * SOURCE DES POSTES — la base (`Position`), injectée par l'appelant via
+ * `positions`. Le catalogue compilé (`TEAM_ROSTERS_BY_RULESET`) ne sert plus
+ * que de repli. Sans ça, un poste dont le prix ou les stats ont été corrigés
+ * en admin produisait un journalier faux — donc une VEA de match fausse (base
+ * de la cagnotte / CTV) et un débit de trésorerie faux au recrutement
+ * post-match — et un slug renommé rendait le journalier « payé mais jamais
+ * matérialisé » (S4 de l'audit). Le module reste 100 % PUR : c'est la feuille
+ * de match qui fait la lecture.
  */
 
 import {
@@ -63,7 +72,12 @@ export interface SheetJourneyman {
   readonly cost: number;
 }
 
-interface EnginePosition {
+/**
+ * Poste utilisable pour dériver un journalier. Forme commune à
+ * `RosterPayload.positions` (base) et au catalogue du moteur (repli) — le
+ * coût est en kpo dans les deux.
+ */
+export interface JourneymanSourcePosition {
   slug: string;
   displayName: string;
   cost: number;
@@ -76,10 +90,19 @@ interface EnginePosition {
   skills: string;
 }
 
-function rosterPositions(roster: string, ruleset?: string): EnginePosition[] {
+/**
+ * Postes du roster : ceux fournis par l'appelant (lus en base) quand il y en
+ * a, sinon le catalogue compilé.
+ */
+function rosterPositions(
+  roster: string,
+  ruleset?: string,
+  provided?: readonly JourneymanSourcePosition[] | null,
+): readonly JourneymanSourcePosition[] {
+  if (provided && provided.length > 0) return provided;
   const rs = (ruleset as Ruleset) ?? DEFAULT_RULESET;
   const map = TEAM_ROSTERS_BY_RULESET[rs] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
-  const def = (map as Record<string, { positions?: EnginePosition[] }>)[roster];
+  const def = (map as Record<string, { positions?: JourneymanSourcePosition[] }>)[roster];
   return def?.positions ?? [];
 }
 
@@ -90,8 +113,9 @@ function rosterPositions(roster: string, ruleset?: string): EnginePosition[] {
 export function linemanPositionsForRoster(
   roster: string,
   ruleset?: string,
+  positions?: readonly JourneymanSourcePosition[] | null,
 ): JourneymanPositionOption[] {
-  return rosterPositions(roster, ruleset)
+  return rosterPositions(roster, ruleset, positions)
     .filter((p) => p.max >= JOURNEYMAN_ELIGIBLE_MAX)
     .sort((a, b) => b.max - a.max || a.cost - b.cost)
     .map((p) => ({ slug: p.slug, name: p.displayName }));
@@ -118,6 +142,11 @@ export interface DeriveJourneymenInput {
   }>;
   /** Choix du coach ({ position }) — null/inconnu => lineman de base. */
   readonly chosenPosition?: string | null;
+  /**
+   * Postes du roster lus EN BASE (`Position`). Absents/vides => repli sur le
+   * catalogue compilé.
+   */
+  readonly positions?: readonly JourneymanSourcePosition[] | null;
 }
 
 /**
@@ -131,8 +160,16 @@ export function deriveJourneymen(
   const missing = Math.max(0, 11 - eligible.length);
   if (missing === 0) return [];
 
-  const positions = rosterPositions(input.roster, input.ruleset);
-  const linemen = linemanPositionsForRoster(input.roster, input.ruleset);
+  const positions = rosterPositions(
+    input.roster,
+    input.ruleset,
+    input.positions,
+  );
+  const linemen = linemanPositionsForRoster(
+    input.roster,
+    input.ruleset,
+    input.positions,
+  );
   const chosenSlug =
     input.chosenPosition &&
     linemen.some((l) => l.slug === input.chosenPosition)

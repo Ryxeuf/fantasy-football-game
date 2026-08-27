@@ -133,6 +133,34 @@ export async function resolvePositionMetaForTeam(
 }
 
 /**
+ * Coût total (po) des joueurs d'une équipe, AU TARIF DE LA BASE.
+ *
+ * Les contrôles de budget mélangeaient deux tarifs : le total des joueurs
+ * existants venait de `getPlayerCost` (catalogue compilé) tandis que le joueur
+ * ajouté était compté au tarif base (`Position.cost`). Un poste dont le prix a
+ * été corrigé en admin autorisait donc — ou refusait — un recrutement à tort,
+ * et la « valeur du joueur » affichée divergeait de la VE persistée.
+ *
+ * Même posture que `resolvePositionMetaForTeam` : base d'abord, catalogue en
+ * repli poste par poste (slug absent de la base, miroir sqlite de test).
+ */
+export async function sumPlayerCostsForTeam(
+  db: unknown,
+  team: { readonly roster: string; readonly ruleset?: string | null },
+  players: readonly { readonly position: string }[],
+): Promise<number> {
+  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const meta = await resolvePositionMetaForTeam(db, team.roster, ruleset);
+  return players.reduce(
+    (total, p) =>
+      total +
+      (meta.get(p.position)?.cost ??
+        getPlayerCost(p.position, team.roster, ruleset)),
+    0,
+  );
+}
+
+/**
  * Règles spéciales d'équipe : base d'abord (éditable en admin), repli sur
  * les données statiques du game-engine. Seule
  * `trois_quarts_a_vil_prix` change le calcul (VEA).

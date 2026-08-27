@@ -49,8 +49,27 @@ vi.mock("./push-notifications", () => ({
 // VE/VEA rafraîchies avant capture / à la lecture d'une feuille non figée
 // (la VEA exclut les absents). Service testé à part ; ici on vérifie la
 // délégation et la composition avec les journaliers.
-vi.mock("../utils/team-values", () => ({
-  updateTeamValues: vi.fn(),
+vi.mock("../utils/team-values", async () => {
+  // Règles spéciales d'équipe résolues en BASE (elles arbitrent les remises
+  // et plafonds de coups de pouce). Le mock doit déclarer TOUTES les
+  // méthodes utilisées (cf. CLAUDE.md). Ici on reproduit le comportement du
+  // vrai résolveur quand la base ne répond pas : repli sur le catalogue.
+  const { getSpecialRulesForTeam } = await import("@bb/game-engine");
+  return {
+    updateTeamValues: vi.fn(),
+    resolveSpecialRulesForTeam: vi.fn(
+      (_db: unknown, rosterSlug: string, ruleset: string) =>
+        Promise.resolve(getSpecialRulesForTeam(rosterSlug, ruleset as never)),
+    ),
+  };
+});
+
+// Accès apothicaire lu en base (`RosterStaffConfig.apothecaryAllowed`) :
+// il conditionne l'apothicaire itinérant / Igor.
+vi.mock("./roster-staff-config", () => ({
+  resolveStaffConfigBySlug: vi.fn(() =>
+    Promise.resolve({ apothecaryAllowed: true }),
+  ),
 }));
 
 // Évolutions stagées : application/reversal mockés (testés à part dans
@@ -88,11 +107,18 @@ import {
 } from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
+import { getSpecialRulesForTeam } from "@bb/game-engine";
+import { resolveSpecialRulesForTeam } from "../utils/team-values";
+import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import { updateTeamValues } from "../utils/team-values";
 import type { MatchSummary } from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
+const mockResolveStaffConfig =
+  resolveStaffConfigBySlug as unknown as ReturnType<typeof vi.fn>;
+const mockResolveSpecialRules =
+  resolveSpecialRulesForTeam as unknown as ReturnType<typeof vi.fn>;
 const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockReverse = reverseOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockPush = sendLeagueMatchValidationPush as ReturnType<typeof vi.fn>;
@@ -117,6 +143,14 @@ function mockPairing() {
 describe("Lot G — league-match-sheet", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // `resetAllMocks` vide aussi les implémentations : on repose les
+    // résolveurs base-d'abord branchés sur la feuille (accès apothicaire et
+    // règles spéciales d'équipe).
+    mockResolveStaffConfig.mockResolvedValue({ apothecaryAllowed: true });
+    mockResolveSpecialRules.mockImplementation(
+      (_db: unknown, rosterSlug: string, ruleset: string) =>
+        Promise.resolve(getSpecialRulesForTeam(rosterSlug, ruleset as never)),
+    );
     mockPairing();
   });
 

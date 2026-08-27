@@ -230,3 +230,78 @@ describe("buildJourneymanHire", () => {
     expect(hire.skills).toBe("loner-4");
   });
 });
+
+/**
+ * Audit statique vs base — lot 3 (S4) : les postes viennent de `Position`
+ * (base), injectés par la feuille de match. Le catalogue compilé n'est plus
+ * que le repli. Un prix corrigé en admin doit changer la VEA du match et le
+ * débit post-match ; un slug renommé ne doit plus rendre le journalier
+ * « payé mais jamais matérialisé ».
+ */
+describe("postes injectés depuis la base", () => {
+  const DB_POSITIONS = [
+    {
+      slug: "skaven_rat_des_clans_skaven",
+      displayName: "Rat des Clans (corrigé)",
+      // 50k au catalogue compilé, 65k en base.
+      cost: 65,
+      max: 16,
+      ma: 7,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 8,
+      skills: "dodge",
+    },
+  ];
+
+  it("prend le coût de la base plutôt que celui du catalogue", () => {
+    const [j] = deriveJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(10),
+      positions: DB_POSITIONS,
+    });
+    expect(j.cost).toBe(65_000);
+    expect(j.stats).toMatchObject({ ma: 7, av: 8 });
+    expect(j.positionName).toContain("Rat des Clans (corrigé)");
+  });
+
+  it("prend le slug de la base (un renommage suit le poste réel)", () => {
+    const renamed = [{ ...DB_POSITIONS[0], slug: "skaven_lineman_v2" }];
+    const [j] = deriveJourneymen({
+      side: "away",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(10),
+      positions: renamed,
+    });
+    expect(j.position).toBe("skaven_lineman_v2");
+  });
+
+  it("expose les options de lineman déclarées en base", () => {
+    expect(
+      linemanPositionsForRoster("skaven", "season_3", DB_POSITIONS).map(
+        (o) => o.slug,
+      ),
+    ).toEqual(["skaven_rat_des_clans_skaven"]);
+  });
+
+  it("retombe sur le catalogue quand la base ne rend rien", () => {
+    const [withDb] = deriveJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(10),
+      positions: [],
+    });
+    const [without] = deriveJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(10),
+    });
+    expect(withDb).toEqual(without);
+  });
+});

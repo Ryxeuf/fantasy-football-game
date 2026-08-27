@@ -56,7 +56,11 @@ import {
 } from "../services/league-scheduler";
 import { recordForfeit } from "../services/league-forfeit";
 import { getEliteSkillSlugs } from "../services/elite-skills";
-import { updateTeamValues } from "../utils/team-values";
+import {
+  resolvePositionMetaForTeam,
+  updateTeamValues,
+} from "../utils/team-values";
+import { getRosterFromDb } from "../utils/roster-helpers";
 import { serverLog } from "../utils/server-log";
 import {
   recordOfflineLeagueResult,
@@ -1545,10 +1549,21 @@ export async function handleGetLeagueTeamRoster(
     // Valeur d'un joueur : meme regle que la VE d'equipe
     // (`utils/team-values`) — cout de base du poste + surcout des
     // ameliorations achetees (dont +10k par competence Elite). Expose en po.
+    //
+    // Le cout de base vient de `Position.cost` (base), pas du catalogue
+    // compile : sinon la « valeur du joueur » affichee ici diverge de la VE
+    // persistee sur `Team.teamValue`, qui est deja calculee en base (M1).
     const teamRuleset = (out.team.ruleset ?? DEFAULT_RULESET) as Ruleset;
     const eliteSlugs = await getEliteSkillSlugs(prisma, teamRuleset);
+    const positionMeta = await resolvePositionMetaForTeam(
+      prisma,
+      out.team.roster,
+      teamRuleset,
+    );
     const playerValue = (position: string, advancementsJson: string | null) => {
-      const base = getPlayerCost(position, out.team.roster, teamRuleset);
+      const base =
+        positionMeta.get(position)?.cost ??
+        getPlayerCost(position, out.team.roster, teamRuleset);
       let surcharge = 0;
       try {
         const parsed = JSON.parse(advancementsJson || "[]");
@@ -1571,12 +1586,26 @@ export async function handleGetLeagueTeamRoster(
       return base + surcharge;
     };
 
+    // Libelles de poste servis par la base (`Position.displayName`) : le
+    // catalogue compile affichait des noms perimes, ou le slug brut pour un
+    // poste cree en admin (M1).
+    const rosterPayload = await getRosterFromDb(
+      out.team.roster,
+      "fr",
+      teamRuleset,
+    ).catch(() => null);
+    const positionNames = new Map(
+      (rosterPayload?.positions ?? []).map((pos) => [pos.slug, pos.displayName]),
+    );
     const players = out.players.map((p: { id: string; position: string }) => {
       const s = statsById.get(p.id);
       return {
         ...p,
         value: playerValue(p.position, s?.advancements ?? null),
-        positionName: getPositionBySlug(p.position)?.displayName ?? p.position,
+        positionName:
+          positionNames.get(p.position) ??
+          getPositionBySlug(p.position)?.displayName ??
+          p.position,
         totalTouchdowns: s?.totalTouchdowns ?? 0,
         totalCasualties: s?.totalCasualties ?? 0,
         totalCompletions: s?.totalCompletions ?? 0,
@@ -1596,9 +1625,12 @@ export async function handleGetLeagueTeamRoster(
         statusSource: s?.statusSource ?? null,
       };
     });
+    // Nom de race depuis `Roster.name` (base), repli catalogue.
     const raceName =
+      rosterPayload?.name ??
       (TEAM_ROSTERS as Record<string, { name?: string }>)[out.team.roster]
-        ?.name ?? out.team.roster;
+        ?.name ??
+      out.team.roster;
 
     // A11 — règles spéciales + type de ligue sur la fiche roster de ligue
     // (certaines impactent les PSP, ex. Bagarreurs Brutaux). Résolution

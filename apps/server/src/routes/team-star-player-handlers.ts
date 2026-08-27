@@ -30,7 +30,7 @@ import type { Response } from 'express';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
-import { updateTeamValues } from '../utils/team-values';
+import { sumPlayerCostsForTeam, updateTeamValues } from '../utils/team-values';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -147,15 +147,12 @@ export async function handleListAvailableStarPlayers(
       (team as { regionalLeague?: string | null }).regionalLeague,
     );
 
-    const { getPlayerCost } = await import(
-      '../../../../packages/game-engine/src/utils/team-value-calculator'
-    );
-    const currentPlayersCost = team.players.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (total: number, player: any) => {
-        return total + getPlayerCost(player.position, team.roster, teamRuleset);
-      },
-      0,
+    // Tarif BASE (`Position.cost`) : voir S6 de l'audit — le budget
+    // disponible etait calcule au catalogue compile.
+    const currentPlayersCost = await sumPlayerCostsForTeam(
+      prisma,
+      team,
+      team.players,
     );
 
     const currentStarPlayersCost = team.starPlayers.reduce(

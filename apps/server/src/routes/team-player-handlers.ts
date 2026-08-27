@@ -31,7 +31,7 @@ import type { UpdatePlayerIdentityBody } from '../schemas/team.schemas';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
-import { updateTeamValues } from '../utils/team-values';
+import { sumPlayerCostsForTeam, updateTeamValues } from '../utils/team-values';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -178,16 +178,13 @@ export async function handleAddTeamPlayer(
       return;
     }
 
-    const { getPlayerCost } = await import(
-      '../../../../packages/game-engine/src/utils/team-value-calculator'
-    );
-    const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-    const currentTotalCost = team.players.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (total: number, player: any) => {
-        return total + getPlayerCost(player.position, team.roster, teamRuleset);
-      },
-      0,
+    // Le total des joueurs existants et le joueur ajoute doivent etre cotes
+    // AU MEME TARIF : le total venait du catalogue compile alors que le
+    // nouveau joueur etait compte au tarif base (S5 de l'audit).
+    const currentTotalCost = await sumPlayerCostsForTeam(
+      prisma,
+      team,
+      team.players,
     );
 
     const newPlayerCost = positionData.cost * 1000;
