@@ -28,6 +28,10 @@ export interface PositionDetailInput {
   ag: number;
   pa: number | null; // null = pas de passe ("-")
   av: number;
+  /** Description editoriale du poste (prioritaire sur la phrase de stats). */
+  description?: string | null;
+  /** Illustration du poste, en URL ABSOLUE (ou null). */
+  imageUrl?: string | null;
 }
 
 export interface BuildPositionDetailSchemaInput {
@@ -47,12 +51,17 @@ export function buildPositionDetailSchema(
   const rosterUrl = `${teamsUrl}/${position.rosterSlug}`;
   const detailUrl = `${rosterUrl}/${position.segment}`;
 
-  const definedTerm = {
+  // La description editoriale, quand elle existe, precede la phrase de
+  // stats : c'est elle qui est citable. Les stats restent presentes derriere.
+  const editorial = position.description?.trim();
+  const definedTerm: Record<string, unknown> = {
     "@type": "DefinedTerm",
     "@id": `${rosterUrl}#position-${position.segment}`,
     identifier: `${position.rosterSlug}_${position.segment}`,
     name: position.name,
-    description: statsSentence(position),
+    description: editorial
+      ? `${editorial} ${statsSentence(position)}`
+      : statsSentence(position),
     url: detailUrl,
     inLanguage: "fr-FR",
     inDefinedTermSet: {
@@ -63,6 +72,9 @@ export function buildPositionDetailSchema(
     },
     isPartOf: { "@id": `${baseUrl}${ORG_ID_FRAGMENT}` },
   };
+  if (position.imageUrl) {
+    definedTerm.image = position.imageUrl;
+  }
 
   const breadcrumb = {
     "@type": "BreadcrumbList",
