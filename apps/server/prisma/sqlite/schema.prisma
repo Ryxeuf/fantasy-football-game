@@ -492,6 +492,8 @@ model Roster {
   tier          String
   regionalRules String?
   specialRules  String?
+  /// Lot 6a — plafond combiné de Gros Bras (miroir PG). Repli moteur si null.
+  maxBigGuys    Int?
   naf           Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -572,6 +574,8 @@ model StarPlayer {
   specialRule String?
   imageUrl    String?
   isMegaStar  Boolean  @default(false)
+  /// Lot 6a — partenaire obligatoire (miroir PG). Repli moteur si null.
+  pairWithSlug String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -618,6 +622,8 @@ model Position {
   rosterId        String
   slug            String
   displayName     String
+  /// Lot 6a — nom anglais du poste (miroir PG). Repli moteur si null.
+  displayNameEn   String?
   cost            Int
   min             Int
   max             Int

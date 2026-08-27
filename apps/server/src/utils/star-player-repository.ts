@@ -1,5 +1,12 @@
 import { prisma } from "../prisma";
-import { type Ruleset, type StarPlayerDefinition } from "@bb/game-engine";
+import {
+  getStarPlayerPairs,
+  STAR_PLAYER_PAIR_PARTNERS,
+  type Ruleset,
+  type StarPlayerDefinition,
+  type StarPlayerPair,
+} from "@bb/game-engine";
+import { serverLog } from "./server-log";
 
 /**
  * Le schéma SQLite (utilisé en CI/E2E) n'incluait pas le modèle StarPlayer —
@@ -21,7 +28,9 @@ export function getStarPlayerModel(): any | null {
  * recrutement) — inutile de dépendre d'un lookup statique supplémentaire ici.
  */
 function mapStarPlayerRowToDefinition(sp: any): StarPlayerDefinition {
+  const pairWith = resolvePairPartnerSlug(sp);
   return {
+    ...(pairWith ? { pairWith } : {}),
     slug: sp.slug,
     displayName: sp.displayName,
     cost: sp.cost,
@@ -104,4 +113,93 @@ export async function getAvailableStarPlayersDb(
       return true;
     })
     .map(mapStarPlayerRowToDefinition);
+}
+
+
+/**
+ * Partenaire OBLIGATOIRE d'un Star Player — lot 6.3.
+ *
+ * `StarPlayer.pairWithSlug` (base, éditable en admin) fait foi ; la table
+ * compilée `STAR_PLAYER_PAIR_PARTNERS` reste le repli tant que la colonne
+ * n'est pas renseignée (posée sans backfill par `prisma db push`).
+ */
+export function resolvePairPartnerSlug(row: {
+  slug: string;
+  pairWithSlug?: string | null;
+}): string | null {
+  const fromDb = row.pairWithSlug?.trim();
+  if (fromDb) return fromDb;
+  return STAR_PLAYER_PAIR_PARTNERS[row.slug] ?? null;
+}
+
+/**
+ * Toutes les paires obligatoires d'un ruleset, servies par la BASE.
+ *
+ * Le prix de la paire est DÉRIVÉ (somme des deux `cost` en base) : le
+ * partenaire garde `cost = 0` comme aujourd'hui, donc corriger un prix en
+ * admin corrige aussi le prix de la paire — ce que le catalogue compilé, avec
+ * son `pairCost` figé, ne savait pas faire.
+ *
+ * Repli intégral sur le catalogue du moteur si la table est absente (miroir
+ * SQLite réduit) ou illisible : une feuille d'équipe ne doit jamais tomber
+ * parce que la relation de paire n'a pas pu être relue.
+ */
+export async function getStarPlayerPairsDb(
+  ruleset: Ruleset,
+): Promise<Record<string, StarPlayerPair>> {
+  const model = getStarPlayerModel();
+  if (!model) return getStarPlayerPairs(ruleset);
+
+  let rows: Array<{
+    slug: string;
+    displayName: string;
+    cost: number;
+    pairWithSlug?: string | null;
+  }> | undefined;
+  try {
+    rows = await model.findMany({
+      where: { ruleset },
+      select: {
+        slug: true,
+        displayName: true,
+        cost: true,
+        pairWithSlug: true,
+      },
+    });
+  } catch (e: unknown) {
+    serverLog.error(
+      `[star-players] paires illisibles pour ${ruleset} — repli catalogue`,
+      e,
+    );
+    return getStarPlayerPairs(ruleset);
+  }
+
+  // Table vide (avant seed) ou client réduit (mock étroit, miroir SQLite) :
+  // repli catalogue plutôt qu'une liste de paires vide, qui laisserait passer
+  // une star « demi-paire ».
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return getStarPlayerPairs(ruleset);
+  }
+
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  const out: Record<string, StarPlayerPair> = {};
+  for (const row of rows) {
+    const partnerSlug = resolvePairPartnerSlug(row);
+    if (!partnerSlug) continue;
+    const partner = bySlug.get(partnerSlug);
+    out[row.slug] = {
+      partnerSlug,
+      partnerName: partner?.displayName ?? partnerSlug,
+      pairCost: row.cost + (partner?.cost ?? 0),
+    };
+  }
+  return out;
+}
+
+/** Paire obligatoire d'un Star Player donné (base d'abord). */
+export async function getStarPlayerPairDb(
+  slug: string,
+  ruleset: Ruleset,
+): Promise<StarPlayerPair | null> {
+  return (await getStarPlayerPairsDb(ruleset))[slug] ?? null;
 }

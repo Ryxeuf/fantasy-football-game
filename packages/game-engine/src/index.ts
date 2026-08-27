@@ -412,7 +412,9 @@ export {
   isStarPlayerRuleUsed,
   markStarPlayerRuleUsed,
   STAR_PLAYER_RULE_SLUGS,
+  STAR_PLAYER_RULE_CATEGORY,
   isStarPlayerRule,
+  isStarPlayerRuleSkill,
   getPlayerStarRules,
 } from './skills/star-player-rules';
 

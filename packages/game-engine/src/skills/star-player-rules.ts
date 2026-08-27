@@ -29,9 +29,33 @@ export const STAR_PLAYER_RULE_SLUGS: ReadonlySet<string> = new Set([
   'reliable',
 ]);
 
+/**
+ * Catégorie portée par ces pouvoirs dans le référentiel de compétences
+ * (`Skill.category`) — lot 6.6.
+ *
+ * La liste ci-dessus reste le REPLI compilé (et la source du seed) ; dès que
+ * la catégorie est posée en base, c'est elle qui fait foi, comme pour toute
+ * autre donnée de catalogue. Le COMPORTEMENT du pouvoir, lui, reste indexé
+ * par slug dans le `skill-registry` : une ligne créée en admin avec un slug
+ * inconnu n'est qu'un libellé.
+ */
+export const STAR_PLAYER_RULE_CATEGORY = 'StarPlayerRule';
+
 /** Check if a skill slug is a star player special rule */
 export function isStarPlayerRule(slug: string): boolean {
   return STAR_PLAYER_RULE_SLUGS.has(slug);
+}
+
+/**
+ * Variante « base d'abord » : la catégorie du référentiel fait foi, la liste
+ * compilée sert de repli tant que le seed de la catégorie n'a pas tourné.
+ */
+export function isStarPlayerRuleSkill(skill: {
+  readonly slug: string;
+  readonly category?: string | null;
+}): boolean {
+  if (skill.category === STAR_PLAYER_RULE_CATEGORY) return true;
+  return isStarPlayerRule(skill.slug);
 }
 
 /** Get the star player rules a player has, with display info and usage status */

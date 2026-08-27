@@ -172,6 +172,7 @@ export {
   FORMAT_CONSTRAINTS,
   isGameFormat,
   getFormatConstraints,
+  defaultBuildBudgetK,
   isLineman,
   isBigGuy,
   countNonLinemen,

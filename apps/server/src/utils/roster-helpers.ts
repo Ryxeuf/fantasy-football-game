@@ -5,6 +5,7 @@
 import {
   DEFAULT_RULESET,
   translateKeywordsCsv,
+  getPositionNameEn,
   getTeamSpecialRuleBySlug,
   type Ruleset,
 } from "@bb/game-engine";
@@ -65,6 +66,8 @@ interface CacheEntry<T> {
 export interface RosterPosition {
   slug: string;
   displayName: string;
+  /** Lot 6a — nom anglais du poste (`Position.displayNameEn`), repli moteur. */
+  displayNameEn: string | null;
   cost: number;
   min: number;
   max: number;
@@ -88,6 +91,12 @@ export interface RosterPayload {
   budget: number;
   tier: string;
   naf: boolean;
+  /**
+   * Lot 6.4 — plafond COMBINÉ de Gros Bras (`Roster.maxBigGuys`). `null` =
+   * non renseigné en base ⇒ l'appelant retombe sur la table compilée
+   * (`bigGuyLimitForRoster`).
+   */
+  maxBigGuys: number | null;
   positions: RosterPosition[];
   /** Règles spéciales d'équipe résolues (vide si aucune). Localisées. */
   specialRules: RosterSpecialRuleView[];
@@ -198,9 +207,12 @@ export async function getRosterFromDb(
     budget: roster.budget,
     tier: roster.tier,
     naf: roster.naf,
+    maxBigGuys: roster.maxBigGuys ?? null,
     positions: roster.positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
+      displayNameEn:
+        position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
       cost: position.cost,
       min: position.min,
       max: position.max,
@@ -269,9 +281,12 @@ export async function getAllRostersFromDb(
       budget: roster.budget,
       tier: roster.tier,
       naf: roster.naf,
+      maxBigGuys: roster.maxBigGuys ?? null,
       positions: roster.positions.map((position: any) => ({
         slug: position.slug,
         displayName: position.displayName,
+        displayNameEn:
+          position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
         cost: position.cost,
         min: position.min,
         max: position.max,

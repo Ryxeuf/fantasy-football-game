@@ -89,7 +89,7 @@ export default function AdminSkillsPage() {
   const [rulesetFilter, setRulesetFilter] = useState<string>("");
   const [search, setSearch] = useState<string>("");
 
-  const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates"];
+  const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates", "StarPlayerRule"];
 
   useEffect(() => {
     loadSkills();

@@ -45,6 +45,13 @@ const categoryNames: Record<string, { fr: string; en: string; key: string }> = {
   Mutation: { fr: "Mutations", en: "Mutations", key: "Mutation" },
   Trait: { fr: "Traits", en: "Traits", key: "Trait" },
   "Scélérates": { fr: "Scélérates", en: "Villainous", key: "Scélérates" },
+  // Lot 6.6 — les 10 pouvoirs de Star Player ont leur propre catégorie dans
+  // le référentiel : ce ne sont ni des Compétences ni des Traits piochables.
+  StarPlayerRule: {
+    fr: "Pouvoirs de Star Player",
+    en: "Star Player Rules",
+    key: "StarPlayerRule",
+  },
 };
 
 interface SkillsClientProps {
@@ -308,7 +315,8 @@ export default function SkillsClient({
                                         skill.category === "Mutations"
                                       ? "bg-orange-100 text-orange-800"
                                       : skill.category === "Trait" ||
-                                          skill.category === "Traits"
+                                          skill.category === "Traits" ||
+                                          skill.category === "StarPlayerRule"
                                         ? "bg-gray-100 text-gray-800"
                                         : skill.category === "Extraordinary"
                                           ? "bg-yellow-100 text-yellow-800"

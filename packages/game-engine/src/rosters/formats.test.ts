@@ -4,6 +4,7 @@ import {
   FORMATS,
   DEFAULT_FORMAT,
   getFormatConstraints,
+  defaultBuildBudgetK,
   isGameFormat,
   isLineman,
   isBigGuy,
@@ -232,5 +233,28 @@ describe("formats — validateFormatSelection (staffConfig par roster)", () => {
     });
     expect(r.valid).toBe(false);
     expect(r.error).toContain("apothicaire");
+  });
+});
+
+describe("defaultBuildBudgetK (lot 6.7)", () => {
+  const BB11 = getFormatConstraints("bb11").startingBudget;
+  const SEVENS = getFormatConstraints("sevens").startingBudget;
+
+  it("BB11 : le budget déclaré par le roster en base fait autorité", () => {
+    expect(defaultBuildBudgetK(1200, "bb11")).toBe(1200);
+  });
+
+  it("BB11 : repli sur le plafond du format sans valeur en base", () => {
+    expect(defaultBuildBudgetK(null, "bb11")).toBe(BB11);
+    expect(defaultBuildBudgetK(undefined, "bb11")).toBe(BB11);
+    expect(defaultBuildBudgetK(0, "bb11")).toBe(BB11);
+  });
+
+  it("Sevens : le plafond du FORMAT gouverne, pas le budget BB11 du roster", () => {
+    // `Roster.budget` est le budget BB11 : le servir en Sevens donnerait
+    // 400 kpo de trop.
+    expect(defaultBuildBudgetK(1000, "sevens")).toBe(SEVENS);
+    expect(defaultBuildBudgetK(1500, "sevens")).toBe(SEVENS);
+    expect(SEVENS).toBeLessThan(BB11);
   });
 });

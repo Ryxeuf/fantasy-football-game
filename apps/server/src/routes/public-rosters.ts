@@ -34,6 +34,7 @@ import {
   effectiveRegionalRules,
   parseSlugList,
 } from "../services/roster-regional-rules";
+import { invalidateRosterCatalogueCache } from "../services/roster-catalogue";
 
 const router = Router();
 
@@ -58,6 +59,10 @@ export function invalidateRosterCaches(): void {
   invalidateMemoNamespace(ROSTER_LIST_NS);
   invalidateMemoNamespace(ROSTER_DETAIL_NS);
   invalidateMemoNamespace(POSITION_STATS_NS);
+  // Lot 6.8 — l'univers des rosters jouables est servi par la base : un
+  // roster créé/supprimé en admin doit être accepté/refusé tout de suite par
+  // le builder, sans attendre le TTL.
+  invalidateRosterCatalogueCache();
 }
 
 interface RosterListPayload {
@@ -67,6 +72,8 @@ interface RosterListPayload {
     budget: number;
     tier: string;
     naf: boolean;
+    /** Lot 6.4 — plafond combiné de Gros Bras (`null` = repli moteur). */
+    maxBigGuys: number | null;
     ruleset?: string;
     _count: { positions: number };
     /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
@@ -277,6 +284,8 @@ async function loadRosterList(
       budget: true,
       tier: true,
       naf: true,
+      // Lot 6.4 — plafond combiné de Gros Bras (null = repli moteur).
+      maxBigGuys: true,
       // Ligues déclarées du roster : elles bornent les options de Ligue
       // exposées ci-dessous (cf. resolveRegionalLeagueOptions).
       regionalRules: true,
@@ -305,6 +314,7 @@ async function loadRosterList(
         budget: roster.budget,
         tier: roster.tier,
         naf: roster.naf,
+        maxBigGuys: roster.maxBigGuys ?? null,
         _count: roster._count,
         staffConfigs: staffConfigsByFormat(roster),
         // Ligue régionale à choisir à la création : exposée dès la LISTE pour
@@ -478,10 +488,13 @@ function transformRoster(roster: any, isEnglish: boolean, ruleset: Ruleset) {
     budget: roster.budget,
     tier: roster.tier,
     naf: roster.naf,
+    maxBigGuys: roster.maxBigGuys ?? null,
     positions: roster.positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
-      displayNameEn: getPositionNameEn(position.slug) ?? null,
+      // Lot 6a — nom anglais servi par la base, repli table compilée.
+      displayNameEn:
+        position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
       cost: position.cost,
       min: position.min,
       max: position.max,

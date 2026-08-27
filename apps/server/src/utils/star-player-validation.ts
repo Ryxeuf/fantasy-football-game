@@ -1,12 +1,15 @@
 import {
-  getStarPlayerPair,
-  getStarPlayerPairs,
   resolveTeamRegionalRules,
   DEFAULT_RULESET,
   type Ruleset,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
-import { getStarPlayerBySlugDb, getAvailableStarPlayersDb } from "./star-player-repository";
+import {
+  getStarPlayerBySlugDb,
+  getAvailableStarPlayersDb,
+  getStarPlayerPairDb,
+  getStarPlayerPairsDb,
+} from "./star-player-repository";
 import { getDeclaredRegionalRules } from "./roster-helpers";
 
 /**
@@ -131,17 +134,20 @@ export async function validateStarPlayerHire(
 /**
  * Valide les paires obligatoires de Star Players.
  *
- * Lot G — la table des paires vient du catalogue (`getStarPlayerPairs`) et non
- * plus d'un `if` par paire : la version câblée ne couvrait que Grak &
- * Crumbleberry et les jumeaux Swift, en oubliant Dribl & Drull, pourtant déjà
- * déclarés dans `requiresPair`.
+ * Lot G — la table des paires vient du catalogue et non plus d'un `if` par
+ * paire : la version câblée ne couvrait que Grak & Crumbleberry et les
+ * jumeaux Swift, en oubliant Dribl & Drull.
+ *
+ * Lot 6.3 — ce catalogue est maintenant servi par la BASE
+ * (`StarPlayer.pairWithSlug`), avec repli sur la table compilée du moteur :
+ * une paire corrigée en admin s'applique immédiatement à l'embauche.
  */
-export function validateStarPlayerPairs(
+export async function validateStarPlayerPairs(
   starPlayerSlugs: string[],
   ruleset: Ruleset = DEFAULT_RULESET,
-): { valid: boolean; error?: string } {
+): Promise<{ valid: boolean; error?: string }> {
   const slugSet = new Set(starPlayerSlugs);
-  const pairs = getStarPlayerPairs(ruleset);
+  const pairs = await getStarPlayerPairsDb(ruleset);
 
   for (const slug of slugSet) {
     const pair = pairs[slug];
@@ -198,12 +204,15 @@ export async function getTeamAvailableStarPlayers(
 /**
  * Vérifie si un Star Player nécessite un partenaire.
  * Lot G — source unique : le catalogue (`pairWith`), plus de table en dur.
+ * Lot 6.3 — résolu en base (`StarPlayer.pairWithSlug`), repli moteur.
  */
-export function requiresPair(
+export async function requiresPair(
   starPlayerSlug: string,
   ruleset: Ruleset = DEFAULT_RULESET,
-): string | null {
-  return getStarPlayerPair(starPlayerSlug, ruleset)?.partnerSlug ?? null;
+): Promise<string | null> {
+  return (
+    (await getStarPlayerPairDb(starPlayerSlug, ruleset))?.partnerSlug ?? null
+  );
 }
 
 /**
@@ -220,7 +229,7 @@ export async function validateStarPlayersForTeam(
 ): Promise<{ valid: boolean; error?: string; totalCost?: number }> {
   // 1. Vérifier les paires obligatoires (au ruleset de l'équipe : les paires
   // de la Saison 3 ne s'appliquent pas à une équipe Saison 2).
-  const pairValidation = validateStarPlayerPairs(starPlayerSlugs, ruleset);
+  const pairValidation = await validateStarPlayerPairs(starPlayerSlugs, ruleset);
   if (!pairValidation.valid) {
     return pairValidation;
   }

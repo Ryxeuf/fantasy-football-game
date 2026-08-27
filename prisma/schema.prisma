@@ -634,6 +634,11 @@ model Roster {
   tier          String // "I" | "II" | "III" | "IV"
   regionalRules String? // Règles régionales (JSON array, ex: ["elven_kingdoms_league"])
   specialRules  String? // Règles spéciales (texte libre)
+  /// Lot 6a — plafond COMBINÉ de Gros Bras (tous postes confondus), distinct
+  /// des `max` par poste. `null` = pas de plafond combiné (l'équipe s'appuie
+  /// sur les `max` de ses postes). Remplace `bigGuyLimitForRoster` du moteur,
+  /// qui reste le repli tant que la colonne est nulle.
+  maxBigGuys    Int?
   naf           Boolean  @default(false) // Disponible dans NAF
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -682,6 +687,10 @@ model Position {
   rosterId        String
   slug            String // Slug unique (ex: "skaven_lineman")
   displayName     String // Nom d'affichage (ex: "Lineman")
+  /// Lot 6a — nom d'affichage anglais du poste. Remplace la table compilée
+  /// `POSITION_NAMES_EN` du moteur, qui reste le repli tant que la colonne
+  /// est nulle (posée sans backfill par `prisma db push`).
+  displayNameEn   String?
   cost            Int // Coût en kpo
   min             Int // Minimum requis
   max             Int // Maximum autorisé
@@ -745,6 +754,13 @@ model StarPlayer {
   specialRule String? // Règle spéciale du joueur
   imageUrl    String? // URL de l'image du joueur
   isMegaStar  Boolean  @default(false) // Flag Mega Star
+  /// Lot 6a — partenaire OBLIGATOIRE (« must be hired as a pair »), slug d'un
+  /// autre Star Player du MÊME ruleset. Le prix de la paire est dérivé
+  /// (somme des deux `cost`) : le partenaire garde `cost = 0` comme
+  /// aujourd'hui, donc aucune donnée n'est dupliquée. `null` = se recrute
+  /// seul. Remplace `STAR_PLAYER_PAIR_PARTNERS` du moteur, qui reste le repli
+  /// tant que la colonne est nulle (posée sans backfill par `db push`).
+  pairWithSlug String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

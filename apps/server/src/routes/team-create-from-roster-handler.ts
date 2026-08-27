@@ -38,7 +38,7 @@ import {
   type AllowedRoster,
   type GameFormat,
   type Ruleset,
-  getFormatConstraints,
+  defaultBuildBudgetK,
   getTeamPositions,
   getTournamentRosterRules,
   isGameFormat,
@@ -56,7 +56,7 @@ import {
   type RosterPayload,
 } from '../utils/roster-helpers';
 import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
-import { isAllowedTeamRoster } from '../constants/allowed-teams';
+import { isAllowedTeamRoster } from '../services/roster-catalogue';
 
 /**
  * Resout la composition de depart d'un roster a partir des positions
@@ -120,19 +120,27 @@ export async function handleCreateFromRoster(
     tournamentRuleset?: string | null;
     regionalLeague?: string | null;
   } = req.body;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!isAllowedTeamRoster(roster))
-    return res.status(400).json({ error: 'Roster non autorisé' });
-
   const ruleset = resolveRuleset(bodyRuleset) as Ruleset;
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
+
+  // Lot 6.8 — univers des rosters servi par la base (repli catalogue compilé).
+  if (!(await isAllowedTeamRoster(roster, ruleset)))
+    return res.status(400).json({ error: 'Roster non autorisé' });
 
   // Règlement de tournoi (null = aucun). Slug inconnu refusé net.
   const parsedPack = await parseTournamentRuleset(bodyTournamentRuleset);
   if (!parsedPack.ok) return res.status(400).json({ error: parsedPack.error });
   const pack = parsedPack.def;
 
-  let finalTeamValue = teamValue || getFormatConstraints(format).startingBudget;
+  // Roster en base, lu UNE fois : il porte le budget par défaut (lot 6.7),
+  // les positions (compo de départ) et les Ligues déclarées (choix de Ligue
+  // régionale plus bas).
+  const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
+
+  // Lot 6.7 — budget de construction : valeur du coach si fournie, sinon
+  // `Roster.budget` (base) et non plus le plafond compilé du format.
+  let finalTeamValue =
+    teamValue || defaultBuildBudgetK(dbRoster?.budget, format);
 
   // Le règlement impose édition, format et budget d'or du tier du roster.
   // Pas de pool de SPP sur ce flux simplifié (aucun achat de compétence
@@ -158,10 +166,6 @@ export async function handleCreateFromRoster(
     }
     finalTeamValue = packRosterRules.goldBudget;
   }
-
-  // Roster en base, lu UNE fois : il porte à la fois les positions (compo de
-  // départ) et les Ligues déclarées (choix de Ligue régionale ci-dessous).
-  const dbRoster = await getRosterFromDb(roster, 'fr', ruleset);
 
   // Ligue régionale de l'équipe : choix du coach (obligatoire dès que le
   // roster a plusieurs Ligues), attribution d'office s'il n'y en a qu'une,
@@ -210,7 +214,10 @@ export async function handleCreateFromRoster(
 
     // Valider les paires obligatoires, au ruleset de l'équipe : les paires
     // déclarées en Saison 3 ne s'appliquent pas à une équipe Saison 2.
-    const pairValidation = validateStarPlayerPairs(starPlayersToHire, ruleset);
+    const pairValidation = await validateStarPlayerPairs(
+      starPlayersToHire,
+      ruleset,
+    );
     if (!pairValidation.valid) {
       return res.status(400).json({ error: pairValidation.error });
     }

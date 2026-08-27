@@ -32,7 +32,7 @@ import { resolveRuleset, isValidRuleset } from '../utils/ruleset-helpers';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { parsePagination, buildApiMeta } from '../utils/pagination';
 import { generateTeamName } from '../services/team-name-generator';
-import { isAllowedTeamRoster } from '../constants/allowed-teams';
+import { isAllowedTeamRoster } from '../services/roster-catalogue';
 import { getTeamsEngagement } from '../services/team-competition-status';
 
 /**
@@ -169,11 +169,11 @@ export async function handleGetRoster(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  if (!isAllowedTeamRoster(id)) {
+  const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
+  if (!(await isAllowedTeamRoster(id, ruleset))) {
     sendError(res, 'Roster inconnu', 404);
     return;
   }
-  const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
 
   const roster = await getRosterFromDb(id, 'fr', ruleset);
   if (!roster) {

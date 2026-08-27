@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 
-const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait"];
+const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "StarPlayerRule"];
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
