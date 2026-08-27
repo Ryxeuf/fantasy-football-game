@@ -13,6 +13,7 @@ import {
   MAX_ENCODED_PAYLOAD_LENGTH,
 } from "../../lib/player-card/card-model";
 import { renderPlayerCardResponse } from "../../lib/player-card/render";
+import { resolveCardImageUrl } from "../../lib/player-card/portrait";
 
 export const runtime = "nodejs";
 
@@ -32,13 +33,13 @@ export async function GET(request: Request): Promise<Response> {
       { status: 400 },
     );
   }
-  // Photo du joueur en URL RELATIVE (`/images/player-images/…`, déjà
-  // validée par le décodeur) : satori a besoin d'une URL absolue pour la
-  // fetch — on la résout contre l'origine de la requête (même origine,
-  // pas de SSRF nouveau).
-  const resolved = data.imageUrl?.startsWith("/")
-    ? { ...data, imageUrl: new URL(data.imageUrl, url.origin).toString() }
-    : data;
+  // Portrait (déjà validé par le décodeur) : un asset local du site est lu
+  // sur disque et embarqué en data URI — c'est le seul moyen d'afficher un
+  // `.webp`, que satori ne sait pas décoder. Sinon, une URL relative est
+  // résolue contre l'origine de la requête (même origine, pas de SSRF
+  // nouveau) pour que satori puisse la fetch.
+  const portrait = await resolveCardImageUrl(data.imageUrl, url.origin);
+  const resolved = portrait === data.imageUrl ? data : { ...data, imageUrl: portrait };
   return renderPlayerCardResponse(resolved, {
     download: url.searchParams.get("download") === "1",
     // L'URL est adressée par le contenu : toute évolution du joueur (stats,

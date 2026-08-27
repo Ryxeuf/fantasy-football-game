@@ -7,6 +7,7 @@ import { Router } from "express";
 import { getPositionNameEn, translateKeywordsCsv } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
+import { resolvePositionContent } from "../services/position-content";
 import { memoizeAsync } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
 import { validateQuery, validateParams } from "../middleware/validate";
@@ -49,6 +50,11 @@ interface PositionRow {
   keywords: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
+  imageUrl: string | null;
+  descriptionFr: string | null;
+  descriptionEn: string | null;
+  fluffFr: string | null;
+  fluffEn: string | null;
   roster: { slug: string; name: string; nameEn: string };
   skills: ReadonlyArray<{ skill: { slug: string } }>;
 }
@@ -73,6 +79,12 @@ interface TransformedPosition {
   keywordsEn: string | null;
   primarySkills: string | null;
   secondarySkills: string | null;
+  /** Illustration du poste (null si non renseignée). */
+  imageUrl: string | null;
+  /** Description de jeu, localisée (repli FR). */
+  description: string | null;
+  /** Fluff / lore, localisé (repli FR). */
+  fluff: string | null;
   rosterSlug: string;
   rosterName: string;
 }
@@ -210,6 +222,7 @@ function transformPosition(
     keywordsEn: translateKeywordsCsv(position.keywords ?? null, "en"),
     primarySkills: position.primarySkills ?? null,
     secondarySkills: position.secondarySkills ?? null,
+    ...resolvePositionContent(position, isEnglish),
     rosterSlug: position.roster.slug,
     rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
   };

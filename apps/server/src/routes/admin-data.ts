@@ -806,6 +806,19 @@ router.delete("/rosters/:id", async (req, res) => {
 // POSITIONS
 // =============================================================================
 
+/**
+ * Normalise un champ éditorial de positionnel : le formulaire admin renvoie
+ * `""` quand l'admin efface le champ — on stocke `null` pour que « vide » ait
+ * une seule représentation en base (cf. `resolvePositionContent`).
+ */
+function normalizeContentInput(
+  value: string | null | undefined,
+): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 router.get("/positions", validateQuery(adminPositionsQuerySchema), async (req, res) => {
   try {
     const { rosterId, ruleset } = req.query;
@@ -877,7 +890,7 @@ router.get("/positions/:id", async (req, res) => {
 
 router.post("/positions", validate(createPositionSchema), async (req, res) => {
   try {
-    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, skillSlugs } = req.body;
+    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, imageUrl, descriptionFr, descriptionEn, fluffFr, fluffEn, skillSlugs } = req.body;
 
     const roster = await prisma.roster.findUnique({
       where: { id: rosterId },
@@ -906,6 +919,11 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
         keywords: keywords || null,
         primarySkills: normalizeAccessInput(primarySkills),
         secondarySkills: normalizeAccessInput(secondarySkills),
+        imageUrl: normalizeContentInput(imageUrl),
+        descriptionFr: normalizeContentInput(descriptionFr),
+        descriptionEn: normalizeContentInput(descriptionEn),
+        fluffFr: normalizeContentInput(fluffFr),
+        fluffEn: normalizeContentInput(fluffEn),
         skills: {
           create: skillIds.map((skillId) => ({
             skill: {
@@ -947,7 +965,7 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
 
 router.put("/positions/:id", validate(updatePositionSchema), async (req, res) => {
   try {
-    const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, skillSlugs } = req.body;
+    const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, primarySkills, secondarySkills, imageUrl, descriptionFr, descriptionEn, fluffFr, fluffEn, skillSlugs } = req.body;
 
     const previous = await prisma.position.findUnique({
       where: { id: req.params.id },
@@ -996,6 +1014,11 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
           keywords: keywords || null,
           primarySkills: normalizeAccessInput(primarySkills),
           secondarySkills: normalizeAccessInput(secondarySkills),
+          imageUrl: normalizeContentInput(imageUrl),
+          descriptionFr: normalizeContentInput(descriptionFr),
+          descriptionEn: normalizeContentInput(descriptionEn),
+          fluffFr: normalizeContentInput(fluffFr),
+          fluffEn: normalizeContentInput(fluffEn),
           skills: {
             create: skillIds.map((skillId) => ({
               skill: {
@@ -1105,6 +1128,13 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
         keywords: sourcePosition.keywords,
         primarySkills: sourcePosition.primarySkills,
         secondarySkills: sourcePosition.secondarySkills,
+        // Le contenu éditorial suit la duplication : un même poste dupliqué
+        // vers une autre édition garde son visuel et son lore.
+        imageUrl: sourcePosition.imageUrl,
+        descriptionFr: sourcePosition.descriptionFr,
+        descriptionEn: sourcePosition.descriptionEn,
+        fluffFr: sourcePosition.fluffFr,
+        fluffEn: sourcePosition.fluffEn,
         skills: {
           create: Array.from(targetIdBySlug.values()).map((skillId) => ({
             skill: { connect: { id: skillId } },

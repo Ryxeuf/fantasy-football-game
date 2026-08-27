@@ -4,6 +4,9 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import { SkillMultiSelect } from "../../../_components/SkillMultiSelect";
 import SkillAccessSelector from "../../SkillAccessSelector";
+import PositionContentFields, {
+  readPositionContentFields,
+} from "../../PositionContentFields";
 import { getRulesetLabel } from "../../../ruleset-utils";
 
 type Position = {
@@ -21,6 +24,11 @@ type Position = {
   keywords?: string | null;
   primarySkills?: string | null;
   secondarySkills?: string | null;
+  imageUrl?: string | null;
+  descriptionFr?: string | null;
+  descriptionEn?: string | null;
+  fluffFr?: string | null;
+  fluffEn?: string | null;
   roster: { id: string; slug: string; name: string; ruleset: string };
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
 };
@@ -169,6 +177,7 @@ export default function EditPositionPage() {
         keywords: formData.get("keywords") as string || null,
         primarySkills: primaryAccess,
         secondarySkills: secondaryAccess,
+        ...readPositionContentFields(formData),
         skillSlugs: selectedSkillSlugs,
       };
       await putJSON(`/admin/data/positions/${position.id}`, data);
@@ -314,6 +323,7 @@ export default function EditPositionPage() {
               Mots-clés pour cette position (ex: elite, passive, etc.)
             </p>
           </div>
+          <PositionContentFields defaults={position} />
           <div className="col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 border rounded bg-gray-50">
             <SkillAccessSelector
               label="Accès primaire"
