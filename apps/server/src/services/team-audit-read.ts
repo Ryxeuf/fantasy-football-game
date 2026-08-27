@@ -72,6 +72,8 @@ const ACTION_LABELS: Readonly<Record<string, string>> = {
   "team.roster.save": "Sauvegarde du roster",
   "team.values.recompute": "Recalcul de la VE / VEA",
   "team.treasury.credit-initial": "Crédit du reliquat de budget initial",
+  "team.treasury.sync-draft":
+    "Trésorerie resynchronisée sur le budget de construction (brouillon)",
   "team.treasury.match": "Trésorerie après match",
   "team.purchase.player": "Achat d'un joueur",
   "team.purchase.reroll": "Achat d'une relance",

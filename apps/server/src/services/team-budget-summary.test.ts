@@ -12,6 +12,7 @@ import {
   buildTeamBudgetSummary,
   creditInitialTreasury,
   dedicatedFansPurchaseCost,
+  syncDraftTreasury,
 } from "./team-budget-summary";
 
 interface FakeTeam {
@@ -169,6 +170,77 @@ describe("creditInitialTreasury", () => {
     );
 
     await expect(creditInitialTreasury(prisma, "team-1")).resolves.toBe(0);
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe("syncDraftTreasury", () => {
+  function prismaFor(t: FakeTeam, playerRows = players(11)) {
+    const update = vi.fn().mockResolvedValue({});
+    const prisma = {
+      team: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ ...t, players: playerRows, starPlayers: [] }),
+        update,
+      },
+      skill: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { prisma: prisma as any, update };
+  }
+
+  it("ramène une trésorerie fantôme au reliquat réel du budget", async () => {
+    // Cas prod : 505k crédités à la création (11 joueurs bon marché), puis
+    // roster complété jusqu'au budget sans débit → reliquat réel 0.
+    const { prisma, update } = prismaFor(
+      team({ initialBudget: 550, treasury: 505_000 }),
+      players(11),
+    );
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(0);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "team-1" },
+      data: { treasury: 0 },
+    });
+  });
+
+  it("recrédite le reliquat quand le brouillon dépense moins", async () => {
+    // 1 000k − 550k joueurs = 450k, quelle que soit la trésorerie courante.
+    const { prisma, update } = prismaFor(team({ treasury: 0 }), players(11));
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(450_000);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "team-1" },
+      data: { treasury: 450_000 },
+    });
+  });
+
+  it("ne descend jamais sous zéro quand le brouillon dépasse le budget", async () => {
+    const { prisma, update } = prismaFor(
+      team({ initialBudget: 500, treasury: 30_000 }),
+      players(11),
+    );
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(0);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "team-1" },
+      data: { treasury: 0 },
+    });
+  });
+
+  it("n'écrit rien quand la trésorerie est déjà juste", async () => {
+    const { prisma, update } = prismaFor(team({ treasury: 450_000 }), players(11));
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(450_000);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("retourne 0 sans écrire pour une équipe introuvable", async () => {
+    const { prisma, update } = prismaFor(team());
+    prisma.team.findUnique.mockResolvedValue(null);
+
+    await expect(syncDraftTreasury(prisma, "team-x")).resolves.toBe(0);
     expect(update).not.toHaveBeenCalled();
   });
 });

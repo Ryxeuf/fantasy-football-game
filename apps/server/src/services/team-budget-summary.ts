@@ -231,7 +231,61 @@ export async function creditInitialTreasury(
   return treasury;
 }
 
-/** Sous-ensemble du client Prisma utilisé par `creditInitialTreasury`. */
+/**
+ * Resynchronise la trésorerie d'une équipe en mode « brouillon libre »
+ * (non engagée) : `treasury = max(0, budget initial − dépenses)`.
+ *
+ * Tant qu'une équipe n'est pas engagée, elle n'a ni gains ni dépenses
+ * d'après-match : sa trésorerie est par définition le reliquat de son
+ * budget de construction. Or l'édition libre (`PUT /team/:id/roster`,
+ * `PUT /team/:id/info`) re-validait contre le budget initial sans jamais
+ * toucher la trésorerie créditée à la création. Cas prod : wizard
+ * (11 gobelins = 495k → 505k crédités) puis roster complété jusqu'au
+ * budget → VE 1 000k **et** 505k de trésorerie fantôme.
+ *
+ * À n'appeler QUE sur une équipe non engagée (l'appelant a vérifié
+ * `isTeamRosterFrozen`) : au-delà, la trésorerie a une histoire (gains,
+ * achats) que « budget − dépenses » ne sait pas reconstituer. No-op si la
+ * valeur ne bouge pas ; journalisé (`team.treasury.sync-draft`) sinon.
+ */
+export async function syncDraftTreasury(
+  prisma: PrismaLikeForTreasury,
+  teamId: string,
+): Promise<number> {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { players: true, starPlayers: true },
+  });
+  if (!team) return 0;
+
+  const summary = await buildTeamBudgetSummary(
+    prisma,
+    team,
+    team.players,
+    team.starPlayers,
+  );
+  const treasury = Math.max(0, summary.remaining);
+  if (treasury === team.treasury) return treasury;
+
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const before = await captureTeamState(auditDb, teamId);
+  await prisma.team.update({ where: { id: teamId }, data: { treasury } });
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: 'team.treasury.sync-draft',
+    before,
+    details: {
+      initialBudget: summary.initialBudget,
+      totalSpent: summary.totalSpent,
+      remaining: summary.remaining,
+      previous: team.treasury,
+      treasury,
+    },
+  });
+  return treasury;
+}
+
+/** Sous-ensemble du client Prisma utilisé par `creditInitialTreasury` et `syncDraftTreasury`. */
 interface PrismaLikeForTreasury {
   team: {
     findUnique: (args: unknown) => Promise<
