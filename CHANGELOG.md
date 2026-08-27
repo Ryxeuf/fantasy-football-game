@@ -1,3 +1,10 @@
+## [1.237.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.237.0...v1.237.1) (2026-08-27)
+
+
+### 🐛 Bug Fixes
+
+* **team:** achats sur un brouillon au prix de construction + resync trésorerie ([9c87d59](https://github.com/Ryxeuf/fantasy-football-game/commit/9c87d59e28bcab40ddad91fb158ea90723ec614e))
+
 ## [1.237.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.236.1...v1.237.0) (2026-08-27)
 
 
