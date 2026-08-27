@@ -392,6 +392,19 @@ export * from './analytics';
 // Export des compétences (skills)
 export * from './skills';
 export * from './skills/skill-effects';
+// Haine (X) — acquisition du trait sur blessure (pur : mots-cles + jet).
+export {
+  HATE_ROLL_TARGET,
+  HATE_EXCLUDED_KEYWORDS,
+  hateRollSucceeds,
+  normalizeKeyword,
+  parseKeywordsCsv,
+  eligibleHateKeywords,
+  pickHateKeyword,
+  hateSlugForKeyword,
+  isHateSkillSlug,
+  buildHateSkillDefinition,
+} from './skills/hate-trait';
 export * from './skills/random-skill-table-2025';
 
 // Enregistrement des règles spéciales des Star Players

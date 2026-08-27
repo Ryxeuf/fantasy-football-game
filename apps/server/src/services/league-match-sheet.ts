@@ -44,6 +44,11 @@ import {
   type ReverseOfflineSkipReason,
 } from "./league-offline-edit";
 import {
+  buildHateCandidates,
+  buildSheetKeywordMap,
+  type HateInjuryInput,
+} from "./league-hate-trait";
+import {
   buildJourneymanHire,
   deriveJourneymen,
   linemanPositionsForRoster,
@@ -992,6 +997,30 @@ function sumGold(raw: unknown): number {
   return total;
 }
 
+/**
+ * Joueurs de la feuille porteurs d'un slug de POSTE : le roster réel plus
+ * les journaliers alignés (dérivés du même catalogue de positions). Sert à
+ * résoudre leurs Mots-clés pour l'acquisition de Haine (X).
+ */
+function collectPositionedSheetPlayers(
+  team: MatchSheetTeam | null,
+  side: "home" | "away",
+  journeymenChoiceRaw: unknown,
+): Array<{ id: string; position: string }> {
+  if (!team) return [];
+  const out = team.players.map((p) => ({ id: p.id, position: p.position }));
+  for (const j of deriveJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+  })) {
+    out.push({ id: j.id, position: j.position });
+  }
+  return out;
+}
+
 export function buildOfflineInputFromSummary(
   pairingId: string,
   summary: MatchSummary,
@@ -1028,6 +1057,12 @@ export function buildOfflineInputFromSummary(
    * la tresorerie comme avant.
    */
   pettyCash: { home: number; away: number } = { home: 0, away: 0 },
+  /**
+   * Haine (X) — CSV de Mots-cles par id de joueur de la feuille (roster
+   * reel, journaliers, Star Players engages). Vide => aucun candidat, la
+   * validation se comporte comme avant.
+   */
+  keywordsByPlayerId: ReadonlyMap<string, string> = new Map(),
 ) {
   const motm = parseStringArray(sheet.motmPlayerIds);
   const motmSet = new Set(motm);
@@ -1061,6 +1096,9 @@ export function buildOfflineInputFromSummary(
   // Map stat de blessure via meta de l'event source (best-effort : on
   // associe par targetPlayerId+severity au 1er event matchant).
   const injuries: OfflineInjuryInput[] = [];
+  // Haine (X) : victime + auteur de la sortie, avant filtrage du type de
+  // blessure (fait par `buildHateCandidates`).
+  const hateInjuries: HateInjuryInput[] = [];
   for (const inj of summary.injuries) {
     if (isSyntheticSheetPlayerId(inj.playerId)) continue;
     // A62 — la victime d'un other_elim est portee par actorPlayerId
@@ -1079,6 +1117,13 @@ export function buildOfflineInputFromSummary(
     const type = mapInjurySeverity(inj.severity, metaStat);
     if (type) {
       injuries.push({ teamPlayerId: inj.playerId, type });
+      // L'auteur PEUT etre synthetique (journalier, Star Player) : se
+      // faire sortir par un Star Player donne un ennemi comme un autre.
+      hateInjuries.push({
+        victimPlayerId: inj.playerId,
+        causerPlayerId: inj.causedByPlayerId ?? null,
+        injuryType: type,
+      });
     }
   }
 
@@ -1119,6 +1164,11 @@ export function buildOfflineInputFromSummary(
     firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
       (id) => !isSyntheticSheetPlayerId(id),
     ),
+    // Haine (X) : le D6 est jete a l'application (cf. league-hate-trait).
+    hateCandidates: buildHateCandidates({
+      injuries: hateInjuries,
+      keywordsByPlayerId,
+    }),
   };
 }
 
@@ -1370,6 +1420,36 @@ export async function validateByCommissioner(input: {
     stalledAway: stalledAtValidation.away,
   });
 
+  // Haine (X) — mots-cles des joueurs POUVANT avoir cause une sortie :
+  // roster reel, journaliers alignes et Star Players engages. Best-effort :
+  // une resolution en echec ne fait perdre que l'acquisition du trait.
+  let keywordsByPlayerId: ReadonlyMap<string, string> = new Map();
+  try {
+    keywordsByPlayerId = await buildSheetKeywordMap({
+      positionedPlayers: [
+        ...collectPositionedSheetPlayers(teamsForBudget.home, "home", sheetJourneymenForBudget.journeymenHome),
+        ...collectPositionedSheetPlayers(teamsForBudget.away, "away", sheetJourneymenForBudget.journeymenAway),
+      ],
+      starPlayerIds: [
+        ...(await deriveSheetStarPlayers({
+          side: "home",
+          inducements: sheetIndForBudget.inducementsHome,
+          ruleset: teamsForBudget.home?.ruleset,
+        })),
+        ...(await deriveSheetStarPlayers({
+          side: "away",
+          inducements: sheetIndForBudget.inducementsAway,
+          ruleset: teamsForBudget.away?.ruleset,
+        })),
+      ].map((sp) => sp.id),
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-match-sheet] resolution des mots-cles (Haine) echouee: ${msg}`,
+    );
+  }
+
   // Applique les effets (peut throw -> on ne valide pas).
   const offlineInput = buildOfflineInputFromSummary(
     input.pairingId,
@@ -1399,6 +1479,7 @@ export async function validateByCommissioner(input: {
     },
     events,
     { home: budget.home.pettyCash, away: budget.away.pettyCash },
+    keywordsByPlayerId,
   );
 
   // Évolutions stagées par les coachs pendant la saisie. Séquence BB de

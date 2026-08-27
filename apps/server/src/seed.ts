@@ -118,6 +118,14 @@ async function main() {
           }
         }
 
+        // `excludedFromSelection` n'est ecrit QUE quand le registre le
+        // declare : `sync-star-players` pose aussi ce flag sur les
+        // competences reservees aux Star Players, un `false` systematique
+        // ici les remettrait a la selection a chaque seed.
+        const exclusion = skillDef.excludedFromSelection
+          ? { excludedFromSelection: true }
+          : {};
+
         if (existing) {
           await prisma.skill.update({
             where: { slug_ruleset: { slug: skillDef.slug, ruleset } },
@@ -130,6 +138,7 @@ async function main() {
               isElite: finalIsElite,
               isPassive: finalIsPassive,
               isModified: finalIsModified,
+              ...exclusion,
             }
           });
           skillsSkipped++;
@@ -146,6 +155,7 @@ async function main() {
               isElite: finalIsElite,
               isPassive: finalIsPassive,
               isModified: finalIsModified,
+              ...exclusion,
             }
           });
           skillsCreated++;

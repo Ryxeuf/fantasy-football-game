@@ -61,6 +61,7 @@ import {
 } from "./team-audit";
 import { serverLog } from "../utils/server-log";
 import { revertPlayerStatus } from "./player-status";
+import { parseHateGrants, revertHateTraitGrants } from "./league-hate-trait";
 import { removeLatestAdvancements } from "./league-sheet-advancements";
 import {
   playoffAdvancementState,
@@ -443,6 +444,12 @@ export async function reverseOfflineLeagueResult(
     ? snapshot.firedApplied.filter((s): s is string => typeof s === "string")
     : [];
 
+  // Traits « Haine (X) » gagnes sur ce match : le trait recompense une
+  // sortie qu'on s'apprete a annuler, il part avec elle.
+  const hateGranted = parseHateGrants(
+    (snapshot as { hateGranted?: unknown }).hateGranted,
+  );
+
   // --- Reversion ---
   const { input } = snapshot;
   const winner = winnerOf(input.scoreHome, input.scoreAway);
@@ -763,6 +770,16 @@ export async function reverseOfflineLeagueResult(
         );
       }
     }
+  }
+
+  // Haine (X) : retire les traits gagnes sur les blessures qu'on vient
+  // d'annuler. Hors transaction (best-effort) comme les statuts : un echec
+  // ne doit pas re-annuler une reversion deja committee.
+  if (hateGranted.length > 0) {
+    const removed = await revertHateTraitGrants(hateGranted);
+    serverLog.info(
+      `[league-offline-edit] traits Haine retires ${removed}/${hateGranted.length} match=${match.id}`,
+    );
   }
 
   // Bracket : retire la qualification issue de ce match (miroir exact de

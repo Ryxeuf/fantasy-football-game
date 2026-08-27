@@ -2352,6 +2352,74 @@ describe("Lot G — league-match-sheet", () => {
       ]);
     });
 
+    it("Haine (X) : propose un candidat par sortie d'au moins un match", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          {
+            playerId: "a5",
+            side: "away",
+            severity: "mng",
+            cause: "block",
+            causedByPlayerId: "h1",
+          },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        {},
+        [],
+        { home: 0, away: 0 },
+        new Map([["h1", "Orque, Blitzer"]]),
+      );
+      // X = la lignee de l'auteur, jamais son poste.
+      expect(out.hateCandidates).toEqual([
+        { victimPlayerId: "a5", keyword: "Orque" },
+      ]);
+    });
+
+    it("Haine (X) : aucun candidat sans mots-cles fournis (retro-compat)", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          {
+            playerId: "a5",
+            side: "away",
+            severity: "mng",
+            cause: "block",
+            causedByPlayerId: "h1",
+          },
+        ],
+      };
+      const out = buildOfflineInputFromSummary("pair-1", summary, {}, []);
+      expect(out.hateCandidates).toEqual([]);
+    });
+
+    it("Haine (X) : une mort n'ouvre aucun candidat", () => {
+      const summary: MatchSummary = {
+        ...baseSummary,
+        injuries: [
+          {
+            playerId: "a5",
+            side: "away",
+            severity: "dead",
+            cause: "block",
+            causedByPlayerId: "h1",
+          },
+        ],
+      };
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        summary,
+        {},
+        [],
+        { home: 0, away: 0 },
+        new Map([["h1", "Orque, Blitzer"]]),
+      );
+      expect(out.hateCandidates).toEqual([]);
+    });
+
     it("filtre les journaliers de toute la persistance (ids synthétiques)", () => {
       const summary: MatchSummary = {
         ...baseSummary,

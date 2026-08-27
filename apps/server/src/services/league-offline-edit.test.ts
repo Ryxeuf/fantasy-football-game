@@ -68,6 +68,13 @@ vi.mock("./league-sheet-advancements", () => ({
 // Bracket de playoffs : service dedie (teste dans league-playoffs.test.ts).
 // Ici on verifie la delegation — quand on interroge l'etat du tour suivant,
 // et avec quoi on le desavance.
+// Haine (X) : service dedie (teste dans league-hate-trait.test.ts). Ici on
+// verifie que l'invalidation retire bien ce que le match avait accorde.
+vi.mock("./league-hate-trait", async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return { ...actual, revertHateTraitGrants: vi.fn(async () => 1) };
+});
+
 vi.mock("./league-playoffs", () => ({
   playoffAdvancementState: vi.fn(async () => "none"),
   unadvancePlayoffsForSlot: vi.fn(async () => ({ unadvanced: true })),
@@ -81,6 +88,7 @@ import {
   playoffAdvancementState,
   unadvancePlayoffsForSlot,
 } from "./league-playoffs";
+import { revertHateTraitGrants } from "./league-hate-trait";
 import { updateTeamValues } from "../utils/team-values";
 import {
   reverseOfflineLeagueResult,
@@ -107,6 +115,7 @@ const m = {
   revertStatus: revertPlayerStatus as unknown as MockFn,
   poState: playoffAdvancementState as unknown as MockFn,
   poUnadvance: unadvancePlayoffsForSlot as unknown as MockFn,
+  revertHate: revertHateTraitGrants as unknown as MockFn,
 };
 
 function buildSnapshot(over: Record<string, unknown> = {}) {
@@ -174,6 +183,7 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     m.roundCount.mockResolvedValue(0);
     m.poState.mockResolvedValue("none");
     m.poUnadvance.mockResolvedValue({ unadvanced: true });
+    m.revertHate.mockResolvedValue(1);
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([]);
     m.partUpdate.mockResolvedValue({});
@@ -290,6 +300,30 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
       slot: "qf2",
       winnerParticipantId: "ph",
     });
+  });
+
+  it("retire les traits de Haine gagnes sur les blessures annulees", async () => {
+    const granted = [
+      { playerId: "p1", skillSlug: "hate-orque", keyword: "Orque", roll: 5 },
+    ];
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        offlineResultInput: {
+          ...buildSnapshot({ injuries: [{ teamPlayerId: "p1", type: "mng" }] }),
+          hateGranted: granted,
+        },
+      }),
+    );
+
+    await reverseOfflineLeagueResult("m-1");
+
+    expect(m.revertHate).toHaveBeenCalledWith(granted);
+  });
+
+  it("n'appelle pas la reversion de Haine sans trait accorde", async () => {
+    m.matchFind.mockResolvedValue(buildMatch());
+    await reverseOfflineLeagueResult("m-1");
+    expect(m.revertHate).not.toHaveBeenCalled();
   });
 
   it("ne touche pas au bracket pour un match de phase reguliere", async () => {
@@ -796,6 +830,7 @@ describe("editOfflineLeagueResult (W-B3)", () => {
     m.roundCount.mockResolvedValue(0);
     m.poState.mockResolvedValue("none");
     m.poUnadvance.mockResolvedValue({ unadvanced: true });
+    m.revertHate.mockResolvedValue(1);
     m.pairFind.mockResolvedValue(buildPairing());
     m.tpFindMany.mockResolvedValue([]);
     m.partUpdate.mockResolvedValue({});

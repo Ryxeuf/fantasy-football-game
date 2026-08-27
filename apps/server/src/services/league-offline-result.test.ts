@@ -62,8 +62,15 @@ vi.mock("./player-status", () => ({
   })),
 }));
 
+// Haine (X) : service dedie (teste dans league-hate-trait.test.ts). Ici on
+// verifie la delegation (bornes du match) et la trace dans le snapshot.
+vi.mock("./league-hate-trait", () => ({
+  applyHateTraitAcquisitions: vi.fn(async () => ({ granted: [] })),
+}));
+
 import { prisma } from "../prisma";
 import { applyPlayerStatuses } from "./player-status";
+import { applyHateTraitAcquisitions } from "./league-hate-trait";
 import { recordLeagueMatchResult } from "./league-match-result";
 import { recordOfflineLeagueResult } from "./league-offline-result";
 import {
@@ -88,6 +95,7 @@ const m = {
   applyPurchases: applyOfflinePurchasesForTeam as unknown as MockFn,
   updateTv: updateTeamValues as unknown as MockFn,
   applyStatus: applyPlayerStatuses as unknown as MockFn,
+  applyHate: applyHateTraitAcquisitions as unknown as MockFn,
 };
 
 function buildPairing(overrides: Record<string, unknown> = {}) {
@@ -127,6 +135,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.tpFindMany.mockResolvedValue([]);
     m.matchUpdate.mockResolvedValue({});
     m.applyPurchases.mockResolvedValue(EMPTY_MUTATION_SIDE);
+    m.applyHate.mockResolvedValue({ granted: [] });
     m.record.mockResolvedValue({
       recorded: true,
       winner: "A",
@@ -710,5 +719,104 @@ describe("recordOfflineLeagueResult (option b)", () => {
       ["cap-hurt"],
       expect.objectContaining({ kind: "firing" }),
     );
+  });
+});
+
+describe("recordOfflineLeagueResult — Haine (X)", () => {
+  const base = {
+    pairingId: "pair-1",
+    scoreHome: 2,
+    scoreAway: 1,
+    casualtiesHome: 0,
+    casualtiesAway: 0,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    m.matchCreate.mockResolvedValue({ id: "m-1" });
+    m.selCreate.mockResolvedValue({});
+    m.tpUpdate.mockResolvedValue({});
+    m.tpUpdateMany.mockResolvedValue({ count: 0 });
+    m.teamUpdate.mockResolvedValue({});
+    m.partUpdate.mockResolvedValue({});
+    m.tpFindMany.mockResolvedValue([]);
+    m.matchUpdate.mockResolvedValue({});
+    m.applyPurchases.mockResolvedValue(EMPTY_MUTATION_SIDE);
+    m.applyHate.mockResolvedValue({ granted: [] });
+    m.record.mockResolvedValue({
+      recorded: true,
+      winner: "A",
+      pointsDelta: { teamA: 3, teamB: 0 },
+      roundCompleted: false,
+      seasonCompleted: false,
+    });
+    m.pairFind.mockResolvedValue(buildPairing());
+  });
+
+  it("delegue le jet en bornant aux 2 equipes du match", async () => {
+    await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    expect(m.applyHate).toHaveBeenCalledWith({
+      candidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+      allowedTeamIds: ["team-home", "team-away"],
+    });
+  });
+
+  it("n'appelle rien sans candidat", async () => {
+    await recordOfflineLeagueResult(base);
+    expect(m.applyHate).not.toHaveBeenCalled();
+  });
+
+  it("memorise les traits accordes dans le snapshot (reversion exacte)", async () => {
+    const granted = [
+      { playerId: "a5", skillSlug: "hate-orque", keyword: "Orque", roll: 5 },
+    ];
+    m.applyHate.mockResolvedValue({ granted });
+
+    await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    const written = m.matchUpdate.mock.calls.at(-1)?.[0].data
+      .offlineResultInput as { hateGranted?: unknown };
+    expect(written.hateGranted).toEqual(granted);
+  });
+
+  it("un echec du jet ne fait pas echouer la validation", async () => {
+    m.applyHate.mockRejectedValue(new Error("db down"));
+
+    const r = await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    expect(r).toMatchObject({ recorded: true });
+  });
+
+  it("joue le jet APRES les blessures (le trait recompense la sortie)", async () => {
+    const order: string[] = [];
+    m.tpUpdate.mockImplementation(async (a: { data: Record<string, unknown> }) => {
+      if ("missNextMatch" in a.data) order.push("injury");
+      return {};
+    });
+    m.applyHate.mockImplementation(async () => {
+      order.push("hate");
+      return { granted: [] };
+    });
+    m.tpFindMany.mockResolvedValue([
+      { id: "a5", ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+    ]);
+
+    await recordOfflineLeagueResult({
+      ...base,
+      injuries: [{ teamPlayerId: "a5", type: "mng" }],
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    expect(order).toEqual(["injury", "hate"]);
   });
 });

@@ -62,6 +62,8 @@ describe("Lot G — summarizeMatchSheet", () => {
       severity: "dead",
       side: "away", // victim is opposite of the actor's team
       cause: "block",
+      // L'auteur de la sortie : X de Haine (X) se lit sur lui.
+      causedByPlayerId: "h1",
     });
     const h1 = out.playerStats.find((p) => p.playerId === "h1");
     expect(h1?.casualtiesInflicted).toBe(1);
@@ -87,6 +89,8 @@ describe("Lot G — summarizeMatchSheet", () => {
       severity: "badly_hurt",
       side: "home", // self-cause: victim is in `team`
       cause: "failed_dodge",
+      // Auto-elimination : personne a hair.
+      causedByPlayerId: null,
     });
   });
 
@@ -101,7 +105,13 @@ describe("Lot G — summarizeMatchSheet", () => {
     ];
     const out = summarizeMatchSheet(events);
     expect(out.injuries).toEqual([
-      { playerId: "h7", severity: "mng", side: "home", cause: "other_elim" },
+      {
+        playerId: "h7",
+        severity: "mng",
+        side: "home",
+        cause: "other_elim",
+        causedByPlayerId: null,
+      },
     ]);
     // Auto-élimination : aucun compteur d'élimination infligée (ni équipe
     // ni joueur — donc pas de SPP indus).
@@ -122,7 +132,13 @@ describe("Lot G — summarizeMatchSheet", () => {
     ];
     const out = summarizeMatchSheet(events);
     expect(out.injuries).toEqual([
-      { playerId: "h4", severity: "mng", side: "home", cause: "stalling" },
+      {
+        playerId: "h4",
+        severity: "mng",
+        side: "home",
+        cause: "stalling",
+        causedByPlayerId: null,
+      },
     ]);
     // Comme other_elim : aucun compteur d'élimination infligée (ni équipe
     // ni joueur — donc pas de SPP indus).
@@ -143,8 +159,46 @@ describe("Lot G — summarizeMatchSheet", () => {
     ];
     const out = summarizeMatchSheet(events);
     expect(out.injuries).toEqual([
-      { playerId: "a9", severity: "stat_loss", side: "away", cause: "stalling" },
+      {
+        playerId: "a9",
+        severity: "stat_loss",
+        side: "away",
+        cause: "stalling",
+        causedByPlayerId: null,
+      },
     ]);
+  });
+
+  it("agression : l'auteur de la sortie est trace (source du X de Haine)", () => {
+    const out = summarizeMatchSheet([
+      {
+        kind: "aggression",
+        team: "away",
+        actorPlayerId: "a3",
+        targetPlayerId: "h2",
+        injurySeverity: "niggling",
+      },
+    ]);
+    expect(out.injuries[0]).toMatchObject({
+      playerId: "h2",
+      side: "home",
+      causedByPlayerId: "a3",
+    });
+  });
+
+  it("foule : sortie sans auteur, donc personne a hair", () => {
+    const out = summarizeMatchSheet([
+      {
+        kind: "crowd_surge",
+        team: "home",
+        targetPlayerId: "a4",
+        injurySeverity: "mng",
+      },
+    ]);
+    expect(out.injuries[0]).toMatchObject({
+      playerId: "a4",
+      causedByPlayerId: null,
+    });
   });
 
   it("stalling sans blessure : aucun impact score/casualty/blessures", () => {
