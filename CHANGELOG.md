@@ -1,3 +1,21 @@
+## [1.238.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.237.1...v1.238.0) (2026-08-27)
+
+
+### ✨ Features
+
+* **game-engine:** predicat d'embauche Star Player et univers de rosters par edition ([93c6fae](https://github.com/Ryxeuf/fantasy-football-game/commit/93c6fae4704374b6924174247e8d3f99b886e9f4))
+* **web:** module pur des options du filtre equipe des Star Players ([77a9c0f](https://github.com/Ryxeuf/fantasy-football-game/commit/77a9c0f8135353645529a7530300a08ccc36b57d))
+
+
+### 🐛 Bug Fixes
+
+* **web:** filtre equipe des Star Players complet et dependant de la saison ([e60f68c](https://github.com/Ryxeuf/fantasy-football-game/commit/e60f68c7e0e9a12c17cd6d3d05aac86bd0064c23))
+
+
+### 📝 Documentation
+
+* changeset du filtre equipe des Star Players ([6a0f458](https://github.com/Ryxeuf/fantasy-football-game/commit/6a0f4589be1b3082ae66ab934c0e3344b2113398))
+
 ## [1.237.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.237.0...v1.237.1) (2026-08-27)
 
 
