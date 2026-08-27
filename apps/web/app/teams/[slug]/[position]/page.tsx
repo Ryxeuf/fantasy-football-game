@@ -9,6 +9,7 @@ import {
   getServerApiBase,
 } from "../../../lib/serverApi";
 import StructuredData from "../../../components/StructuredData";
+import CatalogToolsBar from "../../CatalogToolsBar";
 import { buildPositionDetailSchema } from "../../position-detail-structured-data";
 import {
   resolvePosition,
@@ -656,7 +657,7 @@ export default async function PositionDetailPage({
           </section>
         )}
 
-        {/* Retour */}
+        {/* Retour + outils du catalogue */}
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={`/teams/${roster.slug}${rulesetQuery}`}
@@ -665,18 +666,13 @@ export default async function PositionDetailPage({
             <span aria-hidden="true">←</span> Roster {roster.name}
           </Link>
           <Link
-            href="/teams/positions"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-sm transition-all"
-          >
-            📊 Études des positions
-          </Link>
-          <Link
-            href={`/me/teams/new?roster=${roster.slug}&ruleset=${ruleset}`}
+            href={`/me/teams/new?roster=${roster.slug}&ruleset=${servedRuleset}`}
             className="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-medium text-sm transition-colors"
           >
             Créer une équipe {roster.name}
           </Link>
         </div>
+        <CatalogToolsBar className="mt-4" />
       </div>
     </>
   );

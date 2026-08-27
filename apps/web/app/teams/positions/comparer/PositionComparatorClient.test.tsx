@@ -1,5 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+// `CatalogToolsBar`, monte dans l'en-tete du comparateur, consomme le
+// contexte de langue : on le stub pour rendre le composant isolement.
+vi.mock("../../../contexts/LanguageContext", () => ({
+  useLanguage: () => ({ language: "fr" }),
+}));
+
 import PositionComparatorClient from "./PositionComparatorClient";
 import type { ListedPosition } from "../../position-rankings";
 

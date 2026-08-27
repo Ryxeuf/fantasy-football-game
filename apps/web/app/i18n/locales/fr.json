@@ -1,6 +1,11 @@
 {
   "nav": {
     "teams": "Équipes",
+    "tools": "Outils",
+    "compareTeams": "Comparer des équipes",
+    "positionsStudy": "Études des positions",
+    "comparePositions": "Comparer des positions",
+    "tierList": "Tier list des rosters",
     "skills": "Compétences",
     "starPlayers": "Star Players",
     "play": "Jouer",

@@ -10,6 +10,7 @@ import {
   BEGINNER_FRIENDLY_SLUGS,
 } from "../roster-meta";
 import { buildTierListSchema } from "../tier-list-structured-data";
+import CatalogToolsBar from "../CatalogToolsBar";
 
 const BASE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr"
@@ -173,6 +174,7 @@ export default async function TierListPage() {
             </Link>
             .
           </p>
+          <CatalogToolsBar current="tier-list" className="mt-4" />
         </header>
 
         {/* Encart meilleur roster débutant */}

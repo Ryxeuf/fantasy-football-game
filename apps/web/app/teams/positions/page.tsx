@@ -9,6 +9,7 @@ import {
 } from "../position-rankings";
 import { stripRosterPrefix, cleanDisplayName } from "../position-slug";
 import PositionKeywordBrowser from "./PositionKeywordBrowser";
+import CatalogToolsBar from "../CatalogToolsBar";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const TOP_N = 8;
@@ -129,20 +130,7 @@ export default async function PositionsStudiesPage() {
             de leurs caractéristiques. Un point de départ pour repérer les
             meilleurs profils de chaque roster.
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/teams/positions/comparer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-            >
-              ⚔️ Comparer des positions
-            </Link>
-            <Link
-              href="/teams"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
-            >
-              Tous les rosters
-            </Link>
-          </div>
+          <CatalogToolsBar current="positions" className="mt-4" />
         </header>
 
         {positions.length === 0 ? (

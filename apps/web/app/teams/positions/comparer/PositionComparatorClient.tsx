@@ -9,6 +9,7 @@ import {
   type StatKey,
 } from "../../position-rankings";
 import { stripRosterPrefix, cleanDisplayName } from "../../position-slug";
+import CatalogToolsBar from "../../CatalogToolsBar";
 
 const MAX_SELECTION = 4;
 const MIN_SELECTION = 2;
@@ -201,6 +202,7 @@ export default function PositionComparatorClient({
           Choisis 2 à 4 positions de n'importe quel roster pour comparer leurs
           caractéristiques côte à côte. Le lien est partageable.
         </p>
+        <CatalogToolsBar current="compare-positions" className="mt-4" />
       </header>
 
       {/* Sélecteur */}

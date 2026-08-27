@@ -98,6 +98,11 @@ vi.mock("../../../lib/serverApi", () => ({
   safeServerJson: vi.fn((url: string) => respond(url)),
 }));
 
+// `CatalogToolsBar` (pied de page de la fiche) consomme le contexte de langue.
+vi.mock("../../../contexts/LanguageContext", () => ({
+  useLanguage: () => ({ language: "fr" }),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
