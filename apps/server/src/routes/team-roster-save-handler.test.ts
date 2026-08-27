@@ -38,7 +38,12 @@ vi.mock('../utils/server-log', () => ({
   serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
+vi.mock('../services/team-budget-summary', () => ({
+  syncDraftTreasury: vi.fn().mockResolvedValue(0),
+}));
+
 import { prisma } from '../prisma';
+import { syncDraftTreasury } from '../services/team-budget-summary';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { isTeamRosterFrozen } from '../services/team-lock-status';
@@ -61,6 +66,7 @@ const mockPrisma = prisma as unknown as {
 const mockRoster = getRosterFromDb as ReturnType<typeof vi.fn>;
 const mockStaff = resolveStaffConfigBySlug as ReturnType<typeof vi.fn>;
 const mockFrozen = isTeamRosterFrozen as ReturnType<typeof vi.fn>;
+const mockSyncTreasury = syncDraftTreasury as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & { statusCode?: number; payload?: unknown } = {};
@@ -197,6 +203,7 @@ describe('handleSaveRoster', () => {
       success: false,
       error: expect.stringContaining('Budget'),
     });
+    expect(mockSyncTreasury).not.toHaveBeenCalled();
   });
 
   it('returns 400 when a provided id does not belong to the team', async () => {
@@ -242,5 +249,13 @@ describe('handleSaveRoster', () => {
     // Transaction + recalcul TV.
     expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
     expect(res.payload).toMatchObject({ success: true, data: { team: updated } });
+    // Brouillon libre : la tresorerie est resynchronisee sur le reliquat du
+    // budget APRES l'application du diff (regression : or credite a la
+    // creation conserve apres un roster complete jusqu'au budget).
+    expect(mockSyncTreasury).toHaveBeenCalledTimes(1);
+    expect(mockSyncTreasury).toHaveBeenCalledWith(prisma, 'team-1');
+    expect(mockSyncTreasury.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockPrisma.$transaction.mock.invocationCallOrder[0]!,
+    );
   });
 });
