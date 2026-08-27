@@ -208,8 +208,9 @@ export async function handleCreateFromRoster(
       }
     }
 
-    // Valider les paires obligatoires
-    const pairValidation = validateStarPlayerPairs(starPlayersToHire);
+    // Valider les paires obligatoires, au ruleset de l'équipe : les paires
+    // déclarées en Saison 3 ne s'appliquent pas à une équipe Saison 2.
+    const pairValidation = validateStarPlayerPairs(starPlayersToHire, ruleset);
     if (!pairValidation.valid) {
       return res.status(400).json({ error: pairValidation.error });
     }
@@ -232,10 +233,13 @@ export async function handleCreateFromRoster(
       });
     }
 
-    // Calculer le cout des Star Players
-    // NOTE : bug preexistant (hors perimetre de cette migration) — cet appel
-    // ne passe pas `ruleset`, retombe donc toujours sur DEFAULT_RULESET.
-    const starPlayersCost = await calculateStarPlayersCost(starPlayersToHire);
+    // Cout des Star Players AU RULESET DE L'EQUIPE. Sans lui, une star qui
+    // n'existe pas dans le ruleset par défaut était comptée 0 po : Star Player
+    // gratuit pour une équipe Saison 2 (S12 de l'audit).
+    const starPlayersCost = await calculateStarPlayersCost(
+      starPlayersToHire,
+      ruleset,
+    );
     const budgetInPo = finalTeamValue * 1000;
 
     if (starPlayersCost > budgetInPo) {
@@ -252,6 +256,7 @@ export async function handleCreateFromRoster(
       budgetInPo,
       ruleset,
       regionalLeague,
+      dbRoster?.regionalRules,
     );
 
     if (!validation.valid) {

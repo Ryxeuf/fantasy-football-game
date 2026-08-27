@@ -65,6 +65,9 @@ vi.mock("../utils/roster-helpers", () => ({
 
 vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
+  // Coût des joueurs au tarif BASE (`Position.cost`) pour les contrôles de
+  // budget : le mock doit déclarer TOUTES les méthodes utilisées.
+  sumPlayerCostsForTeam: vi.fn().mockResolvedValue(0),
   // `handleGetTeamDetail` s'en sert pour le `budgetSummary` de la fiche :
   // le mock doit declarer TOUTES les methodes utilisees (cf. CLAUDE.md).
   computeTeamValueBreakdownFor: vi.fn().mockResolvedValue({

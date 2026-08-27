@@ -24,7 +24,6 @@ import {
   applyCharacteristicReduction,
   getNextAdvancementPspCost,
   getTournamentRosterRules,
-  getTournamentRuleset,
   maxTwoSkillPlayers,
   parseAdvancements,
   poolSpentForTeam,
@@ -34,6 +33,7 @@ import {
   type PlayerAdvancement,
   type TournamentRulesetDefinition,
 } from '@bb/game-engine';
+import { getTournamentRulesetDefinition } from './tournament-ruleset-repository';
 import { isTeamRosterFrozen } from './team-lock-status';
 import { updateTeamValues } from '../utils/team-values';
 import {
@@ -222,11 +222,18 @@ export function advancementCostFor(
   return getNextAdvancementPspCost(alreadyTaken, type);
 }
 
-/** Règlement de tournoi de l'équipe, résolu depuis le slug persisté. */
-export function packForTeam(
+/**
+ * Règlement de tournoi de l'équipe, résolu depuis le slug persisté.
+ *
+ * Passe par le repository (BASE d'abord, registre du moteur en repli) et non
+ * par `getTournamentRuleset` du moteur : sinon le barème PSP, la taxe Élite et
+ * le quota de cumul sont arbitrés sur la version compilée du règlement, en
+ * ignorant les éditions faites dans la console admin (C3 de l'audit).
+ */
+export async function packForTeam(
   tournamentRuleset: string | null,
-): TournamentRulesetDefinition | null {
-  return getTournamentRuleset(tournamentRuleset);
+): Promise<TournamentRulesetDefinition | null> {
+  return getTournamentRulesetDefinition(tournamentRuleset);
 }
 
 /**

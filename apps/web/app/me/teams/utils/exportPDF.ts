@@ -68,12 +68,30 @@ function getRosterDisplayName(slug: string): string {
   return ROSTER_DISPLAY_NAMES[slug] || slug;
 }
 
+/**
+ * Libellés servis par l'API (base) plutôt que par les tables figées de ce
+ * module et du catalogue compilé (`ROSTER_DISPLAY_NAMES`, `getDisplayName`).
+ *
+ * Audit statique vs base — lot 5 (W1, W11, W12) : un poste renommé ou un
+ * roster créé en admin sortait en nom périmé, voire en slug brut, sur un
+ * document que le coach imprime et emporte en tournoi. Optionnels : sans eux
+ * l'export retombe sur les tables locales et reste servi.
+ */
+export interface PdfLabelResolvers {
+  readonly positionName?: (position: string) => string;
+  readonly rosterName?: string | null;
+}
+
 export async function exportTeamToPDF(
   team: TeamData,
   getPlayerCost: (position: string, roster: string) => number,
   coachName?: string,
   language: 'fr' | 'en' = 'fr',
+  labels?: PdfLabelResolvers,
 ) {
+  const positionName = (position: string): string =>
+    labels?.positionName?.(position) || getDisplayName(position);
+  const rosterLabel = labels?.rosterName || getRosterDisplayName(team.roster);
   // Import dynamique pour éviter les erreurs SSR
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
@@ -131,7 +149,7 @@ export async function exportTeamToPDF(
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   const dateStr = new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US');
-  doc.text(`${t.team} ${getRosterDisplayName(team.roster)} - ${dateStr}`, margin, 22);
+  doc.text(`${t.team} ${rosterLabel} - ${dateStr}`, margin, 22);
 
   // Calculer les valeurs
   const totalCost = team.players.reduce((sum, p) => sum + getPlayerCost(p.position, team.roster), 0);
@@ -161,7 +179,7 @@ export async function exportTeamToPDF(
       return [
         player.number.toString(),
         player.name,
-        getDisplayName(player.position),
+        positionName(player.position),
         player.ma.toString(),
         player.st.toString(),
         `${player.ag}+`,
@@ -292,7 +310,11 @@ export async function exportTeamToPDF(
 export async function exportSkillsSheet(
   team: TeamData,
   language: 'fr' | 'en' = 'fr',
+  labels?: PdfLabelResolvers,
 ) {
+  const positionName = (position: string): string =>
+    labels?.positionName?.(position) || getDisplayName(position);
+  const rosterLabel = labels?.rosterName || getRosterDisplayName(team.roster);
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
   
@@ -338,7 +360,7 @@ export async function exportSkillsSheet(
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.text(`${t.team}: ${team.name}`, margin, 28);
-  doc.text(`${t.team} ${getRosterDisplayName(team.roster)}`, margin, 34);
+  doc.text(`${t.team} ${rosterLabel}`, margin, 34);
   
   const dateStr = new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US');
   doc.setFontSize(10);
@@ -418,7 +440,7 @@ export async function exportSkillsSheet(
         skillsMap.get(slug)!.players.push({
           number: player.number,
           name: player.name,
-          position: getDisplayName(player.position)
+          position: positionName(player.position)
         });
       }
     });

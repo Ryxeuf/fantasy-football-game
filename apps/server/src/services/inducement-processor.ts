@@ -10,8 +10,8 @@ import {
 import type {
   ExtendedGameState,
   InducementSelection,
-  InducementContext,
 } from "@bb/game-engine";
+import { buildInducementContext } from "./inducement-context";
 import { getUserTeamSide } from "./turn-ownership";
 import { broadcastGameState } from "./game-broadcast";
 import { runAISetupIfNeeded } from "./ai-setup";
@@ -105,7 +105,18 @@ export async function processInducementSubmission(
     where: { matchId },
     orderBy: { createdAt: "asc" },
     include: {
-      teamRef: { select: { roster: true, treasury: true, currentValue: true } },
+      teamRef: {
+        select: {
+          roster: true,
+          treasury: true,
+          currentValue: true,
+          // Ruleset et Ligue régionale : sans eux le contexte de coups de
+          // pouce était vide (remises perdues, plafonds majorés ignorés,
+          // coups de pouce conditionnels refusés à tout le monde).
+          ruleset: true,
+          regionalLeague: true,
+        },
+      },
     },
   });
 
@@ -122,18 +133,24 @@ export async function processInducementSubmission(
     treasuryTeamB: (teamB as any)?.treasury || 0,
   };
 
-  const ctxA: InducementContext = {
-    teamId: "A",
-    regionalRules: [],
-    hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
-    rosterSlug: teamA?.roster || "",
-  };
-  const ctxB: InducementContext = {
-    teamId: "B",
-    regionalRules: [],
-    hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
-    rosterSlug: teamB?.roster || "",
-  };
+  const [ctxA, ctxB] = await Promise.all([
+    buildInducementContext({
+      teamId: "A",
+      rosterSlug: teamA?.roster || "",
+      ruleset: (teamA as { ruleset?: string | null } | undefined)?.ruleset,
+      regionalLeague: (teamA as { regionalLeague?: string | null } | undefined)
+        ?.regionalLeague,
+      hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
+    }),
+    buildInducementContext({
+      teamId: "B",
+      rosterSlug: teamB?.roster || "",
+      ruleset: (teamB as { ruleset?: string | null } | undefined)?.ruleset,
+      regionalLeague: (teamB as { regionalLeague?: string | null } | undefined)
+        ?.regionalLeague,
+      hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
+    }),
+  ]);
 
   const result = processInducementsWithSelection(
     gameState,

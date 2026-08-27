@@ -8,6 +8,10 @@ const h = vi.hoisted(() => ({ state: { ready: false } }));
 // `getSkillDescription` (sync) renvoie le fallback tant que le cache n'est pas
 // prêt, puis la valeur "API". `getSkillDescriptionAsync` "réchauffe" le cache.
 vi.mock("../skills-data", () => ({
+  // Le composant lit désormais le catalogue de compétences PAR ÉDITION
+  // (`?ruleset=`) : le mock doit exposer le défaut (cf. CLAUDE.md — un mock
+  // doit déclarer toutes les exports utilisées).
+  DEFAULT_SKILLS_RULESET: "season_3",
   getSkillDescription: (slug: string) => ({
     name: h.state.ready ? `API-${slug}` : `FB-${slug}`,
     description: "",

@@ -23,13 +23,13 @@
  */
 
 import { prisma } from "../prisma";
+import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import {
   allowsRegionalLeagueChoice,
   defaultStaffConfig,
   DEFAULT_RULESET,
   getRegionalLeagueBySlug,
   getRegionalLeagueOptions,
-  getTournamentRuleset,
   favouredOfLabel,
   isFavouredOfSlug,
   isGameFormat,
@@ -315,7 +315,9 @@ export async function getTeamSettings(input: {
   await ensureTeamInLeague(input);
   const team = await loadTeam(input.teamId);
   const ruleset = (team.ruleset ?? DEFAULT_RULESET) as Ruleset;
-  const pack = getTournamentRuleset(team.tournamentRuleset);
+  // Règlement résolu en BASE (repli moteur) : une édition admin du règlement
+  // doit être arbitrée par les réglages d'équipe (C3 de l'audit).
+  const pack = await getTournamentRulesetDefinition(team.tournamentRuleset);
   const [staffConfig, declared, starPlayers] = await Promise.all([
     resolveStaffConfig(team),
     declaredRegionalRules(team),
@@ -475,7 +477,7 @@ export async function updateTeamRegionalLeague(
   await ensureTeamInLeague(input);
   const team = await loadTeam(input.teamId);
   const ruleset = (team.ruleset ?? DEFAULT_RULESET) as Ruleset;
-  const pack = getTournamentRuleset(team.tournamentRuleset);
+  const pack = await getTournamentRulesetDefinition(team.tournamentRuleset);
 
   if (!allowsRegionalLeagueChoice(pack)) {
     throw new CommissionerSettingsError(

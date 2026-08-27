@@ -52,6 +52,7 @@ import {
   buildJourneymanHire,
   deriveJourneymen,
   linemanPositionsForRoster,
+  type JourneymanSourcePosition,
   parseJourneymenChoice,
   type JourneymanPositionOption,
   type SheetJourneyman,
@@ -64,7 +65,12 @@ import {
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
-import { updateTeamValues } from "../utils/team-values";
+import {
+  resolveSpecialRulesForTeam,
+  updateTeamValues,
+} from "../utils/team-values";
+import { getEliteSkillSlugs } from "./elite-skills";
+import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import {
   parseStagedAdvancements,
   applyStagedAdvancements,
@@ -95,6 +101,53 @@ import {
 } from "./tournament-inducements";
 import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
+import {
+  getDeclaredRegionalRules,
+  getRosterFromDb,
+} from "../utils/roster-helpers";
+
+/**
+ * Postes du roster lus EN BASE (`Position`), a injecter dans la derivation
+ * des journaliers. Le catalogue compile ne doit plus arbitrer ni leur prix
+ * (base de la VEA de match, donc de la cagnotte) ni leur slug (un slug
+ * renomme rendait le journalier « paye mais jamais materialise »).
+ *
+ * Tolerant : base injoignable ou roster absent => `null`, donc repli sur le
+ * catalogue, la feuille reste servie.
+ */
+async function loadJourneymanPositions(teams: {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}): Promise<{
+  home: readonly JourneymanSourcePosition[] | null;
+  away: readonly JourneymanSourcePosition[] | null;
+}> {
+  const [home, away] = await Promise.all([
+    teams.home
+      ? journeymanPositionsFor(teams.home.roster, teams.home.ruleset)
+      : Promise.resolve(null),
+    teams.away
+      ? journeymanPositionsFor(teams.away.roster, teams.away.ruleset)
+      : Promise.resolve(null),
+  ]);
+  return { home, away };
+}
+
+async function journeymanPositionsFor(
+  roster: string,
+  ruleset: string | null | undefined,
+): Promise<readonly JourneymanSourcePosition[] | null> {
+  try {
+    const payload = await getRosterFromDb(
+      roster,
+      "fr",
+      (ruleset as Ruleset) ?? DEFAULT_RULESET,
+    );
+    return payload?.positions ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export type MatchSheetStatus =
   | "draft"
@@ -255,6 +308,7 @@ async function captureSideSnapshot(
     ruleset: team.ruleset,
     players: team.players,
     chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+    positions: await journeymanPositionsFor(team.roster, team.ruleset),
   });
   if (journeymen.length === 0) return JSON.stringify(base);
   // Règle BB : les journaliers alignés comptent dans la VEA du match
@@ -544,16 +598,19 @@ export async function updatePreMatch(input: {
     };
     // CTV du match = valeurs figées (ou live) + journaliers si la feuille
     // n'est pas encore figée (les snapshots portent déjà les journaliers).
+    const journeymanPositions = await loadJourneymanPositions(teamsLive);
     const teams = {
       home: withJourneymenValue(
         withFrozenTeamValues(teamsLive.home, snapForBudget.rosterSnapshotHome),
         "home",
         snapForBudget,
+        journeymanPositions.home,
       ),
       away: withJourneymenValue(
         withFrozenTeamValues(teamsLive.away, snapForBudget.rosterSnapshotAway),
         "away",
         snapForBudget,
+        journeymanPositions.away,
       ),
     };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
@@ -1006,6 +1063,7 @@ function collectPositionedSheetPlayers(
   team: MatchSheetTeam | null,
   side: "home" | "away",
   journeymenChoiceRaw: unknown,
+  positions?: readonly JourneymanSourcePosition[] | null,
 ): Array<{ id: string; position: string }> {
   if (!team) return [];
   const out = team.players.map((p) => ({ id: p.id, position: p.position }));
@@ -1015,6 +1073,7 @@ function collectPositionedSheetPlayers(
     ruleset: team.ruleset,
     players: team.players,
     chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+    positions,
   })) {
     out.push({ id: j.id, position: j.position });
   }
@@ -1247,6 +1306,9 @@ function enrichJourneymanPurchases(input: {
   choiceRaw: unknown;
   staged: readonly StagedAdvancement[];
   computedSpp: Record<string, number>;
+  positions?: readonly JourneymanSourcePosition[] | null;
+  /** Slugs Elite du ruleset : +10 000 po de valeur par competence Elite. */
+  eliteSlugs?: ReadonlySet<string>;
 }): OfflinePurchaseInput[] {
   const { purchases, side, team, staged, computedSpp } = input;
   if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
@@ -1257,6 +1319,7 @@ function enrichJourneymanPurchases(input: {
         ruleset: team.ruleset,
         players: team.players,
         chosenPosition: parseJourneymenChoice(input.choiceRaw),
+        positions: input.positions,
       })
     : [];
   const byId = new Map(journeymen.map((j) => [j.id, j]));
@@ -1284,9 +1347,15 @@ function enrichJourneymanPurchases(input: {
             d8: entry.d8,
             // Un journalier n'a jamais d'avancement : 1er palier.
             pspCost: getNextAdvancementPspCost(0, entry.type),
+            // `isElite` etait omis : les 10 000 po de surcout d'une
+            // competence Elite manquaient au prix de recrutement du
+            // journalier (donc a la VE de l'equipe et au debit).
             valueSurcharge: surchargeForAdvancement({
               type: entry.type,
               stat: entry.stat ?? undefined,
+              isElite:
+                !!entry.skillSlug &&
+                (input.eliteSlugs?.has(entry.skillSlug) ?? false),
             }),
           }
         : null,
@@ -1375,6 +1444,8 @@ export async function validateByCommissioner(input: {
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
+  const journeymanPositions =
+    await loadJourneymanPositions(teamsForBudgetLive);
   const teamsForBudget = {
     home: withJourneymenValue(
       withFrozenTeamValues(
@@ -1383,6 +1454,7 @@ export async function validateByCommissioner(input: {
       ),
       "home",
       sheetJourneymenForBudget,
+      journeymanPositions.home,
     ),
     away: withJourneymenValue(
       withFrozenTeamValues(
@@ -1391,6 +1463,7 @@ export async function validateByCommissioner(input: {
       ),
       "away",
       sheetJourneymenForBudget,
+      journeymanPositions.away,
     ),
   };
   const sheetIndForBudget = sheet as {
@@ -1427,8 +1500,18 @@ export async function validateByCommissioner(input: {
   try {
     keywordsByPlayerId = await buildSheetKeywordMap({
       positionedPlayers: [
-        ...collectPositionedSheetPlayers(teamsForBudget.home, "home", sheetJourneymenForBudget.journeymenHome),
-        ...collectPositionedSheetPlayers(teamsForBudget.away, "away", sheetJourneymenForBudget.journeymenAway),
+        ...collectPositionedSheetPlayers(
+          teamsForBudget.home,
+          "home",
+          sheetJourneymenForBudget.journeymenHome,
+          journeymanPositions.home,
+        ),
+        ...collectPositionedSheetPlayers(
+          teamsForBudget.away,
+          "away",
+          sheetJourneymenForBudget.journeymenAway,
+          journeymanPositions.away,
+        ),
       ],
       starPlayerIds: [
         ...(await deriveSheetStarPlayers({
@@ -1536,6 +1619,10 @@ export async function validateByCommissioner(input: {
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
+  const eliteSlugsForHire = await getEliteSkillSlugs(
+    prisma,
+    teamsForBudget.home?.ruleset ?? teamsForBudget.away?.ruleset ?? null,
+  );
   const enrichedPurchases = {
     home: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesHome,
@@ -1544,6 +1631,8 @@ export async function validateByCommissioner(input: {
       choiceRaw: sheetJourneymenChoice.journeymenHome,
       staged: stagedHome,
       computedSpp: computedSppForHire,
+      positions: journeymanPositions.home,
+      eliteSlugs: eliteSlugsForHire,
     }),
     away: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesAway,
@@ -1552,6 +1641,8 @@ export async function validateByCommissioner(input: {
       choiceRaw: sheetJourneymenChoice.journeymenAway,
       staged: stagedAway,
       computedSpp: computedSppForHire,
+      positions: journeymanPositions.away,
+      eliteSlugs: eliteSlugsForHire,
     }),
   };
 
@@ -2280,6 +2371,7 @@ function withJourneymenValue(
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   },
+  positions?: readonly JourneymanSourcePosition[] | null,
 ): MatchSheetTeam | null {
   if (!team) return null;
   const frozen =
@@ -2296,6 +2388,7 @@ function withJourneymenValue(
     chosenPosition: parseJourneymenChoice(
       side === "home" ? sheet.journeymenHome : sheet.journeymenAway,
     ),
+    positions,
   });
   if (journeymen.length === 0) return team;
   const journeymenValue = journeymen.reduce((s, j) => s + j.cost, 0);
@@ -2397,8 +2490,12 @@ function buildWeatherTables(): MatchSheetWeatherTable[] {
  * roster) et on resout le cout effectif (rabais regional). `star_player`
  * est traite a part. Suit les regles officielles d'acces par equipe.
  */
-function inducementOptionsFor(
+async function inducementOptionsFor(
   roster: string,
+  // Ruleset REEL de l'équipe : `DEFAULT_RULESET` était forcé ici, donc les
+  // Ligues et remises d'une équipe Saison 2 étaient arbitrées sur la table
+  // Saison 3 (S8 de l'audit).
+  ruleset: Ruleset,
   // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
   // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
   allowedInducements: string[] | null = null,
@@ -2409,19 +2506,36 @@ function inducementOptionsFor(
   // Règlement de tournoi de la ligue : liste FERMÉE de coups de pouce, avec
   // ses prix et quantités (ils priment sur le catalogue du moteur).
   pack: TournamentRulesetDefinition | null = null,
-): MatchSheetInducementOption[] {
+): Promise<MatchSheetInducementOption[]> {
+  // Acces apothicaire et regles speciales lus EN BASE
+  // (`RosterStaffConfig.apothecaryAllowed`, `Roster.specialRules`) : ils
+  // arbitrent le prix, la quantite et la disponibilite des coups de pouce,
+  // donc le debit de tresorerie post-match (S9 de l'audit). Les tables
+  // compilees `APOTHECARY_FORBIDDEN_ROSTERS` / `getSpecialRulesForTeam` ne
+  // sont plus que le repli, porte par les resolveurs eux-memes.
+  const [declaredRules, staffConfig, specialRules] = await Promise.all([
+    getDeclaredRegionalRules(roster, ruleset),
+    // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
+    // couple roster x format et la feuille de ligue n'a pas d'autre format.
+    resolveStaffConfigBySlug(roster, ruleset, "bb11"),
+    resolveSpecialRulesForTeam(prisma, roster, ruleset),
+  ]);
   const ctx = {
     teamId: "A" as const,
     regionalRules: resolveTeamRegionalRules(
       roster,
-      DEFAULT_RULESET,
+      ruleset,
       regionalLeague,
+      // Ligues DÉCLARÉES par le roster (`Roster.regionalRules`) : sans elles
+      // la résolution retombe sur la table compilée et une Ligue éditée en
+      // admin ne changeait ni les remises ni l'offre de stars.
+      declaredRules,
     ),
-    hasApothecary: !APOTHECARY_FORBIDDEN_ROSTERS.has(roster),
+    hasApothecary: staffConfig.apothecaryAllowed,
     rosterSlug: roster,
     // A53 — les restrictions/remises officielles dépendent des règles
     // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
-    specialRules: getSpecialRulesForTeam(roster),
+    specialRules: [...specialRules],
   };
   const effective = effectiveInducementAllowlist(allowedInducements, pack);
   const allow = effective ? new Set(effective) : null;
@@ -2459,7 +2573,12 @@ async function starPlayersFor(
   // l'equipe (toujours DEFAULT_RULESET statique). Depuis le choix de Ligue
   // regionale, l'offre suit la Ligue retenue par l'equipe.
   const regionalRules =
-    resolveTeamRegionalRules(roster, ruleset, regionalLeague) ?? [];
+    resolveTeamRegionalRules(
+      roster,
+      ruleset,
+      regionalLeague,
+      await getDeclaredRegionalRules(roster, ruleset),
+    ) ?? [];
   const starPlayers = await getAvailableStarPlayersDb(roster, regionalRules, ruleset);
   return starPlayers.map((s) => ({
     slug: s.slug,
@@ -2600,16 +2719,18 @@ export async function buildMatchSheetReference(
     weatherTables: buildWeatherTables(),
     inducements: {
       home: teams.home
-        ? inducementOptionsFor(
+        ? await inducementOptionsFor(
             teams.home.roster,
+            (teams.home.ruleset as Ruleset) ?? DEFAULT_RULESET,
             allowedInducements,
             teams.home.regionalLeague,
             pack,
           )
         : [],
       away: teams.away
-        ? inducementOptionsFor(
+        ? await inducementOptionsFor(
             teams.away.roster,
+            (teams.away.ruleset as Ruleset) ?? DEFAULT_RULESET,
             allowedInducements,
             teams.away.regionalLeague,
             pack,
@@ -2805,6 +2926,9 @@ export async function getMatchSheet(input: {
     home: await refreshSide(teamsLive.home, sheetSnapRaw.rosterSnapshotHome),
     away: await refreshSide(teamsLive.away, sheetSnapRaw.rosterSnapshotAway),
   };
+  // Postes du roster lus en base : ils arbitrent le prix et le slug des
+  // journaliers (donc la VEA du match et le recrutement post-match).
+  const journeymanPositions = await loadJourneymanPositions(teamsFresh);
   // CTV du match : + valeur des journaliers alignés (déjà comptée dans
   // les en-têtes figés, ajoutée en live pour une feuille en saisie).
   const teams = {
@@ -2812,11 +2936,13 @@ export async function getMatchSheet(input: {
       withFrozenTeamValues(teamsFresh.home, sheetSnapRaw.rosterSnapshotHome),
       "home",
       sheetSnapRaw,
+      journeymanPositions.home,
     ),
     away: withJourneymenValue(
       withFrozenTeamValues(teamsFresh.away, sheetSnapRaw.rosterSnapshotAway),
       "away",
       sheetSnapRaw,
+      journeymanPositions.away,
     ),
   };
   const summary = summarizeMatchSheet(events, {
@@ -2850,6 +2976,8 @@ export async function getMatchSheet(input: {
         ? sheetJourneymen.journeymenHome
         : sheetJourneymen.journeymenAway,
     );
+    const positions =
+      side === "home" ? journeymanPositions.home : journeymanPositions.away;
     return {
       ...team,
       journeymen: deriveJourneymen({
@@ -2858,8 +2986,13 @@ export async function getMatchSheet(input: {
         ruleset: team.ruleset,
         players: team.players,
         chosenPosition: choice,
+        positions,
       }),
-      journeymenOptions: linemanPositionsForRoster(team.roster, team.ruleset),
+      journeymenOptions: linemanPositionsForRoster(
+        team.roster,
+        team.ruleset,
+        positions,
+      ),
       journeymenChoice: choice,
     };
   };

@@ -7,6 +7,29 @@ import {
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { getStarPlayerBySlugDb, getAvailableStarPlayersDb } from "./star-player-repository";
+import { getDeclaredRegionalRules } from "./roster-helpers";
+
+/**
+ * Ligues DÉCLARÉES par le roster (`Roster.regionalRules`, repli catalogue via
+ * `effectiveRegionalRules`).
+ *
+ * Sans cette liste, `resolveTeamRegionalRules` retombe silencieusement sur la
+ * table `TEAM_REGIONAL_RULES_BY_RULESET` compilée : une Ligue retirée ou
+ * ajoutée en admin ne changeait ni l'embauche ni l'offre de Star Players (le
+ * GET la prenait en compte, le POST non), et un roster créé uniquement en base
+ * était refusé avec « Roster 'X' non reconnu ».
+ *
+ * Les appelants qui ont déjà la liste sous la main (build, création) peuvent
+ * la passer pour éviter une lecture supplémentaire.
+ */
+async function declaredRulesFor(
+  rosterSlug: string,
+  ruleset: Ruleset,
+  provided?: readonly string[] | null,
+): Promise<readonly string[] | null> {
+  if (provided && provided.length > 0) return provided;
+  return getDeclaredRegionalRules(rosterSlug, ruleset);
+}
 
 export interface StarPlayerValidationResult {
   valid: boolean;
@@ -30,6 +53,7 @@ export async function validateStarPlayerHire(
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
   regionalLeague?: string | null,
+  declaredRules?: readonly string[] | null,
 ): Promise<StarPlayerValidationResult> {
   // 1. Vérifier que le Star Player existe
   const starPlayer = await getStarPlayerBySlugDb(starPlayerSlug, ruleset);
@@ -58,6 +82,7 @@ export async function validateStarPlayerHire(
     teamRoster,
     ruleset,
     regionalLeague,
+    await declaredRulesFor(teamRoster, ruleset, declaredRules),
   );
   if (!regionalRules || regionalRules.length === 0) {
     return {
@@ -155,11 +180,13 @@ export async function getTeamAvailableStarPlayers(
   teamRoster: string,
   ruleset: Ruleset = DEFAULT_RULESET,
   regionalLeague?: string | null,
+  declaredRules?: readonly string[] | null,
 ): Promise<StarPlayerDefinition[]> {
   const regionalRules = resolveTeamRegionalRules(
     teamRoster,
     ruleset,
     regionalLeague,
+    await declaredRulesFor(teamRoster, ruleset, declaredRules),
   );
   if (!regionalRules || regionalRules.length === 0) {
     return [];
@@ -189,9 +216,11 @@ export async function validateStarPlayersForTeam(
   availableBudget: number,
   ruleset: Ruleset = DEFAULT_RULESET,
   regionalLeague?: string | null,
+  declaredRules?: readonly string[] | null,
 ): Promise<{ valid: boolean; error?: string; totalCost?: number }> {
-  // 1. Vérifier les paires obligatoires
-  const pairValidation = validateStarPlayerPairs(starPlayerSlugs);
+  // 1. Vérifier les paires obligatoires (au ruleset de l'équipe : les paires
+  // de la Saison 3 ne s'appliquent pas à une équipe Saison 2).
+  const pairValidation = validateStarPlayerPairs(starPlayerSlugs, ruleset);
   if (!pairValidation.valid) {
     return pairValidation;
   }
@@ -210,6 +239,7 @@ export async function validateStarPlayersForTeam(
     teamRoster,
     ruleset,
     regionalLeague,
+    await declaredRulesFor(teamRoster, ruleset, declaredRules),
   );
   if (!regionalRules || regionalRules.length === 0) {
     return {

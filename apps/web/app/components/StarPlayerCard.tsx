@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import type { StarPlayerDefinition } from '@bb/game-engine';
+import type { Ruleset, StarPlayerDefinition } from '@bb/game-engine';
 import {
   getStarPlayerSkillDisplayNames,
   getStarPlayerPair,
@@ -29,6 +29,8 @@ export type StarPlayerWithKeywords = StarPlayerDefinition & {
   }>;
   readonly pairWith?: string | null;
   readonly pairCost?: number | null;
+  /** Édition servie pour ce slug (le même slug existe en S2 ET en S3). */
+  readonly ruleset?: string;
 };
 
 interface StarPlayerCardProps {
@@ -52,7 +54,13 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
   // donc le prix de la paire des deux cotes, avec le nom du bon partenaire.
   // Le prix de paire FRAIS vient de l'API (couts DB) quand disponible ;
   // le catalogue statique ne sert que de repli (donnee du dernier deploy).
-  const pair = getStarPlayerPair(starPlayer.slug, 'season_3');
+  // Ruleset REEL de la star : « season_3 » etait code en dur, donc une star
+  // servie en Saison 2 se voyait appliquer la table de paires Saison 3
+  // (W7 de l'audit).
+  const pair = getStarPlayerPair(
+    starPlayer.slug,
+    (starPlayer.ruleset as Ruleset | undefined) ?? undefined,
+  );
   const isPaired = Boolean(starPlayer.pairWith) || Boolean(pair);
   const displayedCost = isPaired
     ? (starPlayer.pairCost ?? pair?.pairCost ?? starPlayer.cost)
@@ -128,7 +136,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
               className="text-xs text-gray-600"
               data-testid="star-player-card-pair"
             >
-              paire avec {pair?.partnerName ?? starPlayer.pairWith}
+              paire avec {starPlayer.pairWith ?? pair?.partnerName}
             </div>
           )}
         </div>

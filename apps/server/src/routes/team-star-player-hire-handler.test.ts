@@ -22,6 +22,9 @@ vi.mock('../utils/server-log', () => ({
 
 vi.mock('../utils/team-values', () => ({
   updateTeamValues: vi.fn(),
+  // Budget disponible coté au tarif BASE (`Position.cost`) : le mock doit
+  // déclarer TOUTES les méthodes utilisées (cf. CLAUDE.md).
+  sumPlayerCostsForTeam: vi.fn().mockResolvedValue(0),
 }));
 
 import { prisma } from '../prisma';

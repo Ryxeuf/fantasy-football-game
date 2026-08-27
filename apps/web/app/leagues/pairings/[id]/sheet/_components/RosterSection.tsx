@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   TEAM_ROSTERS_BY_RULESET,
   DEFAULT_RULESET,
   type Ruleset,
 } from "@bb/game-engine";
+import { apiRequest } from "../../../../../lib/api-client";
 import SkillTooltip from "../../../../../me/teams/components/SkillTooltip";
 import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
@@ -60,6 +61,11 @@ export function parseRosterSnapshot(raw: unknown): {
  * Noms de poste lisibles pour un roster/ruleset donnés (le snapshot stocke
  * les SLUGS de position). Fallback : la valeur brute (déjà lisible pour la
  * vue live et les journaliers).
+ *
+ * Repli seulement : la source de vérité est `Position.displayName` en base,
+ * lue par `usePositionNames` ci-dessous. Le catalogue compilé affichait des
+ * libellés périmés, et le slug brut pour un poste créé en admin (W15 de
+ * l'audit).
  */
 export function positionNameResolver(
   roster: string | undefined,
@@ -137,17 +143,65 @@ export function livePlayersToView(
  *    que personne n'avait soumis, c'est-à-dire pendant toute la
  *    préparation du match.
  */
+/**
+ * Libellés de poste servis par la BASE (`/api/rosters/:slug` →
+ * `Position.displayName`). Carte vide tant qu'elle n'est pas chargée, ou si
+ * l'API échoue : l'appelant retombe alors sur le catalogue compilé.
+ */
+function usePositionNames(
+  roster: string | undefined,
+  ruleset: string | undefined,
+): Map<string, string> {
+  const [names, setNames] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (!roster) {
+      setNames(new Map());
+      return;
+    }
+    let cancelled = false;
+    apiRequest<{
+      roster?: {
+        positions?: Array<{ slug?: string | null; displayName?: string | null }>;
+      };
+    }>(
+      `/api/rosters/${encodeURIComponent(roster)}?ruleset=${encodeURIComponent(
+        ruleset || DEFAULT_RULESET,
+      )}`,
+    )
+      .then((r) => {
+        if (cancelled) return;
+        const m = new Map<string, string>();
+        for (const pos of r.roster?.positions ?? []) {
+          if (pos?.slug && pos.displayName) m.set(pos.slug, pos.displayName);
+        }
+        setNames(m);
+      })
+      .catch(() => {
+        if (!cancelled) setNames(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [roster, ruleset]);
+  return names;
+}
+
 export function RosterSection({
   label,
   raw,
   livePlayers,
   journeymen,
+  roster,
+  ruleset,
 }: {
   label: string;
   raw: unknown;
   livePlayers?: readonly SheetPlayer[];
   /** Journaliers dérivés — inclus dans la vue « état actuel ». */
   journeymen?: readonly SheetJourneyman[];
+  /** Roster/édition de l'équipe : sert à lire les libellés de poste en base. */
+  roster?: string;
+  ruleset?: string;
 }) {
   const [open, setOpen] = useState(false);
   const snapshot = useMemo(() => parseRosterSnapshot(raw), [raw]);
@@ -155,10 +209,15 @@ export function RosterSection({
     () => (snapshot ? null : livePlayersToView(livePlayers, journeymen ?? [])),
     [snapshot, livePlayers, journeymen],
   );
-  const positionName = useMemo(
-    () => positionNameResolver(snapshot?.roster, snapshot?.ruleset),
-    [snapshot?.roster, snapshot?.ruleset],
+  const effectiveRoster = snapshot?.roster ?? roster;
+  const effectiveRuleset = snapshot?.ruleset ?? ruleset;
+  const dbNames = usePositionNames(effectiveRoster, effectiveRuleset);
+  const fallbackName = useMemo(
+    () => positionNameResolver(effectiveRoster, effectiveRuleset),
+    [effectiveRoster, effectiveRuleset],
   );
+  const positionName = (position: string): string =>
+    dbNames.get(position) ?? fallbackName(position);
   const players = snapshot?.players ?? live;
   if (!players || players.length === 0) return null;
 

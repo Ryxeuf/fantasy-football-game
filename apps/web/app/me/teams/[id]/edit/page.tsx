@@ -17,6 +17,7 @@ import {
   SKILL_ELITE_BADGE_CLASSES,
 } from "../../../../lib/skill-elite";
 import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
+import { allowedCategoriesFor } from "../../../../lib/skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import { formatPlusStat } from "../../../../lib/format-stats";
 import {
@@ -128,6 +129,13 @@ interface AvailablePosition {
   currentCount: number;
   maxCount: number;
   canAdd: boolean;
+  /**
+   * Accès Principale/Secondaire déclaré en base (CSV de codes G/A/S/P/M/K).
+   * Optionnels pour rétro-compat avec un serveur antérieur : absents ⇒ repli
+   * sur le catalogue compilé du moteur.
+   */
+  primarySkills?: string | null;
+  secondarySkills?: string | null;
   stats: {
     ma: number;
     st: number;
@@ -927,6 +935,7 @@ export default function TeamEditPage() {
                     </td>
                     <td className="px-4 py-3">
                       <SkillTooltip
+                        ruleset={team?.ruleset}
                         skillsString={player.skills}
                         teamName={team?.roster}
                         position={player.position}
@@ -1087,6 +1096,7 @@ export default function TeamEditPage() {
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compétences</div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <SkillTooltip
+                      ruleset={team?.ruleset}
                       skillsString={player.skills}
                       teamName={team?.roster}
                       position={player.position}
@@ -1254,6 +1264,7 @@ export default function TeamEditPage() {
                           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Compétences de base</div>
                           <div className="bg-white rounded-lg p-3">
                             <SkillTooltip
+                              ruleset={team?.ruleset}
                               skillsString={position.stats.skills}
                               teamName={team?.roster}
                               position={position.key}
@@ -1344,11 +1355,20 @@ export default function TeamEditPage() {
                 ? (selectedStat ? CHARACTERISTIC_VALUE_INCREASE[selectedStat] / 1000 : 0)
                 : SURCHARGE_PER_ADVANCEMENT[actualAdvType as keyof typeof SURCHARGE_PER_ADVANCEMENT] / 1000 +
                   (selectedIsElite ? ELITE_SKILL_SURCHARGE / 1000 : 0);
-              const access = getPositionCategoryAccess(player.position);
               // Déterminer le type d'accès (primary ou secondary) en fonction du type d'avancement
               const categoryAccessType = (actualAdvType === 'random-primary' || actualAdvType === 'primary') ? 'primary' : 'secondary';
-              const allowedCategories = categoryAccessType === 'primary' ? access.primary : access.secondary;
-              
+              // Accès déclaré EN BASE pour ce poste
+              // (`Position.primarySkills`/`secondarySkills`) : c'est lui que le
+              // serveur valide. `getPositionCategoryAccess` (12 postes Saison 2,
+              // sinon TOUTES les catégories) ne sert plus que de repli quand
+              // l'accès n'est pas renseigné (W4 de l'audit).
+              const dbAccess = availablePositions.find(p => p.key === player.position);
+              const allowedCategories =
+                allowedCategoriesFor(dbAccess, actualAdvType as 'primary' | 'secondary' | 'random-primary') ??
+                (categoryAccessType === 'primary'
+                  ? getPositionCategoryAccess(player.position).primary
+                  : getPositionCategoryAccess(player.position).secondary);
+
               // Catégories avec leurs codes et couleurs
               const categoryConfig: Record<string, { code: string; name: string; color: string; bgColor: string }> = {
                 'General': { code: 'G', name: 'Générale', color: 'text-blue-700', bgColor: 'bg-blue-100 hover:bg-blue-200' },
@@ -1356,6 +1376,9 @@ export default function TeamEditPage() {
                 'Strength': { code: 'S', name: 'Force', color: 'text-red-700', bgColor: 'bg-red-100 hover:bg-red-200' },
                 'Passing': { code: 'P', name: 'Passe', color: 'text-purple-700', bgColor: 'bg-purple-100 hover:bg-purple-200' },
                 'Mutation': { code: 'M', name: 'Mutation', color: 'text-orange-700', bgColor: 'bg-orange-100 hover:bg-orange-200' },
+                // Sournoiserie (Saison 3) : piochable au level-up, elle
+                // manquait ici alors que la base la déclare (code K).
+                'Scélérates': { code: 'K', name: 'Sournoiserie', color: 'text-amber-700', bgColor: 'bg-amber-100 hover:bg-amber-200' },
                 'Trait': { code: 'T', name: 'Traits', color: 'text-indigo-700', bgColor: 'bg-indigo-100 hover:bg-indigo-200' },
               };
 

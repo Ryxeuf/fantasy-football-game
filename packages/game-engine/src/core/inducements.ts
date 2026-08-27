@@ -6,6 +6,7 @@
 import { ExtendedGameState } from './game-state';
 import { createLogEntry } from '../utils/logging';
 import { StarPlayerDefinition, getAvailableStarPlayers, getStarPlayerBySlug } from '../rosters/star-players';
+import type { Ruleset } from '../rosters/positions';
 import { TeamId } from './types';
 
 // ---------------------------------------------------------------------------
@@ -74,6 +75,22 @@ export interface InducementContext {
    * Optionnel pour rétro-compat : absent = aucune.
    */
   specialRules?: string[];
+  /**
+   * Ruleset de l'équipe. Absent = `DEFAULT_RULESET` : le catalogue compilé
+   * de Star Players ne connaît alors que la Saison 3.
+   */
+  ruleset?: Ruleset;
+  /**
+   * Star Players ENGAGEABLES par cette équipe, résolus par l'appelant
+   * (table `StarPlayer`, filtrée sur les règles régionales effectives).
+   *
+   * C'est la seule donnée de catalogue que le runtime du moteur lisait
+   * encore en dur : un `StarPlayer.cost` corrigé en admin changeait la
+   * feuille de ligue mais pas le match en ligne. Absent ⇒ repli sur le
+   * catalogue compilé, pour que le moteur reste utilisable hors base
+   * (tests purs, simulateur).
+   */
+  starPlayers?: ReadonlyArray<{ readonly slug: string; readonly cost: number }>;
 }
 
 /** Toutes les règles (régionales + spéciales) du contexte. */
@@ -417,10 +434,21 @@ export function getInducementCost(
   starPlayerSlug?: string
 ): number {
   if (slug === 'star_player' && starPlayerSlug) {
-    const sp = getStarPlayerBySlug(starPlayerSlug);
+    // Catalogue fourni par l'appelant (base) : il porte DÉJÀ le filtrage par
+    // règles régionales, donc l'absence du slug vaut « non engageable ».
+    if (ctx.starPlayers) {
+      return (
+        ctx.starPlayers.find((s) => s.slug === starPlayerSlug)?.cost ?? 0
+      );
+    }
+    const sp = getStarPlayerBySlug(starPlayerSlug, ctx.ruleset);
     if (!sp) return 0;
     // Verify this star player is available to this team
-    const available = getAvailableStarPlayers(ctx.rosterSlug, ctx.regionalRules);
+    const available = getAvailableStarPlayers(
+      ctx.rosterSlug,
+      ctx.regionalRules,
+      ctx.ruleset,
+    );
     return available.some((s) => s.slug === starPlayerSlug) ? sp.cost : 0;
   }
 

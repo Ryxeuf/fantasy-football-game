@@ -2,8 +2,14 @@
  * Page "A propos" / About (Q.15 — Sprint 23).
  *
  * Server component : recupere les chiffres reels (rosters, star players,
- * skills, tutoriels) au build et compose le contenu via le builder pur
+ * skills, tutoriels) et compose le contenu via le builder pur
  * `buildAboutContent`. Page publique citable conçue pour les LLM (GEO).
+ *
+ * Audit statique vs base — lot 5 (W14) : ces chiffres étaient comptés sur les
+ * catalogues COMPILÉS, alors que l'API sert le contenu réel de la base. Une
+ * équipe ou une compétence ajoutée en admin ne changeait pas une page pourtant
+ * indexée et citée. On compte donc côté API, avec les catalogues en repli
+ * quand elle est injoignable (build sans backend).
  */
 import {
   TEAM_ROSTERS_BY_RULESET,
@@ -11,10 +17,13 @@ import {
   listTutorialScripts,
   SKILLS_DEFINITIONS,
 } from "@bb/game-engine";
+import { getServerApiBase, safeServerJson } from "../lib/serverApi";
 import { buildAboutContent } from "./about-content";
 import AboutClient from "./AboutClient";
 
-export const dynamic = "force-static";
+// ISR plutôt que statique au build : les chiffres suivent la base sans
+// redéploiement.
+export const revalidate = 3600;
 
 function countSkills(): number {
   return SKILLS_DEFINITIONS.length;
@@ -44,11 +53,49 @@ function countStarPlayers(): number {
   return all.size;
 }
 
-export default function AboutPage() {
+/**
+ * Nombre d'entrées distinctes servies par l'API sur les deux éditions.
+ * `null` si l'API ne répond pas — l'appelant retombe alors sur le catalogue.
+ */
+async function countFromApi(
+  path: (ruleset: string) => string,
+  pick: (payload: any) => unknown[] | undefined,
+): Promise<number | null> {
+  const base = getServerApiBase();
+  const slugs = new Set<string>();
+  let answered = false;
+  for (const ruleset of ["season_2", "season_3"]) {
+    const payload = await safeServerJson<any>(`${base}${path(ruleset)}`, {
+      next: { revalidate: 3600, tags: ["rosters"] },
+    });
+    const rows = pick(payload);
+    if (!rows) continue;
+    answered = true;
+    for (const row of rows) {
+      const slug = (row as { slug?: unknown })?.slug;
+      if (typeof slug === "string") slugs.add(slug);
+    }
+  }
+  return answered ? slugs.size : null;
+}
+
+export default async function AboutPage() {
+  const [rosterCount, starPlayerCount, skillCount] = await Promise.all([
+    countFromApi(
+      (r) => `/api/rosters?lang=fr&ruleset=${r}`,
+      (p) => p?.rosters,
+    ),
+    countFromApi(
+      (r) => `/star-players?ruleset=${r}`,
+      (p) => p?.data,
+    ),
+    countFromApi((r) => `/api/skills?ruleset=${r}`, (p) => p?.skills),
+  ]);
+
   const counts = {
-    rosterCount: countRosters(),
-    starPlayerCount: countStarPlayers(),
-    skillCount: countSkills(),
+    rosterCount: rosterCount ?? countRosters(),
+    starPlayerCount: starPlayerCount ?? countStarPlayers(),
+    skillCount: skillCount ?? countSkills(),
     tutorialCount: listTutorialScripts().length,
   };
 

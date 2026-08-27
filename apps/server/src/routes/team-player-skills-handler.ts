@@ -21,9 +21,18 @@
  *    restrictions s'appliquent. Une fois l'equipe engagee, on retombe
  *    sur le flux historique : SPP du joueur, barème standard.
  *
+ *    ACCES COMPETENCES — les categories Principale/Secondaire, l'existence
+ *    d'une competence et sa categorie sont lues EN BASE
+ *    (`Position.primarySkills`/`secondarySkills`, table `Skill`), via les
+ *    memes helpers que le chemin LIGUE (`services/skill-access`). La table
+ *    `ACCESS_BY_POSITION` du moteur ne couvrait que 12 postes Saison 2 : tous
+ *    les autres tombaient sur `ALL_CATEGORIES` (Trait compris), donc aucune
+ *    restriction, et une competence creee ou recategorisee en admin etait
+ *    refusee. Les deux chemins (libre et ligue) partagent desormais la meme
+ *    verite.
+ *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
- * `updateTeamValues`, `getNextAdvancementPspCost`/
- * `getPositionCategoryAccess`/`SKILLS_BY_SLUG`/`SKILLS_DEFINITIONS`/
+ * `updateTeamValues`, `services/skill-access`, `services/random-primary-pool`,
  * `AdvancementType`/`PlayerAdvancement` from `@bb/game-engine`,
  * `serverLog`. Aucun cycle.
  */
@@ -39,17 +48,24 @@ import {
   type TeamAuditPrismaLike,
 } from '../services/team-audit';
 import {
-  getPositionCategoryAccess,
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
-  SKILLS_BY_SLUG,
-  SKILLS_DEFINITIONS,
+  isRandomSkillCategory,
+  rollRandomPrimaryCandidates,
   type AdvancementType,
   type CharacteristicKind,
   type PlayerAdvancement,
+  type RandomSkillCategoryCode,
 } from '@bb/game-engine';
 import { serverLog } from '../utils/server-log';
+import {
+  checkSkillAccess,
+  dbCategoryToCode,
+  parseAccessCsv,
+  type SkillCategoryCode,
+} from '../services/skill-access';
+import { resolveRandomPrimaryPool } from '../services/random-primary-pool';
 import { isTeamRosterFrozen } from '../services/team-lock-status';
 import {
   advancementCostFor,
@@ -184,7 +200,9 @@ export async function handleUpdatePlayerSkills(
       tournamentRuleset?: string | null;
     };
     const frozen = await isTeamRosterFrozen(teamId);
-    const pack = frozen ? null : packForTeam(teamRow.tournamentRuleset ?? null);
+    const pack = frozen
+      ? null
+      : await packForTeam(teamRow.tournamentRuleset ?? null);
     const poolTotal = frozen ? 0 : (teamRow.startingPspPool ?? 0);
     const poolLeft = poolTotal
       ? Math.max(0, poolTotal - (await poolSpentForTeamId(teamId)))
@@ -313,24 +331,45 @@ export async function handleUpdatePlayerSkills(
       advancementType === 'primary' || advancementType === 'random-primary'
         ? 'primary'
         : 'secondary';
-    const access = getPositionCategoryAccess(player.position);
-    const allowedCategories =
-      categoryAccessType === 'primary' ? access.primary : access.secondary;
+    const teamRuleset = String(team.ruleset ?? 'season_3');
 
-    // Competences reservees (ex: mighty-blow-2, variantes star player) :
-    // non selectionnables en nouveaute, meme si la categorie/position les
-    // autoriserait. Un seul aller-retour DB, reutilise par les 2 branches.
-    const excludedSkillRows: Array<{ slug: string }> = await prisma.skill.findMany({
-      where: { ruleset: team.ruleset as never, excludedFromSelection: true },
-      select: { slug: true },
+    // Acces Principale/Secondaire de la POSITION, lu en base. `null` sur les
+    // deux colonnes = acces non renseigne (rosters season_2) : on n'impose
+    // alors rien, comme le chemin ligue (`checkSkillAccess` -> `no-data`).
+    const positionAccess = await prisma.position.findFirst({
+      where: {
+        slug: player.position,
+        roster: { slug: team.roster, ruleset: teamRuleset as never },
+      },
+      select: { primarySkills: true, secondarySkills: true },
     });
-    const excludedSlugs = new Set(excludedSkillRows.map((s) => s.slug));
+    const accessCsv =
+      categoryAccessType === 'primary'
+        ? positionAccess?.primarySkills
+        : positionAccess?.secondarySkills;
+    const accessUnknown =
+      positionAccess == null ||
+      (positionAccess.primarySkills == null &&
+        positionAccess.secondarySkills == null);
+    const allowedCodes: ReadonlySet<SkillCategoryCode> = accessUnknown
+      ? new Set<SkillCategoryCode>()
+      : parseAccessCsv(accessCsv);
 
     let finalSkillSlug: string;
 
     if (isRandom) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!allowedCategories.includes(skillCategory as any)) {
+      // Le client envoie un NOM de categorie DB ("General", "Agility"…) ;
+      // l'acces de position et la table de tirage parlent en CODES (G, A…).
+      const categoryCode = dbCategoryToCode(skillCategory);
+      if (!categoryCode || !isRandomSkillCategory(categoryCode)) {
+        sendError(
+          res,
+          `La categorie '${skillCategory}' n'est pas tirable au hasard`,
+          400,
+        );
+        return;
+      }
+      if (!accessUnknown && !allowedCodes.has(categoryCode)) {
         sendError(
           res,
           `La categorie '${skillCategory}' n'est pas accessible en ${categoryAccessType} pour cette position`,
@@ -339,13 +378,16 @@ export async function handleUpdatePlayerSkills(
         return;
       }
 
-      const eligibleSkills = SKILLS_DEFINITIONS.filter(
-        (s) => s.category === skillCategory,
-      )
-        .filter((s) => !currentSkills.includes(s.slug))
-        .filter((s) => !excludedSlugs.has(s.slug));
-
-      if (eligibleSkills.length === 0) {
+      // MEME tirage que le chemin ligue : table officielle 2D6 filtree en
+      // base (recategorisation / exclusion admin), tirage seede reproductible.
+      const candidates = rollRandomPrimaryCandidates({
+        category: categoryCode as RandomSkillCategoryCode,
+        ownedSlugs: currentSkills,
+        seed: `${playerId}:${advancements.length}:${categoryCode}`,
+        count: 1,
+        pool: await resolveRandomPrimaryPool(categoryCode, teamRuleset),
+      });
+      if (candidates.length === 0) {
         sendError(
           res,
           'Aucune competence disponible dans cette categorie',
@@ -353,12 +395,20 @@ export async function handleUpdatePlayerSkills(
         );
         return;
       }
-
-      const randomIndex = Math.floor(Math.random() * eligibleSkills.length);
-      finalSkillSlug = eligibleSkills[randomIndex].slug;
+      finalSkillSlug = candidates[0];
     } else {
       finalSkillSlug = clientSkillSlug!;
-      const skillDef = SKILLS_BY_SLUG[finalSkillSlug];
+      // Existence, libelle, categorie et exclusivite : table `Skill` du
+      // ruleset de l'equipe. Une competence creee en admin etait auparavant
+      // refusee (« Competence inconnue »), une recatégorisation ignoree.
+      const skillDef = await prisma.skill.findFirst({
+        where: { slug: finalSkillSlug, ruleset: teamRuleset as never },
+        select: {
+          nameFr: true,
+          category: true,
+          excludedFromSelection: true,
+        },
+      });
       if (!skillDef) {
         sendError(res, `Competence '${finalSkillSlug}' inconnue`, 400);
         return;
@@ -369,7 +419,7 @@ export async function handleUpdatePlayerSkills(
         return;
       }
 
-      if (excludedSlugs.has(finalSkillSlug)) {
+      if (skillDef.excludedFromSelection) {
         sendError(
           res,
           `La competence '${skillDef.nameFr}' n'est pas disponible a la selection`,
@@ -378,8 +428,13 @@ export async function handleUpdatePlayerSkills(
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!allowedCategories.includes(skillDef.category as any)) {
+      const check = checkSkillAccess({
+        type: advancementType === 'secondary' ? 'secondary' : 'primary',
+        skillCode: dbCategoryToCode(skillDef.category),
+        primarySkills: positionAccess?.primarySkills,
+        secondarySkills: positionAccess?.secondarySkills,
+      });
+      if (check === 'out-of-pool') {
         sendError(
           res,
           `La competence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,

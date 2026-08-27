@@ -9,6 +9,9 @@ vi.mock('../prisma', () => ({
     team: { findFirst: vi.fn(), update: vi.fn() },
     teamPlayer: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
     cupParticipant: { findFirst: vi.fn() },
+    // Le règlement de tournoi est résolu par le repository (base d'abord).
+    // Table vide ⇒ repli sur le registre du moteur, sans bruit d'erreur.
+    tournamentRuleset: { findMany: vi.fn(() => Promise.resolve([])) },
   },
 }));
 
@@ -330,8 +333,8 @@ describe('advancementCostFor', () => {
     expect(advancementCostFor(null, 0, 'secondary')).toBe(10);
   });
 
-  it('applique le barème du règlement de tournoi', () => {
-    const pack = packForTeam('naf_world_cup_2027');
+  it('applique le barème du règlement de tournoi', async () => {
+    const pack = await packForTeam('naf_world_cup_2027');
     expect(pack).not.toBeNull();
     expect(advancementCostFor(pack, 0, 'primary')).toBe(
       pack!.skillCosts.firstPrimary,
@@ -341,8 +344,8 @@ describe('advancementCostFor', () => {
     );
   });
 
-  it('retombe sur le barème standard pour les types qu’un règlement ne cote pas', () => {
-    const pack = packForTeam('naf_world_cup_2027');
+  it('retombe sur le barème standard pour les types qu’un règlement ne cote pas', async () => {
+    const pack = await packForTeam('naf_world_cup_2027');
     expect(advancementCostFor(pack, 0, 'characteristic')).toBe(14);
     expect(advancementCostFor(pack, 0, 'random-primary')).toBe(3);
   });
@@ -367,7 +370,7 @@ describe('assertTournamentAllowsAdvancement', () => {
         teamId: 'T1',
         roster: 'human',
         playerId: 'P1',
-        pack: packForTeam('naf_world_cup_2027'),
+        pack: await packForTeam('naf_world_cup_2027'),
         type: 'characteristic',
       }),
     ).rejects.toBeInstanceOf(TeamAdvancementError);
@@ -385,7 +388,7 @@ describe('assertTournamentAllowsAdvancement', () => {
         teamId: 'T1',
         roster: 'human',
         playerId: 'P1',
-        pack: packForTeam('naf_world_cup_2027'),
+        pack: await packForTeam('naf_world_cup_2027'),
         type: 'primary',
       }),
     ).rejects.toMatchObject({ code: 'tournament-rules' });

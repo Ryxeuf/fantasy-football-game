@@ -126,6 +126,13 @@ export default function TeamDetailClient({
   // Source unique partagée avec le builder : `FORMAT_CONSTRAINTS`.
   const [format, setFormat] = useState<GameFormat>("bb11");
   const constraints = getFormatConstraints(format);
+  // Budget de construction : `Roster.budget` (base, éditable en admin) sert
+  // par l'API ; le plafond compilé du format n'est que le repli. La fiche
+  // publique annonçait sinon un budget et une marge périmés (W3 de l'audit).
+  const startingBudgetK: number =
+    typeof team?.budget === "number" && team.budget > 0
+      ? team.budget
+      : constraints.startingBudget;
   // Config staff (coûts po + plafonds + apothicaire) du roster × format, issue
   // de la BASE (admin) ; repli sur le défaut dérivé si la ligne n'existe pas.
   // Même source de vérité que le builder -> les éditions admin se reflètent ici.
@@ -174,7 +181,7 @@ export default function TeamDetailClient({
   // Statistiques dérivées du roster (coûts en kPO, cf. roster-stats.ts).
   const costRange = playerCostRange(positions);
   const elevenCost = startingElevenCost(positions);
-  const headroom = budgetHeadroom(positions);
+  const headroom = budgetHeadroom(positions, startingBudgetK);
 
   // A11 — règles spéciales + ligues régionales résolues par l'API. Optionnels
   // pour rétro-compat (un frontend déployé avant le serveur reçoit `undefined`).
@@ -225,7 +232,7 @@ export default function TeamDetailClient({
             <span className="text-gray-600 text-xs sm:text-sm">
               {t.teams.budgetLabel.replace(
                 /\{budget\}/g,
-                constraints.startingBudget.toString(),
+                startingBudgetK.toString(),
               )}
             </span>
           </div>
@@ -325,7 +332,7 @@ export default function TeamDetailClient({
                 {t.teams.startingBudget}
               </div>
               <div className="text-lg font-semibold text-gray-900">
-                {constraints.startingBudget}k {t.teams.po}
+                {startingBudgetK}k {t.teams.po}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 {t.teams.startingBudgetDesc}

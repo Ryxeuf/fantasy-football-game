@@ -17,10 +17,12 @@ import {
   validatePlayerPlacement,
   startKickoffSequence,
   INDUCEMENT_CATALOGUE,
+  getInducementCost,
+  getInducementMaxQuantity,
+  type InducementContext,
   listAIOpponentAllowedRosters,
   type WeatherType,
   type InducementSelection,
-  type InducementContext,
   type ExtendedGameState,
   type TeamId,
 } from "@bb/game-engine";
@@ -46,6 +48,7 @@ import {
   localMatchInducementsSchema,
 } from "../schemas/local-match.schemas";
 import { serverLog } from "../utils/server-log";
+import { buildInducementContext } from "../services/inducement-context";
 
 const router = Router();
 
@@ -559,12 +562,13 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
     // on enchaine automatiquement inducements (selections vides) -> prayers -> kicking-team -> setup.
     // Pour les matchs humain vs humain, on s'arrete ici pour que les joueurs choisissent via l'UI.
     if (localMatch.aiOpponent && gameState.preMatch.phase === 'inducements') {
-      const ctvA = localMatch.teamA.players
-        .filter((p: any) => !p.dead)
-        .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
-      const ctvB = localMatch.teamB.players
-        .filter((p: any) => !p.dead)
-        .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+      // VEA (CTV) de chaque equipe : `Team.currentValue`, deja calculee et
+      // persistee par `updateTeamValues` (morts/licencies exclus, absents
+      // deduits). L'ancien calcul sommait `p.value`, champ INEXISTANT sur
+      // `TeamPlayer` : la CTV valait toujours 0, donc la cagnotte du match
+      // local etait toujours nulle.
+      const ctvA = (localMatch.teamA as any).currentValue ?? 0;
+      const ctvB = (localMatch.teamB as any).currentValue ?? 0;
 
       const pettyCashInput = {
         ctvTeamA: ctvA,
@@ -573,18 +577,22 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
         treasuryTeamB: (localMatch.teamB as any).treasury || 0,
       };
 
-      const ctxA: InducementContext = {
-        teamId: "A",
-        regionalRules: [],
-        hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
-        rosterSlug: localMatch.teamA.roster,
-      };
-      const ctxB: InducementContext = {
-        teamId: "B",
-        regionalRules: [],
-        hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
-        rosterSlug: localMatch.teamB.roster,
-      };
+      const [ctxA, ctxB] = await Promise.all([
+        buildInducementContext({
+          teamId: "A",
+          rosterSlug: localMatch.teamA.roster,
+          ruleset: (localMatch.teamA as any).ruleset,
+          regionalLeague: (localMatch.teamA as any).regionalLeague,
+          hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
+        }),
+        buildInducementContext({
+          teamId: "B",
+          rosterSlug: localMatch.teamB.roster,
+          ruleset: (localMatch.teamB as any).ruleset,
+          regionalLeague: (localMatch.teamB as any).regionalLeague,
+          hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
+        }),
+      ]);
 
       const emptySelection: InducementSelection = { items: [] };
       const inducementsResult = processInducementsWithSelection(
@@ -699,26 +707,28 @@ router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema),
     const rosterA = localMatch.teamA.roster;
     const rosterB = localMatch.teamB.roster;
 
-    const ctxA: InducementContext = {
-      teamId: "A",
-      regionalRules: [],
-      hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
-      rosterSlug: rosterA,
-    };
-    const ctxB: InducementContext = {
-      teamId: "B",
-      regionalRules: [],
-      hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
-      rosterSlug: rosterB,
-    };
+    const [ctxA, ctxB] = await Promise.all([
+      buildInducementContext({
+        teamId: "A",
+        rosterSlug: rosterA,
+        ruleset: (localMatch.teamA as any).ruleset,
+        regionalLeague: (localMatch.teamA as any).regionalLeague,
+        hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
+      }),
+      buildInducementContext({
+        teamId: "B",
+        rosterSlug: rosterB,
+        ruleset: (localMatch.teamB as any).ruleset,
+        regionalLeague: (localMatch.teamB as any).regionalLeague,
+        hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
+      }),
+    ]);
 
     // Calculate CTV for petty cash
-    const ctvA = localMatch.teamA.players
-      .filter((p: any) => !p.dead)
-      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
-    const ctvB = localMatch.teamB.players
-      .filter((p: any) => !p.dead)
-      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+    // VEA (CTV) persistee : `p.value` n'existe pas sur `TeamPlayer`, la
+    // cagnotte du match local etait donc toujours nulle.
+    const ctvA = (localMatch.teamA as any).currentValue ?? 0;
+    const ctvB = (localMatch.teamB as any).currentValue ?? 0;
 
     const pettyCashInput = {
       ctvTeamA: ctvA,
@@ -825,12 +835,10 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
     }
 
     // Calculate CTV and petty cash
-    const ctvA = localMatch.teamA.players
-      .filter((p: any) => !p.dead)
-      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
-    const ctvB = localMatch.teamB.players
-      .filter((p: any) => !p.dead)
-      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+    // VEA (CTV) persistee : `p.value` n'existe pas sur `TeamPlayer`, la
+    // cagnotte du match local etait donc toujours nulle.
+    const ctvA = (localMatch.teamA as any).currentValue ?? 0;
+    const ctvB = (localMatch.teamB as any).currentValue ?? 0;
 
     const pettyCashInput = {
       ctvTeamA: ctvA,
@@ -841,15 +849,43 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
 
     const pettyCash = calculatePettyCash(pettyCashInput);
 
-    // Filter catalogue based on team context
-    const catalogue = INDUCEMENT_CATALOGUE.filter((ind) => {
-      // Star players are handled separately in the UI
-      if (ind.slug === "star_player") return false;
-      return true;
-    });
+    // Catalogue vu par CHAQUE equipe : acces conditionnel (`canPurchase`),
+    // prix remise et plafond majore dependent des regles regionales et
+    // speciales de l'equipe. Le catalogue brut annoncait a l'UI des coups de
+    // pouce que le POST refusait ensuite, et au tarif plein.
+    const [ctxA, ctxB] = await Promise.all([
+      buildInducementContext({
+        teamId: "A",
+        rosterSlug: localMatch.teamA.roster,
+        ruleset: (localMatch.teamA as any).ruleset,
+        regionalLeague: (localMatch.teamA as any).regionalLeague,
+        hasApothecary: (gameState.apothecaryAvailable?.teamA ?? 0) > 0,
+      }),
+      buildInducementContext({
+        teamId: "B",
+        rosterSlug: localMatch.teamB.roster,
+        ruleset: (localMatch.teamB as any).ruleset,
+        regionalLeague: (localMatch.teamB as any).regionalLeague,
+        hasApothecary: (gameState.apothecaryAvailable?.teamB ?? 0) > 0,
+      }),
+    ]);
+    const catalogueFor = (ctx: InducementContext) =>
+      INDUCEMENT_CATALOGUE
+        // Les Star Players sont geres a part dans l'UI.
+        .filter((ind) => ind.slug !== "star_player")
+        .filter((ind) => !ind.canPurchase || ind.canPurchase(ctx))
+        .map((ind) => ({
+          ...ind,
+          cost: getInducementCost(ind.slug, ctx),
+          maxQuantity: getInducementMaxQuantity(ind.slug, ctx),
+        }));
 
     res.json({
-      catalogue,
+      // Retro-compat : `catalogue` reste la vue de l'equipe A (seul
+      // consommateur historique), completee par les deux vues explicites.
+      catalogue: catalogueFor(ctxA),
+      catalogueTeamA: catalogueFor(ctxA),
+      catalogueTeamB: catalogueFor(ctxB),
       pettyCash,
       teamA: {
         name: localMatch.teamA.name,

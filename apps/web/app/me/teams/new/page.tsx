@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../auth-client";
@@ -21,6 +21,7 @@ import BuildAdvancementAllocator, {
 import TeamLogoPicker from "../components/TeamLogoPicker";
 import { uploadTeamLogo } from "../components/team-logo-client";
 import { BUILDER_DEFAULTS, readBuilderParams } from "./builder-url-params";
+import { defaultBudgetK } from "./default-budget";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -264,6 +265,36 @@ export default function NewTeamBuilder() {
     if (!staff.apothecaryAllowed) setApothecary(false);
   }, [staff.apothecaryAllowed]);
 
+  // Budget de construction PAR DÉFAUT : `Roster.budget` (base, éditable en
+  // admin) pour le BB11, plafond du FORMAT sinon — voir `default-budget.ts`
+  // pour pourquoi les deux axes ne se confondent pas.
+  const defaultBudgetFor = useCallback(
+    (slug: string, fmt: GameFormat): number =>
+      defaultBudgetK(rosters.find((r) => r.slug === slug)?.budget, fmt),
+    [rosters],
+  );
+
+  // Au changement de ROSTER en jeu libre, réaligne le budget sur celui que le
+  // roster déclare en base. En coupe ou sous règlement de tournoi, le budget
+  // est imposé : on n'y touche pas.
+  //
+  // `setTeamValue` n'est appelé QUE si la valeur change réellement : cet effet
+  // se déclenche à chaque arrivée de la liste des rosters, et une écriture
+  // systématique ajouterait une passe de rendu à chaque montage — de quoi
+  // rendre instables les tests qui assertent juste après le premier rendu.
+  const budgetRosterRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (cupId || pack) return;
+    if (rosters.length === 0) return;
+    if (budgetRosterRef.current === rosterId) return;
+    budgetRosterRef.current = rosterId;
+    const next = defaultBudgetFor(rosterId, format);
+    setTeamValue((current) => (current === next ? current : next));
+    // `format` volontairement hors deps : le changement de format est géré
+    // par l'effet ci-dessous, qui réaligne déjà le budget.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cupId, pack, rosterId, rosters, defaultBudgetFor]);
+
   // Au changement de format (hors montage initial), réaligne le budget par
   // défaut et clampe le staff / star players sur les plafonds du nouveau format.
   const formatMountRef = useRef(true);
@@ -275,13 +306,17 @@ export default function NewTeamBuilder() {
     // En construction pour une coupe (Flow B) ou sous un règlement de
     // tournoi, le budget est imposé : ne pas le réinitialiser au budget
     // par défaut du format.
-    if (!cupId && !pack) setTeamValue(constraints.startingBudget);
+    if (!cupId && !pack) {
+      const next = defaultBudgetFor(rosterId, format);
+      setTeamValue((current) => (current === next ? current : next));
+    }
     setRerolls((v) => Math.min(v, staff.maxRerolls));
     setCheerleaders((v) => Math.min(v, staff.maxCheerleaders));
     setAssistants((v) => Math.min(v, staff.maxAssistants));
     setDedicatedFans((v) => Math.min(v, staff.maxDedicatedFans));
     if (!staff.apothecaryAllowed) setApothecary(false);
     if (!constraints.starPlayersAllowed) setSelectedStarPlayers([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [format, constraints, staff]);
 
   // Parametres d'URL (`?roster=goblin&ruleset=season_3&format=bb11`) appliques

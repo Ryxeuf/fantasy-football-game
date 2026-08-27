@@ -56,6 +56,18 @@ type StarPlayerDetail = StarPlayerDefinition & {
 };
 
 /**
+ * Libellé de repli pour un partenaire de paire que le catalogue compilé ne
+ * connaît pas (star créée en admin) : le slug rendu lisible plutôt que brut.
+ */
+function getRosterAgnosticName(slug: string): string {
+  return slug
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
  * Page de détail d'un Star Player individuel
  */
 export default function StarPlayerDetailPage() {
@@ -186,6 +198,18 @@ export default function StarPlayerDetailPage() {
   const displayedCost =
     (starPlayer as { pairCost?: number | null }).pairCost ??
     (pair ? pair.pairCost : starPlayer.cost);
+  // Le prix annoncé dans le bandeau et celui de la phrase « paire obligatoire »
+  // doivent être LE MÊME : la phrase repartait de `pair.pairCost` (catalogue
+  // compilé) pendant que le bandeau servait déjà `pairCost` de l'API — deux
+  // prix de paire sur la même fiche dès qu'un coût était corrigé en admin
+  // (W7 de l'audit).
+  const partnerSlug =
+    (starPlayer as { pairWith?: string | null }).pairWith ??
+    pair?.partnerSlug ??
+    null;
+  const partnerLabel = partnerSlug
+    ? (pair?.partnerName ?? getRosterAgnosticName(partnerSlug))
+    : null;
 
   // Mots-clés (lignée + type) : EN si disponible, repli FR.
   const keywords =
@@ -293,13 +317,13 @@ export default function StarPlayerDetailPage() {
                     ))}
                   </p>
                 )}
-                {pair && (
+                {partnerLabel && (
                   <p
                     className="mt-3 text-sm sm:text-base opacity-90"
                     data-testid="star-player-pair"
                   >
-                    Recrutement en paire obligatoire avec {pair.partnerName} —
-                    {' '}{(pair.pairCost / 1000).toLocaleString()} K po pour la paire.
+                    Recrutement en paire obligatoire avec {partnerLabel} —
+                    {' '}{(displayedCost / 1000).toLocaleString()} K po pour la paire.
                   </p>
                 )}
                 {/* Carte exportable (change export-player-cards) : PNG 750×1050

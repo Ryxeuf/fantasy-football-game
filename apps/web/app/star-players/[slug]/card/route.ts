@@ -7,7 +7,7 @@
  * l'API publique (même source que la fiche et son image OG), puis rendues
  * par le même pipeline satori que `/api/player-card`.
  */
-import { getStarPlayerPair } from "@bb/game-engine";
+import { getStarPlayerPair, type Ruleset } from "@bb/game-engine";
 import { fetchServerJson, getServerApiBase } from "../../../lib/serverApi";
 import {
   buildStarPlayerCardData,
@@ -15,7 +15,7 @@ import {
 } from "../../../lib/player-card/card-model";
 import { renderPlayerCardResponse } from "../../../lib/player-card/render";
 import { resolveCardImageUrl } from "../../../lib/player-card/portrait";
-import { getPlaysForCardLines } from "../plays-for";
+import { getPlaysForCardLines, toPlaysForCardLines } from "../plays-for";
 
 export const runtime = "nodejs";
 
@@ -35,6 +35,12 @@ interface StarPayload {
   specialRule?: string;
   specialRuleEn?: string;
   imageUrl?: string | null;
+  /** Édition réellement servie pour ce slug (pas toujours la Saison 3). */
+  ruleset?: string;
+  /** Rosters pouvant recruter, résolus par le serveur DEPUIS LA BASE. */
+  playsFor?: string[];
+  /** Prix de la paire, calculé par le serveur sur les coûts en base. */
+  pairCost?: number | null;
 }
 
 function isRenderableStar(
@@ -101,9 +107,15 @@ export async function GET(
 
   const url = new URL(request.url);
   const lang: CardLang = url.searchParams.get("lang") === "en" ? "en" : "fr";
+  // Édition RÉELLEMENT servie pour ce slug : « season_3 » était codé en dur,
+  // donc une star qui n'existe qu'en Saison 2 se voyait appliquer la table de
+  // paires de la Saison 3 (W7 de l'audit).
+  const ruleset = (star.ruleset as Ruleset | undefined) ?? undefined;
   // Recrutement en paire : la fiche affiche le prix de LA PAIRE — la carte
-  // doit montrer le même montant (cf. fiche star, Lot G).
-  const pair = getStarPlayerPair(slug, "season_3");
+  // doit montrer le même montant (cf. fiche star, Lot G). Prix FRAIS depuis
+  // l'API (coûts en base) ; le catalogue compilé ne sert que de repli.
+  const pair = getStarPlayerPair(slug, ruleset);
+  const pairCost = star.pairCost ?? (pair ? pair.pairCost : null);
   const data = buildStarPlayerCardData(
     {
       displayName: star.displayName,
@@ -120,8 +132,12 @@ export async function GET(
     },
     {
       lang,
-      playsFor: getPlaysForCardLines(star.hirableBy, lang),
-      cost: pair ? pair.pairCost : star.cost,
+      // « Joue pour » résolu par le serveur depuis les rosters EN BASE du
+      // ruleset de la star ; dérivation locale de `hirableBy` en repli.
+      playsFor: star.playsFor
+        ? toPlaysForCardLines(star.playsFor, lang)
+        : getPlaysForCardLines(star.hirableBy, lang, ruleset),
+      cost: pairCost ?? star.cost,
     },
   );
   // Portrait du catalogue : la carte montre LE MÊME visuel que la fiche

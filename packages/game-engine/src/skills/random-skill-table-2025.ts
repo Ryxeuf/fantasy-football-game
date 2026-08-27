@@ -145,19 +145,25 @@ export function isRandomSkillCategory(
  * de façon déterministe via `seed` (reproductible côté serveur pour valider le
  * choix du coach). Renvoie moins de `count` candidats si le pool disponible est
  * plus petit (ex: joueur possédant presque toute la catégorie).
+ *
+ * `pool` permet à l'appelant de fournir la liste ORDONNÉE des compétences de
+ * la catégorie déjà résolue en base (une compétence recatégorisée ou retirée
+ * de la sélection en admin ne doit plus être tirée). Absent ⇒ la table
+ * officielle p.121 ci-dessus, qui reste le repli hors base.
  */
 export function rollRandomPrimaryCandidates(params: {
   category: RandomSkillCategoryCode;
   ownedSlugs: readonly string[];
   seed: string;
   count?: number;
+  pool?: readonly string[];
 }): string[] {
   const { category, ownedSlugs, seed } = params;
   const count = params.count ?? 2;
   const owned = new Set(ownedSlugs);
-  const available = (RANDOM_PRIMARY_SKILL_TABLE_2025[category] ?? []).filter(
-    (slug) => !owned.has(slug),
-  );
+  const available = (
+    params.pool ?? RANDOM_PRIMARY_SKILL_TABLE_2025[category] ?? []
+  ).filter((slug) => !owned.has(slug));
 
   // Mélange de Fisher-Yates seedé → tirage sans remise (candidats distincts).
   const rng = makeRNG(`${seed}:random-primary`);
