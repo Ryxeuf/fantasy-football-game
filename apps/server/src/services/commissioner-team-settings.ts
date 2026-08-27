@@ -28,7 +28,6 @@ import {
   allowsRegionalLeagueChoice,
   defaultStaffConfig,
   DEFAULT_RULESET,
-  getRegionalLeagueBySlug,
   getRegionalLeagueOptions,
   favouredOfLabel,
   isFavouredOfSlug,
@@ -38,6 +37,7 @@ import {
   type RosterStaffConfig,
   type Ruleset,
 } from "@bb/game-engine";
+import { loadTeamRulesCatalogue } from "./team-rules-catalogue";
 import { appendAudit, ensureTeamInLeague } from "./commissioner-team-edit";
 import { effectiveRegionalRules } from "./roster-regional-rules";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
@@ -324,12 +324,14 @@ export async function getTeamSettings(input: {
     hiredStarPlayerSlugs(team.id),
   ]);
 
+  // Lot 6.5 — libellés servis par `RegionalLeague` (repli catalogue compilé).
+  const catalogue = await loadTeamRulesCatalogue(ruleset);
   const applicable = allowsRegionalLeagueChoice(pack);
   const options = applicable
     ? getRegionalLeagueOptions(team.roster, ruleset, declared).map((o) => ({
         slug: o.slug,
-        label: getRegionalLeagueBySlug(o.slug)?.nameFr ?? o.slug,
-        description: getRegionalLeagueBySlug(o.slug)?.description ?? null,
+        label: catalogue.regionalLeague(o.slug)?.nameFr ?? o.slug,
+        description: catalogue.regionalLeague(o.slug)?.description ?? null,
         grants: o.grants.map(grantLabel),
       }))
     : [];
@@ -352,7 +354,7 @@ export async function getTeamSettings(input: {
     regionalLeague: {
       current: team.regionalLeague,
       currentLabel: team.regionalLeague
-        ? (getRegionalLeagueBySlug(team.regionalLeague)?.nameFr ??
+        ? (catalogue.regionalLeague(team.regionalLeague)?.nameFr ??
           team.regionalLeague)
         : null,
       applicable,
@@ -488,12 +490,13 @@ export async function updateTeamRegionalLeague(
 
   const wanted = input.regionalLeague?.trim() || null;
   const declared = await declaredRegionalRules(team);
+  const catalogue = await loadTeamRulesCatalogue(ruleset);
   const options = getRegionalLeagueOptions(team.roster, ruleset, declared);
   if (wanted && !options.some((o) => o.slug === wanted)) {
     throw new CommissionerSettingsError(
       "invalid_regional_league",
       `Ligue régionale invalide pour ce roster. Choix possibles : ${options
-        .map((o) => getRegionalLeagueBySlug(o.slug)?.nameFr ?? o.slug)
+        .map((o) => catalogue.regionalLeague(o.slug)?.nameFr ?? o.slug)
         .join(", ")}`,
     );
   }
@@ -526,9 +529,7 @@ export async function updateTeamRegionalLeague(
 
   return {
     regionalLeague: wanted,
-    label: wanted
-      ? (getRegionalLeagueBySlug(wanted)?.nameFr ?? wanted)
-      : null,
+    label: wanted ? (catalogue.regionalLeague(wanted)?.nameFr ?? wanted) : null,
     orphanedStarPlayers: await orphanedStarPlayers(team, ruleset, declared, wanted),
   };
 }

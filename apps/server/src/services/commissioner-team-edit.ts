@@ -21,6 +21,8 @@
  */
 
 import { prisma } from "../prisma";
+import { loadAdvancementSchedule } from "./advancement-schedule-repository";
+import type { Ruleset } from "@bb/game-engine";
 import {
   surchargeForAdvancement,
   type PlayerAdvancement,
@@ -469,11 +471,15 @@ export async function addPlayerSkill(input: AddSkillInput) {
       ]
     : taken;
   const surcharge = advancementType
-    ? surchargeForAdvancement({
-        type: advancementType,
-        // Competence Elite : +10k po de surcout VE additionnel.
-        isElite: (await getEliteSkillSlugs(prisma, ruleset)).has(trimmedSkill),
-      })
+    ? surchargeForAdvancement(
+        {
+          type: advancementType,
+          // Competence Elite : +10k po de surcout VE additionnel.
+          isElite: (await getEliteSkillSlugs(prisma, ruleset)).has(trimmedSkill),
+        },
+        // Lot 6.2 — surcout au bareme de l'edition de l'equipe.
+        await loadAdvancementSchedule(ruleset as Ruleset),
+      )
     : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -590,14 +596,19 @@ export async function removePlayerSkill(input: RemoveSkillInput) {
   const newAdvancements =
     advIdx >= 0 ? taken.filter((_, i) => i !== advIdx) : taken;
   const surcharge = removedAdv
-    ? surchargeForAdvancement({
-        type: removedAdv.type,
-        stat: removedAdv.stat,
-        // Competence Elite : son retrait rend aussi les +10k po Elite.
-        isElite: (
-          await getEliteSkillSlugs(prisma, player.team?.ruleset ?? "season_3")
-        ).has(input.skill),
-      })
+    ? surchargeForAdvancement(
+        {
+          type: removedAdv.type,
+          stat: removedAdv.stat,
+          // Competence Elite : son retrait rend aussi les +10k po Elite.
+          isElite: (
+            await getEliteSkillSlugs(prisma, player.team?.ruleset ?? "season_3")
+          ).has(input.skill),
+        },
+        await loadAdvancementSchedule(
+          (player.team?.ruleset as Ruleset) ?? undefined,
+        ),
+      )
     : 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

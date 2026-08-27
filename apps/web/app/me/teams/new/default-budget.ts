@@ -14,24 +14,24 @@
  *  - `FORMAT_CONSTRAINTS[format].startingBudget` est le plafond du FORMAT
  *    (BB11 1 000 kpo, Sevens 600 kpo).
  *
- * Il n'existe pas (encore) de budget par couple roster × format en base : la
- * colonne serait à créer, cf. lot 6 de l'audit. Tant qu'elle n'existe pas,
+ * Il n'existe pas de budget par couple roster × format en base :
  * `Roster.budget` ne fait donc autorité QUE pour le BB11 ; tout autre format
  * garde son propre plafond, sinon une équipe Sevens partirait avec les
  * 1 000 kpo du BB11 au lieu de ses 600.
  *
+ * Lot 6.7 — la règle est désormais PARTAGÉE avec le serveur
+ * (`defaultBuildBudgetK`, `@bb/game-engine`) : `POST /team/build` applique le
+ * même défaut, donc le « Restant » affiché ne peut plus diverger de l'équipe
+ * réellement construite. Ce module reste l'entrée du builder (et ses tests).
+ *
  * 100 % pur : testable sans rendu React.
  */
 
-import { getFormatConstraints, type GameFormat } from "@bb/game-engine";
+import { defaultBuildBudgetK, type GameFormat } from "@bb/game-engine";
 
 export function defaultBudgetK(
   rosterBudgetK: number | null | undefined,
   format: GameFormat,
 ): number {
-  const fromFormat = getFormatConstraints(format).startingBudget;
-  if (format !== "bb11") return fromFormat;
-  return typeof rosterBudgetK === "number" && rosterBudgetK > 0
-    ? rosterBudgetK
-    : fromFormat;
+  return defaultBuildBudgetK(rosterBudgetK, format);
 }

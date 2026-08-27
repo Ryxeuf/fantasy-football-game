@@ -42,6 +42,8 @@ import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
+import { loadAdvancementSchedule } from '../services/advancement-schedule-repository';
+import type { Ruleset } from '@bb/game-engine';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -244,6 +246,9 @@ export async function handleUpdatePlayerSkills(
         pack,
         advancements.length,
         'characteristic',
+        undefined,
+        // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+        await loadAdvancementSchedule(team.ruleset as Ruleset),
       );
       const playerSpp = p.spp || 0;
       const fromPool = poolLeft >= sppCost;
@@ -449,6 +454,7 @@ export async function handleUpdatePlayerSkills(
       advancements.length,
       advancementType,
       finalSkillSlug,
+      await loadAdvancementSchedule(teamRuleset as Ruleset),
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playerSpp = (player as any).spp || 0;

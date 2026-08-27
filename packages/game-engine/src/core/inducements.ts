@@ -13,7 +13,15 @@ import { TeamId } from './types';
 // Types
 // ---------------------------------------------------------------------------
 
-/** Identifiant unique d'un type d'inducement */
+/**
+ * Slugs de Coups de Pouce dont le COMPORTEMENT est câblé dans le moteur.
+ *
+ * Lot 6.1 — le catalogue (prix, plafonds, remises, conditions) vit désormais
+ * en base et est passé au moteur via `InducementContext.catalogue` ; ces
+ * slugs-là restent un CONTRAT DE CODE. Un coup de pouce créé en admin avec un
+ * slug hors de cette liste est un pur libellé : il se paie et s'affiche, mais
+ * n'a aucun effet en match (cf. `isWiredInducementSlug`).
+ */
 export type InducementSlug =
   | 'prayers_to_nuffle'
   | 'part_time_assistant_coaches'
@@ -36,9 +44,22 @@ export type InducementSlug =
   | 'igor'
   | 'star_player';
 
-/** Définition d'un inducement dans le catalogue */
+/**
+ * Définition d'un Coup de Pouce — 100 % DONNÉES (lot 6.1).
+ *
+ * Les conditions d'achat étaient des FONCTIONS (`canPurchase`), donc
+ * intransposables en base : la même règle devait être réécrite en TypeScript
+ * pour chaque nouveau coup de pouce. Elles sont maintenant décrites par des
+ * champs (`requiresAnyRule`, `requiresRoster`, `requiresApothecary`) évalués
+ * par `canPurchaseInducement`, ce qui permet à la table `Inducement` de
+ * porter le catalogue complet.
+ */
 export interface InducementDefinition {
-  slug: InducementSlug;
+  /**
+   * Slug du coup de pouce. `InducementSlug` liste ceux dont le comportement
+   * est câblé ; un slug hors liste reste un libellé payant sans effet.
+   */
+  slug: string;
   displayName: string;
   displayNameFr: string;
   baseCost: number;
@@ -59,10 +80,24 @@ export interface InducementDefinition {
    * le coach (baseCost = 0, indicatif).
    */
   variableCost?: boolean;
-  /** Fonction de restriction : retourne true si l'équipe peut acheter cet inducement */
-  canPurchase?: (ctx: InducementContext) => boolean;
+  /**
+   * Conditions d'achat, TOUTES requises quand renseignées :
+   *  - `requiresAnyRule` : au moins une de ces règles (régionale ou spéciale) ;
+   *  - `requiresRoster`  : ce roster précis ;
+   *  - `requiresApothecary` : l'équipe doit pouvoir recruter un apothicaire.
+   */
+  requiresAnyRule?: readonly string[];
+  requiresRoster?: string;
+  requiresApothecary?: boolean;
   description: string;
 }
+
+/**
+ * Catalogue résolu passé au moteur par l'appelant (table `Inducement`).
+ * Absent ⇒ `INDUCEMENT_CATALOGUE` compilé, pour que le moteur reste
+ * utilisable hors base (tests purs, simulateur).
+ */
+export type InducementCatalogue = readonly InducementDefinition[];
 
 /** Contexte pour valider si une équipe peut acheter un inducement */
 export interface InducementContext {
@@ -91,6 +126,13 @@ export interface InducementContext {
    * (tests purs, simulateur).
    */
   starPlayers?: ReadonlyArray<{ readonly slug: string; readonly cost: number }>;
+  /**
+   * Lot 6.1 — catalogue de Coups de Pouce résolu par l'appelant (table
+   * `Inducement`, filtrée sur l'édition de l'équipe). Absent ⇒ catalogue
+   * compilé : un prix corrigé en admin ne changeait sinon ni le match en
+   * ligne, ni le match local, ni la feuille de ligue.
+   */
+  catalogue?: InducementCatalogue;
 }
 
 /** Toutes les règles (régionales + spéciales) du contexte. */
@@ -100,7 +142,7 @@ function contextRules(ctx: InducementContext): string[] {
 
 /** Un inducement acheté par une équipe */
 export interface PurchasedInducement {
-  slug: InducementSlug;
+  slug: string;
   displayName: string;
   cost: number;
   quantity: number;
@@ -111,7 +153,7 @@ export interface PurchasedInducement {
 /** Sélection d'inducements soumise par un coach */
 export interface InducementSelection {
   items: Array<{
-    slug: InducementSlug;
+    slug: string;
     quantity: number;
     /** Pour star_player : slug du star player */
     starPlayerSlug?: string;
@@ -248,8 +290,7 @@ export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
     displayNameFr: 'Assistant Funéraire',
     baseCost: 100_000,
     maxQuantity: 1,
-    canPurchase: (ctx) =>
-      contextRules(ctx).includes('maitres_de_la_non_vie'),
+    requiresAnyRule: ['maitres_de_la_non_vie'],
     description:
       'Une fois par match, relance un jet de Régénération raté pour un de vos joueurs. Équipes avec la règle spéciale Maîtres de la Non-vie seulement.',
   },
@@ -259,8 +300,8 @@ export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
     displayNameFr: 'Médecin de la Peste',
     baseCost: 100_000,
     maxQuantity: 1,
-    canPurchase: (ctx) =>
-      contextRules(ctx).includes('favori_de') && ctx.rosterSlug === 'nurgle',
+    requiresAnyRule: ['favori_de'],
+    requiresRoster: 'nurgle',
     description:
       "Une fois par match, relance un jet de Régénération raté ; peut aussi être utilisé comme un apothicaire. Équipes avec la règle spéciale Favoris de Nurgle seulement.",
   },
@@ -270,8 +311,7 @@ export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
     displayNameFr: 'Débutants Déchaînés',
     baseCost: 150_000,
     maxQuantity: 1,
-    canPurchase: (ctx) =>
-      contextRules(ctx).includes('trois_quarts_a_vil_prix'),
+    requiresAnyRule: ['trois_quarts_a_vil_prix'],
     description:
       'Ajoute 2D3+1 Journaliers à votre équipe pour ce match. Équipes avec la règle spéciale Trois-quarts à Vil Prix seulement.',
   },
@@ -281,7 +321,7 @@ export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
     displayNameFr: 'Apothicaire Ambulant',
     baseCost: 100_000,
     maxQuantity: 2,
-    canPurchase: (ctx) => ctx.hasApothecary,
+    requiresApothecary: true,
     description:
       "Un usage d'apothicaire supplémentaire pendant le match, utilisable une fois par partie comme un apothicaire normal. Inaccessible aux équipes qui ne peuvent pas embaucher d'apothicaire.",
   },
@@ -345,13 +385,61 @@ export const INDUCEMENT_CATALOGUE: readonly InducementDefinition[] = [
   },
 ] as const;
 
-/** Lookup rapide par slug */
-const CATALOGUE_MAP = new Map<InducementSlug, InducementDefinition>(
+/** Slugs dont le comportement est câblé (cf. `InducementSlug`). */
+const WIRED_INDUCEMENT_SLUGS: ReadonlySet<string> = new Set(
+  INDUCEMENT_CATALOGUE.map((def) => def.slug),
+);
+
+/**
+ * `true` si le moteur sait FAIRE quelque chose de ce slug. Un coup de pouce
+ * créé en admin hors de cette liste se paie et s'affiche, mais reste sans
+ * effet en match : l'admin doit le dire, pas le laisser deviner.
+ */
+export function isWiredInducementSlug(slug: string): boolean {
+  return WIRED_INDUCEMENT_SLUGS.has(slug);
+}
+
+/** Lookup rapide par slug dans le catalogue compilé. */
+const CATALOGUE_MAP = new Map<string, InducementDefinition>(
   INDUCEMENT_CATALOGUE.map((def) => [def.slug, def])
 );
 
-export function getInducementDefinition(slug: InducementSlug): InducementDefinition | undefined {
-  return CATALOGUE_MAP.get(slug);
+/** Catalogue effectif : celui du contexte (base) sinon le compilé. */
+function catalogueMapOf(
+  ctx: Pick<InducementContext, 'catalogue'>,
+): ReadonlyMap<string, InducementDefinition> {
+  if (!ctx.catalogue) return CATALOGUE_MAP;
+  return new Map(ctx.catalogue.map((def) => [def.slug, def]));
+}
+
+/**
+ * Définition d'un coup de pouce. Le `catalogue` (base) prime quand il est
+ * fourni ; sinon on sert le catalogue compilé.
+ */
+export function getInducementDefinition(
+  slug: string,
+  catalogue?: InducementCatalogue,
+): InducementDefinition | undefined {
+  if (!catalogue) return CATALOGUE_MAP.get(slug);
+  return catalogue.find((def) => def.slug === slug);
+}
+
+/**
+ * L'équipe peut-elle acheter ce coup de pouce ? 100 % pur, évalué sur les
+ * DONNÉES de la définition (lot 6.1) : toutes les conditions renseignées
+ * doivent être vraies.
+ */
+export function canPurchaseInducement(
+  def: InducementDefinition,
+  ctx: InducementContext,
+): boolean {
+  if (def.requiresApothecary && !ctx.hasApothecary) return false;
+  if (def.requiresRoster && ctx.rosterSlug !== def.requiresRoster) return false;
+  if (def.requiresAnyRule && def.requiresAnyRule.length > 0) {
+    const rules = contextRules(ctx);
+    if (!def.requiresAnyRule.some((rule) => rules.includes(rule))) return false;
+  }
+  return true;
 }
 
 /**
@@ -360,10 +448,10 @@ export function getInducementDefinition(slug: InducementSlug): InducementDefinit
  * 0-6 avec Chantage et Corruption, au lieu de 0-3).
  */
 export function getInducementMaxQuantity(
-  slug: InducementSlug,
+  slug: string,
   ctx: InducementContext,
 ): number {
-  const def = CATALOGUE_MAP.get(slug);
+  const def = catalogueMapOf(ctx).get(slug);
   if (!def) return 0;
   if (
     def.ruleMaxQuantity &&
@@ -429,7 +517,7 @@ export function calculatePettyCash(input: PettyCashInput): PettyCashResult {
  * Calcule le coût unitaire d'un inducement pour une équipe donnée.
  */
 export function getInducementCost(
-  slug: InducementSlug,
+  slug: string,
   ctx: InducementContext,
   starPlayerSlug?: string
 ): number {
@@ -452,7 +540,7 @@ export function getInducementCost(
     return available.some((s) => s.slug === starPlayerSlug) ? sp.cost : 0;
   }
 
-  const def = CATALOGUE_MAP.get(slug);
+  const def = catalogueMapOf(ctx).get(slug);
   if (!def) return 0;
 
   // A53 — remise par règle (régionale OU spéciale d'équipe)…
@@ -489,13 +577,14 @@ export function validateInducementSelection(
   let totalCost = 0;
 
   // Track quantities per slug to enforce maxQuantity
-  const quantityMap = new Map<InducementSlug, number>();
+  const quantityMap = new Map<string, number>();
+  const catalogue = catalogueMapOf(ctx);
   // BB2020 : un meme Star Player ne peut pas etre embauche en double par
   // une meme equipe. Track les starPlayerSlug deja utilises.
   const usedStarPlayerSlugs = new Set<string>();
 
   for (const item of selection.items) {
-    const def = CATALOGUE_MAP.get(item.slug);
+    const def = catalogue.get(item.slug);
 
     if (!def) {
       errors.push(`Inducement inconnu : ${item.slug}`);
@@ -507,8 +596,8 @@ export function validateInducementSelection(
       continue;
     }
 
-    // Check purchase restriction
-    if (def.canPurchase && !def.canPurchase(ctx)) {
+    // Check purchase restriction (données, cf. lot 6.1)
+    if (!canPurchaseInducement(def, ctx)) {
       errors.push(`${def.displayName} n'est pas disponible pour cette équipe.`);
       continue;
     }

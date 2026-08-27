@@ -273,6 +273,54 @@ export default function AdminPage() {
               Budgets, barèmes, interdits, classement
             </div>
           </button>
+          <button
+            onClick={() => router.push("/admin/data/special-rules")}
+            data-testid="admin-special-rules-link"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">🛡️</div>
+            <div className="font-semibold text-gray-900">
+              Règles spéciales d'équipe
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Libellés et descriptions servis aux fiches
+            </div>
+          </button>
+          <button
+            onClick={() => router.push("/admin/data/advancement-costs")}
+            data-testid="admin-advancement-costs-link"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">📈</div>
+            <div className="font-semibold text-gray-900">
+              Barème d'avancement
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Coûts PSP et surcoûts de VE, par édition
+            </div>
+          </button>
+          <button
+            onClick={() => router.push("/admin/data/inducements")}
+            data-testid="admin-inducements-link"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">💰</div>
+            <div className="font-semibold text-gray-900">Coups de pouce</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Prix, plafonds, remises et conditions
+            </div>
+          </button>
+          <button
+            onClick={() => router.push("/admin/data/regional-leagues")}
+            data-testid="admin-regional-leagues-link"
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all text-left hover:bg-purple-50"
+          >
+            <div className="text-2xl mb-2">🗺️</div>
+            <div className="font-semibold text-gray-900">Ligues régionales</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Catalogue proposé à la création d'une équipe
+            </div>
+          </button>
         </div>
       </section>
 

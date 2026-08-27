@@ -383,6 +383,7 @@ exports.Prisma.RosterScalarFieldEnum = {
   tier: 'tier',
   regionalRules: 'regionalRules',
   specialRules: 'specialRules',
+  maxBigGuys: 'maxBigGuys',
   naf: 'naf',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -438,6 +439,7 @@ exports.Prisma.StarPlayerScalarFieldEnum = {
   specialRule: 'specialRule',
   imageUrl: 'imageUrl',
   isMegaStar: 'isMegaStar',
+  pairWithSlug: 'pairWithSlug',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -460,6 +462,7 @@ exports.Prisma.PositionScalarFieldEnum = {
   rosterId: 'rosterId',
   slug: 'slug',
   displayName: 'displayName',
+  displayNameEn: 'displayNameEn',
   cost: 'cost',
   min: 'min',
   max: 'max',
@@ -484,6 +487,59 @@ exports.Prisma.PositionSkillScalarFieldEnum = {
   id: 'id',
   positionId: 'positionId',
   skillId: 'skillId'
+};
+
+exports.Prisma.InducementScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  descriptionFr: 'descriptionFr',
+  descriptionEn: 'descriptionEn',
+  baseCost: 'baseCost',
+  maxQuantity: 'maxQuantity',
+  discountRule: 'discountRule',
+  discountRoster: 'discountRoster',
+  discountCost: 'discountCost',
+  ruleMaxRule: 'ruleMaxRule',
+  ruleMaxQuantity: 'ruleMaxQuantity',
+  requiresAnyRule: 'requiresAnyRule',
+  requiresRoster: 'requiresRoster',
+  requiresApothecary: 'requiresApothecary',
+  variableCost: 'variableCost',
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AdvancementCostScalarFieldEnum = {
+  id: 'id',
+  ruleset: 'ruleset',
+  kind: 'kind',
+  step: 'step',
+  sppCost: 'sppCost',
+  teamValueSurcharge: 'teamValueSurcharge',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CharacteristicValueScalarFieldEnum = {
+  id: 'id',
+  ruleset: 'ruleset',
+  stat: 'stat',
+  surcharge: 'surcharge',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RulesetConfigScalarFieldEnum = {
+  id: 'id',
+  ruleset: 'ruleset',
+  eliteSkillSurcharge: 'eliteSkillSurcharge',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CupScalarFieldEnum = {
@@ -1344,6 +1400,14 @@ exports.Format = exports.$Enums.Format = {
   sevens: 'sevens'
 };
 
+exports.AdvancementKind = exports.$Enums.AdvancementKind = {
+  primary: 'primary',
+  secondary: 'secondary',
+  random_primary: 'random_primary',
+  random_secondary: 'random_secondary',
+  characteristic: 'characteristic'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   EloSnapshot: 'EloSnapshot',
@@ -1370,6 +1434,10 @@ exports.Prisma.ModelName = {
   StarPlayerHirableBy: 'StarPlayerHirableBy',
   Position: 'Position',
   PositionSkill: 'PositionSkill',
+  Inducement: 'Inducement',
+  AdvancementCost: 'AdvancementCost',
+  CharacteristicValue: 'CharacteristicValue',
+  RulesetConfig: 'RulesetConfig',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',

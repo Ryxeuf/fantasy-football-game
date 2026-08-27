@@ -40,6 +40,7 @@ import {
   type AllowedRoster,
   type GameFormat,
   getFormatConstraints,
+  defaultBuildBudgetK,
   validateFormatSelection,
   isGameFormat,
   isBigGuy,
@@ -60,11 +61,12 @@ import {
 } from '../utils/star-player-validation';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveRuleset } from '../utils/ruleset-helpers';
+import { loadTeamRulesCatalogue } from '../services/team-rules-catalogue';
 import { parseTournamentRuleset } from '../utils/tournament-ruleset-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { serverLog } from '../utils/server-log';
 import { safeRecordTeamAudit, type TeamAuditPrismaLike } from '../services/team-audit';
-import { isAllowedTeamRoster } from '../constants/allowed-teams';
+import { isAllowedTeamRoster } from '../services/roster-catalogue';
 import { resolveCupBudget, resolveCupStartingPsp } from '../services/cup-rules';
 import {
   applyCupBuildAdvancements,
@@ -136,8 +138,9 @@ export async function handleBuildTeam(
       tournamentRuleset?: string | null;
       regionalLeague?: string | null;
     } = req.body;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!isAllowedTeamRoster(roster)) {
+    // Lot 6.8 — l'univers des rosters vient de la BASE : un roster créé en
+    // admin est jouable immédiatement, un roster retiré ne l'est plus.
+    if (!(await isAllowedTeamRoster(roster, resolveRuleset(bodyRuleset)))) {
       sendError(res, 'Roster non autorise', 400);
       return;
     }
@@ -182,13 +185,18 @@ export async function handleBuildTeam(
       return;
     }
 
-    let finalTeamValue = teamValue || constraints.startingBudget;
-
     const def = await getRosterFromDb(roster as AllowedRoster, 'fr', ruleset);
     if (!def) {
       sendError(res, 'Roster non trouve', 400);
       return;
     }
+
+    // Lot 6.7 — budget de construction : la valeur envoyée par le coach fait
+    // foi (ligues maison), le DÉFAUT vient de `Roster.budget` (base) et non
+    // plus du plafond compilé du format. Le builder web propose déjà cette
+    // même valeur (`defaultBuildBudgetK`) : les deux ne peuvent plus diverger
+    // quand un admin corrige le budget d'un roster.
+    let finalTeamValue = teamValue || defaultBuildBudgetK(def.budget, format);
 
     // Construction « pour une coupe » (Flow B) : le serveur IMPOSE le budget et
     // le pool de PSP depuis la config de la coupe (les valeurs client sont
@@ -393,7 +401,10 @@ export async function handleBuildTeam(
     // Renégats du Chaos) limitent le nombre TOTAL de Gros Bras alignés. La
     // composition est lue via `counts` (slug poste → quantité) + `def.positions`
     // (pour détecter les postes Gros Bras via `isBigGuy`).
-    const bigGuyLimit = bigGuyLimitForRoster(roster);
+    // Lot 6.4 — plafond servi par `Roster.maxBigGuys` (base, éditable en
+    // admin) ; la table compilée `bigGuyLimitForRoster` reste le repli tant
+    // que la colonne est nulle (posée sans backfill par `db push`).
+    const bigGuyLimit = def.maxBigGuys ?? bigGuyLimitForRoster(roster);
     if (bigGuyLimit !== null) {
       const totalBigGuys = def.positions.reduce(
         (sum, p) => (isBigGuy(p) ? sum + Math.max(0, counts[p.slug] ?? 0) : sum),
@@ -423,6 +434,8 @@ export async function handleBuildTeam(
         // Ligues DÉCLARÉES par le roster : le choix accepté est exactement
         // celui que la fiche du roster et le sélecteur affichent.
         declaredRules: def.regionalRules,
+        // Lot 6.5 — les Ligues sont nommées comme sur la fiche du roster.
+        rulesCatalogue: await loadTeamRulesCatalogue(ruleset),
       });
     } catch (e: unknown) {
       if (e instanceof RegionalLeagueError) {
@@ -447,7 +460,7 @@ export async function handleBuildTeam(
     if (starPlayersToHire.length > 0) {
       // Paires au ruleset de l'équipe (les paires Saison 3 ne s'appliquent
       // pas à une équipe Saison 2).
-      const pairValidation = validateStarPlayerPairs(
+      const pairValidation = await validateStarPlayerPairs(
         starPlayersToHire,
         ruleset,
       );

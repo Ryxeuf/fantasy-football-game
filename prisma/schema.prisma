@@ -634,6 +634,11 @@ model Roster {
   tier          String // "I" | "II" | "III" | "IV"
   regionalRules String? // Règles régionales (JSON array, ex: ["elven_kingdoms_league"])
   specialRules  String? // Règles spéciales (texte libre)
+  /// Lot 6a — plafond COMBINÉ de Gros Bras (tous postes confondus), distinct
+  /// des `max` par poste. `null` = pas de plafond combiné (l'équipe s'appuie
+  /// sur les `max` de ses postes). Remplace `bigGuyLimitForRoster` du moteur,
+  /// qui reste le repli tant que la colonne est nulle.
+  maxBigGuys    Int?
   naf           Boolean  @default(false) // Disponible dans NAF
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -682,6 +687,10 @@ model Position {
   rosterId        String
   slug            String // Slug unique (ex: "skaven_lineman")
   displayName     String // Nom d'affichage (ex: "Lineman")
+  /// Lot 6a — nom d'affichage anglais du poste. Remplace la table compilée
+  /// `POSITION_NAMES_EN` du moteur, qui reste le repli tant que la colonne
+  /// est nulle (posée sans backfill par `prisma db push`).
+  displayNameEn   String?
   cost            Int // Coût en kpo
   min             Int // Minimum requis
   max             Int // Maximum autorisé
@@ -745,6 +754,13 @@ model StarPlayer {
   specialRule String? // Règle spéciale du joueur
   imageUrl    String? // URL de l'image du joueur
   isMegaStar  Boolean  @default(false) // Flag Mega Star
+  /// Lot 6a — partenaire OBLIGATOIRE (« must be hired as a pair »), slug d'un
+  /// autre Star Player du MÊME ruleset. Le prix de la paire est dérivé
+  /// (somme des deux `cost`) : le partenaire garde `cost = 0` comme
+  /// aujourd'hui, donc aucune donnée n'est dupliquée. `null` = se recrute
+  /// seul. Remplace `STAR_PLAYER_PAIR_PARTNERS` du moteur, qui reste le repli
+  /// tant que la colonne est nulle (posée sans backfill par `db push`).
+  pairWithSlug String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -807,6 +823,116 @@ model TournamentRuleset {
   updatedAt  DateTime @updatedAt
 
   @@index([enabled])
+}
+
+/// Catalogue des COUPS DE POUCE (lot 6.1) — prix, plafonds, remises et
+/// conditions d'achat, ÉDITABLES en base.
+///
+/// Le catalogue vivait dans `core/inducements.ts`, conditions d'achat
+/// comprises (des fonctions TypeScript) : corriger un prix demandait un
+/// déploiement, et la même règle devait être réécrite pour chaque nouveau
+/// coup de pouce. Les conditions sont ici des DONNÉES, évaluées par la
+/// fonction pure `canPurchaseInducement` du moteur.
+///
+/// Le SLUG reste un contrat de code : seuls ceux que le moteur câble
+/// (`InducementSlug`) ont un effet en match ; un slug créé en admin hors de
+/// cette liste est un libellé payant sans effet, ce que la console signale.
+model Inducement {
+  id                 String   @id @default(cuid())
+  slug               String
+  ruleset            Ruleset  @default(season_3)
+  nameFr             String
+  nameEn             String
+  descriptionFr      String
+  descriptionEn      String?
+  /// Coût de base en po. `0` avec `variableCost` = saisi par le coach
+  /// (Joueurs Mercenaires) ou dérivé (Star Players).
+  baseCost           Int
+  maxQuantity        Int
+  /// Remise : `discountCost` si l'équipe a la règle spéciale/Ligue
+  /// `discountRule` OU si son roster est `discountRoster`.
+  discountRule       String?
+  discountRoster     String?
+  discountCost       Int?
+  /// Plafond majoré si l'équipe a la règle `ruleMaxRule`
+  /// (ex. pots-de-vin : 6 avec Chantage et Corruption).
+  ruleMaxRule        String?
+  ruleMaxQuantity    Int?
+  /// Conditions d'achat (toutes celles renseignées doivent être vraies).
+  /// `requiresAnyRule` est un CSV de slugs : au moins une doit être portée
+  /// par l'équipe.
+  requiresAnyRule    String?
+  requiresRoster     String?
+  requiresApothecary Boolean  @default(false)
+  variableCost       Boolean  @default(false)
+  /// Retiré des listes sans casser l'historique (même posture que
+  /// `TournamentRuleset.enabled`).
+  enabled            Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+  @@index([ruleset, enabled])
+}
+
+/// Type d'amélioration d'un joueur (lot 6.2). `random_secondary` n'existe
+/// plus en Saison 3 mais reste lisible pour les joueurs qui en portent une.
+enum AdvancementKind {
+  primary
+  secondary
+  random_primary
+  random_secondary
+  characteristic
+}
+
+/// Barème d'avancement PAR ÉDITION (lot 6.2).
+///
+/// La table vivait dans `utils/advancements.ts`, en dur et pour la seule
+/// Saison 3 : une équipe Saison 2 se voyait donc appliquer les coûts et les
+/// surcoûts de la Saison 3. Le barème est ici une donnée par édition, servie
+/// au moteur sous forme d'`AdvancementSchedule` résolu (le moteur ne lit pas
+/// Prisma). Sans ligne, le barème compilé s'applique — aucun backfill
+/// nécessaire (`prisma/migrations/` est gitignoré, cf. CLAUDE.md).
+model AdvancementCost {
+  id                 String          @id @default(cuid())
+  ruleset            Ruleset
+  kind               AdvancementKind
+  /// n-ième amélioration du joueur (1..6).
+  step               Int
+  sppCost            Int
+  /// po ajoutés à la VE. Pour `characteristic`, le surcoût dépend de la
+  /// caractéristique améliorée : il vit dans `CharacteristicValue`.
+  teamValueSurcharge Int
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([ruleset, kind, step])
+  @@index([ruleset])
+}
+
+/// Surcoût de VE (po) d'une amélioration de caractéristique, par édition.
+model CharacteristicValue {
+  id        String   @id @default(cuid())
+  ruleset   Ruleset
+  /// ma | st | ag | pa | av
+  stat      String
+  surcharge Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ruleset, stat])
+}
+
+/// Réglages d'édition qui ne rentrent dans aucune autre table (lot 6.2).
+/// Une ligne par édition, extensible par colonne.
+model RulesetConfig {
+  id                  String   @id @default(cuid())
+  ruleset             Ruleset  @unique
+  /// po ajoutés à la VE par une compétence marquée Élite (`Skill.isElite`).
+  eliteSkillSurcharge Int      @default(10000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 // Modèle pour les coupes (tournois)

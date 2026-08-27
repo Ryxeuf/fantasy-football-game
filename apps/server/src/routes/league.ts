@@ -47,6 +47,8 @@ import {
   resolveSpecialRules,
   resolveRegionalLeagues,
 } from "./public-rosters";
+import { loadTeamRulesCatalogue } from "../services/team-rules-catalogue";
+import { loadAdvancementSchedule } from "../services/advancement-schedule-repository";
 import {
   startSeason,
   regenerateSchedule,
@@ -1560,6 +1562,8 @@ export async function handleGetLeagueTeamRoster(
       out.team.roster,
       teamRuleset,
     );
+    // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+    const advancementSchedule = await loadAdvancementSchedule(teamRuleset);
     const playerValue = (position: string, advancementsJson: string | null) => {
       const base =
         positionMeta.get(position)?.cost ??
@@ -1578,6 +1582,8 @@ export async function handleGetLeagueTeamRoster(
                   eliteSlugs.has(a.skillSlug),
               }),
             ),
+            // Lot 6.2 — surcoûts au barème de l'édition de l'équipe.
+            advancementSchedule,
           );
         }
       } catch {
@@ -1640,15 +1646,20 @@ export async function handleGetLeagueTeamRoster(
       where: { slug: out.team.roster, ruleset: ruleset as never },
       select: { specialRules: true, regionalRules: true },
     })) as { specialRules: unknown; regionalRules: unknown } | null;
+    // Lot 6.5 — libellés servis par la base (`TeamSpecialRule`,
+    // `RegionalLeague`), repli sur le catalogue compilé.
+    const rulesCatalogue = await loadTeamRulesCatalogue(ruleset);
     const specialRules = resolveSpecialRules(
       rosterRow?.specialRules ?? null,
       false,
+      rulesCatalogue,
     );
     const regionalLeagues = resolveRegionalLeagues(
       rosterRow?.regionalRules ?? null,
       out.team.roster,
       ruleset,
       false,
+      rulesCatalogue,
     );
 
     sendSuccess(res, {

@@ -25,6 +25,7 @@ import {
   type Ruleset,
   type TournamentRulesetDefinition,
 } from '@bb/game-engine';
+import type { TeamRulesCatalogue } from './team-rules-catalogue';
 
 export type RegionalLeagueErrorCode = 'choice_required' | 'invalid_choice';
 
@@ -38,9 +39,19 @@ export class RegionalLeagueError extends Error {
   }
 }
 
-/** Libellé français d'une Ligue (repli sur le slug si inconnu). */
-function leagueLabel(slug: string): string {
-  return getRegionalLeagueBySlug(slug)?.nameFr ?? slug;
+/**
+ * Libellé français d'une Ligue (repli sur le slug si inconnu).
+ *
+ * Lot 6.5 — le `catalogue` (table `RegionalLeague`) prime quand l'appelant
+ * l'a chargé ; sinon on retombe sur le catalogue compilé, ce qui garde cette
+ * résolution SYNCHRONE et testable sans Prisma.
+ */
+function leagueLabel(slug: string, catalogue?: TeamRulesCatalogue): string {
+  return (
+    catalogue?.regionalLeague(slug)?.nameFr ??
+    getRegionalLeagueBySlug(slug)?.nameFr ??
+    slug
+  );
 }
 
 export interface ResolveRegionalLeagueInput {
@@ -58,6 +69,11 @@ export interface ResolveRegionalLeagueInput {
    * moteur.
    */
   readonly declaredRules?: readonly string[] | null;
+  /**
+   * Catalogue des Ligues servi par la base, pour que le message d'erreur
+   * nomme les Ligues comme la fiche du roster. Absent ⇒ catalogue compilé.
+   */
+  readonly rulesCatalogue?: TeamRulesCatalogue | null;
 }
 
 /**
@@ -71,6 +87,7 @@ export function resolveRegionalLeagueForCreation({
   pack,
   requested,
   declaredRules,
+  rulesCatalogue,
 }: ResolveRegionalLeagueInput): string | null {
   if (!allowsRegionalLeagueChoice(pack)) return null;
 
@@ -83,7 +100,7 @@ export function resolveRegionalLeagueForCreation({
       throw new RegionalLeagueError(
         'invalid_choice',
         `Ligue régionale invalide pour ce roster. Choix possibles : ${options
-          .map((o) => leagueLabel(o.slug))
+          .map((o) => leagueLabel(o.slug, rulesCatalogue ?? undefined))
           .join(', ')}`,
       );
     }
@@ -96,7 +113,7 @@ export function resolveRegionalLeagueForCreation({
   throw new RegionalLeagueError(
     'choice_required',
     `Ce roster doit choisir sa Ligue régionale à la création. Choix possibles : ${options
-      .map((o) => leagueLabel(o.slug))
+      .map((o) => leagueLabel(o.slug, rulesCatalogue ?? undefined))
       .join(', ')}`,
   );
 }

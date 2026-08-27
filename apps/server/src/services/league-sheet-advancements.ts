@@ -23,6 +23,7 @@
  */
 
 import { prisma } from "../prisma";
+import { loadScheduleForTeam } from "./advancement-schedule-repository";
 import { serverLog } from "../utils/server-log";
 import {
   getNextAdvancementPspCost,
@@ -104,6 +105,8 @@ export async function applyStagedAdvancements(input: {
   teamId: string;
   entries: readonly StagedAdvancement[];
 }): Promise<StagedAdvancement[]> {
+  // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+  const schedule = await loadScheduleForTeam(input.teamId);
   const out: StagedAdvancement[] = [];
   for (const entry of input.entries) {
     // Idempotence (re-validation après already-scored) : ne ré-applique
@@ -125,6 +128,7 @@ export async function applyStagedAdvancements(input: {
       const cost = getNextAdvancementPspCost(
         Math.max(result.newAdvancementCount - 1, 0),
         entry.type,
+        schedule,
       );
       out.push({ ...entry, applied: true, cost, skipReason: undefined });
     } else {
@@ -242,6 +246,8 @@ export async function removeLatestAdvancements(input: {
   let skills = player.skills;
   let statsTouched = false;
   let skillsTouched = false;
+  // Lot 6.2 — remboursement au barème de l'édition de l'équipe.
+  const schedule = await loadScheduleForTeam(player.teamId);
   let refund = 0;
   for (let i = taken.length - 1; i >= taken.length - removeCount; i--) {
     const adv = taken[i] as Partial<PlayerAdvancement> | undefined;
@@ -253,7 +259,7 @@ export async function removeLatestAdvancements(input: {
     )
       ? (adv?.type as AdvancementType)
       : "primary";
-    refund += getNextAdvancementPspCost(i, advType);
+    refund += getNextAdvancementPspCost(i, advType, schedule);
     if (advType === "characteristic" && adv?.stat) {
       stats = reverseCharacteristic(stats, adv.stat as CharacteristicKind);
       statsTouched = true;
@@ -304,6 +310,7 @@ export async function reverseAppliedAdvancements(input: {
   teamId: string;
   entries: readonly StagedAdvancement[];
 }): Promise<StagedAdvancement[]> {
+  const schedule = await loadScheduleForTeam(input.teamId);
   const out: StagedAdvancement[] = [];
   for (const entry of input.entries) {
     const cleaned: StagedAdvancement = {
@@ -375,7 +382,7 @@ export async function reverseAppliedAdvancements(input: {
     const refund =
       typeof entry.cost === "number"
         ? entry.cost
-        : getNextAdvancementPspCost(idx, entry.type);
+        : getNextAdvancementPspCost(idx, entry.type, schedule);
     const updatedAdvancements = [...taken.slice(0, idx), ...taken.slice(idx + 1)];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

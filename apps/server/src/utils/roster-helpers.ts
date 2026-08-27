@@ -5,17 +5,26 @@
 import {
   DEFAULT_RULESET,
   translateKeywordsCsv,
-  getTeamSpecialRuleBySlug,
+  getPositionNameEn,
   type Ruleset,
 } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import { effectiveRegionalRules } from "../services/roster-regional-rules";
+import {
+  ENGINE_TEAM_RULES_CATALOGUE,
+  loadTeamRulesCatalogue,
+  type TeamRulesCatalogue,
+} from "../services/team-rules-catalogue";
 
 /**
  * Résout `Roster.specialRules` (CSV de slugs) en vues localisées
- * (slug + nom + description) via le catalogue game-engine. Les slugs
- * inconnus (ex: sentinelle "NONE") sont ignorés. Mutualise la même logique
- * que la route publique sans créer de cycle d'import routes ↔ utils.
+ * (slug + nom + description). Les slugs inconnus (ex: sentinelle "NONE")
+ * sont ignorés. Mutualise la même logique que la route publique sans créer
+ * de cycle d'import routes ↔ utils.
+ *
+ * Lot 6.5 — le `catalogue` vient de la base (`TeamSpecialRule`) quand
+ * l'appelant l'a chargé ; à défaut, le catalogue compilé du moteur, ce qui
+ * garde cette fonction PURE et testable sans Prisma.
  */
 export interface RosterSpecialRuleView {
   slug: string;
@@ -26,13 +35,14 @@ export interface RosterSpecialRuleView {
 export function resolveSpecialRulesCsv(
   raw: string | null | undefined,
   isEnglish: boolean,
+  catalogue: TeamRulesCatalogue = ENGINE_TEAM_RULES_CATALOGUE,
 ): RosterSpecialRuleView[] {
   const out: RosterSpecialRuleView[] = [];
   for (const slug of (raw ?? "")
     .split(/[,\s]+/g)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)) {
-    const def = getTeamSpecialRuleBySlug(slug);
+    const def = catalogue.specialRule(slug);
     if (!def) continue;
     out.push({
       slug: def.slug,
@@ -65,6 +75,8 @@ interface CacheEntry<T> {
 export interface RosterPosition {
   slug: string;
   displayName: string;
+  /** Lot 6a — nom anglais du poste (`Position.displayNameEn`), repli moteur. */
+  displayNameEn: string | null;
   cost: number;
   min: number;
   max: number;
@@ -88,6 +100,12 @@ export interface RosterPayload {
   budget: number;
   tier: string;
   naf: boolean;
+  /**
+   * Lot 6.4 — plafond COMBINÉ de Gros Bras (`Roster.maxBigGuys`). `null` =
+   * non renseigné en base ⇒ l'appelant retombe sur la table compilée
+   * (`bigGuyLimitForRoster`).
+   */
+  maxBigGuys: number | null;
   positions: RosterPosition[];
   /** Règles spéciales d'équipe résolues (vide si aucune). Localisées. */
   specialRules: RosterSpecialRuleView[];
@@ -191,6 +209,8 @@ export async function getRosterFromDb(
   }
 
   const isEnglish = lang === "en";
+  // Lot 6.5 — libellés des règles spéciales servis par la base.
+  const catalogue = await loadTeamRulesCatalogue(roster.ruleset as Ruleset);
 
   // Transformer les données pour correspondre au format attendu (compatible avec TEAM_ROSTERS)
   const result = {
@@ -198,9 +218,12 @@ export async function getRosterFromDb(
     budget: roster.budget,
     tier: roster.tier,
     naf: roster.naf,
+    maxBigGuys: roster.maxBigGuys ?? null,
     positions: roster.positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
+      displayNameEn:
+        position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
       cost: position.cost,
       min: position.min,
       max: position.max,
@@ -217,7 +240,11 @@ export async function getRosterFromDb(
       primarySkills: position.primarySkills ?? null,
       secondarySkills: position.secondarySkills ?? null,
     })),
-    specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
+    specialRules: resolveSpecialRulesCsv(
+      roster.specialRules,
+      isEnglish,
+      catalogue,
+    ),
     regionalRules: effectiveRegionalRules(
       roster.regionalRules,
       roster.slug,
@@ -260,6 +287,7 @@ export async function getAllRostersFromDb(
   });
 
   const isEnglish = lang === "en";
+  const catalogue = await loadTeamRulesCatalogue(ruleset);
 
   // Transformer les données pour correspondre au format attendu
   const result: Record<string, RosterPayload> = {};
@@ -269,9 +297,12 @@ export async function getAllRostersFromDb(
       budget: roster.budget,
       tier: roster.tier,
       naf: roster.naf,
+      maxBigGuys: roster.maxBigGuys ?? null,
       positions: roster.positions.map((position: any) => ({
         slug: position.slug,
         displayName: position.displayName,
+        displayNameEn:
+          position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
         cost: position.cost,
         min: position.min,
         max: position.max,
@@ -288,7 +319,11 @@ export async function getAllRostersFromDb(
         primarySkills: position.primarySkills ?? null,
         secondarySkills: position.secondarySkills ?? null,
       })),
-      specialRules: resolveSpecialRulesCsv(roster.specialRules, isEnglish),
+      specialRules: resolveSpecialRulesCsv(
+        roster.specialRules,
+        isEnglish,
+        catalogue,
+      ),
       regionalRules: effectiveRegionalRules(
         roster.regionalRules,
         roster.slug,

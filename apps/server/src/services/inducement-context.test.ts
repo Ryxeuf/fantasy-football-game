@@ -20,11 +20,18 @@ vi.mock("../utils/star-player-repository", () => ({
   getAvailableStarPlayersDb: vi.fn(),
 }));
 
+// Lot 6.1 — le catalogue de Coups de Pouce vient de la base ; ce fichier
+// teste la RÉSOLUTION du contexte, pas le repository (couvert à part).
+vi.mock("./inducement-repository", () => ({
+  loadInducementCatalogue: vi.fn(),
+}));
+
 vi.mock("../utils/server-log", () => ({
   serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
 import {
+  canPurchaseInducement,
   getInducementCost,
   getInducementMaxQuantity,
   INDUCEMENT_CATALOGUE,
@@ -32,6 +39,7 @@ import {
 import { getDeclaredRegionalRules } from "../utils/roster-helpers";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
+import { loadInducementCatalogue } from "./inducement-repository";
 import { buildInducementContext } from "./inducement-context";
 
 const declared = getDeclaredRegionalRules as unknown as ReturnType<typeof vi.fn>;
@@ -39,12 +47,16 @@ const special = resolveSpecialRulesForTeam as unknown as ReturnType<
   typeof vi.fn
 >;
 const starsDb = getAvailableStarPlayersDb as unknown as ReturnType<typeof vi.fn>;
+const catalogueDb = loadInducementCatalogue as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 beforeEach(() => {
   vi.resetAllMocks();
   declared.mockResolvedValue(null);
   special.mockResolvedValue([]);
   starsDb.mockResolvedValue([]);
+  catalogueDb.mockResolvedValue(INDUCEMENT_CATALOGUE);
 });
 
 describe("buildInducementContext", () => {
@@ -79,10 +91,10 @@ describe("buildInducementContext", () => {
     const mortuary = INDUCEMENT_CATALOGUE.find(
       (i) => i.slug === "mortuary_assistant",
     )!;
-    expect(mortuary.canPurchase?.(ctx)).toBe(true);
+    expect(canPurchaseInducement(mortuary, ctx)).toBe(true);
     // Contexte vide (l'ancien comportement) : refusé.
     expect(
-      mortuary.canPurchase?.({
+      canPurchaseInducement(mortuary, {
         teamId: "B",
         regionalRules: [],
         hasApothecary: false,

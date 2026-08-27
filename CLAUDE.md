@@ -515,6 +515,48 @@ Les fonctions PURES du moteur (bareme de competences, quota de cumul, taxe
 Star Players, `validateTournamentSkillPlan`, `resolveTournamentEliteSkills`)
 sont inchangees : elles prennent la definition en argument.
 
+### Referentiels « base d'abord » : le catalogue compile est un REPLI
+
+Lot 6 (audit statique vs base) a sorti du code les dernieres donnees de catalogue.
+Le patron est TOUJOURS le meme, calque sur `tournament-ruleset-repository` :
+
+| Donnee | Table | Repository | Repli compile |
+|---|---|---|---|
+| Coups de pouce | `Inducement` | `services/inducement-repository` | `INDUCEMENT_CATALOGUE` |
+| Bareme d'avancement | `AdvancementCost` + `CharacteristicValue` + `RulesetConfig` | `services/advancement-schedule-repository` | `DEFAULT_ADVANCEMENT_SCHEDULE` |
+| Regles speciales / Ligues | `TeamSpecialRule`, `RegionalLeague` | `services/team-rules-catalogue` | `TEAM_SPECIAL_RULES`, `REGIONAL_LEAGUES` |
+| Univers des rosters | `Roster.slug` | `services/roster-catalogue` | `ALLOWED_TEAMS` |
+
+Regles qui vont avec, et qu'il faut respecter pour tout nouveau referentiel :
+
+1. **Le moteur ne lit pas Prisma.** Le serveur RESOUT le catalogue et le PASSE :
+   `InducementContext.catalogue`, `AdvancementSchedule` en dernier parametre de
+   `getNextAdvancementPspCost` / `surchargeForAdvancement`, `TeamRulesCatalogue` en
+   dernier parametre des resolveurs de `public-rosters`. Le defaut de ce parametre
+   est le catalogue compile : les fonctions restent PURES et testables sans base.
+2. **Pas de fonction dans une definition de catalogue.** Les 4 `canPurchase` des
+   coups de pouce (des closures) sont devenues des champs
+   (`requiresAnyRule` / `requiresRoster` / `requiresApothecary`) evalues par
+   `canPurchaseInducement(def, ctx)` — c'est ce qui les rend stockables.
+3. **Une ligne incoherente n'est jamais servie a moitie** : cout negatif, plafond nul,
+   bareme a trous ⇒ on ignore la ligne (ou le type entier) et on journalise, sinon un
+   avancement devient gratuit ou un coup de pouce disparait du panier sans le dire.
+4. **Le slug reste un contrat de code.** Une ligne creee en admin avec un slug inconnu
+   du moteur est un pur libelle : elle se paie et s'affiche mais n'a AUCUN effet en
+   match. L'API le dit (`wired` / `knownToEngine`), la console l'affiche.
+5. **Cache court + `invalidate<X>Cache()`** appele par toutes les routes d'ecriture
+   admin (TTL 5 min en prod, 0 ailleurs).
+6. **Colonnes nullables, seeds create-if-missing.** `prisma/migrations/` est gitignore
+   (`db push` en prod) : aucune colonne ajoutee ne peut etre backfillee. Elle est donc
+   nullable et lue avec repli, et le seeder la renseigne SANS jamais ecraser une valeur
+   deja posee (`sync-catalogue-columns`, `sync-team-rules`, `sync-inducements`,
+   `sync-advancement-costs` ; `force: true` pour reinitialiser depuis le moteur).
+
+Piege associe : `Roster.budget` est le budget **BB11**. Le defaut de construction passe
+par `defaultBuildBudgetK(rosterBudgetK, format)` (`@bb/game-engine`, partage serveur ↔
+builder web) — pour tout format autre que BB11, c'est le plafond du FORMAT qui gouverne,
+sinon une equipe Sevens partirait avec 1000 kpo au lieu de 600.
+
 ### Ligues regionales d'un roster : UNE seule source (Roster.regionalRules)
 
 Les Ligues d'un roster existent a deux endroits : la colonne editable
@@ -892,6 +934,13 @@ edition du `.json`, `pnpm --filter web typecheck` +
 - **2026-06-08** : Ligues — modeles `LeaguePool` + `LeagueMatch` avec
   config de points bonus + fonctionnalite "participant de test" (v1.172-
   1.173).
+- **2026-08-27** : Audit « statique vs base » + **lot 6** (modele de donnees
+  « base d'abord ») : `Inducement`, `AdvancementCost`/`CharacteristicValue`/
+  `RulesetConfig`, colonnes `pairWithSlug`/`maxBigGuys`/`displayNameEn`,
+  categorie `StarPlayerRule`, `TeamSpecialRule`/`RegionalLeague` branchees,
+  `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
+  [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
+  et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
 - **2026-06-13→15** : Vague acquisition/retention web (#890-#897).
   Refonte home Nuffle dans l'esprit BB + accueil personnalise (coach
   connecte vs marketing deconnecte) + SEO competences + stats live +

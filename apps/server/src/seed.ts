@@ -9,6 +9,8 @@ import {
   type Ruleset,
 } from "../../../packages/game-engine/src/rosters/positions";
 import { STAR_PLAYERS_BY_RULESET } from "../../../packages/game-engine/src/rosters/star-players";
+import { getPositionNameEn } from "../../../packages/game-engine/src/rosters/position-names-en";
+import { bigGuyLimitForRoster } from "../../../packages/game-engine/src/rosters/big-guy-limits";
 import { SKILL_ACCESS_SEASON3 } from "../../../packages/game-engine/src/rosters/skill-access-season3";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
 import {
@@ -32,6 +34,10 @@ import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
 import { seedRosterStaffConfigs } from "./scripts/seed-roster-staff-config";
 import { syncTournamentRulesets } from "./seeders/sync-tournament-rulesets";
+import { syncCatalogueColumns } from "./seeders/sync-catalogue-columns";
+import { syncTeamRules } from "./seeders/sync-team-rules";
+import { syncInducements } from "./seeders/sync-inducements";
+import { syncAdvancementCosts } from "./seeders/sync-advancement-costs";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -300,6 +306,8 @@ async function main() {
               tier: rosterDef.tier,
               regionalRules: regionalRulesJson,
               specialRules: rosterDef.specialRules || null,
+              // Lot 6.4 — plafond combiné de Gros Bras (null = pas de plafond).
+              maxBigGuys: bigGuyLimitForRoster(slug),
               naf: rosterDef.naf,
             },
           });
@@ -314,6 +322,35 @@ async function main() {
     }
   }
   serverLog.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
+
+  // Catalogues de règles spéciales et de Ligues régionales : les deux tables
+  // existaient mais restaient vides, le produit servait les libellés
+  // compilés. Create-only : une description corrigée en admin survit.
+  const rulesRes = await syncTeamRules({ write: true });
+  serverLog.log(
+    `✅ Règles spéciales: ${rulesRes.specialRules.created} créées, ` +
+      `${rulesRes.specialRules.skipped} déjà présentes — ` +
+      `Ligues régionales: ${rulesRes.regionalLeagues.created} créées, ` +
+      `${rulesRes.regionalLeagues.skipped} déjà présentes\n`,
+  );
+
+  // Catalogue des Coups de Pouce : prix, plafonds, remises et conditions
+  // servis par la base (create-only, cf. sync-inducements.ts).
+  const inducementsRes = await syncInducements({ write: true });
+  serverLog.log(
+    `✅ Coups de pouce: ${inducementsRes.created.length} créés, ` +
+      `${inducementsRes.skipped.length} déjà présents\n`,
+  );
+
+  // Barème d'avancement par édition (create-only). Saison 3 seulement : les
+  // valeurs Saison 2 attendent leur validation (cf. sync-advancement-costs),
+  // et sans ligne le barème compilé s'applique — comportement inchangé.
+  const advancementRes = await syncAdvancementCosts({ write: true });
+  serverLog.log(
+    `✅ Barème d'avancement: ${advancementRes.costsCreated} paliers créés, ` +
+      `${advancementRes.characteristicsCreated} caractéristiques, ` +
+      `${advancementRes.configsCreated} config(s) d'édition\n`,
+  );
 
   // Config staff par roster × format (create-only : ne réécrit pas l'admin).
   const staffRes = await seedRosterStaffConfigs();
@@ -382,6 +419,8 @@ async function main() {
             av: positionDef.av,
             primarySkills: access ? access.primary : null,
             secondarySkills: access ? access.secondary : null,
+            // Lot 6a — nom anglais officiel du poste (repli moteur si absent).
+            displayNameEn: getPositionNameEn(positionDef.slug) ?? null,
           };
 
           let position;
@@ -482,6 +521,9 @@ async function main() {
           specialRule: starPlayerDef.specialRule ?? null,
           imageUrl: starPlayerDef.imageUrl ?? null,
           isMegaStar: starPlayerDef.isMegaStar ?? false,
+          // Lot 6.3 — partenaire obligatoire en base (la relation est une
+          // constante du livre, le PRIX de la paire se dérive des deux `cost`).
+          pairWithSlug: starPlayerDef.pairWith ?? null,
         };
 
         const starPlayer = await prisma.starPlayer.create({
@@ -555,6 +597,19 @@ async function main() {
     }
   }
   serverLog.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} déjà existants (ignorés)\n`);
+
+  // Colonnes de catalogue ajoutées au schéma (noms EN des postes, plafond de
+  // Gros Bras, paires de Star Players, catégorie des pouvoirs de star) :
+  // `db push` ne sait pas les backfiller, ce seeder les renseigne SANS jamais
+  // réécrire une valeur déjà posée (cf. sync-catalogue-columns.ts).
+  const columnsRes = await syncCatalogueColumns({ write: true });
+  serverLog.log(
+    `✅ Colonnes de catalogue: ${columnsRes.positionNames} noms EN, ` +
+      `${columnsRes.bigGuyLimits} plafonds Gros Bras, ` +
+      `${columnsRes.starPairs} paires de Star Players, ` +
+      `${columnsRes.starRuleCategories} pouvoirs de star recatégorisés\n`,
+  );
+
 
   // =============================================================================
   // 5. SEED DES UTILISATEURS ET ÉQUIPES (code existant)

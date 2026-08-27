@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import { RULESET_OPTIONS, getRulesetLabel } from "../../../ruleset-utils";
 
-const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates"];
+const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates", "StarPlayerRule"];
 
 type Skill = {
   id: string;

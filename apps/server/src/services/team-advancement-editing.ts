@@ -23,6 +23,7 @@ import { prisma } from '../prisma';
 import {
   applyCharacteristicReduction,
   getNextAdvancementPspCost,
+  type AdvancementSchedule,
   getTournamentRosterRules,
   maxTwoSkillPlayers,
   parseAdvancements,
@@ -215,11 +216,14 @@ export function advancementCostFor(
   alreadyTaken: number,
   type: AdvancementType,
   skillSlug?: string,
+  // Lot 6.2 — barème de l'ÉDITION de l'équipe quand le règlement n'impose
+  // pas le sien. Absent ⇒ barème compilé (comportement d'avant le lot).
+  schedule?: AdvancementSchedule,
 ): number {
   if (pack && (type === 'primary' || type === 'secondary')) {
     return tournamentSkillCost(pack, alreadyTaken, type, skillSlug);
   }
-  return getNextAdvancementPspCost(alreadyTaken, type);
+  return getNextAdvancementPspCost(alreadyTaken, type, schedule);
 }
 
 /**

@@ -18,6 +18,10 @@
  * `StarPlayer.cost` corrigé en admin changeait la feuille de ligue mais pas le
  * match en ligne (S11).
  *
+ * Le CATALOGUE lui-même (prix, plafonds, remises, conditions) vient aussi de
+ * la base depuis le lot 6.1 : le moteur ne lit pas Prisma, c'est ce contexte
+ * qui le lui passe.
+ *
  * Tolérant de bout en bout : une lecture en échec dégrade vers le repli
  * catalogue plutôt que de faire échouer la phase de coups de pouce.
  */
@@ -33,6 +37,7 @@ import { prisma } from "../prisma";
 import { getDeclaredRegionalRules } from "../utils/roster-helpers";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
+import { loadInducementCatalogue } from "./inducement-repository";
 import { serverLog } from "../utils/server-log";
 
 export interface BuildInducementContextInput {
@@ -51,12 +56,18 @@ export async function buildInducementContext(
   const ruleset = (input.ruleset as Ruleset) ?? DEFAULT_RULESET;
   const roster = input.rosterSlug;
 
+  // Lot 6.1 — catalogue de Coups de Pouce servi par la base. Chargé même
+  // quand le roster est inconnu : le prix corrigé en admin doit s'appliquer
+  // à TOUS les chemins (en ligne, local, feuille de ligue).
+  const catalogue = await loadInducementCatalogue(ruleset);
+
   const base: InducementContext = {
     teamId: input.teamId,
     regionalRules: [],
     hasApothecary: input.hasApothecary,
     rosterSlug: roster,
     ruleset,
+    catalogue,
   };
   if (!roster) return base;
 

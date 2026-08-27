@@ -8,6 +8,8 @@ import {
   type GameFormat,
   type Ruleset,
   calculateAdvancementsSurcharge,
+  DEFAULT_ADVANCEMENT_SCHEDULE,
+  type AdvancementSchedule,
 } from '@bb/game-engine';
 import {
   calculateTeamValueBreakdown,
@@ -18,6 +20,7 @@ import {
 } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 import { getPositionBySlug } from '@bb/game-engine';
 import { getEliteSkillSlugs } from '../services/elite-skills';
+import { loadAdvancementSchedule } from '../services/advancement-schedule-repository';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -212,6 +215,10 @@ export function buildTeamValueData(
   staffCosts: StaffCosts,
   positionMeta: ReadonlyMap<string, PositionValueMeta> = new Map(),
   specialRules: readonly string[] = [],
+  // Lot 6.2 — barème de l'ÉDITION de l'équipe : les surcoûts de VE d'une
+  // Saison 2 ne sont pas ceux d'une Saison 3. Absent ⇒ barème compilé
+  // (comportement d'avant le lot).
+  schedule: AdvancementSchedule = DEFAULT_ADVANCEMENT_SCHEDULE,
 ): TeamValueData {
   const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
   const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
@@ -248,6 +255,7 @@ export function buildTeamValueData(
             isElite:
               typeof a.skillSlug === 'string' && eliteSlugs.has(a.skillSlug),
           })),
+          schedule,
         );
       } catch { /* ignore parse errors */ }
       return {
@@ -311,12 +319,14 @@ export async function computeTeamValueBreakdownFor(
   const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
   // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
   // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
-  const [eliteSlugs, staffCosts, positionMeta, specialRules] =
+  const [eliteSlugs, staffCosts, positionMeta, specialRules, schedule] =
     await Promise.all([
       getEliteSkillSlugs(db, ruleset),
       resolveStaffCostsForTeam(db, team.roster, ruleset, format),
       resolvePositionMetaForTeam(db, team.roster, ruleset),
       resolveSpecialRulesForTeam(db, team.roster, ruleset),
+      // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+      loadAdvancementSchedule(ruleset),
     ]);
   return calculateTeamValueBreakdown(
     buildTeamValueData(
@@ -326,6 +336,7 @@ export async function computeTeamValueBreakdownFor(
       staffCosts,
       positionMeta,
       specialRules,
+      schedule,
     ),
   );
 }

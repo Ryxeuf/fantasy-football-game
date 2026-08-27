@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import type {
   InducementDefinition,
-  InducementSlug,
   InducementSelection,
 } from "@bb/game-engine";
 
@@ -39,8 +38,10 @@ export default function InducementSelector({
 
   const remaining = budget - totalCost;
 
+  // Lot 6.1 — le slug est une chaîne : le catalogue vient de la base, il peut
+  // porter un coup de pouce créé en admin hors de l'union câblée du moteur.
   const handleAdd = useCallback(
-    (slug: InducementSlug) => {
+    (slug: string) => {
       setQuantities((prev) => ({
         ...prev,
         [slug]: (prev[slug] || 0) + 1,
@@ -50,7 +51,7 @@ export default function InducementSelector({
   );
 
   const handleRemove = useCallback(
-    (slug: InducementSlug) => {
+    (slug: string) => {
       setQuantities((prev) => {
         const current = prev[slug] || 0;
         if (current <= 0) return prev;
@@ -63,10 +64,7 @@ export default function InducementSelector({
   const handleConfirm = useCallback(() => {
     const items = Object.entries(quantities)
       .filter(([, qty]) => qty > 0)
-      .map(([slug, quantity]) => ({
-        slug: slug as InducementSlug,
-        quantity,
-      }));
+      .map(([slug, quantity]) => ({ slug, quantity }));
     onConfirm({ items });
   }, [quantities, onConfirm]);
 

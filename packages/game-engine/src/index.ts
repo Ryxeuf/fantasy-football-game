@@ -86,6 +86,8 @@ export type { JourneymanStats } from './core/pre-match-sequence';
 // Export du système d'inducements
 export {
   INDUCEMENT_CATALOGUE,
+  canPurchaseInducement,
+  isWiredInducementSlug,
   getInducementDefinition,
   getInducementMaxQuantity,
   calculatePettyCash,
@@ -97,6 +99,7 @@ export {
 export type {
   InducementSlug,
   InducementDefinition,
+  InducementCatalogue,
   InducementContext,
   PurchasedInducement,
   InducementSelection,
@@ -412,7 +415,9 @@ export {
   isStarPlayerRuleUsed,
   markStarPlayerRuleUsed,
   STAR_PLAYER_RULE_SLUGS,
+  STAR_PLAYER_RULE_CATEGORY,
   isStarPlayerRule,
+  isStarPlayerRuleSkill,
   getPlayerStarRules,
 } from './skills/star-player-rules';
 
@@ -425,6 +430,7 @@ export {
   SURCHARGE_PER_ADVANCEMENT,
   CHARACTERISTIC_VALUE_INCREASE,
   ELITE_SKILL_SURCHARGE,
+  DEFAULT_ADVANCEMENT_SCHEDULE,
   isRandomAdvancement,
   getCategoryAccessType,
   applyCharacteristicImprovement,
@@ -440,7 +446,8 @@ export {
   type CharacteristicKind,
   type PlayerAdvancement,
   type PlayerStats,
-  type AdvancementSurchargeInput
+  type AdvancementSurchargeInput,
+  type AdvancementSchedule
 } from './utils/advancements';
 
 // Comptabilité du pool de PSP de construction (édition avancée / coupes)

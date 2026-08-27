@@ -6,9 +6,8 @@ import {
   getRegionalRulesForTeam,
   resolveTeamRegionalRules,
   getStarPlayerKeywords,
-  isStarPlayerRule,
+  isStarPlayerRuleSkill,
   translateKeywordsCsv,
-  STAR_PLAYER_PAIR_PARTNERS,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
@@ -18,6 +17,7 @@ import {
 } from "../services/star-player-plays-for";
 import { serverLog } from "../utils/server-log";
 import { getRosterFromDb } from "../utils/roster-helpers";
+import { resolvePairPartnerSlug } from "../utils/star-player-repository";
 
 const router = Router();
 
@@ -64,15 +64,15 @@ function transformStarPlayer(sp: any) {
     // reste en base (le moteur de match porte le slug du pouvoir dans
     // `player.skills`, cf. game-engine `skills/star-player-rules.ts`).
     skills: sp.skills
+      .filter((sps: any) => !isStarPlayerRuleSkill(sps.skill))
       .map((sps: any) => sps.skill.slug)
-      .filter((slug: string) => !isStarPlayerRule(slug))
       .join(","),
     // Noms de competences FRAIS depuis la DB (nameFr/nameEn) : la carte
     // publique les prefere au catalogue statique compile dans le bundle
     // (qui droppait silencieusement les slugs inconnus et servait des
     // libelles perimes apres un edit admin).
     skillDetails: sp.skills
-      .filter((sps: any) => !isStarPlayerRule(sps.skill.slug))
+      .filter((sps: any) => !isStarPlayerRuleSkill(sps.skill))
       .map((sps: any) => ({
         slug: sps.skill.slug,
         nameFr: sps.skill.nameFr ?? null,
@@ -83,16 +83,16 @@ function transformStarPlayer(sp: any) {
 }
 
 /**
- * Attache `pairWith`/`pairCost` a partir des COUTS DB (frais). La RELATION
- * de paire est une constante du livre (`STAR_PLAYER_PAIR_PARTNERS`), mais
- * le prix affiche doit refleter la base — pas le catalogue statique.
+ * Attache `pairWith`/`pairCost` a partir des COUTS DB (frais). Lot 6.3 — la
+ * RELATION de paire vient elle aussi de la base (`StarPlayer.pairWithSlug`),
+ * avec repli sur la table compilee du livre ; le prix affiche reflete la
+ * base — pas le catalogue statique.
  * `pairCost` est omis si le partenaire n'est pas dans le lot fourni
  * (le front retombe alors sur son calcul historique).
  */
-function attachPairData<T extends { slug: string; cost: number }>(
-  rows: T[],
-  extraCostBySlug?: ReadonlyMap<string, number>,
-): T[] {
+function attachPairData<
+  T extends { slug: string; cost: number; pairWithSlug?: string | null },
+>(rows: T[], extraCostBySlug?: ReadonlyMap<string, number>): T[] {
   const costBySlug = new Map<string, number>(
     rows.map((r) => [r.slug, r.cost]),
   );
@@ -100,7 +100,7 @@ function attachPairData<T extends { slug: string; cost: number }>(
     if (!costBySlug.has(slug)) costBySlug.set(slug, cost);
   }
   return rows.map((r) => {
-    const partnerSlug = STAR_PLAYER_PAIR_PARTNERS[r.slug];
+    const partnerSlug = resolvePairPartnerSlug(r);
     if (!partnerSlug) return r;
     const partnerCost = costBySlug.get(partnerSlug);
     return {
@@ -328,7 +328,7 @@ router.get("/:slug", async (req, res) => {
 
     // Prix de paire frais : lookup du partenaire dans le meme ruleset
     // (repli tous rulesets, comme le star lui-meme).
-    const partnerSlug = STAR_PLAYER_PAIR_PARTNERS[starPlayer.slug];
+    const partnerSlug = resolvePairPartnerSlug(starPlayer);
     const extraCosts = new Map<string, number>();
     if (partnerSlug) {
       const partner =

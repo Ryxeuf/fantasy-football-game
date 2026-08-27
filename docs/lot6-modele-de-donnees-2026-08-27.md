@@ -1,7 +1,7 @@
 # Lot 6 — modèle de données « base d'abord » : arbitrages et spécification (2026-08-27)
 
 Suite de l'[audit statique vs base](./audit-statique-vs-bdd-2026-08-27.md) (§6 et §9, lot 6).
-Arbitré avec le propriétaire le 2026-08-27.
+Arbitré avec le propriétaire le 2026-08-27. **Livré** (cf. §5 — état de livraison).
 
 ## 1. Décisions
 
@@ -166,3 +166,41 @@ livrer avant 6c pour que les contextes de coups de pouce soient justes.
 - Couleurs / logos / sprites d'équipe : restent en code (cosmétique, moteur de rendu).
 - Whitelist des adversaires IA, familles de noms d'équipe : configuration en code, acceptable.
 - Slugs de compétences et de postes : contrat de code, non éditables.
+
+## 5. État de livraison
+
+Les quatre sous-lots sont livrés, un commit par sous-lot.
+
+| Sous-lot | État | Où |
+|---|---|---|
+| 6a | ✅ | `Position.displayNameEn`, `Roster.maxBigGuys`, `StarPlayer.pairWithSlug`, catégorie `StarPlayerRule` ; `services/roster-catalogue` (ex-`ALLOWED_TEAMS`) ; budget par défaut `Roster.budget` (`defaultBuildBudgetK`, partagé serveur ↔ web) ; seeder `sync-catalogue-columns` |
+| 6b | ✅ | `services/team-rules-catalogue` (DB-first + repli), seeder `sync-team-rules`, CRUD `/admin/data/special-rules` et `/admin/data/regional-leagues`, sélecteurs du formulaire roster (`useTeamRuleCatalogues`) |
+| 6c | ✅ | table `Inducement`, `services/inducement-repository`, conditions d'achat en DONNÉES + `canPurchaseInducement` (moteur), `InducementContext.catalogue`, seeder `sync-inducements`, CRUD `/admin/data/inducements` |
+| 6d | ✅ | tables `AdvancementCost` / `CharacteristicValue` / `RulesetConfig`, `AdvancementSchedule` en paramètre du moteur, `services/advancement-schedule-repository`, 10 consommateurs branchés, seeder `sync-advancement-costs`, grille `/admin/data/advancement-costs` |
+
+### Écarts assumés par rapport à la spécification
+
+- **Barème Saison 2 non seedé automatiquement** (§2.2 : « à faire valider avant seed »). Les
+  valeurs du livre 2020 sont transcrites dans `SEASON_2_SCHEDULE`
+  (`seeders/sync-advancement-costs.ts`) et couvertes par des tests, mais le seed par défaut ne
+  pose que la Saison 3 : tant qu'un humain n'a pas validé la colonne, une équipe Saison 2
+  continue de tomber sur le repli compilé — le comportement d'avant le lot, pas une valeur
+  inventée. Pour les poser une fois validées : bouton « Amorcer depuis le moteur » de
+  `/admin/data/advancement-costs` avec l'édition Saison 2 sélectionnée (ou
+  `syncAdvancementCosts({ write: true, rulesets: ["season_2"] })`).
+- **`Roster.budget` du roster `slann` (S3) à 1093 k** (§2.5) : la donnée n'a pas été corrigée
+  ici — c'est une correction de contenu à faire en admin, et le lot la rend justement visible
+  (le builder propose désormais ce budget au lieu des 1000 k du format).
+- **`pairCost` n'est pas une colonne** : il reste dérivé (somme des deux `cost` en base),
+  conformément à §2.3. Corriger un coût en admin corrige donc aussi le prix de la paire.
+
+### Notes d'implémentation
+
+- Toutes les colonnes ajoutées sont NULLABLES et lues avec repli : `prisma db push` les pose
+  sans backfill, et une table vide sert le catalogue compilé.
+- Les slugs restent un contrat de code. Les consoles admin le disent explicitement : un coup
+  de pouce (`wired: false`) ou une règle (`knownToEngine: false`) dont le slug est inconnu du
+  moteur s'affiche et se paie, mais n'a aucun effet en match.
+- Les résolveurs purs (`resolveSpecialRules`, `canPurchaseInducement`,
+  `getNextAdvancementPspCost`…) prennent le catalogue/barème en PARAMÈTRE : le moteur ne lit
+  pas Prisma, et ces fonctions restent testables sans base.

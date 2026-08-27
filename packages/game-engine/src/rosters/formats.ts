@@ -119,6 +119,33 @@ export function getFormatConstraints(format: GameFormat): FormatConstraints {
 }
 
 /**
+ * Budget de construction PAR DÉFAUT d'une équipe, en kpo (lot 6.7).
+ *
+ * DEUX AXES À NE PAS CONFONDRE :
+ *  - `Roster.budget` (base, éditable en admin) est le budget de construction
+ *    du roster **en Blood Bowl à 11** — la valeur que porte sa fiche publique ;
+ *  - `FORMAT_CONSTRAINTS[format].startingBudget` est le plafond du FORMAT
+ *    (BB11 1 000 kpo, Sevens 600 kpo).
+ *
+ * Il n'existe pas de budget par couple roster × format en base : `Roster.budget`
+ * ne fait donc autorité QUE pour le BB11 ; tout autre format garde son propre
+ * plafond, sinon une équipe Sevens partirait avec les 1 000 kpo du BB11.
+ *
+ * Source unique du serveur (`POST /team/build`, `/team/create-from-roster`)
+ * ET du builder web : les deux doivent proposer le même « Restant ».
+ */
+export function defaultBuildBudgetK(
+  rosterBudgetK: number | null | undefined,
+  format: GameFormat,
+): number {
+  const fromFormat = getFormatConstraints(format).startingBudget;
+  if (format !== "bb11") return fromFormat;
+  return typeof rosterBudgetK === "number" && rosterBudgetK > 0
+    ? rosterBudgetK
+    : fromFormat;
+}
+
+/**
  * Un "Lineman" est le poste de base d'une équipe : sa limitation est 0-12
  * voire 0-16 (cf. règles officielles Sevens). Heuristique robuste même pour
  * les linemen renommés (Zombie, Brawler, etc.) : `max >= 12`.

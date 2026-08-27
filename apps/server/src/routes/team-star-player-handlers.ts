@@ -186,7 +186,7 @@ export async function handleListAvailableStarPlayers(
         const canAfford = sp.cost <= availableBudget;
         const hasRoomForOne = totalPlayers < maxPlayers;
 
-        const pairSlug = requiresPair(sp.slug, teamRuleset);
+        const pairSlug = await requiresPair(sp.slug, teamRuleset);
         let needsPair = false;
         let pairStatus = null;
 
@@ -295,7 +295,7 @@ export async function handleDeleteTeamStarPlayer(
       return;
     }
 
-    const pairSlug = requiresPair(
+    const pairSlug = await requiresPair(
       starPlayer.starPlayerSlug,
       (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
     );

@@ -139,6 +139,26 @@ export type Position = $Result.DefaultSelection<Prisma.$PositionPayload>
  */
 export type PositionSkill = $Result.DefaultSelection<Prisma.$PositionSkillPayload>
 /**
+ * Model Inducement
+ * Catalogue des Coups de Pouce (miroir PG, lot 6.1).
+ */
+export type Inducement = $Result.DefaultSelection<Prisma.$InducementPayload>
+/**
+ * Model AdvancementCost
+ * Barème d'avancement par édition (miroir PG, lot 6.2).
+ */
+export type AdvancementCost = $Result.DefaultSelection<Prisma.$AdvancementCostPayload>
+/**
+ * Model CharacteristicValue
+ * Surcoût de VE d'une amélioration de caractéristique (miroir PG).
+ */
+export type CharacteristicValue = $Result.DefaultSelection<Prisma.$CharacteristicValuePayload>
+/**
+ * Model RulesetConfig
+ * Réglages d'édition (miroir PG, lot 6.2).
+ */
+export type RulesetConfig = $Result.DefaultSelection<Prisma.$RulesetConfigPayload>
+/**
  * Model Cup
  * 
  */
@@ -448,6 +468,17 @@ export const Format: {
 
 export type Format = (typeof Format)[keyof typeof Format]
 
+
+export const AdvancementKind: {
+  primary: 'primary',
+  secondary: 'secondary',
+  random_primary: 'random_primary',
+  random_secondary: 'random_secondary',
+  characteristic: 'characteristic'
+};
+
+export type AdvancementKind = (typeof AdvancementKind)[keyof typeof AdvancementKind]
+
 }
 
 export type Ruleset = $Enums.Ruleset
@@ -457,6 +488,10 @@ export const Ruleset: typeof $Enums.Ruleset
 export type Format = $Enums.Format
 
 export const Format: typeof $Enums.Format
+
+export type AdvancementKind = $Enums.AdvancementKind
+
+export const AdvancementKind: typeof $Enums.AdvancementKind
 
 /**
  * ##  Prisma Client ʲˢ
@@ -825,6 +860,46 @@ export class PrismaClient<
     * ```
     */
   get positionSkill(): Prisma.PositionSkillDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.inducement`: Exposes CRUD operations for the **Inducement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Inducements
+    * const inducements = await prisma.inducement.findMany()
+    * ```
+    */
+  get inducement(): Prisma.InducementDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.advancementCost`: Exposes CRUD operations for the **AdvancementCost** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AdvancementCosts
+    * const advancementCosts = await prisma.advancementCost.findMany()
+    * ```
+    */
+  get advancementCost(): Prisma.AdvancementCostDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.characteristicValue`: Exposes CRUD operations for the **CharacteristicValue** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CharacteristicValues
+    * const characteristicValues = await prisma.characteristicValue.findMany()
+    * ```
+    */
+  get characteristicValue(): Prisma.CharacteristicValueDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.rulesetConfig`: Exposes CRUD operations for the **RulesetConfig** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RulesetConfigs
+    * const rulesetConfigs = await prisma.rulesetConfig.findMany()
+    * ```
+    */
+  get rulesetConfig(): Prisma.RulesetConfigDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.cup`: Exposes CRUD operations for the **Cup** model.
@@ -1830,6 +1905,10 @@ export namespace Prisma {
     StarPlayerHirableBy: 'StarPlayerHirableBy',
     Position: 'Position',
     PositionSkill: 'PositionSkill',
+    Inducement: 'Inducement',
+    AdvancementCost: 'AdvancementCost',
+    CharacteristicValue: 'CharacteristicValue',
+    RulesetConfig: 'RulesetConfig',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
     MatchQueue: 'MatchQueue',
@@ -1902,7 +1981,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3753,6 +3832,302 @@ export namespace Prisma {
           count: {
             args: Prisma.PositionSkillCountArgs<ExtArgs>
             result: $Utils.Optional<PositionSkillCountAggregateOutputType> | number
+          }
+        }
+      }
+      Inducement: {
+        payload: Prisma.$InducementPayload<ExtArgs>
+        fields: Prisma.InducementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InducementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InducementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          findFirst: {
+            args: Prisma.InducementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InducementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          findMany: {
+            args: Prisma.InducementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>[]
+          }
+          create: {
+            args: Prisma.InducementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          createMany: {
+            args: Prisma.InducementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InducementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>[]
+          }
+          delete: {
+            args: Prisma.InducementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          update: {
+            args: Prisma.InducementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          deleteMany: {
+            args: Prisma.InducementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InducementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.InducementUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>[]
+          }
+          upsert: {
+            args: Prisma.InducementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InducementPayload>
+          }
+          aggregate: {
+            args: Prisma.InducementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInducement>
+          }
+          groupBy: {
+            args: Prisma.InducementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InducementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InducementCountArgs<ExtArgs>
+            result: $Utils.Optional<InducementCountAggregateOutputType> | number
+          }
+        }
+      }
+      AdvancementCost: {
+        payload: Prisma.$AdvancementCostPayload<ExtArgs>
+        fields: Prisma.AdvancementCostFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AdvancementCostFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AdvancementCostFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          findFirst: {
+            args: Prisma.AdvancementCostFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AdvancementCostFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          findMany: {
+            args: Prisma.AdvancementCostFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>[]
+          }
+          create: {
+            args: Prisma.AdvancementCostCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          createMany: {
+            args: Prisma.AdvancementCostCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AdvancementCostCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>[]
+          }
+          delete: {
+            args: Prisma.AdvancementCostDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          update: {
+            args: Prisma.AdvancementCostUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          deleteMany: {
+            args: Prisma.AdvancementCostDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AdvancementCostUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AdvancementCostUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>[]
+          }
+          upsert: {
+            args: Prisma.AdvancementCostUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdvancementCostPayload>
+          }
+          aggregate: {
+            args: Prisma.AdvancementCostAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAdvancementCost>
+          }
+          groupBy: {
+            args: Prisma.AdvancementCostGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AdvancementCostGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AdvancementCostCountArgs<ExtArgs>
+            result: $Utils.Optional<AdvancementCostCountAggregateOutputType> | number
+          }
+        }
+      }
+      CharacteristicValue: {
+        payload: Prisma.$CharacteristicValuePayload<ExtArgs>
+        fields: Prisma.CharacteristicValueFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CharacteristicValueFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CharacteristicValueFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          findFirst: {
+            args: Prisma.CharacteristicValueFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CharacteristicValueFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          findMany: {
+            args: Prisma.CharacteristicValueFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>[]
+          }
+          create: {
+            args: Prisma.CharacteristicValueCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          createMany: {
+            args: Prisma.CharacteristicValueCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CharacteristicValueCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>[]
+          }
+          delete: {
+            args: Prisma.CharacteristicValueDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          update: {
+            args: Prisma.CharacteristicValueUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          deleteMany: {
+            args: Prisma.CharacteristicValueDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CharacteristicValueUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CharacteristicValueUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>[]
+          }
+          upsert: {
+            args: Prisma.CharacteristicValueUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CharacteristicValuePayload>
+          }
+          aggregate: {
+            args: Prisma.CharacteristicValueAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCharacteristicValue>
+          }
+          groupBy: {
+            args: Prisma.CharacteristicValueGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CharacteristicValueGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CharacteristicValueCountArgs<ExtArgs>
+            result: $Utils.Optional<CharacteristicValueCountAggregateOutputType> | number
+          }
+        }
+      }
+      RulesetConfig: {
+        payload: Prisma.$RulesetConfigPayload<ExtArgs>
+        fields: Prisma.RulesetConfigFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RulesetConfigFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RulesetConfigFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          findFirst: {
+            args: Prisma.RulesetConfigFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RulesetConfigFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          findMany: {
+            args: Prisma.RulesetConfigFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>[]
+          }
+          create: {
+            args: Prisma.RulesetConfigCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          createMany: {
+            args: Prisma.RulesetConfigCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RulesetConfigCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>[]
+          }
+          delete: {
+            args: Prisma.RulesetConfigDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          update: {
+            args: Prisma.RulesetConfigUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          deleteMany: {
+            args: Prisma.RulesetConfigDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RulesetConfigUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.RulesetConfigUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>[]
+          }
+          upsert: {
+            args: Prisma.RulesetConfigUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RulesetConfigPayload>
+          }
+          aggregate: {
+            args: Prisma.RulesetConfigAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRulesetConfig>
+          }
+          groupBy: {
+            args: Prisma.RulesetConfigGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RulesetConfigGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RulesetConfigCountArgs<ExtArgs>
+            result: $Utils.Optional<RulesetConfigCountAggregateOutputType> | number
           }
         }
       }
@@ -7873,6 +8248,10 @@ export namespace Prisma {
     starPlayerHirableBy?: StarPlayerHirableByOmit
     position?: PositionOmit
     positionSkill?: PositionSkillOmit
+    inducement?: InducementOmit
+    advancementCost?: AdvancementCostOmit
+    characteristicValue?: CharacteristicValueOmit
+    rulesetConfig?: RulesetConfigOmit
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
     matchQueue?: MatchQueueOmit
@@ -31009,10 +31388,12 @@ export namespace Prisma {
 
   export type RosterAvgAggregateOutputType = {
     budget: number | null
+    maxBigGuys: number | null
   }
 
   export type RosterSumAggregateOutputType = {
     budget: number | null
+    maxBigGuys: number | null
   }
 
   export type RosterMinAggregateOutputType = {
@@ -31027,6 +31408,7 @@ export namespace Prisma {
     tier: string | null
     regionalRules: string | null
     specialRules: string | null
+    maxBigGuys: number | null
     naf: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -31044,6 +31426,7 @@ export namespace Prisma {
     tier: string | null
     regionalRules: string | null
     specialRules: string | null
+    maxBigGuys: number | null
     naf: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -31061,6 +31444,7 @@ export namespace Prisma {
     tier: number
     regionalRules: number
     specialRules: number
+    maxBigGuys: number
     naf: number
     createdAt: number
     updatedAt: number
@@ -31070,10 +31454,12 @@ export namespace Prisma {
 
   export type RosterAvgAggregateInputType = {
     budget?: true
+    maxBigGuys?: true
   }
 
   export type RosterSumAggregateInputType = {
     budget?: true
+    maxBigGuys?: true
   }
 
   export type RosterMinAggregateInputType = {
@@ -31088,6 +31474,7 @@ export namespace Prisma {
     tier?: true
     regionalRules?: true
     specialRules?: true
+    maxBigGuys?: true
     naf?: true
     createdAt?: true
     updatedAt?: true
@@ -31105,6 +31492,7 @@ export namespace Prisma {
     tier?: true
     regionalRules?: true
     specialRules?: true
+    maxBigGuys?: true
     naf?: true
     createdAt?: true
     updatedAt?: true
@@ -31122,6 +31510,7 @@ export namespace Prisma {
     tier?: true
     regionalRules?: true
     specialRules?: true
+    maxBigGuys?: true
     naf?: true
     createdAt?: true
     updatedAt?: true
@@ -31226,6 +31615,7 @@ export namespace Prisma {
     tier: string
     regionalRules: string | null
     specialRules: string | null
+    maxBigGuys: number | null
     naf: boolean
     createdAt: Date
     updatedAt: Date
@@ -31262,6 +31652,7 @@ export namespace Prisma {
     tier?: boolean
     regionalRules?: boolean
     specialRules?: boolean
+    maxBigGuys?: boolean
     naf?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -31283,6 +31674,7 @@ export namespace Prisma {
     tier?: boolean
     regionalRules?: boolean
     specialRules?: boolean
+    maxBigGuys?: boolean
     naf?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -31300,6 +31692,7 @@ export namespace Prisma {
     tier?: boolean
     regionalRules?: boolean
     specialRules?: boolean
+    maxBigGuys?: boolean
     naf?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -31317,12 +31710,13 @@ export namespace Prisma {
     tier?: boolean
     regionalRules?: boolean
     specialRules?: boolean
+    maxBigGuys?: boolean
     naf?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type RosterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "name" | "nameEn" | "descriptionFr" | "descriptionEn" | "budget" | "tier" | "regionalRules" | "specialRules" | "naf" | "createdAt" | "updatedAt", ExtArgs["result"]["roster"]>
+  export type RosterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "name" | "nameEn" | "descriptionFr" | "descriptionEn" | "budget" | "tier" | "regionalRules" | "specialRules" | "maxBigGuys" | "naf" | "createdAt" | "updatedAt", ExtArgs["result"]["roster"]>
   export type RosterInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positions?: boolean | Roster$positionsArgs<ExtArgs>
     staffConfigs?: boolean | Roster$staffConfigsArgs<ExtArgs>
@@ -31351,6 +31745,10 @@ export namespace Prisma {
       tier: string
       regionalRules: string | null
       specialRules: string | null
+      /**
+       * Lot 6a — plafond combiné de Gros Bras (miroir PG). Repli moteur si null.
+       */
+      maxBigGuys: number | null
       naf: boolean
       createdAt: Date
       updatedAt: Date
@@ -31791,6 +32189,7 @@ export namespace Prisma {
     readonly tier: FieldRef<"Roster", 'String'>
     readonly regionalRules: FieldRef<"Roster", 'String'>
     readonly specialRules: FieldRef<"Roster", 'String'>
+    readonly maxBigGuys: FieldRef<"Roster", 'Int'>
     readonly naf: FieldRef<"Roster", 'Boolean'>
     readonly createdAt: FieldRef<"Roster", 'DateTime'>
     readonly updatedAt: FieldRef<"Roster", 'DateTime'>
@@ -34785,6 +35184,7 @@ export namespace Prisma {
     specialRule: string | null
     imageUrl: string | null
     isMegaStar: boolean | null
+    pairWithSlug: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -34804,6 +35204,7 @@ export namespace Prisma {
     specialRule: string | null
     imageUrl: string | null
     isMegaStar: boolean | null
+    pairWithSlug: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -34823,6 +35224,7 @@ export namespace Prisma {
     specialRule: number
     imageUrl: number
     isMegaStar: number
+    pairWithSlug: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -34862,6 +35264,7 @@ export namespace Prisma {
     specialRule?: true
     imageUrl?: true
     isMegaStar?: true
+    pairWithSlug?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -34881,6 +35284,7 @@ export namespace Prisma {
     specialRule?: true
     imageUrl?: true
     isMegaStar?: true
+    pairWithSlug?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -34900,6 +35304,7 @@ export namespace Prisma {
     specialRule?: true
     imageUrl?: true
     isMegaStar?: true
+    pairWithSlug?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -35006,6 +35411,7 @@ export namespace Prisma {
     specialRule: string | null
     imageUrl: string | null
     isMegaStar: boolean
+    pairWithSlug: string | null
     createdAt: Date
     updatedAt: Date
     _count: StarPlayerCountAggregateOutputType | null
@@ -35044,6 +35450,7 @@ export namespace Prisma {
     specialRule?: boolean
     imageUrl?: boolean
     isMegaStar?: boolean
+    pairWithSlug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     skills?: boolean | StarPlayer$skillsArgs<ExtArgs>
@@ -35066,6 +35473,7 @@ export namespace Prisma {
     specialRule?: boolean
     imageUrl?: boolean
     isMegaStar?: boolean
+    pairWithSlug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["starPlayer"]>
@@ -35085,6 +35493,7 @@ export namespace Prisma {
     specialRule?: boolean
     imageUrl?: boolean
     isMegaStar?: boolean
+    pairWithSlug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["starPlayer"]>
@@ -35104,11 +35513,12 @@ export namespace Prisma {
     specialRule?: boolean
     imageUrl?: boolean
     isMegaStar?: boolean
+    pairWithSlug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type StarPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "displayName" | "cost" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "specialRule" | "imageUrl" | "isMegaStar" | "createdAt" | "updatedAt", ExtArgs["result"]["starPlayer"]>
+  export type StarPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "displayName" | "cost" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "specialRule" | "imageUrl" | "isMegaStar" | "pairWithSlug" | "createdAt" | "updatedAt", ExtArgs["result"]["starPlayer"]>
   export type StarPlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     skills?: boolean | StarPlayer$skillsArgs<ExtArgs>
     hirableBy?: boolean | StarPlayer$hirableByArgs<ExtArgs>
@@ -35138,6 +35548,10 @@ export namespace Prisma {
       specialRule: string | null
       imageUrl: string | null
       isMegaStar: boolean
+      /**
+       * Lot 6a — partenaire obligatoire (miroir PG). Repli moteur si null.
+       */
+      pairWithSlug: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["starPlayer"]>
@@ -35579,6 +35993,7 @@ export namespace Prisma {
     readonly specialRule: FieldRef<"StarPlayer", 'String'>
     readonly imageUrl: FieldRef<"StarPlayer", 'String'>
     readonly isMegaStar: FieldRef<"StarPlayer", 'Boolean'>
+    readonly pairWithSlug: FieldRef<"StarPlayer", 'String'>
     readonly createdAt: FieldRef<"StarPlayer", 'DateTime'>
     readonly updatedAt: FieldRef<"StarPlayer", 'DateTime'>
   }
@@ -38180,6 +38595,7 @@ export namespace Prisma {
     rosterId: string | null
     slug: string | null
     displayName: string | null
+    displayNameEn: string | null
     cost: number | null
     min: number | null
     max: number | null
@@ -38205,6 +38621,7 @@ export namespace Prisma {
     rosterId: string | null
     slug: string | null
     displayName: string | null
+    displayNameEn: string | null
     cost: number | null
     min: number | null
     max: number | null
@@ -38230,6 +38647,7 @@ export namespace Prisma {
     rosterId: number
     slug: number
     displayName: number
+    displayNameEn: number
     cost: number
     min: number
     max: number
@@ -38279,6 +38697,7 @@ export namespace Prisma {
     rosterId?: true
     slug?: true
     displayName?: true
+    displayNameEn?: true
     cost?: true
     min?: true
     max?: true
@@ -38304,6 +38723,7 @@ export namespace Prisma {
     rosterId?: true
     slug?: true
     displayName?: true
+    displayNameEn?: true
     cost?: true
     min?: true
     max?: true
@@ -38329,6 +38749,7 @@ export namespace Prisma {
     rosterId?: true
     slug?: true
     displayName?: true
+    displayNameEn?: true
     cost?: true
     min?: true
     max?: true
@@ -38441,6 +38862,7 @@ export namespace Prisma {
     rosterId: string
     slug: string
     displayName: string
+    displayNameEn: string | null
     cost: number
     min: number
     max: number
@@ -38485,6 +38907,7 @@ export namespace Prisma {
     rosterId?: boolean
     slug?: boolean
     displayName?: boolean
+    displayNameEn?: boolean
     cost?: boolean
     min?: boolean
     max?: boolean
@@ -38513,6 +38936,7 @@ export namespace Prisma {
     rosterId?: boolean
     slug?: boolean
     displayName?: boolean
+    displayNameEn?: boolean
     cost?: boolean
     min?: boolean
     max?: boolean
@@ -38539,6 +38963,7 @@ export namespace Prisma {
     rosterId?: boolean
     slug?: boolean
     displayName?: boolean
+    displayNameEn?: boolean
     cost?: boolean
     min?: boolean
     max?: boolean
@@ -38565,6 +38990,7 @@ export namespace Prisma {
     rosterId?: boolean
     slug?: boolean
     displayName?: boolean
+    displayNameEn?: boolean
     cost?: boolean
     min?: boolean
     max?: boolean
@@ -38585,7 +39011,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "primarySkills" | "secondarySkills" | "imageUrl" | "descriptionFr" | "descriptionEn" | "fluffFr" | "fluffEn" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
+  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "displayNameEn" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "primarySkills" | "secondarySkills" | "imageUrl" | "descriptionFr" | "descriptionEn" | "fluffFr" | "fluffEn" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
   export type PositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     roster?: boolean | RosterDefaultArgs<ExtArgs>
     skills?: boolean | Position$skillsArgs<ExtArgs>
@@ -38609,6 +39035,10 @@ export namespace Prisma {
       rosterId: string
       slug: string
       displayName: string
+      /**
+       * Lot 6a — nom anglais du poste (miroir PG). Repli moteur si null.
+       */
+      displayNameEn: string | null
       cost: number
       min: number
       max: number
@@ -39056,6 +39486,7 @@ export namespace Prisma {
     readonly rosterId: FieldRef<"Position", 'String'>
     readonly slug: FieldRef<"Position", 'String'>
     readonly displayName: FieldRef<"Position", 'String'>
+    readonly displayNameEn: FieldRef<"Position", 'String'>
     readonly cost: FieldRef<"Position", 'Int'>
     readonly min: FieldRef<"Position", 'Int'>
     readonly max: FieldRef<"Position", 'Int'>
@@ -40545,6 +40976,4411 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PositionSkillInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Inducement
+   */
+
+  export type AggregateInducement = {
+    _count: InducementCountAggregateOutputType | null
+    _avg: InducementAvgAggregateOutputType | null
+    _sum: InducementSumAggregateOutputType | null
+    _min: InducementMinAggregateOutputType | null
+    _max: InducementMaxAggregateOutputType | null
+  }
+
+  export type InducementAvgAggregateOutputType = {
+    baseCost: number | null
+    maxQuantity: number | null
+    discountCost: number | null
+    ruleMaxQuantity: number | null
+    sortOrder: number | null
+  }
+
+  export type InducementSumAggregateOutputType = {
+    baseCost: number | null
+    maxQuantity: number | null
+    discountCost: number | null
+    ruleMaxQuantity: number | null
+    sortOrder: number | null
+  }
+
+  export type InducementMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    baseCost: number | null
+    maxQuantity: number | null
+    discountRule: string | null
+    discountRoster: string | null
+    discountCost: number | null
+    ruleMaxRule: string | null
+    ruleMaxQuantity: number | null
+    requiresAnyRule: string | null
+    requiresRoster: string | null
+    requiresApothecary: boolean | null
+    variableCost: boolean | null
+    enabled: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InducementMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    baseCost: number | null
+    maxQuantity: number | null
+    discountRule: string | null
+    discountRoster: string | null
+    discountCost: number | null
+    ruleMaxRule: string | null
+    ruleMaxQuantity: number | null
+    requiresAnyRule: string | null
+    requiresRoster: string | null
+    requiresApothecary: boolean | null
+    variableCost: boolean | null
+    enabled: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InducementCountAggregateOutputType = {
+    id: number
+    slug: number
+    ruleset: number
+    nameFr: number
+    nameEn: number
+    descriptionFr: number
+    descriptionEn: number
+    baseCost: number
+    maxQuantity: number
+    discountRule: number
+    discountRoster: number
+    discountCost: number
+    ruleMaxRule: number
+    ruleMaxQuantity: number
+    requiresAnyRule: number
+    requiresRoster: number
+    requiresApothecary: number
+    variableCost: number
+    enabled: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type InducementAvgAggregateInputType = {
+    baseCost?: true
+    maxQuantity?: true
+    discountCost?: true
+    ruleMaxQuantity?: true
+    sortOrder?: true
+  }
+
+  export type InducementSumAggregateInputType = {
+    baseCost?: true
+    maxQuantity?: true
+    discountCost?: true
+    ruleMaxQuantity?: true
+    sortOrder?: true
+  }
+
+  export type InducementMinAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    baseCost?: true
+    maxQuantity?: true
+    discountRule?: true
+    discountRoster?: true
+    discountCost?: true
+    ruleMaxRule?: true
+    ruleMaxQuantity?: true
+    requiresAnyRule?: true
+    requiresRoster?: true
+    requiresApothecary?: true
+    variableCost?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type InducementMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    baseCost?: true
+    maxQuantity?: true
+    discountRule?: true
+    discountRoster?: true
+    discountCost?: true
+    ruleMaxRule?: true
+    ruleMaxQuantity?: true
+    requiresAnyRule?: true
+    requiresRoster?: true
+    requiresApothecary?: true
+    variableCost?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type InducementCountAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    baseCost?: true
+    maxQuantity?: true
+    discountRule?: true
+    discountRoster?: true
+    discountCost?: true
+    ruleMaxRule?: true
+    ruleMaxQuantity?: true
+    requiresAnyRule?: true
+    requiresRoster?: true
+    requiresApothecary?: true
+    variableCost?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type InducementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Inducement to aggregate.
+     */
+    where?: InducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Inducements to fetch.
+     */
+    orderBy?: InducementOrderByWithRelationInput | InducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Inducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Inducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Inducements
+    **/
+    _count?: true | InducementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: InducementAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: InducementSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InducementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InducementMaxAggregateInputType
+  }
+
+  export type GetInducementAggregateType<T extends InducementAggregateArgs> = {
+        [P in keyof T & keyof AggregateInducement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInducement[P]>
+      : GetScalarType<T[P], AggregateInducement[P]>
+  }
+
+
+
+
+  export type InducementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InducementWhereInput
+    orderBy?: InducementOrderByWithAggregationInput | InducementOrderByWithAggregationInput[]
+    by: InducementScalarFieldEnum[] | InducementScalarFieldEnum
+    having?: InducementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InducementCountAggregateInputType | true
+    _avg?: InducementAvgAggregateInputType
+    _sum?: InducementSumAggregateInputType
+    _min?: InducementMinAggregateInputType
+    _max?: InducementMaxAggregateInputType
+  }
+
+  export type InducementGroupByOutputType = {
+    id: string
+    slug: string
+    ruleset: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    descriptionFr: string
+    descriptionEn: string | null
+    baseCost: number
+    maxQuantity: number
+    discountRule: string | null
+    discountRoster: string | null
+    discountCost: number | null
+    ruleMaxRule: string | null
+    ruleMaxQuantity: number | null
+    requiresAnyRule: string | null
+    requiresRoster: string | null
+    requiresApothecary: boolean
+    variableCost: boolean
+    enabled: boolean
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    _count: InducementCountAggregateOutputType | null
+    _avg: InducementAvgAggregateOutputType | null
+    _sum: InducementSumAggregateOutputType | null
+    _min: InducementMinAggregateOutputType | null
+    _max: InducementMaxAggregateOutputType | null
+  }
+
+  type GetInducementGroupByPayload<T extends InducementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InducementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InducementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InducementGroupByOutputType[P]>
+            : GetScalarType<T[P], InducementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InducementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    baseCost?: boolean
+    maxQuantity?: boolean
+    discountRule?: boolean
+    discountRoster?: boolean
+    discountCost?: boolean
+    ruleMaxRule?: boolean
+    ruleMaxQuantity?: boolean
+    requiresAnyRule?: boolean
+    requiresRoster?: boolean
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["inducement"]>
+
+  export type InducementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    baseCost?: boolean
+    maxQuantity?: boolean
+    discountRule?: boolean
+    discountRoster?: boolean
+    discountCost?: boolean
+    ruleMaxRule?: boolean
+    ruleMaxQuantity?: boolean
+    requiresAnyRule?: boolean
+    requiresRoster?: boolean
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["inducement"]>
+
+  export type InducementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    baseCost?: boolean
+    maxQuantity?: boolean
+    discountRule?: boolean
+    discountRoster?: boolean
+    discountCost?: boolean
+    ruleMaxRule?: boolean
+    ruleMaxQuantity?: boolean
+    requiresAnyRule?: boolean
+    requiresRoster?: boolean
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["inducement"]>
+
+  export type InducementSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    baseCost?: boolean
+    maxQuantity?: boolean
+    discountRule?: boolean
+    discountRoster?: boolean
+    discountCost?: boolean
+    ruleMaxRule?: boolean
+    ruleMaxQuantity?: boolean
+    requiresAnyRule?: boolean
+    requiresRoster?: boolean
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type InducementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "descriptionFr" | "descriptionEn" | "baseCost" | "maxQuantity" | "discountRule" | "discountRoster" | "discountCost" | "ruleMaxRule" | "ruleMaxQuantity" | "requiresAnyRule" | "requiresRoster" | "requiresApothecary" | "variableCost" | "enabled" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["inducement"]>
+
+  export type $InducementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Inducement"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      ruleset: $Enums.Ruleset
+      nameFr: string
+      nameEn: string
+      descriptionFr: string
+      descriptionEn: string | null
+      baseCost: number
+      maxQuantity: number
+      discountRule: string | null
+      discountRoster: string | null
+      discountCost: number | null
+      ruleMaxRule: string | null
+      ruleMaxQuantity: number | null
+      requiresAnyRule: string | null
+      requiresRoster: string | null
+      requiresApothecary: boolean
+      variableCost: boolean
+      enabled: boolean
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["inducement"]>
+    composites: {}
+  }
+
+  type InducementGetPayload<S extends boolean | null | undefined | InducementDefaultArgs> = $Result.GetResult<Prisma.$InducementPayload, S>
+
+  type InducementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<InducementFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: InducementCountAggregateInputType | true
+    }
+
+  export interface InducementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Inducement'], meta: { name: 'Inducement' } }
+    /**
+     * Find zero or one Inducement that matches the filter.
+     * @param {InducementFindUniqueArgs} args - Arguments to find a Inducement
+     * @example
+     * // Get one Inducement
+     * const inducement = await prisma.inducement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InducementFindUniqueArgs>(args: SelectSubset<T, InducementFindUniqueArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Inducement that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {InducementFindUniqueOrThrowArgs} args - Arguments to find a Inducement
+     * @example
+     * // Get one Inducement
+     * const inducement = await prisma.inducement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InducementFindUniqueOrThrowArgs>(args: SelectSubset<T, InducementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Inducement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementFindFirstArgs} args - Arguments to find a Inducement
+     * @example
+     * // Get one Inducement
+     * const inducement = await prisma.inducement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InducementFindFirstArgs>(args?: SelectSubset<T, InducementFindFirstArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Inducement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementFindFirstOrThrowArgs} args - Arguments to find a Inducement
+     * @example
+     * // Get one Inducement
+     * const inducement = await prisma.inducement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InducementFindFirstOrThrowArgs>(args?: SelectSubset<T, InducementFindFirstOrThrowArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Inducements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Inducements
+     * const inducements = await prisma.inducement.findMany()
+     * 
+     * // Get first 10 Inducements
+     * const inducements = await prisma.inducement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const inducementWithIdOnly = await prisma.inducement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InducementFindManyArgs>(args?: SelectSubset<T, InducementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Inducement.
+     * @param {InducementCreateArgs} args - Arguments to create a Inducement.
+     * @example
+     * // Create one Inducement
+     * const Inducement = await prisma.inducement.create({
+     *   data: {
+     *     // ... data to create a Inducement
+     *   }
+     * })
+     * 
+     */
+    create<T extends InducementCreateArgs>(args: SelectSubset<T, InducementCreateArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Inducements.
+     * @param {InducementCreateManyArgs} args - Arguments to create many Inducements.
+     * @example
+     * // Create many Inducements
+     * const inducement = await prisma.inducement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InducementCreateManyArgs>(args?: SelectSubset<T, InducementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Inducements and returns the data saved in the database.
+     * @param {InducementCreateManyAndReturnArgs} args - Arguments to create many Inducements.
+     * @example
+     * // Create many Inducements
+     * const inducement = await prisma.inducement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Inducements and only return the `id`
+     * const inducementWithIdOnly = await prisma.inducement.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InducementCreateManyAndReturnArgs>(args?: SelectSubset<T, InducementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Inducement.
+     * @param {InducementDeleteArgs} args - Arguments to delete one Inducement.
+     * @example
+     * // Delete one Inducement
+     * const Inducement = await prisma.inducement.delete({
+     *   where: {
+     *     // ... filter to delete one Inducement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InducementDeleteArgs>(args: SelectSubset<T, InducementDeleteArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Inducement.
+     * @param {InducementUpdateArgs} args - Arguments to update one Inducement.
+     * @example
+     * // Update one Inducement
+     * const inducement = await prisma.inducement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InducementUpdateArgs>(args: SelectSubset<T, InducementUpdateArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Inducements.
+     * @param {InducementDeleteManyArgs} args - Arguments to filter Inducements to delete.
+     * @example
+     * // Delete a few Inducements
+     * const { count } = await prisma.inducement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InducementDeleteManyArgs>(args?: SelectSubset<T, InducementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Inducements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Inducements
+     * const inducement = await prisma.inducement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InducementUpdateManyArgs>(args: SelectSubset<T, InducementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Inducements and returns the data updated in the database.
+     * @param {InducementUpdateManyAndReturnArgs} args - Arguments to update many Inducements.
+     * @example
+     * // Update many Inducements
+     * const inducement = await prisma.inducement.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Inducements and only return the `id`
+     * const inducementWithIdOnly = await prisma.inducement.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends InducementUpdateManyAndReturnArgs>(args: SelectSubset<T, InducementUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Inducement.
+     * @param {InducementUpsertArgs} args - Arguments to update or create a Inducement.
+     * @example
+     * // Update or create a Inducement
+     * const inducement = await prisma.inducement.upsert({
+     *   create: {
+     *     // ... data to create a Inducement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Inducement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InducementUpsertArgs>(args: SelectSubset<T, InducementUpsertArgs<ExtArgs>>): Prisma__InducementClient<$Result.GetResult<Prisma.$InducementPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Inducements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementCountArgs} args - Arguments to filter Inducements to count.
+     * @example
+     * // Count the number of Inducements
+     * const count = await prisma.inducement.count({
+     *   where: {
+     *     // ... the filter for the Inducements we want to count
+     *   }
+     * })
+    **/
+    count<T extends InducementCountArgs>(
+      args?: Subset<T, InducementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InducementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Inducement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InducementAggregateArgs>(args: Subset<T, InducementAggregateArgs>): Prisma.PrismaPromise<GetInducementAggregateType<T>>
+
+    /**
+     * Group by Inducement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InducementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InducementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InducementGroupByArgs['orderBy'] }
+        : { orderBy?: InducementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InducementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInducementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Inducement model
+   */
+  readonly fields: InducementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Inducement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InducementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Inducement model
+   */
+  interface InducementFieldRefs {
+    readonly id: FieldRef<"Inducement", 'String'>
+    readonly slug: FieldRef<"Inducement", 'String'>
+    readonly ruleset: FieldRef<"Inducement", 'Ruleset'>
+    readonly nameFr: FieldRef<"Inducement", 'String'>
+    readonly nameEn: FieldRef<"Inducement", 'String'>
+    readonly descriptionFr: FieldRef<"Inducement", 'String'>
+    readonly descriptionEn: FieldRef<"Inducement", 'String'>
+    readonly baseCost: FieldRef<"Inducement", 'Int'>
+    readonly maxQuantity: FieldRef<"Inducement", 'Int'>
+    readonly discountRule: FieldRef<"Inducement", 'String'>
+    readonly discountRoster: FieldRef<"Inducement", 'String'>
+    readonly discountCost: FieldRef<"Inducement", 'Int'>
+    readonly ruleMaxRule: FieldRef<"Inducement", 'String'>
+    readonly ruleMaxQuantity: FieldRef<"Inducement", 'Int'>
+    readonly requiresAnyRule: FieldRef<"Inducement", 'String'>
+    readonly requiresRoster: FieldRef<"Inducement", 'String'>
+    readonly requiresApothecary: FieldRef<"Inducement", 'Boolean'>
+    readonly variableCost: FieldRef<"Inducement", 'Boolean'>
+    readonly enabled: FieldRef<"Inducement", 'Boolean'>
+    readonly sortOrder: FieldRef<"Inducement", 'Int'>
+    readonly createdAt: FieldRef<"Inducement", 'DateTime'>
+    readonly updatedAt: FieldRef<"Inducement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Inducement findUnique
+   */
+  export type InducementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter, which Inducement to fetch.
+     */
+    where: InducementWhereUniqueInput
+  }
+
+  /**
+   * Inducement findUniqueOrThrow
+   */
+  export type InducementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter, which Inducement to fetch.
+     */
+    where: InducementWhereUniqueInput
+  }
+
+  /**
+   * Inducement findFirst
+   */
+  export type InducementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter, which Inducement to fetch.
+     */
+    where?: InducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Inducements to fetch.
+     */
+    orderBy?: InducementOrderByWithRelationInput | InducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Inducements.
+     */
+    cursor?: InducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Inducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Inducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Inducements.
+     */
+    distinct?: InducementScalarFieldEnum | InducementScalarFieldEnum[]
+  }
+
+  /**
+   * Inducement findFirstOrThrow
+   */
+  export type InducementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter, which Inducement to fetch.
+     */
+    where?: InducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Inducements to fetch.
+     */
+    orderBy?: InducementOrderByWithRelationInput | InducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Inducements.
+     */
+    cursor?: InducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Inducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Inducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Inducements.
+     */
+    distinct?: InducementScalarFieldEnum | InducementScalarFieldEnum[]
+  }
+
+  /**
+   * Inducement findMany
+   */
+  export type InducementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter, which Inducements to fetch.
+     */
+    where?: InducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Inducements to fetch.
+     */
+    orderBy?: InducementOrderByWithRelationInput | InducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Inducements.
+     */
+    cursor?: InducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Inducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Inducements.
+     */
+    skip?: number
+    distinct?: InducementScalarFieldEnum | InducementScalarFieldEnum[]
+  }
+
+  /**
+   * Inducement create
+   */
+  export type InducementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Inducement.
+     */
+    data: XOR<InducementCreateInput, InducementUncheckedCreateInput>
+  }
+
+  /**
+   * Inducement createMany
+   */
+  export type InducementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Inducements.
+     */
+    data: InducementCreateManyInput | InducementCreateManyInput[]
+  }
+
+  /**
+   * Inducement createManyAndReturn
+   */
+  export type InducementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * The data used to create many Inducements.
+     */
+    data: InducementCreateManyInput | InducementCreateManyInput[]
+  }
+
+  /**
+   * Inducement update
+   */
+  export type InducementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Inducement.
+     */
+    data: XOR<InducementUpdateInput, InducementUncheckedUpdateInput>
+    /**
+     * Choose, which Inducement to update.
+     */
+    where: InducementWhereUniqueInput
+  }
+
+  /**
+   * Inducement updateMany
+   */
+  export type InducementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Inducements.
+     */
+    data: XOR<InducementUpdateManyMutationInput, InducementUncheckedUpdateManyInput>
+    /**
+     * Filter which Inducements to update
+     */
+    where?: InducementWhereInput
+    /**
+     * Limit how many Inducements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Inducement updateManyAndReturn
+   */
+  export type InducementUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * The data used to update Inducements.
+     */
+    data: XOR<InducementUpdateManyMutationInput, InducementUncheckedUpdateManyInput>
+    /**
+     * Filter which Inducements to update
+     */
+    where?: InducementWhereInput
+    /**
+     * Limit how many Inducements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Inducement upsert
+   */
+  export type InducementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Inducement to update in case it exists.
+     */
+    where: InducementWhereUniqueInput
+    /**
+     * In case the Inducement found by the `where` argument doesn't exist, create a new Inducement with this data.
+     */
+    create: XOR<InducementCreateInput, InducementUncheckedCreateInput>
+    /**
+     * In case the Inducement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InducementUpdateInput, InducementUncheckedUpdateInput>
+  }
+
+  /**
+   * Inducement delete
+   */
+  export type InducementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+    /**
+     * Filter which Inducement to delete.
+     */
+    where: InducementWhereUniqueInput
+  }
+
+  /**
+   * Inducement deleteMany
+   */
+  export type InducementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Inducements to delete
+     */
+    where?: InducementWhereInput
+    /**
+     * Limit how many Inducements to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Inducement without action
+   */
+  export type InducementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Inducement
+     */
+    select?: InducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Inducement
+     */
+    omit?: InducementOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AdvancementCost
+   */
+
+  export type AggregateAdvancementCost = {
+    _count: AdvancementCostCountAggregateOutputType | null
+    _avg: AdvancementCostAvgAggregateOutputType | null
+    _sum: AdvancementCostSumAggregateOutputType | null
+    _min: AdvancementCostMinAggregateOutputType | null
+    _max: AdvancementCostMaxAggregateOutputType | null
+  }
+
+  export type AdvancementCostAvgAggregateOutputType = {
+    step: number | null
+    sppCost: number | null
+    teamValueSurcharge: number | null
+  }
+
+  export type AdvancementCostSumAggregateOutputType = {
+    step: number | null
+    sppCost: number | null
+    teamValueSurcharge: number | null
+  }
+
+  export type AdvancementCostMinAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    kind: $Enums.AdvancementKind | null
+    step: number | null
+    sppCost: number | null
+    teamValueSurcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AdvancementCostMaxAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    kind: $Enums.AdvancementKind | null
+    step: number | null
+    sppCost: number | null
+    teamValueSurcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AdvancementCostCountAggregateOutputType = {
+    id: number
+    ruleset: number
+    kind: number
+    step: number
+    sppCost: number
+    teamValueSurcharge: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AdvancementCostAvgAggregateInputType = {
+    step?: true
+    sppCost?: true
+    teamValueSurcharge?: true
+  }
+
+  export type AdvancementCostSumAggregateInputType = {
+    step?: true
+    sppCost?: true
+    teamValueSurcharge?: true
+  }
+
+  export type AdvancementCostMinAggregateInputType = {
+    id?: true
+    ruleset?: true
+    kind?: true
+    step?: true
+    sppCost?: true
+    teamValueSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AdvancementCostMaxAggregateInputType = {
+    id?: true
+    ruleset?: true
+    kind?: true
+    step?: true
+    sppCost?: true
+    teamValueSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AdvancementCostCountAggregateInputType = {
+    id?: true
+    ruleset?: true
+    kind?: true
+    step?: true
+    sppCost?: true
+    teamValueSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AdvancementCostAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdvancementCost to aggregate.
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvancementCosts to fetch.
+     */
+    orderBy?: AdvancementCostOrderByWithRelationInput | AdvancementCostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AdvancementCostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvancementCosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvancementCosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AdvancementCosts
+    **/
+    _count?: true | AdvancementCostCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AdvancementCostAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AdvancementCostSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AdvancementCostMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AdvancementCostMaxAggregateInputType
+  }
+
+  export type GetAdvancementCostAggregateType<T extends AdvancementCostAggregateArgs> = {
+        [P in keyof T & keyof AggregateAdvancementCost]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAdvancementCost[P]>
+      : GetScalarType<T[P], AggregateAdvancementCost[P]>
+  }
+
+
+
+
+  export type AdvancementCostGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdvancementCostWhereInput
+    orderBy?: AdvancementCostOrderByWithAggregationInput | AdvancementCostOrderByWithAggregationInput[]
+    by: AdvancementCostScalarFieldEnum[] | AdvancementCostScalarFieldEnum
+    having?: AdvancementCostScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AdvancementCostCountAggregateInputType | true
+    _avg?: AdvancementCostAvgAggregateInputType
+    _sum?: AdvancementCostSumAggregateInputType
+    _min?: AdvancementCostMinAggregateInputType
+    _max?: AdvancementCostMaxAggregateInputType
+  }
+
+  export type AdvancementCostGroupByOutputType = {
+    id: string
+    ruleset: $Enums.Ruleset
+    kind: $Enums.AdvancementKind
+    step: number
+    sppCost: number
+    teamValueSurcharge: number
+    createdAt: Date
+    updatedAt: Date
+    _count: AdvancementCostCountAggregateOutputType | null
+    _avg: AdvancementCostAvgAggregateOutputType | null
+    _sum: AdvancementCostSumAggregateOutputType | null
+    _min: AdvancementCostMinAggregateOutputType | null
+    _max: AdvancementCostMaxAggregateOutputType | null
+  }
+
+  type GetAdvancementCostGroupByPayload<T extends AdvancementCostGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AdvancementCostGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AdvancementCostGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AdvancementCostGroupByOutputType[P]>
+            : GetScalarType<T[P], AdvancementCostGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AdvancementCostSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    kind?: boolean
+    step?: boolean
+    sppCost?: boolean
+    teamValueSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["advancementCost"]>
+
+  export type AdvancementCostSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    kind?: boolean
+    step?: boolean
+    sppCost?: boolean
+    teamValueSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["advancementCost"]>
+
+  export type AdvancementCostSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    kind?: boolean
+    step?: boolean
+    sppCost?: boolean
+    teamValueSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["advancementCost"]>
+
+  export type AdvancementCostSelectScalar = {
+    id?: boolean
+    ruleset?: boolean
+    kind?: boolean
+    step?: boolean
+    sppCost?: boolean
+    teamValueSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AdvancementCostOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ruleset" | "kind" | "step" | "sppCost" | "teamValueSurcharge" | "createdAt" | "updatedAt", ExtArgs["result"]["advancementCost"]>
+
+  export type $AdvancementCostPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AdvancementCost"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ruleset: $Enums.Ruleset
+      kind: $Enums.AdvancementKind
+      step: number
+      sppCost: number
+      teamValueSurcharge: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["advancementCost"]>
+    composites: {}
+  }
+
+  type AdvancementCostGetPayload<S extends boolean | null | undefined | AdvancementCostDefaultArgs> = $Result.GetResult<Prisma.$AdvancementCostPayload, S>
+
+  type AdvancementCostCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AdvancementCostFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AdvancementCostCountAggregateInputType | true
+    }
+
+  export interface AdvancementCostDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AdvancementCost'], meta: { name: 'AdvancementCost' } }
+    /**
+     * Find zero or one AdvancementCost that matches the filter.
+     * @param {AdvancementCostFindUniqueArgs} args - Arguments to find a AdvancementCost
+     * @example
+     * // Get one AdvancementCost
+     * const advancementCost = await prisma.advancementCost.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AdvancementCostFindUniqueArgs>(args: SelectSubset<T, AdvancementCostFindUniqueArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AdvancementCost that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AdvancementCostFindUniqueOrThrowArgs} args - Arguments to find a AdvancementCost
+     * @example
+     * // Get one AdvancementCost
+     * const advancementCost = await prisma.advancementCost.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AdvancementCostFindUniqueOrThrowArgs>(args: SelectSubset<T, AdvancementCostFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdvancementCost that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostFindFirstArgs} args - Arguments to find a AdvancementCost
+     * @example
+     * // Get one AdvancementCost
+     * const advancementCost = await prisma.advancementCost.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AdvancementCostFindFirstArgs>(args?: SelectSubset<T, AdvancementCostFindFirstArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdvancementCost that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostFindFirstOrThrowArgs} args - Arguments to find a AdvancementCost
+     * @example
+     * // Get one AdvancementCost
+     * const advancementCost = await prisma.advancementCost.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AdvancementCostFindFirstOrThrowArgs>(args?: SelectSubset<T, AdvancementCostFindFirstOrThrowArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AdvancementCosts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AdvancementCosts
+     * const advancementCosts = await prisma.advancementCost.findMany()
+     * 
+     * // Get first 10 AdvancementCosts
+     * const advancementCosts = await prisma.advancementCost.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const advancementCostWithIdOnly = await prisma.advancementCost.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AdvancementCostFindManyArgs>(args?: SelectSubset<T, AdvancementCostFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AdvancementCost.
+     * @param {AdvancementCostCreateArgs} args - Arguments to create a AdvancementCost.
+     * @example
+     * // Create one AdvancementCost
+     * const AdvancementCost = await prisma.advancementCost.create({
+     *   data: {
+     *     // ... data to create a AdvancementCost
+     *   }
+     * })
+     * 
+     */
+    create<T extends AdvancementCostCreateArgs>(args: SelectSubset<T, AdvancementCostCreateArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AdvancementCosts.
+     * @param {AdvancementCostCreateManyArgs} args - Arguments to create many AdvancementCosts.
+     * @example
+     * // Create many AdvancementCosts
+     * const advancementCost = await prisma.advancementCost.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AdvancementCostCreateManyArgs>(args?: SelectSubset<T, AdvancementCostCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AdvancementCosts and returns the data saved in the database.
+     * @param {AdvancementCostCreateManyAndReturnArgs} args - Arguments to create many AdvancementCosts.
+     * @example
+     * // Create many AdvancementCosts
+     * const advancementCost = await prisma.advancementCost.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AdvancementCosts and only return the `id`
+     * const advancementCostWithIdOnly = await prisma.advancementCost.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AdvancementCostCreateManyAndReturnArgs>(args?: SelectSubset<T, AdvancementCostCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AdvancementCost.
+     * @param {AdvancementCostDeleteArgs} args - Arguments to delete one AdvancementCost.
+     * @example
+     * // Delete one AdvancementCost
+     * const AdvancementCost = await prisma.advancementCost.delete({
+     *   where: {
+     *     // ... filter to delete one AdvancementCost
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AdvancementCostDeleteArgs>(args: SelectSubset<T, AdvancementCostDeleteArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AdvancementCost.
+     * @param {AdvancementCostUpdateArgs} args - Arguments to update one AdvancementCost.
+     * @example
+     * // Update one AdvancementCost
+     * const advancementCost = await prisma.advancementCost.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AdvancementCostUpdateArgs>(args: SelectSubset<T, AdvancementCostUpdateArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AdvancementCosts.
+     * @param {AdvancementCostDeleteManyArgs} args - Arguments to filter AdvancementCosts to delete.
+     * @example
+     * // Delete a few AdvancementCosts
+     * const { count } = await prisma.advancementCost.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AdvancementCostDeleteManyArgs>(args?: SelectSubset<T, AdvancementCostDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdvancementCosts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AdvancementCosts
+     * const advancementCost = await prisma.advancementCost.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AdvancementCostUpdateManyArgs>(args: SelectSubset<T, AdvancementCostUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdvancementCosts and returns the data updated in the database.
+     * @param {AdvancementCostUpdateManyAndReturnArgs} args - Arguments to update many AdvancementCosts.
+     * @example
+     * // Update many AdvancementCosts
+     * const advancementCost = await prisma.advancementCost.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AdvancementCosts and only return the `id`
+     * const advancementCostWithIdOnly = await prisma.advancementCost.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AdvancementCostUpdateManyAndReturnArgs>(args: SelectSubset<T, AdvancementCostUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AdvancementCost.
+     * @param {AdvancementCostUpsertArgs} args - Arguments to update or create a AdvancementCost.
+     * @example
+     * // Update or create a AdvancementCost
+     * const advancementCost = await prisma.advancementCost.upsert({
+     *   create: {
+     *     // ... data to create a AdvancementCost
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AdvancementCost we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AdvancementCostUpsertArgs>(args: SelectSubset<T, AdvancementCostUpsertArgs<ExtArgs>>): Prisma__AdvancementCostClient<$Result.GetResult<Prisma.$AdvancementCostPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AdvancementCosts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostCountArgs} args - Arguments to filter AdvancementCosts to count.
+     * @example
+     * // Count the number of AdvancementCosts
+     * const count = await prisma.advancementCost.count({
+     *   where: {
+     *     // ... the filter for the AdvancementCosts we want to count
+     *   }
+     * })
+    **/
+    count<T extends AdvancementCostCountArgs>(
+      args?: Subset<T, AdvancementCostCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AdvancementCostCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AdvancementCost.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AdvancementCostAggregateArgs>(args: Subset<T, AdvancementCostAggregateArgs>): Prisma.PrismaPromise<GetAdvancementCostAggregateType<T>>
+
+    /**
+     * Group by AdvancementCost.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdvancementCostGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AdvancementCostGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AdvancementCostGroupByArgs['orderBy'] }
+        : { orderBy?: AdvancementCostGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AdvancementCostGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAdvancementCostGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AdvancementCost model
+   */
+  readonly fields: AdvancementCostFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AdvancementCost.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AdvancementCostClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AdvancementCost model
+   */
+  interface AdvancementCostFieldRefs {
+    readonly id: FieldRef<"AdvancementCost", 'String'>
+    readonly ruleset: FieldRef<"AdvancementCost", 'Ruleset'>
+    readonly kind: FieldRef<"AdvancementCost", 'AdvancementKind'>
+    readonly step: FieldRef<"AdvancementCost", 'Int'>
+    readonly sppCost: FieldRef<"AdvancementCost", 'Int'>
+    readonly teamValueSurcharge: FieldRef<"AdvancementCost", 'Int'>
+    readonly createdAt: FieldRef<"AdvancementCost", 'DateTime'>
+    readonly updatedAt: FieldRef<"AdvancementCost", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AdvancementCost findUnique
+   */
+  export type AdvancementCostFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter, which AdvancementCost to fetch.
+     */
+    where: AdvancementCostWhereUniqueInput
+  }
+
+  /**
+   * AdvancementCost findUniqueOrThrow
+   */
+  export type AdvancementCostFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter, which AdvancementCost to fetch.
+     */
+    where: AdvancementCostWhereUniqueInput
+  }
+
+  /**
+   * AdvancementCost findFirst
+   */
+  export type AdvancementCostFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter, which AdvancementCost to fetch.
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvancementCosts to fetch.
+     */
+    orderBy?: AdvancementCostOrderByWithRelationInput | AdvancementCostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdvancementCosts.
+     */
+    cursor?: AdvancementCostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvancementCosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvancementCosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdvancementCosts.
+     */
+    distinct?: AdvancementCostScalarFieldEnum | AdvancementCostScalarFieldEnum[]
+  }
+
+  /**
+   * AdvancementCost findFirstOrThrow
+   */
+  export type AdvancementCostFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter, which AdvancementCost to fetch.
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvancementCosts to fetch.
+     */
+    orderBy?: AdvancementCostOrderByWithRelationInput | AdvancementCostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdvancementCosts.
+     */
+    cursor?: AdvancementCostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvancementCosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvancementCosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdvancementCosts.
+     */
+    distinct?: AdvancementCostScalarFieldEnum | AdvancementCostScalarFieldEnum[]
+  }
+
+  /**
+   * AdvancementCost findMany
+   */
+  export type AdvancementCostFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter, which AdvancementCosts to fetch.
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdvancementCosts to fetch.
+     */
+    orderBy?: AdvancementCostOrderByWithRelationInput | AdvancementCostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AdvancementCosts.
+     */
+    cursor?: AdvancementCostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdvancementCosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdvancementCosts.
+     */
+    skip?: number
+    distinct?: AdvancementCostScalarFieldEnum | AdvancementCostScalarFieldEnum[]
+  }
+
+  /**
+   * AdvancementCost create
+   */
+  export type AdvancementCostCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AdvancementCost.
+     */
+    data: XOR<AdvancementCostCreateInput, AdvancementCostUncheckedCreateInput>
+  }
+
+  /**
+   * AdvancementCost createMany
+   */
+  export type AdvancementCostCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AdvancementCosts.
+     */
+    data: AdvancementCostCreateManyInput | AdvancementCostCreateManyInput[]
+  }
+
+  /**
+   * AdvancementCost createManyAndReturn
+   */
+  export type AdvancementCostCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * The data used to create many AdvancementCosts.
+     */
+    data: AdvancementCostCreateManyInput | AdvancementCostCreateManyInput[]
+  }
+
+  /**
+   * AdvancementCost update
+   */
+  export type AdvancementCostUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AdvancementCost.
+     */
+    data: XOR<AdvancementCostUpdateInput, AdvancementCostUncheckedUpdateInput>
+    /**
+     * Choose, which AdvancementCost to update.
+     */
+    where: AdvancementCostWhereUniqueInput
+  }
+
+  /**
+   * AdvancementCost updateMany
+   */
+  export type AdvancementCostUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AdvancementCosts.
+     */
+    data: XOR<AdvancementCostUpdateManyMutationInput, AdvancementCostUncheckedUpdateManyInput>
+    /**
+     * Filter which AdvancementCosts to update
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * Limit how many AdvancementCosts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdvancementCost updateManyAndReturn
+   */
+  export type AdvancementCostUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * The data used to update AdvancementCosts.
+     */
+    data: XOR<AdvancementCostUpdateManyMutationInput, AdvancementCostUncheckedUpdateManyInput>
+    /**
+     * Filter which AdvancementCosts to update
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * Limit how many AdvancementCosts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdvancementCost upsert
+   */
+  export type AdvancementCostUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AdvancementCost to update in case it exists.
+     */
+    where: AdvancementCostWhereUniqueInput
+    /**
+     * In case the AdvancementCost found by the `where` argument doesn't exist, create a new AdvancementCost with this data.
+     */
+    create: XOR<AdvancementCostCreateInput, AdvancementCostUncheckedCreateInput>
+    /**
+     * In case the AdvancementCost was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AdvancementCostUpdateInput, AdvancementCostUncheckedUpdateInput>
+  }
+
+  /**
+   * AdvancementCost delete
+   */
+  export type AdvancementCostDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+    /**
+     * Filter which AdvancementCost to delete.
+     */
+    where: AdvancementCostWhereUniqueInput
+  }
+
+  /**
+   * AdvancementCost deleteMany
+   */
+  export type AdvancementCostDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdvancementCosts to delete
+     */
+    where?: AdvancementCostWhereInput
+    /**
+     * Limit how many AdvancementCosts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdvancementCost without action
+   */
+  export type AdvancementCostDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdvancementCost
+     */
+    select?: AdvancementCostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdvancementCost
+     */
+    omit?: AdvancementCostOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CharacteristicValue
+   */
+
+  export type AggregateCharacteristicValue = {
+    _count: CharacteristicValueCountAggregateOutputType | null
+    _avg: CharacteristicValueAvgAggregateOutputType | null
+    _sum: CharacteristicValueSumAggregateOutputType | null
+    _min: CharacteristicValueMinAggregateOutputType | null
+    _max: CharacteristicValueMaxAggregateOutputType | null
+  }
+
+  export type CharacteristicValueAvgAggregateOutputType = {
+    surcharge: number | null
+  }
+
+  export type CharacteristicValueSumAggregateOutputType = {
+    surcharge: number | null
+  }
+
+  export type CharacteristicValueMinAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    stat: string | null
+    surcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CharacteristicValueMaxAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    stat: string | null
+    surcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CharacteristicValueCountAggregateOutputType = {
+    id: number
+    ruleset: number
+    stat: number
+    surcharge: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CharacteristicValueAvgAggregateInputType = {
+    surcharge?: true
+  }
+
+  export type CharacteristicValueSumAggregateInputType = {
+    surcharge?: true
+  }
+
+  export type CharacteristicValueMinAggregateInputType = {
+    id?: true
+    ruleset?: true
+    stat?: true
+    surcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CharacteristicValueMaxAggregateInputType = {
+    id?: true
+    ruleset?: true
+    stat?: true
+    surcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CharacteristicValueCountAggregateInputType = {
+    id?: true
+    ruleset?: true
+    stat?: true
+    surcharge?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CharacteristicValueAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CharacteristicValue to aggregate.
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CharacteristicValues to fetch.
+     */
+    orderBy?: CharacteristicValueOrderByWithRelationInput | CharacteristicValueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CharacteristicValueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CharacteristicValues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CharacteristicValues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CharacteristicValues
+    **/
+    _count?: true | CharacteristicValueCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CharacteristicValueAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CharacteristicValueSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CharacteristicValueMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CharacteristicValueMaxAggregateInputType
+  }
+
+  export type GetCharacteristicValueAggregateType<T extends CharacteristicValueAggregateArgs> = {
+        [P in keyof T & keyof AggregateCharacteristicValue]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCharacteristicValue[P]>
+      : GetScalarType<T[P], AggregateCharacteristicValue[P]>
+  }
+
+
+
+
+  export type CharacteristicValueGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CharacteristicValueWhereInput
+    orderBy?: CharacteristicValueOrderByWithAggregationInput | CharacteristicValueOrderByWithAggregationInput[]
+    by: CharacteristicValueScalarFieldEnum[] | CharacteristicValueScalarFieldEnum
+    having?: CharacteristicValueScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CharacteristicValueCountAggregateInputType | true
+    _avg?: CharacteristicValueAvgAggregateInputType
+    _sum?: CharacteristicValueSumAggregateInputType
+    _min?: CharacteristicValueMinAggregateInputType
+    _max?: CharacteristicValueMaxAggregateInputType
+  }
+
+  export type CharacteristicValueGroupByOutputType = {
+    id: string
+    ruleset: $Enums.Ruleset
+    stat: string
+    surcharge: number
+    createdAt: Date
+    updatedAt: Date
+    _count: CharacteristicValueCountAggregateOutputType | null
+    _avg: CharacteristicValueAvgAggregateOutputType | null
+    _sum: CharacteristicValueSumAggregateOutputType | null
+    _min: CharacteristicValueMinAggregateOutputType | null
+    _max: CharacteristicValueMaxAggregateOutputType | null
+  }
+
+  type GetCharacteristicValueGroupByPayload<T extends CharacteristicValueGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CharacteristicValueGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CharacteristicValueGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CharacteristicValueGroupByOutputType[P]>
+            : GetScalarType<T[P], CharacteristicValueGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CharacteristicValueSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    stat?: boolean
+    surcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["characteristicValue"]>
+
+  export type CharacteristicValueSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    stat?: boolean
+    surcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["characteristicValue"]>
+
+  export type CharacteristicValueSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    stat?: boolean
+    surcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["characteristicValue"]>
+
+  export type CharacteristicValueSelectScalar = {
+    id?: boolean
+    ruleset?: boolean
+    stat?: boolean
+    surcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CharacteristicValueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ruleset" | "stat" | "surcharge" | "createdAt" | "updatedAt", ExtArgs["result"]["characteristicValue"]>
+
+  export type $CharacteristicValuePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CharacteristicValue"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ruleset: $Enums.Ruleset
+      stat: string
+      surcharge: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["characteristicValue"]>
+    composites: {}
+  }
+
+  type CharacteristicValueGetPayload<S extends boolean | null | undefined | CharacteristicValueDefaultArgs> = $Result.GetResult<Prisma.$CharacteristicValuePayload, S>
+
+  type CharacteristicValueCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CharacteristicValueFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CharacteristicValueCountAggregateInputType | true
+    }
+
+  export interface CharacteristicValueDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CharacteristicValue'], meta: { name: 'CharacteristicValue' } }
+    /**
+     * Find zero or one CharacteristicValue that matches the filter.
+     * @param {CharacteristicValueFindUniqueArgs} args - Arguments to find a CharacteristicValue
+     * @example
+     * // Get one CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CharacteristicValueFindUniqueArgs>(args: SelectSubset<T, CharacteristicValueFindUniqueArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CharacteristicValue that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CharacteristicValueFindUniqueOrThrowArgs} args - Arguments to find a CharacteristicValue
+     * @example
+     * // Get one CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CharacteristicValueFindUniqueOrThrowArgs>(args: SelectSubset<T, CharacteristicValueFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CharacteristicValue that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueFindFirstArgs} args - Arguments to find a CharacteristicValue
+     * @example
+     * // Get one CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CharacteristicValueFindFirstArgs>(args?: SelectSubset<T, CharacteristicValueFindFirstArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CharacteristicValue that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueFindFirstOrThrowArgs} args - Arguments to find a CharacteristicValue
+     * @example
+     * // Get one CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CharacteristicValueFindFirstOrThrowArgs>(args?: SelectSubset<T, CharacteristicValueFindFirstOrThrowArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CharacteristicValues that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CharacteristicValues
+     * const characteristicValues = await prisma.characteristicValue.findMany()
+     * 
+     * // Get first 10 CharacteristicValues
+     * const characteristicValues = await prisma.characteristicValue.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const characteristicValueWithIdOnly = await prisma.characteristicValue.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CharacteristicValueFindManyArgs>(args?: SelectSubset<T, CharacteristicValueFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CharacteristicValue.
+     * @param {CharacteristicValueCreateArgs} args - Arguments to create a CharacteristicValue.
+     * @example
+     * // Create one CharacteristicValue
+     * const CharacteristicValue = await prisma.characteristicValue.create({
+     *   data: {
+     *     // ... data to create a CharacteristicValue
+     *   }
+     * })
+     * 
+     */
+    create<T extends CharacteristicValueCreateArgs>(args: SelectSubset<T, CharacteristicValueCreateArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CharacteristicValues.
+     * @param {CharacteristicValueCreateManyArgs} args - Arguments to create many CharacteristicValues.
+     * @example
+     * // Create many CharacteristicValues
+     * const characteristicValue = await prisma.characteristicValue.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CharacteristicValueCreateManyArgs>(args?: SelectSubset<T, CharacteristicValueCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CharacteristicValues and returns the data saved in the database.
+     * @param {CharacteristicValueCreateManyAndReturnArgs} args - Arguments to create many CharacteristicValues.
+     * @example
+     * // Create many CharacteristicValues
+     * const characteristicValue = await prisma.characteristicValue.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CharacteristicValues and only return the `id`
+     * const characteristicValueWithIdOnly = await prisma.characteristicValue.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CharacteristicValueCreateManyAndReturnArgs>(args?: SelectSubset<T, CharacteristicValueCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CharacteristicValue.
+     * @param {CharacteristicValueDeleteArgs} args - Arguments to delete one CharacteristicValue.
+     * @example
+     * // Delete one CharacteristicValue
+     * const CharacteristicValue = await prisma.characteristicValue.delete({
+     *   where: {
+     *     // ... filter to delete one CharacteristicValue
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CharacteristicValueDeleteArgs>(args: SelectSubset<T, CharacteristicValueDeleteArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CharacteristicValue.
+     * @param {CharacteristicValueUpdateArgs} args - Arguments to update one CharacteristicValue.
+     * @example
+     * // Update one CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CharacteristicValueUpdateArgs>(args: SelectSubset<T, CharacteristicValueUpdateArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CharacteristicValues.
+     * @param {CharacteristicValueDeleteManyArgs} args - Arguments to filter CharacteristicValues to delete.
+     * @example
+     * // Delete a few CharacteristicValues
+     * const { count } = await prisma.characteristicValue.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CharacteristicValueDeleteManyArgs>(args?: SelectSubset<T, CharacteristicValueDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CharacteristicValues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CharacteristicValues
+     * const characteristicValue = await prisma.characteristicValue.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CharacteristicValueUpdateManyArgs>(args: SelectSubset<T, CharacteristicValueUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CharacteristicValues and returns the data updated in the database.
+     * @param {CharacteristicValueUpdateManyAndReturnArgs} args - Arguments to update many CharacteristicValues.
+     * @example
+     * // Update many CharacteristicValues
+     * const characteristicValue = await prisma.characteristicValue.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CharacteristicValues and only return the `id`
+     * const characteristicValueWithIdOnly = await prisma.characteristicValue.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CharacteristicValueUpdateManyAndReturnArgs>(args: SelectSubset<T, CharacteristicValueUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CharacteristicValue.
+     * @param {CharacteristicValueUpsertArgs} args - Arguments to update or create a CharacteristicValue.
+     * @example
+     * // Update or create a CharacteristicValue
+     * const characteristicValue = await prisma.characteristicValue.upsert({
+     *   create: {
+     *     // ... data to create a CharacteristicValue
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CharacteristicValue we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CharacteristicValueUpsertArgs>(args: SelectSubset<T, CharacteristicValueUpsertArgs<ExtArgs>>): Prisma__CharacteristicValueClient<$Result.GetResult<Prisma.$CharacteristicValuePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CharacteristicValues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueCountArgs} args - Arguments to filter CharacteristicValues to count.
+     * @example
+     * // Count the number of CharacteristicValues
+     * const count = await prisma.characteristicValue.count({
+     *   where: {
+     *     // ... the filter for the CharacteristicValues we want to count
+     *   }
+     * })
+    **/
+    count<T extends CharacteristicValueCountArgs>(
+      args?: Subset<T, CharacteristicValueCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CharacteristicValueCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CharacteristicValue.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CharacteristicValueAggregateArgs>(args: Subset<T, CharacteristicValueAggregateArgs>): Prisma.PrismaPromise<GetCharacteristicValueAggregateType<T>>
+
+    /**
+     * Group by CharacteristicValue.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CharacteristicValueGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CharacteristicValueGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CharacteristicValueGroupByArgs['orderBy'] }
+        : { orderBy?: CharacteristicValueGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CharacteristicValueGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCharacteristicValueGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CharacteristicValue model
+   */
+  readonly fields: CharacteristicValueFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CharacteristicValue.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CharacteristicValueClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CharacteristicValue model
+   */
+  interface CharacteristicValueFieldRefs {
+    readonly id: FieldRef<"CharacteristicValue", 'String'>
+    readonly ruleset: FieldRef<"CharacteristicValue", 'Ruleset'>
+    readonly stat: FieldRef<"CharacteristicValue", 'String'>
+    readonly surcharge: FieldRef<"CharacteristicValue", 'Int'>
+    readonly createdAt: FieldRef<"CharacteristicValue", 'DateTime'>
+    readonly updatedAt: FieldRef<"CharacteristicValue", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CharacteristicValue findUnique
+   */
+  export type CharacteristicValueFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter, which CharacteristicValue to fetch.
+     */
+    where: CharacteristicValueWhereUniqueInput
+  }
+
+  /**
+   * CharacteristicValue findUniqueOrThrow
+   */
+  export type CharacteristicValueFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter, which CharacteristicValue to fetch.
+     */
+    where: CharacteristicValueWhereUniqueInput
+  }
+
+  /**
+   * CharacteristicValue findFirst
+   */
+  export type CharacteristicValueFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter, which CharacteristicValue to fetch.
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CharacteristicValues to fetch.
+     */
+    orderBy?: CharacteristicValueOrderByWithRelationInput | CharacteristicValueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CharacteristicValues.
+     */
+    cursor?: CharacteristicValueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CharacteristicValues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CharacteristicValues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CharacteristicValues.
+     */
+    distinct?: CharacteristicValueScalarFieldEnum | CharacteristicValueScalarFieldEnum[]
+  }
+
+  /**
+   * CharacteristicValue findFirstOrThrow
+   */
+  export type CharacteristicValueFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter, which CharacteristicValue to fetch.
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CharacteristicValues to fetch.
+     */
+    orderBy?: CharacteristicValueOrderByWithRelationInput | CharacteristicValueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CharacteristicValues.
+     */
+    cursor?: CharacteristicValueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CharacteristicValues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CharacteristicValues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CharacteristicValues.
+     */
+    distinct?: CharacteristicValueScalarFieldEnum | CharacteristicValueScalarFieldEnum[]
+  }
+
+  /**
+   * CharacteristicValue findMany
+   */
+  export type CharacteristicValueFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter, which CharacteristicValues to fetch.
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CharacteristicValues to fetch.
+     */
+    orderBy?: CharacteristicValueOrderByWithRelationInput | CharacteristicValueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CharacteristicValues.
+     */
+    cursor?: CharacteristicValueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CharacteristicValues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CharacteristicValues.
+     */
+    skip?: number
+    distinct?: CharacteristicValueScalarFieldEnum | CharacteristicValueScalarFieldEnum[]
+  }
+
+  /**
+   * CharacteristicValue create
+   */
+  export type CharacteristicValueCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * The data needed to create a CharacteristicValue.
+     */
+    data: XOR<CharacteristicValueCreateInput, CharacteristicValueUncheckedCreateInput>
+  }
+
+  /**
+   * CharacteristicValue createMany
+   */
+  export type CharacteristicValueCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CharacteristicValues.
+     */
+    data: CharacteristicValueCreateManyInput | CharacteristicValueCreateManyInput[]
+  }
+
+  /**
+   * CharacteristicValue createManyAndReturn
+   */
+  export type CharacteristicValueCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * The data used to create many CharacteristicValues.
+     */
+    data: CharacteristicValueCreateManyInput | CharacteristicValueCreateManyInput[]
+  }
+
+  /**
+   * CharacteristicValue update
+   */
+  export type CharacteristicValueUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * The data needed to update a CharacteristicValue.
+     */
+    data: XOR<CharacteristicValueUpdateInput, CharacteristicValueUncheckedUpdateInput>
+    /**
+     * Choose, which CharacteristicValue to update.
+     */
+    where: CharacteristicValueWhereUniqueInput
+  }
+
+  /**
+   * CharacteristicValue updateMany
+   */
+  export type CharacteristicValueUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CharacteristicValues.
+     */
+    data: XOR<CharacteristicValueUpdateManyMutationInput, CharacteristicValueUncheckedUpdateManyInput>
+    /**
+     * Filter which CharacteristicValues to update
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * Limit how many CharacteristicValues to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CharacteristicValue updateManyAndReturn
+   */
+  export type CharacteristicValueUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * The data used to update CharacteristicValues.
+     */
+    data: XOR<CharacteristicValueUpdateManyMutationInput, CharacteristicValueUncheckedUpdateManyInput>
+    /**
+     * Filter which CharacteristicValues to update
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * Limit how many CharacteristicValues to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CharacteristicValue upsert
+   */
+  export type CharacteristicValueUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * The filter to search for the CharacteristicValue to update in case it exists.
+     */
+    where: CharacteristicValueWhereUniqueInput
+    /**
+     * In case the CharacteristicValue found by the `where` argument doesn't exist, create a new CharacteristicValue with this data.
+     */
+    create: XOR<CharacteristicValueCreateInput, CharacteristicValueUncheckedCreateInput>
+    /**
+     * In case the CharacteristicValue was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CharacteristicValueUpdateInput, CharacteristicValueUncheckedUpdateInput>
+  }
+
+  /**
+   * CharacteristicValue delete
+   */
+  export type CharacteristicValueDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+    /**
+     * Filter which CharacteristicValue to delete.
+     */
+    where: CharacteristicValueWhereUniqueInput
+  }
+
+  /**
+   * CharacteristicValue deleteMany
+   */
+  export type CharacteristicValueDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CharacteristicValues to delete
+     */
+    where?: CharacteristicValueWhereInput
+    /**
+     * Limit how many CharacteristicValues to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CharacteristicValue without action
+   */
+  export type CharacteristicValueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CharacteristicValue
+     */
+    select?: CharacteristicValueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CharacteristicValue
+     */
+    omit?: CharacteristicValueOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model RulesetConfig
+   */
+
+  export type AggregateRulesetConfig = {
+    _count: RulesetConfigCountAggregateOutputType | null
+    _avg: RulesetConfigAvgAggregateOutputType | null
+    _sum: RulesetConfigSumAggregateOutputType | null
+    _min: RulesetConfigMinAggregateOutputType | null
+    _max: RulesetConfigMaxAggregateOutputType | null
+  }
+
+  export type RulesetConfigAvgAggregateOutputType = {
+    eliteSkillSurcharge: number | null
+  }
+
+  export type RulesetConfigSumAggregateOutputType = {
+    eliteSkillSurcharge: number | null
+  }
+
+  export type RulesetConfigMinAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    eliteSkillSurcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RulesetConfigMaxAggregateOutputType = {
+    id: string | null
+    ruleset: $Enums.Ruleset | null
+    eliteSkillSurcharge: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RulesetConfigCountAggregateOutputType = {
+    id: number
+    ruleset: number
+    eliteSkillSurcharge: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RulesetConfigAvgAggregateInputType = {
+    eliteSkillSurcharge?: true
+  }
+
+  export type RulesetConfigSumAggregateInputType = {
+    eliteSkillSurcharge?: true
+  }
+
+  export type RulesetConfigMinAggregateInputType = {
+    id?: true
+    ruleset?: true
+    eliteSkillSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RulesetConfigMaxAggregateInputType = {
+    id?: true
+    ruleset?: true
+    eliteSkillSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RulesetConfigCountAggregateInputType = {
+    id?: true
+    ruleset?: true
+    eliteSkillSurcharge?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RulesetConfigAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RulesetConfig to aggregate.
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RulesetConfigs to fetch.
+     */
+    orderBy?: RulesetConfigOrderByWithRelationInput | RulesetConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RulesetConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RulesetConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RulesetConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RulesetConfigs
+    **/
+    _count?: true | RulesetConfigCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: RulesetConfigAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: RulesetConfigSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RulesetConfigMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RulesetConfigMaxAggregateInputType
+  }
+
+  export type GetRulesetConfigAggregateType<T extends RulesetConfigAggregateArgs> = {
+        [P in keyof T & keyof AggregateRulesetConfig]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRulesetConfig[P]>
+      : GetScalarType<T[P], AggregateRulesetConfig[P]>
+  }
+
+
+
+
+  export type RulesetConfigGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RulesetConfigWhereInput
+    orderBy?: RulesetConfigOrderByWithAggregationInput | RulesetConfigOrderByWithAggregationInput[]
+    by: RulesetConfigScalarFieldEnum[] | RulesetConfigScalarFieldEnum
+    having?: RulesetConfigScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RulesetConfigCountAggregateInputType | true
+    _avg?: RulesetConfigAvgAggregateInputType
+    _sum?: RulesetConfigSumAggregateInputType
+    _min?: RulesetConfigMinAggregateInputType
+    _max?: RulesetConfigMaxAggregateInputType
+  }
+
+  export type RulesetConfigGroupByOutputType = {
+    id: string
+    ruleset: $Enums.Ruleset
+    eliteSkillSurcharge: number
+    createdAt: Date
+    updatedAt: Date
+    _count: RulesetConfigCountAggregateOutputType | null
+    _avg: RulesetConfigAvgAggregateOutputType | null
+    _sum: RulesetConfigSumAggregateOutputType | null
+    _min: RulesetConfigMinAggregateOutputType | null
+    _max: RulesetConfigMaxAggregateOutputType | null
+  }
+
+  type GetRulesetConfigGroupByPayload<T extends RulesetConfigGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RulesetConfigGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RulesetConfigGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RulesetConfigGroupByOutputType[P]>
+            : GetScalarType<T[P], RulesetConfigGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RulesetConfigSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    eliteSkillSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["rulesetConfig"]>
+
+  export type RulesetConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    eliteSkillSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["rulesetConfig"]>
+
+  export type RulesetConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ruleset?: boolean
+    eliteSkillSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["rulesetConfig"]>
+
+  export type RulesetConfigSelectScalar = {
+    id?: boolean
+    ruleset?: boolean
+    eliteSkillSurcharge?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RulesetConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ruleset" | "eliteSkillSurcharge" | "createdAt" | "updatedAt", ExtArgs["result"]["rulesetConfig"]>
+
+  export type $RulesetConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RulesetConfig"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ruleset: $Enums.Ruleset
+      eliteSkillSurcharge: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["rulesetConfig"]>
+    composites: {}
+  }
+
+  type RulesetConfigGetPayload<S extends boolean | null | undefined | RulesetConfigDefaultArgs> = $Result.GetResult<Prisma.$RulesetConfigPayload, S>
+
+  type RulesetConfigCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RulesetConfigFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RulesetConfigCountAggregateInputType | true
+    }
+
+  export interface RulesetConfigDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RulesetConfig'], meta: { name: 'RulesetConfig' } }
+    /**
+     * Find zero or one RulesetConfig that matches the filter.
+     * @param {RulesetConfigFindUniqueArgs} args - Arguments to find a RulesetConfig
+     * @example
+     * // Get one RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RulesetConfigFindUniqueArgs>(args: SelectSubset<T, RulesetConfigFindUniqueArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one RulesetConfig that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RulesetConfigFindUniqueOrThrowArgs} args - Arguments to find a RulesetConfig
+     * @example
+     * // Get one RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RulesetConfigFindUniqueOrThrowArgs>(args: SelectSubset<T, RulesetConfigFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RulesetConfig that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigFindFirstArgs} args - Arguments to find a RulesetConfig
+     * @example
+     * // Get one RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RulesetConfigFindFirstArgs>(args?: SelectSubset<T, RulesetConfigFindFirstArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RulesetConfig that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigFindFirstOrThrowArgs} args - Arguments to find a RulesetConfig
+     * @example
+     * // Get one RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RulesetConfigFindFirstOrThrowArgs>(args?: SelectSubset<T, RulesetConfigFindFirstOrThrowArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more RulesetConfigs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RulesetConfigs
+     * const rulesetConfigs = await prisma.rulesetConfig.findMany()
+     * 
+     * // Get first 10 RulesetConfigs
+     * const rulesetConfigs = await prisma.rulesetConfig.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const rulesetConfigWithIdOnly = await prisma.rulesetConfig.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RulesetConfigFindManyArgs>(args?: SelectSubset<T, RulesetConfigFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a RulesetConfig.
+     * @param {RulesetConfigCreateArgs} args - Arguments to create a RulesetConfig.
+     * @example
+     * // Create one RulesetConfig
+     * const RulesetConfig = await prisma.rulesetConfig.create({
+     *   data: {
+     *     // ... data to create a RulesetConfig
+     *   }
+     * })
+     * 
+     */
+    create<T extends RulesetConfigCreateArgs>(args: SelectSubset<T, RulesetConfigCreateArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many RulesetConfigs.
+     * @param {RulesetConfigCreateManyArgs} args - Arguments to create many RulesetConfigs.
+     * @example
+     * // Create many RulesetConfigs
+     * const rulesetConfig = await prisma.rulesetConfig.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RulesetConfigCreateManyArgs>(args?: SelectSubset<T, RulesetConfigCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RulesetConfigs and returns the data saved in the database.
+     * @param {RulesetConfigCreateManyAndReturnArgs} args - Arguments to create many RulesetConfigs.
+     * @example
+     * // Create many RulesetConfigs
+     * const rulesetConfig = await prisma.rulesetConfig.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RulesetConfigs and only return the `id`
+     * const rulesetConfigWithIdOnly = await prisma.rulesetConfig.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RulesetConfigCreateManyAndReturnArgs>(args?: SelectSubset<T, RulesetConfigCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a RulesetConfig.
+     * @param {RulesetConfigDeleteArgs} args - Arguments to delete one RulesetConfig.
+     * @example
+     * // Delete one RulesetConfig
+     * const RulesetConfig = await prisma.rulesetConfig.delete({
+     *   where: {
+     *     // ... filter to delete one RulesetConfig
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RulesetConfigDeleteArgs>(args: SelectSubset<T, RulesetConfigDeleteArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one RulesetConfig.
+     * @param {RulesetConfigUpdateArgs} args - Arguments to update one RulesetConfig.
+     * @example
+     * // Update one RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RulesetConfigUpdateArgs>(args: SelectSubset<T, RulesetConfigUpdateArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more RulesetConfigs.
+     * @param {RulesetConfigDeleteManyArgs} args - Arguments to filter RulesetConfigs to delete.
+     * @example
+     * // Delete a few RulesetConfigs
+     * const { count } = await prisma.rulesetConfig.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RulesetConfigDeleteManyArgs>(args?: SelectSubset<T, RulesetConfigDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RulesetConfigs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RulesetConfigs
+     * const rulesetConfig = await prisma.rulesetConfig.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RulesetConfigUpdateManyArgs>(args: SelectSubset<T, RulesetConfigUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RulesetConfigs and returns the data updated in the database.
+     * @param {RulesetConfigUpdateManyAndReturnArgs} args - Arguments to update many RulesetConfigs.
+     * @example
+     * // Update many RulesetConfigs
+     * const rulesetConfig = await prisma.rulesetConfig.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more RulesetConfigs and only return the `id`
+     * const rulesetConfigWithIdOnly = await prisma.rulesetConfig.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends RulesetConfigUpdateManyAndReturnArgs>(args: SelectSubset<T, RulesetConfigUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one RulesetConfig.
+     * @param {RulesetConfigUpsertArgs} args - Arguments to update or create a RulesetConfig.
+     * @example
+     * // Update or create a RulesetConfig
+     * const rulesetConfig = await prisma.rulesetConfig.upsert({
+     *   create: {
+     *     // ... data to create a RulesetConfig
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RulesetConfig we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RulesetConfigUpsertArgs>(args: SelectSubset<T, RulesetConfigUpsertArgs<ExtArgs>>): Prisma__RulesetConfigClient<$Result.GetResult<Prisma.$RulesetConfigPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of RulesetConfigs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigCountArgs} args - Arguments to filter RulesetConfigs to count.
+     * @example
+     * // Count the number of RulesetConfigs
+     * const count = await prisma.rulesetConfig.count({
+     *   where: {
+     *     // ... the filter for the RulesetConfigs we want to count
+     *   }
+     * })
+    **/
+    count<T extends RulesetConfigCountArgs>(
+      args?: Subset<T, RulesetConfigCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RulesetConfigCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RulesetConfig.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RulesetConfigAggregateArgs>(args: Subset<T, RulesetConfigAggregateArgs>): Prisma.PrismaPromise<GetRulesetConfigAggregateType<T>>
+
+    /**
+     * Group by RulesetConfig.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RulesetConfigGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RulesetConfigGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RulesetConfigGroupByArgs['orderBy'] }
+        : { orderBy?: RulesetConfigGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RulesetConfigGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRulesetConfigGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RulesetConfig model
+   */
+  readonly fields: RulesetConfigFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RulesetConfig.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RulesetConfigClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RulesetConfig model
+   */
+  interface RulesetConfigFieldRefs {
+    readonly id: FieldRef<"RulesetConfig", 'String'>
+    readonly ruleset: FieldRef<"RulesetConfig", 'Ruleset'>
+    readonly eliteSkillSurcharge: FieldRef<"RulesetConfig", 'Int'>
+    readonly createdAt: FieldRef<"RulesetConfig", 'DateTime'>
+    readonly updatedAt: FieldRef<"RulesetConfig", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RulesetConfig findUnique
+   */
+  export type RulesetConfigFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which RulesetConfig to fetch.
+     */
+    where: RulesetConfigWhereUniqueInput
+  }
+
+  /**
+   * RulesetConfig findUniqueOrThrow
+   */
+  export type RulesetConfigFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which RulesetConfig to fetch.
+     */
+    where: RulesetConfigWhereUniqueInput
+  }
+
+  /**
+   * RulesetConfig findFirst
+   */
+  export type RulesetConfigFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which RulesetConfig to fetch.
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RulesetConfigs to fetch.
+     */
+    orderBy?: RulesetConfigOrderByWithRelationInput | RulesetConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RulesetConfigs.
+     */
+    cursor?: RulesetConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RulesetConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RulesetConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RulesetConfigs.
+     */
+    distinct?: RulesetConfigScalarFieldEnum | RulesetConfigScalarFieldEnum[]
+  }
+
+  /**
+   * RulesetConfig findFirstOrThrow
+   */
+  export type RulesetConfigFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which RulesetConfig to fetch.
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RulesetConfigs to fetch.
+     */
+    orderBy?: RulesetConfigOrderByWithRelationInput | RulesetConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RulesetConfigs.
+     */
+    cursor?: RulesetConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RulesetConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RulesetConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RulesetConfigs.
+     */
+    distinct?: RulesetConfigScalarFieldEnum | RulesetConfigScalarFieldEnum[]
+  }
+
+  /**
+   * RulesetConfig findMany
+   */
+  export type RulesetConfigFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which RulesetConfigs to fetch.
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RulesetConfigs to fetch.
+     */
+    orderBy?: RulesetConfigOrderByWithRelationInput | RulesetConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RulesetConfigs.
+     */
+    cursor?: RulesetConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RulesetConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RulesetConfigs.
+     */
+    skip?: number
+    distinct?: RulesetConfigScalarFieldEnum | RulesetConfigScalarFieldEnum[]
+  }
+
+  /**
+   * RulesetConfig create
+   */
+  export type RulesetConfigCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * The data needed to create a RulesetConfig.
+     */
+    data: XOR<RulesetConfigCreateInput, RulesetConfigUncheckedCreateInput>
+  }
+
+  /**
+   * RulesetConfig createMany
+   */
+  export type RulesetConfigCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RulesetConfigs.
+     */
+    data: RulesetConfigCreateManyInput | RulesetConfigCreateManyInput[]
+  }
+
+  /**
+   * RulesetConfig createManyAndReturn
+   */
+  export type RulesetConfigCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * The data used to create many RulesetConfigs.
+     */
+    data: RulesetConfigCreateManyInput | RulesetConfigCreateManyInput[]
+  }
+
+  /**
+   * RulesetConfig update
+   */
+  export type RulesetConfigUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * The data needed to update a RulesetConfig.
+     */
+    data: XOR<RulesetConfigUpdateInput, RulesetConfigUncheckedUpdateInput>
+    /**
+     * Choose, which RulesetConfig to update.
+     */
+    where: RulesetConfigWhereUniqueInput
+  }
+
+  /**
+   * RulesetConfig updateMany
+   */
+  export type RulesetConfigUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RulesetConfigs.
+     */
+    data: XOR<RulesetConfigUpdateManyMutationInput, RulesetConfigUncheckedUpdateManyInput>
+    /**
+     * Filter which RulesetConfigs to update
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * Limit how many RulesetConfigs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RulesetConfig updateManyAndReturn
+   */
+  export type RulesetConfigUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * The data used to update RulesetConfigs.
+     */
+    data: XOR<RulesetConfigUpdateManyMutationInput, RulesetConfigUncheckedUpdateManyInput>
+    /**
+     * Filter which RulesetConfigs to update
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * Limit how many RulesetConfigs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RulesetConfig upsert
+   */
+  export type RulesetConfigUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * The filter to search for the RulesetConfig to update in case it exists.
+     */
+    where: RulesetConfigWhereUniqueInput
+    /**
+     * In case the RulesetConfig found by the `where` argument doesn't exist, create a new RulesetConfig with this data.
+     */
+    create: XOR<RulesetConfigCreateInput, RulesetConfigUncheckedCreateInput>
+    /**
+     * In case the RulesetConfig was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RulesetConfigUpdateInput, RulesetConfigUncheckedUpdateInput>
+  }
+
+  /**
+   * RulesetConfig delete
+   */
+  export type RulesetConfigDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
+    /**
+     * Filter which RulesetConfig to delete.
+     */
+    where: RulesetConfigWhereUniqueInput
+  }
+
+  /**
+   * RulesetConfig deleteMany
+   */
+  export type RulesetConfigDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RulesetConfigs to delete
+     */
+    where?: RulesetConfigWhereInput
+    /**
+     * Limit how many RulesetConfigs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * RulesetConfig without action
+   */
+  export type RulesetConfigDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RulesetConfig
+     */
+    select?: RulesetConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RulesetConfig
+     */
+    omit?: RulesetConfigOmit<ExtArgs> | null
   }
 
 
@@ -105564,6 +110400,7 @@ export namespace Prisma {
     tier: 'tier',
     regionalRules: 'regionalRules',
     specialRules: 'specialRules',
+    maxBigGuys: 'maxBigGuys',
     naf: 'naf',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -105628,6 +110465,7 @@ export namespace Prisma {
     specialRule: 'specialRule',
     imageUrl: 'imageUrl',
     isMegaStar: 'isMegaStar',
+    pairWithSlug: 'pairWithSlug',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -105659,6 +110497,7 @@ export namespace Prisma {
     rosterId: 'rosterId',
     slug: 'slug',
     displayName: 'displayName',
+    displayNameEn: 'displayNameEn',
     cost: 'cost',
     min: 'min',
     max: 'max',
@@ -105689,6 +110528,71 @@ export namespace Prisma {
   };
 
   export type PositionSkillScalarFieldEnum = (typeof PositionSkillScalarFieldEnum)[keyof typeof PositionSkillScalarFieldEnum]
+
+
+  export const InducementScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    ruleset: 'ruleset',
+    nameFr: 'nameFr',
+    nameEn: 'nameEn',
+    descriptionFr: 'descriptionFr',
+    descriptionEn: 'descriptionEn',
+    baseCost: 'baseCost',
+    maxQuantity: 'maxQuantity',
+    discountRule: 'discountRule',
+    discountRoster: 'discountRoster',
+    discountCost: 'discountCost',
+    ruleMaxRule: 'ruleMaxRule',
+    ruleMaxQuantity: 'ruleMaxQuantity',
+    requiresAnyRule: 'requiresAnyRule',
+    requiresRoster: 'requiresRoster',
+    requiresApothecary: 'requiresApothecary',
+    variableCost: 'variableCost',
+    enabled: 'enabled',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type InducementScalarFieldEnum = (typeof InducementScalarFieldEnum)[keyof typeof InducementScalarFieldEnum]
+
+
+  export const AdvancementCostScalarFieldEnum: {
+    id: 'id',
+    ruleset: 'ruleset',
+    kind: 'kind',
+    step: 'step',
+    sppCost: 'sppCost',
+    teamValueSurcharge: 'teamValueSurcharge',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AdvancementCostScalarFieldEnum = (typeof AdvancementCostScalarFieldEnum)[keyof typeof AdvancementCostScalarFieldEnum]
+
+
+  export const CharacteristicValueScalarFieldEnum: {
+    id: 'id',
+    ruleset: 'ruleset',
+    stat: 'stat',
+    surcharge: 'surcharge',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CharacteristicValueScalarFieldEnum = (typeof CharacteristicValueScalarFieldEnum)[keyof typeof CharacteristicValueScalarFieldEnum]
+
+
+  export const RulesetConfigScalarFieldEnum: {
+    id: 'id',
+    ruleset: 'ruleset',
+    eliteSkillSurcharge: 'eliteSkillSurcharge',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RulesetConfigScalarFieldEnum = (typeof RulesetConfigScalarFieldEnum)[keyof typeof RulesetConfigScalarFieldEnum]
 
 
   export const CupScalarFieldEnum: {
@@ -106778,6 +111682,13 @@ export namespace Prisma {
    * Reference to a field of type 'Format'
    */
   export type EnumFormatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Format'>
+    
+
+
+  /**
+   * Reference to a field of type 'AdvancementKind'
+   */
+  export type EnumAdvancementKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AdvancementKind'>
     
 
 
@@ -108533,6 +113444,7 @@ export namespace Prisma {
     tier?: StringFilter<"Roster"> | string
     regionalRules?: StringNullableFilter<"Roster"> | string | null
     specialRules?: StringNullableFilter<"Roster"> | string | null
+    maxBigGuys?: IntNullableFilter<"Roster"> | number | null
     naf?: BoolFilter<"Roster"> | boolean
     createdAt?: DateTimeFilter<"Roster"> | Date | string
     updatedAt?: DateTimeFilter<"Roster"> | Date | string
@@ -108553,6 +113465,7 @@ export namespace Prisma {
     tier?: SortOrder
     regionalRules?: SortOrderInput | SortOrder
     specialRules?: SortOrderInput | SortOrder
+    maxBigGuys?: SortOrderInput | SortOrder
     naf?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -108577,6 +113490,7 @@ export namespace Prisma {
     tier?: StringFilter<"Roster"> | string
     regionalRules?: StringNullableFilter<"Roster"> | string | null
     specialRules?: StringNullableFilter<"Roster"> | string | null
+    maxBigGuys?: IntNullableFilter<"Roster"> | number | null
     naf?: BoolFilter<"Roster"> | boolean
     createdAt?: DateTimeFilter<"Roster"> | Date | string
     updatedAt?: DateTimeFilter<"Roster"> | Date | string
@@ -108597,6 +113511,7 @@ export namespace Prisma {
     tier?: SortOrder
     regionalRules?: SortOrderInput | SortOrder
     specialRules?: SortOrderInput | SortOrder
+    maxBigGuys?: SortOrderInput | SortOrder
     naf?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -108622,6 +113537,7 @@ export namespace Prisma {
     tier?: StringWithAggregatesFilter<"Roster"> | string
     regionalRules?: StringNullableWithAggregatesFilter<"Roster"> | string | null
     specialRules?: StringNullableWithAggregatesFilter<"Roster"> | string | null
+    maxBigGuys?: IntNullableWithAggregatesFilter<"Roster"> | number | null
     naf?: BoolWithAggregatesFilter<"Roster"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Roster"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Roster"> | Date | string
@@ -108857,6 +113773,7 @@ export namespace Prisma {
     specialRule?: StringNullableFilter<"StarPlayer"> | string | null
     imageUrl?: StringNullableFilter<"StarPlayer"> | string | null
     isMegaStar?: BoolFilter<"StarPlayer"> | boolean
+    pairWithSlug?: StringNullableFilter<"StarPlayer"> | string | null
     createdAt?: DateTimeFilter<"StarPlayer"> | Date | string
     updatedAt?: DateTimeFilter<"StarPlayer"> | Date | string
     skills?: StarPlayerSkillListRelationFilter
@@ -108878,6 +113795,7 @@ export namespace Prisma {
     specialRule?: SortOrderInput | SortOrder
     imageUrl?: SortOrderInput | SortOrder
     isMegaStar?: SortOrder
+    pairWithSlug?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     skills?: StarPlayerSkillOrderByRelationAggregateInput
@@ -108903,6 +113821,7 @@ export namespace Prisma {
     specialRule?: StringNullableFilter<"StarPlayer"> | string | null
     imageUrl?: StringNullableFilter<"StarPlayer"> | string | null
     isMegaStar?: BoolFilter<"StarPlayer"> | boolean
+    pairWithSlug?: StringNullableFilter<"StarPlayer"> | string | null
     createdAt?: DateTimeFilter<"StarPlayer"> | Date | string
     updatedAt?: DateTimeFilter<"StarPlayer"> | Date | string
     skills?: StarPlayerSkillListRelationFilter
@@ -108924,6 +113843,7 @@ export namespace Prisma {
     specialRule?: SortOrderInput | SortOrder
     imageUrl?: SortOrderInput | SortOrder
     isMegaStar?: SortOrder
+    pairWithSlug?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: StarPlayerCountOrderByAggregateInput
@@ -108951,6 +113871,7 @@ export namespace Prisma {
     specialRule?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
     imageUrl?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
     isMegaStar?: BoolWithAggregatesFilter<"StarPlayer"> | boolean
+    pairWithSlug?: StringNullableWithAggregatesFilter<"StarPlayer"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"StarPlayer"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"StarPlayer"> | Date | string
   }
@@ -109066,6 +113987,7 @@ export namespace Prisma {
     rosterId?: StringFilter<"Position"> | string
     slug?: StringFilter<"Position"> | string
     displayName?: StringFilter<"Position"> | string
+    displayNameEn?: StringNullableFilter<"Position"> | string | null
     cost?: IntFilter<"Position"> | number
     min?: IntFilter<"Position"> | number
     max?: IntFilter<"Position"> | number
@@ -109093,6 +114015,7 @@ export namespace Prisma {
     rosterId?: SortOrder
     slug?: SortOrder
     displayName?: SortOrder
+    displayNameEn?: SortOrderInput | SortOrder
     cost?: SortOrder
     min?: SortOrder
     max?: SortOrder
@@ -109124,6 +114047,7 @@ export namespace Prisma {
     rosterId?: StringFilter<"Position"> | string
     slug?: StringFilter<"Position"> | string
     displayName?: StringFilter<"Position"> | string
+    displayNameEn?: StringNullableFilter<"Position"> | string | null
     cost?: IntFilter<"Position"> | number
     min?: IntFilter<"Position"> | number
     max?: IntFilter<"Position"> | number
@@ -109151,6 +114075,7 @@ export namespace Prisma {
     rosterId?: SortOrder
     slug?: SortOrder
     displayName?: SortOrder
+    displayNameEn?: SortOrderInput | SortOrder
     cost?: SortOrder
     min?: SortOrder
     max?: SortOrder
@@ -109184,6 +114109,7 @@ export namespace Prisma {
     rosterId?: StringWithAggregatesFilter<"Position"> | string
     slug?: StringWithAggregatesFilter<"Position"> | string
     displayName?: StringWithAggregatesFilter<"Position"> | string
+    displayNameEn?: StringNullableWithAggregatesFilter<"Position"> | string | null
     cost?: IntWithAggregatesFilter<"Position"> | number
     min?: IntWithAggregatesFilter<"Position"> | number
     max?: IntWithAggregatesFilter<"Position"> | number
@@ -109251,6 +114177,330 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"PositionSkill"> | string
     positionId?: StringWithAggregatesFilter<"PositionSkill"> | string
     skillId?: StringWithAggregatesFilter<"PositionSkill"> | string
+  }
+
+  export type InducementWhereInput = {
+    AND?: InducementWhereInput | InducementWhereInput[]
+    OR?: InducementWhereInput[]
+    NOT?: InducementWhereInput | InducementWhereInput[]
+    id?: StringFilter<"Inducement"> | string
+    slug?: StringFilter<"Inducement"> | string
+    ruleset?: EnumRulesetFilter<"Inducement"> | $Enums.Ruleset
+    nameFr?: StringFilter<"Inducement"> | string
+    nameEn?: StringFilter<"Inducement"> | string
+    descriptionFr?: StringFilter<"Inducement"> | string
+    descriptionEn?: StringNullableFilter<"Inducement"> | string | null
+    baseCost?: IntFilter<"Inducement"> | number
+    maxQuantity?: IntFilter<"Inducement"> | number
+    discountRule?: StringNullableFilter<"Inducement"> | string | null
+    discountRoster?: StringNullableFilter<"Inducement"> | string | null
+    discountCost?: IntNullableFilter<"Inducement"> | number | null
+    ruleMaxRule?: StringNullableFilter<"Inducement"> | string | null
+    ruleMaxQuantity?: IntNullableFilter<"Inducement"> | number | null
+    requiresAnyRule?: StringNullableFilter<"Inducement"> | string | null
+    requiresRoster?: StringNullableFilter<"Inducement"> | string | null
+    requiresApothecary?: BoolFilter<"Inducement"> | boolean
+    variableCost?: BoolFilter<"Inducement"> | boolean
+    enabled?: BoolFilter<"Inducement"> | boolean
+    sortOrder?: IntFilter<"Inducement"> | number
+    createdAt?: DateTimeFilter<"Inducement"> | Date | string
+    updatedAt?: DateTimeFilter<"Inducement"> | Date | string
+  }
+
+  export type InducementOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountRule?: SortOrderInput | SortOrder
+    discountRoster?: SortOrderInput | SortOrder
+    discountCost?: SortOrderInput | SortOrder
+    ruleMaxRule?: SortOrderInput | SortOrder
+    ruleMaxQuantity?: SortOrderInput | SortOrder
+    requiresAnyRule?: SortOrderInput | SortOrder
+    requiresRoster?: SortOrderInput | SortOrder
+    requiresApothecary?: SortOrder
+    variableCost?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InducementWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug_ruleset?: InducementSlugRulesetCompoundUniqueInput
+    AND?: InducementWhereInput | InducementWhereInput[]
+    OR?: InducementWhereInput[]
+    NOT?: InducementWhereInput | InducementWhereInput[]
+    slug?: StringFilter<"Inducement"> | string
+    ruleset?: EnumRulesetFilter<"Inducement"> | $Enums.Ruleset
+    nameFr?: StringFilter<"Inducement"> | string
+    nameEn?: StringFilter<"Inducement"> | string
+    descriptionFr?: StringFilter<"Inducement"> | string
+    descriptionEn?: StringNullableFilter<"Inducement"> | string | null
+    baseCost?: IntFilter<"Inducement"> | number
+    maxQuantity?: IntFilter<"Inducement"> | number
+    discountRule?: StringNullableFilter<"Inducement"> | string | null
+    discountRoster?: StringNullableFilter<"Inducement"> | string | null
+    discountCost?: IntNullableFilter<"Inducement"> | number | null
+    ruleMaxRule?: StringNullableFilter<"Inducement"> | string | null
+    ruleMaxQuantity?: IntNullableFilter<"Inducement"> | number | null
+    requiresAnyRule?: StringNullableFilter<"Inducement"> | string | null
+    requiresRoster?: StringNullableFilter<"Inducement"> | string | null
+    requiresApothecary?: BoolFilter<"Inducement"> | boolean
+    variableCost?: BoolFilter<"Inducement"> | boolean
+    enabled?: BoolFilter<"Inducement"> | boolean
+    sortOrder?: IntFilter<"Inducement"> | number
+    createdAt?: DateTimeFilter<"Inducement"> | Date | string
+    updatedAt?: DateTimeFilter<"Inducement"> | Date | string
+  }, "id" | "slug_ruleset">
+
+  export type InducementOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountRule?: SortOrderInput | SortOrder
+    discountRoster?: SortOrderInput | SortOrder
+    discountCost?: SortOrderInput | SortOrder
+    ruleMaxRule?: SortOrderInput | SortOrder
+    ruleMaxQuantity?: SortOrderInput | SortOrder
+    requiresAnyRule?: SortOrderInput | SortOrder
+    requiresRoster?: SortOrderInput | SortOrder
+    requiresApothecary?: SortOrder
+    variableCost?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: InducementCountOrderByAggregateInput
+    _avg?: InducementAvgOrderByAggregateInput
+    _max?: InducementMaxOrderByAggregateInput
+    _min?: InducementMinOrderByAggregateInput
+    _sum?: InducementSumOrderByAggregateInput
+  }
+
+  export type InducementScalarWhereWithAggregatesInput = {
+    AND?: InducementScalarWhereWithAggregatesInput | InducementScalarWhereWithAggregatesInput[]
+    OR?: InducementScalarWhereWithAggregatesInput[]
+    NOT?: InducementScalarWhereWithAggregatesInput | InducementScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Inducement"> | string
+    slug?: StringWithAggregatesFilter<"Inducement"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"Inducement"> | $Enums.Ruleset
+    nameFr?: StringWithAggregatesFilter<"Inducement"> | string
+    nameEn?: StringWithAggregatesFilter<"Inducement"> | string
+    descriptionFr?: StringWithAggregatesFilter<"Inducement"> | string
+    descriptionEn?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    baseCost?: IntWithAggregatesFilter<"Inducement"> | number
+    maxQuantity?: IntWithAggregatesFilter<"Inducement"> | number
+    discountRule?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    discountRoster?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    discountCost?: IntNullableWithAggregatesFilter<"Inducement"> | number | null
+    ruleMaxRule?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    ruleMaxQuantity?: IntNullableWithAggregatesFilter<"Inducement"> | number | null
+    requiresAnyRule?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    requiresRoster?: StringNullableWithAggregatesFilter<"Inducement"> | string | null
+    requiresApothecary?: BoolWithAggregatesFilter<"Inducement"> | boolean
+    variableCost?: BoolWithAggregatesFilter<"Inducement"> | boolean
+    enabled?: BoolWithAggregatesFilter<"Inducement"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"Inducement"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"Inducement"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Inducement"> | Date | string
+  }
+
+  export type AdvancementCostWhereInput = {
+    AND?: AdvancementCostWhereInput | AdvancementCostWhereInput[]
+    OR?: AdvancementCostWhereInput[]
+    NOT?: AdvancementCostWhereInput | AdvancementCostWhereInput[]
+    id?: StringFilter<"AdvancementCost"> | string
+    ruleset?: EnumRulesetFilter<"AdvancementCost"> | $Enums.Ruleset
+    kind?: EnumAdvancementKindFilter<"AdvancementCost"> | $Enums.AdvancementKind
+    step?: IntFilter<"AdvancementCost"> | number
+    sppCost?: IntFilter<"AdvancementCost"> | number
+    teamValueSurcharge?: IntFilter<"AdvancementCost"> | number
+    createdAt?: DateTimeFilter<"AdvancementCost"> | Date | string
+    updatedAt?: DateTimeFilter<"AdvancementCost"> | Date | string
+  }
+
+  export type AdvancementCostOrderByWithRelationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    kind?: SortOrder
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdvancementCostWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ruleset_kind_step?: AdvancementCostRulesetKindStepCompoundUniqueInput
+    AND?: AdvancementCostWhereInput | AdvancementCostWhereInput[]
+    OR?: AdvancementCostWhereInput[]
+    NOT?: AdvancementCostWhereInput | AdvancementCostWhereInput[]
+    ruleset?: EnumRulesetFilter<"AdvancementCost"> | $Enums.Ruleset
+    kind?: EnumAdvancementKindFilter<"AdvancementCost"> | $Enums.AdvancementKind
+    step?: IntFilter<"AdvancementCost"> | number
+    sppCost?: IntFilter<"AdvancementCost"> | number
+    teamValueSurcharge?: IntFilter<"AdvancementCost"> | number
+    createdAt?: DateTimeFilter<"AdvancementCost"> | Date | string
+    updatedAt?: DateTimeFilter<"AdvancementCost"> | Date | string
+  }, "id" | "ruleset_kind_step">
+
+  export type AdvancementCostOrderByWithAggregationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    kind?: SortOrder
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AdvancementCostCountOrderByAggregateInput
+    _avg?: AdvancementCostAvgOrderByAggregateInput
+    _max?: AdvancementCostMaxOrderByAggregateInput
+    _min?: AdvancementCostMinOrderByAggregateInput
+    _sum?: AdvancementCostSumOrderByAggregateInput
+  }
+
+  export type AdvancementCostScalarWhereWithAggregatesInput = {
+    AND?: AdvancementCostScalarWhereWithAggregatesInput | AdvancementCostScalarWhereWithAggregatesInput[]
+    OR?: AdvancementCostScalarWhereWithAggregatesInput[]
+    NOT?: AdvancementCostScalarWhereWithAggregatesInput | AdvancementCostScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AdvancementCost"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"AdvancementCost"> | $Enums.Ruleset
+    kind?: EnumAdvancementKindWithAggregatesFilter<"AdvancementCost"> | $Enums.AdvancementKind
+    step?: IntWithAggregatesFilter<"AdvancementCost"> | number
+    sppCost?: IntWithAggregatesFilter<"AdvancementCost"> | number
+    teamValueSurcharge?: IntWithAggregatesFilter<"AdvancementCost"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"AdvancementCost"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AdvancementCost"> | Date | string
+  }
+
+  export type CharacteristicValueWhereInput = {
+    AND?: CharacteristicValueWhereInput | CharacteristicValueWhereInput[]
+    OR?: CharacteristicValueWhereInput[]
+    NOT?: CharacteristicValueWhereInput | CharacteristicValueWhereInput[]
+    id?: StringFilter<"CharacteristicValue"> | string
+    ruleset?: EnumRulesetFilter<"CharacteristicValue"> | $Enums.Ruleset
+    stat?: StringFilter<"CharacteristicValue"> | string
+    surcharge?: IntFilter<"CharacteristicValue"> | number
+    createdAt?: DateTimeFilter<"CharacteristicValue"> | Date | string
+    updatedAt?: DateTimeFilter<"CharacteristicValue"> | Date | string
+  }
+
+  export type CharacteristicValueOrderByWithRelationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    stat?: SortOrder
+    surcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CharacteristicValueWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ruleset_stat?: CharacteristicValueRulesetStatCompoundUniqueInput
+    AND?: CharacteristicValueWhereInput | CharacteristicValueWhereInput[]
+    OR?: CharacteristicValueWhereInput[]
+    NOT?: CharacteristicValueWhereInput | CharacteristicValueWhereInput[]
+    ruleset?: EnumRulesetFilter<"CharacteristicValue"> | $Enums.Ruleset
+    stat?: StringFilter<"CharacteristicValue"> | string
+    surcharge?: IntFilter<"CharacteristicValue"> | number
+    createdAt?: DateTimeFilter<"CharacteristicValue"> | Date | string
+    updatedAt?: DateTimeFilter<"CharacteristicValue"> | Date | string
+  }, "id" | "ruleset_stat">
+
+  export type CharacteristicValueOrderByWithAggregationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    stat?: SortOrder
+    surcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CharacteristicValueCountOrderByAggregateInput
+    _avg?: CharacteristicValueAvgOrderByAggregateInput
+    _max?: CharacteristicValueMaxOrderByAggregateInput
+    _min?: CharacteristicValueMinOrderByAggregateInput
+    _sum?: CharacteristicValueSumOrderByAggregateInput
+  }
+
+  export type CharacteristicValueScalarWhereWithAggregatesInput = {
+    AND?: CharacteristicValueScalarWhereWithAggregatesInput | CharacteristicValueScalarWhereWithAggregatesInput[]
+    OR?: CharacteristicValueScalarWhereWithAggregatesInput[]
+    NOT?: CharacteristicValueScalarWhereWithAggregatesInput | CharacteristicValueScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CharacteristicValue"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"CharacteristicValue"> | $Enums.Ruleset
+    stat?: StringWithAggregatesFilter<"CharacteristicValue"> | string
+    surcharge?: IntWithAggregatesFilter<"CharacteristicValue"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"CharacteristicValue"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CharacteristicValue"> | Date | string
+  }
+
+  export type RulesetConfigWhereInput = {
+    AND?: RulesetConfigWhereInput | RulesetConfigWhereInput[]
+    OR?: RulesetConfigWhereInput[]
+    NOT?: RulesetConfigWhereInput | RulesetConfigWhereInput[]
+    id?: StringFilter<"RulesetConfig"> | string
+    ruleset?: EnumRulesetFilter<"RulesetConfig"> | $Enums.Ruleset
+    eliteSkillSurcharge?: IntFilter<"RulesetConfig"> | number
+    createdAt?: DateTimeFilter<"RulesetConfig"> | Date | string
+    updatedAt?: DateTimeFilter<"RulesetConfig"> | Date | string
+  }
+
+  export type RulesetConfigOrderByWithRelationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    eliteSkillSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RulesetConfigWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ruleset?: $Enums.Ruleset
+    AND?: RulesetConfigWhereInput | RulesetConfigWhereInput[]
+    OR?: RulesetConfigWhereInput[]
+    NOT?: RulesetConfigWhereInput | RulesetConfigWhereInput[]
+    eliteSkillSurcharge?: IntFilter<"RulesetConfig"> | number
+    createdAt?: DateTimeFilter<"RulesetConfig"> | Date | string
+    updatedAt?: DateTimeFilter<"RulesetConfig"> | Date | string
+  }, "id" | "ruleset">
+
+  export type RulesetConfigOrderByWithAggregationInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    eliteSkillSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RulesetConfigCountOrderByAggregateInput
+    _avg?: RulesetConfigAvgOrderByAggregateInput
+    _max?: RulesetConfigMaxOrderByAggregateInput
+    _min?: RulesetConfigMinOrderByAggregateInput
+    _sum?: RulesetConfigSumOrderByAggregateInput
+  }
+
+  export type RulesetConfigScalarWhereWithAggregatesInput = {
+    AND?: RulesetConfigScalarWhereWithAggregatesInput | RulesetConfigScalarWhereWithAggregatesInput[]
+    OR?: RulesetConfigScalarWhereWithAggregatesInput[]
+    NOT?: RulesetConfigScalarWhereWithAggregatesInput | RulesetConfigScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RulesetConfig"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"RulesetConfig"> | $Enums.Ruleset
+    eliteSkillSurcharge?: IntWithAggregatesFilter<"RulesetConfig"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"RulesetConfig"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"RulesetConfig"> | Date | string
   }
 
   export type CupWhereInput = {
@@ -116422,6 +121672,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116442,6 +121693,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116462,6 +121714,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116482,6 +121735,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116502,6 +121756,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -116519,6 +121774,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116536,6 +121792,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116808,6 +122065,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: StarPlayerSkillCreateNestedManyWithoutStarPlayerInput
@@ -116829,6 +122087,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: StarPlayerSkillUncheckedCreateNestedManyWithoutStarPlayerInput
@@ -116850,6 +122109,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: StarPlayerSkillUpdateManyWithoutStarPlayerNestedInput
@@ -116871,6 +122131,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerNestedInput
@@ -116892,6 +122153,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -116911,6 +122173,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -116930,6 +122193,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -117025,6 +122289,7 @@ export namespace Prisma {
     id?: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -117052,6 +122317,7 @@ export namespace Prisma {
     rosterId: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -117077,6 +122343,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -117104,6 +122371,7 @@ export namespace Prisma {
     rosterId?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -117130,6 +122398,7 @@ export namespace Prisma {
     rosterId: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -117154,6 +122423,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -117179,6 +122449,7 @@ export namespace Prisma {
     rosterId?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -117237,6 +122508,377 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     positionId?: StringFieldUpdateOperationsInput | string
     skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type InducementCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    descriptionFr: string
+    descriptionEn?: string | null
+    baseCost: number
+    maxQuantity: number
+    discountRule?: string | null
+    discountRoster?: string | null
+    discountCost?: number | null
+    ruleMaxRule?: string | null
+    ruleMaxQuantity?: number | null
+    requiresAnyRule?: string | null
+    requiresRoster?: string | null
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InducementUncheckedCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    descriptionFr: string
+    descriptionEn?: string | null
+    baseCost: number
+    maxQuantity: number
+    discountRule?: string | null
+    discountRoster?: string | null
+    discountCost?: number | null
+    ruleMaxRule?: string | null
+    ruleMaxQuantity?: number | null
+    requiresAnyRule?: string | null
+    requiresRoster?: string | null
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InducementUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    baseCost?: IntFieldUpdateOperationsInput | number
+    maxQuantity?: IntFieldUpdateOperationsInput | number
+    discountRule?: NullableStringFieldUpdateOperationsInput | string | null
+    discountRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    discountCost?: NullableIntFieldUpdateOperationsInput | number | null
+    ruleMaxRule?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleMaxQuantity?: NullableIntFieldUpdateOperationsInput | number | null
+    requiresAnyRule?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresApothecary?: BoolFieldUpdateOperationsInput | boolean
+    variableCost?: BoolFieldUpdateOperationsInput | boolean
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InducementUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    baseCost?: IntFieldUpdateOperationsInput | number
+    maxQuantity?: IntFieldUpdateOperationsInput | number
+    discountRule?: NullableStringFieldUpdateOperationsInput | string | null
+    discountRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    discountCost?: NullableIntFieldUpdateOperationsInput | number | null
+    ruleMaxRule?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleMaxQuantity?: NullableIntFieldUpdateOperationsInput | number | null
+    requiresAnyRule?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresApothecary?: BoolFieldUpdateOperationsInput | boolean
+    variableCost?: BoolFieldUpdateOperationsInput | boolean
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InducementCreateManyInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    descriptionFr: string
+    descriptionEn?: string | null
+    baseCost: number
+    maxQuantity: number
+    discountRule?: string | null
+    discountRoster?: string | null
+    discountCost?: number | null
+    ruleMaxRule?: string | null
+    ruleMaxQuantity?: number | null
+    requiresAnyRule?: string | null
+    requiresRoster?: string | null
+    requiresApothecary?: boolean
+    variableCost?: boolean
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InducementUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    baseCost?: IntFieldUpdateOperationsInput | number
+    maxQuantity?: IntFieldUpdateOperationsInput | number
+    discountRule?: NullableStringFieldUpdateOperationsInput | string | null
+    discountRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    discountCost?: NullableIntFieldUpdateOperationsInput | number | null
+    ruleMaxRule?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleMaxQuantity?: NullableIntFieldUpdateOperationsInput | number | null
+    requiresAnyRule?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresApothecary?: BoolFieldUpdateOperationsInput | boolean
+    variableCost?: BoolFieldUpdateOperationsInput | boolean
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InducementUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    baseCost?: IntFieldUpdateOperationsInput | number
+    maxQuantity?: IntFieldUpdateOperationsInput | number
+    discountRule?: NullableStringFieldUpdateOperationsInput | string | null
+    discountRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    discountCost?: NullableIntFieldUpdateOperationsInput | number | null
+    ruleMaxRule?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleMaxQuantity?: NullableIntFieldUpdateOperationsInput | number | null
+    requiresAnyRule?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresRoster?: NullableStringFieldUpdateOperationsInput | string | null
+    requiresApothecary?: BoolFieldUpdateOperationsInput | boolean
+    variableCost?: BoolFieldUpdateOperationsInput | boolean
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvancementCostCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    kind: $Enums.AdvancementKind
+    step: number
+    sppCost: number
+    teamValueSurcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdvancementCostUncheckedCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    kind: $Enums.AdvancementKind
+    step: number
+    sppCost: number
+    teamValueSurcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdvancementCostUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    kind?: EnumAdvancementKindFieldUpdateOperationsInput | $Enums.AdvancementKind
+    step?: IntFieldUpdateOperationsInput | number
+    sppCost?: IntFieldUpdateOperationsInput | number
+    teamValueSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvancementCostUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    kind?: EnumAdvancementKindFieldUpdateOperationsInput | $Enums.AdvancementKind
+    step?: IntFieldUpdateOperationsInput | number
+    sppCost?: IntFieldUpdateOperationsInput | number
+    teamValueSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvancementCostCreateManyInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    kind: $Enums.AdvancementKind
+    step: number
+    sppCost: number
+    teamValueSurcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdvancementCostUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    kind?: EnumAdvancementKindFieldUpdateOperationsInput | $Enums.AdvancementKind
+    step?: IntFieldUpdateOperationsInput | number
+    sppCost?: IntFieldUpdateOperationsInput | number
+    teamValueSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdvancementCostUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    kind?: EnumAdvancementKindFieldUpdateOperationsInput | $Enums.AdvancementKind
+    step?: IntFieldUpdateOperationsInput | number
+    sppCost?: IntFieldUpdateOperationsInput | number
+    teamValueSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CharacteristicValueCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    stat: string
+    surcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CharacteristicValueUncheckedCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    stat: string
+    surcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CharacteristicValueUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    stat?: StringFieldUpdateOperationsInput | string
+    surcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CharacteristicValueUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    stat?: StringFieldUpdateOperationsInput | string
+    surcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CharacteristicValueCreateManyInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    stat: string
+    surcharge: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CharacteristicValueUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    stat?: StringFieldUpdateOperationsInput | string
+    surcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CharacteristicValueUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    stat?: StringFieldUpdateOperationsInput | string
+    surcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RulesetConfigCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    eliteSkillSurcharge?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RulesetConfigUncheckedCreateInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    eliteSkillSurcharge?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RulesetConfigUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    eliteSkillSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RulesetConfigUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    eliteSkillSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RulesetConfigCreateManyInput = {
+    id?: string
+    ruleset: $Enums.Ruleset
+    eliteSkillSurcharge?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RulesetConfigUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    eliteSkillSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RulesetConfigUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    eliteSkillSurcharge?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupCreateInput = {
@@ -124772,6 +130414,7 @@ export namespace Prisma {
     tier?: SortOrder
     regionalRules?: SortOrder
     specialRules?: SortOrder
+    maxBigGuys?: SortOrder
     naf?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -124779,6 +130422,7 @@ export namespace Prisma {
 
   export type RosterAvgOrderByAggregateInput = {
     budget?: SortOrder
+    maxBigGuys?: SortOrder
   }
 
   export type RosterMaxOrderByAggregateInput = {
@@ -124793,6 +130437,7 @@ export namespace Prisma {
     tier?: SortOrder
     regionalRules?: SortOrder
     specialRules?: SortOrder
+    maxBigGuys?: SortOrder
     naf?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -124810,6 +130455,7 @@ export namespace Prisma {
     tier?: SortOrder
     regionalRules?: SortOrder
     specialRules?: SortOrder
+    maxBigGuys?: SortOrder
     naf?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -124817,6 +130463,7 @@ export namespace Prisma {
 
   export type RosterSumOrderByAggregateInput = {
     budget?: SortOrder
+    maxBigGuys?: SortOrder
   }
 
   export type RosterScalarRelationFilter = {
@@ -125003,6 +130650,7 @@ export namespace Prisma {
     specialRule?: SortOrder
     imageUrl?: SortOrder
     isMegaStar?: SortOrder
+    pairWithSlug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -125031,6 +130679,7 @@ export namespace Prisma {
     specialRule?: SortOrder
     imageUrl?: SortOrder
     isMegaStar?: SortOrder
+    pairWithSlug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -125050,6 +130699,7 @@ export namespace Prisma {
     specialRule?: SortOrder
     imageUrl?: SortOrder
     isMegaStar?: SortOrder
+    pairWithSlug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -125138,6 +130788,7 @@ export namespace Prisma {
     rosterId?: SortOrder
     slug?: SortOrder
     displayName?: SortOrder
+    displayNameEn?: SortOrder
     cost?: SortOrder
     min?: SortOrder
     max?: SortOrder
@@ -125174,6 +130825,7 @@ export namespace Prisma {
     rosterId?: SortOrder
     slug?: SortOrder
     displayName?: SortOrder
+    displayNameEn?: SortOrder
     cost?: SortOrder
     min?: SortOrder
     max?: SortOrder
@@ -125199,6 +130851,7 @@ export namespace Prisma {
     rosterId?: SortOrder
     slug?: SortOrder
     displayName?: SortOrder
+    displayNameEn?: SortOrder
     cost?: SortOrder
     min?: SortOrder
     max?: SortOrder
@@ -125256,6 +130909,242 @@ export namespace Prisma {
     id?: SortOrder
     positionId?: SortOrder
     skillId?: SortOrder
+  }
+
+  export type InducementSlugRulesetCompoundUniqueInput = {
+    slug: string
+    ruleset: $Enums.Ruleset
+  }
+
+  export type InducementCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountRule?: SortOrder
+    discountRoster?: SortOrder
+    discountCost?: SortOrder
+    ruleMaxRule?: SortOrder
+    ruleMaxQuantity?: SortOrder
+    requiresAnyRule?: SortOrder
+    requiresRoster?: SortOrder
+    requiresApothecary?: SortOrder
+    variableCost?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InducementAvgOrderByAggregateInput = {
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountCost?: SortOrder
+    ruleMaxQuantity?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type InducementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountRule?: SortOrder
+    discountRoster?: SortOrder
+    discountCost?: SortOrder
+    ruleMaxRule?: SortOrder
+    ruleMaxQuantity?: SortOrder
+    requiresAnyRule?: SortOrder
+    requiresRoster?: SortOrder
+    requiresApothecary?: SortOrder
+    variableCost?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InducementMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountRule?: SortOrder
+    discountRoster?: SortOrder
+    discountCost?: SortOrder
+    ruleMaxRule?: SortOrder
+    ruleMaxQuantity?: SortOrder
+    requiresAnyRule?: SortOrder
+    requiresRoster?: SortOrder
+    requiresApothecary?: SortOrder
+    variableCost?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InducementSumOrderByAggregateInput = {
+    baseCost?: SortOrder
+    maxQuantity?: SortOrder
+    discountCost?: SortOrder
+    ruleMaxQuantity?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type EnumAdvancementKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.AdvancementKind | EnumAdvancementKindFieldRefInput<$PrismaModel>
+    in?: $Enums.AdvancementKind[]
+    notIn?: $Enums.AdvancementKind[]
+    not?: NestedEnumAdvancementKindFilter<$PrismaModel> | $Enums.AdvancementKind
+  }
+
+  export type AdvancementCostRulesetKindStepCompoundUniqueInput = {
+    ruleset: $Enums.Ruleset
+    kind: $Enums.AdvancementKind
+    step: number
+  }
+
+  export type AdvancementCostCountOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    kind?: SortOrder
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdvancementCostAvgOrderByAggregateInput = {
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+  }
+
+  export type AdvancementCostMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    kind?: SortOrder
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdvancementCostMinOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    kind?: SortOrder
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdvancementCostSumOrderByAggregateInput = {
+    step?: SortOrder
+    sppCost?: SortOrder
+    teamValueSurcharge?: SortOrder
+  }
+
+  export type EnumAdvancementKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AdvancementKind | EnumAdvancementKindFieldRefInput<$PrismaModel>
+    in?: $Enums.AdvancementKind[]
+    notIn?: $Enums.AdvancementKind[]
+    not?: NestedEnumAdvancementKindWithAggregatesFilter<$PrismaModel> | $Enums.AdvancementKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAdvancementKindFilter<$PrismaModel>
+    _max?: NestedEnumAdvancementKindFilter<$PrismaModel>
+  }
+
+  export type CharacteristicValueRulesetStatCompoundUniqueInput = {
+    ruleset: $Enums.Ruleset
+    stat: string
+  }
+
+  export type CharacteristicValueCountOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    stat?: SortOrder
+    surcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CharacteristicValueAvgOrderByAggregateInput = {
+    surcharge?: SortOrder
+  }
+
+  export type CharacteristicValueMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    stat?: SortOrder
+    surcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CharacteristicValueMinOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    stat?: SortOrder
+    surcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CharacteristicValueSumOrderByAggregateInput = {
+    surcharge?: SortOrder
+  }
+
+  export type RulesetConfigCountOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    eliteSkillSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RulesetConfigAvgOrderByAggregateInput = {
+    eliteSkillSurcharge?: SortOrder
+  }
+
+  export type RulesetConfigMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    eliteSkillSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RulesetConfigMinOrderByAggregateInput = {
+    id?: SortOrder
+    ruleset?: SortOrder
+    eliteSkillSurcharge?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RulesetConfigSumOrderByAggregateInput = {
+    eliteSkillSurcharge?: SortOrder
   }
 
   export type CupCountOrderByAggregateInput = {
@@ -131495,6 +137384,10 @@ export namespace Prisma {
     update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutPositionSkillsInput, SkillUpdateWithoutPositionSkillsInput>, SkillUncheckedUpdateWithoutPositionSkillsInput>
   }
 
+  export type EnumAdvancementKindFieldUpdateOperationsInput = {
+    set?: $Enums.AdvancementKind
+  }
+
   export type UserCreateNestedOneWithoutCreatedCupsInput = {
     create?: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
     connectOrCreate?: UserCreateOrConnectWithoutCreatedCupsInput
@@ -134864,6 +140757,23 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedEnumAdvancementKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.AdvancementKind | EnumAdvancementKindFieldRefInput<$PrismaModel>
+    in?: $Enums.AdvancementKind[]
+    notIn?: $Enums.AdvancementKind[]
+    not?: NestedEnumAdvancementKindFilter<$PrismaModel> | $Enums.AdvancementKind
+  }
+
+  export type NestedEnumAdvancementKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AdvancementKind | EnumAdvancementKindFieldRefInput<$PrismaModel>
+    in?: $Enums.AdvancementKind[]
+    notIn?: $Enums.AdvancementKind[]
+    not?: NestedEnumAdvancementKindWithAggregatesFilter<$PrismaModel> | $Enums.AdvancementKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAdvancementKindFilter<$PrismaModel>
+    _max?: NestedEnumAdvancementKindFilter<$PrismaModel>
   }
 
   export type NestedBoolNullableFilter<$PrismaModel = never> = {
@@ -143086,6 +148996,7 @@ export namespace Prisma {
     id?: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -143111,6 +149022,7 @@ export namespace Prisma {
     id?: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -143229,6 +149141,7 @@ export namespace Prisma {
     rosterId?: StringFilter<"Position"> | string
     slug?: StringFilter<"Position"> | string
     displayName?: StringFilter<"Position"> | string
+    displayNameEn?: StringNullableFilter<"Position"> | string | null
     cost?: IntFilter<"Position"> | number
     min?: IntFilter<"Position"> | number
     max?: IntFilter<"Position"> | number
@@ -143324,6 +149237,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -143343,6 +149257,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -143378,6 +149293,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -143397,6 +149313,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -143579,6 +149496,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     hirableBy?: StarPlayerHirableByCreateNestedManyWithoutStarPlayerInput
@@ -143599,6 +149517,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     hirableBy?: StarPlayerHirableByUncheckedCreateNestedManyWithoutStarPlayerInput
@@ -143676,6 +149595,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hirableBy?: StarPlayerHirableByUpdateManyWithoutStarPlayerNestedInput
@@ -143696,6 +149616,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     hirableBy?: StarPlayerHirableByUncheckedUpdateManyWithoutStarPlayerNestedInput
@@ -143763,6 +149684,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: StarPlayerSkillCreateNestedManyWithoutStarPlayerInput
@@ -143783,6 +149705,7 @@ export namespace Prisma {
     specialRule?: string | null
     imageUrl?: string | null
     isMegaStar?: boolean
+    pairWithSlug?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     skills?: StarPlayerSkillUncheckedCreateNestedManyWithoutStarPlayerInput
@@ -143805,6 +149728,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -143824,6 +149748,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -143862,6 +149787,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: StarPlayerSkillUpdateManyWithoutStarPlayerNestedInput
@@ -143882,6 +149808,7 @@ export namespace Prisma {
     specialRule?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isMegaStar?: BoolFieldUpdateOperationsInput | boolean
+    pairWithSlug?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     skills?: StarPlayerSkillUncheckedUpdateManyWithoutStarPlayerNestedInput
@@ -143910,6 +149837,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -143929,6 +149857,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -143948,6 +149877,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -143967,6 +149897,7 @@ export namespace Prisma {
     tier: string
     regionalRules?: string | null
     specialRules?: string | null
+    maxBigGuys?: number | null
     naf?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -144021,6 +149952,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -144040,6 +149972,7 @@ export namespace Prisma {
     tier?: StringFieldUpdateOperationsInput | string
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    maxBigGuys?: NullableIntFieldUpdateOperationsInput | number | null
     naf?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -144067,6 +150000,7 @@ export namespace Prisma {
     id?: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -144093,6 +150027,7 @@ export namespace Prisma {
     rosterId: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -144174,6 +150109,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -144200,6 +150136,7 @@ export namespace Prisma {
     rosterId?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -162313,6 +168250,7 @@ export namespace Prisma {
     id?: string
     slug: string
     displayName: string
+    displayNameEn?: string | null
     cost: number
     min: number
     max: number
@@ -162360,6 +168298,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -162385,6 +168324,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number
@@ -162410,6 +168350,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     slug?: StringFieldUpdateOperationsInput | string
     displayName?: StringFieldUpdateOperationsInput | string
+    displayNameEn?: NullableStringFieldUpdateOperationsInput | string | null
     cost?: IntFieldUpdateOperationsInput | number
     min?: IntFieldUpdateOperationsInput | number
     max?: IntFieldUpdateOperationsInput | number

@@ -8,11 +8,10 @@ import {
   type Ruleset,
 } from "../../ruleset-utils";
 import {
-  REGIONAL_LEAGUE_OPTIONS,
-  SPECIAL_RULE_OPTIONS,
   SlugCheckboxGrid,
   toggleSlug,
 } from "../../_components/SlugCheckboxGrid";
+import { useTeamRuleCatalogues } from "../../_components/useTeamRuleCatalogues";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -49,6 +48,9 @@ export default function NewRosterPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  // Lot 6.5 — catalogues servis par la base (repli compilé au chargement).
+  const { specialRuleOptions, regionalLeagueOptions } =
+    useTeamRuleCatalogues(ruleset);
   // Ligues et regles speciales du nouveau roster. Sans ces champs il
   // fallait creer le roster puis rouvrir sa fiche pour les renseigner.
   const [regionalRules, setRegionalRules] = useState<string[]>([]);
@@ -200,7 +202,7 @@ export default function NewRosterPage() {
             Ligues régionales
           </label>
           <SlugCheckboxGrid
-            catalog={REGIONAL_LEAGUE_OPTIONS}
+            catalog={regionalLeagueOptions}
             selected={regionalRules}
             onToggle={(slug) =>
               setRegionalRules((prev) => toggleSlug(prev, slug))
@@ -218,7 +220,7 @@ export default function NewRosterPage() {
             Règles spéciales
           </label>
           <SlugCheckboxGrid
-            catalog={SPECIAL_RULE_OPTIONS}
+            catalog={specialRuleOptions}
             selected={specialRules}
             onToggle={(slug) =>
               setSpecialRules((prev) => toggleSlug(prev, slug))

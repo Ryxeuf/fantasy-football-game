@@ -14,7 +14,20 @@ export interface SkillDefinition {
    * `Skill.descriptionEn` en base.
    */
   descriptionEn?: string;
-  category: "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates";
+  /**
+   * Catégorie du référentiel (`Skill.category` en base). `StarPlayerRule`
+   * (lot 6.6) marque les pouvoirs de Star Player : ni Compétence ni Trait
+   * piochable, ils ont leur propre section sur les fiches.
+   */
+  category:
+    | "General"
+    | "Agility"
+    | "Strength"
+    | "Passing"
+    | "Mutation"
+    | "Trait"
+    | "Scélérates"
+    | "StarPlayerRule";
   isElite?: boolean;      // Compétence Elite (+10 000 de valeur d'équipe)
   isPassive?: boolean;     // Compétence passive (soulignée)
   isModified?: boolean;    // Compétence modifiée ou nouveau nom (astérisque)
@@ -1048,75 +1061,78 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     season3Only: true
   },
   // ─── RÈGLES SPÉCIALES STAR PLAYERS ────────────────────────────────
+  // Lot 6.6 — catégorie dédiée `StarPlayerRule` (cf. STAR_PLAYER_RULE_CATEGORY) :
+  // ce ne sont ni des Compétences ni des Traits piochables en montée de niveau,
+  // et le référentiel doit pouvoir les distinguer sans liste codée en dur.
   {
     slug: "blind-rage",
     nameFr: "Rage Aveugle",
     nameEn: "Blind Rage",
     description: "Peut relancer le D6 pour Intrépide (Dauntless).",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "slayer",
     nameFr: "Tueur",
     nameEn: "Slayer",
     description: "Peut relancer les jets d'Intrépide (Dauntless) ratés.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "coup-sauvage",
     nameFr: "Coup Sauvage",
     nameEn: "Savage Blow",
     description: "Une fois par partie, peut relancer n'importe quel nombre de dés de Blocage.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "la-baliste",
     nameFr: "La Baliste",
     nameEn: "The Ballista",
     description: "Une fois par match, peut relancer un jet de Passe raté (Passe ou Lancer de Coéquipier).",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "consummate-professional",
     nameFr: "Professionnel Accompli",
     nameEn: "Consummate Professional",
     description: "Une fois par match, peut relancer n'importe quel dé.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "crushing-blow",
     nameFr: "Coup Dévastateur",
     nameEn: "Crushing Blow",
     description: "Une fois par match, +1 au jet d'armure après un blocage réussi.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "lord-of-chaos",
     nameFr: "Seigneur du Chaos",
     nameEn: "Lord of Chaos",
     description: "L'équipe gagne +1 relance d'équipe pour la première mi-temps.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "pirouette",
     nameFr: "Pirouette",
     nameEn: "Pirouette",
     description: "Une fois par tour, +1 au jet d'esquive.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "casse-os",
     nameFr: "Casse-Os",
     nameEn: "Bone Breaker",
     description: "Une fois par match, +1 en Force lors d'un blocage.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
   {
     slug: "reliable",
     nameFr: "Fiable",
     nameEn: "Reliable",
     description: "Un Lancer de Coéquipier raté ne cause pas de turnover.",
-    category: "Trait"
+    category: "StarPlayerRule"
   },
 ];
 

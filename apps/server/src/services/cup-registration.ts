@@ -10,6 +10,8 @@
  */
 
 import { tournamentRulesetShortLabel } from './tournament-ruleset-repository';
+import { loadAdvancementSchedule } from './advancement-schedule-repository';
+import type { Ruleset } from '@bb/game-engine';
 import { prisma } from '../prisma';
 import {
   parseNumberMap,
@@ -163,7 +165,12 @@ export async function registerTeamToCup(input: {
         where: { teamId, ...ACTIVE_PLAYER_WHERE },
         select: { advancements: true },
       });
-      const spent = teamAdvancementsPspCost(players);
+      // Lot 6.2 — barème de l'édition de l'équipe (elle est ici la même que
+      // celle de la coupe, contrôlée plus haut).
+      const spent = teamAdvancementsPspCost(
+        players,
+        await loadAdvancementSchedule(team.ruleset as Ruleset),
+      );
       if (spent > pspPoolGranted) {
         throw new CupRegistrationError(
           'psp_exceeded',

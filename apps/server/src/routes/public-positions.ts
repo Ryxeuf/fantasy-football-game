@@ -39,6 +39,8 @@ const POSITION_INCLUDE = {
 interface PositionRow {
   slug: string;
   displayName: string;
+  /** Lot 6a — nom anglais du poste en base (null = repli table compilée). */
+  displayNameEn: string | null;
   cost: number;
   min: number;
   max: number;
@@ -208,7 +210,10 @@ function transformPosition(
   return {
     slug: position.slug,
     displayName: position.displayName,
-    displayNameEn: getPositionNameEn(position.slug) ?? null,
+    // Lot 6a — nom anglais servi par la base ; repli sur la table compilée
+    // tant que la colonne n'est pas renseignée (posée sans backfill).
+    displayNameEn:
+      position.displayNameEn ?? getPositionNameEn(position.slug) ?? null,
     cost: position.cost,
     min: position.min,
     max: position.max,

@@ -77,6 +77,13 @@ type Roster = {
   tier?: string;
   /** Budget par défaut du roster (kpo). */
   budget?: number;
+  /**
+   * Lot 6.4 — plafond COMBINÉ de Gros Bras servi par la base
+   * (`Roster.maxBigGuys`). `null`/absent ⇒ repli sur la table compilée du
+   * moteur (`bigGuyLimitForRoster`), qui reste vraie tant que la colonne
+   * n'est pas renseignée.
+   */
+  maxBigGuys?: number | null;
   /** Config staff par format (DB ; défaut dérivé sinon). Coûts en po. */
   staffConfigs?: Record<GameFormat, RosterStaffConfig>;
   /**
@@ -592,10 +599,10 @@ export default function NewTeamBuilder() {
 
   // A36 — Plafond COMBINÉ de Gros Bras (tous types confondus) pour le roster
   // courant. `null` = pas de plafond combiné (s'appuie sur les max par poste).
-  const bigGuyLimit = useMemo(
-    () => bigGuyLimitForRoster(rosterId),
-    [rosterId],
-  );
+  const bigGuyLimit = useMemo(() => {
+    const fromDb = rosters.find((r) => r.slug === rosterId)?.maxBigGuys;
+    return typeof fromDb === "number" ? fromDb : bigGuyLimitForRoster(rosterId);
+  }, [rosters, rosterId]);
   const bigGuyCount = useMemo(
     () =>
       positions.reduce(

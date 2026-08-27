@@ -71,6 +71,8 @@ import {
 } from "../utils/team-values";
 import { getEliteSkillSlugs } from "./elite-skills";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
+import { loadInducementCatalogue } from "./inducement-repository";
+import { loadAdvancementSchedule } from "./advancement-schedule-repository";
 import {
   parseStagedAdvancements,
   applyStagedAdvancements,
@@ -81,8 +83,11 @@ import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
+  canPurchaseInducement,
+  type InducementContext,
   getNextAdvancementPspCost,
   surchargeForAdvancement,
+  type AdvancementSchedule,
   calculatePettyCash,
   getInducementCost,
   getInducementMaxQuantity,
@@ -1309,6 +1314,11 @@ function enrichJourneymanPurchases(input: {
   positions?: readonly JourneymanSourcePosition[] | null;
   /** Slugs Elite du ruleset : +10 000 po de valeur par competence Elite. */
   eliteSlugs?: ReadonlySet<string>;
+  /**
+   * Lot 6.2 — barème de l'édition de l'équipe (coût PSP et surcoût de VE de
+   * l'évolution du journalier). Absent ⇒ barème compilé.
+   */
+  schedule?: AdvancementSchedule;
 }): OfflinePurchaseInput[] {
   const { purchases, side, team, staged, computedSpp } = input;
   if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
@@ -1346,17 +1356,20 @@ function enrichJourneymanPurchases(input: {
             stat: entry.stat,
             d8: entry.d8,
             // Un journalier n'a jamais d'avancement : 1er palier.
-            pspCost: getNextAdvancementPspCost(0, entry.type),
+            pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
             // `isElite` etait omis : les 10 000 po de surcout d'une
             // competence Elite manquaient au prix de recrutement du
             // journalier (donc a la VE de l'equipe et au debit).
-            valueSurcharge: surchargeForAdvancement({
-              type: entry.type,
-              stat: entry.stat ?? undefined,
-              isElite:
-                !!entry.skillSlug &&
-                (input.eliteSlugs?.has(entry.skillSlug) ?? false),
-            }),
+            valueSurcharge: surchargeForAdvancement(
+              {
+                type: entry.type,
+                stat: entry.stat ?? undefined,
+                isElite:
+                  !!entry.skillSlug &&
+                  (input.eliteSlugs?.has(entry.skillSlug) ?? false),
+              },
+              input.schedule,
+            ),
           }
         : null,
     });
@@ -1623,6 +1636,17 @@ export async function validateByCommissioner(input: {
     prisma,
     teamsForBudget.home?.ruleset ?? teamsForBudget.away?.ruleset ?? null,
   );
+  // Lot 6.2 — barème de l'édition de CHAQUE équipe : le prix d'un journalier
+  // recruté inclut le surcoût de VE de son évolution, qui n'est pas le même
+  // en Saison 2 et en Saison 3.
+  const [scheduleHome, scheduleAway] = await Promise.all([
+    loadAdvancementSchedule(
+      (teamsForBudget.home?.ruleset as Ruleset) ?? undefined,
+    ),
+    loadAdvancementSchedule(
+      (teamsForBudget.away?.ruleset as Ruleset) ?? undefined,
+    ),
+  ]);
   const enrichedPurchases = {
     home: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesHome,
@@ -1633,6 +1657,7 @@ export async function validateByCommissioner(input: {
       computedSpp: computedSppForHire,
       positions: journeymanPositions.home,
       eliteSlugs: eliteSlugsForHire,
+      schedule: scheduleHome,
     }),
     away: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesAway,
@@ -1643,6 +1668,7 @@ export async function validateByCommissioner(input: {
       computedSpp: computedSppForHire,
       positions: journeymanPositions.away,
       eliteSlugs: eliteSlugsForHire,
+      schedule: scheduleAway,
     }),
   };
 
@@ -2513,14 +2539,17 @@ async function inducementOptionsFor(
   // donc le debit de tresorerie post-match (S9 de l'audit). Les tables
   // compilees `APOTHECARY_FORBIDDEN_ROSTERS` / `getSpecialRulesForTeam` ne
   // sont plus que le repli, porte par les resolveurs eux-memes.
-  const [declaredRules, staffConfig, specialRules] = await Promise.all([
-    getDeclaredRegionalRules(roster, ruleset),
-    // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
-    // couple roster x format et la feuille de ligue n'a pas d'autre format.
-    resolveStaffConfigBySlug(roster, ruleset, "bb11"),
-    resolveSpecialRulesForTeam(prisma, roster, ruleset),
-  ]);
-  const ctx = {
+  const [declaredRules, staffConfig, specialRules, catalogue] =
+    await Promise.all([
+      getDeclaredRegionalRules(roster, ruleset),
+      // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
+      // couple roster x format et la feuille de ligue n'a pas d'autre format.
+      resolveStaffConfigBySlug(roster, ruleset, "bb11"),
+      resolveSpecialRulesForTeam(prisma, roster, ruleset),
+      // Lot 6.1 — prix, plafonds et conditions servis par la base.
+      loadInducementCatalogue(ruleset),
+    ]);
+  const ctx: InducementContext = {
     teamId: "A" as const,
     regionalRules: resolveTeamRegionalRules(
       roster,
@@ -2536,11 +2565,15 @@ async function inducementOptionsFor(
     // A53 — les restrictions/remises officielles dépendent des règles
     // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
     specialRules: [...specialRules],
+    ruleset,
+    catalogue,
   };
   const effective = effectiveInducementAllowlist(allowedInducements, pack);
   const allow = effective ? new Set(effective) : null;
-  const options = INDUCEMENT_CATALOGUE.filter((d) => d.slug !== "star_player")
-    .filter((d) => !d.canPurchase || d.canPurchase(ctx))
+  // Lot 6.1 — catalogue servi par la base (`Inducement`), repli compilé.
+  const options = (ctx.catalogue ?? INDUCEMENT_CATALOGUE)
+    .filter((d) => d.slug !== "star_player")
+    .filter((d) => canPurchaseInducement(d, ctx))
     .filter((d) => allow === null || allow.has(d.slug))
     .map((d) => ({
       slug: d.slug,
