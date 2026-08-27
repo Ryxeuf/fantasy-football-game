@@ -21,6 +21,7 @@ import BuildAdvancementAllocator, {
 import TeamLogoPicker from "../components/TeamLogoPicker";
 import { uploadTeamLogo } from "../components/team-logo-client";
 import { BUILDER_DEFAULTS, readBuilderParams } from "./builder-url-params";
+import { defaultBudgetK } from "./default-budget";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -265,17 +266,11 @@ export default function NewTeamBuilder() {
   }, [staff.apothecaryAllowed]);
 
   // Budget de construction PAR DÉFAUT : `Roster.budget` (base, éditable en
-  // admin) d'abord, plafond du format en repli tant que la liste n'est pas
-  // chargée. Le builder affichait le budget compilé du format alors que
-  // `POST /team/build` accepte la valeur envoyée par le client : le « Restant »
-  // affiché divergeait de l'équipe réellement construite (W2 de l'audit).
+  // admin) pour le BB11, plafond du FORMAT sinon — voir `default-budget.ts`
+  // pour pourquoi les deux axes ne se confondent pas.
   const defaultBudgetFor = useCallback(
-    (slug: string, fmt: GameFormat): number => {
-      const fromDb = rosters.find((r) => r.slug === slug)?.budget;
-      return typeof fromDb === "number" && fromDb > 0
-        ? fromDb
-        : getFormatConstraints(fmt).startingBudget;
-    },
+    (slug: string, fmt: GameFormat): number =>
+      defaultBudgetK(rosters.find((r) => r.slug === slug)?.budget, fmt),
     [rosters],
   );
 
