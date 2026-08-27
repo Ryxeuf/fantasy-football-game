@@ -151,9 +151,24 @@ export default async function PositionsStudiesPage() {
           </p>
         ) : (
           <>
-          <div className="mb-6">
-            <PositionKeywordBrowser positions={positions} />
-          </div>
+          {/* Sommaire des classements : ils sont la raison d'etre de la page,
+              ils passent donc AVANT l'explorateur (qui liste ~300 postes et
+              repoussait tout le reste hors de l'ecran). */}
+          <nav
+            aria-label="Aller à un classement"
+            data-testid="leaderboard-jump"
+            className="mb-5 flex flex-wrap gap-2"
+          >
+            {LEADERBOARDS.map((board) => (
+              <a
+                key={board.id}
+                href={`#classement-${board.id}`}
+                className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+              >
+                {board.title}
+              </a>
+            ))}
+          </nav>
           <div
             className="grid grid-cols-1 md:grid-cols-2 gap-5"
             data-testid="positions-leaderboards"
@@ -163,8 +178,9 @@ export default async function PositionsStudiesPage() {
               return (
                 <section
                   key={board.id}
+                  id={`classement-${board.id}`}
                   data-testid={`leaderboard-${board.id}`}
-                  className="rounded-2xl bg-white border border-gray-200 p-5 shadow-sm"
+                  className="scroll-mt-20 rounded-2xl bg-white border border-gray-200 p-5 shadow-sm"
                 >
                   <h2 className="text-lg font-bold text-gray-900">
                     {board.title}
@@ -202,6 +218,9 @@ export default async function PositionsStudiesPage() {
                 </section>
               );
             })}
+          </div>
+          <div className="mt-8">
+            <PositionKeywordBrowser positions={positions} />
           </div>
           </>
         )}
