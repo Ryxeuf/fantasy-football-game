@@ -5,12 +5,18 @@ import { useRouter } from 'next/navigation';
 import StarPlayerCard, { type StarPlayerWithKeywords } from '../components/StarPlayerCard';
 import CopyrightFooter from '../components/CopyrightFooter';
 import {
-  TEAM_REGIONAL_RULES,
+  isStarPlayerHirableByRoster,
   type StarPlayerDefinition,
 } from '@bb/game-engine';
 import { useLanguage } from '../contexts/LanguageContext';
 import { collectKeywordOptions, filterByKeywords } from '../lib/keyword-filter';
 import { UMAMI_EVENTS, trackUmamiEvent } from '../lib/umami-events';
+import {
+  ALL_TEAMS_OPTION,
+  buildTeamFilterOptions,
+  type ApiRosterRow,
+  type TeamFilterOption,
+} from './team-filter-options';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -26,7 +32,10 @@ export default function StarPlayersPage() {
   
   // Filtres
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRoster, setSelectedRoster] = useState<string>('all');
+  const [selectedRoster, setSelectedRoster] = useState<string>(ALL_TEAMS_OPTION);
+  // Équipes proposées par le filtre : servies par `/api/rosters` pour la
+  // saison sélectionnée (repli catalogue engine si l'API est indisponible).
+  const [teamOptions, setTeamOptions] = useState<TeamFilterOption[]>([]);
   const [minCost, setMinCost] = useState<number>(0);
   const [maxCost, setMaxCost] = useState<number>(400000);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
@@ -43,10 +52,47 @@ export default function StarPlayersPage() {
     loadStarPlayers();
   }, [selectedRuleset]);
 
+  // Liste des équipes du filtre : elle suit la saison (une édition n'a pas le
+  // même parc d'équipes) et la langue (noms localisés servis par l'API).
+  // Chargement indépendant des Star Players : un échec ici ne doit pas
+  // masquer la liste, il fait juste retomber le filtre sur le catalogue.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let rows: ApiRosterRow[] = [];
+      try {
+        const response = await fetch(
+          `${API_URL}/api/rosters?lang=${language}&ruleset=${selectedRuleset}`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data?.rosters)) rows = data.rosters;
+        }
+      } catch {
+        // Repli silencieux : `buildTeamFilterOptions([])` sert le catalogue.
+      }
+      if (cancelled) return;
+      const options = buildTeamFilterOptions(rows, selectedRuleset, language);
+      setTeamOptions(options);
+      // L'équipe sélectionnée peut ne pas exister dans la nouvelle édition
+      // (ex: Bretonniens en saison 2) : on ne laisse pas un filtre fantôme
+      // vider la liste sans que l'utilisateur puisse le voir.
+      setSelectedRoster((current) =>
+        current === ALL_TEAMS_OPTION ||
+        options.some((option) => option.slug === current)
+          ? current
+          : ALL_TEAMS_OPTION,
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRuleset, language]);
+
   // Appliquer les filtres
   useEffect(() => {
     applyFilters();
-  }, [starPlayers, searchQuery, selectedRoster, minCost, maxCost, selectedSkill, selectedKeywords, language]);
+  }, [starPlayers, searchQuery, selectedRoster, selectedRuleset, minCost, maxCost, selectedSkill, selectedKeywords, language]);
 
   // Les mots-clés proposés se recalculent sur la liste chargée (le catalogue
   // change avec le ruleset) et sur la langue (libellés FR ou EN).
@@ -101,21 +147,16 @@ export default function StarPlayersPage() {
       );
     }
 
-    // Filtre par roster.
-    //
-    // Un star player est recrutable par un roster si :
-    //   - `hirableBy.includes("all")` (mercenaire universel), OU
-    //   - intersection non-vide entre `hirableBy` (regles speciales
-    //     du player) et `regionalRules` du roster.
-    //
-    // `TEAM_REGIONAL_RULES` map les slugs de roster vers leur set de
-    // regional rules (donnees engine, source de verite).
-    if (selectedRoster !== 'all') {
-      const rosterRules = TEAM_REGIONAL_RULES[selectedRoster] ?? [];
-      filtered = filtered.filter((sp) => {
-        if (sp.hirableBy.includes('all')) return true;
-        return sp.hirableBy.some((rule) => rosterRules.includes(rule));
-      });
+    // Filtre par roster : le predicat vit dans le game-engine
+    // (`isStarPlayerHirableByRoster`, pur et teste), qui resout les deux
+    // formes de `hirableBy` remontees par l'API — slug de Ligue regionale et
+    // slug de roster brut — POUR L'EDITION SELECTIONNEE (les Ligues 2025
+    // n'existent pas en saison 2). C'est le meme referentiel que la rubrique
+    // « Joue pour » des fiches, donc les deux ne peuvent pas diverger.
+    if (selectedRoster !== ALL_TEAMS_OPTION) {
+      filtered = filtered.filter((sp) =>
+        isStarPlayerHirableByRoster(sp.hirableBy, selectedRoster, selectedRuleset),
+      );
     }
 
     // Filtre par coût
@@ -218,14 +259,15 @@ export default function StarPlayersPage() {
               <select
                 value={selectedRoster}
                 onChange={(e) => setSelectedRoster(e.target.value)}
+                data-testid="star-player-team-filter"
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">{t.starPlayers.allTeams}</option>
-                <option value="skaven">Skavens</option>
-                <option value="wood_elf">Elfes Sylvains</option>
-                <option value="dwarf">Nains</option>
-                <option value="orc">Orcs</option>
-                <option value="human">Humains</option>
+                <option value={ALL_TEAMS_OPTION}>{t.starPlayers.allTeams}</option>
+                {teamOptions.map((option) => (
+                  <option key={option.slug} value={option.slug}>
+                    {option.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -305,7 +347,7 @@ export default function StarPlayersPage() {
           <button
             onClick={() => {
               setSearchQuery('');
-              setSelectedRoster('all');
+              setSelectedRoster(ALL_TEAMS_OPTION);
               setMinCost(0);
               setMaxCost(400000);
               setSelectedSkill('');
