@@ -22,6 +22,7 @@ import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
 import { sendError, sendSuccess } from '../utils/api-response';
 import { updateTeamValues } from '../utils/team-values';
+import { syncDraftTreasury } from '../services/team-budget-summary';
 import {
   type AllowedRoster,
   type GameFormat,
@@ -245,6 +246,12 @@ export async function handleSaveRoster(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await updateTeamValues(prisma as any, teamId);
+    // Brouillon libre : la trésorerie suit le reliquat du budget. Sans ce
+    // sync, l'or crédité à la création (compo par défaut bon marché)
+    // restait intact après un roster complété jusqu'au budget → VE au
+    // budget ET trésorerie fantôme (cf. `syncDraftTreasury`).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await syncDraftTreasury(prisma as any, teamId);
 
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
