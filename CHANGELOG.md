@@ -1,3 +1,23 @@
+## [1.239.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.2...v1.239.0) (2026-08-27)
+
+
+### ✨ Features
+
+* **data:** lot 6a — colonnes de catalogue servies par la base ([9dc7517](https://github.com/Ryxeuf/fantasy-football-game/commit/9dc75172a154ffb9653d3edfc48eaa156d18451e))
+* **data:** lot 6b — règles spéciales et Ligues régionales servies par la base ([f0a011e](https://github.com/Ryxeuf/fantasy-football-game/commit/f0a011e3b975e371986313049d1732dbf3ec667f))
+* **data:** lot 6c — catalogue des coups de pouce en base ([57e4cce](https://github.com/Ryxeuf/fantasy-football-game/commit/57e4cce91dbb15d91dc3477af0dd8fc71e8ba29d))
+* **data:** lot 6d — barème d'avancement en base, par édition ([30ad6c5](https://github.com/Ryxeuf/fantasy-football-game/commit/30ad6c593ddaca3402580a9c7dd3adfada584fbd))
+
+
+### 📝 Documentation
+
+* **changeset:** lot 6 — modèle de données « base d'abord » ([7a7a864](https://github.com/Ryxeuf/fantasy-football-game/commit/7a7a864a76425b2c2c3c82320c9be690c49c5ad5))
+
+
+### ♻️ Code Refactoring
+
+* **server:** lecture tolérante du barème depuis l'équipe ([e5a70e2](https://github.com/Ryxeuf/fantasy-football-game/commit/e5a70e22c6b43c9b143978a1e8f5b74aa08a3c25))
+
 ## [1.238.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.1...v1.238.2) (2026-08-27)
 
 
