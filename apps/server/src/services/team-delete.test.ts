@@ -2,14 +2,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    team: { findFirst: vi.fn(), update: vi.fn() },
+    team: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     leagueParticipant: { findFirst: vi.fn() },
     cupParticipant: { findFirst: vi.fn() },
   },
 }));
 
+// Le journal d'équipe n'est pas le sujet ici : il est déjà couvert par
+// `team-audit`, et `safeRecordTeamAudit` avale ses propres erreurs.
+vi.mock("./team-audit", () => ({
+  captureTeamState: vi.fn(async () => null),
+  safeRecordTeamAudit: vi.fn(async () => {}),
+}));
+
 import { prisma } from "../prisma";
-import { deleteTeam, TeamDeleteError } from "./team-delete";
+import { safeRecordTeamAudit } from "./team-audit";
+import {
+  adminSoftDeleteTeam,
+  deleteTeam,
+  restoreTeam,
+  TeamDeleteError,
+} from "./team-delete";
 
 const mockPrisma = prisma as any;
 
@@ -112,5 +125,133 @@ describe("deleteTeam", () => {
 
     const err = await deleteTeam({ teamId, userId }).catch((e) => e);
     expect(err.code).toBe("in_active_league");
+  });
+});
+
+
+describe("adminSoftDeleteTeam", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: teamId,
+      name: "Les Rats",
+      ownerId: userId,
+      deletedAt: null,
+    });
+    mockPrisma.leagueParticipant.findFirst.mockResolvedValue(null);
+    mockPrisma.cupParticipant.findFirst.mockResolvedValue(null);
+    mockPrisma.team.update.mockResolvedValue({ id: teamId });
+  });
+
+  it("soft-delete : pose deletedAt, ne supprime rien", async () => {
+    const result = await adminSoftDeleteTeam({ teamId });
+
+    expect(mockPrisma.team.update).toHaveBeenCalledWith({
+      where: { id: teamId },
+      data: { deletedAt: expect.any(Date) },
+    });
+    expect(result.deletedAt).toBeInstanceOf(Date);
+    expect(result.teamName).toBe("Les Rats");
+    expect(result.ownerId).toBe(userId);
+    expect(result.warnings).toEqual([]);
+    expect(safeRecordTeamAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ teamId, action: "team.delete" }),
+    );
+  });
+
+  it("n'est PAS bloqué par une compétition en cours (contrairement au coach)", async () => {
+    mockPrisma.leagueParticipant.findFirst.mockResolvedValue({
+      season: { league: { name: "Ligue du Chaos" } },
+    });
+    mockPrisma.cupParticipant.findFirst.mockResolvedValue({
+      cup: { name: "Coupe de Nuffle" },
+    });
+
+    const result = await adminSoftDeleteTeam({ teamId });
+
+    expect(mockPrisma.team.update).toHaveBeenCalled();
+    expect(result.warnings).toHaveLength(2);
+    expect(result.warnings[0]).toContain("Ligue du Chaos");
+    expect(result.warnings[1]).toContain("Coupe de Nuffle");
+  });
+
+  it("refuse (already_deleted) si l'équipe est déjà supprimée", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: teamId,
+      name: "Les Rats",
+      ownerId: userId,
+      deletedAt: new Date("2026-05-01"),
+    });
+
+    const err = await adminSoftDeleteTeam({ teamId }).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TeamDeleteError);
+    expect(err.code).toBe("already_deleted");
+    expect(mockPrisma.team.update).not.toHaveBeenCalled();
+  });
+
+  it("404 (not_found) si l'équipe n'existe pas", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue(null);
+
+    const err = await adminSoftDeleteTeam({ teamId }).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TeamDeleteError);
+    expect(err.code).toBe("not_found");
+    expect(mockPrisma.team.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("restoreTeam", () => {
+  const deletedAt = new Date("2026-05-01T10:00:00.000Z");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: teamId,
+      name: "Les Rats",
+      ownerId: userId,
+      deletedAt,
+    });
+    mockPrisma.team.update.mockResolvedValue({ id: teamId });
+  });
+
+  it("efface deletedAt et journalise team.restore", async () => {
+    const result = await restoreTeam({ teamId });
+
+    expect(mockPrisma.team.update).toHaveBeenCalledWith({
+      where: { id: teamId },
+      data: { deletedAt: null },
+    });
+    expect(result.previousDeletedAt).toEqual(deletedAt);
+    expect(result.teamName).toBe("Les Rats");
+    expect(safeRecordTeamAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ teamId, action: "team.restore" }),
+    );
+  });
+
+  it("refuse (not_deleted) si l'équipe est active", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue({
+      id: teamId,
+      name: "Les Rats",
+      ownerId: userId,
+      deletedAt: null,
+    });
+
+    const err = await restoreTeam({ teamId }).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TeamDeleteError);
+    expect(err.code).toBe("not_deleted");
+    expect(mockPrisma.team.update).not.toHaveBeenCalled();
+  });
+
+  it("404 (not_found) si l'équipe n'existe pas", async () => {
+    mockPrisma.team.findUnique.mockResolvedValue(null);
+
+    const err = await restoreTeam({ teamId }).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TeamDeleteError);
+    expect(err.code).toBe("not_found");
   });
 });
