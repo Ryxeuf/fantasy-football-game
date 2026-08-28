@@ -12,6 +12,12 @@ vi.mock("./team-audit", () => ({
   safeRecordTeamAudit: vi.fn(async () => {}),
 }));
 
+// Cache du catalogue public : on verifie seulement que la creation le purge
+// (le cache lui-meme est teste dans memoize-async.test.ts).
+vi.mock("../utils/skills-cache", () => ({
+  invalidatePublicSkillsCache: vi.fn(),
+}));
+
 vi.mock("../prisma", () => ({
   prisma: {
     position: { findMany: vi.fn() },
@@ -22,12 +28,14 @@ vi.mock("../prisma", () => ({
 
 import { prisma } from "../prisma";
 import { safeRecordTeamAudit } from "./team-audit";
+import { invalidatePublicSkillsCache } from "../utils/skills-cache";
 import {
   HATE_TRIGGERING_INJURIES,
   applyHateTraitAcquisitions,
   buildHateCandidates,
   buildSheetKeywordMap,
   parseHateGrants,
+  parseHateRolls,
   resolveKeywordsByPosition,
   revertHateTraitGrants,
   starKeywordsFromSheetId,
@@ -41,6 +49,7 @@ const m = {
   tpFindMany: prisma.teamPlayer.findMany as unknown as MockFn,
   tpUpdate: prisma.teamPlayer.update as unknown as MockFn,
   audit: safeRecordTeamAudit as unknown as MockFn,
+  invalidateSkills: invalidatePublicSkillsCache as unknown as MockFn,
 };
 
 describe("HATE_TRIGGERING_INJURIES", () => {
@@ -216,6 +225,7 @@ describe("applyHateTraitAcquisitions", () => {
 
   const victim = (over: Record<string, unknown> = {}) => ({
     id: "v1",
+    name: "Grognak",
     teamId: "t1",
     skills: "block",
     dead: false,
@@ -421,6 +431,214 @@ describe("revertHateTraitGrants", () => {
   it("ne lit rien sans grant", async () => {
     expect(await revertHateTraitGrants([])).toBe(0);
     expect(m.tpFindMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("trace des jets (recapitulatif UI)", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    m.tpUpdate.mockResolvedValue({});
+    m.skillCreate.mockResolvedValue({ id: "sk1" });
+  });
+
+  const victim = (over: Record<string, unknown> = {}) => ({
+    id: "v1",
+    name: "Grognak",
+    teamId: "t1",
+    skills: "block",
+    dead: false,
+    team: { ruleset: "season_3" },
+    ...over,
+  });
+
+  it("trace un jet REUSSI avec le de, le mot-cle et le joueur", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue({ id: "sk-existing" });
+
+    const out = await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 5,
+    });
+
+    expect(out.rolls).toEqual([
+      {
+        playerId: "v1",
+        playerName: "Grognak",
+        teamId: "t1",
+        keyword: "Orque",
+        skillSlug: "hate-orque",
+        roll: 5,
+        granted: true,
+      },
+    ]);
+  });
+
+  it("trace AUSSI un jet rate : le de a ete lance, la feuille doit le dire", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue({ id: "sk-existing" });
+
+    const out = await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 3,
+    });
+
+    expect(out.granted).toEqual([]);
+    expect(out.rolls).toEqual([
+      {
+        playerId: "v1",
+        playerName: "Grognak",
+        teamId: "t1",
+        keyword: "Orque",
+        skillSlug: "hate-orque",
+        roll: 3,
+        granted: false,
+      },
+    ]);
+  });
+
+  it("un 4+ sans competence garantie est trace comme NON accorde", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue(null);
+    m.skillCreate.mockRejectedValue(new Error("db down"));
+
+    const out = await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 6,
+    });
+
+    expect(out.granted).toEqual([]);
+    // Le de dit 6 mais rien n'est pose : sans `failure`, l'UI afficherait un
+    // succes sans trait sur la fiche du joueur.
+    expect(out.rolls).toEqual([
+      expect.objectContaining({
+        roll: 6,
+        granted: false,
+        failure: "skill-unavailable",
+      }),
+    ]);
+  });
+
+  it("un echec d'ecriture est trace comme NON accorde", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue({ id: "sk-existing" });
+    m.tpUpdate.mockRejectedValue(new Error("db down"));
+
+    const out = await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 6,
+    });
+
+    expect(out.granted).toEqual([]);
+    expect(out.rolls).toEqual([
+      expect.objectContaining({
+        roll: 6,
+        granted: false,
+        failure: "write-failed",
+      }),
+    ]);
+  });
+
+  it("ne trace AUCUN jet quand aucun de n'a ete lance", async () => {
+    // Trait deja possede : pas de jet, donc rien a afficher.
+    m.tpFindMany.mockResolvedValue([victim({ skills: "block,hate-orque" })]);
+    m.skillFindUnique.mockResolvedValue({ id: "sk-existing" });
+
+    const out = await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 6,
+    });
+
+    expect(out.rolls).toEqual([]);
+  });
+
+  it("purge le catalogue public quand le trait vient d'etre cree", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue(null);
+
+    await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Homme-lezard" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 4,
+    });
+
+    // Sans purge, le badge s'afficherait en slug brut jusqu'a 5 min.
+    expect(m.invalidateSkills).toHaveBeenCalled();
+  });
+
+  it("ne purge PAS quand le trait existait deja", async () => {
+    m.tpFindMany.mockResolvedValue([victim()]);
+    m.skillFindUnique.mockResolvedValue({ id: "sk-existing" });
+
+    await applyHateTraitAcquisitions({
+      candidates: [{ victimPlayerId: "v1", keyword: "Orque" }],
+      allowedTeamIds: ["t1"],
+      roll: () => 4,
+    });
+
+    expect(m.invalidateSkills).not.toHaveBeenCalled();
+  });
+});
+
+describe("parseHateRolls", () => {
+  const rolls = [
+    {
+      playerId: "v1",
+      playerName: "Grognak",
+      teamId: "t1",
+      keyword: "Orque",
+      skillSlug: "hate-orque",
+      roll: 5,
+      granted: true,
+    },
+  ];
+
+  it("accepte l'array natif (PG) et la chaine serialisee (sqlite)", () => {
+    expect(parseHateRolls(rolls)).toEqual(rolls);
+    expect(parseHateRolls(JSON.stringify(rolls))).toEqual(rolls);
+  });
+
+  it("ignore les entrees mal formees", () => {
+    expect(parseHateRolls([{ playerId: "v1" }, null, 3])).toEqual([]);
+    expect(parseHateRolls("{pas du json")).toEqual([]);
+  });
+
+  it("ne retient qu'un `failure` connu", () => {
+    const [parsed] = parseHateRolls([
+      { ...rolls[0], granted: false, failure: "n'importe quoi" },
+    ]);
+    expect(parsed.failure).toBeUndefined();
+    const [ok] = parseHateRolls([
+      { ...rolls[0], granted: false, failure: "skill-unavailable" },
+    ]);
+    expect(ok.failure).toBe("skill-unavailable");
+  });
+
+  it("retro-compat : reconstitue les jets depuis `hateGranted` seul", () => {
+    // Match valide AVANT le champ `hateRolls` : le recap ne doit pas etre
+    // vide sur l'historique.
+    const granted = [
+      { playerId: "v1", skillSlug: "hate-orque", keyword: "Orque", roll: 6 },
+    ];
+    expect(parseHateRolls(undefined, granted)).toEqual([
+      {
+        playerId: "v1",
+        playerName: "",
+        teamId: "",
+        keyword: "Orque",
+        skillSlug: "hate-orque",
+        roll: 6,
+        granted: true,
+      },
+    ]);
+  });
+
+  it("sans jet ni grant, rend une liste vide", () => {
+    expect(parseHateRolls(undefined, undefined)).toEqual([]);
   });
 });
 

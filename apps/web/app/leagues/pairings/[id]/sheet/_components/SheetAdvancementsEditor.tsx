@@ -96,7 +96,7 @@ export interface StagedAdvancementEntry extends StagedAdvancementChoice {
 }
 
 /** Catalogue de compétences par ruleset, partagé entre éditeur et récaps. */
-function useSkillCatalog(ruleset: string): SkillCatalogItem[] {
+export function useSkillCatalog(ruleset: string): SkillCatalogItem[] {
   const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
   useEffect(() => {
     let cancelled = false;

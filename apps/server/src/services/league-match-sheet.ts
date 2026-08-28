@@ -30,6 +30,7 @@ import {
 } from "./league-match-summary";
 import {
   recordOfflineLeagueResult,
+  OFFLINE_MATCH_MODE,
   type OfflinePlayerStatInput,
   type OfflineInjuryInput,
   type OfflineInjuryType,
@@ -46,7 +47,9 @@ import {
 import {
   buildHateCandidates,
   buildSheetKeywordMap,
+  parseHateRolls,
   type HateInjuryInput,
+  type HateRoll,
 } from "./league-hate-trait";
 import {
   buildJourneymanHire,
@@ -1393,6 +1396,12 @@ export async function validateByCommissioner(input: {
   sheet: unknown;
   summary: MatchSummary;
   effects: { applied: boolean; reason?: string };
+  /**
+   * Haine (X) — jets d'après-match de cette validation. Le D6 est lancé
+   * SERVEUR : sans ce retour, le commissaire ne saurait jamais qu'il a eu
+   * lieu. Vide quand aucune sortie ne remplit les conditions.
+   */
+  hateRolls: readonly HateRoll[];
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   if (!isCommissioner(ctx, input.userId)) {
@@ -1440,6 +1449,8 @@ export async function validateByCommissioner(input: {
       sheet: updatedFf,
       summary,
       effects: { applied: "recorded" in ff && ff.recorded },
+      // Un forfait n'a ni sortie ni blessure : aucun jet de Haine.
+      hateRolls: [],
     };
   }
 
@@ -1683,8 +1694,10 @@ export async function validateByCommissioner(input: {
   });
 
   let effects: { applied: boolean; reason?: string };
+  let hateRolls: readonly HateRoll[] = [];
   if ("recorded" in outcome && outcome.recorded) {
     effects = { applied: true };
+    hateRolls = outcome.hateRolls;
   } else if ("skipped" in outcome) {
     // already-scored / not-terminal-eligible : effets deja en place.
     effects = { applied: false, reason: outcome.reason };
@@ -1706,7 +1719,7 @@ export async function validateByCommissioner(input: {
       ...advData,
     },
   });
-  return { sheet: updated, summary, effects };
+  return { sheet: updated, summary, effects, hateRolls };
 }
 
 /**
@@ -2866,6 +2879,42 @@ async function computeSheetSpp(input: {
   return out;
 }
 
+/**
+ * Haine (X) — jets d'après-match persistés pour ce pairing.
+ *
+ * Lus depuis le snapshot du Match offline (`offlineResultInput.hateRolls`),
+ * seul endroit où ils vivent : le récap reste donc affichable à CHAQUE
+ * ouverture de la feuille validée, pas seulement dans la réponse ponctuelle
+ * de la validation. Best-effort — un échec de lecture masque le récap, il ne
+ * casse pas la feuille.
+ */
+async function loadHateRollsForPairing(pairingId: string): Promise<HateRoll[]> {
+  try {
+    const match = (await prisma.match.findFirst({
+      where: { leaguePairingId: pairingId, mode: OFFLINE_MATCH_MODE },
+      select: { offlineResultInput: true },
+    })) as { offlineResultInput: unknown } | null;
+    if (!match?.offlineResultInput) return [];
+    let snapshot: unknown = match.offlineResultInput;
+    if (typeof snapshot === "string") {
+      try {
+        snapshot = JSON.parse(snapshot);
+      } catch {
+        return [];
+      }
+    }
+    if (!snapshot || typeof snapshot !== "object") return [];
+    const snap = snapshot as { hateRolls?: unknown; hateGranted?: unknown };
+    return parseHateRolls(snap.hateRolls, snap.hateGranted);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.warn(
+      `[league-match-sheet] lecture des jets de Haine echouee pairing=${pairingId}: ${msg}`,
+    );
+    return [];
+  }
+}
+
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
@@ -2887,6 +2936,11 @@ export async function getMatchSheet(input: {
   reference: MatchSheetReference;
   /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
   computedSpp: Record<string, number>;
+  /**
+   * Haine (X) — jets d'après-match déjà joués sur ce match. Toujours `[]`
+   * tant que la feuille n'est pas validée : le D6 est lancé à la validation.
+   */
+  hateRolls: readonly HateRoll[];
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -3104,5 +3158,10 @@ export async function getMatchSheet(input: {
         : side === "away"
           ? (teams.away?.teamId ?? null)
           : null,
+    // Le D6 de Haine est lance a la validation : rien a montrer avant.
+    hateRolls:
+      sheet.status === "validated"
+        ? await loadHateRollsForPairing(input.pairingId)
+        : [],
   };
 }

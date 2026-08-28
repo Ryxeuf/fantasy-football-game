@@ -65,7 +65,7 @@ vi.mock("./player-status", () => ({
 // Haine (X) : service dedie (teste dans league-hate-trait.test.ts). Ici on
 // verifie la delegation (bornes du match) et la trace dans le snapshot.
 vi.mock("./league-hate-trait", () => ({
-  applyHateTraitAcquisitions: vi.fn(async () => ({ granted: [] })),
+  applyHateTraitAcquisitions: vi.fn(async () => ({ granted: [], rolls: [] })),
 }));
 
 import { prisma } from "../prisma";
@@ -135,7 +135,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
     m.tpFindMany.mockResolvedValue([]);
     m.matchUpdate.mockResolvedValue({});
     m.applyPurchases.mockResolvedValue(EMPTY_MUTATION_SIDE);
-    m.applyHate.mockResolvedValue({ granted: [] });
+    m.applyHate.mockResolvedValue({ granted: [], rolls: [] });
     m.record.mockResolvedValue({
       recorded: true,
       winner: "A",
@@ -774,7 +774,7 @@ describe("recordOfflineLeagueResult — Haine (X)", () => {
     const granted = [
       { playerId: "a5", skillSlug: "hate-orque", keyword: "Orque", roll: 5 },
     ];
-    m.applyHate.mockResolvedValue({ granted });
+    m.applyHate.mockResolvedValue({ granted, rolls: [] });
 
     await recordOfflineLeagueResult({
       ...base,
@@ -805,7 +805,7 @@ describe("recordOfflineLeagueResult — Haine (X)", () => {
     });
     m.applyHate.mockImplementation(async () => {
       order.push("hate");
-      return { granted: [] };
+      return { granted: [], rolls: [] };
     });
     m.tpFindMany.mockResolvedValue([
       { id: "a5", ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
@@ -818,5 +818,69 @@ describe("recordOfflineLeagueResult — Haine (X)", () => {
     });
 
     expect(order).toEqual(["injury", "hate"]);
+  });
+
+  it("memorise TOUS les jets dans le snapshot, y compris les rates", async () => {
+    const rolls = [
+      {
+        playerId: "a5",
+        playerName: "Grognak",
+        teamId: "team-home",
+        keyword: "Orque",
+        skillSlug: "hate-orque",
+        roll: 2,
+        granted: false,
+      },
+    ];
+    m.applyHate.mockResolvedValue({ granted: [], rolls });
+
+    await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    // Rien a reverser (aucun trait accorde) mais le snapshot doit quand meme
+    // etre ecrit : sinon la feuille ne pourrait plus montrer le jet rate.
+    const written = m.matchUpdate.mock.calls.at(-1)?.[0].data
+      .offlineResultInput as { hateRolls?: unknown };
+    expect(written.hateRolls).toEqual(rolls);
+  });
+
+  it("remonte les jets dans l'issue (reponse de validation)", async () => {
+    const rolls = [
+      {
+        playerId: "a5",
+        playerName: "Grognak",
+        teamId: "team-home",
+        keyword: "Orque",
+        skillSlug: "hate-orque",
+        roll: 5,
+        granted: true,
+      },
+    ];
+    m.applyHate.mockResolvedValue({
+      granted: [
+        { playerId: "a5", skillSlug: "hate-orque", keyword: "Orque", roll: 5 },
+      ],
+      rolls,
+    });
+
+    const r = await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    expect(r).toMatchObject({ recorded: true, hateRolls: rolls });
+  });
+
+  it("tolere un service sans `rolls` (mock/version anterieure)", async () => {
+    m.applyHate.mockResolvedValue({ granted: [] });
+
+    const r = await recordOfflineLeagueResult({
+      ...base,
+      hateCandidates: [{ victimPlayerId: "a5", keyword: "Orque" }],
+    });
+
+    expect(r).toMatchObject({ recorded: true, hateRolls: [] });
   });
 });

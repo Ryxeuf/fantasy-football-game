@@ -28,6 +28,7 @@ vi.mock("../prisma", () => ({
 // Lot G.2 — mock du pipeline offline branche a la validation.
 vi.mock("./league-offline-result", () => ({
   recordOfflineLeagueResult: vi.fn(),
+  OFFLINE_MATCH_MODE: "offline",
 }));
 
 // Polish — mock de la reversion (invalidation).
@@ -795,6 +796,75 @@ describe("Lot G — league-match-sheet", () => {
       });
     });
 
+    it("remonte les jets de Haine dans la reponse de validation", async () => {
+      // Le D6 est lance serveur : sans ce retour, le commissaire ne saurait
+      // jamais qu'un jet a eu lieu.
+      const hateRolls = [
+        {
+          playerId: "h2",
+          playerName: "Grognak",
+          teamId: "team-home",
+          keyword: "Orque",
+          skillSlug: "hate-orque",
+          roll: 5,
+          granted: true,
+        },
+      ];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockResolvedValue({
+        recorded: true,
+        pairingId: "pair-1",
+        matchId: "m1",
+        winner: "home",
+        sppPlayersUpdated: 0,
+        hateRolls,
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+
+      const out = await validateByCommissioner({
+        pairingId: "pair-1",
+        userId: COMMISH,
+      });
+
+      expect(out.hateRolls).toEqual(hateRolls);
+    });
+
+    it("rend une liste de jets vide quand le pipeline a ete saute", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockRecordOffline.mockResolvedValue({
+        skipped: true,
+        reason: "match-already-scored",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+
+      const out = await validateByCommissioner({
+        pairingId: "pair-1",
+        userId: COMMISH,
+      });
+
+      expect(out.hateRolls).toEqual([]);
+    });
+
     it("marks validated even when offline pipeline skips (already scored)", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
@@ -929,6 +999,89 @@ describe("Lot G — league-match-sheet", () => {
       const out = await getMatchSheet({ pairingId: "pair-1", userId: AWAY });
       expect(out.viewerRole).toBe("away");
       expect(out.summary.scoreAway).toBe(1);
+    });
+
+    it("expose les jets de Haine persistes d'une feuille validee", async () => {
+      // Le recap doit survivre a un rechargement de page : il est relu du
+      // snapshot du match, pas de la reponse ponctuelle de validation.
+      const hateRolls = [
+        {
+          playerId: "h2",
+          playerName: "Grognak",
+          teamId: "team-home",
+          keyword: "Orque",
+          skillSlug: "hate-orque",
+          roll: 2,
+          granted: false,
+        },
+      ];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+      });
+      mockPrisma.match.findFirst.mockResolvedValue({
+        offlineResultInput: { hateRolls },
+      });
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.hateRolls).toEqual(hateRolls);
+    });
+
+    it("relit un snapshot serialise en chaine (miroir sqlite)", async () => {
+      const hateRolls = [
+        {
+          playerId: "h2",
+          playerName: "Grognak",
+          teamId: "team-home",
+          keyword: "Orque",
+          skillSlug: "hate-orque",
+          roll: 6,
+          granted: true,
+        },
+      ];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+      });
+      mockPrisma.match.findFirst.mockResolvedValue({
+        offlineResultInput: JSON.stringify({ hateRolls }),
+      });
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.hateRolls).toEqual(hateRolls);
+    });
+
+    it("ne lit aucun jet tant que la feuille n'est pas validee", async () => {
+      // Le D6 est lance A la validation : rien a montrer avant, et surtout
+      // pas de requete inutile.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      mockPrisma.match.findFirst.mockClear();
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.hateRolls).toEqual([]);
+      expect(mockPrisma.match.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("degrade sans casser la feuille si la lecture des jets echoue", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+      });
+      mockPrisma.match.findFirst.mockRejectedValue(new Error("db down"));
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.hateRolls).toEqual([]);
     });
 
     it("marks commissioner role", async () => {
