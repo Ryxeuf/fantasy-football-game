@@ -30,6 +30,7 @@ import {
   pickHateKeyword,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
+import { invalidatePublicSkillsCache } from "../utils/skills-cache";
 import {
   safeRecordTeamAudit,
   type TeamAuditPrismaLike,
@@ -64,6 +65,35 @@ export interface HateGrant {
   readonly skillSlug: string;
   readonly keyword: string;
   readonly roll: number;
+}
+
+/**
+ * Pourquoi un jet réussi n'a finalement rien accordé. `undefined` sur un
+ * jet accordé ou simplement raté — l'UI n'a alors rien à expliquer.
+ */
+export type HateRollFailure = "skill-unavailable" | "write-failed";
+
+/**
+ * UN jet de D6 réellement lancé, accordé ou non.
+ *
+ * `granted` ne se déduit PAS de `roll >= 4` : un 4+ peut ne rien donner si
+ * la compétence n'a pas pu être garantie au catalogue. L'UI doit dire la
+ * vérité du dé ET celle de l'attribution, sinon un coach qui voit « 5 » sur
+ * la feuille et rien sur la fiche du joueur croit à une perte de données.
+ *
+ * `playerName` est FIGÉ à l'écriture (même posture que `actorLabel` du
+ * journal d'équipe) : le récapitulatif reste lisible même si le joueur est
+ * mort, licencié ou renommé depuis.
+ */
+export interface HateRoll {
+  readonly playerId: string;
+  readonly playerName: string;
+  readonly teamId: string;
+  readonly keyword: string;
+  readonly skillSlug: string;
+  readonly roll: number;
+  readonly granted: boolean;
+  readonly failure?: HateRollFailure;
 }
 
 /**
@@ -193,6 +223,11 @@ async function ensureHateSkill(
         excludedFromSelection: true,
       },
     });
+    // Le catalogue public est memoize 5 min : sans purge, le badge fraichement
+    // pose s'afficherait en slug brut sur la fiche du joueur jusqu'a
+    // expiration. Le trait vient d'apparaitre, il doit etre lisible tout de
+    // suite.
+    invalidatePublicSkillsCache();
     serverLog.info(
       `[league-hate-trait] trait cree slug=${slug} ruleset=${ruleset}`,
     );
@@ -218,9 +253,11 @@ export async function applyHateTraitAcquisitions(input: {
   /** Bornes de sécurité : les 2 équipes du match. */
   readonly allowedTeamIds: readonly string[];
   readonly roll?: () => number;
-}): Promise<{ granted: HateGrant[] }> {
+}): Promise<{ granted: HateGrant[]; rolls: HateRoll[] }> {
   const granted: HateGrant[] = [];
-  if (input.candidates.length === 0) return { granted };
+  /** Tous les D6 REELLEMENT lances (accordes ou non) — trace pour l'UI. */
+  const rolls: HateRoll[] = [];
+  if (input.candidates.length === 0) return { granted, rolls };
   const roll = input.roll ?? rollD6;
 
   const ids = [...new Set(input.candidates.map((c) => c.victimPlayerId))];
@@ -228,6 +265,7 @@ export async function applyHateTraitAcquisitions(input: {
     where: { id: { in: ids }, teamId: { in: [...input.allowedTeamIds] } },
     select: {
       id: true,
+      name: true,
       teamId: true,
       skills: true,
       dead: true,
@@ -235,6 +273,7 @@ export async function applyHateTraitAcquisitions(input: {
     },
   })) as Array<{
     id: string;
+    name: string | null;
     teamId: string;
     skills: string | null;
     dead: boolean;
@@ -257,10 +296,32 @@ export async function applyHateTraitAcquisitions(input: {
     if (current.includes(slug)) continue;
 
     const value = roll();
-    if (!hateRollSucceeds(value)) continue;
+    // Le D6 est lance : quoi qu'il advienne ensuite, la feuille doit le
+    // montrer. `pushRoll` est donc appele sur TOUS les chemins de sortie.
+    const pushRoll = (isGranted: boolean, failure?: HateRollFailure): void => {
+      rolls.push({
+        playerId: player.id,
+        playerName: player.name ?? "",
+        teamId: player.teamId,
+        keyword: candidate.keyword,
+        skillSlug: slug,
+        roll: value,
+        granted: isGranted,
+        ...(failure ? { failure } : {}),
+      });
+    };
+    if (!hateRollSucceeds(value)) {
+      pushRoll(false);
+      continue;
+    }
 
     const ruleset = player.team?.ruleset ?? "season_3";
-    if (!(await ensureHateSkill(slug, candidate.keyword, ruleset))) continue;
+    if (!(await ensureHateSkill(slug, candidate.keyword, ruleset))) {
+      // 4+ obtenu mais rien accorde : l'UI doit l'expliquer plutot que
+      // d'afficher un jet reussi sans trait sur la fiche du joueur.
+      pushRoll(false, "skill-unavailable");
+      continue;
+    }
 
     const next = [...current, slug];
     try {
@@ -273,8 +334,10 @@ export async function applyHateTraitAcquisitions(input: {
       serverLog.error(
         `[league-hate-trait] pose du trait ${slug} echouee player=${player.id}: ${msg}`,
       );
+      pushRoll(false, "write-failed");
       continue;
     }
+    pushRoll(true);
     skillsById.set(player.id, next);
     // Journal d'equipe : une competence qui apparait sur un joueur sans
     // que personne ne l'ait choisie est exactement ce qu'un coach vient
@@ -306,7 +369,7 @@ export async function applyHateTraitAcquisitions(input: {
     );
   }
 
-  return { granted };
+  return { granted, rolls };
 }
 
 /**
@@ -385,6 +448,61 @@ export function parseHateGrants(raw: unknown): HateGrant[] {
       skillSlug,
       keyword: typeof keyword === "string" ? keyword : "",
       roll: typeof rollValue === "number" ? rollValue : 0,
+    });
+  }
+  return out;
+}
+
+/**
+ * Parse tolérant (array PG / string sqlite) des jets du snapshot.
+ *
+ * Rétro-compat : un match validé AVANT ce champ n'a que `hateGranted`. On
+ * en reconstitue les jets réussis (`granted: true`) pour que le récap ne
+ * soit pas vide sur l'historique — les jets ratés d'alors sont perdus,
+ * ils n'ont jamais été écrits.
+ */
+export function parseHateRolls(
+  raw: unknown,
+  fallbackGrants?: unknown,
+): HateRoll[] {
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = null;
+    }
+  }
+  if (!Array.isArray(arr)) {
+    return parseHateGrants(fallbackGrants).map((g) => ({
+      playerId: g.playerId,
+      playerName: "",
+      teamId: "",
+      keyword: g.keyword,
+      skillSlug: g.skillSlug,
+      roll: g.roll,
+      granted: true,
+    }));
+  }
+  const out: HateRoll[] = [];
+  for (const e of arr) {
+    if (!e || typeof e !== "object") continue;
+    const r = e as Record<string, unknown>;
+    if (typeof r.playerId !== "string" || typeof r.skillSlug !== "string") {
+      continue;
+    }
+    const failure = r.failure;
+    out.push({
+      playerId: r.playerId,
+      playerName: typeof r.playerName === "string" ? r.playerName : "",
+      teamId: typeof r.teamId === "string" ? r.teamId : "",
+      keyword: typeof r.keyword === "string" ? r.keyword : "",
+      skillSlug: r.skillSlug,
+      roll: typeof r.roll === "number" ? r.roll : 0,
+      granted: r.granted === true,
+      ...(failure === "skill-unavailable" || failure === "write-failed"
+        ? { failure }
+        : {}),
     });
   }
   return out;

@@ -60,6 +60,7 @@ import {
   applyHateTraitAcquisitions,
   type HateCandidate,
   type HateGrant,
+  type HateRoll,
 } from "./league-hate-trait";
 
 /** Mode pose sur le Match synthetique pour le distinguer des matchs joues. */
@@ -180,6 +181,12 @@ export type RecordOfflineResultOutcome =
       readonly matchId: string;
       readonly winner: OfflineResultWinner;
       readonly sppPlayersUpdated: number;
+      /**
+       * Haine (X) — TOUS les D6 lancés à cette validation (accordés ou non).
+       * Remonté jusqu'à la réponse HTTP pour que le commissaire voie le
+       * résultat des jets sans recharger la feuille.
+       */
+      readonly hateRolls: readonly HateRoll[];
     }
   | {
       readonly skipped: true;
@@ -971,6 +978,7 @@ export async function recordOfflineLeagueResult(
   // les PSP ni la VE (le trait ne vit pas dans `advancements`), mais la
   // fiche du joueur doit etre a jour quand le coach choisit son evolution.
   let hateGranted: readonly HateGrant[] = [];
+  let hateRolls: readonly HateRoll[] = [];
   if (input.hateCandidates && input.hateCandidates.length > 0) {
     try {
       const out = await applyHateTraitAcquisitions({
@@ -978,6 +986,10 @@ export async function recordOfflineLeagueResult(
         allowedTeamIds: [home.teamId, away.teamId],
       });
       hateGranted = out.granted;
+      // `?? []` : le service peut etre mocke (tests) ou une version
+      // anterieure — on ne veut pas faire echouer une validation pour un
+      // recapitulatif d'affichage.
+      hateRolls = out.rolls ?? [];
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
       serverLog.error(
@@ -1029,7 +1041,10 @@ export async function recordOfflineLeagueResult(
   if (
     hasAnyMutation(rosterMutations) ||
     firedApplied.length > 0 ||
-    hateGranted.length > 0
+    hateGranted.length > 0 ||
+    // Un match ou TOUS les jets de Haine ont rate n'a rien a reverser, mais
+    // la feuille doit quand meme pouvoir montrer que les des ont ete lances.
+    hateRolls.length > 0
   ) {
     await prisma.match.update({
       where: { id: match.id },
@@ -1039,6 +1054,7 @@ export async function recordOfflineLeagueResult(
           rosterMutations,
           firedApplied,
           hateGranted,
+          hateRolls,
         },
       },
     });
@@ -1064,5 +1080,6 @@ export async function recordOfflineLeagueResult(
     matchId: match.id,
     winner,
     sppPlayersUpdated,
+    hateRolls,
   };
 }

@@ -11,6 +11,10 @@ import {
   type StagedAdvancementEntry,
 } from "./_components/SheetAdvancementsEditor";
 import {
+  HateRollsRecap,
+  type HateRollView,
+} from "./_components/HateRollsRecap";
+import {
   KICKOFF_EVENTS,
   LEGACY_KICKOFF_EVENT_IDS,
   surchargeForAdvancement,
@@ -216,6 +220,11 @@ interface SheetResponse {
   teams: { home: SheetTeam | null; away: SheetTeam | null };
   reference: MatchSheetReference;
   computedSpp: Record<string, number>;
+  /**
+   * Haine (X) — jets d'après-match joués par le SERVEUR à la validation.
+   * Optionnel : rétro-compat avec un serveur antérieur au récapitulatif.
+   */
+  hateRolls?: readonly HateRollView[];
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -613,6 +622,10 @@ export default function MatchSheetPage() {
   const home = data?.teams.home ?? null;
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
+  // Haine (X) : situe le joueur blessé dans son équipe (les 2 côtés jettent).
+  const hateTeamNames: Record<string, string> = {};
+  if (home?.teamId) hateTeamNames[home.teamId] = home.name ?? "Domicile";
+  if (away?.teamId) hateTeamNames[away.teamId] = away.name ?? "Extérieur";
   const role = data?.viewerRole ?? "none";
   // `myTeamId` doit refléter l'équipe possédée par le viewer, y compris quand
   // il est commissaire ET participant (viewerRole="commissioner"). On lit
@@ -1187,6 +1200,17 @@ export default function MatchSheetPage() {
       {/* FIN DU MATCH */}
       {tab === "after" &&
         ((isCoach || isCommissioner) ? (
+        <div className="space-y-3">
+        {/* Haine (X) : le D6 est lancé SERVEUR à la validation. Sans ce
+            panneau, le trait apparaîtrait sur la fiche du joueur sans
+            explication — et un jet raté ne laisserait aucune trace. Il vit
+            ici (conséquences d'après-match) et non sous « Évolutions » : le
+            trait ne coûte pas de PSP et ne se choisit pas. */}
+        <HateRollsRecap
+          rolls={data.hateRolls ?? []}
+          teamNames={hateTeamNames}
+          ruleset={home?.ruleset ?? away?.ruleset}
+        />
         <PostMatchPanel
           initial={{
             winningsHomeManual: data.sheet.winningsHomeManual ?? null,
@@ -1216,6 +1240,7 @@ export default function MatchSheetPage() {
           }}
           journeymanHireCost={journeymanHireCost}
         />
+        </div>
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
             La fin de match est réservée aux coachs et au commissaire.

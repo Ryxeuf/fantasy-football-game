@@ -8,11 +8,12 @@ import { prisma } from "../prisma";
 import { resolveRuleset } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
 import { serverLog } from "../utils/server-log";
+import {
+  SKILLS_CACHE_NS as SKILLS_NS,
+  SKILLS_CACHE_TTL_MS,
+} from "../utils/skills-cache";
 
 const router = Router();
-
-const SKILLS_CACHE_TTL_MS = 5 * 60 * 1000;
-const SKILLS_NS = "public-skills";
 
 interface SkillRow {
   id: string;
