@@ -207,6 +207,107 @@ export function deriveJourneymen(
   }));
 }
 
+/**
+ * Libellé de poste porté par un journalier BAKÉ dans un snapshot de roster
+ * (`positionName` : « Journalier » ou « Journalier (<poste>) »). Les joueurs
+ * réels y portent leur SLUG de poste (`blitzer_skaven`…), jamais un libellé :
+ * le préfixe discrimine donc les deux sans ambiguïté.
+ */
+const FROZEN_JOURNEYMAN_POSITION_PREFIX = "Journalier";
+
+/** Roster FIGÉ d'un côté de la feuille (« version du match »). */
+export interface FrozenSheetRoster {
+  /**
+   * Joueurs RÉELS figés, dans la forme attendue par `deriveJourneymen`. Le
+   * gel exclut déjà les morts, les licenciés et les absents : tous les
+   * joueurs du snapshot étaient donc disponibles pour ce match.
+   */
+  readonly players: ReadonlyArray<{
+    readonly number: number;
+    readonly dead: boolean;
+    readonly missNextMatch: boolean;
+  }>;
+  /** Journaliers alignés, bakés au gel dans l'ordre de dérivation. */
+  readonly journeymen: ReadonlyArray<{
+    readonly number: number;
+    readonly name: string;
+  }>;
+}
+
+/**
+ * Lit le roster figé d'un côté de la feuille (parse tolérant : objet natif
+ * PG, chaîne JSON du miroir sqlite, null).
+ *
+ * Retourne `null` quand il n'y a RIEN de figé à lire — snapshot absent,
+ * illisible, ou « en-tête seul » (feuilles antérieures au gel complet, qui
+ * ne bakent ni le roster ni les journaliers). L'appelant retombe alors sur
+ * le roster live.
+ */
+export function parseFrozenSheetRoster(raw: unknown): FrozenSheetRoster | null {
+  let obj: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as { headerOnly?: unknown; players?: unknown };
+  if (o.headerOnly === true) return null;
+  if (!Array.isArray(o.players)) return null;
+
+  const players: Array<{ number: number; dead: boolean; missNextMatch: boolean }> = [];
+  const journeymen: Array<{ number: number; name: string }> = [];
+  for (const entry of o.players) {
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry as { number?: unknown; name?: unknown; position?: unknown };
+    const number = typeof e.number === "number" ? e.number : 0;
+    if (
+      typeof e.position === "string" &&
+      e.position.startsWith(FROZEN_JOURNEYMAN_POSITION_PREFIX)
+    ) {
+      journeymen.push({
+        number,
+        name: typeof e.name === "string" ? e.name : "",
+      });
+      continue;
+    }
+    players.push({ number, dead: false, missNextMatch: false });
+  }
+  return { players, journeymen };
+}
+
+/**
+ * Journaliers de la « VERSION DU MATCH » : dérivés du roster FIGÉ dès qu'il
+ * existe, du roster live sinon.
+ *
+ * C'est la seule dérivation que doit utiliser la feuille de match. Repartir
+ * du roster live rejouait le calcul sur un roster qui a bougé DEPUIS le coup
+ * d'envoi : après validation, les morts et les blessures « rate le prochain
+ * match » que la feuille vient d'appliquer faisaient apparaître (ou grossir)
+ * un contingent de journaliers qui n'a jamais joué ce match-là — ceux-ci sont
+ * pour la rencontre SUIVANTE.
+ *
+ * Les numéros et les noms viennent des journaliers bakés dans le snapshot :
+ * le gel fait foi, y compris sur les feuilles figées avant cette correction.
+ */
+export function deriveMatchJourneymen(
+  input: DeriveJourneymenInput & {
+    /** Colonne `rosterSnapshotHome/Away` de la feuille (brute). */
+    readonly frozenRosterSnapshot?: unknown;
+  },
+): SheetJourneyman[] {
+  const frozen = parseFrozenSheetRoster(input.frozenRosterSnapshot);
+  if (!frozen) return deriveJourneymen(input);
+  const derived = deriveJourneymen({ ...input, players: frozen.players });
+  return derived.map((j, i) => {
+    const baked = frozen.journeymen[i];
+    if (!baked) return j;
+    return { ...j, number: baked.number, name: baked.name || j.name };
+  });
+}
+
 /** Parse tolérant du champ `journeymenHome/Away` ({ position } | null). */
 export function parseJourneymenChoice(raw: unknown): string | null {
   let obj: unknown = raw;

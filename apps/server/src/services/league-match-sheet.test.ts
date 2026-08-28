@@ -1059,6 +1059,84 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.teams.away?.currentValue).toBe(840_000);
     });
 
+    it("feuille figée : les journaliers servis sont ceux du COUP D'ENVOI", async () => {
+      // Régression : après validation, la feuille reprenait la dérivation
+      // depuis le roster LIVE — sur lequel elle venait d'appliquer un mort et
+      // deux « rate le prochain match ». Elle annonçait donc des journaliers
+      // qui n'ont jamais joué ce match (ils sont pour le suivant).
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const frozen = (realCount: number, journeymenNumbers: number[] = []) =>
+        JSON.stringify({
+          currentValue: 940_000,
+          players: [
+            ...Array.from({ length: realCount }, (_, i) => ({
+              name: `J${i + 1}`,
+              position: "human_lineman",
+              number: i + 1,
+              spp: 0,
+            })),
+            ...journeymenNumbers.map((number, i) => ({
+              name: `Journalier ${i + 1}`,
+              position: "Journalier (Lineman)",
+              number,
+              spp: 0,
+            })),
+          ],
+        });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        events: [],
+        // Domicile : 10 joueurs au coup d'envoi -> 1 journalier baké.
+        rosterSnapshotHome: frozen(10, [11]),
+        // Extérieur : 11 joueurs -> aucun journalier.
+        rosterSnapshotAway: frozen(11),
+      });
+      // Roster LIVE d'aujourd'hui : la feuille a tué un joueur et posé deux
+      // absences -> 8 disponibles côté domicile, 9 côté extérieur.
+      const players = (
+        count: number,
+        out: Array<Partial<{ dead: boolean; missNextMatch: boolean }>> = [],
+      ) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `p${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "human_lineman",
+          dead: out[i]?.dead ?? false,
+          missNextMatch: out[i]?.missNextMatch ?? false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          players: players(10, [
+            { dead: true },
+            { missNextMatch: true },
+          ]),
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "human",
+          players: players(11, [{ missNextMatch: true }, { missNextMatch: true }]),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      expect(out.teams.home?.journeymen).toHaveLength(1);
+      expect(out.teams.home?.journeymen?.[0]?.number).toBe(11);
+      // Le bandeau « aligne N journaliers » disparaît quand il n'y en a pas.
+      expect(out.teams.away?.journeymen).toEqual([]);
+    });
+
     it("exclut les licencies des pickers mais garde les morts", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
