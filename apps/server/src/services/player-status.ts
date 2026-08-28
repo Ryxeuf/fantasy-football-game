@@ -21,6 +21,14 @@
  * INVARIANT — au plus un statut inactif à la fois par joueur, donc au plus un
  * `TeamPlayerStatusEvent` avec `revertedAt = null`. `applyPlayerStatus` skippe
  * un joueur déjà inactif.
+ *
+ * MORT ⇒ HORS ROSTER — séquence de fin de match BB (p.68) : le joueur mort est
+ * retiré de l'équipe AVANT toute autre action d'après-match, ce qui libère sa
+ * place et son numéro pour l'étape 4 (embauches). La mort pose donc `dead`
+ * ET `firedAt` (l'état « sorti du roster » du modèle) ; la reversion lève les
+ * deux. Un joueur `dead: true, firedAt: null` est donc soit en cours
+ * d'écriture, soit antérieur à cette règle — les deux se retirent à la main
+ * via `removeInactivePlayerFromRoster`.
  */
 
 import { prisma } from "../prisma";
@@ -140,9 +148,16 @@ export async function applyPlayerStatus(
   }
 
   const now = new Date();
+  // Sequence de fin de match BB (livre p.68) : un joueur MORT est retire de
+  // l'equipe AVANT toute autre action d'apres-match — sa place et son numero
+  // doivent etre libres pour l'etape 4 (embauches). Le retrait du roster est
+  // porte par `firedAt` (l'etat « sorti du roster » du modele, cf.
+  // `removeInactivePlayerFromRoster`) ; `dead` / `diedAt` / la provenance
+  // restent poses pour l'historique et pour la reversion (invalidation d'une
+  // feuille de match), qui releve les DEUX (cf. `revertPlayerStatus`).
   const statusData =
     input.kind === "death"
-      ? { dead: true, diedAt: now }
+      ? { dead: true, diedAt: now, firedAt: now }
       : { firedAt: now };
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;
@@ -215,16 +230,16 @@ export async function applyPlayerStatuses(
 /**
  * Retire du roster un joueur DEJA inactif (mort ou licencie).
  *
- * Cas d'usage : un joueur mort reste sur la feuille d'equipe d'une equipe
- * engagee (le verrou anti-triche interdit toute suppression) et occupe une
- * place. Le coach doit pouvoir l'en sortir.
+ * Depuis que la mort sort elle-meme le joueur du roster (cf.
+ * `applyPlayerStatus`), ce retrait manuel ne sert plus qu'aux joueurs morts
+ * AVANT cette regle (`dead: true` avec `firedAt: null`), que le coach ou le
+ * commissaire doivent pouvoir sortir de la feuille d'equipe a la main.
  *
  * On pose `firedAt` — l'etat « sorti du roster » du modele — et RIEN
  * d'autre : `dead` / `diedAt` / la provenance du statut sont laisses
  * intacts, pour que l'invalidation d'une feuille de match puisse toujours
- * reverter la mort (`revertPlayerStatus` ne remet pas `firedAt` a null :
- * un joueur retire par son coach ne revient donc pas au roster tout seul,
- * ce qui est le comportement voulu).
+ * reverter la mort (`revertPlayerStatus` leve alors les deux : ressusciter
+ * un joueur, c'est le remettre au roster).
  *
  * Aucun `TeamPlayerStatusEvent` n'est ecrit : l'invariant « au plus un
  * event non reverte par joueur » appartient a l'evenement de MORT, qui
@@ -361,9 +376,14 @@ export async function revertPlayerStatus(
   }
 
   const now = new Date();
+  // Ressusciter, c'est aussi REMETTRE au roster : la mort en sort le joueur
+  // (`firedAt` pose par `applyPlayerStatus`), donc l'annuler doit lever les
+  // deux. Sur un joueur mort, `firedAt` ne peut PAS venir d'un licenciement —
+  // `applyPlayerStatus` refuse de licencier un joueur deja inactif — il vient
+  // toujours du retrait du corps, qui n'a plus de raison d'etre.
   const revertData =
     input.kind === "death"
-      ? { dead: false, diedAt: null }
+      ? { dead: false, diedAt: null, firedAt: null }
       : { firedAt: null };
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;

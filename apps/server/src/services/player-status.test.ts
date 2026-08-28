@@ -110,6 +110,26 @@ describe("applyPlayerStatus", () => {
     });
   });
 
+  it("sort le mort du roster (firedAt) des la pose de la mort", async () => {
+    // Sequence BB p.68 : un joueur mort est retire de l'equipe AVANT toute
+    // autre action d'apres-match, sa place et son numero sont libres.
+    mockFindUnique.mockResolvedValue(ACTIVE as never);
+
+    await applyPlayerStatus({
+      playerId: "p1",
+      kind: "death",
+      source: "match_sheet",
+      sourceId: "m1",
+    });
+
+    const updateArgs = vi.mocked(prisma.teamPlayer.update).mock.calls[0]![0];
+    expect(updateArgs.data.firedAt).toBeInstanceOf(Date);
+    expect(updateArgs.data.diedAt).toBeInstanceOf(Date);
+    // `dead` reste la source de verite du statut : le retrait n'est PAS un
+    // licenciement (statut "dead", pas "fired").
+    expect(updateArgs.data).toMatchObject({ dead: true, status: "dead" });
+  });
+
   it("pose le licenciement (firedAt) sans toucher a dead", async () => {
     mockFindUnique.mockResolvedValue(ACTIVE as never);
 
@@ -210,6 +230,9 @@ describe("revertPlayerStatus — verification de la source", () => {
       status: "active",
       statusSource: null,
       missNextMatch: false,
+      // Ressusciter, c'est REMETTRE au roster : la mort l'en avait sorti.
+      diedAt: null,
+      firedAt: null,
     });
     expect(mockEventUpdate).toHaveBeenCalledOnce();
   });

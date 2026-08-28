@@ -1059,7 +1059,7 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.teams.away?.currentValue).toBe(840_000);
     });
 
-    it("exclut les joueurs licencies (firedAt) des pickers", async () => {
+    it("exclut les licencies des pickers mais garde les morts", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
         round: { season: { league: { id: "L1", creatorId: COMMISH } } },
@@ -1078,9 +1078,13 @@ describe("Lot G — league-match-sheet", () => {
 
       await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
 
-      // La requete des joueurs filtre les licencies (firedAt: null).
+      // La requete des joueurs filtre les licencies (firedAt) mais garde les
+      // MORTS, qui portent eux aussi `firedAt` (la mort sort du roster) et
+      // dont les evenements de CETTE feuille doivent rester libelles.
       const call = mockPrisma.team.findMany.mock.calls[0][0];
-      expect(call.select.players.where).toEqual({ firedAt: null });
+      expect(call.select.players.where).toEqual({
+        OR: [{ firedAt: null }, { dead: true }],
+      });
     });
 
     it("Innovateur Violent : les PSP d'une Élimination sur Action Spéciale vont au porteur", async () => {

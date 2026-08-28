@@ -2175,8 +2175,11 @@ async function loadSheetTeams(
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
         // actif : on les exclut des pickers (comme un retrait definitif). Les
-        // morts restent inclus mais flagges.
-        where: { firedAt: null },
+        // MORTS restent inclus (flagges `dead`, filtres cote UI) alors qu'ils
+        // portent eux aussi `firedAt` depuis que la mort sort du roster : ils
+        // figurent aux evenements de la feuille qui les a tues, dont les
+        // libelles seraient sinon reduits a des ids bruts.
+        where: { OR: [{ firedAt: null }, { dead: true }] },
         orderBy: { number: "asc" },
         select: {
           id: true,
