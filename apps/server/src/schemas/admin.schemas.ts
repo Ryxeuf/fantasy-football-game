@@ -29,11 +29,18 @@ export const adminTeamsQuerySchema = z.object({
   roster: z.string().max(100).default(""),
   ownerId: z.string().max(100).default(""),
   ruleset: z.string().max(50).optional(),
+  /**
+   * Périmètre de suppression. Le défaut `active` MASQUE les équipes
+   * soft-deletées : la console listait auparavant les équipes supprimées sans
+   * les distinguer des vivantes.
+   */
+  deleted: z.enum(["active", "deleted", "all"]).default("active"),
   sortBy: z.enum(["createdAt", "name", "roster", "currentValue"]).default("createdAt"),
   sortOrder: sortOrderEnum,
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
+export type AdminTeamsQuery = z.infer<typeof adminTeamsQuerySchema>;
 
 // ── Body schemas ──
 

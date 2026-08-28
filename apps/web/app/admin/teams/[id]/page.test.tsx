@@ -327,3 +327,54 @@ describe("AdminTeamDetailPage", () => {
     expect(screen.getByTestId("admin-team-back")).toBeTruthy();
   });
 });
+
+
+describe("AdminTeamDetailPage — restauration", () => {
+  it("n'affiche aucun bouton Restaurer sur une équipe active", async () => {
+    mockApi();
+    renderPage();
+
+    await screen.findByTestId("admin-team-detail");
+    expect(screen.queryByTestId("admin-team-restore")).toBeNull();
+  });
+
+  it("propose la restauration quand l'équipe est supprimée", async () => {
+    mockApi({ team: { ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" } });
+    renderPage();
+
+    await screen.findByTestId("admin-team-deleted-badge");
+    expect(screen.getByTestId("admin-team-restore")).toBeTruthy();
+  });
+
+  it("POSTe /restore puis recharge la fiche", async () => {
+    const fetchMock = mockApi({
+      team: { ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" },
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderPage();
+
+    fireEvent.click(await screen.findByTestId("admin-team-restore"));
+
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls as unknown as Array<[any, any]>;
+      expect(
+        calls.some(
+          ([url, init]) =>
+            String(url).includes("/admin/teams/team-1/restore") &&
+            init?.method === "POST",
+        ),
+      ).toBe(true);
+    });
+  });
+});
+
+
+describe("AdminTeamDetailPage — accès à l'édition", () => {
+  it("expose un lien vers la page d'édition admin", async () => {
+    mockApi();
+    renderPage();
+
+    const link = await screen.findByTestId("admin-team-edit-link");
+    expect(link.getAttribute("href")).toBe("/admin/teams/team-1/edit");
+  });
+});

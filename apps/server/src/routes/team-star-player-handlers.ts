@@ -49,6 +49,7 @@ import {
   requiresPair,
 } from '../utils/star-player-validation';
 import { serverLog } from '../utils/server-log';
+import { teamAccessWhere } from '../services/team-edit-access';
 
 /**
  * S25.5q / S27.8.23 — `GET /team/:id/star-players`
@@ -66,7 +67,7 @@ export async function handleListTeamStarPlayers(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { starPlayers: true },
     });
 
@@ -128,7 +129,7 @@ export async function handleListAvailableStarPlayers(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true, starPlayers: true },
     });
 
@@ -261,7 +262,7 @@ export async function handleDeleteTeamStarPlayer(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true, starPlayers: true },
     });
 

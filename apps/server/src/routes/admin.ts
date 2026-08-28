@@ -35,6 +35,15 @@ import {
   enrichTeamStarPlayers,
   listOwnerTeams,
 } from "../services/admin-team-detail";
+import {
+  buildAdminTeamsWhere,
+  type AdminTeamsDeletedScope,
+} from "../services/admin-teams-list";
+import {
+  adminSoftDeleteTeam,
+  restoreTeam,
+  TeamDeleteError,
+} from "../services/team-delete";
 import { updateTeamValues } from "../utils/team-values";
 import { ENGINE_VER as GAME_ENGINE_VER, type Ruleset } from "@bb/game-engine";
 import { ENGINE_VER as SIM_ENGINE_VER } from "@bb/sim-engine";
@@ -1509,6 +1518,7 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
       roster = "",
       ownerId = "",
       ruleset,
+      deleted = "active",
       sortBy = "createdAt",
       sortOrder = "desc",
       page = "1",
@@ -1519,22 +1529,18 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
     const limitNum = parseInt(limit as string, 10) || 50;
     const skip = (pageNum - 1) * limitNum;
 
-    // Construire les filtres
-    const where: any = {};
-    if (search) {
-      const isPostgres = process.env.TEST_SQLITE !== "1";
-      const searchMode = isPostgres ? { mode: "insensitive" as const } : {};
-      where.name = { contains: search as string, ...searchMode };
-    }
-    if (roster) {
-      where.roster = roster;
-    }
-    if (ownerId) {
-      where.ownerId = ownerId;
-    }
-    if (ruleset && typeof ruleset === "string") {
-      where.ruleset = ruleset;
-    }
+    // `mode: "insensitive"` n'existe pas sur le miroir SQLite des tests.
+    const caseInsensitiveSearch = process.env.TEST_SQLITE !== "1";
+    const where = buildAdminTeamsWhere(
+      {
+        search: search as string,
+        roster: roster as string,
+        ownerId: ownerId as string,
+        ruleset: typeof ruleset === "string" ? ruleset : undefined,
+        deleted: deleted as AdminTeamsDeletedScope,
+      },
+      caseInsensitiveSearch,
+    );
 
     // Compter le total
     const total = await prisma.team.count({ where });
@@ -1557,6 +1563,9 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
         apothecary: true,
         dedicatedFans: true,
         createdAt: true,
+        // Sans ce champ l'UI ne peut pas distinguer une équipe supprimée
+        // d'une équipe vivante quand le filtre remonte les deux.
+        deletedAt: true,
         owner: {
           select: {
             id: true,
@@ -1635,55 +1644,75 @@ router.get("/teams/:id", async (req, res) => {
   }
 });
 
-// Route pour supprimer une équipe
+/**
+ * Suppression d'une équipe par un admin — SOFT delete.
+ *
+ * L'ancienne implémentation hard-deletait joueurs, Star Players puis l'équipe,
+ * en se protégeant derrière un refus quand `selections > 0`. Deux problèmes :
+ * l'équipe reste référencée par `LeagueParticipant` / `CupParticipant`, donc
+ * le `DELETE` échouait en violation de clé étrangère dès qu'elle avait été
+ * engagée ; et la suppression était irréversible alors que le coach, lui, ne
+ * fait qu'un soft delete. On aligne donc l'admin sur `deletedAt`, ce qui rend
+ * l'opération réversible (`POST /teams/:id/restore`).
+ */
 router.delete("/teams/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Vérifier si l'équipe existe
-    const team = await prisma.team.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: {
-            selections: true,
-          },
-        },
-      },
-    });
-
-    if (!team) {
-      return res.status(404).json({ error: "Équipe non trouvée" });
-    }
-
-    // Vérifier si l'équipe est utilisée dans des sélections
-    if (team._count.selections > 0) {
-      return res.status(400).json({
-        error: "Impossible de supprimer cette équipe car elle est utilisée dans des matchs",
-      });
-    }
-
-    // Supprimer les joueurs et Star Players associés
-    await prisma.teamPlayer.deleteMany({ where: { teamId: id } });
-    await prisma.teamStarPlayer.deleteMany({ where: { teamId: id } });
-
-    // Supprimer l'équipe
-    await prisma.team.delete({ where: { id } });
+    const result = await adminSoftDeleteTeam({ teamId: id });
 
     await safeAudit(req, {
       action: "team.delete",
       entity: "Team",
       entityId: id,
-      oldValue: { id: team.id, name: team.name, ownerId: team.ownerId },
+      oldValue: { id, name: result.teamName, ownerId: result.ownerId },
+      newValue: { deletedAt: result.deletedAt, warnings: result.warnings },
     });
 
-    res.json({ ok: true });
-  } catch (e: any) {
-    if (e.code === "P2025") {
-      return res.status(404).json({ error: "Équipe non trouvée" });
+    res.json({
+      ok: true,
+      deletedAt: result.deletedAt.toISOString(),
+      warnings: result.warnings,
+    });
+  } catch (e: unknown) {
+    if (e instanceof TeamDeleteError) {
+      return res
+        .status(e.code === "not_found" ? 404 : 409)
+        .json({ error: e.message });
     }
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la suppression de l'équipe" });
+  }
+});
+
+/**
+ * Restauration d'une équipe soft-deletée. Le soft delete n'ayant rien détruit
+ * (joueurs, Star Players et rattachements sont intacts), il suffit d'effacer
+ * `deletedAt` pour que l'équipe redevienne visible du coach comme des listes.
+ */
+router.post("/teams/:id/restore", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await restoreTeam({ teamId: id });
+
+    await safeAudit(req, {
+      action: "team.restore",
+      entity: "Team",
+      entityId: id,
+      oldValue: { deletedAt: result.previousDeletedAt },
+      newValue: { deletedAt: null, name: result.teamName },
+    });
+
+    res.json({ ok: true });
+  } catch (e: unknown) {
+    if (e instanceof TeamDeleteError) {
+      return res
+        .status(e.code === "not_found" ? 404 : 409)
+        .json({ error: e.message });
+    }
+    serverLog.error(e);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la restauration de l'équipe" });
   }
 });
 

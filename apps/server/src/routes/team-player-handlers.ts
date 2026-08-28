@@ -48,7 +48,10 @@ import {
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { serverLog } from '../utils/server-log';
 import {
-  isTeamRosterFrozen,
+  isRosterFrozenFor,
+  teamAccessWhere,
+} from '../services/team-edit-access';
+import {
   TEAM_ENGAGED_MESSAGE,
 } from '../services/team-lock-status';
 import {
@@ -78,7 +81,7 @@ export async function handleAddTeamPlayer(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true },
     });
 
@@ -106,7 +109,7 @@ export async function handleAddTeamPlayer(
     // Anti-triche : une equipe engagee (ligue / coupe / match joue) est
     // verrouillee. La progression legitime passe par des flux dedies
     // (tresorerie, montee de niveau), pas par cet ajout a budget initial.
-    if (await isTeamRosterFrozen(teamId)) {
+    if (await isRosterFrozenFor(req, teamId)) {
       sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
@@ -270,7 +273,7 @@ export async function handleDeleteTeamPlayer(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true },
     });
 
@@ -350,7 +353,7 @@ export async function handleDeleteTeamPlayer(
     // qu'elle est en brouillon, le coach peut au contraire descendre
     // librement sous 11 (le plancher BB n'est verifie qu'a la sauvegarde du
     // roster).
-    if (await isTeamRosterFrozen(teamId)) {
+    if (await isRosterFrozenFor(req, teamId)) {
       sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }
@@ -412,7 +415,7 @@ export async function handleListAvailablePositions(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true },
     });
 
@@ -473,8 +476,10 @@ export async function handleListAvailablePositions(
 
     // `frozen` indique a l'UI si le plancher de 11 joueurs s'applique
     // (equipe engagee) ou si le roster est encore en brouillon librement
-    // editable. L'UI conditionne le bouton "retirer" la-dessus.
-    const frozen = await isTeamRosterFrozen(teamId);
+    // editable. L'UI conditionne le bouton "retirer" la-dessus. Pour un
+    // admin le gel ne s'applique pas : la console doit donc l'annoncer
+    // deverrouille, sinon elle masquerait des actions que le PUT accepte.
+    const frozen = await isRosterFrozenFor(req, teamId);
 
     sendSuccess(res, {
       availablePositions,
@@ -509,7 +514,7 @@ export async function handleUpdatePlayerIdentity(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       select: { id: true },
     });
     if (!team) {
