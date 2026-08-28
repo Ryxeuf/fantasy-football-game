@@ -38,6 +38,7 @@ import {
   requiresPair,
 } from '../utils/star-player-validation';
 import { serverLog } from '../utils/server-log';
+import { teamAccessWhere } from '../services/team-edit-access';
 
 /**
  * S25.5ab / S27.8.31 — `POST /team/:id/star-players`
@@ -53,7 +54,7 @@ export async function handleHireStarPlayer(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true, starPlayers: true },
     });
 

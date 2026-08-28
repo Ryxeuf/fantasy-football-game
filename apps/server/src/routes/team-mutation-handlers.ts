@@ -38,6 +38,10 @@ import {
   isTeamRosterFrozen,
   TEAM_ENGAGED_MESSAGE,
 } from '../services/team-lock-status';
+import {
+  isRosterFrozenFor,
+  teamAccessWhere,
+} from '../services/team-edit-access';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import {
   buildTeamBudgetSummary,
@@ -125,7 +129,7 @@ export async function handlePutTeamInfo(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true, starPlayers: true },
     });
 
@@ -151,8 +155,9 @@ export async function handlePutTeamInfo(
     }
 
     // Anti-triche : le staff/inducements d'une equipe engagee ne se modifie
-    // plus via cet endpoint (page d'edition verrouillee).
-    if (await isTeamRosterFrozen(teamId)) {
+    // plus via cet endpoint (page d'edition verrouillee) — sauf pour un
+    // admin, dont la console d'edition sert justement a corriger ces cas.
+    if (await isRosterFrozenFor(req, teamId)) {
       sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }

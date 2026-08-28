@@ -33,10 +33,11 @@ import {
 } from '@bb/game-engine';
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import { TEAM_ENGAGED_MESSAGE } from '../services/team-lock-status';
 import {
-  isTeamRosterFrozen,
-  TEAM_ENGAGED_MESSAGE,
-} from '../services/team-lock-status';
+  isRosterFrozenFor,
+  teamAccessWhere,
+} from '../services/team-edit-access';
 import { serverLog } from '../utils/server-log';
 import {
   captureTeamState,
@@ -55,7 +56,7 @@ export async function handleSaveRoster(
 
   try {
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
+      where: teamAccessWhere(req, teamId),
       include: { players: true, starPlayers: true },
     });
     if (!team) {
@@ -63,8 +64,9 @@ export async function handleSaveRoster(
       return;
     }
 
-    // Anti-triche : une equipe engagee ne peut plus etre editee.
-    if (await isTeamRosterFrozen(teamId)) {
+    // Anti-triche : une equipe engagee ne peut plus etre editee PAR SON
+    // COACH. Un admin passe outre (correction de saisie, litige de ligue).
+    if (await isRosterFrozenFor(req, teamId)) {
       sendError(res, TEAM_ENGAGED_MESSAGE, 403);
       return;
     }

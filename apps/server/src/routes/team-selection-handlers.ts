@@ -32,6 +32,10 @@ import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { buildTeamBudgetSummary } from '../services/team-budget-summary';
 import { getTeamSpecialRules } from '../services/team-special-rules';
 import { serverLog } from '../utils/server-log';
+import {
+  isAdminRequest,
+  teamAccessWhere,
+} from '../services/team-edit-access';
 
 /**
  * S27.8.26 — `POST /team/choose`
@@ -129,8 +133,15 @@ export async function handleGetTeamDetail(
   res: Response,
 ): Promise<void> {
   try {
+    // Un admin lit n'importe quelle equipe (console d'edition) ; le coach
+    // reste limite aux siennes. `deletedAt` n'est PAS filtre pour l'admin :
+    // consulter une equipe supprimee est justement ce qu'il vient faire.
+    const admin = isAdminRequest(req);
     const team = await prisma.team.findFirst({
-      where: { id: req.params.id, ownerId: req.user!.id, deletedAt: null },
+      where: {
+        ...teamAccessWhere(req, req.params.id),
+        ...(admin ? {} : { deletedAt: null }),
+      },
       include: {
         players: true,
         starPlayers: true,
