@@ -87,10 +87,12 @@ interface JournalPreviewEntry {
 
 const JOURNAL_PREVIEW_SIZE = 8;
 
-async function fetchAdminJSON(path: string) {
+async function fetchAdminJSON(path: string, init?: RequestInit) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
     headers: {
+      ...init?.headers,
       Authorization: token ? `Bearer ${token}` : "",
       "Content-Type": "application/json",
     },
@@ -122,6 +124,7 @@ export default function AdminTeamDetailPage() {
   const [journal, setJournal] = useState<JournalPreviewEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const load = useCallback(async () => {
     if (!teamId) return;
@@ -142,6 +145,24 @@ export default function AdminTeamDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // La fiche affichait le badge « Supprimée » sans aucune issue : la
+  // restauration se pilote donc ici, au plus près de l'équipe consultée.
+  const handleRestore = useCallback(async () => {
+    if (!teamId) return;
+    if (!confirm("Restaurer cette équipe ?")) return;
+    setRestoring(true);
+    try {
+      await fetchAdminJSON(`/admin/teams/${teamId}/restore`, {
+        method: "POST",
+      });
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la restauration");
+    } finally {
+      setRestoring(false);
+    }
+  }, [teamId, load]);
 
   // Détail roster : positions (mots-clés, compétences de base DB, accès
   // primaire/secondaire). Optionnel — son échec ne doit pas masquer la fiche,
@@ -283,6 +304,17 @@ export default function AdminTeamDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {team.deletedAt && (
+            <button
+              type="button"
+              data-testid="admin-team-restore"
+              onClick={() => void handleRestore()}
+              disabled={restoring}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors text-sm font-medium border border-emerald-200"
+            >
+              {restoring ? "⏳" : "♻️"} Restaurer
+            </button>
+          )}
           {/* Journal d'équipe : la frise complète des mutations (trésorerie,
               VE, roster) avec l'auteur de chacune. */}
           <Link

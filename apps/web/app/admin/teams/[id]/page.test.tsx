@@ -327,3 +327,42 @@ describe("AdminTeamDetailPage", () => {
     expect(screen.getByTestId("admin-team-back")).toBeTruthy();
   });
 });
+
+
+describe("AdminTeamDetailPage — restauration", () => {
+  it("n'affiche aucun bouton Restaurer sur une équipe active", async () => {
+    mockApi();
+    renderPage();
+
+    await screen.findByTestId("admin-team-detail");
+    expect(screen.queryByTestId("admin-team-restore")).toBeNull();
+  });
+
+  it("propose la restauration quand l'équipe est supprimée", async () => {
+    mockApi({ team: { ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" } });
+    renderPage();
+
+    await screen.findByTestId("admin-team-deleted-badge");
+    expect(screen.getByTestId("admin-team-restore")).toBeTruthy();
+  });
+
+  it("POSTe /restore puis recharge la fiche", async () => {
+    const fetchMock = mockApi({
+      team: { ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" },
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderPage();
+
+    fireEvent.click(await screen.findByTestId("admin-team-restore"));
+
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]: [any, any]) =>
+            String(url).includes("/admin/teams/team-1/restore") &&
+            init?.method === "POST",
+        ),
+      ).toBe(true);
+    });
+  });
+});

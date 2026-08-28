@@ -104,3 +104,91 @@ describe("AdminTeamsPage — filtre ruleset", () => {
     ).toBe(true);
   });
 });
+
+
+describe("AdminTeamsPage — équipes supprimées", () => {
+  it("demande le périmètre « active » par défaut", async () => {
+    render(<AdminTeamsPage />);
+    await screen.findByTestId("admin-team-row-team-1");
+
+    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock
+      .calls;
+    expect(calls.some(([url]) => String(url).includes("deleted=active"))).toBe(
+      true,
+    );
+  });
+
+  it("relance la recherche sur le périmètre « deleted »", async () => {
+    render(<AdminTeamsPage />);
+    await screen.findByTestId("admin-team-row-team-1");
+
+    fireEvent.change(screen.getByTestId("admin-teams-deleted-filter"), {
+      target: { value: "deleted" },
+    });
+
+    await screen.findByTestId("admin-team-row-team-1");
+    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock
+      .calls;
+    expect(calls.some(([url]) => String(url).includes("deleted=deleted"))).toBe(
+      true,
+    );
+  });
+
+  it("marque les équipes supprimées et propose la restauration", async () => {
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        teams: [{ ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" }],
+        pagination: { total: 1, page: 1, limit: 50, totalPages: 1 },
+      }),
+    })) as unknown as typeof fetch;
+
+    render(<AdminTeamsPage />);
+
+    const badge = await screen.findByTestId("admin-team-deleted-badge-team-1");
+    expect(badge.textContent).toBe("Supprimée");
+    expect(screen.getByTestId("admin-team-restore-team-1")).toBeTruthy();
+    // Une équipe supprimée ne se re-supprime pas.
+    expect(screen.queryByTestId("admin-team-delete-team-1")).toBeNull();
+  });
+
+  it("garde le bouton Supprimer sur une équipe active", async () => {
+    render(<AdminTeamsPage />);
+
+    expect(await screen.findByTestId("admin-team-delete-team-1")).toBeTruthy();
+    expect(screen.queryByTestId("admin-team-restore-team-1")).toBeNull();
+    expect(screen.queryByTestId("admin-team-deleted-badge-team-1")).toBeNull();
+  });
+
+  it("appelle l'endpoint de restauration au clic sur Restaurer", async () => {
+    const fetchMock = vi.fn(async (url: any, init?: any) => {
+      if (String(url).includes("/restore")) {
+        return { ok: true, status: 200, json: async () => ({ ok: true }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          teams: [{ ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" }],
+          pagination: { total: 1, page: 1, limit: 50, totalPages: 1 },
+        }),
+      };
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<AdminTeamsPage />);
+    fireEvent.click(await screen.findByTestId("admin-team-restore-team-1"));
+
+    await vi.waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes("/admin/teams/team-1/restore") &&
+            (init as RequestInit | undefined)?.method === "POST",
+        ),
+      ).toBe(true);
+    });
+  });
+});

@@ -19,6 +19,12 @@ type Team = {
   apothecary: boolean;
   dedicatedFans: number;
   createdAt: string;
+  /**
+   * Soft delete. Optionnel pour retro-compat : une API anterieure au filtre
+   * `deleted` ne renvoie pas le champ, l'equipe est alors traitee comme
+   * active plutot que d'afficher un badge faux.
+   */
+  deletedAt?: string | null;
   owner: {
     id: string;
     email: string;
@@ -30,6 +36,18 @@ type Team = {
     starPlayers: number;
   };
 };
+
+/** Perimetre de suppression demande au serveur (cf. `adminTeamsQuerySchema`). */
+type DeletedScope = "active" | "deleted" | "all";
+
+const DELETED_SCOPE_OPTIONS: ReadonlyArray<{
+  value: DeletedScope;
+  label: string;
+}> = [
+  { value: "active", label: "Équipes actives" },
+  { value: "deleted", label: "Équipes supprimées" },
+  { value: "all", label: "Toutes (actives + supprimées)" },
+];
 
 type Pagination = {
   total: number;
@@ -64,6 +82,11 @@ export default function AdminTeamsPage() {
   const [rosterFilter, setRosterFilter] = useState("");
   const [ownerFilter, setOwnerFilter] = useState("");
   const [rulesetFilter, setRulesetFilter] = useState("");
+  // Perimetre de suppression. Defaut « active » : une equipe supprimee ne
+  // doit plus polluer la liste, mais reste atteignable via ce filtre pour
+  // etre restauree.
+  const [deletedFilter, setDeletedFilter] =
+    useState<DeletedScope>("active");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,6 +105,7 @@ export default function AdminTeamsPage() {
         ...(rosterFilter && { roster: rosterFilter }),
         ...(ownerFilter && { ownerId: ownerFilter }),
         ...(rulesetFilter && { ruleset: rulesetFilter }),
+        deleted: deletedFilter,
       });
       const data = await fetchJSON(`/admin/teams?${params}`);
       setTeams(data.teams);
@@ -101,6 +125,7 @@ export default function AdminTeamsPage() {
     // `rulesetFilter` est lu dans la query : sans lui ici, `loadTeams` n'est
     // pas recree et le select « Tous les rulesets » ne relance aucun fetch.
     rulesetFilter,
+    deletedFilter,
   ]);
 
   useEffect(() => {
@@ -123,21 +148,44 @@ export default function AdminTeamsPage() {
   };
 
   const handleDelete = async (teamId: string, teamName: string) => {
+    // La suppression est un SOFT delete : rien n'est detruit, l'equipe est
+    // masquee et reste restaurable. Le message doit le dire, sinon un admin
+    // renonce a une action qu'il croit destructrice.
     if (
       !confirm(
-        `⚠️ ATTENTION: Voulez-vous vraiment supprimer l'équipe "${teamName}" ?\n\nCette action est irréversible et supprimera tous les joueurs associés.`,
+        `Supprimer l'équipe "${teamName}" ?\n\nL'équipe sera masquée (joueurs et Star Players conservés). Elle restera restaurable depuis le filtre « Équipes supprimées ».`,
       )
     ) {
       return;
     }
     setActionLoading(teamId);
     try {
-      await fetchJSON(`/admin/teams/${teamId}`, {
+      const result = await fetchJSON(`/admin/teams/${teamId}`, {
         method: "DELETE",
       });
+      // Le serveur ne bloque pas la suppression d'une equipe engagee (l'action
+      // est reversible) mais signale ce qu'elle impacte : sans cet affichage,
+      // l'admin sortirait une equipe d'une ligue en cours sans le savoir.
+      const warnings: string[] = result?.warnings ?? [];
+      if (warnings.length > 0) {
+        alert(`Équipe supprimée.\n\n${warnings.join("\n")}`);
+      }
       await loadTeams();
     } catch (e: any) {
       alert(e.message || "Erreur lors de la suppression");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRestore = async (teamId: string, teamName: string) => {
+    if (!confirm(`Restaurer l'équipe "${teamName}" ?`)) return;
+    setActionLoading(teamId);
+    try {
+      await fetchJSON(`/admin/teams/${teamId}/restore`, { method: "POST" });
+      await loadTeams();
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la restauration");
     } finally {
       setActionLoading(null);
     }
@@ -245,6 +293,24 @@ export default function AdminTeamsPage() {
             <option value="season_2">Saison 2</option>
             <option value="season_3">Saison 3</option>
           </select>
+          {/* Perimetre de suppression. La liste montrait les equipes
+              soft-deletees melangees aux vivantes, sans les distinguer. */}
+          <select
+            data-testid="admin-teams-deleted-filter"
+            aria-label="Périmètre de suppression"
+            value={deletedFilter}
+            onChange={(e) => {
+              setDeletedFilter(e.target.value as DeletedScope);
+              setCurrentPage(1);
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+          >
+            {DELETED_SCOPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -264,7 +330,11 @@ export default function AdminTeamsPage() {
             <p className="text-gray-500">Chargement...</p>
           </div>
         ) : teams.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Aucune équipe trouvée</div>
+          <div className="p-8 text-center text-gray-500">
+            {deletedFilter === "deleted"
+              ? "Aucune équipe supprimée"
+              : "Aucune équipe trouvée"}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -316,11 +386,26 @@ export default function AdminTeamsPage() {
                 <tr
                   key={team.id}
                   data-testid={`admin-team-row-${team.id}`}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                  className={`cursor-pointer transition-colors duration-150 ${
+                    team.deletedAt ? "bg-red-50/60 hover:bg-red-50" : "hover:bg-gray-50"
+                  }`}
                   onClick={() => router.push(`/admin/teams/${team.id}`)}
                 >
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {team.name}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={team.deletedAt ? "line-through text-gray-500" : ""}>
+                        {team.name}
+                      </span>
+                      {team.deletedAt && (
+                        <span
+                          data-testid={`admin-team-deleted-badge-${team.id}`}
+                          title={`Supprimée le ${new Date(team.deletedAt).toLocaleString("fr-FR")}`}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                        >
+                          Supprimée
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -395,15 +480,32 @@ export default function AdminTeamsPage() {
                         <span>📜</span>
                         <span>Journal</span>
                       </a>
-                      <button
-                        onClick={() => handleDelete(team.id, team.name)}
-                        disabled={actionLoading === team.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-xs font-medium"
-                        title="Supprimer"
-                      >
-                        <span>{actionLoading === team.id ? "⏳" : "🗑️"}</span>
-                        <span>Supprimer</span>
-                      </button>
+                      {/* Une equipe supprimee ne se re-supprime pas : le
+                          bouton bascule en restauration, seule action qui a
+                          du sens dans cet etat. */}
+                      {team.deletedAt ? (
+                        <button
+                          data-testid={`admin-team-restore-${team.id}`}
+                          onClick={() => handleRestore(team.id, team.name)}
+                          disabled={actionLoading === team.id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors text-xs font-medium"
+                          title="Restaurer"
+                        >
+                          <span>{actionLoading === team.id ? "⏳" : "♻️"}</span>
+                          <span>Restaurer</span>
+                        </button>
+                      ) : (
+                        <button
+                          data-testid={`admin-team-delete-${team.id}`}
+                          onClick={() => handleDelete(team.id, team.name)}
+                          disabled={actionLoading === team.id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-xs font-medium"
+                          title="Supprimer"
+                        >
+                          <span>{actionLoading === team.id ? "⏳" : "🗑️"}</span>
+                          <span>Supprimer</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
