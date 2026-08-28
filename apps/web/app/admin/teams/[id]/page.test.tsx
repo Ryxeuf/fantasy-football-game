@@ -356,13 +356,25 @@ describe("AdminTeamDetailPage — restauration", () => {
     fireEvent.click(await screen.findByTestId("admin-team-restore"));
 
     await waitFor(() => {
+      const calls = fetchMock.mock.calls as unknown as Array<[any, any]>;
       expect(
-        fetchMock.mock.calls.some(
-          ([url, init]: [any, any]) =>
+        calls.some(
+          ([url, init]) =>
             String(url).includes("/admin/teams/team-1/restore") &&
             init?.method === "POST",
         ),
       ).toBe(true);
     });
+  });
+});
+
+
+describe("AdminTeamDetailPage — accès à l'édition", () => {
+  it("expose un lien vers la page d'édition admin", async () => {
+    mockApi();
+    renderPage();
+
+    const link = await screen.findByTestId("admin-team-edit-link");
+    expect(link.getAttribute("href")).toBe("/admin/teams/team-1/edit");
   });
 });

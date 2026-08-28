@@ -315,6 +315,16 @@ export default function AdminTeamDetailPage() {
               {restoring ? "⏳" : "♻️"} Restaurer
             </button>
           )}
+          {/* L'édition (positions, Star Players, coups de pouce) vit sur une
+              page dédiée : la fiche reste une lecture, et l'admin choisit
+              explicitement de basculer en écriture. */}
+          <Link
+            href={`/admin/teams/${team.id}/edit`}
+            data-testid="admin-team-edit-link"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-nuffle-gold/20 text-nuffle-anthracite rounded-lg hover:bg-nuffle-gold/30 transition-colors text-sm font-medium border border-nuffle-gold/40"
+          >
+            ✏️ Éditer
+          </Link>
           {/* Journal d'équipe : la frise complète des mutations (trésorerie,
               VE, roster) avec l'auteur de chacune. */}
           <Link
