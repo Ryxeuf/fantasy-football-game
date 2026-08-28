@@ -52,6 +52,44 @@ describe("A67/A68 — addEventSchema stat_loss", () => {
   });
 });
 
+describe("FDM — addEventSchema pass_complete (réceptionneur)", () => {
+  const pass = {
+    kind: "pass_complete" as const,
+    team: "home" as const,
+    actorPlayerId: "h1",
+  };
+
+  it("accepte un réceptionneur distinct du lanceur", () => {
+    const res = addEventSchema.safeParse({ ...pass, targetPlayerId: "h9" });
+    expect(res.success).toBe(true);
+  });
+
+  it("refuse un réceptionneur identique au lanceur", () => {
+    const res = addEventSchema.safeParse({ ...pass, targetPlayerId: "h1" });
+    expect(res.success).toBe(false);
+    expect(res.error?.issues[0]?.path).toEqual(["targetPlayerId"]);
+  });
+
+  it("rétro-compat : une passe sans réceptionneur reste valide", () => {
+    expect(addEventSchema.safeParse(pass).success).toBe(true);
+    expect(
+      addEventSchema.safeParse({ ...pass, targetPlayerId: null }).success,
+    ).toBe(true);
+  });
+
+  it("n'impose rien aux autres types d'évènement", () => {
+    // Une auto-élimination peut porter le même id des deux côtés.
+    const res = addEventSchema.safeParse({
+      kind: "other_elim",
+      team: "home",
+      actorPlayerId: "h1",
+      targetPlayerId: "h1",
+      injurySeverity: "badly_hurt",
+    });
+    expect(res.success).toBe(true);
+  });
+});
+
 describe("Prières à Nuffle — preMatchSchema.prayers*", () => {
   it("accepte une liste de jets de D16 valides (avec ou sans prayerId)", () => {
     const res = preMatchSchema.safeParse({

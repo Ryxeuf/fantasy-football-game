@@ -6,8 +6,8 @@
  *   - les casualties infligees par equipe (events `casualty` +
  *     `other_elim`/`crowd_surge`/`aggression` ayant une `injurySeverity`) ;
  *   - la liste des joueurs blesses (cible + severite) ;
- *   - les stats par joueur (TD, casualties infligees, passes, interceptions,
- *     aggressions) utiles pour les SPP / classements.
+ *   - les stats par joueur (TD, casualties infligees, passes, receptions,
+ *     interceptions, aggressions) utiles pour les SPP / classements.
  *
  * 100% pur (pas de Prisma) ⇒ testable en unit sans DB. Le service
  * `league-match-sheet` appelle cette fonction au read et a la validation
@@ -42,6 +42,11 @@ export interface MatchEventInput {
   readonly kind: MatchEventKind;
   readonly team?: MatchEventTeam | null;
   readonly actorPlayerId?: string | null;
+  /**
+   * Joueur subissant l'action, dans l'equipe OPPOSEE a `team`… sauf sur
+   * `pass_complete`, ou il porte le RECEPTIONNEUR : un coequipier du
+   * lanceur (cf. `receptions` ci-dessous).
+   */
   readonly targetPlayerId?: string | null;
   readonly causeDetail?: string | null;
   readonly injurySeverity?: InjurySeverity | string | null;
@@ -69,6 +74,14 @@ export interface PlayerStatLine {
   touchdowns: number;
   casualtiesInflicted: number;
   completions: number;
+  /**
+   * Receptions reussies : le joueur a RECEPTIONNE le ballon sur une Action
+   * de Passe reussie d'un coequipier (`pass_complete.targetPlayerId`). Ne
+   * rapporte AUCUN PSP par defaut (seul le lanceur marque la Reussite) :
+   * c'est la Priere a Nuffle « Reception Etourdissante » (D16 = 11) qui
+   * accorde 1 PSP au receptionneur.
+   */
+  receptions: number;
   interceptions: number;
   aggressions: number;
   /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
@@ -167,6 +180,7 @@ export function summarizeMatchSheet(
         touchdowns: 0,
         casualtiesInflicted: 0,
         completions: 0,
+        receptions: 0,
         interceptions: 0,
         aggressions: 0,
         ttmLandings: 0,
@@ -191,6 +205,18 @@ export function summarizeMatchSheet(
       case "pass_complete": {
         if (ev.actorPlayerId && team) {
           ensureStat(ev.actorPlayerId, team).completions += 1;
+        }
+        // Le receptionneur est un COEQUIPIER (meme `team` que le lanceur),
+        // pas un adversaire : c'est la seule cible du journal qui ne soit
+        // pas dans l'equipe opposee. Il est facultatif (feuilles saisies
+        // avant cette colonne) et ne compte pas s'il est confondu avec le
+        // lanceur (un joueur ne receptionne pas sa propre passe).
+        if (
+          ev.targetPlayerId &&
+          team &&
+          ev.targetPlayerId !== ev.actorPlayerId
+        ) {
+          ensureStat(ev.targetPlayerId, team).receptions += 1;
         }
         break;
       }

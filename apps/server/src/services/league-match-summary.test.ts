@@ -270,6 +270,119 @@ describe("Lot G — summarizeMatchSheet", () => {
     ).toBe(1);
   });
 
+  // FDM — le réceptionneur d'une passe réussie. Il est saisi dans
+  // `targetPlayerId`, mais contrairement à toutes les autres cibles du
+  // journal il est dans la MÊME équipe que l'acteur. Sans lui, rien ne
+  // permettait d'attribuer la Prière à Nuffle « Réception Étourdissante »
+  // (D16 = 11 : 1 PSP à qui réceptionne le ballon sur une Action de Passe).
+  describe("pass_complete — réceptionneur", () => {
+    it("crédite la Réussite au lanceur et la réception au coéquipier", () => {
+      const events: MatchEventInput[] = [
+        {
+          kind: "pass_complete",
+          team: "home",
+          actorPlayerId: "h_thrower",
+          targetPlayerId: "h_catcher",
+        },
+      ];
+      const out = summarizeMatchSheet(events);
+      const thrower = out.playerStats.find((p) => p.playerId === "h_thrower");
+      const catcher = out.playerStats.find((p) => p.playerId === "h_catcher");
+      expect(thrower?.completions).toBe(1);
+      expect(thrower?.receptions).toBe(0);
+      // Le réceptionneur ne marque PAS la Réussite (elle revient au
+      // lanceur) : sans Prière à Nuffle, sa ligne ne rapporte aucun PSP.
+      expect(catcher?.completions).toBe(0);
+      expect(catcher?.receptions).toBe(1);
+      expect(catcher?.touchdowns).toBe(0);
+      expect(catcher?.casualtiesInflicted).toBe(0);
+      expect(catcher?.interceptions).toBe(0);
+    });
+
+    it("range le réceptionneur dans l'équipe du lanceur, pas chez l'adversaire", () => {
+      const out = summarizeMatchSheet([
+        {
+          kind: "pass_complete",
+          team: "away",
+          actorPlayerId: "a_thrower",
+          targetPlayerId: "a_catcher",
+        },
+      ]);
+      expect(out.playerStats.find((p) => p.playerId === "a_catcher")?.side).toBe(
+        "away",
+      );
+      // Une passe ne blesse personne et ne change pas le score.
+      expect(out.injuries).toEqual([]);
+      expect(out.scoreAway).toBe(0);
+      expect(out.casualtiesAway).toBe(0);
+    });
+
+    it("cumule les réceptions d'un même joueur sur plusieurs passes", () => {
+      const out = summarizeMatchSheet([
+        {
+          kind: "pass_complete",
+          team: "home",
+          actorPlayerId: "h1",
+          targetPlayerId: "h9",
+        },
+        {
+          kind: "pass_complete",
+          team: "home",
+          actorPlayerId: "h2",
+          targetPlayerId: "h9",
+        },
+      ]);
+      const h9 = out.playerStats.find((p) => p.playerId === "h9");
+      expect(h9?.receptions).toBe(2);
+      expect(h9?.completions).toBe(0);
+    });
+
+    it("ignore un réceptionneur identique au lanceur (pas de double compte)", () => {
+      const out = summarizeMatchSheet([
+        {
+          kind: "pass_complete",
+          team: "home",
+          actorPlayerId: "h4",
+          targetPlayerId: "h4",
+        },
+      ]);
+      const h4 = out.playerStats.find((p) => p.playerId === "h4");
+      expect(h4?.completions).toBe(1);
+      expect(h4?.receptions).toBe(0);
+    });
+
+    it("rétro-compat : une passe sans réceptionneur reste une Réussite seule", () => {
+      const out = summarizeMatchSheet([
+        { kind: "pass_complete", team: "home", actorPlayerId: "h4" },
+      ]);
+      expect(out.playerStats).toHaveLength(1);
+      expect(out.playerStats[0]).toMatchObject({
+        playerId: "h4",
+        completions: 1,
+        receptions: 0,
+      });
+    });
+
+    it("compte la réception même si le lanceur n'est pas identifié", () => {
+      const out = summarizeMatchSheet([
+        { kind: "pass_complete", team: "home", targetPlayerId: "h9" },
+      ]);
+      expect(out.playerStats).toEqual([
+        {
+          playerId: "h9",
+          side: "home",
+          touchdowns: 0,
+          casualtiesInflicted: 0,
+          completions: 0,
+          receptions: 1,
+          interceptions: 0,
+          aggressions: 0,
+          ttmLandings: 0,
+        },
+      ]);
+    });
+  });
+
   it("ttm_landing : le coéquipier lancé (acteur) compte un atterrissage réussi", () => {
     const events: MatchEventInput[] = [
       { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },

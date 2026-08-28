@@ -43,3 +43,21 @@ export const INJURY_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
   "special_elim",
   "stalling",
 ]);
+
+// FDM — le RÉCEPTIONNEUR d'une passe réussie. Contrairement à la « Cible »
+// ci-dessus, il est dans la MÊME équipe que l'acteur : c'est le coéquipier
+// qui réceptionne le ballon, et donc le bénéficiaire de la Prière à Nuffle
+// « Réception Étourdissante » (1 PSP par réception). Stocké dans
+// `targetPlayerId`, comme la cible — les deux champs sont exclusifs.
+export const RECEIVER_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
+  "pass_complete",
+]);
+
+/**
+ * `targetPlayerId` est-il saisissable pour ce type d'évènement ? Vrai pour
+ * une cible adverse comme pour un réceptionneur coéquipier — c'est la même
+ * colonne, seule l'équipe proposée par le picker change.
+ */
+export function hasTargetField(kind: EventKind): boolean {
+  return TARGET_BEARING_KINDS.has(kind) || RECEIVER_BEARING_KINDS.has(kind);
+}

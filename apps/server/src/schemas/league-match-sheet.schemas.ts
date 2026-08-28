@@ -22,6 +22,12 @@ export const addEventSchema = z.object({
   ]),
   team: z.enum(["home", "away"]).optional().nullable(),
   actorPlayerId: z.string().min(1).optional().nullable(),
+  /**
+   * Joueur subissant l'action (equipe adverse)… sauf sur `pass_complete`,
+   * ou il porte le RECEPTIONNEUR : un coequipier du lanceur. C'est lui qui
+   * « Receptionne le ballon a la suite d'une Action de Passe », donc le
+   * beneficiaire de la Priere a Nuffle « Reception Etourdissante ».
+   */
   targetPlayerId: z.string().min(1).optional().nullable(),
   causeDetail: z.string().max(64).optional().nullable(),
   injurySeverity: z
@@ -34,6 +40,21 @@ export const addEventSchema = z.object({
   turn: z.number().int().min(1).max(16).optional().nullable(),
   meta: z.record(z.string(), z.unknown()).optional().nullable(),
 })
+  // Une passe reussie a deux joueurs DISTINCTS : on ne receptionne pas sa
+  // propre passe. Sans ce refus, le meme id compterait a la fois la
+  // Reussite et la Reception, et doublerait les PSP sous « Reception
+  // Etourdissante ».
+  .superRefine((v, ctx) => {
+    if (v.kind !== "pass_complete") return;
+    if (!v.actorPlayerId || !v.targetPlayerId) return;
+    if (v.actorPlayerId !== v.targetPlayerId) return;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["targetPlayerId"],
+      message:
+        "Le réceptionneur doit être un autre joueur que le lanceur de la passe",
+    });
+  })
   // A67/A68 — une Sequelle (stat_loss) sans caracteristique visee etait
   // silencieusement droppee a l'application sur le roster. On refuse
   // l'event a la saisie plutot que de perdre la blessure.

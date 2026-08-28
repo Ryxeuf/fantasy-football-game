@@ -39,7 +39,9 @@ import {
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
 import {
+  hasTargetField,
   INJURY_BEARING_KINDS,
+  RECEIVER_BEARING_KINDS,
   TARGET_BEARING_KINDS,
   type EventKind,
 } from "./event-fields";
@@ -424,7 +426,9 @@ export default function MatchSheetPage() {
           team,
           actorPlayerId: actorPlayerId || undefined,
           // A62 — pas de cible pour les évènements qui n'en portent pas.
-          targetPlayerId: TARGET_BEARING_KINDS.has(kind)
+          // FDM — sur une passe réussie, ce champ porte le réceptionneur
+          // (coéquipier) au lieu d'une cible adverse.
+          targetPlayerId: hasTargetField(kind)
             ? targetPlayerId || undefined
             : undefined,
           injurySeverity: INJURY_BEARING_KINDS.has(kind)
@@ -958,7 +962,7 @@ export default function MatchSheetPage() {
                     const next = e.target.value as EventKind;
                     setKind(next);
                     // A62 — purge les champs qui ne s'appliquent plus.
-                    if (!TARGET_BEARING_KINDS.has(next)) setTargetPlayerId("");
+                    if (!hasTargetField(next)) setTargetPlayerId("");
                     if (!INJURY_BEARING_KINDS.has(next)) {
                       setInjurySeverity("");
                       setInjuryStat("");
@@ -1009,6 +1013,21 @@ export default function MatchSheetPage() {
                     value={targetPlayerId}
                     onChange={setTargetPlayerId}
                     testId="event-target"
+                  />
+                </label>
+              )}
+              {/* FDM — passe réussie : le réceptionneur est un COÉQUIPIER.
+                  Il ne marque pas la Réussite (elle revient au lanceur) mais
+                  c'est lui que récompense la Prière à Nuffle « Réception
+                  Étourdissante » (1 PSP par réception). */}
+              {RECEIVER_BEARING_KINDS.has(kind) && (
+                <label className="text-xs">
+                  Réceptionneur (même équipe)
+                  <PlayerSelect
+                    team={eventTeam}
+                    value={targetPlayerId}
+                    onChange={setTargetPlayerId}
+                    testId="event-receiver"
                   />
                 </label>
               )}
@@ -1146,7 +1165,14 @@ export default function MatchSheetPage() {
                           : ""}
                         {ev.targetPlayerId
                           ? ` → ${playerName(
-                              ev.team === "home" ? away : home,
+                              // FDM — le réceptionneur d'une passe est dans
+                              // l'équipe de l'acteur, pas dans l'équipe
+                              // adverse comme une cible ordinaire.
+                              RECEIVER_BEARING_KINDS.has(ev.kind)
+                                ? evTeam
+                                : ev.team === "home"
+                                  ? away
+                                  : home,
                               ev.targetPlayerId,
                             )}`
                           : ""}
