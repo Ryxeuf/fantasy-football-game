@@ -35,6 +35,10 @@ import {
   enrichTeamStarPlayers,
   listOwnerTeams,
 } from "../services/admin-team-detail";
+import {
+  buildAdminTeamsWhere,
+  type AdminTeamsDeletedScope,
+} from "../services/admin-teams-list";
 import { updateTeamValues } from "../utils/team-values";
 import { ENGINE_VER as GAME_ENGINE_VER, type Ruleset } from "@bb/game-engine";
 import { ENGINE_VER as SIM_ENGINE_VER } from "@bb/sim-engine";
@@ -1509,6 +1513,7 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
       roster = "",
       ownerId = "",
       ruleset,
+      deleted = "active",
       sortBy = "createdAt",
       sortOrder = "desc",
       page = "1",
@@ -1519,22 +1524,18 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
     const limitNum = parseInt(limit as string, 10) || 50;
     const skip = (pageNum - 1) * limitNum;
 
-    // Construire les filtres
-    const where: any = {};
-    if (search) {
-      const isPostgres = process.env.TEST_SQLITE !== "1";
-      const searchMode = isPostgres ? { mode: "insensitive" as const } : {};
-      where.name = { contains: search as string, ...searchMode };
-    }
-    if (roster) {
-      where.roster = roster;
-    }
-    if (ownerId) {
-      where.ownerId = ownerId;
-    }
-    if (ruleset && typeof ruleset === "string") {
-      where.ruleset = ruleset;
-    }
+    // `mode: "insensitive"` n'existe pas sur le miroir SQLite des tests.
+    const caseInsensitiveSearch = process.env.TEST_SQLITE !== "1";
+    const where = buildAdminTeamsWhere(
+      {
+        search: search as string,
+        roster: roster as string,
+        ownerId: ownerId as string,
+        ruleset: typeof ruleset === "string" ? ruleset : undefined,
+        deleted: deleted as AdminTeamsDeletedScope,
+      },
+      caseInsensitiveSearch,
+    );
 
     // Compter le total
     const total = await prisma.team.count({ where });
@@ -1557,6 +1558,9 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
         apothecary: true,
         dedicatedFans: true,
         createdAt: true,
+        // Sans ce champ l'UI ne peut pas distinguer une équipe supprimée
+        // d'une équipe vivante quand le filtre remonte les deux.
+        deletedAt: true,
         owner: {
           select: {
             id: true,
