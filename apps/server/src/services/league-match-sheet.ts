@@ -54,6 +54,7 @@ import {
 import {
   buildJourneymanHire,
   deriveJourneymen,
+  deriveMatchJourneymen,
   linemanPositionsForRoster,
   type JourneymanSourcePosition,
   parseJourneymenChoice,
@@ -1072,16 +1073,18 @@ function collectPositionedSheetPlayers(
   side: "home" | "away",
   journeymenChoiceRaw: unknown,
   positions?: readonly JourneymanSourcePosition[] | null,
+  frozenRosterSnapshot?: unknown,
 ): Array<{ id: string; position: string }> {
   if (!team) return [];
   const out = team.players.map((p) => ({ id: p.id, position: p.position }));
-  for (const j of deriveJourneymen({
+  for (const j of deriveMatchJourneymen({
     side,
     roster: team.roster,
     ruleset: team.ruleset,
     players: team.players,
     chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
     positions,
+    frozenRosterSnapshot,
   })) {
     out.push({ id: j.id, position: j.position });
   }
@@ -1322,17 +1325,20 @@ function enrichJourneymanPurchases(input: {
    * l'évolution du journalier). Absent ⇒ barème compilé.
    */
   schedule?: AdvancementSchedule;
+  /** Roster figé de ce côté : les journaliers RECRUTABLES sont ceux du match. */
+  frozenRosterSnapshot?: unknown;
 }): OfflinePurchaseInput[] {
   const { purchases, side, team, staged, computedSpp } = input;
   if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
   const journeymen = team
-    ? deriveJourneymen({
+    ? deriveMatchJourneymen({
         side,
         roster: team.roster,
         ruleset: team.ruleset,
         players: team.players,
         chosenPosition: parseJourneymenChoice(input.choiceRaw),
         positions: input.positions,
+        frozenRosterSnapshot: input.frozenRosterSnapshot,
       })
     : [];
   const byId = new Map(journeymen.map((j) => [j.id, j]));
@@ -1529,12 +1535,14 @@ export async function validateByCommissioner(input: {
           "home",
           sheetJourneymenForBudget.journeymenHome,
           journeymanPositions.home,
+          sheetSnapForBudget.rosterSnapshotHome,
         ),
         ...collectPositionedSheetPlayers(
           teamsForBudget.away,
           "away",
           sheetJourneymenForBudget.journeymenAway,
           journeymanPositions.away,
+          sheetSnapForBudget.rosterSnapshotAway,
         ),
       ],
       starPlayerIds: [
@@ -1669,6 +1677,7 @@ export async function validateByCommissioner(input: {
       positions: journeymanPositions.home,
       eliteSlugs: eliteSlugsForHire,
       schedule: scheduleHome,
+      frozenRosterSnapshot: sheetSnapForBudget.rosterSnapshotHome,
     }),
     away: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesAway,
@@ -1680,6 +1689,7 @@ export async function validateByCommissioner(input: {
       positions: journeymanPositions.away,
       eliteSlugs: eliteSlugsForHire,
       schedule: scheduleAway,
+      frozenRosterSnapshot: sheetSnapForBudget.rosterSnapshotAway,
     }),
   };
 
@@ -2188,8 +2198,11 @@ async function loadSheetTeams(
       players: {
         // Les joueurs licencies (firedAt) ne font plus partie du roster
         // actif : on les exclut des pickers (comme un retrait definitif). Les
-        // morts restent inclus mais flagges.
-        where: { firedAt: null },
+        // MORTS restent inclus (flagges `dead`, filtres cote UI) alors qu'ils
+        // portent eux aussi `firedAt` depuis que la mort sort du roster : ils
+        // figurent aux evenements de la feuille qui les a tues, dont les
+        // libelles seraient sinon reduits a des ids bruts.
+        where: { OR: [{ firedAt: null }, { dead: true }] },
         orderBy: { number: "asc" },
         select: {
           id: true,
@@ -3047,8 +3060,13 @@ export async function getMatchSheet(input: {
   const { allowlist: allowedInducements, pack: inducementPack } =
     await loadLeagueInducementRules(input.pairingId);
 
-  // Journaliers : derives du roster courant + choix de poste stocke sur
-  // la feuille. Ils alimentent les pickers d'events et le roster affiche.
+  // Journaliers de la VERSION DU MATCH : derives du roster FIGE (la feuille
+  // fait foi des le coup d'envoi), du roster courant tant qu'elle ne l'est
+  // pas. Ils alimentent les pickers d'events et le roster affiche. Repartir
+  // du roster live montrait, une fois le match valide, des journaliers qui
+  // n'ont jamais joue cette rencontre : les morts et les blessures « rate le
+  // prochain match » que la feuille venait d'appliquer faisaient chuter le
+  // nombre de joueurs disponibles — un contingent pour le match SUIVANT.
   const sheetJourneymen = sheet as {
     journeymenHome?: unknown;
     journeymenAway?: unknown;
@@ -3067,13 +3085,17 @@ export async function getMatchSheet(input: {
       side === "home" ? journeymanPositions.home : journeymanPositions.away;
     return {
       ...team,
-      journeymen: deriveJourneymen({
+      journeymen: deriveMatchJourneymen({
         side,
         roster: team.roster,
         ruleset: team.ruleset,
         players: team.players,
         chosenPosition: choice,
         positions,
+        frozenRosterSnapshot:
+          side === "home"
+            ? sheetSnapRaw.rosterSnapshotHome
+            : sheetSnapRaw.rosterSnapshotAway,
       }),
       journeymenOptions: linemanPositionsForRoster(
         team.roster,

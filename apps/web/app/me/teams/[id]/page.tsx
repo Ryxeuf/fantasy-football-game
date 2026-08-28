@@ -27,6 +27,7 @@ import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/e
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 import { shouldShowTeamLoadError } from "./team-detail-error";
+import { rosterPlayersOf } from "./roster-players";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
@@ -504,6 +505,11 @@ export default function TeamDetailPage() {
     () => resolveBudgetSummary(team),
     [team],
   );
+  /** Composition affichée : les joueurs encore au roster (cf. module). */
+  const rosterPlayers: any[] = useMemo(
+    () => rosterPlayersOf((team?.players ?? []) as any[]),
+    [team],
+  );
   const kpo = (valuePo: number): string => formatKpo(valuePo, t.teams.kpo);
 
   if (loading) {
@@ -897,7 +903,7 @@ export default function TeamDetailPage() {
             <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
               <h2 className="text-base sm:text-lg font-semibold">{t.teams.teamComposition}</h2>
               <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                {team.players?.length || 0} {t.teams.players}
+                {rosterPlayers.length} {t.teams.players}
                 {(team.starPlayers?.length ?? 0) > 0 && (
                   <span data-testid="team-composition-star-count">
                     {" "}
@@ -939,7 +945,7 @@ export default function TeamDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
+                  {[...rosterPlayers].sort((a: any, b: any) => a.number - b.number).map((p: any) => (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
                       <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">
@@ -1044,7 +1050,7 @@ export default function TeamDetailPage() {
               
               {/* Version mobile : cartes */}
               <div className="md:hidden space-y-3 p-4">
-                {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
+                {[...rosterPlayers].sort((a: any, b: any) => a.number - b.number).map((p: any) => (
                   <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">

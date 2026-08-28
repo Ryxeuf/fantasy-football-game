@@ -11,8 +11,10 @@ import { describe, it, expect } from "vitest";
 import {
   buildJourneymanHire,
   deriveJourneymen,
+  deriveMatchJourneymen,
   isJourneymanId,
   linemanPositionsForRoster,
+  parseFrozenSheetRoster,
   parseJourneymenChoice,
   JOURNEYMAN_ID_PREFIX,
   type SheetJourneyman,
@@ -303,5 +305,123 @@ describe("postes injectés depuis la base", () => {
       players: players(10),
     });
     expect(withDb).toEqual(without);
+  });
+});
+
+/**
+ * « Version du match » : les journaliers de la feuille sont ceux du COUP
+ * D'ENVOI. Une fois la feuille validée, le roster live a bougé (morts et
+ * blessures « rate le prochain match » appliquées par cette feuille) — le
+ * relire ferait apparaître des journaliers qui n'ont jamais joué ce match.
+ */
+describe("journaliers de la version figée du match", () => {
+  /** Snapshot d'un côté : joueurs réels + journaliers bakés au gel. */
+  function snapshot(realCount: number, journeymenNumbers: number[] = []) {
+    return {
+      teamValue: 1_000_000,
+      currentValue: 1_000_000,
+      players: [
+        ...Array.from({ length: realCount }, (_, i) => ({
+          name: `Joueur ${i + 1}`,
+          position: "skaven_rat_des_clans_skaven",
+          number: i + 1,
+          spp: 0,
+        })),
+        ...journeymenNumbers.map((number, i) => ({
+          name: `Journalier ${i + 1}`,
+          position: "Journalier (Rat des Clans Skaven)",
+          number,
+          spp: 0,
+        })),
+      ],
+    };
+  }
+
+  it("compte les journaliers du GEL, pas ceux du roster d'aujourd'hui", () => {
+    // Au coup d'envoi : 10 joueurs disponibles ⇒ 1 journalier. Depuis, la
+    // feuille a tué un joueur et blessé deux autres : le roster live n'en
+    // aligne plus que 7 (⇒ 4 journaliers pour le PROCHAIN match).
+    const live = players(10, [
+      { dead: true },
+      { missNextMatch: true },
+      { missNextMatch: true },
+    ]);
+    const derived = deriveMatchJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: live,
+      frozenRosterSnapshot: snapshot(10, [11]),
+    });
+    expect(derived).toHaveLength(1);
+    expect(derived[0]!.number).toBe(11);
+    expect(derived[0]!.name).toBe("Journalier 1");
+    // Sans le gel, la dérivation live en compterait 4.
+    expect(
+      deriveJourneymen({
+        side: "home",
+        roster: "skaven",
+        ruleset: "season_3",
+        players: live,
+      }),
+    ).toHaveLength(4);
+  });
+
+  it("ne rend AUCUN journalier quand le match s'est joué à 11", () => {
+    const live = players(11, [{ dead: true }]);
+    expect(
+      deriveMatchJourneymen({
+        side: "away",
+        roster: "skaven",
+        ruleset: "season_3",
+        players: live,
+        frozenRosterSnapshot: snapshot(11),
+      }),
+    ).toEqual([]);
+  });
+
+  it("accepte le snapshot sérialisé (miroir sqlite)", () => {
+    const derived = deriveMatchJourneymen({
+      side: "home",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: players(11),
+      frozenRosterSnapshot: JSON.stringify(snapshot(9, [10, 11])),
+    });
+    expect(derived.map((j) => j.number)).toEqual([10, 11]);
+    expect(derived.map((j) => j.id)).toEqual([
+      "journeyman-home-1",
+      "journeyman-home-2",
+    ]);
+  });
+
+  it("retombe sur le roster live sans gel exploitable", () => {
+    const live = players(9);
+    for (const raw of [
+      undefined,
+      null,
+      "pas du json",
+      { headerOnly: true, teamValue: 1 },
+      { teamValue: 1 },
+    ]) {
+      expect(parseFrozenSheetRoster(raw)).toBeNull();
+      expect(
+        deriveMatchJourneymen({
+          side: "home",
+          roster: "skaven",
+          ruleset: "season_3",
+          players: live,
+          frozenRosterSnapshot: raw,
+        }),
+      ).toHaveLength(2);
+    }
+  });
+
+  it("sépare joueurs réels et journaliers bakés du snapshot", () => {
+    const frozen = parseFrozenSheetRoster(snapshot(10, [11]));
+    expect(frozen?.players).toHaveLength(10);
+    // Le gel exclut déjà morts, licenciés et absents : tous disponibles.
+    expect(frozen?.players.every((p) => !p.dead && !p.missNextMatch)).toBe(true);
+    expect(frozen?.journeymen).toEqual([{ number: 11, name: "Journalier 1" }]);
   });
 });
